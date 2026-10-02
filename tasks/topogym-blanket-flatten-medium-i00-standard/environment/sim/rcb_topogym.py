@@ -16,7 +16,7 @@ trajectory : the (T, action_dim) JOINT_ABS actions handed to the simulator, one 
              ~1e-11 in the state but not bit for bit, so `deterministic` (state hashes equal) is reported and not
              required; every replay must complete the task (the same rule as robot_coding_bench's GPU backend).
 episode end: a task's success predicate, or one of its failure predicates (e.g. touching the buzz wire), ends the
-             simulated episode: later steps are recorded but no longer move the scene, and status()["episode_end"] says
+             simulated episode: later steps do not change the execution ledger or scene, and status()["episode_end"] says
              why. reset() starts again from the frozen state.
 grasping   : a family may enable TopoGym's passive grasp assistance (instance.json simulator.grasp_assist; the rules are
              in robot_spec()["grippers"][...]["command"]); primitives()["object_in_hand"] says what a gripper holds.
@@ -55,10 +55,97 @@ import math
 import subprocess
 import sys
 import time
+import tempfile
+import zipfile
 from pathlib import Path
 from typing import Any, Callable
 
 import numpy as np
+
+
+class InvalidTrajectory(ValueError):
+    """Malformed agent submission; distinct from simulator and host I/O errors."""
+
+
+class InstanceMismatch(RuntimeError):
+    """The frozen instance could not be reconstructed within its contract."""
+
+
+def atomic_json(path, value):
+    """Durably publish a single authoritative JSON record on the same filesystem."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix='.' + path.name, dir=path.parent)
+    try:
+        with os.fdopen(fd, 'w') as stream:
+            json.dump(value, stream, allow_nan=False)
+            stream.write('\n'); stream.flush(); os.fsync(stream.fileno())
+        os.replace(temporary, path)
+        directory = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def recover_reward(directory):
+    """Verifier parent only, after the agent artifacts have been cleared."""
+    path = Path(directory) / "verdict.json"
+    if not path.is_file():
+        return False
+    verdict = json.loads(path.read_text())
+    reward = verdict["reward"]
+    if verdict.get("schema_version") != 2 or reward.get("success") not in (0, 1):
+        raise ValueError("invalid committed verdict")
+    if not all(isinstance(v, (int, float)) and math.isfinite(v) for v in reward.values()):
+        raise ValueError("Harbor rewards must be finite numeric fields")
+    atomic_json(Path(directory) / "reward.json", reward)
+    atomic_json(Path(directory) / "reward.txt", reward["success"])
+    return True
+
+
+def load_trajectory(path, task, dim, *, trusted=False):
+    """Validate before scene creation. Tick metadata is accepted only from the trusted service."""
+    try:
+        # Inspect the array header before NumPy allocates from an untrusted shape.
+        with zipfile.ZipFile(path) as archive, archive.open("actions.npy") as stream:
+            version = np.lib.format.read_magic(stream)
+            if version == (1, 0):
+                shape, _, dtype = np.lib.format.read_array_header_1_0(stream)
+            elif version == (2, 0):
+                shape, _, dtype = np.lib.format.read_array_header_2_0(stream)
+            else:
+                raise InvalidTrajectory("unsupported actions array format")
+            if len(shape) != 2 or shape[1] != dim or not (0 if trusted else 1) <= shape[0] <= MAX_STEPS or dtype.kind not in 'fiu':
+                raise InvalidTrajectory("invalid or oversized actions array header")
+        with np.load(path, allow_pickle=False) as data:
+            if str(data['task']) != task:
+                raise InvalidTrajectory('wrong task family')
+            raw = data['actions']
+            if raw.dtype.kind not in 'fiu' or raw.ndim != 2 or raw.shape[1] != dim or not (0 if trusted else 1) <= len(raw) <= MAX_STEPS:
+                raise InvalidTrajectory('actions must be a nonempty bounded numeric (T, action_dim) array')
+            with np.errstate(over='ignore', invalid='ignore'):
+                actions = raw.astype(np.float32)
+            if not np.isfinite(actions).all():
+                raise InvalidTrajectory('actions contain nonfinite values')
+            ticks = None
+            if trusted:
+                meta = json.loads(str(data['meta'])) if 'meta' in data else {}
+                live = meta.get('live_rows', len(actions))
+                if type(live) is not int or not 0 <= live <= len(actions):
+                    raise InvalidTrajectory('invalid live_rows')
+                actions = actions[:live]
+                if 'physics_steps_per_action' in data:
+                    ticks = data['physics_steps_per_action']
+                    if ticks.dtype.kind not in 'iu' or ticks.ndim != 1 or len(ticks) != len(raw) or np.any(ticks <= 0):
+                        raise InvalidTrajectory('invalid executed tick ledger')
+                    ticks = ticks[:live].copy()
+            return actions, ticks
+    except (ValueError, TypeError, KeyError, EOFError, zipfile.BadZipFile) as exc:
+        raise InvalidTrajectory(str(exc)) from exc
 
 # Interaction log (the same contract as rcb_robowits.py): every Session appends one line per session start/reset/record/
 # replay/exit, with the control steps consumed, to RCB_SESSION_LOG (default /app/output/rcb_session_log.jsonl, collected
@@ -796,7 +883,7 @@ def _speed_up_knot_predicate(task_id: str) -> bool:
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
-                 strict: bool = False, max_steps: int | None = None, backend: str = DEFAULT_BACKEND):
+                 strict: bool = True, max_steps: int | None = None, backend: str = DEFAULT_BACKEND):
         if task not in TASKS:
             raise KeyError(f"unknown task {task!r}; known: {list(TASKS)}")
         if backend != "cuda":
@@ -850,30 +937,54 @@ class Session:
         atexit.register(lambda: _slog("session_end", task=task, resets=self._resets, sim_steps=self._total_steps + self.n_steps))
         # Every episode -- live or replayed, in this process or a fresh one -- starts from a restore of the frozen state.
         self._restore()
+        self.asset_identity = self._asset_identity()
         self.instance_sha = self.state_sha()
         expected = inst.get("state_sha") if inst else None
         self.instance_exact = expected is None or expected == self.instance_sha
-        self.instance_matches = self.instance_exact or (inst is not None and self._poses_match(inst))
-        if not self.instance_exact:
+        assets_match = inst is None or inst.get("asset_identity", self.asset_identity) == self.asset_identity
+        self.instance_matches = assets_match and (self.instance_exact or (inst is not None and self._poses_match(inst)))
+        if not self.instance_exact or not assets_match:
             msg = f"instance state sha {self.instance_sha} != expected {expected}"
             if self.instance_matches:
                 _log(f"WARNING: {msg}, but every object/joint pose matches within tolerance")
             else:
                 if strict:
-                    raise RuntimeError(msg + " and poses differ (asset / simulator drift?)")
+                    self.env.close()
+                    raise InstanceMismatch(msg + " and poses differ (asset / simulator drift?)")
                 _log("WARNING:", msg, "and poses differ")
         _log(f"instance ready in {time.time() - t0:.0f}s; state_sha={self.instance_sha}; max_steps={self.max_steps}")
+
+    def _asset_identity(self):
+        """Compare actual generated assets, normalizing only their temporary root."""
+        build = self.env._asset_build
+        root = str(build.root.resolve()).encode()
+        return {name: hashlib.sha256((build.root / name).read_bytes().replace(root, b"<instance-assets>")).hexdigest()
+                for name in sorted(build.files)}
 
     def _poses_match(self, inst: dict, pos_tol: float = 2e-3, quat_tol: float = 2e-2, joint_tol: float = 2e-3) -> bool:
         try:
             objs = self.objects()
+            if set(objs) != set(inst.get("objects") or {}):
+                return False
+            soft = self._soft_state()
+            reference = inst.get("soft_state") or {}
+            if set(soft) != set(reference):
+                return False  # old centroid-only soft instances require exact state identity
+            for name, fields in soft.items():
+                if set(fields) != set(reference[name]):
+                    return False
+                for field, value in fields.items():
+                    current, wanted = np.asarray(value), np.asarray(reference[name][field])
+                    tolerance = pos_tol if field in ("position_m", "vertices_m") else 2e-3
+                    if current.shape != wanted.shape or not np.allclose(current, wanted, atol=tolerance, rtol=0):
+                        return False
             for name, ref in (inst.get("objects") or {}).items():
                 cur = objs.get(name)
                 if cur is None:
                     return False
                 if np.max(np.abs(np.asarray(cur["position"]) - np.asarray(ref["position"]))) > pos_tol:
                     return False
-                if "orientation_wxyz" not in cur or "orientation_wxyz" not in ref:   # particles / FEM: centroid only
+                if "orientation_wxyz" not in cur or "orientation_wxyz" not in ref:
                     continue
                 q0, q1 = np.asarray(cur["orientation_wxyz"]), np.asarray(ref["orientation_wxyz"])
                 if min(np.max(np.abs(q0 - q1)), np.max(np.abs(q0 + q1))) > quat_tol:
@@ -885,6 +996,13 @@ class Session:
         except Exception as exc:  # noqa: BLE001
             _log("pose comparison failed:", repr(exc)[:120])
             return False
+
+    def _soft_state(self) -> dict:
+        world = self.env._world.read_state()
+        return {name: {key: _plain(value) for key, value in fields.items()
+                       if key in ("position_m", "vertices_m", "velocity_m_s")}
+                for kind in ("particles", "fem") for name, fields in world.get(kind, {}).items()
+                if name in self._entities() and isinstance(fields, dict)}
 
     # ---- state helpers
     def state_sha(self) -> str:
@@ -913,9 +1031,14 @@ class Session:
 
     def _restore(self) -> None:
         self._recording = None
+        self._recorded_ticks = []
+        self._saved_recording = None
         self.episode_done = False
         self.episode_end = None
         self.n_steps = 0
+        self.physics_steps = 0
+        self.sim_time_s = 0.0
+        self.last_step_ticks = 0
         self._reward = 0.0
         self.env.privileged.rewind_to(self.S0)
         self._targets = self.robot.targets()
@@ -928,11 +1051,11 @@ class Session:
     def action_layout(self) -> list[str]:
         return list(self.robot.layout)
 
-    def step(self, action) -> bool:
+    def step(self, action, *, _physics_steps=None) -> bool:
         """Apply one low-level action (ACTION_LAYOUT: per arm its joint targets, then its gripper width) for one control
         step. Out-of-limit values are clipped to the joint / gripper limits. Returns True once max_steps control steps
         have run (a runaway guard, not a budget); further steps raise. After the task's own episode end (success or a
-        failure predicate) steps are still recorded but no longer move the scene."""
+        failure predicate) steps return True without changing the scene or execution ledger."""
         a = np.asarray(action, dtype=np.float32).reshape(-1)
         if a.size != self.action_dim:
             raise ValueError(f"action must have {self.action_dim} entries, got {a.size}")
@@ -940,21 +1063,34 @@ class Session:
             raise ValueError("action contains nan/inf")
         if self.episode_done:
             raise PrimitiveError(f"{self.max_steps} control steps reached (runaway guard); call reset() before stepping again")
-        if self._recording is not None:
-            self._recording.append(a.copy())
+        if self.episode_end is not None:
+            return True
         target = self.robot.clip(a.astype(np.float64))
-        if self.episode_end is None:
-            _, reward, terminated, truncated, info = self.env.step(self.robot.command(target))
-            self._reward = float(reward)
-            if terminated or truncated:
-                self.episode_end = "success" if info["task_success"] else (info.get("termination_reason") or "task_failed")
+        command = self.robot.command(target)
+        self._video_begin()
+        kwargs = {} if _physics_steps is None else {"_physics_steps": int(_physics_steps)}
+        try:
+            _, reward, terminated, truncated, info = self.env.step(command, **kwargs)
+        except Exception as exc:
+            if getattr(self.env, "_faulted", False):
+                raise RuntimeError("simulator fault during control execution; result not committed") from exc
+            raise
+        self.last_step_ticks = int(info["physics_steps"])
+        self.physics_steps += self.last_step_ticks
+        self.sim_time_s += float(info["action_duration_s"])
+        self._reward = float(reward)
+        if terminated or truncated:
+            self.episode_end = "success" if info["task_success"] else (info.get("termination_reason") or "task_failed")
+        if self._recording is not None:
+            self._recording.append(target.astype(np.float32).copy())
+            self._recorded_ticks.append(self.last_step_ticks)
         self._targets = target
         self.n_steps += 1
-        if self._video is not None and self.n_steps % self._video["every"] == 0:
+        if self._video is not None:
             self._video_add()
         if self.n_steps >= self.max_steps:
             self.episode_done = True
-        return self.episode_done
+        return self.episode_done or self.episode_end is not None
 
     def hold_action(self) -> np.ndarray:
         """The action that keeps the current joint targets (what the robot does when a primitive is idle)."""
@@ -965,29 +1101,40 @@ class Session:
 
     def status(self) -> dict[str, Any]:
         return {"success": self.success(), "progress": round(self._reward, 4), "sim_steps": int(self.n_steps),
+                "physics_steps": self.physics_steps, "sim_time_s": self.sim_time_s,
                 "resets": self._resets, "state_sha": self.state_sha(), "episode_end": self.episode_end}
 
     # ---- recording / trajectories
     def record_start(self) -> None:
         self._recording = []
+        self._recorded_ticks = []
 
     def record_stop(self) -> np.ndarray:
         acts = np.stack(self._recording) if self._recording else np.zeros((0, self.action_dim), np.float32)
+        self._saved_recording = (acts.copy(), np.asarray(self._recorded_ticks, dtype=np.int64))
         self._recording = None
         _slog("record", task=self.task, n_actions=int(len(acts)), success=self.success())
         return acts.astype(np.float32)
 
     def save_trajectory(self, actions: np.ndarray, path: str | Path, meta: dict | None = None) -> None:
+        extra = {}
+        saved = getattr(self, "_saved_recording", None)
+        if saved is not None and np.array_equal(actions, saved[0]):
+            extra = dict(trajectory_version=2, physics_steps_per_action=saved[1])
         np.savez(path, actions=np.asarray(actions, dtype=np.float32), task=self.task, topogym_task=self.config["task_id"],
                  variation_id=self.config["variation_id"], eval_index=-1 if self.eval_index is None else self.eval_index,
                  scene_seed=int(self.config["seed"]), instance_sha=self.instance_sha,
-                 action_dim=self.action_dim, action_layout=np.array(self.action_layout), meta=json.dumps(meta or {}))
+                 action_dim=self.action_dim, action_layout=np.array(self.action_layout), meta=json.dumps(meta or {}), **extra)
 
-    def replay(self, actions: np.ndarray) -> dict[str, Any]:
+    def replay(self, actions: np.ndarray, *, physics_steps=None) -> dict[str, Any]:
         """Open-loop replay after reset(): what the verifier does, twice, in its own process."""
         self.reset()
-        for a in np.asarray(actions, dtype=np.float32):
-            if self.step(a):
+        if self._video is not None:
+            self._video_begin()
+        if physics_steps is not None and len(physics_steps) != len(actions):
+            raise ValueError("tick ledger length differs from actions")
+        for i, a in enumerate(np.asarray(actions, dtype=np.float32)):
+            if self.step(a, _physics_steps=None if physics_steps is None else physics_steps[i]):
                 break
         st = self.status()
         _slog("replay", task=self.task, n_actions=int(len(actions)), success=st["success"])
@@ -1016,38 +1163,62 @@ class Session:
         return np.concatenate([np.concatenate(tiles[i:i + cols], axis=1) for i in range(0, len(tiles), cols)], axis=0)
 
     def render_video(self, actions: np.ndarray, path: str | Path, *, every: int = 2, fps: int = 15,
-                     cameras: tuple[str, ...] | None = None, cols: int = 3, size: tuple[int, int] = (424, 240)) -> dict[str, Any]:
-        """Replay `actions` from the frozen instance (reset() first) and write an MP4 of `cameras` tiled, one frame every
-        `every` control steps (+ `<path>.last.png`). Returns the final status plus n_frames and the video path."""
-        import imageio.v2 as imageio
-        self.reset()
-        path = Path(path); path.parent.mkdir(parents=True, exist_ok=True)
-        n = 0
-        with imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1) as w:
-            def grab() -> np.ndarray:
-                nonlocal n
-                f = self.render_grid(cameras, cols=cols, size=size); w.append_data(f); n += 1
-                return f
-            grab()
-            for i, a in enumerate(np.asarray(actions, dtype=np.float32)):
-                if self.step(a):
-                    break
-                if (i + 1) % every == 0:
-                    grab()
-            last = grab()
-        imageio.imwrite(str(path.with_suffix(".last.png")), last)
-        return {**self.status(), "n_frames": n, "video": str(path)}
+                     cameras=None, cols=3, size=(424, 240), physics_steps=None) -> dict[str, Any]:
+        """Record one replay through the shared SensorFrame recording module.
+
+        Legacy layout/sampling arguments no longer create a separate writer.
+        The shared recording manifest and physical timestamps live beside the video.
+        """
+        self.start_video(path, fps=fps)
+        self._video["grid"] = dict(cameras=cameras, cols=cols, size=size)
+        status = self.replay(actions, physics_steps=physics_steps)
+        self.stop_video()
+        return {**status, "video": str(path)}
 
     def start_video(self, path: str | Path, fps: int = 15, every: int | None = None) -> None:
-        import imageio.v2 as imageio
-        every = every or max(1, int(round(self.control_hz / fps)))
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        w = imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1)
-        self._video = {"path": str(path), "every": every, "writer": w, "last": None}
-        self._video_add()
+        if self._video is not None:
+            raise RuntimeError("finish the current recording before starting another")
+        if not np.isfinite(fps) or not 0 < fps <= self.control_hz:
+            raise ValueError("video fps must be positive and no greater than control_hz")
+        # Arm only: replay restores its initial state before taking the first frame.
+        self._video = {"path": str(path), "fps": fps, "session": None, "error": None}
+
+    def _video_begin(self):
+        v = self._video
+        if v is None or v["session"] is not None or v["error"]:
+            return
+        try:
+            from topogym.recording import RecordingSession
+            path = Path(v["path"])
+            path.parent.mkdir(parents=True, exist_ok=True)
+            root = Path(tempfile.mkdtemp(prefix=path.stem + ".recording-", dir=path.parent))
+            rec = RecordingSession(root / "recording", fps=v["fps"], metadata={
+                "task": self.task, "instance_sha": self.instance_sha, "scope": "frozen-instance replay"})
+            v["session"] = rec
+            rec.__enter__()
+            rec.append(self._recording_frame())
+        except Exception as exc:
+            v["error"] = repr(exc)
 
     def _video_add(self) -> None:
-        f = self._video_frame(); self._video["writer"].append_data(f); self._video["last"] = f
+        self._video_begin()
+        v = self._video
+        if v["error"]:
+            return
+        try:
+            frame = self._recording_frame()
+            if frame.state_id != v["session"].previous_state_id:
+                v["session"].append(frame)
+        except Exception as exc:
+            v["error"] = repr(exc)
+
+    def _recording_frame(self, video=None):
+        """Keep Harbor's all-camera composite; shared recording owns its clock/writer."""
+        from dataclasses import replace
+        frame = self.env.sensor_frame()
+        settings = video if video is not None else self._video
+        pixels = self.render_grid(**settings["grid"]) if settings and "grid" in settings else self._video_frame()
+        return replace(frame, rgb={"combined": pixels})
 
     def _video_frame(self) -> np.ndarray:
         """The first camera at full size, the others stacked at the right, scaled to share its height."""
@@ -1071,10 +1242,36 @@ class Session:
     def stop_video(self) -> str | None:
         if self._video is None:
             return None
-        import imageio.v2 as imageio
+        self._video_begin()
         v, self._video = self._video, None
-        v["writer"].close()
-        imageio.imwrite(str(Path(v["path"]).with_suffix(".last.png")), v["last"])
+        rec = v["session"]
+        if v["error"]:
+            if rec is not None:
+                rec.close(commit=False)
+            raise RuntimeError(v["error"])
+        import shutil
+        from PIL import Image
+        try:
+            frame = self._recording_frame(v)
+            rec.append_final(frame)
+            rec.finish(self.status())
+            rec.close(commit=True)
+            first = next(iter(frame.rgb))
+            from topogym.recording.encoding import probe
+            validation = probe(rec.output / "videos" / (first + ".mp4"), decode=True)
+            if validation["frames"] != rec.frame_count:
+                raise RuntimeError("recorded video and frame map have different lengths")
+            shutil.copyfile(rec.output / "videos" / (first + ".mp4"), v["path"])
+            frame_map = Path(v["path"]).with_suffix(".frame_map.jsonl")
+            shutil.copyfile(rec.output / "frame_map.jsonl", frame_map)
+            manifest = json.loads((rec.output / "recording_manifest.json").read_text())
+            manifest["videos"][first]["path"] = Path(v["path"]).name
+            manifest["frame_map"]["path"] = frame_map.name
+            manifest["validation"] = validation
+            atomic_json(Path(v["path"]).with_suffix(".recording_manifest.json"), manifest)
+            Image.fromarray(np.asarray(frame.rgb[first])).save(Path(v["path"]).with_suffix(".last.png"))
+        finally:
+            rec.close(commit=False)
         return v["path"]
 
     # ---- objects / robot state
@@ -1510,6 +1707,7 @@ def cmd_make_instance(a) -> None:
            "eval_index": s.eval_index, "text": s.spec["text"], "simulator": s.config, "state_sha": s.instance_sha,
            "action_dim": s.action_dim, "action_layout": s.action_layout, "control_hz": s.control_hz, "backend": s.backend,
            "reset_joint_targets": [round(float(x), 6) for x in s.joint_positions()], "objects": s.objects(),
+           "instance_contract_version": 2, "soft_state": s._soft_state(), "asset_identity": s.asset_identity,
            "genesis_version": gs.__version__, "topogym_source": _source(),
            "resolved_variation_id": s.env._variation["variation_id"],
            "scene_variation": s.env._scene_variation,
@@ -1553,14 +1751,14 @@ def cmd_replay(a) -> None:
     if str(traj.get("task")) != a.task:
         print(json.dumps({"error": f"trajectory task {traj.get('task')} != {a.task}"}), flush=True); sys.exit(2)
     s = Session(a.task, instance=a.instance, strict=a.strict)
-    acts = np.asarray(traj["actions"], dtype=np.float32)
+    acts, ticks = load_trajectory(a.traj, a.task, s.action_dim, trusted=True)
     t0 = time.time()
-    outs = [s.replay(acts) for _ in range(a.repeat)]
+    outs = [s.replay(acts, physics_steps=ticks) for _ in range(a.repeat)]
     out = {"n_actions": int(len(acts)), "instance_sha": s.instance_sha, "instance_matches": s.instance_matches,
            "instance_exact": s.instance_exact, "replays": outs, "all_success": all(o["success"] for o in outs),
            "deterministic": len({o["state_sha"] for o in outs}) == 1, "wall_s": round(time.time() - t0, 1)}
     if a.video:
-        s.start_video(a.video, fps=a.fps); s.replay(acts); s.stop_video(); out["video"] = a.video
+        s.start_video(a.video, fps=a.fps); s.replay(acts, physics_steps=ticks); s.stop_video(); out["video"] = a.video
     print(json.dumps(out), flush=True)
     s.close()
 
@@ -1568,7 +1766,8 @@ def cmd_replay(a) -> None:
 def cmd_render(a) -> None:
     s = Session(a.task, instance=a.instance)
     cams = tuple(a.cameras.split(",")) if a.cameras else None
-    print(json.dumps(s.render_video(_load_traj(a.traj)["actions"], a.out, every=a.every, fps=a.fps, cameras=cams, cols=a.cols)), flush=True)
+    actions, ticks = load_trajectory(a.traj, a.task, s.action_dim, trusted=True)
+    print(json.dumps(s.render_video(actions, a.out, every=a.every, fps=a.fps, cameras=cams, cols=a.cols, physics_steps=ticks)), flush=True)
     s.close()
 
 

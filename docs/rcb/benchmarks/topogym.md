@@ -7,20 +7,20 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-02)
-| dirs | families | tooling | standard protocol | image |
-|---|---|---|---|---|
-| 48 | buzz_wire_3d, cast_coil, cast_keyhole, fiber_bundling, hedgehog_in_cage, horseshoe_ring, interlocked_claws, lock_picking | v5 | `eai-standard/2.3` | `rcb-topogym:0.2.7-cu128` |
-| 30 | blanket_flatten, knot_untying, rope_threading, orbits, slotted_post_ring | v4 (frozen) | `eai-standard/2.2` | `rcb-topogym:0.2.5-cu128` |
-
+All 78 dirs: tooling v5, `eai-standard/2.3`, `rcb-topogym:0.2.7-cu128`.
 - v5 / 2.3 = Jianwen's post-merge repairs B04–B13 (`docs/rcb/STANDARD_MODE_2_3.md`,
   `docs/debug_logs/run_trials_post_merge_repair_20261001_zh.md`): invalid submissions graded as such, scores persisted
   before the video, only executed actions recorded with their actual ticks, non-integer `dt` refused, instance mismatch
   never a success, operation ids and request deadlines (a retried request is not executed twice).
 - `eai-standard/2.3` is a TopoGym-local extension of robot_coding_bench main's 2.2 (`ci_checks/rcb_vendor.json`
   `local_adaptations`), to be proposed for main.
-- The five soft-body families stay on v4: v5 refuses a soft-body instance without complete node references (B08), so they
-  move to v5 once their instances are made again with the v5 generator.
 - 0.2.7 = Jianwen's 0.2.6 simulator changes + the batched rigid readback (Step time below).
+- The 15 soft-body instances (blanket_flatten and the four IPC families) were made again with the v5 tooling on lab's
+  RTX PRO 6000 (`make-instance --variation <family>_<tier> --scene-seed 0`, image 0.2.7): `instance_contract_version` 2
+  with complete soft-body node references, which v5 requires (B08). blanket_flatten's initial states were prepared again in
+  0.2.7 (`scripts/prepare_blanket_initial_states.py --tier <tier> --seed 0 --acceptance scene_layout`: the 0.2.3 archives
+  are incompatible with the 0.2.7 backend identity) and are packaged in each instance. Every instance passed a strict
+  fresh-process smoke (build, 3 hold steps with RGB, replay; `instance_matches`). The rigid instances are unchanged.
 
 ## Budget
 Agent wall clock **21600 s** (6 h) for every family (decision of 2026-10-01; before: 6 h, knot_untying 10 h). This is above
@@ -31,9 +31,9 @@ trial (the protocol's default is 100M / 10M, D10), applied after the run.
 
 ## Tooling
 Thin wrappers of the low-level action only (IK and joint moves, gripper, hold) plus state, recording, replay and
-rendering; no task-level skills. One source, tooling v4 (`[metadata].tooling_version = "4"`):
+rendering; no task-level skills. One source, tooling v5 (`[metadata].tooling_version = "5"`, Jianwen's repairs on top of v4):
 `harbor_templates/topogym/common/rcb_topogym.py`, byte-identical in every copy (`ci_checks/check-topogym-tooling.py`, run
-by `check-tooling-identity.sh`). v4 (Jianwen, 6a7c755b) folds the two family variants of the previous render into it:
+by `check-tooling-identity.sh`). v4 (Jianwen, 6a7c755b) folded the two family variants of the earlier render into it:
 - a gripper hold keeps the native target when the commanded width round-trips (the width table drops the closed-end
   plateau): interlocked_claws' contact-weld pre-weld then survives the first step; no other family has an off-table
   gripper target, so their commands are unchanged;
@@ -71,7 +71,7 @@ On lab with 0.2.7 (one sim alone, GPU 4): buzz_wire_3d easy 0.26 s per control s
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from
   `tests/instance.json` twice in a fresh process and renders `replay.mp4` **during the second replay**. Success: both
   replays meet the task's predicate. The physics runs on the GPU and is not bit-deterministic: `deterministic` is
-  reported, not required; v5 requires the rebuilt frozen scene to match (`instance_ok`), v4 only reports it.
+  reported, not required; the rebuilt frozen scene must match (`instance_ok`, v5).
 - **Standard.** Pass 1 is the live episode in the `sim` sidecar. When it ends the service writes `trajectory.npz` and
   `episode.json` (live result, final-state hash, `live_rows`: the rows the live episode executed). The collect hook
   `environment/sim/finalize.sh` sends SIGUSR1, waits until the service has exited (its GPU memory is free), then replays
@@ -88,7 +88,7 @@ On lab with 0.2.7 (one sim alone, GPU 4): buzz_wire_3d easy 0.26 s per control s
   replay container of its own (a possible later step).
 
 ## Standard mode
-`eai-standard/2.3` (v5 dirs; the v4 dirs keep 2.2) with crash recovery (`docs/rcb/STANDARD_MODE_2_2.md` §13,
+`eai-standard/2.3` with crash recovery (`docs/rcb/STANDARD_MODE_2_2.md` §13,
 `STANDARD_MODE_2_3.md`), resume class `approx` (GPU nondeterminism), `RCB_STARTUP_TIMEOUT_S` = 1800. The shared layer is
 `scripts/eai_standard/` (from robot_coding_bench, with the 2.3 changes as `local_adaptations` in `ci_checks/rcb_vendor.json`);
 the TopoGym adapter is `environment/sim/server.py`. Genesis' CUDA context belongs to the
@@ -105,12 +105,14 @@ family (PROTOCOL §2.7). Model positives so far: interlocked_claws easy in both 
 the previous version of these dirs).
 
 ## Hosts
-- Base images `ghcr.io/luigivamper/rcb-topogym:0.2.7-cu128` (v5 dirs) and `:0.2.5-cu128` (v4 dirs)
+- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.7-cu128`
   (`images/topogym/VERSION` + the CUDA profile of `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a legacy
   warning). Neither is on GHCR: build on the host with `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym` (a
   large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab).
-- blanket_flatten's archived PBD states restore only on the GPU model they were prepared on (RTX PRO 6000): run blanket
-  on lab.
+- blanket_flatten's packaged PBD states restore only on the GPU profile they were prepared on (RTX PRO 6000, sm_120):
+  run blanket on lab.
+- The IPC families are slow (50-90 s per control step in motion, 15 s holds, one sim per GPU): a precision / speed study
+  of the simulator settings is under way (2026-10-02).
 
 ## Legacy: the original frozen instances
 Jianwen's first frozen instances `tasks/topogym-<family>-i00[-limited]` (seed 0) keep their pre-v1.0 names, layer and

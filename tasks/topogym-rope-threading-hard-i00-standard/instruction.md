@@ -1,4 +1,4 @@
-# TopoGym · rope_threading — STANDARD MODE (robot as a service, eai-standard/2.2)
+# TopoGym · rope_threading — STANDARD MODE (robot as a service, eai-standard/2.3)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and one episode. **Task:** Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end.
@@ -57,7 +57,7 @@ client and one episode. **Task:** Thread the rope through the cyan ring (R1) the
 - One control step takes about 9.0 s of wall clock on an unloaded GPU and up to about 15.1 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: keep each `submit` to at most 59 control steps (1.48 s of simulated time: rows x dt); keep each `get_obs(seconds=...)` watch to at most 19 control steps (0.47 s) (both with a 2x margin).
 - If a request times out in the client anyway, the service still runs it to the end: do NOT send it again (it would run twice). Call `r.get_obs()` (repeat it if it also times out): it answers once the earlier request has finished and shows the state after it.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`)
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects to the existing service; retries until ready (default timeout 600 s)

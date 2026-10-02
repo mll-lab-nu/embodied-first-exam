@@ -2,7 +2,7 @@
   "schema_version": 1,
   "metadata": {
     "backend": {
-      "codec": "rigid_pbd_numeric_v1",
+      "codec": "rigid_pbd_numeric_v2",
       "genesis": "1.2.1",
       "precision": "<f8",
       "backend": "2",
@@ -15,14 +15,474 @@
         "engine/entities/particle_entity.py": "0a65276bd3c6bda69d2997c2ee43ecaed69407e339e5d009db2f537761507638",
         "engine/entities/pbd_entity.py": "060007678121acc1186d76e10efcd75fa10e79e6ae999c7029123d00ec7b1248",
         "engine/solvers/pbd_solver.py": "71deb2ee9277b49aeeafb96eba739df99f49f6ac1c5d4acd73c4f0d9567b6c5f",
-        "engine/solvers/rigid/rigid_solver.py": "63abc5530fede31b599eef6de3bd51bdb4d3d7dd20628b6494f14bddc301cb14"
+        "engine/solvers/rigid/rigid_solver.py": "63abc5530fede31b599eef6de3bd51bdb4d3d7dd20628b6494f14bddc301cb14",
+        "engine/solvers/rigid/collider/collider.py": "20ef3a8a366773f7e258c54aa7e8d6f3e555761fe7efb6ba88faa891276bf19d",
+        "engine/couplers/legacy_coupler.py": "e85929b6d2fe92d797b946f575d5b524a9e6f014ad79852ea67d8469a9f81cb9"
       },
       "state_codec_sha256": "e8fc073137284511d6affc897c0ad12ff9c850b7b6764d23c6de56b89edbd703",
-      "world_sha256": "e30677794192f6d0dd63bf442e66f33ea35de168b0793417d83ccb65066b053e",
       "table_friction_sha256": "4bc0dcd4973e85062e007db3b80278cf6ef7298aedcf0398140dd63bc44afaf0",
       "bindings": {
         "blanket": "526ad3f9f26ad0387aa66cef08103fa1c0c2f22a65b8e5339d5d3eec47982465"
-      }
+      },
+      "world_restore_semantics": 1,
+      "device": {
+        "type": "cuda",
+        "compute_capability": [
+          12,
+          0
+        ],
+        "multiprocessor_count": 188,
+        "warp_size": 32
+      },
+      "built_geometry": {
+        "sha256": "fe584e789d19469375f0b3d98409b6d0199ee00ad80a5b780bb49993568f8a2f",
+        "buffers": {
+          "RigidSolver/data_manager/geoms_info/pos": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38,
+                3
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "22221ae701e60b722212d706576e7db075fbf8a31ead4bf47292e4fc35883cec"
+          },
+          "RigidSolver/data_manager/geoms_info/center": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38,
+                3
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "7383a197d86e04714b2f211fdec0a6b0527ec52e527deaf2d0636a99c0820e36"
+          },
+          "RigidSolver/data_manager/geoms_info/quat": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38,
+                4
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "4f1cd9c7c6395144e917d0ab291324b84155397a0087a8a8792cf4bad8e2fb1f"
+          },
+          "RigidSolver/data_manager/geoms_info/data": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38,
+                7
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "7f16e0e09bc5250369ea215c2d9a136bc8833194baf4f23b2bd4b9a7dadde75a"
+          },
+          "RigidSolver/data_manager/geoms_info/link_idx": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "c7f063ebadf9f4c2711122a273ff132178d7f488bc8b8bb61dc5084cd7d4ad43"
+          },
+          "RigidSolver/data_manager/geoms_info/type": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "49732e634d122dbb8044cde1cd49ce7784f43bd60309555f3fa25caff2e5acc7"
+          },
+          "RigidSolver/data_manager/geoms_info/friction": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "412583ad4800d5fea58516bc2bd4234a1bbff6d6012d37fcb5a261f48ab89351"
+          },
+          "RigidSolver/data_manager/geoms_info/sol_params": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38,
+                7
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "5dba1585c6c71103b9967e4702f49bcb73e5a3847fef32c8a058ae99933a96d5"
+          },
+          "RigidSolver/data_manager/geoms_info/vert_num": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "b8dc54319238bec6a836ded21ea60bb6279b356ab13d008a5db4b158adbbb585"
+          },
+          "RigidSolver/data_manager/geoms_info/vert_start": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "0161a0c8b6f978cd107ca2e678f351f989691c16227a98263b98a6d63adc2f8a"
+          },
+          "RigidSolver/data_manager/geoms_info/vert_end": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "5cb8bc03ce6bb5581aab5a698d71d6e84445d576f5b89ed6e3785722d8bba15f"
+          },
+          "RigidSolver/data_manager/geoms_info/verts_state_start": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "c0c3636fc8c5cecad889be5778e354a6a4206f3b3defe1ca4971c4e58eb0202a"
+          },
+          "RigidSolver/data_manager/geoms_info/verts_state_end": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "76e62469cc7300710603f4c1e443ad66bbc90d322f0ddb01c51b761cf5620058"
+          },
+          "RigidSolver/data_manager/geoms_info/face_num": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "58d898aef6c770393aa7d2297cd085b444ea348ed73739728afe90bcfdfaf582"
+          },
+          "RigidSolver/data_manager/geoms_info/face_start": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "814d331093861293d3915ec5f5677523ada86bb82ce1d5bda5af78162bdfbbc7"
+          },
+          "RigidSolver/data_manager/geoms_info/face_end": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "2339f923af1192994150a26a41ba0cf302a962648bf8fd9d99c2ec16138396b5"
+          },
+          "RigidSolver/data_manager/geoms_info/edge_num": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "44ee696683f430602fed36ec45c3114f55fccc2e7af59fbb841ca981aac49a95"
+          },
+          "RigidSolver/data_manager/geoms_info/edge_start": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "d35ee57a62671d01f1f39fb449bab2e1f53759f09b482c59e3589d5ec9dd86ea"
+          },
+          "RigidSolver/data_manager/geoms_info/edge_end": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "2a27b2568ae27d6c561f8bfdfd080915558733292db066caa243de234a002ed0"
+          },
+          "RigidSolver/data_manager/geoms_info/is_convex": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "|b1"
+            },
+            "sha256": "3fea653723dc7414de78df193bba18a242e09ed493e6ec0da8b02bf11267cfbc"
+          },
+          "RigidSolver/data_manager/geoms_info/contype": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "de610bf908abef49cffcde8dd79a590a1a9d17e16397034073186b53210918a4"
+          },
+          "RigidSolver/data_manager/geoms_info/conaffinity": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "050f91e6388859f3ec8bc8136e6be6b997c3d700ad9ab9639886626b2c64c26a"
+          },
+          "RigidSolver/data_manager/geoms_info/is_fixed": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "|b1"
+            },
+            "sha256": "ffedf435656e4a130d257128e7543eaf6055e9766d2ea8805a7f61a2cfdf0e85"
+          },
+          "RigidSolver/data_manager/geoms_info/is_decomposed": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "|b1"
+            },
+            "sha256": "762b023699a0e48aa95763f0cf7c0467f1d6e9880308c78ebbc1c423de7072d3"
+          },
+          "RigidSolver/data_manager/geoms_info/needs_coup": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "5a21c61ba9aee62ae16b371218289dfd6314d5e1478a4ae490a5b250feacf805"
+          },
+          "RigidSolver/data_manager/geoms_info/coup_friction": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "80d5c5351c7c3beb158243d979e7f543587efc21fb7b2b2d2ab75fd0d8c3ef83"
+          },
+          "RigidSolver/data_manager/geoms_info/coup_softness": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "e0cec805691cc86156bfacabf79d0051f5f6232f824361d5fcc2a1079ccd9921"
+          },
+          "RigidSolver/data_manager/geoms_info/coup_restitution": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                38
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "e2fc162ed9124452d23c85e81d60a0c228f414c3214a5de635737e25fbd29ac1"
+          },
+          "RigidSolver/data_manager/verts_info/init_pos": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                14008,
+                3
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "35ab1c77f412ecadbfa2456c933fde4aeba5c89777fce176f31d7e18e29866c1"
+          },
+          "RigidSolver/data_manager/verts_info/init_normal": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                14008,
+                3
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "b1e1782b88be958562c8af213494b3e33cb0363dc4438469c00350c1245682a2"
+          },
+          "RigidSolver/data_manager/verts_info/geom_idx": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                14008
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "c28d4681b7240487e526b41bdb7834a42c7597ddce026c7b60e1088b718b2db0"
+          },
+          "RigidSolver/data_manager/verts_info/init_center_pos": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                14008,
+                3
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "cff5463a5728affa15c664dd31e44ddd508953026a4f4616525e02c3080dadaa"
+          },
+          "RigidSolver/data_manager/verts_info/verts_state_idx": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                14008
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "85c8d36d2be2306805918722d58efedf5c4d1b024c769ca3d49d3e060e67197d"
+          },
+          "RigidSolver/data_manager/verts_info/is_fixed": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                14008
+              ],
+              "dtype": "|b1"
+            },
+            "sha256": "b5c3a5b5bfa1a4051389bd7660785fde9d5c480a05e77117303011bb43ad439e"
+          },
+          "RigidSolver/data_manager/faces_info/verts_idx": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                27864,
+                3
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "0a772f16e78efd452f882e175ce4bd458bbbfaf4eed461044e9d9db90b96b237"
+          },
+          "RigidSolver/data_manager/faces_info/geom_idx": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                27864
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "673248105a215f751fcb99f1ccad36e755be53de8547ba1d1d141a1e81d3a292"
+          },
+          "RigidSolver/data_manager/edges_info/v0": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                41796
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "1dee9eda6931a51ba4dde52e655a83e167d50bd9e1593a1758f9aadca42e82f1"
+          },
+          "RigidSolver/data_manager/edges_info/v1": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                41796
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "b5dad75c9b830c454bc3fe123f6fb2578e71a20cc6d4fdce978e370707fea4b6"
+          },
+          "RigidSolver/data_manager/edges_info/length": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                41796
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "24aa8d8700ed11e3d89d7b60ccbb0ac035b70f01c30a82e78397acd9f5615111"
+          },
+          "entity/blanket/_vfaces": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                4000,
+                3
+              ],
+              "dtype": "<i4"
+            },
+            "sha256": "bee8f637ef4cc1940c23185a55f22325c64b0d448dfa2057c39959e369bad2ea"
+          },
+          "entity/blanket/_edges_len_rest": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                24180
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "99cb05d6acb867f103a27fb4a472975d404f6cc1a2a68a15481e84c0a632d3cc"
+          },
+          "entity/blanket/_inner_edges_len_rest": {
+            "layout": {
+              "kind": "array",
+              "shape": [
+                23820
+              ],
+              "dtype": "<f8"
+            },
+            "sha256": "2fbdd43f6183c500cfbc170301221dedde547f5def33e549839a10159bd5be88"
+          }
+        }
+      },
+      "dependencies": {
+        "quadrants": "1.0.2",
+        "torch": "2.11.0+cu128",
+        "numpy": "2.3.5"
+      },
+      "payload_layout_sha256": "eae2b9e2a2a40812617d7d98cedc7a248c5397dd38243ab0ee2186eb22f55141"
+    },
+    "provenance": {
+      "world_source_sha256": "716d596c8f5a2aa921e90fd3933e3b1a5f8da4698ddfc1f5d02fc7d2357b3965",
+      "codec_source_sha256": "5db2cfdc457907bbf586a6abedb9d940793f6c34216f2fab06ba69f6c7440b5a",
+      "compatibility_source_sha256": "659b9ec29a8d215b48256803c0480247ceb41e7c13e0c89ee9b1670cea2bd2f4",
+      "gpu_name": "NVIDIA RTX PRO 6000 Blackwell Max-Q Workstation Edition",
+      "torch_cuda": "12.8",
+      "preparation_image": "ghcr.io/luigivamper/rcb-topogym:0.2.7-cu128"
     },
     "identity": {
       "schema_version": 1,
@@ -784,7 +1244,7 @@
       "passed": false,
       "scope": "scene_layout",
       "scene_layout_passed": true,
-      "report_sha256": "f010de0ea5bffdd8e8866acced336ca01da7119b4b0276f44dc39f95571000aa",
+      "report_sha256": "28de1f80520079c201b417a33f0388f910b3f2a00f61b73bd2d0726a890f5914",
       "preparation": {
         "kind": "offline_bounded_velocity_preparation",
         "robot_manipulation": false,
@@ -844,22 +1304,22 @@
             "name": "gather",
             "start_tick": 0,
             "end_tick": 1320,
-            "target_rms_error_m": 0.002594442210763012,
+            "target_rms_error_m": 0.002594442150847623,
             "metrics": {
               "finite": true,
               "particles": 8181,
-              "coverage_ratio": 0.37850909242584135,
+              "coverage_ratio": 0.3785090919280591,
               "coverage_fallback_precision_grid_m": 1e-08,
-              "minimum_height_m": 0.0991235516984762,
-              "maximum_height_m": 0.1838534478574284,
-              "p95_height_m": 0.17321873104103414,
-              "maximum_speed_m_s": 0.15168894328441893,
-              "p99_speed_m_s": 0.02475619623748919,
-              "mean_speed_m_s": 0.008708767693054743,
+              "minimum_height_m": 0.09912355173054721,
+              "maximum_height_m": 0.183853447876129,
+              "p95_height_m": 0.1732187319968882,
+              "maximum_speed_m_s": 0.15171258638738913,
+              "p99_speed_m_s": 0.024756196004827185,
+              "mean_speed_m_s": 0.008708773698458072,
               "outside_table_particles": 0,
-              "maximum_edge_stretch": 1.0858696425395187,
-              "minimum_edge_stretch": 0.8897293656153794,
-              "maximum_visual_edge_stretch": 1.0567432372963652,
+              "maximum_edge_stretch": 1.0858696435548973,
+              "minimum_edge_stretch": 0.8897293660348227,
+              "maximum_visual_edge_stretch": 1.0567432373914358,
               "minimum_nonlocal_particle_distance_m": 0.008,
               "self_contact_check": "nonlocal particle separation; not surface CCD certification"
             }
@@ -868,22 +1328,22 @@
             "name": "twist",
             "start_tick": 1320,
             "end_tick": 2640,
-            "target_rms_error_m": 0.0041407533887867845,
+            "target_rms_error_m": 0.004140753387713148,
             "metrics": {
               "finite": true,
               "particles": 8181,
-              "coverage_ratio": 0.29166574502983217,
+              "coverage_ratio": 0.2916657449845339,
               "coverage_fallback_precision_grid_m": 1e-08,
-              "minimum_height_m": 0.10189836857088508,
-              "maximum_height_m": 0.33866827640249453,
-              "p95_height_m": 0.3065247020699752,
-              "maximum_speed_m_s": 0.0549106483113154,
-              "p99_speed_m_s": 0.03946267215059584,
-              "mean_speed_m_s": 0.013584453816564049,
+              "minimum_height_m": 0.10189836861686052,
+              "maximum_height_m": 0.3386682763906027,
+              "p95_height_m": 0.30652470195232195,
+              "maximum_speed_m_s": 0.05490932027960097,
+              "p99_speed_m_s": 0.039462647986182986,
+              "mean_speed_m_s": 0.013584453450646657,
               "outside_table_particles": 0,
-              "maximum_edge_stretch": 1.0897070957983843,
-              "minimum_edge_stretch": 0.8831120383758386,
-              "maximum_visual_edge_stretch": 1.0654940597205187,
+              "maximum_edge_stretch": 1.089707093887927,
+              "minimum_edge_stretch": 0.8831120426842598,
+              "maximum_visual_edge_stretch": 1.0654940599363478,
               "minimum_nonlocal_particle_distance_m": 0.008,
               "self_contact_check": "nonlocal particle separation; not surface CCD certification"
             }
@@ -892,22 +1352,22 @@
             "name": "lower_to_table",
             "start_tick": 2640,
             "end_tick": 3560,
-            "target_rms_error_m": 0.0007986252005248064,
+            "target_rms_error_m": 0.0007986251998963227,
             "metrics": {
               "finite": true,
               "particles": 8181,
-              "coverage_ratio": 0.29182462434022494,
+              "coverage_ratio": 0.2918246242290613,
               "coverage_fallback_precision_grid_m": 1e-08,
-              "minimum_height_m": 0.004175493349337311,
-              "maximum_height_m": 0.24074362585909237,
-              "p95_height_m": 0.2084013165448656,
-              "maximum_speed_m_s": 0.015183590484778773,
-              "p99_speed_m_s": 0.0134331459358307,
-              "mean_speed_m_s": 0.004124086888804609,
+              "minimum_height_m": 0.004175493337109759,
+              "maximum_height_m": 0.2407436257418244,
+              "p95_height_m": 0.2084013164220141,
+              "maximum_speed_m_s": 0.015183590341510126,
+              "p99_speed_m_s": 0.013433145781375892,
+              "mean_speed_m_s": 0.004124086889570611,
               "outside_table_particles": 0,
-              "maximum_edge_stretch": 1.0900727898197418,
-              "minimum_edge_stretch": 0.9000405247527793,
-              "maximum_visual_edge_stretch": 1.061244203121535,
+              "maximum_edge_stretch": 1.090072789022952,
+              "minimum_edge_stretch": 0.9000405280710051,
+              "maximum_visual_edge_stretch": 1.0612442051899353,
               "minimum_nonlocal_particle_distance_m": 0.008,
               "self_contact_check": "nonlocal particle separation; not surface CCD certification"
             }
@@ -918,19 +1378,19 @@
         "final_metrics": {
           "finite": true,
           "particles": 8181,
-          "coverage_ratio": 0.4845507802482,
+          "coverage_ratio": 0.47909923558282563,
           "coverage_fallback_precision_grid_m": 1e-08,
           "minimum_height_m": 0.0039999999999998925,
-          "maximum_height_m": 0.03647895462605244,
-          "p95_height_m": 0.020749093774808602,
-          "maximum_speed_m_s": 0.10920643557343825,
-          "p99_speed_m_s": 0.01484442628469952,
-          "mean_speed_m_s": 0.002346658435858097,
+          "maximum_height_m": 0.03649248404677885,
+          "p95_height_m": 0.02081587339644919,
+          "maximum_speed_m_s": 0.18016066956930926,
+          "p99_speed_m_s": 0.028721721443639485,
+          "mean_speed_m_s": 0.004149632891139106,
           "outside_table_particles": 0,
-          "maximum_edge_stretch": 1.067574835321945,
-          "minimum_edge_stretch": 0.9384785391747014,
-          "maximum_visual_edge_stretch": 1.0865191608655513,
-          "minimum_nonlocal_particle_distance_m": 0.00784382009712189,
+          "maximum_edge_stretch": 1.0797790517988946,
+          "minimum_edge_stretch": 0.9431375562686891,
+          "maximum_visual_edge_stretch": 1.0862042306129116,
+          "minimum_nonlocal_particle_distance_m": 0.007844300494068089,
           "self_contact_check": "nonlocal particle separation; not surface CCD certification"
         },
         "final_gates": {
@@ -948,7 +1408,7 @@
         "motion_qualification": "deferred",
         "final_tick": 5801,
         "layout_observation_seconds": 0.5999999999999996,
-        "layout_drift_m": 0.031052459274587222,
+        "layout_drift_m": 0.030814062337081047,
         "gravity_restored": true,
         "projection": {
           "calls": 3560,
@@ -40999,6 +41459,6 @@
   },
   "arrays": {
     "path": "arrays.npz",
-    "sha256": "ae2efeabe35377ff76d7f1dc53e626f02eb23aa9ae968b7449c2022670595ca2"
+    "sha256": "f4238c7d0712ddba243cc27dabe75ccec63c76583aeb06d05d46af6a47bd2c4a"
   }
 }
