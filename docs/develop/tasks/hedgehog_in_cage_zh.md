@@ -187,3 +187,23 @@ v2 支持固定/参数模式、尺寸、位置、朝向、木质外观与保存/
 ## 2026-09-27 Scripted policy 首轮实施
 
 新 medium 的反馈执行器与几何搜索已接入，但完整机器人路线尚未建立。六窗对照、8,192 个候选及 12,000 次 SE(3) 搜索扩展未在声明范围内找到完整出笼通路；这不是全局无解证明。当前目标仍要求全部尖刺进入固定区域并低速保持 2 s，正式终态资格未开启。见[实施与证据](../../../runs/test_results/hedgehog_claws_policy_20260927/README.md)及[开发计划实际进展](hedgehog_claws_scripted_policy_plan_20260927_zh.md#11-首轮实施已接入与未通过项)。
+
+## 2026-10-02 below-easy 设定：very_easy / easier
+
+依据 [两档计划](../../tasks_simplifications/two_levels_below_easy_plan_20261001_zh.md)。说明页与图片见 [below_easy_variants_zh.html](../../tasks_simplifications/below_easy_variants_zh.html)。
+
+两档共用同一个笼子，只有刺球的初始位姿不同；刺球与 easy 完全相同。CLASSIC 笼中 144°/216° 两个窗口合并为一个朝向机器人（180°）、宽 106 mm 的窗口，上下环箍由 30 mm 降到 18 mm。初始位姿是在 Genesis（CPU、25 ms tick、40 子步）中落稳 5 s 后的结果，再沿 z 抬离接触 0.2 mm 写入变体参数。
+
+| 入口 | 别名 | 设计意图 | 物体层面检查 |
+| --- | --- | --- | --- |
+| `hedgehog_in_cage_very_easy` | `very_easy` | 保持初始朝向即可平移出笼 | 2 mm 平移网格可达笼外；认证路径：抬起 5 mm，朝 182° 直拉，余量下界 1.07 mm |
+| `hedgehog_in_cage_easier` | `easier` | 初始朝向下不能平移出笼；一次抓持内转一下再拉出 | 平移网格不可达笼外；认证路径：抬起 15 mm，绕出口轴转 80°，朝 172° 直拉，余量下界 1.0 mm |
+
+代码：[below_easy.py](../../../topogym/tasks/hedgehog_in_cage/below_easy.py)（共享构造，难度旋钮为 `cage` 与 `ball_pose`）、[hedgehog_in_cage_very_easy.py](../../../topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_very_easy.py)、[hedgehog_in_cage_easier.py](../../../topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_easier.py)；检查：[below_easy_witness.py](../../../topogym/planning/hedgehog_in_cage/below_easy_witness.py)、[test-hedgehog-below-easy.py](../../../ci_checks/test-hedgehog-below-easy.py)。登记在 `variation_records.py`，`pool='below_easy'`，seeded 仍只抽 easy/medium/hard。
+
+```bash
+python -m topogym.planning.hedgehog_in_cage.below_easy_witness --variant easier --output runs/below_easy/easier --settle-seconds 3
+python ci_checks/test-hedgehog-below-easy.py
+```
+
+边界：物体层面检查只含刺球与笼、底座、桌面的几何，不含机械臂、夹爪、IK 与动力学；“平移不可达”以 2 mm 网格为准，不是不可能性证明。机器人完整执行与 Harbor 任务包尚未做。
