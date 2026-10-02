@@ -63,6 +63,9 @@ The readback made about 700 separate GPU->CPU copies per tick (four per link, pe
 why lab's server CPU made it twice as slow and the GPU sat mostly idle. NUMA pinning and fewer torch threads changed nothing.
 Since 0.2.7 `GenesisWorld.read_state` reads the rigid solver once per field (`_RigidReadout`, six copies per tick);
 `scripts/check_read_state_batch.py` compares it with the per-link getters at every tick: bit-identical.
+On lab with 0.2.7 (one sim alone, GPU 4): buzz_wire_3d easy 0.26 s per control step (readback 0.055), cast_keyhole hard
+0.25 (readback 0.046): 4x and 2.3x faster. At that speed one reference-length solution (Jianwen's solvability proofs: cast_coil
+6.5-7.3k control steps, cast_keyhole 18-21k, hedgehog_in_cage 2.3-9.6k) executes in about 0.5 h, 1.4 h and 0.2-0.7 h.
 
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from
