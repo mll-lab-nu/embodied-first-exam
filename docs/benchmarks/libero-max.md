@@ -10,7 +10,7 @@ tasks, each with one online event, in both modes: 48 cases, 96 tasks.
 | tasks | `tasks/libero-max-<suite>-<task>-<event>-iNN-privileged` and `...-standard` |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda"`, `family = "libero-max/<suite>/<event>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-libero-max:0.1.0` (`images/libero-max/`), 3.5 GB, CPU only |
-| standard client | the shared client base and pins of `scripts/eai_standard/`; `rcb_client.py`, `rcb1.py`, `rcb_service.py` and the standard `grade.py` are byte copies of main's (HumanoidBench / VLABench) |
+| standard client | the shared client base and pins of `scripts/eai_standard/`; `rcb_client.py`, `rcb1.py` and the standard `grade.py` are byte copies of main's (HumanoidBench / VLABench); `rcb_service.py` is too, plus one hook (3 lines): `verify()` may return `extra`, merged into the verdict, which LIBERO-MAX uses to record `event_fired` / `event_step` (live) and `replay_event_fired` / `replay_event_step` in `final.json` (evidence only, never part of the success rule; a candidate to upstream to the shared service) |
 | generator | `scripts/libero-max/` (`select_cases.py` → `cases.json`, `freeze.sh` → `frozen/`, `generate.py` → `tasks/`, `generate.py --check`) |
 
 ## Task definition

@@ -651,6 +651,9 @@ class Service:
             rep = self.sim.verify(rows)
             self.verdict = {"n_actions": int(len(rows)), "replay_success": bool(rep["success"]),
                             "deterministic": rep["state_sha"] == live_sha, "state_sha": live_sha, "video": False}
+            # Benchmark evidence from the adapter's verify() (`extra`, e.g. LIBERO-MAX's event record): recorded in
+            # final.json, never part of the success rule, never overriding a verdict field.
+            self.verdict.update({k: v for k, v in (rep.get("extra") or {}).items() if k not in self.verdict})
             self.log("replay", **self.verdict)
             self._write_final()                      # the verdict is on disk before any video is rendered
             try:

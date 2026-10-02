@@ -144,7 +144,19 @@ class LiberoMax:
     # ---------------------------------------------------------------- grading and evidence
     def verify(self, rows: np.ndarray) -> dict:
         r = lmx_tool.replay_fresh(rows, self.instance)
-        return {"success": r["success"] and "invalid" not in r, "state_sha": r["state_sha"]}
+        live = self.s.report()
+        return {
+            "success": r["success"] and "invalid" not in r,
+            "state_sha": r["state_sha"],
+            # final.json evidence (rcb_service merges `extra` into the verdict): whether, and at which control step
+            # (1-based; null if never), the case's event fired in the live episode and in the fresh replay.
+            "extra": {
+                "event_fired": bool(live["event_fired"]),
+                "event_step": live["event_step"],
+                "replay_event_fired": bool(r.get("event_fired")),
+                "replay_event_step": r.get("event_step"),
+            },
+        }
 
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         np.savez(path, actions=np.asarray(rows, np.float64), meta=np.array(lmx_tool.canonical(meta)))
