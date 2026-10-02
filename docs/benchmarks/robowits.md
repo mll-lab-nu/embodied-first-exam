@@ -72,12 +72,13 @@ can render them once each has a valid positive and a written success criterion. 
 
 ## Image
 - `images/robowits/`: RoboWits @ 9cc30ae, Genesis 0.4.7 and RoboWits' locked stack, RoboWits' Apache-2.0 asset bundle.
-  `ghcr.io/embodied-agent-interface-v2-internal/eai-robowits:<images/robowits/VERSION>`, public. 0.1.1 is the image
+  `ghcr.io/embodied-agent-interface-v2-internal/eai-robowits:<images/robowits/VERSION>`; as of 2026-10-02 the registry
+  has it only under its earlier name `rcb-robowits:0.1.1` (public): the `eai-` copy is still to be made. 0.1.1 is the image
   published on 2026-09-20 as `rcb-robowits:0.1.1`, unchanged (digest sha256:62688073fee9...); the Dockerfile pins the uv,
   huggingface_hub, imageio and asset-bundle versions that image contains. The GPU renders the three cameras; physics runs
   on the CPU.
 - Until the migration (PROTOCOL §7) `scripts/build_images.sh` / `push_images.sh` name images `rcb-<sim>`; this one is
-  built and tagged as docs/RUNNING.md ("Base images until the migration") describes. 0.1.1 was pushed on 2026-10-01 as a
+  built and tagged as docs/RUNNING.md ("Base images until the migration") describes. 0.1.1 is to be published as a
   retag of `rcb-robowits:0.1.1` (the same manifest).
 - Standard agent containers and verifiers use the shared client base, pinned by digest, and the shared pip pins
   (`scripts/eai_standard/client.env`, `client-requirements.txt`, copied into `environment/`; `check-standard-client.sh`).

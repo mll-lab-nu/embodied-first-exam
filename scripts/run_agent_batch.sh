@@ -6,7 +6,10 @@
 # records and is off by default. Env (defaults):
 #   AGENT        codex | claude-code (codex)        MODEL   the -m model (openai/gpt-6-luna)
 #   EFFORT       reasoning effort, --ak reasoning_effort=<EFFORT> (xhigh); `default` passes none
-#   AK           more agent options, e.g. "--ak web_search=disabled --ak reasoning_summary=detailed"
+#   AK           more agent options, e.g. "--ak reasoning_summary=detailed"
+#   WEB_SEARCH   disabled (default) = the harness offers the model no web search: Codex --ak web_search=disabled,
+#                Claude Code --ak disallowed_tools=WebSearch,WebFetch (PROTOCOL §5; the search runs at the model
+#                provider, past any egress allowlist); "allowed" = leave the harness default (not for official runs)
 #   AGENT_CONFIG a native config file, --ak config=<file>: Codex's config.toml (an Azure provider; retries with
 #                request_max_retries / stream_max_retries) or Claude Code's settings
 #   ENV_FILE     a .env file Harbor loads (--env-file); without it the credentials come from this environment
@@ -48,6 +51,7 @@ R="$(cd "$(dirname "$0")/.." && pwd)"
 [ $# -ge 2 ] || { sed -n 2,40p "$0"; exit 2; }
 batch="$1"; shift; tasks=("$@")
 AGENT="${AGENT:-codex}"; MODEL="${MODEL:-openai/gpt-6-luna}"; EFFORT="${EFFORT:-xhigh}"; AK="${AK:-}"
+WEB_SEARCH="${WEB_SEARCH:-disabled}"
 AGENT_CONFIG="${AGENT_CONFIG:-}"; ENV_FILE="${ENV_FILE:-}"
 MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${N_S:-2}"; K="${K:-1}"; WAIT_FOR="${WAIT_FOR:-}"
 JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"; LABEL="${LABEL:-$AGENT + $MODEL ($EFFORT)}"
@@ -69,6 +73,13 @@ AGENT_ARGS=(-a "$AGENT" -m "$MODEL")
 [ -n "$AGENT_CONFIG" ] && AGENT_ARGS+=(--ak "config=$AGENT_CONFIG")
 # shellcheck disable=SC2206
 AGENT_ARGS+=($AK)
+# no harness web search unless asked for (PROTOCOL §5): it runs at the model provider, so no egress allowlist stops it
+case "$WEB_SEARCH" in
+  disabled) if [ "$AGENT" = codex ]; then AGENT_ARGS+=(--ak web_search=disabled)
+            else AGENT_ARGS+=(--ak disallowed_tools=WebSearch,WebFetch); fi ;;
+  allowed) ;;
+  *) echo "WEB_SEARCH must be disabled or allowed" >&2; exit 2 ;;
+esac
 SCAN=(); [ -n "$ENV_FILE" ] && SCAN+=(--env-file "$ENV_FILE")
 case "${CODEX_FORCE_AUTH_JSON:-}" in 1|true|TRUE|yes) SCAN+=(--codex-auth "${CODEX_AUTH_JSON_PATH:-$HOME/.codex/auth.json}") ;; esac
 # Append, so a harbor already on PATH wins (a shared account's ~/.local/bin may hold another user's older harbor);
@@ -78,7 +89,7 @@ mkdir -p "$JOBS"
 LOG="$JOBS/$batch.log"
 log() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
 if [ -n "$ENV_FILE" ] && [ ! -f "$ENV_FILE" ]; then log "no env file $ENV_FILE"; exit 2; fi
-log "runner $$: $AGENT $MODEL effort $EFFORT, run id $RUN_ID, modes $MODES"
+log "runner $$: $AGENT $MODEL effort $EFFORT, run id $RUN_ID, modes $MODES, web search $WEB_SEARCH"
 
 # append-only mirror of every trial's agent/ directory, out of every trial container's reach
 if [ "$LOG_MIRROR" = 1 ] && ! docker ps --format '{{.Names}}' | grep -qx rcb-log-mirror; then
