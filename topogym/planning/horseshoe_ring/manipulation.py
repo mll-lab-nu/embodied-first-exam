@@ -38,6 +38,8 @@ class ManipulationPlanner:
         return self.task.evaluate_goal_region(observation['privileged']['world'],self.task.goal_region)
 
     def observed(self, observation):
+        if hasattr(self.checker, 'observe_contacts'):
+            self.checker.observe_contacts(observation)
         bodies={n:body_pose(observation['privileged']['world']['bodies'][n]) for n in self.checker.bodies}
         q=self.checker.seed.copy()
         for side,state in observation['robot'].items():
@@ -110,19 +112,25 @@ class ManipulationPlanner:
                         try:goals.append(self.checker.solve('left',(target[0]+delta,target[1]),q))
                         except ValueError:continue
                     transit_errors=[]
-                    for goal in goals:
-                        from topogym.planning.buzz_wire_3d.kinematics import distance
-                        checked=self.checker.check(goal,body_poses=bodies,
-                            contacts={'right':('horseshoe_left','horseshoe_right')})
-                        if not checked['passed']:continue
-                        clearance=min(distance(self.checker.by_arm['left'],manager)
-                                      for _,manager in self.checker.bodies.values())
-                        clearance=min(clearance,distance(self.checker.by_arm['left'],self.checker.by_arm['right']))
-                        if clearance<.05:continue
-                        try:free_transit=plan_transit(self,q,goal,bodies,seconds=10.)
-                        except ValueError as error:transit_errors.append(str(error));continue
-                        free_transit['endpoint_minimum_clearance_m']=clearance
-                        break
+                    # Prefer a checked direct retreat across all endpoints.
+                    # A timed RRT for an earlier endpoint must not preempt an
+                    # available direct route merely because CPU load changed.
+                    for direct_only in (True,False):
+                        for goal in goals:
+                            from topogym.planning.buzz_wire_3d.kinematics import distance
+                            checked=self.checker.check(goal,body_poses=bodies,
+                                contacts={'right':('horseshoe_left','horseshoe_right')})
+                            if not checked['passed']:continue
+                            clearance=min(distance(self.checker.by_arm['left'],manager)
+                                          for _,manager in self.checker.bodies.values())
+                            clearance=min(clearance,distance(self.checker.by_arm['left'],self.checker.by_arm['right']))
+                            if clearance<.05:continue
+                            try:free_transit=plan_transit(self,q,goal,bodies,seconds=10.,direct_only=direct_only)
+                            except ValueError as error:transit_errors.append(str(error));continue
+                            free_transit['endpoint_minimum_clearance_m']=clearance
+                            free_transit['selection_preference']='checked_direct_then_rrt'
+                            break
+                        if free_transit is not None:break
                     if free_transit is None:raise ValueError(f'No further free retreat: {transit_errors}')
                 result=dict(passed=True,target_tcp=pose_dict(target),joint_samples=rows,
                             free_transit=free_transit,
@@ -163,7 +171,40 @@ class ManipulationPlanner:
                                      reached=len(rows),error=str(error)))
         return dict(passed=False,attempts=attempts)
 
-    def ring_grasp(self, observation, side='left'):
+    def pivot_anchors(self, observation, grasp_tcp, seed):
+        """Screen pivot endpoints for a hypothetical grasp; no connecting-path claim."""
+        from .ring_route import HeldRingPath,reference_pivot_goals
+        if self.reference is None:raise ValueError('Pivot screening requires a reference')
+        checker=HeldRingPath(self,observation,
+            passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1'])
+        checker.offset=relative_pose(checker.start,grasp_tcp)
+        q=seed.copy();q[self.robot._q_indices['left'][6:]]=.008+self.task.assembly.loops['target_ring'].wire_radius
+        goals,metadata=reference_pivot_goals(self,checker.bodies,self.reference)
+        rows=[]
+        for goal,description in zip(goals,metadata):
+            checked=checker.check(goal,seed=q)
+            rows.append(dict(goal=description,check=checked))
+        return dict(passed=any(row['check']['passed'] for row in rows),endpoints=rows,
+                    scope='hypothetical held-ring pivot endpoints; connecting path and physics unvalidated')
+
+    def ring_grasp(self, observation, side='left', *, choice=None, require_pivot_endpoint=False):
+        """Check a grasp and approach, optionally fixing selected parameters."""
+        if not isinstance(require_pivot_endpoint,bool) or (require_pivot_endpoint and side!='left'):
+            raise ValueError('Pivot screening requires the left ring hand')
+        options={'angle_deg':tuple(np.arange(0.,360.,15.)),
+                 'approach_sign':(-1,1),'flip':(1,-1),
+                 'tangent_roll_deg':(0.,-45.,45.,-90.,90.),
+                 'approach_distance_m':(.04,.08)}
+        if choice is not None:
+            if (not isinstance(choice,dict) or not choice or set(choice)-set(options)
+                    or any(isinstance(v,bool) or not isinstance(v,(int,float,np.integer,np.floating))
+                           or not np.isfinite(v) for v in choice.values())):
+                raise ValueError('Invalid ring grasp candidate restriction')
+            for key,value in choice.items():
+                valid=(0<=value<360 if key=='angle_deg' else
+                       -90<=value<=90 if key=='tangent_roll_deg' else value in options[key])
+                if not valid:raise ValueError('Invalid ring grasp candidate restriction')
+                options[key]=(value,)
         bodies,seed=self.observed(observation)
         other='right' if side=='left' else 'left'
         # The supporting hand can touch both stacked shoes, while the grasp
@@ -172,21 +213,21 @@ class ManipulationPlanner:
         p,r=bodies['target_ring'];loop=self.task.assembly.loops['target_ring']
         center=loop.center-self.task.body_origins['target_ring']
         hand=tcp_pose(observation['robot'][side]);candidates=[];attempts=[];transit_searches=0
-        for angle in np.arange(0.,360.,15.):
+        for angle in options['angle_deg']:
             a=np.deg2rad(angle)
             point=center+loop.rotation.apply([loop.radii[0]*np.cos(a),loop.radii[1]*np.sin(a),0.])
             radial=r.apply(loop.rotation.apply([np.cos(a)/loop.radii[0],np.sin(a)/loop.radii[1],0.]))
             radial/=np.linalg.norm(radial)
-            for approach_sign in (-1,1):
+            for approach_sign in options['approach_sign']:
                 normal=approach_sign*r.apply(loop.rotation.apply([0.,0.,1.]))
-                for flip in (1,-1):
+                for flip in options['flip']:
                     tangent=np.cross(normal,flip*radial)
-                    for roll in (0.,-45.,45.,-90.,90.):
+                    for roll in options['tangent_roll_deg']:
                         twist=Rotation.from_rotvec(np.deg2rad(roll)*tangent)
                         direction=twist.apply(normal);jaw=twist.apply(flip*radial)
                         turn=Rotation.from_matrix(np.column_stack([direction,jaw,np.cross(direction,jaw)]))
                         target=(p+r.apply(point)+turn.apply([-.01381,0.,.00055]),turn)
-                        for approach_distance in (.04,.08):
+                        for approach_distance in options['approach_distance_m']:
                             pre=(target[0]-approach_distance*direction,turn)
                             # A round wire permits different approach angles
                             # around its tangent. This avoids confining both
@@ -206,6 +247,9 @@ class ManipulationPlanner:
                     closing=target_q.copy();closing[self.robot._q_indices[side][6:]]=opening
                     checked=self.checker.check(closing,contacts={**contacts,side:'target_ring'},body_poses=bodies)
                     if not checked['passed']:raise ValueError('closing '+str(checked))
+                pivot=self.pivot_anchors(observation,target,target_q) if require_pivot_endpoint else None
+                if pivot is not None and not pivot['passed']:
+                    raise ValueError('No reachable pivot endpoint for this grasp')
                 # Explicitly check the free arm's joint transit and its final
                 # straight approach. All puzzle bodies remain obstacles.
                 transit=[];transit_error=None
@@ -237,6 +281,7 @@ class ManipulationPlanner:
                             observed_bodies={n:pose_dict(v) for n,v in bodies.items()},
                             joint_transit=transit,transit_plan=transit_plan,approach=descent,attempts=attempts,
                             withdrawal_anchors=anchors,
+                            pivot_anchors=pivot,
                             scope='sampled native IK/collision plan; bilateral acquisition requires physical execution')
                 write_json_atomic(self.directory/'ring_grasp_plan.json',result)
                 self.selected_ring_grasp=result

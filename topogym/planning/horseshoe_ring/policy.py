@@ -21,6 +21,7 @@ class HorseshoePolicy:
             maximum_stages=200,search_seed=922,
             support_tracking_m=None,
             position_bias_limit_m=.03,
+            rotation_bias_limit_rad=.15,
             position_integral_gain_s_inv=2.,
             position_velocity_gain_s=0.,
             position_velocity_filter_s=0.,
@@ -29,6 +30,11 @@ class HorseshoePolicy:
             gate_support_tracking=True,
             exit_goal_mode='all_axes',
             robot_puzzle_clearance_m=.0005,
+            joint_search_goal_tube=False,
+            refine_short_stage_prefix=False,
+            refine_ik_compensation=False,
+            prefer_reference_exit_guide=False,
+            direct_axis_exit_first=False,
             check_static_passive_links=True,
             passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1'])
         if withdrawal_parameters:
@@ -37,6 +43,16 @@ class HorseshoePolicy:
             self.withdrawal_parameters.update(withdrawal_parameters)
         if not isinstance(self.withdrawal_parameters['check_static_passive_links'],bool):
             raise ValueError('Static passive topology option must be boolean')
+        if not isinstance(self.withdrawal_parameters['joint_search_goal_tube'],bool):
+            raise ValueError('Joint goal tube search option must be boolean')
+        if not isinstance(self.withdrawal_parameters['refine_short_stage_prefix'],bool):
+            raise ValueError('Short-stage prefix refinement option must be boolean')
+        if not isinstance(self.withdrawal_parameters['refine_ik_compensation'],bool):
+            raise ValueError('IK compensation refinement option must be boolean')
+        if not isinstance(self.withdrawal_parameters['prefer_reference_exit_guide'],bool):
+            raise ValueError('Reference exit guide preference must be boolean')
+        if not isinstance(self.withdrawal_parameters['direct_axis_exit_first'],bool):
+            raise ValueError('Direct axis exit preference must be boolean')
         if not isinstance(self.withdrawal_parameters['rebase_support_each_stage'],bool):
             raise ValueError('Support rebasing option must be boolean')
         if not isinstance(self.withdrawal_parameters['gate_support_tracking'],bool):
@@ -50,6 +66,9 @@ class HorseshoePolicy:
         bias_limit=float(self.withdrawal_parameters['position_bias_limit_m'])
         if not np.isfinite(bias_limit) or not .001<=bias_limit<=.10:
             raise ValueError('Position feedback bias limit must be between 1 and 100 mm')
+        rotation_limit=float(self.withdrawal_parameters['rotation_bias_limit_rad'])
+        if not np.isfinite(rotation_limit) or not .01<=rotation_limit<=.4:
+            raise ValueError('Rotation feedback bias limit must be between 0.01 and 0.4 rad')
         for key,high in (('position_integral_gain_s_inv',4.),('position_velocity_gain_s',1.),
                          ('position_velocity_filter_s',2.)):
             value=float(self.withdrawal_parameters[key])
@@ -157,6 +176,7 @@ class HorseshoePolicy:
 
     def follow_bodies(self, target, seconds, phase, *, pose_at=None, tracking_m=.002, tracking_limits=None,
                       progress_sides=None, fixed_sides=(), position_bias_limit_m=.03,
+                      rotation_bias_limit_rad=.15,
                       position_integral_gain_s_inv=2.,position_velocity_gain_s=0.,
                       position_velocity_filter_s=0.,tracking_stall_timeout_s=None):
         self.phase=phase;start=self.time();initial=self.bodies();progress=0.;last_progress=start
@@ -173,7 +193,8 @@ class HorseshoePolicy:
                 ep=p-actual[s][0];er=(r*actual[s][1].inv()).as_rotvec()
                 self.bias[s]=np.clip(self.bias[s]+position_integral_gain_s_inv*self.dt*ep,
                                      -position_bias_limit_m,position_bias_limit_m)
-                self.angle_bias[s]=np.clip(self.angle_bias[s]+2*self.dt*er,-.15,.15)
+                self.angle_bias[s]=np.clip(self.angle_bias[s]+2*self.dt*er,
+                                           -rotation_bias_limit_rad,rotation_bias_limit_rad)
                 cr=Rotation.from_rotvec(self.angle_bias[s]+.5*er)*r
                 velocity=(self.feedback_velocity(s,position_velocity_filter_s)
                           if position_velocity_gain_s else np.zeros(3))
@@ -186,6 +207,8 @@ class HorseshoePolicy:
                                   fixed_body_target_hands=sorted(fixed_sides),
                                   position_bias_m={s:self.bias[s].tolist() for s in desired},
                                   position_bias_limit_m=position_bias_limit_m,
+                                  rotation_bias_rad={s:self.angle_bias[s].tolist() for s in desired},
+                                  rotation_bias_limit_rad=rotation_bias_limit_rad,
                                   position_integral_gain_s_inv=position_integral_gain_s_inv,
                                   position_velocity_gain_s=position_velocity_gain_s,
                                   position_velocity_filter_s=position_velocity_filter_s,
@@ -242,7 +265,8 @@ class HorseshoePolicy:
         if self.support is None:raise ValueError('Support requires a checked target pose')
         initial=self.bodies();lp,lr=initial['left']
         suspended=bool(getattr(self,'suspended_upper',False))
-        if suspended:self.support=[initial['left'],initial['left']]
+        table_supported=bool(getattr(self,'table_supported',False))
+        if suspended or table_supported:self.support=[initial['left'],initial['left']]
         knots=[initial['left'],*self.support[1:]]
         def poses(u):
             progress=u*(len(knots)-1);index=min(len(knots)-2,int(progress))
@@ -266,7 +290,7 @@ class HorseshoePolicy:
         self.phase='release_upper_shoe';yield {'left':dict(gripper_position_m=.027)}
         yield from self.hold(1.)
         if self.planner is None:raise ValueError('Support handoff requires checked free-hand retreat')
-        retreat=self.planner.withdraw_left(self.obs,allow_release_contact=suspended)
+        retreat=self.planner.withdraw_left(self.obs,allow_release_contact=suspended or table_supported)
         yield from self.move({'left':body_pose(retreat['target_tcp'])},3.,'withdraw_left_hand')
         if retreat.get('free_transit'):
             indices=self.planner.robot._q_indices['left'][:6]
@@ -276,20 +300,21 @@ class HorseshoePolicy:
                 seconds=max(.5,float(np.max(np.abs(target-current)))/.3)
                 yield from self.move_joints({'left':target},seconds,f'clear_left_hand_{index}')
         self.phase='support_settle';yield from self.hold(3.)
-        if suspended:
+        if suspended or table_supported:
             # At an inverted support angle gravity can open the pair instead
             # of clamping the ring. The released shoe is free to hang from
             # the original chains. Wait for its measured motion and the
             # ring's motion to settle before planning the next grasp.
             started=self.time();stable=0.;support=self.bodies()['right']
             while stable<.5:
-                yield from self.follow_bodies({'right':support},.25,'settle_suspended_pair',tracking_m=.002)
+                yield from self.follow_bodies({'right':support},.25,
+                    'settle_table_supported_pair' if table_supported else 'settle_suspended_pair',tracking_m=.002)
                 world=self.obs['privileged']['world']['bodies']
                 quiet=all(np.linalg.norm(world[n]['linear_velocity_m_s'])<.005 and
                           np.linalg.norm(world[n]['angular_velocity_rad_s'])<.05
                           for n in ('horseshoe_left','target_ring'))
                 stable=stable+.25 if quiet else 0.
-                if self.time()-started>30.:raise RuntimeError('Suspended shoe and ring did not become quiet')
+                if self.time()-started>30.:raise RuntimeError('Released shoe and ring did not become quiet')
         hands=self.obs['privileged']['world']['grasp']['hands']
         if hands['left']['binding'] is not None or not hands['right']['binding']:
             raise RuntimeError('Support handoff did not release only the left hand')
@@ -297,8 +322,14 @@ class HorseshoePolicy:
         displacement=float(np.linalg.norm(after['left'][0]-before['left'][0]))
         turn=float((after['left'][1]*before['left'][1].inv()).magnitude())
         self.diagnostics=dict(upper_shoe_displacement_m=displacement,upper_shoe_rotation_rad=turn)
-        self.diagnostics['support_mode']='suspended_from_original_chains' if suspended else 'horizontal_stack'
-        if not suspended and (displacement>.04 or turn>.2):raise RuntimeError(f'Upper shoe did not remain supported: {self.diagnostics}')
+        self.diagnostics['support_mode']=('table' if table_supported else
+                                         'suspended_from_original_chains' if suspended else 'horizontal_stack')
+        if table_supported:
+            p,r=after['left']
+            gap=float((r.apply(self.planner.task.placement_vertices['horseshoe_left'])+p)[:,2].min())-self.planner.checker.table_height
+            self.diagnostics['upper_table_gap_m']=gap
+            if not -.0008<=gap<=.003:raise RuntimeError(f'Upper shoe did not settle at the table: {gap}')
+        elif not suspended and (displacement>.04 or turn>.2):raise RuntimeError(f'Upper shoe did not remain supported: {self.diagnostics}')
         self.phase='support_complete'
 
     def gravity_settle_folded(self):
@@ -365,7 +396,8 @@ class HorseshoePolicy:
     def grasp_ring(self):
         if self.planner is None:raise ValueError('Ring grasp needs read-only planning capabilities')
         self.phase='plan_ring_grasp'
-        plan=self.planner.ring_grasp(self.obs,'left')
+        plan=self.planner.ring_grasp(self.obs,'left',choice=getattr(self,'ring_grasp_choice',None),
+            require_pivot_endpoint=getattr(self,'require_ring_pivot',False))
         self.grip['left']=plan['open_position_m']
         if plan.get('transit_plan'):
             indices=self.planner.robot._q_indices['left'][:6]
@@ -467,7 +499,7 @@ class HorseshoePolicy:
         tracking_limits=({'right':float(params['support_tracking_m'])}
                          if params.get('support_tracking_m') is not None else None)
         progress_sides=None if params['gate_support_tracking'] else ('left',)
-        feedback={k:params[k] for k in ('position_bias_limit_m','position_integral_gain_s_inv',
+        feedback={k:params[k] for k in ('position_bias_limit_m','rotation_bias_limit_rad','position_integral_gain_s_inv',
                                        'position_velocity_gain_s','position_velocity_filter_s',
                                        'tracking_stall_timeout_s')}
         self.planner.withdrawal_parameters=params

@@ -20,6 +20,9 @@ from topogym.planning.buzz_wire_3d.policy import rotation
 GRASP_LINK = "trunk_04"
 FRONT_M = .08  # trunk_04 origin to the sheath front face: two 40 mm links.
 UP = np.array([0., 0., 1.])
+# A pressed-and-slid tip ends about this far inside the press offset (easy_01/02
+# comb_01: tip = d_press - 21.6 mm; the geometric contact is 21.5 + 1.2 mm).
+PRESS_CONTACT_M = .0216
 
 
 def ring_frame(state):
@@ -105,23 +108,79 @@ def roll_choices(fan_deg, current_roll_deg=0., rolls=(0., -70., 70.), minimum_fr
     return allowed
 
 
+def pressed_radius(radius, theta, d_press, contact=PRESS_CONTACT_M):
+    """Predicted tip distance from the sheath axis after a press at offset
+    d_press, for a tip at angle theta from the press direction. The ring's outer
+    surface, seen from the sheath axis, is a circle of radius `contact` centred
+    d_press away; a tip reaching past its near side ends there."""
+    side = d_press*np.sin(theta)
+    near = d_press*np.cos(theta)-np.sqrt(max(contact**2-side**2, 0.))
+    if abs(side) >= contact or near <= 0:  # the ring is beside or behind this strand
+        return radius
+    return min(radius, near)
+
+
+def expected_radius(radius, theta, d_press):
+    """pressed_radius scaled by the share of it reached in physics. Measured in
+    hard_guided_01 presses 1-3 (d_press 29 mm, 20 strands): within 5 deg of the
+    press direction the full reduction; 17-38 deg about 45-75 % (mean 0.6),
+    because the ring also pushes those strands sideways around itself; 42-46 deg
+    0-46 %, and nothing beyond. 40 deg is taken as the edge."""
+    angle = abs((np.degrees(theta)+180.) % 360.-180.)
+    share = 1. if angle <= 7. else .6 if angle <= 40. else 0.
+    return radius-share*(radius-pressed_radius(radius, theta, d_press))
+
+
+def excess(measures, target):
+    return sum(max(0., m["max_radius_m"]-target) for m in measures)
+
+
+def sector_choices(measures, d_press, target, step_deg=5.):
+    """Press directions (fan-frame degrees), best first: most strands now beyond
+    target expected to come within it, then the largest drop in the summed
+    excess beyond target. Directions gaining the same strand set are listed once."""
+    rows, seen = [], set()
+    for psi in np.arange(0., 360., step_deg):
+        predicted = [expected_radius(m["tip_radius_m"], np.radians(m["fan_deg"]-psi), d_press) for m in measures]
+        gained = frozenset(i for i, (m, after) in enumerate(zip(measures, predicted))
+                           if m["max_radius_m"] > target and after <= target)
+        reduction = sum(max(0., m["max_radius_m"]-target)-max(0., min(m["max_radius_m"], after)-target)
+                        for m, after in zip(measures, predicted))
+        rows.append(dict(psi_deg=float(psi), gained=sorted(gained), reduction_m=float(reduction),
+                         contacted=[i for i, (m, after) in enumerate(zip(measures, predicted))
+                                    if after < m["tip_radius_m"]]))
+    rows.sort(key=lambda row: (-len(row["gained"]), -row["reduction_m"]))
+    result = []
+    for row in rows:
+        if row["gained"] and frozenset(row["gained"]) not in seen:
+            seen.add(frozenset(row["gained"]))
+            result.append(row)
+    return result
+
+
 def comb_keyframes(state, layout, strand, d_press, roll_deg, *, approach_margin_m=.008,
-                   tip_past_ring_m=.004, slide_m=.02, select_back_m=.02):
+                   tip_past_ring_m=.004, slide_m=.02, select_back_m=.02, psi_deg=None):
     """Two guides from the measured start: A presses and slides the contact off
     the tip, B backs out and returns to the axis at the starting front position.
     The offset and roll happen select_back_m before the approach position, which
-    keeps the gripper clear of the cradle while every tip stays before the ring."""
+    keeps the gripper clear of the cradle while every tip stays before the ring.
+    `strand` is one index or a group pressed together toward psi_deg (default:
+    the first strand's fan direction); the approach clears the group's farthest
+    tip and brings its least advanced tip just past the ring."""
     center, axis = ring_frame(state)
-    measures = strand_measures(state, layout)[strand]
+    group = [strand] if isinstance(strand, (int, np.integer)) else list(strand)
+    rows = strand_measures(state, layout)
     p, r = link_pose(state, GRASP_LINK)
     park_s = float((front_point(p, r)-center) @ axis)
-    after = np.radians(measures["fan_deg"]-(roll_deg-current_roll_deg(state, axis)))
+    psi = rows[group[0]]["fan_deg"] if psi_deg is None else psi_deg
+    after = np.radians(psi-(roll_deg-current_roll_deg(state, axis)))
     u = reference_rotation(axis).apply([0., np.sin(after), np.cos(after)])
     outer = layout.ring_inner_radius_m+2*layout.ring_tube_radius_m+layout.fiber_radius_m
-    d0 = outer+measures["tip_radius_m"]+approach_margin_m
+    d0 = outer+max(rows[i]["tip_radius_m"] for i in group)+approach_margin_m
     if not 0 < d_press < d0:
         raise ValueError(f"Press offset {d_press} must lie between 0 and the approach offset {d0}")
-    approach_s = tip_past_ring_m-measures["tip_ahead_of_front_m"]
+    approach_s = tip_past_ring_m-min(rows[i]["tip_ahead_of_front_m"] for i in group)
+    measures = rows[group[0]] if len(group) == 1 else [rows[i] for i in group]
     select_s = max(park_s, approach_s-select_back_m)
     slide_s = approach_s-slide_m
 
@@ -132,7 +191,7 @@ def comb_keyframes(state, layout, strand, d_press, roll_deg, *, approach_margin_
     guide_a = [start, pose("select", d0, roll_deg, select_s), pose("approach", d0, roll_deg, approach_s),
                pose("press", d_press, roll_deg, approach_s), pose("slide", d_press, roll_deg, slide_s)]
     guide_b = [guide_a[-1], pose("release", d0, roll_deg, slide_s), pose("center", 0., 0., park_s)]
-    return guide_a, guide_b, dict(strand=strand, d0_m=d0, d_press_m=d_press, roll_deg=roll_deg,
+    return guide_a, guide_b, dict(strand=strand, psi_deg=float(psi), d0_m=d0, d_press_m=d_press, roll_deg=roll_deg,
                                   press_direction=u.tolist(), park_front_s_m=park_s, select_front_s_m=select_s,
                                   approach_front_s_m=approach_s, slide_front_s_m=slide_s, measures=measures)
 

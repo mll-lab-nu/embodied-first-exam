@@ -15,6 +15,7 @@ import numpy as np
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
 from topogym_mk_task import MAX_BUDGET_S, startup_instruction, goal_words, validate_goal_instance
 from topogym_rules import details_section, limited_timing
+from topogym.utils.io import make_asset_tree_readable
 
 root = pathlib.Path(__file__).resolve().parents[1]
 TEMPLATE = root / "harbor_templates/topogym/limited"
@@ -70,6 +71,7 @@ def main() -> None:
     assets = unl / "environment/instance_assets"
     if assets.is_dir():
         shutil.copytree(assets, dst / "environment/sim/instance_assets", dirs_exist_ok=True)
+        make_asset_tree_readable(dst / "environment/sim/instance_assets")
     import tomllib
     if tomllib.loads((unl / "task.toml").read_text())["agent"]["timeout_sec"] != BUDGET_S:
         raise ValueError("limited/unlimited wall-clock budgets must match")
@@ -211,7 +213,7 @@ unlimited task to measure the cost of losing resets, privileged state and the to
     level = tomllib.loads(unl_toml)["metadata"].get("difficulty")   # the unlimited twin's tier (docs/rcb/TAXONOMY.md)
     level = f'difficulty = "{level}"\n' if level else ""
     um = tomllib.loads(unl_toml)["metadata"]       # the unlimited twin's grasp mode and success-rule provenance
-    level += "".join(f"{k} = {json.dumps(um[k])}\n" for k in ("grasp", "success_rule", "initial_state") if k in um)
+    level += "".join(f"{k} = {json.dumps(um[k])}\n" for k in ("grasp", "success_rule", "initial_state", "tooling_version") if k in um)
     # collect: the service replays the episode once for the grading record, then once more for the video; each replay takes
     # at most as long as the agent's own episode (the budget), so wait up to that long for each.
     polls = (BUDGET_S + 601) // 2

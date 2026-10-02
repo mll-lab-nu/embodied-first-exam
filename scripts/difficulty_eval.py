@@ -293,9 +293,13 @@ import numpy as np
 r = Robot(base='http://localhost:8000'); spec = r.spec(); obs = r.get_obs()
 assert obs.last and all(np.isfinite(v).all() for v in obs.last.values())
 dim = spec['action_types']['joint_position']['dim']
-q = np.asarray(obs.meta['proprio']['now'][:dim], dtype=np.float32)
+first, count, _ = spec['proprio_groups']['joint_cmd']
+assert count == dim
+q = np.asarray(obs.meta['proprio']['now'][first:first+count], dtype=np.float32)
 res = r.submit('joint_position', q[None,:], dt=1/spec['control_hz'])
 assert res.meta.get('ok') and res.last
+after = np.asarray(res.meta['proprio']['now'][first:first+count], dtype=np.float32)
+assert np.allclose(after, q, atol=1e-6, rtol=0)
 print('limited protocol smoke passed', flush=True)
 """
 
@@ -505,6 +509,13 @@ class DifficultyEvaluation:
         missing = [row["slug"] for row in self.manifest["instances"] if not (self.build_dir(row) / marker).is_file()]
         if missing:
             raise EvaluationError(f"{phase} phase incomplete; model execution blocked: " + ", ".join(missing))
+        if phase == "preflight":
+            self.verify_image()
+            self.verify_packages()
+            for row in self.manifest["instances"]:
+                proof = read_json(self.build_dir(row)/marker)
+                if proof.get("passed") is not True or proof.get("evidence_identity") != self.preflight_identity(row):
+                    raise EvaluationError("preflight evidence is stale; rerun preflight: " + row["slug"])
 
     def task_dir(self, row, mode="unlimited"):
         return self.run / "tasks" / (row["slug"] + ("-limited" if mode == "limited" else ""))
@@ -700,17 +711,37 @@ class DifficultyEvaluation:
         sampling.atomic_json(out / "identity.json", dict(instance=str(instance_path), sha256=sampling.file_hash(instance_path), sample_sha256=row["sample_sha256"]))
         sampling.atomic_json(self.build_dir(row) / "prepared.json", dict(files=files))
 
+    def preflight_identity(self, row):
+        """Bind a pass to actual package bytes and the verified runtime, not a filename."""
+        _, gpu = self.commands.run_command(["nvidia-smi", "-i", self.gpu_device,
+            "--query-gpu=uuid,name,driver_version,compute_cap", "--format=csv,noheader"],
+            capture=True, check=True, timeout=15)
+        client_proof = self.build_dir(row)/"limited-client-image.json"
+        client = None
+        if client_proof.exists():
+            client = read_json(client_proof)
+            _, current = self.commands.run_command(["docker", "image", "inspect", "--format", "{{.Id}}", client["image"]],
+                                                  capture=True, check=True, timeout=15)
+            client = dict(client, id=current.strip())
+        return dict(probe_version=3, prepared_sha256=sampling.file_hash(self.build_dir(row)/"prepared.json"),
+                    tool_sha256=sampling.file_hash(self.task_dir(row)/"environment/rcb_topogym.py"),
+                    image=read_json(self.run/"image.json"), gpu_device=self.gpu_device, gpu_profile=gpu.strip(),
+                    client_image=client, probe_sha256=sampling.file_hash(self.source/"scripts/difficulty_eval.py"))
+
     def preflight(self):
         self.verify_image()
         self.verify_packages()
         checks = ("check-task-structure", "check-task-fields", "check-dockerfile", "check-instruction", "check-verifier-isolation", "check-limited-texts")
-        tool = self.source / "harbor_templates/topogym/common/rcb_topogym.py"
         for index, row in enumerate(self.manifest["instances"], 1):
             build = self.build_dir(row)
             if not (build / "prepared.json").exists():
                 task_progress(row, index, self.manifest["instance_count"], "blocked: not prepared")
                 continue
-            if (build / "preflight.ok.json").exists():
+            evidence = self.preflight_identity(row)
+            tool = self.task_dir(row) / "environment/rcb_topogym.py"
+            previous = read_json(build / "preflight.ok.json") if (build / "preflight.ok.json").exists() else {}
+            if ((build / "preflight.ok.json").exists()
+                    and previous.get("passed") is True and previous.get("evidence_identity") == evidence):
                 task_progress(row, index, self.manifest["instance_count"], "skip: preflight already passed")
                 continue
             task_progress(row, index, self.manifest["instance_count"], "preflight")
@@ -736,7 +767,8 @@ class DifficultyEvaluation:
                 progress(f"Preflight replay/limited check failed; see {build / 'preflight.log'}", error=True)
                 continue
             proof = read_json(build / "prepared.json")
-            proof.update(passed=True, scope="short_build_action_reset_rgb_and_limited_protocol_deadline", solvability_proven=False)
+            proof.update(passed=True, scope="short_build_action_reset_rgb_and_limited_protocol_deadline", solvability_proven=False,
+                         evidence_identity=self.preflight_identity(row))
             sampling.atomic_json(build / "preflight.ok.json", proof)
             progress(f"Preflight passed: {row['slug']}")
 
@@ -745,8 +777,26 @@ class DifficultyEvaluation:
         (build / "limited").mkdir(parents=True)
         owner = self.delivery.workspace[:12] if self.delivery else self.source_sha[:12]
         container = f"tg-check-{owner}-{row['slug'].removeprefix('topogym-')}"
+        client_image = (self.delivery.images["client"]["image"] if self.delivery
+                        else self.commands.env.get("TOPOGYM_CLIENT_IMAGE"))
+        if not client_image:
+            # Local mode uses the generated client's Dockerfile and dependencies.
+            client_image = f"topogym-local/preflight-client:{self.source_sha[:12]}"
+            self.commands.run_command(["docker", "build", "-t", client_image, task/"environment"],
+                                      log=build/"client-build.log", monitor=True, check=True)
+        _, client_id = self.commands.run_command(["docker", "image", "inspect", "--format", "{{.Id}}", client_image],
+                                                capture=True, check=True, timeout=15)
+        sampling.atomic_json(build/"limited-client-image.json", dict(image=client_image, id=client_id.strip()))
+        client_cmd = ["docker", "run", "--rm", "--name", container+"-client", "--network", "container:"+container,
+                      "-i", "-w", "/tmp", "-e", "PYTHONPATH=/check"]
+        for name in ("rcb_client.py", "rcb1.py"):
+            client_cmd += ["-v", f"{task}/environment/{name}:/check/{name}:ro"]
+        if self.delivery:
+            from difficulty_delivery import label_args
+            client_cmd += [*label_args(self.delivery.labels()), "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
+        client_cmd += [client_image, "python", "-"]
         cmd = ["docker", "run", "-d", "--name", container, "--runtime", "nvidia", "--gpus", f"device={self.gpu_device}", "--network", "none",
-               "--label", "topogym.difficulty-run=" + self.args.run_id]
+               "--label", "topogym.difficulty-run=" + self.args.run_id, "-w", "/tmp"]
         if self.delivery:
             from difficulty_delivery import label_args
             cmd += [*label_args(self.delivery.labels()), "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
@@ -759,7 +809,7 @@ class DifficultyEvaluation:
         try:
             if self.commands.run_command(cmd, log=build / "preflight.log", append=True)[0]:
                 return False
-            if self.commands.run_command(["docker", "exec", "-i", container, "python", "-"], input_text=LIMITED_SMOKE,
+            if self.commands.run_command(client_cmd, input_text=LIMITED_SMOKE,
                     log=build / "preflight.log", append=True, monitor=True)[0]:
                 return False
             deadline = time.monotonic() + 900
@@ -775,6 +825,7 @@ class DifficultyEvaluation:
             return False
         finally:
             self.commands.run_command(["docker", "logs", container], log=build / "limited/server.log", timeout=15)
+            self.commands.run_command(["docker", "rm", "-f", container+"-client"], timeout=30)
             self.commands.run_command(["docker", "rm", "-f", container], timeout=30)
 
     def launch_job(self, task, job):

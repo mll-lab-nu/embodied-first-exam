@@ -174,6 +174,7 @@ def install_for_scene(scene, *, initial_robot_positions=None):
             self._target_substep = 0
             self.fem_grasp_specs = {}
             self.grasp_backend = None
+            self._sync_check_active = False  # build's warm-up step precedes the reset of articulation references
 
         def build(self):
             # qpos0 is the model reference, not a configurable spawn pose.
@@ -256,11 +257,63 @@ def install_for_scene(scene, *, initial_robot_positions=None):
                 for geom, vertices, faces in originals:
                     geom._init_verts, geom._init_faces = vertices, faces
 
+        def _add_articulation_entities_to_ipc(self):
+            # Genesis 1.2.1 declares IPC revolute joints with a reversed edge
+            # (`reverse_verts=True`), but pyuipc 0.0.25 takes the edge direction
+            # as the positive axis: every native arm joint then turns opposite
+            # to Genesis, and the bodies the rope touches leave the controlled
+            # robot (140 mm after 0.4 s of right-arm motion). Reverse the edge
+            # again while joints are declared; no runtime state is rewritten.
+            from genesis.engine.couplers.ipc_coupler import coupler as module
+
+            original = module.AffineBodyRevoluteJoint
+
+            class ForwardAxisRevoluteJoint:
+                def apply_to(self, geometry, *args, **kwargs):
+                    vertices = uipc.view(geometry.positions())
+                    vertices[:] = vertices[::-1].copy()
+                    return original().apply_to(geometry, *args, **kwargs)
+
+            module.AffineBodyRevoluteJoint = ForwardAxisRevoluteJoint
+            try:
+                super()._add_articulation_entities_to_ipc()
+            finally:
+                module.AffineBodyRevoluteJoint = original
+
         def couple(self, f):
             self._target_substep = f + 1
             super().couple(f)
             if not self._ipc_world.is_valid():
                 raise RuntimeError("Native IPC world became invalid while stepping")
+            self._check_articulation_sync()
+
+        def _check_articulation_sync(self):
+            # The policy observes Genesis links; deformables touch the native
+            # bodies. Fail loudly if they part instead of silently missing contact.
+            if not self._sync_check_active or not self._articulation_data_by_entity:
+                return
+            from genesis.utils.misc import qd_to_numpy
+
+            if getattr(self, "_articulated_body_rows", None) is None:
+                order = list(self._abd_slots_by_link)
+                links = [link for link in order if link.entity in self._articulation_data_by_entity]
+                self._articulated_body_rows = (
+                    np.array([order.index(link) for link in links]),
+                    np.array([link.idx for link in links]),
+                    [link.name for link in links],
+                )
+            rows, link_idx, names = self._articulated_body_rows
+            native = np.asarray(
+                self._abd_state_geom.instances().find(uipc.builtin.transform).view()
+            )[rows, :3, 3]
+            genesis = qd_to_numpy(self.rigid_solver.links_state.pos, transpose=True)[0, link_idx]
+            gaps = np.linalg.norm(native - genesis, axis=1)
+            worst = int(np.argmax(gaps))
+            if gaps[worst] > 0.002:
+                raise RuntimeError(
+                    f"IPC articulation body {names[worst]} left its Genesis link by {gaps[worst] * 1000:.1f} mm "
+                    f"(native {np.round(native[worst], 4).tolist()}, Genesis {np.round(genesis[worst], 4).tolist()})"
+                )
 
         def reset(self, envs_idx=None):
             super().reset(envs_idx)
@@ -282,6 +335,7 @@ def install_for_scene(scene, *, initial_robot_positions=None):
                 ]
             self._retrieve_fem_states()
             self._retrieve_rigid_states()
+            self._sync_check_active = True
 
         def _register_contact_pairs(self):
             super()._register_contact_pairs()

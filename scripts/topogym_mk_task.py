@@ -9,8 +9,8 @@ usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded 
   --instance    an existing frozen instance to copy; otherwise one is made with `rcb_topogym.py make-instance` (needs the GPU)
   --python      the interpreter that has topogym + a GPU (default .venv-gs121-nyx/bin/python), for make-instance / describe
 Then: run-oracle + replay, `harbor run -a oracle` / `-a nop`, scripts/topogym_mk_limited.py, and `cd tasks && harbor add --scan .`.
-The shared files (rcb_topogym.py, tests/grade.py, Dockerfiles, compose files) are copied unchanged from the template, so a
-change to them is rolled out to every task at once (ci_checks/check-tooling-identity.sh).
+Shared files are copied from one tooling generation. New packages record its version;
+historical frozen generations keep their pinned bytes (ci_checks/check-tooling-identity.sh).
 Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600, at most 36000).
 [task].name = "robot-coding-bench/<slug>" and [metadata].difficulty = the variation record's tier (docs/rcb/TAXONOMY.md)."""
 import argparse, json, os, pathlib, shutil, subprocess, sys
@@ -20,16 +20,14 @@ root = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 from topogym.tasks.goal_description import TASK_IDS as GOAL_TASKS, render_goal
 from topogym_rules import details_section
+from topogym.utils.io import make_asset_tree_readable
+from cuda_profiles import image_tag
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
-# interlocked_claws only (user decision 2026-10-01, option i): the template + the pre-weld gripper fix. A row that keeps the
-# gripper width keeps its native target: the width table drops the closed-end plateau, so the birth target closed_qpos
-# (0.002) round-trips to 0.00747 (closing fraction 0.844) and his grasp manager reads that as an opening intent, which ends
-# the pre-weld at the first step. No other family has an off-table gripper target, so their commands would be unchanged.
-TOOL_FOR = {"interlocked_claws": root / "harbor_templates/topogym/common/rcb_topogym_interlocked.py"}
+TOOLING_VERSION = "3"
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
-IMAGE = "ghcr.io/luigivamper/rcb-topogym:" + (root / "images/VERSION").read_text().strip()
+IMAGE = image_tag(root)
 BUDGET_S = 21600
 MAX_BUDGET_S = 36000                  # knot_untying's budget (10 h); every other family 21600
 
@@ -79,9 +77,9 @@ def startup_instruction(fam: str, *, limited: bool = False) -> str:
 """
 
 
-def run_tool(python, *args) -> dict:
+def run_tool(python, *args, tool=TOOL) -> dict:
     env = dict(os.environ, RCB_SESSION_LOG="", PYTHONPATH=str(root))
-    cmd = [python, str(TOOL), *map(str, args)]
+    cmd = [python, str(tool), *map(str, args)]
     if os.environ.get("TOPOGYM_TOOL_IMAGE"):
         mount = os.environ["TOPOGYM_RUN_ROOT"]
         cmd = ["docker", "run", "--rm", "--runtime", "nvidia", "--gpus", "device=" + os.environ.get("TOPOGYM_GPU_UUID", "0"),
@@ -89,7 +87,7 @@ def run_tool(python, *args) -> dict:
                "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "RCB_SESSION_LOG=",
                "-e", "NVIDIA_VISIBLE_DEVICES=" + os.environ.get("TOPOGYM_GPU_UUID", "0"),
                "-v", f"{mount}:{mount}", "-w", mount, os.environ["TOPOGYM_TOOL_IMAGE"],
-               "python", str(TOOL), *map(str, args)]
+               "python", str(tool), *map(str, args)]
         if os.environ.get("TOPOGYM_RESOURCE_LABELS"):
             from difficulty_delivery import label_args
             cmd[2:2] = label_args(json.loads(os.environ["TOPOGYM_RESOURCE_LABELS"])) + [
@@ -319,6 +317,7 @@ keywords = ["robotics", "topogym", "genesis", "{d['robot_spec']['name']}", "code
 
 [metadata]
 author_name = "jianwen"
+tooling_version = "{TOOLING_VERSION}"
 task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
 simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
 robot = "{d['robot_spec']['name']}"
@@ -382,7 +381,8 @@ def main() -> None:
             shutil.copy(TEMPLATE / f, dst / f)
         for f in dst.glob("solution/oracle_*.py"):
             f.unlink()
-    shutil.copy(TOOL_FOR.get(fam, TOOL), dst / "environment/rcb_topogym.py")
+    tool = dst / "environment/rcb_topogym.py"
+    shutil.copy(TOOL, tool)
     for rel in ("environment/Dockerfile", "tests/Dockerfile"):
         p = dst / rel
         base = os.environ.get("TOPOGYM_AGENT_IMAGE", IMAGE) if rel.startswith("environment/") else IMAGE
@@ -399,11 +399,13 @@ def main() -> None:
         selection = ["--variation", a.variation, "--scene-seed", a.scene_seed] if a.variation else ["--eval-index", a.eval_index]
         if a.task_parameters:
             selection += ["--task-parameters", a.task_parameters]
-        run_tool(a.python, "make-instance", "--task", fam, *selection, "--out", inst_path)
+        run_tool(a.python, "make-instance", "--task", fam, *selection, "--out", inst_path, tool=tool)
     assets = dst / "environment/instance_assets"
     assets.mkdir(exist_ok=True)
     (assets / ".gitkeep").touch()   # git keeps no empty directory, and both Dockerfiles COPY instance_assets/
+    make_asset_tree_readable(assets)
     shutil.copytree(assets, dst / "tests/instance_assets", dirs_exist_ok=True)
+    make_asset_tree_readable(dst / "tests/instance_assets")
     shutil.copy(inst_path, dst / "tests/instance.json")
     inst = json.loads(inst_path.read_text())
     if inst["task"] != fam or (a.eval_index is not None and inst["eval_index"] != a.eval_index):
@@ -413,7 +415,7 @@ def main() -> None:
     if a.reuse_describe:
         d = json.loads((build / "describe.json").read_text())
     else:
-        d = run_tool(a.python, "describe", "--task", fam, "--instance", inst_path)
+        d = run_tool(a.python, "describe", "--task", fam, "--instance", inst_path, tool=tool)
         (build / "describe.json").write_text(json.dumps(d, indent=1))
     validate_goal_instance(fam, d, inst)
     if a.oracle:

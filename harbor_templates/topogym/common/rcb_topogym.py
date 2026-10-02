@@ -556,10 +556,19 @@ class _Robot:
 
     def command(self, row) -> dict:
         row = np.asarray(row, dtype=np.float64)
+        # Width is not injective at the closed-end plateau. A hold must keep
+        # the accepted native target, including after reset/rewind and without
+        # requiring targets() to have been called first. Do not cache proposals:
+        # validate_action can reject them without changing the robot.
+        targets = self.robot.capture_state().targets
         out = {}
         for name, g in self.groups.items():
+            width = float(row[self.grip_index[name]])
+            current = float(targets[name][g.gripper_field])
+            native = (current if abs(width - self.native_to_width(name, current)) <= 1e-7
+                      else self.width_to_native(name, width))
             out[name] = {"joint_position_rad": row[self.arm_slice[name]].tolist(),
-                         g.gripper_field: self.width_to_native(name, row[self.grip_index[name]])}
+                         g.gripper_field: native}
         return self.robot.validate_action(out)
 
     def targets(self) -> np.ndarray:

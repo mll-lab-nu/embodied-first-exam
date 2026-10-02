@@ -1,5 +1,7 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
+2026-10-01：本次 pull 的 39 个三档实例与双模式交付，以及 builder 反馈 A 至 F 的逐项解释、修补顺序和验收标准，见 [RCB builder 反馈修补工程计划](builder_feedback_repair_plan_zh.md)。计划同时覆盖预检工具和镜像标签不一致；下文带日期的历史验收记录保留原有范围。
+
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
 2026-09-29。对齐基准是 robot_coding_bench（下称“参考仓库”）服务器上最新的 `origin/dev/qineng@fa59c1a6`。参考仓库的 `main`（`fa2d613a`）是更早的祖先提交，不作为基准。

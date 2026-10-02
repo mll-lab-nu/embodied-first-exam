@@ -8,6 +8,7 @@ import fcl
 import numpy as np
 import time
 from collections import Counter
+from dataclasses import replace
 from scipy.spatial.transform import Rotation
 from scipy.optimize import linprog
 
@@ -263,7 +264,9 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
     loop=planner.task.assembly.loops['target_ring']
     center=loop.center-planner.task.body_origins['target_ring']
     state=getattr(planner,'withdrawal_stage_state',None)
-    if state is None and getattr(planner,'withdrawal_use_joint',False):
+    prefer_reference=(parameters.get('prefer_reference_exit_guide',False)
+                      and parameters.get('exit_goal_mode')=='reference')
+    if state is None and getattr(planner,'withdrawal_use_joint',False) and not prefer_reference:
         route=plan_joint_withdrawal(planner,observation,reference)
         relative_guide=[relative_pose(measured['horseshoe_right'],
             (np.asarray(row['position_m']),Rotation.from_quat(np.roll(row['quaternion_wxyz'],-1))))
@@ -276,12 +279,14 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
             loop.rotation*Rotation.from_rotvec(np.pi*axis)*loop.rotation.inv() for axis in np.eye(3)]
         choices=[]
         for symmetry in symmetries:
-            for index in range(0,len(guide),4):
+            indices=range(fold_end_index,len(guide)) if prefer_reference else range(0,len(guide),4)
+            for index in indices:
                 p,r=guide[index]
                 candidate=(p+r.apply(center-symmetry.apply(center)),r*symmetry)
                 choices.append((checker.motion(checker.start,candidate),index,symmetry))
         _,index,symmetry=min(choices,key=lambda row:row[0])
         state=dict(index=index,symmetry=symmetry,stage=0,stride=4)
+        if prefer_reference:state['guide_source']='canonical_reference_exit'
         planner.withdrawal_stage_state=state
     if 'relative_guide' in state:
         guide=[(hp+hr.apply(p),hr*r) for p,r in state['relative_guide']]
@@ -290,6 +295,7 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
     result=dict(passed=False,separated=False,stage=state['stage'],reference_index=state['index'],
         observed_bodies={n:pose_dict(v) for n,v in measured.items()},
         scope='short sampled contact-policy candidate; physical execution and independent audit required')
+    if state.get('guide_source'):result['guide_source']=state['guide_source']
     destination=planner.directory/f"ring_stage_{state['stage']:03d}.json"
     initial=checker.check(checker.start)
     if not initial['passed']:
@@ -309,11 +315,27 @@ def plan_withdrawal_stage(planner, observation, reference, fold_end_index):
             failure=audit
             # Keep the largest checked prefix when the next guide pose is
             # blocked by a passive object at its currently measured pose.
+            best=None;lower=0.;upper=1.
             for shorten in (.5,.25,.125):
                 shorter=interpolate(path[-1],candidate,shorten)
                 trial=checker.ordered_audit([*path,shorter],release_prefix_edges=release_edges)
                 if trial['passed']:
-                    path.append(shorter);travel+=fraction*motion*shorten;break
+                    best=shorter;lower=shorten;break
+                upper=shorten
+            if parameters.get('refine_short_stage_prefix',False):
+                # Coarse fractions can discard a useful checked prefix:
+                # e.g. 0.74 mm passes and 1.48 mm fails, but 1.25 mm passes
+                # the same checks and exceeds the 1 mm progress threshold.
+                # Every retained prefix is audited in its entirety. This
+                # search does not assume unchecked space is collision-free.
+                for _ in range(6):
+                    shorten=(lower+upper)/2
+                    shorter=interpolate(path[-1],candidate,shorten)
+                    trial=checker.ordered_audit([*path,shorter],release_prefix_edges=release_edges)
+                    if trial['passed']:best=shorter;lower=shorten
+                    else:upper=shorten
+            if best is not None:
+                path.append(best);travel+=fraction*motion*lower
             break
         path.append(candidate);travel+=fraction*motion
         if fraction>=1.:index=min(index+state['stride'],len(guide)-1)
@@ -347,6 +369,63 @@ def reference_pivot_goals(planner, bodies, reference):
     return goals,metadata
 
 
+def direct_axis_withdrawal(planner, observation):
+    """Try short Cartesian translations before a joint-space exit detour.
+
+    Every retained path uses the original ordered IK/contact audit and keeps
+    the measured passive-loop linkages at the same dense pose samples. Free
+    bodies are still only planning snapshots; execution must check their
+    actual response after each short stage.
+    """
+    parameters=getattr(planner,'withdrawal_parameters',{})
+    passive=parameters.get('passive_contact_names',())
+    checker=HeldRingPath(planner,observation,passive_contact_names=passive)
+    measured=checker.bodies.copy();p,r=checker.start
+    ring=r.apply(checker.vertices)+p
+    remainder=np.vstack([rot.apply(planner.task.placement_vertices[name])+pos
+        for name,(pos,rot) in measured.items() if name!='target_ring'])
+    candidates=sorted((max(0.,float((remainder@axis).max()-(ring@axis).min())+.008),index,axis)
+                      for index,axis in enumerate(np.r_[np.eye(3),-np.eye(3)]))
+    loop=planner.task.assembly.loops['target_ring']
+    def world_loop(shape,pos,rot):
+        return replace(shape,center=pos+rot.apply(shape.center-planner.task.body_origins[shape.body]),
+                       rotation=rot*shape.rotation)
+    passive_loops={name:world_loop(shape,*measured[shape.body])
+        for name,shape in planner.task.assembly.loops.items() if shape.body in passive}
+    initial={name:world_loop(loop,p,r).linking(shape) for name,shape in passive_loops.items()}
+    rows=[]
+    for travel,index,axis in candidates:
+        goal=(p+travel*axis,r)
+        count=max(1,int(np.ceil(travel/.00075)))
+        poses=[interpolate(checker.start,goal,float(u)) for u in np.linspace(0,1,count+1)]
+        topology_failure=None
+        for sample,(pos,rot) in enumerate(poses):
+            current=world_loop(loop,pos,rot)
+            if any(current.linking(shape)!=initial[name] for name,shape in passive_loops.items()):
+                topology_failure=sample;break
+        if topology_failure is not None:
+            rows.append(dict(axis_index=index,travel_m=travel,passed=False,
+                             reason='static_passive_linkage',sample=topology_failure))
+            continue
+        audit=checker.ordered_audit(poses)
+        rows.append(dict(axis_index=index,travel_m=travel,passed=audit['passed'],ordered_audit=audit))
+        if not audit['passed']:continue
+        result=dict(passed=True,poses=[pose_dict(pose) for pose in poses],ordered_audit=audit,
+            joint_knots=[],queries=checker.queries,release_prefix_edges=0,
+            passive_contact_names=list(passive),contact_release=True,
+            static_passive_loop_linkages_preserved_at_pose_checks=True,
+            static_passive_loop_linkages=initial,static_passive_loop_samples=len(poses),
+            actual_passive_topology_requires_physical_audit=True,
+            joint_search_goal_tube=bool(parameters.get('joint_search_goal_tube',False)),
+            guide_source='direct_cartesian_axis_exit',axis_index=index,translation_m=travel,
+            scope='Sampled ordered Cartesian IK/contact and static-loop checks; physical exit remains unverified')
+        write_json_atomic(planner.directory/'direct_axis_exit_candidates.json',dict(passed=True,rows=rows))
+        return result
+    checker.set_ring(checker.start)
+    write_json_atomic(planner.directory/'direct_axis_exit_candidates.json',dict(passed=False,rows=rows))
+    return None
+
+
 def plan_joint_withdrawal(planner, observation, reference):
     """Find reachable exit attitudes without prescribing a wrist branch."""
     from .joint_route import plan_free_ring_transport
@@ -363,6 +442,13 @@ def plan_joint_withdrawal(planner, observation, reference):
             method='native_joint_route_to_reference_pivot; no separation claim')
         write_json_atomic(planner.directory/'joint_withdrawal_plan.json',result)
         return result
+    if parameters.get('direct_axis_exit_first',False):
+        direct=direct_axis_withdrawal(planner,observation)
+        if direct is not None:
+            direct.update(observed_bodies={n:pose_dict(pose) for n,pose in bodies.items()},
+                          exit_goal_mode=mode,method='direct_cartesian_axis_before_joint_search')
+            write_json_atomic(planner.directory/'joint_withdrawal_plan.json',direct)
+            return direct
     rp,rr=relative_pose(reference[-1]['horseshoe_right'],reference[-1]['target_ring'])
     direction=(hr*reference[-1]['horseshoe_right'][1].inv()).apply([-1.,0.,0.])
     end=hp+hr.apply(rp)

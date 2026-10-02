@@ -49,7 +49,8 @@ class GatheredBlanketTask(BlanketFlattenTask):
         """Tier archives live at seed_<N>; an instance whose seeded scene variation
         (colour, pattern, centre) differs from the tier is frozen under seeded_v<version>/."""
         folder = f"{seeded_folder()}/" if self.seeded_draw(config) else ""
-        return f"blanket_flatten/{REVISION}/{self.difficulty}/{folder}seed_{seed}/manifest.json"
+        from topogym.world.physics.initial_state_compatibility import ARCHIVE_REVISION, resource_profile
+        return f"blanket_flatten/{ARCHIVE_REVISION}/{resource_profile()}/{self.difficulty}/{folder}seed_{seed}/manifest.json"
 
     @classmethod
     def seeded_draw(cls, config):

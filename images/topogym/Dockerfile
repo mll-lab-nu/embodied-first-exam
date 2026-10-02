@@ -1,6 +1,6 @@
 # rcb-topogym: Genesis 1.2.1 / Nyx with cu128 torch and original pyuipc 0.0.25 materials.
 # Infrastructure only, no benchmark code (docs/rcb/PROTOCOL.md §1): the task tooling (rcb_topogym.py) comes with each task,
-# and prune.py removes everything that could hold a reference solution. Tag = images/VERSION; build: scripts/build_images.sh
+# and prune.py removes everything that could hold a reference solution. Tag = images/topogym/VERSION + CUDA profile; build: scripts/build_images.sh
 # topogym (from the repository root, which is the build context; .dockerignore keeps it small).
 ARG UIPC_BUILDER=sameli/manylinux_2_34_x86_64_cuda_12.8@sha256:0b99ea5d0e32f5ad49b02de2663520f17a8dafc8739365cd7463a82ed3f0590a
 FROM ${UIPC_BUILDER} AS uipc-compile

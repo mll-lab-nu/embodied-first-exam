@@ -32,6 +32,7 @@
 - `difficulty_results_hf.py`：白名单结果导出、快照身份、HF 分批 commit、恢复对账和上传日志；通过 difficulty_eval 的 `--results_to_hf` / `--phase upload` 使用，见 [HF 上传用法](../docs/rcb/docker_quickstart_zh.md#上传结果到私有-hf-dataset)。
 - `difficulty_release.py`：无 Git 源码身份、build-info 与 Docker 源码发行包；使用方法见 [Docker 启动说明](../docs/rcb/docker_quickstart_zh.md)。
 - `topogym_mk_task.py`、`topogym_mk_limited.py`：生成 unlimited / limited 任务。
+- `check_builder_feedback.py`：Builder 反馈的持续回归入口，记录 seed 冷启动、夹爪保持／回放、IK 端点和 Lock 支架取件诊断；输出报告、逐 tick 记录与共享录制 MP4，不授予完整任务成功资格。见[修补计划](../docs/rcb/builder_feedback_repair_plan_zh.md)。
 - `build_images.sh`、`push_images.sh`、`vendor_rcb.py`、`set_agent_egress.py`：镜像、参考工具及任务出网配置。
 - `run_agent_batch.sh`、`regrade_trials.sh`：批量运行与重评分。
 - `account_failure_check.py`、`log_mirror.py`、`mem_guard.py`、`scan_secrets.py`：账号异常检测、日志镜像、资源监控与产物密钥检查。

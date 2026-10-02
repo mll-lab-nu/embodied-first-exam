@@ -19,6 +19,43 @@ from topogym.utils.io import write_json_atomic
 from topogym.utils.grasp import held_finger_contact_mask
 
 
+STATE_FIELDS=('episode_id','branch_id','state_id','physics_step')
+
+
+def _state_key(state):
+    return tuple(state[key] for key in STATE_FIELDS)
+
+
+def _audit_robot_observations(step_files, expected_states, limits, *, prefix):
+    """Match robot rows to the exact bounded monitor states, across segments."""
+    covered=set();failures=[];maximum_residue=0.
+    for steps in step_files:
+        with steps.open() as stream:
+            for line in stream:
+                if prefix and not line.endswith('\n'):break
+                row=json.loads(line);key=_state_key(row['state'])
+                # A live prefix can be followed by a rewind's initial row,
+                # or by newer ticks. Neither belongs to this monitor snapshot.
+                # Monitored post-rewind ticks remain included and still fail
+                # the separate continuous-history check.
+                if key not in expected_states:continue
+                if not {'left','right'}<=row.get('robot',{}).keys():continue
+                covered.add(key)
+                for side,state in row['robot'].items():
+                    q=np.asarray(state['joint_position_rad'])
+                    residue=float(np.maximum(limits[:,0]-q,q-limits[:,1]).max())
+                    maximum_residue=max(maximum_residue,residue)
+                    if residue>1e-6:
+                        failures.append(dict(tick=row['state']['physics_step'],
+                            reason='observed_joint_limit_violation',side=side,violation_rad=residue))
+    missing=expected_states-covered
+    if missing:
+        failures.append(dict(reason='missing_robot_observations',count=len(missing),
+            examples=[dict(zip(STATE_FIELDS,key)) for key in sorted(missing)[:10]]))
+    return maximum_residue,dict(expected_states=len(expected_states),
+        covered_states=len(covered),complete=not missing),failures
+
+
 def audit_run(root, *, prefix=False):
     root=Path(root).resolve()
     report=json.loads((root/'run_report.json').read_text())
@@ -47,6 +84,7 @@ def audit_run(root, *, prefix=False):
     max_other_depth=0.;max_held_depth=0.
     link_names=report.get('contact_link_names',{})
     initial_linkage=None;linkage=None
+    expected_robot_states=set()
     acquisition_covered=bool(report.get('grasp_finger_links'));acquisition_valid=True
     artifact=root/'private/horseshoe_monitor.jsonl'
     digest=hashlib.sha256()
@@ -58,6 +96,7 @@ def audit_run(root, *, prefix=False):
             if limit is not None and (stream.tell()>limit or not line.endswith(b'\n')):break
             digest.update(line);row=json.loads(line)
             state,world=row['state'],row['world'];count+=1
+            expected_robot_states.add(_state_key(state))
             if birth is None:birth=state
             tick=int(state['physics_step'])
             if (previous is None and tick!=0 or previous is not None and tick!=previous+1
@@ -143,32 +182,21 @@ def audit_run(root, *, prefix=False):
     home_ok=all(np.allclose(first['robot'][s]['joint_position_rad'],list(scene.robot_control.home[s])[:6],atol=1e-9,rtol=0)
                 for s in ('left','right'))
     limits=np.asarray(scene.robot_control.robot.arm_joint_limits)
-    maximum_joint_limit_residue=0.
-    last_robot_tick=None
-    for steps in step_files:
-        with steps.open() as stream:
-            for line in stream:
-                if prefix and not line.endswith('\n'):break
-                row=json.loads(line)
-                if prefix and row['state']['physics_step']>last['state']['physics_step']:break
-                last_robot_tick=row['state']['physics_step']
-                for side,state in row.get('robot',{}).items():
-                    q=np.asarray(state['joint_position_rad'])
-                    residue=float(np.maximum(limits[:,0]-q,q-limits[:,1]).max())
-                    maximum_joint_limit_residue=max(maximum_joint_limit_residue,residue)
-                    if residue>1e-6:
-                        failures.append(dict(tick=row['state']['physics_step'],reason='observed_joint_limit_violation',
-                                             side=side,violation_rad=residue))
-    if last_robot_tick!=last['state']['physics_step']:
-        failures.append(dict(reason='missing_final_robot_observation',last_robot_tick=last_robot_tick))
+    maximum_joint_limit_residue,robot_coverage,robot_failures=_audit_robot_observations(
+        step_files,expected_robot_states,limits,prefix=prefix)
+    failures.extend(robot_failures)
+    workflow=root/'qualification/workflow.json'
+    rewinds=len(json.loads(workflow.read_text()).get('rewinds',())) if workflow.exists() else 0
     native=bool(report.get('task_success',False))
     raw=best_stable+1e-12>=float(task.config['stable_duration_s'])
-    qualified=not prefix and source_valid and home_ok and not failures and not lost and raw and acquisition_valid and bool(acquired)
+    qualified=not prefix and not rewinds and source_valid and home_ok and not failures and not lost and raw and acquisition_valid and bool(acquired)
     result=dict(schema_version=1,source_snapshot_valid=source_valid,from_default_home=home_ok,
         diagnostic_prefix=prefix,last_audited_state=last['state'],
         auditor_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         physical_evidence_sha256=digest.hexdigest(),identity=identity,physics_ticks=count,
-        continuous_from_birth=not any(f.get('reason')=='noncontinuous_history' for f in failures),
+        continuous_from_birth=(not any(f.get('reason')=='noncontinuous_history' for f in failures)
+                               and (prefix or not rewinds)),
+        workflow_rewinds=rewinds,robot_observation_coverage=robot_coverage,
         maximum_task_contact_penetration_m=max_depth,chain_connections_intact=not any(f.get('reason')=='chain_connection_lost' for f in failures),
         contact_policy=contact_policy or dict(other_contacts_m=.001,held_finger_contacts_m=.001,
                                              scope='historical uniform audit; original verdict not relaxed'),

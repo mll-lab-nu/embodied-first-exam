@@ -43,7 +43,8 @@ def canonical_hash(value):
                                      allow_nan=False).encode()).hexdigest()
 
 
-def write_json_atomic(path, value, *, indent=2):
+def write_json_atomic(path, value, *, indent=2, mode=None):
+    """Atomically replace JSON; public assets opt in to an explicit file mode."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
@@ -52,11 +53,25 @@ def write_json_atomic(path, value, *, indent=2):
             stream.write(json.dumps(to_jsonable(value), indent=indent, ensure_ascii=False, allow_nan=False))
             stream.write("\n")
             stream.flush()
+            if mode is not None:
+                os.fchmod(stream.fileno(), mode)
             os.fsync(stream.fileno())
         os.replace(temporary, path)
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)
+
+
+def make_asset_tree_readable(root):
+    """Normalize only a caller-designated public asset tree, never symlink targets."""
+    root = Path(root)
+    paths = [root, *root.rglob("*")]
+    if any(p.is_symlink() for p in paths):
+        raise ValueError(f"Public asset tree contains a symlink: {root}")
+    if not root.is_dir():
+        raise ValueError(f"Expected public asset directory: {root}")
+    for path in paths:
+        path.chmod(0o755 if path.is_dir() else 0o644)
 
 
 def read_json(path):

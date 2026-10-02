@@ -90,6 +90,7 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
             q=np.asarray(checked['qpos']);arm=q[ids]
             if valid(arm) and all(np.linalg.norm(arm-old)>.1 for old in roots):roots.append(arm)
     if not roots or not valid(start[ids]):raise ValueError('No valid free-ring joint search endpoints')
+    goal_roots=[q.copy() for q in roots]
     trees=[([start[ids].copy()],[-1]),(roots,[-1]*len(roots))]
     def extend(tree,target):
         nodes,parents=tree;i=int(np.argmin(np.linalg.norm(np.asarray(nodes)-target,axis=1)))
@@ -117,13 +118,34 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
         while i>=0:result.append(tree[0][i]);i=tree[1][i]
         return result[::-1]
     path=None
+    goal_tube=getattr(planner,'withdrawal_parameters',{}).get('joint_search_goal_tube',False)
+    if not isinstance(goal_tube,bool):raise ValueError('Joint goal tube search option must be boolean')
+    if goal_tube:
+        # Preserve checked parts of direct connections before random search.
+        # These are planning-tree nodes, never restored simulator states.
+        for root_index,root in enumerate(goal_roots):
+            for side,a,b in ((0,start[ids],root),(1,root,start[ids])):
+                last=None;complete=True
+                for sample in edge_samples(a,b):
+                    if not valid(sample):complete=False;break
+                    last=sample
+                if complete:path=[start[ids].copy(),root.copy()];break
+                if last is not None and np.linalg.norm(last-a)>1e-5:
+                    trees[side][0].append(last);trees[side][1].append(0 if side==0 else root_index)
+            if path is not None:break
     for index in range(iterations):
+        if path is not None:break
         if index%100==0:
             write_json_atomic(planner.directory/'free_ring_search_progress.json',
                 dict(iteration=index,nodes=[len(t[0]) for t in trees],queries=queries,elapsed_s=time.monotonic()-began))
         side=index%2;tree,other=trees[side],trees[1-side]
-        target=(other[0][rng.integers(len(other[0]))] if rng.random()<.25
-                else rng.uniform(limits[:,0]+.015,limits[:,1]-.015))
+        coin=rng.random()
+        if coin<.25:target=other[0][rng.integers(len(other[0]))]
+        elif goal_tube and coin<.80:
+            goal=goal_roots[rng.integers(len(goal_roots))]
+            target=np.clip(start[ids]+rng.random()*(goal-start[ids])+rng.normal(0.,.30,len(ids)),
+                           limits[:,0]+.015,limits[:,1]-.015)
+        else:target=rng.uniform(limits[:,0]+.015,limits[:,1]-.015)
         a,_=extend(tree,target)
         if a is None:continue
         for _ in range(80):
@@ -156,6 +178,7 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
         static_passive_loop_linkages_preserved_at_joint_checks=static_passive_topology,
         static_passive_loop_linkages=initial_linkage,
         actual_passive_topology_requires_physical_audit=True,
+        joint_search_goal_tube=goal_tube,
         scope='sampled native joint search and Cartesian replay; allowed passive contact response requires physical execution')
     write_json_atomic(planner.directory/'free_ring_transport_plan.json',result)
     return result

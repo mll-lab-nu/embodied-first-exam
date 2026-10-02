@@ -49,7 +49,14 @@ class CheckedJointPolicy:
                     nominal=self.policy.nominal_tcp.get(side)
                     if nominal is None:raise
                     np_,nr=nominal;angle=(r*nr.inv()).as_rotvec()
-                    for fraction in (.5,.25,0.):
+                    # A target just outside the IK tolerance can have a
+                    # nearby valid solution that coarse halving skips.
+                    # Keep native tolerances and the measured joint seed;
+                    # only reduce the controller's optional compensation.
+                    refined=getattr(self.policy,'withdrawal_parameters',{}).get('refine_ik_compensation',False)
+                    fractions=((.995,.99,.975,.95,.9,.8,.7,.6,.5,.25,0.)
+                               if refined else (.5,.25,0.))
+                    for fraction in fractions:
                         try:q=solve(np_+fraction*(p-np_),Rotation.from_rotvec(fraction*angle)*nr)
                         except ValueError:
                             if fraction==0.:raise

@@ -80,12 +80,14 @@ class NumericTree:
 def save_numeric_archive(folder, payload, metadata):
     folder = Path(folder)
     folder.mkdir(parents=True, exist_ok=False)
+    folder.chmod(0o755)
     tree = NumericTree()
     root = tree.encode(payload)
     np.savez_compressed(folder/"arrays.npz", **tree.arrays)
+    (folder/"arrays.npz").chmod(0o644)
     manifest = dict(schema_version=1, metadata=metadata, tree=root,
                     arrays=dict(path="arrays.npz", sha256=sha256_file(folder/"arrays.npz")))
-    write_json_atomic(folder/"manifest.json", manifest)
+    write_json_atomic(folder/"manifest.json", manifest, mode=0o644)
     return folder/"manifest.json"
 
 
@@ -110,6 +112,10 @@ def load_numeric_archive(manifest_path, *, expected_sha256=None):
     return payload, manifest["metadata"]
 
 
+def _array_layout(value):
+    return dict(type=type(value).__name__, shape=list(value.shape), dtype=str(value.dtype)) if hasattr(value, "shape") else dict(type=type(value).__name__)
+
+
 def require_same_layout(source, target, path="state"):
     """Check every value's layout before mutating any live buffer."""
     if isinstance(target, PackedArray):
@@ -117,10 +123,10 @@ def require_same_layout(source, target, path="state"):
     if hasattr(target, "detach"):
         if (not hasattr(source, "detach") or source.shape != target.shape
                 or source.dtype != target.dtype):
-            raise ValueError(f"Tensor layout differs at {path}")
+            raise ValueError(f"Tensor layout differs at {path}: archive={_array_layout(source)}, runtime={_array_layout(target)}; use a compatible runtime or prepare a new initial state")
     elif isinstance(target, np.ndarray):
         if not isinstance(source, np.ndarray) or source.shape != target.shape or source.dtype != target.dtype:
-            raise ValueError(f"Array layout differs at {path}")
+            raise ValueError(f"Array layout differs at {path}: archive={_array_layout(source)}, runtime={_array_layout(target)}; use a compatible runtime or prepare a new initial state")
     elif isinstance(target, dict):
         if not isinstance(source, dict) or source.keys() != target.keys():
             raise ValueError(f"Mapping layout differs at {path}")

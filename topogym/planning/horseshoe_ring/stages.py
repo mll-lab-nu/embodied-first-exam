@@ -38,6 +38,10 @@ class ContinuationPolicy(HorseshoePolicy):
         elif self.operation=='support_and_grasp':
             yield from self.support_pair()
             yield from self.grasp_ring()
+        elif self.operation=='table_support':
+            from .table_support import execute_table_support
+            yield from execute_table_support(self, self.table_support_guide,
+                                             tracking_m=self.table_tracking_m)
         else:
             yield from getattr(self,self.operation)()
 
@@ -55,12 +59,19 @@ class BirthRingPolicy(HorseshoePolicy):
 
 def stages(env, context, *, folded_settling=False, suspended_handoff=False, direct_birth=False,
            handoff_candidates=None, lower_reposition=False, withdrawal_defaults=None,
-           reposition_parameters=None, require_prefix_replay=False):
+           reposition_parameters=None, require_prefix_replay=False, ring_grasp_choice=None,
+           require_ring_pivot=False, native_robot_contacts=False, table_supported=False):
     """Bind the five prefix inputs and any optional withdrawal guide by hash."""
+    if not isinstance(native_robot_contacts, bool):
+        raise ValueError('Native robot contact screening option must be boolean')
+    if not isinstance(table_supported, bool) or table_supported and not native_robot_contacts:
+        raise ValueError('Table support requires native robot contact screening')
     out=context.output;holder=[None];shared={};attempt=[0]
     monitor=(out/'private/horseshoe_monitor.jsonl').open('x',buffering=1)
     identity=dict(config=to_jsonable(env.config),seed=context.identity['seed'],
         instance_id=env._task.instance_id,from_default_home=True,
+        native_robot_contact_screening_after_handoff=native_robot_contacts,
+        table_supported_handoff=table_supported,
         terminal=env._task.terminal_metadata(),
         contact_link_names={str(link.idx):f'{name}/{link.name}' for name,entity in env._world.entities.items()
                             for link in getattr(entity,'links',())},
@@ -133,6 +144,7 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
         names=('grasps','reference','fold','support','approach')
         if 'withdrawal_guide' in parameters:
             names+=('withdrawal_guide',)
+        if table_supported:names+=('table_support_guide',)
         if 'prefix_replay' in parameters:names+=('prefix_replay',)
         elif require_prefix_replay:raise ValueError('This recipe requires a hash-bound action prefix')
         for name in names:
@@ -170,7 +182,11 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
         if direct_birth:
             planner.reference=None
             policy=BirthRingPolicy(grasps,planner=planner)
+        policy.ring_grasp_choice=deepcopy(ring_grasp_choice)
+        policy.require_ring_pivot=require_ring_pivot
         shared.update(grasps=grasps,reference=reference,fold_end_index=meta['fold_end_index'],support=support)
+        if table_supported:
+            shared['table_support_guide']=json.loads(paths['table_support_guide'].read_text())
         if 'withdrawal_guide' in paths:
             guide=json.loads(paths['withdrawal_guide'].read_text())
             if not guide.get('passed') or len(guide.get('poses',()))<2:
@@ -197,11 +213,18 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
     def continuation(operation, budget, *, stage_index=None):
         def build(parameters):
             attempt[0]+=1
-            checker=HorseshoeIK(env,puzzle_clearance_m=parameters.get('robot_puzzle_clearance_m',.0005))
-            planner=ManipulationPlanner(env,out/f'planning/{operation}_{attempt[0]:03}',checker,
-                reference=shared['reference'],fold_end_index=shared['fold_end_index'])
             values=dict(parameters);limit=float(values.pop('contact_limit_m',.0008))
             if not 0<limit<=.001:raise ValueError('Stage contact limit must be at most 1 mm')
+            checker_type=HorseshoeIK
+            checker_options=dict(puzzle_clearance_m=parameters.get('robot_puzzle_clearance_m',.0005))
+            if native_robot_contacts and (operation in ('withdraw_one','place_ring','place_remainder')
+                    or table_supported and operation in ('table_support','support_and_grasp')):
+                from .native_contacts import ContactHorseshoeIK
+                checker_type=ContactHorseshoeIK
+                checker_options['ordinary_limit_m']=limit
+            checker=checker_type(env,**checker_options)
+            planner=ManipulationPlanner(env,out/f'planning/{operation}_{attempt[0]:03}',checker,
+                reference=shared['reference'],fold_end_index=shared['fold_end_index'])
             replan=bool(values.pop('replan',False))
             if operation=='withdraw_one' and not replan and shared.get('guide_state') is not None:
                 planner.withdrawal_stage_state=deepcopy(shared['guide_state'])
@@ -222,7 +245,18 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
                 policy.settling_parameters=values
             elif operation=='support_and_grasp':
                 policy.suspended_upper=values.pop('suspended_upper',False)
-                if not isinstance(policy.suspended_upper,bool) or values:raise ValueError('Invalid support handoff parameters')
+                policy.table_supported=values.pop('table_supported',False)
+                policy.ring_grasp_choice=deepcopy(ring_grasp_choice)
+                policy.require_ring_pivot=require_ring_pivot
+                if (not isinstance(policy.suspended_upper,bool) or not isinstance(policy.table_supported,bool)
+                        or policy.suspended_upper and policy.table_supported or values):
+                    raise ValueError('Invalid support handoff parameters')
+            elif operation=='table_support':
+                policy.table_tracking_m=float(values.pop('tracking_m',.0015))
+                if not np.isfinite(policy.table_tracking_m) or not .0005<=policy.table_tracking_m<=.0015:
+                    raise ValueError('Table tracking tolerance must be within 0.5 and 1.5 mm')
+                if values:raise ValueError('Unexpected table transport parameters')
+                policy.table_support_guide=shared['table_support_guide']
             elif operation=='reposition_lower':
                 policy.reposition_fraction=float(values.pop('fraction',1.))
                 policy.reposition_tracking_m=float(values.pop('lower_tracking_m',.0015))
@@ -241,12 +275,14 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
                     raise ValueError('Reposition velocity feedback must be within 0 and 1 second')
             elif operation!='withdraw_one' and values:raise ValueError('Unexpected placement parameters')
             holder[0]=policy
-            condition=(holding_shoes if operation=='gravity_settle_folded' else
+            condition=(holding_shoes if operation in ('gravity_settle_folded','table_support') else
                        handoff_invariant if operation=='support_and_grasp' else holding)
-            entry=holding_shoes if operation in ('gravity_settle_folded','support_and_grasp') else holding
+            entry=holding_shoes if operation in ('gravity_settle_folded','table_support','support_and_grasp') else holding
             def invariant(row):return dict(common(row,limit),**condition(row))
             def exit(row):
-                result=holding_shoes(row) if operation=='gravity_settle_folded' else holding(row)
+                result=holding_shoes(row) if operation in ('gravity_settle_folded','table_support') else holding(row)
+                if operation=='table_support':
+                    result['table_transport_reached']=getattr(policy,'table_support_result',{}).get('passed',False)
                 if operation=='gravity_settle_folded':
                     key='ring_relocated' if values.get('restore',True) else 'handoff_orientation_reached'
                     result[key]=getattr(policy,'gravity_result',{}).get('passed',False)
@@ -283,7 +319,11 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
             yield Step('orient_for_handoff' if suspended_handoff else 'gravity_settle_folded',
                        gravity_candidates,continuation('gravity_settle_folded',240.))
             shared['previous']=holder[0]
-            yield Step('support_and_grasp',({'suspended_upper':True} if suspended_handoff else {},),
+            if table_supported:
+                yield Step('table_support',({'tracking_m':.0015},),continuation('table_support',600.))
+                shared['previous']=holder[0]
+            yield Step('support_and_grasp',({'table_supported':True} if table_supported else
+                                          {'suspended_upper':True} if suspended_handoff else {},),
                        continuation('support_and_grasp',120. if suspended_handoff else 60.))
             shared['previous']=holder[0]
         if lower_reposition:
@@ -518,6 +558,211 @@ def patient_direct_exit_stages(env, context):
             position_velocity_gain_s=.25,position_velocity_filter_s=.1,
             tracking_stall_timeout_s=10.,maximum_stages=1000,
             exit_goal_mode='all_axes',search_seed=970,
+            passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))
+
+
+def patient_upward_pivot_stages(env, context, *, adaptive_grasp=False, native_robot_contacts=False):
+    """Try an alternate ring grasp and pivot while keeping the lower shoe fixed."""
+    candidates=(dict(angle_deg=90.,yaw_deg=0.,translation_m=[0.,.10,-.04],
+                     hold_s=8.,sample_duration_s=.1,restore=False),)
+    return stages(env,context,folded_settling=True,suspended_handoff=True,
+        handoff_candidates=candidates,
+        native_robot_contacts=native_robot_contacts,
+        ring_grasp_choice=None if adaptive_grasp else
+            dict(angle_deg=295.,approach_sign=1,flip=-1,tangent_roll_deg=40.),
+        require_ring_pivot=adaptive_grasp,
+        withdrawal_defaults=dict(rebase_support_each_stage=False,gate_support_tracking=False,
+            robot_puzzle_clearance_m=.0001,
+            position_bias_limit_m=.06,position_integral_gain_s_inv=2.,
+            position_velocity_gain_s=.25,position_velocity_filter_s=.1,
+            tracking_stall_timeout_s=10.,maximum_stages=1000,
+            exit_goal_mode='reference_pivot',search_seed=985,joint_search_goal_tube=adaptive_grasp,
+            passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))
+
+
+def adaptive_upward_pivot_stages(env, context):
+    """Select the ring grasp from the actual handoff and screen its pivot endpoint."""
+    return patient_upward_pivot_stages(env,context,adaptive_grasp=True)
+
+
+def contact_upward_pivot_stages(env, context):
+    """Use native contact classification after the unchanged fixed-grip handoff."""
+    return patient_upward_pivot_stages(env,context,native_robot_contacts=True)
+
+
+def reference_tube_exit_stages(env, context):
+    """Keep the existing pivot recipe, then prefer reference-exit search tubes.
+
+    The switch only changes search proposals at the measured pivot milestone.
+    Each candidate still replans from its actual observation and uses the same
+    geometry, contact, grasp, action and independent qualification checks.
+    """
+    original=contact_upward_pivot_stages(env,context)
+    switched=False
+    try:
+        for step in original:
+            if (not switched and step.name.startswith('withdraw_')
+                    and step.candidates
+                    and step.candidates[0].get('exit_goal_mode')=='reference'):
+                candidates=tuple(dict(parameters,search_seed=995+i,
+                    joint_search_goal_tube=True,
+                    passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1'])
+                    for i,parameters in enumerate(step.candidates))
+                step=replace(step,candidates=candidates)
+                write_json_atomic(Path(context.output)/'reference_exit_search_switch.json',
+                    dict(step=step.name,candidates=candidates,
+                         scope='Search proposals only, after measured reference pivot; physical exit and native goal remain unverified'))
+                switched=True
+            yield step
+    finally:
+        original.close()
+
+
+def patient_reference_tube_exit_stages(env, context):
+    """Refine checked exit prefixes and allow slow contact response after pivot.
+
+    The home, fold, handoff and pivot recipe remains unchanged. Only measured
+    post-pivot withdrawal candidates receive these planner/controller options.
+    """
+    original=reference_tube_exit_stages(env,context)
+    recorded=False
+    try:
+        for step in original:
+            if (step.name.startswith('withdraw_') and step.candidates
+                    and step.candidates[0].get('exit_goal_mode')=='reference'):
+                candidates=tuple(dict(parameters,
+                    speed_m_s=min(float(parameters['speed_m_s']),.001),
+                    tracking_stall_timeout_s=30.,position_bias_limit_m=.1,
+                    refine_short_stage_prefix=True,
+                    passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1'])
+                    for parameters in step.candidates)
+                step=replace(step,candidates=candidates)
+                if not recorded:
+                    write_json_atomic(Path(context.output)/'patient_reference_exit_switch.json',
+                        dict(step=step.name,candidates=candidates,
+                             scope='Checked short-prefix refinement and ordinary feedback only; native physical qualification remains required'))
+                    recorded=True
+            yield step
+    finally:
+        original.close()
+
+
+def rotation_compensated_reference_exit_stages(env, context):
+    """Allow bounded rotational load compensation after the measured pivot."""
+    original=patient_reference_tube_exit_stages(env,context)
+    recorded=False
+    try:
+        for step in original:
+            if (step.name.startswith('withdraw_') and step.candidates
+                    and step.candidates[0].get('exit_goal_mode')=='reference'):
+                candidates=tuple(dict(parameters,rotation_bias_limit_rad=.3)
+                                 for parameters in step.candidates)
+                step=replace(step,candidates=candidates)
+                if not recorded:
+                    write_json_atomic(Path(context.output)/'rotation_compensation_exit_switch.json',
+                        dict(step=step.name,candidates=candidates,
+                             scope='Ordinary target generation only; no change to native gains, forces, constraints or acceptance'))
+                    recorded=True
+            yield step
+    finally:
+        original.close()
+
+
+def canonical_first_reference_exit_stages(env, context):
+    """Try the reference suffix locally before searching an exit detour."""
+    original=rotation_compensated_reference_exit_stages(env,context)
+    recorded=False
+    try:
+        for step in original:
+            if (step.name.startswith('withdraw_') and step.candidates
+                    and step.candidates[0].get('exit_goal_mode')=='reference'):
+                candidates=tuple(dict(parameters,prefer_reference_exit_guide=index==0)
+                                 for index,parameters in enumerate(step.candidates))
+                step=replace(step,candidates=candidates)
+                if not recorded:
+                    write_json_atomic(Path(context.output)/'canonical_first_exit_switch.json',
+                        dict(step=step.name,candidates=candidates,
+                             scope='Reference suffix is a local guide; measured IK/contact checks and physical qualification remain mandatory, joint-search fallbacks retained'))
+                    recorded=True
+            yield step
+    finally:
+        original.close()
+
+
+def direct_first_reference_exit_stages(env, context):
+    """Check a dense Cartesian exit before planning a longer joint detour."""
+    original=rotation_compensated_reference_exit_stages(env,context)
+    recorded=False
+    try:
+        for step in original:
+            if (step.name.startswith('withdraw_') and step.candidates
+                    and step.candidates[0].get('exit_goal_mode')=='reference'):
+                candidates=tuple(dict(parameters,direct_axis_exit_first=True)
+                                 for parameters in step.candidates)
+                step=replace(step,candidates=candidates)
+                if not recorded:
+                    write_json_atomic(Path(context.output)/'direct_axis_exit_switch.json',
+                        dict(step=step.name,candidates=candidates,
+                             scope='Dense checked direct exit proposals only; native physics and success unchanged'))
+                    recorded=True
+            yield step
+    finally:
+        original.close()
+
+
+def native_limit_reference_exit_stages(env, context):
+    """Use the native ordinary-contact ceiling for post-pivot candidates."""
+    original=canonical_first_reference_exit_stages(env,context)
+    recorded=False
+    try:
+        for step in original:
+            if (step.name.startswith('withdraw_') and step.candidates
+                    and step.candidates[0].get('exit_goal_mode')=='reference'):
+                candidates=tuple(dict(parameters,contact_limit_m=.001,direct_axis_exit_first=True)
+                                 for parameters in step.candidates)
+                step=replace(step,candidates=candidates)
+                if not recorded:
+                    write_json_atomic(Path(context.output)/'native_contact_exit_switch.json',
+                        dict(step=step.name,candidates=candidates,
+                             scope='Planner and per-tick stage guard use the unchanged native 1mm ordinary limit; native qualified fingers remain2mm. Direct checked exit fallback enabled.'))
+                    recorded=True
+            yield step
+    finally:
+        original.close()
+
+
+def refined_native_limit_reference_exit_stages(env, context):
+    """Refine IK feedback reduction only after the measured reference pivot."""
+    original=native_limit_reference_exit_stages(env,context)
+    recorded=False
+    try:
+        for step in original:
+            if (step.name.startswith('withdraw_') and step.candidates
+                    and step.candidates[0].get('exit_goal_mode')=='reference'):
+                candidates=tuple(dict(parameters,refine_ik_compensation=True)
+                                 for parameters in step.candidates)
+                step=replace(step,candidates=candidates)
+                if not recorded:
+                    write_json_atomic(Path(context.output)/'refined_ik_exit_switch.json',
+                        dict(step=step.name,candidates=candidates,
+                             scope='Fine feedback-compensation reduction after native IK rejection; measured seed, IK tolerances, physics and success remain unchanged.'))
+                    recorded=True
+            yield step
+    finally:
+        original.close()
+
+
+def table_supported_stages(env, context):
+    """Transport the folded pair toward the table before releasing the upper shoe."""
+    return stages(env,context,folded_settling=True,suspended_handoff=True,
+        native_robot_contacts=True,table_supported=True,
+        handoff_candidates=(dict(angle_deg=90.,yaw_deg=0.,translation_m=[0.,.10,-.04],
+                                hold_s=8.,sample_duration_s=.1,restore=False),),
+        withdrawal_defaults=dict(rebase_support_each_stage=False,gate_support_tracking=False,
+            robot_puzzle_clearance_m=.0001,position_bias_limit_m=.06,
+            position_integral_gain_s_inv=2.,position_velocity_gain_s=.25,
+            position_velocity_filter_s=.1,tracking_stall_timeout_s=10.,maximum_stages=1000,
+            exit_goal_mode='all_axes',search_seed=995,joint_search_goal_tube=True,
             passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))
 
 

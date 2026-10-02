@@ -396,6 +396,42 @@
       "sha256": "4f03b4f03611925ac1f9486c728a27703f882bf17c8ea54413babf2abe1f499d",
       "source": "runs/test_results/release_scene_fixes_20260929/horseshoe_settle/waist_ellipse_settled_poses.json",
       "license": null
+    },
+    "blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/easy/seed_0/manifest.json": {
+      "path": "variations/blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/easy/seed_0/manifest.json",
+      "sha256": "8e4066726df073c1ad15c03354792bce83965bae9d2076509ef3350cfc40df2f",
+      "source": "prepared gathered_scene_v1 easy, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/easy/seed_0/arrays.npz": {
+      "path": "variations/blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/easy/seed_0/arrays.npz",
+      "sha256": "468412eea6cfd25de4f9291fe35bf1a887de218fcf53fdeb26f2c60f5a8e510b",
+      "source": "prepared gathered_scene_v1 easy, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/medium/seed_0/manifest.json": {
+      "path": "variations/blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/medium/seed_0/manifest.json",
+      "sha256": "c25349fd0c9b64867b1ec0f79fb38ecefab3124cc56ee04aeadb8c32b129eac6",
+      "source": "prepared gathered_scene_v1 medium, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/medium/seed_0/arrays.npz": {
+      "path": "variations/blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/medium/seed_0/arrays.npz",
+      "sha256": "b743fd0389abb1dcfb4c6a7395b8b9409a820e315f4793fd4affed920035082c",
+      "source": "prepared gathered_scene_v1 medium, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/hard/seed_0/manifest.json": {
+      "path": "variations/blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/hard/seed_0/manifest.json",
+      "sha256": "a23cc42bb599622f9133818f9ccf8c906390c86c5f8cdfef29cbcf7f5b152d5f",
+      "source": "prepared gathered_scene_v1 hard, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/hard/seed_0/arrays.npz": {
+      "path": "variations/blanket_flatten/gathered_archive_v2/cuda_sm89_mp128_87407517a32a/hard/seed_0/arrays.npz",
+      "sha256": "e56be350823f4df0ebbe32e87b90550b61c5180d0f83928ffe1d0d55652f860c",
+      "source": "prepared gathered_scene_v1 hard, seed 0; scope=scene_layout",
+      "license": null
     }
   }
 }

@@ -2,6 +2,25 @@
 
 > **2026-09-27 更新：** 正式 easy 为两次重叠单绳圈；medium 为原 easy 的 overhand_trefoil；hard 为原 medium 的 figure_eight。double_overhand 已移到实验附表。 建模、录像与验证边界见[本轮开发报告](initial_scene_feedback_20260927_zh.md#9-本轮开发与验证2026-09-27)；全部当前入口见[39 项初始化索引](../../../runs/test_results/base_acceptance_final/README.md)。下文历史证据仍保留原版本含义。
 
+## 当前默认三档的可解性证明（2026-09-30）
+
+按"只动绳的路线 → 机器人 IK → 任务 Env 内连续物理执行"的顺序补证据，**机器人物理执行尚未完成**。绳上位置一律用弧长 s（从 A 端起，直绳参考态的材料坐标）；"交叉"指俯视投影中两段不相邻绳的交点；"抓点"指离 s 不超过 6 mm 的那一段绳。
+
+**动作及出处。** 三档只用两类动作：
+- 删交叉（node deletion，[HULK](https://arxiv.org/abs/2011.04999)）：从较近的自由端往里找第一个"该端从下面穿过"的交叉，一只手按住、另一只手抓住该交叉之后 35 mm 处抬起并往外拉，每拉 50 mm 重新数交叉（HULK 每次动作后重新感知）。与 HULK 不同，按住的是另一端离端 15 mm 处（v9 demo 的远端固定）：按 HULK 原样按在交叉旁的上股时，两手之间只有约 291 mm 绳，拉开时绳被拉长、松手回弹（`hard_cl_v4/v5`），不采用。
+- 两端拉开（Reidemeister move，HULK 与 [SGTM 2.0](https://arxiv.org/abs/2207.07813)）：只剩局部小圈（一个交叉的两次经过之间没有别的交叉）时，两手捏住两端往外拉，小圈翻转消失。
+- easy 的两个交叉都是同一条腿压在上面（Reidemeister II 构型），一只手把上面那条腿抬起越过另一条即可。
+
+| 档位 | 只动绳的路线（粗网格，IPC 摩擦平滑 1 mm/s） | 交叉数 | 机器人 IK（CPU，仅运动学） |
+|---|---|---|---|
+| easy | A 腿鼓包 s=224 mm 抬 25 mm、−x 平移 95 mm、放回 | 2→0，终态判据稳定通过 | 右臂可达，桌面最小间隙 2.1 mm |
+| medium | 远端 B 固定；A 侧 s=249 mm 抬 15 mm 沿绳拉 300 mm；两端拉开到约 0.9 m | 3→2→0，稳定通过；绳总长最大 +1.8 % | 左臂按 B、右臂拉 A；两端拉开右 A 左 B；均可达 |
+| hard | 远端 A 固定；B 侧 s=1135 mm 抬 30 mm 往外拉 0.55 m；两端拉开到约 1.15 m | 4→1→0，稳定通过；绳总长最大 +1.9 % | 右臂按 A、左臂拉 B；两端拉开右 A 左 B；均可达 |
+
+只动绳的证据与失败轮次见 [README](../../../runs/test_results/knot_object_route_20260930/README.md)；IK 检查见 `runs/test_results/knot_ik_keyframes_20260930/`（`scripts/check_knot_keyframes.py`，竖直下夹、夹指垂直于绳，预抓位与撤离各高 80 mm，查桌面、同臂、两臂与关节限位，绳不作碰撞体）。机器人执行器为 `scripts/run_knot_robot_route.py`，选点规则与只动绳共用 `topogym/planning/knot_untying/route_rule.py`，抓取为纯摩擦（不开抓持辅助）。
+
+**已知边界。** 只动绳的路线用的是 8 边粗网格（约 1.6k 顶点，正式约 3.2 万）并把接触摩擦平滑速度设为 1 mm/s；正式配置未设该参数（libuipc 默认 10 mm/s），此时弯绳以约 3 mm/s 持续蠕动，过不了"最大速度 ≤ 1 mm/s"。机器人执行沿用正式网格与正式接触参数，只把时序改为每物理步 25 ms、40 子步（IPC 积分步长仍为 0.625 ms），原因是正式时序下每模拟秒约 2700 s 墙钟。`KnotUntyingTask.goal_complete=False`，Env 不会报 `task_success`，Harbor 中 knot 的 trial 因而不会判成功；可解性证明直接核对终态判据（无投影交叉/重叠、贴桌、静止、已松手、机器人离开 ≥5 mm、稳定 0.5 s）。
+
 
 Agent 接入见 [Knot Untying adapter](../../../legacy/cleanup_20260929/docs/develop/modules/knot_untying_agent_adapter_zh.md)：本地文件队列、双臂四图、CUDA FEM 接触辅助与可复制 prompt。该接口的验证状态独立于下述历史 demo。
 

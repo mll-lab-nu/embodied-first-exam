@@ -14,14 +14,18 @@ from topogym.planning.solvability import Stage, Step
 from topogym.planning.buzz_wire_3d.keyframes import connect_held_guide
 from topogym.planning.buzz_wire_3d.kinematics import CheckedJointPolicy
 from topogym.utils.io import write_json_atomic
-from .keyframes import (GRASP_LINK, comb_keyframes, current_roll_deg, feed_keyframes, front_offsets, grasp_tcp,
-                        link_pose, ring_frame, roll_choices, strand_measures)
+from .keyframes import (GRASP_LINK, comb_keyframes, current_roll_deg, excess, feed_keyframes, front_offsets,
+                        grasp_tcp, link_pose, ring_frame, roll_choices, sector_choices, strand_measures)
 from .kinematics import FiberIK
 from .policy import FiberPolicy
 
 # 12.179 mm is the Task's entry radius for a strand station (13.479 hole radius,
 # 1.2 fiber radius, 0.1 margin); 0.68 mm is left for sheath centring while feeding.
 COMB_TARGET_M = .0115
+# Judged at the ring plane (terminal_v4), a strand only has to reach the half of
+# the tube front that guides it inward. The 2026-09-21 16-strand demo stopped
+# combing below 16 mm (plan.json entry_envelope_m) and every strand threaded.
+GUIDED_TARGET_M = .015
 MAXIMUM_BEND_DEG = 60.
 CLEARANCE_M = .001
 SPEEDS = dict(joint_speed=.25, translation_speed=.015, rotation_speed=.35)
@@ -32,6 +36,12 @@ PICKUPS = tuple(dict(tilt_deg=t, approach_m=.1) for t in (30., 40.))
 # the gripper base near a cradle side wall.
 COMBS = tuple(dict(d_press_m=d, roll_rank=k, approach_margin_m=m, tip_past_ring_m=.004)
               for m in (.008, .004) for d in (.032, .031, .030) for k in (0, 1))
+# Several strands per press: the direction is chosen to bring the most strands
+# within COMB_TARGET_M (keyframes.sector_choices). A deeper press reaches strands
+# up to about 34 degrees off the press direction (29 mm: 9.7 mm predicted there).
+SECTOR_COMBS = tuple(dict(sector_rank=k, d_press_m=d, roll_rank=j, approach_margin_m=m, tip_past_ring_m=.004)
+                     for m in (.008, .004) for k in (0, 1) for d in (.029, .030) for j in (0, 1))
+SECTOR_PROGRESS_M = .005
 FEED = dict(front_s_m=.03, maximum_front_offset_m=.0003, hold_s=1.5)
 
 
@@ -81,6 +91,12 @@ def plan_comb(kin, state, layout, parameters, strand=None):
     guide_a, guide_b, geometry = comb_keyframes(state, layout, strand, parameters["d_press_m"], roll,
                                                 approach_margin_m=parameters["approach_margin_m"],
                                                 tip_past_ring_m=parameters["tip_past_ring_m"])
+    first, second = connect_comb(kin, state, guide_a, guide_b)
+    return dict(strand=strand, roll_deg=roll, geometry=geometry, strand_measures=rows, guides=[first, second],
+                end_qpos=second["refs"][-1]["qpos"])
+
+
+def connect_comb(kin, state, guide_a, guide_b):
     offset_p, offset_r = measured_offset(kin, state)
     seed = kin.seed.copy()
     first = connect(kin, guide_a, offset_p, offset_r)
@@ -91,7 +107,28 @@ def plan_comb(kin, state, layout, parameters, strand=None):
         second = connect(kin, guide_b, offset_p, offset_r)
     finally:
         kin.seed = seed
-    return dict(strand=strand, roll_deg=roll, geometry=geometry, strand_measures=rows, guides=[first, second],
+    return first, second
+
+
+def plan_sector_comb(kin, state, layout, parameters, target=COMB_TARGET_M):
+    """Press several strands together, toward the sector_rank-th direction that
+    has an allowed roll (keyframes.sector_choices); the group is every strand the
+    prediction says the ring will push."""
+    rows = strand_measures(state, layout)
+    _, axis = ring_frame(state)
+    current = current_roll_deg(state, axis)
+    usable = [row for row in sector_choices(rows, parameters["d_press_m"], target)
+              if len(roll_choices(row["psi_deg"], current)) > parameters["roll_rank"]]
+    if parameters["sector_rank"] >= len(usable):
+        raise ValueError(f"Only {len(usable)} press directions with roll rank {parameters['roll_rank']}")
+    choice = usable[parameters["sector_rank"]]
+    roll = roll_choices(choice["psi_deg"], current)[parameters["roll_rank"]]
+    guide_a, guide_b, geometry = comb_keyframes(state, layout, choice["contacted"], parameters["d_press_m"], roll,
+                                                psi_deg=choice["psi_deg"],
+                                                approach_margin_m=parameters["approach_margin_m"],
+                                                tip_past_ring_m=parameters["tip_past_ring_m"])
+    first, second = connect_comb(kin, state, guide_a, guide_b)
+    return dict(choice=choice, roll_deg=roll, geometry=geometry, strand_measures=rows, guides=[first, second],
                 end_qpos=second["refs"][-1]["qpos"])
 
 
@@ -123,7 +160,7 @@ def common(tick):
                 task_not_failed=not (result["terminated"] and not result["task_success"]))
 
 
-def stages(env, context):
+def stages(env, context, comb_mode="single", target=COMB_TARGET_M):
     output = context.output / "planning"
     output.mkdir(exist_ok=True)
     layout = env._task.layout
@@ -170,7 +207,7 @@ def stages(env, context):
 
         def exit(tick):
             after = measures(tick["world"])
-            return dict(holding(tick), strand_within_target=after[strand]["max_radius_m"] <= COMB_TARGET_M,
+            return dict(holding(tick), strand_within_target=after[strand]["max_radius_m"] <= target,
                         bends_within_limit=max(row["max_bend_deg"] for row in after) <= MAXIMUM_BEND_DEG)
         kwargs = dict(part="references", plans=[first["refs"], second["refs"]], pauses=[1., .5],
                       progress_error_m=.001, arrival_error_m=.001)
@@ -179,10 +216,36 @@ def stages(env, context):
         return stage(name, "interaction", definition, kwargs, holding, exit, max(40., 2*duration+10),
                      holding_throughout=True)
 
+    def sector(name, parameters):
+        state = env._world.read_state()
+        plan = plan_sector_comb(FiberIK(env), state, layout, parameters, target)
+        attempts[0] += 1
+        write_json_atomic(output / f"{name}_plan{attempts[0]:03d}.json", dict(parameters=parameters, **plan))
+        first, second = plan["guides"]
+        before = excess(plan["strand_measures"], target)
+        duration = first["refs"][-1]["time_s"]+second["refs"][-1]["time_s"]
+
+        def exit(tick):
+            # A press that gains several strands may push a combed one on the far
+            # side back out a little (hard_guided_01 sector_03: -38 mm, +2.5 mm),
+            # so progress is the summed excess beyond target, not a strand count.
+            after = measures(tick["world"])
+            return dict(holding(tick), excess_reduced_5mm=excess(after, target) <= before-SECTOR_PROGRESS_M,
+                        bends_within_limit=max(row["max_bend_deg"] for row in after) <= MAXIMUM_BEND_DEG)
+        kwargs = dict(part="references", plans=[first["refs"], second["refs"]], pauses=[1., .5],
+                      progress_error_m=.001, arrival_error_m=.001)
+        definition = dict(parameters=dict(parameters, psi_deg=plan["choice"]["psi_deg"], roll_deg=plan["roll_deg"],
+                                          predicted_gain=plan["choice"]["gained"],
+                                          contacted=plan["choice"]["contacted"]),
+                          excess_beyond_target_before_m=before, planned_s=duration,
+                          minimum_clearance_m=min(e["minimum_clearance_m"] for e in first["edges"]+second["edges"]))
+        return stage(name, "interaction", definition, kwargs, holding, exit, max(40., 2*duration+10),
+                     holding_throughout=True)
+
     def verify(parameters):
         def exit(tick):
             rows = measures(tick["world"])
-            return dict(holding(tick), all_strands_within_target=max(r["max_radius_m"] for r in rows) <= COMB_TARGET_M,
+            return dict(holding(tick), all_strands_within_target=max(r["max_radius_m"] for r in rows) <= target,
                         bends_within_limit=max(r["max_bend_deg"] for r in rows) <= MAXIMUM_BEND_DEG)
         kwargs = dict(part="script", instructions=[dict(operation="hold", seconds=parameters["hold_s"])])
         return stage("verify_combed", "interaction", dict(parameters=parameters), kwargs, holding, exit, 5.,
@@ -207,11 +270,15 @@ def stages(env, context):
 
     yield Step("pickup", PICKUPS, pickup)
     limit, index = 3*layout.fiber_count, 0
-    while max(row["max_radius_m"] for row in measures(env._world.read_state())) > COMB_TARGET_M:
+    while max(row["max_radius_m"] for row in measures(env._world.read_state())) > target:
         if index >= limit:
-            raise ValueError(f"{variant}: strands still outside {COMB_TARGET_M} m after {limit} combing steps")
+            raise ValueError(f"{variant}: strands still outside {target} m after {limit} combing steps")
         index += 1
-        yield Step(f"comb_{index:02d}", COMBS, lambda parameters, name=f"comb_{index:02d}": comb(name, parameters))
+        if comb_mode == "sector":
+            yield Step(f"sector_{index:02d}", SECTOR_COMBS,
+                       lambda parameters, name=f"sector_{index:02d}": sector(name, parameters))
+        else:
+            yield Step(f"comb_{index:02d}", COMBS, lambda parameters, name=f"comb_{index:02d}": comb(name, parameters))
     yield Step("verify_combed", (dict(hold_s=1.),), verify)
     yield Step("feed", (FEED,), feed)
 
@@ -220,3 +287,13 @@ def pickup_only(env, context):
     """Grasp check alone (the first step of stages): approach, close on the
     sheath, register the contact weld and settle the fingers."""
     yield next(iter(stages(env, context)))
+
+
+def stages_sector(env, context):
+    """stages() with several strands combed per press (sector choice)."""
+    yield from stages(env, context, comb_mode="sector")
+
+
+def stages_sector_guided(env, context):
+    """Sector combing that stops once every strand is within GUIDED_TARGET_M."""
+    yield from stages(env, context, comb_mode="sector", target=GUIDED_TARGET_M)

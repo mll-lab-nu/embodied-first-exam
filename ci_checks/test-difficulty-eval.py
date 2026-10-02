@@ -316,6 +316,13 @@ class ResultTests(unittest.TestCase):
             self.assertEqual(p.returncode,0,p.stdout+p.stderr)
             u=tomllib.loads((tasks/slug/'task.toml').read_text()); l=tomllib.loads((tasks/(slug+'-limited')/'task.toml').read_text())
             self.assertEqual((u['agent']['timeout_sec'],l['agent']['timeout_sec']),(21600,21600))
+            self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),('3','3'))
+            tools=[tasks/slug/'environment/rcb_topogym.py',tasks/slug/'tests/rcb_topogym.py',
+                   tasks/(slug+'-limited')/'environment/sim/rcb_topogym.py']
+            self.assertTrue(all(p.read_bytes()==(ROOT/'harbor_templates/topogym/common/rcb_topogym.py').read_bytes() for p in tools))
+            identity=subprocess.run(['bash',str(ROOT/'ci_checks/check-tooling-identity.sh'),str(tasks)],capture_output=True,text=True,
+                env=dict(os.environ,PATH=str(Path(sys.executable).parent)+os.pathsep+os.environ['PATH']))
+            self.assertEqual(identity.returncode,0,identity.stdout+identity.stderr)
             self.assertEqual(u['verifier']['timeout_sec'],65700)
             self.assertEqual(l['verifier']['collect'][0]['timeout_sec'],45000)
             self.assertEqual((tasks/slug/'environment/instance.json').read_bytes(),(tasks/(slug+'-limited')/'environment/sim/instance.json').read_bytes())
@@ -418,13 +425,30 @@ print(os.environ.get('OPENAI_API_KEY','stub subscription: no key'))
             # Canary only copies this file in the stub test, no physical image is implied.
             (build/'smoke/initial_rgb/camera.png').write_bytes(b'synthetic test image')
             (build/'prepared.json').write_text('{"files":{}}')
-            (build/'preflight.ok.json').write_text('{"synthetic_test_only":true}')
             for suffix in ('','-limited'):
                 path=self.run/'tasks'/(row['slug']+suffix); path.mkdir(parents=True)
+            tool = self.run/'tasks'/row['slug']/'environment/rcb_topogym.py'
+            tool.parent.mkdir(); tool.write_text('# synthetic tool, never physics\n')
+            from difficulty_eval import DifficultyEvaluation
+            from types import SimpleNamespace
+            fixture = SimpleNamespace(run=self.run, source=self.root, gpu_device='0',
+                commands=SimpleNamespace(run_command=lambda *a, **kw: (0, '24000, 0\n')),
+                build_dir=lambda r: self.run/'build'/r['slug'],
+                task_dir=lambda r: self.run/'tasks'/r['slug'])
+            evidence = DifficultyEvaluation.preflight_identity(fixture, row)
+            (build/'preflight.ok.json').write_text(json.dumps(dict(passed=True, synthetic_test_only=True, evidence_identity=evidence)))
         self.key='contract-test-'+os.urandom(24).hex()
 
     def tearDown(self):
         self.tmp.cleanup()
+
+    def test_stale_preflight_marker_blocks_trial(self):
+        marker=next((self.run/'build').glob('*/preflight.ok.json'))
+        marker.write_text('{"passed":true}')
+        p=self.call('--phase','run','--resume','--model','contract-model','--api-key',self.key)
+        self.assertNotEqual(p.returncode,0)
+        self.assertIn('preflight evidence is stale', p.stderr+p.stdout)
+        self.assertFalse(list(self.jobs.glob('**/launch-proof.json')))
 
     def executable(self,name,body):
         p=self.bin/name; p.write_text('#!'+sys.executable+'\n'+body+'\n'); p.chmod(0o755)

@@ -4,7 +4,8 @@ import time
 import numpy as np
 
 
-def plan_transit(planner, start, goal, bodies, *, side='left', seconds=30., seed=931):
+def plan_transit(planner, start, goal, bodies, *, side='left', seconds=30., seed=931, direct_only=False):
+    if not isinstance(direct_only,bool):raise ValueError('Direct transit option must be boolean')
     indices=planner.robot._q_indices[side][:6]
     other='right' if side=='left' else 'left'
     contacts={other:('horseshoe_left','horseshoe_right')}
@@ -27,6 +28,7 @@ def plan_transit(planner, start, goal, bodies, *, side='left', seconds=30., seed
 
     if not valid(start) or not valid(goal):raise ValueError('Free transit endpoint collision')
     if edge(start,goal):return dict(waypoints=[start.tolist(),goal.tolist()],queries=queries,method='direct')
+    if direct_only:raise ValueError('No checked direct free-arm transit')
     rng=np.random.default_rng(seed)
     trees=[([start],[-1]),([goal],[-1])]
 

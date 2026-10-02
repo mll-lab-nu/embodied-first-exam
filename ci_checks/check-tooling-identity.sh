@@ -13,18 +13,16 @@
 # TopoGym (adapted from robot_coding_bench fa59c1a6): topogym is one more benchmark (tooling rcb_topogym.py) and part of the
 # 2.2 layer; the files copied from robot_coding_bench (ci_checks/rcb_vendor.json "verbatim") must still be byte-identical
 # to the reference blobs recorded there.
-# TopoGym has two tooling generations (2026-09-30): the tier dirs topogym-<family>-{easy,medium,hard}-i00[-limited] carry
-# the current template byte for byte (his grasp configuration, float32 joint limits, the live-end replay); Jianwen's original
-# frozen instances topogym-<family>-i00[-limited] keep HIS template as at 76583213 (his own re-render in 76583213; their
-# grasp behaviour stays as authored): each group is checked on its own, against its own template.
-# The interlocked_claws tier dirs (topogym-interlocked-claws-*) are a third group (user decision 2026-10-01, option i): their
-# rcb_topogym.py is common/rcb_topogym_interlocked.py (the template + the pre-weld gripper fix); every other shared file of
-# theirs is the common template's.
+# TopoGym originals (76583213) and tier packages (c0a35177, including the
+# historical interlocked-only patch) retain pinned tooling hashes. Newly
+# generated metadata.tooling_version="3" packages all use the current common
+# template. Unknown explicit versions fail; upgrading templates does not rewrite
+# historical benchmark inputs.
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 - "${1:-$root/tasks}" "$root" <<'PY'
-import collections, hashlib, os, re, sys
+import collections, hashlib, os, re, sys, tomllib
 tasks = sys.argv[1]
 TOPOGYM_TIER = re.compile(r"topogym-.+-(easy|medium|hard)-i\d\d(-limited)?$")
 # His template as at 76583213 (sha256[:16]), which the original topogym-<family>-i00[-limited] dirs keep.
@@ -50,10 +48,17 @@ for t in sorted(os.listdir(tasks)):
     if bench not in MODULE or not os.path.isfile(os.path.join(tasks, t, "task.toml")):
         continue
     module = MODULE[bench]
-    if bench == "topogym" and not TOPOGYM_TIER.match(t):
+    metadata = tomllib.loads(open(os.path.join(tasks, t, 'task.toml')).read()).get('metadata', {})
+    if bench == 'topogym' and metadata.get('tooling_version') == '3':
+        pass  # Explicit v3 packages must match the current common template.
+    elif bench == 'topogym' and 'tooling_version' in metadata:
+        raise SystemExit(f"Unknown tooling version in {t}: {metadata['tooling_version']}")
+    elif bench == "topogym" and not TOPOGYM_TIER.match(t):
         bench = "topogym (original i00)"
     elif bench == "topogym" and t.startswith("topogym-interlocked-claws-"):
         bench = "topogym (interlocked)"
+    elif bench == 'topogym':
+        bench = 'topogym (frozen v2)'
     dirs[bench] += 1
     mode = "limited" if t.endswith("-limited") else "unlimited"
     for dp, dns, fns in os.walk(os.path.join(tasks, t)):
@@ -75,15 +80,21 @@ canonical = {"rcb_topogym.py": "common/rcb_topogym.py",
              "unlimited tests/grade.py": "unlimited/tests/grade.py"}
 canonical.update({"limited " + rel: "limited/" + rel for rel in SHARED
                   if os.path.isfile(os.path.join(template, "limited", rel))})
-VARIANT_TOOL = {"topogym (interlocked)": "common/rcb_topogym_interlocked.py"}
-for group in ("topogym", "topogym (interlocked)"):
+for group in ("topogym",):
     for role, rel in canonical.items():
-        rel = VARIANT_TOOL.get(group, rel) if role == "rcb_topogym.py" else rel
         with open(os.path.join(template, rel), "rb") as f:
             expected = hashlib.sha256(f.read()).hexdigest()[:16]
         for actual, path in seen.get(group, {}).get(role, {}).items():
             if actual != expected:
                 bad.append(f"{path}: differs from public template {rel}")
+frozen_common = dict(TOPOGYM_ORIGINAL, **{'rcb_topogym.py': 'fd19e5191e14f5bc',
+    'limited environment/sim/server.py': 'd7aa47dfb2428705'})
+for group, frozen in {'topogym (frozen v2)': frozen_common,
+        'topogym (interlocked)': dict(frozen_common, **{'rcb_topogym.py': '493ece29325f37c3'})}.items():
+    for role, versions in seen.get(group, {}).items():
+        for actual, path in versions.items():
+            if actual != frozen.get(role):
+                bad.append(f'{path}: differs from frozen c0a35177 tooling ({role})')
 for role, versions in seen.get("topogym (original i00)", {}).items():
     for actual, path in versions.items():
         if actual != TOPOGYM_ORIGINAL.get(role):

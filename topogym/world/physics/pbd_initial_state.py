@@ -16,9 +16,12 @@ from topogym.utils.io import canonical_hash, sha256_file
 from topogym.world.initial_state import load_numeric_archive, save_numeric_archive, require_same_layout
 from topogym.world.state import BufferState, copy_native_state
 from topogym.world.physics.pbd_binding import read_birth_visual_binding
+from topogym.world.physics.initial_state_compatibility import (
+    CODEC, WORLD_RESTORE_SEMANTICS, built_geometry, device_identity, layout,
+    provenance, require_compatible)
 
 
-def backend_identity(world):
+def backend_identity(world, *, codec=CODEC, state=None):
     import genesis as gs
     root = Path(gs.__file__).parent
     solvers = [type(s).__name__ for s in world.scene.sim._active_solvers]
@@ -28,7 +31,7 @@ def backend_identity(world):
         raise ValueError("Unsupported frozen-state coupler")
     files = ("engine/entities/particle_entity.py", "engine/entities/pbd_entity.py",
              "engine/solvers/pbd_solver.py", "engine/solvers/rigid/rigid_solver.py")
-    return dict(codec="rigid_pbd_numeric_v1", genesis=version("genesis-world"),
+    result = dict(codec="rigid_pbd_numeric_v1", genesis=version("genesis-world"),
         precision=np.dtype(gs.np_float).str, backend=str(gs.backend),
         dt_s=world.physics_dt_s, solvers=solvers,
         backend_sources={n: sha256_file(root/n) for n in files},
@@ -37,6 +40,19 @@ def backend_identity(world):
         table_friction_sha256=sha256_file(Path(__file__).with_name("pbd_table_friction.py")),
         bindings={name: read_birth_visual_binding(e).sha256 for name, e in world.entities.items()
                   if hasattr(e, "get_particles_pos")})
+    if codec == "rigid_pbd_numeric_v1":
+        return result  # Preserve the historical strict contract byte for byte.
+    if codec != CODEC:
+        raise ValueError(f"Unsupported frozen-state codec: {codec}")
+    if state is None:
+        state = world.capture_state()
+    result.pop("world_sha256")
+    result.update(codec=CODEC, world_restore_semantics=WORLD_RESTORE_SEMANTICS,
+                  device=device_identity(), built_geometry=built_geometry(state),
+                  dependencies={p: version(p) for p in ("quadrants", "torch", "numpy")})
+    for name in ("engine/solvers/rigid/collider/collider.py", "engine/couplers/legacy_coupler.py"):
+        result["backend_sources"][name] = sha256_file(root/name)
+    return result
 
 
 def native_values(state):
@@ -48,7 +64,7 @@ def export_initial_state(world, folder, *, identity, robot=None, qualification=N
     state = world.capture_state()
     if state.grasp_state is not None:
         raise ValueError("Initial-state export must precede runtime grasp configuration")
-    backend = backend_identity(world)
+    backend = backend_identity(world, state=state)
     if state.ipc_state is not None:
         raise ValueError("IPC is outside this codec")
     robot_state = None if robot is None else robot.capture_state()
@@ -61,7 +77,8 @@ def export_initial_state(world, folder, *, identity, robot=None, qualification=N
         robot=None if robot_state is None else dict(robot_id=robot_state.robot_id, targets=robot_state.targets))
     if len(payload["buffers"]) != len(state.buffers):
         raise ValueError("Ambiguous buffer paths cannot be exported")
-    return save_numeric_archive(folder, payload, dict(backend=backend, identity=identity,
+    backend["payload_layout_sha256"] = canonical_hash(layout(payload))
+    return save_numeric_archive(folder, payload, dict(backend=backend, provenance=provenance(world), identity=identity,
         identity_sha256=canonical_hash(identity), qualification=qualification or {},
         scope="management_initial_state", includes_robot=robot is not None))
 
@@ -71,13 +88,18 @@ def restore_initial_state(world, manifest, *, identity, robot=None, expected_sha
     payload, metadata = load_numeric_archive(manifest, expected_sha256=expected_sha256)
     if metadata["identity_sha256"] != canonical_hash(identity) or metadata["identity"] != identity:
         raise ValueError("Frozen initial-state scene/configuration identity differs")
-    if metadata["backend"] != backend_identity(world):
-        raise ValueError("Frozen initial-state backend or birth binding differs")
     if metadata["includes_robot"] != (robot is not None):
         raise ValueError("Frozen initial-state robot coverage differs")
     template = world.capture_state()
     if template.grasp_state is not None:
         raise ValueError("Initial-state import must precede runtime grasp configuration")
+    source_backend = dict(metadata["backend"])
+    codec = source_backend.get("codec")
+    if codec == CODEC:
+        # Check that inventory metadata still describes the actual payload.
+        if source_backend.pop("payload_layout_sha256", None) != canonical_hash(layout(payload)):
+            raise ValueError("Frozen initial-state payload layout fingerprint differs")
+    require_compatible(source_backend, backend_identity(world, codec=codec, state=template))
     target_native = native_values(template)
     require_same_layout(payload["native"], target_native, "native")
     by_path = {b.path: b for b in template.buffers}
