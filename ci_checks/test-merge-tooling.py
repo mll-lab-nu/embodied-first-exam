@@ -105,7 +105,7 @@ class MergeTests(unittest.TestCase):
     def test_frozen_inventory_detects_missing_and_tampered_tooling(self):
         spec = importlib.util.spec_from_file_location('tooling_check', ROOT/'ci_checks/check-topogym-tooling.py')
         checker = importlib.util.module_from_spec(spec); spec.loader.exec_module(checker)
-        name = 'topogym-interlocked-claws-hard-i00-standard'
+        name = 'topogym-interlocked-claws-i00-limited'   # unversioned: the tier dirs are tooling v4 since their re-render
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder)/name
             shutil.copytree(ROOT/'tasks'/name, target)
