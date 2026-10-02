@@ -90,13 +90,17 @@ Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts
 ```
 <trial>/gateway/usage.jsonl     one line per request: time, duration, host, path, status, model, input / cached / output tokens
 <trial>/gateway/totals.json     running totals, rewritten after every request
-<trial>/gateway/raw/            GATEWAY_RAW=1 only: every request and response body, gzipped JSON (headers without credentials)
+<trial>/gateway/raw/            every request and response body (GATEWAY_RAW=1, the default with the gateway on), gzipped JSON (headers without credentials)
 ```
 Input counts what the model read (Anthropic: input + cache read + cache creation; OpenAI: `input_tokens`, cached
 included); output includes reasoning: the same convention as Harbor's `n_input_tokens` / `n_output_tokens`, which the batch
 summary shows side by side. They agree exactly when the agent ends by itself; when it is stopped at its time limit, the
 gateway is higher by the requests the provider completed (and billed) after Harbor's cut-off or that the agent was killed
-before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Switches: `GATEWAY=1` (record usage), `GATEWAY_RAW=1` (raw bodies; private, they hold the
+before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Token budget: with the gateway on, a trial that reaches `TOKEN_BUDGET_IN` input or `TOKEN_BUDGET_OUT` output tokens
+(default 100M / 10M; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
+the agent stops; `totals.json` records `over_token_budget = 1`, the batch summary marks it, and `write_task_results.py`
+counts it as failed (PROTOCOL §5). Tested 2026-10-02: Codex 0.159.2 ends its turn on the first refusal, without retrying.
+Switches: `GATEWAY=1` (record usage and, by default, raw bodies), `GATEWAY_RAW=0` (usage only; raw bodies are private: they hold the
 whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
 attempts); Codex request bodies are zstd-compressed and are stored as base64 unless `zstandard` is installed; OpenAI
 reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
