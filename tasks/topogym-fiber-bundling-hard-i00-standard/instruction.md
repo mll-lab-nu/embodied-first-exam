@@ -1,4 +1,4 @@
-# TopoGym · fiber_bundling — STANDARD MODE (robot as a service, eai-standard/2.2)
+# TopoGym · fiber_bundling — STANDARD MODE (robot as a service, eai-standard/2.3)
 
 You control a robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and one episode. **Task:** Manipulate the thick sheath to pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored.
@@ -60,7 +60,7 @@ client and one episode. **Task:** Manipulate the thick sheath to pass every fine
 - One control step takes about 15.7 s of wall clock on an unloaded GPU and up to about 53.4 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: keep each `submit` to at most 16 control steps (0.40 s of simulated time: rows x dt); keep each `get_obs(seconds=...)` watch to at most 5 control steps (0.12 s) (both with a 2x margin).
 - If a request times out in the client anyway, the service still runs it to the end: do NOT send it again (it would run twice). Call `r.get_obs()` (repeat it if it also times out): it answers once the earlier request has finished and shows the state after it.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`)
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects to the existing service; retries until ready (default timeout 600 s)

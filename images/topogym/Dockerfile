@@ -14,6 +14,9 @@ COPY images/topogym/build_uipc.sh images/topogym/verify_uipc_wheel.py /recipe/
 ARG UIPC_CONFIG=uipc-build.json
 COPY images/topogym/${UIPC_CONFIG} /recipe/uipc-build.json
 RUN bash /recipe/build_uipc.sh prepare
+# The compile parallelism (build_uipc.sh: CMAKE_BUILD_PARALLEL_LEVEL): default 3 = uipc-build.json build_policy.compile_jobs;
+# a host with more memory may pass more (lab: --build-arg UIPC_BUILD_JOBS=16).
+ARG UIPC_BUILD_JOBS=3
 RUN --mount=type=cache,target=/root/.cache/vcpkg \
     --mount=type=cache,target=/build/vcpkg/downloads \
     --mount=type=cache,id=topogym-uipc-objects-${UIPC_CONFIG},target=/build/uipc-build,sharing=locked \

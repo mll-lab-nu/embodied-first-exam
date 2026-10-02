@@ -1,4 +1,4 @@
-# TopoGym · cast_coil — STANDARD MODE (robot as a service, eai-standard/2.2)
+# TopoGym · cast_coil — STANDARD MODE (robot as a service, eai-standard/2.3)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and one episode. **Task:** Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both.
@@ -59,7 +59,7 @@ client and one episode. **Task:** Assemble the gold and silver Cast Coil pieces 
 - One control step takes about 0.4 s of wall clock on an unloaded GPU and up to about 0.8 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: a `submit` of the maximum 10 s chunk fits; keep each `get_obs(seconds=...)` watch to at most 361 control steps (9.03 s) (both with a 2x margin).
 - If a request times out in the client anyway, the service still runs it to the end: do NOT send it again (it would run twice). Call `r.get_obs()` (repeat it if it also times out): it answers once the earlier request has finished and shows the state after it.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`)
 ```python
 from rcb_client import Robot
 r = Robot()                                   # connects to the existing service; retries until ready (default timeout 600 s)

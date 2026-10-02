@@ -67,7 +67,9 @@ try:
     out.update(json.load(open(os.path.join(d, "episode.json"))))
 except Exception as exc:
     out["error"] = f"no episode.json: {exc!r}"
-r = last_json("replay.json")
+r = last_json("replay.verdict.json") or last_json("replay.json")
+out["instance_mismatch"] = bool(r.get("instance_mismatch"))
+out["media_status"] = r.get("media_status", "incomplete")
 a = (r.get("replays") or [None])[0]
 if isinstance(a, dict):                  # a replay result (None: the replay process failed -> grader_error, not the agent's 0)
     out["replay_success"] = bool(a.get("success"))
@@ -81,6 +83,7 @@ if r.get("gpu_lost"):
     out["gpu_lost"] = True; out["infra_error"] = 1
     out["error"] = "infrastructure: the GPU was not accessible to new processes in the sim sidecar, so the episode could not be replayed"
 out["finalized"] = True
-json.dump(out, open(os.path.join(d, "final.json"), "w"))
+from rcb_topogym import atomic_json
+atomic_json(os.path.join(d, "final.json"), out)
 print(json.dumps(out))
 PY

@@ -9,7 +9,7 @@
 | Family / instance | `buzz_wire_3d` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.5-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.7-cu128` |
 
 ## Task
 TopoGym buzz_wire_3d (panda_robotiq, Genesis): produce one replayable trajectory. Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support. Frozen scene instance (variation buzz_wire_3d_hard, seed 0).
@@ -25,7 +25,7 @@ grasping, if the family enables it, is the same for the oracle and the agent).
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
 replay (two passes, no separate video replay). The physics runs on the GPU, which is not bit-deterministic: the
-final-state hashes (`deterministic`) and the rebuilt frozen scene (`instance_ok`) are reported, not required
+final-state hashes (`deterministic`) are diagnostic; the rebuilt frozen scene must match (`instance_ok`)
 (robot_coding_bench's GPU-backend rule).
 
 ## Details

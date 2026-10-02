@@ -43,8 +43,8 @@ import numpy as np
 
 import rcb1
 
-PROTOCOL = "eai-standard/2.2"
-COMPAT = ["rcb-limited/2.0", "rcb-limited/2.1", "eai-standard/2.1"]   # requests written for these are served unchanged
+PROTOCOL = "eai-standard/2.3"
+COMPAT = ["eai-standard/2.2", "rcb-limited/2.0", "rcb-limited/2.1", "eai-standard/2.1"]   # requests written for these are served unchanged
 MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024
 DEPTH_MODES = ("none", "last", "frames")
@@ -54,6 +54,17 @@ _RNG = np.random.default_rng(int(os.environ.get("RCB_DEPTH_NOISE_SEED", "0")))
 PROPRIO_GROUPS_REQUIRED = ("joint_pos", "joint_vel", "gripper_opening", "tcp_pose", "joint_effort")
 PART_PREFIXES = ("video/", "frames/", "last/", "last_depth/", "depth_frames/", "depth/", "extrinsic_cv/")
 PART_NAMES = ("proprio", "frame_step", "frame_time_s")
+
+
+def control_periods(dt, hz):
+    """Validate duration without silently changing the requested control clock."""
+    dt, hz = float(dt), float(hz)
+    if not math.isfinite(dt) or not math.isfinite(hz) or hz <= 0 or dt < 1 / hz - 1e-9 or dt > .5 + 1e-9:
+        raise ValueError("dt must be a finite duration between one control period and 0.5 s")
+    count = round(dt * hz)
+    if count < 1 or not math.isclose(dt * hz, count, rel_tol=0, abs_tol=1e-7):
+        raise ValueError("dt must be an integer multiple of the control period")
+    return int(count)
 
 
 # ---------------------------------------------------------------- depth
@@ -122,18 +133,29 @@ class Recorder:
     axis N: frames/<cam>, the mp4's frames, proprio, frame_step, frame_time_s, extrinsic_cv/<cam>, depth_frames/<cam>."""
 
     def __init__(self, cameras, every: int, grab: Callable, proprio_row: Callable, extrinsics: Callable, clock: Callable,
-                 depth: str = "none", clock_hz: float = 1.0):
+                 depth: str = "none", clock_hz: float = 1.0, time_clock=None, fps=None):
         if depth not in DEPTH_MODES + ("legacy",):
             raise ValueError(f"bad depth mode {depth!r}")
         self.cams = list(cameras); self.every = max(1, int(every)); self.mode = depth; self.hz = float(clock_hz)
         self._grab, self._prop, self._ext, self._clock = grab, proprio_row, extrinsics, clock
+        self._time_clock = time_clock or (lambda: self._clock() / self.hz)
+        self.fps = float(self.hz / self.every if fps is None else fps)
+        if not math.isfinite(self.fps) or not 0 < self.fps <= self.hz:
+            raise ValueError("video fps must be positive and no greater than control_hz")
+        self.times = []; self._next_time = None
         self.frames: dict = {c: [] for c in self.cams}; self.depth: dict = {c: [] for c in self.cams}
         self.ext: dict = {c: [] for c in self.cams}; self.last_depth: dict = {}
         self.prop: list = []; self.steps: list = []; self.n = 0; self.missing = 0
 
     def tick(self, force: bool = False, last: bool = False) -> None:
-        if force or last or self.n % self.every == 0:
-            self._capture(last)
+        now = float(self._time_clock())
+        if self._next_time is None:
+            self._next_time = now
+        if force or last or now + 1e-10 >= self._next_time:
+            if not self.times or now > self.times[-1]:
+                self._capture(last)
+            while self._next_time <= now + 1e-10:
+                self._next_time += 1 / self.fps
         self.n += 1
 
     def _capture(self, last: bool) -> None:
@@ -163,6 +185,7 @@ class Recorder:
                     self.last_depth[c] = d
         self.prop.append(np.asarray(self._prop(), dtype=np.float32).reshape(-1))
         self.steps.append(int(self._clock()))
+        self.times.append(float(self._time_clock()))
 
     def parts(self, video: str, fps: int) -> list:
         if self.mode == "last" and not self.last_depth and self.prop:   # no last=True tick: the state has not moved since
@@ -194,7 +217,7 @@ class Recorder:
         out.append(rcb1.array_part("proprio", np.stack(self.prop) if self.prop else np.zeros((0, 0), np.float32)))
         st = np.asarray(self.steps, dtype=np.int64)
         out.append(rcb1.array_part("frame_step", st))
-        out.append(rcb1.array_part("frame_time_s", st.astype(np.float64) / self.hz))
+        out.append(rcb1.array_part("frame_time_s", np.asarray(self.times, dtype=np.float64)))
         return out
 
 
@@ -431,7 +454,13 @@ def _write_json(path: str, obj: dict) -> None:
     tmp = f"{path}.{os.getpid()}.tmp"
     with open(tmp, "w") as f:
         json.dump(obj, f)
+        f.flush(); os.fsync(f.fileno())
     os.replace(tmp, path)
+    directory = os.open(os.path.dirname(path) or ".", os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
 
 
 def final_verdict(data: str) -> dict | None:
@@ -479,6 +508,9 @@ class Episode:
         p = lambda n: os.path.join(data, n)  # noqa: E731
         self.f_events, self.f_journal, self.f_final, self.f_pid, self.f_startups = (
             p("episode.jsonl"), p("journal.f64"), p("final.json"), p("server.pid"), p("startups.jsonl"))
+        self.f_ticks = p("journal.ticks.i64")
+        self.f_call_watchdog = p("call-watchdog.json")
+        self._tf = None
         self.rows = 0                       # control steps executed in this episode (journaled)
         self.max_call_wall_s = MAX_CALL_WALL_S
         self.n_startups = 0; self.resumes = 0; self.mismatches = 0; self.max_tcp_dev = 0.0; self.max_joint_dev = 0.0
@@ -513,6 +545,7 @@ class Episode:
     def log(self, ev: dict) -> None:
         with open(self.f_events, "a") as f:
             f.write(json.dumps(_jsonable({"ts": time.time(), **ev})) + "\n")
+            f.flush(); os.fsync(f.fileno())
 
     def events(self) -> list:
         out = []
@@ -527,14 +560,23 @@ class Episode:
             pass
         return [e for e in out if isinstance(e, dict)]
 
-    def journal(self, row) -> bool:
+    def journal(self, row, *, physics_steps=None) -> bool:
         """One executed control step. True: the call in progress must stop at this step boundary (meta.stopped)."""
         a = np.asarray(row, dtype=np.float64).reshape(-1)
         if a.size != self.dim:
             raise ValueError(f"journal rows have {self.dim} entries, got {a.size}")
         if self._jf is None:
             self._jf = open(self.f_journal, "ab")
-        self._jf.write(a.tobytes()); self.rows += 1
+        self._jf.write(a.tobytes())
+        if physics_steps is not None:
+            if self._tf is None:
+                self._tf = open(self.f_ticks, "ab")
+            self._tf.write(np.asarray([physics_steps], dtype=np.int64).tobytes())
+        self.rows += 1
+        return self.poll_stop()
+
+    def poll_stop(self):
+        """Check the call boundary before and after a non-preemptible physics step."""
         c = self._call
         if c is None:
             return False
@@ -557,21 +599,32 @@ class Episode:
     def stop_reason(self) -> str | None:
         return self._call["stopped"] if self._call else None
 
-    def call_begin(self, path: str, sock=None) -> int:
+    def call_begin(self, path: str, sock=None, *, deadline=None) -> int:
         self._ids += 1
         if path != "/kinematics":
-            self._call = {"id": self._ids, "t0": time.monotonic(), "sock": sock, "polled": 0.0, "stopped": None}
+            budget = self.max_call_wall_s if deadline is None else min(self.max_call_wall_s, max(0, deadline - time.time()))
+            self._call = {"id": self._ids, "t0": time.monotonic() - (self.max_call_wall_s - budget), "sock": sock, "polled": 0.0, "stopped": None}
+            _write_json(self.f_call_watchdog, {"call": self._ids, "pid": os.getpid(), "deadline": time.time() + max(1, budget + 60)})
+            faulthandler.dump_traceback_later(max(1, budget + 60), exit=True)
         self.log({"ev": "call_begin", "id": self._ids, "path": path})
         return self._ids
 
     def call_end(self, cid: int, path: str, **extra) -> None:
         self.log({"ev": "call_end", "id": cid, "path": path, **extra})
         if path != "/kinematics":
+            faulthandler.cancel_dump_traceback_later()
+            try:
+                os.remove(self.f_call_watchdog)
+            except FileNotFoundError:
+                pass
             self._call = None
 
     def checkpoint(self, state: dict, state_sha: Callable | None, proprio: Callable | None) -> None:
         if self._jf is not None:
-            self._jf.flush()                 # the rows reach the file before the checkpoint that counts them
+            self._jf.flush(); os.fsync(self._jf.fileno())
+        if self._tf is not None:
+            self._tf.flush(); os.fsync(self._tf.fileno())
+        # the rows reach the file before the checkpoint that counts them
         if self._ck is not None and self._ck[0] == self.rows:
             sha, pr = self._ck[1], self._ck[2]                          # no physics since the last checkpoint
         else:
@@ -600,7 +653,7 @@ class Episode:
 
     # ---- start or resume
     def begin(self, *, state: dict, step: Callable, state_sha: Callable, proprio: Callable, spec: dict,
-              start_event: dict | None = None, on_end: Callable | None = None) -> bool:
+              start_event: dict | None = None, on_end: Callable | None = None, step_ticks: Callable | None = None) -> bool:
         """Start the episode, or resume it after a crash. `step(row)` executes one journaled row on the simulator (the
         recorder on, no rendering needed); `on_end` is what the collect hook's SIGUSR1 runs (in a thread). Returns True
         if the episode was resumed."""
@@ -615,11 +668,15 @@ class Episode:
             pass
         ev = self.events()
         starts = [e for e in ev if e.get("ev") == "start"]
+        watchdog = _read_json(self.f_call_watchdog)
+        if starts and watchdog and time.time() >= float(watchdog["deadline"]):
+            self.give_up("call_watchdog: unfinished native call exceeded its deadline", infra=True)
         if not starts:
-            try:
-                os.remove(self.f_journal)
-            except OSError:
-                pass
+            for path in (self.f_journal, self.f_ticks):
+                try:
+                    os.remove(path)
+                except FileNotFoundError:
+                    pass
             sha = state_sha()
             self._ck = (0, sha, self._proprio_row(proprio))
             self.log({**(start_event or {}), "ev": "start", "state_sha": sha, "protocol": PROTOCOL, "resume": self.resume_class,
@@ -647,6 +704,14 @@ class Episode:
         cps = [e for e in ev if e.get("ev") == "checkpoint"]
         last = cps[-1] if cps else {"call": 0, "step": 0, "control_steps": 0, "success": False, "state_sha": starts[0].get("state_sha")}
         n = int(last.get("control_steps") or 0)
+        operation_dir = os.path.join(self.data, "operations")
+        if os.path.isdir(operation_dir):
+            for name in os.listdir(operation_dir):
+                path = os.path.join(operation_dir, name)
+                record = _read_json(path)
+                if record.get("status") == "admitted":
+                    _write_json(path, {**record, "status": "interrupted", "execution_uncertain": True,
+                                       "restored_committed_rows": n})
         try:
             R = np.fromfile(self.f_journal, dtype=np.float64)
         except (OSError, ValueError):
@@ -655,8 +720,21 @@ class Episode:
             self.give_up("resume_failed: journal shorter than the log", infra=True)
         R = R[: n * self.dim].reshape(n, self.dim)
         t = time.time()
-        for row in R:
-            step(row)
+        ticks = None
+        if step_ticks is not None and n:
+            try:
+                ticks = np.fromfile(self.f_ticks, dtype=np.int64)[:n]
+                if len(ticks) != n or np.any(ticks <= 0):
+                    raise ValueError("incomplete tick journal")
+            except (ValueError, OSError):
+                self.give_up("resume_failed: actual tick journal missing", infra=True)
+        for i, row in enumerate(R):
+            if ticks is None:
+                step(row)
+            else:
+                step_ticks(row, int(ticks[i]))
+        if ticks is not None:
+            ticks.tofile(self.f_ticks)
         replay_s = time.time() - t
         R.tofile(self.f_journal)            # drop the rows of the call that was in flight
         self.rows = n
@@ -786,6 +864,12 @@ def make_handler(svc: Service):
             return body, {}
 
         def do_GET(self):
+            if self.path.startswith("/operations/") and svc.episode:
+                op = self.path.removeprefix("/operations/")
+                if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", op):
+                    return self._json(400, {"error": "invalid operation ID"})
+                record = _read_json(os.path.join(svc.episode.data, "operations", op + ".json"))
+                return self._json(200 if record else 404, record)
             if self.path == "/spec":
                 return self._json(200, svc.spec)
             if self.path == "/status":
@@ -814,10 +898,28 @@ def make_handler(svc: Service):
                     if ep:
                         ep.call_end(cid, self.path)
                 return self._json(200, out)
+            operation = meta.get("operation_id")
+            deadline = meta.get("request_deadline_unix_s")
+            if operation is not None and (not isinstance(operation, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", operation)):
+                return self._json(400, {"error": "invalid operation ID"})
+            if deadline is not None and (not isinstance(deadline, (int, float)) or not math.isfinite(deadline)):
+                return self._json(400, {"error": "invalid request deadline"})
             with svc.lock:
+                if deadline is not None and time.time() >= deadline:
+                    return self._json(408, {"error": "request expired before execution"})
+                operation_path = None
+                if operation and ep:
+                    directory = os.path.join(ep.data, "operations")
+                    os.makedirs(directory, exist_ok=True)
+                    operation_path = os.path.join(directory, operation + ".json")
+                    if os.path.exists(operation_path):
+                        return self._json(409, {"reason": "operation already admitted; query /operations/" + operation,
+                                                "operation_id": operation, "operation": _read_json(operation_path)})
                 if E.get("exiting") or (self.path == "/submit" and E.get("done")):
                     return self._json(409, {"error": "episode finished", "reason": E.get("reason")})
-                cid = ep.call_begin(self.path, self.connection) if ep else 0
+                if operation_path:
+                    _write_json(operation_path, {"operation_id": operation, "status": "admitted", "rows_before": ep.rows})
+                cid = ep.call_begin(self.path, self.connection, deadline=deadline) if ep else 0
                 rows0 = ep.rows if ep else 0
                 out = blobs = err = None; stopped = None
                 try:
@@ -841,12 +943,21 @@ def make_handler(svc: Service):
                         if err is None or ep.rows != rows0:
                             try:
                                 ep.checkpoint(E, svc.state_sha, svc.proprio)
-                            except Exception:  # noqa: BLE001
+                            except Exception as exc:  # failed durable commit is an infrastructure error
                                 traceback.print_exc()
+                                err = (500, {"error": "execution checkpoint could not be committed"})
+                                E["error"] = repr(exc)
+                                try:
+                                    svc.on_submit_error(exc)
+                                except Exception:
+                                    traceback.print_exc()
                         ep.call_end(cid, self.path, **({"stopped": stopped} if stopped else {}))
+                        if operation_path:
+                            _write_json(operation_path, {"operation_id": operation, "status": "error" if err else "completed",
+                                                       "rows_before": rows0, "committed_rows": ep.rows, "stopped": stopped})
             if err is not None:
                 return self._json(*err)
-            return self._rcb1({**out, "stopped": stopped}, blobs)
+            return self._rcb1({**out, "stopped": stopped, "operation_id": operation}, blobs)
     return H
 
 
