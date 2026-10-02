@@ -33,7 +33,7 @@ import argparse, json, os, pathlib, shutil, sys, tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robolab"
 LAYER = ROOT / "scripts/eai_standard"
-REGISTRY = "ghcr.io/embodied-agent-interface-v2-internal"
+REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 RUN_ID = "codex-gpt6_luna-xhigh"            # the run whose trials are the cited positives (results site, Hugging Face)
 REVIEW_PR = "#3"                           # the pull request with the per-family review (PROTOCOL §2.7): dev/qineng = PR #3

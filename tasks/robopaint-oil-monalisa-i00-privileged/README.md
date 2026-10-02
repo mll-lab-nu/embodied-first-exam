@@ -9,7 +9,7 @@
 | Family / instance | `robopaint_oil_monalisa` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: oil-u-oracle-final0928, oil-u-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (cc866ac9: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on irises and pearlearring), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only. Not re-run on this version (static validation only). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robopaint:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task
 The instance: paint the picture in `environment/target.png` (a square crop of Leonardo da Vinci's Mona Lisa, c. 1503-06: a public-domain masterpiece, cropped and downscaled to the 227 mm main sheet) in at most 434 strokes, with 16 premixed paints (the picture's colours quantised) on a plate and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; everything frozen in `environment/instance.json`.

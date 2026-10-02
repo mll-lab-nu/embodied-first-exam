@@ -9,7 +9,7 @@
 | Family / instance | `blocks_ranking_rgb` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 blocks_ranking_rgb (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Place the red block, green block, and blue block in the order of red, green, and blue from left to right, placing in a row. Frozen scene instance (RoboTwin seed 60417).

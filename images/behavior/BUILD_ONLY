@@ -6,15 +6,15 @@ ffmpeg. It contains NVIDIA Isaac Sim 5.1.0 and Omniverse Kit, whose licences for
 13.7 GB layer, above ghcr.io's per-layer limit.
 
 Build (from the repository root; Docker with BuildKit, the default since Docker 23; about 15 GB to pull):
-  docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:$(cat images/behavior/VERSION) \
+  docker build -t ghcr.io/mll-lab-nu/eai-behavior:$(cat images/behavior/VERSION) \
     -f images/behavior/Dockerfile .
 The tag is the name every BEHAVIOR task uses (environment/Dockerfile, tests/Dockerfile, the standard `sim` service).
 The build pulls the public base by digest and installs ffmpeg from the Ubuntu archive snapshot of 2026-09-20; it fails
 unless the package state equals dpkg.lock. README.md here shows how to check a build against the tested image.
 A host that already built this Dockerfile as rcb-behavior:0.1.1 (the name before protocol v1.0) has the same image and
 may tag it instead:
-  docker tag ghcr.io/embodied-agent-interface-v2-internal/rcb-behavior:0.1.1 \
-    ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1
+  docker tag ghcr.io/jameskrw/rcb-behavior:0.1.1 \
+    ghcr.io/mll-lab-nu/eai-behavior:0.1.1
 
 Licences the builder accepts: the NVIDIA Isaac Sim / Omniverse licence terms of the official image (BEHAVIOR-1K's own
 code is MIT).

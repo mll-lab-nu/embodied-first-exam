@@ -30,7 +30,7 @@ SHARED = HERE / "shared"
 TEMPLATES = HERE / "templates"
 FROZEN = HERE / "frozen"
 VERSION = (ROOT / "images/vlabench/VERSION").read_text().strip()
-IMAGE = f"ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:{VERSION}"
+IMAGE = f"ghcr.io/mll-lab-nu/eai-vlabench:{VERSION}"
 # Standard-mode client image (agent container and verifier): the one digest-pinned base and the exact pip pins of
 # scripts/eai_standard/ (PROTOCOL §2.4; ci_checks/check-standard-client.sh).
 _EAI = ROOT / "scripts/eai_standard"

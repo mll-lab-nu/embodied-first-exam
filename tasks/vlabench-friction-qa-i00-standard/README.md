@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/friction_qa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
 
 ## Task
 VLABench's `friction_qa` as a robot service: a Franka Panda arm at a table, instructed **"We are going to test the friction of the different object. Choose the object that slides the slowest on a steel ramp: press the button in front of it."**

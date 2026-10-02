@@ -9,7 +9,7 @@
 | Family / instance | `food_packing2_cans` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-food-packing2-cans-i00__ne3U8Jh (robolab-food-packing2-cans-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/food_packing2_cans/unlimited/). Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.1` |
 
 ## Task
 Pack canned foods into the bin.

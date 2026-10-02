@@ -8,7 +8,7 @@ on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 | upstream | VLABench @ `cf588fe60c0c7282174fe979f5913170cfe69017` (MIT), assets `lerobot/vlabench-assets` @ `08d7a44`, MuJoCo 3.2.2, dm_control 1.0.22 |
 | tasks | `tasks/vlabench-<task>-i00-privileged` and `tasks/vlabench-<task>-i00-standard` (PROTOCOL v1.0.1 names) |
 | metadata | `simulator = "vlabench"`, `robot = "franka-panda"`, `family = "vlabench/<task>"`, `oracle = "full"` |
-| image | `ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
+| image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
 | standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + `scripts/vlabench/shared/standard/server.py` |
 | standard client | the shared client base and exact pins of `scripts/eai_standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
 | generator | `scripts/vlabench/` (`import_pr4.py` → `frozen/`, `freeze.sh` → `frozen/report.json`, `generate.py` → `tasks/`, finished with `scripts/task_conventions.py`; `generate.py --check`) |
@@ -90,7 +90,7 @@ client and the verifier (`grade.py`: `success = live_success ∧ replay_success 
 
 ## Rebuilding
 ```bash
-docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-vlabench:$(cat images/vlabench/VERSION) \
+docker build -t ghcr.io/mll-lab-nu/eai-vlabench:$(cat images/vlabench/VERSION) \
     -f images/vlabench/Dockerfile .                  # from the repository root; ~15 GB
 git fetch origin refs/pull/4/head                 # PR #4 was closed without merging; GitHub keeps its head ad3c510
 python3 scripts/vlabench/import_pr4.py            # one-off: instances and references from PR #4 @ ad3c510

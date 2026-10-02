@@ -9,7 +9,7 @@
 | Family / instance | `block_stacking_order_agnostic` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-block-stacking-order-agn__kqJQMLf (robolab-block-stacking-order-agnostic-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/block_stacking_order_agnostic/unlimited/); robolab-block-stacking-order-agn__S6o3W3Z (robolab-block-stacking-order-agnostic-i00-standard, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-rerun-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/block_stacking_order_agnostic/limited/). Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.1` |
 
 ## Task
 Standard-mode twin of `robolab-block-stacking-order-agnostic-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):

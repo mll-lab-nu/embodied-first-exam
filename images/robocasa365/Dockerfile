@@ -7,7 +7,7 @@
 # This recipe reproduces the content of the image the tasks were validated with (built in the PR #4 era as
 # rcb-robocasa365:0.1.0: the runtime image, then the assets fetched by scripts/robot24/download_assets.py --suite 365
 # copied in). Build from this directory:
-#   docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-robocasa365:$(cat VERSION) .
+#   docker build -t ghcr.io/mll-lab-nu/eai-robocasa365:$(cat VERSION) .
 # About 27 GB, ~11 GB downloaded. Licences: RoboCasa code MIT; robocasa/robocasa-assets CC-BY-4.0 (textures,
 # generative textures, objaverse and AI-generated objects); the Lightwheel fixtures and objects come from RoboCasa's
 # UT Box links (RoboCasa's asset terms) -- check before publishing.

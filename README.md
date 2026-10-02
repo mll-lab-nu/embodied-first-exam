@@ -27,9 +27,8 @@ measures the same thing under real-robot constraints. The standard-mode wire pro
 [docs/LIMITED_MODE_PROTOCOL.md](docs/LIMITED_MODE_PROTOCOL.md).
 
 > **Names.** Protocol v1.0 renamed *unlimited/limited* to *privileged/standard* and `rcb-limited/2.1` to
-> `eai-standard/2.1`. Every task directory ends in `-privileged` or `-standard`. The robosuite, RoboTwin and MuJoCo
-> base images still live under `ghcr.io/jameskrw/rcb-<sim>` until the registry move described in PROTOCOL §7; KinDER
-> and HumanoidBench already use `eai-<sim>`.
+> `eai-standard/2.1`. Every task directory ends in `-privileged` or `-standard`. Base images are
+> `ghcr.io/mll-lab-nu/eai-<name>` (formerly `rcb-<sim>` under several registries), one per benchmark (PROTOCOL D5).
 
 ## Benchmarks
 
@@ -76,7 +75,7 @@ git submodule update --init --recursive          # third_party/ sources used by 
 images/mujoco/prepare_assets.sh                  # MuJoCo assets (pinned upstream commits)
 scripts/build_images.sh                          # rcb-* base images (not yet publicly pullable)
 for s in kinder humanoidbench; do                # eai-* base images of KinDER and HumanoidBench
-  docker build -f images/$s/Dockerfile -t ghcr.io/embodied-agent-interface-v2-internal/eai-$s:$(cat images/$s/VERSION) .
+  docker build -f images/$s/Dockerfile -t ghcr.io/mll-lab-nu/eai-$s:$(cat images/$s/VERSION) .
 done
 cp .env.example .env                             # API keys, or a Claude / ChatGPT subscription login
 

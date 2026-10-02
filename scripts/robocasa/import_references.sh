@@ -8,7 +8,7 @@ root="$(cd "$here/../.." && pwd)"
 bench="$(basename "$here")"
 src="$(cd "$1" && pwd)"
 shift
-image="ghcr.io/embodied-agent-interface-v2-internal/eai-$bench:$(cat "$root/images/$bench/VERSION")"
+image="ghcr.io/mll-lab-nu/eai-$bench:$(cat "$root/images/$bench/VERSION")"
 # As root (RoboCasa writes temporary model files into its package); hand frozen/ back to the caller afterwards.
 docker run --rm --network none --cpus 12 -e PYTHONDONTWRITEBYTECODE=1 -e HOME=/tmp -e OWNER="$(id -u):$(id -g)" \
   -v "$src:/src:ro" -v "$here:/work/$bench" -w "/work/$bench" "$image" \
