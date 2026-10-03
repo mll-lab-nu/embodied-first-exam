@@ -2159,9 +2159,17 @@ digest = "sha256:377d61310dff1c29f67a487ed9e98e039f9069821491679c50bd62452144676
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-jar-transport-i14-privileged"
-digest = "sha256:d92b16f8f100d4f2dd1e3492a82490cb65b042db64c649331b8c493f5f965d0f"
+digest = "sha256:f2bdd8e9b5e29c1314237b44d5871859e7cf3e5f5dc8f8e8671045b4aed63e24"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-jar-transport-i14-standard"
-digest = "sha256:4494343edb1b8561a7ca37752e40ece31fd23be9de9bd2c4e480fa5ec6bf7591"
+digest = "sha256:1c0b4190f02a7d716626077b121f158bc88782cc8cb95ea0702eb2e528d25f3b"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-cabinet-pickup-i19-privileged"
+digest = "sha256:3997d9144a6089e1b00975af4ea35912095ee98ede05a543d1bc3a7e8a660344"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-cabinet-pickup-i19-standard"
+digest = "sha256:c57a5f4e1142ee710a71ca842c86979e3bd9154ced836ee1cbc1ea64a7a51377"
 
