@@ -118,7 +118,3 @@ def unpin_all(model, data):
 def pinned(model, data):
     return [model.equality(eq).name[4:] for eq in range(model.neq)
             if model.equality(eq).name.startswith("pin_") and data.eq_active[eq]]
-
-
-def penetration(model, data):
-    return float(max(0., -data.contact.dist[:data.ncon].min(initial=0.)))

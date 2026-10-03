@@ -16,6 +16,10 @@ def _start(name):
     return m, d
 
 
+def _penetration(d):
+    return float(max(0., -d.contact.dist[:d.ncon].min(initial=0.)))
+
+
 def _run(m, d, seconds):
     for _ in range(int(seconds/m.opt.timestep)):
         mujoco.mj_step(m, d)
@@ -64,7 +68,7 @@ def test_a_truncated_cache_file_is_rebuilt():
                                            ("horseshoe_ring_easy", True)])
 def test_scene_starts_without_penetration(name, settled):
     m, d = _start(name)
-    assert models.penetration(m, d) < 5e-4
+    assert _penetration(d) < 5e-4
     start = d.xpos.copy()
     _run(m, d, .5)
     assert np.isfinite(d.qpos).all()
