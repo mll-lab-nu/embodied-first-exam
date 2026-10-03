@@ -9,7 +9,7 @@
 | Family / instance | `blanket_flatten` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128` |
 
 ## Task
 TopoGym blanket_flatten (aloha, Genesis): produce one replayable trajectory. Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw. Frozen scene instance (variation blanket_flatten_easy, seed 0).
@@ -49,6 +49,7 @@ Unfold and spread the blanket flat on the table without overlaps or excessive st
 - Any cloth point falling more than 100 mm below the tabletop ends the episode in failure.
 
 ### Grader details (in addition to the requirements above)
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - The blanket is 0.6 m x 0.48 m (0.288 m^2), so the coverage needs at least 0.2592 m^2 of its area in the top view. Heights are measured at the cloth particles' centres.
 - The release clearance is measured from one box around all cloth particles, grown by 8 mm: every robot collision box must stay at least 5 mm from it, i.e. at least 13 mm outside the cloth's bounding box, above its highest point too.
-- A failure is reported in `s.status()["episode_end"]` as "Cloth fell below the table".
+- A failure is reported in `s.status()["episode_end"]` as "Cloth fell below the table" (<what>: the readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops against these limits.

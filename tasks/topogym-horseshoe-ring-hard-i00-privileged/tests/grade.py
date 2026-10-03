@@ -84,8 +84,12 @@ def main() -> int:
             outs.append(s.replay(acts))
         all_success = all(o["success"] for o in outs)
         deterministic = len({o["state_sha"] for o in outs}) == 1
-        ok = all_success and bool(s.instance_matches)
+        # A replay that ended in a numerically unstable simulation (rcb_topogym.SIMULATOR_INSTABILITY) is an infrastructure
+        # failure: never success, never the task's failure (the evidence is in verdict.json's replays[].instability).
+        unstable = any(o.get("episode_end") == "simulator_instability" for o in outs)
+        ok = all_success and bool(s.instance_matches) and not unstable
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": 1,
+               "infra_error": int(unstable), "simulator_instability": int(unstable),
                "instance_ok": int(bool(s.instance_matches)), "instance_exact": int(bool(s.instance_exact)),
                "n_actions": int(outs[-1]["sim_steps"]), "submitted_actions": int(len(acts)),
                "sim_steps": int(outs[-1]["sim_steps"]), "physics_steps": int(outs[-1].get("physics_steps", 0)),

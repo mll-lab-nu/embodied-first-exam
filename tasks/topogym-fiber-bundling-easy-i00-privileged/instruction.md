@@ -18,11 +18,12 @@ You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 p
 
 ## Grader details (in addition to the requirements above)
 
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - Sizes: ring inner radius 13.5 mm, ring tube radius 4 mm; 4 fibers of radius 1.2 mm; sheath radius 12 mm.
 - Each fiber is tracked at 11 points from tip to root. A point counts when it crosses the ring's plane less than 17.48 mm from the ring's axis, in tip-to-root order; a crossing out of order or outside that radius resets that point and every point behind it, and crossing back loses the credit.
 - At the end every fiber point must be more than 5.2 mm past the ring's plane (tube + fiber radius) and the centre of the sheath's front face more than 16 mm past it (tube + sheath radius). The exit side is the side opposite to where the fibers start.
 - The failure counts contact between a fine fiber and the gripper (fingers and hand, housing included); arm links touching a fiber do not count. Contact is sampled at all 4 solver substeps of every tick; if any tick since the start had incomplete contact coverage (a simulator-side condition), the episode can no longer succeed.
-- A failure is reported in `s.status()["episode_end"]` as "fiber_gripper_contact" or "Fiber below table".
+- A failure is reported in `s.status()["episode_end"]` as "fiber_gripper_contact" or "Fiber below table" (<what>: the readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops against these limits.
 
 The scene objects are the task's entities (`s.objects()`: `fiber_bundle`, `bundling_ring` (fixed), `cable_cradle_base` (fixed), `cable_cradle_post` (fixed), `cable_cradle_pad` (fixed), `cable_cradle_left` (fixed), `cable_cradle_right` (fixed), `ring_mount_base` (fixed), `ring_mount_post` (fixed)).
 Implementation reference: `FiberBundlingEasyTask.evaluate_state` (module `topogym.tasks.fiber_bundling.fiber_bundling_easy`).
@@ -81,6 +82,7 @@ p["object_in_hand"]("arm"); p["set_joint_targets"](row, steps=1); p["gripper_qua
 s.step(action)                     # one low-level action (8 entries, below) = one control step (1/40 s)
 s.record_start(); ...; actions = s.record_stop()   # (T, 8) actions, one row per control step
 s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}
+s.safety()                         # since the last call: deepest contacts / rope volume ratio / table-guard stops vs the limits
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
@@ -96,7 +98,7 @@ CLI equivalent of the grader:
 - Action (8): arm `arm`: 7 joint targets (rad), then `arm_gripper` = opening width (m, 0 closed .. 0.0854 open); absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget; your
-  wall-clock budget is 360 min (21600 s). One control step takes about 1.5 s of wall clock on an unloaded GPU, and up to about 7.5 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
+  wall-clock budget is 360 min (21600 s). One control step takes about 0.17 s of wall clock on an unloaded GPU, and up to about 0.33 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
 - Grippers: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it.
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [0.0, 0.0, 1.0], finger-closing axis = local [-0.0, -1.0, 0.0]. The ee_pose action, the proprio tcp pose and the IK use this frame.
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.

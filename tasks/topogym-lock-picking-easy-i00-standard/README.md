@@ -9,7 +9,7 @@
 | Family / instance | `lock_picking` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128` |
 
 ## Task
 Standard-mode twin of `topogym-lock-picking-easy-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.3` client
@@ -47,6 +47,7 @@ Insert the tabbed key through all three rotor plates and the final END plate, wh
 - The key falling more than 100 mm below the tabletop ends the episode in failure.
 
 ### Grader details (in addition to the requirements above)
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - Sizes: bore radius 7.5 mm, shaft radius 6.5 mm. At each of the 8 plate faces (three 10 mm rotor plates and END, 150 mm apart), the shaft axis' distance from the bore axis plus 6.5 mm / cos(tilt) may exceed 7.5 mm by at most 0.01 mm: about 1.01 mm of offset when the key is straight, which over the stack allows only about 0.25 degrees of tilt.
 - The shaft reaches from 515 mm behind the leading tab to 15 mm in front of it; all 8 plate faces must lie within that length.
 - Tabs: radius 36 mm, half-width 4 degrees; slots: half-width 8 degrees. A tab that overlaps a plate must sit inside one of that plate's slots with an angular margin of at least asin(axis offset / 36 mm) + the tilt.

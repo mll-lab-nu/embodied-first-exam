@@ -18,9 +18,10 @@ You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw
 
 ## Grader details (in addition to the requirements above)
 
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - The blanket is 0.6 m x 0.48 m (0.288 m^2), so the coverage needs at least 0.2592 m^2 of its area in the top view. Heights are measured at the cloth particles' centres.
 - The release clearance is measured from one box around all cloth particles, grown by 8 mm: every robot collision box must stay at least 5 mm from it, i.e. at least 13 mm outside the cloth's bounding box, above its highest point too.
-- A failure is reported in `s.status()["episode_end"]` as "Cloth fell below the table".
+- A failure is reported in `s.status()["episode_end"]` as "Cloth fell below the table" (<what>: the readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops against these limits.
 
 The scene objects are the task's entities (`s.objects()`: `blanket` (deformable, particle)).
 Implementation reference: `BlanketFlattenEasyTask.evaluate_state` (module `topogym.tasks.blanket_flatten.blanket_flatten_easy`).
@@ -28,7 +29,7 @@ This is a partial implementation excerpt; delegated helpers, passage history and
 checks also apply. The complete public goal requirements are stated above.
 ```python
     def evaluate_state(self, state):
-        from topogym.evaluation.cloth_metrics import footprint_area
+        from topogym.evaluation.cloth_metrics import footprint_area, footprint_area_slabs
 
         particle_state = state["particles"]["blanket"]
         positions = np.asarray(particle_state["position_m"])
@@ -39,9 +40,6 @@ checks also apply. The complete public goal requirements are stated above.
         if heights.min() < -0.1:
             return False, "Cloth fell below the table", {}
         cfg = self.config
-        coverage = footprint_area(positions, self.particle_faces) / (
-            self.layout.length_m * self.layout.width_m
-        )
         stretch = (
             np.linalg.norm(
                 positions[self.particle_edges[:, 1]]
@@ -51,19 +49,31 @@ checks also apply. The complete public goal requirements are stated above.
             / self.rest_lengths
         )
         speed = float(np.linalg.norm(velocity, axis=1).max())
-        gates = dict(
-            covered=coverage >= cfg["minimum_coverage_ratio"],
+        cheap = dict(
             flat=float(heights.max()) <= cfg["maximum_height_m"],
             above_table=float(heights.min()) >= -self.layout.particle_size_m,
             material_intact=float(stretch.max()) <= cfg["maximum_stretch_ratio"],
             settled=speed <= cfg["maximum_speed_m_s"],
         )
+        # The footprint union is ~88 % of a control step at every 2.5 ms tick. It only decides the goal when every cheap
+        # gate holds, so it is computed then, and on each control step's last tick (complete_metrics, set by Env.step) so the
+        # metrics a step reports stay complete; on the other ticks the goal is false either way (identical predicate).
+        coverage = None
+        if all(cheap.values()) or getattr(self, "complete_metrics", True):
+            area = self.layout.length_m * self.layout.width_m
+            coverage = footprint_area_slabs(positions, self.particle_faces) / area
+            # The slab sum equals the union to ~1e-15 on cloth states; on extreme synthetic folds GEOS' one-shot union
+            # itself drifts by up to ~3e-4 (the slab sum then agrees with a 10 nm grid union). Within 1e-3 of the
+            # threshold the shipped union decides, so the gate is identical (scripts/check_blanket_coverage_slabs.py).
+            if abs(coverage - cfg["minimum_coverage_ratio"]) < 1e-3:
+                coverage = footprint_area(positions, self.particle_faces) / area
+        gates = dict(covered=coverage is not None and coverage >= cfg["minimum_coverage_ratio"], **cheap)
         return (
             all(gates.values()),
             None,
             dict(
                 gates=gates,
-                coverage_ratio=float(coverage),
+                coverage_ratio=None if coverage is None else float(coverage),
                 maximum_height_m=float(heights.max()),
                 maximum_speed_m_s=speed,
                 maximum_stretch_ratio=float(stretch.max()),
@@ -119,6 +129,7 @@ p["object_in_hand"]("left"); p["set_joint_targets"](row, steps=1); p["gripper_qu
 s.step(action)                     # one low-level action (14 entries, below) = one control step (1/40 s)
 s.record_start(); ...; actions = s.record_stop()   # (T, 14) actions, one row per control step
 s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}
+s.safety()                         # since the last call: deepest contacts / rope volume ratio / table-guard stops vs the limits
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
@@ -134,7 +145,7 @@ CLI equivalent of the grader:
 - Action (14): arm `left`: 6 joint targets (rad), then `left_gripper` = opening width (m, 0 closed .. 0.057385 open); arm `right`: 6 joint targets (rad), then `right_gripper` = opening width (m, 0 closed .. 0.057385 open); absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget; your
-  wall-clock budget is 360 min (21600 s). One control step takes about 2.8 s of wall clock on an unloaded GPU, and up to about 4.9 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
+  wall-clock budget is 360 min (21600 s). One control step takes about 0.31 s of wall clock on an unloaded GPU, and up to about 0.62 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
 - Grippers: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it.
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.008]. The ee_pose action, the proprio tcp pose and the IK use this frame.
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.

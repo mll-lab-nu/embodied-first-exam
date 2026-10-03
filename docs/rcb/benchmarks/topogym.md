@@ -6,9 +6,32 @@
 their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fields, README layout). Re-rendering needs no
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
-## Versions (2026-10-02)
-The 78 tier dirs: tooling v12, `eai-standard/2.3`, `rcb-topogym:0.2.11-cu128`; Jianwen's simpler variants
+## Versions (2026-10-03)
+The 78 tier dirs: tooling v14, `eai-standard/2.3`, `rcb-topogym:0.2.12-cu128`; Jianwen's simpler variants
 (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v14 (2026-10-03) = Jianwen's v13 (e49b116e3) + the rules of the 2026-10-03 rules audit + a PBD cloth-contact fix, on image
+  0.2.12 (0.2.11's stack with v13's `topogym/`: the IPC articulation-reference fix and v13's task changes). The 10 instances
+  those task changes touch were made again (knot_untying and rope_threading with a stored IPC settled state,
+  interlocked_claws' separation goal, buzz_wire_3d medium's F2_terminal_xy40_20 layout; strict smokes instance_exact); the
+  other 29 load unchanged on 0.2.12 (their v12 hashes).
+  - Rules (tooling-level overrides; every frozen t = 0 state hash kept). A non-held rigid task contact ends the episode when
+    it is deeper than 3 mm at once or deeper than 1 mm for 0.25 s; held fingers 4 / 2 mm (v12: 1 / 2 mm at any tick end,
+    which ordinary contacts reached and the only v12 success passed at 0.83 mm). A soft body's tet inversion or a stretched
+    attachment ends it after 0.25 s; an invalid native IPC state at once. ALOHA arm torque caps 12.9 / 80 / 59 / 12.9 / 35 /
+    17.5 N m (waist ... wrist rotate), Panda 50 N m on joints 1-4; grippers unchanged. A fingertip-table guard: no part of a
+    gripper is commanded lower than 15 mm below the tabletop (arm motion stops there; gripper commands never). The standard
+    service runs joint_position rows at most 0.04 rad per control step and refuses an ee_pose row whose IK solution jumps
+    more than 0.5 rad. `Session.safety()` / the service's `meta["safety"]` report contact depth, force and the guard;
+    failure reasons are readable. The instruction texts state all of it.
+  - blanket_flatten: Genesis 1.2.1's `LegacyCoupler.kernel_pbd_rigid_collide` pushed a cloth particle out of each rigid geom
+    in turn by the whole penetration and turned that displacement into velocity. A particle squeezed between two surfaces
+    (fingertips pressed onto the table through the cloth) was thrown at up to 1.6e5 m/s ("Cloth fell below the table": all
+    three standard failures of the v12 sweep). The tooling replaces that kernel (Genesis' files unchanged, so the frozen
+    cloth states restore): a particle's push-outs are summed and bounded by what the contact can physically do in a substep
+    (the body's own approach plus 0.05 m/s); one unsqueezed contact runs Genesis' own expressions bit for bit. A guard ends
+    an episode whose cloth particle exceeds 20 m/s with `simulator_instability`, an infrastructure error for both graders
+    (runs that did not blow up peaked at 9.2 m/s; every recorded blow-up crossed 10 m/s in one jump).
+  - The per-step times in the texts come from the v14 describe (Instruction texts).
 - v12 = v11 + knot_untying and orbits at one IPC substep like rope_threading / slotted_post_ring (the user's call,
   2026-10-02; their 6 instances made again, settled at one substep): knot 7.4x, orbits 12-15x against substeps 4 in the
   IPC study (knot easy lift / slip / drop within 0.1 mm, frames identical; orbits' clear approach within 0.11 mm).
@@ -92,8 +115,8 @@ trial (the protocol's default is 100M / 10M, D10), applied after the run.
 
 ## Tooling
 Thin wrappers of the low-level action only (IK and joint moves, gripper, hold) plus state, recording, replay and
-rendering; no task-level skills. New packages use tooling v13 (`[metadata].tooling_version = "13"`): v12 performance
-settings plus local variant-aware grasps. The checked-in tier packages remain frozen v12:
+rendering; no task-level skills. The 78 tier packages and new packages use tooling v14
+(`[metadata].tooling_version = "14"`; v13 is frozen in the inventory with its image 0.2.11):
 `harbor_templates/topogym/common/rcb_topogym.py`, byte-identical in every copy (`ci_checks/check-topogym-tooling.py`, run
 by `check-tooling-identity.sh`). v4 (Jianwen, 6a7c755b) folded the two family variants of the earlier render into it:
 - a gripper hold keeps the native target when the commanded width round-trips (the width table drops the closed-end
@@ -203,8 +226,11 @@ thread that built the scene, so every simulator call (and each call's checkpoint
 main thread's job queue.
 
 ## Instruction texts
-The per-step wall times quoted in the texts come from each instance's `describe.json`, measured on lab while it was
-loaded (pessimistic); the client-timeout advice derives the chunk sizes from them with a 2× margin.
+The per-step wall times quoted in the texts come from each instance's `describe.json`. Since v14: the unloaded figure is
+the v14 describe's own measurement (lab, 3 hold steps, 2026-10-03), the shared figure twice that (the v12 sweep's
+standard trials ran at 1.0-2.2x the unloaded figure under its load). Until v12 the texts still quoted the first builds'
+times (knot_untying: 37.7 s unloaded / 67 s shared per control step, against about 2 s since v11-v12). The
+client-timeout advice derives the chunk sizes from the shared figure with a 2× margin.
 
 ## Oracle and review
 No reference solutions for the tier instances: `oracle = "none"` with `oracle_evidence`, no `solution/`; human review per
@@ -212,7 +238,7 @@ family (PROTOCOL §2.7). Model positives so far: interlocked_claws easy in both 
 the previous version of these dirs).
 
 ## Hosts
-- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128`
+- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128`
   (`images/topogym/VERSION` + the CUDA profile of `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a legacy
   warning). Neither is on GHCR: build on the host with `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym` (a
   large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab), then warm its cache on that

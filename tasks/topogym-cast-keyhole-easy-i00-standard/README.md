@@ -9,7 +9,7 @@
 | Family / instance | `cast_keyhole` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128` |
 
 ## Task
 Standard-mode twin of `topogym-cast-keyhole-easy-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.3` client
@@ -46,7 +46,9 @@ Separate and place the entire silver keyhole piece inside the green dashed goal 
 ### Grader details (in addition to the requirements above)
 - Goal square in this instance: the inner edge of the 2 mm wide dashed green line is the containment limit (the region's border runs along the middle of the line); it encloses a 252.5 mm x 252.5 mm square. Every point counts: for a rigid part every vertex of its visual and collision meshes.
 - The separator is an invisible, fixed vertical plane parallel to the goal square's near edge, 5 mm beyond the point of all remaining components that was closest to the goal square at the start; the square's near edge is at least 30 mm beyond it. The gold piece is free to move (its speed is not checked), but no point of it may cross that plane.
-- Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per control step). "Held" is decided anew at every tick: a zero-force touch counts, and if one finger loses contact (with no active assisted grasp), the other finger is back at the 1 mm limit in the same tick.
+- Contact limits as this benchmark grades them (they replace the "at most 1 mm / 2 mm" wording above): brief contacts up to 3 mm are tolerated. A task contact deeper than 3 mm ends the episode at once, and one deeper than 1 mm ends it once it has stayed deeper than 1 mm for 0.25 s (100 consecutive physics ticks); for a finger contact with a held piece the limits are 4 mm at once and 2 mm for 0.25 s.
+- Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per control step). "Held" is decided anew at every tick: a zero-force touch counts, and if one finger loses contact (with no active assisted grasp), the other finger is back at the non-held limits in the same tick.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): keyhole_gold: radius 50 mm; keyhole_silver: radius 40 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically.
 
 | | |

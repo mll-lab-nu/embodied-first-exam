@@ -71,12 +71,22 @@ def ctrl_steps() -> int:
     return int(S.n_steps) if E["ready"] else 0
 
 
+# Episode ends that are infrastructure failures, never the agent's: a simulator error, and a numerically unstable simulation
+# (rcb_topogym.SIMULATOR_INSTABILITY: a cloth particle faster than PARTICLE_SPEED_LIMIT_M_S, before the task's own failure
+# predicates; finalize.sh applies the same rule to the replay).
+INFRA_REASONS = ("error", "simulator_instability")
+
+
+def instability_fields() -> dict:
+    return {"simulator_instability": E["reason"] == "simulator_instability", "instability": getattr(S, "instability", None)}
+
+
 def write_final() -> None:
     if L.final_verdict(DATA):           # finalize.sh's verdict, or a give-up after crashes: never overwritten
         return
     n = int(E.get("episode_control_steps") or ctrl_steps())
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error"), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+        "success": bool(E["success"]), "infra_error": int(E["reason"] in INFRA_REASONS), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK,
         "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"),
         "live_sha": E.get("live_sha"), **EP.final_fields()})
@@ -97,7 +107,7 @@ def dump() -> None:
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     n = int(E.get("episode_control_steps") or 0)
     L._write_json(os.path.join(DATA, "episode.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error"), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+        "success": bool(E["success"]), "infra_error": int(E["reason"] in INFRA_REASONS), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
         "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"), **EP.final_fields()})
     write_final()
@@ -171,12 +181,20 @@ SPEC = {
                            "limits": LIMITS,
                            "semantics": f"absolute joint targets tracked by the robot's PD controllers, streamed at the {CTRL_HZ:g} Hz control rate; rows "
                                         f"`dt` apart (a multiple of 1/{CTRL_HZ:g} s), hold or linear interpolation between rows (the gripper switches "
-                                        "at the row); out-of-limit values are clipped and reported"},
+                                        "at the row); out-of-limit values are clipped and reported. An arm joint target moves at most "
+                                        f"{M.JOINT_STEP_LIMIT_RAD:g} rad per control step ({M.JOINT_STEP_LIMIT_RAD * CTRL_HZ:g} rad/s, as ee_pose rows): "
+                                        "a row asking for more takes the control steps it needs and is reported in clipped[]. "
+                                        f"No gripper target goes lower than {M.table_guard_words()}: a target "
+                                        "that would is stopped there (reported in clipped[])"},
         "ee_pose": {"dim": 8 * len(ARMS), "layout": [f"{a}_{k}" for a in ARMS for k in ("x", "y", "z", "qw", "qx", "qy", "qz", "gripper")],
                     "frame": WORLD_FRAME, "quaternion": "wxyz, unit norm",
                     "semantics": "each row is solved by inverse kinematics (bounded least squares on the robot's forward kinematics, no collision "
                                  "checking) and driven to in joint space; `dt` is ignored (the joint distance sets the duration); an arm whose IK "
-                                 "fails holds and is reported in plan[]",
+                                 "fails holds and is reported in plan[]. A solution more than "
+                                 f"{M.IK_JUMP_LIMIT_RAD:g} rad from the current joints on any joint is refused the same way (for a small "
+                                 "pose change that is another IK branch, which would swing the arm): split long moves into rows. The "
+                                 f"table guard applies as for joint_position (no gripper target lower than {M.table_guard_words()}, "
+                                 "reported in clipped[])",
                     "note": "the pose is each gripper's tool frame (TCP; axes in robot_spec.tcp); same convention as the proprio TCP poses, so "
                             "an observed pose is a valid target"},
         "not_yet": ["joint_delta", "joint_velocity", "ee_delta", "joint_torque"]},
@@ -189,7 +207,9 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
                 "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, or on a "
-                "simulator error; the recorded trajectory is then replayed once in a fresh process and graded"),
+                "simulator error; a numerically unstable simulation (any cloth particle faster than "
+                f"{M.PARTICLE_SPEED_LIMIT_M_S:g} m/s) ends it with reason {M.SIMULATOR_INSTABILITY}, graded as an infrastructure "
+                "error, not as the task's failure; the recorded trajectory is then replayed once in a fresh process and graded"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -234,7 +254,7 @@ def meta_common(cams) -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
             "time_s": round(time.time() - E["t0"], 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"]), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
-            **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
+            "safety": S.safety(), **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
 
 
 def save_call_evidence(idx: int, meta: dict, rec: L.Recorder) -> None:
@@ -258,9 +278,10 @@ def clip_joint_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
     return r
 
 
-def ctrl_step(a: np.ndarray, rec: L.Recorder, *, row_start=False) -> bool:
+def ctrl_step(a: np.ndarray, rec: L.Recorder, *, row_start=False, notes: list | None = None, ri: int | None = None) -> bool:
     """One recorded control step. True when the call must stop here: the episode is over (runaway guard, the task's own
-    failure predicate, the wall clock), or the call ran past max_call_wall_s / its client hung up (EP.journal)."""
+    failure predicate, the wall clock), or the call ran past max_call_wall_s / its client hung up (EP.journal). A gripper
+    target the table guard stopped (rcb_topogym._TableGuard) is reported in `notes` (meta["clipped"]), once per row and arm."""
     if deadline_reached():
         finish("timeout")
         return True
@@ -271,6 +292,14 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder, *, row_start=False) -> bool:
     guard = S.step(row)
     if S.n_steps != before and row_start:
         E["step"] += 1
+    if S.n_steps != before and S.last_guard and notes is not None:
+        for arm in ARMS:
+            e = S.last_guard.get(arm)
+            reason = f"table guard: the {arm} gripper"
+            if e and not any(n["row"] == ri and n["reason"].startswith(reason + " ") for n in notes[-8:]):
+                notes.append({"row": ri, "index": int(ARM[arm][1]), "reason": (
+                    f"{reason} would have reached {e['asked_mm']:+.1f} mm from the tabletop; its target stopped at "
+                    f"{e['stopped_mm']:+.1f} mm (no gripper target goes lower than {M.table_guard_words()})")})
     stop = EP.journal(S.hold_action(), physics_steps=S.last_step_ticks) if S.n_steps != before else EP.poll_stop()
     rec.tick()
     if S.episode_end is not None and "end_row" not in E and S._recording is not None:
@@ -281,19 +310,42 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder, *, row_start=False) -> bool:
 
 
 def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: L.Recorder, clipped: list) -> None:
+    """Rows `dt` apart (linear interpolation or hold). Joint-speed limit (rules 2026-10-03, as ee_pose rows): an arm joint
+    target moves at most rcb_topogym.JOINT_STEP_LIMIT_RAD per control step; a row that asks for more takes the control
+    steps it needs (reported in meta["clipped"]), so every row is still reached."""
     steps_per_row = L.control_periods(dt, CTRL_HZ)
     q_prev = np.asarray(S.hold_action(), dtype=np.float64)
     grips = [ARM[a][1] for a in ARMS]
+    arm_cols = [j for j in range(N) if j not in grips]
+    limit = M.JOINT_STEP_LIMIT_RAD
     for ri, row in enumerate(A):
         target = clip_joint_row(row.astype(np.float64), clipped, ri)
-        for k in range(1, steps_per_row + 1):
-            a = target if interp == "hold" else q_prev + (target - q_prev) * (k / steps_per_row)
+        reach = np.abs(target[arm_cols] - q_prev[arm_cols])
+        n = max(steps_per_row, int(math.ceil(float(reach.max(initial=0.)) / limit - 1e-6)))
+        slowed = False
+        for k in range(1, n + 1):
+            a = target.copy() if interp == "hold" or k > steps_per_row else q_prev + (target - q_prev) * (k / steps_per_row)
             a[grips] = target[grips]                          # the gripper switches at the row
-            if ctrl_step(a, rec, row_start=k == 1): return
+            cmd = np.asarray(S.hold_action(), dtype=np.float64)
+            d = a[arm_cols] - cmd[arm_cols]
+            if np.any(np.abs(d) > limit + 1e-6):
+                a[arm_cols] = cmd[arm_cols] + np.clip(d, -limit, limit)
+                slowed = True
+            if ctrl_step(a, rec, row_start=k == 1, notes=clipped, ri=ri): return
+        if slowed:
+            j = arm_cols[int(np.argmax(reach))]
+            clipped.append({"row": ri, "index": int(j), "reason": (
+                f"speed: {LAYOUT[j]} asked to move {float(reach.max()):.3f} rad "
+                f"{'at once' if interp == 'hold' else f'in {steps_per_row} control step(s)'}; joint "
+                f"targets move at most {limit:g} rad per control step ({limit * CTRL_HZ:g} rad/s), so this row took {n} "
+                "control steps")})
         q_prev = target
 
 
-def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
+def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> None:
+    """IK per row from the measured joints. A solution farther than rcb_topogym.IK_JUMP_LIMIT_RAD from them on any joint
+    is refused (rules 2026-10-03: for a small pose change that is another IK branch, which swings the arm): that arm holds
+    and plan[] says why, as for a failed IK."""
     for ri, row in enumerate(A):
         cur = np.asarray(S.hold_action(), dtype=np.float64); goal = cur.copy(); st = {"row": ri}
         for i, arm in enumerate(ARMS):
@@ -303,7 +355,16 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
                 qa, ep, er = S.ik(arm, row[off:off + 3], q)
                 if ep > 0.02 or er > 0.35:
                     raise ValueError(f"no IK solution within 2 cm / 20 deg (residual {ep * 1000:.0f} mm / {math.degrees(er):.0f} deg)")
-                goal[sl] = np.clip(qa, LIM_ARR[sl, 0], LIM_ARR[sl, 1]); st[arm] = "Success"
+                qa = np.clip(qa, LIM_ARR[sl, 0], LIM_ARR[sl, 1])
+                jump, joint = S.ik_jump(arm, qa)
+                if jump > M.IK_JUMP_LIMIT_RAD:
+                    st[arm] = (f"refused: the IK solution is {jump:.2f} rad from the current joints on {joint} (limit "
+                               f"{M.IK_JUMP_LIMIT_RAD:g} rad per ee_pose row): for a small pose change that is another IK "
+                               "branch, which would swing the arm. Split the motion into rows that change each joint by at "
+                               "most that much (for example a few cm and degrees apart), or move the joints with "
+                               "joint_position. This arm holds.")
+                else:
+                    goal[sl] = qa; st[arm] = "Success"
             except Exception as exc:  # noqa: BLE001
                 st[arm] = f"failed: {str(exc)[:90]}"
             goal[gi] = float(np.clip(row[off + 7], LIM_ARR[gi, 0], LIM_ARR[gi, 1]))
@@ -312,7 +373,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
         for k in range(1, n + 1):
             a = cur + (goal - cur) * (k / n)
             for arm in ARMS: a[ARM[arm][1]] = goal[ARM[arm][1]]
-            if ctrl_step(a, rec, row_start=k == 1): return
+            if ctrl_step(a, rec, row_start=k == 1, notes=clipped, ri=ri): return
 
 
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
@@ -333,7 +394,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     E["calls"] += 1; step0 = E["step"]
     before = ctrl_steps(); before_ticks = S.physics_steps; rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
-    else: run_ee_pose(A, rec, plan)
+    else: run_ee_pose(A, rec, plan, clipped)
     rec.tick(force=True, last=True)
     succ = check_success(); E["success"] = E["success"] or succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,

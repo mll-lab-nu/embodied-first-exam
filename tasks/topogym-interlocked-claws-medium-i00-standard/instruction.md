@@ -1,14 +1,12 @@
 # TopoGym · interlocked_claws — STANDARD MODE (robot as a service, eai-standard/2.3)
 
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
-client and one episode. **Task:** Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side.
+client and one episode. **Task:** Completely separate the two claw pieces and briefly hold both still.
 
 ## Success requirements
 
-- Put every part of the entire brown claw piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.
-- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 404.198 mm above the tabletop.
-- Keep the other claw piece, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.
-- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.
+- Leave at least 10 mm between the complete pieces, with a plane separating all of their geometry; a gap inside the interlock is insufficient.
+- Keep both pieces' linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding both pieces is allowed; release and transport into the green region are not required.
 - Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
 
 ## Task failure conditions
@@ -19,7 +17,9 @@ client and one episode. **Task:** Separate and place the entire brown claw piece
 
 - Goal square in this instance: the inner edge of the 2 mm wide dashed green line is the containment limit (the region's border runs along the middle of the line); it encloses a 412.2 mm x 412.2 mm square. Every point counts: for a rigid part every vertex of its visual and collision meshes.
 - The separator is an invisible, fixed vertical plane parallel to the goal square's near edge, 5 mm beyond the point of all remaining components that was closest to the goal square at the start; the square's near edge is at least 30 mm beyond it. The other claw piece is free to move (its speed is not checked), but no point of it may cross that plane.
-- Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per control step). "Held" is decided anew at every tick: a zero-force touch counts, and if one finger loses contact (with no active assisted grasp), the other finger is back at the 1 mm limit in the same tick.
+- Contact limits as this benchmark grades them (they replace the "at most 1 mm / 2 mm" wording above): brief contacts up to 3 mm are tolerated. A task contact deeper than 3 mm ends the episode at once, and one deeper than 1 mm ends it once it has stayed deeper than 1 mm for 0.25 s (100 consecutive physics ticks); for a finger contact with a held piece the limits are 4 mm at once and 2 mm for 0.25 s.
+- Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per control step). "Held" is decided anew at every tick: a zero-force touch counts, and if one finger loses contact (with no active assisted grasp), the other finger is back at the non-held limits in the same tick.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): piece_0: radius 30 mm; piece_1: radius 30 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically.
 
 ## Rules (real-robot rules)
@@ -31,7 +31,7 @@ client and one episode. **Task:** Separate and place the entire brown claw piece
   objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
   the task requirements above still apply in full.
 - **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
-  simulated time are reported as cost. One control step takes about 0.5 s of wall clock on an unloaded GPU, and up to about 0.6 s when other simulations share the GPU; the call metadata reports the time.
+  simulated time are reported as cost. One control step takes about 0.059 s of wall clock on an unloaded GPU, and up to about 0.12 s when other simulations share the GPU; the call metadata reports the time.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -56,7 +56,7 @@ client and one episode. **Task:** Separate and place the entire brown claw piece
   running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
 
 ## Time per call
-- One control step takes about 0.5 s of wall clock on an unloaded GPU and up to about 0.6 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: a `submit` of the maximum 10 s chunk fits; keep each `get_obs(seconds=...)` watch to at most 480 control steps (12.00 s) (both with a 2x margin).
+- One control step takes about 0.059 s of wall clock on an unloaded GPU and up to about 0.12 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: a `submit` of the maximum 10 s chunk fits; any watch up to 30 s fits (both with a 2x margin).
 - If a request times out in the client anyway, the service still runs it to the end: do NOT send it again (it would run twice). Call `r.get_obs()` (repeat it if it also times out): it answers once the earlier request has finished and shows the state after it.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`)
@@ -96,12 +96,20 @@ the PD gains and the tool frames; `spec["world"]` the frame conventions.
   (left: 0 = closed .. 0.057385 = open; right: 0 = closed .. 0.057385 = open). Absolute targets tracked by PD controllers.
   Rows are `dt` apart (`1/40 ≤ dt ≤ 0.5` s, a multiple of the control period); a chunk may cover at most 10 s;
   out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). The gripper switches at the
-  row. Use `obs.meta["proprio"]["now"][:14]` as the starting row to move smoothly.
+  row. Use `obs.meta["proprio"]["now"][:14]` as the starting row to move smoothly. An arm joint target moves at most
+  0.04 rad per control step (1.6 rad/s, the same speed as `ee_pose` rows): a row that asks for more takes
+  the control steps it needs, and `meta["clipped"]` says so.
 - `ee_pose` (16): per arm (in the order ['left', 'right']) `x y z qw qx qy qz gripper`; world frame (robot base at (-0.136, 0.000, 0.920),
   +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and driven to in joint
   space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is each gripper's **tool frame** (TCP;
   its approach and finger-closing axes are in `spec["robot_spec"]["tcp"]`), the same convention as the proprio TCP
-  poses, so an observed pose is a valid target. At most 50 rows per submit.
+  poses, so an observed pose is a valid target. At most 50 rows per submit. A row whose IK solution lies more than
+  0.5 rad from the current joints on any joint is refused the same way as a failed IK (for a small pose change that is
+  another IK branch, which would swing the arm): split long moves into rows a few cm and degrees apart.
+- Both action types: no gripper target goes lower than 15 mm below the tabletop; a target that would bring any part of
+  a gripper lower is stopped there and listed in `meta["clipped"]`. Every response's `meta["safety"]` reports, since the
+  previous call, the deepest task contact and the longest time above its sustained limit (rigid families), the lowest
+  rope / cord volume ratio (soft families) and the table-guard stops, against the limits above.
 
 Grasping: assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (piece_0, piece_1) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, or the part drifts 1 cm / 0.15 rad from its held pose) is lost, and the gripper must open before it can take hold again. Two grippers never hold the same part; other objects are grasped physically (friction); the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command.
 

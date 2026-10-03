@@ -26,7 +26,7 @@ from topogym.utils.io import make_asset_tree_readable
 from cuda_profiles import image_tag
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
-TOOLING_VERSION = "13"
+TOOLING_VERSION = "14"
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = image_tag(root)
@@ -246,6 +246,7 @@ p["object_in_hand"]("{arm}"); p["set_joint_targets"](row, steps=1); p["gripper_q
 s.step(action)                     # one low-level action ({len(d['action_layout'])} entries, below) = one control step (1/{d['control_hz']:g} s)
 s.record_start(); ...; actions = s.record_stop()   # (T, {len(d['action_layout'])}) actions, one row per control step
 s.status()                         # {{'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}}
+s.safety()                         # since the last call: deepest contacts / rope volume ratio / table-guard stops vs the limits
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video

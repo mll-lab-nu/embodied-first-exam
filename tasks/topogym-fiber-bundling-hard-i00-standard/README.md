@@ -9,7 +9,7 @@
 | Family / instance | `fiber_bundling` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128` |
 
 ## Task
 Standard-mode twin of `topogym-fiber-bundling-hard-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.3` client
@@ -45,6 +45,7 @@ Manipulate the thick sheath to pass every fine fiber and the front sheath throug
 - A fiber link falling more than 100 mm below the tabletop ends the episode in failure.
 
 ### Grader details (in addition to the requirements above)
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - Sizes: ring inner radius 13.5 mm, ring tube radius 4 mm; 16 fibers of radius 1.2 mm; sheath radius 12 mm.
 - Each fiber is tracked at 11 points from tip to root. A point counts when it crosses the ring's plane less than 17.48 mm from the ring's axis, in tip-to-root order; a crossing out of order or outside that radius resets that point and every point behind it, and crossing back loses the credit.
 - At the end every fiber point must be more than 5.2 mm past the ring's plane (tube + fiber radius) and the centre of the sheath's front face more than 16 mm past it (tube + sheath radius). The exit side is the side opposite to where the fibers start.

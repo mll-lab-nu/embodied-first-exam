@@ -8,20 +8,31 @@ citations), with the tier's values from the frozen instance.json. It repeats not
 of it. No positions or poses: conditions, thresholds, names and sizes only (the limited-mode rule)."""
 
 RIGID = {"cast_coil", "cast_keyhole", "interlocked_claws", "hedgehog_in_cage", "horseshoe_ring"}
+SOFT = {"knot_untying", "rope_threading", "orbits", "slotted_post_ring"}
+# The tooling's safety rules (rcb_topogym.py, 2026-10-03; ci_checks/test-topogym-safety-rules.py checks the numbers match):
+# they replace the "at most 1 mm / 2 mm" and the instant volume-failure wording of his text.
+CONTACT_RULE = dict(deep_m=.003, sustained_m=.001, held_deep_m=.004, held_sustained_m=.002, window_s=.25)
+SOFT_RULE = dict(window_s=.25, residual_m=.002)
+TABLE_GUARD_MARGIN_M = -.015
+# How far the gripper's lowest collision vertex reaches beyond the TCP along the approach axis, measured with the robots'
+# own forward kinematics at the home pose (2026-10-03, lab): ALOHA 16.3 mm open or closed; the Robotiq 2F-85's fingertips
+# move forward as they close, 5.5 mm open, 18.7 mm closed.
+FINGERTIP_WORDS = {"aloha": "about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed",
+                   "panda_robotiq": "about 6 mm beyond the tool frame (TCP) along its approach axis when open and about "
+                                    "19 mm when closed (the Robotiq fingertips move forward as they close)"}
 PLACEMENT = {"cast_keyhole", "interlocked_claws", "hedgehog_in_cage", "horseshoe_ring", "orbits", "slotted_post_ring"}
 # remaining components of the placement families that are free bodies (the rest are fixed), as named in s.objects()
 FREE_REMAINDER = {"cast_keyhole": "the gold piece", "interlocked_claws": "the other claw piece",
                   "horseshoe_ring": "the horseshoes and chain links", "slotted_post_ring": "the cord, beads and end discs"}
 # failure strings as `s.status()["episode_end"]` reports them (unlimited); limited mode reports `task_failed`
 FAIL_STRINGS = {
-    "rigid": ['"Held finger contact penetration exceeded 2 mm"', '"Task contact penetration exceeded 1 mm"',
-              '"A task body fell below the table"'],
+    "rigid": ['"task_contact_forced: <what>"', '"held_contact_forced: <what>"', '"A task body fell below the table"'],
     "horseshoe_ring": ['"Physical chain/eye connection lost"'],
     "buzz_wire_3d": ['"wire_touched"', '"Wand fell below table"'],
     "lock_picking": ['"rotor_limit_exceeded"', '"Key fell below table"'],
     "fiber_bundling": ['"fiber_gripper_contact"', '"Fiber below table"'],
-    "orbits": ['"connection_or_volume_invalid"'], "slotted_post_ring": ['"connection_or_volume_invalid"'],
-    "knot_untying": ['"rope_volume_invalid"'], "rope_threading": ['"rope_volume_invalid"'],
+    "orbits": ['"connection_or_volume_invalid: <what>"'], "slotted_post_ring": ['"connection_or_volume_invalid: <what>"'],
+    "knot_untying": ['"rope_volume_invalid: <what>"'], "rope_threading": ['"rope_volume_invalid: <what>"'],
     "blanket_flatten": ['"Cloth fell below the table"'],
 }
 
@@ -33,6 +44,17 @@ def _mm(m, nd=1):
 
 def _or(xs):
     return xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " or " + xs[-1]
+
+
+def table_guard_words():
+    """The guard's limit in words (rcb_topogym.table_guard_words)."""
+    mm = abs(TABLE_GUARD_MARGIN_M) * 1000
+    return ("the tabletop" if mm == 0 else f"{mm:g} mm below the tabletop" if TABLE_GUARD_MARGIN_M < 0 else
+            f"{mm:g} mm above the tabletop")
+
+
+def _robot_of(inst):
+    return ((inst or {}).get("simulator") or {}).get("robot_id")
 
 
 def _square_mm(inst):
@@ -64,11 +86,33 @@ def grader_details(fam, inst, *, limited):
                        f"{free[0].upper() + free[1:]} is free to move (its speed is not checked), but no point of it may "
                        "cross that plane." if free else "The remaining components here are fixed."))
     if fam in RIGID:
+        c = CONTACT_RULE
+        out.append(f"Contact limits as this benchmark grades them (they replace the \"at most {_mm(c['sustained_m'], 0)} / "
+                   f"{_mm(c['held_sustained_m'], 0)}\" wording above): brief contacts up to {_mm(c['deep_m'], 0)} are tolerated. A task "
+                   f"contact deeper than {_mm(c['deep_m'], 0)} ends the episode at once, and one deeper than {_mm(c['sustained_m'], 0)} "
+                   f"ends it once it has stayed deeper than {_mm(c['sustained_m'], 0)} for {c['window_s']:g} s (100 consecutive physics "
+                   f"ticks); for a finger contact with a held piece the limits are {_mm(c['held_deep_m'], 0)} at once and "
+                   f"{_mm(c['held_sustained_m'], 0)} for {c['window_s']:g} s.")
         out.append("Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per "
                    "control step). \"Held\" is decided anew at every tick: a zero-force touch counts, and if one finger "
-                   "loses contact (with no active assisted grasp), the other finger is back at the 1 mm limit in the same "
-                   "tick." + (" The cage is fixed, so finger contact with it is never held (always the 1 mm limit)."
+                   "loses contact (with no active assisted grasp), the other finger is back at the non-held limits in the same "
+                   "tick." + (" The cage is fixed, so finger contact with it is never held (always the non-held limits)."
                               if fam == "hedgehog_in_cage" else ""))
+    if fam in SOFT:
+        what = "rope" if fam in ("knot_untying", "rope_threading") else "cord"
+        w = SOFT_RULE["window_s"]
+        out.append(f"The {what} is very soft (Young's modulus 50 kPa): a full close of a gripper on it, or landing on it, "
+                   f"crushes it. A crushed {what} volume (an inverted volume element)"
+                   + (f" or a permanent cord attachment stretched by more than {_mm(SOFT_RULE['residual_m'], 0)}"
+                      if what == "cord" else "")
+                   + f" ends the episode only once it has lasted {w:g} s (while it lasts, the goal cannot be confirmed); an "
+                   f"invalid soft-body solver state ends it at once. Close to about half the {what}'s diameter and slow down "
+                   "in the last centimetre.")
+    out.append(f"Robot safety (this benchmark's tooling): no gripper target goes lower than {table_guard_words()}; a commanded "
+               "target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach "
+               + FINGERTIP_WORDS.get(_robot_of(inst), "beyond the tool frame (TCP)")
+               + ". Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle "
+               "stalls at that torque.")
     if fam == "horseshoe_ring":
         out.append("The four permanent connections (the upper and lower eye of each horseshoe with its chain link) are "
                    "checked at every tick by the linking number of the two loops.")
@@ -189,7 +233,9 @@ def grader_details(fam, inst, *, limited):
     if not limited:
         strings = (FAIL_STRINGS["rigid"] if fam in RIGID else []) + FAIL_STRINGS.get(fam, [])
         if strings:
-            out.append("A failure is reported in `s.status()[\"episode_end\"]` as " + _or(strings) + ".")
+            out.append("A failure is reported in `s.status()[\"episode_end\"]` as " + _or(strings) + " (<what>: the "
+                       "readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops "
+                       "against these limits.")
     return out
 
 
@@ -227,6 +273,12 @@ def details_section(fam, inst, *, limited):
             + "\n".join(f"- {x}" for x in lines) + "\n")
 
 
+def _secs(x) -> str:
+    """A wall time for the texts: two significant digits below 10 s (0.053, 0.11, 1.9), whole seconds above."""
+    x = float(x)
+    return f"{x:.2g}" if x < 10 else f"{x:.0f}"
+
+
 def step_seconds(d: dict) -> float:
     """The per-control-step wall time the texts quote: the measured arm-motion value where the build measured one
     (describe.json sec_per_step_motion: FEM / IPC families, 2026-10-01: motion steps on an unloaded GPU, the slower of our
@@ -243,9 +295,9 @@ def step_time_words(d: dict) -> str:
         return (f"One control step with the arms moving takes about {step_seconds(d):.0f} s of wall clock here (measured on an "
                 f"unloaded GPU, the slower of our GPU types; holding still is faster)")
     if d.get("sec_per_step_unloaded"):
-        return (f"One control step takes about {float(d['sec_per_step_unloaded']):.1f} s of wall clock on an unloaded GPU, and "
-                f"up to about {step_seconds(d):.1f} s when other simulations share the GPU; the call metadata reports the time")
-    return f"One control step takes about {step_seconds(d):.1f} s of wall clock here"
+        return (f"One control step takes about {_secs(d['sec_per_step_unloaded'])} s of wall clock on an unloaded GPU, and "
+                f"up to about {_secs(step_seconds(d))} s when other simulations share the GPU; the call metadata reports the time")
+    return f"One control step takes about {_secs(step_seconds(d))} s of wall clock here"
 
 
 def limited_timing(sec_per_step, control_hz=40.0, submit_timeout_s=1800, observe_timeout_s=600, max_chunk_s=10.0, safety=2.0,
@@ -261,9 +313,9 @@ def limited_timing(sec_per_step, control_hz=40.0, submit_timeout_s=1800, observe
                   f"({watch_steps / control_hz:.2f} s)" if watch_steps < 30 * control_hz else "any watch up to 30 s fits")
     return ("## Time per call\n"
             + (f"- One control step with the arms moving takes about {per:.0f} s of wall clock here (holding still is faster). "
-               if motion else f"- One control step takes about {float(unloaded):.1f} s of wall clock on an unloaded GPU and up to about "
-               f"{per:.1f} s when other simulations share it; the advice below assumes the slower figure. "
-               if unloaded else f"- One control step takes about {per:.1f} s of wall clock here. ")
+               if motion else f"- One control step takes about {_secs(unloaded)} s of wall clock on an unloaded GPU and up to about "
+               f"{_secs(per)} s when other simulations share it; the advice below assumes the slower figure. "
+               if unloaded else f"- One control step takes about {_secs(per)} s of wall clock here. ")
             + "A request returns only when all of its steps "
             f"have run, and the client gives up waiting after {submit_timeout_s} s for `submit` and {observe_timeout_s} s "
             f"for `get_obs`: {chunk_line}; {watch_line} (both with a 2x margin).\n"

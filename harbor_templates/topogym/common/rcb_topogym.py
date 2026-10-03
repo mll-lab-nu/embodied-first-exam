@@ -20,10 +20,18 @@ trajectory : the (T, action_dim) JOINT_ABS actions handed to the simulator, one 
              renders on the GPU in both cases.
 episode end: a task's success predicate, or one of its failure predicates (e.g. touching the buzz wire), ends the
              simulated episode: later steps do not change the execution ledger or scene, and status()["episode_end"] says
-             why. reset() starts again from the frozen state.
+             why. reset() starts again from the frozen state. A numerically unstable simulation (a particle faster than
+             PARTICLE_SPEED_LIMIT_M_S, 20 m/s) ends it with episode_end "simulator_instability" (evidence in
+             status()["instability"]): a simulator failure that graders report as an infrastructure error, never as
+             success or as the task's failure. PBD cloth-rigid contacts are resolved together per particle with a
+             physically bounded push-out (_bound_pbd_rigid_contacts), which removes the cause of those blow-ups.
 grasping   : a family may enable TopoGym's passive grasp assistance (instance.json simulator.grasp_assist; the rules are
              in robot_spec()["grippers"][...]["command"]); primitives()["object_in_hand"] says what a gripper holds.
 budget     : there is no step budget: the agent's wall clock is the limit. MAX_STEPS only stops runaway trajectories.
+safety     : the tooling's rules (2026-10-03, _install_rules): rigid task contacts fail when deeper than 3 mm, or deeper than
+             1 mm for 0.25 s (held fingers 4 / 2 mm); a crushed rope volume or a stretched cord attachment fails after
+             0.25 s; arm drive torques are capped; no gripper target goes lower than 15 mm below the tabletop
+             (TABLE_GUARD_MARGIN_M). s.safety() reports them.
 
 CLI
 ---
@@ -44,6 +52,7 @@ Python (what the agent gets)
   s.render_frame(cam)                # RGB (H, W, 3) uint8; s.render_grid(), s.render_video(actions, path); s.VIDEO_CAMERAS
   s.record_start(); ...; actions = s.record_stop()   # (T, action_dim) low-level actions, one row per control step
   s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}
+  s.safety()                         # contact depths / rope volume / table-guard stops since the last call, against the limits
   s.replay(actions)                  # resets, replays open-loop, returns status -> self-check
   s.save_trajectory(actions, "/app/output/trajectory.npz")
 """
@@ -577,6 +586,8 @@ class _Robot:
         self.robot, self.entity, self.timing = robot, robot.entity, timing
         self.groups = {g.name: g for g in robot.description.groups}
         self.arms = list(self.groups)
+        # per arm the drive force clamp of its arm joints then its actuated fingers (N m / N); the torque caps lower it
+        self.drive_force = {name: tuple(float(v) for v in g.force) for name, g in self.groups.items()}
         self.template = _np(self.entity.get_qpos()).reshape(-1).astype(np.float64).copy()
         self.joint = {j.name: j for j in self.entity.joints if len(j.qs_idx_local) == 1}
         self.layout, self.arm_slice, self.grip_index, self.limits = [], {}, {}, []
@@ -746,7 +757,8 @@ class _Robot:
             else:
                 m = obs[name]; n = len(g.arm_joints)
                 e = np.asarray(g.kp[:n]) * (m["joint_position_target_rad"] - m["joint_position_rad"]) - np.asarray(g.kv[:n]) * m["joint_velocity_rad_s"]
-                row[self.arm_slice[name]] = np.clip(e, -np.asarray(g.force[:n]), g.force[:n])
+                force = np.asarray(self.drive_force[name][:n])
+                row[self.arm_slice[name]] = np.clip(e, -force, force)
         return row
 
     def tcp(self, arm) -> tuple[np.ndarray, np.ndarray]:
@@ -991,6 +1003,636 @@ def _speed_up_knot_predicate(task_id: str) -> bool:
     return True
 
 
+# --------------------------------------------------------------------------- safety rules and guards (2026-10-03)
+# The 2026-10-03 rules audit (robot_coding_bench jobs/journal/2026-10-03/rules_audit/AUDIT.md: every finished v12 failure
+# classified, nine trajectories replayed) found TopoGym's any-tick 1 mm contact limit and its any-tick tet-inversion rule
+# without margin: the sweep's only success peaked at 0.83 mm, noise twins of real trajectories trip 1 mm, Jianwen's
+# validated rope pinch inverts tets for a few ticks, while what the rules exist to catch (one body forced through
+# another, a rope crushed flat) persists. Installed per Session by _install_rules, like the fast paths above: TopoGym's
+# files are not edited, and everything is installed after Env.reset recorded the frozen first checkpoint (the t = 0 state
+# and its hash do not change).
+#  R1 rigid task contacts (the five RigidTaskDefinition families): a non-held task contact deeper than 3 mm fails at once,
+#     one deeper than 1 mm fails once it has stayed above 1 mm for 0.25 s; held-finger contacts: 4 mm / 2 mm for 0.25 s.
+#  R2 soft integrity (the four IPC families): a tet inversion (worst volume ratio <= 0) or a cord attachment stretched by
+#     more than 2 mm fails once it has persisted for 0.25 s; while it is shorter the evidence reads as unavailable (no
+#     success credit, no failure). An invalid native IPC state still fails at once.
+#     R1 / R2 keep their consecutive-tick counters in the task's own history (task_state[_RULES_KEY], absent while all
+#     are zero), so reset and rewind restore them with the rest of the task state.
+#  R3 arm drive torque caps (ARM_TORQUE_CAPS_NM: the PD force clamp of the arm joints); the gripper drives are unchanged.
+#  R4 a fingertip-table guard on every control step (_TableGuard); the standard service's joint-speed limit and IK-jump
+#     refusal (JOINT_STEP_LIMIT_RAD, IK_JUMP_LIMIT_RAD, environment/sim/server.py); Session.safety() and the service's
+#     meta["safety"]; readable failure reasons for R1 / R2.
+RULES_REVISION = "rules_2026-10-03"
+CONTACT_RULE = dict(deep_m=.003, sustained_m=.001, held_deep_m=.004, held_sustained_m=.002, window_s=.25)
+SOFT_RULE = dict(window_s=.25, residual_m=.002)
+# N m per arm joint, in arm-joint order; the effective cap is min(this, the model's own force limit: ALOHA 35 / 144 / 59 /
+# 22 / 35 / 35, Panda 87 x 4 / 12 x 3). The audit proposed the real ViperX actuators (12.9 / 25.8 / 25.8 / 12.9 / 12.9 /
+# 4.8: XM540 stall torque, doubled on the dual-servo shoulder and elbow; XM430 on the wrist rotate). On lab (2026-10-03
+# rules fix, NOTES) those break the validated ipc_fast rope pinch (no lift; knot 10.5 instead of 17.8 mm): its six-step
+# approach (0.245 rad per control step) needs 73-77 N m on the shoulder, 45 on the elbow, the model's full 35 on the
+# wrist angle and 14.3 on the wrist rotate, and lags 185 mm at the proposal (60 / 45 still 30 mm). With these the knot and
+# rope pinches lift as with the uncapped arm and the rope keeps a positive tet volume (a wrist rotate cap of 9.6 turned the
+# rope's lift into a 0.24 s tet inversion), and every other validated reference still succeeds; the waist and forearm roll
+# keep the real-actuator caps. Panda: 50 on joints 1-4 (the cube oracle succeeds; a stiff-PD transient at the start of
+# each fast step is the only binding).
+ARM_TORQUE_CAPS_NM = {"aloha": (12.9, 80., 59., 12.9, 35., 17.5), "panda_robotiq": (50., 50., 50., 50., 12., 12., 12.)}
+# No gripper vertex (fingers, housing) is commanded lower than the tabletop + this. Negative: below the tabletop. The
+# audit proposed + 2 mm; on lab that broke two validated references (2026-10-03 rules fix, NOTES): the ipc_fast knot / rope
+# pinch (its closed-loop servo commands the fingertips 0-12 mm below their +1.8 mm contact pose to cancel the arm's lag;
+# + 2 mm and 0 mm both stopped it) and the cast_keyhole easier / very_easy oracles (their servo integrates up to 12 mm
+# below a +1.0-1.5 mm pregrasp; stopped at + 2 mm or 0 mm it never converges). - 15 mm keeps those envelopes and still
+# stops the gross below-table targets of the v12 failures (an IK swing to -245 mm, -80 mm, -41 mm).
+TABLE_GUARD_MARGIN_M = -.015
+IK_JUMP_LIMIT_RAD = .5           # standard service: an ee_pose row whose IK solution is farther from the measured joints is refused
+JOINT_STEP_LIMIT_RAD = .04       # standard service: joint_position targets move at most this per control step (as ee_pose rows)
+_RULES_KEY = "rcb_rules"
+
+
+def table_guard_words() -> str:
+    """The guard's limit in words ('15 mm below the tabletop'), for texts and feedback: no target goes lower than it."""
+    mm = abs(TABLE_GUARD_MARGIN_M) * 1000
+    return ("the tabletop" if mm == 0 else f"{mm:g} mm below the tabletop" if TABLE_GUARD_MARGIN_M < 0 else
+            f"{mm:g} mm above the tabletop")
+
+
+def rule_window_ticks(physics_dt_s: float, window_s: float) -> int:
+    """The persistence window in physics ticks (0.25 s at 2.5 ms = 100 ticks)."""
+    return max(1, int(round(float(window_s) / float(physics_dt_s))))
+
+
+def contact_rule_tick(counts: dict, nonheld_m: float, held_m: float, window: int, rule: dict = CONTACT_RULE):
+    """R1 for one physics tick: `counts` = consecutive ticks above the sustained limits so far ({"over", "held_over"},
+    absent = 0); nonheld_m / held_m = this tick's deepest non-held task contact and held-finger contact. Returns the new
+    counts (zeros dropped) and the verdict: None, "deep", "held_deep", "sustained" or "held_sustained"."""
+    over = int(counts.get("over", 0)) + 1 if nonheld_m > rule["sustained_m"] else 0
+    held_over = int(counts.get("held_over", 0)) + 1 if held_m > rule["held_sustained_m"] else 0
+    verdict = ("deep" if nonheld_m > rule["deep_m"] else "held_deep" if held_m > rule["held_deep_m"] else
+               "sustained" if over >= window else "held_sustained" if held_over >= window else None)
+    return {k: v for k, v in (("over", over), ("held_over", held_over)) if v}, verdict
+
+
+def soft_rule_tick(counts: dict, ratios: dict, residuals: dict, residual_m: float = SOFT_RULE["residual_m"]) -> dict:
+    """R2 for one physics tick: per soft entity the consecutive ticks with an inverted tet (worst volume ratio <= 0), per
+    attachment the consecutive ticks stretched beyond residual_m. Non-finite diagnostics are left to TopoGym's own check
+    (it raises). Zeros are dropped."""
+    inverted, stretched = counts.get("inverted", {}), counts.get("stretched", {})
+    out = {"inverted": {n: int(inverted.get(n, 0)) + 1 for n, r in ratios.items() if math.isfinite(r) and r <= 0},
+           "stretched": {n: int(stretched.get(n, 0)) + 1 for n, v in residuals.items() if math.isfinite(v) and v > residual_m}}
+    return {k: v for k, v in out.items() if v}
+
+
+def _validate_rules_history(value) -> None:
+    ok = isinstance(value, dict) and not set(value) - {"contact", "soft"}
+    contact, soft = (value.get("contact", {}), value.get("soft", {})) if ok else ({}, {})
+    ok = (ok and isinstance(contact, dict) and isinstance(soft, dict) and not set(contact) - {"over", "held_over"}
+          and not set(soft) - {"inverted", "stretched"})
+    counters = [contact] + [soft.get(k, {}) for k in ("inverted", "stretched")] if ok else []
+    if (not ok or not all(isinstance(c, dict) for c in counters)
+            or any(type(v) is not int or v < 1 for c in counters for v in c.values())):
+        raise ValueError("Invalid rules history")
+
+
+_IPC_INTEGRITY: list = []       # TopoGym's own topogym.evaluation.task_metrics.ipc_integrity (set once)
+_SOFT_CONTEXT: dict = {}        # the tick being evaluated by an R2 task: {"state", "counts", "window"}
+
+
+def _ipc_integrity_rules(state, soft_names, attachment_names=(), residual_limit=.002):
+    """topogym.evaluation.task_metrics.ipc_integrity with R2's persistence: TopoGym's function runs first (its validation
+    and verdicts are unchanged); a False caused only by tet inversions or stretched attachments that have not yet
+    persisted for the window becomes None (unavailable: no success, no failure). An invalid native state, an inconsistent
+    diagnostic, or a state no R2 task is evaluating keeps TopoGym's verdict."""
+    verdict = _IPC_INTEGRITY[0](state, soft_names, attachment_names, residual_limit)
+    ctx = _SOFT_CONTEXT
+    if verdict is not False or not ctx or ctx["state"] is not state:
+        return verdict
+    ipc = state["ipc"]
+    if not ipc["native_valid"]:
+        return False
+    counts, ages = ctx["counts"], []
+    for name in soft_names:
+        lo, hi = (float(ipc["volume_ratio"][name][k]) for k in ("minimum", "maximum"))
+        if hi < lo:
+            return False
+        if lo <= 0:
+            ages.append(counts.get("inverted", {}).get(name, 0))
+    for name in attachment_names:
+        if float(ipc["attachment_residual_m"][name]) > residual_limit:
+            ages.append(counts.get("stretched", {}).get(name, 0))
+    return False if not ages or max(ages) >= ctx["window"] else None
+
+
+def _patch_ipc_integrity(task) -> None:
+    """Route TopoGym's ipc_integrity through _ipc_integrity_rules: the task_metrics module global (placement_candidate,
+    placement.py) and every module of the task's class hierarchy that imported it by name."""
+    import topogym.evaluation.task_metrics as metrics
+    if not _IPC_INTEGRITY:
+        _IPC_INTEGRITY.append(metrics.ipc_integrity)
+    metrics.ipc_integrity = _ipc_integrity_rules
+    for cls in type(task).__mro__:
+        module = sys.modules.get(cls.__module__)
+        if module is not None and getattr(module, "ipc_integrity", None) is _IPC_INTEGRITY[0]:
+            module.ipc_integrity = _ipc_integrity_rules
+
+
+def _rigid_measurements_rules(self, state):
+    """RigidTaskDefinition.rigid_measurements (topogym/tasks/base.py) with the same poses, bounds, quiet flag and failures
+    (a non-finite state, a body more than 100 mm below the table) and the same contact sets (held = topogym.utils.grasp
+    .held_finger_contact_mask over every contact sample of the tick), but without the any-tick penetration verdict: this
+    tick's deepest non-held and held task contacts go to self._rcb_contact for R1 (_install_rules)."""
+    from scipy.spatial.transform import Rotation
+    from topogym.utils.grasp import held_finger_contact_mask
+    poses, bounds, quiet = {}, {}, True
+    for name, vertices in self.local_vertices.items():
+        body = state["bodies"][name]
+        position = np.asarray(body["position_m"], dtype=float)
+        quaternion = np.asarray(body["quaternion_wxyz"], dtype=float)
+        velocity = np.asarray(body["linear_velocity_m_s"], dtype=float)
+        angular = np.asarray(body["angular_velocity_rad_s"], dtype=float)
+        if not np.isfinite(np.r_[position, quaternion, velocity, angular]).all():
+            return {}, {}, False, "Non-finite physical state"
+        rotation = Rotation.from_quat(quaternion[[1, 2, 3, 0]])
+        points = rotation.apply(vertices) + position
+        if points[:, 2].min() < self.table_height_m - .1:
+            return {}, {}, False, "A task body fell below the table"
+        poses[name] = (position, rotation)
+        bounds[name] = (points.min(axis=0), points.max(axis=0))
+        quiet = quiet and np.linalg.norm(velocity) < .001 and np.linalg.norm(angular) < .02
+    contact_states = [dict(contacts=state.get("contacts"), grasp=state.get("grasp"))]
+    if state.get("terminal_contract_version", 1) == 2:
+        events = state.get("contact_events") or {}
+        if not events.get("substeps_complete") or not events.get("contact_snapshots"):
+            raise RuntimeError("terminal contract 2 requires complete rigid substep contact coverage")
+        contact_states = events["contact_snapshots"]
+    worst = {"nonheld": (0., None, 0.), "held": (0., None, 0.)}
+    for sample in contact_states:
+        contacts = sample["contacts"]
+        if contacts is None:
+            continue
+        a, b = np.asarray(contacts["link_a"]), np.asarray(contacts["link_b"])
+        involved = np.isin(a, list(self._task_link_indices)) | np.isin(b, list(self._task_link_indices))
+        penetration = np.asarray(contacts["penetration"])
+        held = held_finger_contact_mask(contacts, self._finger_links_by_hand, self._movable_task_link_indices,
+                                        sample.get("grasp"))
+        for key, mask in (("nonheld", involved & ~held), ("held", involved & held)):
+            depth = float(penetration[mask].max(initial=0.))
+            if math.isfinite(depth) and depth > worst[key][0]:          # NaN: no verdict, as TopoGym's comparison
+                i = int(np.flatnonzero(mask & (penetration == depth))[0])
+                force = contacts.get("force")
+                force = float(np.linalg.norm(np.asarray(force)[i])) if force is not None else 0.
+                worst[key] = (depth, (int(a[i]), int(b[i])), force)
+    self._rcb_contact = worst
+    return poses, bounds, bool(quiet), None
+
+
+def _install_rules(session) -> dict:
+    """R1-R4 for this Session (see the block comment above). Returns the installed parameters (Session.rules)."""
+    from types import MethodType
+    task = session.env._task
+    dt = float(session.env.config.physics_dt_s)
+    session.torque_caps = _install_torque_caps(session)
+    session.monitor = _SafetyMonitor(session)
+    session.table_guard = _TableGuard(session)
+    session.last_guard = None
+
+    def on_lifecycle(event):
+        if event["kind"] == "rewind":
+            # A rewind (reset) restores the checkpoint's engine buffers, Genesis' force ranges included (recorded
+            # before the caps): apply them again before the next physics step.
+            _apply_torque_caps(session)
+            session.monitor.reset()
+    session.env.add_lifecycle_sink(on_lifecycle)
+    contact = hasattr(task, "rigid_measurements")
+    soft = getattr(task, "physics_model", "") == "fem_ipc"
+    rules = {"revision": RULES_REVISION, "torque_caps_nm": session.torque_caps,
+             "table_guard_margin_m": TABLE_GUARD_MARGIN_M if session.table_guard.limit is not None else None,
+             "contact": dict(CONTACT_RULE, window_ticks=rule_window_ticks(dt, CONTACT_RULE["window_s"])) if contact else None,
+             "soft": dict(SOFT_RULE, window_ticks=rule_window_ticks(dt, SOFT_RULE["window_s"])) if soft else None}
+    if not (contact or soft):
+        return rules
+    words = _link_words(session)
+    if contact:
+        task._rcb_contact = None
+        task.rigid_measurements = MethodType(_rigid_measurements_rules, task)
+    if soft:
+        _patch_ipc_integrity(task)
+    original_transition, original_validate = task.evaluate_transition, task.validate_task_state
+    depth = [0]
+
+    def validate_task_state(self, state):
+        if isinstance(state, dict) and _RULES_KEY in state:
+            _validate_rules_history(state[_RULES_KEY])
+            state = {k: v for k, v in state.items() if k != _RULES_KEY}
+        return original_validate(state)
+
+    def evaluate_transition(self, state, private):
+        mine = dict(private.get(_RULES_KEY) or {}) if isinstance(private, dict) else {}
+        own = {k: v for k, v in private.items() if k != _RULES_KEY} if isinstance(private, dict) else private
+        if depth[0]:                     # a family's own nested call (evaluate_state -> evaluate_transition): plain
+            return original_transition(state, own)
+        soft_counts, ipc = mine.get("soft", {}), state.get("ipc") or {}
+        if soft and ipc and "native_valid" in ipc:
+            ratios = {k: float(v["minimum"]) for k, v in (ipc.get("volume_ratio") or {}).items()}
+            residuals = {k: float(v) for k, v in (ipc.get("attachment_residual_m") or {}).items()}
+            soft_counts = soft_rule_tick(soft_counts, ratios, residuals)
+            _SOFT_CONTEXT.update(state=state, counts=soft_counts, window=rules["soft"]["window_ticks"])
+            session.monitor.soft(ratios, residuals, soft_counts)
+        self._rcb_contact = None
+        depth[0] += 1
+        try:
+            reached, failure, metrics, private = original_transition(state, own)
+        finally:
+            depth[0] -= 1
+            _SOFT_CONTEXT.clear()
+        contact_counts = mine.get("contact", {})
+        if contact and self._rcb_contact is not None:
+            tick = self._rcb_contact
+            contact_counts, verdict = contact_rule_tick(contact_counts, tick["nonheld"][0], tick["held"][0],
+                                                        rules["contact"]["window_ticks"])
+            session.monitor.contact(tick, contact_counts)
+            if verdict and failure is None:
+                reached, failure = False, _contact_reason(session, words, verdict, tick, contact_counts)
+        if soft and failure in ("rope_volume_invalid", "connection_or_volume_invalid"):
+            failure = _soft_reason(session, failure, ipc, soft_counts)
+        kept = {k: v for k, v in (("contact", contact_counts), ("soft", soft_counts)) if v}
+        if isinstance(private, dict):
+            private = {**{k: v for k, v in private.items() if k != _RULES_KEY}, **({_RULES_KEY: kept} if kept else {})}
+        return reached, failure, metrics, private
+
+    task.validate_task_state = MethodType(validate_task_state, task)
+    task.evaluate_transition = MethodType(evaluate_transition, task)
+    return rules
+
+
+def _link_words(session) -> dict:
+    """global link index -> plain words for the readable failure reasons."""
+    words, robot = {}, session.robot
+    fingers = {name: arm for arm, g in robot.groups.items() if g.grasp is not None for name in g.grasp.finger_links}
+    gripper = {i: arm for arm, links in session.table_guard.subtrees.items() for i in links}
+    for ename, ent in session.env._world.entities.items():
+        for link in getattr(ent, "links", ()):
+            i = int(link.idx)
+            if ename == "robot":
+                arm = gripper.get(i) or fingers.get(link.name)
+                side = f"the {arm} " if arm and len(robot.arms) > 1 else "the "
+                if link.name in fingers:
+                    words[i] = f"{side}gripper's finger"
+                elif arm:
+                    words[i] = f"{side}gripper"
+                else:
+                    prefix = link.name.split("/")[0] if "/" in link.name else ""
+                    words[i] = (f"the {prefix} arm's {link.name.split('/')[-1]}" if prefix in robot.arms else
+                                f"the robot's {link.name}")
+            elif ename == "table" or ename.startswith(("table", "lab_")):
+                words[i] = "the table" if ename.startswith("table") else f"the {ename.replace('_', ' ')}"
+            else:
+                words[i] = f"the {ename.replace('_', ' ')}"
+    return words
+
+
+def _drive_context(session) -> str:
+    """What the arms were doing when a rule fired: a drive at its torque cap, or a fast joint motion."""
+    try:
+        r = session.robot
+        effort, speed = np.abs(r.efforts()), np.abs(r.velocities())
+        worst = max(((arm, float(np.max(effort[r.arm_slice[arm]] / np.asarray(r.drive_force[arm][:len(r.groups[arm].arm_joints)]))))
+                     for arm in r.arms), key=lambda x: x[1])
+        fast = max(((arm, float(np.max(speed[r.arm_slice[arm]]))) for arm in r.arms), key=lambda x: x[1])
+        if worst[1] >= .9:
+            side = f"the {worst[0]} arm" if len(r.arms) > 1 else "the arm"
+            return f", while {side} pushed at {100 * min(worst[1], 1.):.0f} % of its drive torque limit"
+        if fast[1] >= 1.:
+            side = f"the {fast[0]} arm" if len(r.arms) > 1 else "the arm"
+            return f", during a fast motion of {side} ({fast[1]:.1f} rad/s)"
+    except Exception:  # noqa: BLE001 -- a reason must never fail a physics tick
+        pass
+    return ""
+
+
+def _contact_reason(session, words, verdict, tick, counts) -> str:
+    held = verdict.startswith("held")
+    depth, pair, force = tick["held" if held else "nonheld"]
+    one, two = (words.get(pair[0], "a task part"), words.get(pair[1], "another body")) if pair else ("a task part", "another body")
+    c = CONTACT_RULE
+    if verdict.endswith("deep"):
+        limit = c["held_deep_m"] if held else c["deep_m"]
+        what = f"{one} and {two} were forced {depth * 1000:.1f} mm into each other (limit {limit * 1000:g} mm at once)"
+    else:
+        limit = c["held_sustained_m"] if held else c["sustained_m"]
+        what = (f"{one} and {two} stayed pressed more than {limit * 1000:g} mm into each other for {c['window_s']:g} s "
+                f"(now {depth * 1000:.1f} mm)")
+    return (f"{'held_contact_forced' if held else 'task_contact_forced'}: {what}; contact force {force:.0f} N"
+            f"{_drive_context(session)}. Contacts this deep or this persistent count as forcing bodies through each other.")
+
+
+def _soft_reason(session, code, ipc, counts) -> str:
+    if not ipc.get("native_valid", True):
+        return f"{code}: the soft-body solver reported an invalid state"
+    window = session.rules["soft"]["window_ticks"]
+    inverted = {k: v for k, v in counts.get("inverted", {}).items() if v >= window}
+    if inverted:
+        name = max(inverted, key=inverted.get)
+        ratio = float((ipc.get("volume_ratio") or {}).get(name, {}).get("minimum", float("nan")))
+        return (f"{code}: the {name} stayed crushed for {SOFT_RULE['window_s']:g} s (an inverted volume element, worst "
+                f"volume ratio {ratio:.3f}){_gripper_context(session)}. A squeeze that recovers within "
+                f"{SOFT_RULE['window_s']:g} s is tolerated; a full close on it, or pressing it into the table, is not.")
+    stretched = {k: v for k, v in counts.get("stretched", {}).items() if v >= window}
+    if stretched:
+        name = max(stretched, key=stretched.get)
+        value = float((ipc.get("attachment_residual_m") or {}).get(name, float("nan")))
+        return (f"{code}: the cord's permanent attachment {name} stayed stretched by {value * 1000:.1f} mm (limit "
+                f"{SOFT_RULE['residual_m'] * 1000:g} mm) for {SOFT_RULE['window_s']:g} s{_drive_context(session)}")
+    return code
+
+
+def _gripper_context(session) -> str:
+    """Where the grippers working near the tabletop (lowest point within 5 cm) were when a soft rule fired: closed on
+    something, or touching the tabletop. A gripper parked higher up is not mentioned."""
+    try:
+        r, guard = session.robot, session.table_guard
+        low = guard.lowest(r.positions()) if guard.limit is not None else {}
+        parts = []
+        for arm in r.arms:
+            if arm in low and low[arm] - guard.table > .05:
+                continue
+            width, bits = r.opening(arm), []
+            if width < .012:
+                bits.append(f"closed to {width * 1000:.0f} mm")
+            if arm in low and low[arm] - guard.table < .006:
+                bits.append(f"its lowest point {max(low[arm] - guard.table, 0.) * 1000:.0f} mm above the tabletop")
+            if bits:
+                parts.append(f"{'the ' + arm + ' gripper' if len(r.arms) > 1 else 'the gripper'} " + " and ".join(bits))
+        return f" ({'; '.join(parts)})" if parts else ""
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def _install_torque_caps(session) -> dict:
+    """R3: the arm joints' PD force clamp (Genesis set_dofs_force_range) becomes min(model limit, ARM_TORQUE_CAPS_NM);
+    the gripper drives keep theirs. The world checkpoint (recorded before) restores Genesis' engine buffers, the force
+    range included, so every rewind applies the caps again (_install_rules' lifecycle sink)."""
+    rr = session.env._robot
+    caps = ARM_TORQUE_CAPS_NM.get(rr.description.robot_id)
+    session._torque_cap_dofs, out = [], {}
+    if caps is None:
+        return out
+    for g in rr.description.groups:
+        n = len(g.arm_joints)
+        if len(caps) != n:
+            raise ValueError(f"torque caps for {rr.description.robot_id} name {len(caps)} joints, the arm has {n}")
+        limits = np.minimum(np.asarray(g.force[:n], dtype=np.float64), np.asarray(caps, dtype=np.float64))
+        session._torque_cap_dofs.append((list(rr._controlled[g.name][:n]), limits))
+        session.robot.drive_force[g.name] = tuple(float(v) for v in limits) + tuple(float(v) for v in g.force[n:])
+        out[g.name] = [float(v) for v in limits]
+    _apply_torque_caps(session)
+    return out
+
+
+def _apply_torque_caps(session) -> None:
+    for dofs, limits in session._torque_cap_dofs:
+        session.env._robot.entity.set_dofs_force_range(-limits, limits, dofs)
+
+
+class _ChainFK:
+    """Forward kinematics of the robot entity in numpy, from Genesis' own static link / joint / dof data, mirroring
+    func_forward_kinematics_entity (genesis/engine/solvers/rigid/abd/forward_kinematics.py: fixed root, revolute,
+    prismatic and fixed joints). Genesis' RigidEntity.forward_kinematics runs its kernel on the live solver arrays and
+    changes the next physics step in the last bits (a guard that stops nothing must not change the simulation), and it
+    costs a kernel launch; this reads the solver once and never again."""
+
+    def __init__(self, entity):
+        solver = entity._solver
+
+        def read(field, n):
+            a = np.asarray(field.to_numpy(), dtype=np.float64)
+            return a.reshape(a.shape[0], -1, n)[:, 0, :] if n else a.reshape(a.shape[0], -1)[:, 0]
+        self.names = {int(link.idx): link.name for link in entity.links}
+        self.l0, self.l1, self.q0 = int(entity.link_start), int(entity.link_end), int(entity.q_start)
+        info, joints, dofs = solver.links_info, solver.joints_info, solver.dofs_info
+        self.lpos, self.lquat = read(info.pos, 3), read(info.quat, 4)
+        self.parent, self.fixed = read(info.parent_idx, 0).astype(int), read(info.is_fixed, 0).astype(bool)
+        self.jstart, self.jend = read(info.joint_start, 0).astype(int), read(info.joint_end, 0).astype(int)
+        self.jtype, self.jq = read(joints.type, 0).astype(int), read(joints.q_start, 0).astype(int)
+        self.jdof, self.jpos = read(joints.dof_start, 0).astype(int), read(joints.pos, 3)
+        self.mang, self.mvel = read(dofs.motion_ang, 3), read(dofs.motion_vel, 3)
+        self.qpos0 = read(solver._rigid_global_info.qpos0, 0)
+        root_pos, root_quat = read(solver.links_state.pos, 3), read(solver.links_state.quat, 4)
+        self.root = {i: (root_pos[i].copy(), root_quat[i].copy()) for i in range(self.l0, self.l1)
+                     if self.parent[i] == -1 and self.fixed[i]}            # fixed roots keep their placed pose
+        import genesis as gs
+        self.types = (int(gs.JOINT_TYPE.FIXED), int(gs.JOINT_TYPE.REVOLUTE), int(gs.JOINT_TYPE.PRISMATIC))
+
+    @staticmethod
+    def _mul(u, v):
+        w1, x1, y1, z1 = u
+        w2, x2, y2, z2 = v
+        q = np.array([w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2, w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+                      w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2, w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2])
+        return q / np.linalg.norm(q)
+
+    def __call__(self, q_local) -> dict:
+        """link name -> 4x4 world pose for the entity-local qpos q_local (Session._Robot q_full layout)."""
+        fixed, revolute, prismatic = self.types
+        q = self.qpos0.copy()
+        q[self.q0:self.q0 + len(q_local)] = np.asarray(q_local, dtype=np.float64)
+        P, Q, out = {}, {}, {}
+        for i in range(self.l0, self.l1):
+            if i in self.root:
+                P[i], Q[i] = self.root[i]
+            else:
+                pos, quat, parent = self.lpos[i], self.lquat[i], self.parent[i]
+                if parent != -1:
+                    pos, quat = P[parent] + quat_to_mat(Q[parent]) @ self.lpos[i], self._mul(Q[parent], self.lquat[i])
+                for j in range(self.jstart[i], self.jend[i]):
+                    kind, angle = self.jtype[j], q[self.jq[j]] - self.qpos0[self.jq[j]]
+                    if kind == revolute:
+                        anchor = quat_to_mat(quat) @ self.jpos[j] + pos
+                        v = self.mang[self.jdof[j]] * angle
+                        theta = float(np.linalg.norm(v))
+                        local = (np.r_[math.cos(theta / 2), math.sin(theta / 2) / theta * v] if theta > 1e-15
+                                 else np.array([1., 0., 0., 0.]))
+                        quat = self._mul(quat, local)
+                        pos = anchor - quat_to_mat(quat) @ self.jpos[j]
+                    elif kind == prismatic:
+                        pos = pos + quat_to_mat(quat) @ self.mvel[self.jdof[j]] * angle
+                    elif kind != fixed:
+                        raise ValueError(f"table guard kinematics: unsupported joint type {kind}")
+                P[i], Q[i] = pos, quat
+            out[self.names[i]] = _T(P[i], Q[i])
+        return out
+
+
+class _TableGuard:
+    """R4: before a control step runs, stop each arm's commanded joint targets where any collision vertex of its gripper
+    (the subtree of its grasp contact_root_link: fingers and housing, at the commanded opening) would come lower than the
+    tabletop + TABLE_GUARD_MARGIN_M (negative: below the tabletop; see the constant). Only arm motion is stopped, along
+    the step (previous joint targets -> new ones), so the stop lies on the commanded path; a gripper command is never
+    changed (closing a Robotiq moves its fingertips forward: near the table they may touch it, with the gripper's own
+    small force). A gripper already below may move up, not further down. Forward kinematics (_ChainFK) runs only for
+    arms whose joint targets changed. A guarded target is rounded to float32 like every recorded row, so live execution
+    and replays command the same values (a replayed guarded row is not changed again)."""
+
+    def __init__(self, session):
+        self.s, r = session, session.robot
+        self.table = session.table_z()
+        self.limit = None if self.table is None else self.table + TABLE_GUARD_MARGIN_M
+        self.points: dict = {}           # arm -> [(link name, (k, 3) link-frame vertices)]
+        self.subtrees: dict = {}         # arm -> {global link indices}
+        links = list(r.entity.links)
+        for arm, g in r.groups.items():
+            root = next((link for link in links if g.grasp is not None and link.name == g.grasp.contact_root_link), None)
+            if root is None:
+                continue
+            tree, grown = {int(root.idx)}, True
+            while grown:
+                grown = False
+                for link in links:
+                    if int(link.idx) not in tree and int(link.parent_idx) in tree:
+                        tree.add(int(link.idx))
+                        grown = True
+            self.subtrees[arm] = tree
+            pts = []
+            for link in links:
+                if int(link.idx) in tree and link.geoms:
+                    local = np.concatenate([quat_to_mat(gm.init_quat).dot(np.asarray(gm.init_verts, dtype=np.float64).T).T
+                                            + np.asarray(gm.init_pos, dtype=np.float64) for gm in link.geoms])
+                    try:
+                        from scipy.spatial import ConvexHull
+                        local = local[ConvexHull(local).vertices]
+                    except Exception:  # noqa: BLE001 -- a degenerate hull keeps every vertex
+                        pass
+                    pts.append((link.name, local))
+            self.points[arm] = pts
+        self.count, self.events = 0, []
+        self.fk = _ChainFK(r.entity) if self.points else None
+
+    def lowest(self, row) -> dict:
+        """arm -> the lowest world z of its gripper at the joint row `row` (action layout)."""
+        r, row = self.s.robot, np.asarray(row, dtype=np.float64)
+        q = r.q_full(np.concatenate([row[r.arm_slice[a]] for a in r.arms]))
+        q = r._with_fingers(q, {a: r.width_to_native(a, row[r.grip_index[a]]) for a in r.arms})
+        T = self.fk(q)
+        return {arm: min(float((local @ T[name][2, :3] + T[name][2, 3]).min()) for name, local in pts)
+                for arm, pts in self.points.items() if pts}
+
+    def apply(self, target, previous):
+        """-> the guarded target (the input itself when nothing is stopped); sets the Session's last_guard event."""
+        self.s.last_guard = None
+        if self.limit is None or not self.points:
+            return target
+        r = self.s.robot
+        previous = np.asarray(previous, dtype=np.float64)
+        moved = [a for a in self.points if not np.array_equal(target[r.arm_slice[a]], previous[r.arm_slice[a]])]
+        if not moved:
+            return target                                     # a gripper command alone is never stopped
+        want = self.lowest(target)
+        low = [a for a in moved if want.get(a, np.inf) < self.limit - 1e-5]
+        if not low:
+            return target
+        base = np.asarray(target, dtype=np.float64).copy()    # the previous joint targets at the new openings
+        for arm in low:
+            base[r.arm_slice[arm]] = previous[r.arm_slice[arm]]
+        have = self.lowest(base)
+        out, event = np.asarray(target, dtype=np.float64).copy(), {}
+        for arm in low:
+            bound = min(self.limit, have[arm])
+            if want[arm] >= bound - 1e-5:
+                continue                                      # moving up from below the limit is allowed
+            idx = list(range(r.arm_slice[arm].start, r.arm_slice[arm].stop))
+            lo, hi = 0., 1.
+            for _ in range(14):                               # the stop within 0.01 % of the step
+                mid = (lo + hi) / 2
+                trial = out.copy()
+                trial[idx] = previous[idx] + (out[idx] - previous[idx]) * mid
+                if self.lowest(trial)[arm] >= bound + 1e-6:
+                    lo = mid
+                else:
+                    hi = mid
+            out[idx] = previous[idx] + (out[idx] - previous[idx]) * lo
+            event[arm] = dict(asked_mm=round((want[arm] - self.table) * 1000, 1), stopped_mm=round((bound - self.table) * 1000, 1),
+                              fraction=round(lo, 4))
+        if not event:
+            return target
+        out = out.astype(np.float32).astype(np.float64)
+        self.count += 1
+        self.s.last_guard = dict(step=int(self.s.n_steps) + 1, **event)
+        self.events = (self.events + [self.s.last_guard])[-20:]
+        self.s.monitor.guard(self.s.last_guard)
+        if self.count <= 5 or self.count % 100 == 0:
+            _log("table guard:", "; ".join(f"{a} gripper target {e['asked_mm']:+.1f} mm from the tabletop, stopped at "
+                                           f"{e['stopped_mm']:+.1f} mm" for a, e in event.items()), f"(guarded steps: {self.count})")
+        return out
+
+
+class _SafetyMonitor:
+    """What R1 / R2 / R4 measure, for the agent (Session.safety(), the standard service's meta["safety"]): maxima since the
+    previous read and over the episode (since the last reset), against their limits."""
+
+    def __init__(self, session):
+        self.s = session
+        self.reset()
+
+    @staticmethod
+    def _blank() -> dict:
+        return dict(contact=0., held=0., over=0, held_over=0, ratio={}, inverted=0, residual=0., stretched=0, guard=0,
+                    guard_events=[], ik=[])
+
+    def reset(self) -> None:
+        self.last, self.episode = self._blank(), self._blank()
+
+    def _both(self):
+        return (self.last, self.episode)
+
+    def contact(self, tick, counts) -> None:
+        for d in self._both():
+            d.update(contact=max(d["contact"], tick["nonheld"][0]), held=max(d["held"], tick["held"][0]),
+                     over=max(d["over"], counts.get("over", 0)), held_over=max(d["held_over"], counts.get("held_over", 0)))
+
+    def soft(self, ratios, residuals, counts) -> None:
+        for d in self._both():
+            for name, value in ratios.items():
+                if math.isfinite(value):
+                    d["ratio"][name] = min(d["ratio"].get(name, value), value)
+            d["residual"] = max([d["residual"]] + [v for v in residuals.values() if math.isfinite(v)])
+            d["inverted"] = max([d["inverted"]] + list(counts.get("inverted", {}).values()))
+            d["stretched"] = max([d["stretched"]] + list(counts.get("stretched", {}).values()))
+
+    def guard(self, event) -> None:
+        for d in self._both():
+            d.update(guard=d["guard"] + 1, guard_events=(d["guard_events"] + [event])[-5:])
+
+    def ik_jump(self, event) -> None:
+        for d in self._both():
+            d["ik"] = (d["ik"] + [event])[-5:]
+
+    def read(self, *, episode: bool = False, reset: bool = True) -> dict:
+        d, s = (self.episode if episode else self.last), self.s
+        dt = float(s.env.config.physics_dt_s)
+        rules = s.rules
+        out = {"rules": RULES_REVISION, "scope": "episode" if episode else "since the previous read"}
+        if rules["contact"]:
+            c = CONTACT_RULE
+            out["task_contact_mm"] = dict(max=round(d["contact"] * 1000, 3), fails_above=c["deep_m"] * 1000,
+                                          fails_if_above_for_s=[c["sustained_m"] * 1000, c["window_s"]],
+                                          longest_above_s=round(d["over"] * dt, 4))
+            out["held_finger_contact_mm"] = dict(max=round(d["held"] * 1000, 3), fails_above=c["held_deep_m"] * 1000,
+                                                 fails_if_above_for_s=[c["held_sustained_m"] * 1000, c["window_s"]],
+                                                 longest_above_s=round(d["held_over"] * dt, 4))
+        if rules["soft"]:
+            w = SOFT_RULE["window_s"]
+            out["soft_volume_ratio"] = dict(min={k: round(v, 4) for k, v in d["ratio"].items()}, fails_at_or_below_for_s=[0., w],
+                                            longest_at_or_below_s=round(d["inverted"] * dt, 4))
+            out["attachment_stretch_mm"] = dict(max=round(d["residual"] * 1000, 3),
+                                                fails_if_above_for_s=[SOFT_RULE["residual_m"] * 1000, w],
+                                                longest_above_s=round(d["stretched"] * dt, 4))
+        if rules["table_guard_margin_m"] is not None:
+            out["table_guard"] = dict(margin_mm=TABLE_GUARD_MARGIN_M * 1000, stopped_steps=d["guard"], recent=d["guard_events"])
+        if d["ik"]:
+            out["ik_jumps"] = d["ik"]
+        if reset and not episode:
+            self.last = self._blank()
+        return out
+
+
 def _settle_only_when_reached(task) -> bool:
     """Tooling v12, families with a final-settling check (knot_untying, cast_coil, buzz_wire_3d, blanket_flatten):
     TaskDefinition._evaluate_terminal (topogym/tasks/base.py) runs evaluate_settling (release clearance over every FEM
@@ -1019,6 +1661,214 @@ def _settle_only_when_reached(task) -> bool:
                 next_reference = None
         return reached, failure, metrics, private, next_reference
     task._evaluate_terminal = MethodType(_evaluate_terminal, task)
+    return True
+
+
+# ---- PBD cloth contact (the blanket blow-up of 2026-10-03: trials mCa9CZt / r42VtjE, jobs/journal/2026-10-03/blanket_debug)
+SIMULATOR_INSTABILITY = "simulator_instability"     # the episode end of a numerically unstable simulation
+# Guard (a backstop; _bound_pbd_rigid_contacts removes the cause). PBD reports a particle's velocity over its last
+# 0.625 ms substep. Runs that did not blow up reached at most 9.2 m/s, with Genesis' contact and the bounded one alike:
+# brief substep-scale oscillations while a gripper pinned or squeezed the cloth (no particle moved faster than 0.5 m/s
+# between 50 ms samples); a cloth dropped from the robot's reach lands below ~3 m/s. Every recorded Genesis blow-up
+# crossed 10 m/s in one jump (11-24 m/s) and reached 1e3-1e5 m/s within three ticks; traced tick by tick: 21.5 -> 35 ->
+# 159,526 and 20.1 -> 28.5 -> 5,337 m/s, the cloth falling off the table at the third tick. 20 m/s keeps twice the
+# headroom over the fastest run that did not blow up and still ends every blow-up no later than the tick in which its
+# cloth would fall (the guard runs before the task's predicates). A cloth particle faster than this means the
+# simulation, not the agent, failed.
+PARTICLE_SPEED_LIMIT_M_S = 20.0
+# Depenetration allowance of the PBD-rigid contact (_bound_pbd_rigid_contacts): the speed beyond the colliding body's own
+# approach and the particle's own inward motion at which a contact may push a particle out (resolving penetration left by
+# an infeasible squeeze). Gravity's per-substep sag needs g * dt = 0.006 m/s; resting and pushed cloth never reaches it.
+PBD_DEPENETRATION_MARGIN_M_S = 0.05
+
+
+def _bound_pbd_rigid_contacts() -> float:
+    """PBD scenes (blanket_flatten): resolve a cloth particle's rigid contacts together and bound the push-out by the
+    contact's physics. Installed before the scene's first physics step (it replaces Genesis 1.2.1's
+    LegacyCoupler.kernel_pbd_rigid_collide; the Genesis files are not edited, so the frozen blanket states' backend
+    identity, which hashes those files, still matches). A no-op for scenes without PBD particles: the kernel runs only when
+    rigid and PBD solvers are both active. Genesis 1.2.1-1.4.3 and main (2026-10-03) share the replaced code unchanged.
+
+    Genesis (legacy_coupler.py:736-760, 895-916), once per substep after the cloth constraints: for each coupled geom in
+    turn, a particle within the particle radius r of the geom is moved out along that geom's SDF normal by the whole
+    penetration, and its velocity becomes the substep's whole displacement over dt (0.625 ms); the geom's link receives
+    -m dv/dt. With one contact this is ordinary position-based contact. With two rigid surfaces closer than 2r (closed
+    fingertips pressed onto the table through the cloth; finger pads closing on a cloth edge) the constraints cannot all
+    hold: each geom undoes the previous one, the last geom wins, the particle moves by up to ~2r per substep, partly
+    sideways along the tilted SDF normals at the fingertip's edges, and all of it becomes velocity. The cloth constraints
+    pull the particle back in the next substep, which feeds the cycle: 0.96 -> 21 -> 35 -> 159,526 m/s in three ticks (the
+    easy trial's replay), the cloth thrown metres off the table, "Cloth fell below the table".
+
+    Here, per particle and substep, at the particle's pre-contact position x (after the cloth constraints; v its velocity,
+    x0 its position at the substep's start):
+      1. all coupled geoms are evaluated at x and their push-outs p_g = n_g (r - sd_g) summed (one simultaneous
+         projection, independent of the geom order): one contact gives Genesis' push-out, orthogonal contacts (a table
+         corner against a finger) are resolved together, opposing contacts (a squeeze) give their compromise, so a
+         squeezed particle stays held between the two surfaces;
+      2. the push-out along each contact normal is bounded by what that contact can physically do within the substep:
+         stop the particle's own motion into the geom, follow the geom's own approach (its velocity at the contact point)
+         and resolve old penetration at PBD_DEPENETRATION_MARGIN_M_S. The sum is scaled by the tightest bound, so no
+         contact moves a particle out faster than the body pushing it (plus the margin), and none lags behind it (no
+         tunnelling). Penetration an infeasible squeeze leaves is carried and resolved at the margin's speed;
+      3. the velocity is the bounded displacement over dt (PBD's own velocity rule), so a contact cannot give a particle
+         more normal speed than the colliding body's plus the margin: no energy from depenetration. The cloth
+         constraints see the corrected positions (they start the next substep's solve), and because the correction now
+         has the size of the physical motion they propagate it as ordinary motion;
+      4. each geom's link receives Genesis' reaction to its own full penetration, m p_g / dt^2 (the PBD constraint force
+         of that contact), so squeezed cloth still resists the gripper as before (the grip of a closing gripper).
+    When one contact is active and its push-out is within the bound (cloth resting on the table, cloth pushed by a moving
+    body, a falling particle stopped by the table: every contact of an unsqueezed cloth), the particle runs Genesis' own
+    expressions, bit for bit. Returns the margin."""
+    import quadrants as qd
+    import genesis as gs
+    import genesis.utils.sdf as sdf
+    from genesis.engine.couplers import legacy_coupler
+    from genesis.utils import array_class
+    installed = getattr(legacy_coupler.LegacyCoupler.kernel_pbd_rigid_collide, "_topogym_depenetration_margin_m_s", None)
+    if installed is not None:
+        return installed
+    margin = float(PBD_DEPENETRATION_MARGIN_M_S)
+
+    @qd.data_oriented
+    class _BoundedPBDRigidContact:
+        def kernel_pbd_rigid_collide(self, geoms_state, geoms_info, links_state, sdf_info, rigid_global_info,
+                                     collider_static_config):
+            for i_p, i_b in qd.ndrange(self.pbd_solver._n_particles, self.sph_solver._B):
+                if self.pbd_solver.particles_ng_reordered[i_p, i_b].active:
+                    r = self.pbd_solver.particle_size / 2
+                    dt = self.pbd_solver._substep_dt
+                    x = self.pbd_solver.particles_reordered[i_p, i_b].pos
+                    v = self.pbd_solver.particles_reordered[i_p, i_b].vel
+                    x0 = self.pbd_solver.particles_reordered[i_p, i_b].ipos
+                    mass = self.pbd_solver.particles_info_reordered[i_p, i_b].mass
+                    push = qd.Vector.zero(gs.qd_float, 3)
+                    n_contacts = 0
+                    g_first = 0
+                    n_first = qd.Vector.zero(gs.qd_float, 3)
+                    sd_first = gs.qd_float(0.0)
+                    # 1. every coupled geom at the pre-contact position; the push-outs summed
+                    for i_g in range(self.rigid_solver.n_geoms):
+                        if geoms_info.needs_coup[i_g]:
+                            signed_dist = sdf.sdf_func_world(
+                                geoms_state=geoms_state, geoms_info=geoms_info, sdf_info=sdf_info, pos_world=x,
+                                geom_idx=i_g, batch_idx=i_b)
+                            contact_normal = sdf.sdf_func_normal_world(
+                                geoms_state=geoms_state, geoms_info=geoms_info, rigid_global_info=rigid_global_info,
+                                collider_static_config=collider_static_config, sdf_info=sdf_info, pos_world=x,
+                                geom_idx=i_g, batch_idx=i_b)
+                            self.pbd_rigid_normal_reordered[i_p, i_b, i_g] = contact_normal
+                            if signed_dist < r:
+                                push = push + contact_normal * (r - signed_dist)
+                                if n_contacts == 0:
+                                    g_first = i_g
+                                    n_first = contact_normal
+                                    sd_first = signed_dist
+                                n_contacts += 1
+                    if n_contacts > 0:
+                        # 2. the tightest physical bound of the push-out along a contact normal
+                        scale = gs.qd_float(1.0)
+                        if n_contacts == 1:
+                            u = self.rigid_solver._func_vel_at_point(
+                                pos_world=x, link_idx=geoms_info.link_idx[g_first], i_b=i_b, links_state=links_state)
+                            allowed = (qd.max(u.dot(n_first), 0.0) + qd.max(-v.dot(n_first), 0.0) + margin) * dt
+                            along = push.dot(n_first)
+                            if along > allowed:
+                                scale = allowed / along
+                        else:
+                            for i_g in range(self.rigid_solver.n_geoms):
+                                if geoms_info.needs_coup[i_g]:
+                                    signed_dist = sdf.sdf_func_world(
+                                        geoms_state=geoms_state, geoms_info=geoms_info, sdf_info=sdf_info, pos_world=x,
+                                        geom_idx=i_g, batch_idx=i_b)
+                                    if signed_dist < r:
+                                        contact_normal = sdf.sdf_func_normal_world(
+                                            geoms_state=geoms_state, geoms_info=geoms_info,
+                                            rigid_global_info=rigid_global_info,
+                                            collider_static_config=collider_static_config, sdf_info=sdf_info,
+                                            pos_world=x, geom_idx=i_g, batch_idx=i_b)
+                                        u = self.rigid_solver._func_vel_at_point(
+                                            pos_world=x, link_idx=geoms_info.link_idx[i_g], i_b=i_b,
+                                            links_state=links_state)
+                                        allowed = (qd.max(u.dot(contact_normal), 0.0)
+                                                   + qd.max(-v.dot(contact_normal), 0.0) + margin) * dt
+                                        along = push.dot(contact_normal)
+                                        if along > allowed:
+                                            scale = qd.min(scale, allowed / along)
+                        new_pos = x
+                        new_vel = v
+                        if n_contacts == 1 and scale >= 1.0:
+                            # Genesis' own expressions (legacy_coupler.py:907-924), bit for bit
+                            stiffness = 1.0
+                            energy_loss = 0.0
+                            new_pos = x + stiffness * n_first * (self.pbd_solver.particle_size / 2 - sd_first)
+                            new_vel = (new_pos - x0) / self.pbd_solver._substep_dt
+                            delta_mv = mass * (new_vel - v)
+                            force = (-delta_mv / self.rigid_solver._substep_dt) * (1 - energy_loss)
+                            self.rigid_solver._func_apply_coupling_force(
+                                x, force, geoms_info.link_idx[g_first], i_b, links_state)
+                        else:
+                            # 3. the bounded simultaneous push-out; the velocity from the displacement
+                            new_pos = x + scale * push
+                            new_vel = (new_pos - x0) / dt
+                            # 4. each link: the reaction to its own full penetration
+                            for i_g in range(self.rigid_solver.n_geoms):
+                                if geoms_info.needs_coup[i_g]:
+                                    signed_dist = sdf.sdf_func_world(
+                                        geoms_state=geoms_state, geoms_info=geoms_info, sdf_info=sdf_info, pos_world=x,
+                                        geom_idx=i_g, batch_idx=i_b)
+                                    if signed_dist < r:
+                                        contact_normal = sdf.sdf_func_normal_world(
+                                            geoms_state=geoms_state, geoms_info=geoms_info,
+                                            rigid_global_info=rigid_global_info,
+                                            collider_static_config=collider_static_config, sdf_info=sdf_info,
+                                            pos_world=x, geom_idx=i_g, batch_idx=i_b)
+                                        force = -mass * contact_normal * (r - signed_dist) / (
+                                            dt * self.rigid_solver._substep_dt)
+                                        self.rigid_solver._func_apply_coupling_force(
+                                            x, force, geoms_info.link_idx[i_g], i_b, links_state)
+                        self.pbd_solver.particles_reordered[i_p, i_b].pos = new_pos
+                        self.pbd_solver.particles_reordered[i_p, i_b].vel = new_vel
+        # Real annotation objects (this module uses postponed annotations; Quadrants needs the types themselves)
+        kernel_pbd_rigid_collide.__annotations__ = dict(
+            geoms_state=array_class.GeomsState, geoms_info=array_class.GeomsInfo, links_state=array_class.LinksState,
+            sdf_info=array_class.SDFInfo, rigid_global_info=array_class.RigidGlobalInfo,
+            collider_static_config=qd.template())
+        kernel_pbd_rigid_collide = qd.kernel(kernel_pbd_rigid_collide)
+
+    kernel = _BoundedPBDRigidContact.__dict__["kernel_pbd_rigid_collide"]
+    kernel._topogym_depenetration_margin_m_s = margin
+    legacy_coupler.LegacyCoupler.kernel_pbd_rigid_collide = kernel
+    return margin
+
+
+def _guard_particle_speeds(task, on_trip: Callable[[dict], None]) -> bool:
+    """Every physics tick (Task.update -> evaluate_state): a particle entity with a non-finite or faster than
+    PARTICLE_SPEED_LIMIT_M_S particle ends the episode with failure reason SIMULATOR_INSTABILITY before the task's own
+    predicates run (blanket: "Cloth fell below the table", which a blow-up reaches a tick or two later), so a numerical
+    blow-up is never graded as the agent's success or as the task's failure: the standard service, its collect hook and
+    both graders report it as an infrastructure error. It ends the episode through the task's own termination path, so
+    the env stays consistent (the trajectory, its replay and the video are kept). The check reads the tick's velocities
+    only; scenes without particles are unchanged."""
+    original = task.evaluate_state
+
+    def evaluate_state(state):
+        for name, fields in (state.get("particles") or {}).items():
+            v = np.asarray(fields.get("velocity_m_s"), dtype=np.float64).reshape(-1, 3)
+            if not len(v):
+                continue
+            s2 = np.einsum("ij,ij->i", v, v)
+            finite = bool(np.isfinite(s2).all())
+            i = int(np.argmax(np.where(np.isfinite(s2), s2, np.inf)))
+            speed = float(np.sqrt(s2[i])) if finite else float("inf")
+            if not finite or speed > PARTICLE_SPEED_LIMIT_M_S:
+                p = np.asarray(fields.get("position_m"), dtype=np.float64).reshape(-1, 3)
+                on_trip(dict(entity=str(name), particle=i, max_speed_m_s=speed if finite else None, finite=finite,
+                             limit_m_s=PARTICLE_SPEED_LIMIT_M_S, physics_step=int(state.get("physics_step", -1)),
+                             sim_time_s=float(state.get("sim_time_s", float("nan"))),
+                             position_m=[float(x) for x in p[i]] if i < len(p) and np.isfinite(p[i]).all() else None))
+                return False, SIMULATOR_INSTABILITY, {}
+        return original(state)
+    task.evaluate_state = evaluate_state
     return True
 
 
@@ -1062,6 +1912,7 @@ class Session:
             # under a container's CPU quota. The results are the same at any count (2026-10-02 study).
             import torch
             torch.set_num_threads(4)
+        margin = _bound_pbd_rigid_contacts()   # before the scene's first physics step (kernels compile on first use)
         self.env = Env(SimulatorConfig(**cfg))
         # Tooling v7: frames come only from env.sensor_frame() (render_frame / render_grid / render_depth / videos), so the
         # per-step observation skips the camera pass and a frame is rendered when asked (image 0.2.9; physics identical).
@@ -1070,6 +1921,10 @@ class Session:
         self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env)
         self.knot_predicate_vectorized = _speed_up_knot_predicate(cfg["task_id"])
         self.settle_only_when_reached = _settle_only_when_reached(self.env._task)
+        # The bounded PBD-rigid contact applies when this scene couples rigid bodies with PBD particles (blanket_flatten)
+        self.pbd_depenetration_margin_m_s = margin if getattr(self.env._world.scene.sim.coupler, "_rigid_pbd", False) else None
+        self.instability: dict | None = None    # the first simulator instability of this episode (None: none)
+        self.particle_speed_guard = _guard_particle_speeds(self.env._task, self._on_instability)
         if not self.spec["fixture"]:
             # The family catalog is only a short catalog label. Public goals
             # come from the selected instance, for both Session and limited SPEC.
@@ -1086,6 +1941,7 @@ class Session:
         self._resets = 0
         self._total_steps = 0
         self._reward = 0.0
+        self.rules = _install_rules(self)    # R1-R4 (2026-10-03), after Env.reset recorded the frozen first checkpoint
         _slog("session_start", task=task, eval_index=self.eval_index)
         import atexit
         atexit.register(lambda: _slog("session_end", task=task, resets=self._resets, sim_steps=self._total_steps + self.n_steps))
@@ -1194,8 +2050,19 @@ class Session:
         self.sim_time_s = 0.0
         self.last_step_ticks = 0
         self._reward = 0.0
+        self.instability = None
         self.env.privileged.rewind_to(self.S0)
         self._targets = self.robot.targets()
+
+    def _on_instability(self, info: dict) -> None:
+        """The particle speed guard tripped (_guard_particle_speeds): keep the first evidence of this episode."""
+        if self.instability is None:
+            self.instability = info
+            speed = "non-finite" if info["max_speed_m_s"] is None else f"{info['max_speed_m_s']:.3g} m/s"
+            _log(f"SIMULATOR INSTABILITY at physics step {info['physics_step']}: {info['entity']} particle {info['particle']} "
+                 f"moves at {speed} (limit {info['limit_m_s']:g} m/s). The episode ends with episode_end "
+                 f"'{SIMULATOR_INSTABILITY}': a simulator failure, graded as an infrastructure error, not as the task's "
+                 "failure predicate; reset() starts again from the frozen state")
 
     @property
     def action_dim(self) -> int:
@@ -1209,7 +2076,9 @@ class Session:
         """Apply one low-level action (ACTION_LAYOUT: per arm its joint targets, then its gripper width) for one control
         step. Out-of-limit values are clipped to the joint / gripper limits. Returns True once max_steps control steps
         have run (a runaway guard, not a budget); further steps raise. After the task's own episode end (success or a
-        failure predicate) steps return True without changing the scene or execution ledger."""
+        failure predicate) steps return True without changing the scene or execution ledger. A numerically unstable
+        simulation (a particle faster than PARTICLE_SPEED_LIMIT_M_S) ends the episode the same way, with episode_end
+        SIMULATOR_INSTABILITY and the evidence in self.instability: a simulator failure, not the task's."""
         a = np.asarray(action, dtype=np.float32).reshape(-1)
         if a.size != self.action_dim:
             raise ValueError(f"action must have {self.action_dim} entries, got {a.size}")
@@ -1220,6 +2089,7 @@ class Session:
         if self.episode_end is not None:
             return True
         target = self.robot.clip(a.astype(np.float64))
+        target = self.table_guard.apply(target, self._targets)   # R4: no gripper vertex below TABLE_GUARD_MARGIN_M
         command = self.robot.command(target)
         self._video_begin()
         kwargs = {} if _physics_steps is None else {"_physics_steps": int(_physics_steps)}
@@ -1250,13 +2120,31 @@ class Session:
         """The action that keeps the current joint targets (what the robot does when a primitive is idle)."""
         return self._targets.copy()
 
+    def safety(self, *, episode: bool = False) -> dict[str, Any]:
+        """What the safety rules measured since the previous safety() call (episode=True: since the last reset), against
+        their limits: the deepest task contact and held-finger contact (mm) and the longest time above the sustained limit
+        (rigid families: > 3 mm at once, or > 1 mm for 0.25 s, ends the episode; held fingers 4 mm / 2 mm), the lowest
+        soft-body volume ratio and the longest time at or below 0 (IPC families: 0.25 s ends it), the worst cord
+        attachment stretch, the control steps whose gripper target the table guard stopped (table_guard_words()), and
+        IK solutions far from the current joints (move_ee). Reading it does not touch the simulation."""
+        return self.monitor.read(episode=episode)
+
+    def ik_jump(self, arm: str, q_arm) -> tuple[float, str]:
+        """(largest |q_arm - the measured joints of `arm`| in rad, that joint's name): how far an IK solution lies from
+        where the arm is. A large jump for a small pose change is another IK branch, which swings the arm."""
+        sl = [self.robot.arm_joints.index(n) for n in self.robot.groups[arm].arm_joints]
+        d = np.abs(np.asarray(q_arm, dtype=np.float64).reshape(-1) - self.robot.arm_q()[sl])
+        j = int(np.argmax(d))
+        return float(d[j]), self.robot.groups[arm].arm_joints[j]
+
     def success(self) -> bool:
         return bool(self.env.is_solved())
 
     def status(self) -> dict[str, Any]:
         return {"success": self.success(), "progress": round(self._reward, 4), "sim_steps": int(self.n_steps),
                 "physics_steps": self.physics_steps, "sim_time_s": self.sim_time_s,
-                "resets": self._resets, "state_sha": self.state_sha(), "episode_end": self.episode_end}
+                "resets": self._resets, "state_sha": self.state_sha(), "episode_end": self.episode_end,
+                "instability": self.instability}
 
     # ---- recording / trajectories
     def record_start(self) -> None:
@@ -1645,10 +2533,12 @@ class Session:
                 lim = g.gripper_limits if finger else g.arm_limits_rad[i]
                 joints.append({"name": jn, "type": "prismatic" if prismatic else "revolute", "unit": "m" if prismatic else "rad",
                                "position_limits": [round(float(lim[0]), 6), round(float(lim[1]), 6)], "velocity_limit": None,
-                               "effort_limit": round(float(g.force[i]), 6), "group": f"gripper_{name}" if finger else f"arm_{name}",
+                               "effort_limit": round(float(r.drive_force[name][i]), 6), "group": f"gripper_{name}" if finger else f"arm_{name}",
                                "note": "velocity_limit: the simulation enforces none (the PD tracking sets the speed); effort_limit: "
                                        "the drive force clamp" + ("; the gripper action is the opening width, converted to this "
-                                                                  "coordinate" if finger else "")})
+                                                                  "coordinate" if finger else
+                                                                  " (arm joints: capped by this benchmark's safety rules, so an arm "
+                                                                  "pushing against an obstacle stalls at this torque)")})
                 gains[jn] = {"stiffness": float(g.kp[i]), "damping": float(g.kv[i])}
             lo, hi = r.limits[r.grip_index[name]]
             grip[name] = {"joints": list(g.finger_joints), "opening_m": [lo, hi], "tcp_frame": r.tcp_frames[name],
@@ -1736,7 +2626,9 @@ class Session:
                     tol: float = 0.008, linear: int = 0):
             """Move the TCP of `arm` to world pose (pos, quat_wxyz; default: keep the current orientation). IK then joint
             interpolation (`max_dq` rad/step). `linear=k` splits the motion into k straight-line Cartesian waypoints (use for
-            descents/lifts). Raises PrimitiveError if the IK residual exceeds `tol` metres. Returns the final TCP error (m)."""
+            descents/lifts). Raises PrimitiveError if the IK residual exceeds `tol` metres. Returns the final TCP error (m).
+            An IK solution more than 0.5 rad from the current joints is noted in s.safety()["ik_jumps"] and on stderr: for
+            a small pose change it is another IK branch, which swings the arm (split the move, or use linear=k)."""
             p1 = np.asarray(pos, dtype=np.float64)
             p0, q0 = s.ee_pose(arm)
             quat = np.asarray(quat_wxyz if quat_wxyz is not None else q0, dtype=np.float64)
@@ -1746,6 +2638,13 @@ class Session:
                 q7, ep, er = s.ik(arm, pj, quat)
                 if ep > tol or er > 0.2:
                     raise PrimitiveError(f"IK for {arm} arm at {np.round(pj, 3).tolist()} failed: residual {ep * 1000:.1f} mm / {math.degrees(er):.1f} deg")
+                jump, joint = s.ik_jump(arm, q7)
+                if jump > IK_JUMP_LIMIT_RAD:
+                    event = dict(step=int(s.n_steps), arm=arm, joint=joint, jump_rad=round(jump, 3))
+                    s.monitor.ik_jump(event)
+                    _log(f"move_ee: the IK solution for {'the ' + arm + ' arm' if len(r.arms) > 1 else 'the arm'} is {jump:.2f} "
+                         f"rad from the current joints ({joint}); for a small pose change that is another IK branch and the "
+                         "arm will swing")
                 move_joints(arm, q7, max_dq=max_dq, steps=(steps if k == 1 else None), settle=(settle if j == k else 0))
             pe, _ = s.ee_pose(arm)
             return float(np.linalg.norm(pe - p1))

@@ -9,7 +9,7 @@
 | Family / instance | `rope_threading` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128` |
 
 ## Task
 Standard-mode twin of `topogym-rope-threading-medium-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.3` client
@@ -44,6 +44,8 @@ Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring
 - Invalid rope volume ends the episode in failure.
 
 ### Grader details (in addition to the requirements above)
+- The rope is very soft (Young's modulus 50 kPa): a full close of a gripper on it, or landing on it, crushes it. A crushed rope volume (an inverted volume element) ends the episode only once it has lasted 0.25 s (while it lasts, the goal cannot be confirmed); an invalid soft-body solver state ends it at once. Close to about half the rope's diameter and slow down in the last centimetre.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - Sizes: each ring's inner radius is 69 mm and its tube 12 mm thick (radius 6 mm); the rope's radius is 4 mm. So the rope's centreline must pass less than 64.9 mm from a ring's centre, and the passage is checked on the ring's middle plane and on the planes 6 mm to either side of it.
 - The material start is the rope end that is farther from the rings at the start.
 

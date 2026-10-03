@@ -18,6 +18,7 @@ client and one episode. **Task:** Manipulate the thick sheath to pass every fine
 
 ## Grader details (in addition to the requirements above)
 
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - Sizes: ring inner radius 13.5 mm, ring tube radius 4 mm; 16 fibers of radius 1.2 mm; sheath radius 12 mm.
 - Each fiber is tracked at 11 points from tip to root. A point counts when it crosses the ring's plane less than 17.48 mm from the ring's axis, in tip-to-root order; a crossing out of order or outside that radius resets that point and every point behind it, and crossing back loses the credit.
 - At the end every fiber point must be more than 5.2 mm past the ring's plane (tube + fiber radius) and the centre of the sheath's front face more than 16 mm past it (tube + sheath radius). The exit side is the side opposite to where the fibers start.
@@ -32,7 +33,7 @@ client and one episode. **Task:** Manipulate the thick sheath to pass every fine
   objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
   the task requirements above still apply in full.
 - **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
-  simulated time are reported as cost. One control step takes about 15.7 s of wall clock on an unloaded GPU, and up to about 53.4 s when other simulations share the GPU; the call metadata reports the time.
+  simulated time are reported as cost. One control step takes about 2.6 s of wall clock on an unloaded GPU, and up to about 5.2 s when other simulations share the GPU; the call metadata reports the time.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -57,7 +58,7 @@ client and one episode. **Task:** Manipulate the thick sheath to pass every fine
   running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
 
 ## Time per call
-- One control step takes about 15.7 s of wall clock on an unloaded GPU and up to about 53.4 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: keep each `submit` to at most 16 control steps (0.40 s of simulated time: rows x dt); keep each `get_obs(seconds=...)` watch to at most 5 control steps (0.12 s) (both with a 2x margin).
+- One control step takes about 2.6 s of wall clock on an unloaded GPU and up to about 5.2 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: keep each `submit` to at most 172 control steps (4.30 s of simulated time: rows x dt); keep each `get_obs(seconds=...)` watch to at most 57 control steps (1.43 s) (both with a 2x margin).
 - If a request times out in the client anyway, the service still runs it to the end: do NOT send it again (it would run twice). Call `r.get_obs()` (repeat it if it also times out): it answers once the earlier request has finished and shows the state after it.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`)
@@ -97,12 +98,20 @@ the PD gains and the tool frames; `spec["world"]` the frame conventions.
   (arm: 0 = closed .. 0.0854 = open). Absolute targets tracked by PD controllers.
   Rows are `dt` apart (`1/40 ≤ dt ≤ 0.5` s, a multiple of the control period); a chunk may cover at most 10 s;
   out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). The gripper switches at the
-  row. Use `obs.meta["proprio"]["now"][:8]` as the starting row to move smoothly.
+  row. Use `obs.meta["proprio"]["now"][:8]` as the starting row to move smoothly. An arm joint target moves at most
+  0.04 rad per control step (1.6 rad/s, the same speed as `ee_pose` rows): a row that asks for more takes
+  the control steps it needs, and `meta["clipped"]` says so.
 - `ee_pose` (8): per arm (in the order ['arm']) `x y z qw qx qy qz gripper`; world frame (robot base at (-0.570, 0.000, 0.920),
   +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and driven to in joint
   space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is each gripper's **tool frame** (TCP;
   its approach and finger-closing axes are in `spec["robot_spec"]["tcp"]`), the same convention as the proprio TCP
-  poses, so an observed pose is a valid target. At most 50 rows per submit.
+  poses, so an observed pose is a valid target. At most 50 rows per submit. A row whose IK solution lies more than
+  0.5 rad from the current joints on any joint is refused the same way as a failed IK (for a small pose change that is
+  another IK branch, which would swing the arm): split long moves into rows a few cm and degrees apart.
+- Both action types: no gripper target goes lower than 15 mm below the tabletop; a target that would bring any part of
+  a gripper lower is stopped there and listed in `meta["clipped"]`. Every response's `meta["safety"]` reports, since the
+  previous call, the deepest task contact and the longest time above its sustained limit (rigid families), the lowest
+  rope / cord volume ratio (soft families) and the table-guard stops, against the limits above.
 
 Grasping: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it.
 

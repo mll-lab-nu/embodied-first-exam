@@ -9,7 +9,7 @@
 | Family / instance | `knot_untying` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128` |
 
 ## Task
 Standard-mode twin of `topogym-knot-untying-hard-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.3` client
@@ -45,6 +45,8 @@ Untie and spread the rope on the tabletop until its top-down projection has no c
 - Invalid rope volume ends the episode in failure.
 
 ### Grader details (in addition to the requirements above)
+- The rope is very soft (Young's modulus 50 kPa): a full close of a gripper on it, or landing on it, crushes it. A crushed rope volume (an inverted volume element) ends the episode only once it has lasted 0.25 s (while it lasts, the goal cannot be confirmed); an invalid soft-body solver state ends it at once. Close to about half the rope's diameter and slow down in the last centimetre.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - The rope is 8 mm thick (radius 4 mm), so its highest point may be at most 11 mm above the tabletop.
 - "Nonlocal" means at least 16 mm apart along the rope: such parts of the rope's centreline must be at least 8 mm apart in the top view. Closer parts are exempt, but an actual crossing always counts.
 - The release clearance is measured between axis-aligned bounding boxes of the robot's collision geometries and the rope (refined per tetrahedron where they are close).

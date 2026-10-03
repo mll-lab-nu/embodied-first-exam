@@ -18,10 +18,12 @@ You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw
 
 ## Grader details (in addition to the requirements above)
 
+- The rope is very soft (Young's modulus 50 kPa): a full close of a gripper on it, or landing on it, crushes it. A crushed rope volume (an inverted volume element) ends the episode only once it has lasted 0.25 s (while it lasts, the goal cannot be confirmed); an invalid soft-body solver state ends it at once. Close to about half the rope's diameter and slow down in the last centimetre.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - The rope is 8 mm thick (radius 4 mm), so its highest point may be at most 11 mm above the tabletop.
 - "Nonlocal" means at least 16 mm apart along the rope: such parts of the rope's centreline must be at least 8 mm apart in the top view. Closer parts are exempt, but an actual crossing always counts.
 - The release clearance is measured between axis-aligned bounding boxes of the robot's collision geometries and the rope (refined per tetrahedron where they are close).
-- A failure is reported in `s.status()["episode_end"]` as "rope_volume_invalid".
+- A failure is reported in `s.status()["episode_end"]` as "rope_volume_invalid: <what>" (<what>: the readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops against these limits.
 
 The scene objects are the task's entities (`s.objects()`: `rope` (deformable, fem)).
 Implementation reference: `KnotUntyingHardTask.evaluate_state` (module `topogym.tasks.knot_untying.knot_untying_hard`).
@@ -97,6 +99,7 @@ p["object_in_hand"]("left"); p["set_joint_targets"](row, steps=1); p["gripper_qu
 s.step(action)                     # one low-level action (14 entries, below) = one control step (1/40 s)
 s.record_start(); ...; actions = s.record_stop()   # (T, 14) actions, one row per control step
 s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}
+s.safety()                         # since the last call: deepest contacts / rope volume ratio / table-guard stops vs the limits
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
@@ -112,7 +115,7 @@ CLI equivalent of the grader:
 - Action (14): arm `left`: 6 joint targets (rad), then `left_gripper` = opening width (m, 0 closed .. 0.057385 open); arm `right`: 6 joint targets (rad), then `right_gripper` = opening width (m, 0 closed .. 0.057385 open); absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget; your
-  wall-clock budget is 360 min (21600 s). One control step takes about 43.8 s of wall clock on an unloaded GPU, and up to about 85.3 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
+  wall-clock budget is 360 min (21600 s). One control step takes about 1.7 s of wall clock on an unloaded GPU, and up to about 3.3 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
 - Grippers: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it.
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.008]. The ee_pose action, the proprio tcp pose and the IK use this frame.
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.
