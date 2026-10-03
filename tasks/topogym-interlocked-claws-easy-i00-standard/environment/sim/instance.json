@@ -4,7 +4,7 @@
  "variation_id": "interlocked_claws_easy",
  "seed": 0,
  "eval_index": null,
- "text": "Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side.\n\n## Success requirements\n\n- Put every part of the entire brown claw piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.\n- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 306.515 mm above the tabletop.\n- Keep the other claw piece, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.\n- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.",
+ "text": "Completely separate the two claw pieces and briefly hold both still.\n\n## Success requirements\n\n- Leave at least 10 mm between the complete pieces, with a plane separating all of their geometry; a gap inside the interlock is insufficient.\n- Keep both pieces' linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding both pieces is allowed; release and transport into the green region are not required.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.",
  "simulator": {
   "task_id": "interlocked_claws",
   "robot_id": "aloha",
@@ -22,6 +22,8 @@
   "rigid_options": {
    "use_contact_island": false
   },
+  "ipc_options": {},
+  "ipc_settled_state": null,
   "enable_rgb": true,
   "enable_depth": true,
   "observation_mode": "JOINT",
@@ -65,7 +67,7 @@
    "initial_intent": "close"
   }
  },
- "state_sha": "6b5fecd0d0464f93",
+ "state_sha": "a69d9ab492ef9010",
  "action_dim": 14,
  "action_layout": [
   "left/waist",
@@ -238,8 +240,8 @@
  },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "83e767645c95afe17dbb3fc2efeab64e3838003221956696505e1733489b93a2",
-  "files": 280
+  "sha256": "941ac2a912611bd3d66020af4383d0718ad962967f31eccfeaa1c0e0b8289899",
+  "files": 318
  },
  "resolved_variation_id": "interlocked_claws_easy",
  "scene_variation": null,
@@ -262,19 +264,17 @@
   "task_id": "interlocked_claws",
   "variation_id": "interlocked_claws_easy",
   "seed": 0,
-  "terminal_revision": "placement_region_v3_grasp_contact_2mm",
-  "summary": "Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side.",
+  "terminal_revision": "claws_separation_v1_grasp_contact_2mm",
+  "summary": "Completely separate the two claw pieces and briefly hold both still.",
   "stable_duration_s": 0.5,
   "success_conditions": [
-   "Put every part of the entire brown claw piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.",
-   "Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 306.515 mm above the tabletop.",
-   "Keep the other claw piece, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.",
-   "Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required."
+   "Leave at least 10 mm between the complete pieces, with a plane separating all of their geometry; a gap inside the interlock is insufficient.",
+   "Keep both pieces' linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding both pieces is allowed; release and transport into the green region are not required."
   ],
   "failure_conditions": [
    "A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure."
   ]
  },
  "evaluable_for_task_success": true,
- "success_rule": "his default success (goal_complete True; terminal revision placement_region_v3_grasp_contact_2mm)"
+ "success_rule": "his default success (goal_complete True; terminal revision claws_separation_v1_grasp_contact_2mm)"
 }

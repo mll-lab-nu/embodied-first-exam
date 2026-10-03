@@ -17,6 +17,8 @@ client and one episode. **Task:** Thread the rope through the cyan ring (R1) the
 
 ## Grader details (in addition to the requirements above)
 
+- The rope is very soft (Young's modulus 50 kPa): a full close of a gripper on it, or landing on it, crushes it. A crushed rope volume (an inverted volume element) ends the episode only once it has lasted 0.25 s (while it lasts, the goal cannot be confirmed); an invalid soft-body solver state ends it at once. Close to about half the rope's diameter and slow down in the last centimetre.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - Sizes: each ring's inner radius is 69 mm and its tube 12 mm thick (radius 6 mm); the rope's radius is 4 mm. So the rope's centreline must pass less than 64.9 mm from a ring's centre, and the passage is checked on the ring's middle plane and on the planes 6 mm to either side of it.
 - The material start is the rope end that is farther from the rings at the start.
 
@@ -29,7 +31,7 @@ client and one episode. **Task:** Thread the rope through the cyan ring (R1) the
   objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
   the task requirements above still apply in full.
 - **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
-  simulated time are reported as cost. One control step takes about 8.9 s of wall clock on an unloaded GPU, and up to about 13.6 s when other simulations share the GPU; the call metadata reports the time.
+  simulated time are reported as cost. One control step takes about 2.2 s of wall clock on an unloaded GPU, and up to about 4.4 s when other simulations share the GPU; the call metadata reports the time.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -54,7 +56,7 @@ client and one episode. **Task:** Thread the rope through the cyan ring (R1) the
   running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
 
 ## Time per call
-- One control step takes about 8.9 s of wall clock on an unloaded GPU and up to about 13.6 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: keep each `submit` to at most 66 control steps (1.65 s of simulated time: rows x dt); keep each `get_obs(seconds=...)` watch to at most 22 control steps (0.55 s) (both with a 2x margin).
+- One control step takes about 2.2 s of wall clock on an unloaded GPU and up to about 4.4 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: keep each `submit` to at most 206 control steps (5.15 s of simulated time: rows x dt); keep each `get_obs(seconds=...)` watch to at most 68 control steps (1.70 s) (both with a 2x margin).
 - If a request times out in the client anyway, the service still runs it to the end: do NOT send it again (it would run twice). Call `r.get_obs()` (repeat it if it also times out): it answers once the earlier request has finished and shows the state after it.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`)
@@ -94,13 +96,21 @@ the PD gains and the tool frames; `spec["world"]` the frame conventions.
   (left: 0 = closed .. 0.057385 = open; right: 0 = closed .. 0.057385 = open). Absolute targets tracked by PD controllers.
   Rows are `dt` apart (`1/40 ≤ dt ≤ 0.5` s, a multiple of the control period); a chunk may cover at most 10 s;
   out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). The gripper switches at the
-  row. Use `obs.meta["proprio"]["now"][:14]` as the starting row to move smoothly.
+  row. Use `obs.meta["proprio"]["now"][:14]` as the starting row to move smoothly. An arm joint target moves at most
+  0.04 rad per control step (1.6 rad/s, the same speed as `ee_pose` rows): a row that asks for more takes
+  the control steps it needs, and `meta["clipped"]` says so.
 - `ee_pose` (16): per arm (in the order ['left', 'right']) `x y z qw qx qy qz gripper`; world frame (robot base at (-0.136, 0.000, 0.920),
   +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and driven to in joint
   space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is each gripper's **tool frame** (TCP;
   its approach and finger-closing axes are in `spec["robot_spec"]["tcp"]`), the same convention as the proprio TCP
-  poses, so an observed pose is a valid target. At most 50 rows per submit.
+  poses, so an observed pose is a valid target. At most 50 rows per submit. A row whose IK solution lies more than
+  0.5 rad from the current joints on any joint is refused the same way as a failed IK (for a small pose change that is
+  another IK branch, which would swing the arm): split long moves into rows a few cm and degrees apart.
+- Both action types: no gripper target goes lower than 15 mm below the tabletop; a target that would bring any part of
+  a gripper lower is stopped there and listed in `meta["clipped"]`. Every response's `meta["safety"]` reports, since the
+  previous call, the deepest task contact and the longest time above its sustained limit (rigid families), the lowest
+  rope / cord volume ratio (soft families) and the table-guard stops, against the limits above.
 
 Grasping: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it.
 
-Objects here: `rope`, `R1`, `R1_stand`, `R1_base`, `R2`, `R2_stand`, `R2_base`.
+Objects here: `rope`, `R1`, `R1_stand`, `R1_base`, `R2`, `R2_stand`, `R2_base`, `left_base_riser`, `right_base_riser`.

@@ -9,7 +9,7 @@
 | Family / instance | `orbits` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128` |
 
 ## Task
 TopoGym orbits (aloha, Genesis): produce one replayable trajectory. Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the rings, posts and fixed assembly on the puzzle/system side. Frozen scene instance (variation orbits_medium, seed 0).
@@ -51,4 +51,6 @@ Separate and place the entire cord and wooden handle together inside the green d
 ### Grader details (in addition to the requirements above)
 - Goal square in this instance: the inner edge of the 2 mm wide dashed green line is the containment limit (the region's border runs along the middle of the line); it encloses a 398.0 mm x 398.0 mm square. Every point counts: for a rigid part every vertex of its visual and collision meshes; for the cord every vertex of its simulated volume.
 - The separator is an invisible, fixed vertical plane parallel to the goal square's near edge, 5 mm beyond the point of all remaining components that was closest to the goal square at the start; the square's near edge is at least 30 mm beyond it. The remaining components here are fixed.
-- A failure is reported in `s.status()["episode_end"]` as "connection_or_volume_invalid".
+- The cord is very soft (Young's modulus 50 kPa): a full close of a gripper on it, or landing on it, crushes it. A crushed cord volume (an inverted volume element) or a permanent cord attachment stretched by more than 2 mm ends the episode only once it has lasted 0.25 s (while it lasts, the goal cannot be confirmed); an invalid soft-body solver state ends it at once. Close to about half the cord's diameter and slow down in the last centimetre.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
+- A failure is reported in `s.status()["episode_end"]` as "connection_or_volume_invalid: <what>" (<what>: the readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops against these limits.

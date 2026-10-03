@@ -20,6 +20,7 @@ client and one episode. **Task:** Insert the tabbed key through all three rotor 
 
 ## Grader details (in addition to the requirements above)
 
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - Sizes: bore radius 7.5 mm, shaft radius 6.5 mm. At each of the 8 plate faces (three 10 mm rotor plates and END, 150 mm apart), the shaft axis' distance from the bore axis plus 6.5 mm / cos(tilt) may exceed 7.5 mm by at most 0.01 mm: about 1.01 mm of offset when the key is straight, which over the stack allows only about 0.25 degrees of tilt.
 - The shaft reaches from 515 mm behind the leading tab to 15 mm in front of it; all 8 plate faces must lie within that length.
 - Tabs: radius 36 mm, half-width 4 degrees; slots: half-width 8 degrees. A tab that overlaps a plate must sit inside one of that plate's slots with an angular margin of at least asin(axis offset / 36 mm) + the tilt.
@@ -35,7 +36,7 @@ client and one episode. **Task:** Insert the tabbed key through all three rotor 
   objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
   the task requirements above still apply in full.
 - **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
-  simulated time are reported as cost. One control step takes about 1.2 s of wall clock on an unloaded GPU, and up to about 8.3 s when other simulations share the GPU; the call metadata reports the time.
+  simulated time are reported as cost. One control step takes about 0.094 s of wall clock on an unloaded GPU, and up to about 0.19 s when other simulations share the GPU; the call metadata reports the time.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -60,7 +61,7 @@ client and one episode. **Task:** Insert the tabbed key through all three rotor 
   running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
 
 ## Time per call
-- One control step takes about 1.2 s of wall clock on an unloaded GPU and up to about 8.3 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: keep each `submit` to at most 108 control steps (2.70 s of simulated time: rows x dt); keep each `get_obs(seconds=...)` watch to at most 36 control steps (0.90 s) (both with a 2x margin).
+- One control step takes about 0.094 s of wall clock on an unloaded GPU and up to about 0.19 s when other simulations share it; the advice below assumes the slower figure. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: a `submit` of the maximum 10 s chunk fits; any watch up to 30 s fits (both with a 2x margin).
 - If a request times out in the client anyway, the service still runs it to the end: do NOT send it again (it would run twice). Call `r.get_obs()` (repeat it if it also times out): it answers once the earlier request has finished and shows the state after it.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`)
@@ -100,12 +101,20 @@ the PD gains and the tool frames; `spec["world"]` the frame conventions.
   (arm: 0 = closed .. 0.0854 = open). Absolute targets tracked by PD controllers.
   Rows are `dt` apart (`1/40 ≤ dt ≤ 0.5` s, a multiple of the control period); a chunk may cover at most 10 s;
   out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). The gripper switches at the
-  row. Use `obs.meta["proprio"]["now"][:8]` as the starting row to move smoothly.
+  row. Use `obs.meta["proprio"]["now"][:8]` as the starting row to move smoothly. An arm joint target moves at most
+  0.04 rad per control step (1.6 rad/s, the same speed as `ee_pose` rows): a row that asks for more takes
+  the control steps it needs, and `meta["clipped"]` says so.
 - `ee_pose` (8): per arm (in the order ['arm']) `x y z qw qx qy qz gripper`; world frame (robot base at (-0.570, 0.000, 0.920),
   +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and driven to in joint
   space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is each gripper's **tool frame** (TCP;
   its approach and finger-closing axes are in `spec["robot_spec"]["tcp"]`), the same convention as the proprio TCP
-  poses, so an observed pose is a valid target. At most 50 rows per submit.
+  poses, so an observed pose is a valid target. At most 50 rows per submit. A row whose IK solution lies more than
+  0.5 rad from the current joints on any joint is refused the same way as a failed IK (for a small pose change that is
+  another IK branch, which would swing the arm): split long moves into rows a few cm and degrees apart.
+- Both action types: no gripper target goes lower than 15 mm below the tabletop; a target that would bring any part of
+  a gripper lower is stopped there and listed in `meta["clipped"]`. Every response's `meta["safety"]` reports, since the
+  previous call, the deepest task contact and the longest time above its sustained limit (rigid families), the lowest
+  rope / cord volume ratio (soft families) and the table-guard stops, against the limits above.
 
 Grasping: assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (lock_key) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.05 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, or the part drifts 1 cm / 0.15 rad from its held pose) is lost, and the gripper must open before it can take hold again. Two grippers never hold the same part; other objects are grasped physically (friction).
 

@@ -19,7 +19,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/topogym-interlocked-claws-medium-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.3): TopoGym interlocked_claws on the same frozen instance as the privileged task. Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.3): TopoGym interlocked_claws on the same frozen instance as the privileged task. Completely separate the two claw pieces and briefly hold both still. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "standard-mode", "trajectory", "interlocked_claws"]
 
@@ -35,8 +35,8 @@ oracle = "none"
 oracle_evidence = "No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol \u00a72.7)."
 difficulty = "medium"
 grasp = "assisted (his contact_weld_v1 pre-weld: the grippers start closed on piece_0, piece_1)"
-success_rule = "his default success (goal_complete True; terminal revision placement_region_v3_grasp_contact_2mm)"
-tooling_version = "12"
+success_rule = "his default success (goal_complete True; terminal revision claws_separation_v1_grasp_contact_2mm)"
+tooling_version = "14"
 instance_seed = 0
 expert_time_estimate_hours = 3
 

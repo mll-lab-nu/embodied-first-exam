@@ -273,6 +273,12 @@ def details_section(fam, inst, *, limited):
             + "\n".join(f"- {x}" for x in lines) + "\n")
 
 
+def _secs(x) -> str:
+    """A wall time for the texts: two significant digits below 10 s (0.053, 0.11, 1.9), whole seconds above."""
+    x = float(x)
+    return f"{x:.2g}" if x < 10 else f"{x:.0f}"
+
+
 def step_seconds(d: dict) -> float:
     """The per-control-step wall time the texts quote: the measured arm-motion value where the build measured one
     (describe.json sec_per_step_motion: FEM / IPC families, 2026-10-01: motion steps on an unloaded GPU, the slower of our
@@ -289,9 +295,9 @@ def step_time_words(d: dict) -> str:
         return (f"One control step with the arms moving takes about {step_seconds(d):.0f} s of wall clock here (measured on an "
                 f"unloaded GPU, the slower of our GPU types; holding still is faster)")
     if d.get("sec_per_step_unloaded"):
-        return (f"One control step takes about {float(d['sec_per_step_unloaded']):.1f} s of wall clock on an unloaded GPU, and "
-                f"up to about {step_seconds(d):.1f} s when other simulations share the GPU; the call metadata reports the time")
-    return f"One control step takes about {step_seconds(d):.1f} s of wall clock here"
+        return (f"One control step takes about {_secs(d['sec_per_step_unloaded'])} s of wall clock on an unloaded GPU, and "
+                f"up to about {_secs(step_seconds(d))} s when other simulations share the GPU; the call metadata reports the time")
+    return f"One control step takes about {_secs(step_seconds(d))} s of wall clock here"
 
 
 def limited_timing(sec_per_step, control_hz=40.0, submit_timeout_s=1800, observe_timeout_s=600, max_chunk_s=10.0, safety=2.0,
@@ -307,9 +313,9 @@ def limited_timing(sec_per_step, control_hz=40.0, submit_timeout_s=1800, observe
                   f"({watch_steps / control_hz:.2f} s)" if watch_steps < 30 * control_hz else "any watch up to 30 s fits")
     return ("## Time per call\n"
             + (f"- One control step with the arms moving takes about {per:.0f} s of wall clock here (holding still is faster). "
-               if motion else f"- One control step takes about {float(unloaded):.1f} s of wall clock on an unloaded GPU and up to about "
-               f"{per:.1f} s when other simulations share it; the advice below assumes the slower figure. "
-               if unloaded else f"- One control step takes about {per:.1f} s of wall clock here. ")
+               if motion else f"- One control step takes about {_secs(unloaded)} s of wall clock on an unloaded GPU and up to about "
+               f"{_secs(per)} s when other simulations share it; the advice below assumes the slower figure. "
+               if unloaded else f"- One control step takes about {_secs(per)} s of wall clock here. ")
             + "A request returns only when all of its steps "
             f"have run, and the client gives up waiting after {submit_timeout_s} s for `submit` and {observe_timeout_s} s "
             f"for `get_obs`: {chunk_line}; {watch_line} (both with a 2x margin).\n"

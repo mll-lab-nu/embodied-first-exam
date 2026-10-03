@@ -18,10 +18,12 @@ You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw
 
 ## Grader details (in addition to the requirements above)
 
-- Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per control step). "Held" is decided anew at every tick: a zero-force touch counts, and if one finger loses contact (with no active assisted grasp), the other finger is back at the 1 mm limit in the same tick.
+- Contact limits as this benchmark grades them (they replace the "at most 1 mm / 2 mm" wording above): brief contacts up to 3 mm are tolerated. A task contact deeper than 3 mm ends the episode at once, and one deeper than 1 mm ends it once it has stayed deeper than 1 mm for 0.25 s (100 consecutive physics ticks); for a finger contact with a held piece the limits are 4 mm at once and 2 mm for 0.25 s.
+- Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per control step). "Held" is decided anew at every tick: a zero-force touch counts, and if one finger loses contact (with no active assisted grasp), the other finger is back at the non-held limits in the same tick.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
 - The release clearance is measured between axis-aligned bounding boxes: one around each collision geometry of the whole robot (every link of both arms) and one around each collision geometry of the pieces, so the true gap usually has to be larger than 5 mm.
 - Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): coil_gold: radius 25 mm; coil_silver: radius 25 mm. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.
-- A failure is reported in `s.status()["episode_end"]` as "Held finger contact penetration exceeded 2 mm", "Task contact penetration exceeded 1 mm" or "A task body fell below the table".
+- A failure is reported in `s.status()["episode_end"]` as "task_contact_forced: <what>", "held_contact_forced: <what>" or "A task body fell below the table" (<what>: the readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops against these limits.
 
 The scene objects are the task's entities (`s.objects()`: `coil_gold`, `coil_silver`).
 Implementation reference: `CastCoilMediumTask.evaluate_state` (module `topogym.tasks.cast_coil.cast_coil_medium`).
@@ -102,6 +104,7 @@ p["object_in_hand"]("left"); p["set_joint_targets"](row, steps=1); p["gripper_qu
 s.step(action)                     # one low-level action (14 entries, below) = one control step (1/40 s)
 s.record_start(); ...; actions = s.record_stop()   # (T, 14) actions, one row per control step
 s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}
+s.safety()                         # since the last call: deepest contacts / rope volume ratio / table-guard stops vs the limits
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
@@ -117,7 +120,7 @@ CLI equivalent of the grader:
 - Action (14): arm `left`: 6 joint targets (rad), then `left_gripper` = opening width (m, 0 closed .. 0.057385 open); arm `right`: 6 joint targets (rad), then `right_gripper` = opening width (m, 0 closed .. 0.057385 open); absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget; your
-  wall-clock budget is 360 min (21600 s). One control step takes about 0.5 s of wall clock on an unloaded GPU, and up to about 0.9 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
+  wall-clock budget is 360 min (21600 s). One control step takes about 0.058 s of wall clock on an unloaded GPU, and up to about 0.12 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
 - Grippers: assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (coil_gold, coil_silver) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, or the part drifts 1 cm / 0.15 rad from its held pose) is lost, and the gripper must open before it can take hold again. Two grippers never hold the same part; other objects are grasped physically (friction).
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.008]. The ee_pose action, the proprio tcp pose and the IK use this frame.
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.

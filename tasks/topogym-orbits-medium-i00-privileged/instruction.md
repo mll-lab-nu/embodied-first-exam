@@ -20,7 +20,9 @@ You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw
 
 - Goal square in this instance: the inner edge of the 2 mm wide dashed green line is the containment limit (the region's border runs along the middle of the line); it encloses a 398.0 mm x 398.0 mm square. Every point counts: for a rigid part every vertex of its visual and collision meshes; for the cord every vertex of its simulated volume.
 - The separator is an invisible, fixed vertical plane parallel to the goal square's near edge, 5 mm beyond the point of all remaining components that was closest to the goal square at the start; the square's near edge is at least 30 mm beyond it. The remaining components here are fixed.
-- A failure is reported in `s.status()["episode_end"]` as "connection_or_volume_invalid".
+- The cord is very soft (Young's modulus 50 kPa): a full close of a gripper on it, or landing on it, crushes it. A crushed cord volume (an inverted volume element) or a permanent cord attachment stretched by more than 2 mm ends the episode only once it has lasted 0.25 s (while it lasts, the goal cannot be confirmed); an invalid soft-body solver state ends it at once. Close to about half the cord's diameter and slow down in the last centimetre.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque.
+- A failure is reported in `s.status()["episode_end"]` as "connection_or_volume_invalid: <what>" (<what>: the readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops against these limits.
 
 The scene objects are the task's entities (`s.objects()`: `base` (fixed), `ring_1` (fixed), `ring_2` (fixed), `ring_3` (fixed), `post_1` (fixed), `post_2` (fixed), `post_3` (fixed), `post_4` (fixed), `stopper_ball` (fixed), `handle`, `cord` (deformable, fem), `goal_region` (fixed)).
 Implementation reference: `OrbitsMediumTask.evaluate_state` (module `topogym.tasks.orbits.orbits_medium`).
@@ -79,6 +81,7 @@ p["object_in_hand"]("left"); p["set_joint_targets"](row, steps=1); p["gripper_qu
 s.step(action)                     # one low-level action (14 entries, below) = one control step (1/40 s)
 s.record_start(); ...; actions = s.record_stop()   # (T, 14) actions, one row per control step
 s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}
+s.safety()                         # since the last call: deepest contacts / rope volume ratio / table-guard stops vs the limits
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
@@ -94,7 +97,7 @@ CLI equivalent of the grader:
 - Action (14): arm `left`: 6 joint targets (rad), then `left_gripper` = opening width (m, 0 closed .. 0.057385 open); arm `right`: 6 joint targets (rad), then `right_gripper` = opening width (m, 0 closed .. 0.057385 open); absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget; your
-  wall-clock budget is 360 min (21600 s). One control step takes about 11.6 s of wall clock on an unloaded GPU, and up to about 19.3 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
+  wall-clock budget is 360 min (21600 s). One control step takes about 1.8 s of wall clock on an unloaded GPU, and up to about 3.6 s when other simulations share the GPU; the call metadata reports the time, so budget your experiments.
 - Grippers: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it.
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.008]. The ee_pose action, the proprio tcp pose and the IK use this frame.
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.

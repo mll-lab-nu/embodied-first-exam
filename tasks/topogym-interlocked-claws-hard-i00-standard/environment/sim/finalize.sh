@@ -78,6 +78,13 @@ if isinstance(a, dict):                  # a replay result (None: the replay pro
     out["replay_wall_s"] = r.get("wall_s"); out["instance_exact"] = r.get("instance_exact"); out["instance_matches"] = r.get("instance_matches")
 elif r.get("error"):
     out["error"] = f"replay: {r['error']}"
+if isinstance(a, dict) and a.get("episode_end") == "simulator_instability":
+    out["replay_instability"] = a.get("instability")
+# A numerically unstable simulation (rcb_topogym.SIMULATOR_INSTABILITY), in the live episode or in this replay (GPU physics:
+# either may meet it without the other), is an infrastructure failure: never the agent's success, never the task's failure.
+if out.get("reason") == "simulator_instability" or out.get("replay_episode_end") == "simulator_instability":
+    out["simulator_instability"] = True; out["infra_error"] = 1
+    out.setdefault("error", "simulator_instability: a cloth particle exceeded the simulator's plausibility speed limit")
 out["video"] = bool(r.get("video")) and os.path.exists(os.path.join(d, "replay.mp4"))
 if r.get("gpu_lost"):
     out["gpu_lost"] = True; out["infra_error"] = 1
