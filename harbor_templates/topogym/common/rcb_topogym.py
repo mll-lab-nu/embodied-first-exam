@@ -20,7 +20,11 @@ trajectory : the (T, action_dim) JOINT_ABS actions handed to the simulator, one 
              renders on the GPU in both cases.
 episode end: a task's success predicate, or one of its failure predicates (e.g. touching the buzz wire), ends the
              simulated episode: later steps do not change the execution ledger or scene, and status()["episode_end"] says
-             why. reset() starts again from the frozen state.
+             why. reset() starts again from the frozen state. A numerically unstable simulation (a particle faster than
+             PARTICLE_SPEED_LIMIT_M_S, 20 m/s) ends it with episode_end "simulator_instability" (evidence in
+             status()["instability"]): a simulator failure that graders report as an infrastructure error, never as
+             success or as the task's failure. PBD cloth-rigid contacts are resolved together per particle with a
+             physically bounded push-out (_bound_pbd_rigid_contacts), which removes the cause of those blow-ups.
 grasping   : a family may enable TopoGym's passive grasp assistance (instance.json simulator.grasp_assist; the rules are
              in robot_spec()["grippers"][...]["command"]); primitives()["object_in_hand"] says what a gripper holds.
 budget     : there is no step budget: the agent's wall clock is the limit. MAX_STEPS only stops runaway trajectories.
@@ -1660,6 +1664,214 @@ def _settle_only_when_reached(task) -> bool:
     return True
 
 
+# ---- PBD cloth contact (the blanket blow-up of 2026-10-03: trials mCa9CZt / r42VtjE, jobs/journal/2026-10-03/blanket_debug)
+SIMULATOR_INSTABILITY = "simulator_instability"     # the episode end of a numerically unstable simulation
+# Guard (a backstop; _bound_pbd_rigid_contacts removes the cause). PBD reports a particle's velocity over its last
+# 0.625 ms substep. Runs that did not blow up reached at most 9.2 m/s, with Genesis' contact and the bounded one alike:
+# brief substep-scale oscillations while a gripper pinned or squeezed the cloth (no particle moved faster than 0.5 m/s
+# between 50 ms samples); a cloth dropped from the robot's reach lands below ~3 m/s. Every recorded Genesis blow-up
+# crossed 10 m/s in one jump (11-24 m/s) and reached 1e3-1e5 m/s within three ticks; traced tick by tick: 21.5 -> 35 ->
+# 159,526 and 20.1 -> 28.5 -> 5,337 m/s, the cloth falling off the table at the third tick. 20 m/s keeps twice the
+# headroom over the fastest run that did not blow up and still ends every blow-up no later than the tick in which its
+# cloth would fall (the guard runs before the task's predicates). A cloth particle faster than this means the
+# simulation, not the agent, failed.
+PARTICLE_SPEED_LIMIT_M_S = 20.0
+# Depenetration allowance of the PBD-rigid contact (_bound_pbd_rigid_contacts): the speed beyond the colliding body's own
+# approach and the particle's own inward motion at which a contact may push a particle out (resolving penetration left by
+# an infeasible squeeze). Gravity's per-substep sag needs g * dt = 0.006 m/s; resting and pushed cloth never reaches it.
+PBD_DEPENETRATION_MARGIN_M_S = 0.05
+
+
+def _bound_pbd_rigid_contacts() -> float:
+    """PBD scenes (blanket_flatten): resolve a cloth particle's rigid contacts together and bound the push-out by the
+    contact's physics. Installed before the scene's first physics step (it replaces Genesis 1.2.1's
+    LegacyCoupler.kernel_pbd_rigid_collide; the Genesis files are not edited, so the frozen blanket states' backend
+    identity, which hashes those files, still matches). A no-op for scenes without PBD particles: the kernel runs only when
+    rigid and PBD solvers are both active. Genesis 1.2.1-1.4.3 and main (2026-10-03) share the replaced code unchanged.
+
+    Genesis (legacy_coupler.py:736-760, 895-916), once per substep after the cloth constraints: for each coupled geom in
+    turn, a particle within the particle radius r of the geom is moved out along that geom's SDF normal by the whole
+    penetration, and its velocity becomes the substep's whole displacement over dt (0.625 ms); the geom's link receives
+    -m dv/dt. With one contact this is ordinary position-based contact. With two rigid surfaces closer than 2r (closed
+    fingertips pressed onto the table through the cloth; finger pads closing on a cloth edge) the constraints cannot all
+    hold: each geom undoes the previous one, the last geom wins, the particle moves by up to ~2r per substep, partly
+    sideways along the tilted SDF normals at the fingertip's edges, and all of it becomes velocity. The cloth constraints
+    pull the particle back in the next substep, which feeds the cycle: 0.96 -> 21 -> 35 -> 159,526 m/s in three ticks (the
+    easy trial's replay), the cloth thrown metres off the table, "Cloth fell below the table".
+
+    Here, per particle and substep, at the particle's pre-contact position x (after the cloth constraints; v its velocity,
+    x0 its position at the substep's start):
+      1. all coupled geoms are evaluated at x and their push-outs p_g = n_g (r - sd_g) summed (one simultaneous
+         projection, independent of the geom order): one contact gives Genesis' push-out, orthogonal contacts (a table
+         corner against a finger) are resolved together, opposing contacts (a squeeze) give their compromise, so a
+         squeezed particle stays held between the two surfaces;
+      2. the push-out along each contact normal is bounded by what that contact can physically do within the substep:
+         stop the particle's own motion into the geom, follow the geom's own approach (its velocity at the contact point)
+         and resolve old penetration at PBD_DEPENETRATION_MARGIN_M_S. The sum is scaled by the tightest bound, so no
+         contact moves a particle out faster than the body pushing it (plus the margin), and none lags behind it (no
+         tunnelling). Penetration an infeasible squeeze leaves is carried and resolved at the margin's speed;
+      3. the velocity is the bounded displacement over dt (PBD's own velocity rule), so a contact cannot give a particle
+         more normal speed than the colliding body's plus the margin: no energy from depenetration. The cloth
+         constraints see the corrected positions (they start the next substep's solve), and because the correction now
+         has the size of the physical motion they propagate it as ordinary motion;
+      4. each geom's link receives Genesis' reaction to its own full penetration, m p_g / dt^2 (the PBD constraint force
+         of that contact), so squeezed cloth still resists the gripper as before (the grip of a closing gripper).
+    When one contact is active and its push-out is within the bound (cloth resting on the table, cloth pushed by a moving
+    body, a falling particle stopped by the table: every contact of an unsqueezed cloth), the particle runs Genesis' own
+    expressions, bit for bit. Returns the margin."""
+    import quadrants as qd
+    import genesis as gs
+    import genesis.utils.sdf as sdf
+    from genesis.engine.couplers import legacy_coupler
+    from genesis.utils import array_class
+    installed = getattr(legacy_coupler.LegacyCoupler.kernel_pbd_rigid_collide, "_topogym_depenetration_margin_m_s", None)
+    if installed is not None:
+        return installed
+    margin = float(PBD_DEPENETRATION_MARGIN_M_S)
+
+    @qd.data_oriented
+    class _BoundedPBDRigidContact:
+        def kernel_pbd_rigid_collide(self, geoms_state, geoms_info, links_state, sdf_info, rigid_global_info,
+                                     collider_static_config):
+            for i_p, i_b in qd.ndrange(self.pbd_solver._n_particles, self.sph_solver._B):
+                if self.pbd_solver.particles_ng_reordered[i_p, i_b].active:
+                    r = self.pbd_solver.particle_size / 2
+                    dt = self.pbd_solver._substep_dt
+                    x = self.pbd_solver.particles_reordered[i_p, i_b].pos
+                    v = self.pbd_solver.particles_reordered[i_p, i_b].vel
+                    x0 = self.pbd_solver.particles_reordered[i_p, i_b].ipos
+                    mass = self.pbd_solver.particles_info_reordered[i_p, i_b].mass
+                    push = qd.Vector.zero(gs.qd_float, 3)
+                    n_contacts = 0
+                    g_first = 0
+                    n_first = qd.Vector.zero(gs.qd_float, 3)
+                    sd_first = gs.qd_float(0.0)
+                    # 1. every coupled geom at the pre-contact position; the push-outs summed
+                    for i_g in range(self.rigid_solver.n_geoms):
+                        if geoms_info.needs_coup[i_g]:
+                            signed_dist = sdf.sdf_func_world(
+                                geoms_state=geoms_state, geoms_info=geoms_info, sdf_info=sdf_info, pos_world=x,
+                                geom_idx=i_g, batch_idx=i_b)
+                            contact_normal = sdf.sdf_func_normal_world(
+                                geoms_state=geoms_state, geoms_info=geoms_info, rigid_global_info=rigid_global_info,
+                                collider_static_config=collider_static_config, sdf_info=sdf_info, pos_world=x,
+                                geom_idx=i_g, batch_idx=i_b)
+                            self.pbd_rigid_normal_reordered[i_p, i_b, i_g] = contact_normal
+                            if signed_dist < r:
+                                push = push + contact_normal * (r - signed_dist)
+                                if n_contacts == 0:
+                                    g_first = i_g
+                                    n_first = contact_normal
+                                    sd_first = signed_dist
+                                n_contacts += 1
+                    if n_contacts > 0:
+                        # 2. the tightest physical bound of the push-out along a contact normal
+                        scale = gs.qd_float(1.0)
+                        if n_contacts == 1:
+                            u = self.rigid_solver._func_vel_at_point(
+                                pos_world=x, link_idx=geoms_info.link_idx[g_first], i_b=i_b, links_state=links_state)
+                            allowed = (qd.max(u.dot(n_first), 0.0) + qd.max(-v.dot(n_first), 0.0) + margin) * dt
+                            along = push.dot(n_first)
+                            if along > allowed:
+                                scale = allowed / along
+                        else:
+                            for i_g in range(self.rigid_solver.n_geoms):
+                                if geoms_info.needs_coup[i_g]:
+                                    signed_dist = sdf.sdf_func_world(
+                                        geoms_state=geoms_state, geoms_info=geoms_info, sdf_info=sdf_info, pos_world=x,
+                                        geom_idx=i_g, batch_idx=i_b)
+                                    if signed_dist < r:
+                                        contact_normal = sdf.sdf_func_normal_world(
+                                            geoms_state=geoms_state, geoms_info=geoms_info,
+                                            rigid_global_info=rigid_global_info,
+                                            collider_static_config=collider_static_config, sdf_info=sdf_info,
+                                            pos_world=x, geom_idx=i_g, batch_idx=i_b)
+                                        u = self.rigid_solver._func_vel_at_point(
+                                            pos_world=x, link_idx=geoms_info.link_idx[i_g], i_b=i_b,
+                                            links_state=links_state)
+                                        allowed = (qd.max(u.dot(contact_normal), 0.0)
+                                                   + qd.max(-v.dot(contact_normal), 0.0) + margin) * dt
+                                        along = push.dot(contact_normal)
+                                        if along > allowed:
+                                            scale = qd.min(scale, allowed / along)
+                        new_pos = x
+                        new_vel = v
+                        if n_contacts == 1 and scale >= 1.0:
+                            # Genesis' own expressions (legacy_coupler.py:907-924), bit for bit
+                            stiffness = 1.0
+                            energy_loss = 0.0
+                            new_pos = x + stiffness * n_first * (self.pbd_solver.particle_size / 2 - sd_first)
+                            new_vel = (new_pos - x0) / self.pbd_solver._substep_dt
+                            delta_mv = mass * (new_vel - v)
+                            force = (-delta_mv / self.rigid_solver._substep_dt) * (1 - energy_loss)
+                            self.rigid_solver._func_apply_coupling_force(
+                                x, force, geoms_info.link_idx[g_first], i_b, links_state)
+                        else:
+                            # 3. the bounded simultaneous push-out; the velocity from the displacement
+                            new_pos = x + scale * push
+                            new_vel = (new_pos - x0) / dt
+                            # 4. each link: the reaction to its own full penetration
+                            for i_g in range(self.rigid_solver.n_geoms):
+                                if geoms_info.needs_coup[i_g]:
+                                    signed_dist = sdf.sdf_func_world(
+                                        geoms_state=geoms_state, geoms_info=geoms_info, sdf_info=sdf_info, pos_world=x,
+                                        geom_idx=i_g, batch_idx=i_b)
+                                    if signed_dist < r:
+                                        contact_normal = sdf.sdf_func_normal_world(
+                                            geoms_state=geoms_state, geoms_info=geoms_info,
+                                            rigid_global_info=rigid_global_info,
+                                            collider_static_config=collider_static_config, sdf_info=sdf_info,
+                                            pos_world=x, geom_idx=i_g, batch_idx=i_b)
+                                        force = -mass * contact_normal * (r - signed_dist) / (
+                                            dt * self.rigid_solver._substep_dt)
+                                        self.rigid_solver._func_apply_coupling_force(
+                                            x, force, geoms_info.link_idx[i_g], i_b, links_state)
+                        self.pbd_solver.particles_reordered[i_p, i_b].pos = new_pos
+                        self.pbd_solver.particles_reordered[i_p, i_b].vel = new_vel
+        # Real annotation objects (this module uses postponed annotations; Quadrants needs the types themselves)
+        kernel_pbd_rigid_collide.__annotations__ = dict(
+            geoms_state=array_class.GeomsState, geoms_info=array_class.GeomsInfo, links_state=array_class.LinksState,
+            sdf_info=array_class.SDFInfo, rigid_global_info=array_class.RigidGlobalInfo,
+            collider_static_config=qd.template())
+        kernel_pbd_rigid_collide = qd.kernel(kernel_pbd_rigid_collide)
+
+    kernel = _BoundedPBDRigidContact.__dict__["kernel_pbd_rigid_collide"]
+    kernel._topogym_depenetration_margin_m_s = margin
+    legacy_coupler.LegacyCoupler.kernel_pbd_rigid_collide = kernel
+    return margin
+
+
+def _guard_particle_speeds(task, on_trip: Callable[[dict], None]) -> bool:
+    """Every physics tick (Task.update -> evaluate_state): a particle entity with a non-finite or faster than
+    PARTICLE_SPEED_LIMIT_M_S particle ends the episode with failure reason SIMULATOR_INSTABILITY before the task's own
+    predicates run (blanket: "Cloth fell below the table", which a blow-up reaches a tick or two later), so a numerical
+    blow-up is never graded as the agent's success or as the task's failure: the standard service, its collect hook and
+    both graders report it as an infrastructure error. It ends the episode through the task's own termination path, so
+    the env stays consistent (the trajectory, its replay and the video are kept). The check reads the tick's velocities
+    only; scenes without particles are unchanged."""
+    original = task.evaluate_state
+
+    def evaluate_state(state):
+        for name, fields in (state.get("particles") or {}).items():
+            v = np.asarray(fields.get("velocity_m_s"), dtype=np.float64).reshape(-1, 3)
+            if not len(v):
+                continue
+            s2 = np.einsum("ij,ij->i", v, v)
+            finite = bool(np.isfinite(s2).all())
+            i = int(np.argmax(np.where(np.isfinite(s2), s2, np.inf)))
+            speed = float(np.sqrt(s2[i])) if finite else float("inf")
+            if not finite or speed > PARTICLE_SPEED_LIMIT_M_S:
+                p = np.asarray(fields.get("position_m"), dtype=np.float64).reshape(-1, 3)
+                on_trip(dict(entity=str(name), particle=i, max_speed_m_s=speed if finite else None, finite=finite,
+                             limit_m_s=PARTICLE_SPEED_LIMIT_M_S, physics_step=int(state.get("physics_step", -1)),
+                             sim_time_s=float(state.get("sim_time_s", float("nan"))),
+                             position_m=[float(x) for x in p[i]] if i < len(p) and np.isfinite(p[i]).all() else None))
+                return False, SIMULATOR_INSTABILITY, {}
+        return original(state)
+    task.evaluate_state = evaluate_state
+    return True
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
@@ -1700,6 +1912,7 @@ class Session:
             # under a container's CPU quota. The results are the same at any count (2026-10-02 study).
             import torch
             torch.set_num_threads(4)
+        margin = _bound_pbd_rigid_contacts()   # before the scene's first physics step (kernels compile on first use)
         self.env = Env(SimulatorConfig(**cfg))
         # Tooling v7: frames come only from env.sensor_frame() (render_frame / render_grid / render_depth / videos), so the
         # per-step observation skips the camera pass and a frame is rendered when asked (image 0.2.9; physics identical).
@@ -1708,6 +1921,10 @@ class Session:
         self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env)
         self.knot_predicate_vectorized = _speed_up_knot_predicate(cfg["task_id"])
         self.settle_only_when_reached = _settle_only_when_reached(self.env._task)
+        # The bounded PBD-rigid contact applies when this scene couples rigid bodies with PBD particles (blanket_flatten)
+        self.pbd_depenetration_margin_m_s = margin if getattr(self.env._world.scene.sim.coupler, "_rigid_pbd", False) else None
+        self.instability: dict | None = None    # the first simulator instability of this episode (None: none)
+        self.particle_speed_guard = _guard_particle_speeds(self.env._task, self._on_instability)
         if not self.spec["fixture"]:
             # The family catalog is only a short catalog label. Public goals
             # come from the selected instance, for both Session and limited SPEC.
@@ -1833,8 +2050,19 @@ class Session:
         self.sim_time_s = 0.0
         self.last_step_ticks = 0
         self._reward = 0.0
+        self.instability = None
         self.env.privileged.rewind_to(self.S0)
         self._targets = self.robot.targets()
+
+    def _on_instability(self, info: dict) -> None:
+        """The particle speed guard tripped (_guard_particle_speeds): keep the first evidence of this episode."""
+        if self.instability is None:
+            self.instability = info
+            speed = "non-finite" if info["max_speed_m_s"] is None else f"{info['max_speed_m_s']:.3g} m/s"
+            _log(f"SIMULATOR INSTABILITY at physics step {info['physics_step']}: {info['entity']} particle {info['particle']} "
+                 f"moves at {speed} (limit {info['limit_m_s']:g} m/s). The episode ends with episode_end "
+                 f"'{SIMULATOR_INSTABILITY}': a simulator failure, graded as an infrastructure error, not as the task's "
+                 "failure predicate; reset() starts again from the frozen state")
 
     @property
     def action_dim(self) -> int:
@@ -1848,7 +2076,9 @@ class Session:
         """Apply one low-level action (ACTION_LAYOUT: per arm its joint targets, then its gripper width) for one control
         step. Out-of-limit values are clipped to the joint / gripper limits. Returns True once max_steps control steps
         have run (a runaway guard, not a budget); further steps raise. After the task's own episode end (success or a
-        failure predicate) steps return True without changing the scene or execution ledger."""
+        failure predicate) steps return True without changing the scene or execution ledger. A numerically unstable
+        simulation (a particle faster than PARTICLE_SPEED_LIMIT_M_S) ends the episode the same way, with episode_end
+        SIMULATOR_INSTABILITY and the evidence in self.instability: a simulator failure, not the task's."""
         a = np.asarray(action, dtype=np.float32).reshape(-1)
         if a.size != self.action_dim:
             raise ValueError(f"action must have {self.action_dim} entries, got {a.size}")
@@ -1913,7 +2143,8 @@ class Session:
     def status(self) -> dict[str, Any]:
         return {"success": self.success(), "progress": round(self._reward, 4), "sim_steps": int(self.n_steps),
                 "physics_steps": self.physics_steps, "sim_time_s": self.sim_time_s,
-                "resets": self._resets, "state_sha": self.state_sha(), "episode_end": self.episode_end}
+                "resets": self._resets, "state_sha": self.state_sha(), "episode_end": self.episode_end,
+                "instability": self.instability}
 
     # ---- recording / trajectories
     def record_start(self) -> None:

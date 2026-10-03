@@ -71,12 +71,22 @@ def ctrl_steps() -> int:
     return int(S.n_steps) if E["ready"] else 0
 
 
+# Episode ends that are infrastructure failures, never the agent's: a simulator error, and a numerically unstable simulation
+# (rcb_topogym.SIMULATOR_INSTABILITY: a cloth particle faster than PARTICLE_SPEED_LIMIT_M_S, before the task's own failure
+# predicates; finalize.sh applies the same rule to the replay).
+INFRA_REASONS = ("error", "simulator_instability")
+
+
+def instability_fields() -> dict:
+    return {"simulator_instability": E["reason"] == "simulator_instability", "instability": getattr(S, "instability", None)}
+
+
 def write_final() -> None:
     if L.final_verdict(DATA):           # finalize.sh's verdict, or a give-up after crashes: never overwritten
         return
     n = int(E.get("episode_control_steps") or ctrl_steps())
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error"), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+        "success": bool(E["success"]), "infra_error": int(E["reason"] in INFRA_REASONS), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK,
         "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"),
         "live_sha": E.get("live_sha"), **EP.final_fields()})
@@ -97,7 +107,7 @@ def dump() -> None:
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     n = int(E.get("episode_control_steps") or 0)
     L._write_json(os.path.join(DATA, "episode.json"), {
-        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error"), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+        "success": bool(E["success"]), "infra_error": int(E["reason"] in INFRA_REASONS), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
         "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"), **EP.final_fields()})
     write_final()
@@ -197,7 +207,9 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
                 "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, or on a "
-                "simulator error; the recorded trajectory is then replayed once in a fresh process and graded"),
+                "simulator error; a numerically unstable simulation (any cloth particle faster than "
+                f"{M.PARTICLE_SPEED_LIMIT_M_S:g} m/s) ends it with reason {M.SIMULATOR_INSTABILITY}, graded as an infrastructure "
+                "error, not as the task's failure; the recorded trajectory is then replayed once in a fresh process and graded"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
