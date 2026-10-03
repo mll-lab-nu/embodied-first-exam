@@ -332,6 +332,7 @@ class Env:
                 folder / "assets", float(table.pos[2] + table.size[2] / 2)
             )
             spec = self._task.finalize_spec(spec, asset_dir=folder / "assets", scene_config=cfg)
+            self._scene_spec = spec
             self._initial_state_report = None
             if spec.initial_state is not None and self.config.reset_physics_steps:
                 raise ValueError("Frozen initial state requires reset_physics_steps == 0")
@@ -387,6 +388,11 @@ class Env:
                 self._initial_state_report = restore_declared_initial_state(
                     self._world, self._robot, spec.initial_state,
                     identity=scene_identity(self.config, cfg, self._task, spec, self._asset_build))
+            if self.config.ipc_settled_state is not None:
+                from topogym.world.physics.ipc_settled_state import identity, restore_settled_state
+                self._initial_state_report = restore_settled_state(
+                    self._world, self.config.ipc_settled_state,
+                    scene_identity=identity(self._world, self._task, spec, self._asset_build))
             for _ in range(self.config.reset_physics_steps):
                 self._world.advance()
             self._world.reset_clock()

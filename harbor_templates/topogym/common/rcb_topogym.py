@@ -308,11 +308,17 @@ TASKS["lock_picking"]["simulator"] = {**TASKS["lock_picking"]["simulator"], "pre
 # before the instance is frozen (the v5 instances were not at rest at t = 0). Against substeps 4 from the same settled
 # state: rope_threading 8.1x, slotted_post_ring 9.2x per control step (10.7x / 10.1x with libuipc's linear_bvh broad phase
 # instead of its default info_stackless_bvh: the same contacts); lift / slip / drop within 0.1 mm, centerline 0.3-0.8 mm at
-# the end of a pinch-lift-release, the same cord break (0.1 s later), frames identical. knot_untying keeps its v5 settings
-# for now: on medium the larger IPC dt squeezes the rope a little more softly and a near-threshold tet inversion of the
-# reference does not happen.
-for _name, _ticks in (("rope_threading", 300), ("slotted_post_ring", 800)):
-    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "solver_substeps": 1, "reset_physics_steps": _ticks,
+# the end of a pinch-lift-release, the same cord break (0.1 s later), frames identical. knot_untying (v10) runs two solver
+# substeps: at one, the larger IPC dt squeezes the rope a little more softly and the reference's near-threshold tet
+# inversion on medium (robust to noise) does not happen; at two it does; 4.0x with the exact clearance, end 0.35 mm.
+# Since v10 the settled state is frozen with the instance (export-ipc-state, SimulatorConfig.ipc_settled_state) instead
+# of settling at every build: every build starts from the same bits (settling on the GPU started builds ~0.04 um apart,
+# enough for a near-threshold squeeze to take another contact branch) and skips 0.8-2.4 min of settling.
+# orbits keeps four substeps (only four reproduce the reference's violent-impact tet inversion, robust to noise; one and two
+# do not) with the cheaper tolerances and broad phase (same impact inversion, cord 0.007 mm; ~1.3x) and a settled start.
+for _name, _ticks, _substeps in (("rope_threading", 300, 1), ("slotted_post_ring", 800, 1), ("knot_untying", 600, 2),
+                                 ("orbits", 800, 4)):
+    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "solver_substeps": _substeps, "reset_physics_steps": _ticks,
                                  "ipc_options": {"newton_tolerance": 1e-3, "linear_system_tolerance": 1e-5,
                                                  "collision_detection_method": "linear_bvh"}}
 
@@ -1008,6 +1014,9 @@ class Session:
             dependency = cfg["task_parameters"].get("initial_state_path")
             if dependency and not Path(dependency).is_absolute():
                 cfg["task_parameters"]["initial_state_path"] = str(Path(instance).resolve().parent / dependency)
+            settled = cfg.get("ipc_settled_state")
+            if settled and not Path(settled).is_absolute():
+                cfg["ipc_settled_state"] = str(Path(instance).resolve().parent / settled)
         else:
             cfg = simulator_config(task, eval_index, variation_id=variation_id, seed=seed, task_parameters=task_parameters)
         self.eval_index, self.max_steps, self.backend = eval_index, int(max_steps or MAX_STEPS), backend
@@ -1813,8 +1822,25 @@ def success_rule(s: "Session") -> str:
     return out
 
 
+def cmd_export_ipc_state(a) -> None:
+    """Build the scene with the family's settling (reset_physics_steps) and archive the settled IPC state (-> make-instance
+    --ipc-settled-state): every build of that instance then restores the same bits instead of settling again."""
+    from topogym.world.physics.ipc_settled_state import export_settled_state, identity
+    s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed)
+    env = s.env
+    manifest = export_settled_state(env._world, a.out, scene_identity=identity(env._world, env._task, env._scene_spec,
+                                    env._asset_build), metadata=dict(settled_ticks=int(s.config["reset_physics_steps"]),
+                                    solver_substeps=int(s.config["solver_substeps"]),
+                                    ipc_options=dict(s.config.get("ipc_options") or {})))
+    print(json.dumps({"archive": str(manifest), "settled_ticks": int(s.config["reset_physics_steps"])}), flush=True)
+    s.close()
+
+
 def cmd_make_instance(a) -> None:
     params = json.loads(Path(a.task_parameters).read_text()) if a.task_parameters else None
+    if a.ipc_settled_state:   # restore the archived settled state instead of settling at every build
+        TASKS[a.task]["simulator"] = {**TASKS[a.task]["simulator"], "reset_physics_steps": 0,
+                                      "ipc_settled_state": str(Path(a.ipc_settled_state).resolve())}
     s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed, task_parameters=params)
     import genesis as gs
     from topogym.tasks.goal_description import TASK_IDS, describe_goal
@@ -1840,6 +1866,13 @@ def cmd_make_instance(a) -> None:
         relative = "instance_assets/initial_state/" + Path(dependency).name
         out["simulator"]["task_parameters"]["initial_state_path"] = relative
         out["effective_task_parameters"]["initial_state_path"] = relative
+    if a.ipc_settled_state:
+        import shutil
+        source = Path(a.ipc_settled_state).resolve().parent
+        target = Path(a.out).resolve().parent / "instance_assets" / "ipc_state"
+        if source != target:
+            shutil.copytree(source, target, dirs_exist_ok=True)
+        out["simulator"]["ipc_settled_state"] = "instance_assets/ipc_state/" + Path(a.ipc_settled_state).name
     from topogym.utils.io import to_jsonable
     out = to_jsonable(out)
     Path(a.out).write_text(json.dumps(out, indent=1))
@@ -1955,7 +1988,8 @@ def cmd_smoke(a) -> None:
         if status.get("episode_end") not in (None, "success"):
             raise ValueError(f"short hold ended with {status['episode_end']}")
         result = dict(passed=True, scope="short_build_action_reset_rgb", control_steps=len(actions),
-                      instance_matches=s.instance_matches, status=status, replay=s.replay(actions),
+                      instance_matches=s.instance_matches, instance_exact=s.instance_exact, status=status,
+                      replay=s.replay(actions),
                       evaluable_for_task_success=bool(getattr(s.env._task, "goal_complete", False)), recording=recording)
         (out / "smoke.json").write_text(json.dumps(result, indent=2))
         print(json.dumps(result))
@@ -1970,7 +2004,11 @@ def main() -> None:
     sub = p.add_subparsers(dest="cmd", required=True)
     q = sub.add_parser("make-instance"); q.add_argument("--task", required=True); q.add_argument("--eval-index", type=int)
     q.add_argument("--variation"); q.add_argument("--scene-seed", type=int); q.add_argument("--task-parameters")
+    q.add_argument("--ipc-settled-state", help="an export-ipc-state archive (manifest.json) to restore instead of settling")
     q.add_argument("--out", required=True); q.set_defaults(fn=cmd_make_instance)
+    q = sub.add_parser("export-ipc-state"); q.add_argument("--task", required=True); q.add_argument("--eval-index", type=int)
+    q.add_argument("--variation"); q.add_argument("--scene-seed", type=int); q.add_argument("--out", required=True)
+    q.set_defaults(fn=cmd_export_ipc_state)
     q = sub.add_parser("run-oracle"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True)
     q.add_argument("--code", required=True); q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)
     q = sub.add_parser("replay"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True); q.add_argument("--traj", required=True)

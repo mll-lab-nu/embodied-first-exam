@@ -7,7 +7,23 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-02)
-All 78 dirs: tooling v9, `eai-standard/2.3`, `rcb-topogym:0.2.10-cu128`.
+The 78 tier dirs: tooling v11, `eai-standard/2.3`, `rcb-topogym:0.2.11-cu128`; Jianwen's simpler variants
+(interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v11 = Jianwen's v10 + the IPC families' settled scene frozen with the instance (`export-ipc-state`, then `make-instance
+  --ipc-settled-state`; `SimulatorConfig.ipc_settled_state`, `topogym/world/physics/ipc_settled_state.py`): every build
+  restores the same bits instead of settling (settling on the GPU started builds ~0.04 um apart, enough for a
+  near-threshold squeeze to take another contact branch in a grader's replay; rope_threading hard showed it), so
+  `instance_exact` holds again and a build skips 0.8-2.4 min of settling; knot_untying at two IPC substeps + the
+  same tolerances / broad phase / settling (4.0x; one substep avoided the reference's near-threshold tet inversion);
+  orbits at four substeps with the cheaper tolerances / broad phase and a settled start (~1.3x: only four substeps
+  reproduce the reference's violent-impact tet inversion, which is robust to noise; one and two substeps would be
+  12-15x but more lenient there).
+  0.2.11 = 0.2.10 + that restore + one shared kernel / shader cache for every user (`XDG_CACHE_HOME`,
+  `CUDA_CACHE_PATH` = /opt/rcb-cache), filled on a lab GPU by `images/topogym/warm_cache.sh` and committed into the tag:
+  a fresh container's first build + first frame 88-239 s + 20-24 s -> 27-62 s + < 1 s (physics unchanged: claws easy
+  replays to the same state hash).
+- v10 (Jianwen, f0d233115) = v9 + his A01 ZIP/NPZ error classification, A03 evidence export and the owner-only
+  `Env.sensor_factory`; new packages only (his simpler variants); notes below.
 - New packages use tooling v10: remote v9 performance settings plus the local A01 ZIP/NPZ error classification repair.
   Existing v9 packages keep their bytes and their 0.2.10 image references; v10 is checked against the current templates
   and image version. The local `Env.sensor_factory` extension and A03 evidence collection/export remain in source.
@@ -181,10 +197,12 @@ family (PROTOCOL §2.7). Model positives so far: interlocked_claws easy in both 
 the previous version of these dirs).
 
 ## Hosts
-- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128`
+- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128`
   (`images/topogym/VERSION` + the CUDA profile of `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a legacy
   warning). Neither is on GHCR: build on the host with `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym` (a
-  large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab).
+  large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab), then warm its cache on that
+  host's GPU: `images/topogym/warm_cache.sh <built tag> <published tag> <gpu> tasks` (one Session per family; without it
+  every container compiles the kernels again).
 - blanket_flatten's packaged PBD states restore only on the GPU profile they were prepared on (RTX PRO 6000, sm_120):
   run blanket on lab.
 - The IPC families are slow (50-90 s per control step in motion, 15 s holds, one sim per GPU): a precision / speed study

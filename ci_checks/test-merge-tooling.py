@@ -52,14 +52,15 @@ class MergeTests(unittest.TestCase):
                     # to its separate camera-selection path.
                     self.assertEqual(len(calls), 1 if factory is SensorSuite else 0)
 
-    def test_remote_v9_stays_frozen_and_checks_its_image(self):
-        spec = importlib.util.spec_from_file_location('tooling_v10_check', ROOT/'ci_checks/check-topogym-tooling.py')
+    def test_frozen_generation_stays_frozen_and_checks_its_image(self):
+        spec = importlib.util.spec_from_file_location('tooling_frozen_check', ROOT/'ci_checks/check-topogym-tooling.py')
         checker = importlib.util.module_from_spec(spec); spec.loader.exec_module(checker)
-        name = 'topogym-interlocked-claws-hard-i00-standard'
+        # A frozen generation in the repository: tooling v10 (Jianwen's simpler claws variants on 0.2.10) since v11.
+        name = 'topogym-interlocked-claws-easier-i00-standard'
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder)/name
             shutil.copytree(ROOT/'tasks'/name, target)
-            # Historical v9 must stay valid even after the current image changes.
+            # A historical generation must stay valid even after the current image changes.
             with patch.object(checker, 'current_image', return_value='future-image'):
                 self.assertFalse(checker.check(Path(folder))[1])
             path = target/'environment/sim/rcb_topogym.py'
@@ -67,8 +68,15 @@ class MergeTests(unittest.TestCase):
             path.write_bytes(original+b'\n# tampered\n')
             self.assertTrue(checker.check(Path(folder))[1])
             path.write_bytes(original)
+        # The current generation must reference the image of images/topogym/VERSION: a downgraded image fails.
+        name = 'topogym-interlocked-claws-hard-i00-standard'
+        image = checker.current_image().rsplit(':', 1)[1]
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder)/name
+            shutil.copytree(ROOT/'tasks'/name, target)
+            self.assertFalse(checker.check(Path(folder))[1])
             compose = target/'environment/docker-compose.yaml'
-            compose.write_text(compose.read_text().replace('0.2.10-cu128', '0.2.9-cu128'))
+            compose.write_text(compose.read_text().replace(image, '0.2.10-cu128'))
             self.assertTrue(any('image' in error for error in checker.check(Path(folder))[1]))
 
     def protocol_check(self, task, *, strict=False):

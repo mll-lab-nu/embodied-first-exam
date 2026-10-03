@@ -6,6 +6,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import signal
@@ -316,7 +317,8 @@ class ResultTests(unittest.TestCase):
             self.assertEqual(p.returncode,0,p.stdout+p.stderr)
             u=tomllib.loads((tasks/(slug+'-privileged')/'task.toml').read_text()); l=tomllib.loads((tasks/(slug+'-standard')/'task.toml').read_text())
             self.assertEqual((u['agent']['timeout_sec'],l['agent']['timeout_sec']),(21600,21600))
-            self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),('10','10'))
+            current=re.search(r'^TOOLING_VERSION = "(\d+)"',(ROOT/'scripts/topogym_mk_task.py').read_text(),re.M).group(1)
+            self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),(current,current))
             self.assertEqual(l['metadata']['protocol'], 'eai-standard/2.3')
             tools=[tasks/(slug+'-privileged')/'environment/rcb_topogym.py',tasks/(slug+'-privileged')/'tests/rcb_topogym.py',
                    tasks/(slug+'-standard')/'environment/sim/rcb_topogym.py']

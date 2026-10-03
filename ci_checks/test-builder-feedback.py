@@ -207,9 +207,10 @@ class FeedbackTests(unittest.TestCase):
         self.assertNotEqual(layout(value), layout(value.astype(np.float64)))
 
     def test_profile_image_tags(self):
+        version = (ROOT/'images/topogym/VERSION').read_text().strip()
         with patch.dict(os.environ, {'RCB_IMAGE_REGISTRY': 'local/test'}):
-            self.assertEqual(image_tag(ROOT, 'cu128'), 'local/test/rcb-topogym:0.2.6-cu128')
-            self.assertTrue(image_tag(ROOT, 'cu130').endswith(':0.2.6-cu130'))
+            self.assertEqual(image_tag(ROOT, 'cu128'), f'local/test/rcb-topogym:{version}-cu128')
+            self.assertTrue(image_tag(ROOT, 'cu130').endswith(f':{version}-cu130'))
             with self.assertRaises(ValueError):
                 image_tag(ROOT, 'auto')
 

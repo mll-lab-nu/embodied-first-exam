@@ -9,7 +9,7 @@
 | Family / instance | `fiber_bundling` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
 
 ## Task
 TopoGym fiber_bundling (panda_robotiq, Genesis): produce one replayable trajectory. Manipulate the thick sheath to pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored. Frozen scene instance (variation fiber_bundling_hard, seed 0).

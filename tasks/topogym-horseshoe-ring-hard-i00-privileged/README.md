@@ -9,7 +9,7 @@
 | Family / instance | `horseshoe_ring` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
 
 ## Task
 TopoGym horseshoe_ring (aloha, Genesis): produce one replayable trajectory. Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side. Frozen scene instance (variation horseshoe_ring_hard, seed 0).

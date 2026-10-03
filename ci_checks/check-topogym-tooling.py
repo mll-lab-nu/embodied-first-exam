@@ -74,14 +74,14 @@ def check(tasks):
         meta = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
         version = meta.get("tooling_version")
         mode = "limited" if task.name.endswith(("-limited", "-standard")) else "unlimited"
-        if version == "10":
+        if version == "11":
             if not task.name.endswith(("-privileged", "-standard")):
-                errors.append(f"{task.name}: tooling v10 requires protocol v1.0 task names")
+                errors.append(f"{task.name}: tooling v11 requires protocol v1.0 task names")
             expected = current_files(mode)
             image = current_image()
             errors.extend(f"{task.name}/{rel}: image {ref} != {image} (images/topogym/VERSION)"
                           for rel, ref in image_references(task) if ref != image)
-        elif version in ("3", "4", "5", "6", "7", "8", "9"):
+        elif version in ("3", "4", "5", "6", "7", "8", "9", "10"):
             expected = frozen["v" + version][mode]
             # Both branches independently published tooling 6. Select the local
             # A01 lineage by its immutable tool hash, then check EVERY file.
@@ -121,5 +121,5 @@ if __name__ == "__main__":
     for error in errors:
         print("FAIL " + error)
     if not errors:
-        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v10 checked")
+        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v11 checked")
     raise SystemExit(bool(errors))

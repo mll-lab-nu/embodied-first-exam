@@ -9,7 +9,7 @@ keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "code-as-policy",
 
 [metadata]
 author_name = "jianwen"
-tooling_version = "9"
+tooling_version = "11"
 task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
 simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
 robot = "panda_robotiq"

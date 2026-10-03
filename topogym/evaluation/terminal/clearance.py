@@ -33,13 +33,13 @@ def convex_cover_planes(vertices):
 def validate_robot_planes(values, count):
     if not isinstance(values, (list, tuple)) or len(values) != count:
         raise ValueError("Release convex cover count differs from robot bounds")
-    result = []
-    for value in values:
-        planes = np.asarray(value, dtype=float)
-        if (planes.ndim != 2 or planes.shape[1] != 4 or not np.isfinite(planes).all()
-                or not np.allclose(np.linalg.norm(planes[:, :3], axis=1), 1., rtol=0., atol=1e-8)):
+    result = [np.asarray(value, dtype=float) for value in values]
+    if any(planes.ndim != 2 or planes.shape[1] != 4 for planes in result):
+        raise ValueError("Invalid release convex planes")
+    if result:   # one check over every plane (runs every tick): the same verdict as np.allclose(..., rtol=0., atol=1e-8)
+        planes = np.concatenate(result)
+        if not np.isfinite(planes).all() or not np.all(np.abs(np.linalg.norm(planes[:, :3], axis=1)-1.) <= 1e-8):
             raise ValueError("Invalid release convex planes")
-        result.append(planes)
     return result
 
 

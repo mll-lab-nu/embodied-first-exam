@@ -9,7 +9,7 @@
 | Family / instance | `hedgehog_in_cage` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128` |
 
 ## Task
 TopoGym hedgehog_in_cage (panda_robotiq, Genesis): produce one replayable trajectory. Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side. Frozen scene instance (variation hedgehog_in_cage_medium, seed 0).

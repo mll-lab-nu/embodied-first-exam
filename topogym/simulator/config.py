@@ -46,6 +46,9 @@ class SimulatorConfig:
     rigid_options: Mapping[str, Any] = field(default_factory=dict)
     # Qualified overrides of the task's IPCCouplerOptions (IPC_OPTION_OVERRIDES); merged in Env.reset.
     ipc_options: Mapping[str, Any] = field(default_factory=dict)
+    # A settled IPC scene frozen with the instance (world/physics/ipc_settled_state.py): restored at every build instead
+    # of settling for reset_physics_steps ticks.
+    ipc_settled_state: str | None = None
     enable_rgb: bool = True
     enable_depth: bool = False
     observation_mode: str = "JOINT"
@@ -123,6 +126,9 @@ class SimulatorConfig:
                           for k, v in options.items()):
             raise ValueError(f"ipc_options must use qualified overrides {IPC_OPTION_OVERRIDES}; got {options}")
         object.__setattr__(self, "ipc_options", freeze(options))
+        if self.ipc_settled_state is not None and (not isinstance(self.ipc_settled_state, str) or self.reset_physics_steps
+                                                   or self.compute_backend != "cuda"):
+            raise ValueError("ipc_settled_state must be a manifest path, with reset_physics_steps 0 on CUDA")
         object.__setattr__(self, "task_parameters", freeze(dict(self.task_parameters)))
         for name in ("asset_root", "work_dir"):
             if getattr(self, name) is not None:
