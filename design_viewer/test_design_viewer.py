@@ -85,11 +85,13 @@ def test_slotted_post_pieces_are_convex_and_keep_the_slot_open():
         assert not piece.contains(np.array(sides+ends)).any()
 
 
-def test_a_truncated_cache_file_is_rebuilt():
-    scenes.build("horseshoe_ring_medium")
-    path = next((scenes.CACHE/"horseshoe_ring_medium").glob("*.pkl"))
-    path.write_bytes(path.read_bytes()[:100])
-    assert scenes.build("horseshoe_ring_medium").name == "horseshoe_ring_medium"
+@pytest.mark.parametrize("folder, rebuild", [("horseshoe_ring_medium", lambda: scenes.build("horseshoe_ring_medium")),
+                                             ("coacd", lambda: models.build(scenes.build("hedgehog_in_cage_medium")))])
+def test_a_truncated_cache_file_is_rebuilt(folder, rebuild):
+    rebuild()
+    for path in (scenes.CACHE/folder).glob("*.pkl"):
+        path.write_bytes(path.read_bytes()[:100])
+    rebuild()
 
 
 # Hedgehog start poses are only collision-free (the ball then tips onto its spikes);

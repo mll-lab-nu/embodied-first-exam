@@ -5,13 +5,12 @@ group 3 (tick it under Visibility Groups in the browser to see them). Concave pi
 split with CoACD (cached). Every free body has an inactive weld hold_<body> to the world.
 """
 import hashlib
-import pickle
 
 import mujoco
 import numpy as np
 import trimesh
 
-from design_viewer.scenes import CACHE
+from design_viewer.scenes import CACHE, cached
 
 
 def build(scene):
@@ -110,14 +109,12 @@ def _convex(items, threshold=.02):
 def _coacd(mesh, threshold):
     key = hashlib.sha256(np.ascontiguousarray(mesh.vertices).tobytes()+np.ascontiguousarray(mesh.faces).tobytes()
                          + str(threshold).encode()).hexdigest()[:16]
-    path = CACHE/"coacd"/f"{key}.pkl"
-    if not path.exists():
+
+    def make():
         import coacd
         coacd.set_log_level("error")
-        parts = coacd.run_coacd(coacd.Mesh(mesh.vertices, mesh.faces), threshold=threshold)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(pickle.dumps([trimesh.Trimesh(v, f) for v, f in parts]))
-    return pickle.loads(path.read_bytes())
+        return [trimesh.Trimesh(v, f) for v, f in coacd.run_coacd(coacd.Mesh(mesh.vertices, mesh.faces), threshold=threshold)]
+    return cached(CACHE/"coacd"/f"{key}.pkl", make)
 
 
 def toggle_hold(model, data, body):

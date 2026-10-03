@@ -56,20 +56,27 @@ def build(name):
     if task_id is None:
         raise ValueError(f"{name}: not a variation of {TASKS}")
     task = task_definition(task_id, name)(None, seed=0)
-    path = CACHE/name/f"{_key(name, task)}.pkl"
+
+    def make():
+        with tempfile.TemporaryDirectory() as folder:
+            return {"hedgehog_in_cage": _hedgehog, "horseshoe_ring": _horseshoe,
+                    "slotted_post_ring": _slotted}[task_id](name, task, Path(folder))
+    return cached(CACHE/name/f"{_key(name, task)}.pkl", make)
+
+
+def cached(path, make):
+    """Pickle cache: make() when the file is missing or cut short; written atomically."""
     if path.exists():
         try:
             return pickle.loads(path.read_bytes())
         except (EOFError, pickle.UnpicklingError):  # interrupted write: rebuild
             pass
-    with tempfile.TemporaryDirectory() as folder:
-        scene = {"hedgehog_in_cage": _hedgehog, "horseshoe_ring": _horseshoe,
-                 "slotted_post_ring": _slotted}[task_id](name, task, Path(folder))
+    value = make()
     path.parent.mkdir(parents=True, exist_ok=True)
     partial = path.with_suffix(f".{os.getpid()}.tmp")
-    partial.write_bytes(pickle.dumps(scene))
+    partial.write_bytes(pickle.dumps(value))
     os.replace(partial, path)  # a reader never sees half a file
-    return scene
+    return value
 
 
 def _key(name, task):
