@@ -21,7 +21,7 @@ from topogym.assets.geometry.hedgehog_in_cage import (
 )
 from topogym.solvers.collision.triangle_meshes import TriangleMeshPair
 from topogym.tasks.base import merge_parameters
-from .common import HedgehogInCageTask
+from .hedgehog_in_cage_easy import HedgehogInCageEasyTask
 
 
 def cage(window_mm):
@@ -35,14 +35,14 @@ def cage(window_mm):
                                                    [300., float(window_mm)]], "collar_height_mm": 18.}
 
 
-class HedgehogBelowEasyTask(HedgehogInCageTask):
+class HedgehogBelowEasyTask(HedgehogInCageEasyTask):
     """Shared construction; very_easy / easier set only the window width."""
 
     model_revision = "below_easy_v2"
     family_id = "below_easy_three_windows"
     # Gravity-settled on CPU (Genesis, 25 ms tick / 40 substeps, 5 s) in the 108 mm cage and
     # lifted 0.2 mm out of contact.
-    defaults = merge_parameters(HedgehogInCageTask.defaults, {
+    defaults = merge_parameters(HedgehogInCageEasyTask.defaults, {
         "cage": cage(108.),
         "ball_pose": {"position_m": [-0.027999, 0., -0.049957],
                       "quaternion_wxyz": [0.422212, 0.423279, -0.060657, 0.799307]},

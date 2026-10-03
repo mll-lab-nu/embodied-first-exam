@@ -26,6 +26,10 @@ class SlottedPostRingTask(PlacementGoalMixin, TaskDefinition):
     defaults = defaults(task_id, geometry={}, stable_duration_s=0.5, cord_finish="hemp")
     hash_when_changed = ("cord_finish",)
 
+    def make_layout(self):
+        """This setting's geometry and cord route."""
+        return SlottedPostLayout(**self.config["geometry"])
+
     def declare(self, asset_dir, table_height_m):
         self.table_height_m = float(table_height_m)
         preset = record_preset(self, asset_dir)
@@ -33,9 +37,7 @@ class SlottedPostRingTask(PlacementGoalMixin, TaskDefinition):
         if xy.shape != (2,) or not np.isfinite(xy).all():
             raise ValueError("Invalid Slotted Post Ring center_xy_m")
         origin = tuple(np.r_[xy, table_height_m])
-        self.layout, report = generate_assets(
-            asset_dir, SlottedPostLayout(**self.config["geometry"])
-        )
+        self.layout, report = generate_assets(asset_dir, self.make_layout())
         parts, _ = make_meshes(self.layout)
         folder = Path(asset_dir)
         volume = write_rope_volume(folder / "cord_volume.npz", centerline(self.layout),

@@ -107,6 +107,16 @@ class SlottedPostLayout:
             [.078, -.223, bz], [.090, -.247, bz], [.104, -.277, end_z],
         ])
 
+    def bead_controls(self):
+        """Indices of the cord controls at the two bead centres; each bore spans index -1 .. +1."""
+        return 2, len(self.cord_controls())-3
+
+    def route_checks(self, slot_crossings, exterior_crossings, cord):
+        """Checks of the cord route (layout v1: once through the slot, back round the right rail)."""
+        return dict(cord_passes_slot_once=len(slot_crossings) == 1,
+                    return_cord_outside_right_rail=len(exterior_crossings) == 1
+                    and exterior_crossings[0][0] > self.post_width_m/2+self.rope_radius_m)
+
 
 def _extrude_xz(polygon, depth):
     mesh = trimesh.creation.extrude_polygon(polygon, depth, engine="earcut")
@@ -122,7 +132,7 @@ def centerline(layout, spacing=.0015):
     derivatives = np.gradient(controls, s, axis=0)
     # Preserve straight, bore-aligned spans through each bead. A generic
     # interpolating spline can bow into the bead's small cylindrical bore.
-    for a, b in ((1, 3), (14, 16)):
+    for a, b in ((k-1, k+1) for k in layout.bead_controls()):
         direction = controls[b]-controls[a]
         derivatives[a:b+1] = direction/np.linalg.norm(direction)
     dense = CubicHermiteSpline(s, controls, derivatives)(np.linspace(0, s[-1], 4000))
@@ -186,7 +196,7 @@ def make_meshes(layout):
     parts = {"base": base, "post": post, "target_ring": ring,
              "cord": tube_mesh(cord, layout.rope_radius_m)}
     # Bore orientation follows the cord tangent at each bead's location.
-    for name, index in (("left", 2), ("right", 15)):
+    for name, index in zip(("left", "right"), layout.bead_controls()):
         point = layout.cord_controls()[index]
         k = np.argmin(np.linalg.norm(cord-point, axis=1))
         parts[f"bead_{name}"] = _bead(layout, cord[k], cord[k+1]-cord[k-1])
@@ -240,8 +250,7 @@ def geometry_report(layout, parts, cord):
         disc_slot_height_margin_m=layout.slot_top_m-layout.slot_bottom_m-layout.slot_width_m-2*layout.disc_radius_m)
     checks = dict(meshes_closed_and_positive=all(v["watertight"] and v["volume_positive"] for v in mesh_status.values()),
                   post_and_ring_have_real_holes=all(parts[n].euler_number == 0 for n in ("post", "target_ring")),
-                  cord_passes_slot_once=len(slot_crossings) == 1,
-                  return_cord_outside_right_rail=len(exterior_crossings) == 1 and exterior_crossings[0][0] > layout.post_width_m/2+layout.rope_radius_m,
+                  **layout.route_checks(slot_crossings, exterior_crossings, cord),
                   cord_clear_of_solid_parts=min(clearance.values()) > 0,
                   cord_clear_of_table=float(cord[:, 2].min()) > layout.rope_radius_m,
                   no_nonlocal_cord_overlap=self_clearance > 0,
