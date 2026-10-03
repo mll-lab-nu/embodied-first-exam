@@ -28,12 +28,14 @@ Host
   Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU. ManiGuard verified driver
   580.x and reports repeatable Isaac Sim 4.5 startup segfaults with newer drivers. Blackwell GPUs (RTX 50 / RTX PRO 6000)
   need torch 2.7.0+cu128 instead of 2.6.0+cu124 (ManiGuard's note): not this image; a separate build, checked separately.
-  Build: about 35 GB of free disk at peak (the image is about 25 GB on disk with Docker's containerd image store, which keeps
-  the compressed layers next to the unpacked ones), network access to github.com, pypi.org, download.pytorch.org,
-  pypi.nvidia.com, conda.anaconda.org and snapshot.ubuntu.com. Run: one Isaac simulator per 32 GB of host RAM.
+  Build: plan for about 50 GB of free disk (the image is 26 GB on disk; on a host with Docker's containerd image store the
+  first build of 2026-10-03 took about 40 GB of the disk in all, with the compressed layers and BuildKit's cache), network
+  access to github.com, raw.githubusercontent.com, pypi.org, download.pytorch.org, pypi.nvidia.com, conda.anaconda.org and
+  snapshot.ubuntu.com. Run: one Isaac simulator per 32 GB of host RAM. Tested on an RTX 4090 Laptop GPU (16 GB), driver
+  580.178.04: a replay peaks at about 4 GB of VRAM.
 
 Build (from the repository root)
   docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:$(cat images/maniguard/VERSION) -f images/maniguard/Dockerfile .
 
-Check a build (README.md here): the evaluator imports (the build does it), the locks match (once committed), and a frozen
+Check a build (README.md here): the evaluator imports (the build does it), the locks match (the build does it), and a frozen
 instance loads to its recorded state hash with the long-finger robot.
