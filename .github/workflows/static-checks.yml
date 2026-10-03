@@ -23,3 +23,5 @@ jobs:
         run: |
           python3 scripts/kinder/gen_tasks.py check
           python3 scripts/humanoidbench/gen_tasks.py check
+      - name: ManiGuard task dirs are what their generator writes
+        run: python3 scripts/maniguard/mk_tasks.py --check

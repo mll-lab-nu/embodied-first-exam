@@ -9,7 +9,8 @@ for t in "${tasks[@]}"; do
     bash "$root/ci_checks/$c.sh" "$t" || rc=1
   done
   bash "$root/ci_checks/check-robopaint-leak.sh" "$t" || rc=1     # RoboPaint tasks only (the script skips others)
-  bash "$root/ci_checks/check-limited-texts.sh" "$t" || rc=1      # D7, declared by BEHAVIOR, RoboLab, RoboWits, RoboPaint: no world coordinates
+  bash "$root/ci_checks/check-maniguard-leak.sh" "$t" || rc=1     # ManiGuard tasks only (the script skips others)
+  bash "$root/ci_checks/check-limited-texts.sh" "$t" || rc=1      # D7, declared by BEHAVIOR, RoboLab, RoboWits, RoboPaint, ManiGuard: no world coordinates
 done
 bash "$root/ci_checks/check-dataset-manifest.sh" || rc=1
 bash "$root/ci_checks/check-robopaint-tooling.sh" || rc=1            # RoboPaint: tooling byte-identical within a family / stack
