@@ -18,7 +18,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/mll-lab-nu/eai-"
-PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2"}
+PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2",
+             "eai-standard-realtime/1.0",   # real-time sports (docs/EAI_STANDARD_REALTIME_1_0.md; proposed)
+             "eai-standard-turn/1.0"}       # turn-based (precision) sports, same document; proposed
 LEGACY_PROTOCOLS = {"rcb-limited/2.1"}
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")
 TEXT_SUFFIXES = {".md", ".toml", ".py", ".sh", ".yaml", ".yml", ".json", ".jsonl", ".txt", ".cfg", ".xml", ".urdf", ""}

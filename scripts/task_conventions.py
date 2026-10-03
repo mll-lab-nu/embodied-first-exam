@@ -49,6 +49,12 @@ BENCHMARKS = [  # (directory prefix, label)
     ("vlabench-", "VLABench"),
     ("robocasa-gr1-", "RoboCasa-GR1"),  # before "robocasa-": the first matching prefix wins
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
+    ("tabletennis-", "Embodied Agent Olympiad"), ("tennis-", "Embodied Agent Olympiad"),
+    ("badminton-", "Embodied Agent Olympiad"), ("baseball-", "Embodied Agent Olympiad"),
+    ("darts-", "Embodied Agent Olympiad"), ("archery-", "Embodied Agent Olympiad"),
+    ("basketball-", "Embodied Agent Olympiad"), ("bowling-", "Embodied Agent Olympiad"),
+    ("golf-", "Embodied Agent Olympiad"), ("billiards-", "Embodied Agent Olympiad"),
+    ("curling-", "Embodied Agent Olympiad"),
 ]
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
                "Base image"}
@@ -294,7 +300,10 @@ def render_readme(task: Path) -> str:
     head = [("Benchmark", bench_of(task) or "—"),
             ("Mode", f"{mode} (`{md['protocol']}`)" if mode == "standard" and md.get("protocol") else mode)]
     # a standard task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
-    head.append(("Twin", f"`{twin}`" if mode == "standard" or task.with_name(twin).is_dir() else "— (privileged only)"))
+    if str(md.get("protocol", "")).startswith(("eai-standard-realtime/", "eai-standard-turn/")):  # Olympiad: no twin
+        head.append(("Twin", "— (standard only: Olympiad sports have no privileged twin)"))
+    else:
+        head.append(("Twin", f"`{twin}`" if mode == "standard" or task.with_name(twin).is_dir() else "— (privileged only)"))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
              ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),

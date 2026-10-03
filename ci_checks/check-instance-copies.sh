@@ -7,6 +7,9 @@
 # Usage: check-instance-copies.sh tasks/<task-dir>
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"; rc=0
+# Olympiad sports (protocols eai-standard-realtime/* and eai-standard-turn/*) have no privileged twin
+# (docs/EAI_STANDARD_REALTIME_1_0.md).
+grep -qE '^protocol = "eai-standard-(realtime|turn)/' "$t/task.toml" 2>/dev/null && exit 0
 case "$n" in
   *-standard) ref="${n%-standard}-privileged/tests"; copy="environment/sim" ;;
   robopaint-*) ref="$n/tests"; copy="environment/scorer" ;;
