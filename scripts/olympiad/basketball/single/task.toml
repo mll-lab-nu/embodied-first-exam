@@ -1,0 +1,56 @@
+schema_version = "1.3"
+artifacts = [
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.json", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/replay_check.json", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/think_usage.json", service = "sim" },
+  { source = "/data/think_calls.jsonl", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "robot-coding-bench/basketball-shootout-program-standard"
+description = "PROGRAM PLAY, turn-based, parameterized: the instance seed (RCB_SEED: the five spots, the shooter's headings and the release scatter) is chosen at run time; the verifier reports it and whether it is an official configuration. Robot basketball shootout: a simulated Franka Panda launcher on a 1 m pedestal takes 10 shots, two from each of five spots (mid-range to beyond the three-point line; 1 point per make; NBA court markings), with a static defender between it and the hoop (MuJoCo, osmesa rendering; ball with drag and Magnus force; rim, backboard and floor contacts). Each shot is `game shoot ANGLE SPEED SPIN YAW`; observations are camera images only (two shooter cameras, two court cameras; no hoop, ball or spot coordinates) and the result strip of every shot. The agent may write a program that finds the hoop in the images and computes and sends its shots, and stays in the loop (review after every shot). 60-minute chess clock. One action in flight. Success: a valid, complete shootout with at least 6 makes of 10 (the makes are always reported)."
+authors = [{ name = "Chi Gui" }]
+keywords = ["program-play", "basketball", "shooting", "ballistics", "sports", "turn-based", "chess-clock", "vision", "franka-panda", "mujoco"]
+
+[metadata]
+author_name = "Chi Gui"
+task_type = "trajectory"          # the deliverable is the recorded match itself
+simulator = "mujoco"
+robot = "franka-panda"
+family = "basketball_shootout"
+mode = "standard"
+protocol = "eai-standard-turn/1.0"           # turn-based extension of standard mode
+oracle = "full"
+oracle_evidence = "solution/: a reference shooter from the camera images and the documented physics (it locates the rim in the zoom camera and solves the flight); it makes 6, 7 and 4 of 10 on the official seeds 7, 17, 27 (success line 6)"
+revision = "basketball-shootout-program-2"
+parameters = "RCB_SEED (default 7)"
+expert_time_estimate_hours = 0.5
+
+[[seats]]
+name = "A"
+service = "player"
+agent_kwargs = { think_proxy_url = "http://sim:18090/v1" }
+setup_networks = ["egress"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[[verifier.collect]]
+service = "sim"
+command = "test -s /data/server.pid || exit 1; kill -USR1 $(cat /data/server.pid) || exit 1; for i in $(seq 1 600); do if grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null; then head -c 2000 /data/final.json; exit 0; fi; sleep 1; done; echo \"grading evidence did not finalize\" >&2; exit 1"
+timeout_sec = 700
+
+[agent]
+timeout_sec = 7200.0           # preparation, then the shootout: 60 minutes on the agent's clock plus the simulation
+
+[environment]
+build_timeout_sec = 1200.0
+cpus = 4
+memory_mb = 8192

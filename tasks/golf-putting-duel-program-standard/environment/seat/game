@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""game — play mini-golf putting (program play, turn-based: eai-standard-turn/1.0).
+
+  game spec                  the holes, cameras, limits, your clock (and your seat in a duel)
+  game status                the current state (score, whose turn, clock_left_s), no images
+  game observe               the current decision point and its camera image (one PNG, saved to /app/output/views/: open it)
+  game start                 start the round; your clock runs from then on, on your turns
+  game putt AIM_DEG SPEED    play one stroke
+  game ready "WHY" "PLAN"    after each of your strokes: your review; the game goes on then
+  game wait [MAX_S]          (duel) return when it is your turn or the match is over (at most 60 s)
+Each reply is JSON: `state` (score, whose turn, clock_left_s) and `shots_since_your_last_call` (the strokes since your previous call).
+From a program, call the same HTTP endpoints directly (see the task description).
+"""
+import base64
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.request
+
+VIEWS = "/app/output/views"
+BASE = os.environ.get("SIM_URL", "http://sim:8000").rstrip("/") + ("/" + os.environ["SEAT"] if os.environ.get("SEAT") else "")
+
+
+def call(ep, body=None):
+    req = urllib.request.Request(f"{BASE}/{ep}", data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=900) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        try:
+            out = json.load(e)
+        except ValueError:
+            out = {"error": str(e)}
+        out["http_status"] = e.code
+        return out
+    except OSError as e:
+        return {"error": f"game service unreachable: {e}"}
+
+
+def show(o):
+    ob = o.get("observation")
+    if isinstance(ob, dict) and "image_png_b64" in ob:
+        os.makedirs(VIEWS, exist_ok=True)
+        dec = ob.get("decision") or {}
+        p = os.path.join(VIEWS, f"{os.environ.get('SEAT', '')}h{dec.get('hole')}_s{dec.get('stroke')}_{int(time.time() * 1000) % 100000}.png")
+        with open(p, "wb") as f:
+            f.write(base64.b64decode(ob.pop("image_png_b64")))
+        ob["image_file"] = p
+    print(json.dumps(o, indent=1))
+    if "error" in o:
+        sys.exit(1)
+
+
+a = sys.argv[1:]
+if a in (["spec"], ["status"]):
+    show(call(a[0]))
+elif a == ["observe"]:
+    show(call("observe", {}))
+elif a == ["start"]:
+    show(call("start", {}))
+elif a[:1] == ["wait"] and len(a) <= 2:
+    try:
+        show(call("wait", {"max_s": float(a[1])} if len(a) == 2 else {}))
+    except ValueError:
+        sys.exit(__doc__)
+elif a[:1] == ["ready"] and len(a) == 3:
+    show(call("ready", {"why": a[1], "plan": a[2]}))
+elif a[:1] == ["putt"] and len(a) == 3:
+    try:
+        v = [float(x) for x in a[1:]]
+    except ValueError:
+        sys.exit(__doc__)
+    show(call("act", {"type": "putt", "aim_deg": v[0], "speed": v[1]}))
+else:
+    sys.exit(__doc__)

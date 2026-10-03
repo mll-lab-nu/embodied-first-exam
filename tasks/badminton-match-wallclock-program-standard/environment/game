@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+"""game — the only way to play (badminton match, WALL-CLOCK REAL TIME, interactive mode).
+
+The world runs on its own at 1/SLOWDOWN of real speed (`game spec` timing.slowdown: 1 s of game time takes SLOWDOWN s of real time).
+It does not wait for you: your thinking, your tool calls and the network all take real time while it runs.
+
+  game start                            start the match when you are ready: the world is frozen until then; from
+                                        then on it runs by itself. Returns the first camera frames
+  game observe                          the newest camera frames (saved to /app/output/views/obs_<n>.png: open it),
+                                        what you heard, the game time, your robot and its current command;
+                                        call it whenever you want
+  game act T PX PY PZ NX NY NZ VX VY VZ new command: the racket state at contact T s (game time) FROM WHEN THE COMMAND
+                                        TAKES EFFECT (`game spec` timing.act_lead_steps control steps after it
+                                        arrives: the stroke controller's planning time; the reply says when): head
+                                        centre, string-face normal, head velocity. It replaces the stroke under way
+                                        (corrections ok). One act at a time
+  game act none                         cancel the command: the robot returns to the ready pose, the base home
+  game wait DT                          block until DT more seconds of game time have passed (0 < DT <= 1.0)
+  game ready "WHY" "PLAN"               after each point: your review; the world stays frozen until then
+  game status | game spec
+"""
+import base64, json, os, sys, tempfile, urllib.error, urllib.request
+
+VIEWS = "/app/output/views"
+
+
+def base():
+    for b in [os.environ.get("SIM_URL"), "http://sim:8000", "http://127.0.0.1:8000"]:
+        if not b:
+            continue
+        try:
+            urllib.request.urlopen(b + "/spec", timeout=3)
+            return b
+        except urllib.error.HTTPError:
+            return b
+        except Exception:
+            continue
+    sys.exit("game service unreachable")
+
+
+def call(path, body=None):
+    req = urllib.request.Request(BASE + path, data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        return json.load(urllib.request.urlopen(req, timeout=900))
+    except urllib.error.HTTPError as e:
+        return json.load(e)
+
+
+def show(o):
+    ob = o.get("observation") if isinstance(o, dict) else None
+    if isinstance(ob, dict) and "image_png_b64" in ob:
+        os.makedirs(VIEWS, exist_ok=True)
+        # Parallel observations must never overwrite the image another tool is opening.
+        with tempfile.NamedTemporaryFile(dir=VIEWS, prefix=f"obs_{ob.get('obs_id', 0)}_",
+                                         suffix=".png", delete=False) as f:
+            f.write(base64.b64decode(ob.pop("image_png_b64")))
+            p = f.name
+        ob["image_file"] = p
+    print(json.dumps(o, indent=1))
+
+
+BASE = base()
+a = sys.argv[1:]
+if a[:1] == ["start"] and len(a) == 1:
+    show(call("/start", {}))
+elif a[:1] == ["observe"] and len(a) == 1:
+    show(call("/observe", {}))
+elif a[:1] == ["act"] and a[1:] == ["none"]:
+    show(call("/act", {"type": "none"}))
+elif a[:1] == ["act"] and len(a) == 11:
+    try:
+        v = [float(x) for x in a[1:11]]
+    except ValueError:
+        sys.exit(__doc__)
+    show(call("/act", {"type": "act", "t": v[0], "pos": v[1:4], "normal": v[4:7], "vel": v[7:10]}))
+elif a[:1] == ["wait"] and len(a) == 2:
+    show(call("/wait", {"dt": a[1]}))
+elif a[:1] == ["ready"] and len(a) == 3:
+    show(call("/ready", {"why": a[1], "plan": a[2]}))
+elif a[:1] == ["status"]:
+    show(call("/status"))
+elif a[:1] == ["spec"]:
+    show(call("/spec"))
+else:
+    print(__doc__)

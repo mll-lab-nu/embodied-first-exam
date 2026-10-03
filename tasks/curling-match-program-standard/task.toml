@@ -1,0 +1,57 @@
+schema_version = "1.3"
+artifacts = [
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.json", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/replay_check.json", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/think_usage.json", service = "sim" },
+  { source = "/data/think_calls.jsonl", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "robot-coding-bench/curling-match-program-standard"
+description = "PROGRAM PLAY, turn-based, parameterized: the opponent level (RCB_LEVEL 1-2) and the instance seed (RCB_SEED, the execution noise) are chosen at run time; the verifier reports them and whether they form an official configuration. A curling match as the skip of the yellow team (4 ends x 5 stones per team, one extra end if tied; DigitalCurling FCV1 ice model) against a scripted red team. Observation: a top-down house camera and an end camera, no stone coordinates; action: release speed, angle and spin. A 60-minute chess clock runs only on the player's turn (reviews included); clock out = loss. The agent may write a program that measures the images and sends its throws, with a live metered model session; one act in flight; a review after each of its throws. Success: win a valid match (deterministic replay, no simulator, model-API or metering failure)."
+authors = [{ name = "Chi Gui" }]
+keywords = ["program-play", "curling", "turn-based", "chess-clock", "vision", "spatial-reasoning", "physics", "match"]
+
+[metadata]
+author_name = "Chi Gui"
+task_type = "trajectory"          # the deliverable is the recorded match itself
+simulator = "curling-fcv1 (MuJoCo renderer)"
+robot = "none (stones)"
+family = "curling_match"
+mode = "standard"
+protocol = "eai-standard-turn/1.0"           # turn-based extension of standard mode
+oracle = "full"
+oracle_evidence = "solution/: a scripted camera-only player; checked valid at L1-L2 on official seeds, it can win or lose (checked: valid at L1 and L2)"
+revision = "turn-1-program-param"
+parameters = "RCB_LEVEL (1-2, default 1), RCB_SEED (default: the level's first official seed, 7101 / 7202)"
+expert_time_estimate_hours = 0.75
+
+[[seats]]
+name = "A"
+service = "player"
+agent_kwargs = { think_proxy_url = "http://sim:18090/v1" }
+setup_networks = ["egress"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[[verifier.collect]]
+service = "sim"
+command = "test -s /data/server.pid || exit 1; kill -USR1 $(cat /data/server.pid) || exit 1; for i in $(seq 1 900); do if grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null; then head -c 2000 /data/final.json; exit 0; fi; sleep 1; done; echo \"grading evidence did not finalize\" >&2; exit 1"
+timeout_sec = 1000
+
+[agent]
+timeout_sec = 7200.0           # preparation, then the match: a 60-minute chess clock plus the service's own time
+
+[environment]
+build_timeout_sec = 1200.0
+cpus = 4
+memory_mb = 8192
+# The agent runs in `player` (a single Harbor seat), networked only with sim during play; see docker-compose.yaml.

@@ -1,0 +1,96 @@
+{
+ "note": "Harbor oracle for golf putting: per official seed, the old tasks' precomputed strokes (the privileged reference player of golf-putting-interactive[-seed13/14]: true positions and physics, grid search over aim x speed, the most robust holed cell); aim = absolute heading in the green frame. Other seeds: straight putts along +x (valid, not tuned).",
+ "offline_total": {
+  "20260928": 5,
+  "13": 6,
+  "14": 5
+ },
+ "seeds": {
+  "20260928": [
+   {
+    "hole": 1,
+    "aim_deg": -29.109,
+    "speed": 3.1
+   },
+   {
+    "hole": 2,
+    "aim_deg": 36.866,
+    "speed": 3.5
+   },
+   {
+    "hole": 3,
+    "aim_deg": -25.092,
+    "speed": 3.95
+   },
+   {
+    "hole": 3,
+    "aim_deg": -58.09,
+    "speed": 0.85
+   },
+   {
+    "hole": 4,
+    "aim_deg": -23.361,
+    "speed": 4.05
+   }
+  ],
+  "13": [
+   {
+    "hole": 1,
+    "aim_deg": -43.76,
+    "speed": 4.7
+   },
+   {
+    "hole": 1,
+    "aim_deg": -122.59,
+    "speed": 0.75
+   },
+   {
+    "hole": 2,
+    "aim_deg": -22.57,
+    "speed": 3.65
+   },
+   {
+    "hole": 3,
+    "aim_deg": -18.04,
+    "speed": 3.9
+   },
+   {
+    "hole": 4,
+    "aim_deg": -32.62,
+    "speed": 5.0
+   },
+   {
+    "hole": 4,
+    "aim_deg": -88.65,
+    "speed": 0.6
+   }
+  ],
+  "14": [
+   {
+    "hole": 1,
+    "aim_deg": -29.38,
+    "speed": 3.15
+   },
+   {
+    "hole": 2,
+    "aim_deg": 38.26,
+    "speed": 3.25
+   },
+   {
+    "hole": 3,
+    "aim_deg": -22.02,
+    "speed": 4.1
+   },
+   {
+    "hole": 3,
+    "aim_deg": -50.34,
+    "speed": 0.8
+   },
+   {
+    "hole": 4,
+    "aim_deg": 29.46,
+    "speed": 3.4
+   }
+  ]
+ }
+}

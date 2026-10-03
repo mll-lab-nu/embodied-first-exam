@@ -1,0 +1,340 @@
+{
+ "note": "Harbor oracle for bowling: per official seed, the old tasks' precomputed releases (the privileged reference player of bowling-interactive[-seed2/3]: true pin poses and the real MuJoCo lane, grid search + Monte Carlo over the published scatter, choosing the candidate that does best under each ball's seeded scatter). Other seeds: a fixed release (valid, not tuned).",
+ "offline_total": {
+  "20260930": 300,
+  "2": 300,
+  "3": 300
+ },
+ "seeds": {
+  "20260930": [
+   {
+    "frame": 1,
+    "ball": 1,
+    "board": 29.48,
+    "angle_deg": -3.75,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 2,
+    "ball": 1,
+    "board": 29.48,
+    "angle_deg": -3.75,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 3,
+    "ball": 1,
+    "board": 27.34,
+    "angle_deg": -3.0,
+    "speed": 8.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 4,
+    "ball": 1,
+    "board": 29.48,
+    "angle_deg": -3.75,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 5,
+    "ball": 1,
+    "board": 29.48,
+    "angle_deg": -3.75,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 6,
+    "ball": 1,
+    "board": 23.96,
+    "angle_deg": -2.25,
+    "speed": 9.0,
+    "rpm": 400,
+    "axis_deg": 50
+   },
+   {
+    "frame": 7,
+    "ball": 1,
+    "board": 29.48,
+    "angle_deg": -3.75,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 8,
+    "ball": 1,
+    "board": 23.96,
+    "angle_deg": -2.25,
+    "speed": 9.0,
+    "rpm": 400,
+    "axis_deg": 50
+   },
+   {
+    "frame": 9,
+    "ball": 1,
+    "board": 29.48,
+    "angle_deg": -3.75,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 10,
+    "ball": 1,
+    "board": 29.48,
+    "angle_deg": -3.75,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 10,
+    "ball": 2,
+    "board": 29.48,
+    "angle_deg": -3.75,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 10,
+    "ball": 3,
+    "board": 29.48,
+    "angle_deg": -3.75,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   }
+  ],
+  "2": [
+   {
+    "frame": 1,
+    "ball": 1,
+    "board": 18.14,
+    "angle_deg": -2.75,
+    "speed": 9.0,
+    "rpm": 400,
+    "axis_deg": 50
+   },
+   {
+    "frame": 2,
+    "ball": 1,
+    "board": 16.38,
+    "angle_deg": -2.0,
+    "speed": 9.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 3,
+    "ball": 1,
+    "board": 20.94,
+    "angle_deg": -2.25,
+    "speed": 9.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 4,
+    "ball": 1,
+    "board": 14.94,
+    "angle_deg": -1.5,
+    "speed": 8.5,
+    "rpm": 300,
+    "axis_deg": 35
+   },
+   {
+    "frame": 5,
+    "ball": 1,
+    "board": 16.38,
+    "angle_deg": -2.0,
+    "speed": 9.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 6,
+    "ball": 1,
+    "board": 20.94,
+    "angle_deg": -2.25,
+    "speed": 9.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 7,
+    "ball": 1,
+    "board": 16.38,
+    "angle_deg": -2.0,
+    "speed": 9.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 8,
+    "ball": 1,
+    "board": 20.94,
+    "angle_deg": -2.25,
+    "speed": 9.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 9,
+    "ball": 1,
+    "board": 21.39,
+    "angle_deg": -2.75,
+    "speed": 9.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 10,
+    "ball": 1,
+    "board": 16.38,
+    "angle_deg": -2.0,
+    "speed": 9.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 10,
+    "ball": 2,
+    "board": 16.38,
+    "angle_deg": -2.0,
+    "speed": 9.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 10,
+    "ball": 3,
+    "board": 16.38,
+    "angle_deg": -2.0,
+    "speed": 9.0,
+    "rpm": 350,
+    "axis_deg": 45
+   }
+  ],
+  "3": [
+   {
+    "frame": 1,
+    "ball": 1,
+    "board": 24.98,
+    "angle_deg": -3.5,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 2,
+    "ball": 1,
+    "board": 18.95,
+    "angle_deg": -1.75,
+    "speed": 9.0,
+    "rpm": 400,
+    "axis_deg": 50
+   },
+   {
+    "frame": 3,
+    "ball": 1,
+    "board": 24.98,
+    "angle_deg": -3.5,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 4,
+    "ball": 1,
+    "board": 24.98,
+    "angle_deg": -3.5,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 5,
+    "ball": 1,
+    "board": 24.98,
+    "angle_deg": -3.5,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 6,
+    "ball": 1,
+    "board": 19.48,
+    "angle_deg": -2.5,
+    "speed": 8.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 7,
+    "ball": 1,
+    "board": 19.48,
+    "angle_deg": -2.5,
+    "speed": 8.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 8,
+    "ball": 1,
+    "board": 19.48,
+    "angle_deg": -2.5,
+    "speed": 8.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 9,
+    "ball": 1,
+    "board": 19.48,
+    "angle_deg": -2.5,
+    "speed": 8.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 10,
+    "ball": 1,
+    "board": 24.98,
+    "angle_deg": -3.5,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   },
+   {
+    "frame": 10,
+    "ball": 2,
+    "board": 19.48,
+    "angle_deg": -2.5,
+    "speed": 8.0,
+    "rpm": 350,
+    "axis_deg": 45
+   },
+   {
+    "frame": 10,
+    "ball": 3,
+    "board": 24.98,
+    "angle_deg": -3.5,
+    "speed": 8.5,
+    "rpm": 450,
+    "axis_deg": 60
+   }
+  ]
+ }
+}

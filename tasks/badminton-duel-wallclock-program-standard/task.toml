@@ -1,0 +1,67 @@
+schema_version = "1.3"
+artifacts = [
+  "/app/output/",
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.json", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/replay_check.json", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/think_usage_A.json", service = "sim" },
+  { source = "/data/think_calls_A.jsonl", service = "sim" },
+  { source = "/data/think_usage_B.json", service = "sim" },
+  { source = "/data/think_calls_B.jsonl", service = "sim" },
+]
+
+[task]
+name = "robot-coding-bench/badminton-duel-wallclock-program-standard"
+description = "Two-player robot badminton in a shared continuous wall-clock world, slowdown chosen at run time (RCB_SLOWDOWN; DUEL_SEED, FIRST_RECEIVER), PROGRAM PLAY: each agent may write an autonomous player program that observes and acts without a new model response per shot, and may watch, fix and restart it at any time (also mid-point) and during reviews (300 s). Up to 30 minutes to start after the opponent. Two identical robots (Franka on a sliding base with a racket) on a mirrored court; equal isolated seats; one act per seat in flight; a neutral machine serves (the receiver changes every point); rally scoring, first to 5, from 4-4 a two-point lead, at most 7. Technical failures invalidate the trial."
+authors = [{ name = "Chi Gui" }]
+keywords = ["program-play", "robotics", "mujoco", "badminton", "interactive", "arena", "multi-seat", "mobile-base"]
+
+[metadata]
+revision = "bm-duel-wallclock-3-program-v2-param"   # 2: base 6 m/s, 20 m/s^2, camera-only reference; 3: BWF serve courts, net 1.524 m, win by 2 (cap 7), receiver every point
+author_name = "Chi Gui"
+category = "robotics-sports-arena"
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "franka-panda"
+family = "badminton_duel"
+mode = "standard"
+protocol = "eai-standard-realtime/1.0"           # real-time extension of standard mode
+oracle = "full"
+oracle_evidence = "solution/: a camera-only reference player for either seat (images, replies and documented physics only); two of them play valid matches with real rallies (checked at x10 and x20, both first receivers)"
+parameters = "RCB_SLOWDOWN (default 20), DUEL_SEED (default 1), FIRST_RECEIVER (A or B)"
+timing_policy = "report_only"
+duel_seed = 1
+expert_time_estimate_hours = 0.75
+
+[[seats]]
+name = "A"
+service = "seat_a"
+agent_kwargs = { think_proxy_url = "http://sim:18090/v1" }
+setup_networks = ["egress_a"]
+
+[[seats]]
+name = "B"
+service = "seat_b"
+agent_kwargs = { think_proxy_url = "http://sim:18091/v1" }
+setup_networks = ["egress_b"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[[verifier.collect]]
+service = "sim"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; cat /data/final.json | head -c 2000"
+timeout_sec = 700
+
+[agent]
+timeout_sec = 7200.0           # preparation (start window up to 30 min), the match at x20 and the reviews
+
+[environment]
+build_timeout_sec = 1200.0
+cpus = 1                      # main (idle); sim and the seats are sized in docker-compose.yaml
+memory_mb = 1024

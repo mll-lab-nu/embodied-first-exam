@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""game — the only way to play (baseball batting, WALL-CLOCK REAL TIME, program play).
+
+The world runs on its own at 1/SLOWDOWN of real speed (`game spec` timing.slowdown: 1 s of game time takes SLOWDOWN s of real time).
+It does not wait for you: your thinking, your tool calls and the network all take real time while it runs.
+
+  game start                             start the game when you are ready: the world is frozen until then; from
+                                         then on it runs by itself (the pitcher winds up). Returns the first frames
+  game observe                           the newest camera frames (saved to /app/output/views/obs_<n>_*.png: open
+                                         it), what you heard (release, mitt, bat), the game time, your command
+  game act T PLANE_DEG HEIGHT SPEED [REACH]
+                                         new swing command: the bat SQUARE (theta = 0) T s of game time FROM WHEN THE
+                                         COMMAND TAKES EFFECT (the next 10 ms control step after it arrives; the reply
+                                         says when), with swing plane PLANE_DEG (attack angle, deg), HEIGHT = bat-axis
+                                         height at the square position (m), SPEED = sweet-spot speed (m/s), REACH =
+                                         pivot shift towards the plate (m, default 0). The swing starts 3.9741 / SPEED s
+                                         before square; until it starts, a new act replaces it; once started it cannot
+                                         be changed. One act at a time
+  game act none                          cancel a swing that has not started (take the pitch)
+  game wait DT                           block until DT more seconds of game time have passed (0 < DT <= 1.0)
+  game ready "WHY" "PLAN"                after each pitch: your review; the world stays frozen until then
+  game status | game spec
+"""
+import base64, json, os, sys, tempfile, urllib.error, urllib.request
+
+VIEWS = "/app/output/views"
+
+
+def base():
+    for b in [os.environ.get("SIM_URL"), "http://sim:8000", "http://127.0.0.1:8000"]:
+        if not b:
+            continue
+        try:
+            urllib.request.urlopen(b + "/spec", timeout=3)
+            return b
+        except urllib.error.HTTPError:
+            return b
+        except Exception:
+            continue
+    sys.exit("game service unreachable")
+
+
+def call(path, body=None):
+    req = urllib.request.Request(BASE + path, data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        return json.load(urllib.request.urlopen(req, timeout=900))
+    except urllib.error.HTTPError as e:
+        return json.load(e)
+
+
+def show(o):
+    ob = o.get("observation") if isinstance(o, dict) else None
+    if isinstance(ob, dict) and "image_png_b64" in ob:
+        os.makedirs(VIEWS, exist_ok=True)
+        # Parallel observations must never overwrite the image another tool is opening.
+        with tempfile.NamedTemporaryFile(dir=VIEWS, prefix=f"obs_{ob.get('obs_id', 0)}_",
+                                         suffix=".png", delete=False) as f:
+            f.write(base64.b64decode(ob.pop("image_png_b64")))
+            p = f.name
+        ob["image_file"] = p
+    print(json.dumps(o, indent=1))
+
+
+BASE = base()
+a = sys.argv[1:]
+if a[:1] == ["start"] and len(a) == 1:
+    show(call("/start", {}))
+elif a[:1] == ["observe"] and len(a) == 1:
+    show(call("/observe", {}))
+elif a[:1] == ["act"] and a[1:] == ["none"]:
+    show(call("/act", {"type": "none"}))
+elif a[:1] == ["act"] and len(a) in (5, 6):
+    try:
+        v = [float(x) for x in a[1:]]
+    except ValueError:
+        sys.exit(__doc__)
+    show(call("/act", {"type": "swing", "t": v[0], "plane": v[1], "height": v[2], "speed": v[3],
+                       "reach": v[4] if len(v) > 4 else 0.0}))
+elif a[:1] == ["wait"] and len(a) == 2:
+    show(call("/wait", {"dt": a[1]}))
+elif a[:1] == ["ready"] and len(a) == 3:
+    show(call("/ready", {"why": a[1], "plan": a[2]}))
+elif a[:1] == ["status"]:
+    show(call("/status"))
+elif a[:1] == ["spec"]:
+    show(call("/spec"))
+else:
+    print(__doc__)

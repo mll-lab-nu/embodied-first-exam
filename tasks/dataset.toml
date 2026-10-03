@@ -3669,3 +3669,91 @@ digest = "sha256:5d36cac4f15401e33f3884ae54496edca3e6cf0443638ffeef29a9630a92392
 name = "robot-coding-bench/vlabench-texas-holdem-i00-standard"
 digest = "sha256:f8471c97dbee0a2ba501198a62b3893f4c74302f1d795084514de9caa7587066"
 
+[[tasks]]
+name = "robot-coding-bench/tabletennis-duel-wallclock-program-standard"
+digest = "sha256:dca5fc72282442898874ff2e12ca4a7119a1ff51f50e7cb0c6bcb5d79d88a8b0"
+
+[[tasks]]
+name = "robot-coding-bench/tabletennis-match-wallclock-program-standard"
+digest = "sha256:cd27521ca544a69471087168a04b5dd891db18e5ff512fb7b10cf6e1b1457693"
+
+[[tasks]]
+name = "robot-coding-bench/archery-duel-program-standard"
+digest = "sha256:9b5d7368558ed11ab622b3ef3cc178d4dcd1784a648558a1395e063671271c0c"
+
+[[tasks]]
+name = "robot-coding-bench/archery-program-standard"
+digest = "sha256:53fc191ede08058ffbe2b4777ddb20d2593b70f0e59250ccaa2a726b1f42d18a"
+
+[[tasks]]
+name = "robot-coding-bench/baseball-batting-wallclock-program-standard"
+digest = "sha256:752fc7d591fb9d6f42b05180bfdb61cc84fce94deb1718456c228683dc93952f"
+
+[[tasks]]
+name = "robot-coding-bench/baseball-duel-wallclock-program-standard"
+digest = "sha256:9389ed93e64f294d7ee145c2ac54908905ab456a53c5a37599e465bb04986f23"
+
+[[tasks]]
+name = "robot-coding-bench/basketball-duel-program-standard"
+digest = "sha256:1b17107ede72b70dfd7867c41cc26161ec44666d272af6c48ab09e32b3fa9f78"
+
+[[tasks]]
+name = "robot-coding-bench/basketball-shootout-program-standard"
+digest = "sha256:4cb4e76842b33c86010807e41380c7f748f751ee0f3596180e91598806bc7b2f"
+
+[[tasks]]
+name = "robot-coding-bench/billiards-duel-program-standard"
+digest = "sha256:8a5f2ff996d94d56af1025e7efdf220c31a8556ccb5d0ef1c4a737ddb3eb0616"
+
+[[tasks]]
+name = "robot-coding-bench/billiards-eightball-program-standard"
+digest = "sha256:03ba1d80b85febfef57563a2ef6c25a655e5b77de72c294a64da785528afc3c4"
+
+[[tasks]]
+name = "robot-coding-bench/bowling-duel-program-standard"
+digest = "sha256:50f19bb6a2915b96d8bbb7271ee3ea117257df24072ea1ad8364b18e171905e7"
+
+[[tasks]]
+name = "robot-coding-bench/bowling-program-standard"
+digest = "sha256:7bc161efa85a7e79a4b3c84ae1429572b1fb6656e0128e2d0e87a2d3ff192a6e"
+
+[[tasks]]
+name = "robot-coding-bench/curling-duel-program-standard"
+digest = "sha256:93d1e29dba573936a5b597abe86e1c6173315e462f108e6d555092796ce44bcd"
+
+[[tasks]]
+name = "robot-coding-bench/curling-match-program-standard"
+digest = "sha256:493621c137b64c6ad617d954d7aac3d491ae9e0fea48f72b159a3c127004b93a"
+
+[[tasks]]
+name = "robot-coding-bench/darts-501-program-standard"
+digest = "sha256:23a5c171c9e1cea3d9be24a634bee09e6b66a624f50cfedefb68cadaee99a91b"
+
+[[tasks]]
+name = "robot-coding-bench/darts-duel-program-standard"
+digest = "sha256:57a53b0257c2dfa34cf4eb6681e97d6d4aa67dfb620b4faf1bee60606be0d10c"
+
+[[tasks]]
+name = "robot-coding-bench/golf-putting-duel-program-standard"
+digest = "sha256:514ed94f3c2eba7999efbf32d7b5982eb3ecde1c37ef17206abdcd6151ebfcf8"
+
+[[tasks]]
+name = "robot-coding-bench/golf-putting-program-standard"
+digest = "sha256:02e7538547589697f54a9bf2ab3aed1018c7c18244cc091f902147aef7e6e9fb"
+
+[[tasks]]
+name = "robot-coding-bench/tennis-duel-wallclock-program-standard"
+digest = "sha256:aa5955f2d8944680d08efc86a55e872fecf5b1d742ad37278486382b0b761623"
+
+[[tasks]]
+name = "robot-coding-bench/tennis-match-wallclock-program-standard"
+digest = "sha256:274d2dc0ff872a4cf37335e0efd4e18b16c8b5db5fb9357a284c113aab74373b"
+
+[[tasks]]
+name = "robot-coding-bench/badminton-duel-wallclock-program-standard"
+digest = "sha256:b28e1cd077b7640ee05f0ad04caf39425b075629462c12f3ee2857bf1313cefa"
+
+[[tasks]]
+name = "robot-coding-bench/badminton-match-wallclock-program-standard"
+digest = "sha256:45f89a6bfc64a441ae5ebd053a58197b7d660bd92b91b310ab5f186e0b7b6e55"
+

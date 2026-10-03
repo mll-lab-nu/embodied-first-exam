@@ -1,0 +1,66 @@
+schema_version = "1.3"
+artifacts = [
+  "/app/output/",
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.json", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/replay_check.json", service = "sim" },
+  { source = "/data/replay_A.mp4", service = "sim" },
+  { source = "/data/replay_B.mp4", service = "sim" },
+  { source = "/data/think_usage_A.json", service = "sim" },
+  { source = "/data/think_calls_A.jsonl", service = "sim" },
+  { source = "/data/think_usage_B.json", service = "sim" },
+  { source = "/data/think_calls_B.jsonl", service = "sim" },
+]
+
+[task]
+name = "robot-coding-bench/bowling-duel-program-standard"
+description = "Two-player ten-pin bowling, PROGRAM PLAY, turn-based (eai-standard-turn/1.0): each agent bowls a 10-frame game on its own MuJoCo lane; the lanes and the release scatter are identical (DUEL_SEED). Frames alternate, the first player (FIRST_PLAYER) leads every frame; an action out of turn is refused (409). One 60-minute chess clock per player (running on its turns, reviews included; clock out = loss); a review after each ball. Highest total wins; equal totals are a draw. Each agent may write a program that observes and bowls; one action in flight per seat. Technical failures invalidate the trial."
+authors = [{ name = "Chi Gui" }]
+keywords = ["program-play", "mujoco", "bowling", "ten-pin", "turn-based", "chess-clock", "arena", "multi-seat"]
+
+[metadata]
+revision = "turn-1-program"
+author_name = "Chi Gui"
+category = "robotics-sports-arena"
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "none (ball release primitive)"
+family = "bowling_duel"
+mode = "standard"
+protocol = "eai-standard-turn/1.0"           # turn-based extension of standard mode
+oracle = "full"
+oracle_evidence = "solution/: the reference player (precomputed releases per official seed) on either seat; oracle against oracle plays valid matches with both first players"
+parameters = "DUEL_SEED (default 20260930), FIRST_PLAYER (A or B)"
+expert_time_estimate_hours = 0.7
+
+[[seats]]
+name = "A"
+service = "seat_a"
+agent_kwargs = { think_proxy_url = "http://sim:18090/v1" }
+setup_networks = ["egress_a"]
+
+[[seats]]
+name = "B"
+service = "seat_b"
+agent_kwargs = { think_proxy_url = "http://sim:18091/v1" }
+setup_networks = ["egress_b"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[[verifier.collect]]
+service = "sim"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; cat /data/final.json | head -c 2000"
+timeout_sec = 700
+
+[agent]
+timeout_sec = 7200.0           # preparation (start window up to 30 min), then the match on two 60-minute chess clocks
+
+[environment]
+build_timeout_sec = 1200.0
+cpus = 1                      # main (idle); sim and the seats are sized in docker-compose.yaml
+memory_mb = 1024

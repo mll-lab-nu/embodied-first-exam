@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""game — the archery round service (eai-standard-turn/1.0). The world waits for you; your chess clock runs on your turn.
+
+  game spec                           the range, the bow, the arrow, the cameras, the clock
+  game status                         the current state, no images
+  game start                          start the round (your clock starts); returns the state and the camera images
+  game observe                        the state and the camera images (saved to /app/output/views/)
+  game shoot ELEV_DEG AZIM_DEG DRAW   shoot one arrow (launch elevation and heading, draw fraction)
+  game ready "WHY" "PLAN"             after each arrow: your review
+Images are saved as PNG files; the JSON reply gives their paths (`image_file`, `landed_image_file`).
+"""
+import base64
+import json
+import os
+import sys
+import tempfile
+import urllib.error
+import urllib.request
+
+VIEWS = "/app/output/views"
+BASE = os.environ.get("SIM_URL", "http://sim:8000")
+
+
+def call(path, body=None):
+    req = urllib.request.Request(BASE + path, data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=600) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        try:
+            out = json.load(e)
+        except ValueError:
+            out = {"error": str(e)}
+        out["http_status"] = e.code
+        return out
+
+
+def save(b64, name):
+    os.makedirs(VIEWS, exist_ok=True)
+    fd, p = tempfile.mkstemp(dir=VIEWS, prefix=name + "_", suffix=".png")
+    with os.fdopen(fd, "wb") as f:
+        f.write(base64.b64decode(b64))
+    return p
+
+
+def show(o):
+    ob = o.get("observation")
+    if isinstance(ob, dict) and ob.get("image_png_b64"):
+        ob["image_file"] = save(ob.pop("image_png_b64"), "obs")
+    for k in [k for k in o if k.endswith("_image_b64")]:
+        if o[k]:
+            o[k[:-4] + "_file"] = save(o.pop(k), k[:-10])
+        else:
+            o.pop(k)
+    print(json.dumps(o, indent=1))
+
+
+a = sys.argv[1:]
+if a == ["spec"]:
+    show(call("/spec"))
+elif a == ["status"]:
+    show(call("/status"))
+elif a == ["start"]:
+    show(call("/start", {}))
+elif a == ["observe"]:
+    show(call("/observe", {}))
+elif a[:1] == ["shoot"] and len(a) == 4:
+    try:
+        e, z, d = (float(x) for x in a[1:])
+    except ValueError:
+        sys.exit(__doc__)
+    show(call("/act", {"type": "shoot", "elev_deg": e, "azim_deg": z, "draw": d}))
+elif a[:1] == ["ready"] and len(a) == 3:
+    show(call("/ready", {"why": a[1], "plan": a[2]}))
+else:
+    sys.exit(__doc__)

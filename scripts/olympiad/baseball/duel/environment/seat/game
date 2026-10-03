@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+"""game spec | status | observe | start | ready WHY PLAN | wait DT
+ game act T PLANE HEIGHT SPEED [REACH] | game act none          (batting: a swing; none cancels it)
+ game pitch TYPE SPEED X Z | game act none                       (pitching: the pitch; none cancels it)
+Times are game seconds. The world continues while you think or use tools.
+Observe prints JSON with observation.image_file; open that file to actually see the image.
+"""
+import base64,json,os,sys,tempfile,urllib.request,urllib.error
+BASE=os.environ.get('SIM_URL','http://sim:8000')+'/'+os.environ.get('SEAT','A')
+def call(ep,body=None):
+    request=urllib.request.Request(BASE+'/'+ep,data=None if body is None else json.dumps(body).encode(),headers={'Content-Type':'application/json'})
+    try:
+        with urllib.request.urlopen(request,timeout=900) as r: out=json.load(r)
+    except urllib.error.HTTPError as e:
+        try: out=json.load(e)
+        except ValueError: out={'error':str(e)}
+        out['http_status']=e.code
+    ob=out.get('observation')
+    if isinstance(ob,dict) and 'image_png_b64' in ob:
+        os.makedirs('/app/output/views',exist_ok=True)
+        fd,name=tempfile.mkstemp(prefix='obs_',suffix='.png',dir='/app/output/views')
+        with os.fdopen(fd,'wb') as f:f.write(base64.b64decode(ob.pop('image_png_b64')))
+        ob['image_file']=name
+    print(json.dumps(out))
+    if 'error' in out: sys.exit(1)
+if __name__=='__main__':
+    a=sys.argv[1:]
+    try:
+        if len(a)==1 and a[0] in ('spec','status'):call(a[0])
+        elif a==['observe']:call('observe',{})
+        elif a==['start']:call('start',{})
+        elif len(a)==3 and a[0]=='ready':call('ready',dict(why=a[1],plan=a[2]))
+        elif len(a)==2 and a[0]=='wait':call('wait',dict(dt=float(a[1])))
+        elif a==['act','none']:call('act',dict(type='none'))
+        elif len(a) in (5,6) and a[0]=='act':
+            v=list(map(float,a[1:]));call('act',dict(type='swing',t=v[0],plane=v[1],height=v[2],speed=v[3],reach=v[4] if len(v)>4 else 0.0))
+        elif len(a)==5 and a[0]=='pitch':
+            call('act',dict(type='pitch',pitch=a[1],speed=float(a[2]),x=float(a[3]),z=float(a[4])))
+        else:sys.exit(__doc__)
+    except (ValueError,OSError) as e:sys.exit(str(e))

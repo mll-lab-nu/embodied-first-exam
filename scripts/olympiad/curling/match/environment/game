@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""game — the curling match (program play). The same calls are plain HTTP + JSON at http://sim:8000.
+
+  game spec                     sheet geometry, cameras (poses, intrinsics), opponent level, clock
+  game status                   the current state (no images)
+  game start                    start the match and your chess clock; shows the sheet
+  game observe                  the sheet: saves the two camera images (house, hack) to /app/output/views/
+  game throw SPEED ANGLE SPIN   throw your next stone: release SPEED in m/s (0.5-4.0) at the hack, ANGLE in degrees
+                                from the centre line (+ = to the right, |ANGLE| <= 5), SPIN = cw | ccw
+  game ready "WHY" "PLAN"       after each of your throws: your review; the game goes on only then
+Every reply includes the state (score, whose turn, clock_left_s) and the throws made since your previous call.
+"""
+import base64, json, os, sys, tempfile, time, urllib.error, urllib.request
+
+VIEWS = "/app/output/views"
+
+
+def base():
+    t0 = time.time()
+    while time.time() - t0 < 180:
+        for b in [os.environ.get("SIM_URL"), "http://sim:8000", "http://127.0.0.1:8000"]:
+            if not b:
+                continue
+            try:
+                urllib.request.urlopen(b + "/spec", timeout=3)
+                return b
+            except urllib.error.HTTPError:
+                return b
+            except Exception:
+                continue
+        time.sleep(2)
+    sys.exit("game service unreachable")
+
+
+def call(path, body=None):
+    req = urllib.request.Request(BASE + path, data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        return json.load(urllib.request.urlopen(req, timeout=900))
+    except urllib.error.HTTPError as e:
+        try:
+            out = json.load(e)
+        except ValueError:
+            out = {"error": str(e)}
+        out["http_status"] = e.code
+        return out
+
+
+def strip(x):
+    if isinstance(x, dict) and "images_png_b64" in x:
+        os.makedirs(VIEWS, exist_ok=True)
+        files = {}
+        for cam, b in x.pop("images_png_b64").items():
+            with tempfile.NamedTemporaryFile(dir=VIEWS, prefix=f"end{x.get('end')}_throw{x.get('throw_in_end')}_{cam}_",
+                                             suffix=".png", delete=False) as f:
+                f.write(base64.b64decode(b))
+                files[cam] = f.name
+        x["image_files"] = files
+    return x
+
+
+def show(o):
+    for k in ("observation", "next"):
+        if isinstance(o.get(k), dict):
+            strip(o[k])
+    print(json.dumps(o, indent=1))
+
+
+BASE = base()
+a = sys.argv[1:]
+if a == ["observe"]:
+    show(call("/observe", {}))
+elif a == ["start"]:
+    show(call("/start", {}))
+elif a == ["status"]:
+    show(call("/status"))
+elif a == ["spec"]:
+    show(call("/spec"))
+elif a[:1] == ["ready"] and len(a) == 3:
+    show(call("/ready", {"why": a[1], "plan": a[2]}))
+elif a[:1] == ["throw"] and len(a) == 4:
+    try:
+        v, ang = float(a[1]), float(a[2])
+    except ValueError:
+        sys.exit(__doc__)
+    show(call("/act", {"type": "throw", "speed": v, "angle": ang, "spin": a[3]}))
+else:
+    print(__doc__)

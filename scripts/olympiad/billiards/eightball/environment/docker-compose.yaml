@@ -1,0 +1,52 @@
+services:
+  main:
+    depends_on: [sim]
+    volumes: [agent_output:/app/output]
+  sim:
+    image: ghcr.io/mll-lab-nu/eai-olympiad-billiards:0.1.0
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /srv
+    command: sh -c "python3 /srv/think_proxy.py 18090 & python3 /srv/server.py"
+    networks: [default, play]
+    environment:
+      RCB_DATA: /data
+      # the configuration is chosen at run time (scripts/olympiad/run_single.sh); an empty seed = the level's first
+      # official seed
+      MATCH_LEVEL: "${RCB_LEVEL:-1}"
+      MATCH_SEED: "${RCB_SEED:-}"
+      CLOCK_BUDGET_S: "3600"
+      RCB_ACT_RULE: program
+      RCB_PLAYER_MODE: ${RCB_PLAYER_MODE:-model}
+      THINK_RETRY_WAITS_S: ""
+      RCB_RENDER_VIDEO: ${RCB_RENDER_VIDEO:-1}
+      RCB_VIDEO_TIMEOUT_S: "600"
+      RCB_REPLAY_TIMEOUT_S: "600"
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OAUTH_TOKEN:-}
+      CODEX_ACCESS_TOKEN: ${CODEX_ACCESS_TOKEN:-}
+      CODEX_ACCOUNT_ID: ${CODEX_ACCOUNT_ID:-}
+      # OpenAI-style model calls go to OpenRouter by default; THINK_OPENAI_ROUTE=azure sends them to Azure AI Foundry
+      THINK_OPENAI_ROUTE: ${THINK_OPENAI_ROUTE:-openrouter}
+      AZURE_AI_ENDPOINT: ${AZURE_AI_ENDPOINT:-}
+      AZURE_AI_API_KEY: ${AZURE_AI_API_KEY:-}
+      # Azure replicas of the model to fail over between (see think_proxy.py); empty = no failover
+      AZURE_DEPLOYMENTS: ${AZURE_DEPLOYMENTS:-}
+      THINK_USAGE_FILE: /data/think_usage.json
+  player:
+    build:
+      context: .
+    depends_on: [sim]
+    command: ["sh", "-c", "sleep infinity"]
+    cpus: 4
+    mem_limit: 8g
+    volumes: [agent_output:/app/output]
+    networks: [play, egress]
+networks:
+  play:
+    internal: true
+  egress: {}
+volumes:
+  agent_output: {}

@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""game — your seat in the basketball duel (eai-standard-turn/1.0). The world waits; your chess clock runs on your turn.
+
+  game spec                           your seat, the court, the shooter, the ball, the cameras, the clock
+  game status                         the current state, no images
+  game start                          you are ready; the match begins when both players have started
+  game wait                           block until it is your turn (or the match is over)
+  game observe                        on your turn: the state and the camera image (saved to /app/output/views/)
+  game shoot ANGLE SPEED SPIN YAW     take one shot (release angle deg, speed m/s, backspin rev/s, direction deg)
+  game ready "WHY" "PLAN"             after each of your shots: your review
+"""
+import base64
+import json
+import os
+import sys
+import tempfile
+import urllib.error
+import urllib.request
+
+VIEWS = "/app/output/views"
+BASE = os.environ.get("SIM_URL", "http://sim:8000") + "/" + os.environ.get("SEAT", "A")
+
+
+def call(ep, body=None):
+    req = urllib.request.Request(BASE + "/" + ep, data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=300) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        try:
+            out = json.load(e)
+        except ValueError:
+            out = {"error": str(e)}
+        out["http_status"] = e.code
+        return out
+
+
+def save(b64, name):
+    os.makedirs(VIEWS, exist_ok=True)
+    fd, p = tempfile.mkstemp(dir=VIEWS, prefix=name + "_", suffix=".png")
+    with os.fdopen(fd, "wb") as f:
+        f.write(base64.b64decode(b64))
+    return p
+
+
+def show(o):
+    ob = o.get("observation")
+    if isinstance(ob, dict) and ob.get("image_png_b64"):
+        ob["image_file"] = save(ob.pop("image_png_b64"), "obs")
+    for k in [k for k in o if k.endswith("_image_b64")]:
+        if o[k]:
+            o[k[:-4] + "_file"] = save(o.pop(k), k[:-10])
+        else:
+            o.pop(k)
+    print(json.dumps(o, indent=1))
+
+
+a = sys.argv[1:]
+if a == ["spec"]:
+    show(call("spec"))
+elif a == ["status"]:
+    show(call("status"))
+elif a == ["start"]:
+    show(call("start", {}))
+elif a == ["wait"]:
+    while True:
+        o = call("wait", {"timeout_s": 60})
+        st = o.get("state") or {}
+        if "error" in o or st.get("done") or st.get("your_turn"):
+            break
+    show(o)
+elif a == ["observe"]:
+    show(call("observe", {}))
+elif a[:1] == ["shoot"] and len(a) == 5:
+    try:
+        an, sp, sn, yw = (float(x) for x in a[1:])
+    except ValueError:
+        sys.exit(__doc__)
+    show(call("act", {"type": "shoot", "angle_deg": an, "speed": sp, "spin_hz": sn, "yaw_deg": yw}))
+elif a[:1] == ["ready"] and len(a) == 3:
+    show(call("ready", {"why": a[1], "plan": a[2]}))
+else:
+    sys.exit(__doc__)

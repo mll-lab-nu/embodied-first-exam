@@ -1,0 +1,66 @@
+schema_version = "1.3"
+artifacts = [
+  "/app/output/",
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.json", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/replay_check.json", service = "sim" },
+  { source = "/data/replay_A.mp4", service = "sim" },
+  { source = "/data/replay_B.mp4", service = "sim" },
+  { source = "/data/think_usage_A.json", service = "sim" },
+  { source = "/data/think_calls_A.jsonl", service = "sim" },
+  { source = "/data/think_usage_B.json", service = "sim" },
+  { source = "/data/think_calls_B.jsonl", service = "sim" },
+]
+
+[task]
+name = "robot-coding-bench/archery-duel-program-standard"
+description = "Two-player target archery, PROGRAM PLAY, turn-based (eai-standard-turn/1.0): two agents shoot the same round (4 ends x 3 arrows at 50, 70, 70, 90 m, World Archery 122 cm face) on identical lanes in the same seeded gusty wind with the same scatter draws; in each end one player shoots its 3 arrows, then the other, FIRST_PLAYER first in ends 1 and 3 (DUEL_SEED, FIRST_PLAYER chosen at run time). Highest total wins (cumulative, as in compound match play); a tie goes to shoot-off arrows, repeated until the tie is broken. Each agent may write a program that reads the windsocks and the target in the camera images and computes and sends its shots, and reviews after every arrow. One chess clock of 60 minutes per player, on its own turn; out of time = loss. Turns enforced (HTTP 409), images only on one's own turn, one action per seat in flight; up to 30 minutes to start after the opponent. Technical failures invalidate the trial."
+authors = [{ name = "Chi Gui" }]
+keywords = ["program-play", "archery", "wind", "ballistics", "sports", "turn-based", "chess-clock", "arena", "multi-seat", "vision", "mujoco"]
+
+[metadata]
+revision = "archery-duel-program-2"
+author_name = "Chi Gui"
+category = "robotics-sports-arena"
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "none (bow release primitive)"
+family = "archery_duel"
+mode = "standard"
+protocol = "eai-standard-turn/1.0"           # turn-based extension of standard mode
+oracle = "full"
+oracle_evidence = "solution/: the reference archer (camera images and the documented physics) on either seat; oracle against oracle plays valid matches with either first player"
+parameters = "DUEL_SEED (default 1), FIRST_PLAYER (A or B, default A)"
+expert_time_estimate_hours = 0.75
+
+[[seats]]
+name = "A"
+service = "seat_a"
+agent_kwargs = { think_proxy_url = "http://sim:18090/v1" }
+setup_networks = ["egress_a"]
+
+[[seats]]
+name = "B"
+service = "seat_b"
+agent_kwargs = { think_proxy_url = "http://sim:18091/v1" }
+setup_networks = ["egress_b"]
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[[verifier.collect]]
+service = "sim"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; cat /data/final.json | head -c 2000"
+timeout_sec = 700
+
+[agent]
+timeout_sec = 10800.0          # preparation, the start window (up to 30 min) and both players' 60-minute clocks
+
+[environment]
+build_timeout_sec = 1200.0
+cpus = 1                      # main (idle); sim and the seats are sized in docker-compose.yaml
+memory_mb = 1024

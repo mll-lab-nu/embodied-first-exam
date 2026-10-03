@@ -1,0 +1,15 @@
+# eai-olympiad-billiards: the billiards sim service's Python stack (pinned; the same versions as the original
+# billiards-match tasks, so their recorded matches replay bit-exactly). pooltool's event-based physics (numba JIT, CPU).
+# panda3d's dev build comes from https://archive.panda3d.org/ (pooltool 0.6.0 requires it).
+pooltool-billiards==0.6.0
+panda3d==1.11.0.dev3702
+numpy==2.3.5
+numba==0.62.1
+llvmlite==0.45.1
+scipy==1.18.1
+attrs==26.1.0
+cattrs==26.2.1
+numpy-quaternion==2024.0.13
+pillow==12.3.0
+imageio==2.37.0
+imageio-ffmpeg==0.6.0

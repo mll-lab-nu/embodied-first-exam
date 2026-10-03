@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""game — the two-player curling match (program play). The same calls are plain HTTP + JSON at
+http://sim:8000/<your seat>/ (your seat is $SEAT, also in `game spec`).
+
+  game spec                     your seat and colour, sheet geometry, cameras, clocks
+  game status                   the current state (no images)
+  game start                    you are ready; the match begins when both players have started
+  game wait [MAX_S]             block until it is your turn (or the match is over), at most MAX_S s (<= 60)
+  game observe                  the sheet: saves the two camera images (house, hack) to /app/output/views/
+  game throw SPEED ANGLE SPIN   throw your next stone (only on your turn): release SPEED in m/s (0.5-4.0) at the hack,
+                                ANGLE in degrees from the centre line (+ = to the right, |ANGLE| <= 5), SPIN = cw | ccw
+  game ready "WHY" "PLAN"       after each of your throws: your review; the game goes on only then
+Every reply includes the state (score, whose turn, both clocks) and the throws made since your previous call.
+"""
+import base64, json, os, sys, tempfile, urllib.error, urllib.request
+
+VIEWS = "/app/output/views"
+BASE = os.environ.get("SIM_URL", "http://sim:8000") + "/" + os.environ.get("SEAT", "A")
+
+
+def call(path, body=None):
+    req = urllib.request.Request(BASE + path, data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=900) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:
+        try:
+            out = json.load(e)
+        except ValueError:
+            out = {"error": str(e)}
+        out["http_status"] = e.code
+        return out
+
+
+def show(o):
+    for k in ("observation", "next"):
+        x = o.get(k)
+        if isinstance(x, dict) and "images_png_b64" in x:
+            os.makedirs(VIEWS, exist_ok=True)
+            files = {}
+            for cam, b in x.pop("images_png_b64").items():
+                with tempfile.NamedTemporaryFile(dir=VIEWS, prefix=f"end{x.get('end')}_throw{x.get('throw_in_end')}_{cam}_",
+                                                 suffix=".png", delete=False) as f:
+                    f.write(base64.b64decode(b))
+                    files[cam] = f.name
+            x["image_files"] = files
+    print(json.dumps(o, indent=1))
+
+
+a = sys.argv[1:]
+try:
+    if a == ["spec"]:
+        show(call("/spec"))
+    elif a == ["status"]:
+        show(call("/status"))
+    elif a == ["start"]:
+        show(call("/start", {}))
+    elif a[:1] == ["wait"] and len(a) in (1, 2):
+        show(call("/wait", {"max_s": float(a[1]) if len(a) == 2 else 30.0}))
+    elif a == ["observe"]:
+        show(call("/observe", {}))
+    elif a[:1] == ["ready"] and len(a) == 3:
+        show(call("/ready", {"why": a[1], "plan": a[2]}))
+    elif a[:1] == ["throw"] and len(a) == 4:
+        show(call("/act", {"type": "throw", "speed": float(a[1]), "angle": float(a[2]), "spin": a[3]}))
+    else:
+        sys.exit(__doc__)
+except ValueError:
+    sys.exit(__doc__)

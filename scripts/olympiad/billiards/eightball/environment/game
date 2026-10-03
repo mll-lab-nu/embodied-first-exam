@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""game — 8-ball against a computer opponent (program play). The same calls are plain HTTP + JSON at http://sim:8000.
+
+  game spec                               table, pockets (ids lb lc lt rb rc rt), cameras, opponent level, clock
+  game status                             the current state (no images)
+  game start                              start the game and your chess clock; shows the table
+  game observe [AIM_DEG]                  the table: saves two camera images to /app/output/views/ (top view and a
+                                          sighting view behind the cue ball along AIM_DEG; default: towards the centre)
+                                          and prints their paths
+  game shoot AIM_DEG SPEED [SPIN_X SPIN_Y] [cue=X,Y] [call=BALL:POCKET|safety]
+                                          play a shot: cue direction (degrees counter-clockwise from +x), cue stick
+                                          speed (m/s), tip offset in ball radii (x = right english, y = follow);
+                                          cue=X,Y places the cue ball first (ball in hand only); call=BALL:POCKET
+                                          (e.g. 3:rc, 8:lt) or call=safety: required on every shot but the break
+  game ready "WHY" "PLAN"                 after each of your shots: your review; the game goes on only then
+Every reply includes the state (your group, balls left, whose turn, ball in hand, clock_left_s) and the shots played
+since your last call (shots_since_your_last_call).
+"""
+import base64, json, os, sys, tempfile, time, urllib.error, urllib.request
+
+VIEWS = "/app/output/views"
+
+
+def base():
+    t0 = time.time()
+    while time.time() - t0 < 180:            # the service needs a few seconds to start (physics JIT warm-up)
+        for b in [os.environ.get("SIM_URL"), "http://sim:8000", "http://127.0.0.1:8000"]:
+            if not b:
+                continue
+            try:
+                urllib.request.urlopen(b + "/spec", timeout=3)
+                return b
+            except urllib.error.HTTPError:
+                return b
+            except Exception:
+                continue
+        time.sleep(2)
+    sys.exit("game service unreachable")
+
+
+def call(path, body=None):
+    req = urllib.request.Request(BASE + path, data=None if body is None else json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        return json.load(urllib.request.urlopen(req, timeout=900))
+    except urllib.error.HTTPError as e:
+        try:
+            out = json.load(e)
+        except ValueError:
+            out = {"error": str(e)}
+        out["http_status"] = e.code
+        return out
+
+
+def save(name, b64):
+    os.makedirs(VIEWS, exist_ok=True)
+    # parallel calls must never overwrite an image another tool is opening
+    with tempfile.NamedTemporaryFile(dir=VIEWS, prefix=name + "_", suffix=".png", delete=False) as f:
+        f.write(base64.b64decode(b64))
+        return f.name
+
+
+def strip(x):
+    if isinstance(x, dict) and "images_png_b64" in x:
+        n = x.get("shot_number")
+        x["image_files"] = {cam: save(f"shot{n}_{cam}", b) for cam, b in x.pop("images_png_b64").items()}
+    return x
+
+
+def show(o):
+    for k in ("observation", "next"):
+        if isinstance(o.get(k), dict):
+            strip(o[k])
+    print(json.dumps(o, indent=1))
+
+
+BASE = base()
+a = sys.argv[1:]
+if a[:1] == ["observe"] and len(a) in (1, 2):
+    body = {}
+    if len(a) == 2:
+        try:
+            body["aim"] = float(a[1])
+        except ValueError:
+            sys.exit(__doc__)
+    show(call("/observe", body))
+elif a == ["start"]:
+    show(call("/start", {}))
+elif a[:1] == ["ready"] and len(a) == 3:
+    show(call("/ready", {"why": a[1], "plan": a[2]}))
+elif a == ["status"]:
+    show(call("/status"))
+elif a == ["spec"]:
+    show(call("/spec"))
+elif a[:1] == ["shoot"]:
+    pos = [x for x in a[1:] if "=" not in x]
+    kw = dict(x.split("=", 1) for x in a[1:] if "=" in x)
+    if len(pos) not in (2, 4) or set(kw) - {"cue", "call"}:
+        sys.exit(__doc__)
+    try:
+        v = [float(x) for x in pos]
+        body = {"type": "shoot", "aim_deg": v[0], "speed": v[1]}
+        if len(v) == 4:
+            body["spin_x"], body["spin_y"] = v[2], v[3]
+        if "cue" in kw:
+            body["cue_x"], body["cue_y"] = (float(t) for t in kw["cue"].split(","))
+    except ValueError:
+        sys.exit(__doc__)
+    if "call" in kw:
+        body["call"] = kw["call"]
+    show(call("/act", body))
+else:
+    print(__doc__)
