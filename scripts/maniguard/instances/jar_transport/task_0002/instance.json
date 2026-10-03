@@ -1,0 +1,15 @@
+{
+ "task": "jar_transport/task_0002",
+ "family": "jar_transport",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "d23c0045d246375d3e25d8b33ea47ccc5614358d5729d7ac4fd7dd9f30e7b5d5",
+ "diagnostics_sha256": "cbd10847e9695d0ec4b9310225ce2cf88bd61aadd74947302f87441ea488427a",
+ "pipeline": "jar_transport",
+ "gpu_dynamics": false,
+ "state_sha": null,
+ "objects": null,
+ "robot_q": null,
+ "frozen": false,
+ "note": "state_sha, objects and robot_q are written by `rcb_maniguard.py make-instance` in the eai-maniguard image; until then every load fails closed (instance_ok = 0)"
+}
