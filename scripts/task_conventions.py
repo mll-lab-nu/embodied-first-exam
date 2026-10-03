@@ -45,7 +45,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robosuite-", "robosuite (example task)"), ("kinder-", "KinDER"), ("humanoidbench-", "HumanoidBench"),
     ("metaworldplus-", "MetaWorld+"),
     ("robowits-", "RoboWits"), ("robopaint-", "RoboPaint"), ("robolab-", "RoboLab"),
-    ("behavior-", "BEHAVIOR-1K"),
+    ("behavior-", "BEHAVIOR-1K"), ("maniguard-", "ManiGuard"),
 ]
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
                "Base image"}
