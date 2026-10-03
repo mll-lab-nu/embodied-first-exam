@@ -10,8 +10,9 @@ What it writes (the layout OmniGibson 3.7.2 reads with OMNIGIBSON_DATA_PATH=/dat
   behavior-1k-assets/       members of behavior-1k-assets-3.7.2rc1.zip (Hugging Face behavior-1k/zipped-datasets, pinned
                             revision; the file BEHAVIOR-1K v3.7.2's asset_utils downloads). Default: only the members the
                             selected ManiGuard tasks load (VERSION, metadata/, objects/<category>/<model>/ of every
-                            DatasetObject in their scene snapshots, systems/<name>/ of every particle system they hold), read
-                            from the zip by HTTP range requests; --full: every member, streamed (no zip is stored either way).
+                            DatasetObject in their scene snapshots, and every particle system: objects' abilities name
+                            systems by name, e.g. a pepper shaker's black_pepper), read from the zip by HTTP range requests;
+                            --full: every member, streamed (no zip is stored either way).
   omnigibson-robot-assets/  every member of omnigibson-robot-assets.zip (the 2025-09-02 file BEHAVIOR-1K 3.7.2 downloads),
                             plus ManiGuard's long-finger Franka at models/franka/franka_panda_longfinger/ (Hugging Face
                             IDEAS-Lab-Northwestern/franka-panda-longfinger, pinned revision, Apache-2.0).
@@ -163,11 +164,13 @@ def stream_all(z: dict, members: list[dict], root: pathlib.Path) -> None:
         raise IOError(f"{z['dest']}: the zip's sha256 {h.hexdigest()} != {z['sha256']}")
 
 
-def subset_prefixes(tasks: list[str]) -> tuple[set, list]:
-    pre = {"VERSION", "metadata/"}; used = []
-    for key in tasks:
-        d = HERE / "instances" / key
-        scene = json.loads((d / "scene_ep1.json").read_text())
+def subset_prefixes(tasks: list[str], extra_scenes: list[str] = ()) -> tuple[set, list]:
+    # every particle system: objects' abilities name systems their scene never holds (a pepper shaker's black_pepper), and
+    # OmniGibson checks a system name against the systems/ directories of the dataset (0.83 GB)
+    pre = {"VERSION", "metadata/", "systems/"}; used = []
+    for key in list(tasks) + list(extra_scenes):
+        f = pathlib.Path(key) if key in extra_scenes else HERE / "instances" / key / "scene_ep1.json"
+        scene = json.loads(f.read_text())
         for name, o in scene["objects_info"]["init_info"].items():
             if o.get("class_name") == "DatasetObject":
                 a = o["args"]; pre.add(f"objects/{a['category']}/{a['model']}/")
@@ -210,6 +213,7 @@ def main() -> int:
     ap.add_argument("--key", help="an existing omnigibson.key (the BEHAVIOR Data Bundle key of a licence already accepted)")
     ap.add_argument("--full", action="store_true", help="every member of behavior-1k-assets-3.7.2rc1 (34.7 GB) instead of the task subset")
     ap.add_argument("--tasks", nargs="*", default=None, help="ManiGuard task keys for the subset (default: every task in families.json)")
+    ap.add_argument("--extra-scenes", nargs="*", default=[], help="more scene_ep1.json files whose objects the subset includes (e.g. a smoke-test task)")
     ap.add_argument("--check", action="store_true", help="verify an existing root against its MANIGUARD_DATA.json; write nothing")
     a = ap.parse_args()
     root = pathlib.Path(a.root).resolve()
@@ -229,7 +233,7 @@ def main() -> int:
     if a.full:
         stream_all(ASSETS, cd, root / ASSETS["dest"]); covered = "all"
     else:
-        pre, covered = subset_prefixes(tasks)
+        pre, covered = subset_prefixes(tasks, a.extra_scenes)
         sel = [m for m in cd if any(m["name"] == p or m["name"].startswith(p) for p in pre)]
         missing = [p for p in pre if not any(m["name"] == p or m["name"].startswith(p) for m in cd)]
         if missing:

@@ -13,7 +13,9 @@ runtime patches target 3.7.2, and upstream abandoned its own port to a newer Isa
 | PyTorch | torch 2.6.0, torchvision 0.21.0, torchaudio 2.6.0, CUDA 12.4 wheels (setup.sh's default) |
 | BEHAVIOR-1K | v3.7.2 sparse checkout (`OmniGibson/`, `bddl3/`), editable installs: OmniGibson 3.7.2, bddl 3.7.0 (no extras) |
 | Isaac Sim | the 26 `4.5.0.0` wheels setup.sh installs (`omniverse_kit-106.5.0.162521` + `isaacsim_*`), each checked against `isaacsim-4.5.0.0.sha256`; setup.sh's websockets fix and `cffi==1.17.1` |
-| conda-forge | PyAV 16.0.1 (setup.sh's `--eval` step), Spot 2.16 (ManiGuard's LTL monitor; "do NOT pip install spot") |
+| conda-forge | Spot 2.16 (ManiGuard's LTL monitor; "do NOT pip install spot") |
+| PyPI | PyAV 16.0.1 (setup.sh's `--eval` step) as the PyPI wheel, not conda-forge's: every conda-forge ffmpeg since 2024 brings its own Vulkan loader and libglvnd into the env, and once PyAV has loaded them Isaac Sim's renderer segfaults on its first frame (measured 2026-10-03); the wheel keeps its libraries under private names |
+| Run-time extras | `g++` (OmniGibson compiles some transforms with `torch.compile`; kernels cached under `/cache/torchinductor`), BEHAVIOR-1K's `docs/assets/OmniGibson_logo.png` (the launcher copies it; sha256-checked) |
 | ManiGuard | `NU-IDEAS-Lab/ManiGuard@a1b6444b3`, only `maniguard-keep.txt` (the evaluator's import closure, 37 modules, + `configs/eval/`), on the env's path via `maniguard.pth` |
 | Data | none; `/data` is the read-only mount of `$RCB_MANIGUARD_DATA` (`OMNIGIBSON_DATA_PATH=/data`) |
 | Caches | Kit's caches and OmniGibson's appdata under `/cache` (a task mounts a volume of its trial there) |
@@ -29,15 +31,15 @@ ManiGuard's data generator, its scripted skeletons, grasp annotations, policy se
 encode or point to reference solutions, which must not be in reach of an agent (PROTOCOL §2.7).
 
 ## Locks
-The first tested build writes `/opt/locks/{dpkg,conda,pip}.lock` in the image; they are committed here as `dpkg.lock`,
-`conda.lock` and `pip.lock`, after which a build fails unless it installs exactly those sets (as `eai-behavior`'s
-`dpkg.lock`). Until then the pins are the ones in the Dockerfile.
+Every build writes `/opt/locks/{dpkg,conda,pip}.lock` in the image. `dpkg.lock`, `conda.lock` and `pip.lock` here are
+those of the first tested build (2026-10-03, about 26 GB on disk), and a build fails unless it installs exactly those sets
+(as `eai-behavior`'s `dpkg.lock`).
 
 ## Check a build
 ```bash
 img=ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:$(cat images/maniguard/VERSION)
 docker run --rm $img python -c "import omnigibson, maniguard.eval.benchmark; print(omnigibson.__version__)"     # 3.7.2
-for l in dpkg conda pip; do docker run --rm $img cat /opt/locks/$l.lock | diff - images/maniguard/$l.lock; done      # once committed
+for l in dpkg conda pip; do docker run --rm $img cat /opt/locks/$l.lock | diff - images/maniguard/$l.lock; done
 # a frozen instance loads with the long-finger robot and to its recorded state hash (GPU, the data root):
 docker run --rm --gpus all --shm-size 8g -v "$RCB_MANIGUARD_DATA:/data:ro" -v $PWD/scripts/maniguard:/m:ro $img \
   python /m/shared/rcb_maniguard.py make-instance --task jar_transport/task_0014 --instance /m/instances/jar_transport/task_0014 --out /tmp/i.json

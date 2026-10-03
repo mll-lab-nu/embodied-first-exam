@@ -2,15 +2,16 @@
 # BEHAVIOR-1K v3.7.2 = OmniGibson 3.7.2 + bddl 3.7.0 + Isaac Sim 4.5.0.0 (NVIDIA's pip wheels), Python 3.10, torch
 # 2.6.0+cu124, and Spot 2.16 (conda-forge; the LTL library ManiGuard's safety monitor needs). This is what BEHAVIOR-1K
 # v3.7.2's own installer builds (`setup.sh --new-env --omnigibson --bddl`, the order and pins of that script) plus PyAV from
-# its `--eval` step, minus the extras ManiGuard's evaluation never imports (`--primitives`: cuRobo and OMPL; `--joylo`;
-# `--eval`'s lerobot, open3d, hydra, torch-cluster), and ManiGuard's evaluator only (images/maniguard/maniguard-keep.txt:
-# its import closure; no data generator, demonstrations, grasp annotations, policy servers or SFT code).
+# its `--eval` step (the PyPI wheel, see below) and g++ for torch.compile, minus the extras ManiGuard's evaluation never
+# imports (`--primitives`: cuRobo and OMPL; `--joylo`; `--eval`'s lerobot, open3d, hydra, torch-cluster), and ManiGuard's
+# evaluator only (images/maniguard/maniguard-keep.txt: its import closure; no data generator, demonstrations, grasp
+# annotations, policy servers or SFT code).
 # NO dataset: the licensed BEHAVIOR-1K 3.7.2 data root is mounted read-only at /data from $RCB_MANIGUARD_DATA
 # (scripts/maniguard/prep_data.py). Isaac Sim needs an RTX-class GPU even headless; a task's compose reserves it.
 # BUILD_ONLY, never pushed (NVIDIA Isaac Sim inside; images/maniguard/BUILD_ONLY). Build from the repository root:
 #   docker build -t ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:$(cat images/maniguard/VERSION) -f images/maniguard/Dockerfile .
-# Locks: the build writes the installed package sets to /opt/locks/{dpkg,conda,pip}.lock; once images/maniguard/*.lock are
-# committed (copied from the first tested build), every later build fails unless its sets equal them.
+# Locks: the build writes the installed package sets to /opt/locks/{dpkg,conda,pip}.lock and fails unless they equal the
+# committed images/maniguard/*.lock (copied from the first tested build, 2026-10-03).
 FROM nvidia/cuda:12.4.1-base-ubuntu22.04@sha256:0f6bfcbf267e65123bcc2287e2153dedfc0f24772fb5ce84afe16ac4b2fada95
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 NVIDIA_DRIVER_CAPABILITIES=all \
     VK_DRIVER_FILES=/etc/vulkan/icd.d/nvidia_icd.json VK_ICD_FILENAMES=/etc/vulkan/icd.d/nvidia_icd.json \
@@ -62,8 +63,12 @@ RUN mkdir /tmp/isaac && cd /tmp/isaac && \
     if [ -n "$ISAAC_PATH" ] && [ -d "$ISAAC_PATH/extscache" ]; then find "$ISAAC_PATH/extscache" -type d -name websockets -path "*/pip_prebundle/*" -exec rm -rf {} +; fi && \
     pip install --no-cache-dir --force-reinstall cffi==1.17.1
 
-# setup.sh --eval's PyAV (numpy < 2 kept) and ManiGuard's Spot, both from conda-forge, pinned
-RUN conda install -y -n behavior --override-channels -c conda-forge av=16.0.1 "numpy<2" spot=2.16 && conda clean -afy && \
+# ManiGuard's Spot from conda-forge, pinned. setup.sh --eval's PyAV from PyPI instead of conda-forge: every conda-forge ffmpeg
+# since 2024 brings its own Vulkan loader and libglvnd (libGL/libEGL) into the env, and once PyAV has loaded them Isaac Sim's
+# renderer segfaults on its first frame (measured 2026-10-03, driver 580.178.04); the PyPI wheel bundles its libraries under
+# private names. Same PyAV version, numpy < 2 kept.
+RUN conda install -y -n behavior --override-channels -c conda-forge spot=2.16 && conda clean -afy && \
+    pip install --no-cache-dir av==16.0.1 && \
     python -c "import numpy, spot; from spot import buddy; assert numpy.__version__ < '2', numpy.__version__; assert all(hasattr(spot, a) for a in ('formula', 'translate', 'atomic_prop_collect')); print('numpy', numpy.__version__, 'spot ok')"
 
 # ManiGuard's evaluator at the pinned commit: only the files of images/maniguard/maniguard-keep.txt, on the env's path
@@ -75,9 +80,21 @@ RUN git clone -q --filter=blob:none --no-checkout https://github.com/NU-IDEAS-La
     echo /opt/maniguard > "$(python -c 'import site; print(site.getsitepackages()[0])')/maniguard.pth"
 ENV MANIGUARD_ROOT=/opt/maniguard OMNIGIBSON_HEADLESS=1 OMNIGIBSON_DATA_PATH=/data OMNIGIBSON_APPDATA_PATH=/cache/appdata
 
+# OmniGibson's launcher copies BEHAVIOR-1K's docs/assets/OmniGibson_logo.png into Isaac Sim's apps directory at every start
+# (simulator.py): the one file outside OmniGibson/ and bddl3/ it needs, from the same commit, sha256-checked.
+RUN mkdir -p /opt/behavior-1k/docs/assets && curl -fsSL --retry 5 -o /opt/behavior-1k/docs/assets/OmniGibson_logo.png \
+      https://raw.githubusercontent.com/StanfordVL/BEHAVIOR-1K/88454bd04f75dc57c00ab1f1a00bcde1ff505950/docs/assets/OmniGibson_logo.png && \
+    echo "415480a53ed07ee3b909b4a3510f0aa44c4f44aa23296713ebc07af5a461ec23  /opt/behavior-1k/docs/assets/OmniGibson_logo.png" | sha256sum -c -
+
+# OmniGibson compiles some of its transforms with torch.compile (inductor), which needs a C++ compiler at run time (same
+# Ubuntu snapshot as above); its compiled kernels are cached under the trial's /cache volume.
+RUN apt-get -o Acquire::Retries=10 update && apt-get -o Acquire::Retries=10 install -y --no-install-recommends g++ && \
+    rm -rf /var/lib/apt/lists/*
+ENV TORCHINDUCTOR_CACHE_DIR=/cache/torchinductor TRITON_CACHE_DIR=/cache/triton
+
 # Kit's caches (shaders, extension cache, logs) and OmniGibson's appdata under /cache, which a task mounts as a volume of its
 # trial; the evaluator must import (no GPU needed for that); the installed package sets, checked against committed locks.
-RUN mkdir -p /cache/ov-cache /cache/ov-data /cache/ov-logs /cache/appdata /root/.cache /root/.local/share /root/.nvidia-omniverse /app/output /data && \
+RUN mkdir -p /cache/ov-cache /cache/ov-data /cache/ov-logs /cache/appdata /cache/torchinductor /cache/triton /root/.cache /root/.local/share /root/.nvidia-omniverse /app/output /data && \
     ln -s /cache/ov-cache /root/.cache/ov && ln -s /cache/ov-data /root/.local/share/ov && ln -s /cache/ov-logs /root/.nvidia-omniverse/logs && \
     python -c "import maniguard.eval.benchmark, maniguard.eval.goal_checker, maniguard.utils.safety_monitor, maniguard.utils.ltl_utils, maniguard.envs.frozen_task_runtime, maniguard.data.bench_builder.perturbation, maniguard.data.datagen.primitives.scene, maniguard.utils.camera_setup; print('maniguard evaluator imports')"
 RUN --mount=type=bind,source=images/maniguard,target=/locks \
