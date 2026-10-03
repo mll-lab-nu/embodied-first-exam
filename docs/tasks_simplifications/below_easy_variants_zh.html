@@ -204,6 +204,19 @@ footer ul { padding-left: 1.2em; }
 .f-ring { stroke: var(--accent); stroke-width: 5; fill: none; }
 .f-bead { fill: var(--wall); stroke: var(--steel-dark); stroke-width: 1.5; }
 .f-disc { fill: var(--steel); }
+/* knob diagrams */
+.f-hog-ok line { stroke: var(--path); stroke-opacity: .55; }
+.f-hog-ok circle { fill: var(--path); fill-opacity: .55; }
+.f-hog-block line { stroke: var(--block); stroke-opacity: .5; }
+.f-hog-block circle { fill: var(--block); fill-opacity: .5; }
+.f-sil-ghost { fill: none; stroke: var(--block); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.f-turn { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.f-turn-head { fill: var(--accent); }
+.f-shoe { fill: var(--steel); }
+.f-shoe-ghost { fill: none; stroke: var(--steel-dark); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.f-bore { fill: none; stroke: var(--accent); stroke-width: 6; }
+.f-bore-ghost { fill: none; stroke: var(--block); stroke-width: 2; stroke-dasharray: 6 5; }
+/* end knob diagrams */
 .diagram svg.tall { min-width: 0; max-width: 430px; margin-inline: auto; }
 
 @media (max-width: 860px) {
@@ -219,6 +232,9 @@ footer ul { padding-left: 1.2em; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
+
+
+
 
 
 
@@ -303,12 +319,40 @@ env.reset()</pre>
 <section id="hedgehog">
   <div class="head">
     <div class="eyebrow">hedgehog_in_cage · Panda + Robotiq 2F-85 · 刚体</div>
-    <h2>刺球：窗宽决定能否直接拉出</h2>
+    <h2>刺球：窗比刺球宽还是窄</h2>
   </div>
-  <div class="prose" style="display:grid;gap:10px">
-    <p><b>设计。</b>刺球沿用 easy。笼内径从 117 mm 加大到 150 mm，开三个等宽窗，笼条均匀立在 0°、120°、240°，其中一个窗正对机器人。刺球偏向机器人 28 mm 静置，一根 60 mm 长刺伸出笼壁 29.5 mm，夹爪在笼外夹住它。窗 118 mm 时，按原朝向直接拉出；窗 108 mm 时，要先绕这根刺转一下手腕。</p>
-    <p><b>为什么加大笼子。</b>直接平移出笼需要约 102 mm 以上的出口。原笼上三根均匀笼条只能留出 101 mm 的窗。</p>
-  </div>
+  <p class="prose"><b>怎么设置。</b>刺球和它的初始位姿两档完全相同，只换笼子的窗宽。夹爪在笼外夹住一根朝向机器人、伸出笼壁 29.5 mm 的刺。沿拉出方向看：窗比刺球轮廓宽，就直接拉出（very_easy）；窗比轮廓窄，要先绕所夹的刺转一下，让轮廓变窄再拉出（easier）。笼子内径 150 mm，三个等宽窗，笼条均匀分布，一个窗正对机器人。</p>
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 900 270" role="img" aria-label="沿拉出方向看刺球与出口窗：easy 的窗只有 55 到 60 毫米，比刺球最窄处 97 毫米还窄；very_easy 刺球轮廓 109 毫米小于窗的 112 毫米，直接拉出；easier 轮廓 127 毫米大于窗的 107 毫米，绕所夹的刺转 80 度后变成 103 毫米，再拉出。">
+<g>
+      <text x="10" y="22" class="t-title">easy / medium / hard</text>
+      <rect x="85.7" y="46" width="26" height="166" class="f-wall"/><rect x="178.3" y="46" width="26" height="166" class="f-wall"/>
+      <g class="f-hog-block"><line x1="131.6" y1="103.2" x2="106.8" y2="76.5" stroke-width="12.4"/><line x1="171.2" y1="145.3" x2="203.1" y2="179.4" stroke-width="12.4"/><line x1="162.4" y1="116.6" x2="176.3" y2="107.2" stroke-width="12.4"/><line x1="140.3" y1="131.8" x2="118.6" y2="146.7" stroke-width="12.4"/><line x1="169.6" y1="105.8" x2="194.5" y2="80.4" stroke-width="12.4"/><line x1="133.2" y1="142.6" x2="97.4" y2="179.0" stroke-width="12.4"/><line x1="170.0" y1="108.5" x2="198.0" y2="84.9" stroke-width="12.4"/><line x1="132.8" y1="140.0" x2="87.1" y2="178.5" stroke-width="12.4"/><line x1="150.9" y1="121.6" x2="150.1" y2="117.6" stroke-width="12.4"/><line x1="151.8" y1="126.9" x2="153.1" y2="133.4" stroke-width="12.4"/><circle cx="151.4" cy="124.2" r="31.0"/></g>
+      <text x="145" y="240" class="t-block" text-anchor="middle">窗 55–60 mm，刺球最窄处 97 mm</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">边转边让刺依次穿出，要换抓</text>
+    </g>
+<g transform="translate(305 0)">
+      <text x="10" y="22" class="t-title">very_easy</text>
+      <rect x="54.5" y="46" width="26" height="166" class="f-wall"/><rect x="209.5" y="46" width="26" height="166" class="f-wall"/>
+      <g class="f-hog-ok"><line x1="131.6" y1="103.2" x2="106.8" y2="76.5" stroke-width="12.4"/><line x1="171.2" y1="145.3" x2="203.1" y2="179.4" stroke-width="12.4"/><line x1="162.4" y1="116.6" x2="176.3" y2="107.2" stroke-width="12.4"/><line x1="140.3" y1="131.8" x2="118.6" y2="146.7" stroke-width="12.4"/><line x1="169.6" y1="105.8" x2="194.5" y2="80.4" stroke-width="12.4"/><line x1="133.2" y1="142.6" x2="97.4" y2="179.0" stroke-width="12.4"/><line x1="170.0" y1="108.5" x2="198.0" y2="84.9" stroke-width="12.4"/><line x1="132.8" y1="140.0" x2="87.1" y2="178.5" stroke-width="12.4"/><line x1="150.9" y1="121.6" x2="150.1" y2="117.6" stroke-width="12.4"/><line x1="151.8" y1="126.9" x2="153.1" y2="133.4" stroke-width="12.4"/><circle cx="151.4" cy="124.2" r="31.0"/></g>
+      <text x="145" y="240" class="t-path" text-anchor="middle">轮廓 109 mm &lt; 窗 112 mm</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">不用转，直接拉出（窗宽 118 mm）</text>
+    </g>
+<g transform="translate(610 0)">
+      <text x="10" y="22" class="t-title">easier</text>
+      <rect x="57.2" y="46" width="26" height="166" class="f-wall"/><rect x="206.8" y="46" width="26" height="166" class="f-wall"/>
+      <polygon points="124.5,183.7 78.8,183.7 78.4,183.7 78.0,183.5 77.4,183.0 76.7,182.5 76.0,181.8 75.3,180.8 74.6,179.9 73.9,178.9 73.2,177.9 72.8,176.9 72.3,175.9 72.0,175.1 71.9,174.4 71.7,173.8 71.9,173.5 112.7,79.0 113.0,78.1 113.6,77.3 114.3,76.5 115.1,75.7 116.0,74.9 117.1,74.1 118.0,73.5 118.9,73.0 119.8,72.6 120.6,72.4 121.3,72.3 181.1,75.7 182.3,75.8 211.4,79.8 211.8,79.9 212.3,80.1 212.8,80.6 213.5,81.3 214.2,82.1 214.9,83.0 215.7,83.9 216.3,84.9 217.0,86.0 217.4,86.9 217.8,87.8 218.1,88.6 218.3,89.3 218.3,89.8 205.9,176.5 205.7,177.2 205.4,177.9 204.8,178.7 204.1,179.6 203.3,180.4 202.4,181.2 201.5,181.9 200.4,182.6 199.5,183.0 198.6,183.5 197.8,183.7 197.1,183.7 124.5,183.7" class="f-sil-ghost"/>
+      <g class="f-hog-ok"><line x1="118.3" y1="136.1" x2="89.8" y2="155.9" stroke-width="12.4"/><line x1="163.6" y1="104.6" x2="200.3" y2="79.2" stroke-width="12.4"/><line x1="144.9" y1="110.6" x2="149.7" y2="98.2" stroke-width="12.4"/><line x1="137.0" y1="130.1" x2="129.5" y2="149.6" stroke-width="12.4"/><line x1="123.2" y1="98.0" x2="98.9" y2="67.3" stroke-width="12.4"/><line x1="158.7" y1="142.7" x2="193.6" y2="186.7" stroke-width="12.4"/><line x1="135.4" y1="100.7" x2="127.2" y2="71.2" stroke-width="12.4"/><line x1="146.5" y1="140.0" x2="159.9" y2="188.1" stroke-width="12.4"/><line x1="128.8" y1="117.7" x2="110.5" y2="113.7" stroke-width="12.4"/><line x1="153.1" y1="123.0" x2="183.0" y2="129.5" stroke-width="12.4"/><circle cx="141.0" cy="120.3" r="31.0"/></g>
+      <path d="M175 62A70 70 0 0 1 211 100" class="f-turn"/>
+      <path d="M205 94L212 106L217 92Z" class="f-turn-head"/>
+      <text x="145" y="240" class="t-acc" text-anchor="middle">轮廓 127 mm &gt; 窗 107 mm</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">绕所夹的刺转 80° 后 103 mm，再拉出</text>
+    </g>
+</svg>
+    </div>
+    <figcaption>沿拉出方向看（从机器人一侧），按真实尺寸画出球核和每根刺。灰色是窗两侧的笼条，窗宽按拉出方向投影。绿色能过，红色过不去；easier 的虚线框是转动前的轮廓。easy 那栏用同一个刺球示意：CLASSIC 笼的窗比刺球任何朝向的宽度（最窄 97 mm）都窄。</figcaption>
+  </figure>
   <div class="two">
     <figure class="card"><img src="figures/sim_hedgehog_in_cage_very_easy.jpg" alt="very_easy 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>very_easy</b>，窗 118 mm。仿真相机渲染的开局。</figcaption></figure>
     <figure class="card"><img src="figures/sim_hedgehog_in_cage_easier.jpg" alt="easier 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>easier</b>，窗 108 mm。仿真相机渲染的开局。</figcaption></figure>
@@ -326,7 +370,7 @@ env.reset()</pre>
       <div class="card"><img src="figures/hedgehog_easier_step3.jpg" alt="easier 拉出途中" loading="lazy" width="720" height="540"></div>
       <div class="card"><img src="figures/hedgehog_easier_step4.jpg" alt="easier 出笼" loading="lazy" width="720" height="540"></div>
     </div>
-    <figcaption>证明过的取出路径（只算刺球，从机器人一侧看；青绿色是夹爪要夹的那段刺）。上排 very_easy：抬 5 mm 后朝 198° 直拉。下排 easier：抬 25 mm，绕所夹的刺转 80°，再朝 174° 直拉。</figcaption>
+    <figcaption>证明过的取出路径（只算刺球；青绿色是夹爪要夹的那段刺）。上排 very_easy：抬 5 mm 后直拉。下排 easier：抬 25 mm，绕所夹的刺转 80°，再直拉。</figcaption>
   </figure>
   <div class="table-wrap">
     <table>
@@ -335,51 +379,64 @@ env.reset()</pre>
         <tr><td>保持初始朝向能否平移出笼（2 mm 网格搜索）</td><td class="ok">能</td><td class="no">不能</td></tr>
         <tr><td>证明过的路径，表面余量 ≥ 1 mm</td><td>抬 5 mm → 直拉</td><td>抬 25 mm → 绕刺转 80° → 直拉</td></tr>
         <tr><td>加 2F-85 夹爪夹住那根刺</td><td>160 个方向中 2 个能直拉（约 ±6°）</td><td>直拉 0/160；绕接近轴转 −75° 后 2/160</td></tr>
-        <tr><td>仿真里机器人不动、静置</td><td>刺球移动 0.30 mm（Genesis CUDA 1 s；CPU 3 s 同为 0.30 mm）</td><td>刺球移动 0.30 mm（Genesis CUDA 1 s；CPU 3 s 同为 0.30 mm）</td></tr>
+        <tr><td>仿真里机器人不动、静置 1 s</td><td>刺球移动 0.30 mm</td><td>刺球移动 0.30 mm</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="note prose">已知限制：very_easy 夹爪下能直拉的方向较窄，因为刺球在这个朝向上横向约 116 mm，只比窗小 2 mm。easier 的初始位姿加 ±1 mm、±2° 扰动时，20 个样本中有 10 个能从背面 60° 的窗平移出去；这个方向远离机器人，夹着前面那根刺时用不上。</p>
+  <p class="note prose">已知限制：very_easy 夹爪下能直拉的方向较窄，因为轮廓只比窗小约 3 mm。easier 的初始位姿加 ±1 mm、±2° 扰动时，20 个样本中有 10 个能从背面 60° 的窗平移出去；这个方向远离机器人，夹着前面那根刺时用不上。</p>
 </section>
 
 <section id="horseshoe">
   <div class="head">
     <div class="eyebrow">horseshoe_ring · ALOHA 双臂 · 刚体</div>
-    <h2>马蹄环：环孔决定能否直接滑过马蹄</h2>
+    <h2>马蹄环：环孔比马蹄大还是小</h2>
   </div>
-  <div class="prose" style="display:grid;gap:10px">
-    <p><b>设计。</b>任务定义不变：环仍同时套着两条链，部件沿用 easy，只改环孔大小。一只手提起一只马蹄，链竖直；另一只手拿环沿链滑过下面那只马蹄，环就脱出。沿链方向看，马蹄是一根 138 × 25 mm 的长条，环孔要能把它套进去：</p>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>档</th><th>环孔</th><th>能套过马蹄的环相位（绕链转的角度）</th></tr></thead>
-      <tbody>
-        <tr><td>easy（现有）</td><td class="num">135 × 128 mm</td><td>没有，要用折合两只马蹄的技巧</td></tr>
-        <tr><td><b>easier</b></td><td class="num">146 × 120 mm</td><td>64°–116°：先转到长轴横跨马蹄</td></tr>
-        <tr><td><b>very_easy</b></td><td class="num">144 mm 圆</td><td>全部</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="two">
-    <figure class="card"><img src="figures/sim_horseshoe_ring_very_easy.jpg" alt="very_easy 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>very_easy</b>：落稳后环平躺，两条链从环中穿过。仿真相机渲染。</figcaption></figure>
-    <figure class="card"><img src="figures/sim_horseshoe_ring_easier.jpg" alt="easier 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>easier</b>：椭圆环平躺在马蹄上方，两条链从环中穿过。仿真相机渲染。</figcaption></figure>
-  </div>
+  <p class="prose"><b>怎么设置。</b>部件和 easy 相同，环仍同时套着两条链，只改环孔。一只手提起一只马蹄，链竖直；另一只手拿着环沿链往下滑过下面那只马蹄，环就脱出。沿链方向看，马蹄是一根 138 × 25 mm 的长条：圆环孔比它大，任何角度都能套过（very_easy）；椭圆环孔只有长轴比它大，要先转到长轴横跨马蹄（easier）。</p>
   <figure>
-    <div class="strip">
-      <div class="card"><img src="figures/horseshoe_bore_easy.jpg" alt="easy 环过不去" loading="lazy" width="720" height="540"></div>
-      <div class="card"><img src="figures/horseshoe_bore_easier.jpg" alt="easier 环未转到位时过不去" loading="lazy" width="720" height="540"></div>
-      <div class="card"><img src="figures/horseshoe_bore_easier_aligned.jpg" alt="easier 环转到位后能过" loading="lazy" width="720" height="540"></div>
-      <div class="card"><img src="figures/horseshoe_bore_very_easy.jpg" alt="very_easy 环任何相位都能过" loading="lazy" width="720" height="540"></div>
+    <div class="diagram">
+      <svg viewBox="0 0 900 270" role="img" aria-label="提起马蹄后沿链方向看马蹄截面与环孔：easy 的环孔比 138 毫米长的马蹄截面短，要折合两只马蹄；very_easy 是 144 毫米圆环，任何角度都能套过；easier 是 146 乘 120 毫米椭圆环，转到长轴横跨马蹄才能套过。">
+<g>
+      <text x="10" y="22" class="t-title">easy / medium / hard</text>
+      <ellipse cx="145" cy="128" rx="77.4" ry="73.5" class="f-bore"/>
+      <rect x="65.8" y="113.7" width="158.5" height="28.5" rx="14.3" class="f-shoe"/>
+      <path d="M59.8 106l12 12m0 -12l-12 12M218.2 106l12 12m0 -12l-12 12" class="f-x"/>
+      <text x="145" y="240" class="t-block" text-anchor="middle">环孔 135 × 128 mm，马蹄 138 mm 长</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">怎么转都套不过，要折合两只马蹄</text>
+    </g>
+<g transform="translate(305 0)">
+      <text x="10" y="22" class="t-title">very_easy</text>
+      <ellipse cx="145" cy="128" rx="82.8" ry="82.8" class="f-bore"/>
+      <rect x="65.8" y="113.7" width="158.5" height="28.5" rx="14.3" class="f-shoe-ghost" transform="rotate(60 145 128)"/>
+      <rect x="65.8" y="113.7" width="158.5" height="28.5" rx="14.3" class="f-shoe"/>
+      <text x="145" y="240" class="t-path" text-anchor="middle">环孔 144 mm 圆</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">任何角度都能套过，直接沿链拉出</text>
+    </g>
+<g transform="translate(610 0)">
+      <text x="10" y="22" class="t-title">easier</text>
+      <ellipse cx="145" cy="128" rx="83.9" ry="69.0" class="f-bore-ghost" transform="rotate(90 145 128)"/>
+      <ellipse cx="145" cy="128" rx="83.9" ry="69.0" class="f-bore"/>
+      <rect x="65.8" y="113.7" width="158.5" height="28.5" rx="14.3" class="f-shoe"/>
+      <path d="M195 50A90 90 0 0 1 229 84" class="f-turn"/>
+      <path d="M223 78L231 90L235 76Z" class="f-turn-head"/>
+      <text x="145" y="240" class="t-acc" text-anchor="middle">环孔 146 × 120 mm 椭圆</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">先绕链转到长轴横跨马蹄，再拉出</text>
+    </g>
+</svg>
     </div>
-    <figcaption>提起马蹄、链竖直后，沿链方向往下看：灰色长条是马蹄侧面，橙色是环。从左到右：easy 的环过不去；easier 的环没转到位时过不去；转到长轴横跨马蹄后能过；very_easy 的圆环在任何相位都能过。</figcaption>
+    <figcaption>提起马蹄、链竖直后沿链方向看，按真实尺寸画。灰色长条是马蹄截面（含端部小环），橙色是环孔；虚线是转动前的位置。</figcaption>
   </figure>
+  <div class="two">
+    <figure class="card"><img src="figures/sim_horseshoe_ring_very_easy.jpg" alt="very_easy 仿真开局" loading="lazy" width="424" height="240"><figcaption><b>very_easy</b>：落稳后环平躺，两条链从环中穿过。仿真相机渲染。</figcaption></figure>
+    <figure class="card"><img src="figures/sim_horseshoe_ring_easier.jpg" alt="easier 仿真开局" loading="lazy" width="424" height="240"><figcaption><b>easier</b>：椭圆环平躺在马蹄上方，两条链从环中穿过。仿真相机渲染。</figcaption></figure>
+  </div>
   <div class="table-wrap">
     <table>
       <thead><tr><th>检查</th><th>very_easy</th><th>easier</th></tr></thead>
       <tbody>
-        <tr><td>沿链直拉（马蹄与链固定在装配姿态），表面余量 ≥ 1 mm</td><td>抽查 6 个相位都有证明路径</td><td>90° 相位有证明路径；0° 相位会碰撞</td></tr>
+        <tr><td>能套过马蹄的环相位（绕链转的角度，每 2° 一档）</td><td>全部</td><td>64°–116°</td></tr>
+        <tr><td>沿链直拉（马蹄与链固定在装配姿态），表面余量 ≥ 1 mm</td><td>抽查 6 个相位都有证明路径</td><td>90° 有证明路径；0° 会碰撞</td></tr>
         <tr><td>开局时环仍套着两条链；环不能单独平移取下</td><td class="ok">是</td><td class="ok">是</td></tr>
-        <tr><td>仿真里机器人不动、静置</td><td>环移动 0.02 mm（Genesis CUDA 1 s）；CPU 3 s 移动 0.06 mm，仍套着两条链</td><td>环移动 0.18 mm（Genesis CUDA 1 s）；CPU 3 s 移动 0.33 mm，仍套着两条链</td></tr>
+        <tr><td>仿真里机器人不动、静置 1 s</td><td>环移动 0.02 mm</td><td>环移动 0.18 mm</td></tr>
       </tbody>
     </table>
   </div>
@@ -392,7 +449,7 @@ env.reset()</pre>
     <h2>长孔立柱：绳在环的上面还是下面</h2>
   </div>
   <div class="prose" style="display:grid;gap:10px">
-    <p><b>设计。</b>部件尺寸沿用 easy，环开局套在立柱根部。环只会被“从环上方跨过”的那段绳困住，因为端盘（直径 110 mm）穿不过环（内径 108 mm）。所以绳的走向决定难度：</p>
+    <p><b>怎么设置。</b>部件尺寸沿用 easy，环开局套在立柱根部，只改绳的走向。环只会被从环上方跨过的那段绳困住，因为端盘（直径 110 mm）穿不过环（内径 108 mm）。绳全部在环下面，环直接提起越过柱顶（very_easy）；只有另一侧带珠 2 的绳圈搭在环上，先把绳圈穿下去再提环（easier）。</p>
   </div>
   <figure>
     <div class="diagram">
