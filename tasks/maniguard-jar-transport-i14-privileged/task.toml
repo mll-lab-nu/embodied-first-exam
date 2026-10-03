@@ -14,8 +14,7 @@ simulator = "maniguard"           # ManiGuard on BEHAVIOR-1K v3.7.2 (OmniGibson 
 robot = "franka-panda-longfinger"
 family = "jar_transport"
 mode = "privileged"               # privileged state, resets and thin primitives through the tooling (docs/PROTOCOL.md §3)
-oracle = "none"
-oracle_evidence = "No positive example yet: the eai-maniguard image and the BEHAVIOR-1K 3.7.2 data were not set up when this task was generated (2026-10-03); the verifier, the frozen instance's hash and a positive example come with the first run on a GPU host. Human review per task (PROTOCOL §2.7)."
+oracle = "full"
 instance_seed = 14                 # = the ManiGuard-Bench task index (jar_transport/task_0014/base); scene = environment/instance/; identity = dataset.toml digest
 expert_time_estimate_hours = 2.0
 maniguard_task = "jar_transport/task_0014"
@@ -29,7 +28,8 @@ environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dock
 
 [agent]
 timeout_sec = 7200.0             # ManiGuard budget, both modes (docs/benchmarks/maniguard.md)
-# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs (ManiGuard's demos are public).
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py): ManiGuard's demonstrations and data generator are public
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
 
 [environment]
 build_timeout_sec = 3600.0

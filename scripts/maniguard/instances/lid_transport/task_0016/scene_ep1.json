@@ -32,49 +32,52 @@
         "registry": {
             "system_registry": {},
             "object_registry": {
-                "bar_jvkwcc_0": {
+                "breakfast_table_idnnmz_0": {
                     "is_asleep": false,
                     "root_link": {
                         "pos": [
-                            2.766995429992676,
-                            5.873109817504883,
-                            0.682338297367096
+                            1.9217729568481445,
+                            4.952547550201416,
+                            0.6417213082313538
                         ],
                         "ori": [
-                            0.0,
-                            0.0,
-                            1.0,
-                            -4.331257628109597e-07
+                            -5.122275936741971e-08,
+                            -6.661140616870398e-08,
+                            0.7071069478988647,
+                            -0.7071065902709961
                         ]
                     },
                     "non_kin": {}
                 },
-                "target_bottle_of_whiskey_ep1_1": {
-                    "is_asleep": true,
+                "target_jug_ep1_1": {
+                    "is_asleep": false,
                     "root_link": {
                         "pos": [
-                            2.7034549713134766,
-                            5.87203311920166,
-                            1.316422939300537
+                            1.8105897903442383,
+                            4.951999187469482,
+                            0.8910363912582397
                         ],
                         "ori": [
-                            -0.00572923943400383,
-                            0.0009066102793440223,
-                            2.049757313216105e-05,
-                            0.9999832510948181
+                            -9.16959106689319e-06,
+                            -2.0877690985798836e-05,
+                            1.3978569768369198e-07,
+                            1.0000001192092896
                         ],
                         "lin_vel": [
-                            0.0,
-                            0.0,
-                            0.0
+                            -2.5142086087726057e-05,
+                            9.491998207522556e-05,
+                            -6.65825282339938e-05
                         ],
                         "ang_vel": [
-                            0.0,
-                            0.0,
-                            0.0
+                            -0.0007037217728793621,
+                            -0.0015732949832454324,
+                            -0.0003319343086332083
                         ]
                     },
                     "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        },
                         "AttachedTo": {
                             "attached_obj_uuid": -1
                         }
@@ -84,25 +87,25 @@
                     "is_asleep": false,
                     "root_link": {
                         "pos": [
-                            2.804645538330078,
-                            5.871069431304932,
-                            1.273601770401001
+                            1.9696967601776123,
+                            4.95197868347168,
+                            0.7670691609382629
                         ],
                         "ori": [
-                            0.0001876026944955811,
-                            -0.01845993474125862,
-                            6.328958534140838e-06,
-                            0.9998295307159424
+                            -0.0007766363560222089,
+                            -1.3939035852672532e-05,
+                            0.00018831618945114315,
+                            0.9999997615814209
                         ],
                         "lin_vel": [
-                            -0.002491448074579239,
-                            -0.00029455620096996427,
-                            -9.21761165955104e-05
+                            -4.3618089762276213e-07,
+                            2.8145266696810722e-05,
+                            -1.8119235392077826e-05
                         ],
                         "ang_vel": [
-                            0.009102229960262775,
-                            -0.059904273599386215,
-                            0.02060060203075409
+                            -0.0007451567216776311,
+                            0.0006749947788193822,
+                            -0.0005077017121948302
                         ]
                     },
                     "non_kin": {
@@ -111,13 +114,47 @@
                         }
                     }
                 },
-                "goal_region__target_bottle_of_whiskey_ep1_1": {
+                "food_cherry_ep1_1": {
                     "is_asleep": false,
                     "root_link": {
                         "pos": [
-                            2.703611135482788,
-                            6.063471794128418,
-                            1.3293113708496094
+                            1.797122597694397,
+                            5.0406389236450195,
+                            0.7749037146568298
+                        ],
+                        "ori": [
+                            -0.032634127885103226,
+                            0.03202950581908226,
+                            -0.0004943369422107935,
+                            0.9989538788795471
+                        ],
+                        "lin_vel": [
+                            0.00018235293100588024,
+                            0.00032158091198652983,
+                            -4.928472117171623e-05
+                        ],
+                        "ang_vel": [
+                            -0.04011751338839531,
+                            0.04797251895070076,
+                            0.024860862642526627
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        },
+                        "MaxTemperature": {
+                            "max_temperature": 23.0
+                        }
+                    }
+                },
+                "goal_region__target_jug_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            1.3495954275131226,
+                            4.966097354888916,
+                            0.9082698822021484
                         ],
                         "ori": [
                             0.0,
@@ -127,7 +164,7 @@
                         ]
                     },
                     "non_kin": {},
-                    "radius": 0.02871551550924778,
+                    "radius": 0.07426643371582031,
                     "height": -1,
                     "size": -1
                 },
@@ -135,15 +172,15 @@
                     "is_asleep": false,
                     "root_link": {
                         "pos": [
-                            2.2416610717773438,
-                            5.8716936111450195,
-                            1.2513179779052734
+                            1.839646577835083,
+                            4.344898223876953,
+                            0.7758427858352661
                         ],
                         "ori": [
-                            2.444721758365631e-09,
-                            -1.0331859812140465e-09,
-                            -0.0003452672390267253,
-                            1.0000003576278687
+                            2.9802322387695312e-08,
+                            7.2177499532699585e-09,
+                            0.6962706446647644,
+                            0.7177797555923462
                         ],
                         "lin_vel": [
                             0.0,
@@ -190,6 +227,14 @@
                                 "past_samples": [
                                     [
                                         0.0,
+                                        -0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        -0.0
+                                    ],
+                                    [
+                                        0.0,
                                         0.0
                                     ],
                                     [
@@ -199,14 +244,6 @@
                                     [
                                         0.0,
                                         0.0
-                                    ],
-                                    [
-                                        0.0,
-                                        -0.0
-                                    ],
-                                    [
-                                        0.0,
-                                        -0.0
                                     ]
                                 ],
                                 "current_idx": 0,
@@ -260,49 +297,52 @@
                     "registry": {
                         "system_registry": {},
                         "object_registry": {
-                            "bar_jvkwcc_0": {
+                            "breakfast_table_idnnmz_0": {
                                 "is_asleep": false,
                                 "root_link": {
                                     "pos": [
-                                        2.766995429992676,
-                                        5.873109817504883,
-                                        0.682338297367096
+                                        1.9217729568481445,
+                                        4.952547550201416,
+                                        0.6417213082313538
                                     ],
                                     "ori": [
-                                        0.0,
-                                        0.0,
-                                        1.0,
-                                        -4.331257628109597e-07
+                                        5.122275936741971e-08,
+                                        6.661140616870398e-08,
+                                        -0.7071069478988647,
+                                        0.7071065902709961
                                     ]
                                 },
                                 "non_kin": {}
                             },
-                            "target_bottle_of_whiskey_ep1_1": {
-                                "is_asleep": true,
+                            "target_jug_ep1_1": {
+                                "is_asleep": false,
                                 "root_link": {
                                     "pos": [
-                                        2.7034549713134766,
-                                        5.872032642364502,
-                                        1.3164228200912476
+                                        1.8105944395065308,
+                                        4.951996326446533,
+                                        0.8910362720489502
                                     ],
                                     "ori": [
-                                        -0.005729439202696085,
-                                        0.0009066229686141014,
-                                        2.0505996872088872e-05,
-                                        0.9999831914901733
+                                        1.0427246479594032e-06,
+                                        -4.952307790517807e-06,
+                                        2.5588082053218386e-07,
+                                        1.0
                                     ],
                                     "lin_vel": [
-                                        0.0,
-                                        0.0,
-                                        0.0
+                                        -0.0004859234322793782,
+                                        0.00033896786044351757,
+                                        -2.467942249495536e-05
                                     ],
                                     "ang_vel": [
-                                        0.0,
-                                        0.0,
-                                        0.0
+                                        -0.002282937755808234,
+                                        -0.0037121842615306377,
+                                        -0.0009310083114542067
                                     ]
                                 },
                                 "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    },
                                     "AttachedTo": {
                                         "attached_obj_uuid": -1
                                     }
@@ -312,25 +352,25 @@
                                 "is_asleep": false,
                                 "root_link": {
                                     "pos": [
-                                        2.8046300411224365,
-                                        5.871065616607666,
-                                        1.2736011743545532
+                                        1.9696967601776123,
+                                        4.951976299285889,
+                                        0.7670690417289734
                                     ],
                                     "ori": [
-                                        0.00022715593513567,
-                                        -0.01865006797015667,
-                                        1.7427308193873614e-05,
-                                        0.9998260736465454
+                                        -0.0006714697810821235,
+                                        -9.427607437828556e-06,
+                                        0.00018809545144904405,
+                                        0.9999997615814209
                                     ],
                                     "lin_vel": [
-                                        -0.00036041144630871713,
-                                        0.002201673574745655,
-                                        -0.00013495625171344727
+                                        -5.160820819583023e-06,
+                                        0.00012111241812817752,
+                                        -1.377903004140535e-06
                                     ],
                                     "ang_vel": [
-                                        -0.04267802834510803,
-                                        -0.0175585076212883,
-                                        -0.006241686642169952
+                                        -0.011292652226984501,
+                                        -0.00047220144188031554,
+                                        1.9383151084184647e-05
                                     ]
                                 },
                                 "non_kin": {
@@ -339,13 +379,47 @@
                                     }
                                 }
                             },
-                            "goal_region__target_bottle_of_whiskey_ep1_1": {
+                            "food_cherry_ep1_1": {
                                 "is_asleep": false,
                                 "root_link": {
                                     "pos": [
-                                        2.703611135482788,
-                                        6.063471794128418,
-                                        1.3293113708496094
+                                        1.797120213508606,
+                                        5.040637969970703,
+                                        0.7749043107032776
+                                    ],
+                                    "ori": [
+                                        -0.03237566724419594,
+                                        0.0317235067486763,
+                                        -0.0006101392209529877,
+                                        0.9989719986915588
+                                    ],
+                                    "lin_vel": [
+                                        7.01070312061347e-05,
+                                        2.139661773981061e-05,
+                                        -0.0005153525271452963
+                                    ],
+                                    "ang_vel": [
+                                        0.12681476771831512,
+                                        0.08779391646385193,
+                                        -0.012040838599205017
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    },
+                                    "MaxTemperature": {
+                                        "max_temperature": 23.0
+                                    }
+                                }
+                            },
+                            "goal_region__target_jug_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        1.3495954275131226,
+                                        4.966097354888916,
+                                        0.9082698822021484
                                     ],
                                     "ori": [
                                         0.0,
@@ -355,7 +429,7 @@
                                     ]
                                 },
                                 "non_kin": {},
-                                "radius": 0.02871551550924778,
+                                "radius": 0.07426643371582031,
                                 "height": -1,
                                 "size": -1
                             }
@@ -371,36 +445,36 @@
                 },
                 "objects_info": {
                     "init_info": {
-                        "bar_jvkwcc_0": {
+                        "breakfast_table_idnnmz_0": {
                             "class_module": "omnigibson.objects.dataset_object",
                             "class_name": "DatasetObject",
                             "args": {
-                                "name": "bar_jvkwcc_0",
-                                "category": "bar",
-                                "model": "jvkwcc",
+                                "name": "breakfast_table_idnnmz_0",
+                                "category": "breakfast_table",
+                                "model": "idnnmz",
                                 "scale": [
-                                    0.9999293088912964,
-                                    0.9999783635139465,
-                                    0.9999604821205139
+                                    1.439886212348938,
+                                    0.9523371458053589,
+                                    1.770556926727295
                                 ],
                                 "fixed_base": true,
-                                "expected_file_hash": "60d91632ceb823b4fa26a609505ba37a"
+                                "expected_file_hash": "4b1a312f1078015665135954b17971cc"
                             }
                         },
-                        "target_bottle_of_whiskey_ep1_1": {
+                        "target_jug_ep1_1": {
                             "class_module": "omnigibson.objects.dataset_object",
                             "class_name": "DatasetObject",
                             "args": {
-                                "name": "target_bottle_of_whiskey_ep1_1",
-                                "category": "bottle_of_whiskey",
-                                "model": "lzjuvy",
+                                "name": "target_jug_ep1_1",
+                                "category": "jug",
+                                "model": "quzmfw",
                                 "scale": [
                                     1.0,
                                     1.0,
                                     1.0
                                 ],
                                 "fixed_base": false,
-                                "expected_file_hash": "161625719e8faa964de76435ba5ad7a3"
+                                "expected_file_hash": "499f75236cb5905e54333476a229d323"
                             }
                         },
                         "lid_cap_ep1_1": {
@@ -409,23 +483,39 @@
                             "args": {
                                 "name": "lid_cap_ep1_1",
                                 "category": "cap",
-                                "model": "arskxc",
+                                "model": "ygsmgm",
                                 "scale": [
                                     1.0,
                                     1.0,
                                     1.0
                                 ],
                                 "fixed_base": false,
-                                "expected_file_hash": "7dfd3bd7c7543f951dfa7a34d856c831"
+                                "expected_file_hash": "4136bb0e833355f81ef952f0ef1aedcd"
                             }
                         },
-                        "goal_region__target_bottle_of_whiskey_ep1_1": {
+                        "food_cherry_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "food_cherry_ep1_1",
+                                "category": "cherry",
+                                "model": "lencii",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "f8ab9227a0a3d2b4eec169998ae27b66"
+                            }
+                        },
+                        "goal_region__target_jug_ep1_1": {
                             "class_module": "omnigibson.objects.primitive_object",
                             "class_name": "PrimitiveObject",
                             "args": {
-                                "name": "goal_region__target_bottle_of_whiskey_ep1_1",
+                                "name": "goal_region__target_jug_ep1_1",
                                 "primitive_type": "Sphere",
-                                "relative_prim_path": "/goal_region__target_bottle_of_whiskey_ep1_1",
+                                "relative_prim_path": "/goal_region__target_jug_ep1_1",
                                 "category": "goal_region_marker",
                                 "fixed_base": true,
                                 "visual_only": true,
@@ -435,7 +525,7 @@
                                     0.2,
                                     1.0
                                 ],
-                                "radius": 0.028715515136718748
+                                "radius": 0.07426643371582031
                             }
                         }
                     }
@@ -445,36 +535,36 @@
     },
     "objects_info": {
         "init_info": {
-            "bar_jvkwcc_0": {
+            "breakfast_table_idnnmz_0": {
                 "class_module": "omnigibson.objects.dataset_object",
                 "class_name": "DatasetObject",
                 "args": {
-                    "name": "bar_jvkwcc_0",
-                    "category": "bar",
-                    "model": "jvkwcc",
+                    "name": "breakfast_table_idnnmz_0",
+                    "category": "breakfast_table",
+                    "model": "idnnmz",
                     "scale": [
-                        0.9999293088912964,
-                        0.9999783635139465,
-                        0.9999604821205139
+                        1.439886212348938,
+                        0.9523371458053589,
+                        1.770556926727295
                     ],
                     "fixed_base": true,
-                    "expected_file_hash": "60d91632ceb823b4fa26a609505ba37a"
+                    "expected_file_hash": "4b1a312f1078015665135954b17971cc"
                 }
             },
-            "target_bottle_of_whiskey_ep1_1": {
+            "target_jug_ep1_1": {
                 "class_module": "omnigibson.objects.dataset_object",
                 "class_name": "DatasetObject",
                 "args": {
-                    "name": "target_bottle_of_whiskey_ep1_1",
-                    "category": "bottle_of_whiskey",
-                    "model": "lzjuvy",
+                    "name": "target_jug_ep1_1",
+                    "category": "jug",
+                    "model": "quzmfw",
                     "scale": [
                         1.0,
                         1.0,
                         1.0
                     ],
                     "fixed_base": false,
-                    "expected_file_hash": "161625719e8faa964de76435ba5ad7a3"
+                    "expected_file_hash": "499f75236cb5905e54333476a229d323"
                 }
             },
             "lid_cap_ep1_1": {
@@ -483,23 +573,39 @@
                 "args": {
                     "name": "lid_cap_ep1_1",
                     "category": "cap",
-                    "model": "arskxc",
+                    "model": "ygsmgm",
                     "scale": [
                         1.0,
                         1.0,
                         1.0
                     ],
                     "fixed_base": false,
-                    "expected_file_hash": "7dfd3bd7c7543f951dfa7a34d856c831"
+                    "expected_file_hash": "4136bb0e833355f81ef952f0ef1aedcd"
                 }
             },
-            "goal_region__target_bottle_of_whiskey_ep1_1": {
+            "food_cherry_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "food_cherry_ep1_1",
+                    "category": "cherry",
+                    "model": "lencii",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "f8ab9227a0a3d2b4eec169998ae27b66"
+                }
+            },
+            "goal_region__target_jug_ep1_1": {
                 "class_module": "omnigibson.objects.primitive_object",
                 "class_name": "PrimitiveObject",
                 "args": {
-                    "name": "goal_region__target_bottle_of_whiskey_ep1_1",
+                    "name": "goal_region__target_jug_ep1_1",
                     "primitive_type": "Sphere",
-                    "relative_prim_path": "/goal_region__target_bottle_of_whiskey_ep1_1",
+                    "relative_prim_path": "/goal_region__target_jug_ep1_1",
                     "category": "goal_region_marker",
                     "fixed_base": true,
                     "visual_only": true,
@@ -509,7 +615,7 @@
                         0.2,
                         1.0
                     ],
-                    "radius": 0.028715515136718748
+                    "radius": 0.07426643371582031
                 }
             },
             "agent_0": {
@@ -542,15 +648,15 @@
                     "action_type": "continuous",
                     "action_normalize": false,
                     "reset_joint_pos": [
-                        -6.71344532747753e-05,
-                        1.42980097734835e-05,
-                        -2.1591153199551627e-05,
-                        -0.06982738524675369,
-                        -0.00011145701864734292,
-                        0.08136076480150223,
-                        -5.492403943208046e-05,
-                        0.019977992400527,
-                        0.019527412950992584
+                        -3.961824404541403e-05,
+                        -1.1477223779365886e-05,
+                        1.16935848382127e-06,
+                        -0.06980671733617783,
+                        -0.0003121295303571969,
+                        0.08160894364118576,
+                        -6.764994759578258e-05,
+                        0.01997106894850731,
+                        0.019437607377767563
                     ],
                     "obs_modalities": [
                         "rgb"
