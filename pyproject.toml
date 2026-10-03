@@ -35,6 +35,7 @@ namespaces = true
 [tool.setuptools.package-data]
 "topogym.config" = ["profiles/*.yaml", "profiles/*/*.yaml"]
 "topogym.assets" = ["resources/catalog.json", "resources/templates/*", "resources/meshes/*", "resources/textures/*", "resources/variations/**/*"]
+"topogym.planning.interlocked_claws" = ["easier_reference_route.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

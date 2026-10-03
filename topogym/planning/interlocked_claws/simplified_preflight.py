@@ -42,19 +42,31 @@ def prepare(env, variant):
             managers[PARTS[s]].add_object(str(index),mesh)
     frames, issues, minimum = [], [], float('inf')
     for motion in motions:
-        length = np.linalg.norm(motion.end[0]-motion.start[0])
-        angle = (motion.end[1]*motion.start[1].inv()).magnitude()
+        endpoints = zip(motion.bodies_at(0.).values(), motion.bodies_at(1.).values())
+        distances = [(np.linalg.norm(b[0]-a[0]), (b[1]*a[1].inv()).magnitude()) for a,b in endpoints]
+        length = max(d[0] for d in distances)
+        angle = max(d[1] for d in distances)
         count = max(2, int(np.ceil(max(length/.006, angle/np.deg2rad(4))))+1)
         for u in np.linspace(0.,1.,count):
-            bodies = {'left': motion.at(u), 'right': initial['right']}
-            p,r = bodies['left']; dp,dr=offsets['left']
-            group=robot.groups['left']
-            tcp_r=r*dr
-            hand_r=tcp_r*turn(group.tcp_orientation_in_hand_wxyz).inv()
-            q=ik.solve_checked(link_name=group.hand_link,
-                position_world_m=p+r.apply(dp)-hand_r.apply(group.tcp_position_in_hand_m),
-                orientation_wxyz=hand_r.as_quat()[[3,0,1,2]],initial_qpos=q,
-                joint_dof_indices=robot._indices['left'][:6])
+            bodies = motion.bodies_at(u)
+            for side, (p,r) in bodies.items():
+                dp,dr=offsets[side]
+                group=robot.groups[side]
+                tcp_r=r*dr
+                hand_r=tcp_r*turn(group.tcp_orientation_in_hand_wxyz).inv()
+                solve_args=dict(link_name=group.hand_link,
+                    position_world_m=p+r.apply(dp)-hand_r.apply(group.tcp_position_in_hand_m),
+                    orientation_wxyz=hand_r.as_quat()[[3,0,1,2]],
+                    joint_dof_indices=robot._indices[side][:6],max_solver_iterations=300)
+                try:
+                    seed=ik.solve(initial_qpos=q,**solve_args)
+                    q=ik.solve_checked(initial_qpos=seed,**solve_args)
+                except ValueError as error:
+                    issues.append(dict(frame=len(frames),phase=motion.phase,side=side,
+                                       progress=float(u),ik_error=str(error)))
+                    return motions, initial, offsets, dict(passed=False,frames=frames,issues=issues,
+                        minimum_table_clearance_m=minimum if np.isfinite(minimum) else None,
+                        object_route=object_audit)
             poses=fk.solve(q)
             pp=np.asarray(poses['position_world_m']).reshape(-1,3)
             rr=np.asarray(poses['orientation_wxyz']).reshape(-1,4)

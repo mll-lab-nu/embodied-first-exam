@@ -2,11 +2,11 @@
 from dataclasses import dataclass
 from tempfile import TemporaryDirectory
 from pathlib import Path
+import json
 
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from topogym.assets.variation_resources import read_json
 from topogym.config.registry import task_definition
 from topogym.planning.rigid_reference.geometry import RigidPathChecker, interpolate, pose_dict
 from topogym.planning.rigid_reference.feedback import body_pose
@@ -15,15 +15,28 @@ from topogym.planning.rigid_reference.feedback import body_pose
 PARTS = {"left": "piece_0", "right": "piece_1"}
 
 
+def read_reference_route():
+    # Authoring data belongs with the planner: benchmark images strip this
+    # directory, while task geometry remains available without a solution.
+    return json.loads(Path(__file__).with_name("easier_reference_route.json").read_text())
+
+
 @dataclass
 class Motion:
     phase: str
     start: tuple
     end: tuple
     seconds: float
+    right_start: tuple | None = None
+    right_end: tuple | None = None
 
     def at(self, u):
         return interpolate(self.start, self.end, u)
+
+    def bodies_at(self, u):
+        if self.right_start is None or self.right_end is None:
+            raise ValueError("World motion requires both arm references")
+        return {"left": self.at(u), "right": interpolate(self.right_start, self.right_end, u)}
 
 
 def reference(variant):
@@ -41,7 +54,7 @@ def reference(variant):
                  (shifted+[-.08, 0., 0.], turn), (np.array([-.09, 0., 0.]), Rotation.identity())]
         phases = ["unhook_small_turn", "separate_short_legs", "restore_attitude"]
     else:
-        record = read_json("variations/interlocked_claws/easier/reference_route.json")
+        record = read_reference_route()
         if record["model_revision"] != task.model_revision:
             raise ValueError("Cross route does not match this model revision")
         poses = [body_pose(p) for p in record["poses"]]
@@ -65,7 +78,7 @@ def reference(variant):
 
 
 def world_route(variant, initial, region):
-    """Recheck measured entry; hold the blue piece at its acquired pose."""
+    """Recheck the measured entry and share separation between both hands."""
     task, assembly, checker, motions, audit = reference(variant)
     base_p, base_r = initial["right"]
     p, r = initial["left"]
@@ -79,12 +92,27 @@ def world_route(variant, initial, region):
     bounds = assembly.bodies[0].mesh.bounds
     target_r = Rotation.identity()
     target_p = np.r_[region["center_xy_m"], region["table_height_m"]+region["placement_height_m"]/2]-bounds.mean(0)
-    destination = (base_r.inv().apply(target_p-base_p), base_r.inv()*target_r)
-    transfer = checker.edge(local[-1].end, destination)
-    if not transfer["passed"]:
-        raise ValueError("Goal transfer intersects the other piece: "+str(transfer))
-    local.append(Motion("transfer_into_goal", local[-1].end, destination, 8.))
-    audit.update(measured_entry=entry, goal_transfer=transfer)
-    world = [Motion(m.phase, (base_p+base_r.apply(m.start[0]), base_r*m.start[1]),
-                    (base_p+base_r.apply(m.end[0]), base_r*m.end[1]), m.seconds) for m in local]
+    # Share the axial separation between the two hands. Holding the blue hand
+    # fixed puts the brown wrist too close to its base during attitude recovery.
+    def common(p):
+        return np.array([np.clip(-.5*p[0], 0., .045), 0., 0.])
+    final_common = common(local[-1].end[0])
+    destination = (base_r.inv().apply(target_p-base_p)-final_common, base_r.inv()*target_r)
+    transfers = []
+    if task.family_id == "cross_square_offset":
+        # Clear the square laterally before moving back toward its x plane.
+        # A direct diagonal toward the zone clips a corner of the frame.
+        lateral = (np.array([local[-1].end[0][0], destination[0][1], local[-1].end[0][2]]), local[-1].end[1])
+        transfers.append(Motion("clear_frame_side", local[-1].end, lateral, 7.))
+    transfers.append(Motion("transfer_into_goal", transfers[-1].end if transfers else local[-1].end, destination, 8.))
+    transfer_edges = [checker.edge(m.start, m.end) for m in transfers]
+    if not all(e["passed"] for e in transfer_edges):
+        raise ValueError("Goal transfer intersects the other piece: "+str(transfer_edges))
+    audit.update(measured_entry=entry, goal_transfer=dict(passed=True, edges=transfer_edges))
+    world = []
+    for index, m in enumerate(local+transfers):
+        ca, cb = (common(m.start[0]), common(m.end[0])) if index < len(local) else (final_common, final_common)
+        world.append(Motion(m.phase, (base_p+base_r.apply(m.start[0]+ca), base_r*m.start[1]),
+                            (base_p+base_r.apply(m.end[0]+cb), base_r*m.end[1]), m.seconds,
+                            (base_p+base_r.apply(ca), base_r), (base_p+base_r.apply(cb), base_r)))
     return world, audit

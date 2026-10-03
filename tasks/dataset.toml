@@ -435,3 +435,19 @@ digest = "sha256:07a02edc427c2e30b1fbfc74dd63ed490d786a527b163f813d1da017392cea5
 name = "robot-coding-bench/topogym-slotted-post-ring-medium-i00-standard"
 digest = "sha256:a6a5cd26b019e0dcbf8a1d6471fee392161889d241054cdacdc436a0b91d0903"
 
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-very-easy-i00-privileged"
+digest = "sha256:15ce095b5d1bbb1d330d75d2320731056623a854f752131d464c68493f85c4db"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-very-easy-i00-standard"
+digest = "sha256:6351ca77fb2353191c60b476177e8564b5f403b28ebb8e69a11504451f22ccfe"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-easier-i00-privileged"
+digest = "sha256:c64462ee0841797eec9bb6a769372d54e9dcfe95df186dc47cd85ce33c2db01d"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-interlocked-claws-easier-i00-standard"
+digest = "sha256:1fb4514aecd0b2b8a5ca023644e413256af251b9ee9526fe333ae005e8e81b5d"
+

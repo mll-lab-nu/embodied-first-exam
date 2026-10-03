@@ -1,6 +1,6 @@
 # Cast Coil very_easy 与 easier 正方体装配工程计划
 
-日期：2026-10-02。修订：v5，两档形状已获用户确认，进入完整变体开发。当前模型：very_easy 为 `cubic_comb_v2`，easier 为 `cubic_baffle_v2`。**Task 注册、资源生成、外侧抓持、参考策略及公开目标已接入；18 项几何与变体回归通过，真实机器人流程正在验收。** 102 mm 建模资源保留；仿真实例按 0.5 等比缩放为 51 mm，版本分别为 `cubic_comb_v2_aloha_v1` 和 `cubic_baffle_v2_aloha_v1`。
+日期：2026-10-02。修订：v5，两档形状已获用户确认，完整变体已接入。当前模型：very_easy 为 `cubic_comb_v2`，easier 为 `cubic_baffle_v2`。**45 项回归通过，两档均从默认 home 连续完成装配、落桌、释放、撤手及原生稳定判定，逐 tick 独立复核通过。** 102 mm 建模资源保留；仿真实例按 0.5 等比缩放为 51 mm，版本分别为 `cubic_comb_v2_aloha_v1` 和 `cubic_baffle_v2_aloha_v1`。实测使用接触后辅助抓持、固定 seed 和显式时序，资格范围见第 10 节。
 
 新增 `cast_coil_very_easy` 与 `cast_coil_easier`，保持两档原定操作区别：**very_easy 对齐后直线拼合；easier 对齐后直插，再保持角度不变横移到位。** 两档最终均为三边等长、外表面齐平的正方体轮廓。两档中央均由实际零件填充，终态为除装配缝外的实心正方体。本次依据用户说明，在 easier 银色大凸起靠外壁处开出镂空槽，让金色前挡板在第二段横移时进入槽内。
 
@@ -67,7 +67,7 @@ Hanayama 官方将 Cast Coil 描述为由两件近似同形的卷绕零件组成
 
 very_easy 每件有连续外侧背板及与其一体的大齿；easier 的前挡板连接上下框条，终态进入银件根部镂空。两档均不增加外凸定位柄。
 
-本次模型候选已采用 `L=102 mm`，便于和现有面宽比较；这属于建模版本的固定参数，尚未冻结为正式机器人实例。主体尺寸、质量和惯量已在资产中计算，机器人适配仍待验证。把旧结构的深度从 74.25 mm 直接拉伸到 102 mm 会改变质量、抓取空间及通路，不能视为零成本变换；必要时对两档统一缩放，仍保持三轴等长。
+建模版本采用 `L=102 mm`，便于和现有面宽比较。机器人版本根据 ALOHA 实际指尖开口采用统一 0.5 缩放，三轴均为 51 mm；质量和惯量由缩放后的实体重新计算，不复用 102 mm 的惯量。详见第 10 节。
 
 ### 必须落实到实体的形状条件
 
@@ -91,7 +91,7 @@ very_easy 每件有连续外侧背板及与其一体的大齿；easier 的前挡
 
 大齿及槽壁约束上下错位，齿尖与对侧连续背板确定插入终点；抓持区在两件外侧背板上。没有需要绕过的倒扣，允许沿原方向拆开；本档不要求插接后不可直拔。槽沿 Y 贯通，前后齐平需要位姿控制，并无额外 Y 向定位小销。
 
-设计验收的关键是：**两个完整实体连同抓持它们的手指，能在对齐后仅靠一次直线相对运动完成拼合。** 当前只完成零件几何通路检查，夹爪验证留到后续接入阶段。
+设计验收的关键是：**两个完整实体连同抓持它们的手指，能在对齐后仅靠一次直线相对运动完成拼合。** 建模阶段完成零件几何通路检查；第 10 节记录缩放后模型的外侧夹持和真实机器人完整执行。
 
 ## 5. easier 前挡板与大凸起根部镂空
 
@@ -149,7 +149,7 @@ very_easy 每件有连续外侧背板及与其一体的大齿；easier 的前挡
 
 旧 `CoilAssembly`、`geometry_report()` 固定四层交错、旧中心孔及拓扑假设，新两档应使用自己的报告，不伪造旧检查字段，也不放宽旧变体规则。新报告至少包含 `assembled_extent_m`、`cube_extent_error_m`、六面轮廓检查、两档全体积填充及 easier 根部镂空、每件连通性、水密性、质量、惯量及装配间隙。
 
-`variant_reference()` 目前把无模板分派到旧 baseline，其他模板读取 `inverse_design`；runner 与 baseline 还使用固定 `GRASP_POINTS`。本次须按 family 一起解析几何、抓点和参考路线，仅增加 CLI choices 不足以完成接入。[现有 policy](../../topogym/planning/cast_coil/policy.py)、[现有 runner](../../scripts/oracle_runners/run_cast_coil_policy.py)。
+`variant_reference()` 已按新资源分派几何和路线，runner 使用 Task 推荐的抓持区域，并为新两档选择 `SimplifiedCoilPolicy`。原三档仍走原来的模板及策略分支。[路线解析](../../topogym/planning/cast_coil/policy.py)、[执行入口](../../scripts/oracle_runners/run_cast_coil_policy.py)。
 
 正式素材放在包内 resources，参考路线与 oracle 数据留在 planning／验证范围。根目录 `tasks/` 继续作为生成产物，不作为场景源码编辑入口。
 
@@ -159,9 +159,9 @@ very_easy 每件有连续外侧背板及与其一体的大齿；easier 的前挡
 | --- | --- | --- |
 | P0 方案 | 本文、官方资料核对、新版概念图 | 已完成。 |
 | P1 几何 | 先做完整正方体目标及两个主体，再做接头 | 当前候选通过等边、齐平、设计填充与镂空、两个连通水密实体、无穿透与质量检查。 |
-| P2 路径与抓取 | very_easy 直线扫掠，easier 两段扫掠及阻挡反例 | 指定零件平移通路已通过；夹爪净空、任意旋转捷径与机器人可达性尚未验证。 |
-| P3 接入与机器人 | 注册、初态、抓点、参考策略；从 home 连续完成 | 初态不成功；实测达到终态、释放并稳定；旧三档按影响范围回归。 |
-| P4 双模式交付 | 固定代码与资产身份，构建镜像、冻结实例并生成任务包 | 初始化、执行、回放评分、完整成功、失败反例及录像分别有证据。 |
+| P2 路径与抓取 | very_easy 直线扫掠，easier 两段扫掠及阻挡反例 | 缩放后连续通路及指定错误平移反例通过；实际夹持和可达性由完整执行确认，未证明不存在任意旋转捷径。 |
+| P3 接入与机器人 | 注册、初态、抓点、参考策略；从 home 连续完成 | 两档原生成功、释放稳定、全 tick 复核及四路录像通过；旧三档几何与相关代码回归通过，未重跑旧完整流程。 |
+| P4 双模式交付 | 固定代码与资产身份，构建镜像、冻结实例并生成任务包 | 四个任务包、24 项包检查及镜像内短回放通过；完整 Harbor agent／verifier 尚未运行。 |
 
 几何验收须保存终态三视图和六面轮廓检查，不能只检查 `extent_x=extent_y=extent_z`。同时验证碰撞体与视觉体的一致性，排除“画成方块，实际碰撞是另一形状”。
 
@@ -216,3 +216,58 @@ OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv-gs121-nyx/bin/python \
 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv-gs121-nyx/bin/python \
   ci_checks/test-cast-coil-simplifications.py -v
 ```
+
+## 10. 完整变体接入（2026-10-02）
+
+入口为 `cast_coil_very_easy` / `very_easy` 和 `cast_coil_easier` / `easier`，均在 experimental 池。`base` 及 `seeded` 仍使用原 easy／medium／hard，不改原有数据集采样。两档复用原生装配、落桌、释放、撤手和 0.5 s 稳定窗口；未对齐、半插入、未横移、悬空到位、仍在抓持和稳定时间不足均不能成功。
+
+正式仿真配置采用 **51 × 51 × 51 mm** 外形、0.3 mm 装配缝；easier 的错位量为 9 mm。102 mm 原始资源与截图保留。ALOHA 的 37 mm 单指导轨行程不等于指尖净开口；初试 61.2 mm 会顶到指尖，现由实际机器人 XML 中的指尖位置及半径验证 51 mm 的外侧夹持尺寸。两件没有新增外凸抓柄或第三件支撑。
+
+从默认 home 开始，先张开夹爪并允许自由零件自然落桌，再连续接近外侧背板、双指接触取得 `contact_weld_v1` 辅助抓持、抬升和对齐。easier 银件会自然倾到由外壁与大凸起共同支撑的姿态，实测在 0.5 s 时已稳定；策略读取该真实姿态，不假设零件保持创建瞬间的直立角度。随后执行 very_easy 的直插，或 easier 的错位直插与横移，最后落桌、开指、撤手，由 Task 确认稳定。
+
+策略以相对装配坐标系中的横向位移和旋转误差约束插入通道；沿当前运动轴的滞后仍处于同一条可行线段上，不用它反复阻止推进。换轴前检查完整相对位姿。51 mm 几何的两条路线均通过向固定件外扩 0.25 mm 的连续碰撞检查；推进预算为 0.24 mm，到位预算为 0.2 mm。这些是策略控制预算，没有修改 Task 的 1 mm / 0.02 rad 成功容差或接触穿透上限。
+
+本轮新增脚本／模块：
+
+| 文件 | 用途 |
+| --- | --- |
+| `topogym/tasks/cast_coil/cast_coil_very_easy.py` | very_easy Task 入口及版本身份。 |
+| `topogym/tasks/cast_coil/cast_coil_easier.py` | easier Task 入口及版本身份。 |
+| `topogym/tasks/cast_coil/simplified.py` | 统一缩放、初态、外侧抓持区域和资产声明。 |
+| `topogym/planning/cast_coil/simplified_policy.py` | 从 home 到装配、落桌释放的实测反馈策略。 |
+| `ci_checks/test-cast-coil-variants.py` | 10 项注册、缩放、夹爪、通路、推进方向、公开目标及终态反例检查。 |
+
+本轮修改脚本／模块：
+
+| 文件 | 改动 |
+| --- | --- |
+| `topogym/assets/geometry/cast_coil_simplified.py` | 在已确认模型生成器上增加等比缩放及 Task 空目录导出支持。 |
+| `topogym/tasks/cast_coil/common.py` | 增加新档抓持分派及可覆写的银件初始旋转；原三档公式与终态保持原样。 |
+| `topogym/config/variation_records.py` | 注册两个具名入口。 |
+| `topogym/planning/cast_coil/policy.py` | 按实际任务配置解析新几何及一段／两段参考运动。 |
+| `scripts/oracle_runners/run_cast_coil_policy.py` | 支持五个入口、自动选择新策略和抓持区域、要求完整证据、监控资源。 |
+| `topogym/tasks/goal_description.py` | 新档公开目标描述为外表面齐平的正方体。 |
+
+前一建模阶段新增的 `ci_checks/test-cast-coil-simplifications.py` 及两份 `geometry.json` 继续使用。文档更新包括本文、`docs/develop/tasks/cast_coil_zh.md` 和 `scripts/oracle_runners/README.md`。一次性构建、迁移和审计辅助程序放在仓库外，未加入活动脚本目录。
+
+验证记录：9 项几何检查、10 项变体检查、10 项公开目标检查及 16 项 runner 回归，共 45 项通过。原三档几何文件 SHA-256 仍为 `270cda804ef2bbd3b2f7a988feb253bc00d83fb1a4e0375ab0e3b2175019437b`；这不代表本轮重新运行了旧三档的完整机器人流程。[最终汇总](../../runs/test_results/cast_coil_variants_gpu_20261002/implementation_report.json)保存本轮脚本哈希、源码一致性、运行身份、录像哈希及资源峰值；两次完整运行最高系统内存占用均为 52.7%，未触发 90% 停止阈值。
+
+已构建本地镜像 `topogym-local/cast-coil-variants:20261002-01`，镜像 ID 为 `sha256:780c297d83889b9eca67bdfe715d7072f518086274b565d1243cef55a41513f8`。它基于本机已有 `rcb-topogym:0.2.6-cu128` 依赖层，覆盖冻结的场景源码并使用现有 `prune.py` 移除规划／策略代码；源码摘要为 `74cab719681efbbd9622d76ef56ea1a53a548b40dcf991530682cd3f3b41b2d1`。没有覆盖或推送正式镜像标签。
+
+使用现有生成器冻结两档实例，并生成 [四个 privileged／standard 任务包](../../runs/test_results/cast_coil_variants_gpu_20261002/tasks/)。[24 项包检查](../../runs/test_results/cast_coil_variants_gpu_20261002/package_checks_v2.json)通过。镜像内两档均通过严格初态身份匹配、3 步保持、reset/replay 及 Nyx 四视角短录制；见 [very_easy smoke](../../runs/test_results/cast_coil_variants_gpu_20261002/very_easy_package_smoke/smoke.json) 和 [easier smoke](../../runs/test_results/cast_coil_variants_gpu_20261002/easier_package_smoke/smoke.json)。这只是启动与短动作回放验收，两次均未装配成功；very_easy 短回放末态哈希不同，不声明逐位确定性。容器退出时的 Nyx shader-cache 导出警告保留在日志中，两条命令退出码均为 0。
+
+完整原生机器人执行使用冻结源码、CUDA、Nyx + compact_lab、25 ms tick、40 子步、1 tick/action，保留每个 tick 的状态和全部动作。**两档均通过原 Task 的 `Goal stable`，运行退出码为 0，证据与 physics tick 均完整。** 每档仅验证 seed=0 的一个实例，使用 `contact_weld_v1` 接触后辅助抓持；两手均有真实双指接触取得和开指解除事件，终态辅助已解除。该结果不代表纯摩擦抓持、默认 400 Hz tick、半步长资格、随机参数域保证或完整 Harbor agent／verifier 验收。
+
+| 实例 | 仿真时长 | 终态相对位置／角度误差 | 稳定时间 | 全 tick 复核 |
+| --- | --- | --- | --- | --- |
+| [very_easy](../../runs/test_results/cast_coil_variants_gpu_20261002/very_easy_a05/run_report.json) | 46.30 s | 0.105 mm / 0.000924 rad | 0.50 s | [1,853 个状态，无差异](../../runs/test_results/cast_coil_variants_gpu_20261002/very_easy_a05/native_tick_audit.json) |
+| [easier](../../runs/test_results/cast_coil_variants_gpu_20261002/easier_a03/run_report.json) | 48.55 s | 0.249 mm / 0.003628 rad | 0.50 s | [1,943 个状态，无差异](../../runs/test_results/cast_coil_variants_gpu_20261002/easier_a03/native_tick_audit.json) |
+
+复核使用各运行冻结的 Task，逐个读取保存的末子步测量，重新计算成功／终止／原因和稳定窗口，并检查默认 home 起点；不是一次新的物理重放。终态机器人保守净空分别为 28.91 mm 与 28.59 mm，全流程任务接触最大穿透分别为 0.585 mm 与 0.545 mm。
+
+录像覆盖同一次连续执行的 home、抓取、装配、放桌和撤手，各档四视角及拼图均通过共享录制校验。very_easy 每路 1,390 帧，easier 每路 1,457 帧，30 fps；四个单视角均为 848×480。当前保留为单一时序的开发验收证据：
+
+- very_easy：[上方](../../runs/test_results/cast_coil_variants_gpu_20261002/very_easy_a05/segments/segment_1/videos/cam_high.mp4) · [前方](../../runs/test_results/cast_coil_variants_gpu_20261002/very_easy_a05/segments/segment_1/videos/cam_low.mp4) · [左腕](../../runs/test_results/cast_coil_variants_gpu_20261002/very_easy_a05/segments/segment_1/videos/cam_left_wrist.mp4) · [右腕](../../runs/test_results/cast_coil_variants_gpu_20261002/very_easy_a05/segments/segment_1/videos/cam_right_wrist.mp4) · [四视角拼图](../../runs/test_results/cast_coil_variants_gpu_20261002/very_easy_a05/segments/segment_1/videos/combined.mp4)。
+- easier：[上方](../../runs/test_results/cast_coil_variants_gpu_20261002/easier_a03/segments/segment_1/videos/cam_high.mp4) · [前方](../../runs/test_results/cast_coil_variants_gpu_20261002/easier_a03/segments/segment_1/videos/cam_low.mp4) · [左腕](../../runs/test_results/cast_coil_variants_gpu_20261002/easier_a03/segments/segment_1/videos/cam_left_wrist.mp4) · [右腕](../../runs/test_results/cast_coil_variants_gpu_20261002/easier_a03/segments/segment_1/videos/cam_right_wrist.mp4) · [四视角拼图](../../runs/test_results/cast_coil_variants_gpu_20261002/easier_a03/segments/segment_1/videos/combined.mp4)。
+
+证据存储在 `/data/jianwen/topogym/cast_coil_variants_20261002/`，仓库 `runs/test_results/cast_coil_variants_gpu_20261002` 提供入口。此前四次已停止诊断逐文件校验 SHA-256 后迁到同目录的 `diagnostics/`，原访问路径保留；没有删除其证据、缓存或其他会话产物。

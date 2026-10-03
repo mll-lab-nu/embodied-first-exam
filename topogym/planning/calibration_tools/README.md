@@ -74,12 +74,76 @@ with open_session(dict(task_id="cast_keyhole", variation_id="easier",
 | `run_grasp_trial`、`grasp_trial_report` | 异步执行明确给出的接近／闭合／提升／持握／释放动作，保存逐 tick 测量、阶段、事件、判据及可选共享录像。 |
 | `start_tracking`、`tracking_report`、`stop_tracking` | 按已提交控制步汇总关节／TCP 误差，接收可选物体参考，并保留回溯分支和不完整执行。 |
 | `cache_plan`、`check_cached_plan`、`prepare_plan` | 保存不可变候选计划，按身份／实测起点／检查覆盖决定复用、局部修正或完整规划。 |
+| `task_summary` | 分开显示目标进度、失败原因、判据开关与 registry 验收引用；忙碌时从 `status().progress.task_summary` 读取最后提交的摘要。 |
+| `contact_details`、`gripper_geometry` | 查询可用接触位置及后端来源，测量实际碰撞面距离；指定指垫三角面后可测指垫距离。 |
+| `compare_runs`、`summarize_run` | 离线对照已有运行的步数、分项耗时、缓存选择和任务摘要；记录的执行工作不一致时不给加速比。 |
+| `drive_object` | 在显式准备的 FEM／IPC 开发会话中，以有界外力或位置 PD 探索物体运动；实验接口，尚无 GPU 动力学验收。 |
 
 几何编辑与建模适配目前覆盖显式 Cast Keyhole 变体；`seeded` 场景扰动和其他任务需要额外适配。真实动力学 teleport／pin、软体节点编辑、跨进程精确 checkpoint、未记录状态的历史重渲染、精确接触点箭头尚未提供。调用不支持的能力明确报 `UnsupportedCapability`。
 
 `check_robot_path` 的 path 是**完整 robot qpos 的列表**，只检查提交的采样，不替调用者做连续关节插值。`allowed_contacts` 是显式的 `entity/link` 名称对；结果记录所有允许项。无碰撞候选不等于机器人成功抓持或完成任务。
 
 `check_robot_path(..., include_tcp=True)` 还返回相同采样点的原生 FK `tcp_path`（各臂的 `position_m` / `quaternion_wxyz`）。开发方可据此构造沿关节路径的 EE 接近路点，避免只在几个独立 Cartesian 目标上求 IK 而忽略中间构型。此选项不发送控制命令，也不推进物理；实际 EE 执行仍会经过公共 IK 校验。
+
+## 状态摘要与接触／夹爪读数
+
+```python
+summary = dev.task_summary()  # 空闲时读取当前状态，不推进物理
+print(summary["progress"], summary["outcome"])
+print(summary["evaluation"], summary["qualification"])
+
+op = dev.run_policy(policy_spec, max_control_steps=40)
+print(dev.status(op)["progress"]["task_summary"])  # 不向忙碌 worker 发送读取请求
+dev.wait(op)
+
+contacts = dev.contact_details(entities=["robot", "piece"])
+fingers = dev.gripper_geometry("right", include_surfaces=True)
+```
+
+`progress` 包含 Task 已报告的目标条件、稳定时间和指标；`outcome` 分开列出失败、终止与时间上限；`evaluation.goal_enabled` 表示原生目标判据是否启用。`qualification` 保留 registry 状态、验收引用与声明缺口，**不会从开关或 registry 状态推导已验收范围**；历史证据尚未解析时 `accepted_scope=None`。父进程摘要在控制步提交及回溯后更新，带 episode／branch／state 和仿真时间；原生步卡住时仍可读取，但不是卡住帧内部的新测量。
+
+`contact_details()` 一次读取 Genesis 刚体接触缓冲区，返回命名接触对、可用力／穿透以及 `contact_position_world_m`，同时注明来源。缺少位置时保留 `None`；IPC 接触的命名对、力和位置尚未映射，单独以 `ipc.contacts=None` 和缺失原因说明，不把刚体缓冲区当成完整 IPC 接触。此接口不自动判定“哪个接触顶开手指”。
+
+`gripper_geometry()` 返回实际／指令手指坐标、`finger_surface_clearance`、最近点和是否相交。默认自动选择 IPC 实际仿射碰撞面，非 IPC 场景使用 Genesis 碰撞面；可用 `source="ipc"` 或 `"genesis"` 显式选择。单指关节坐标和整根手指表面距离都不等于指垫净间距。
+
+若已确定同一后端碰撞网格的指垫三角面，传 `pad_faces={"right": {实际左指链接名: [三角面编号], 实际右指链接名: [三角面编号]}}`，即可读取 `pad_surface_clearance`；未指定时该字段为 `None`。`include_surfaces=True` 按需返回每根手指的世界坐标顶点和三角面编号，供选择指垫面；默认不传网格。所有距离仅为当前三角表面几何量，相交时不会推断接触力或穿透深度，也不推进物理。
+
+## 已有运行的耗时对照
+
+```python
+from topogym.planning.calibration_tools import compare_runs
+
+comparison = compare_runs(["runs/oracle_dev/baseline", "runs/oracle_dev/candidate"])
+print(comparison["comparisons"])
+print(comparison["planning_by_selection"])
+```
+
+该函数离线读取已落盘的配置、源码／资产身份、动作、计时和报告，不启动仿真；也可调用 `dev.compare_runs(...)`。每次运行同时列出总执行步数和回溯后有效分支步数，耗时对应全部实际工作。对照项列出分阶段总耗时与扣除子阶段后的耗时差，以及缓存命中／修正／完整规划的分项成本。
+
+只有配置、源码、资产、候选、动作／tick 数、回溯与外力记录一致且证据完整时，才提供控制步墙钟时间比；硬件和背景负载仍标为未核验。不同参数运行照常列出原始数据和差异，但不给加速比。`planning_by_selection` 是按缓存选择汇总的描述性统计，不把不同规划请求的成本差当成缓存带来的加速。
+
+## 同一 FEM／IPC 模型下的外力探索
+
+必须在新建物理会话时声明目标实体，工具才会在 native IPC 初始化前注册 libuipc 外力接口；不改正式 Task、共享 World 文件或默认物理参数。以下片段放在前述 main guard 内，`ipc_config`、实体名和节点集合由当前任务提供：
+
+```python
+with open_session(ipc_config, "runs/oracle_dev/object_force_01", kind="physics",
+                  candidate={"object_drives": {fem_entity: "fem"}}) as dev:
+    op = dev.drive_object(
+        fem_entity, vertex_indices=selected_vertex_indices,
+        control_steps=5, force_world_n=[0., 0., .1], max_force_n=.1,
+    )
+    print(dev.status(op)["progress"])
+    result = dev.wait(op)
+```
+
+`force_world_n` 是所选 FEM 节点共同承担的**总力**，均分到明确选择的节点；示例数值只说明单位与调用方式，不是推荐任务参数。单刚体使用 `{entity: "rigid"}`，不传 `vertex_indices`；仅支持单环境、单链接、可动 `ipc_only` 任务刚体，不支持机器人和桌面。
+
+也可将 `force_world_n` 替换为 `positions_world_m=[[x, y, z], ...]`，并提供 `kp_n_per_m`、`kd_ns_per_m`：工具从实测起点按控制步插值目标，对刚体原点或所选 FEM 节点平均位置施加有界 PD 力。`max_force_n` 必填，位置跟随不保证精确到达，不提供姿态驱动、运动学 teleport 或新积分器。
+
+每次经现有 SegmentRunner 执行空动作、保持机器人控制目标，记录参考、施力、实测位置及状态引用；暂停／取消在控制步边界生效，原生超时沿用 supervisor 保护。完成、取消和可捕获异常后清零外力，回溯后也清零；worker 被终止时该进程中的场景随之销毁。运行永久标为探索，不能作为机器人完成证明；包含外力的动作序列拒绝 `restart(replay_to=N)`，因为仅回放机器人动作不能恢复外力历史。
+
+验收范围：工具调用、取消／清理、真实 libuipc 几何声明及外力缓冲区读写已检查；**未完成 GPU World 中的动力学验收**。`capabilities().object_drives.physical_acceptance` 因此为 `False`，不承诺解题效果或迭代加速。
 
 ## 控制步跟踪与物体参考
 
@@ -295,7 +359,9 @@ with open_grasp_sweep(config, trial, grid, "runs/oracle_dev/grasp_sweep_01", see
 bash ci_checks/check-calibration-isolation.sh
 ```
 
-CLI 的 `script --commands commands.json` 顺序调用 JSON 数组中的 `{ "method": "...", "params": {...} }`；`--config config.json` 接收完整 SimulatorConfig 字段。
+CLI 的 `script --commands commands.json` 顺序调用 JSON 数组中的 `{ "method": "...", "params": {...} }`；`--config config.json` 接收完整 SimulatorConfig 字段，`--candidate candidate.json` 接收开发候选及可选 `object_drives` 声明。
+
+本轮新增支持的工具检查入口为 `PYTHONDONTWRITEBYTECODE=1 .venv-gs121-nyx/bin/python -B -m topogym.planning.calibration_tools.test_support -v`，覆盖状态解释、忙碌时查询、运行对照、接触／表面距离、外力边界和清理；它不运行完整 Task 或证明 GPU 物理成功。本轮代码、测试和说明只改本目录。
 
 正式隔离检查可加 `--artifact <wheel或sdist>`、四个角色的 `--limited-image`／`--privileged-image`／`--sim-image`／`--verifier-image`、`--require-images` 和实际容器的 `--container`。未提供的运行环境记为 `not_verified`。不把本机基镜像检查当成所有未来部署挂载都已检查。
 

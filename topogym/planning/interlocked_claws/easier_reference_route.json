@@ -2,7 +2,7 @@
   "schema_version": 1,
   "model_revision": "xyz_cross_offset_frame_candidate_v1",
   "family_id": "cross_square_offset",
-  "frame": "piece_1 local; piece_0 relative pose",
+  "frame": "piece_1 local; piece_0 relative pose (authoring reference only)",
   "clearance_margin_m": 0.0015,
   "poses": [
     {

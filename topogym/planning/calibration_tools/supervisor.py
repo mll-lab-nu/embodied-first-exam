@@ -45,6 +45,7 @@ class Supervisor:
         self._timings = TimingBook()
         self._samples = deque(maxlen=32)
         self._tracking = {}
+        self._task_summary = None
         self._profile_stream = (self.output / "profile.jsonl").open("x", buffering=1)
         self._closed = False
         self._closing = False
@@ -99,7 +100,7 @@ class Supervisor:
         params = json_value(params or {})
         token = identifier(request_id or uuid4().hex)
         signature = digest(dict(method=method, params=params))
-        timeout = (self.budgets.policy_s if method in {"run_policy", "step_until", "run_grasp_trial"} else
+        timeout = (self.budgets.policy_s if method in {"run_policy", "step_until", "run_grasp_trial", "drive_object"} else
                    self.budgets.render_s if method == "capture_frame" else self.budgets.operation_s)
         if timeout_s is not None:
             from math import isfinite
@@ -162,6 +163,7 @@ class Supervisor:
         result.update({key: value for key, value in measured.items() if value is not None})
         result["last_saved_state"] = deepcopy(self._last.get("state_ref"))
         result["tracking"] = deepcopy(self._tracking)
+        result["task_summary"] = deepcopy(self._task_summary)
         return result
 
     def timings(self):
@@ -263,6 +265,8 @@ class Supervisor:
                                 self._samples.append(message["sample"])
                             elif kind == "tracking_summary":
                                 self._tracking[message["summary"]["tracking_id"]] = message["summary"]
+                            elif kind == "task_summary":
+                                self._task_summary = message["summary"]
                             elif kind == "ready":
                                 self._last = message["progress"]
                                 self._save_timings()

@@ -22,6 +22,9 @@ class SimplifiedCoilPolicy(CastCoilPolicy):
         self.variant = variant
         self.grasp_points = grasp_points(assembly.record)
         self.radius = max(float(np.linalg.norm(b.visual.vertices, axis=1).max()) for b in assembly.bodies)
+        clearance = assembly.record["parameters"]["seam_mm"]*.001
+        self.arrival_error = min(.0002, clearance*2/3)
+        self.insertion_error = min(.00025, clearance*.8)
         self.samples, self.tracking = [], {}
         self.require_grasps = False
 
@@ -43,6 +46,18 @@ class SimplifiedCoilPolicy(CastCoilPolicy):
             result[side] = (p+r.apply(self.grasp_points[side])+turn.apply([-.01381, 0., .00055]), turn)
         return result
 
+    def transverse_error(self, desired, phase):
+        """An insertion-axis lag remains on the route; cross-axis lag does not."""
+        actual = self.bodies()
+        def relative(poses):
+            gp, gr = poses["right"]
+            sp, sr = poses["left"]
+            return gr.inv().apply(sp-gp), gr.inv()*sr
+        p, r = relative(desired)
+        ap, ar = relative(actual)
+        axis = 0 if phase == "assembly_insert" else 1
+        return float(np.linalg.norm(np.delete(p-ap, axis))) + self.radius*float((r*ar.inv()).magnitude())
+
     def follow_bodies(self, pose_at, seconds, phase):
         self.phase = phase
         start = self.time()
@@ -53,12 +68,16 @@ class SimplifiedCoilPolicy(CastCoilPolicy):
             u = float(np.clip(fraction**3*(10+fraction*(-15+6*fraction)), 0., 1.))
             desired = pose_at(u)
             absolute, relative = self.tracking_error(desired)
+            transverse = self.transverse_error(desired, phase) if tight else None
             self.tracking = dict(phase=phase, progress=u, absolute_material_error_m=absolute,
-                                 relative_material_error_m=relative)
-            if fraction >= 1. and absolute < .0001 and relative < .0001:
+                                 relative_material_error_m=relative, transverse_material_error_m=transverse)
+            if fraction >= 1. and absolute < self.arrival_error and relative < self.arrival_error:
                 self.samples.append(dict(time_s=self.time(), **self.tracking))
                 return
-            if absolute < (.0007 if tight else .003) and (not tight or relative < .00012):
+            # Cross-axis displacement/rotation must fit the verified gap.
+            # Longitudinal lag stays on the same clear segment; endpoints still
+            # require the full relative pose to converge before changing axis.
+            if absolute < (.0007 if tight else .003) and (not tight or transverse < self.insertion_error):
                 elapsed = min(seconds, elapsed+self.dt)
                 last_advance = self.time()
             if self.time()-start > max(40., seconds*24) or self.time()-last_advance > 12.:

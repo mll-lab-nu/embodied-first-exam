@@ -1,5 +1,6 @@
 """Oracle (standard mode): replays the privileged oracle's joint targets, sampled every K control steps, as
-`joint_position` chunks with dt = K/30 s — i.e. the oracle's own timing, streamed through the same interface an agent
+`joint_position` chunks with dt = K/control_hz s, using the frozen service's reported control frequency (normally 40 Hz).
+They are streamed through the same interface an agent
 has. K = 1 with `hold` replays the recorded rows exactly. Uses no privileged information at run time.
 Source: scripts/robowits/shared/oracle_replay.py; the rows come from scripts/robowits/oracles/<family>/oracle_qpos.npy."""
 import json, os, sys, time
@@ -8,7 +9,7 @@ import requests
 sys.path.insert(0, "/opt/tools")
 from rcb_client import Robot, EpisodeOver
 HERE = os.path.dirname(os.path.abspath(__file__))
-Q = np.load(os.path.join(HERE, "oracle_qpos.npy")).astype(np.float32)           # (N, 16), one row per K control steps
+Q = np.load(os.path.join(HERE, "oracle_qpos.npy")).astype(np.float32)           # (N, action_dim), one row per K control steps
 M = json.load(open(os.path.join(HERE, "oracle_meta.json"))) if os.path.exists(os.path.join(HERE, "oracle_meta.json")) else {}
 K = int(M.get("K", 1)); interp = M.get("interpolate", "hold")
 r = Robot(); spec = r.spec(); hz = float(spec.get("control_hz", 30)); dt = K / hz

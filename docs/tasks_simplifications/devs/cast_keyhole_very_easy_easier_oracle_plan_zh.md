@@ -219,10 +219,14 @@ easier 也已完成普通 `Env + SegmentRunner` 的独立完整重跑：[报告]
 
 easier 的四路录像完整解码、同组时间线核对通过：[俯视](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_full_qualified_01/segments/segment_2/videos/cam_high.mp4)、[低视角](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_full_qualified_01/segments/segment_2/videos/cam_low.mp4)、[左腕](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_full_qualified_01/segments/segment_2/videos/cam_left_wrist.mp4)、[右腕](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_full_qualified_01/segments/segment_2/videos/cam_right_wrist.mp4)。初态和自然落稳前缀同样在 segment 0、1。[接触审计](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_full_qualified_01/recorded_contacts_audit.json)覆盖 61,724 个策略阶段状态，没有抓持脱落，也没有记录手臂互碰、手臂碰另一片或手指碰桌；范围仍限于保存的物理 tick，不代表求解子步或视觉外壳的全覆盖。
 
-错误直拉曾做 5 s 内测，实际只推进约 2.4 mm，未采到金银片接触，**不足以证明真实物理阻挡**；已有几何负例与物理对照分开记录。正在补做从 home 连续执行、到第一个错位处继续直拉的较长对照，物理和跟踪参数保持不变。
+错误直拉曾做 5 s 内测，实际只推进约 2.4 mm，未采到金银片接触，**不足以证明真实物理阻挡**。随后从 home 连续补做较长对照，保持物理和跟踪参数：到第一个错位处省略横移，要求继续直出 25 mm。22.525 s 后实际只前进约 5.85 mm，金银片保持接触、控制器报跟踪停滞，双手无抓持丢失；采到的最大金银接触力约 4.32 N、最大穿透约 1.76 μm。[接触审计](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_wrong_straight_full_01/negative_contact_audit.json)判为 `physical_block_observed`。该项仅证明这个入口状态的错误直拉受阻，不是所有可能路径的不可行证明；这次无 RGB。
 
 已构建不含 planning／参考解的本地验收镜像并冻结两档实例。very_easy 的私有候选已通过 `run-oracle` 的公开 float32 关节／夹爪宽度动作重跑，仍在 125.3325 s / 50,133 tick 成功，执行结果为 `exec.ok=true`；[实际记录](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/very_easy_harbor_replay_02/runtime.log)。首轮容器因缺少显式 NVIDIA runtime，在动作开始前图形初始化失败，记录保留，不算策略失败或成功。
 
 两档 × 两种模式共四个 `nop` 均正常得 0，无评分器／基础设施错误：[汇总](../../../runs/test_results/cast_keyhole_oracle_20261002_01/harbor_nop_summary.json)。首个 privileged nop 暴露了原子输出 reward 文件为 0600、宿主 Harbor 无权读取的问题；生成器现在只将最终 `reward.txt`／`reward.json` 设为 0644，判分逻辑未改，修复后重新跑通负对照。完整 oracle 的双模式正式评分仍在运行，尚未登记 `oracle = "full"`。
+
+Harbor 后续发现的缺口：very_easy 的 privileged 和 standard 实际执行均成功，独立评分回放仍在运行；easier 的首轮公开回放执行完 6,203 行后未成功，银片入区和金片留在系统侧均为 false，不能解释成仅差一个停稳窗口。已保留实际轨迹、失败输出，并停止该失败 job 的重复评分；其 `RewardFileNotFoundError` 来自这次主动停止，不冒充正常评分结果。[失败说明](../../../runs/test_results/cast_keyhole_oracle_20261002_01/easier_public_replay_failure_01.json)。
+
+正在对照公开回放前段。已实测发现夹爪闭合端转换不一一对应：本地原生目标 `0.002 m` 转为公开宽度 `0` 后，再转回原生坐标变成 `0.00746875 m`，相差约 5.47 mm。这个差异可能改变抓持，须用实际状态确认；不能因为 very_easy 能成功就认为 easier 也必然能复现。当前未修改公共转换器、物理或成功判据。
 
 对本轮实际使用的 limited、privileged、sim、verifier 四类镜像，均已在无挂载的新容器内检查 calibration tools 无法导入；并核对实际运行容器没有开发源码挂载：[隔离报告](../../../runs/test_results/cast_keyhole_oracle_20261002_01/harbor_calibration_isolation.json)。检查范围是这些具体镜像和部署，不代替其他部署的隔离检查。

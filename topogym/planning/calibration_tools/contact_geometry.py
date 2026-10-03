@@ -95,9 +95,11 @@ def _patch(surface, indices):
     return vertices, faces[indices]
 
 
-def gripper_geometry(env, hand=None, *, pad_faces=None, source="auto"):
+def gripper_geometry(env, hand=None, *, pad_faces=None, source="auto", include_surfaces=False):
     """Whole-finger surface clearance by default; named pad patches opt in explicitly."""
     robot, hands = env._robot, {}
+    if type(include_surfaces) is not bool:
+        raise ValueError("include_surfaces must be boolean")
     if hand is not None and hand not in robot.groups:
         raise ValueError("Unknown hand")
     pad_faces = pad_faces or {}
@@ -128,5 +130,8 @@ def gripper_geometry(env, hand=None, *, pad_faces=None, source="auto"):
             finger_surface_clearance=distance, pad_surface_clearance=pad,
             pad_definition="caller_selected_triangles" if pad is not None else "unavailable_without_pad_selection",
             note="joint coordinate, whole-finger surface clearance and pad clearance are different quantities")
+        if include_surfaces:
+            hands[side]["surfaces"] = {name: dict(vertices_world_m=surface[0], triangles=surface[1])
+                                        for name, surface in zip(names, surfaces)}
     return json_value(dict(hands=hands, physics_step=env._world.physics_step, physics_steps_advanced=0,
                            coverage="current built collision surfaces; no force inference or contact attribution"))

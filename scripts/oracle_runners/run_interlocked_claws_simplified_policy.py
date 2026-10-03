@@ -69,7 +69,7 @@ def worker(args):
                     manifest=json.loads((output/'run_source_manifest.json').read_text())
                     for part in ('acquire','solve'):
                         if part=='solve':
-                            if args.part=='hold': break
+                            if args.part=='acquire': break
                             print('planning_native_ik_and_collision',flush=True)
                             motions,initial,offsets,audit=prepare(env,args.variant)
                             write_json_atomic(output/'preflight.json',audit)
@@ -106,18 +106,16 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--variant',choices=['very_easy','easier'],required=True)
     parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--part',choices=['geometry','hold','solve'],default='solve')
+    parser.add_argument('--part',choices=['geometry','acquire','solve'],default='solve')
     parser.add_argument('--seed',type=int,default=0)
     parser.add_argument('--compute-backend',choices=['cpu','cuda'],default='cuda')
     parser.add_argument('--no-rgb',action='store_true')
     parser.add_argument('--physics-dt',type=float,default=.0025)
     parser.add_argument('--control-decimation',type=int,default=10)
     parser.add_argument('--solver-substeps',type=int,default=4)
-    parser.add_argument('--episode-seconds',type=float,default=180.)
+    parser.add_argument('--episode-seconds',type=float,default=600.)
     parser.add_argument('--worker',action='store_true',help=argparse.SUPPRESS)
     args=parser.parse_args();args.output=args.output.resolve()
-    if args.compute_backend=='cpu' and not args.no_rgb and args.part!='geometry':
-        parser.error('CPU requires --no-rgb')
     if args.worker: return worker(args)
     args.output.mkdir(parents=True,exist_ok=False)
     from scripts.test_policy_cube_transfer import snapshot

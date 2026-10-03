@@ -12,6 +12,10 @@ if __name__ == "__main__":
     selector = argparse.ArgumentParser(add_help=False)
     selector.add_argument("--variant", default="medium")
     selected, _ = selector.parse_known_args()
+    if "--help" in sys.argv and "--variant" not in sys.argv:
+        print("Claws variants: very_easy, easier, easy, medium, hard.\n"
+              "For low-tier solve/recording options, use --variant very_easy --help "
+              "or --variant easier --help.\nLegacy tier options follow:", flush=True)
     if selected.variant in {"very_easy", "easier"}:
         from scripts.oracle_runners.run_interlocked_claws_simplified_policy import main as simplified_main
         simplified_main()

@@ -39,6 +39,15 @@ class CalibrationSession:
         """Read completed spans from the parent, including during native stalls."""
         return self._supervisor.timings()
 
+    def compare_runs(self, directories):
+        """Read saved reports without sending a request to the physics worker."""
+        from .run_comparison import compare_runs
+        return compare_runs(directories)
+
+    def drive_object(self, entity, *, request_id=None, **options):
+        """Async bounded external-force exploration in an explicitly prepared IPC session."""
+        return self.submit("drive_object", entity=entity, request_id=request_id, **options)
+
     def pause(self):
         return self._supervisor.cancel()
 
@@ -80,6 +89,8 @@ class CalibrationSession:
             actions = actions[:replay_to]
         else:
             actions = []
+        if actions and any(row["kind"] == "object_drive_started" for row in events):
+            raise CalibrationError("Action-only replay cannot reproduce external object forces; start a fresh drive run explicitly")
         if any(row["kind"] == "policy_loaded" for row in events) and actions:
             # Action replay restores physics, not arbitrary generator/policy state.
             policy_restored = False
@@ -124,6 +135,7 @@ class CalibrationSession:
                     "cache_plan": ("plan_bundle",), "check_cached_plan": ("plan_id", "tolerances", "adapter"),
                     "prepare_plan": ("request", "adapter"),
                     "grasp_status": ("hand",), "grasp_trial_report": ("trial_id",),
+                    "contact_details": ("entities",), "gripper_geometry": ("hand",),
                 }.get(name, ())
                 if len(args) > len(positional) or set(positional[:len(args)]) & params.keys():
                     raise TypeError(f"Invalid arguments for {name}")

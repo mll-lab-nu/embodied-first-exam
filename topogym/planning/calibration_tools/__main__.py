@@ -8,6 +8,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("capabilities", "smoke", "script"))
     parser.add_argument("--config", type=Path, help="SimulatorConfig JSON; overrides CLI scene defaults")
+    parser.add_argument("--candidate", type=Path, help="Development candidate JSON, including optional object_drives")
     parser.add_argument("--kind", choices=("geometry", "physics"), default="geometry")
     parser.add_argument("--task", default="cast_keyhole")
     parser.add_argument("--variation", default="very_easy")
@@ -24,7 +25,8 @@ def main():
     from .api import open_session
     from topogym.utils.io import write_json_atomic
     results = []
-    with open_session(config, args.output, kind=args.kind) as dev:
+    candidate = json.loads(args.candidate.read_text()) if args.candidate else None
+    with open_session(config, args.output, kind=args.kind, candidate=candidate) as dev:
         results.append(dev.capabilities())
         if args.command == "smoke":
             results.append(dev.inspect())

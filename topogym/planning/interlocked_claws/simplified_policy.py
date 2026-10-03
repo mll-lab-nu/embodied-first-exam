@@ -41,12 +41,18 @@ class SimplifiedClawsPolicy:
     def command(self, desired):
         actual, action = self.bodies(), {}
         for s, (p, r) in desired.items():
+            measured = self.obs["privileged"]["world"]["bodies"][PARTS[s]]
             error = p-actual[s][0]
             angle = (r*actual[s][1].inv()).as_rotvec()
-            self.bias[s] = np.clip(self.bias[s]+4*self.dt*error, -.03, .03)
-            self.angle_bias[s] = np.clip(self.angle_bias[s]+4*self.dt*angle, -.20, .20)
-            commanded_r = Rotation.from_rotvec(self.angle_bias[s]+.5*angle)*r
-            position = p+self.bias[s]+.5*error+commanded_r.apply(self.offsets[s][0])
+            self.bias[s] = np.clip(self.bias[s]+2*self.dt*error, -.03, .03)
+            self.angle_bias[s] = np.clip(self.angle_bias[s]+2*self.dt*angle, -.20, .20)
+            # Original ALOHA arm actuators have no added velocity gain. Damp
+            # measured body motion through ordinary targets rather than
+            # modifying those actuators or their force limits.
+            damp_p = .08*np.asarray(measured["linear_velocity_m_s"])
+            damp_r = .08*np.asarray(measured["angular_velocity_rad_s"])
+            commanded_r = Rotation.from_rotvec(self.angle_bias[s]-damp_r)*r
+            position = p+self.bias[s]-damp_p+commanded_r.apply(self.offsets[s][0])
             rotation = commanded_r*self.offsets[s][1]
             action[s] = dict(position_world_m=position.tolist(),
                              orientation_wxyz=rotation.as_quat()[[3, 0, 1, 2]].tolist(), gripper_position_m=.002)
@@ -60,8 +66,8 @@ class SimplifiedClawsPolicy:
         elapsed = 0.
         while True:
             fraction = min(1., elapsed/motion.seconds)
-            u = fraction**3*(10+fraction*(-15+6*fraction))
-            desired = {"left": motion.at(u), "right": self.initial["right"]}
+            u = float(np.clip(fraction**3*(10+fraction*(-15+6*fraction)), 0., 1.))
+            desired = motion.bodies_at(u)
             actual = self.bodies()
             errors = {s: float(np.linalg.norm(p-actual[s][0]))+.18*float((r*actual[s][1].inv()).magnitude())
                       for s,(p,r) in desired.items()}
@@ -71,9 +77,18 @@ class SimplifiedClawsPolicy:
                 self.samples.append(dict(time_s=self.time(), **self.tracking))
                 return
             if maximum < .0008:
-                elapsed = min(motion.seconds, elapsed+self.dt)
+                candidate = min(motion.seconds, elapsed+self.dt)
+                f = candidate/motion.seconds
+                next_u = float(np.clip(f**3*(10+f*(-15+6*f)), 0., 1.))
+                following = motion.bodies_at(next_u)
+                step = max(float(np.linalg.norm(following[s][0]-p))
+                           +.18*float((following[s][1]*r.inv()).magnitude())
+                           for s,(p,r) in desired.items())
+                # A restarted clock must not jump by more than the narrow-gap
+                # tracking budget. Nominal time alone permits >1 mm jumps.
+                elapsed += (candidate-elapsed)*min(1., .0002/max(step, 1e-12))
                 last_progress = self.time()
-            if self.time()-last_progress > 8. or self.time()-start > max(30., motion.seconds*12):
+            if self.time()-last_progress > 12. or self.time()-start > max(60., motion.seconds*24):
                 raise RuntimeError("Claws tracking stalled: "+str(self.tracking))
             yield self.command(desired)
 
@@ -94,7 +109,7 @@ class SimplifiedClawsPolicy:
         self.phase = "hold_in_goal"
         start = self.time()
         while self.time()-start < 5.:
-            yield self.command({"left": self.motions[-1].end, "right": self.initial["right"]})
+            yield self.command(self.motions[-1].bodies_at(1.))
         self.completed = True
 
     def debug_reference(self):

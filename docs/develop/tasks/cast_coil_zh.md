@@ -2,13 +2,28 @@
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
-更新：2026-09-28。全项目进度见[当前进度](../../progress/current_zh.md)，历史视频直链见[Demo 目录](../../../demos/README.md)。
+更新：2026-10-02。全项目进度见[当前进度](../../progress/current_zh.md)，历史视频直链见[Demo 目录](../../../demos/README.md)。
 
-## very_easy 与 easier 模型候选
+## very_easy 与 easier 正方体变体
 
-已生成两档模型候选：用户已确认的 very_easy 保持 `cubic_comb_v2`，金色三齿与银色双齿直线拼合。easier 按新手绘改为 `cubic_baffle_v2`：金色前挡板对应银色大凸起根部的开口镂空；侧向错开 18 mm 后插合，再横移让挡板进入槽内。两档终态均为 102 × 102 × 102 mm 实心正方体轮廓，预留 0.6 mm 装配缝。9 项几何回归通过，包含连续平移通路和阻挡反例；尚未注册新 Task，也未验证机器人抓持或物理装配。下文原三档成功证据不适用于新模型。
+两档已注册为 `cast_coil_very_easy` 和 `cast_coil_easier`，支持别名 `very_easy` / `easier`。very_easy 为金色三齿与银色双齿直线拼合；easier 为金色前挡板与银色大凸起根部镂空，先错位插合，再横移让挡板进入槽内。
 
-[工程计划与建模结果](../../tasks_simplifications/cast_coil_very_easy_easier_engineering_plan_zh.md#9-本次建模结果) · [very_easy 模型](../../tasks_simplifications/assets/cast_coil_very_easy_actual_models_v2.png) · [easier 拼合过程](../../tasks_simplifications/assets/cast_coil_easier_actual_models_v2.png) · [easier 挡板与镂空](../../tasks_simplifications/assets/cast_coil_easier_baffle_parts_v2.png) · [本次运行产物](../../../runs/test_results/cast_coil_easier_baffle_20261002_03/)
+机器人实例将已确认的 102 mm 模型等比缩放为 **51 × 51 × 51 mm**，预留 0.3 mm 装配缝，easier 横移为 9 mm，使 ALOHA 能从外侧夹持。102 mm 原始建模资源保留。两档复用原装配、放桌、释放、撤手和稳定判据；`base` 和 `seeded` 继续使用原三档。19 项几何／变体检查及 26 项既有目标／runner 回归通过；已生成独立的双模式任务包，24 项包检查及镜像内短动作回放通过。
+
+**两档完整机器人执行均通过原生 `Goal stable` 和全 tick 独立复核**：very_easy 为 46.30 s、1,853 个状态，easier 为 48.55 s、1,943 个状态，均从默认 home 连续执行至释放、撤手和稳定 0.5 s。使用 CUDA、Nyx、25 ms tick、40 子步及接触后 `contact_weld_v1` 辅助抓持，最终解除辅助。证据限于各档 seed=0 的冻结实例；未完成半步长或完整 Harbor agent／verifier 验收，不代表纯摩擦抓持保证。
+
+[实现、脚本清单与验收边界](../../tasks_simplifications/cast_coil_very_easy_easier_engineering_plan_zh.md#10-完整变体接入2026-10-02) · [very_easy 模型](../../tasks_simplifications/assets/cast_coil_very_easy_actual_models_v2.png) · [easier 拼合过程](../../tasks_simplifications/assets/cast_coil_easier_actual_models_v2.png) · [本次运行产物与任务包](../../../runs/test_results/cast_coil_variants_gpu_20261002/)
+
+从默认 home 执行、CUDA + Nyx 四视角录制：
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_cast_coil_policy.py \
+  --variant very_easy --seed 0 \
+  --physics-dt .025 --control-decimation 1 --solver-substeps 40 \
+  --output runs/test_results/cast_coil_very_easy_new
+```
+
+easier 使用 `--variant easier` 和另一输出目录。省略三项时序参数可使用默认时序；显式加 `--compute-backend cpu --no-rgb` 可运行无 RGB 物理。已验证的具体时序及有限实例范围以对应报告为准。
 
 ## 当前三档 policy 与可解性验收
 

@@ -26,6 +26,8 @@ def force_command(position, velocity, target, *, kp, kd, maximum):
 def declare_force(geometry, kind):
     """Pure native geometry declaration, independently testable without a World."""
     from uipc.constitution import AffineBodyExternalBodyForce, FiniteElementExternalForce
+    if kind not in {"rigid", "fem"}:
+        raise ValueError("Expected rigid or fem force declaration")
     cls = AffineBodyExternalBodyForce if kind == "rigid" else FiniteElementExternalForce
     constitution = cls()
     constitution.apply_to(geometry, np.zeros(3))
@@ -52,6 +54,7 @@ class ObjectDrives:
         from uipc.backend import SceneVisitor
         coupler = world.scene.sim.coupler
         rest = {slot.id(): slot for slot in SceneVisitor(coupler._ipc_scene).rest_geometries()}
+        inserted = set()
         for name, kind in self.declarations.items():
             if name not in world.entities or name in {"robot", "table"}:
                 raise ValueError("Declare a task object for external driving: "+name)
@@ -69,10 +72,15 @@ class ObjectDrives:
                     raise UnsupportedCapability("Rigid drive requires a single environment")
                 slot = slots[0]
             constitution, attribute = declare_force(slot.geometry(), kind)
-            coupler._ipc_constitution_tabular.insert(constitution)
+            if kind not in inserted:
+                coupler._ipc_constitution_tabular.insert(constitution)
+                inserted.add(kind)
             if slot.id() in rest:
                 declare_force(rest[slot.id()].geometry(), kind)
-            self.slots[name] = dict(kind=kind, attribute=attribute)
+            flags = slot.geometry().instances().find("is_constrained") if kind == "rigid" else None
+            if flags is not None and np.any(np.asarray(flags.view())):
+                raise UnsupportedCapability("External driving cannot take ownership of an existing rigid constraint")
+            self.slots[name] = dict(kind=kind, attribute=attribute, flags=flags)
 
     def capabilities(self):
         return dict(declared=deepcopy(self.declarations), ready=list(self.slots),
@@ -81,9 +89,13 @@ class ObjectDrives:
             orientation_drive=False, direct_pose_setter=False, physical_acceptance=False)
 
     def clear(self):
+        if not self.slots:
+            return
         import uipc
         for row in self.slots.values():
             uipc.view(row["attribute"])[:] = 0
+            if row.get("flags") is not None:
+                uipc.view(row["flags"])[:] = 0
 
     def set_force(self, name, force, indices):
         import uipc
@@ -92,6 +104,8 @@ class ObjectDrives:
         values[:] = 0
         if row["kind"] == "rigid":
             values.reshape(-1, 12)[:, :3] = force
+            if row.get("flags") is not None:
+                uipc.view(row["flags"])[:] = 1
         else:
             # force_world_n means total force, not an unintended per-vertex multiplier.
             values.reshape(-1, 3)[indices] = force/len(indices)
@@ -100,9 +114,10 @@ class ObjectDrives:
         world = self.owner.runner._last_tick["world"]
         if self.slots[name]["kind"] == "rigid":
             body = world["bodies"][name]
-            return np.asarray(body["position_m"]), np.asarray(body["linear_velocity_m_s"])
+            return vector(body["position_m"], "measured position"), vector(body["linear_velocity_m_s"], "measured velocity")
         fem = world["fem"][name]
-        return np.asarray(fem["position_m"])[indices].mean(0), np.asarray(fem["velocity_m_s"])[indices].mean(0)
+        return (vector(np.asarray(fem["position_m"])[indices].mean(0), "measured centroid"),
+                vector(np.asarray(fem["velocity_m_s"])[indices].mean(0), "measured velocity"))
 
     def run(self, entity, *, control_steps, max_force_n, force_world_n=None,
             positions_world_m=None, vertex_indices=None, kp_n_per_m=100., kd_ns_per_m=5.):
@@ -173,6 +188,9 @@ class ObjectDrives:
                 if result["control_steps"] != 1 or owner.env._terminated or owner.env._truncated:
                     reason = result["reason"]
                     break
+        except BaseException:
+            reason = "execution_error"
+            raise
         finally:
             try:
                 self.clear()

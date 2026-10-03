@@ -37,6 +37,7 @@ def install(owner):
 
     def instrument_world(world):
         coupler = world.scene.sim.coupler
+        owner.object_drives.install(world)
         p.wrap(coupler, "couple", "ipc_coupling" if hasattr(coupler, "_ipc_world") else "coupling", optional=True)
         if hasattr(coupler, "_ipc_world"):
             for name, stage in (("_store_gs_rigid_states", "ipc_rigid_upload"),

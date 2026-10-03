@@ -27,6 +27,7 @@ def summarize_run(directory):
     assets = _json(root / "execution/asset_manifest.json", issues)
     report = _json(root / "report.json", issues) or {}
     actions, active_actions, ticks, active_ticks, cache = [], [], 0, 0, []
+    execution_context = []
     episode, intervention = None, bool(report.get("exploration"))
     events_path = root / "events.jsonl"
     if events_path.exists():
@@ -48,12 +49,19 @@ def summarize_run(directory):
                     ticks += count
                 elif kind == "restore_committed":
                     active_actions = active_actions[:row["action_count"]]
+                    execution_context.append(dict(kind=kind, after_control=len(actions), action_count=row["action_count"]))
+                elif kind in {"object_drive_started", "object_drive_command"}:
+                    # Hold actions alone do not describe externally driven work.
+                    fields = ("entity", "control_steps", "force_world_n", "positions_world_m", "vertex_indices",
+                              "max_force_n", "kp_n_per_m", "kd_ns_per_m", "index", "target_position_world_m")
+                    execution_context.append(dict(kind=kind, after_control=len(actions),
+                                                  **{k: row[k] for k in fields if k in row}))
                 elif kind == "plan_prepared":
                     cache.append({k: row.get(k) for k in ("plan_id", "selection", "timings")})
     else:
         issues.append("missing:events.jsonl")
     active_ticks = sum(a["physics_steps"] for a in active_actions)
-    config = dict(session.get("config", {}))
+    config = dict(_json(root / "execution/config.json", issues) or session.get("config", {}))
     for key in ("work_dir", "output_dir"):
         config.pop(key, None)
     costs = timing.get("costs", {})
@@ -62,6 +70,7 @@ def summarize_run(directory):
                     source=digest(source) if source else None,
                     assets=digest(assets) if assets else None,
                     actions=digest(actions) if actions else None,
+                    execution_context=digest(execution_context),
                     candidate=digest(session.get("candidate", {})), exploration=intervention)
     return dict(directory=str(root), session_id=session.get("session_id"), identity=identity,
         task_id=config.get("task_id"), variation_id=config.get("variation_id"), seed=config.get("seed"),
@@ -87,6 +96,9 @@ def compare_runs(directories):
                       if expected is None or row["identity"].get(name) is None or row["identity"].get(name) != expected]
         if row["control_steps"] != baseline["control_steps"] or row["physics_ticks"] != baseline["physics_ticks"]:
             mismatches.append("executed_work")
+        for key in ("calls", "failed_calls"):
+            if row["stages"].get("control_step", {}).get(key) != baseline["stages"].get("control_step", {}).get(key):
+                mismatches.append("control_"+key)
         if baseline["issues"] or row["issues"] or baseline["incomplete_spans"] or row["incomplete_spans"]:
             mismatches.append("incomplete_evidence")
         a, b = baseline["control_wall_seconds"], row["control_wall_seconds"]
@@ -106,4 +118,5 @@ def compare_runs(directories):
                        for stage, values in stages.items()} for mode, stages in planning.items()}
     return dict(baseline=baseline["directory"], runs=runs, comparisons=comparisons, planning_by_selection=planning,
         scope="recorded workload and host wall time; no new physical or task qualification",
+        hardware_and_background_load_verified=False,
         planning_scope="descriptive totals by selected path; different planning requests are not a paired speedup test")

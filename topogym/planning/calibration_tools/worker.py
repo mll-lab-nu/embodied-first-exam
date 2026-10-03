@@ -77,6 +77,8 @@ class DevelopmentOwner:
         self.grasp_trace = GraspTrace(self.evidence.event)
         self.active_trial, self.grasp_trials = None, {}
         self.candidate = candidate or {}
+        from .object_drives import ObjectDrives
+        self.object_drives = ObjectDrives(self, self.candidate.get("object_drives", {}))
         if self.candidate and kind != "physics":
             raise UnsupportedCapability("Material/trial candidates require a fresh physics session")
         # The actor privilege configuration is never used as a development gate.
@@ -117,6 +119,7 @@ class DevelopmentOwner:
             self.env.add_state_sink(self.tick)
             self.env.add_transition_sink(self.transition)
             self.evidence.event("episode_started", metadata=self.env.episode_metadata)
+            self.publish_task_summary()
         else:
             with self.profiler.span("geometry_setup"):
                 self.get_probe()
@@ -174,6 +177,7 @@ class DevelopmentOwner:
             with self.profiler.span("tracking_commit"):
                 self.tracking.finish(transition)
         self.action_count += 1
+        self.publish_task_summary(info=transition.info, task=self.runner._last_tick["task"])
         self.evidence.event("control_committed", action=transition.action,
             action_count=self.action_count, physics_steps=transition.physics_steps,
             state_ref=dict(episode_id=transition.episode_id, state_id=transition.state_id))
@@ -218,6 +222,8 @@ class DevelopmentOwner:
             event_preframes=False, exact_contact_point_overlay=False,
             profiling=self.profiler.coverage, newton_iterations=False, newton_residual=False,
             historical_ipc_rerender=False,
+            task_summary=self.env is not None, contact_details=self.env is not None,
+            gripper_geometry=self.env is not None, object_drives=self.object_drives.capabilities(),
             control_tracking=self.env is not None, planning_cache=self.env is not None,
             planning_adapters=["keyhole_tcp"],
             grasp_explanation=self.env is not None, grasp_trials=self.env is not None,
@@ -250,6 +256,31 @@ class DevelopmentOwner:
         self.need_physics()
         from .inspection import contact_summary
         return contact_summary(self.env._world.read_state(), self.env._world.entities, entities)
+
+    def task_summary(self):
+        self.need_physics()
+        from .task_summary import summarize_task
+        return summarize_task(self.env._info(), self.env._task.get_state(), exploration=self.evidence.exploration)
+
+    def publish_task_summary(self, info=None, task=None):
+        from .task_summary import summarize_task
+        value = (self.task_summary() if info is None else
+                 summarize_task(info, task, exploration=self.evidence.exploration))
+        self.send(dict(kind="task_summary", summary=value))
+        return value
+
+    def contact_details(self, entities=None):
+        self.need_physics()
+        from .contact_geometry import contacts
+        return contacts(self.env, entities)
+
+    def gripper_geometry(self, hand=None, **options):
+        self.need_physics()
+        from .contact_geometry import gripper_geometry
+        return gripper_geometry(self.env, hand, **options)
+
+    def drive_object(self, entity, **options):
+        return self.object_drives.run(entity, **options)
 
     def capture_frame(self, camera="cam_high", **options):
         self.need_physics()
@@ -366,7 +397,17 @@ class DevelopmentOwner:
         return self.checkpoints.save(name, world_only=world_only)
 
     def restore(self, checkpoint):
-        return self.checkpoints.restore(checkpoint)
+        result = self.checkpoints.restore(checkpoint)
+        if self.env is not None:
+            if self.object_drives.slots:
+                try:
+                    self.object_drives.clear()
+                    self.env._checkpoint_current()
+                except BaseException:
+                    self.poisoned = True
+                    raise
+            self.publish_task_summary()
+        return result
 
     def sync_probe(self):
         self.need_physics()
@@ -435,7 +476,11 @@ class DevelopmentOwner:
         return dict(costs=deepcopy(self.evidence.costs), scope="wall time per tool operation, startup and policy load")
 
     def before_action(self, action, policy=None):
-        self.grasp_trace.begin_control()
+        # The tracking hook is also usable by lightweight development owners
+        # that have not enabled grasp-event collection.
+        trace = getattr(self, "grasp_trace", None)
+        if trace is not None:
+            trace.begin_control()
         if not any(row["active"] for row in self.tracking.records.values()):
             return
         with self.profiler.span("tracking_begin"):
@@ -504,9 +549,11 @@ class DevelopmentOwner:
     def export_report(self):
         return self.evidence.report(capabilities=self.capabilities(), state_ref=self.state_ref(),
                                     control_steps_committed=self.action_count, tracking=self.tracking.records,
-                                    grasp_trials=self.grasp_trials, candidate=self.candidate)
+                                    grasp_trials=self.grasp_trials, candidate=self.candidate,
+                                    task_summary=self.task_summary() if self.env is not None else None)
 
     def close(self):
+        final_task = self.task_summary() if self.env is not None and not self.env._faulted else None
         self.tracking.close()
         self.windows.reset("close")
         if self.runner is not None:
@@ -514,7 +561,8 @@ class DevelopmentOwner:
         if self.env is not None:
             self.env.close()
         self.evidence.report(capabilities=self.capabilities(), status="closed", control_steps_committed=self.action_count,
-                             tracking=self.tracking.records, grasp_trials=self.grasp_trials, candidate=self.candidate)
+                             tracking=self.tracking.records, grasp_trials=self.grasp_trials, candidate=self.candidate,
+                             task_summary=final_task)
         self.evidence.close()
         self.profiler.close()
         return dict(closed=True)

@@ -8,7 +8,7 @@ from .contracts import UnsupportedCapability, digest, identifier, json_value
 
 
 CONFIG_FIELDS = {"physics_dt_s", "control_decimation", "solver_substeps", "task_parameters", "grasp_assist"}
-FIELDS = {"name", "config", "materials", "primitive_masses_kg", "robot_material", "phase_actions"}
+FIELDS = {"name", "config", "materials", "primitive_masses_kg", "robot_material", "phase_actions", "object_drives"}
 
 
 def merge(base, patch):
@@ -29,6 +29,9 @@ def validate_candidate(candidate):
             raise ValueError(name+" must be a mapping")
     if set(result.get("config", {}))-CONFIG_FIELDS:
         raise ValueError("Candidate config only supports timing, task_parameters and grasp_assist")
+    if any(not isinstance(name, str) or name in {"robot", "table"} or kind not in {"rigid", "fem"}
+           for name, kind in result.get("object_drives", {}).items()):
+        raise ValueError("object_drives maps task entity names to 'rigid' or 'fem'")
     robot = result.get("robot_material", {})
     if set(robot)-{"friction", "coup_friction"}:
         raise ValueError("Robot material candidates support friction and coup_friction")

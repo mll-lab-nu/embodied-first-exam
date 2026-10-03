@@ -1,0 +1,283 @@
+{
+ "task": "interlocked_claws",
+ "topogym_task": "interlocked_claws",
+ "variation_id": "very_easy",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side.\n\n## Success requirements\n\n- Put every part of the entire brown claw piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.\n- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 197.372 mm above the tabletop.\n- Keep the other claw piece, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.\n- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.",
+ "simulator": {
+  "task_id": "interlocked_claws",
+  "robot_id": "aloha",
+  "variation_id": "very_easy",
+  "task_parameters": {},
+  "compute_backend": "cpu",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "terminal_contract_version": 1,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "rigid_options": {
+   "use_contact_island": false
+  },
+  "ipc_options": {},
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "contact_weld_v1",
+   "targets": [
+    {
+     "entity": "piece_0",
+     "link": "piece_0",
+     "center_m": [
+      -0.13,
+      0.0,
+      -0.02199999999999991
+     ],
+     "radius_m": 0.03
+    },
+    {
+     "entity": "piece_1",
+     "link": "piece_1",
+     "center_m": [
+      0.12999999999999978,
+      0.022000000000000023,
+      0.0
+     ],
+     "radius_m": 0.03
+    }
+   ],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "close"
+  }
+ },
+ "state_sha": "e5b7430c2040ecda",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  -0.0,
+  -0.622257,
+  1.104918,
+  -0.0,
+  -0.482661,
+  0.0,
+  0.027774,
+  -0.156687,
+  -0.661494,
+  1.044331,
+  -0.400106,
+  -0.412191,
+  0.369682,
+  0.027774
+ ],
+ "objects": {
+  "piece_0": {
+   "position": [
+    -0.13568,
+    -0.019,
+    1.20493
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.29068,
+     -0.033,
+     1.17093
+    ],
+    [
+     -0.12168,
+     -0.005,
+     1.21693
+    ]
+   ],
+   "size": [
+    0.169,
+    0.028,
+    0.046
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "piece_1": {
+   "position": [
+    -0.13568,
+    -0.019,
+    1.20493
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.14968,
+     -0.031,
+     1.19293
+    ],
+    [
+     0.01932,
+     0.017,
+     1.21693
+    ]
+   ],
+   "size": [
+    0.169,
+    0.048,
+    0.024
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.24036,
+     0.104,
+     0.91984
+    ],
+    [
+     -0.03099,
+     0.31337,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.20937,
+    0.20937,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "instance_contract_version": 2,
+ "soft_state": {},
+ "asset_identity": {
+  "assembly.glb": "377697c338758536682089dfc84d6f19f0b8d0b62a9dfbd513b0dc20f915cf6a",
+  "family/model.json": "db149c6969d08c5cbab81d38c915d80fc656a15b4080df3517581795c9c53a40",
+  "family/piece_0.obj": "f30fdbfb42a37f81c6cb3f2930a593ebff020757f987863a0ccc2b7680475070",
+  "family/piece_0.urdf": "06cffee95cf1c020f769e6be0611da7fca840c31bb72a5f2560d4186535f3d03",
+  "family/piece_1.obj": "63b8b1cf379035d95da0a04b249041afaf7c536f4c06c97af18f3d4c7c16f929",
+  "family/piece_1.urdf": "5aa99d0c49c6f9e890effd41fbc2565c0d99ad4145ae70ce0b052c0cfb23166f",
+  "geometry_report.json": "56b418164e7b395f62a9d66585fc7bcacff8575ba86ed7447f498bb93a0a58dd",
+  "goal_region.obj": "76f5701e8f941c9a0a5a1c56113fba61ecf8ccdc75e66acbb1a66d5534ff6e8e"
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "8f919bfd6ac1017c46e58724863bd190a163f1eded5ae7b0ffcb1ad05d04f9e1",
+  "files": 295
+ },
+ "resolved_variation_id": "interlocked_claws_very_easy",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "center_xy_m": [
+   -0.1356786,
+   0.05
+  ],
+  "initial_floor_clearance_m": 0.001,
+  "stable_duration_s": 0.5,
+  "minimum_separation_m": 0.01,
+  "sdf_cell_size_m": 0.001,
+  "sdf_max_res": 128,
+  "initial_finger_position_m": null,
+  "target_shade": 1.0,
+  "other_rgb": null
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "interlocked_claws",
+  "variation_id": "interlocked_claws_very_easy",
+  "seed": 0,
+  "terminal_revision": "placement_region_v3_grasp_contact_2mm",
+  "summary": "Separate and place the entire brown claw piece inside the green dashed goal region. Keep the other claw piece on the puzzle/system side.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Put every part of the entire brown claw piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.",
+   "Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 197.372 mm above the tabletop.",
+   "Keep the other claw piece, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.",
+   "Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required."
+  ],
+  "failure_conditions": [
+   "A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision placement_region_v3_grasp_contact_2mm)"
+}

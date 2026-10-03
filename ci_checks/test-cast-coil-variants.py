@@ -88,6 +88,27 @@ class CoilVariantTests(unittest.TestCase):
             self.assertIn("0.5 s", text)
             self.assertNotIn("9 mm", text)
 
+    def test_path_gate_distinguishes_longitudinal_lag_from_misalignment(self):
+        task, state = fixture("easier", assembled=True)
+        policy = SimplifiedCoilPolicy(body_origins=task.body_origins, variant="easier")
+        policy.obs = dict(privileged=dict(world=state))
+        desired = policy.bodies()
+        silver = state["bodies"]["coil_silver"]
+        initial = silver["position_m"].copy()
+        rotation = desired["right"][1]
+        for axis, phase in ((0, "assembly_insert"), (1, "assembly_lateral_slide")):
+            delta = np.zeros(3); delta[axis] = .0006
+            silver["position_m"] = initial+rotation.apply(delta)
+            self.assertGreater(policy.tracking_error(desired)[1], .0005)
+            self.assertLess(policy.transverse_error(desired, phase), 1e-12)
+            delta[2] = .0004
+            silver["position_m"] = initial+rotation.apply(delta)
+            self.assertGreater(policy.transverse_error(desired, phase), policy.insertion_error)
+        silver["position_m"] = initial
+        turn = rotation*Rotation.from_euler("x", .01)
+        silver["quaternion_wxyz"] = turn.as_quat()[[3, 0, 1, 2]]
+        self.assertGreater(policy.transverse_error(desired, "assembly_insert"), policy.insertion_error)
+
     def test_explicit_entries_keep_original_seed_pool(self):
         self.assertEqual(variation_registration("cast_coil")["variation_id"], "cast_coil_easy")
         for seed in range(9):
@@ -116,7 +137,7 @@ class CoilVariantTests(unittest.TestCase):
                 r0, t0 = motion.pose(0.)
                 r1, t1 = motion.pose(1.)
                 np.testing.assert_allclose(r0, r1)
-                self.assertIsNone(checks.translation_collision(gold, silver, t0, t1, .00015))
+                self.assertIsNone(checks.translation_collision(gold, silver, t0, t1, .00025))
             if level == "easier":
                 self.assertAlmostEqual(route[0].pose(1.)[1][1], .009)
                 self.assertIsNotNone(checks.translation_collision(gold, silver, [.04, 0., 0.], [0., 0., 0.]))

@@ -1,10 +1,13 @@
 """Trusted, source-only oracle development tools. Never expose to an agent RPC."""
 
 __all__ = ["open_session", "CalibrationSession", "open_grasp_sweep", "parameter_grid",
-           "UnsupportedCapability", "OperationTimeout"]
+           "compare_runs", "summarize_run", "UnsupportedCapability", "OperationTimeout"]
 
 
 def __getattr__(name):
+    if name in {"compare_runs", "summarize_run"}:
+        from . import run_comparison
+        return getattr(run_comparison, name)
     if name == "open_grasp_sweep":
         from .grasp_sweep import open_grasp_sweep
         return open_grasp_sweep

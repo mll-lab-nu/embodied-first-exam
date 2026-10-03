@@ -456,12 +456,6 @@
       "sha256": "ea8fd2b0a819925ab03b44f9d3e40771ab90d0b20540226096295428e9373511",
       "source": "topogym.assets.geometry.cast_coil_simplified.geometry_record",
       "license": null
-    },
-    "variations/interlocked_claws/easier/reference_route.json": {
-      "path": "variations/interlocked_claws/easier/reference_route.json",
-      "sha256": "04526a27976bf7afc5772fdca372a1a797ab470eb8e52529fd24653ba2f06a58",
-      "source": "approved Claws geometry; certified SE(3) reference route",
-      "license": null
     }
   }
 }

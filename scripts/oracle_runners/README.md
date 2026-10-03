@@ -10,12 +10,33 @@
 | `run_buzz_wire_policy.py` | Buzz 策略及已编译参考动作执行 |
 | `run_hedgehog_oracle.py` | 从 home 执行带显式辅助抓持选项的 Hedgehog oracle |
 | `run_horseshoe_policy.py` | Horseshoe 几何、IK 和机器人分阶段诊断 |
-| `run_interlocked_claws_policy.py` | Claws 几何及摩擦抓持诊断，调用共享刚体入口 |
+| `run_interlocked_claws_policy.py` | Claws very_easy / easier 的辅助抓持参考策略；旧三档仍调用原几何及摩擦抓持诊断 |
+| `run_interlocked_claws_simplified_policy.py` | 两档简化 Claws 的源码冻结、连续几何检查、双臂预检和 SegmentRunner 执行 |
 | `run_hedgehog_policy.py` | Hedgehog 旧几何／反馈诊断入口，保留其原有阶段限制 |
 | `run_rigid_reference_policy.py` | Hedgehog／Claws 共用的几何、抓持诊断管理器 |
 | `run_solvability_workflow.py` | 按任务提供的 stage factory 执行诊断或连续证明候选 |
 
 只读规划器 `scripts/plan_*`、独立审计器 `scripts/audit_*`、通用接口测试及源码快照工具 `scripts/test_*` 继续放在上级目录。difficulty trials 使用独立的 Harbor 执行链，不调用这些 oracle runner。
+
+## Claws 两档简化变体
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_interlocked_claws_policy.py \
+  --variant very_easy --seed 0 \
+  --output runs/test_results/claws_very_easy_new
+
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_interlocked_claws_policy.py \
+  --variant easier --seed 0 \
+  --output runs/test_results/claws_easier_new
+```
+
+默认从任务已确认的双臂预抓姿态开始，使用原 ALOHA、`contact_weld_v1`、CUDA、Nyx 四视角和默认物理时序。策略先通过双指接触取得辅助抓持，再执行两件相对通路，最后让棕色件整体进入绿色目标区并满足当前 Task 的低速保持条件。该流程不包含 home 到预抓姿态的接近动作，也不以“已分离”代替 Task success。
+
+`--part geometry` 只检查物体通路，`--part acquire` 只执行辅助抓持准入，默认 `--part solve` 要求 Task success 且执行证据完整。`--no-rgb` 显式关闭录像；若使用非默认 `--physics-dt` / `--control-decimation` / `--solver-substeps`，结果仅代表所记录的时序。输出目录必须尚不存在。
+
+输出保存源码快照和哈希、几何报告、原生 IK／网格碰撞预检、逐 tick 状态、资源占用、阶段误差、Task 结果及公共录制产物。物体通路做连续检查；机械臂预检是采样检查，二者不能混称连续机器人无碰撞证明。系统内存达到 90% 时仅停止本次 worker，保留失败证据。
+
+回归入口：`.venv-gs121-nyx/bin/python ci_checks/test-interlocked-claws-simplifications.py`。实际验收状态和形状说明见 [Claws 任务页](../../docs/develop/tasks/interlocked_claws_zh.md)。两档先作为独立具名入口接入，保留旧 `base` / `seeded` 三档含义。
 
 ## Coil 正方体变体
 
