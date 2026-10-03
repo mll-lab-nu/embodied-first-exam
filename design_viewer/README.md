@@ -6,13 +6,16 @@
 
 ## 启动
 
+在仓库根目录、装好 TopoGym 依赖的 Python 环境里运行。除 TopoGym 本身的依赖外，还需要：
+
+- `mujoco` ≥ 3.14：要用到它自带的 Web Viewer `mujoco.experimental.studio`，在 3.14.0 上测试过；
+- `coacd`：只有含凹形碰撞件的场景（如 hedgehog medium）会用到。
+
 ```bash
-cd /home/pingyue/work/topogym/.claude/worktrees/topo   # 在仓库（worktree）根目录运行
-conda activate topogym && export PYTHONNOUSERSITE=1
 python -m design_viewer.view --scene hedgehog_in_cage_easy --port 18080
 ```
 
-在 VS Code 的「端口」面板转发 18080，然后在浏览器打开 `http://localhost:18080/`。第一次打开要下载约 25 MB，会先显示一会儿 “PARSING…”。用完在终端按 Ctrl+C 关掉。
+然后在浏览器打开 `http://localhost:18080/`。在远程机器上运行时，先把端口转发到本地，例如 `ssh -L 18080:localhost:18080 <远程主机>`，或者用 VS Code 的端口转发。第一次打开要下载约 25 MB，会先显示一会儿 “PARSING…”。用完在终端按 Ctrl+C 关掉。
 
 - 同一时间只能有一个浏览器页面控制，其他页面显示 SPECTATING。出现 SPECTATING 时，关掉其他 18080 页面即可。
 - 服务只监听本机，但本机的其他用户也能连上这个端口。

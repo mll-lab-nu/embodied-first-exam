@@ -1,4 +1,4 @@
-"""Behaviour checks (CPU, no browser). From the worktree root: python -m pytest design_viewer -q
+"""Behaviour checks (CPU, no browser). From the repo root: python -m pytest design_viewer -q
 The first run builds the scene cache (hedgehog easy ~25 s)."""
 from pathlib import Path
 import xml.etree.ElementTree as ET
