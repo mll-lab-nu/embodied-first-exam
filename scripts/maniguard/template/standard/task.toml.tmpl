@@ -47,7 +47,8 @@ timeout_sec = 14400               # 4 h: a 2 h episode at 20 Hz records up to ~1
 
 [agent]
 timeout_sec = @@BUDGET@@.0             # ManiGuard budget, both modes (docs/benchmarks/maniguard.md)
-# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs (ManiGuard's demos are public).
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py): ManiGuard's demonstrations and data generator are public
+allowed_hosts = @@ALLOWED_HOSTS@@
 
 [environment]
 build_timeout_sec = 1800.0

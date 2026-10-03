@@ -7,7 +7,7 @@
 | Twin | `maniguard-jar-transport-i14-privileged` |
 | Simulator / robot | `maniguard` / `franka-panda-longfinger` |
 | Family / instance | `jar_transport` / seed 14 |
-| Oracle | `none` — No positive example yet: the eai-maniguard image and the BEHAVIOR-1K 3.7.2 data were not set up when this task was generated (2026-10-03); the verifier, the frozen instance's hash and a positive example come with the first run on a GPU host. Human review per task (PROTOCOL §2.7). |
+| Oracle | `none` — No positive example through the standard service yet: the privileged twin's reference trajectory (a time-resampled public demonstration) scores 1 there and is the planned one. Human review per task (PROTOCOL §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:0.1.0` |
 
@@ -26,7 +26,7 @@ planned from camera images, depth and the robot's own proprioception, a violated
 reports one.
 
 ## Reference solution
-None yet: no positive example has been graded 1 on this version (`oracle = "none"`). ManiGuard's scripted demonstrations were recorded at 30 Hz in a differently built scene; a time-resampled demonstration or a hand-built trajectory that this verifier scores 1 is the planned positive example (docs/benchmarks/maniguard.md).
+None yet (`oracle = "none"`): the privileged twin's reference trajectory scores 1 on its verifier; driven through this task's service, it is the planned positive example here (docs/benchmarks/maniguard.md).
 
 ## Verification
 `success` = live success ∧ replay success ∧ deterministic ∧ instance_ok, where a success is the strict goal held for 10
