@@ -9,7 +9,7 @@
 | Family / instance | `orbits` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.9-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128` |
 
 ## Task
 TopoGym orbits (aloha, Genesis): produce one replayable trajectory. Separate and place the entire cord and wooden handle together inside the green dashed goal region. Keep the rings, posts and fixed assembly on the puzzle/system side. Frozen scene instance (variation orbits_medium, seed 0).

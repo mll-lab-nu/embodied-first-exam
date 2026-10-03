@@ -9,7 +9,7 @@
 | Family / instance | `cast_coil` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.9-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128` |
 
 ## Task
 TopoGym cast_coil (aloha, Genesis): produce one replayable trajectory. Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both. Frozen scene instance (variation cast_coil_easy, seed 0).

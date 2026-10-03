@@ -10,7 +10,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/luigivamper/rcb-topogym:0.2.9-cu128
+    image: ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128
     volumes:
       - ./sim:/srv:ro
     working_dir: /tmp

@@ -2,6 +2,7 @@
 """Check immutable historical packages and explicit public tooling generations."""
 import hashlib
 import json
+import re
 from pathlib import Path
 import sys
 import tomllib
@@ -42,6 +43,27 @@ def frozen_state_identity(task):
     return errors
 
 
+def current_image():
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from cuda_profiles import image_tag
+    return image_tag(ROOT, "cu128")
+
+
+def image_references(task):
+    """The simulator image of every container of a current-tooling dir (the privileged environment and verifier, the
+    standard sidecar), which must be the image of images/topogym/VERSION: a dir rendered against an older image keeps
+    working until its instance needs a newer library (tooling v9's ipc_options)."""
+    refs = []
+    for rel in ("environment/Dockerfile", "tests/Dockerfile"):
+        path = task / rel
+        if path.is_file():
+            refs += [(rel, m) for m in re.findall(r"^FROM\s+(\S*rcb-topogym\S*)", path.read_text(), re.M)]
+    compose = task / "environment/docker-compose.yaml"
+    if compose.is_file():
+        refs += [("environment/docker-compose.yaml", m) for m in re.findall(r"image:\s*(\S*rcb-topogym\S*)", compose.read_text())]
+    return refs
+
+
 def check(tasks):
     frozen = json.loads((ROOT / "ci_checks/topogym_tooling_versions.json").read_text())
     errors, count = [], 0
@@ -56,6 +78,9 @@ def check(tasks):
             if not task.name.endswith(("-privileged", "-standard")):
                 errors.append(f"{task.name}: tooling v9 requires protocol v1.0 task names")
             expected = current_files(mode)
+            image = current_image()
+            errors.extend(f"{task.name}/{rel}: image {ref} != {image} (images/topogym/VERSION)"
+                          for rel, ref in image_references(task) if ref != image)
         elif version in ("3", "4", "5", "6", "7", "8"):
             expected = frozen["v" + version][mode]
         elif "tooling_version" in meta:
