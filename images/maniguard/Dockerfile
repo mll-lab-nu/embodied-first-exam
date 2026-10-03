@@ -2,10 +2,10 @@
 # BEHAVIOR-1K v3.7.2 = OmniGibson 3.7.2 + bddl 3.7.0 + Isaac Sim 4.5.0.0 (NVIDIA's pip wheels), Python 3.10, torch
 # 2.6.0+cu124, and Spot 2.16 (conda-forge; the LTL library ManiGuard's safety monitor needs). This is what BEHAVIOR-1K
 # v3.7.2's own installer builds (`setup.sh --new-env --omnigibson --bddl`, the order and pins of that script) plus PyAV from
-# its `--eval` step (the PyPI wheel, see below) and g++ for torch.compile, minus the extras ManiGuard's evaluation never
-# imports (`--primitives`: cuRobo and OMPL; `--joylo`; `--eval`'s lerobot, open3d, hydra, torch-cluster), and ManiGuard's
-# evaluator only (images/maniguard/maniguard-keep.txt: its import closure; no data generator, demonstrations, grasp
-# annotations, policy servers or SFT code).
+# its `--eval` step (the PyPI wheel, see below), g++ for torch.compile and two Kit extensions for offline launches, minus
+# the extras ManiGuard's evaluation never imports (`--primitives`: cuRobo and OMPL; `--joylo`; `--eval`'s lerobot, open3d,
+# hydra, torch-cluster), and ManiGuard's evaluator only (images/maniguard/maniguard-keep.txt: its import closure; no data
+# generator, demonstrations, grasp annotations, policy servers or SFT code).
 # NO dataset: the licensed BEHAVIOR-1K 3.7.2 data root is mounted read-only at /data from $RCB_MANIGUARD_DATA
 # (scripts/maniguard/prep_data.py). Isaac Sim needs an RTX-class GPU even headless; a task's compose reserves it.
 # BUILD_ONLY, never pushed (NVIDIA Isaac Sim inside; images/maniguard/BUILD_ONLY). Build from the repository root:
@@ -91,6 +91,17 @@ RUN mkdir -p /opt/behavior-1k/docs/assets && curl -fsSL --retry 5 -o /opt/behavi
 RUN apt-get -o Acquire::Retries=10 update && apt-get -o Acquire::Retries=10 install -y --no-install-recommends g++ && \
     rm -rf /var/lib/apt/lists/*
 ENV TORCHINDUCTOR_CACHE_DIR=/cache/torchinductor TRITON_CACHE_DIR=/cache/triton
+
+# OmniGibson's kit file depends on two extensions the Isaac Sim wheels do not ship (omni.flowusd and its schema); Kit fetches
+# them from NVIDIA's extension CDN at its first launch into the per-trial cache, so an offline launch (a standard-mode
+# sidecar behind the agent's egress allowlist, a verifier without network) stops with "dependency solver failure"
+# (measured 2026-10-03). They are fetched here instead, sha256-checked, into the extscache folder the kit file scans.
+RUN X="$(python -c 'import isaacsim, os; print(os.path.join(os.path.dirname(isaacsim.__file__), "extscache"))')" && cd /tmp && \
+    for e in "omni.flowusd-106.5.2+106.5.0.lx64.r.cp310.ub3f efaeac05f2e055334010a209977b0ff896891f33f663fbb84dfbb5fe8e996d7f" \
+             "omni.usd.schema.flow-107.0.0+106.1.0.ub3f 2b5c46b749b88a165988f53bbd9d5b6b99532caee64ff5ffb1bd74588431932b"; do \
+      set -- $e; curl -fsSL --retry 5 -o ext.zip "https://d4i3qtqj3r0z5.cloudfront.net/$(echo "$1" | sed 's/+/%2B/g').zip" && \
+      echo "$2  ext.zip" | sha256sum -c - && python -m zipfile -e ext.zip "$X/$1" && rm ext.zip || exit 1; \
+    done && test -f "$X/omni.flowusd-106.5.2+106.5.0.lx64.r.cp310.ub3f/config/extension.toml"
 
 # Kit's caches (shaders, extension cache, logs) and OmniGibson's appdata under /cache, which a task mounts as a volume of its
 # trial; the evaluator must import (no GPU needed for that); the installed package sets, checked against committed locks.
