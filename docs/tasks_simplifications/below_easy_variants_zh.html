@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <title>Below-Easy 变体图解</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="TopoGym 三个任务新增 very_easy / easier：刺球与马蹄环两档的设计、验证、渲染和代码结构，长孔立柱的方案。">
+<meta name="description" content="TopoGym 刺球、马蹄环、长孔立柱在 easy 之下新增的 very_easy / easier：用法、代码结构、每档的设计、真实图片与验证结果。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap">
@@ -221,142 +221,98 @@ footer ul { padding-left: 1.2em; }
 </style>
 
 
+
+
 <div class="wrap">
 
 <header class="top">
-  <div class="eyebrow">TopoGym · Below-Easy 变体 · 实现跟踪</div>
+  <div class="eyebrow">TopoGym · Below-Easy 难度 · 交接说明</div>
   <h1>在 easy 之下再加两档</h1>
-  <p class="lead prose">刺球出笼、马蹄环、长孔立柱解环三个任务，各加 very_easy 和 easier 两档。<b>刺球和马蹄环的两档已实现并通过检查</b>；长孔立柱的方案按“环从立柱上开局”重新设计，等你确认。每个任务分四部分：两档怎么设计、是否验证过可解、真实几何的渲染、实现与代码结构。</p>
+  <p class="lead prose">刺球出笼、马蹄环、长孔立柱解环三个任务，在 easy / medium / hard 之下各加了 <b>very_easy</b> 和 <b>easier</b>。新档和现有三档同属一个任务，部件、评分、目标区都共用；切换只换 <code>variation_id</code>。</p>
   <div class="meta">
-    <span>分支：<b>dev/pingyue-topo</b>（基于 robot_coding_bench dev/jianwen <code>cef2797</code>）</span>
-    <span>计划原文：<code>docs/tasks_simplifications/two_levels_below_easy_plan_20261001_zh.md</code></span>
+    <span>分支：<b>dev/pingyue-topo</b>（robot_coding_bench，基于 dev/jianwen <code>cef2797</code>）</span>
+    <span>入口说明：<code>docs/tasks_simplifications/README.md</code></span>
     <span>更新：<b>2026-10-03</b></span>
-  </div>
-  <div class="sources" aria-label="来源标注">
-    <span><span class="tag plan">计划原文</span></span>
-    <span><span class="tag user">你的决定</span></span>
-    <span><span class="tag repo">仓库现状</span> 代码与运行记录里的事实</span>
-    <span><span class="tag mine">我的方案</span> 本页作者（Claude）的推导和方案</span>
   </div>
 </header>
 
 <nav class="toc" aria-label="目录">
-  <a href="#overview">总览</a>
+  <a href="#use">用法</a>
+  <a href="#structure">代码结构</a>
   <a href="#hedgehog">刺球</a>
   <a href="#horseshoe">马蹄环</a>
   <a href="#slotted">长孔立柱</a>
-  <a href="#harbor">Harbor 打包</a>
-  <a href="#decide">待你决定</a>
-  <a href="#background">背景</a>
+  <a href="#checks">检查命令</a>
+  <a href="#status">现状与待办</a>
 </nav>
 
-<section id="overview">
+<section id="use">
   <div class="head">
-    <div class="eyebrow">Overview</div>
-    <h2>总览</h2>
+    <div class="eyebrow">Usage</div>
+    <h2>用法：五档，一个参数</h2>
   </div>
-  <p class="prose">三个任务用同一种做法：部件不变，每个任务只留一个难度旋钮，very_easy 和 easier 只差这个旋钮的取值。切换难度只需换 <code>variation_id</code>。</p>
+<pre>import topogym
+
+env = topogym.make("hedgehog_in_cage", variation_id="very_easy")   <span class="cm"># very_easy / easier / easy / medium / hard</span>
+env.reset()</pre>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>任务</th><th>very_easy</th><th>easier</th><th>难度旋钮</th><th>状态</th></tr></thead>
+      <thead><tr><th>任务</th><th>very_easy</th><th>easier</th><th>难度旋钮</th></tr></thead>
       <tbody>
-        <tr><td>刺球</td><td>不转，直接平移拉出笼</td><td>绕所夹的刺转一下，再平移拉出</td><td>三个窗的共同宽度：118 / 108 mm</td><td><span class="pill done">已实现并验证</span></td></tr>
-        <tr><td>马蹄环</td><td>提起马蹄，环沿链直接拉出，转不转都能过</td><td>先绕链转环，让长轴横跨马蹄，再沿链拉出</td><td>环孔：144 mm 圆 / 146 × 120 mm 椭圆</td><td><span class="pill done">已实现并验证</span></td></tr>
-        <tr><td>长孔立柱</td><td>环套在立柱上、压在绳上面，直接提起越过柱顶</td><td>另一侧的绳圈带着珠 2 搭在环上；先把绳圈穿下去，再提环</td><td>开局时绳的走向</td><td><span class="pill doing">方案，待确认</span></td></tr>
+        <tr><td><code>hedgehog_in_cage</code></td><td>夹住朝机器人的那根刺，直接平移拉出笼</td><td>先绕所夹的刺转约 80°，再拉出</td><td>三个等宽窗的宽度：118 / 108 mm</td></tr>
+        <tr><td><code>horseshoe_ring</code></td><td>提起马蹄，环沿链直接滑过另一只马蹄</td><td>先绕链转环，让长轴横跨马蹄，再沿链拉出</td><td>环孔：144 mm 圆 / 146 × 120 mm 椭圆</td></tr>
+        <tr><td><code>slotted_post_ring</code></td><td>绳从环下方穿过，环沿立柱直接提起越过柱顶</td><td>另一侧带珠 2 的绳圈搭在环上，先把绳圈穿下去再提环</td><td>绳的走向：<code>under_ring</code> / <code>loop_over_ring</code></td></tr>
       </tbody>
     </table>
   </div>
+  <ul class="prose">
+    <li>也可以写全名，如 <code>hedgehog_in_cage_very_easy</code>。<code>variation_id="seeded"</code> 的随机抽样仍只抽 easy / medium / hard。</li>
+    <li>两档的设计依据计划原文：very_easy 主要考察接近、抓取、取出和搬运，尽量不需要解谜操作；easier 在抓住后需要调整一次角度或方向。</li>
+  </ul>
+</section>
+
+<section id="structure">
+  <div class="head">
+    <div class="eyebrow">Structure</div>
+    <h2>代码结构：继承 easy，只加一个旋钮</h2>
+  </div>
+<pre>&lt;任务&gt;Task               <span class="cm"># common.py：场景声明、评分、目标区，所有档共用</span>
+ ├─ Easy / Medium / Hard  <span class="cm"># 现有三档</span>
+ └─ Easy
+     └─ BelowEasy         <span class="cm"># below_easy.py：加一个旋钮，覆盖一个几何钩子</span>
+         ├─ VeryEasy      <span class="cm"># &lt;任务&gt;_very_easy.py：一行，旋钮取值</span>
+         └─ Easier        <span class="cm"># &lt;任务&gt;_easier.py：一行，旋钮取值</span></pre>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>任务</th><th>旋钮</th><th>覆盖的几何钩子</th><th>very_easy</th><th>easier</th></tr></thead>
+      <tbody>
+        <tr><td>刺球</td><td><code>cage(窗宽 mm)</code></td><td><code>build_assets()</code></td><td><code>cage(118.)</code></td><td><code>cage(108.)</code></td></tr>
+        <tr><td>马蹄环</td><td><code>ring(长轴, 短轴)</code></td><td><code>template()</code>、<code>rest_poses()</code></td><td><code>ring(144., 144.)</code> + 落稳布局</td><td><code>ring(146., 120.)</code> + 落稳布局</td></tr>
+        <tr><td>长孔立柱</td><td><code>cord_route</code></td><td><code>make_layout()</code></td><td><code>"under_ring"</code></td><td><code>"loop_over_ring"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="prose">
+    <li><b>登记</b>：<code>topogym/config/variation_records.py</code> 每档一条，<code>pool='below_easy'</code>，别名 very_easy / easier。</li>
+    <li><b>检查</b>：<code>topogym/planning/&lt;任务&gt;/below_easy_witness.py</code>，都有 <code>check_variant</code>（物体层面）和 <code>settle_check</code>（物理落稳），命令行参数相同。</li>
+    <li><b>测试</b>：<code>ci_checks/test-&lt;任务&gt;-below-easy.py</code>，分两组：登记（别名、参数锁定、公开目标与 easy 相同）和设计意图。</li>
+    <li><b>对共用代码的改动只有钩子</b>。现有三档行为不变：回归测试全部通过；长孔立柱三档的网格、绳和几何报告修改前后逐字节一致。</li>
+  </ul>
 </section>
 
 <section id="hedgehog">
   <div class="head">
-    <div class="eyebrow">hedgehog_in_cage · Panda + Robotiq · 刚体</div>
-    <h2>刺球</h2>
+    <div class="eyebrow">hedgehog_in_cage · Panda + Robotiq 2F-85 · 刚体</div>
+    <h2>刺球：窗宽决定能否直接拉出</h2>
   </div>
-
-  <h3>1. 两档的设计</h3>
-  <div class="two">
-    <div class="box decided">
-      <h3>定义 <span class="tag user">你的决定</span></h3>
-      <ul>
-        <li><b>very_easy</b>：按初始朝向直接平移拉出来，全程不转。</li>
-        <li><b>easier</b>：直接拉拉不出来；在一次抓持内转一下（角度不限），再平移拉出来。</li>
-        <li><b>笼子</b>：笼条分布要均匀、自然，可以把笼子做宽一点。</li>
-      </ul>
-    </div>
-    <div class="box">
-      <h3>实现 <span class="tag mine">我的方案</span></h3>
-      <ul>
-        <li>刺球沿用 easy 的 CLASSIC 刺球（10 根刺，球核直径 54 mm）。</li>
-        <li>笼内径 117 → 150 mm，三个等宽窗，笼条均匀立在 0°、120°、240°，一个窗正对机器人。</li>
-        <li>两档只差三个窗的共同宽度：very_easy 118 mm（笼条 16°），easier 108 mm（笼条 28°）。刺球和初始位姿完全相同。</li>
-        <li>刺球偏向机器人 28 mm，一根 60 mm 长刺伸出笼壁 29.5 mm；夹爪在笼外夹住它，easier 的“转一下”就是绕这根刺的轴转手腕。</li>
-      </ul>
-    </div>
-  </div>
-  <p class="prose"><b>为什么出口窗正对机器人。</b>夹爪夹着朝向机器人的那根刺，所以刺球只能朝机器人方向拉出来；出口如果在别的方向，就要先在笼里把球挪过去，需要换抓或多步操作，那是 easy 及以上的内容。所以两档都是出口正对、路线最短，区别只在窗够不够宽：够宽就直接拉，不够宽就先转一下。</p>
-
-  <h3>2. 笼子：从稀疏改为三根均匀笼条</h3>
-  <figure>
-    <div class="diagram">
-      <svg viewBox="0 0 860 250" role="img" aria-label="刺球笼子在半高处的俯视图：easy 有 5 根均匀笼条；上一版 very_easy 只剩背面 2 根；现在两档的笼内径 150 mm、3 根均匀笼条，easier 窗 108 mm，very_easy 窗 118 mm。">
-        <circle cx="95" cy="132" r="39.1" class="f-ghost"/>
-        <path d="M74.9 98.5A39.1 39.1 0 0 0 67.9 103.9" class="f-bar" stroke-width="5.6"/>
-        <path d="M56.6 139.1A39.1 39.1 0 0 0 59.9 149.1" class="f-bar" stroke-width="5.6"/>
-        <path d="M89.9 170.7A39.1 39.1 0 0 0 100.4 170.7" class="f-bar" stroke-width="5.6"/>
-        <path d="M130.3 148.8A39.1 39.1 0 0 0 133.5 138.8" class="f-bar" stroke-width="5.6"/>
-        <path d="M121.9 103.7A39.1 39.1 0 0 0 114.8 98.3" class="f-bar" stroke-width="5.6"/>
-        <circle cx="95" cy="132" r="16.7" class="f-core"/>
-        <text x="95" y="40" class="t-title" text-anchor="middle">easy</text>
-        <text x="95" y="58" class="t-s" text-anchor="middle">内径 117，5 根</text>
-        <circle cx="285" cy="132" r="39.1" class="f-ghost"/>
-        <path d="M264.9 98.5A39.1 39.1 0 0 0 257.9 103.9" class="f-bar" stroke-width="5.6"/>
-        <path d="M311.9 103.7A39.1 39.1 0 0 0 304.8 98.3" class="f-bar" stroke-width="5.6"/>
-        <circle cx="285" cy="132" r="16.7" class="f-core"/>
-        <text x="285" y="40" class="t-title" text-anchor="middle">very_easy（上一版）</text>
-        <text x="285" y="58" class="t-s" text-anchor="middle">只剩背面 2 根</text>
-        <line x1="400" y1="40" x2="400" y2="225" class="f-axis" stroke-dasharray="3 4"/>
-        <circle cx="530" cy="132" r="49.3" class="f-ghost"/>
-        <path d="M541.9 84.2A49.3 49.3 0 0 0 518.1 84.2" class="f-bar-acc" stroke-width="5.6"/>
-        <path d="M482.6 145.6A49.3 49.3 0 0 0 494.5 166.2" class="f-bar-acc" stroke-width="5.6"/>
-        <path d="M565.5 166.2A49.3 49.3 0 0 0 577.4 145.6" class="f-bar-acc" stroke-width="5.6"/>
-        <circle cx="530" cy="149.4" r="16.7" class="f-core"/>
-        <text x="530" y="40" class="t-title" text-anchor="middle">easier</text>
-        <text x="530" y="58" class="t-s" text-anchor="middle">内径 150，窗 108，笼条 28°</text>
-        <circle cx="745" cy="132" r="49.3" class="f-ghost"/>
-        <path d="M752.0 83.2A49.3 49.3 0 0 0 738.0 83.2" class="f-bar-acc" stroke-width="5.6"/>
-        <path d="M699.3 150.4A49.3 49.3 0 0 0 706.2 162.4" class="f-bar-acc" stroke-width="5.6"/>
-        <path d="M783.8 162.4A49.3 49.3 0 0 0 790.7 150.4" class="f-bar-acc" stroke-width="5.6"/>
-        <circle cx="745" cy="149.4" r="16.7" class="f-core"/>
-        <text x="745" y="40" class="t-title" text-anchor="middle">very_easy</text>
-        <text x="745" y="58" class="t-s" text-anchor="middle">内径 150，窗 118，笼条 16°</text>
-        <text x="430" y="242" class="t-s" text-anchor="middle">↓ 机器人一侧（方位角 180°）</text>
-      </svg>
-    </div>
-    <figcaption>笼壁在半高处的俯视图，按比例画。实线段是笼条，虚线圆是笼壁位置，中间的圆是球核（直径 54 mm）。上一版 very_easy 的 116 mm 窗和左右两个窗连成一片，开口共 273°。现在两档都是三根均匀笼条，球核画在实际位置（偏向机器人 28 mm）。</figcaption>
-  </figure>
   <div class="prose" style="display:grid;gap:10px">
-    <p><span class="tag mine">为什么要加大笼子</span> 直接平移出笼需要约 102 mm 以上的出口。在原来 117 mm 内径的笼上，三根笼条均匀分布时每个窗最宽只有 101 mm，所以必须加大笼子。</p>
-    <p><span class="tag repo">代价</span> 夹爪夹住那根刺时，very_easy 能直拉出去的方向较窄：160 个方向中只有 2 个（约 ±6°）。原因是刺球在这个朝向上横向宽约 116 mm，只比窗小 2 mm。把窗加到 120、124 mm 只增加到 3/160、4/160。用夹爪筛了 49 个候选位姿，最多也只有 5/160；其中落稳检查过的两个，在 108 mm 窗下又找不到“转一次就能出”的路径。上一版开口 273° 时是 10–11/160。</p>
+    <p><b>设计。</b>刺球沿用 easy。笼内径从 117 mm 加大到 150 mm，开三个等宽窗，笼条均匀立在 0°、120°、240°，其中一个窗正对机器人。刺球偏向机器人 28 mm 静置，一根 60 mm 长刺伸出笼壁 29.5 mm，夹爪在笼外夹住它。窗 118 mm 时，按原朝向直接拉出；窗 108 mm 时，要先绕这根刺转一下手腕。</p>
+    <p><b>为什么加大笼子。</b>直接平移出笼需要约 102 mm 以上的出口。原笼上三根均匀笼条只能留出 101 mm 的窗。</p>
   </div>
-
-  <h3>3. 可解性验证</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>检查</th><th>very_easy（118 mm）</th><th>easier（108 mm）</th><th>方法</th></tr></thead>
-      <tbody>
-        <tr><td>初始位姿与笼、底座、桌面不相交</td><td class="ok">是</td><td class="ok">是</td><td>精确网格</td></tr>
-        <tr><td>保持初始朝向能否平移出笼</td><td class="ok">能</td><td class="no">不能</td><td>2 mm 平移网格上的广度优先搜索</td></tr>
-        <tr><td>证明过的路径（只算刺球）</td><td>抬 5 mm → 朝 198° 直拉</td><td>抬 25 mm → 绕所夹的刺转 80° → 朝 174° 直拉</td><td><code>RigidPathChecker</code> 逐段证明，表面余量 ≥ 1 mm</td></tr>
-        <tr><td>加 2F-85 夹住那根刺</td><td>160 个方向中 2 个能直拉</td><td>直拉 0/160；抬 25 mm、绕接近轴转 −75° 后 2/160</td><td><code>exit_check.py --spike 9</code>（提交 5d5a67b）</td></tr>
-        <tr><td>初始位姿扰动（±1 mm、±2°，20 个样本）</td><td>20/20 仍能平移出笼</td><td>10/20 仍出不去；另 10 个在零余量下能从背面 60° 的窗平移出去（远离机器人，夹着前面的刺时用不上）。窗改为 104 mm 能堵住，但转一次也出不去了</td><td>同上平移搜索</td></tr>
-        <tr><td>CPU 物理仿真里再放 3 s</td><td>移动 0.30 mm</td><td>移动 0.30 mm</td><td>Genesis CPU，机器人保持 home</td></tr>
-      </tbody>
-    </table>
+  <div class="two">
+    <figure class="card"><img src="figures/sim_hedgehog_in_cage_very_easy.jpg" alt="very_easy 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>very_easy</b>，窗 118 mm。仿真相机渲染的开局。</figcaption></figure>
+    <figure class="card"><img src="figures/sim_hedgehog_in_cage_easier.jpg" alt="easier 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>easier</b>，窗 108 mm。仿真相机渲染的开局。</figcaption></figure>
   </div>
-  <p class="note prose">未做：机器人从 home 出发的完整执行（含 Panda 手腕、IK、动力学）。</p>
-
-  <h3>4. 渲染</h3>
   <figure>
     <div class="strip">
       <div class="card"><img src="figures/hedgehog_very_easy_step1.jpg" alt="very_easy 初态" loading="lazy" width="720" height="540"></div>
@@ -370,103 +326,79 @@ footer ul { padding-left: 1.2em; }
       <div class="card"><img src="figures/hedgehog_easier_step3.jpg" alt="easier 拉出途中" loading="lazy" width="720" height="540"></div>
       <div class="card"><img src="figures/hedgehog_easier_step4.jpg" alt="easier 出笼" loading="lazy" width="720" height="540"></div>
     </div>
-    <figcaption>上排 very_easy（窗 118 mm），下排 easier（窗 108 mm），起始位姿相同。视角在机器人一侧，正对出口窗；橙色是刺球，青绿色是夹爪要夹的那段刺。每帧都是证明过的路径上的位姿，由生成器网格在 CPU 上渲染，不含机器人。</figcaption>
+    <figcaption>证明过的取出路径（只算刺球，从机器人一侧看；青绿色是夹爪要夹的那段刺）。上排 very_easy：抬 5 mm 后朝 198° 直拉。下排 easier：抬 25 mm，绕所夹的刺转 80°，再朝 174° 直拉。</figcaption>
   </figure>
-
-  <h3>5. 实现与代码结构</h3>
-<pre>topogym/tasks/hedgehog_in_cage/
-  below_easy.py                    <span class="cm"># 两档共用：笼子构造、落稳位姿；cage(窗宽 mm) 是唯一旋钮</span>
-  hedgehog_in_cage_very_easy.py    <span class="cm"># 一行：cage(118.)</span>
-  hedgehog_in_cage_easier.py       <span class="cm"># 一行：cage(108.)</span>
-topogym/config/variation_records.py <span class="cm"># 登记两档，别名 very_easy / easier</span>
-topogym/planning/hedgehog_in_cage/below_easy_witness.py  <span class="cm"># 平移可达、证明路径、CPU 落稳</span>
-ci_checks/test-hedgehog-below-easy.py                    <span class="cm"># 7 项测试，约 40 s，不需要 GPU</span>
-
-env = topogym.make("hedgehog_in_cage", variation_id="very_easy")   <span class="cm"># 或 "easier"、"easy"、"medium"、"hard"</span></pre>
-  <p class="note prose">思路：先在几何上搜索满足“一根刺朝机器人伸出笼外”的静置位姿（12 个稳定朝向 × 偏航角 × 偏向机器人的距离），在 5 种窗宽下分类；再把候选放进 Genesis 落稳后重新分类（一半候选会滑回笼中间），最后加夹爪复核。easy 的生成器和 <code>common.py</code> 没有改动（easy 的可解性记录按 SHA-256 锁定了这两个文件）。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>检查</th><th>very_easy</th><th>easier</th></tr></thead>
+      <tbody>
+        <tr><td>保持初始朝向能否平移出笼（2 mm 网格搜索）</td><td class="ok">能</td><td class="no">不能</td></tr>
+        <tr><td>证明过的路径，表面余量 ≥ 1 mm</td><td>抬 5 mm → 直拉</td><td>抬 25 mm → 绕刺转 80° → 直拉</td></tr>
+        <tr><td>加 2F-85 夹爪夹住那根刺</td><td>160 个方向中 2 个能直拉（约 ±6°）</td><td>直拉 0/160；绕接近轴转 −75° 后 2/160</td></tr>
+        <tr><td>仿真里机器人不动、静置</td><td>刺球移动 0.30 mm（Genesis CUDA 1 s；CPU 3 s 同为 0.30 mm）</td><td>刺球移动 0.30 mm（Genesis CUDA 1 s；CPU 3 s 同为 0.30 mm）</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note prose">已知限制：very_easy 夹爪下能直拉的方向较窄，因为刺球在这个朝向上横向约 116 mm，只比窗小 2 mm。easier 的初始位姿加 ±1 mm、±2° 扰动时，20 个样本中有 10 个能从背面 60° 的窗平移出去；这个方向远离机器人，夹着前面那根刺时用不上。</p>
 </section>
 
 <section id="horseshoe">
   <div class="head">
     <div class="eyebrow">horseshoe_ring · ALOHA 双臂 · 刚体</div>
-    <h2>马蹄环</h2>
+    <h2>马蹄环：环孔决定能否直接滑过马蹄</h2>
   </div>
-
-  <h3>1. 两档的设计</h3>
   <div class="prose" style="display:grid;gap:10px">
-    <p><span class="tag user">你的意见</span> 任务定义不改：两只手一只拿马蹄、一只拿环就行，关键是环和马蹄的相对关系。<span class="tag mine">实现</span> 环仍同时套着两条链，部件不变，只改环孔大小。</p>
-    <p><b>原理。</b>一只手把马蹄提起来，让链竖直，环沿链方向滑过下面那只马蹄就脱出。沿链方向看，马蹄是一根 138 × 25 mm 的长条（含端部小环），环孔要能把这根长条套进去。</p>
+    <p><b>设计。</b>任务定义不变：环仍同时套着两条链，部件沿用 easy，只改环孔大小。一只手提起一只马蹄，链竖直；另一只手拿环沿链滑过下面那只马蹄，环就脱出。沿链方向看，马蹄是一根 138 × 25 mm 的长条，环孔要能把它套进去：</p>
   </div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>档</th><th>环孔</th><th>能套过马蹄的环相位</th><th>机器人要做的</th></tr></thead>
+      <thead><tr><th>档</th><th>环孔</th><th>能套过马蹄的环相位（绕链转的角度）</th></tr></thead>
       <tbody>
-        <tr><td>easy（现有）</td><td class="num">135 × 128 mm 椭圆</td><td>0（怎么转都过不去）</td><td>要用折合两只马蹄的技巧</td></tr>
-        <tr><td><b>easier</b></td><td class="num">146 × 120 mm 椭圆</td><td>64°–116°（180° 中 54°）</td><td>提起马蹄，绕链方向转环，让长轴横跨马蹄，再沿链拉出</td></tr>
-        <tr><td><b>very_easy</b></td><td class="num">144 mm 圆</td><td>全部（居中时每边余量约 3 mm）</td><td>提起马蹄，沿链拉出</td></tr>
+        <tr><td>easy（现有）</td><td class="num">135 × 128 mm</td><td>没有，要用折合两只马蹄的技巧</td></tr>
+        <tr><td><b>easier</b></td><td class="num">146 × 120 mm</td><td>64°–116°：先转到长轴横跨马蹄</td></tr>
+        <tr><td><b>very_easy</b></td><td class="num">144 mm 圆</td><td>全部</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="note prose">“环相位”指环绕链方向转过的角度，每 2° 取一个，共 90 个。</p>
-
-  <h3>2. 可解性验证</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>检查</th><th>very_easy</th><th>easier</th><th>方法</th></tr></thead>
-      <tbody>
-        <tr><td>截面：能套过马蹄的相位</td><td>90/90</td><td>27/90</td><td>马蹄截面与环孔的二维包含</td></tr>
-        <tr><td>沿链直拉（马蹄与链固定在装配姿态）</td><td>抽查 6 个相位都有证明路径</td><td>90° 相位有证明路径；0° 相位直拉会碰撞</td><td><code>RigidPathChecker</code>，表面余量 ≥ 1 mm</td></tr>
-        <tr><td>开局时环仍套着两条链</td><td class="ok">是</td><td class="ok">是</td><td>沿马蹄带、端部小环和链环钢丝追踪每条链，穿过环面次数为奇数</td></tr>
-        <tr><td>开局时环能否单独平移取下</td><td class="ok">不能</td><td class="ok">不能</td><td>其他部件固定，73 个方向直线平移</td></tr>
-        <tr><td>CPU 物理仿真里再放 3 s</td><td>环移动 0.06 mm，仍套着</td><td>环移动 0.33 mm，仍套着</td><td>Genesis CPU，2.5 ms、4 子步</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p class="note prose">开局布局：把装配体放在桌面上方 1 mm，CPU 落稳 5 s 后存为资源文件。“套着两条链”的检查用现有三档的落稳布局验证过，三档都判为套住。未做：机器人从平躺开局把马蹄提起来、链如何下垂，以及完整执行。</p>
-
-  <h3>3. 渲染</h3>
   <div class="two">
-    <figure class="card"><img src="figures/horseshoe_very_easy_start.jpg" alt="very_easy 落稳后的开局" loading="lazy" width="720" height="540"><figcaption>very_easy 开局（落稳后）：环平躺在左侧马蹄上方，两条链从环中穿过。</figcaption></figure>
-    <figure class="card"><img src="figures/horseshoe_easier_start.jpg" alt="easier 落稳后的开局" loading="lazy" width="720" height="540"><figcaption>easier 开局（落稳后）：椭圆环平躺在右侧马蹄上方，两条链从环中穿过。</figcaption></figure>
+    <figure class="card"><img src="figures/sim_horseshoe_ring_very_easy.jpg" alt="very_easy 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>very_easy</b>：落稳后环平躺，两条链从环中穿过。仿真相机渲染。</figcaption></figure>
+    <figure class="card"><img src="figures/sim_horseshoe_ring_easier.jpg" alt="easier 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>easier</b>：椭圆环平躺在马蹄上方，两条链从环中穿过。仿真相机渲染。</figcaption></figure>
   </div>
   <figure>
     <div class="strip">
-      <div class="card"><img src="figures/horseshoe_bore_easy.jpg" alt="easy 环：任何相位都过不去" loading="lazy" width="720" height="540"></div>
-      <div class="card"><img src="figures/horseshoe_bore_easier.jpg" alt="easier 环：没转到位时过不去" loading="lazy" width="720" height="540"></div>
-      <div class="card"><img src="figures/horseshoe_bore_easier_aligned.jpg" alt="easier 环：长轴横跨马蹄后能过" loading="lazy" width="720" height="540"></div>
-      <div class="card"><img src="figures/horseshoe_bore_very_easy.jpg" alt="very_easy 环：任何相位都能过" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/horseshoe_bore_easy.jpg" alt="easy 环过不去" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/horseshoe_bore_easier.jpg" alt="easier 环未转到位时过不去" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/horseshoe_bore_easier_aligned.jpg" alt="easier 环转到位后能过" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/horseshoe_bore_very_easy.jpg" alt="very_easy 环任何相位都能过" loading="lazy" width="720" height="540"></div>
     </div>
-    <figcaption>提起马蹄、链竖直后沿链方向往下看（近似正交投影）：灰色长条是马蹄的侧面，橙色是环。从左到右：easy 的环过不去；easier 的环没转到位时过不去；转到长轴横跨马蹄后能过；very_easy 的圆环在任何相位都能过。装配姿态，未落稳。</figcaption>
+    <figcaption>提起马蹄、链竖直后，沿链方向往下看：灰色长条是马蹄侧面，橙色是环。从左到右：easy 的环过不去；easier 的环没转到位时过不去；转到长轴横跨马蹄后能过；very_easy 的圆环在任何相位都能过。</figcaption>
   </figure>
-
-  <h3>4. 实现与代码结构</h3>
-<pre>topogym/tasks/horseshoe_ring/
-  below_easy.py                 <span class="cm"># 共享构造；ring(长轴 mm, 短轴 mm) 是唯一旋钮</span>
-  horseshoe_ring_very_easy.py   <span class="cm"># ring(144., 144.) + 自己的落稳布局</span>
-  horseshoe_ring_easier.py      <span class="cm"># ring(146., 120.) + 自己的落稳布局</span>
-  common.py                     <span class="cm"># 新增两个钩子：template()、rest_poses()</span>
-topogym/assets/resources/variations/horseshoe_ring/below_easy_{very_easy,easier}_settled_poses.json
-topogym/planning/horseshoe_ring/below_easy_witness.py  <span class="cm"># 截面、证明路径、开局是否套住、CPU 落稳</span>
-ci_checks/test-horseshoe-below-easy.py                 <span class="cm"># 8 项测试，约 2 s，不需要 GPU</span></pre>
-  <p class="note prose">结构和刺球一样：每档一个类、一行参数；新档只需给出 <code>ring(...)</code> 并落稳出自己的布局。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>检查</th><th>very_easy</th><th>easier</th></tr></thead>
+      <tbody>
+        <tr><td>沿链直拉（马蹄与链固定在装配姿态），表面余量 ≥ 1 mm</td><td>抽查 6 个相位都有证明路径</td><td>90° 相位有证明路径；0° 相位会碰撞</td></tr>
+        <tr><td>开局时环仍套着两条链；环不能单独平移取下</td><td class="ok">是</td><td class="ok">是</td></tr>
+        <tr><td>仿真里机器人不动、静置</td><td>环移动 0.02 mm（Genesis CUDA 1 s）；CPU 3 s 移动 0.06 mm，仍套着两条链</td><td>环移动 0.18 mm（Genesis CUDA 1 s）；CPU 3 s 移动 0.33 mm，仍套着两条链</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note prose">每档的开局布局来自一次 5 s 的 CPU 落稳，存为资源文件 <code>variations/horseshoe_ring/below_easy_{very_easy,easier}_settled_poses.json</code>。</p>
 </section>
 
 <section id="slotted">
   <div class="head">
-    <div class="eyebrow">slotted_post_ring · ALOHA 双臂 · FEM / IPC</div>
-    <h2>长孔立柱</h2>
+    <div class="eyebrow">slotted_post_ring · ALOHA 双臂 · FEM 绳</div>
+    <h2>长孔立柱：绳在环的上面还是下面</h2>
   </div>
-
-  <h3>1. 两档的设计 <span class="tag mine">按你的意见重新设计，待确认</span></h3>
   <div class="prose" style="display:grid;gap:10px">
-    <p><span class="tag user">你的意见</span> 从 s3 或 s4 开局时环已经不在立柱上，不像这个任务；应该从环套在立柱上开局。</p>
-    <p><span class="tag mine">关键</span> 环套在立柱上时，要看绳在环的上面还是下面。只要有一段绳从环上方跨过、而那段绳的端头又穿不过环（端盘直径 110 mm，大于环孔），环就被困住，只能走完整的 5 步定式；现有三档都是这种情况。绳全部压在环下面时，环直接沿立柱往上提，越过柱顶就出来了。</p>
+    <p><b>设计。</b>部件尺寸沿用 easy，环开局套在立柱根部。环只会被“从环上方跨过”的那段绳困住，因为端盘（直径 110 mm）穿不过环（内径 108 mm）。所以绳的走向决定难度：</p>
   </div>
   <figure>
     <div class="diagram">
       <svg viewBox="0 0 900 270" role="img" aria-label="侧视示意图：现有三档的绳从环上方跨过，环被困住；very_easy 的绳从环下方穿过，环可以直接提起；easier 近侧的绳在环下方，另一侧带着珠 2 的绳圈搭在环上方，要先把绳圈穿下去。">
         <g>
-          <text x="10" y="22" class="t-title">现有三档</text>
+          <text x="10" y="22" class="t-title">easy / medium / hard</text>
           <line x1="0" y1="210" x2="290" y2="210" class="f-axis"/>
           <rect x="70" y="198" width="150" height="12" class="f-wall"/>
           <path d="M83 190A62 8 0 0 1 207 190" class="f-ring"/>
@@ -522,117 +454,75 @@ ci_checks/test-horseshoe-below-easy.py                 <span class="cm"># 8 项�
         </g>
       </svg>
     </div>
-    <figcaption>侧视示意图，只表示绳在环的上面还是下面，不是真实形状。立柱中间的虚线框是长孔；橙色是套在立柱根部的环。easier 的绳像定式第一步之后那样两次穿过长孔：两个端盘都在左侧，右侧形成一个带珠 2 的绳圈。</figcaption>
+    <figcaption>侧视示意图，只表示绳在环的上面还是下面。立柱中间的虚线框是长孔，橙色是套在立柱根部的环。easier 的绳像标准解法第一步之后那样两次穿过长孔，两个端盘都在近侧。</figcaption>
   </figure>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>档</th><th>开局</th><th>机器人要做的</th></tr></thead>
-      <tbody>
-        <tr><td><b>very_easy</b></td><td>环套在立柱根部，压在绳上面（你最早提的“环在绳上面”）。绳一次穿过长孔，两端和现有三档相同。</td><td>抓住环，沿立柱提起约 30 cm，越过柱顶。</td></tr>
-        <tr><td><b>easier</b></td><td>环套在立柱根部。绳两次穿过长孔，两个端盘都在近侧、压在环下面；另一侧的绳圈带着珠 2 搭在环上面。</td><td>把绳圈连同珠 2 从环和立柱之间的空隙里穿下去（珠 2 直径 39 mm，环偏向这一侧时空隙最大约 59 mm），再提环。</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p class="note prose">两档都不改部件尺寸，只改绳的走向和环的位置。我之前担心环压在绳上不稳；其实绳平铺在底座上、环压在绳上面，是稳定的，仍要在 GPU 上做 FEM 落稳确认。</p>
-
-  <h3>2. 可解性验证</h3>
-  <ul class="prose">
-    <li><span class="pill todo">未做</span> 写出两档的绳控制点，环放在立柱根部。</li>
-    <li><span class="pill todo">未做</span> 开局检查：沿绳中心线判断绳在环的上面还是下面，确认 very_easy 无跨过、easier 只有绳圈跨过。</li>
-    <li><span class="pill todo">未做</span> GPU 上的 FEM 落稳，确认开局稳定。</li>
-    <li><span class="pill todo">未做</span> 机器人执行。</li>
-  </ul>
-
-  <h3>3. 渲染</h3>
-  <figure class="card" style="max-width:420px">
-    <img src="figures/slotted_post_ring_easy.jpg" alt="长孔立柱 easy 的初态" loading="lazy" width="720" height="540">
-    <figcaption>现有 easy 的开局：绳从长孔穿出后从环的上方垂到两侧。新两档的真实渲染要等开局构造出来、在 GPU 上落稳以后。</figcaption>
-  </figure>
-
-  <h3>4. 实现计划与代码结构 <span class="tag mine">计划</span></h3>
-<pre>topogym/tasks/slotted_post_ring/
-  below_easy.py                    <span class="cm"># 共享构造；开局（绳控制点）是唯一旋钮</span>
-  slotted_post_ring_very_easy.py   <span class="cm"># 绳全部在环下方</span>
-  slotted_post_ring_easier.py      <span class="cm"># 绳两次穿孔，另一侧的绳圈搭在环上</span>
-topogym/planning/slotted_post_ring/below_easy_witness.py  <span class="cm"># 绳在环上下的判断、FEM 落稳检查（GPU）</span>
-ci_checks/test-slotted-below-easy.py</pre>
-</section>
-
-<section id="harbor">
-  <div class="head">
-    <div class="eyebrow">Harbor</div>
-    <h2>Harbor 打包：同一个框架下的参数</h2>
-  </div>
-  <div class="prose" style="display:grid;gap:10px">
-    <p>新难度就是同一个任务的参数，没有单独的框架。仓库分三层：</p>
-    <ol>
-      <li><b>任务源码</b> <code>topogym/tasks/&lt;任务&gt;/</code>：一个任务，每档一个类，共用 <code>common.py</code>。</li>
-      <li><b>登记</b> <code>variation_records.py</code>：每档一个 <code>variation_id</code> 和别名，<code>topogym.make(任务, variation_id=...)</code> 选档。刺球和马蹄环的新两档已登记。</li>
-      <li><b>Harbor 任务包</b> 根目录 <code>tasks/&lt;slug&gt;/</code>：从某一档、某个 seed 生成的冻结实例，包含 <code>instance.json</code>、资源、评分脚本和 docker 配置。现有 easy / medium / hard 也是每档各一个包，分 privileged 和 standard 两种模式。</li>
-    </ol>
-    <p>打包用现有的 <code>scripts/topogym_mk_task.py hedgehog_in_cage --variation very_easy --scene-seed 0</code>，<code>[metadata].difficulty</code> 自动取登记里的 very_easy / easier。还没做，因为生成时要在 GPU 的 docker 里跑 <code>make-instance</code>，镜像里也要有新代码。</p>
-  </div>
-</section>
-
-<section id="decide">
-  <div class="head">
-    <div class="eyebrow">Decisions</div>
-    <h2>待你决定</h2>
-  </div>
-  <ol class="prose">
-    <li><b>长孔立柱</b>：very_easy 用“环压在绳上面，直接提起”，easier 用“另一侧的绳圈搭在环上，先穿下去再提环”，可以吗？确认后趁 GPU 空闲做 FEM 落稳。</li>
-    <li><b>刺球 very_easy 的出口宽度</b>：现在夹爪下 2/160 个直拉方向（约 ±6°）。要放宽就得回到不均匀的笼条，或把窗加到 124 mm（笼条 8.5°，只到 4/160）。我建议保持现状。</li>
-  </ol>
-</section>
-
-<section id="background">
-  <div class="head">
-    <div class="eyebrow">Background</div>
-    <h2>背景</h2>
-  </div>
-  <blockquote class="prose">
-    <p><span class="tag plan">计划原文</span></p>
-    <p><b>very_easy</b>：主要考察机械臂找合适角度接近、抓住目标物、取出并搬运的能力，尽量减少抓取后的解谜操作。</p>
-    <p><b>easier</b>：在上述基础上增加少量约束，让机械臂抓住物体后需要调整角度或方向，再完成取出和搬运；整体仍比当前 easy 简单。</p>
-  </blockquote>
   <div class="tiers">
-    <figure class="card"><img src="figures/hedgehog_in_cage_easy.jpg" alt="刺球 easy" loading="lazy" width="720" height="540"><div class="label">刺球 easy <i>classic_3star</i></div></figure>
-    <figure class="card"><img src="figures/hedgehog_in_cage_medium.jpg" alt="刺球 medium" loading="lazy" width="720" height="540"><div class="label">刺球 medium <i>waisted_windows</i></div></figure>
-    <figure class="card"><img src="figures/hedgehog_in_cage_hard.jpg" alt="刺球 hard" loading="lazy" width="720" height="540"><div class="label">刺球 hard <i>gen_keyhole</i></div></figure>
-    <figure class="card"><img src="figures/horseshoe_ring_easy.jpg" alt="马蹄环 easy" loading="lazy" width="720" height="540"><div class="label">马蹄环 easy <i>落稳后，环平躺在右侧马蹄上</i></div></figure>
-    <figure class="card"><img src="figures/horseshoe_ring_medium.jpg" alt="马蹄环 medium" loading="lazy" width="720" height="540"><div class="label">马蹄环 medium <i>u_mild</i></div></figure>
-    <figure class="card"><img src="figures/horseshoe_ring_hard.jpg" alt="马蹄环 hard" loading="lazy" width="720" height="540"><div class="label">马蹄环 hard <i>waist_ellipse</i></div></figure>
-    <figure class="card"><img src="figures/slotted_post_ring_easy.jpg" alt="长孔立柱 easy" loading="lazy" width="720" height="540"><div class="label">长孔立柱 easy <i>环内径 108 mm</i></div></figure>
-    <figure class="card"><img src="figures/slotted_post_ring_medium.jpg" alt="长孔立柱 medium" loading="lazy" width="720" height="540"><div class="label">长孔立柱 medium <i>105 mm</i></div></figure>
-    <figure class="card"><img src="figures/slotted_post_ring_hard.jpg" alt="长孔立柱 hard" loading="lazy" width="720" height="540"><div class="label">长孔立柱 hard <i>102 mm</i></div></figure>
+    <figure class="card"><img src="figures/slotted_very_easy_start.jpg" alt="very_easy 开局" loading="lazy" width="848" height="480"><div class="label">very_easy <i>绳从环下方穿出</i></div></figure>
+    <figure class="card"><img src="figures/slotted_easier_start_near.jpg" alt="easier 开局，近侧" loading="lazy" width="720" height="540"><div class="label">easier <i>近侧：两股绳在环下方</i></div></figure>
+    <figure class="card"><img src="figures/slotted_easier_start.jpg" alt="easier 开局，另一侧" loading="lazy" width="720" height="540"><div class="label">easier <i>另一侧：带珠 2 的绳圈搭在环上</i></div></figure>
   </div>
+  <p class="note prose">生成器网格的开局，在 CPU 上渲染。仿真相机渲染排在共享 GPU 上，尚未完成。</p>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>任务</th><th>网上的定式解法</th><th>机器人完整执行（仓库）</th></tr></thead>
+      <thead><tr><th>检查</th><th>very_easy</th><th>easier</th></tr></thead>
       <tbody>
-        <tr><td>刺球</td><td>RADEMIC 提示：CLASSIC 找最宽的孔和两根最短的刺</td><td>easy、medium 已完成（2026-09-30）；hard 未完成</td></tr>
-        <tr><td>马蹄环</td><td>一只马蹄翻过来与另一只成直角，环从 U 形底部滑出</td><td>当前三档没有</td></tr>
-        <tr><td>长孔立柱</td><td>Fisherman's Folly 5 步（Cabalar 与 Santos，Figure 4）</td><td>没有</td></tr>
+        <tr><td>绳经过环的位置</td><td>两侧都在环下方</td><td>近侧在下方；另一侧两处在上方，都属于两次穿孔之间的绳圈</td></tr>
+        <tr><td>直接提环（绳冻结）</td><td>提起 289 mm 越过柱顶，有证明路径</td><td>会碰到绳圈</td></tr>
+        <tr><td>珠 2 能否穿过环与立柱之间</td><td>—</td><td>最大空隙 66 mm，珠 2 直径 39 mm</td></tr>
+        <tr><td>仿真落稳（GPU，FEM 绳）</td><td colspan="2">very_easy：落稳 2 s 后，环所在高度范围内没有绳顶点在环上方（下方 1414 个），IPC 有效；环移动 15.9 mm、倾斜 4°（从悬在绳上落到一侧贴底座）。easier：尚未完成，在共享 GPU 上一次显存溢出、一次进程段错误，原因未确定。</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="note prose">来源：<a href="https://help.rademic.cz/">RADEMIC</a>、<a href="https://waynesword.net/trjuly98.htm">Wayne's Word</a>、<a href="https://www.ime.usp.br/~logprob/articles/fishermansAIJ-15.pdf">Cabalar 与 Santos</a>。渲染图由仓库生成器的网格在 CPU 上渲染。</p>
+  <p class="note prose">绳比 easy 长：very_easy 0.92 m，easier 1.24 m（easy 0.79 m）；环抬高到压在绳上。easier 的“把绳圈穿下去”是软绳操作，没有路径证明，只检查了尺寸关系。另一个 session 用 3D 查看器的 MuJoCo 近似猛拉环 35 cm：very_easy 的环直接越过柱顶；easy 和 easier 的环会拖动端盘。这只作为直观参考，不是仿真证据。</p>
+</section>
+
+<section id="checks">
+  <div class="head">
+    <div class="eyebrow">Commands</div>
+    <h2>检查命令</h2>
+  </div>
+<pre><span class="cm"># 在仓库根目录、装好 TopoGym 的环境里运行</span>
+python ci_checks/test-hedgehog-below-easy.py      <span class="cm"># 7 项，约 40 s</span>
+python ci_checks/test-horseshoe-below-easy.py     <span class="cm"># 8 项，约 2 s</span>
+python ci_checks/test-slotted-below-easy.py       <span class="cm"># 8 项，约 5 s</span>
+
+<span class="cm"># 单档报告写到 --output/below_easy_check.json；--settle-seconds 再做一次物理落稳</span>
+python -m topogym.planning.hedgehog_in_cage.below_easy_witness  --variant easier --output runs/below_easy/hedgehog_easier --settle-seconds 3
+python -m topogym.planning.horseshoe_ring.below_easy_witness    --variant easier --output runs/below_easy/horseshoe_easier --settle-seconds 3
+python -m topogym.planning.slotted_post_ring.below_easy_witness --variant easier --output runs/below_easy/slotted_easier
+
+<span class="cm"># 3D 查看器：浏览器里用鼠标拖动零件（MuJoCo 近似，见 design_viewer/README.md）</span>
+python -m design_viewer.view --scene slotted_post_ring_easier --port 18080</pre>
+  <p class="note prose">刺球和马蹄环的落稳在 CPU 上运行。长孔立柱的落稳需要 GPU 和 IPC 后端，要在 TopoGym 镜像里运行。</p>
+</section>
+
+<section id="status">
+  <div class="head">
+    <div class="eyebrow">Status</div>
+    <h2>现状与待办</h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项目</th><th>刺球</th><th>马蹄环</th><th>长孔立柱</th></tr></thead>
+      <tbody>
+        <tr><td>场景、登记、测试</td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td></tr>
+        <tr><td>物体层面的设计检查</td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td></tr>
+        <tr><td>仿真落稳</td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td><td><span class="pill done">very_easy 完成</span> <span class="pill doing">easier 未完成</span></td></tr>
+        <tr><td>机器人从 home 出发的完整执行</td><td><span class="pill todo">未做</span></td><td><span class="pill todo">未做</span></td><td><span class="pill todo">未做</span></td></tr>
+        <tr><td>Harbor 任务包</td><td colspan="3"><span class="pill todo">未做</span> 用现有的 <code>scripts/topogym_mk_task.py &lt;任务&gt; --variation very_easy --scene-seed 0</code> 生成，需要 GPU 和包含新代码的镜像</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note prose">文件：入口说明 <code>docs/tasks_simplifications/README.md</code>；任务来源 <code>docs/tasks_simplifications/two_levels_below_easy_plan_20261001_zh.md</code>；各任务设计记录见 <code>docs/develop/tasks/&lt;任务&gt;_zh.md</code> 的 “below-easy 设定” 一节；3D 查看器 <code>design_viewer/README.md</code>。</p>
+  <div class="tiers">
+    <figure class="card"><img src="figures/hedgehog_in_cage_easy.jpg" alt="刺球 easy" loading="lazy" width="720" height="540"><div class="label">刺球 easy <i>对照：现有档</i></div></figure>
+    <figure class="card"><img src="figures/horseshoe_ring_easy.jpg" alt="马蹄环 easy" loading="lazy" width="720" height="540"><div class="label">马蹄环 easy <i>对照：现有档</i></div></figure>
+    <figure class="card"><img src="figures/slotted_post_ring_easy.jpg" alt="长孔立柱 easy" loading="lazy" width="720" height="540"><div class="label">长孔立柱 easy <i>对照：现有档</i></div></figure>
+  </div>
 </section>
 
 <footer>
-  <div><b>相关文件</b></div>
-  <ul>
-    <li>任务文档：<code>docs/develop/tasks/hedgehog_in_cage_zh.md</code>、<code>docs/develop/tasks/horseshoe_ring_zh.md</code> 的“2026-10-02 below-easy 设定”一节。</li>
-    <li>鼠标拖动零件的 3D 查看器：<code>design_viewer/</code>（只用于理解谜题，不含机械臂）。</li>
-    <li>检查报告：<code>runs/below_easy/{hedgehog,horseshoe}_{very_easy,easier}/below_easy_check.json</code>（本地，git 忽略）。</li>
-  </ul>
-  <div><b>维护记录</b></div>
-  <ul>
-    <li>2026-10-03 第 10 版：刺球改为内径 150 mm、三根均匀笼条（窗宽 118 / 108 mm）并重新验证；马蹄环两档实现并验证（环孔 144 mm 圆 / 146 × 120 mm 椭圆）；长孔立柱改为从环套在立柱上开局的方案。</li>
-    <li>2026-10-02 第 9 版：改为按任务组织；Harbor 打包说明。</li>
-    <li>2026-10-02 第 5–8 版：改为实现跟踪页；刺球两档按夹爪设计；脚本路径更新。</li>
-    <li>2026-10-02 第 1–4 版：任务说明、来源标注、定式解法、3D 工具计划。</li>
-  </ul>
+  <div>本页由生成器网格的 CPU 渲染、仿真相机渲染和检查报告整理而成。检查报告在本地 <code>runs/below_easy/</code>（git 忽略），可用上面的命令重新生成。</div>
 </footer>
 
 </div>

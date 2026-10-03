@@ -231,3 +231,28 @@ PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python \
 几何参数可编辑，但绳尾排列是固定模板，改尺寸后必须重新通过初态检查；目前无随机实例生成器。
 
 后续需完成全路径的半步长复验，并将已验证的外力解环路径转为双臂连续执行：补齐提环、木环过槽、再次过珠及最终释放，解决交接后的关节跟踪误差。当前端片交接、过珠局部录像及完整外力录像不替代完整机器人执行。
+
+## 2026-10-03 below-easy 设定：very_easy / easier
+
+依据 [两档计划](../../tasks_simplifications/two_levels_below_easy_plan_20261001_zh.md)。说明页与图片见 [below_easy_variants_zh.html](../../tasks_simplifications/below_easy_variants_zh.html)。
+
+部件尺寸沿用 easy（环内径 108 mm、长孔 28 mm、端盘直径 110 mm），环开局仍套在立柱根部。环只会被“从环上方跨过”的那段绳困住，因为端盘穿不过环。难度旋钮是绳的走向 `cord_route`：
+
+| 入口 | 别名 | 绳的走向 | 物体层面检查 |
+| --- | --- | --- | --- |
+| `slotted_post_ring_easy` | `easy` | 穿长孔一次，两侧都从环上方跨过（现有） | 两侧都在环上方 |
+| `slotted_post_ring_very_easy` | `very_easy` | `under_ring`：同样穿孔一次、绕右立柱回来，但两侧都从环下方穿出，环压在绳上 | 两侧都在环下方；环沿立柱直接提起 289 mm 越过柱顶，有认证路径（余量 0.2 mm） |
+| `slotted_post_ring_easier` | `easier` | `loop_over_ring`：穿长孔两次（定式第一步之后的走向），两个端盘都在近侧、绳在环下方；另一侧带珠 2 的绳圈从环上方跨过 | 近侧在环下方，另一侧绳圈两次跨过环上方且位于两次穿孔之间；直接提环会碰到绳；环推向一侧时与立柱的最大空隙 66 mm，珠 2 直径 39 mm |
+
+绳变长：very_easy 0.92 m、easier 1.24 m（easy 0.79 m）。环抬高到压在绳上（中心高 43.5 mm，easy 为 33 mm）。
+
+代码：[below_easy.py](../../../topogym/tasks/slotted_post_ring/below_easy.py)（两种走向的 layout 子类与 `ring_band_runs`）、[slotted_post_ring_very_easy.py](../../../topogym/tasks/slotted_post_ring/slotted_post_ring_very_easy.py)、[slotted_post_ring_easier.py](../../../topogym/tasks/slotted_post_ring/slotted_post_ring_easier.py)；`common.py` 新增 `make_layout()` 钩子；几何模块把珠的位置和走向检查改为 layout 的方法 `bead_controls()`、`route_checks()`，现有三档的网格、绳和几何报告逐字节不变。检查：[below_easy_witness.py](../../../topogym/planning/slotted_post_ring/below_easy_witness.py)、[test-slotted-below-easy.py](../../../ci_checks/test-slotted-below-easy.py)。
+
+```bash
+python -m topogym.planning.slotted_post_ring.below_easy_witness --variant easier --output runs/below_easy/slotted_easier
+# GPU FEM 落稳需要 IPC 后端，在 TopoGym 镜像里运行，加 --settle-seconds 2
+```
+
+GPU 落稳（TopoGym 镜像 0.2.3-cu128，挂载本分支代码，CUDA，2.5 ms、4 子步，机器人保持 home）：very_easy 落稳 2 s 后，处在环所在高度范围内的绳顶点没有一个在环上方（下方 1414 个），IPC 状态有效，任务未结束；环移动 15.9 mm、倾斜 4°（开局时悬在两股绳上，落稳时一侧落到底座上），绳最大下垂 37 mm。easier 尚未完成：在共享 GPU 上一次显存溢出、一次进程段错误，原因未确定。
+
+边界：物体层面检查把绳当作冻结的折线，不含机器人、IK 与动力学；easier 的“把绳圈连同珠 2 穿下去”没有路径证明，只检查了尺寸关系。机器人完整执行与 Harbor 任务包尚未做。
