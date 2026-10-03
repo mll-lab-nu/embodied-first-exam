@@ -12,9 +12,12 @@ instance   : one TopoGym scene = a task family's variation built from a fixed se
              `instance_matches` = hash equality or every object / joint pose within tolerance.
 trajectory : the (T, action_dim) JOINT_ABS actions handed to the simulator, one row per control step: per arm (the order
              of ACTION_LAYOUT) the arm joint targets (rad) and the gripper opening width (m, 0 = closed .. open width).
-             The physics runs on the GPU (CUDA). Its contact solver is not bit-deterministic: repeated replays agree to
-             ~1e-11 in the state but not bit for bit, so `deterministic` (state hashes equal) is reported and not
-             required; every replay must complete the task (the same rule as robot_coding_bench's GPU backend).
+             The physics runs where the instance's `simulator.compute_backend` says: the GPU (CUDA) for the soft-body
+             families and lock_picking, whose contact solver is not bit-deterministic (repeated replays agree to ~1e-11
+             in the state but not bit for bit), and the CPU for the other rigid families, whose replays are
+             bit-deterministic on one host. Either way `deterministic` (state hashes equal) is reported and not
+             required; every replay must complete the task (the same rule as robot_coding_bench's GPU backend). Nyx
+             renders on the GPU in both cases.
 episode end: a task's success predicate, or one of its failure predicates (e.g. touching the buzz wire), ends the
              simulated episode: later steps do not change the execution ledger or scene, and status()["episode_end"] says
              why. reset() starts again from the frozen state.
@@ -174,7 +177,7 @@ def _slog(ev: str, **kw) -> None:
             pass
 
 
-DEFAULT_BACKEND = "cuda"          # TopoGym's physics runs on the GPU; there is no CPU backend
+DEFAULT_BACKEND = "cuda"          # robot_coding_bench's GPU-backend rule (determinism reported, not required); the physics device is the instance's
 MAX_STEPS = int(os.environ.get("RCB_MAX_STEPS", "200000"))   # runaway guard on a trajectory's length, not a budget
 
 # --------------------------------------------------------------------------- task family registry
@@ -284,6 +287,31 @@ TASKS: dict[str, dict] = {
 for _name, _t in TASKS.items():
     _t.setdefault("simulator", {}); _t.setdefault("grasp_assist", None); _t.setdefault("fixture", False)
     _t.update(simulator_name="topogym", image="topogym")
+# Tooling v7 (2026-10-02 speed study, robot_coding_bench jobs/journal/2026-10-02/rigid_fast/): these rigid families simulate
+# on the CPU in float64 with one global constraint solve (use_contact_island False); Nyx still renders on the GPU. Against
+# v6's GPU float32: 2-3x faster control steps, sims on one host do not slow each other, replays bit-deterministic on one
+# host, outcomes / per-substep contact penetration / trajectory deviation inside the GPU's own noise envelope, frames
+# identical. interlocked_claws spent v8 on the GPU in float32: in medium's friction-held phase some noise runs lose the teal
+# piece on the CPU; the same seeds lose it on the GPU in float64 too, so that is float64 physics (Jianwen's original
+# setting), which v6's float32 does not reproduce. The soft-body families stay GPU float64.
+for _name in ("buzz_wire_3d", "cast_coil", "cast_keyhole", "fiber_bundling", "hedgehog_in_cage", "horseshoe_ring",
+              "interlocked_claws"):
+    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "compute_backend": "cpu", "precision": "64",
+                                 "rigid_options": {"use_contact_island": False}}
+# lock_picking keeps v6's GPU float32 (slower on the CPU).
+TASKS["lock_picking"]["simulator"] = {**TASKS["lock_picking"]["simulator"], "precision": "32"}
+# Tooling v9 (2026-10-02 IPC speed study, robot_coding_bench jobs/journal/2026-10-02/ipc_fast/): one IPC solver substep per
+# 2.5 ms tick (was four) with Newton / PCG tolerances 1e-3 / 1e-5 (were 1e-4 / 1e-6), from a scene settled for N ticks
+# before the instance is frozen (the v5 instances were not at rest at t = 0). Against substeps 4 from the same settled
+# state: rope_threading 8.1x, slotted_post_ring 9.2x per control step (10.7x / 10.1x with libuipc's linear_bvh broad phase
+# instead of its default info_stackless_bvh: the same contacts); lift / slip / drop within 0.1 mm, centerline 0.3-0.8 mm at
+# the end of a pinch-lift-release, the same cord break (0.1 s later), frames identical. knot_untying keeps its v5 settings
+# for now: on medium the larger IPC dt squeezes the rope a little more softly and a near-threshold tet inversion of the
+# reference does not happen.
+for _name, _ticks in (("rope_threading", 300), ("slotted_post_ring", 800)):
+    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "solver_substeps": 1, "reset_physics_steps": _ticks,
+                                 "ipc_options": {"newton_tolerance": 1e-3, "linear_system_tolerance": 1e-5,
+                                                 "collision_detection_method": "linear_bvh"}}
 
 
 def simulator_config(task: str, eval_index: int | None = None, *, variation_id: str | None = None,
@@ -871,12 +899,87 @@ def _vectorized_planar_clearance(points, material_s, diameter):
     return minimum is None or minimum >= diameter, dict(projected_degenerate=False, minimum_nonlocal_distance_m=minimum)
 
 
+def _tree_planar_clearance(points, material_s, diameter):
+    """_vectorized_planar_clearance on the segment pairs that can matter (tooling v9; 2026-10-02 IPC study: the vectorized
+    form tests all ~300k pairs of the 770-station knot centerline, 0.25 s per tick). A k-d tree on the segment midpoints
+    yields the pairs within R + Lmax (Lmax = the longest segment), which include every pair at segment distance <= R; the
+    same per-pair arithmetic runs on those only. 'Any pair closer than 1e-10' uses R = 1e-10; the non-local minimum doubles R
+    from 2 diameters until a non-local candidate lies within R (or R spans the curve), so it is the global minimum. Same bool
+    and same minimum (scripts/check_knot_clearance.py; a full knot run: 770 of 770 calls identical)."""
+    from scipy.spatial import cKDTree
+    from topogym.utils.geometry import passage
+    p = passage.points3(points)
+    s = np.asarray(material_s, float)
+    if len(p) < 2 or s.shape != (len(p),) or not np.isfinite(s).all() or np.any(np.diff(s) <= 0) or not np.isfinite(diameter) or diameter <= 0:
+        raise ValueError("Invalid planar rope/material coordinates")
+    if np.any(np.linalg.norm(np.diff(p[:, :2], axis=0), axis=1) < 1e-9):
+        return False, dict(projected_degenerate=True, minimum_nonlocal_distance_m=None)
+    edges = np.diff(p[:, :2], axis=0)
+    a, b = edges[:-1], edges[1:]
+    cross = a[:, 0] * b[:, 1] - a[:, 1] * b[:, 0]
+    fold = (np.abs(cross) <= 1e-12 * np.linalg.norm(a, axis=1) * np.linalg.norm(b, axis=1)) & (np.einsum("ij,ij->i", a, b) < 0)
+    if np.any(fold):
+        return False, dict(projected_degenerate=True, minimum_nonlocal_distance_m=0.)
+    m = len(p) - 1
+    if m < 3:
+        return True, dict(projected_degenerate=False, minimum_nonlocal_distance_m=None)
+    q = p[:, :2]
+    longest = float(np.linalg.norm(edges, axis=1).max())
+    tree = cKDTree(0.5 * (q[:-1] + q[1:]))
+
+    def cr(x, y):
+        return x[:, 0] * y[:, 1] - x[:, 1] * y[:, 0]
+
+    def point_segment(P, X, Y):
+        E = Y - X
+        tt = np.clip(np.einsum("ij,ij->i", P - X, E) / np.maximum(np.einsum("ij,ij->i", E, E), 1e-30), 0, 1)
+        return np.linalg.norm(P - (X + tt[:, None] * E), axis=1)
+
+    def distances(I, J):
+        A, B, C, D = q[I], q[I + 1], q[J], q[J + 1]
+        U, V = B - A, D - C
+        den = cr(U, V)
+        CA = C - A
+        with np.errstate(divide="ignore", invalid="ignore"):
+            t = cr(CA, V) / den
+            u = cr(CA, U) / den
+        hit = (np.abs(den) > 1e-15) & (t >= 0) & (t <= 1) & (u >= 0) & (u <= 1)
+        dist = np.minimum.reduce([point_segment(A, C, D), point_segment(B, C, D), point_segment(C, A, B), point_segment(D, A, B)])
+        return np.where(hit, 0., dist)
+
+    def candidates(radius):
+        pairs = tree.query_pairs(r=radius + longest, output_type="ndarray")
+        if not len(pairs):
+            return np.zeros(0, int), np.zeros(0, int)
+        I, J = pairs.min(axis=1), pairs.max(axis=1)
+        keep = J >= I + 2
+        return I[keep], J[keep]
+
+    I, J = candidates(1e-10)
+    if len(I) and np.any(distances(I, J) < 1e-10):
+        return False, dict(projected_degenerate=False, minimum_nonlocal_distance_m=0.)
+    radius, span = 2.0 * diameter, float(np.linalg.norm(q.max(0) - q.min(0)))
+    while True:
+        I, J = candidates(radius)
+        nonlocal_ = (s[J] - s[I + 1]) >= 2 * diameter
+        if np.any(nonlocal_):
+            minimum = float(distances(I[nonlocal_], J[nonlocal_]).min())
+            if minimum <= radius or radius >= span:
+                break
+        elif radius >= span:
+            minimum = None
+            break
+        radius *= 2.0
+    return minimum is None or minimum >= diameter, dict(projected_degenerate=False, minimum_nonlocal_distance_m=minimum)
+
+
 def _speed_up_knot_predicate(task_id: str) -> bool:
-    """knot_untying only: its task module calls the vectorized planar_clearance (same results, ~100x faster)."""
+    """knot_untying only: its task module calls the k-d tree planar_clearance (same results; the vectorized form ~100x
+    faster than the original loop, this one 1.2 vs 56.6 ms per call on a 770-station curve)."""
     if task_id != "knot_untying":
         return False
     import topogym.tasks.knot_untying.common as knot
-    knot.planar_clearance = _vectorized_planar_clearance
+    knot.planar_clearance = _tree_planar_clearance
     return True
 
 
@@ -887,7 +990,7 @@ class Session:
         if task not in TASKS:
             raise KeyError(f"unknown task {task!r}; known: {list(TASKS)}")
         if backend != "cuda":
-            raise ValueError("TopoGym's physics runs on CUDA only")
+            raise ValueError("TopoGym sessions follow the GPU-backend rule; the physics device comes from the instance")
         self.task, self.spec = task, dict(TASKS[task])
         inst = None
         if instance is not None:
@@ -912,7 +1015,15 @@ class Session:
         from topogym.simulator.env import Env
         t0 = time.time()
         _log(f"building {cfg['task_id']} / {cfg['variation_id']} (seed {cfg['seed']}, eval index {self.eval_index}) ...")
+        if cfg.get("compute_backend") == "cpu":
+            # Genesis' CPU getters are torch CPU ops, and torch sizes its pool to the host (256 threads on lab), which spins
+            # under a container's CPU quota. The results are the same at any count (2026-10-02 study).
+            import torch
+            torch.set_num_threads(4)
         self.env = Env(SimulatorConfig(**cfg))
+        # Tooling v7: frames come only from env.sensor_frame() (render_frame / render_grid / render_depth / videos), so the
+        # per-step observation skips the camera pass and a frame is rendered when asked (image 0.2.9; physics identical).
+        self.env.defer_rgb = True
         self.env.reset(seed=int(cfg["seed"]))
         self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env)
         self.knot_predicate_vectorized = _speed_up_knot_predicate(cfg["task_id"])
@@ -1693,7 +1804,8 @@ def success_rule(s: "Session") -> str:
     if record:
         out += (f"; his qualification record for this variation matches, as metadata only (record profile: "
                 f"{record.get('profile', 'not recorded')}{'; ' + record['scope'] if record.get('scope') else ''}); this "
-                f"instance runs CUDA {float(s.config['physics_dt_s']) * 1000:g} ms ticks x {int(s.config['solver_substeps'])} "
+                f"instance runs {'CPU' if s.config.get('compute_backend') == 'cpu' else 'CUDA'} "
+                f"{float(s.config['physics_dt_s']) * 1000:g} ms ticks x {int(s.config['solver_substeps'])} "
                 f"substeps with joint-position actions and {grasp_words(s)}, which the record does not cover")
     return out
 

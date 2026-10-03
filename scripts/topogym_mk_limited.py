@@ -198,7 +198,7 @@ the privileged task to measure the cost of losing resets, privileged state and t
 | mode | standard (RGB, optional depth, proprioception, calibrated cameras, no reset) |
 | action space | `eai-standard/2.3`: `submit` chunks of `joint_position` ({dim}, streamed at the {d['control_hz']:g} Hz control rate with the agent's `dt`) or `ee_pose` ({8 * len(arms)}, IK per row); `observe` frames or a watch window; binary RCB1 responses |
 | oracle | {ref} |
-| verification | `success` = live success ∧ replay success: the live episode, then one fresh-process replay in the sidecar's collect hook, after the live service has exited; GPU physics: the state hashes are reported, not required; `/logs/verifier/replay.mp4` is rendered during that replay |
+| verification | `success` = live success ∧ replay success: the live episode, then one fresh-process replay in the sidecar's collect hook, after the live service has exited; the state hashes are reported, not required (GPU physics is not bit-deterministic; the CPU rigid families' is, on one host); `/logs/verifier/replay.mp4` is rendered during that replay |
 | crash recovery | `eai-standard/2.3` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
 """)
     unl_toml = (unl / "task.toml").read_text()

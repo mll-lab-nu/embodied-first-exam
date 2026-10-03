@@ -9,9 +9,9 @@ keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "code-as-policy",
 
 [metadata]
 author_name = "jianwen"
-tooling_version = "5"
+tooling_version = "9"
 task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
-simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
+simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CPU float64 physics, Nyx RGB)
 robot = "panda_robotiq"
 family = "fiber_bundling"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)

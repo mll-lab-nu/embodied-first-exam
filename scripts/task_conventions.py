@@ -151,7 +151,7 @@ def _shared_sources() -> set[bytes]:
 
 
 def _frozen_topogym_tooling() -> set[str]:
-    """TopoGym (adapted): sha256 of the frozen tooling copies of the historical TopoGym packages (tooling v3 / v4 / v5 and the
+    """TopoGym (adapted): sha256 of the frozen tooling copies of the historical TopoGym packages (versioned and
     unversioned generations, ci_checks/topogym_tooling_versions.json). They keep their bytes (check-topogym-tooling.py)
     although scripts/eai_standard/ moved on (eai-standard/2.3), so normalize never rewrites them either."""
     p = Path(__file__).resolve().parents[1] / "ci_checks/topogym_tooling_versions.json"
@@ -166,8 +166,9 @@ def _frozen_topogym_tooling() -> set[str]:
                 walk(v)
         elif isinstance(o, str) and re.fullmatch(r"[0-9a-f]{64}", o):
             out.add(o)
-    for key in ("generations", "v3", "v4", "v5"):
-        walk(frozen.get(key))
+    for key, value in frozen.items():
+        if key == "generations" or re.fullmatch(r"v\d+(?:_local_a01)?", key):
+            walk(value)
     return out
 
 

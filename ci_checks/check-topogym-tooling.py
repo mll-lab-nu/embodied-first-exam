@@ -2,6 +2,7 @@
 """Check immutable historical packages and explicit public tooling generations."""
 import hashlib
 import json
+import re
 from pathlib import Path
 import sys
 import tomllib
@@ -26,6 +27,43 @@ def current_files(mode):
     return expected
 
 
+def frozen_state_identity(task):
+    """A packaged blanket PBD initial state restores only while the topogym sources in its backend identity are unchanged
+    (topogym/world/physics/pbd_initial_state.py); an edit there needs new states, not a silent refusal at run time."""
+    errors = []
+    for manifest in sorted(task.glob("**/instance_assets/**/manifest.json")):
+        backend = json.loads(manifest.read_text()).get("metadata", {}).get("backend", {})
+        wanted = {"state_codec_sha256": "topogym/world/state.py",
+                  "table_friction_sha256": "topogym/world/physics/pbd_table_friction.py"}
+        if backend.get("codec") == "rigid_pbd_numeric_v1":
+            wanted["world_sha256"] = "topogym/world/genesis_world.py"
+        for key, rel in wanted.items():
+            if key in backend and backend[key] != sha(ROOT / rel):
+                errors.append(f"{task.name}/{manifest.relative_to(task)}: {key} != sha256({rel}); the frozen state would not restore")
+    return errors
+
+
+def current_image():
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from cuda_profiles import image_tag
+    return image_tag(ROOT, "cu128")
+
+
+def image_references(task):
+    """The simulator image of every container of a current-tooling dir (the privileged environment and verifier, the
+    standard sidecar), which must be the image of images/topogym/VERSION: a dir rendered against an older image keeps
+    working until its instance needs a newer library (tooling v9's ipc_options)."""
+    refs = []
+    for rel in ("environment/Dockerfile", "tests/Dockerfile"):
+        path = task / rel
+        if path.is_file():
+            refs += [(rel, m) for m in re.findall(r"^FROM\s+(\S*rcb-topogym\S*)", path.read_text(), re.M)]
+    compose = task / "environment/docker-compose.yaml"
+    if compose.is_file():
+        refs += [("environment/docker-compose.yaml", m) for m in re.findall(r"image:\s*(\S*rcb-topogym\S*)", compose.read_text())]
+    return refs
+
+
 def check(tasks):
     frozen = json.loads((ROOT / "ci_checks/topogym_tooling_versions.json").read_text())
     errors, count = [], 0
@@ -36,12 +74,26 @@ def check(tasks):
         meta = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
         version = meta.get("tooling_version")
         mode = "limited" if task.name.endswith(("-limited", "-standard")) else "unlimited"
-        if version == "6":
+        if version == "10":
             if not task.name.endswith(("-privileged", "-standard")):
-                errors.append(f"{task.name}: tooling v6 requires protocol v1.0 task names")
+                errors.append(f"{task.name}: tooling v10 requires protocol v1.0 task names")
             expected = current_files(mode)
-        elif version in ("3", "4", "5"):
+            image = current_image()
+            errors.extend(f"{task.name}/{rel}: image {ref} != {image} (images/topogym/VERSION)"
+                          for rel, ref in image_references(task) if ref != image)
+        elif version in ("3", "4", "5", "6", "7", "8", "9"):
             expected = frozen["v" + version][mode]
+            # Both branches independently published tooling 6. Select the local
+            # A01 lineage by its immutable tool hash, then check EVERY file.
+            if version == "6":
+                local = frozen["v6_local_a01"][mode]
+                rel = "environment/sim/rcb_topogym.py" if mode == "limited" else "environment/rcb_topogym.py"
+                if (task / rel).is_file() and sha(task / rel) == local[rel]:
+                    expected = local
+            image = frozen.get("version_images", {}).get(version)
+            if image:
+                errors.extend(f"{task.name}/{rel}: image {ref} != frozen tooling {version} image {image}"
+                              for rel, ref in image_references(task) if ref != image)
         elif "tooling_version" in meta:
             errors.append(f"{task.name}: unknown tooling_version {version!r}")
             continue
@@ -50,6 +102,8 @@ def check(tasks):
         else:
             errors.append(f"{task.name}: unversioned package has no frozen inventory")
             continue
+        if version is not None:
+            errors.extend(frozen_state_identity(task))
         for rel, wanted in expected.items():
             path = task / rel
             if not path.is_file() or sha(path) != wanted:
@@ -67,5 +121,5 @@ if __name__ == "__main__":
     for error in errors:
         print("FAIL " + error)
     if not errors:
-        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v6 checked")
+        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v10 checked")
     raise SystemExit(bool(errors))

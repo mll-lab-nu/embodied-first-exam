@@ -93,6 +93,9 @@ class Env:
         self._mutation_lock = Lock()
         self._execution_guard = None
         self.last_transition = None
+        # True: observations skip the camera pass and sensor_frame()/render() render the current state when first asked
+        # (for consumers that take frames only from those two). Physics never reads the cameras.
+        self.defer_rgb = False
 
     @property
     def config(self):
@@ -338,6 +341,12 @@ class Env:
                 self.config.task_id, folder / "assets", self._task.config, self._seed
             )
             physics_options = deepcopy(dict(spec.physics_options))
+            if self.config.rigid_options:
+                physics_options["rigid"] = {**dict(physics_options.get("rigid", {})), **self.config.rigid_options}
+            if self.config.ipc_options:
+                if "ipc" not in physics_options:
+                    raise ValueError("ipc_options require an IPC scene")
+                physics_options["ipc"] = {**dict(physics_options["ipc"]), **self.config.ipc_options}
             if self.config.grasp_assist.model == "contact_weld_v1":
                 if "ipc" in physics_options:
                     raise ValueError("contact_weld_v1 does not support IPC scenes")
@@ -435,12 +444,17 @@ class Env:
             self._stage = "command"
             self._robot.apply_action(command)
             self._control_step += 1
-            for _ in range(ticks):
+            for tick in range(ticks):
                 self._stage = "physics"
                 self._world.advance()
                 self._stage = "task"
                 world_state = self._world.read_state()
-                result = self._task.update(world_state, self.config.physics_dt_s)
+                # A task may skip a measurement that cannot change its result on a period's inner ticks (blanket coverage).
+                self._task.complete_metrics = tick == ticks - 1
+                try:
+                    result = self._task.update(world_state, self.config.physics_dt_s)
+                finally:
+                    self._task.complete_metrics = True
                 self._terminated = bool(result.terminated)
                 self._truncated = bool(
                     not self._terminated
@@ -591,18 +605,19 @@ class Env:
         self._require_ready()
         return bool(self._task.result.task_success)
 
-    def observe(self):
+    def observe(self, *, _rgb=False):
         self._require_ready()
         observation, _ = self._sensors.sample(
             episode_id=self._episode_id,
             branch_id=self._branch_id,
             state_id=self._state_id,
             task=self._task,
+            rgb=_rgb or not self.defer_rgb,
         )
         return observation
 
     def sensor_frame(self, *, depth=False):
-        self.observe()
+        self.observe(_rgb=True)
         if depth:
             return self._sensors.depth_frame()
         return self._sensors._frame

@@ -10,14 +10,18 @@
   "robot_id": "aloha",
   "variation_id": "interlocked_claws_hard",
   "task_parameters": {},
-  "compute_backend": "cuda",
+  "compute_backend": "cpu",
   "precision": "64",
   "physics_dt_s": 0.0025,
   "solver_substeps": 4,
+  "terminal_contract_version": 1,
   "control_decimation": 10,
   "max_physics_steps": null,
   "history_storage": "segment",
   "reset_physics_steps": 0,
+  "rigid_options": {
+   "use_contact_island": false
+  },
   "enable_rgb": true,
   "enable_depth": true,
   "observation_mode": "JOINT",
@@ -61,7 +65,7 @@
    "initial_intent": "close"
   }
  },
- "state_sha": "79abe84fd75dc455",
+ "state_sha": "51cb16ffbfe35b8f",
  "action_dim": 14,
  "action_layout": [
   "left/waist",
@@ -222,10 +226,25 @@
    "fixed": true
   }
  },
+ "instance_contract_version": 2,
+ "soft_state": {},
+ "asset_identity": {
+  "assembly.glb": "a2c5a4fdd2c67a4a7d04a505af2fdc4ae3678a5e0b4e69a28f038d04191bc247",
+  "claw_0/claw_0.urdf": "6a3a9cd3f933aaeaaaf712bfd416f0e2225817baea1eb4093ad56141489cb4fb",
+  "claw_0/mesh.obj": "152be66f7771f87e1d32c63f3a3e8a3d98f45ffa1ee3555d1be890090120217b",
+  "claw_0/mesh_with_grip.obj": "f48bc94e78526bd26027a8d8d781c0662d5f06fb7a3e6fb5fbaed9311cc823ed",
+  "claw_1/claw_1.urdf": "056945203f1794a0f9f6b4ba90913eaea4b6cb6138501bb9d209679639629268",
+  "claw_1/mesh.obj": "aa8a7136eea64c2e7523fb412640d4356934c83316b8dc84e518adcf8b348bd9",
+  "claw_1/mesh_with_grip.obj": "e4caaabcdb3c18f0772f66da9d9cf13e88b3260f67be3e81ff50558e2493f83b",
+  "geometry_report.json": "36cebfb34a3411508d320f23fe0d6f7122104315fc1ac1a5f2f48c1dbfeb8803",
+  "goal_region.obj": "8c2b4457e0cb5b94ed641c27fecb0923b838b111d4dfaba58c69a612fffc1724",
+  "reference_scene.json": "4a73079c08627f96a962c859844029d4c9d794f63a669a37725d5c2856a45d8b",
+  "separated_inspection.glb": "3202c9c43fa32fbe06c3f26d801d45739879e28ef9f0aa5fc665715c63a5ba7d"
+ },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
-  "files": 272
+  "sha256": "83e767645c95afe17dbb3fc2efeab64e3838003221956696505e1733489b93a2",
+  "files": 280
  },
  "resolved_variation_id": "interlocked_claws_hard",
  "scene_variation": null,

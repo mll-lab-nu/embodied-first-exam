@@ -8,7 +8,8 @@ from uuid import uuid4
 import numpy as np
 from topogym.utils.arrays import to_numpy
 
-from topogym.world.state import WorldState, capture_engine_buffers, capture_rng, copy_native_state, restore_engine_buffers, restore_rng, require_finite_state
+from topogym.world.finite import require_finite
+from topogym.world.state import WorldState, capture_engine_buffers, capture_rng, copy_native_state, restore_engine_buffers, restore_rng
 
 
 class _RigidReadout:
@@ -19,7 +20,8 @@ class _RigidReadout:
     Reading each link on its own cost about 700 synchronous GPU->CPU copies per tick on a two-arm scene, 63-84 % of a rigid
     control step (2026-10-01 profiles)."""
 
-    def __init__(self, solver):
+    def __init__(self, solver, layouts):
+        self.layouts = layouts  # entity name -> its index layout, fixed once the scene is built (kept by the world)
         self.pos = to_numpy(solver.get_links_pos(relative=True)).reshape(-1, 3)
         self.quat = to_numpy(solver.get_links_quat(relative=True)).reshape(-1, 4)
         self.vel = to_numpy(solver.get_links_vel()).reshape(-1, 3)
@@ -27,18 +29,27 @@ class _RigidReadout:
         self.qpos = to_numpy(solver.get_qpos()).reshape(-1)
         self.dofs_vel = to_numpy(solver.get_dofs_velocity()).reshape(-1)
 
+    def finite(self):
+        return all(np.isfinite(a).all() for a in (self.pos, self.quat, self.vel, self.ang, self.qpos, self.dofs_vel))
+
     def link(self, i):
         return dict(position_m=self.pos[i].copy(), quaternion_wxyz=self.quat[i].copy(),
                     linear_velocity_m_s=self.vel[i].copy(), angular_velocity_rad_s=self.ang[i].copy())
 
-    def entity(self, entity):
-        body = dict(self.link(entity.base_link_idx), link_indices=tuple(link.idx for link in entity.links))
-        qpos = self.qpos[entity.q_start:entity.q_start + entity.n_qs]
-        velocity = self.dofs_vel[entity.dof_start:entity.dof_start + entity.n_dofs]
+    def entity(self, name, entity):
+        layout = self.layouts.get(name)
+        if layout is None or layout[0] is not entity:
+            layout = self.layouts[name] = (
+                entity, entity.base_link_idx, tuple(link.idx for link in entity.links),
+                slice(entity.q_start, entity.q_start + entity.n_qs), slice(entity.dof_start, entity.dof_start + entity.n_dofs),
+                tuple((joint.name, list(joint.qs_idx_local), list(joint.dofs_idx_local)) for joint in entity.joints),
+                tuple((link.name, link.idx) for link in entity.links))
+        _, base, link_indices, qs, dofs, joints, links = layout
+        body = dict(self.link(base), link_indices=link_indices)
+        qpos, velocity = self.qpos[qs], self.dofs_vel[dofs]
         return body, dict(
-            joints={joint.name: dict(position=qpos[list(joint.qs_idx_local)].copy(),
-                    velocity=velocity[list(joint.dofs_idx_local)].copy()) for joint in entity.joints},
-            links={link.name: self.link(link.idx) for link in entity.links})
+            joints={joint: dict(position=qpos[q].copy(), velocity=velocity[d].copy()) for joint, q, d in joints},
+            links={link: self.link(i) for link, i in links})
 
 
 class GenesisWorld:
@@ -74,6 +85,7 @@ class GenesisWorld:
         self._grasp_manager = None
         self._material_maps = []
         self._release_geometry = None
+        self._rigid_layouts = {}
 
     @classmethod
     def from_tabletop(cls, env_cfg, robot_cfg, *, physics_options=None,
@@ -374,7 +386,7 @@ class GenesisWorld:
     def read_state(self):
         self._require_built()
         bodies, particles, articulations, fem = {}, {}, {}, {}
-        rigid, readout = self.scene.sim.rigid_solver, None
+        rigid, readout, from_readout = self.scene.sim.rigid_solver, None, set()
         for name, entity in self.entities.items():
             if hasattr(entity, "material_coordinates"):
                 from .physics.fem import read_vertices
@@ -383,8 +395,9 @@ class GenesisWorld:
                 particles[name] = dict(position_m=to_numpy(entity.get_particles_pos()).reshape(-1, 3),
                                        velocity_m_s=to_numpy(entity.get_particles_vel()).reshape(-1, 3))
             elif getattr(entity, "_solver", None) is rigid:
-                readout = readout or _RigidReadout(rigid)
-                bodies[name], articulations[name] = readout.entity(entity)
+                readout = readout or _RigidReadout(rigid, self._rigid_layouts)
+                bodies[name], articulations[name] = readout.entity(name, entity)
+                from_readout.add(name)
             elif hasattr(entity, "get_pos"):
                 bodies[name] = dict(position_m=to_numpy(entity.get_pos()).reshape(-1, 3)[0],
                                     quaternion_wxyz=to_numpy(entity.get_quat()).reshape(-1, 4)[0],
@@ -403,6 +416,7 @@ class GenesisWorld:
         coupler = self.scene.sim.coupler
         if hasattr(coupler, "rigid_velocities"):
             for name, (linear, angular) in coupler.rigid_velocities().items():
+                from_readout.discard(name)
                 bodies[name]["linear_velocity_m_s"] = linear
                 bodies[name]["angular_velocity_rad_s"] = angular
                 link = articulations[name]["links"][self.entities[name].base_link.name]
@@ -429,7 +443,16 @@ class GenesisWorld:
             result["contact_events"] = self._contact_collector.read()
         result["terminal_contract_version"] = self.terminal_contract_version
         try:
-            require_finite_state(result)
+            if from_readout and readout.finite():
+                # Every number of these entries is a row or slice of the readout's arrays, all finite: walk the rest. Any
+                # failure walks the whole state again, for the same error as before.
+                try:
+                    require_finite(dict(result, bodies={k: v for k, v in bodies.items() if k not in from_readout},
+                                        articulations={k: v for k, v in articulations.items() if k not in from_readout}))
+                except FloatingPointError:
+                    require_finite(result)
+            else:
+                require_finite(result)
         except FloatingPointError:
             self._faulted = True
             raise

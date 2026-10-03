@@ -18,6 +18,15 @@ DEFAULT_HISTORY_STORAGE = "segment"
 HISTORY_STORAGES = {"segment", "memory", "disk"}
 
 
+# RigidOptions fields an instance may override, with their types. use_contact_island=False: one global constraint solve
+# instead of per-island solves; on the CPU backend 1.3x faster (2026-10-02 study).
+RIGID_OPTION_OVERRIDES = {"use_contact_island": bool}
+# IPCCouplerOptions fields an instance may override (2026-10-02 study: Newton 1e-3 / PCG 1e-5 with one solver substep;
+# libuipc's linear_bvh broad phase instead of its default info_stackless_bvh: the same contacts, ~10 % faster).
+IPC_OPTION_OVERRIDES = {"newton_tolerance": float, "linear_system_tolerance": float, "collision_detection_method": str}
+IPC_BROAD_PHASES = ("linear_bvh",)
+
+
 @dataclass(frozen=True)
 class SimulatorConfig:
     task_id: str = "cast_coil"
@@ -33,6 +42,10 @@ class SimulatorConfig:
     max_physics_steps: int | None = 10000
     history_storage: str = field(default_factory=lambda: DEFAULT_HISTORY_STORAGE)
     reset_physics_steps: int = 0
+    # Qualified overrides of the task's Genesis RigidOptions (RIGID_OPTION_OVERRIDES); merged in Env.reset.
+    rigid_options: Mapping[str, Any] = field(default_factory=dict)
+    # Qualified overrides of the task's IPCCouplerOptions (IPC_OPTION_OVERRIDES); merged in Env.reset.
+    ipc_options: Mapping[str, Any] = field(default_factory=dict)
     enable_rgb: bool = True
     enable_depth: bool = False
     observation_mode: str = "JOINT"
@@ -96,8 +109,20 @@ class SimulatorConfig:
             raise ValueError("enable_rgb must be a boolean")
         if type(self.enable_depth) is not bool or self.enable_depth and not self.enable_rgb:
             raise ValueError("Depth requires enable_rgb=True and a boolean enable_depth")
-        if self.enable_rgb and self.compute_backend != "cuda":
-            raise ValueError("Nyx RGB requires CUDA; CPU physics requires enable_rgb=False")
+        # Nyx renders on a CUDA device for either physics backend; with CPU physics the plugin copies the visual
+        # state to its CUDA buffers per render (2026-10-02 study: same frames up to renderer noise).
+        options = dict(self.rigid_options)
+        unknown = set(options) - set(RIGID_OPTION_OVERRIDES)
+        if unknown or any(type(options[k]) is not RIGID_OPTION_OVERRIDES[k] for k in options):
+            raise ValueError(f"rigid_options must use qualified overrides {RIGID_OPTION_OVERRIDES}; got {options}")
+        object.__setattr__(self, "rigid_options", freeze(options))
+        options = dict(self.ipc_options)
+        unknown = set(options) - set(IPC_OPTION_OVERRIDES)
+        if unknown or any(type(v) is not IPC_OPTION_OVERRIDES[k]
+                          or (v not in IPC_BROAD_PHASES if k == "collision_detection_method" else not (math.isfinite(v) and v > 0))
+                          for k, v in options.items()):
+            raise ValueError(f"ipc_options must use qualified overrides {IPC_OPTION_OVERRIDES}; got {options}")
+        object.__setattr__(self, "ipc_options", freeze(options))
         object.__setattr__(self, "task_parameters", freeze(dict(self.task_parameters)))
         for name in ("asset_root", "work_dir"):
             if getattr(self, name) is not None:

@@ -20,7 +20,6 @@
   "scripts/log_mirror.py": "scripts/log_mirror.py",
   "scripts/account_failure_check.py": "scripts/account_failure_check.py",
   "scripts/set_agent_egress.py": "scripts/set_agent_egress.py",
-  "ci_checks/run_all.sh": "ci_checks/run_all.sh",
   "ci_checks/check-dockerfile.sh": "ci_checks/check-dockerfile.sh",
   "ci_checks/check-instruction.sh": "ci_checks/check-instruction.sh",
   "ci_checks/check-verifier-isolation.sh": "ci_checks/check-verifier-isolation.sh",
@@ -59,7 +58,8 @@
   "harbor_templates/topogym/limited/environment/sim/rcb_limited.py": "scripts/eai_standard/rcb_limited.py",
   "harbor_templates/topogym/limited/environment/rcb_client.py": "scripts/eai_standard/rcb_client.py",
   "ci_checks/check-limited-protocol.py": "ci_checks/check-limited-protocol.py",
-  "scripts/eai_standard/selftest.py": "scripts/eai_standard/selftest.py"
+  "scripts/eai_standard/selftest.py": "scripts/eai_standard/selftest.py",
+  "ci_checks/run_all.sh": "ci_checks/run_all.sh"
  },
  "blobs": {
   "scripts/eai_standard/rcb_limited.py": "1ce117178770929994c35602cf78dbe8f8028a40",
@@ -153,6 +153,11 @@
    "upstream_path": "ci_checks/check-protocol-v1.py",
    "upstream_blob": "0a376947bcd6bed2f5dc398a9ef67daf67b011b1",
    "reason": "recognize the versioned eai-standard/2.3 contract while retaining upstream hard failures, TopoGym frozen-instance exceptions and research-tree provenance warnings"
+  },
+  "ci_checks/run_all.sh": {
+   "upstream_path": "ci_checks/run_all.sh",
+   "upstream_blob": "c9303f9421cb80d08510b971103312f4b63a434d",
+   "reason": "retain the local calibration isolation CI check in addition to the upstream task/protocol checks"
   }
  }
 }

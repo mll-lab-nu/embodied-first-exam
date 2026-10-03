@@ -10,14 +10,18 @@
   "robot_id": "aloha",
   "variation_id": "cast_coil_medium",
   "task_parameters": {},
-  "compute_backend": "cuda",
+  "compute_backend": "cpu",
   "precision": "64",
   "physics_dt_s": 0.0025,
   "solver_substeps": 4,
+  "terminal_contract_version": 1,
   "control_decimation": 10,
   "max_physics_steps": null,
   "history_storage": "segment",
   "reset_physics_steps": 0,
+  "rigid_options": {
+   "use_contact_island": false
+  },
   "enable_rgb": true,
   "enable_depth": true,
   "observation_mode": "JOINT",
@@ -61,7 +65,7 @@
    "initial_intent": "open"
   }
  },
- "state_sha": "49e5dbf153470f1c",
+ "state_sha": "be3eb170ac78df70",
  "action_dim": 14,
  "action_layout": [
   "left/waist",
@@ -107,7 +111,7 @@
    "orientation_wxyz": [
     0.707107,
     0.0,
-    -0.0,
+    0.0,
     0.707107
    ],
    "euler_xyz": [
@@ -181,10 +185,22 @@
    "fixed": false
   }
  },
+ "instance_contract_version": 2,
+ "soft_state": {},
+ "asset_identity": {
+  "assembly.glb": "c6cae59a5ec80c6a8932b035c76436cf1ee32bef7471241a54a28b4b8bb83d4b",
+  "coil_gold/coil_gold.glb": "967edbc0ae7f31e6911fee5eed44dec2793335466c7ae16f93f7fed9f4907699",
+  "coil_gold/coil_gold.urdf": "dfe77e9bdff46aa776343f8ec00a6c729ac1948498396a58b176137c449a250d",
+  "coil_silver/coil_silver.glb": "f91a9f86f3fe8bed8a7e39b7e4cfb617b5cc7c973af4138fd8dcd72b039fb0a1",
+  "coil_silver/coil_silver.urdf": "281a47a7c3ea47e9a4e3bf333ffafc1d2f8afb672cecf4e5f5e31f9ea78ff1dc",
+  "geometry_report.json": "bb5ae49f6529f53d48a7304cdbe016ad86e8d599d649d1c4267f3e28c0ee67d0",
+  "separated_inspection.glb": "1b278894e1b2737da0fec21afc9468d03e78115b838eac4e229cbee217256d35",
+  "template.json": "12ff0acf13ec2c577c818bee018b751876ce137f650592660960b4109bb0a893"
+ },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
-  "files": 272
+  "sha256": "83e767645c95afe17dbb3fc2efeab64e3838003221956696505e1733489b93a2",
+  "files": 280
  },
  "resolved_variation_id": "cast_coil_medium",
  "scene_variation": null,

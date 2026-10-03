@@ -10,14 +10,18 @@
   "robot_id": "aloha",
   "variation_id": "cast_coil_hard",
   "task_parameters": {},
-  "compute_backend": "cuda",
+  "compute_backend": "cpu",
   "precision": "64",
   "physics_dt_s": 0.0025,
   "solver_substeps": 4,
+  "terminal_contract_version": 1,
   "control_decimation": 10,
   "max_physics_steps": null,
   "history_storage": "segment",
   "reset_physics_steps": 0,
+  "rigid_options": {
+   "use_contact_island": false
+  },
   "enable_rgb": true,
   "enable_depth": true,
   "observation_mode": "JOINT",
@@ -61,7 +65,7 @@
    "initial_intent": "open"
   }
  },
- "state_sha": "2ab9ec6481e3fa13",
+ "state_sha": "580bf8f98e01eaad",
  "action_dim": 14,
  "action_layout": [
   "left/waist",
@@ -107,7 +111,7 @@
    "orientation_wxyz": [
     0.707107,
     0.0,
-    -0.0,
+    0.0,
     0.707107
    ],
    "euler_xyz": [
@@ -181,10 +185,22 @@
    "fixed": false
   }
  },
+ "instance_contract_version": 2,
+ "soft_state": {},
+ "asset_identity": {
+  "assembly.glb": "ce0ded76ecac2aa6232512f47fa89616d35b47748cfee8d45f9c19aadbd50648",
+  "coil_gold/coil_gold.glb": "d3da9537a07e85cdc9bb8d3a73c752b5eef1e074eaf66e3b937b0cbd96519469",
+  "coil_gold/coil_gold.urdf": "98954841c68000c284bc6cd3d460dad8f6828902794359acfb387ee29654e4bf",
+  "coil_silver/coil_silver.glb": "f91a9f86f3fe8bed8a7e39b7e4cfb617b5cc7c973af4138fd8dcd72b039fb0a1",
+  "coil_silver/coil_silver.urdf": "281a47a7c3ea47e9a4e3bf333ffafc1d2f8afb672cecf4e5f5e31f9ea78ff1dc",
+  "geometry_report.json": "0e84dea8b859e067823f433762db8bddc758f520c54ef3e1d40c486ff1bbf20b",
+  "separated_inspection.glb": "e2a200db3f402bcf383b93557a30acc11bd467fb70ffcd1760bea6d39dcae7af",
+  "template.json": "a2c34d04ccbd83ad8a3c6e9608e0572836574690e013796ced95275bdcece590"
+ },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
-  "files": 272
+  "sha256": "83e767645c95afe17dbb3fc2efeab64e3838003221956696505e1733489b93a2",
+  "files": 280
  },
  "resolved_variation_id": "cast_coil_hard",
  "scene_variation": null,

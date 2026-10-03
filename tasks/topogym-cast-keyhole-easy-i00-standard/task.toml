@@ -35,8 +35,8 @@ oracle = "none"
 oracle_evidence = "No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol \u00a72.7)."
 difficulty = "easy"
 grasp = "assisted (his contact_weld_v1 grasp regions on keyhole_gold, keyhole_silver)"
-success_rule = "his default success (goal_complete True; terminal revision cast_keyhole_placement_v4_grasp_contact_2mm); his qualification record for this variation matches, as metadata only (record profile: default task parameters, seed 0, ALOHA EE_ABS, CPU, 25 ms World tick / 40 substeps, bilateral-contact contact_weld_v1); this instance runs CUDA 2.5 ms ticks x 4 substeps with joint-position actions and his recommended contact_weld_v1 grasp assistance, which the record does not cover"
-tooling_version = "5"
+success_rule = "his default success (goal_complete True; terminal revision cast_keyhole_placement_v4_grasp_contact_2mm); his qualification record for this variation matches, as metadata only (record profile: default task parameters, seed 0, ALOHA EE_ABS, CPU, 25 ms World tick / 40 substeps, bilateral-contact contact_weld_v1); this instance runs CPU 2.5 ms ticks x 4 substeps with joint-position actions and his recommended contact_weld_v1 grasp assistance, which the record does not cover"
+tooling_version = "9"
 instance_seed = 0
 expert_time_estimate_hours = 3
 

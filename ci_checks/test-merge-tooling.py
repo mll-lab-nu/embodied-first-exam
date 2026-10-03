@@ -10,6 +10,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
@@ -21,6 +22,55 @@ from collect_batch_results import classify_trial
 
 
 class MergeTests(unittest.TestCase):
+    def test_owner_sensor_adapter_coexists_with_deferred_rgb(self):
+        from topogym.simulator.env import Env
+        from topogym.simulator.config import SimulatorConfig
+        from topogym.sensors.observation import SensorSuite
+        from topogym.planning.calibration_tools.rendering import DevelopmentSensors
+        calls = []
+        class Camera:
+            res = (4, 4)
+            fov = 60.
+            transform = np.eye(4)
+            def render(self, **kwargs):
+                calls.append(1)
+                return np.zeros((4, 4, 3), dtype=np.uint8)
+        world = SimpleNamespace(cameras={'test': Camera()}, physics_step=0, sim_time_s=0.)
+        robot, task = SimpleNamespace(observe=lambda: {}), SimpleNamespace(observe=lambda: {})
+        for factory in (SensorSuite, DevelopmentSensors):
+            with self.subTest(factory=factory.__name__):
+                calls.clear()
+                env = Env(SimulatorConfig(task_id='cast_keyhole', variation_id='very_easy'), sensor_factory=factory)
+                env._sensors = env._sensor_factory(world, robot, enable_rgb=True)
+                env._task, env._episode_id, env._state_id = task, 'fixture', 0
+                env.defer_rgb = True
+                with patch.object(env, '_require_ready'):
+                    env.observe()
+                    self.assertEqual(calls, [])
+                    env.sensor_frame()
+                    # The developer adapter still delegates explicit captures
+                    # to its separate camera-selection path.
+                    self.assertEqual(len(calls), 1 if factory is SensorSuite else 0)
+
+    def test_remote_v9_stays_frozen_and_checks_its_image(self):
+        spec = importlib.util.spec_from_file_location('tooling_v10_check', ROOT/'ci_checks/check-topogym-tooling.py')
+        checker = importlib.util.module_from_spec(spec); spec.loader.exec_module(checker)
+        name = 'topogym-interlocked-claws-hard-i00-standard'
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder)/name
+            shutil.copytree(ROOT/'tasks'/name, target)
+            # Historical v9 must stay valid even after the current image changes.
+            with patch.object(checker, 'current_image', return_value='future-image'):
+                self.assertFalse(checker.check(Path(folder))[1])
+            path = target/'environment/sim/rcb_topogym.py'
+            original = path.read_bytes()
+            path.write_bytes(original+b'\n# tampered\n')
+            self.assertTrue(checker.check(Path(folder))[1])
+            path.write_bytes(original)
+            compose = target/'environment/docker-compose.yaml'
+            compose.write_text(compose.read_text().replace('0.2.10-cu128', '0.2.9-cu128'))
+            self.assertTrue(any('image' in error for error in checker.check(Path(folder))[1]))
+
     def protocol_check(self, task, *, strict=False):
         env = dict(os.environ)
         env.pop('RCB_PROTOCOL_STRICT', None)

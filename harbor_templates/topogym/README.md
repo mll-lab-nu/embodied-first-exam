@@ -19,9 +19,9 @@ Blanket 的数值初态位于各包的 `instance_assets/`，limited 只将它放
 `make-instance --variation seeded --scene-seed ...`；两套选择方式互斥。
 显式选择实例 JSON 的 `eval_index` 为 `null`，NPZ 轨迹用整数 `-1` 表示，避免 object/pickle 字段。
 
-新包写入 `metadata.tooling_version = "5"`，采用 `-privileged` / `-standard` 名称，默认镜像由
-`scripts/cuda_profiles.py` 和 `images/topogym/VERSION` 决定（当前配方为 `0.2.6-<cu128|cu130>`；两种 GPU 配置的实测资格分别记录）。
-`ci_checks/check-tooling-identity.sh` 对 v5 包检查当前公共模板的一致性；历史无版本包及 v3/v4
+新包写入 `metadata.tooling_version = "10"`，采用 `-privileged` / `-standard` 名称，默认镜像由
+`scripts/cuda_profiles.py` 和 `images/topogym/VERSION` 决定（当前配方为 `0.2.10-<cu128|cu130>`；两种 GPU 配置的实测资格分别记录）。
+`ci_checks/check-tooling-identity.sh` 对 v10 包检查当前公共模板的一致性；历史无版本包及 v3–v9
 按 `ci_checks/topogym_tooling_versions.json` 中的固定哈希检查。更新模板不改写历史包，旧包也不会自动获得新修复；
 需要新修复时生成并验证新包。旧任务包的预算和历史实验结果不由此回写。
 RCB 原样引入文件的来源及 blob 仍由 `ci_checks/rcb_vendor.json` 记录。

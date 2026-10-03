@@ -26,7 +26,7 @@ from topogym.utils.io import make_asset_tree_readable
 from cuda_profiles import image_tag
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
-TOOLING_VERSION = "6"
+TOOLING_VERSION = "10"
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = image_tag(root)
@@ -177,8 +177,9 @@ def validate_goal_instance(fam: str, d: dict, instance: dict) -> None:
 
 def success_rule_of(inst: dict) -> str:
     """The instance's success-rule provenance (rcb_topogym make-instance); older instances only record evaluability."""
-    if inst.get("success_rule"):
-        return inst["success_rule"]
+    if inst.get("success_rule"):  # frozen with the instance; the v7 CPU instances' text predates the backend wording
+        rule = inst["success_rule"]
+        return rule.replace("instance runs CUDA", "instance runs CPU") if cpu_physics(inst) else rule
     return "his (goal_complete)" if inst.get("evaluable_for_task_success", True) else "not evaluable (goal_complete False)"
 
 
@@ -258,9 +259,18 @@ CLI equivalent of the grader:
 {conventions(d, fam)}"""
 
 
+def cpu_physics(inst: dict | None) -> bool:
+    """Tooling v7 runs the rigid families' physics on the CPU (float64); Nyx renders on the GPU either way."""
+    return ((inst or {}).get("simulator") or {}).get("compute_backend") == "cpu"
+
+
 def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, difficulty: str, oracle: bool,
            success_rule: str = "", inst: dict | None = None) -> str:
     text, requirements = goal_words(fam, text, d)
+    physics = "CPU physics in float64, Nyx RGB on the GPU" if cpu_physics(inst) else "CUDA, Nyx RGB"
+    determinism = ("The physics runs on the CPU and is bit-deterministic on one host; the final-state hashes\n"
+                   "(`deterministic`) are still diagnostic, as for the GPU families" if cpu_physics(inst) else
+                   "The physics runs on the GPU, which is not bit-deterministic: the\nfinal-state hashes (`deterministic`) are diagnostic")
     ref = (f"`solution/oracle_{fam}.py`, written for this instance with the tooling's primitives; `solution/solve.sh` records it into a\n"
            f"trajectory." if oracle else
            "None yet (`oracle = \"none\"`, no `solution/`). A reference solution must be written for this instance (assisted\n"
@@ -269,7 +279,7 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
 
 | | |
 |---|---|
-| Simulator / robot | TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB) / {d['robot_spec']['name']} ({robot_words(d)}) |
+| Simulator / robot | TopoGym (Genesis 1.2.1, {physics}) / {d['robot_spec']['name']} ({robot_words(d)}) |
 | Family / instance | `{fam}` / variation `{variation}`, seed {seed} (eval index {ei}), frozen in `environment/instance.json` |
 | Task type / mode | trajectory / privileged |
 | Base image | `{IMAGE}` (built locally with `scripts/build_images.sh topogym`; needs an NVIDIA GPU: `environment/docker-compose.yaml`) |
@@ -291,8 +301,7 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
-replay (two passes, no separate video replay). The physics runs on the GPU, which is not bit-deterministic: the
-final-state hashes (`deterministic`) are diagnostic; the rebuilt frozen scene must match (`instance_ok`)
+replay (two passes, no separate video replay). {determinism}; the rebuilt frozen scene must match (`instance_ok`)
 (robot_coding_bench's GPU-backend rule).
 """
 
@@ -316,6 +325,7 @@ def oracle_evidence(slug: str, mode: str) -> str:
 
 def task_toml(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, seed: int, hours: float, level=None,
               inst: dict | None = None) -> str:
+    physics_note = "CPU float64" if cpu_physics(inst) else "CUDA"
     # The verifier replays the trajectory twice (the second one renders the video) at the simulator's speed: at most the
     # agent's budget each, since the agent's own run took at least that long.
     vt = 2 * BUDGET_S + 1800
@@ -338,7 +348,7 @@ keywords = ["robotics", "topogym", "genesis", "{d['robot_spec']['name']}", "code
 author_name = "jianwen"
 tooling_version = "{TOOLING_VERSION}"
 task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
-simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
+simulator = "topogym"             # TopoGym on Genesis 1.2.1 ({physics_note} physics, Nyx RGB)
 robot = "{d['robot_spec']['name']}"
 family = "{fam}"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)

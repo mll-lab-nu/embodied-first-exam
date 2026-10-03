@@ -9,7 +9,7 @@
 | Family / instance | `hedgehog_in_cage` / seed 0 |
 | Oracle | `none` — No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol §2.7). |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.7-cu128` |
+| Base image | `ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128` |
 
 ## Task
 TopoGym hedgehog_in_cage (panda_robotiq, Genesis): produce one replayable trajectory. Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side. Frozen scene instance (variation hedgehog_in_cage_medium, seed 0).
@@ -24,15 +24,15 @@ grasping, if the family enables it, is the same for the oracle and the agent).
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
-replay (two passes, no separate video replay). The physics runs on the GPU, which is not bit-deterministic: the
-final-state hashes (`deterministic`) are diagnostic; the rebuilt frozen scene must match (`instance_ok`)
+replay (two passes, no separate video replay). The physics runs on the CPU and is bit-deterministic on one host; the final-state hashes
+(`deterministic`) are still diagnostic, as for the GPU families; the rebuilt frozen scene must match (`instance_ok`)
 (robot_coding_bench's GPU-backend rule).
 
 ## Details
 | | |
 |---|---|
 | Grasping | assisted grasping (contact_weld_v1) |
-| Success rule | his default success (goal_complete True; terminal revision hedgehog_placement_v4_grasp_contact_2mm); his qualification record for this variation matches, as metadata only (record profile: Panda/Robotiq JOINT_ABS, CPU float64, 25 ms World tick / 40 substeps, bilateral-contact contact_weld_v1; medium default parameters, seed 0 only; no scene-variation qualification); this instance runs CUDA 2.5 ms ticks x 4 substeps with joint-position actions and his recommended contact_weld_v1 grasp assistance, which the record does not cover |
+| Success rule | his default success (goal_complete True; terminal revision hedgehog_placement_v4_grasp_contact_2mm); his qualification record for this variation matches, as metadata only (record profile: Panda/Robotiq JOINT_ABS, CPU float64, 25 ms World tick / 40 substeps, bilateral-contact contact_weld_v1; medium default parameters, seed 0 only; no scene-variation qualification); this instance runs CPU 2.5 ms ticks x 4 substeps with joint-position actions and his recommended contact_weld_v1 grasp assistance, which the record does not cover |
 
 ### Goal
 Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side.

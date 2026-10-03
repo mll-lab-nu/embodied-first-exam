@@ -10,14 +10,18 @@
   "robot_id": "aloha",
   "variation_id": "interlocked_claws_medium",
   "task_parameters": {},
-  "compute_backend": "cuda",
+  "compute_backend": "cpu",
   "precision": "64",
   "physics_dt_s": 0.0025,
   "solver_substeps": 4,
+  "terminal_contract_version": 1,
   "control_decimation": 10,
   "max_physics_steps": null,
   "history_storage": "segment",
   "reset_physics_steps": 0,
+  "rigid_options": {
+   "use_contact_island": false
+  },
   "enable_rgb": true,
   "enable_depth": true,
   "observation_mode": "JOINT",
@@ -61,7 +65,7 @@
    "initial_intent": "close"
   }
  },
- "state_sha": "717794ba7a2253af",
+ "state_sha": "c21a641847b6c986",
  "action_dim": 14,
  "action_layout": [
   "left/waist",
@@ -107,7 +111,7 @@
    "orientation_wxyz": [
     1.0,
     0.0,
-    -0.0,
+    0.0,
     0.0
    ],
    "euler_xyz": [
@@ -148,7 +152,7 @@
    "orientation_wxyz": [
     1.0,
     0.0,
-    -0.0,
+    0.0,
     0.0
    ],
    "euler_xyz": [
@@ -222,10 +226,23 @@
    "fixed": true
   }
  },
+ "instance_contract_version": 2,
+ "soft_state": {},
+ "asset_identity": {
+  "geometry_report.json": "8012b9621247b50e695787af39d1eef6b82105612a74e5cbdea670f700c0ecd5",
+  "goal_region.obj": "7d36772a68c47dbe77571ec40085a93ff3a02647279a3b3ecd3374adde8c2a59",
+  "material.mtl": "afbdd35109a5eeab8d376b8fe86e27868670daefac91c0af80bb917a9bd8e455",
+  "piece_0.glb": "e5c0ce480eb673136fc5c117420d0b686ebad5b17250052e0d039ad0b2dd6925",
+  "piece_0.obj": "3502a4b764468f5434b95b47d6a3f805604f197856b9d5922133e5375ac9b457",
+  "piece_0.urdf": "45ed0d2b94b0629794c540f789ceecbf2c5f728390063a965406d84175025c83",
+  "piece_1.glb": "229e738e7850b50af70369e122df6e452df44f9d8bee5db46d9157d2e2c3342b",
+  "piece_1.obj": "9bfc99437b4b493cf03bb254e883aa1e6f15086122b94310a2d508efa662ef9c",
+  "piece_1.urdf": "70cc8b8eb7a7861580426fe280d4eeb77a4e50f361b546e393b4cd162c4061ac"
+ },
  "genesis_version": "1.2.1",
  "topogym_source": {
-  "sha256": "c8f20f40d5bb7413aa4429de684882d0b5d20df51d602fd9bbea86d5edc56164",
-  "files": 272
+  "sha256": "83e767645c95afe17dbb3fc2efeab64e3838003221956696505e1733489b93a2",
+  "files": 280
  },
  "resolved_variation_id": "interlocked_claws_medium",
  "scene_variation": null,
