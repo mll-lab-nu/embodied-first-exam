@@ -25,11 +25,11 @@
 工具/机器人无触线及原生 Task 成功；兼容已无损压缩的历史 JSONL。
 `--prefix-run` / `--replay-run` 是显式开发选项，常规 oracle 不使用它们。
 布局、两档实测结果与任务包资格见 [任务页](../../../docs/develop/tasks/buzz_wire_3d_zh.md)；
-下文三档历史成功数量不包含这两个新变体。
+下文三档历史成功数量不包含这两个新变体。新版 very_easy / easier 的 seed 0 均已从 home 无回溯完整成功（262.8 s / 290.875 s），独立审计确认无工具或机器人触线。
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
-当前范围是注册的 `buzz_wire_3d_easy` / `medium` / `hard`，默认参数、seed 0。
+下文历史记录覆盖注册的 `buzz_wire_3d_easy` / `medium` / `hard`，默认参数、seed 0。
 **关键姿态与历史走线夹持检查 3/3；含终态动作的分段证据 2/3（easy、hard）；连续完整 Task 成功与独立审计仍为 1/3（easy）。**
 最新结果见 [`buzz_three_tier_component_proof_20260929_01`](../../../runs/test_results/buzz_three_tier_component_proof_20260929_01/README.md)。
 Hard 新补的局部转正、释放和静置通过，最终误差 **0.057 mm / 8.146°**，持续满足终态 **5.95 s**。

@@ -4,6 +4,9 @@ from .common import InterlockedClawsTask
 
 class SimplifiedClawsTask(InterlockedClawsTask):
     pregrasp_weld = True
+    # Keep the separately accepted low-tier placement contract unchanged.
+    separation_only = False
+    terminal_revision = "placement_region_v3_grasp_contact_2mm"
 
     def build_assets(self, folder):
         from topogym.assets.geometry.claws_simplified import build_simplified_claws

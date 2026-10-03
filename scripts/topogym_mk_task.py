@@ -26,7 +26,7 @@ from topogym.utils.io import make_asset_tree_readable
 from cuda_profiles import image_tag
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
-TOOLING_VERSION = "11"
+TOOLING_VERSION = "13"
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = image_tag(root)

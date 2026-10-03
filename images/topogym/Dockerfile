@@ -65,5 +65,11 @@ COPY images/topogym/prune.py /opt/prune.py
 RUN python /opt/prune.py /opt/topogym && rm /opt/prune.py && chmod -R a+rX /opt/topogym
 # Trusted limited sidecars run as the invoking UID and write artifacts here.
 RUN mkdir -p /data && chmod 1777 /data
+# One cache directory for every user (agents and verifiers run as root, limited sidecars as the invoking UID): Genesis'
+# and Quadrants' compiled kernels, topogym's asset cache and the NVIDIA shader cache follow XDG_CACHE_HOME, the CUDA JIT
+# cache CUDA_CACHE_PATH. images/topogym/warm_cache.sh fills it on a GPU host and commits the result as the published tag,
+# so a Session build reuses the compiled kernels instead of compiling them again (cold 183 s -> warm 40 s, 2026-10-02).
+ENV XDG_CACHE_HOME=/opt/rcb-cache CUDA_CACHE_PATH=/opt/rcb-cache/nv/ComputeCache
+RUN mkdir -p /opt/rcb-cache && chmod 1777 /opt/rcb-cache
 ENV PYTHONPATH=/opt/topogym TOPOGYM_SOURCE=/opt/topogym/SOURCE.json
 WORKDIR /app

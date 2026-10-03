@@ -27,7 +27,7 @@
 | [Cast Keyhole](devs/cast_keyhole_very_easy_easier_oracle_plan_zh.md) | 从 home 成功，有录像；双模式完整评分通过 | 正式冻结 Session 闭环成功，155.605 s；双模式完整评分通过 | 两档均完成正向验收；候选包仍标 oracle=none，待整理资格元数据与正式交付。GPU 回放不保证逐位相同。 |
 | [Interlocked Claws](../develop/tasks/interlocked_claws_zh.md) | 已实现；从预抓姿态完整成功，108.775 s；录像已有校验记录 | 已实现；从预抓姿态完整成功，517.675 s；成功运行无录像 | 补 easier 成功录像及双模式完整评分。四包已登记，privileged 短 verifier 通过。 |
 | [Lock Picking](../develop/tasks/lock_picking_zh.md) | 两片直槽；从 home 成功，35.6325 s；审计及录像通过 | 第一片偏转 20°；从 home 接触转片后成功，48.2575 s；审计及录像通过 | 默认时序原生执行和新进程关节目标回放均成功；四包及双模式短测通过，完整 Harbor 正向评分待验。 |
-| [Buzz Wire 3D](../develop/tasks/buzz_wire_3d_zh.md) | 直道布局及双模式包已接入；seed 0 开发时序两次完整成功，含三路完整 Nyx 视频及独立审计 | 横弯接下凹弯布局及双模式包已接入；完整走线与低位释放通过，终点重新抓取/摆正仍待完成 | 5 项几何/判据、13 项包结构检查通过；两档默认时序容器加载与负例评分通过。正分 Harbor oracle 与难度排序尚未资格化。 |
+| [Buzz Wire 3D](../develop/tasks/buzz_wire_3d_zh.md) | 直道布局及双模式包已接入；planning oracle 从 home 无回溯成功，262.8 s，审计及三路 Nyx 视频通过 | 横弯接下凹弯；planning oracle 从 home 无回溯成功，290.875 s，审计及三路 Nyx 视频通过 | 两档 seed 0、CPU64、25 ms / 1 倍 / 40 子步、接触辅助抓持已验证。默认任务包负例评分通过；默认时序完整正分及难度排序未资格化。 |
 | [Fiber Bundling](../develop/tasks/fiber_bundling_zh.md) | 2 根相对细线，seed 0 从 home 完整成功并独立审计 | 3 根三角细线，seed 0 从 home 完整成功并独立审计 | 两档三视角录像、4 个包已生成；privileged 和 standard 短流程均通过。辅助护套抓持；两档默认时序复验与独立审计通过，难度排序未评测。 |
 | [Rope Threading](../develop/tasks/rope_threading_zh.md) | 下半圆搭绳场景与完整终态判据已接入 | 单环穿越、双手交接历史及终态判据已接入 | 五档统一 0° 摆位与 20.9 mm 底座垫高；合成状态／回溯检查通过，正常 IPC 初始化已修复，完整机器人解法仍待验收。 |
 | [Knot Untying](../develop/tasks/knot_untying_zh.md) | 未见实现 | 未见实现 | 制定两档解结初态与操作要求，进入建模和验证。 |

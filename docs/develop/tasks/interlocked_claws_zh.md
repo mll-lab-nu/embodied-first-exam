@@ -1,5 +1,60 @@
 # 双爪互锁
 
+## 2026-10-03：接续 easy / medium / hard 交接工作
+
+已导入交接中的三档物体路线、耦合双臂 IK、带积分补偿的普通 JOINT_ABS 策略和独立审计。
+没有导入缺失原始证据的旧 `qualification.py` 成功声明，也没有用旧任务文件覆盖本地实现。
+来源全文及逐文件 SHA-256 位于 [本轮目录](../../../runs/test_results/claws_handoff_integration_20261003/)
+的 `handoff.txt` / `import_manifest.json`。各次运行另存完整源码快照与 manifest。
+
+本轮 easy / medium / hard 的目标按根目录约定统一为：两件完整几何可由一个平面分开，
+平面间隙至少 10 mm，双件线速度不超过 1 mm/s、角速度不超过 0.02 rad/s，保持 0.5 s；
+允许继续抓持，终态版本为 `claws_separation_v1_grasp_contact_2mm`。正的三角表面间隙本身
+不足以认定解锁。绿色区域保留作场景标记，不再要求搬运。已验收的 very_easy / easier
+保持下面记录的入区目标、几何和终态版本。
+
+hard 采用 `pregrasp_scaled_inset3mm_weld_v4`：保留 0.68 整体尺度与原尺寸
+30 × 28 × 24 mm 握持块，两件三角网格顶点沿内法线移 3 mm；显示与碰撞共用该实体。
+两件均为单连通水密实体，质量分别约 83.27 / 83.19 g，初始表面间隙约 9.43 mm。
+原 Wang 路线在新几何上重新获得 **4 mm 连续净空证书**（旧 hard 为 0.5 mm）；
+[六轴直拉反例](../../../runs/test_results/claws_handoff_integration_20261003/hard_inset3_controls/straight_pull_controls.json)
+均在 10–197.5 mm 位移内发生真实网格碰撞。未修改摩擦、机器人增益或 Task 的
+1 mm 普通接触／2 mm 已持件手指穿透阈值；旧 hard 的成功或失败资格不转移到新版本。
+
+| 档位 | 当前物体证书 | 本地连续物理执行 | 独立审计 |
+| --- | --- | --- | --- |
+| easy，原几何 | 1 mm | 18.55 s / 742 ticks，原生成功 | 通过 |
+| medium，原几何 | 4 mm | 31.275 s / 1,251 ticks，原生成功 | 通过 |
+| hard，3 mm 收薄版本 | 4 mm | 208.225 s / 8,329 ticks，原生成功 | 有界滑动接触审计通过 |
+
+hard 的实际路线有 3 个件间接触 tick，最大力 3.412 N，引擎穿透最大 0.173 mm。
+因此不将其标为全程无接触：保留严格审计的拒绝记录，另以显式
+`--tolerate-piece-contact --piece-force-n 8 --contact-depth-mm .5` 做有界滑动审计。
+该模式继续逐 tick 检查独立三角穿透、机器人／桌面／错误持件禁碰、关节限位、
+双手取得与持件漂移；没有关闭 Task 的物理失败判据。
+全程独立网格复核发现 5 个件间表面交叠 tick，最大三角接触深度 0.429 mm，
+低于显式的 0.5 mm 审计上限；其中 3 tick 有引擎件间接触。全场景最大引擎接触
+穿透 0.534 mm（包含手指夹持），最小实测臂关节限位余量 0.135 rad，所有禁碰通过。
+easy / medium 的默认审计保留交接方案中的 1 s 抓持后脱离窗口：该窗口内可以消除
+取得辅助抓持时形成的接触，窗口后禁止件间接触；原生穿透阈值在窗口内也保持启用。
+
+上述运行均为 seed 0、CPU float64、25 ms tick / 40 子步 / control decimation 1，
+从任务预抓姿态出发，真实双指接触后取得双手 `contact_weld_v1`，只发送普通机器人动作。
+不含标准 home 到预抓姿态的接近段，不证明纯摩擦抓持、多 seed、任务包默认时序或难度排名。
+原生 success 与物理审计分别留证；审计覆盖逐 tick 接触、几何、抓持、关节及稳定窗口，
+不声称覆盖所有子步的独立三角检查。当前 GPU 驱动不可用，因此没有新增 Nyx 视频。
+
+easy 第一轮因磁盘耗尽导致证据写入失败，保留为 `easy_run01`，不计成功；
+恢复空间后从出生状态完整重跑为 `easy_run02`。本轮已完成的早期快照若压缩为
+`source_snapshot.tar.gz`，均先逐文件与 `source_manifest.json` 核验；历史运行与其他任务产物未删除。
+
+入口和重渲染命令见 [Oracle 使用说明](../../../scripts/oracle_runners/README.md#claws-easy--medium--hard-交接路线)。
+完整三档证据、配置、源码及审计已收录 [正式证明目录](../../../solvability_proof/interlocked_claws/README.md)，
+逐文件真实复制并验证 SHA-256，保留原始运行和 hard 严格审计拒绝记录。
+新增 [原三档回归](../../../ci_checks/test-interlocked-claws-oracle.py) 验证互锁初态不能成功、
+完整分离及双件静稳、hard 连通性／尺寸对等、六轴阻挡和旧证书拒绝；
+[原低档回归](../../../ci_checks/test-interlocked-claws-simplifications.py) 的 10 项保持通过。
+
 ## 2026-10-02：very_easy / easier 实现
 
 按用户修正建立两个可单独选择的 `experimental` 入口：`interlocked_claws_very_easy` / `very_easy` 和 `interlocked_claws_easier` / `easier`。沿用当前 Claw 的真实 ALOHA、双臂预抓持、共享终态和 `contact_weld_v1` 推荐配置；以 easy 的 260 mm TCP 间距和安装坐标中的 305.28805 mm 高度为基准，仅为几何连接关系调整两手的局部位置并重求 IK。握持块参考 medium/hard，为 30 × 28 × 24 mm。旧三档和 `base` / `seeded` 映射保持原含义。

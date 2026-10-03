@@ -180,11 +180,27 @@ def geometry_report(assembly):
         dynamics_qualified=False, full_path_verified=False)
 
 
-def generate_assets(output, render_variant=None, scale=1.):
+def generate_assets(output, render_variant=None, scale=1., surface_inset_m=0.):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
     assembly = ClawAssembly(render_variant=render_variant, scale=scale)
+    if not np.isfinite(surface_inset_m) or not 0. <= surface_inset_m <= .004:
+        raise ValueError("Claw surface inset must be between 0 and 4 mm")
+    if surface_inset_m:
+        # Thin the actual visible/collision solid before adding the original-size
+        # grasp pads. Uniform body scaling shifts concave windows and invalidates
+        # the route; moving vertices inward retains the window locations.
+        for body in assembly.bodies:
+            mesh = body.mesh
+            normals = mesh.vertex_normals.copy()
+            mesh.vertices = mesh.vertices-surface_inset_m*normals
+            if (not mesh.is_volume or len(mesh.split()) != 1
+                    or np.linalg.eigvalsh(mesh.moment_inertia).min() <= 0.):
+                raise ValueError("Claw inset produced an invalid solid")
     report = geometry_report(assembly)
+    if surface_inset_m:
+        report.update(surface_inset_m=surface_inset_m, original_triangles_preserved=False,
+                      historical_certificate_transferred=False)
     if not report["passed"]:
         raise ValueError("Reference geometry/initial pose audit failed")
     assembled, separated = trimesh.Scene(), trimesh.Scene()

@@ -11,7 +11,7 @@ from topogym.tasks.base import EntitySpec, RigidTaskDefinition, TaskSpec
 
 
 class InterlockedClawsTask(PlacementGoalMixin, RigidTaskDefinition):
-    terminal_revision = "placement_region_v3_grasp_contact_2mm"
+    terminal_revision = "claws_separation_v1_grasp_contact_2mm"
     task_id = "interlocked_claws"
     placement_description = 'the entire brown claw piece'
     goal_side = (1, 1)  # +y, the nominal scene's side; pose variation cannot flip it
@@ -25,6 +25,8 @@ class InterlockedClawsTask(PlacementGoalMixin, RigidTaskDefinition):
     geometry_family = None
     gate_extra_m = (0., 0.)
     claw_scale = 1.
+    claw_surface_inset_m = 0.
+    separation_only = True
     # Pure-friction pregrasp holds slip (release probe 2026-09-29). All three
     # shipped tiers request contact_weld_v1 through recommended_grasp_assist();
     # the owner's SimulatorConfig still decides whether assistance is enabled.
@@ -36,15 +38,18 @@ class InterlockedClawsTask(PlacementGoalMixin, RigidTaskDefinition):
             assembly, report, self.initial_robot_q = build_opposed_windows(folder, self.gate_extra_m)
             return assembly, report
         if not self.geometry_family:
-            assembly, report = generate_assets(folder, scale=self.claw_scale)
+            assembly, report = generate_assets(folder, scale=self.claw_scale,
+                                              surface_inset_m=self.claw_surface_inset_m)
             from topogym.assets.geometry.claws_grip import add_grip_blocks
             from topogym.assets.geometry.interlocked_claws import geometry_report
             add_grip_blocks(assembly, folder)
             report = geometry_report(assembly)
             report.update(grip_blocks_m=[.030,.028,.024], claw_scale=assembly.scale,
                 initial_robot_qpos=assembly.initial_qpos.tolist(),
-                triangle_positions_preserved=False, original_collision_triangles_preserved=True,
-                collision_representation='original nonconvex triangles plus native flat grip boxes',
+                triangle_positions_preserved=False,
+                original_collision_triangles_preserved=self.claw_surface_inset_m == 0.,
+                surface_inset_m=self.claw_surface_inset_m,
+                collision_representation='nonconvex triangles plus native flat grip boxes',
                 historical_certificate_transferred=False)
             import json
             import trimesh
@@ -131,7 +136,8 @@ class InterlockedClawsTask(PlacementGoalMixin, RigidTaskDefinition):
         transformed = [b.mesh.vertices@b.pose[:3, :3].T+b.pose[:3, 3] for b in assembly.bodies]
         points = np.concatenate(transformed)
         center = np.asarray(cfg["center_xy_m"], dtype=float)
-        if center.shape != (2,) or not np.isfinite(center).all() or cfg["initial_floor_clearance_m"] < 0:
+        if (center.shape != (2,) or not np.isfinite(center).all() or cfg["initial_floor_clearance_m"] < 0
+                or not np.isfinite(cfg["minimum_separation_m"]) or cfg["minimum_separation_m"] <= 0):
             raise ValueError("Invalid Claw tabletop layout")
         offset = np.zeros(3)  # Assembly is declared in source robot-mount coordinates.
         self.local_vertices = {b.name: b.mesh.vertices for b in assembly.bodies}
@@ -176,11 +182,23 @@ class InterlockedClawsTask(PlacementGoalMixin, RigidTaskDefinition):
         return tuple(targets)
 
     def evaluate_goal_region(self, state, region):
-        """Measure the fixed placement rule; physical qualification is separate."""
-        from topogym.evaluation.task_metrics import placement_candidate
-        result = placement_candidate(state, region, self.placement_vertices,
-            self.placement_targets, self.placement_remainder)
-        return result
+        """The existing region is a scene landmark; Claws ends after separation."""
+        if not self.separation_only:
+            from topogym.evaluation.task_metrics import placement_candidate
+            return placement_candidate(state, region, self.placement_vertices,
+                                       self.placement_targets, self.placement_remainder)
+        from .terminal import separation_candidate
+        return separation_candidate(state, self.placement_vertices,
+                                    minimum_separation_m=self.config["minimum_separation_m"])
+
+    def terminal_metadata(self):
+        if not self.separation_only:
+            return super().terminal_metadata()
+        return super().terminal_metadata() | dict(
+            goal_kind="whole_piece_separation", placement_required=False,
+            minimum_separation_m=self.config["minimum_separation_m"],
+            separation_certificate="plane separating every visible and collision vertex",
+            quiet_entities=tuple(getattr(self, "placement_vertices", {})))
 
     def goal_region_observation(self, region):
         return region.observation(self.placement_targets, self.placement_remainder)

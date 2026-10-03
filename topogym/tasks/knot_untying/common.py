@@ -70,7 +70,10 @@ class KnotUntyingTask(TaskDefinition):
         )
         return TaskSpec(
             (entity,),
-            {"fem": {}, "ipc": rope_ipc_parameters()},
+            # 1 mm/s friction smoothing (as the v9 demo): with the libuipc default
+            # 10 mm/s a released curved rope creeps ~3 mm/s and never meets the
+            # 1 mm/s quiet terminal check.
+            {"fem": {}, "ipc": dict(rope_ipc_parameters(), contact_eps_velocity=.001)},
             dict(
                 **preset,
                 task_id=self.task_id,

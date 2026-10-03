@@ -7,11 +7,42 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-02)
-All 78 dirs: tooling v9, `eai-standard/2.3`, `rcb-topogym:0.2.10-cu128`.
-- New packages use tooling v10: remote v9 performance settings plus the local A01 ZIP/NPZ error classification repair.
-  Existing v9 packages keep their bytes and their 0.2.10 image references; v10 is checked against the current templates
-  and image version. The local `Env.sensor_factory` extension and A03 evidence collection/export remain in source.
-  Published images do not automatically acquire local development extensions.
+The 78 tier dirs: tooling v12, `eai-standard/2.3`, `rcb-topogym:0.2.11-cu128`; Jianwen's simpler variants
+(interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v12 = v11 + knot_untying and orbits at one IPC substep like rope_threading / slotted_post_ring (the user's call,
+  2026-10-02; their 6 instances made again, settled at one substep): knot 7.4x, orbits 12-15x against substeps 4 in the
+  IPC study (knot easy lift / slip / drop within 0.1 mm, frames identical; orbits' clear approach within 0.11 mm).
+  Accepted leniency: the larger IPC dt cushions a violent impact, so the reference's noise-robust tet inversion (episode
+  end `rope_volume_invalid` / `connection_or_volume_invalid`) on knot medium's closing pinch and on orbits' ~2 m/s
+  open-finger sweep does not happen; such impacts no longer end the episode. The families with a final-settling check
+  (knot_untying, cast_coil, buzz_wire_3d, blanket_flatten) run it only on ticks where their goal predicate is reached
+  (`_settle_only_when_reached`): elsewhere its result cannot change the outcome, so success / failures / episode ends are
+  the same and only those ticks' `final_settling` metrics are left out; knot's task cost 1.84 -> 0.04 s per control step.
+- v11 = Jianwen's v10 + the IPC families' settled scene frozen with the instance (`export-ipc-state`, then `make-instance
+  --ipc-settled-state`; `SimulatorConfig.ipc_settled_state`, `topogym/world/physics/ipc_settled_state.py`): every build
+  restores the same bits instead of settling (settling on the GPU started builds ~0.04 um apart, enough for a
+  near-threshold squeeze to take another contact branch in a grader's replay; rope_threading hard showed it), so
+  `instance_exact` holds again and a build skips 0.8-2.4 min of settling; knot_untying at two IPC substeps + the
+  same tolerances / broad phase / settling (4.0x; one substep avoided the reference's near-threshold tet inversion);
+  orbits at four substeps with the cheaper tolerances / broad phase and a settled start (~1.3x: only four substeps
+  reproduce the reference's violent-impact tet inversion, which is robust to noise; one and two substeps would be
+  12-15x but more lenient there).
+  0.2.11 = 0.2.10 + that restore + one shared kernel / shader cache for every user (`XDG_CACHE_HOME`,
+  `CUDA_CACHE_PATH` = /opt/rcb-cache), filled on a lab GPU by `images/topogym/warm_cache.sh` and committed into the tag:
+  a fresh container's first build + first frame 88-239 s + 20-24 s -> 27-62 s + < 1 s (physics unchanged: claws easy
+  replays to the same state hash).
+- v10 (Jianwen, f0d233115) = v9 + his A01 ZIP/NPZ error classification, A03 evidence export and the owner-only
+  `Env.sensor_factory`; new packages only (his simpler variants); notes below.
+- New packages use tooling v13: upstream v12 plus the local Fiber Bundling and Lock Picking variant-aware recommended
+  grasps. The local IPC articulation-reference initialization repair, task variants, A01/A03 and calibration extensions
+  remain in source. Existing packages are not regenerated or relabelled by this merge.
+- Both branches also used v11 independently. Upstream v11 and v12 keep image 0.2.11; local `v11_local_grasp` and its earlier Lock-only `v11_local_lock` keep
+  their recorded `topogym-local/<family>-variants:20261002-01` images, pinned per package. The checker selects the local
+  lineage by the exact tool hash, then checks every shared file and the simulator image references.
+  Current v13 uses the image selected by VERSION. Published runtime images do not automatically include local source
+  changes, including the local IPC initialization repair; building a new image is a separate release step.
+- The upstream v12 one-substep policy retains its documented impact leniency. Skipped final-settling measurements can
+  change task-result hashes; this merge does not claim physics-equivalence to older settings or requalify old episodes.
 - Both branches independently used tooling v6. The inventory preserves upstream v6 and `v6_local_a01` separately;
   the checker selects the local lineage by its exact tool hash, then validates every shared file. No existing package
   is relabelled. Earlier validation of upstream physics does not qualify the combined code or new task variants.
@@ -61,8 +92,8 @@ trial (the protocol's default is 100M / 10M, D10), applied after the run.
 
 ## Tooling
 Thin wrappers of the low-level action only (IK and joint moves, gripper, hold) plus state, recording, replay and
-rendering; no task-level skills. New packages use tooling v10 (`[metadata].tooling_version = "10"`): v9 performance
-settings plus the local A01 input-classification repair. The checked-in tier packages remain frozen v9:
+rendering; no task-level skills. New packages use tooling v13 (`[metadata].tooling_version = "13"`): v12 performance
+settings plus local variant-aware grasps. The checked-in tier packages remain frozen v12:
 `harbor_templates/topogym/common/rcb_topogym.py`, byte-identical in every copy (`ci_checks/check-topogym-tooling.py`, run
 by `check-tooling-identity.sh`). v4 (Jianwen, 6a7c755b) folded the two family variants of the earlier render into it:
 - a gripper hold keeps the native target when the commanded width round-trips (the width table drops the closed-end
@@ -181,10 +212,12 @@ family (PROTOCOL §2.7). Model positives so far: interlocked_claws easy in both 
 the previous version of these dirs).
 
 ## Hosts
-- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128`
+- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128`
   (`images/topogym/VERSION` + the CUDA profile of `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a legacy
   warning). Neither is on GHCR: build on the host with `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym` (a
-  large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab).
+  large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab), then warm its cache on that
+  host's GPU: `images/topogym/warm_cache.sh <built tag> <published tag> <gpu> tasks` (one Session per family; without it
+  every container compiles the kernels again).
 - blanket_flatten's packaged PBD states restore only on the GPU profile they were prepared on (RTX PRO 6000, sm_120):
   run blanket on lab.
 - The IPC families are slow (50-90 s per control step in motion, 15 s holds, one sim per GPU): a precision / speed study

@@ -22,6 +22,28 @@ from collect_batch_results import classify_trial
 
 
 class MergeTests(unittest.TestCase):
+    def test_local_v11_grasp_packages_keep_their_own_identity_and_image(self):
+        spec = importlib.util.spec_from_file_location('local_v11_check', ROOT/'ci_checks/check-topogym-tooling.py')
+        checker = importlib.util.module_from_spec(spec); spec.loader.exec_module(checker)
+        for family, suffix in ((f, m) for f in ('lock-picking', 'buzz-wire-3d', 'fiber-bundling')
+                               for m in ('privileged', 'standard')):
+            with self.subTest(family=family, mode=suffix), tempfile.TemporaryDirectory() as folder:
+                name = f'topogym-{family}-very-easy-i00-{suffix}'
+                task = Path(folder)/name
+                shutil.copytree(ROOT/'tasks'/name, task)
+                with patch.object(checker, 'current_image', return_value='future-image'):
+                    self.assertFalse(checker.check(Path(folder))[1])
+                grader = task/'tests/grade.py'
+                original = grader.read_bytes()
+                grader.write_bytes(original + b'\n# changed\n')
+                self.assertTrue(checker.check(Path(folder))[1])
+                grader.write_bytes(original)
+                image_file = task/('environment/Dockerfile' if suffix == 'privileged' else 'environment/docker-compose.yaml')
+                original_image = image_file.read_text()
+                self.assertIn('topogym-local/', original_image)
+                image_file.write_text(original_image.replace('topogym-local/', 'wrong-image/'))
+                self.assertTrue(any('image' in e for e in checker.check(Path(folder))[1]))
+
     def test_owner_sensor_adapter_coexists_with_deferred_rgb(self):
         from topogym.simulator.env import Env
         from topogym.simulator.config import SimulatorConfig
@@ -52,14 +74,15 @@ class MergeTests(unittest.TestCase):
                     # to its separate camera-selection path.
                     self.assertEqual(len(calls), 1 if factory is SensorSuite else 0)
 
-    def test_remote_v9_stays_frozen_and_checks_its_image(self):
-        spec = importlib.util.spec_from_file_location('tooling_v10_check', ROOT/'ci_checks/check-topogym-tooling.py')
+    def test_frozen_generation_stays_frozen_and_checks_its_image(self):
+        spec = importlib.util.spec_from_file_location('tooling_frozen_check', ROOT/'ci_checks/check-topogym-tooling.py')
         checker = importlib.util.module_from_spec(spec); spec.loader.exec_module(checker)
-        name = 'topogym-interlocked-claws-hard-i00-standard'
+        # A frozen generation in the repository: tooling v10 (Jianwen's simpler claws variants on 0.2.10) since v11.
+        name = 'topogym-interlocked-claws-easier-i00-standard'
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder)/name
             shutil.copytree(ROOT/'tasks'/name, target)
-            # Historical v9 must stay valid even after the current image changes.
+            # A historical generation must stay valid even after the current image changes.
             with patch.object(checker, 'current_image', return_value='future-image'):
                 self.assertFalse(checker.check(Path(folder))[1])
             path = target/'environment/sim/rcb_topogym.py'
@@ -67,8 +90,15 @@ class MergeTests(unittest.TestCase):
             path.write_bytes(original+b'\n# tampered\n')
             self.assertTrue(checker.check(Path(folder))[1])
             path.write_bytes(original)
+        # The imported remote generation keeps its pinned image: a downgrade fails.
+        name = 'topogym-interlocked-claws-hard-i00-standard'
+        image = checker.current_image().rsplit(':', 1)[1]
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder)/name
+            shutil.copytree(ROOT/'tasks'/name, target)
+            self.assertFalse(checker.check(Path(folder))[1])
             compose = target/'environment/docker-compose.yaml'
-            compose.write_text(compose.read_text().replace('0.2.10-cu128', '0.2.9-cu128'))
+            compose.write_text(compose.read_text().replace(image, '0.2.10-cu128'))
             self.assertTrue(any('image' in error for error in checker.check(Path(folder))[1]))
 
     def protocol_check(self, task, *, strict=False):

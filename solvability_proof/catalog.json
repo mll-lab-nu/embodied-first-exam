@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "archived_at_utc": "2026-09-30T20:08:26.167470+00:00",
+  "archived_at_utc": "2026-10-03T06:10:00.819175+00:00",
   "scope": "Accepted finite-instance Task success proofs in the unified Env; original source/config identities retained",
-  "accepted_proofs": 8,
+  "accepted_proofs": 11,
   "tasks": [
     {
       "task": "cast_keyhole",
@@ -142,6 +142,41 @@
       ],
       "evidence_files": 22183,
       "evidence_bytes": 4888981603
+    },
+    {
+      "task": "interlocked_claws",
+      "batch": "2026-10-03",
+      "accepted_proofs": 3,
+      "readme": "interlocked_claws/README.md",
+      "summary": "interlocked_claws/2026-10-03/summary.json",
+      "manifest": "interlocked_claws/2026-10-03/archive_manifest.json",
+      "validation": "interlocked_claws/2026-10-03/archive_validation.json",
+      "manifest_sha256": "ad6c7b6ccba64d3d18a9a83f45f8060756736f7a8a25248715571e41f02de735",
+      "evidence_files": 4586,
+      "evidence_bytes": 2281044877,
+      "scope": {
+        "seed": 0,
+        "robot": "aloha",
+        "action": "JOINT_ABS",
+        "backend": "cpu",
+        "precision": "64",
+        "physics_dt_s": 0.025,
+        "solver_substeps": 40,
+        "control_decimation": 1,
+        "task_checks_hz": 40,
+        "integration_substep_s": 0.000625,
+        "assistance": "contact_weld_v1",
+        "start": "task_pregrasp_birth",
+        "home_approach_included": false,
+        "rgb": false,
+        "video": false,
+        "goal": "whole_piece_separation_and_both_quiet_for_0.5s",
+        "easy_medium_contact_rule": "1 s acquired-grasp departure window only",
+        "hard_contact_rule": "bounded sliding: 8 N, 1 mm engine, 0.5 mm triangle",
+        "original_hard_qualified": false,
+        "default_task_package_timing_qualified": false,
+        "multiple_seeds_qualified": false
+      }
     }
   ],
   "limitations": [

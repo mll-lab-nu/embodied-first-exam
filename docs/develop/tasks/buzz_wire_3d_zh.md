@@ -58,13 +58,21 @@ PYTHONPATH=. PYOPENGL_PLATFORM=egl .venv-gs121-nyx/bin/python \
 
 2026-10-03 已将规划逻辑整理到 [planning/buzz_wire_3d/simplified_policy.py](../../../topogym/planning/buzz_wire_3d/simplified_policy.py)：按每段实际观测规划抓取、完整走线、低位释放和终点摆正。常规入口不依赖历史动作或 run 目录；独立审计入口为 [audit.py](../../../topogym/planning/buzz_wire_3d/audit.py)，具体用法见 [planning README](../../../topogym/planning/buzz_wire_3d/README.md)。
 
-新版 very_easy 已从默认 home 连续成功：**262.8 s / 10,512 tick，终点误差 3.418 mm / 5.024°**。完整谱系、普通 action 覆盖、所有上报刚体子步、工具与机器人无触线均通过独立审计。[运行与审计](../../../runs/test_results/buzz_wire_simplified_oracle_20261002/very_easy_feedback_01/)保留实际冻结源码身份。
+两档新版 oracle 均已从默认 home 独立连续成功，未使用历史动作前缀或回溯。完整谱系、普通 action 覆盖、所有上报刚体子步、工具与机器人无触线均通过独立审计；各 run 保留实际冻结源码身份。
 
-该次成功的完整刚体状态经公共 `record_rigid_history` 重渲染为三路 Nyx 视频，逐帧核对所有 link 位姿，最大误差为 0；重渲染没有增加物理成功次数。三路均为 848 × 480、30 fps、7,885 帧，完整解码和同步检查通过，并由公共 `archive_recording` 归档：
+| 档位 | 仿真时长 / 物理 tick | 终点位置 / 姿态误差 | 原生执行与独立审计 |
+| --- | --- | --- | --- |
+| very_easy | 262.8 s / 10,512 | 3.418 mm / 5.024° | [运行](../../../runs/test_results/buzz_wire_simplified_oracle_20261002/very_easy_feedback_01/run_report.json) · [审计](../../../runs/test_results/buzz_wire_simplified_oracle_20261002/very_easy_feedback_01/independent_audit.json) |
+| easier | 290.875 s / 11,635 | 3.416 mm / 5.026° | [运行](../../../runs/test_results/buzz_wire_simplified_oracle_20261002/easier_feedback_02/run_report.json) · [审计](../../../runs/test_results/buzz_wire_simplified_oracle_20261002/easier_feedback_02/independent_audit.json) |
+
+两档成功的完整刚体状态经公共 `record_rigid_history` 重渲染为三路 Nyx 视频，逐帧核对所有 link 位姿，最大误差为 0；重渲染没有增加物理成功次数。全部为 848 × 480、30 fps，very_easy 每路 7,885 帧，easier 每路 8,727 帧；完整解码和同步检查通过，并由公共 `archive_recording` 归档：
 
 - very_easy：[全景](../../../demos/buzz_wire_3d/varaition_very_easy/agentview/varaition_very_easy_agentview.mp4) · [斜前](../../../demos/buzz_wire_3d/varaition_very_easy/front_oblique/varaition_very_easy_front_oblique.mp4) · [腕部](../../../demos/buzz_wire_3d/varaition_very_easy/wrist/varaition_very_easy_wrist.mp4) · [归档清单](../../../runs/demo_metadata/buzz_wire_3d/20261003_very_easy_feedback_01/archive_manifest.json)。
+- easier：[全景](../../../demos/buzz_wire_3d/varaition_easier/agentview/varaition_easier_agentview.mp4) · [斜前](../../../demos/buzz_wire_3d/varaition_easier/front_oblique/varaition_easier_front_oblique.mp4) · [腕部](../../../demos/buzz_wire_3d/varaition_easier/wrist/varaition_easier_wrist.mp4) · [归档清单](../../../runs/demo_metadata/buzz_wire_3d/20261003_easier_feedback_02/archive_manifest.json)。
 
-easier 的终点标定使用 `planning/calibration_tools` 的原生物理检查点、恢复、抓持状态、接触明细和夹爪几何工具。第一次终点抓取改为相对偏航 223.625°；实测抓持后先平移 `[3, -3, 0] mm` 使环居中，再提高 4 mm，转向终点保留 3 mm 高度。窄间隙离开路径单独采样检查，后续转向仍要求 1.5 mm 规划净空；场景、碰撞失败条件与成功阈值未修改。[标定分支](../../../runs/test_results/buzz_wire_simplified_oracle_20261002/calibration_easier_01/calibration_summary.json)已经达到原生成功（3.695 mm / 4.697°），该分支使用过检查点，不能当作从 home 零回溯的完整 oracle 资格；独立完整复验仍在运行。
+easier 的终点标定使用 `planning/calibration_tools` 的原生物理检查点、恢复、抓持状态、接触明细和夹爪几何工具。第一次终点抓取改为相对偏航 223.625°；实测抓持后先平移 `[3, -3, 0] mm` 使环居中，再提高 4 mm，转向终点保留 3 mm 高度。窄间隙离开路径单独采样检查，后续转向仍要求 1.5 mm 规划净空；场景、碰撞失败条件与成功阈值未修改。[标定分支](../../../runs/test_results/buzz_wire_simplified_oracle_20261002/calibration_easier_01/calibration_summary.json)已经达到原生成功（3.695 mm / 4.697°），该分支使用过检查点，只用于诊断；上表独立完整复验随后从 home 无回溯通过。第一次完整复验因“先抬高”的窄间隙规划检查中止，保留为失败记录；最终实现先居中，再抬高，场景及原生成功判据保持不变。
+
+为控制磁盘占用，部分已结束运行的 `physics_states.jsonl` / `steps.jsonl` 改存无损 gzip；压缩后逐字节解压核对 SHA-256 和长度，普通 action 账本、源码快照、数组证据与 MP4 保持原样。原始表示可完整恢复；新审计入口直接支持 gzip。映射分别保存在[建模阶段](../../../runs/test_results/buzz_wire_simplified_development_20261002/lossless_completed_native_storage.json)与[本轮成功运行](../../../runs/test_results/buzz_wire_simplified_oracle_20261002/lossless_completed_tick_storage.json)等 `lossless_*.json` 清单中。
 
 **建模阶段 very_easy 还保留两次完整原生成功。** [attempt07 报告](../../../runs/test_results/buzz_wire_simplified_development_20261002/very_easy_attempt07_cpu/run_report.json)记录 262.1 s、10,484 个物理 tick，连续完成起点抓取/换抓、全部线路、终点低位放回、重新抓取摆正、释放撤臂及静置。终点位置误差 3.644 mm、姿态误差 4.739°，释放后满足完整终态判据持续 1 s。[独立审计](../../../runs/test_results/buzz_wire_simplified_development_20261002/very_easy_attempt07_cpu/independent_audit.json)核对从出生状态开始的完整无回溯链、普通动作覆盖、全部上报刚体子步接触证据；工具—铜轨、机器人—铜轨接触事件均为 0。
 
@@ -76,13 +84,21 @@ easier 的终点标定使用 `planning/calibration_tools` 的原生物理检查�
 
 上述成功限定于 **seed 0、CPU 64 位、25 ms tick / 1 倍控制降采样 / 40 子步**。这与冻结任务包默认动作时序不同，尚不能视为 Harbor 包正分参考解或难度排序资格。初期直接高位松爪的尝试会转动触线，记录仍保留；正式策略必须受控低位下放，不能以静态 IK 通过代替物理结果。
 
-easier 的 [attempt06 报告](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/run_report.json)已记录从 home 完成整条线路、低位下放及释放；`traversal_complete=true`，独立审计确认 9,036 tick 的接触覆盖完整，工具和机器人均无触线。但终点再次抓取后，辅助抓持在 225.9 s 因 `relative_pose_error` 解除，策略中止，**该次不是完整 Task 成功**。录像按同一执行的连续段保存：[起点抓取与主轨道](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/segments/segment_1/videos/agentview.mp4) · [终点受控下放](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/segments/segment_2/videos/agentview.mp4) · [释放及静置](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/segments/segment_3/videos/agentview.mp4) · [再次抓取的失败段](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/segments/segment_4/videos/agentview.mp4)。后续闭爪控制实验独立记录，不覆盖此失败结果。
+建模阶段 easier 的 [attempt06 报告](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/run_report.json)已记录从 home 完成整条线路、低位下放及释放；`traversal_complete=true`，独立审计确认 9,036 tick 的接触覆盖完整，工具和机器人均无触线。但终点再次抓取后，辅助抓持在 225.9 s 因 `relative_pose_error` 解除，策略中止，**该次不是完整 Task 成功**。录像按同一执行的连续段保存：[起点抓取与主轨道](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/segments/segment_1/videos/agentview.mp4) · [终点受控下放](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/segments/segment_2/videos/agentview.mp4) · [释放及静置](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/segments/segment_3/videos/agentview.mp4) · [再次抓取的失败段](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt06_rgb/segments/segment_4/videos/agentview.mp4)。后续闭爪控制实验独立记录，不覆盖此失败结果。
 
-本轮部分早期失败实验的分段观察日志已无损压缩为 `steps.jsonl.gz`；解压字节数及 SHA-256 逐项一致，见 [压缩映射](../../../runs/test_results/buzz_wire_simplified_development_20261002/lossless_compression_manifest.json)。动作账本、完整私有 tick 证据、成功执行和正在执行的日志未压缩。
-
-[easier attempt07](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt07_cpu/run_report.json)从 home 重新执行到首次释放，再用缓慢闭爪寻找双侧接触；到达闭合上限仍为 `no_bilateral_candidate`，本次同样未成功。**当前交付状态：两档场景、资源、完整判据及双模式任务包均已接入；very_easy 有完整机器人成功，easier 的终点重新抓取/摆正仍待完成。** 原有终态要求未放宽，easier 不登记完整正例，不用于证明两档的难度排序。
+[easier attempt07](../../../runs/test_results/buzz_wire_simplified_development_20261002/easier_attempt07_cpu/run_report.json)从 home 重新执行到首次释放，再用缓慢闭爪寻找双侧接触；到达闭合上限仍为 `no_bilateral_candidate`，本次同样未成功。该次失败发生于本轮终点标定前；当前两档完整 oracle 结果以上表为准。原有终态要求未放宽，默认任务包时序正例与两档难度排序仍未资格化。
 
 ## 原 easy / medium / hard 验证记录
+
+### 2026-10-03：Medium 末端建模候选，待用户审核
+
+本轮继续原三档 oracle。现有 medium 的历史转正抓姿在只读复核中会使腕座或前臂与铜轨相交；该抓姿取得 IK 数值解不代表动作可执行。原模型的平放终点抓姿扫描也没有接通整个转正区间。这是所列搜索范围内的失败证据，不是全局不可解证明。
+
+新增开发工具 [calibration_tools/adapters/buzz_wire.py](../../../topogym/planning/calibration_tools/adapters/buzz_wire.py)，提供独立候选资产、隔离新场景声明、保守胶囊障碍查询及参数补丁导出。候选将终点立柱在场景坐标中移动 **X +40 mm、Y +20 mm**；只在最后 `exit_bend` 平滑过渡，末段立柱整体平移。底板、工具尺寸、前面线路的控制点、碰撞角色及原有成功阈值保持原值。正式布局资源尚未修改。
+
+候选的 **6 段持工具转正 IK 路径**通过加密采样与关节参考加密检查，环朝向从 94° 分次转到 148°，最小记录净空 **1.837 mm**；这是离线规划，未推进物理。阶段之间需要释放／重新抓取，**换抓连接、实际双侧接触、从默认 home 开始的全流程及原生成功均未验收**，不能把六段路径称为连续完整解。原三档连续成功数量仍为 **easy 1/3**。
+
+按用户要求，完成微调截图后停在建模审核，审核通过再继续候选上的抓取、完整 IK 动作与连续物理验证。[原始模型](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_original/finish_close.png) · [候选模型](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_candidate/finish_close.png) · [候选俯视图](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_candidate/top.png) · [证据汇总](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_summary.json)。候选截图使用 Genesis CPU 建场、GPU Nyx + compact_lab 取景，默认 home、零物理步；不作为执行录像。工具声明／资产检查 4/4 通过，Buzz 正式 policy 与 runner 的 AST 导入检查未发现 calibration-tools 调用依赖；静态打包隔离检查通过，未重复验证镜像。截图期间共享磁盘写满导致 Nyx 着色器库截断，已从同版本本机镜像恢复并按安装 RECORD 哈希校验；失败记录与修复记录保留在证据目录。
 
 2026-09-29 相机：Panda 默认使用任务专属斜上方角点主机位，让水平与两个竖直方向的线路展开；`front_oblique` 从另一侧补充观察交叉段。
 [相机配置](../../../topogym/config/profiles/camera_configs/buzz_wire_3d_observation.yaml) ·

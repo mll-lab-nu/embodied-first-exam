@@ -2,7 +2,23 @@
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
-更新：2026-10-01。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见[Demo 目录](../../../demos/README.md)。
+更新：2026-10-03。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见[Demo 目录](../../../demos/README.md)。
+
+## Calibration-tools 续作：建模候选待审核
+
+本轮仍为 **easy / seed 0 开发探索，完整机器人成功数没有增加**。正式 scripted policy 没有引入 calibration-tools；新增建模生成、参数补丁、质心坐标对齐及 Nyx 预览仅在 [开发适配器](../../../topogym/planning/calibration_tools/adapters/horseshoe_ring.py)。用户要求先审核建模截图，再继续采用新模型。
+
+对原模型 844.5 s 停点的[接触对照](../../../runs/oracle_dev/horseshoe_20261003/original_contact_comparison.json)复现了全部机器人链接位置，128 项生成资产 SHA-256 与原运行完全相同。FCL 最大合格夹指穿透为 0.154 mm，原生记录为 0.165 mm，普通接触约 0.034 mm；该停点通过原生 1 mm／2 mm 上限。旧 oracle 的 0.8 mm 额外余量确曾造成失败，但不能据此认定原生判据普遍误报，或把放宽判据作为完整解法。
+
+当前送审候选只修改目标环：实际中心线半轴从 **70.101 / 66.763 mm** 增至 **74.101 / 70.763 mm**，线径仍为 5.6 mm，马蹄与链环尺寸保持原值。按原密度重新生成资产后，环质量从 81.66 g 变为 86.43 g。[候选及未应用参数补丁](../../../runs/oracle_dev/horseshoe_20261003/selected_candidate.json)保留原模板哈希；正式模板、材料、辅助抓持和任务判据没有修改。
+
+审核图：[正面同尺度对照](../../../runs/oracle_dev/horseshoe_20261003/selected_geometry_review_v2/front.png) · [侧面对照](../../../runs/oracle_dev/horseshoe_20261003/selected_geometry_review_v2/side.png)。这是实际生成网格的工程投影，**不是仿真截图**。早期原模型 Nyx 近景成功；最终候选的 Nyx 在原生 renderer `startup()` 处反复段错误，关闭离线内核缓存、独立工作目录／缓存及显式 CUDA 重试均未恢复，故不能交付这版的 Nyx 帧；失败日志保留在本轮目录，不将崩溃当作物理任务失败。
+
+该候选从上述实测构型出发，在其余四个部件固定时找到[完整物体退出路线](../../../runs/oracle_dev/horseshoe_20261003/selected_exit_certificate.json)：7 个姿态，初始实体包含检查通过，全部视觉面和保守包围碰撞体、桌面参与连续边界检查，净空下界至少 0.150 mm，终点分隔面间隙约 8 mm。它只证明该假设起点的物体退出，不包含新模型从 home 到起点的物理过程、被动部件动力学或固定目标区成功。较早同时减薄／收窄马蹄的探索不再是送审方案；工具已处理尺寸变化造成的质心偏移，避免把非预期实体平移当作净空改善。
+
+[原生 IK／接触筛选](../../../runs/oracle_dev/horseshoe_20261003/selected_exit_ik.json)仍拒绝当前抓法：左手夹指与非抓持上马蹄的预测接触达到约 1.40 mm，超过普通接触 1 mm 上限。实际重新抓持与完整机器人路线未完成；不能将纯物体证书改写成 IK 成功。后续需在用户审核尺寸后重新规划抓姿、验证新初态并从 home 连续执行。
+
+工具验证：5 项新增建模合同、12 项既有会话合同、16 项候选／抓持合同及静态发布隔离检查通过；这些检查不授予任务成功或运行镜像资格。证据集中在 [`runs/oracle_dev/horseshoe_20261003/`](../../../runs/oracle_dev/horseshoe_20261003/)。
 
 ## 当前默认三档的 oracle 与证明工作
 

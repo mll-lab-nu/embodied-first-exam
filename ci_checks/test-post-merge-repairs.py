@@ -130,7 +130,9 @@ with patch.object(tool, 'Session', side_effect=tool.InstanceMismatch('wrong node
             self.assertTrue(final['finalized'] and final['instance_mismatch'])
             self.assertEqual(final['infra_error'], 0)
             source = (ROOT / 'harbor_templates/topogym/limited/tests/grade.py').read_text()
-            source = source.replace('/logs/verifier', str(root / 'verifier')).replace('/data/', d + '/')
+            # Replace container data paths before inserting a host path, which
+            # can itself live under /data when TMPDIR points to the data drive.
+            source = source.replace('/data/', d + '/').replace('/logs/verifier', str(root / 'verifier'))
             exec(compile(source, 'standard_grade', 'exec'), {})
             reward = json.loads((root / 'verifier/reward.json').read_text())
             self.assertEqual((reward['success'], reward['instance_mismatch'], reward['infra_error'], reward['grader_error']), (0, 1, 0, 0))

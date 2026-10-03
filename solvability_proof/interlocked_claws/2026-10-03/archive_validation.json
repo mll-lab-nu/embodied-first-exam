@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "files": 4586,
+  "bytes": 2281044877,
+  "verified_variations": [
+    "easy",
+    "hard",
+    "medium"
+  ],
+  "native_success_and_independent_audit_verified": true,
+  "accepted_proofs": 3,
+  "frozen_source_manifests_verified": 7,
+  "frozen_source_files_verified": 4285
+}

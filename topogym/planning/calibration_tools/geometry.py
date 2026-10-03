@@ -1,5 +1,6 @@
 """Detached rigid geometry probes. Edits here never teleport a running Env."""
 from copy import deepcopy
+from contextlib import nullcontext
 from dataclasses import asdict
 from pathlib import Path
 from uuid import uuid4
@@ -25,7 +26,7 @@ def pose(value):
 
 
 class RigidProbe:
-    def __init__(self, config, output):
+    def __init__(self, config, output, *, geometry_parameters=None):
         from topogym.config.registry import task_definition, variation_registration
         from topogym.config.scene import load_scene_config
         from topogym.simulator.config import SimulatorConfig
@@ -44,7 +45,12 @@ class RigidProbe:
             thaw(self.config.task_parameters), seed=seed)
         table = scene.env.world.table
         self.table_height = float(table.pos[2] + table.size[2]/2)
-        spec = self.task.declare(self.output / "assets", self.table_height)
+        context = nullcontext()
+        if geometry_parameters is not None:
+            from .adapters.horseshoe_ring import declaration
+            context = declaration(self.task, geometry_parameters)
+        with context:
+            spec = self.task.declare(self.output / "assets", self.table_height)
         spec = self.task.finalize_spec(spec, asset_dir=self.output / "assets", scene_config=scene)
         if spec.initial_state is not None:
             raise UnsupportedCapability("Probe needs an initial-state adapter for this frozen state")

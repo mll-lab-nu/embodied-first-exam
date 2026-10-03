@@ -1,1 +1,1 @@
-"""Development policies for the two simplified rope-threading tasks."""
+"""Wang-layout relay oracles and the two simplified threading policies."""

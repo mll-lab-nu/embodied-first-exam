@@ -1,5 +1,42 @@
 # 绳穿环：五档场景
 
+## easy / medium / hard 的 Wang oracle 整合（2026-10-03）
+
+已按提供的 Wang 源码接入三档物体路径、接力 IK 和 `EE_ABS` 回放策略。
+算法位于 `topogym/planning/rope_threading/`；执行入口与其他 oracle 一致，位于
+`scripts/oracle_runners/run_rope_threading_relay.py`。只读规划入口按既有约定放在
+`scripts/plan_rope_threading_oracle.py` 和 `scripts/plan_rope_threading_ik.py`。
+完整三步命令见 [oracle README](../../../topogym/planning/rope_threading/README.md)。
+
+本轮没有修改 Task、场景资产、home、0° 布设、材料或公共物理参数。
+三档均采用 `A=right / B=left` 和 10 mm 的 hold 采样间隔：
+
+| 变体 | 已接入默认方案 | 当前仓库 seed 0 复验 |
+| --- | --- | --- |
+| easy | `A10_B_pull19_B20_recvA` | 物体路径通过；双臂 IK 452 个采样点通过 |
+| medium | `A10_B_pull19_B20_keep_recvA6` | 物体路径通过；双臂 IK 466 个采样点通过 |
+| hard | `A10_B_pull19_B24_keep_recvA5` | 物体路径通过；双臂 IK 500 个采样点通过 |
+
+三次 IK 均首选方案通过，包含从 home 接近、抓持姿态、接力及末端释放／撤回的运动学检查，
+但不推进任务 FEM/IPC。当前实体垫座也纳入碰撞检查，固定机器人底座与垫座的接合面除外。
+18 项 oracle 接入回归、6 项五档场景回归和 4 个 CLI 帮助入口通过。
+证据、源码哈希、输入和资源记录见
+[整合验证报告](../../../runs/test_results/rope_threading_wang_integration_20261003/integration_report.json)。
+medium/hard 首次本地复跑因磁盘写满退出，失败日志完整保留；空间恢复后两档重跑均通过。
+easy 的快照早于 CLI 异常报告重构和 profile 文档调整，核心 IK／碰撞代码与最终版本一致；
+报告列出了精确源码差异，不把所有 run 视作同一快照。
+
+执行器默认使用当前 simulator 的 2.5 ms tick、4 子步、10 倍控制降采样、CUDA FEM/IPC，
+从标准 home 开始，经共享 `SegmentRunner` 和 Nyx 四视角录制；可显式 `--no-rgb`。
+采用附件的 `ipc_soft_band_v1`，等待接触触发的 native 抓持实际求解成功，并检测抓持丢失。
+轨迹记录变体、seed、实例、资产、robot mount 与 home 身份，执行前逐项核对；旧无身份 NPZ 需重建。
+`policy_done` 不能替代原生 Task success，成功还要求终止和完整逐 tick 证据，允许仍保持抓持。
+
+**完整物理执行未验收**：附件也注明三档物理作业均取消，已验证部分为 IK。
+几何模型假设绳沿轨道滑动，未抓持换抓阶段假设形状保持；EE 回放及实测反馈不会继承
+离散 IK 样本的关节分支或连续碰撞证明。本轮未新增实际机器人成功或正式演示视频。
+现有 very_easy/easier 使用独立 `ThreadingPolicy` 和原 `run_rope_threading_policy.py`，保持原验证范围。
+
 ## 0° 布局与两档简化任务（2026-10-02）
 
 按本轮场景确认要求，五档统一采用 Wang 参考的 0° 布设：

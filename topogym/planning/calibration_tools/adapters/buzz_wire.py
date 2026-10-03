@@ -3,6 +3,16 @@
 The final bend blends a small XY displacement with zero first/second endpoint
 derivatives. The final straight post translates rigidly. Tool dimensions,
 contact roles, task thresholds and all preceding route controls stay unchanged.
+
+Trusted development use:
+    record = preview(task, {"finish_offset_xy_m": [.04, .02]}, output)
+    env._task_class = fixture_task(type(task), record["parameters"])
+    env.reset()  # Fresh candidate birth; choose the factory before reset.
+
+Use calibration_tools.rendering.capture for actual Nyx screenshots. These are
+standalone adapter functions, not registered CalibrationSession RPC methods.
+Formal scripted policies must consume ordinary joint references and must not
+import this module. Model approval and fresh physical qualification are separate.
 """
 from dataclasses import asdict, replace
 from pathlib import Path
@@ -60,6 +70,10 @@ def preview(task, parameters, output):
         route_length_m=float(route.length), requires_rebuild=True,
         physical_execution_verified=False, formal_qualification=False,
         assets={str(p.relative_to(output)): sha256_file(p) for p in sorted(output.rglob("*")) if p.is_file()})
+    write_json_atomic(output / "parameter_patch.json", dict(source_resource=task.layout_resource,
+        base_sha256=manifest["base_sha256"], candidate_sha256=manifest["candidate_sha256"],
+        parameters=parameters, requires_rebuild=True, requires_user_review=True,
+        requires_oracle_requalification=True, applied_to_official_assets=False))
     write_json_atomic(output / "manifest.json", manifest)
     return dict(manifest, output=str(output))
 

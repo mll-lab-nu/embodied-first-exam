@@ -1,0 +1,4 @@
+{
+    "backend": "cuda",
+    "frame": 300
+}

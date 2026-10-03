@@ -49,18 +49,20 @@ def current_image():
     return image_tag(ROOT, "cu128")
 
 
-def image_references(task):
+def image_references(task, *, include_custom=False):
     """The simulator image of every container of a current-tooling dir (the privileged environment and verifier, the
     standard sidecar), which must be the image of images/topogym/VERSION: a dir rendered against an older image keeps
     working until its instance needs a newer library (tooling v9's ipc_options)."""
     refs = []
-    for rel in ("environment/Dockerfile", "tests/Dockerfile"):
+    dockerfiles = () if include_custom and task.name.endswith(("-standard", "-limited")) else ("environment/Dockerfile", "tests/Dockerfile")
+    image_pattern = r"\S+" if include_custom else r"\S*rcb-topogym\S*"
+    for rel in dockerfiles:
         path = task / rel
         if path.is_file():
-            refs += [(rel, m) for m in re.findall(r"^FROM\s+(\S*rcb-topogym\S*)", path.read_text(), re.M)]
+            refs += [(rel, m) for m in re.findall(rf"^FROM\s+({image_pattern})", path.read_text(), re.M)]
     compose = task / "environment/docker-compose.yaml"
     if compose.is_file():
-        refs += [("environment/docker-compose.yaml", m) for m in re.findall(r"image:\s*(\S*rcb-topogym\S*)", compose.read_text())]
+        refs += [("environment/docker-compose.yaml", m) for m in re.findall(rf"image:\s*({image_pattern})", compose.read_text())]
     return refs
 
 
@@ -74,24 +76,34 @@ def check(tasks):
         meta = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
         version = meta.get("tooling_version")
         mode = "limited" if task.name.endswith(("-limited", "-standard")) else "unlimited"
-        if version == "11":
+        if version == "13":
             if not task.name.endswith(("-privileged", "-standard")):
-                errors.append(f"{task.name}: tooling v11 requires protocol v1.0 task names")
+                errors.append(f"{task.name}: tooling v13 requires protocol v1.0 task names")
             expected = current_files(mode)
             image = current_image()
             errors.extend(f"{task.name}/{rel}: image {ref} != {image} (images/topogym/VERSION)"
                           for rel, ref in image_references(task) if ref != image)
-        elif version in ("3", "4", "5", "6", "7", "8", "9", "10"):
+        elif version in ("3", "4", "5", "6", "7", "8", "9", "10", "11", "12"):
             expected = frozen["v" + version][mode]
-            # Both branches independently published tooling 6. Select the local
-            # A01 lineage by its immutable tool hash, then check EVERY file.
-            if version == "6":
-                local = frozen["v6_local_a01"][mode]
+            # Independent branches reused version numbers. Identify the local
+            # lineage by its tool hash, then validate EVERY shared file.
+            image_key = version
+            local_keys = {"6": ("v6_local_a01",),
+                          "11": ("v11_local_grasp", "v11_local_lock")}.get(version, ())
+            for local_key in local_keys:
+                local = frozen[local_key][mode]
                 rel = "environment/sim/rcb_topogym.py" if mode == "limited" else "environment/rcb_topogym.py"
                 if (task / rel).is_file() and sha(task / rel) == local[rel]:
                     expected = local
-            image = frozen.get("version_images", {}).get(version)
-            if image:
+                    image_key = local_key if local_key in frozen.get("version_images", {}) else version
+                    break
+            image = frozen.get("version_images", {}).get(image_key)
+            pinned = frozen.get("package_images", {}).get(task.name)
+            if pinned:
+                actual_images = dict(image_references(task, include_custom=True))
+                if actual_images != pinned:
+                    errors.append(f"{task.name}: image references {actual_images} != frozen package images {pinned}")
+            elif image:
                 errors.extend(f"{task.name}/{rel}: image {ref} != frozen tooling {version} image {image}"
                               for rel, ref in image_references(task) if ref != image)
         elif "tooling_version" in meta:
@@ -121,5 +133,5 @@ if __name__ == "__main__":
     for error in errors:
         print("FAIL " + error)
     if not errors:
-        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v11 checked")
+        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v13 checked")
     raise SystemExit(bool(errors))

@@ -219,7 +219,7 @@ class BlanketFlattenTask(TaskDefinition):
             raise ValueError("Degenerate material-coordinate triangulation")
 
     def evaluate_state(self, state):
-        from topogym.evaluation.cloth_metrics import footprint_area
+        from topogym.evaluation.cloth_metrics import footprint_area, footprint_area_slabs
 
         particle_state = state["particles"]["blanket"]
         positions = np.asarray(particle_state["position_m"])
@@ -250,9 +250,13 @@ class BlanketFlattenTask(TaskDefinition):
         # metrics a step reports stay complete; on the other ticks the goal is false either way (identical predicate).
         coverage = None
         if all(cheap.values()) or getattr(self, "complete_metrics", True):
-            coverage = footprint_area(positions, self.particle_faces) / (
-                self.layout.length_m * self.layout.width_m
-            )
+            area = self.layout.length_m * self.layout.width_m
+            coverage = footprint_area_slabs(positions, self.particle_faces) / area
+            # The slab sum equals the union to ~1e-15 on cloth states; on extreme synthetic folds GEOS' one-shot union
+            # itself drifts by up to ~3e-4 (the slab sum then agrees with a 10 nm grid union). Within 1e-3 of the
+            # threshold the shipped union decides, so the gate is identical (scripts/check_blanket_coverage_slabs.py).
+            if abs(coverage - cfg["minimum_coverage_ratio"]) < 1e-3:
+                coverage = footprint_area(positions, self.particle_faces) / area
         gates = dict(covered=coverage is not None and coverage >= cfg["minimum_coverage_ratio"], **cheap)
         return (
             all(gates.values()),

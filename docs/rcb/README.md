@@ -1,6 +1,6 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
-2026-10-02：新生成包使用 tooling v10 / standard 2.3，保留远端 v9 性能改动、本地无效 NPZ 提交分类及证据导出修复。现有 78 个 v9 包按冻结身份校验；两端独立生成的 v6 按各自完整 hash 清单区分。见 [版本说明](benchmarks/topogym.md) 和 [A01/A03 修复记录](../debug_logs/run_trials_a01_a03_repair_20261002_zh.md)。历史冻结包和旧 run 不追溯改写。
+2026-10-03：新生成包使用 tooling v13 / standard 2.3，合并远端 v12 的 IPC 初态恢复、性能设置与稳定判据优化，以及本地 Fiber/Lock 变体推荐抓持。远端 v12、本地 v11 和既有历史包保持各自身份；两套 v11 按完整工具 hash 与镜像分别检查。见 [版本说明](benchmarks/topogym.md)。
 
 2026-10-01 合并后修复及当时的 v5 / 0.2.6-cu128 验收，见[实施报告](../debug_logs/run_trials_post_merge_repair_20261001_zh.md)；下文历史结果不追溯修改。
 
@@ -656,7 +656,7 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 
 ## 8. 难度评测入口
 
-当前新生成包使用 tooling v10 / standard 2.3；新旧轨迹、评分和恢复差异见 [2.3 合同](STANDARD_MODE_2_3.md)，本地输入分类修复见 [A01/A03 修复记录](../debug_logs/run_trials_a01_a03_repair_20261002_zh.md)。镜像构建通过与逐任务物理资格分别报告。
+当前新生成包使用 tooling v13 / standard 2.3；新旧轨迹、评分和恢复差异见 [2.3 合同](STANDARD_MODE_2_3.md)，本地输入分类修复见 [A01/A03 修复记录](../debug_logs/run_trials_a01_a03_repair_20261002_zh.md)。镜像构建通过与逐任务物理资格分别报告。
 
 合并后 B04–B13 的修复顺序、接口合同及验收安排见 [Run trials 合并后问题修复工程计划](run_trials_post_merge_repair_plan_zh.md)；该文是待实施计划，实际问题状态以链接的审查与验收记录为准。
 

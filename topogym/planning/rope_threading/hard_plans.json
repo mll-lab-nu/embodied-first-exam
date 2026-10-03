@@ -1,0 +1,154 @@
+[
+ [
+  "A10_B_pull19_B24_keep_recvA5",
+  [
+   {
+    "ring": 0,
+    "pusher": "A",
+    "pusher_station_m": 0.1,
+    "poke_m": 0.05,
+    "receiver": "B",
+    "receiver_station_m": 0.02,
+    "pull_m": 0.19,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   },
+   {
+    "ring": 1,
+    "pusher": "B",
+    "pusher_station_m": 0.24,
+    "poke_m": 0.05,
+    "receiver": null,
+    "receiver_station_m": 0.24,
+    "pull_m": 0.0,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   },
+   {
+    "ring": 2,
+    "pusher": "B",
+    "pusher_station_m": 0.24,
+    "poke_m": 0.05,
+    "receiver": "A",
+    "receiver_station_m": 0.01,
+    "pull_m": 0.12,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   }
+  ]
+ ],
+ [
+  "A10_B_pull19_B26_keep_recvA5",
+  [
+   {
+    "ring": 0,
+    "pusher": "A",
+    "pusher_station_m": 0.1,
+    "poke_m": 0.05,
+    "receiver": "B",
+    "receiver_station_m": 0.02,
+    "pull_m": 0.19,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   },
+   {
+    "ring": 1,
+    "pusher": "B",
+    "pusher_station_m": 0.26,
+    "poke_m": 0.05,
+    "receiver": null,
+    "receiver_station_m": 0.26,
+    "pull_m": 0.0,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   },
+   {
+    "ring": 2,
+    "pusher": "B",
+    "pusher_station_m": 0.26,
+    "poke_m": 0.05,
+    "receiver": "A",
+    "receiver_station_m": 0.01,
+    "pull_m": 0.12,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   }
+  ]
+ ],
+ [
+  "A10_B_pull19_B24_keep_solo5",
+  [
+   {
+    "ring": 0,
+    "pusher": "A",
+    "pusher_station_m": 0.1,
+    "poke_m": 0.05,
+    "receiver": "B",
+    "receiver_station_m": 0.02,
+    "pull_m": 0.19,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   },
+   {
+    "ring": 1,
+    "pusher": "B",
+    "pusher_station_m": 0.24,
+    "poke_m": 0.05,
+    "receiver": null,
+    "receiver_station_m": 0.24,
+    "pull_m": 0.0,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   },
+   {
+    "ring": 2,
+    "pusher": "B",
+    "pusher_station_m": 0.24,
+    "poke_m": 0.05,
+    "receiver": null,
+    "receiver_station_m": 0.01,
+    "pull_m": 0.12,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   }
+  ]
+ ],
+ [
+  "A10_B_pull19_B22_keep_recvA4",
+  [
+   {
+    "ring": 0,
+    "pusher": "A",
+    "pusher_station_m": 0.1,
+    "poke_m": 0.05,
+    "receiver": "B",
+    "receiver_station_m": 0.02,
+    "pull_m": 0.19,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   },
+   {
+    "ring": 1,
+    "pusher": "B",
+    "pusher_station_m": 0.22,
+    "poke_m": 0.05,
+    "receiver": null,
+    "receiver_station_m": 0.22,
+    "pull_m": 0.0,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   },
+   {
+    "ring": 2,
+    "pusher": "B",
+    "pusher_station_m": 0.22,
+    "poke_m": 0.04,
+    "receiver": "A",
+    "receiver_station_m": 0.01,
+    "pull_m": 0.12,
+    "pusher_orientation": null,
+    "receiver_orientation": null
+   }
+  ]
+ ]
+]

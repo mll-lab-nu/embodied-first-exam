@@ -196,7 +196,8 @@ class DevelopmentOwner:
     def get_probe(self):
         if self.probe is None:
             from .geometry import RigidProbe
-            self.probe = RigidProbe(self.config, self.output / ("probe_" + uuid4().hex))
+            self.probe = RigidProbe(self.config, self.output / ("probe_" + uuid4().hex),
+                                    geometry_parameters=self.candidate.get("geometry", {}).get("parameters"))
             if self.env is not None:
                 self.probe.sync(json_value(self.env._world.read_state()), self.state_ref())
         return self.probe

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Buzz candidate declaration checks; does not certify an oracle execution."""
 from dataclasses import asdict
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -15,9 +16,18 @@ from topogym.planning.calibration_tools.adapters.buzz_wire import patched_layout
 
 class BuzzGeometryTests(unittest.TestCase):
     def setUp(self):
-        self.task_class = task_definition("buzz_wire_3d", "medium")
+        # Candidate operations are relative to the model reviewed on 2026-10-03,
+        # even after the approved layout becomes the registered medium model.
+        class ReviewBaseline(task_definition("buzz_wire_3d", "medium")):
+            layout_resource = "variations/buzz_wire_3d/F2_compact_toy_s70_home_lab_v4/layout.json"
+        self.task_class = ReviewBaseline
         self.task = self.task_class(seed=0)
         self.layout = self.task.build_layout()
+
+    def test_registered_medium_matches_approved_candidate(self):
+        expected = patched_layout(self.layout, {"finish_offset_xy_m": [.04, .02]})
+        actual = task_definition("buzz_wire_3d", "medium")(seed=0).build_layout()
+        self.assertEqual(json.loads(json.dumps(asdict(actual))), json.loads(json.dumps(asdict(expected))))
 
     def test_only_final_bend_and_post_change(self):
         baseline = asdict(self.layout)
@@ -61,6 +71,9 @@ class BuzzGeometryTests(unittest.TestCase):
             self.assertEqual(a["geometry"]["wand_mass_kg"], b["geometry"]["wand_mass_kg"])
             self.assertEqual(a["assets"]["assets/wand.urdf"], b["assets"]["assets/wand.urdf"])
             self.assertFalse(b["physical_execution_verified"])
+            patch = json.loads((Path(folder)/"b/parameter_patch.json").read_text())
+            self.assertFalse(patch["applied_to_official_assets"])
+            self.assertTrue(patch["requires_user_review"])
 
 
 if __name__ == "__main__":

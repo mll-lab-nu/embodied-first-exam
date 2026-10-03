@@ -167,7 +167,7 @@ def _frozen_topogym_tooling() -> set[str]:
         elif isinstance(o, str) and re.fullmatch(r"[0-9a-f]{64}", o):
             out.add(o)
     for key, value in frozen.items():
-        if key == "generations" or re.fullmatch(r"v\d+(?:_local_a01)?", key):
+        if key == "generations" or re.fullmatch(r"v\d+(?:_local_[a-z0-9_]+)?", key):
             walk(value)
     return out
 

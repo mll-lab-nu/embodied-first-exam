@@ -2,16 +2,25 @@
 import numpy as np
 
 
-def footprint_area(positions, faces):
-    """Union of projected simulation triangles: folds and holes count correctly."""
-    import shapely
+def _projected_triangles(positions, faces):
     triangles = positions[faces, :2]
     cross = ((triangles[:, 1, 0]-triangles[:, 0, 0])*(triangles[:, 2, 1]-triangles[:, 0, 1])
              -(triangles[:, 1, 1]-triangles[:, 0, 1])*(triangles[:, 2, 0]-triangles[:, 0, 0]))
-    triangles = triangles[np.abs(cross) > 1e-12]
-    if not len(triangles):
-        return 0.
-    polygons = shapely.polygons(triangles)
+    return triangles[np.abs(cross) > 1e-12]
+
+
+def _triangle_polygons(triangles):
+    """shapely.polygons(triangles) in one call (rings closed by their first vertex): the same geometries."""
+    import shapely
+    count = len(triangles)
+    coords = np.empty((count, 4, 2), dtype=np.float64)
+    coords[:, :3], coords[:, 3] = triangles, triangles[:, 0]
+    offsets = (np.arange(0, 4*count+1, 4, dtype=np.int64), np.arange(0, count+1, dtype=np.int64))
+    return shapely.from_ragged_array(shapely.GeometryType.POLYGON, coords.reshape(-1, 2), offsets)
+
+
+def _union_area(polygons):
+    import shapely
     try:
         return float(shapely.area(shapely.union_all(polygons)))
     except shapely.errors.GEOSException:
@@ -19,6 +28,51 @@ def footprint_area(positions, faces):
         # linework. Use a 10 nm precision grid only for this numerical fallback;
         # applying it to every frame is substantially more expensive.
         return float(shapely.area(shapely.union_all(polygons, grid_size=1e-8)))
+
+
+def footprint_area(positions, faces):
+    """Union of projected simulation triangles: folds and holes count correctly."""
+    triangles = _projected_triangles(positions, faces)
+    if not len(triangles):
+        return 0.
+    return _union_area(_triangle_polygons(triangles))
+
+
+_SLAB_POOLS = {}
+
+
+def footprint_area_slabs(positions, faces, *, slabs=8, threads=4):
+    """footprint_area as a sum over vertical slabs, each slab's union on a thread (GEOS releases the GIL): ~3x faster on
+    the 8181-particle blanket. The same area mathematically; numerically within ~1e-15 on cloth states (another noding
+    order), but GEOS' one-shot union can itself drift on extreme folds (~3e-4 of the area), so a decision at a threshold
+    must recompute footprint_area when this value is near it (blanket_flatten: within 1e-3)."""
+    import shapely
+    from concurrent.futures import ThreadPoolExecutor
+    triangles = _projected_triangles(positions, faces)
+    if not len(triangles):
+        return 0.
+    polygons = _triangle_polygons(triangles)
+    xmin, xmax = triangles[:, :, 0].min(axis=1), triangles[:, :, 0].max(axis=1)
+    cuts = np.quantile((xmin+xmax)/2, np.linspace(0, 1, slabs+1))
+    cuts[0], cuts[-1] = xmin.min()-1., xmax.max()+1.
+    ylo, yhi = triangles[:, :, 1].min()-1., triangles[:, :, 1].max()+1.
+
+    def slab(k):
+        a, b = cuts[k], cuts[k+1]
+        chosen = np.flatnonzero((xmax > a) & (xmin < b))
+        if not len(chosen):
+            return 0.
+        geometries = polygons[chosen]
+        spanning = ~((xmin[chosen] >= a) & (xmax[chosen] <= b))
+        if spanning.any():
+            geometries = geometries.copy()
+            geometries[spanning] = shapely.clip_by_rect(geometries[spanning], a, ylo, b, yhi)
+        return float(shapely.area(shapely.union_all(geometries)))
+    pool = _SLAB_POOLS.get(threads) or _SLAB_POOLS.setdefault(threads, ThreadPoolExecutor(threads))
+    try:
+        return float(sum(pool.map(slab, range(slabs))))
+    except shapely.errors.GEOSException:
+        return _union_area(polygons)
 
 
 def measure(positions, velocities, faces, edges, rest_lengths, *, table_z, table_bounds,

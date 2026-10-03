@@ -14,7 +14,6 @@
   "harbor_templates/topogym/limited/environment/client-requirements.txt": "scripts/eai_standard/client-requirements.txt",
   "harbor_templates/topogym/limited/tests/test.sh": "tasks/robowits-stack-cubes-i00-standard/tests/test.sh",
   "harbor_templates/topogym/limited/tests/Dockerfile": "tasks/robowits-stack-cubes-i00-standard/tests/Dockerfile",
-  "harbor_templates/topogym/limited/solution/oracle_replay.py": "tasks/robowits-stack-cubes-i00-standard/solution/oracle_replay.py",
   "harbor_templates/topogym/limited/solution/solve.sh": "tasks/robowits-stack-cubes-i00-standard/solution/solve.sh",
   "scripts/run_agent_batch.sh": "scripts/run_agent_batch.sh",
   "scripts/log_mirror.py": "scripts/log_mirror.py",
@@ -119,6 +118,11 @@
   "ci_checks/check-task-structure.sh": "fe6ab3da45de14c96dfcb91a442db954a8554eb3"
  },
  "local_adaptations": {
+  "harbor_templates/topogym/limited/solution/oracle_replay.py": {
+   "upstream_path": "tasks/robowits-stack-cubes-i00-standard/solution/oracle_replay.py",
+   "upstream_blob": "b0dc378be9fe7ef37dd78b86f42f188d7c68eae4",
+   "reason": "TopoGym streams dt = K / control_hz (the frozen service reports 40 Hz), not K / 30 (Jianwen, f0d233115)"
+  },
   "scripts/eai_standard/rcb_limited.py": {
    "upstream_path": "scripts/eai_standard/rcb_limited.py",
    "upstream_blob": "1ce117178770929994c35602cf78dbe8f8028a40",

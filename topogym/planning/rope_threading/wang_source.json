@@ -1,0 +1,52 @@
+{
+  "source": "User-supplied Wang source export, generated 2026-10-03 from topogym_wang",
+  "attachment_sha256": "4bd03395d6695fa7fae9893e71600024bbcd027ead9da635b517fc2e407a0172",
+  "validation_scope": "Source reports easy/medium/hard sampled IK verified; all physics jobs canceled, policy not physically verified.",
+  "files": [
+    {
+      "source": "topogym/planning/rope_threading/geometry.py",
+      "target": "topogym/planning/rope_threading/geometry.py",
+      "source_sha256": "8feb575f849b76a6be5cd7d8851448df45c75249602594ce15b6130c4c907359"
+    },
+    {
+      "source": "topogym/planning/rope_threading/object_oracle.py",
+      "target": "topogym/planning/rope_threading/object_oracle.py",
+      "source_sha256": "b900eedc25e8f57a162ebda613d72be415756c82e4d3c552ac032c7ab1f2780b"
+    },
+    {
+      "source": "topogym/planning/rope_threading/relay_ik.py",
+      "target": "topogym/planning/rope_threading/relay_ik.py",
+      "source_sha256": "74c7076ce8ed5ecc046decc856906cc47d817a9f5b86b5782980e49dd3872634"
+    },
+    {
+      "source": "topogym/planning/rope_threading/kinematics.py",
+      "target": "topogym/planning/rope_threading/relay_kinematics.py",
+      "source_sha256": "2176a1f9c06c2835a7e15ae0acc7afba9a44cd2825db2ac7c0b1c8dc93de1689"
+    },
+    {
+      "source": "topogym/planning/rope_threading/policy.py",
+      "target": "topogym/planning/rope_threading/relay_policy.py",
+      "source_sha256": "668589d4f80efb9f7471753161a8b7b1526a1632bbb2fe9f73b7f8203446ba23"
+    },
+    {
+      "source": "scripts/plan_rope_threading_oracle.py",
+      "target": "scripts/plan_rope_threading_oracle.py",
+      "source_sha256": "52d1a16a069fa845a18d080a8ebb7a160bad346216a7e6e6bcb374ff2517f984"
+    },
+    {
+      "source": "scripts/plan_rope_threading_ik.py",
+      "target": "scripts/plan_rope_threading_ik.py",
+      "source_sha256": "d4f307ef4e63a7949721177bf1797f409a9398a958ebd8d0230b23bef4286361"
+    },
+    {
+      "source": "scripts/run_rope_threading_relay.py",
+      "target": "scripts/oracle_runners/run_rope_threading_relay.py",
+      "source_sha256": "e39ff6ff27f13137a0cb4521bd5828bdba1aebfbcd368c5a03017d69ebfeb3a0"
+    },
+    {
+      "source": "hard_plans.json",
+      "target": "topogym/planning/rope_threading/hard_plans.json",
+      "source_sha256": "504ca4b640267a6c5bef35d108bd00195f1842e0b6c7528f761a7561f3d0e5e1"
+    }
+  ]
+}

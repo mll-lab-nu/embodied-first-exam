@@ -38,6 +38,12 @@ class Runner:
         from topogym.simulator.env import Env
         from topogym.planning.knot_untying.kinematics import KnotIK
         self.args, self.started = args, time.time()
+        if args.mesh == "coarse":
+            # Exploration only: 8-sided, 6 mm-station rope volume (same material, contact and geometry).
+            from functools import partial
+            import topogym.tasks.knot_untying.common as knot
+            from topogym.assets.geometry.rope_volume import write_rope_volume
+            knot.write_rope_volume = partial(write_rope_volume, profile="structured_baseline")
         self.env = Env(SimulatorConfig(task_id="knot_untying", robot_id="aloha", variation_id=args.variation,
                                        compute_backend="cuda", enable_rgb=False, enable_depth=False,
                                        enable_privileged=True, control_mode="JOINT_ABS", max_physics_steps=None,
@@ -120,6 +126,29 @@ class Runner:
         return a+(b-a)*(3*u**2-2*u**3)
 
     # ---------- grasp primitives ----------
+    def clearance(self, line, s):
+        """Horizontal distance from the centre line at s to the nearest strand more than 40 mm of rope away."""
+        p = self.at(line, s)[:2]
+        a, b = line[:-1, :2], line[1:, :2]
+        far = np.abs(self.stations-s) > .04
+        keep = far[:-1] & far[1:]
+        ab = b-a
+        u = np.clip(((p-a)*ab).sum(1)/np.maximum((ab*ab).sum(1), 1e-12), 0, 1)
+        return float(np.linalg.norm(a+ab*u[:, None]-p, axis=1)[keep].min())
+
+    def grasp_site(self, s):
+        """(arc, opening command): open the jaws only as wide as the free space beside the rope allows
+        (half gap <= clearance - 4 mm radius - 3 mm margin, at most 19 mm); if fewer than 6 mm remain,
+        move the grasp toward the rope's middle in 5 mm steps (at most 80 mm)."""
+        line = self.line()
+        toward = 1. if s < self.length/2 else -1.
+        for k in range(17):
+            arc = float(np.clip(s+toward*.005*k, .01, self.length-.01))
+            half = min(.019, self.clearance(line, arc)-.007)
+            if half >= .006:
+                return arc, half+.00785  # native command: jaw gap = 2*command - 15.7 mm
+        raise RuntimeError(f"no grasp site with free space within 80 mm of s={s:.3f}")
+
     def pose(self, side, s, flips=(1, -1)):
         """Vertical pinch over the live rope at s: (tcp, turn, flip, pregrasp joints)."""
         from topogym.planning.knot_untying.kinematics import vertical_pinch
@@ -138,6 +167,9 @@ class Runner:
 
     def grasp(self, sides, ss, phase):
         """Both listed arms open, approach, re-aim on the live rope, descend and pinch together."""
+        sites = [self.grasp_site(s) for s in ss]
+        ss = [arc for arc, _ in sites]
+        opening = {side: cmd for side, (_, cmd) in zip(sides, sites)}
         plans = {side: self.pose(side, s) for side, s in zip(sides, ss)}
         n = int(round(1./DT))
         start = {side: self.q[side].copy() for side in sides}
@@ -145,7 +177,7 @@ class Runner:
         for k, u in enumerate(np.linspace(0, 1, n+1)[1:]):
             for side in sides:
                 self.q[side] = start[side]+(plans[side][3]-start[side])*(10*u**3-15*u**4+6*u**5)
-                self.g[side] = g0[side]+(self.args.open-g0[side])*min(1., 4*u)
+                self.g[side] = g0[side]+(opening[side]-g0[side])*min(1., 4*u)
             self.step(phase+":approach")
         # The rope keeps relaxing during the approach: aim again with the same jaw flip.
         plans = {side: self.pose(side, s, (plans[side][2],)) for side, s in zip(sides, ss)}
@@ -173,15 +205,15 @@ class Runner:
                 self.q[side] = self.solve(side, plans[side][0], plans[side][1])
         for u in np.linspace(0, 1, int(round(.4/DT))+1)[1:]:
             for side in sides:
-                self.g[side] = self.args.open+(self.args.close-self.args.open)*u
+                self.g[side] = opening[side]+(self.args.close-opening[side])*u
             self.step(phase+":close")
         for _ in range(10):
             self.step(phase+":squeeze")
         out = []
         for side, s in zip(sides, ss):
             tcp, turn, flip, _ = plans[side]
-            self.grasps[side] = dict(s=s, turn=turn, tcp=tcp.copy(), flip=flip)
-            out.append(dict(side=side, s=s, flip=flip, tcp=tcp.round(4).tolist(), placement=record))
+            self.grasps[side] = dict(s=s, turn=turn, tcp=tcp.copy(), flip=flip, open=opening[side])
+            out.append(dict(side=side, s=s, flip=flip, open_cmd=opening[side], tcp=tcp.round(4).tolist(), placement=record))
         return out
 
     def converge(self, sides, targets, phase, tolerance=.002, limit_s=4.):
@@ -216,7 +248,7 @@ class Runner:
             tcp = self.tcp(side)
         start = self.g[side]
         for u in np.linspace(0, 1, int(round(.25/DT))+1)[1:]:
-            self.g[side] = start+(self.args.open-start)*u
+            self.g[side] = start+(g["open"]-start)*u
             self.step(phase+":open")
         self.cartesian(side, self.smooth(tcp, tcp+[0, 0, PRE], .1), g["turn"], phase+":retreat")
 
@@ -253,7 +285,7 @@ class Runner:
                 break
             if count < count0:
                 break
-            if span >= .95*abs(action["s_pull"]-action["s_anchor"]):
+            if span >= .95*abs(self.grasps[pull_side]["s"]-self.grasps[anchor_side]["s"]):
                 record["stopped"] = "band distance reached 0.95 of the rope between the grasps"
                 break
         self.release(pull_side, cfg["lift"], f"d{k}:release")
@@ -351,9 +383,9 @@ class Runner:
     def dump(self, partial):
         result = self.task.result
         metrics = {k: v for k, v in result.metrics.items() if isinstance(v, (bool, int, float, str))}
-        report = dict(variation=self.args.variation, robot="aloha", grasp="friction only (grasp_assist none)",
+        report = dict(variation=self.args.variation, mesh=self.args.mesh, robot="aloha", grasp="friction only (grasp_assist none)",
                       physics_dt_s=self.args.physics_dt, substeps=self.args.substeps, control_decimation=self.args.decimation,
-                      close_cmd=self.args.close, open_cmd=self.args.open, build_s=self.build_s, wall_s=time.time()-self.started,
+                      close_cmd=self.args.close, build_s=self.build_s, wall_s=time.time()-self.started,
                       simulated_s=self.log[-1]["t"] if self.log else 0., partial=partial, decisions=self.decisions,
                       terminal_predicate_met=bool(metrics.get("stable_time_s", 0.) >= self.task.config["stable_duration_s"]),
                       env_task_success=bool(result.task_success), goal_complete_flag=bool(self.task.goal_complete),
@@ -372,11 +404,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--variation", choices=sorted(TIERS), required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--mesh", choices=("task", "coarse"), default="task",
+                        help="coarse: exploration-only structured rope volume; the proof uses the task mesh")
     parser.add_argument("--physics-dt", type=float, default=.025)
     parser.add_argument("--substeps", type=int, default=40)
     parser.add_argument("--decimation", type=int, default=1)
     parser.add_argument("--close", type=float, default=.010, help="native gripper command when pinching the rope")
-    parser.add_argument("--open", type=float, default=.027, help="native gripper command before a grasp (38 mm gap)")
     parser.add_argument("--speed", type=float, default=.04, help="average pull speed, m/s")
     parser.add_argument("--max-pull", type=float, default=.6)
     parser.add_argument("--max-decisions", type=int, default=8)

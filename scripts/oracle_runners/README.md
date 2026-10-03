@@ -14,11 +14,65 @@
 | `run_horseshoe_policy.py` | Horseshoe 几何、IK 和机器人分阶段诊断 |
 | `run_interlocked_claws_policy.py` | Claws very_easy / easier 的辅助抓持参考策略；旧三档仍调用原几何及摩擦抓持诊断 |
 | `run_interlocked_claws_simplified_policy.py` | 两档简化 Claws 的源码冻结、连续几何检查、双臂预检和 SegmentRunner 执行 |
+| `run_claws_oracle.py` | 原三档 Claws 的交接路线重认证、实测抓持 IK、JOINT_ABS 分离与停稳 |
 | `run_hedgehog_policy.py` | Hedgehog 旧几何／反馈诊断入口，保留其原有阶段限制 |
 | `run_rigid_reference_policy.py` | Hedgehog／Claws 共用的几何、抓持诊断管理器 |
 | `run_solvability_workflow.py` | 按任务提供的 stage factory 执行诊断或连续证明候选 |
+| `run_rope_threading_relay.py` | Wang 0° easy / medium / hard 接力 IK 样本执行；普通 EE_ABS、抓持反馈和原生 Task 判定 |
+| `run_rope_threading_policy.py` | very_easy / easier 的搭绳和单环双手交接开发策略 |
 
 只读规划器 `scripts/plan_*`、独立审计器 `scripts/audit_*`、通用接口测试及源码快照工具 `scripts/test_*` 继续放在上级目录。difficulty trials 使用独立的 Harbor 执行链，不调用这些 oracle runner。
+
+## Claws easy / medium / hard 交接路线
+
+```bash
+.venv-gs121/bin/python scripts/plan_claws_object_oracle.py \
+  --variation easy --output runs/test_results/claws_easy_object_new
+.venv-gs121/bin/python scripts/oracle_runners/run_claws_oracle.py \
+  --variation easy --witness runs/test_results/claws_easy_object_new/object_witness.json \
+  --output runs/test_results/claws_easy_run_new
+.venv-gs121/bin/python scripts/audit_claws_oracle.py \
+  --run runs/test_results/claws_easy_run_new --require-native-success \
+  --output runs/test_results/claws_easy_audit_new
+```
+
+将 `easy` 和输出路径改为 `medium` / `hard` 可运行另两档。默认物体证书余量为
+1 / 4 / 4 mm，关节速度为 0.2 / 0.1 / 0.08 rad/s。hard 当前为
+`pregrasp_scaled_inset3mm_weld_v4`：两件原三角表面沿顶点法线内移 3 mm，
+原尺寸握持块保留。旧 hard 证书不能用于新版；每次执行前都会重建资产并复核证书。
+
+这三档按项目约定在完整分离后双件停稳 0.5 s 即结束，允许保持抓持；
+very_easy / easier 已验收的入区判据保持其原版本。当前 oracle 从任务预抓姿态开始，
+通过双指接触取得 `contact_weld_v1`，不含标准 home 接近段。采用 CPU float64、
+25 ms tick、40 子步、每 tick 一次普通 JOINT_ABS，保留原机器人模型及增益。
+物体路径、IK、原生 success 和独立逐 tick 审计分别记录；原生成功不能代替审计。
+
+`scripts/plan_claws_ik.py --variation <档位> --witness <证书> --output <新目录>`
+可单独检查出生姿态的 IK；实际执行仍从取得辅助抓持后的实测状态重新规划。
+hard 的成功执行有三次轻微件间接触；审计时加
+`--tolerate-piece-contact --piece-force-n 8 --contact-depth-mm .5`。
+这是独立审计的显式滑动接触选项，不修改 Task 的 1 mm 普通接触／2 mm
+持件手指穿透阈值。easy / medium 使用不允许持续件间接触的默认审计。
+
+有 Nyx/CUDA 时可从完整记录重渲染四路视频，不推进物理、不增加成功次数：
+
+```bash
+TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets" \
+  .venv-gs121-nyx/bin/python scripts/render_claws_oracle.py \
+  --run runs/test_results/claws_easy_run_new \
+  --output runs/test_results/claws_easy_video_new
+```
+
+重渲染校验冻结源码、实例和资产，通过共享 `record_rigid_history` / `RecordingSession`
+恢复全部关节（含被动手指）。本地本轮 GPU 驱动不可用，尚未验证这个视频入口的实际渲染。
+完整结果与边界见 [Claws 任务页](../../docs/develop/tasks/interlocked_claws_zh.md)。
+
+Rope Threading 三档先通过 `scripts/plan_rope_threading_oracle.py --variation easy|medium|hard`
+生成物体路径，再用 `scripts/plan_rope_threading_ik.py --witness <object_witness.json>` 生成对应轨迹。
+执行：`run_rope_threading_relay.py --variant easy|medium|hard --seed 0 --samples <relay_samples.npz> --output <新目录>`。
+三档各自的默认配方、完整命令和证据边界见
+[Rope Threading oracle](../../topogym/planning/rope_threading/README.md)。默认 Nyx 四视角，`--no-rgb` 可关闭；
+导入的 IK 证据不等于完整物理成功。
 
 ## Fiber 两档简化变体
 
@@ -54,7 +108,7 @@
 
 ## Buzz Wire 两档简化变体
 
-这是 [planning/buzz_wire_3d/simplified_policy.py](../../topogym/planning/buzz_wire_3d/simplified_policy.py) 的管理侧执行入口。每段按实际观测重新规划；常规执行不依赖历史 run。very_easy 的新版 oracle 已从默认 home 完整成功，easier 已完成终点标定，独立完整复验中。任务包默认时序的正分资格仍单独记录，详见任务页。
+这是 [planning/buzz_wire_3d/simplified_policy.py](../../topogym/planning/buzz_wire_3d/simplified_policy.py) 的管理侧执行入口。每段按实际观测重新规划；常规执行不依赖历史 run。两档新版 oracle 均已从默认 home 无回溯完整成功，并通过独立审计。任务包默认时序的正分资格仍单独记录，详见任务页。
 
 ```bash
 .venv-gs121-nyx/bin/python scripts/oracle_runners/run_buzz_wire_simplified_policy.py \
@@ -73,7 +127,7 @@
 
 默认启用起点换抓及低位终点释放。`--prefix-run <输出目录>` 可复用已完成的 `traverse` / `prepare_finish_slide` / `finish_recipe_0` 段之前的动作序列，仍从 home 真实重跑，不恢复物体状态；报告记录截断 tick 和实际动作指纹。两种重跑均继承来源冻结的运行源码，避免其他任务的并行修改改变物理身份；允许用 `--episode-seconds` 延长运行时限，不改变物理步长。每次全程逐 tick 记录会占用数 GB，运行前应留足磁盘空间。
 
-`--terminal-contact-close` 保留慢速双侧接触闭爪实验入口；当前 easier 实例使用这一方式仍未成功建立终点抓持，不能当作已修复的策略。
+`--terminal-contact-close` 保留慢速闭爪实验开关；历史尝试未取得完整成功。默认已验收流程使用原闭爪动作配合抓取朝向调整和环居中，该开关未随新流程独立验收。
 
 ## Claws 两档简化变体
 

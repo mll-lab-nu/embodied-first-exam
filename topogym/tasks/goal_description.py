@@ -89,7 +89,16 @@ def describe_goal(task):
         raise ValueError(f"No public terminal description for {name}")
     terminal = cfg.get("terminal", {})
     rules, failures = [], []
-    if name in PLACEMENT:
+    if name == "interlocked_claws" and getattr(task, "separation_only", False):
+        summary = "Completely separate the two claw pieces and briefly hold both still."
+        rules += [
+            f"Leave at least {mm(cfg.get('minimum_separation_m', .01))} between the complete pieces, "
+            "with a plane separating all of their geometry; a gap inside the interlock is insufficient.",
+            "Keep both pieces' linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. "
+            "Holding both pieces is allowed; release and transport into the green region are not required.",
+        ]
+        failures.append(_rigid_contact_failure())
+    elif name in PLACEMENT:
         target, remainder = PLACEMENT[name]
         summary = f"Separate and place {target} inside the green dashed goal region. Keep {remainder} on the puzzle/system side."
         region = getattr(task, "goal_region", None)

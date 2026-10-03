@@ -1,5 +1,16 @@
 # 被动策略与参考运动
 
+2026-10-03 Claws：已接入交接的 easy / medium / hard 物体路线、实测抓持耦合 IK、
+JOINT_ABS 执行及独立审计。原三档完成分离停稳即可结束；hard 使用两件表面内移
+3 mm 的新版几何，原始未收薄 hard 不继承其结果。具体状态和有限实例范围见
+[Claws 任务页](../../docs/develop/tasks/interlocked_claws_zh.md)，
+[复现命令](../../scripts/oracle_runners/README.md#claws-easy--medium--hard-交接路线)。
+
+`rope_threading/` 已接入 Wang 0° 的 easy / medium / hard 接力 oracle：当前任务生成物体路径，
+再转双臂 IK 样本，由 `scripts/oracle_runners/run_rope_threading_relay.py` 从标准 home 执行。
+各档配方、完整命令与 IK／物理验证边界见 [Rope Threading oracle](rope_threading/README.md)。
+原有 very_easy / easier 开发控制器继续使用 `run_rope_threading_policy.py`。
+
 2026-09-30 执行入口整理：10 个 oracle／参考策略 runner 已集中至 [scripts/oracle_runners/](../../scripts/oracle_runners/README.md)，源码快照内的 worker 路径同步更新。Lock 的 solve 运行在原生 Task 成功时正常结束，允许尚未松手；失败和超时仍报错，`policy_done` 本身不算成功。新审计按该结束规则重算稳定窗口，历史完整释放证明保留原验收规则。
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。

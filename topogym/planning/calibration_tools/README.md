@@ -68,7 +68,7 @@ with open_session(dict(task_id="cast_keyhole", variation_id="easier",
 | `pin_object`、`unpin_object`、`set_probe_grasp` | 几何固定／手与物体之间的刚性变换，用于探查；不产生物理约束或真实接触抓持。清除抓持用 `set_probe_grasp(hand, None)`。 |
 | `sweep_object` | 将路点按平移／旋转分辨率细分，返回首个碰撞和最小采样间隙，包括实体包含检查。只检查列明的任务物体，不默认包含机器人和桌面。 |
 | `solve_ik`、`check_robot_path`、`rank_grasps` | 只读原生 IK/FK、导入碰撞网格的采样检查；包含双臂、手指及已建模的腕部相机。列出相邻刚体／固定安装的排除项；候选优先按环境净空和关节余量排序。 |
-| `preview_geometry`、`compare_geometry`、`export_geometry_patch` | 生成独立 Keyhole 候选资产、截面、质量惯量、净空差和带原版本哈希的参数补丁；不应用到正式任务。 |
+| `preview_geometry`、`compare_geometry`、`export_geometry_patch` | 生成独立 Keyhole／Horseshoe 候选资产、截面、质量惯量、净空差和带原版本哈希的参数补丁；不应用到正式任务。 |
 | `timings`、`export_report` | 分层阶段计时、源码／配置／资产身份、进程资源、动作记录和探索标记。`timings()` 由父进程读取，worker 忙碌或已失败时也可查询。 |
 | `grasp_status` | 被动解释 assist 状态、后端拒绝原因、已报告的条件及阈值余量；未提供的测量为 `None`。 |
 | `run_grasp_trial`、`grasp_trial_report` | 异步执行明确给出的接近／闭合／提升／持握／释放动作，保存逐 tick 测量、阶段、事件、判据及可选共享录像。 |
@@ -79,7 +79,17 @@ with open_session(dict(task_id="cast_keyhole", variation_id="easier",
 | `compare_runs`、`summarize_run` | 离线对照已有运行的步数、分项耗时、缓存选择和任务摘要；记录的执行工作不一致时不给加速比。 |
 | `drive_object` | 在显式准备的 FEM／IPC 开发会话中，以有界外力或位置 PD 探索物体运动；实验接口，尚无 GPU 动力学验收。 |
 
-几何编辑与建模适配目前覆盖显式 Cast Keyhole 变体；`seeded` 场景扰动和其他任务需要额外适配。真实动力学 teleport／pin、软体节点编辑、跨进程精确 checkpoint、未记录状态的历史重渲染、精确接触点箭头尚未提供。调用不支持的能力明确报 `UnsupportedCapability`。
+几何编辑与建模适配目前覆盖显式 Cast Keyhole 与 Horseshoe Ring 变体；`seeded` 场景扰动和其他任务需要额外适配。真实动力学 teleport／pin、软体节点编辑、跨进程精确 checkpoint、未记录状态的历史重渲染、精确接触点箭头尚未提供。调用不支持的能力明确报 `UnsupportedCapability`。
+
+### 马蹄环建模候选
+
+`preview_geometry(parameters)` 支持 `target_ring.centerline_radii`、`target_ring.wire_radius` 及 `horseshoe.band_width`／`thickness`／`edge_bevel`。尺寸采用模板 mm，实际米制尺寸还乘以 Task 的 `scale / 1000`；例如默认 scale=2 时，模板厚度 3 对应实物 6 mm。预览重建视觉网格、碰撞体、质量与惯量，检查初态几何和原链环拓扑；`compare_geometry`、`export_geometry_patch` 沿用公共接口。比较中的马蹄环初态间隙是原几何生成器的保守下界，不能解释为物理实测距离。
+
+新建物理试验可传入 `open_session(config, output, candidate={"geometry": {"parameters": parameters}})`。覆盖仅在独立 worker 建场时生效，结束声明后恢复原生成器；不会写回模板、正式 policy 或任务判据。形状变化导致质心移动时，出生布局和 detached probe 会补偿质心坐标，使实体原有参考坐标系保持不动。新尺寸仍必须重新静置和重新验证抓持，不能继承旧布局或旧 oracle 的成功资格。
+
+开发 owner 可用 `adapters.horseshoe_ring.rebase_poses(task, parameters, poses)` 对齐历史姿态；返回的是建模假设，不是物理观测。`render_preview(config, parameters, output, observation=..., camera_poses=...)` 在一次性 Env 中用 Nyx 渲染该假设，支持独立近景相机，并标明零物理推进与原始姿态来源。它应运行在有资源监控的独立开发进程；不得在运行中的正式环境或 scripted policy 内调用。
+
+`plot_geometry_comparison(task, parameters, poses, output)` 将原始和候选的实际生成三角网格作同尺度、同相机的工程投影，保存正面／侧面 PNG 与坐标对齐清单。它不是 Nyx 帧、物理截图或录制模块的替代；仅供审核建模尺寸，不能提供机器人或动力学证据。
 
 `check_robot_path` 的 path 是**完整 robot qpos 的列表**，只检查提交的采样，不替调用者做连续关节插值。`allowed_contacts` 是显式的 `entity/link` 名称对；结果记录所有允许项。无碰撞候选不等于机器人成功抓持或完成任务。
 
