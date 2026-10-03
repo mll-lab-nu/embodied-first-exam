@@ -16,6 +16,11 @@ from design_viewer.scenes import CACHE
 
 def build(scene):
     spec = mujoco.MjSpec.from_string(_base_xml(scene))
+    if "cord" in scene.extras:  # the task's cord ends in stop knots; they keep the beads on it
+        v, r = _cord_vertices(scene), 1.6*scene.extras["layout"].rope_radius_m
+        for name, x in (("cordB_first", 0.), ("cordB_last", np.linalg.norm(v[-1]-v[-2]))):
+            spec.body(name).add_geom(type=mujoco.mjtGeom.mjGEOM_SPHERE, size=[r, 0, 0], pos=[x, 0, 0],
+                                     density=3300, rgba=(.9, .88, .8, 1))
     for b in scene.bodies:
         body = spec.worldbody.add_body(name=b.name, pos=b.pos, quat=b.quat)
         if b.free:
@@ -61,22 +66,33 @@ def _base_xml(scene):
 </mujoco>"""
 
 
-def _cable(scene, n=64):
-    """Slotted cord as a chain of capsules on ball joints, both ends tied to the discs (a stand-in for
-    the FEM cord). No elasticity plugin: the browser's WebAssembly client crashes on plugins.
-    Density 3x a real cord: with the stiff contacts this keeps a hard-pulled ring from squeezing
-    the cord through itself or the post (5 -> 0.8 mm penetration)."""
-    cord, radius = scene.extras["cord"], scene.extras["layout"].rope_radius_m
+def _cord_vertices(scene, n=64):
+    cord = scene.extras["cord"]
     arc = np.r_[0, np.cumsum(np.linalg.norm(np.diff(cord, axis=0), axis=1))]
     s = np.linspace(0, arc[-1], n)
-    vertices = np.column_stack([np.interp(s, arc, cord[:, i]) for i in range(3)])
+    return np.column_stack([np.interp(s, arc, cord[:, i]) for i in range(3)])
+
+
+def _cable(scene):
+    """Slotted cord as a chain of capsules on ball joints, both ends tied to the discs (a stand-in for
+    the FEM cord). No elasticity plugin: the browser's WebAssembly client crashes on plugins.
+    MuJoCo contacts soften with the lighter body's mass, so the light cord gets two helpers: 3x a real
+    cord's density (a hard-pulled ring no longer squeezes it through itself or the post) and joint
+    armature, which adds inertia but no weight (a bead rolling on the table no longer pushes the
+    cord out through its bore)."""
+    vertices, radius = _cord_vertices(scene), scene.extras["layout"].rope_radius_m
+    tip = np.linalg.norm(vertices[-1]-vertices[-2])  # cordB_last's frame starts one segment before the end
     cable = f"""<composite prefix="cord" type="cable" vertex="{' '.join(map(str, vertices.ravel()))}" initial="free">
-      <joint kind="main" damping=".002"/>
+      <joint kind="main" damping=".002" armature="1e-4"/>
       <geom type="capsule" size="{radius}" density="3300" rgba=".9 .88 .8 1"/>
     </composite>"""
-    equality = """<equality>
+    equality = f"""<contact>
+    <exclude body1="cordB_first" body2="disc_left"/>
+    <exclude body1="cordB_last" body2="disc_right"/>
+  </contact>
+  <equality>
     <connect body1="cordB_first" body2="disc_left" anchor="0 0 0"/>
-    <connect body1="cordB_last" body2="disc_right" anchor="0 0 0"/>
+    <connect body1="cordB_last" body2="disc_right" anchor="{tip} 0 0"/>
   </equality>"""
     return cable, equality
 

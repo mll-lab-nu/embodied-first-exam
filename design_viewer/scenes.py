@@ -144,12 +144,9 @@ def _slotted(name, task, folder):
                        [("capsule", p, q, layout.ring_tube_radius_m) for p, q in zip(loop, np.roll(loop, -1, axis=0))],
                        centre, identity, (.9, .5, .2, 1), density=7800.))
     for side, index in (("left", 2), ("right", 15)):
-        mesh = parts[f"bead_{side}"]
-        c = mesh.bounds.mean(0)
-        k = np.argmin(np.linalg.norm(cord-layout.cord_controls()[index], axis=1))
-        bodies.append(Body(f"bead_{side}", mesh.copy().apply_translation(-c),
-                           [h.apply_translation(-c) for h in _sector_hulls(mesh, cord[k+1]-cord[k-1], c)],
-                           c, identity, light, density=700.))
+        k = np.argmin(np.linalg.norm(cord-layout.cord_controls()[index], axis=1))  # as make_meshes places it
+        bodies.append(Body(f"bead_{side}", parts[f"bead_{side}"].copy().apply_translation(-cord[k]),
+                           _bead_sectors(layout, cord[k+1]-cord[k-1]), cord[k], identity, light, density=700.))
         disc = parts[f"disc_{side}"]
         c = disc.bounds.mean(0)
         bodies.append(Body(f"disc_{side}", disc.copy().apply_translation(-c), [disc.convex_hull.apply_translation(-c)],
@@ -175,17 +172,19 @@ def _post_pieces(layout, arc_levels=9):
     return pieces
 
 
-def _sector_hulls(mesh, axis, centre, sectors=12):
-    """Bead as convex sectors around its bore, so the bore stays open for the cord."""
+def _bead_sectors(layout, axis, sectors=12):
+    """Bead (a sphere with an axial bore) as convex sectors around the bore, built from the shape
+    itself so neighbouring sectors share their faces: the bore stays open for the cord and no gap
+    lets the cord slip out sideways (sectors cut from mesh vertices left 5.6 deg gaps)."""
+    big, bore = layout.bead_radius_m, layout.bead_hole_radius_m
     axis = axis/np.linalg.norm(axis)
     ref = np.cross(axis, [1, 0, 0] if abs(axis[0]) < .9 else [0, 1, 0])
     ref /= np.linalg.norm(ref)
     other = np.cross(axis, ref)
-    v = mesh.vertices-centre
-    angle = np.arctan2(v@other, v@ref) % (2*np.pi)
-    width = 2*np.pi/sectors
+    zs = np.linspace(-1, 1, 9)*np.sqrt(big**2-bore**2)
     hulls = []
     for k in range(sectors):
-        d = (angle-k*width) % (2*np.pi)
-        hulls.append(trimesh.convex.convex_hull(mesh.vertices[(d <= width+1e-3) | (d >= 2*np.pi-1e-3)]))
+        points = [z*axis+r*(np.cos(a)*ref+np.sin(a)*other)
+                  for a in np.linspace(k, k+1, 4)*2*np.pi/sectors for z in zs for r in (bore, np.sqrt(big**2-z**2))]
+        hulls.append(trimesh.convex.convex_hull(np.array(points)))
     return hulls

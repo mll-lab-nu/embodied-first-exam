@@ -1,12 +1,17 @@
 """Behaviour checks (CPU, no browser). From the worktree root: python -m pytest design_viewer -q
 The first run builds the scene cache (hedgehog easy ~25 s)."""
+from pathlib import Path
+import xml.etree.ElementTree as ET
+
 import mujoco
 import numpy as np
 import pytest
+from scipy.spatial.transform import Rotation
+import trimesh
 
 from design_viewer import model as models
 from design_viewer import scenes, view
-from topogym.config.registry import variation_catalog
+from topogym.config.registry import task_definition, variation_catalog
 
 
 def _start(name):
@@ -31,6 +36,30 @@ def test_lists_every_integrated_variation():
         for row in variation_catalog(task):
             if row["status"] == "integrated":
                 assert row["variation_id"] in names
+
+
+@pytest.mark.parametrize("name", ["hedgehog_in_cage_medium", "horseshoe_ring_easy", "slotted_post_ring_easy"])
+def test_scene_matches_the_task_declaration(name, tmp_path):
+    """Same rigid bodies as the task's own declare(): names, fixed flags, posed mesh bounds."""
+    task = task_definition(next(t for t in scenes.TASKS if name.startswith(t)), name)(None, seed=0)
+    spec = task.declare(tmp_path, table_height_m=0.)
+    offset = np.r_[task.config["center_xy_m"], 0.]
+    mine = {b.name: b for b in scenes.build(name).bodies}
+    for e in spec.entities:
+        if e.physics_model != "rigid":
+            continue  # the slotted cord: same centerline, see the bead test
+        b = mine.pop(e.name.removeprefix("hedgehog_"))  # hedgehog_mount / _cage / _ball here: mount / cage / ball
+        assert b.free != e.fixed, e.name
+        if e.morph_type == "box":
+            theirs = trimesh.creation.box(extents=e.morph_options["size"]).vertices
+        else:
+            urdf = Path(e.asset_path)
+            theirs = trimesh.load(urdf.parent/next(m.get("filename") for v in ET.parse(urdf).getroot().iter("visual")
+                                                   for m in v.iter("mesh")), force="mesh", process=False).vertices
+        theirs = Rotation.from_quat(np.asarray(e.quaternion_wxyz)[[1, 2, 3, 0]]).apply(theirs)+e.position_m
+        ours = Rotation.from_quat(b.quat[[1, 2, 3, 0]]).apply(b.visual.vertices)+b.pos+offset
+        assert np.abs(theirs.min(0)-ours.min(0)).max() < 1e-4 and np.abs(theirs.max(0)-ours.max(0)).max() < 1e-4, e.name
+    assert not mine
 
 
 def test_hedgehog_cage_stands_on_its_mount():
@@ -80,6 +109,31 @@ def test_no_scene_needs_an_engine_plugin():
     """The browser's WebAssembly client crashes on plugins ("invalid plugin slot"), stuck at PARSING."""
     for name in ("hedgehog_in_cage_medium", "horseshoe_ring_easy", "slotted_post_ring_easy"):
         assert _start(name)[0].nplugin == 0, name
+
+
+def _cord(m, d):
+    """Cable vertices: every segment start plus the end of the last segment."""
+    ids = [i for i in range(m.nbody) if m.body(i).name.startswith("cordB")]
+    last = m.body("cordB_last").id
+    tip = d.xpos[last]+d.xmat[last].reshape(3, 3)@[m.geom_size[m.body_geomadr[last]][1]*2, 0, 0]
+    return np.vstack([d.xpos[ids], tip])
+
+
+def test_slotted_beads_stay_on_the_cord_and_the_cord_ends_stay_on_the_discs():
+    """The task's FEM cord ends in stop knots, so the beads cannot slide off its ends."""
+    m, d = _start("slotted_post_ring_easy")
+    layout = scenes.build("slotted_post_ring_easy").extras["layout"]
+    start = _cord(m, d)
+    _run(m, d, 5.)
+    p = _cord(m, d)
+    a, b = p[:-1], p[1:]
+    for side in ("left", "right"):
+        c = d.xpos[m.body(f"bead_{side}").id]
+        t = np.clip(np.einsum("ij,ij->i", c-a, b-a)/np.einsum("ij,ij->i", b-a, b-a), 0, 1)
+        assert np.linalg.norm(a+t[:, None]*(b-a)-c, axis=1).min() < layout.bead_hole_radius_m, side
+    for end, disc in ((0, "disc_left"), (-1, "disc_right")):  # each end moves with its disc
+        moved = d.xpos[m.body(disc).id]-scenes.build("slotted_post_ring_easy").body(disc).pos
+        assert np.linalg.norm(p[end]-start[end]-moved) < 2e-3, disc
 
 
 def test_slotted_cord_settles_through_the_slot_once():
