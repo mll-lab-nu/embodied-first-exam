@@ -432,6 +432,18 @@
       "sha256": "e56be350823f4df0ebbe32e87b90550b61c5180d0f83928ffe1d0d55652f860c",
       "source": "prepared gathered_scene_v1 hard, seed 0; scope=scene_layout",
       "license": null
+    },
+    "variations/horseshoe_ring/below_easy_very_easy_settled_poses.json": {
+      "path": "variations/horseshoe_ring/below_easy_very_easy_settled_poses.json",
+      "sha256": "002c156d3f9a0c6a909926bbbcd1022725bc25061f189cc107d712bf55c41e5e",
+      "source": "runs/below_easy/horseshoe_design/ve_assembled/settled_poses.json (topogym/planning/horseshoe_ring/below_easy_witness.py checks it)",
+      "license": null
+    },
+    "variations/horseshoe_ring/below_easy_easier_settled_poses.json": {
+      "path": "variations/horseshoe_ring/below_easy_easier_settled_poses.json",
+      "sha256": "a4031241364fba3a7143e03ca1541d12aaaeb19723b74f35e06d899619fae53c",
+      "source": "runs/below_easy/horseshoe_design/ea_assembled/settled_poses.json (topogym/planning/horseshoe_ring/below_easy_witness.py checks it)",
+      "license": null
     }
   }
 }
