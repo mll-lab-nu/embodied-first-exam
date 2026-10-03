@@ -65,7 +65,8 @@ def main() -> int:
     ap.add_argument("--no-video", action="store_true")
     a = ap.parse_args()
     task, trial, out = Path(a.task), Path(a.trial), Path(a.out)
-    meta = tomllib.loads((task / "task.toml").read_text())["metadata"]
+    toml = tomllib.loads((task / "task.toml").read_text())
+    meta, name = toml["metadata"], toml["task"]["name"].split("/")[-1]   # the mount point's name says nothing
     family, standard = meta["family"], (task / "environment/sim").is_dir()
     if meta.get("tooling_version") != "15":
         sys.exit(f"{task}: tooling v{meta.get('tooling_version')}, not v15")
@@ -98,9 +99,9 @@ def main() -> int:
         if not (data.is_dir() and log.is_dir() and os.path.samefile(data, out / "data")):
             sys.exit("mount <out>/data at /data and <out>/verifier at /logs/verifier (the standard graders' paths)")
         same_instance(trial / "trajectory.npz", task / "environment/sim/instance.json")
-        for name in ("trajectory.npz", "episode.jsonl"):
-            if (trial / name).is_file():
-                shutil.copy(trial / name, data / name)
+        for f in ("trajectory.npz", "episode.jsonl"):
+            if (trial / f).is_file():
+                shutil.copy(trial / f, data / f)
         live = {k: final[k] for k in LIVE_KEYS if k in final}
         live.update(infra_error=int(final.get("reason") in INFRA_REASONS),
                     simulator_instability=final.get("reason") == "simulator_instability")
@@ -116,12 +117,12 @@ def main() -> int:
         reward = load(log / "reward.json")
         grading = [(load(data / "final.json") or {}).get("replay_grading")]
     record = dict(script="scripts/topogym_regrade_v15.py", tooling_version="15", family=family,
-                  mode="standard" if standard else "privileged", task=task.name, trial=str(trial),
+                  mode="standard" if standard else "privileged", task=name, trial=str(trial),
                   original_reward=original, reward=reward, grading=grading)
     (out / "regrade.json").write_text(json.dumps(record, indent=1))
     keys = ("success", "live_success", "replay_success", "all_success", "replay_hold_steps", "replay_tolerance_needed",
             "grader_error", "infra_error")
-    print(json.dumps(dict(task=task.name, v14={k: (original or {}).get(k) for k in keys if k in (original or {})},
+    print(json.dumps(dict(task=name, v14={k: (original or {}).get(k) for k in keys if k in (original or {})},
                           v15={k: (reward or {}).get(k) for k in keys if k in (reward or {})})), flush=True)
     return 0
 
