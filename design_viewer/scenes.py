@@ -105,13 +105,11 @@ def _urdf_collision(folder, name):
 
 def _horseshoe(name, task, folder):
     from topogym.assets.geometry.horseshoe_ring import HorseshoeAssembly
-    from topogym.assets.variation_resources import read_json
-    template = read_json(task.template_resource) if task.template_resource else None
-    assembly = HorseshoeAssembly(template=template, scale=float(task.config["scale"]))
+    # The task's own accessors: a tier may build its template in code and carry its own rest poses.
+    assembly = HorseshoeAssembly(template=task.template(), scale=float(task.config["scale"]))
     origins = {b.name: b.visual.center_mass for b in assembly.bodies}
-    if task.layout_resource:
-        poses = read_json(task.layout_resource)["poses"]  # settled rest poses
-    else:  # authored layout lowered onto the table, as common.py does before settling
+    poses = task.rest_poses()  # settled rest poses
+    if poses is None:  # authored layout lowered onto the table, as common.py does before settling
         lift = float(task.config["initial_floor_clearance_m"])-min(b.visual.vertices[:, 2].min() for b in assembly.bodies)
         poses = {n: {"position_m": o+[0, 0, lift], "quaternion_wxyz": [1, 0, 0, 0]} for n, o in origins.items()}
     bodies = []

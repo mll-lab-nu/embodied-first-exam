@@ -38,7 +38,8 @@ def test_lists_every_integrated_variation():
                 assert row["variation_id"] in names
 
 
-@pytest.mark.parametrize("name", ["hedgehog_in_cage_medium", "horseshoe_ring_easy", "slotted_post_ring_easy"])
+@pytest.mark.parametrize("name", ["hedgehog_in_cage_medium", "horseshoe_ring_easy", "horseshoe_ring_very_easy",
+                                  "slotted_post_ring_easy"])
 def test_scene_matches_the_task_declaration(name, tmp_path):
     """Same rigid bodies as the task's own declare(): names, fixed flags, posed mesh bounds."""
     task = task_definition(next(t for t in scenes.TASKS if name.startswith(t)), name)(None, seed=0)
