@@ -76,6 +76,12 @@ def test_scene_starts_without_penetration(name, settled):
         assert np.linalg.norm(d.xpos-start, axis=1).max() < 2e-3
 
 
+def test_no_scene_needs_an_engine_plugin():
+    """The browser's WebAssembly client crashes on plugins ("invalid plugin slot"), stuck at PARSING."""
+    for name in ("hedgehog_in_cage_medium", "horseshoe_ring_easy", "slotted_post_ring_easy"):
+        assert _start(name)[0].nplugin == 0, name
+
+
 def test_slotted_cord_settles_through_the_slot_once():
     m, d = _start("slotted_post_ring_easy")
     layout = scenes.build("slotted_post_ring_easy").extras["layout"]

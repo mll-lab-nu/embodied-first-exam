@@ -48,7 +48,6 @@ def _base_xml(scene):
        barely move the horseshoe ring that carries the 1 kg assembly: 1.4 mm of a 10 cm pull,
        7 deg of a 45 deg turn; these give 69 mm and 36 deg with <3 mm contact penetration. -->
   <visual><map stiffness="1000" stiffnessrot="5000"/></visual>
-  {'<extension><plugin plugin="mujoco.elasticity.cable"/></extension>' if cable else ''}
   <default><geom friction=".3" condim="3" solref=".004 1"/></default>
   <worldbody>
     <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
@@ -60,15 +59,13 @@ def _base_xml(scene):
 
 
 def _cable(scene, n=64):
-    """MuJoCo cable for the slotted cord, both ends tied to the discs (a stand-in for the FEM cord)."""
+    """Slotted cord as a chain of capsules on ball joints, both ends tied to the discs (a stand-in for
+    the FEM cord). No elasticity plugin: the browser's WebAssembly client crashes on plugins."""
     cord, radius = scene.extras["cord"], scene.extras["layout"].rope_radius_m
     arc = np.r_[0, np.cumsum(np.linalg.norm(np.diff(cord, axis=0), axis=1))]
     s = np.linspace(0, arc[-1], n)
     vertices = np.column_stack([np.interp(s, arc, cord[:, i]) for i in range(3)])
     cable = f"""<composite prefix="cord" type="cable" vertex="{' '.join(map(str, vertices.ravel()))}" initial="free">
-      <plugin plugin="mujoco.elasticity.cable">
-        <config key="twist" value="1e6"/><config key="bend" value="2e5"/><config key="vmax" value="0"/>
-      </plugin>
       <joint kind="main" damping=".002"/>
       <geom type="capsule" size="{radius}" density="1100" rgba=".9 .88 .8 1"/>
     </composite>"""
