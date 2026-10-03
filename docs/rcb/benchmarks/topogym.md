@@ -7,8 +7,22 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-03)
-The 78 tier dirs: tooling v14, `eai-standard/2.3`, `rcb-topogym:0.2.12-cu128`; Jianwen's simpler variants
+The 78 tier dirs: tooling v15, `eai-standard/2.3`, `rcb-topogym:0.2.12-cu128`; Jianwen's simpler variants
 (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v15 (2026-10-03) = v14 + live-strict, replay-tolerant grading for the six families whose physics runs on the GPU
+  (blanket_flatten, knot_untying, rope_threading, slotted_post_ring, orbits, lock_picking; the user's decision, 2026-10-03)
+  and blanket_flatten's live coverage threshold 0.95 (was 0.90: a folded corner passed). Image unchanged (0.2.12). The
+  graders' replays run the rows with the instance's thresholds, then hold the final targets for up to 2 s with small replay
+  tolerances on continuous thresholds; a tolerant replay only confirms a strict success (standard: the live one; a live
+  failure is final; privileged: one replay must reach the strict goal within the trajectory's rows). Details in Grading
+  replays below; the live episode and the agent's own Session are unchanged. The texts state all of it.
+  - blanket_flatten's 3 instances were made again (`make-instance --task-parameters`: `minimum_coverage_ratio` 0.95). Their
+    frozen cloth state is bound to the scene identity, which includes every task parameter, so the archive was re-keyed
+    (`identity.parameters.minimum_coverage_ratio` and `identity_sha256` updated, an `identity_rekey` record added,
+    `arrays.npz` byte-identical) instead of prepared again (another GPU preparation would give another cloth). Against
+    v14: `soft_state`, `objects`, `asset_identity` identical; `effective_task_parameters` and `public_goal` differ only in
+    the threshold (95 %); strict fresh-process smokes pass (`instance_matches`; `instance_exact` 0, as for the v14 blanket
+    instances). The other 36 instances are v14's.
 - v14 (2026-10-03) = Jianwen's v13 (e49b116e3) + the rules of the 2026-10-03 rules audit + a PBD cloth-contact fix, on image
   0.2.12 (0.2.11's stack with v13's `topogym/`: the IPC articulation-reference fix and v13's task changes). The 10 instances
   those task changes touch were made again (knot_untying and rope_threading with a stored IPC settled state,
@@ -115,8 +129,8 @@ trial (the protocol's default is 100M / 10M, D10), applied after the run.
 
 ## Tooling
 Thin wrappers of the low-level action only (IK and joint moves, gripper, hold) plus state, recording, replay and
-rendering; no task-level skills. The 78 tier packages and new packages use tooling v14
-(`[metadata].tooling_version = "14"`; v13 is frozen in the inventory with its image 0.2.11):
+rendering; no task-level skills. The 78 tier packages and new packages use tooling v15
+(`[metadata].tooling_version = "15"`; v14 is frozen in the inventory with its image 0.2.12):
 `harbor_templates/topogym/common/rcb_topogym.py`, byte-identical in every copy (`ci_checks/check-topogym-tooling.py`, run
 by `check-tooling-identity.sh`). v4 (Jianwen, 6a7c755b) folded the two family variants of the earlier render into it:
 - a gripper hold keeps the native target when the commanded width round-trips (the width table drops the closed-end
@@ -200,14 +214,70 @@ outcome of replayed agent trajectories, deviation against the baseline's own 1e-
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from
   `tests/instance.json` twice in a fresh process and renders `replay.mp4` **during the second replay**. Success: both
-  replays meet the task's predicate. The physics runs on the GPU and is not bit-deterministic: `deterministic` is
+  replays meet the task's predicate (grading replays since v15: see Grading replays). The physics runs on the GPU and is not bit-deterministic: `deterministic` is
   reported, not required; the rebuilt frozen scene must match (`instance_ok`, v5).
 - **Standard.** Pass 1 is the live episode in the `sim` sidecar. When it ends the service writes `trajectory.npz` and
   `episode.json` (live result, final-state hash, `live_rows`: the rows the live episode executed). The collect hook
   `environment/sim/finalize.sh` sends SIGUSR1, waits until the service has exited (its GPU memory is free), then replays
-  the live rows **once** in a fresh process (`environment/sim/replay.py`), rendering `replay.mp4` during that replay, and
-  writes `final.json`. The verifier (shared client image, no network) grades `final.json`: success = live ∧ replay; a
+  the live rows **once** in a fresh process (`environment/sim/replay.py`, a grading replay since v15), rendering
+  `replay.mp4` during that replay, and writes `final.json`. The verifier (shared client image, no network) grades `final.json`: success = live ∧ replay; a
   replay without a result is a `grader_error`, not the agent's 0.
+
+## Grading replays (tooling v15)
+The physics of six families runs on the GPU, which is not bit-deterministic: blanket_flatten (PBD cloth), knot_untying,
+rope_threading, slotted_post_ring, orbits (IPC FEM rope / cord) and lock_picking (GPU float32 rigid bodies). A genuine
+live success could miss its own fresh replay: blanket medium standard trial ihy7Nru (v14) succeeded live at row 3089 and
+the grader's replay of those rows did not (a speed spike restarted its confirmation at the last row). The user's
+decisions (2026-10-03): live-strict, replay-tolerant grading, and a tolerant replay may only confirm a strict success,
+never turn a failure into one.
+- What the agent sees is unchanged: the live episode (standard) and its own Session (privileged) use the instance's
+  thresholds.
+- A grading replay (`Session.replay(actions, physics_steps=..., grading=True)`: the standard collect hook's
+  `environment/sim/replay.py` after a live success, both replays of the privileged `tests/grade.py`, the `rcb_topogym.py
+  replay` CLI) of one of these families (`rcb_topogym.REPLAY_TOLERANCES`)
+  1. runs the trajectory's rows with the instance's own thresholds: a success there is a strict success
+     (`strict_success`, `success_row`);
+  2. if the episode has not ended after the last row, holds the final targets for up to `GRADING_HOLD_S` = 2 s (80
+     control steps), stopping at the first success or failure, so a confirmation that starts a few ticks later than live
+     can still complete (a confirmation running at the last row carries on); during this hold only, the task's predicate
+     uses the replay tolerances below: continuous thresholds, each one of the task's own parameters, loosened for the hold
+     and restored after it. Binary / topological conditions, failure predicates and the length of every confirmation
+     window are never changed.
+- Standard: success = the live success (strict) AND the replay's success AND the existing conditions; a live failure is
+  final whatever a replay shows, and the collect hook then replays plainly (instance thresholds, no hold).
+- Privileged: success = both replays succeed AND at least one of them is a strict success within the trajectory's own
+  rows (the trajectory itself reached the goal at least once): `strict_goal_reached` / `strict_goal_row`, verdict.json
+  `evidence.strict_goal` (which replay, which row). A recording stops at the agent's own success, so the texts tell the
+  agent it may append copies of the final row for a replay whose confirmation ends a few ticks later.
+- Evidence: the replay's status carries a `grading` record (`revision`, `rows`, `strict_success`, `success_row`,
+  `hold_steps`, `hold_limit_steps`, `success_in_hold`, per relaxed threshold its `live` and `replay` values and, over the
+  confirmation window that ended in success, `window_worst` and `live_held`; `tolerance_needed` = the pass needed a
+  slack). Privileged: `verdict.json` `evidence.replays[].grading`; standard: `replay.verdict.json` and `final.json`
+  `replay_grading` (+ `replay_grading_policy`: false after a live failure). Both graders add the numeric reward fields
+  `replay_hold_steps` (the most hold steps a replay used) and `replay_tolerance_needed` (0/1).
+- The CPU families are not in the table: their grading replays are plain replays (bit-exact; v14 and v15 tooling give the
+  same verdicts and state hashes), and a plain replay's success is a strict success.
+- The instruction texts (grader details) and READMEs of the six families state all of it; agents in privileged mode can
+  call `s.replay(actions, grading=True)` to check a trajectory the way the verifier will.
+
+### Replay tolerances and their evidence
+Rule: a slack only where a continuous threshold's quantity shows a material replay-to-replay spread at the same control
+step; slack = 2 x the largest measured spread, rounded up. Spreads below 1 % of a threshold get none; branch-like
+divergence (another contact outcome) is not noise a tolerance can absorb, so it gets none either (the hold still applies).
+Lab, rcb-topogym:0.2.12-cu128, GPUs 5-7 under the v14 sweep's load, 2026-10-03; probes in
+`/DATA2/qineng/rcb/topogym_v1/v15/out/` (`probe_spread.py`: R in-process replays + 80 hold steps, every control step's
+metrics, margins against the live thresholds, positions).
+
+| family | threshold (task parameter) | live | grading hold | measured spread (trajectory, replays) |
+|---|---|---|---|---|
+| blanket_flatten | coverage (`minimum_coverage_ratio`) | 0.95 | 0.93 | the user's numbers. Medium trial ihy7Nru (3089 rows), 3 replays: coverage at the last rows 0.928-0.931 / 0.952-0.956, a third replay succeeded at row 2868 at 0.943: 2.5 points between replays of one long trajectory. Short scripted operations (blanket fix notes): at most 0.7 points. So the 2-point band does not cover every long trajectory (the user decides) |
+| blanket_flatten | particle speed 0.03 m/s (`maximum_speed_m_s`), drift 3 mm, height, stretch | unchanged | unchanged | not relaxed (the user's decision covers the coverage only). The speed gate reads PBD's last-substep velocities: in ihy7Nru's replays spikes of 0.044-0.072 m/s restarted the confirmation; one replay never confirmed within the 2 s hold (coverage 0.958) |
+| knot_untying | rope speed (`terminal.maximum_speed_m_s`: quiet and final settling) | 1 mm/s | 1.25 mm/s | v14 success WWfaVD9 (365 rows), 2 replays, both strict successes at row 365: the window's speeds 0.43-0.90 mm/s, same-step spread up to 0.12 mm/s (just after the release); rope vertices within 11.7 um |
+| knot_untying | planar clearance 8 mm, table band (z), release clearance 5 mm, drift 1 mm | unchanged | unchanged | same replays: 16.4 mm (spread 1.5e-8 m); margins 2.8 / 1.19 mm (< 1e-8 m); 0.7 um; 7e-8 m |
+| rope_threading | rope speed 1 mm/s, crossing aperture (0.1 mm margin), thickness planes | unchanged | unchanged | no trajectory on the v14 instances yet (the sweep's rope trials still ran): no slack until a measurement; its rope uses libuipc's default friction smoothing (10 mm/s, knot: 1 mm/s), so the knot's numbers do not carry over |
+| slotted_post_ring | ring speed 1 mm/s / 0.02 rad/s, containment (1 mm boundary, z band), separator | unchanged | unchanged | v12 agent ULq3ATD (92 rows + hold), 3 replays: ring position 3 um, speeds 6e-6 m/s / 6e-5 rad/s (< 1 %); the cord, beads and discs (remainder) diverge by 0.3-8 mm (branch-like) |
+| orbits | target speed 1 mm/s / 0.02 rad/s (cord and handle), containment, separator | unchanged | unchanged | v12 agent HHnLEzf (154 rows + 80 hold), 1 replay (the second was stopped by the RAM guard): the cord crept at 1.9-3.3 mm/s through the hold (above the limit, not near it); handle 0.9-2.1e-3 rad/s; separator and z margins constant. No spread measured: no slack |
+| lock_picking | shaft-bore excess 10 um, insertion margin 1 mm, slot clearances | unchanged | unchanged | v12 agents oRtMyhk (1178 rows) / JPLHPHT (1285 rows), 3 replays each: bit-identical up to control step 543 / 476, then a contact branch (32-42 um at onset, 1.2 / 5.7 mm key position and 0.27 rad rotor angle at the end); no success trajectory exists to measure at the goal |
 
 ## Grading GPU
 - Privileged: the verifier is its own container; on a host with a spare GPU (lab) the host's copy of

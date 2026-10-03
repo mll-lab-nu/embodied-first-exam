@@ -8,6 +8,12 @@ human-viewable replay video /logs/verifier/replay.mp4 (all cameras tiled) plus r
 the `--repeat` (2) replays in this fresh process: two passes in all, no separate video replay. TopoGym's physics runs on
 the GPU, whose contact solver is not bit-exact (the rule of robot_coding_bench's GPU backend): every replay must complete
 the task. Initial state and runtime binding must match exactly; final-state determinism is reported separately.
+The replays are grading replays (rcb_topogym.Session.replay(grading=True), tooling v15): for the GPU families the rows run
+with the instance's own thresholds and, if the episode has not ended after the last row, the final targets are held for up
+to 2 s with the replay tolerances (rcb_topogym.REPLAY_TOLERANCES). A tolerant pass only confirms: success also needs one
+replay that met the instance's own (strict) goal within the trajectory's rows (`strict_goal_reached`, `strict_goal_row`;
+verdict.json `evidence.strict_goal`). Each replay's "grading" record is in verdict.json; `replay_hold_steps` /
+`replay_tolerance_needed` summarize them.
 """
 from __future__ import annotations
 import argparse, json, os, sys, time, traceback
@@ -55,7 +61,7 @@ def main() -> int:
     if not os.path.isfile(a.traj):
         write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, **cost}); return 0
     s = None
-    from rcb_topogym import Session, InvalidTrajectory, InstanceMismatch, load_trajectory, atomic_json
+    from rcb_topogym import Session, InvalidTrajectory, InstanceMismatch, load_trajectory, atomic_json, strict_goal
     try:
         inst = json.load(open(a.instance))  # trusted input failure remains infrastructure failure
         if type(inst.get("action_dim")) is not int or not 0 < inst["action_dim"] <= 1024:
@@ -80,25 +86,32 @@ def main() -> int:
                 except Exception as exc:
                     video_error = repr(exc)[:200]
             # Physics errors must not be reclassified as video errors or retried away.
-            outs.append(s.replay(acts))
+            outs.append(s.replay(acts, grading=True))
         all_success = all(o["success"] for o in outs)
         deterministic = len({o["state_sha"] for o in outs}) == 1
         # A replay that ended in a numerically unstable simulation (rcb_topogym.SIMULATOR_INSTABILITY) is an infrastructure
         # failure: never success, never the task's failure (the evidence is in verdict.json's replays[].instability).
         unstable = any(o.get("episode_end") == "simulator_instability" for o in outs)
-        ok = all_success and bool(s.instance_matches) and not unstable
+        # tolerant replays only confirm: one of them must have met the strict goal within the trajectory's own rows
+        goal = strict_goal(outs)
+        ok = all_success and bool(s.instance_matches) and not unstable and goal is not None
+        grading = [o.get("grading") or {} for o in outs]
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": 1,
                "infra_error": int(unstable), "simulator_instability": int(unstable),
                "instance_ok": int(bool(s.instance_matches)), "instance_exact": int(bool(s.instance_exact)),
                "runtime_binding_ok": 1,
-               "n_actions": int(outs[-1]["sim_steps"]), "submitted_actions": int(len(acts)),
+               "n_actions": int(grading[-1].get("rows", outs[-1]["sim_steps"])), "submitted_actions": int(len(acts)),
                "sim_steps": int(outs[-1]["sim_steps"]), "physics_steps": int(outs[-1].get("physics_steps", 0)),
                "sim_time_s": float(outs[-1].get("sim_time_s", 0)), "final_reward": float(outs[-1].get("progress") or 0.0),
-               "replay_wall_s": round(time.time() - t0, 1), "replays": len(outs), "grader_error": 0, "video_rendered": 0, **cost}
+               "replay_wall_s": round(time.time() - t0, 1), "replays": len(outs), "grader_error": 0, "video_rendered": 0,
+               "replay_hold_steps": max(int(g.get("hold_steps", 0)) for g in grading),
+               "replay_tolerance_needed": int(any(g.get("tolerance_needed") for g in grading)),
+               "strict_goal_reached": int(goal is not None), "strict_goal_row": goal[1] if goal else 0, **cost}
         import hashlib, uuid
         from pathlib import Path
         evidence = dict(commit_id=uuid.uuid4().hex, replays=outs,
                         runtime_binding=s.runtime_binding,
+                        strict_goal=dict(replay=goal[0], row=goal[1]) if goal else None,
                         trajectory_sha256=hashlib.sha256(Path(a.traj).read_bytes()).hexdigest(),
                         instance_sha256=hashlib.sha256(Path(a.instance).read_bytes()).hexdigest())
         write(ok, out, evidence=evidence)

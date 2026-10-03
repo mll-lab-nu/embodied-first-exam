@@ -181,7 +181,7 @@ from types import SimpleNamespace
 sys.path.insert(0, sys.argv[1] + '/harbor_templates/topogym/common')
 import rcb_topogym as t
 n = [0]
-def replay(a):
+def replay(a, grading=False):
  n[0] += 1
  return dict(success=True, state_sha='s', sim_steps=1, physics_steps=3, sim_time_s=.0075)
 def stop():

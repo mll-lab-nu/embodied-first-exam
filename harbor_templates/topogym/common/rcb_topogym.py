@@ -38,6 +38,7 @@ CLI
   python rcb_topogym.py make-instance --task cube_pick_place --eval-index 0 --out instance.json
   python rcb_topogym.py run-oracle    --task cube_pick_place --instance instance.json --code oracle.py --out traj.npz
   python rcb_topogym.py replay        --task cube_pick_place --instance instance.json --traj traj.npz [--repeat 2] [--video replay.mp4]
+                                      # as the graders replay (Session.replay grading=True)
   python rcb_topogym.py render        --task cube_pick_place --instance instance.json --traj traj.npz --out replay.mp4 [--every 2]
   python rcb_topogym.py selftest      --task cube_pick_place --eval-index 0 --code oracle.py --out-dir /tmp/selftest   # 3 fresh processes
   python rcb_topogym.py describe      --task cube_pick_place --instance instance.json   # cameras, robot, predicate (task generator)
@@ -54,6 +55,7 @@ Python (what the agent gets)
   s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}
   s.safety()                         # contact depths / rope volume / table-guard stops since the last call, against the limits
   s.replay(actions)                  # resets, replays open-loop, returns status -> self-check
+  s.replay(actions, grading=True)    # as the graders replay: GPU families hold up to 2 s, then replay tolerances
   s.save_trajectory(actions, "/app/output/trajectory.npz")
 """
 from __future__ import annotations
@@ -1903,6 +1905,143 @@ def _guard_particle_speeds(task, on_trip: Callable[[dict], None]) -> bool:
 BINDING_API = 1
 
 
+# --------------------------------------------------------------------------- grading replays (tooling v15, 2026-10-03)
+# The user's decisions (2026-10-03): live-strict, replay-tolerant grading for the families whose physics runs on the GPU,
+# which is not bit-deterministic (PBD cloth, the IPC FEM ropes and cords, lock_picking's GPU float32 rigid bodies), and a
+# tolerant replay may only CONFIRM a strict success, never turn a failure into one. A genuine live success could miss
+# its own fresh replay: blanket medium standard trial ihy7Nru succeeded live at row 3089 and the grader's replay of those
+# rows did not (a speed spike restarted its confirmation at the last row). What the agent sees (the live episode, its own
+# Session) is unchanged. A grading replay (Session.replay(..., grading=True): environment/sim/replay.py after a live
+# success, both replays of the privileged tests/grade.py, the `replay` CLI) of one of these families
+#   1. re-executes the trajectory's rows with the instance's own thresholds: a success within the rows is a STRICT
+#      success (the grading record's strict_success and success_row);
+#   2. if the episode has not ended after the last row, holds the final targets for up to GRADING_HOLD_S of simulated
+#      time, stopping at the first success or failure, so a confirmation window that starts a few ticks later than live
+#      can still complete; during this hold only, the task's predicate uses REPLAY_TOLERANCES: continuous thresholds,
+#      each one of the task's own parameters loosened by a small slack and restored after the replay. A confirmation
+#      window already running at the last row carries on. Binary and topological conditions, failure predicates and the
+#      length of every confirmation window are never changed.
+# The graders combine it: standard = the live success (strict) AND this replay's success (a live failure stays final:
+# finalize.sh then replays plainly); privileged = both replays succeed AND at least one of them is a strict success within
+# the agent's own rows (the trajectory itself reached the goal at least once). The record (_GradingReplay.record) carries
+# the hold used, every relaxed threshold with its live and replay values and, over the confirmation window that ended in
+# success, the worst measured value and whether it stayed within the live threshold (tolerance_needed: the pass needed
+# the slack). The CPU families are not in the table: their grading replays are plain replays (bit-exact, the same
+# verdicts and state hashes); a plain replay's success is a strict success.
+GRADING_REVISION = "replay_tolerance_2026-10-03b"
+GRADING_HOLD_S = 2.0
+# family -> {threshold: (task parameter, the side that passes, slack in the parameter's unit, towards passing)}.
+# blanket's coverage: the user's numbers (live 0.95, replay 0.93). knot's rope speed: 2 x the largest replay-to-replay spread
+# measured in a success's confirmation window (0.12 mm/s, lab 2026-10-03). The other families: no measured spread that a
+# small slack would absorb (docs/rcb/benchmarks/topogym.md, "Grading replays"), so the hold only.
+REPLAY_TOLERANCES: dict[str, dict[str, tuple[str, str, float]]] = {
+    "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.02)},
+    "knot_untying": {"rope_speed": ("terminal.maximum_speed_m_s", "at_most", .00025)},
+    "rope_threading": {},
+    "slotted_post_ring": {},
+    "orbits": {},
+    "lock_picking": {},
+}
+# threshold -> the quantity the task compares with it at a tick, from the tick's world state and the task's metrics
+_GRADING_VALUES: dict[str, Callable] = {
+    "coverage": lambda task, state, metrics: metrics.get("coverage_ratio"),
+    "rope_speed": lambda task, state, metrics: metrics.get("maximum_speed_m_s"),
+}
+
+
+def _parameter(config, path):
+    for key in path.split("."):
+        config = config[key]
+    return config
+
+
+def _set_parameter(config, path, value) -> None:
+    *head, last = path.split(".")
+    for key in head:
+        config = config[key]
+    config[last] = value
+
+
+class _GradingReplay:
+    """The grading-replay policy of one replay (the block comment above): a recorder of the confirmation window on the
+    Session's task from the first row on, the hold after the rows with the replay thresholds, and the grading record;
+    remove() restores the task's own thresholds and update."""
+
+    def __init__(self, session):
+        self.s, self.task = session, session.env._task
+        self.thresholds = {}
+        for name, (path, side, slack) in REPLAY_TOLERANCES[session.task].items():
+            live = float(_parameter(self.task.config, path))
+            self.thresholds[name] = dict(parameter=path, passes=side, live=live, replay=round(live + slack, 12),
+                                         slack=slack)
+        self.hold_limit = int(round(GRADING_HOLD_S * session.control_hz))
+        self.hold_steps, self.relaxed = 0, False
+        self.window: list = []          # (physics step, {threshold: value}) of the current confirmation window
+        self._own_update = self.task.__dict__.get("update")
+        self._update = self.task.update
+        self.task.update = self._recording_update
+
+    def _recording_update(self, state, physics_dt_s):
+        result = self._update(state, physics_dt_s)
+        if self.task._goal_active:      # this tick starts or extends the confirmation window
+            self.window.append((int(state["physics_step"]),
+                                {n: _GRADING_VALUES[n](self.task, state, result.metrics) for n in self.thresholds}))
+        elif self.window:
+            self.window = []
+        return result
+
+    def hold(self) -> None:
+        """After the rows, while the episode has not ended: the replay thresholds, then the final targets until the
+        episode ends or for at most hold_limit control steps."""
+        s = self.s
+        if s.episode_end is not None or s.episode_done:
+            return
+        for t in self.thresholds.values():
+            _set_parameter(self.task.config, t["parameter"], t["replay"])
+        self.relaxed = True
+        while s.episode_end is None and not s.episode_done and self.hold_steps < self.hold_limit:
+            s.step(s.hold_action())
+            self.hold_steps += 1
+
+    def remove(self) -> None:
+        if self.relaxed:
+            for t in self.thresholds.values():
+                _set_parameter(self.task.config, t["parameter"], t["live"])
+        if self._own_update is None:
+            self.task.__dict__.pop("update", None)
+        else:
+            self.task.update = self._own_update
+
+    def record(self, rows: int) -> dict:
+        success = bool(self.s.success())
+        strict = success and self.hold_steps == 0
+        out = dict(revision=GRADING_REVISION, rows=int(rows), strict_success=strict,
+                   success_row=int(rows) if strict else None, hold_steps=self.hold_steps,
+                   hold_limit_steps=self.hold_limit, success_in_hold=success and self.hold_steps > 0, thresholds={},
+                   tolerance_needed=False)
+        window = self.window if success else []
+        for name, t in self.thresholds.items():
+            entry = dict(t)
+            values = [v[name] for _, v in window if v.get(name) is not None]
+            if values:
+                worst = min(values) if t["passes"] == "at_least" else max(values)
+                held = worst >= t["live"] if t["passes"] == "at_least" else worst <= t["live"]
+                entry.update(window_ticks=len(window), window_worst=float(worst), live_held=bool(held))
+                out["tolerance_needed"] = out["tolerance_needed"] or not held
+            out["thresholds"][name] = entry
+        return out
+
+
+def strict_goal(statuses) -> tuple[int, int] | None:
+    """(1-based replay, row) of the first graded replay that met the instance's own (strict) goal within the trajectory's
+    rows, or None. A plain replay (a CPU family: no grading record) uses the instance's thresholds throughout."""
+    for i, st in enumerate(statuses, 1):
+        g = st.get("grading")
+        if st.get("success") and (g is None or g.get("strict_success")):
+            return i, int(g["success_row"]) if g is not None else int(st.get("sim_steps", 0))
+    return None
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
@@ -2221,17 +2360,31 @@ class Session:
                  action_dim=self.action_dim, action_layout=np.array(self.action_layout),
                  gripper_space=self.gripper_space, meta=json.dumps(meta or {}), **extra)
 
-    def replay(self, actions: np.ndarray, *, physics_steps=None) -> dict[str, Any]:
-        """Open-loop replay after reset(): what the verifier does, twice, in its own process."""
+    def replay(self, actions: np.ndarray, *, physics_steps=None, grading: bool = False) -> dict[str, Any]:
+        """Open-loop replay after reset(): what the verifier does, twice, in its own process. grading=True is the
+        graders' replay: for a family of REPLAY_TOLERANCES (physics on the GPU) the rows run with the instance's own
+        thresholds (a success there is strict) and, if the episode has not ended after the last row, the final targets
+        are held for up to GRADING_HOLD_S with the listed continuous thresholds loosened; the status then carries a
+        "grading" record. Every other family replays as without it."""
         self.reset()
         if self._video is not None:
             self._video_begin()
         if physics_steps is not None and len(physics_steps) != len(actions):
             raise ValueError("tick ledger length differs from actions")
-        for i, a in enumerate(np.asarray(actions, dtype=np.float32)):
-            if self.step(a, _physics_steps=None if physics_steps is None else physics_steps[i]):
-                break
+        policy = _GradingReplay(self) if grading and self.task in REPLAY_TOLERANCES else None
+        try:
+            for i, a in enumerate(np.asarray(actions, dtype=np.float32)):
+                if self.step(a, _physics_steps=None if physics_steps is None else physics_steps[i]):
+                    break
+            rows = self.n_steps
+            if policy is not None:
+                policy.hold()
+        finally:
+            if policy is not None:
+                policy.remove()
         st = self.status()
+        if policy is not None:
+            st["grading"] = policy.record(rows)
         _slog("replay", task=self.task, n_actions=int(len(actions)), success=st["success"])
         return st
 
@@ -2923,12 +3076,14 @@ def cmd_replay(a) -> None:
     s = Session(a.task, instance=a.instance, strict=a.strict)
     acts, ticks = load_trajectory(a.traj, a.task, s.action_dim, trusted=True, layout=s.action_layout)
     t0 = time.time()
-    outs = [s.replay(acts, physics_steps=ticks) for _ in range(a.repeat)]
+    outs = [s.replay(acts, physics_steps=ticks, grading=True) for _ in range(a.repeat)]   # as the graders replay
     out = {"n_actions": int(len(acts)), "instance_sha": s.instance_sha, "instance_matches": s.instance_matches,
            "instance_exact": s.instance_exact, "replays": outs, "all_success": all(o["success"] for o in outs),
-           "deterministic": len({o["state_sha"] for o in outs}) == 1, "wall_s": round(time.time() - t0, 1)}
+           "deterministic": len({o["state_sha"] for o in outs}) == 1, "strict_goal": strict_goal(outs),
+           "wall_s": round(time.time() - t0, 1)}
     if a.video:
-        s.start_video(a.video, fps=a.fps); s.replay(acts, physics_steps=ticks); s.stop_video(); out["video"] = a.video
+        s.start_video(a.video, fps=a.fps); s.replay(acts, physics_steps=ticks, grading=True); s.stop_video()
+        out["video"] = a.video
     print(json.dumps(out), flush=True)
     s.close()
 

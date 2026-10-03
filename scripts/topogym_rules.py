@@ -24,6 +24,22 @@ PLACEMENT = {"cast_keyhole", "interlocked_claws", "hedgehog_in_cage", "horseshoe
 # remaining components of the placement families that are free bodies (the rest are fixed), as named in s.objects()
 FREE_REMAINDER = {"cast_keyhole": "the gold piece", "interlocked_claws": "the other claw piece",
                   "horseshoe_ring": "the horseshoes and chain links", "slotted_post_ring": "the cord, beads and end discs"}
+# The grading replays of the GPU families (rcb_topogym.py GRADING_HOLD_S / REPLAY_TOLERANCES, tooling v15; the numbers
+# must match: ci_checks/test-topogym-grading-replay.py). family -> {threshold: (task parameter, passing side, slack)}.
+GRADING_HOLD_S = 2.0
+REPLAY_TOLERANCES = {
+    "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.02)},
+    "knot_untying": {"rope_speed": ("terminal.maximum_speed_m_s", "at_most", .00025)},
+    "rope_threading": {},
+    "slotted_post_ring": {},
+    "orbits": {},
+    "lock_picking": {},
+}
+# threshold -> words for (live value, replay value)
+TOLERANCE_WORDS = {
+    "coverage": lambda live, replay: f"a blanket coverage of {replay:.0%} instead of {live:.0%}",
+    "rope_speed": lambda live, replay: f"rope speeds up to {replay * 1000:g} mm/s instead of {live * 1000:g} mm/s",
+}
 # failure strings as `s.status()["episode_end"]` reports them (unlimited); limited mode reports `task_failed`
 FAIL_STRINGS = {
     "rigid": ['"task_contact_forced: <what>"', '"held_contact_forced: <what>"', '"A task body fell below the table"'],
@@ -248,6 +264,8 @@ def grader_details(fam, inst, *, limited):
     g = grasp_regions(fam, inst, limited=limited)
     if g:
         out.append(g)
+    if fam in REPLAY_TOLERANCES:
+        out.append(grading_replay_words(fam, inst, limited=limited))
     if not limited:
         strings = (FAIL_STRINGS["rigid"] if fam in RIGID else []) + FAIL_STRINGS.get(fam, [])
         if strings:
@@ -255,6 +273,44 @@ def grader_details(fam, inst, *, limited):
                        "readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops "
                        "against these limits.")
     return out
+
+
+def _parameter(params, path):
+    for key in path.split("."):
+        params = params[key]
+    return params
+
+
+def replay_tolerances(fam, inst):
+    """[(threshold, live value, replay value)] of this instance's grading replays (its frozen task parameters)."""
+    tp = (inst or {}).get("effective_task_parameters") or {}
+    return [(name, float(_parameter(tp, path)), round(float(_parameter(tp, path)) + slack, 12))
+            for name, (path, _, slack) in REPLAY_TOLERANCES.get(fam, {}).items()]
+
+
+def grading_replay_words(fam, inst, *, limited):
+    """The grading-replay rule of a GPU family in plain words (rcb_topogym.py, tooling v15; 40 Hz control)."""
+    steps = int(round(GRADING_HOLD_S * 40))
+    tol = [TOLERANCE_WORDS[name](live, replay) for name, live, replay in replay_tolerances(fam, inst)]
+    hold = (f"runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final "
+            f"targets for up to {GRADING_HOLD_S:g} s ({steps} control steps), stopping at the first success or failure, so a "
+            "confirmation that starts a few physics ticks later than in " + ("the live episode" if limited else "your own run")
+            + " can still complete")
+    during = (f"; during that hold it accepts {' and '.join(tol)}" if tol else
+              "; the hold uses the thresholds above too (no tolerance for this family)")
+    tail = (" Nothing else is relaxed: every other condition, the failure conditions and the confirmation time are the "
+            "same." if tol else " Nothing else changes.")
+    if limited:
+        return ("Grading: success needs the live episode to succeed (with the thresholds above) AND one fresh-process replay of "
+                "its rows to succeed; a live failure is final whatever the replay shows. This family's physics runs on the GPU, "
+                f"which is not bit-deterministic, so that replay can differ slightly from the live episode: it {hold}{during}."
+                + tail)
+    return ("Grading: the verifier replays your trajectory twice in a fresh process. This family's physics runs on the GPU, "
+            f"which is not bit-deterministic, so a replay can differ slightly from your own run: each replay {hold}{during}. "
+            "Success needs both replays to succeed AND at least one of them to reach the goal with the thresholds above "
+            "within your own rows (not only in the hold)." + tail + " A recording stops at your own success, so a replay "
+            "whose confirmation ends a few ticks later needs more rows: you may append copies of the final row (holding "
+            "still) before saving. `s.replay(actions, grading=True)` replays as the verifier does.")
 
 
 # where his declared grasp regions sit, by construction of his recipes (76583213 topogym/tasks/<family>/common.py

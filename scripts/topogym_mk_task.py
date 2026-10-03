@@ -21,7 +21,7 @@ sys.dont_write_bytecode = True        # importing the task's tooling must not le
 root = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 from topogym.tasks.goal_description import TASK_IDS as GOAL_TASKS, render_goal
-from topogym_rules import details_section, step_time_words
+from topogym_rules import REPLAY_TOLERANCES, details_section, step_time_words
 from topogym.utils.io import make_asset_tree_readable
 from cuda_profiles import image_tag
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
@@ -290,6 +290,10 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
     determinism = ("The physics runs on the CPU and is bit-deterministic on one host; the final-state hashes\n"
                    "(`deterministic`) are still diagnostic, as for the GPU families" if cpu_physics(inst) else
                    "The physics runs on the GPU, which is not bit-deterministic: the\nfinal-state hashes (`deterministic`) are diagnostic")
+    grading = ("\nThe replays are grading replays (tooling v15): if this GPU family's episode has not ended after the last row, the\n"
+               "final targets are held for up to 2 s with the replay tolerances of the grader details; at least one replay must\n"
+               "reach the goal with the instance's own thresholds within the trajectory's rows."
+               if fam in REPLAY_TOLERANCES else "")
     ref = (f"`solution/oracle_{fam}.py`, written for this instance with the tooling's primitives; `solution/solve.sh` records it into a\n"
            f"trajectory." if oracle else
            "None yet (`oracle = \"none\"`, no `solution/`). A reference solution must be written for this instance (assisted\n"
@@ -321,7 +325,7 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
 replay (two passes, no separate video replay). {determinism}; the rebuilt frozen scene must match (`instance_ok`)
-(robot_coding_bench's GPU-backend rule).
+(robot_coding_bench's GPU-backend rule).{grading}
 """
 
 

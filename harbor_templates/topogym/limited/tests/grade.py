@@ -3,7 +3,11 @@
 crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. Adapted from robot_coding_bench's RoboWits standard
 grader. success = live success AND replay success, and no infrastructure failure; TopoGym's physics runs on the GPU (the
 RoboWits GPU-backend rule): the live and replayed states need not agree bit for bit, so `deterministic` is reported, not
-required. A replay that produced no result is a grader error, not the agent's 0. Numeric-only reward.json."""
+required. A replay that produced no result is a grader error, not the agent's 0. Numeric-only reward.json. After a live
+success the replay is a grading replay (tooling v15): for the GPU families, if the episode has not ended after the last
+live row, it holds the final targets for up to 2 s with the replay tolerances; final.json's replay_grading has the record,
+replay_hold_steps / replay_tolerance_needed summarize it. It only confirms: a live failure is final whatever the replay
+shows (the collect hook then replays plainly)."""
 import hashlib, json, os, shutil
 from pathlib import Path
 LOG = "/logs/verifier"; os.makedirs(LOG, exist_ok=True)
@@ -39,6 +43,7 @@ except (OSError, ValueError, TypeError):
     pass
 mismatch = mismatch or not binding_ok
 grader_error = not infra and not mismatch and not d.get("gave_up") and not replayed
+# the live (strict) success first: a tolerant replay success never stands in for a live failure
 ok = bool(d.get("success")) and bool(d.get("replay_success")) and (bool(d.get("deterministic")) or gpu) and not infra and not grader_error and not mismatch
 num = lambda k, cast=int: cast(d.get(k) or 0)  # noqa: E731
 write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "replay_success": int(bool(d.get("replay_success"))),
@@ -47,6 +52,7 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "rep
            "gpu_backend": int(gpu), "finalized": int(bool(d.get("finalized"))), "n_actions": num("n_actions"), "live_rows": num("live_rows"),
            "sim_steps": num("control_steps"), "physics_steps": num("physics_steps"), "steps": num("steps"), "elapsed_s": num("elapsed_s", float),
            "replay_wall_s": num("replay_wall_s", float), "video_rendered": int(bool(d.get("video"))), "gpu_lost": int(bool(d.get("gpu_lost"))),
+           "replay_hold_steps": num("replay_hold_steps"), "replay_tolerance_needed": int(bool(d.get("replay_tolerance_needed"))),
            "infra_error": int(infra), "simulator_instability": int(bool(d.get("simulator_instability"))),
            "gave_up": int(bool(d.get("gave_up"))), "sim_startups": num("sim_startups"), "resumes": num("resumes"),
            "resume_state_mismatch": num("resume_state_mismatch"), "resume_max_tcp_dev_m": num("resume_max_tcp_dev_m", float),
