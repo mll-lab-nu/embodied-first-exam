@@ -128,8 +128,8 @@ def _horseshoe(name, task, folder):
 
 
 def _slotted(name, task, folder):
-    from topogym.assets.geometry.slotted_post_ring import SlottedPostLayout, make_meshes
-    layout = SlottedPostLayout(**task.config["geometry"]).validate()
+    from topogym.assets.geometry.slotted_post_ring import make_meshes
+    layout = task.make_layout().validate()  # a tier may re-route the cord (a layout subclass)
     parts, cord = make_meshes(layout)
     zero, identity = np.zeros(3), np.array([1., 0, 0, 0])
     wood, light = (.45, .25, .14, 1), (.85, .7, .5, 1)
@@ -141,7 +141,7 @@ def _slotted(name, task, folder):
     bodies.append(Body("target_ring", parts["target_ring"].copy().apply_translation(-centre),
                        [("capsule", p, q, layout.ring_tube_radius_m) for p, q in zip(loop, np.roll(loop, -1, axis=0))],
                        centre, identity, (.9, .5, .2, 1), density=7800.))
-    for side, index in (("left", 2), ("right", 15)):
+    for side, index in zip(("left", "right"), layout.bead_controls()):
         k = np.argmin(np.linalg.norm(cord-layout.cord_controls()[index], axis=1))  # as make_meshes places it
         bodies.append(Body(f"bead_{side}", parts[f"bead_{side}"].copy().apply_translation(-cord[k]),
                            _bead_sectors(layout, cord[k+1]-cord[k-1]), cord[k], identity, light, density=700.))

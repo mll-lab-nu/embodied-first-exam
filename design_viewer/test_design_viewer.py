@@ -39,7 +39,7 @@ def test_lists_every_integrated_variation():
 
 
 @pytest.mark.parametrize("name", ["hedgehog_in_cage_medium", "horseshoe_ring_easy", "horseshoe_ring_very_easy",
-                                  "slotted_post_ring_easy"])
+                                  "slotted_post_ring_easy", "slotted_post_ring_very_easy", "slotted_post_ring_easier"])
 def test_scene_matches_the_task_declaration(name, tmp_path):
     """Same rigid bodies as the task's own declare(): names, fixed flags, posed mesh bounds."""
     task = task_definition(next(t for t in scenes.TASKS if name.startswith(t)), name)(None, seed=0)
@@ -120,10 +120,11 @@ def _cord(m, d):
     return np.vstack([d.xpos[ids], tip])
 
 
-def test_slotted_beads_stay_on_the_cord_and_the_cord_ends_stay_on_the_discs():
+@pytest.mark.parametrize("name", ["slotted_post_ring_easy", "slotted_post_ring_very_easy", "slotted_post_ring_easier"])
+def test_slotted_beads_stay_on_the_cord_and_the_cord_ends_stay_on_the_discs(name):
     """The task's FEM cord ends in stop knots, so the beads cannot slide off its ends."""
-    m, d = _start("slotted_post_ring_easy")
-    layout = scenes.build("slotted_post_ring_easy").extras["layout"]
+    m, d = _start(name)
+    layout = scenes.build(name).extras["layout"]
     start = _cord(m, d)
     _run(m, d, 5.)
     p = _cord(m, d)
@@ -133,7 +134,7 @@ def test_slotted_beads_stay_on_the_cord_and_the_cord_ends_stay_on_the_discs():
         t = np.clip(np.einsum("ij,ij->i", c-a, b-a)/np.einsum("ij,ij->i", b-a, b-a), 0, 1)
         assert np.linalg.norm(a+t[:, None]*(b-a)-c, axis=1).min() < layout.bead_hole_radius_m, side
     for end, disc in ((0, "disc_left"), (-1, "disc_right")):  # each end moves with its disc
-        moved = d.xpos[m.body(disc).id]-scenes.build("slotted_post_ring_easy").body(disc).pos
+        moved = d.xpos[m.body(disc).id]-scenes.build(name).body(disc).pos
         assert np.linalg.norm(p[end]-start[end]-moved) < 2e-3, disc
 
 
@@ -180,9 +181,11 @@ def test_mouse_pull_lifts_the_horseshoe_ring():
     assert d.xpos[pert.select, 2]-z > .05
 
 
-def test_lifting_the_slotted_ring_neither_pushes_through_the_cord_nor_frees_the_ring():
-    """By design only the cord (through the slot, around the right rail) traps the ring."""
-    m, d = _start("slotted_post_ring_easy")
+# By design only the cord traps the ring: it runs over the ring in easy and easier, under it in very_easy.
+@pytest.mark.parametrize("name, trapped", [("slotted_post_ring_easy", True), ("slotted_post_ring_very_easy", False),
+                                           ("slotted_post_ring_easier", True)])
+def test_lifting_the_slotted_ring_follows_the_cord_route_without_pushing_through_it(name, trapped):
+    m, d = _start(name)
     _run(m, d, 1.)
     discs = [m.body(n).id for n in ("disc_left", "disc_right")]
     start = d.xpos[discs].copy()
@@ -190,7 +193,8 @@ def test_lifting_the_slotted_ring_neither_pushes_through_the_cord_nor_frees_the_
     pert.refselpos[:] = pert.refselpos+[0, 0, .35]  # yank the mouse 35 cm up, above the post
     worst = _hold_mouse(m, d, pert, seconds=3.)
     assert worst < 3e-3  # the 3.5 mm-radius cord is not pushed through the ring or the post
-    assert np.linalg.norm(d.xpos[discs]-start, axis=1).max() > .02  # the lifted ring carries the cord along
+    dragged = np.linalg.norm(d.xpos[discs]-start, axis=1).max()
+    assert dragged > .02 if trapped else dragged < .005  # a trapped ring carries the cord along
 
 
 def test_mouse_turn_rotates_the_horseshoe_ring():
