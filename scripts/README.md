@@ -40,23 +40,3 @@
 - `collect_batch_results.py`、`write_task_results.py`、`make_two_mode_report_zh.py`：收集结果并生成报告。
 
 完整命令见 [Harbor 手册](../docs/rcb/README.md)。任务静态检查仍为 `bash ci_checks/run_all.sh`。
-
-## 设计辅助（非物理证据）
-
-[design_viewer/](design_viewer/) 为 Hedgehog、Horseshoe、Slotted Post Ring 的变体设计提供可交互的 3D 场景，计划见 [实施计划](../docs/tasks_simplifications/interactive_3d_impl_plan_zh.md)。它只读调用任务生成器，用 MuJoCo 3.14 Web Viewer（CPU，仅绑定 127.0.0.1）和 python-fcl 检查。结果只用于设计直觉，**不能**作为可解性证据、qualification 或成功标签，也不进入 simulator / rollout / 评分链路；Genesis 仍是唯一物理途径。变体注册进 registry 后自动出现在场景列表中。
-
-```bash
-conda activate topogym && export PYTHONNOUSERSITE=1   # 在 worktree 根目录运行
-python -m scripts.design_viewer.view --scene hedgehog_in_cage_easy --port 18080
-# VS Code「端口」面板转发 18080，浏览器打开 http://localhost:18080/
-python -m scripts.design_viewer.exit_check --scene hedgehog_in_cage_very_easy --grasp 180 --roll 90 --lift-mm 5
-python -m scripts.design_viewer.scenes --list                        # 构建并列出所有场景（结果缓存）
-python -m scripts.design_viewer.mjcf --seconds 1                     # 每个场景的步长耗时、初始穿透、漂移
-python -m pytest scripts/design_viewer -q                            # 行为测试（CPU）
-```
-
-- 浏览器：左键拖动旋转视角，右键平移，滚轮缩放；双击选中物体；Ctrl+右键拖动拉动物体（加 Shift 为水平面内），Ctrl+左键拖动旋转；空格暂停。
-- 「TopoGym design」面板与终端使用同一套命令（终端输入 `help`）：切换场景、开关 2F-85 夹爪、放置夹爪（方位角、roll）、开合手指、夹持（grip）或固定（pin）选中物体、刺球出笼检查（结果方向显示为绿色箭头）、保存/读取位姿。
-- `--set key=value` 覆盖 Hedgehog 模板（如 `window_widths=24`）、Horseshoe 模板或 Slotted 几何参数，不修改生成器。
-- 产物：`runs/design_viewer/`（缓存、位姿、检查报告）。
-- 服务只绑定 127.0.0.1，但本机其他用户也能连上这个端口并操作面板；不用时请关闭查看器。
