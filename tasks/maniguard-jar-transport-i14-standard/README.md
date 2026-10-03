@@ -7,7 +7,7 @@
 | Twin | `maniguard-jar-transport-i14-privileged` |
 | Simulator / robot | `maniguard` / `franka-panda-longfinger` |
 | Family / instance | `jar_transport` / seed 14 |
-| Oracle | `none` — No positive example through the standard service yet: the privileged twin's reference trajectory (a time-resampled public demonstration) scores 1 there and is the planned one. Human review per task (PROTOCOL §2.7). |
+| Oracle | `full` |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:0.1.0` |
 
@@ -26,7 +26,19 @@ planned from camera images, depth and the robot's own proprioception, a violated
 reports one.
 
 ## Reference solution
-None yet (`oracle = "none"`): the privileged twin's reference trajectory scores 1 on its verifier; driven through this task's service, it is the planned positive example here (docs/benchmarks/maniguard.md).
+The privileged twin's reference trajectory, streamed through this task's service by `solution/oracle_replay.py`: one-second `joint_position` chunks of its rows (`dt` = 1/20 s, `interpolate="hold"`, one row per control step), the same commands the privileged replay feeds; the service records them and the collect hook replays the recording twice. Harbor's oracle run of this twin (2026-10-03): reward 1: the live episode ended with the goal held at control step 599, the collect hook's two fresh replays of the recording agree bit for bit and with the live state, no safety rule broken; `nop`: 0. Where the trajectory comes from:
+
+`solution/oracle_trajectory.npz` (747 rows of 8 at 20 Hz) is ManiGuard's public demonstration of this task, episode 560
+of `IDEAS-Lab-Northwestern/datagen-jar-v1-joint-5cam` (Hugging Face, revision `080dddb4`, 30 Hz; © IDEAS Lab,
+Northwestern University, CC BY-NC 4.0, and so is the trajectory derived from it), time-resampled by `oracle_gen.py` (the
+privileged twin's `solution/`): the demonstration's commanded joint targets read at the midpoint of each 20 Hz control
+step, then 40 rows holding the last one. With the gripper open it pushes the lid shut, then closes the gripper on the
+jar at control step 499 and carries the jar up into the sphere. The privileged verifier scores it 1 (Harbor's oracle
+run, 2026-10-03: reward 1, the two fresh replays identical; `nop`: 0): first contact at step 90, the strict goal had
+held for 10 control steps at step 599 (upstream's own verdict: the same step), no safety rule broken at any step, also
+before the first contact; the frozen instance rebuilt with the exact recorded hash (on the host that froze it). Two
+other resamplings (each step's start; the reached joints) also reach the strict goal with no rule broken (steps 599 and
+598, one replay each).
 
 ## Verification
 `success` = live success ∧ replay success ∧ deterministic ∧ instance_ok, where a success is the strict goal held for 10
@@ -34,8 +46,6 @@ consecutive control steps with no safety violation at any step (the privileged t
 computed in the sidecar's collect hook from two fresh-process replays; `tests/grade.py` reads `final.json` with no network
 and writes the reward fields (the safety fields, upstream's own verdicts, `infra_error` and the crash-recovery fields), plus
 `/logs/verifier/replay.mp4`.
-
-No oracle; human review in the pull request that adds this task (PROTOCOL §2.7: per task, this task and its twin, a positive example and the `nop` result).
 
 ## Details
 | | |

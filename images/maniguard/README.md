@@ -16,6 +16,7 @@ runtime patches target 3.7.2, and upstream abandoned its own port to a newer Isa
 | conda-forge | Spot 2.16 (ManiGuard's LTL monitor; "do NOT pip install spot") |
 | PyPI | PyAV 16.0.1 (setup.sh's `--eval` step) as the PyPI wheel, not conda-forge's: every conda-forge ffmpeg since 2024 brings its own Vulkan loader and libglvnd into the env, and once PyAV has loaded them Isaac Sim's renderer segfaults on its first frame (measured 2026-10-03); the wheel keeps its libraries under private names |
 | Run-time extras | `g++` (OmniGibson compiles some transforms with `torch.compile`; kernels cached under `/cache/torchinductor`), BEHAVIOR-1K's `docs/assets/OmniGibson_logo.png` (the launcher copies it; sha256-checked) |
+| Kit extensions | `omni.flowusd` 106.5.2 and `omni.usd.schema.flow` 107.0.0 (OmniGibson's kit file needs them; the wheels do not ship them, and Kit would fetch them from NVIDIA's extension CDN at every first launch into the per-trial cache, which fails offline) in `isaacsim/extscache/`, sha256-checked |
 | ManiGuard | `NU-IDEAS-Lab/ManiGuard@a1b6444b3`, only `maniguard-keep.txt` (the evaluator's import closure, 37 modules, + `configs/eval/`), on the env's path via `maniguard.pth` |
 | Data | none; `/data` is the read-only mount of `$RCB_MANIGUARD_DATA` (`OMNIGIBSON_DATA_PATH=/data`) |
 | Caches | Kit's caches and OmniGibson's appdata under `/cache` (a task mounts a volume of its trial there) |

@@ -1,5 +1,5 @@
-"""Standard-mode oracle: stream the privileged reference trajectory's rows (oracle_qpos.npy, (T, 8): 7 joint targets + the
-gripper command, one row per 20 Hz control step) through the eai-standard client in one-second `joint_position` chunks
+"""Standard-mode oracle: stream the privileged reference trajectory's rows (oracle_trajectory.npz, the privileged twin's
+solution: `actions` (T, 8), 7 joint targets + the gripper command, one row per 20 Hz control step) through the eai-standard client in one-second `joint_position` chunks
 with `hold` interpolation (each row held for exactly one control step: the same commands the privileged replay feeds). After
 a service crash it waits for the resumed episode and continues from the control step the service reports."""
 import os, sys, time
@@ -7,7 +7,7 @@ import numpy as np
 sys.path.insert(0, "/opt/tools")
 from rcb_client import Robot, EpisodeOver  # noqa: E402
 
-Q = np.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "oracle_qpos.npy")).astype(np.float32)
+Q = np.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "oracle_trajectory.npz"))["actions"].astype(np.float32)
 r = Robot(); spec = r.spec(); hz = int(spec["control_hz"])
 i = int(r.status().get("control_steps") or 0)
 while i < len(Q):

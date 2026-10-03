@@ -163,9 +163,6 @@ SPEC = {
                        "robot_spec.base.pose", "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "xyzw",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV (x right, y down, z forward); cam2world_gl: OpenGL (x right, y up, z backward)"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "7200"))},
-    "episode": "one episode, no reset: it ends when the task's goal has held for 10 consecutive control steps (reason goal_held), when "
-               "your time is up, or on a simulator error; the task's safety rules are checked after every control step and decide, "
-               "with the goal, whether the episode counts (graded on replays; never reported live)",
     "robot_spec": RSPEC,
     "kinematics": KSPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,

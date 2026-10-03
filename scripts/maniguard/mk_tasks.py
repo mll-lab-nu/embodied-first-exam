@@ -14,8 +14,9 @@ Inputs, all in the repository:
   scripts/maniguard/instances/<family>/<task>/   scene_ep1.json + diagnostics.jsonl (ManiGuard-Bench, unchanged, CC BY-NC 4.0:
                                          instances/NOTICE) and instance.json (our record: pins, sha256, the loaded state's
                                          hash, written in the image by `rcb_maniguard.py make-instance`)
-  scripts/maniguard/oracles/<family>/<task>/     tasks with a positive example: oracle_trajectory.npz + oracle_gen.py (privileged)
-                                         and oracle_qpos.npy (standard), with README_oracle.md (where they come from)
+  scripts/maniguard/oracles/<family>/<task>/     tasks with a positive example: oracle_trajectory.npz (both modes' solution/;
+                                         the standard oracle streams its rows through the service), oracle_gen.py (privileged)
+                                         and README_oracle.md (where they come from)
   scripts/maniguard/shared/rcb_maniguard.py      the tooling (privileged environment/ + tests/, standard environment/sim/)
   scripts/maniguard/template/<mode>/     every other task file; a *.tmpl file is filled with the task's values (@@KEY@@)
   scripts/eai_standard/                  the eai-standard/2.2 layer, copied unchanged, and the standard client image + pins
@@ -219,6 +220,20 @@ def reference_none(mode: str = "privileged", twin_full: bool = False) -> str:
             "trajectory that this verifier scores 1 is the planned positive example (docs/benchmarks/maniguard.md).")
 
 
+def reference_text(key: str, T: dict, mode: str) -> str:
+    """The README's reference solution: where the trajectory comes from and what the privileged verifier made of it
+    (oracles/<key>/README_oracle.md), plus how each mode's oracle agent delivers it."""
+    src = (HERE / "oracles" / key / "README_oracle.md").read_text().strip()
+    if mode == "privileged":
+        return (src + "\n\nThe oracle agent copies it to `/app/output/trajectory.npz` (`solution/solve.sh`). It is never in the "
+                "agent's reach: `solution/` is mounted for the oracle agent only, and agent egress is allowlisted.")
+    note = ((T.get("oracle_note") or {}).get("standard") or "").strip()
+    return ("The privileged twin's reference trajectory, streamed through this task's service by `solution/oracle_replay.py`: "
+            "one-second `joint_position` chunks of its rows (`dt` = 1/20 s, `interpolate=\"hold\"`, one row per control step), "
+            "the same commands the privileged replay feeds; the service records them and the collect hook replays the recording "
+            "twice. " + (note + " " if note else "") + "Where the trajectory comes from:\n\n" + src)
+
+
 def review_note(level: str) -> str:
     if level == "full":
         return ""
@@ -271,7 +286,7 @@ def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[
         ev = None if lvl == "full" and not T.get("oracle_evidence") else oracle_evidence(T, mode)
         return {"ORACLE": lvl, "REVIEW_NOTE": review_note(lvl), "ORACLE_EVIDENCE_LINE": f'oracle_evidence = "{toml_str(ev)}"\n' if ev else "",
                 "REFERENCE_SOLUTION": reference_none(mode, T["oracle"].get("privileged") == "full") if lvl == "none"
-                else (HERE / "oracles" / key / "README_oracle.md").read_text().strip()}
+                else reference_text(key, T, mode)}
     priv = {**per_mode("privileged"), "GOAL_BLOCK": goal_block_privileged(diag), "SAFETY_BLOCK": safety_block_privileged(diag),
             "OBJECTS_BLOCK": objects_block_privileged(diag, scene), "GRASP_TEXT": grasp_text(F["grasping"], diag),
             "GRADE_FLAGS": "--require-instance-exact " if T.get("require_instance_exact") else ""}
@@ -320,7 +335,7 @@ def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[
             req = CLIENT.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
             files["environment/client-requirements.txt"] = ((LAYER / req).read_bytes(), 0o644)
             if has_solution:
-                files["solution/oracle_qpos.npy"] = ((HERE / "oracles" / key / "oracle_qpos.npy").read_bytes(), 0o644)
+                files["solution/oracle_trajectory.npz"] = ((HERE / "oracles" / key / "oracle_trajectory.npz").read_bytes(), 0o644)
         out[task_dir(key, mode)] = files
     return out
 

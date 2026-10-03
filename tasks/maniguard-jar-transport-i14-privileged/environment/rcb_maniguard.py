@@ -1085,12 +1085,25 @@ class Session:
             p = p.GetParent()
         raise RuntimeError(f"camera {prim.GetPath()} is not below a robot link")
 
+    def _cam_K(self, c, W: int, H: int) -> np.ndarray:
+        """The camera's intrinsics. OmniGibson's intrinsic_matrix reads the renderer's CameraParams annotator, which is all
+        zeros until that camera has rendered a frame with it (measured: cam_left's K came back zero right after its depth
+        modality was added): render until it is valid; else derive K from the USD camera (focal length and horizontal
+        aperture, square pixels, centred principal point), which is what the renderer projects with."""
+        for _ in range(20):
+            K = np.asarray(_np(c.intrinsic_matrix), dtype=np.float64).reshape(3, 3)
+            if np.all(np.isfinite(K)) and K[0, 0] > 0 and K[1, 1] > 0:
+                return K
+            self.og.sim.render()
+        f = float(c.focal_length) * W / float(c.horizontal_aperture)
+        return np.array([[f, 0.0, W / 2.0], [0.0, f, H / 2.0], [0.0, 0.0, 1.0]])
+
     def _cam_fixed(self) -> dict:
         if self._camfix is None:
             out = {}
             for n, c in self._cam_sensors().items():
                 W, H = int(c.image_width), int(c.image_height)
-                K = np.asarray(_np(c.intrinsic_matrix), dtype=np.float64).reshape(3, 3)
+                K = self._cam_K(c, W, H)
                 pos, quat = c.get_position_orientation(); G = _T_of(_np(pos), _np(quat))
                 if n == WRIST or n.startswith(WRIST):
                     link = self._parent_link(c.prim)
