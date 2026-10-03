@@ -308,17 +308,17 @@ TASKS["lock_picking"]["simulator"] = {**TASKS["lock_picking"]["simulator"], "pre
 # before the instance is frozen (the v5 instances were not at rest at t = 0). Against substeps 4 from the same settled
 # state: rope_threading 8.1x, slotted_post_ring 9.2x per control step (10.7x / 10.1x with libuipc's linear_bvh broad phase
 # instead of its default info_stackless_bvh: the same contacts); lift / slip / drop within 0.1 mm, centerline 0.3-0.8 mm at
-# the end of a pinch-lift-release, the same cord break (0.1 s later), frames identical. knot_untying (v10) runs two solver
-# substeps: at one, the larger IPC dt squeezes the rope a little more softly and the reference's near-threshold tet
-# inversion on medium (robust to noise) does not happen; at two it does; 4.0x with the exact clearance, end 0.35 mm.
+# the end of a pinch-lift-release, the same cord break (0.1 s later), frames identical.
 # Since v10 the settled state is frozen with the instance (export-ipc-state, SimulatorConfig.ipc_settled_state) instead
 # of settling at every build: every build starts from the same bits (settling on the GPU started builds ~0.04 um apart,
 # enough for a near-threshold squeeze to take another contact branch) and skips 0.8-2.4 min of settling.
-# orbits keeps four substeps (only four reproduce the reference's violent-impact tet inversion, robust to noise; one and two
-# do not) with the cheaper tolerances and broad phase (same impact inversion, cord 0.007 mm; ~1.3x) and a settled start.
-for _name, _ticks, _substeps in (("rope_threading", 300, 1), ("slotted_post_ring", 800, 1), ("knot_untying", 600, 2),
-                                 ("orbits", 800, 4)):
-    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "solver_substeps": _substeps, "reset_physics_steps": _ticks,
+# Since v12 knot_untying (v10-v11: two substeps) and orbits (v11: four) also run one substep (the user's call,
+# 2026-10-02): knot 7.4x, orbits 12-15x against substeps 4 (knot easy lift / slip / drop within 0.1 mm, frames identical;
+# orbits' clear approach within 0.11 mm). Accepted leniency: the larger IPC dt cushions a violent impact, so the
+# reference's noise-robust tet inversion (episode end rope_volume_invalid / connection_or_volume_invalid) on knot medium's
+# closing pinch and on orbits' ~2 m/s open-finger sweep does not happen: such impacts no longer end the episode.
+for _name, _ticks in (("rope_threading", 300), ("slotted_post_ring", 800), ("knot_untying", 600), ("orbits", 800)):
+    TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "solver_substeps": 1, "reset_physics_steps": _ticks,
                                  "ipc_options": {"newton_tolerance": 1e-3, "linear_system_tolerance": 1e-5,
                                                  "collision_detection_method": "linear_bvh"}}
 
@@ -992,6 +992,37 @@ def _speed_up_knot_predicate(task_id: str) -> bool:
     return True
 
 
+def _settle_only_when_reached(task) -> bool:
+    """Tooling v12, families with a final-settling check (knot_untying, cast_coil, buzz_wire_3d, blanket_flatten):
+    TaskDefinition._evaluate_terminal (topogym/tasks/base.py) runs evaluate_settling (release clearance over every FEM
+    tet, speeds, drift) only on ticks where the task's own goal predicate is reached. On the other ticks its result cannot
+    change the outcome (it is ANDed into reached, the stability window restarts, next_reference is discarded), so
+    success, failures and the episode end are unchanged; those ticks only leave out metrics["final_settling"] and its
+    evaluation_status. knot_untying: task cost 1.84 -> 0.04 s per control step (IPC study, 2026-10-02)."""
+    if task.final_settling_spec() is None:
+        return False
+    from types import MethodType
+
+    def _evaluate_terminal(self, state, private, reference):
+        reached, failure, metrics, private = self.evaluate_transition(state, private)
+        spec = self.final_settling_spec()
+        next_reference = None
+        if spec is not None and not failure and reached:
+            from topogym.evaluation.terminal import evaluate_settling
+            settled, measurements, next_reference = evaluate_settling(state, spec, reference)
+            status = metrics.get("evaluation_status", "available")
+            if status not in {"available", "unavailable"}:
+                raise ValueError("Invalid task evaluation status")
+            status = "available" if status == measurements["evaluation_status"] == "available" else "unavailable"
+            metrics = {**metrics, "final_settling": measurements, "evaluation_status": status}
+            reached = bool(reached and settled and status == "available")
+            if not reached:
+                next_reference = None
+        return reached, failure, metrics, private, next_reference
+    task._evaluate_terminal = MethodType(_evaluate_terminal, task)
+    return True
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
@@ -1039,6 +1070,7 @@ class Session:
         self.env.reset(seed=int(cfg["seed"]))
         self.fem_checkpoint_store_bounded = _drop_fem_gradient_checkpoints(self.env)
         self.knot_predicate_vectorized = _speed_up_knot_predicate(cfg["task_id"])
+        self.settle_only_when_reached = _settle_only_when_reached(self.env._task)
         if not self.spec["fixture"]:
             # The family catalog is only a short catalog label. Public goals
             # come from the selected instance, for both Session and limited SPEC.

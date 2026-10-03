@@ -43,10 +43,10 @@
         "sha256.json": "2daee05de03fa49ea7921e38768dc49121b951e415d1fe69e0d577f1f05a9c38"
       }
     },
-    "frame": 1200,
+    "frame": 600,
     "metadata": {
       "settled_ticks": 600,
-      "solver_substeps": 2,
+      "solver_substeps": 1,
       "ipc_options": {
         "newton_tolerance": 0.001,
         "linear_system_tolerance": 1e-05,
@@ -4037,108 +4037,108 @@
     ],
     "files": [
       {
-        "path": "dump/common/sim_engine.cpp/state.1200.json",
-        "sha256": "fe31ebc2c57ace97a51652269dcc1bb936a73660300b2f1b807c633c2124724d",
-        "bytes": 44
+        "path": "dump/common/sim_engine.cpp/state.600.json",
+        "sha256": "758120fb5fc7851c122727dabf105533fb714626de2ef2afb0ccbbacd2f4ceb3",
+        "bytes": 43
       },
       {
-        "path": "dump/cuda/affine_body/affine_body_dynamics.cu/q.1200",
-        "sha256": "315b80d3bad45c7aa86d924a65d272786c1101b980023817ee42fd53013b19d3",
+        "path": "dump/cuda/affine_body/affine_body_dynamics.cu/q.600",
+        "sha256": "8fc992dc10aa152b2922c1b063c1777852b072b87cad7211e36b59fa186e709b",
         "bytes": 1744
       },
       {
-        "path": "dump/cuda/affine_body/affine_body_dynamics.cu/q_prev.1200",
-        "sha256": "cbeb971b30b2af755f619e76d61535aac55bc59db498ae4f2e45a01de085fc27",
+        "path": "dump/cuda/affine_body/affine_body_dynamics.cu/q_prev.600",
+        "sha256": "31c4ecbf81ca96d4d8b8f77bc5b0df73eeb59e87b4127dc05b434cf579564ca7",
         "bytes": 1744
       },
       {
-        "path": "dump/cuda/affine_body/affine_body_dynamics.cu/q_v.1200",
-        "sha256": "06524e7ad74f49635001fa22a7e96c9904f2f395c00b69def29bf822b3b96483",
+        "path": "dump/cuda/affine_body/affine_body_dynamics.cu/q_v.600",
+        "sha256": "688f3468f8a07ceced5c1f0f761662ce17dcf9786b6653169298a2afebfe6f0c",
         "bytes": 1744
       },
       {
-        "path": "dump/cuda/affine_body/bdf/abd_bdf2_state.cu/q_n_1.1200",
+        "path": "dump/cuda/affine_body/bdf/abd_bdf2_state.cu/q_n_1.600",
         "sha256": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
         "bytes": 16
       },
       {
-        "path": "dump/cuda/affine_body/bdf/abd_bdf2_state.cu/qv_n_1.1200",
+        "path": "dump/cuda/affine_body/bdf/abd_bdf2_state.cu/qv_n_1.600",
         "sha256": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
         "bytes": 16
       },
       {
-        "path": "dump/cuda/affine_body/constitutions/affine_body_prismatic_joint.cu/pj_current_distances.1200",
-        "sha256": "b7c47ffea1c4e5efc0101b02138db9704b867d8377a48795a9e367741c450c47",
+        "path": "dump/cuda/affine_body/constitutions/affine_body_prismatic_joint.cu/pj_current_distances.600",
+        "sha256": "e5d25f1cbd62d63d593f8be9bd4c9d0a5b0748bc576f4edff88cb79318bda9ee",
         "bytes": 48
       },
       {
-        "path": "dump/cuda/affine_body/constitutions/affine_body_revolute_joint.cu/rj_current_angle.1200",
-        "sha256": "25167fcc553f9cc73d55f83fcd9ba41f88f85f712cae15eeadb9b712e0203d5a",
+        "path": "dump/cuda/affine_body/constitutions/affine_body_revolute_joint.cu/rj_current_angle.600",
+        "sha256": "9eb016f36e2f532a3208014fa937346561fabd3884e0cefe99ffb26faee41963",
         "bytes": 112
       },
       {
-        "path": "dump/cuda/affine_body/constraints/external_articulation_constraint.cu/delta_theta.1200",
-        "sha256": "bcb680499257168c037574d8308282eb14ec1402a431e00f462126cfd86b1133",
+        "path": "dump/cuda/affine_body/constraints/external_articulation_constraint.cu/delta_theta.600",
+        "sha256": "112d008dca8466433c3ea438535e42b54219497beee5a41fd6ff5d4390abd9d3",
         "bytes": 144
       },
       {
-        "path": "dump/cuda/collision_detection/simplex_trajectory_filter.cu/EEs.1200",
-        "sha256": "2bcbb6a0c0505d39a6ca06d801d769187a92ccc96e48c20938ccc602153d4b33",
-        "bytes": 864
+        "path": "dump/cuda/collision_detection/simplex_trajectory_filter.cu/EEs.600",
+        "sha256": "e3b7b0eb78fad46f094fff9f90b0f40933472dece3a442873ea4d917bb54c020",
+        "bytes": 896
       },
       {
-        "path": "dump/cuda/collision_detection/simplex_trajectory_filter.cu/PEs.1200",
-        "sha256": "a19322659cfa462ac3fce610167f6b70450d1c784b1982b1d3698fcf8d8117e0",
-        "bytes": 376
+        "path": "dump/cuda/collision_detection/simplex_trajectory_filter.cu/PEs.600",
+        "sha256": "d42dce6a88d957fc50b36cf409a35674fe60ec6612a9d3fee07ca93f81a8acee",
+        "bytes": 340
       },
       {
-        "path": "dump/cuda/collision_detection/simplex_trajectory_filter.cu/PPs.1200",
+        "path": "dump/cuda/collision_detection/simplex_trajectory_filter.cu/PPs.600",
         "sha256": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
         "bytes": 16
       },
       {
-        "path": "dump/cuda/collision_detection/simplex_trajectory_filter.cu/PTs.1200",
-        "sha256": "1afe273abfeecae026d33e124984b5e80d2cf94674d57a9141b5aeeda7619112",
-        "bytes": 15232
+        "path": "dump/cuda/collision_detection/simplex_trajectory_filter.cu/PTs.600",
+        "sha256": "cc3161d644d384f5ee3835d98c1e14b4a02b1b1f78c72a1fec0353f11636ed2c",
+        "bytes": 15312
       },
       {
-        "path": "dump/cuda/collision_detection/vertex_half_plane_trajectory_filter.cu/PHs.1200",
+        "path": "dump/cuda/collision_detection/vertex_half_plane_trajectory_filter.cu/PHs.600",
         "sha256": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
         "bytes": 16
       },
       {
-        "path": "dump/cuda/finite_element/bdf/fem_bdf2_state.cu/q_n_1.1200",
+        "path": "dump/cuda/finite_element/bdf/fem_bdf2_state.cu/q_n_1.600",
         "sha256": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
         "bytes": 16
       },
       {
-        "path": "dump/cuda/finite_element/bdf/fem_bdf2_state.cu/qv_n_1.1200",
+        "path": "dump/cuda/finite_element/bdf/fem_bdf2_state.cu/qv_n_1.600",
         "sha256": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
         "bytes": 16
       },
       {
-        "path": "dump/cuda/finite_element/finite_element_method.cu/q.1200",
-        "sha256": "0c8d54b9e5baca8e9fb014b90171212f803d83ff42db284268b6ca47d940eaf5",
+        "path": "dump/cuda/finite_element/finite_element_method.cu/q.600",
+        "sha256": "8ab2886436c6450cce8d4f8bf1dbb1e4346aa7eb286475ce4873d6ca58fd70c8",
         "bytes": 773104
       },
       {
-        "path": "dump/cuda/finite_element/finite_element_method.cu/q_prev.1200",
-        "sha256": "bcead72599d259dc2452f60780932e423f417b37a71004f185e57d972706ae0b",
+        "path": "dump/cuda/finite_element/finite_element_method.cu/q_prev.600",
+        "sha256": "eb370b6a7eb70af9e4c71a99d59eaf4d09be7f04922048196dc5e85dae62e2b5",
         "bytes": 773104
       },
       {
-        "path": "dump/cuda/finite_element/finite_element_method.cu/q_v.1200",
-        "sha256": "8ff2fcc65fcd6121c86761687fd1ff6c5d75b4d3a7a8d6bfb7a87108815959e6",
+        "path": "dump/cuda/finite_element/finite_element_method.cu/q_v.600",
+        "sha256": "f87118419509ad766b3d640a558a7ca6014519a1aab0037a2ebc08100598da1f",
         "bytes": 773104
       },
       {
-        "path": "dump/cuda/global_geometry/global_vertex_manager.cu/positions.1200",
-        "sha256": "bcfdec8cc8620d5eb759efd6160c45d6cc6512c7581095b94b6bd37e2b473ead",
+        "path": "dump/cuda/global_geometry/global_vertex_manager.cu/positions.600",
+        "sha256": "d0e5b1f2bd32501662c99905064754445107d8457fade398daa5f58ee59eb991",
         "bytes": 1109128
       },
       {
-        "path": "dump/cuda/global_geometry/global_vertex_manager.cu/prev_positions.1200",
-        "sha256": "dc0f3a3160ff80487487cb4604a5f550138a3ba66d19380259238d7fddedad5d",
+        "path": "dump/cuda/global_geometry/global_vertex_manager.cu/prev_positions.600",
+        "sha256": "b3bbbcc2453ff8eb1dec88cc0eaea3d783f3920042a874ad05ead59ab9da44f7",
         "bytes": 1109128
       }
     ]
@@ -11221,6 +11221,6 @@
   },
   "arrays": {
     "path": "arrays.npz",
-    "sha256": "a29f4ae408d55a74a5b0b20f817dd64758104d6590f55ca7709203ccb596be22"
+    "sha256": "73de896b50d48d89f57874a47b5f0917db0546344d9bb258e036877b9613c99f"
   }
 }

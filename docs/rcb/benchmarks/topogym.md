@@ -7,8 +7,17 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-02)
-The 78 tier dirs: tooling v11, `eai-standard/2.3`, `rcb-topogym:0.2.11-cu128`; Jianwen's simpler variants
+The 78 tier dirs: tooling v12, `eai-standard/2.3`, `rcb-topogym:0.2.11-cu128`; Jianwen's simpler variants
 (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v12 = v11 + knot_untying and orbits at one IPC substep like rope_threading / slotted_post_ring (the user's call,
+  2026-10-02; their 6 instances made again, settled at one substep): knot 7.4x, orbits 12-15x against substeps 4 in the
+  IPC study (knot easy lift / slip / drop within 0.1 mm, frames identical; orbits' clear approach within 0.11 mm).
+  Accepted leniency: the larger IPC dt cushions a violent impact, so the reference's noise-robust tet inversion (episode
+  end `rope_volume_invalid` / `connection_or_volume_invalid`) on knot medium's closing pinch and on orbits' ~2 m/s
+  open-finger sweep does not happen; such impacts no longer end the episode. The families with a final-settling check
+  (knot_untying, cast_coil, buzz_wire_3d, blanket_flatten) run it only on ticks where their goal predicate is reached
+  (`_settle_only_when_reached`): elsewhere its result cannot change the outcome, so success / failures / episode ends are
+  the same and only those ticks' `final_settling` metrics are left out; knot's task cost 1.84 -> 0.04 s per control step.
 - v11 = Jianwen's v10 + the IPC families' settled scene frozen with the instance (`export-ipc-state`, then `make-instance
   --ipc-settled-state`; `SimulatorConfig.ipc_settled_state`, `topogym/world/physics/ipc_settled_state.py`): every build
   restores the same bits instead of settling (settling on the GPU started builds ~0.04 um apart, enough for a
