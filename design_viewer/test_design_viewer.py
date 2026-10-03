@@ -86,36 +86,62 @@ def test_slotted_cord_settles_through_the_slot_once():
     assert sum(x > layout.post_width_m/2 for x in xs) == 1
 
 
-def test_mouse_pull_lifts_the_horseshoe_ring():
-    """Same calls as the browser: select the ring, drag 10 cm up for 1.5 s."""
-    m, d = _start("horseshoe_ring_easy")
-    ring = m.body("target_ring").id
+def _mouse(m, d, body, active):
+    """Select `body` the way the browser does; returns the perturbation to steer."""
     pert, camera, scn = mujoco.MjvPerturb(), mujoco.MjvCamera(), mujoco.MjvScene(m, 20000)
     mujoco.mjv_defaultFreeCamera(m, camera)
     mujoco.mjv_updateScene(m, d, mujoco.MjvOption(), None, camera, mujoco.mjtCatBit.mjCAT_ALL, scn)
-    pert.select, pert.active = ring, mujoco.mjtPertBit.mjPERT_TRANSLATE
+    pert.select, pert.active = m.body(body).id, active
     mujoco.mjv_initPerturb(m, d, scn, pert)
-    z = d.xpos[ring, 2]
-    pert.refselpos[:] = pert.refselpos+[0, 0, .1]
-    for _ in range(int(1.5/m.opt.timestep)):
+    return pert
+
+
+def _hold_mouse(m, d, pert, seconds=1.5):
+    for _ in range(int(seconds/m.opt.timestep)):
         d.xfrc_applied[:] = 0
         mujoco.mjv_applyPerturbForce(m, d, pert)
         mujoco.mj_step(m, d)
-    assert d.xpos[ring, 2]-z > .05
 
 
-def test_pin_holds_a_body_and_pinning_again_releases_it():
+def test_mouse_pull_lifts_the_horseshoe_ring():
+    m, d = _start("horseshoe_ring_easy")
+    pert = _mouse(m, d, "target_ring", mujoco.mjtPertBit.mjPERT_TRANSLATE)
+    z = d.xpos[pert.select, 2]
+    pert.refselpos[:] = pert.refselpos+[0, 0, .1]  # drag 10 cm up
+    _hold_mouse(m, d, pert)
+    assert d.xpos[pert.select, 2]-z > .05
+
+
+def test_mouse_turn_rotates_the_horseshoe_ring():
+    m, d = _start("horseshoe_ring_easy")
+    pert = _mouse(m, d, "target_ring", mujoco.mjtPertBit.mjPERT_ROTATE)
+    start = d.xquat[pert.select].copy()
+    mujoco.mju_mulQuat(pert.refquat, [np.cos(np.pi/8), 0, np.sin(np.pi/8), 0], start)  # turn 45 deg
+    _hold_mouse(m, d, pert)
+    turned = np.zeros(3)
+    mujoco.mju_subQuat(turned, d.xquat[pert.select], start)
+    assert np.degrees(np.linalg.norm(turned)) > 25
+
+
+def test_hold_keeps_a_body_in_place_and_holding_again_lets_it_go():
     m, d = _start("hedgehog_in_cage_medium")
     ball = m.body("ball").id
     d.qpos[m.joint("ball_free").qposadr[0]+2] += .01  # lift clear of the floor
     mujoco.mj_forward(m, d)
     z = d.xpos[ball, 2]
-    models.toggle_pin(m, d, "ball")
+    models.toggle_hold(m, d, "ball")
     _run(m, d, .5)
-    assert abs(d.xpos[ball, 2]-z) < 5e-4 and models.pinned(m, d) == ["ball"]
-    models.toggle_pin(m, d, "ball")
+    assert abs(d.xpos[ball, 2]-z) < 5e-4 and models.held(m, d) == ["ball"]
+    models.toggle_hold(m, d, "ball")
     _run(m, d, .3)
-    assert d.xpos[ball, 2] < z-5e-3 and models.pinned(m, d) == []
+    assert d.xpos[ball, 2] < z-5e-3 and models.held(m, d) == []
+
+
+def test_release_all_keeps_the_cord_attached():
+    m, d = _start("slotted_post_ring_easy")
+    models.toggle_hold(m, d, "target_ring")
+    models.release_all(m, d)
+    assert models.held(m, d) == [] and d.eq_active[[i for i in range(m.neq) if not m.equality(i).name]].all()
 
 
 def test_a_selection_from_the_previous_model_is_ignored():

@@ -1,8 +1,8 @@
-"""Scene -> MuJoCo model, and pinning a body in place.
+"""Scene -> MuJoCo model, and holding a body in place.
 
 Visual meshes are drawn in group 2 and never collide; collision geoms sit in the hidden
 group 3 (tick it under Visibility Groups in the browser to see them). Concave pieces are
-split with CoACD (cached). Every free body has an inactive weld pin_<body> to the world.
+split with CoACD (cached). Every free body has an inactive weld hold_<body> to the world.
 """
 import hashlib
 import pickle
@@ -21,7 +21,7 @@ def build(scene):
         if b.free:
             body.add_freejoint(name=f"{b.name}_free")
             # MjSpec's default weld data is all zeros (torquescale 0 = no weld); set it explicitly.
-            spec.add_equality(type=mujoco.mjtEq.mjEQ_WELD, name=f"pin_{b.name}", name1="world", name2=b.name,
+            spec.add_equality(type=mujoco.mjtEq.mjEQ_WELD, name=f"hold_{b.name}", name1="world", name2=b.name,
                               objtype=mujoco.mjtObj.mjOBJ_BODY, active=False, solref=[.02, 1],
                               data=[0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1])
         spec.add_mesh(name=f"{b.name}_visual", uservert=b.visual.vertices.ravel(), userface=b.visual.faces.ravel(),
@@ -44,9 +44,10 @@ def _base_xml(scene):
     return f"""<mujoco model="{scene.name}">
   <option timestep="{scene.extras.get('timestep', .002)}" integrator="implicitfast" cone="{'pyramidal' if cable else 'elliptic'}"/>
   <statistic center="0 0 .12" extent=".35"/>
-  <!-- Mouse pull spring per kg of the grabbed body. MuJoCo's 100 cannot lift the 0.13 kg
-       horseshoe ring that carries the 1 kg assembly (1000: +69 mm of a 100 mm pull). -->
-  <visual><map stiffness="1000"/></visual>
+  <!-- Mouse springs, scaled by the grabbed body's mass / inertia. MuJoCo's defaults (100, 500)
+       barely move the horseshoe ring that carries the 1 kg assembly: 1.4 mm of a 10 cm pull,
+       7 deg of a 45 deg turn; these give 69 mm and 36 deg with <3 mm contact penetration. -->
+  <visual><map stiffness="1000" stiffnessrot="5000"/></visual>
   {'<extension><plugin plugin="mujoco.elasticity.cable"/></extension>' if cable else ''}
   <default><geom friction=".3" condim="3" solref=".004 1"/></default>
   <worldbody>
@@ -101,20 +102,20 @@ def _coacd(mesh, threshold):
     return pickle.loads(path.read_bytes())
 
 
-def toggle_pin(model, data, body):
-    """Weld `body` to the world where it is now (a second hand), or let it go if already pinned."""
-    eq = model.equality(f"pin_{body}").id
+def toggle_hold(model, data, body):
+    """Weld `body` to the world where it is now (a second hand), or let it go if already held."""
+    eq = model.equality(f"hold_{body}").id
     if not data.eq_active[eq]:
         b = model.body(body).id
         model.eq_data[eq, :11] = [0, 0, 0, *data.xpos[b], *data.xquat[b], 1]  # body pose relative to the world
     data.eq_active[eq] = not data.eq_active[eq]
 
 
-def unpin_all(model, data):
-    for body in pinned(model, data):
-        data.eq_active[model.equality(f"pin_{body}").id] = 0
+def release_all(model, data):
+    for body in held(model, data):
+        data.eq_active[model.equality(f"hold_{body}").id] = 0
 
 
-def pinned(model, data):
-    return [model.equality(eq).name[4:] for eq in range(model.neq)
-            if model.equality(eq).name.startswith("pin_") and data.eq_active[eq]]
+def held(model, data):
+    return [model.equality(eq).name[5:] for eq in range(model.neq)
+            if model.equality(eq).name.startswith("hold_") and data.eq_active[eq]]
