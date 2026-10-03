@@ -150,7 +150,7 @@
    ],
    "why_hard": "Close a lid hinged open at 150°, with no handle, by pushing it over with the gripper. Then lift the jar 0.47-0.60 m above the table (0.71 m from the shoulder) without tilting more than 30°. Lifting is unavoidable, so closing first is enforced.",
    "oracle": {
-    "privileged": "none",
+    "privileged": "full",
     "standard": "none"
    },
    "oracle_evidence": null,
@@ -184,7 +184,7 @@
    "standard": null,
    "require_instance_exact": false
   },
-  "lid_transport/task_0023": {
+  "lid_transport/task_0016": {
    "rank": 8,
    "shortlist": "top10",
    "include": false,
@@ -192,7 +192,7 @@
     "privileged",
     "standard"
    ],
-   "why_hard": "A small cap must sit on a narrow whiskey-bottle mouth before lifting; 2.9 cm sphere. Standard needs millimetre alignment from depth. Needs strict grading.",
+   "why_hard": "Dry analogue of the cap task it replaces: a small cap must sit on the narrow mouth of a jug (a pitcher) before the jug may leave the table; the 7.4 cm goal sphere floats 0.15 m above the table top at 0.61 m from the robot, so the capped jug must be lifted and carried. Needs strict grading (upstream ignores the cap).",
    "oracle": {
     "privileged": "none",
     "standard": "none"
@@ -201,7 +201,7 @@
    "difficulty": null,
    "standard": null,
    "require_instance_exact": false,
-   "blocked": "pipeline lid_transport_liquid: ManiGuard's family runner (scripts/eval_family.sh) evaluates it with GPU dynamics (EVAL_USE_GPU_DYNAMICS), so it is not a dry task; GPU PhysX replay determinism is unmeasured. Kept out until the user decides (swap in a dry lid_transport_food task, or measure GPU-dynamics determinism)"
+   "replaces": "lid_transport/task_0023 (lid_transport_liquid: ManiGuard's family runner evaluates it with GPU dynamics, so it is not dry; replaced by the hardest dry lid task of the same kind, user decision 2026-10-03)"
   },
   "jar_transport/task_0002": {
    "rank": 9,
@@ -383,7 +383,7 @@
    "standard": null,
    "require_instance_exact": false
   },
-  "lid_transport/task_0021": {
+  "lid_transport/task_0007": {
    "rank": 19,
    "shortlist": "reserve",
    "include": false,
@@ -391,7 +391,7 @@
     "privileged",
     "standard"
    ],
-   "why_hard": "Cap on a soap bottle (2.6 cm sphere); same cap model as lid task_0024.",
+   "why_hard": "A hingeless jar on a countertop with its lid 0.60 m away and the smallest goal sphere of the dry lid tasks (4.3 cm) 0.89 m from the jar: a long fetch for the lid, then a long, precise carry. Needs strict grading.",
    "oracle": {
     "privileged": "none",
     "standard": "none"
@@ -400,7 +400,7 @@
    "difficulty": null,
    "standard": null,
    "require_instance_exact": false,
-   "blocked": "pipeline lid_transport_liquid: ManiGuard's family runner (scripts/eval_family.sh) evaluates it with GPU dynamics (EVAL_USE_GPU_DYNAMICS), so it is not a dry task; GPU PhysX replay determinism is unmeasured. Kept out until the user decides (swap in a dry lid_transport_food task, or measure GPU-dynamics determinism)"
+   "replaces": "lid_transport/task_0021 (lid_transport_liquid: ManiGuard's family runner evaluates it with GPU dynamics, so it is not dry; replaced by the hardest dry lid task of the same kind, user decision 2026-10-03)"
   },
   "jar_transport/task_0024": {
    "rank": 20,

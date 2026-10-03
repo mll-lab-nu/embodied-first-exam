@@ -25,7 +25,7 @@ is rendered from instances/, so the instruction states the rules the verifier ch
 scratch directory, passed through scripts/task_conventions.py's normalize() and then synced into tasks/: a task dir holds
 exactly what the generator writes."""
 from __future__ import annotations
-import argparse, json, os, pathlib, sys, tempfile
+import argparse, ast, json, os, pathlib, re, sys, tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/maniguard"
@@ -33,6 +33,8 @@ LAYER = ROOT / "scripts/eai_standard"
 REGISTRY = "ghcr.io/embodied-agent-interface-v2-internal"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 REVIEW_PR = ""                              # the pull request with the per-task review (PROTOCOL §2.7), once there is one
+# agent egress: model APIs only, by default in both modes (user decision 2026-10-03); the host list of set_agent_egress.py
+HOSTS = ast.literal_eval(re.search(r"^HOSTS = (\[.*?\])", (ROOT / "scripts/set_agent_egress.py").read_text(), re.S | re.M).group(1))
 
 
 def toml_str(s: str) -> str:
@@ -205,7 +207,10 @@ GRASP = {
 }
 
 
-def reference_none() -> str:
+def reference_none(mode: str = "privileged", twin_full: bool = False) -> str:
+    if mode == "standard" and twin_full:
+        return ("None yet (`oracle = \"none\"`): the privileged twin's reference trajectory scores 1 on its verifier; driven "
+                "through this task's service, it is the planned positive example here (docs/benchmarks/maniguard.md).")
     return ("None yet: no positive example has been graded 1 on this version (`oracle = \"none\"`). ManiGuard's scripted "
             "demonstrations were recorded at 30 Hz in a differently built scene; a time-resampled demonstration or a hand-built "
             "trajectory that this verifier scores 1 is the planned positive example (docs/benchmarks/maniguard.md).")
@@ -224,9 +229,12 @@ def oracle_evidence(T: dict, mode: str) -> str:
     if ev:
         return ev
     if T["oracle"][mode] == "none":
-        return ("No positive example yet: the eai-maniguard image and the BEHAVIOR-1K 3.7.2 data were not set up when this task "
-                "was generated (2026-10-03); the verifier, the frozen instance's hash and a positive example come with the first "
-                "run on a GPU host. Human review per task (PROTOCOL §2.7).")
+        if mode == "standard" and T["oracle"].get("privileged") == "full":
+            return ("No positive example through the standard service yet: the privileged twin's reference trajectory (a "
+                    "time-resampled public demonstration) scores 1 there and is the planned one. Human review per task (PROTOCOL §2.7).")
+        return ("No positive example yet: ManiGuard's public demonstrations are 30 Hz recordings in a differently built scene, so a "
+                "time-resampled one (or a hand-built trajectory) must score 1 on this verifier first (docs/benchmarks/maniguard.md). "
+                "Human review per task (PROTOCOL §2.7).")
     raise RuntimeError(f"oracle {T['oracle'][mode]} ({mode}) needs its oracle_evidence in families.json")
 
 
@@ -253,13 +261,14 @@ def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[
               "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(), "BUDGET": str(budget), "BUDGET_MIN": str(budget // 60),
               "PROMPT": prompt, "PROMPT_TOML": toml_str(prompt), "CONSTRAINT_CLASS": F["constraint_class"], "SKILL": F["skill"],
               "GRASPING": F["grasping"], "HORIZON": str(F["upstream_max_steps"]), "DIFFICULTY": T["difficulty"].strip(),
-              "README_SAFETY": readme_safety(diag)}
+              "README_SAFETY": readme_safety(diag), "ALLOWED_HOSTS": "[" + ", ".join(f'"{h}"' for h in HOSTS) + "]"}
 
     def per_mode(mode: str) -> dict:
         lvl = T["oracle"][mode]
         ev = None if lvl == "full" and not T.get("oracle_evidence") else oracle_evidence(T, mode)
         return {"ORACLE": lvl, "REVIEW_NOTE": review_note(lvl), "ORACLE_EVIDENCE_LINE": f'oracle_evidence = "{toml_str(ev)}"\n' if ev else "",
-                "REFERENCE_SOLUTION": reference_none() if lvl == "none" else (HERE / "oracles" / key / "README_oracle.md").read_text().strip()}
+                "REFERENCE_SOLUTION": reference_none(mode, T["oracle"].get("privileged") == "full") if lvl == "none"
+                else (HERE / "oracles" / key / "README_oracle.md").read_text().strip()}
     priv = {**per_mode("privileged"), "GOAL_BLOCK": goal_block_privileged(diag), "SAFETY_BLOCK": safety_block_privileged(diag),
             "OBJECTS_BLOCK": objects_block_privileged(diag, scene), "GRASP_TEXT": GRASP[F["grasping"]],
             "GRADE_FLAGS": "--require-instance-exact " if T.get("require_instance_exact") else ""}

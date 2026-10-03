@@ -28,7 +28,7 @@ family = "jar_transport"
 mode = "standard"                  # robot as a service: RGB-D + proprioception, no object poses, no success or safety predicate, no reset
 protocol = "eai-standard/2.2"
 oracle = "none"
-oracle_evidence = "No positive example yet: the eai-maniguard image and the BEHAVIOR-1K 3.7.2 data were not set up when this task was generated (2026-10-03); the verifier, the frozen instance's hash and a positive example come with the first run on a GPU host. Human review per task (PROTOCOL §2.7)."
+oracle_evidence = "No positive example through the standard service yet: the privileged twin's reference trajectory (a time-resampled public demonstration) scores 1 there and is the planned one. Human review per task (PROTOCOL §2.7)."
 instance_seed = 14
 expert_time_estimate_hours = 3.0
 maniguard_task = "jar_transport/task_0014"
@@ -48,7 +48,8 @@ timeout_sec = 14400               # 4 h: a 2 h episode at 20 Hz records up to ~1
 
 [agent]
 timeout_sec = 7200.0             # ManiGuard budget, both modes (docs/benchmarks/maniguard.md)
-# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs (ManiGuard's demos are public).
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py): ManiGuard's demonstrations and data generator are public
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
 
 [environment]
 build_timeout_sec = 1800.0

@@ -7,25 +7,28 @@ by a Spot-compiled monitor. It runs on BEHAVIOR-1K **v3.7.2** (OmniGibson 3.7.2 
 `simulator = "maniguard"`, `robot = "franka-panda-longfinger"`. Tasks: `maniguard-<family>-i<NN>-privileged` and the
 standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the ManiGuard-Bench task index, base level.
 
-Status (2026-10-03): the generator, tooling, graders, image recipe and the first task pair
-(`maniguard-jar-transport-i14`) exist; nothing has run yet (the image is not built and the data not fetched on any host).
-The task's frozen instance has no state hash yet, so it fails closed (every grade is 0) until `make-instance` runs.
+Status (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy smoke
+(`jar_transport/task_0000`) passes in the image. `maniguard-jar-transport-i14-privileged` is frozen (state hash
+`5d235d1b51a76116`, the same in fresh containers, also without network) and its oracle is `full`: Harbor's oracle run
+scores 1 (two fresh replays identical), `nop` 0. Its standard twin and the other 19 shortlisted tasks have not run yet.
 
 ## Prerequisites (every ManiGuard run)
 - **The image** `ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:<images/maniguard/VERSION>`, built on the host
   (BUILD_ONLY: NVIDIA Isaac Sim 4.5 inside). `images/maniguard/` has the recipe: BEHAVIOR-1K v3.7.2 installed the way its
   own `setup.sh --new-env --omnigibson --bddl` does (Python 3.10, torch 2.6.0+cu124, the 26 Isaac Sim 4.5.0.0 wheels,
-  sha256-checked), PyAV and Spot 2.16 from conda-forge, and ManiGuard's evaluator at `a1b6444b3` (its import closure only).
-  It is NOT eai-behavior (BEHAVIOR-1K 3.9.2 / Isaac Sim 5.1): ManiGuard's frozen scenes are 3.7.2 snapshots and its runtime
-  patches target 3.7.2.
+  sha256-checked), Spot 2.16 from conda-forge, PyAV from PyPI (conda-forge's ffmpeg brings a Vulkan loader and libglvnd
+  that crash Isaac's renderer), g++ for OmniGibson's `torch.compile`, and ManiGuard's evaluator at `a1b6444b3` (its import
+  closure only). It is NOT eai-behavior (BEHAVIOR-1K 3.9.2 / Isaac Sim 5.1): ManiGuard's frozen scenes are 3.7.2
+  snapshots and its runtime patches target 3.7.2.
 - **The data root** `RCB_MANIGUARD_DATA`: a host directory with the BEHAVIOR-1K 3.7.2 data, mounted read-only at `/data`
   by every service that runs the simulator (`${RCB_MANIGUARD_DATA:?…}`, so compose refuses to start without it):
   `behavior-1k-assets/` (3.7.2rc1), `omnigibson-robot-assets/` (with ManiGuard's long-finger Franka under
   `models/franka/franka_panda_longfinger/`; without it the stock hand would load silently, so the tooling refuses), and
   `omnigibson.key`. `scripts/maniguard/prep_data.py` builds it: from the pinned Hugging Face files, by range requests, only
-  the members the selected tasks load (0.17 GB for all 20 shortlisted tasks; `--full`: all 34.7 GB, streamed), the
-  robot assets (2.5 GB), the long-finger bundle (37 MB, hash-checked), and the key copied from an existing licensed copy
-  (`--key`; the script never accepts the BEHAVIOR Data Bundle licence or downloads a key). It is never in an image.
+  the members the selected tasks load plus all of `systems/` (an object's abilities name particle systems, which the scene
+  import loads: 0.98 GB for the 20 shortlisted tasks; `--full`: all 34.7 GB, streamed), the robot assets (2.4 GB), the
+  long-finger bundle (37 MB, hash-checked), and the key copied from an existing licensed copy (`--key`; the script never
+  accepts the BEHAVIOR Data Bundle licence or downloads a key): 3.4 GB in all. It is never in an image.
 - **One RTX-class NVIDIA GPU per Isaac process** (physics runs on the CPU), a driver Isaac Sim 4.5 supports (ManiGuard
   verified 580.x and saw startup segfaults with newer ones). Blackwell needs a torch 2.7 / cu128 build of the image: not done.
 - One Isaac simulator per 32 GB of host RAM; the compose files cap torch / OpenMP pools at 8 threads.
@@ -39,9 +42,12 @@ The task's frozen instance has no state hash yet, so it fails closed (every grad
   the LTL specification and its thresholds) is rendered from `instances/`, so the instruction states what the verifier
   checks. `--check` only compares; CI runs it.
 - The 20 shortlisted dry tasks (ranked hardest first; ManiGuard contributes at most 15 jobs) are in `families.json`; one is
-  included so far (`jar_transport/task_0014`). Two are blocked: `lid_transport/task_0023` and `task_0021` are
-  `lid_transport_liquid`, which ManiGuard's family runner evaluates with GPU dynamics (`EVAL_USE_GPU_DYNAMICS`), so they are
-  not dry; the tooling follows the runner (`instance.json` `gpu_dynamics`).
+  included so far (`jar_transport/task_0014`). Change of 2026-10-03 (user decision): the first shortlist had
+  `lid_transport/task_0023` (rank 8) and `task_0021` (rank 19), both `lid_transport_liquid`, which ManiGuard's family runner
+  evaluates with GPU dynamics (`EVAL_USE_GPU_DYNAMICS` for every *liquid* pipeline), so they are not dry; they were replaced
+  by the hardest dry lid tasks of the same kind, `lid_transport/task_0016` (a cap on a jug, the sphere 0.15 m above the
+  table) and `task_0007` (the smallest dry-lid sphere, 4.3 cm, 0.89 m from the jar). The tooling follows the runner for any
+  liquid task (`instance.json` `gpu_dynamics`).
 - New task: set `include: true` and write its texts in `families.json`, run `make-instance` in the image to freeze it
   (below), run the generator and `cd tasks && harbor add --scan .`.
 
@@ -80,14 +86,28 @@ enforced: time is the budget, as for BEHAVIOR-1K; `MAX_STEPS` = 50,000 only stop
   state hash, the state hash every 50 control steps, the hash of the per-step safety labels and every verdict.
 - Standard: the service dumps the episode, the collect hook (`environment/sim/finalize.sh`) replays it the same way twice;
   `success = live ∧ replay ∧ deterministic ∧ instance_ok`.
-- Not measured yet (the first thing to do on a GPU host): whether ManiGuard's stack replays bit-exactly in fresh processes
-  (BEHAVIOR-1K 3.9.2 on CPU PhysX does) and whether another host rebuilds the instance exactly. That decides `instance_ok`
-  (default) vs `--require-instance-exact` (families.json `require_instance_exact`) and the standard resume class (`approx`
-  until then). The privileged verifier keeps Harbor's default network (an Isaac Sim start without network is untested).
+- Measured (laptop, 2026-10-03): fresh-process replays are bit-exact (PhysX on the CPU: the final hash, the 50-step
+  checkpoints and the label hash agree, `first_divergence_step` = -1), and a fresh container rebuilds the frozen instance
+  to the exact recorded hash, also with `--network none` (Isaac Sim starts offline). Not measured: whether another host
+  (another GPU or driver) rebuilds it exactly. Until then `instance_ok` (tolerance) is the default rather than
+  `--require-instance-exact` (families.json `require_instance_exact`), and the standard resume class stays `approx`.
+
+## Positive examples (the oracle)
+ManiGuard publishes 40 scripted demonstrations per task (`IDEAS-Lab-Northwestern/datagen-<family>-v1-joint-5cam`, LeRobot,
+30 Hz, CC BY-NC 4.0), recorded by its data generator in a scene built object by object. A privileged task's reference
+trajectory is one of them, time-resampled to the evaluator's 20 Hz: `scripts/maniguard/oracles/<family>/<task>/oracle_gen.py`
+fetches the pinned episode (sha256-checked), reads the generator's commanded joint targets at the midpoint of each control
+step and appends 40 rows holding the last one; `oracle_trajectory.npz` is its output, `README_oracle.md` its record (the
+task README's reference solution). Both go to `solution/` only (the oracle agent's mount; the leak check keeps them and the
+dataset's name out of everything the agent reads). A task's `oracle` becomes `full` only once Harbor's oracle run scores 1.
+The standard twin stays `none` until the same trajectory has been driven through its service.
 
 ## Time budget (D8)
-7200 s for every task of both modes: every Python process pays an Isaac Sim 4.5 launch and the scene load (to be measured;
-small tabletop scenes), and the shortlisted tasks are long multi-phase manipulations.
+7200 s for every task of both modes (user decision 2026-10-03): every Python process pays an Isaac Sim 4.5 launch and the
+scene load (measured: 23 s with a warm cache, 239 s with a cold one, which every trial's first process has: Kit's shaders
+and OmniGibson's `torch.compile` kernels; then roughly 20 control steps per wall second), and the shortlisted tasks are long
+multi-phase manipulations. ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A Harbor
+oracle trial of jar 14 takes 6 min (the verifier's two replays: 331 s).
 
 ## Kit cache: one per trial
 As for BEHAVIOR-1K: every compose file names its cache volume without a fixed name (`rcb_maniguard_cache` for the agent,
@@ -122,19 +142,19 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
   `check-limited-texts.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
   base pose is in `robot_spec`. Privileged tasks give everything through the tooling.
 - **Reference solutions out of reach.** ManiGuard's 40 public demonstrations per task, its scripted data generator and its
-  grasp annotations are not in the image or the task dirs. Agent egress stays Harbor's default until the user decides
-  (`scripts/set_agent_egress.py allowlist` closes it).
+  grasp annotations are not in the image or the task dirs, and agent egress is allowlisted to the model APIs by default in
+  both modes (`[agent] network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`; user decision 2026-10-03).
 
 ## Licences
 ManiGuard code: Apache-2.0 (the evaluator modules in the image). ManiGuard-Bench task files: CC BY-NC 4.0 (copied unchanged
-into `scripts/maniguard/instances/` and the task dirs, `instances/NOTICE`). The long-finger robot asset: Apache-2.0.
+into `scripts/maniguard/instances/` and the task dirs, `instances/NOTICE`). The reference trajectories
+(`scripts/maniguard/oracles/`, the tasks' `solution/`) derive from ManiGuard's public demonstrations (CC BY-NC 4.0) and
+carry the same licence; each `README_oracle.md` names its source. The long-finger robot asset: Apache-2.0.
 BEHAVIOR-1K code: MIT; the BEHAVIOR Data Bundle: no redistribution (mounted, never copied). Isaac Sim 4.5 / Omniverse Kit:
 NVIDIA proprietary, hence BUILD_ONLY. Spot: GPL-3.0-or-later (in the never-distributed image only).
 
 ## Open items
-- First GPU run: build the image, prepare the data root, upstream smoke (`--random-policy` on `jar_transport/task_0000`),
-  `make-instance` for the included tasks, the fresh-process determinism probe, a positive example per task, `nop`.
-- A positive example: ManiGuard's demonstrations are 30 Hz recordings of its data generator in a differently built scene
-  (action 30 Hz, the scene re-posed object by object); a time-resampled demo has to be tested through this verifier; a
-  hand-built trajectory on the tooling is the fallback.
-- The standard service, its collect hook and grader are written but have never run.
+- The other 19 shortlisted tasks: `make-instance`, a resampled demonstration through the verifier, Harbor oracle and `nop`.
+- The standard service, its collect hook and grader are written but have never run (jar 14's twin is next).
+- Another host: whether it rebuilds the frozen instances exactly (`instance_exact`).
+- A cold start compiles with up to 32 torch inductor workers and peaks at about 13 GiB of RAM (about 4 GB of VRAM).
