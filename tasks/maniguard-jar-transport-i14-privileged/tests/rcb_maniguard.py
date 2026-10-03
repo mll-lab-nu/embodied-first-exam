@@ -201,6 +201,27 @@ def top_down_quat(yaw: float = 0.0) -> np.ndarray:
     return _xyzw_of_R(np.stack([x, y, z], axis=1))
 
 
+def _deterministic_grasp_anchor() -> None:
+    """The one change to OmniGibson's behaviour, for reproducibility only. An assisted or sticky grasp is a fixed joint
+    anchored at a contact point between the finger and the object, and OmniGibson takes the first matching point it finds
+    in a Python set of (prim path, point tensor) pairs: tensors hash by identity, so the choice, and with it the last bits of
+    every later step, differs between processes (measured: fresh replays of cabinet_pickup/task_0019 diverged at the first
+    grasp). Here the pairs come sorted (by link, then coordinates): one of the points upstream may pick, the same one in
+    every process. The constraint holds the hand and the object in the pose they have at that instant either way."""
+    from omnigibson.robots.manipulation_robot import ManipulationRobot
+    orig = ManipulationRobot._find_gripper_contacts
+    if getattr(orig, "_rcb_sorted", False):
+        return
+
+    def find_gripper_contacts(self, arm="default", return_contact_positions=False):
+        data, links = orig(self, arm=arm, return_contact_positions=return_contact_positions)
+        if return_contact_positions:
+            data = sorted(data, key=lambda d: (str(d[0]), tuple(float(x) for x in d[1])))
+        return data, links
+    find_gripper_contacts._rcb_sorted = True
+    ManipulationRobot._find_gripper_contacts = find_gripper_contacts
+
+
 class _Kin:
     """The arm's kinematic model, read at run time from the simulator's own articulation (every USD joint of the robot:
     its two bodies, joint frames and axis, exactly as PhysX simulates it; nothing is copied from the dataset). FK of the
@@ -396,6 +417,7 @@ class Session:
         import omnigibson as og
         from omnigibson.macros import gm
         self.og, self.gm = og, gm
+        _deterministic_grasp_anchor()
         self.gpu_dynamics = bool(gm.USE_GPU_DYNAMICS)
         og_cfg = B.build_og_config(info, cfg)
         # The only change to upstream's environment: all four recorded task cameras instead of its single policy view
@@ -694,6 +716,14 @@ class Session:
             except Exception:  # noqa: BLE001
                 pass
         self.og.sim.load_state(self.S0.clone(), serialized=True)
+        # OmniGibson's spatial states (AABB, hence Inside, OnTop, Touching) read poses from fabric, which PhysX writes only
+        # for bodies awake in a simulate call: a body load_state puts back while asleep keeps its old fabric pose, for any
+        # number of steps (measured: a jar reset out of a drawer still counted as inside it). So: wake every object, one
+        # physics step (fabric catches up), and load the frozen state again (physics exact; fabric within one step's drift).
+        for o in self.env.scene.objects:
+            o.wake()
+        self.og.sim.step_physics()
+        self.og.sim.load_state(self.S0.clone(), serialized=True)
         self.og.sim.render()
         self._start_episode()
 
@@ -898,7 +928,7 @@ class Session:
             r = self.robot
             names = list(r.joints)
             arm_q = [names[i] for i in r.arm_control_idx[r.default_arm].tolist()]
-            root = r.root_link.name if hasattr(r.root_link, "name") else r.root_link_name
+            root = r.root_link_name                                      # the USD link name (root_link.name is "<robot>:<link>")
             pos, quat = r.root_link.get_position_orientation()          # the fixed base: the root link's world pose
             self._kinm = _Kin(r, self.og.sim.stage, arm_q, root, _T_of(_np(pos), _np(quat)))
             self._kin_lo = np.array([float(r.joints[n].lower_limit) for n in arm_q])
@@ -938,7 +968,7 @@ class Session:
                        "seed_default": "the measured joints", "tol_pos_m": KIN_TOL_POS_M, "tol_rot_rad": KIN_TOL_ROT_RAD,
                        "max_iters": KIN_MAX_ITERS, "collision_checking": "none", "joint_limits": "enforced"},
                 "stateless": True,
-                "note": f"q = the 7 arm joints (proprio columns). Poses in the world frame: the base ({r.root_link.name}) is fixed, its pose is "
+                "note": f"q = the 7 arm joints (proprio columns). Poses in the world frame: the base ({r.root_link_name}) is fixed, its pose is "
                         "robot_spec.base.pose. The model is the simulator's own articulation (its USD joint frames): FK of the measured "
                         "joints gives the measured link poses."}
 
@@ -993,7 +1023,7 @@ class Session:
             "description": "Franka Emika Panda arm with ManiGuard's long fin-ray finger gripper (IDEAS Lab franka_panda_longfinger), fixed "
                            "base, as modelled in OmniGibson 3.7.2",
             "base": {"type": "fixed", "pose": [float(v) for v in _np(pos)] + [float(v) for v in _np(quat)],
-                     "frame": f"{r.root_link.name}: the robot's root link; pose = world x y z qx qy qz qw"},
+                     "frame": f"{r.root_link_name}: the robot's root link; pose = world x y z qx qy qz qw"},
             "joints": joints,
             "grippers": {"gripper": {"joints": [names[i] for i in fingers],
                                      "opening_m": [round(2 * float(r.joint_lower_limits[fingers[0]]), 6), round(2 * float(r.joint_upper_limits[fingers[0]]), 6)],

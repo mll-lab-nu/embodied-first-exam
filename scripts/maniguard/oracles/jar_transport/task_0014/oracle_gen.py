@@ -27,7 +27,8 @@ import numpy as np
 TASK = "jar_transport/task_0014"
 REPO = "IDEAS-Lab-Northwestern/datagen-jar-v1-joint-5cam"
 REVISION = "080dddb4f51ab060e9127e322c06e8ba4147d83c"
-PATH = "data/chunk-000/episode_000560.parquet"
+EPISODE = 560
+PATH = f"data/chunk-000/episode_{EPISODE:06d}.parquet"
 SHA256 = "c4239e4c151a8f7fe55d00ad2f5df169c24787a52a052a7715efa4ff898b5071"
 HZ_IN, HZ_OUT, HOLD = 30.0, 20.0, 40
 
@@ -55,7 +56,7 @@ def main() -> None:
         raise SystemExit("the episode's sha256 does not match the pinned one")
     import pyarrow.parquet as pq
     cols = pq.read_table(io.BytesIO(raw)).to_pydict()
-    assert set(cols["episode_index"]) == {560}
+    assert set(cols["episode_index"]) == {EPISODE}
     acts = resample(np.array(cols["actions_commanded"], np.float32))
     meta = {"source": f"hf://datasets/{REPO}@{REVISION}/{PATH}", "license": "CC BY-NC 4.0", "column": "actions_commanded",
             "resampling": "30 Hz -> 20 Hz, zero-order hold read at each control step's midpoint", "hold": HOLD,

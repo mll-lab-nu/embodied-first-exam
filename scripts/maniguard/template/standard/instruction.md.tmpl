@@ -70,6 +70,5 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 - **Robot**: `spec["robot_spec"]`: joints and their limits, the gripper rule, drive gains, the end-effector frame vs the
   fingertip centre; `spec["world"]`: frame, units, quaternion order, camera axes.
 - **Kinematics** (stateless: no physics, no time): `r.fk(q7)`, `r.ik({"tcp": pose7}, seed=q7)` in the world frame.
-- `spec["static"]["goal_sphere_radius_m"]`: the radius of the green goal sphere (where it is, the cameras show).
-
+@@STATIC_SPHERE_LINE@@
 @@STANDARD_OBJECTS@@

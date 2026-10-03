@@ -8,9 +8,11 @@ by a Spot-compiled monitor. It runs on BEHAVIOR-1K **v3.7.2** (OmniGibson 3.7.2 
 standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the ManiGuard-Bench task index, base level.
 
 Status (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy smoke
-(`jar_transport/task_0000`) passes in the image. `maniguard-jar-transport-i14-privileged` is frozen (state hash
-`5d235d1b51a76116`, the same in fresh containers, also without network) and its oracle is `full`: Harbor's oracle run
-scores 1 (two fresh replays identical), `nop` 0. Its standard twin and the other 19 shortlisted tasks have not run yet.
+(`jar_transport/task_0000`) passes in the image. Two privileged tasks are frozen (the same state hash in fresh containers,
+also without network) and have a `full` oracle, a time-resampled public demonstration that Harbor's oracle run scores 1
+(two fresh replays identical), with `nop` 0: `maniguard-jar-transport-i14-privileged` (state hash `5d235d1b51a76116`) and
+`maniguard-cabinet-pickup-i19-privileged` (`d2191aa0e0587eb3`). Their standard twins and the other 18 shortlisted tasks
+have not run yet.
 
 ## Prerequisites (every ManiGuard run)
 - **The image** `ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:<images/maniguard/VERSION>`, built on the host
@@ -42,7 +44,7 @@ scores 1 (two fresh replays identical), `nop` 0. Its standard twin and the other
   the LTL specification and its thresholds) is rendered from `instances/`, so the instruction states what the verifier
   checks. `--check` only compares; CI runs it.
 - The 20 shortlisted dry tasks (ranked hardest first; ManiGuard contributes at most 15 jobs) are in `families.json`; one is
-  included so far (`jar_transport/task_0014`). Change of 2026-10-03 (user decision): the first shortlist had
+  included so far (`jar_transport/task_0014`, `cabinet_pickup/task_0019`). Change of 2026-10-03 (user decision): the first shortlist had
   `lid_transport/task_0023` (rank 8) and `task_0021` (rank 19), both `lid_transport_liquid`, which ManiGuard's family runner
   evaluates with GPU dynamics (`EVAL_USE_GPU_DYNAMICS` for every *liquid* pipeline), so they are not dry; they were replaced
   by the hardest dry lid tasks of the same kind, `lid_transport/task_0016` (a cap on a jug, the sphere 0.15 m above the
@@ -57,8 +59,12 @@ family's eval config (`configs/eval/<family>_joint.yaml`, checked against the va
 the snapshot (DummyTask; 20 Hz control and rendering, 120 Hz physics; GPU dynamics only for liquid pipelines), the sensors
 resized to 256², `env.reset()`, the recorded camera poses, the perturbation hook, the `joint_position_raw` controllers, the
 family's grasping mode (jar: assisted; the others: sticky), 10 warm-up steps holding the arm with the gripper open, 2
-renders, the safety monitor (`TaskLTLMonitor`, Spot) and its initial check. The only change: all four recorded task
-cameras exist (upstream builds only its policy's `cam_left`); cameras are render products, never simulator state.
+renders, the safety monitor (`TaskLTLMonitor`, Spot) and its initial check. Two changes: all four recorded task cameras
+exist (upstream builds only its policy's `cam_left`; cameras are render products, never simulator state), and the anchor of
+an assisted or sticky grasp is chosen deterministically. OmniGibson anchors the grasp's fixed joint at the first matching
+contact point in a Python set of (prim path, point tensor) pairs; tensors hash by identity, so the choice differed between
+processes and fresh replays of cabinet_pickup/task_0019 diverged at its first grasp. The tooling sorts those pairs (one of
+the points upstream may pick; the constraint holds the hand and the object in their pose at that instant either way).
 `rcb_maniguard.py make-instance` records the state's sha1 (`og.sim.dump_state`), every object's pose and the robot's joints
 in `instance.json`; a later load must match exactly (`instance_exact`) or within tolerance (`instance_ok`).
 
@@ -107,7 +113,7 @@ The standard twin stays `none` until the same trajectory has been driven through
 scene load (measured: 23 s with a warm cache, 239 s with a cold one, which every trial's first process has: Kit's shaders
 and OmniGibson's `torch.compile` kernels; then roughly 20 control steps per wall second), and the shortlisted tasks are long
 multi-phase manipulations. ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A Harbor
-oracle trial of jar 14 takes 6 min (the verifier's two replays: 331 s).
+oracle trial takes 6 min for jar 14 (747 rows; the verifier's two replays 331 s) and 9 min for cabinet 19 (2291 rows; 492 s).
 
 ## Kit cache: one per trial
 As for BEHAVIOR-1K: every compose file names its cache volume without a fixed name (`rcb_maniguard_cache` for the agent,
@@ -130,7 +136,12 @@ floor convention only.
 | `tests/rcb_traj.py` | `tests/rcb_maniguard.py` |
 | standard sidecar | `environment/sim/server.py` (2.2 adapter), `finalize.sh`, `rcb_maniguard.py`, `instance/`; `rcb_limited.py`, `rcb1.py`, `run.sh` from `scripts/eai_standard/` |
 
-The tooling records (T, 8) actions at 20 Hz. Every copy of the tooling and of the standard sidecar files is byte-identical
+The tooling records (T, 8) actions at 20 Hz. Every entry point was exercised in the simulator (2026-10-03): FK of the
+measured joints equals the simulator's end-effector pose to 0.2 µm, an IK round trip is within 0.6 mm. `s.reset()` loads
+the frozen state in-process (approximate: PhysX keeps solver state) and then refreshes the fabric poses OmniGibson's
+spatial states read (AABB, Inside, OnTop): PhysX writes them only for bodies awake in a step, so a sleeping body put back
+by `load_state` kept its old pose (measured: a jar reset out of a drawer still counted as inside it); reset wakes every
+object, takes one physics step and loads the state again. Every copy of the tooling and of the standard sidecar files is byte-identical
 across the benchmark (`check-tooling-identity.sh`); `check-maniguard-leak.sh` keeps the agent side to the tooling and the
 frozen instance and checks that nothing the agent reads names ManiGuard's demonstrations, data generator or grasp annotations.
 
@@ -154,7 +165,7 @@ BEHAVIOR-1K code: MIT; the BEHAVIOR Data Bundle: no redistribution (mounted, nev
 NVIDIA proprietary, hence BUILD_ONLY. Spot: GPL-3.0-or-later (in the never-distributed image only).
 
 ## Open items
-- The other 19 shortlisted tasks: `make-instance`, a resampled demonstration through the verifier, Harbor oracle and `nop`.
+- The other 18 shortlisted tasks: `make-instance`, a resampled demonstration through the verifier, Harbor oracle and `nop`.
 - The standard service, its collect hook and grader are written but have never run (jar 14's twin is next).
 - Another host: whether it rebuilds the frozen instances exactly (`instance_exact`).
 - A cold start compiles with up to 32 torch inductor workers and peaks at about 13 GiB of RAM (about 4 GB of VRAM).
