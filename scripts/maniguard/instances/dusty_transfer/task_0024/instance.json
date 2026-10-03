@@ -1,0 +1,15 @@
+{
+ "task": "dusty_transfer/task_0024",
+ "family": "dusty_transfer",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "a07985de7a14b67842d1fdd98dbfd7ad71abe0954ba1e65c0f254d7897908110",
+ "diagnostics_sha256": "2a7886881909dff67f304cd34144f52cd08bfff59edb3559814797063a7921d8",
+ "pipeline": "dusty_transfer",
+ "gpu_dynamics": false,
+ "state_sha": null,
+ "objects": null,
+ "robot_q": null,
+ "frozen": false,
+ "note": "state_sha, objects and robot_q are written by `rcb_maniguard.py make-instance` in the eai-maniguard image; until then every load fails closed (instance_ok = 0)"
+}
