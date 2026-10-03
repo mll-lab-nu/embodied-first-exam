@@ -1,0 +1,15 @@
+{
+ "task": "lid_transport/task_0012",
+ "family": "lid_transport",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "6b514916b9d3d779662e425b9481a4904ef33ea4633c38c77dcd0e72d13c9406",
+ "diagnostics_sha256": "2ba189d21d9c4410a7065beed22ef8d22f8f0db4fca3f82b304ed927aa925e3d",
+ "pipeline": "lid_transport_food",
+ "gpu_dynamics": false,
+ "state_sha": null,
+ "objects": null,
+ "robot_q": null,
+ "frozen": false,
+ "note": "state_sha, objects and robot_q are written by `rcb_maniguard.py make-instance` in the eai-maniguard image; until then every load fails closed (instance_ok = 0)"
+}

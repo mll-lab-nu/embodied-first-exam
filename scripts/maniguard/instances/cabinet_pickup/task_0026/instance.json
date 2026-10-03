@@ -1,0 +1,15 @@
+{
+ "task": "cabinet_pickup/task_0026",
+ "family": "cabinet_pickup",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "de26b364ff7e0fa0d2ac06cd858e554a877fb3746112459564d414f11ac94c00",
+ "diagnostics_sha256": "89995b74298d6494b2f4c2abb51a328a0548965047b40a51d3fa391f6d26d975",
+ "pipeline": "cabinet_pickup",
+ "gpu_dynamics": false,
+ "state_sha": null,
+ "objects": null,
+ "robot_q": null,
+ "frozen": false,
+ "note": "state_sha, objects and robot_q are written by `rcb_maniguard.py make-instance` in the eai-maniguard image; until then every load fails closed (instance_ok = 0)"
+}

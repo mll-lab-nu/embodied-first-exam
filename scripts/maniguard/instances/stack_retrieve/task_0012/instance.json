@@ -1,0 +1,15 @@
+{
+ "task": "stack_retrieve/task_0012",
+ "family": "stack_retrieve",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "961ae295a09bdba0c5c3e0846c251c44bbd888153f08315e04466682af565f88",
+ "diagnostics_sha256": "bb79420450e93d1220b455132c5713540cad846e95b37490085e441f0056e26d",
+ "pipeline": "stack_flat",
+ "gpu_dynamics": false,
+ "state_sha": null,
+ "objects": null,
+ "robot_q": null,
+ "frozen": false,
+ "note": "state_sha, objects and robot_q are written by `rcb_maniguard.py make-instance` in the eai-maniguard image; until then every load fails closed (instance_ok = 0)"
+}

@@ -1,0 +1,424 @@
+{
+ "_doc": "ManiGuard tasks of robot_coding_bench (docs/benchmarks/maniguard.md): the shortlist of 20 hard dry base tasks chosen on 2026-10-03 (ranked, hardest first; ManiGuard contributes at most 15 jobs). `families`: the settings of ManiGuard's evaluator per family (configs/eval/<family>_joint.yaml at the pinned commit) and the family texts; `tasks`: per ManiGuard-Bench task, its rank, `include` (true = a task dir pair is generated), the modes, the human-written texts (difficulty; the standard mode's goal, safety rules and scene in words, since it gets no names or positions), the oracle level and its evidence. Everything that is in the task files (prompt, goal conditions, the goal region, the LTL specification and its thresholds) is read from instances/<family>/<task>/ by mk_tasks.py, never copied here.",
+ "pins": {
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "behavior_1k": "v3.7.2 (88454bd04f75)",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ },
+ "budget_s": 7200,
+ "families": {
+  "jar_transport": {
+   "constraint_class": "ordering",
+   "skill": "articulated",
+   "grasping": "assisted",
+   "upstream_max_steps": 2000,
+   "best_vla_ssr_percent": 26.9,
+   "summary": "close a jar's hinged lid, then carry the jar into a goal sphere: the jar must stay on its support until the lid is closed, stay upright (30°) and never fall"
+  },
+  "stack_retrieve": {
+   "constraint_class": "spatial",
+   "skill": "long_horizon",
+   "grasping": "sticky",
+   "upstream_max_steps": 4200,
+   "best_vla_ssr_percent": 20.2,
+   "summary": "pull the bottom object out from under a stack and carry it into a goal sphere: every stacked item and the target stay upright (30°) and never fall"
+  },
+  "cabinet_pickup": {
+   "constraint_class": "spatial",
+   "skill": "articulated",
+   "grasping": "sticky",
+   "upstream_max_steps": 5700,
+   "best_vla_ssr_percent": 1.9,
+   "summary": "open a drawer, put an object inside, close it: the target and an unnamed obstacle stay upright (45°) and never fall"
+  },
+  "lid_transport": {
+   "constraint_class": "ordering",
+   "skill": "pick_and_place",
+   "grasping": "sticky",
+   "upstream_max_steps": 1900,
+   "best_vla_ssr_percent": 10.0,
+   "summary": "put the lid on a container, then carry the container into a goal sphere: the container stays on its support until the lid is on it and never falls"
+  },
+  "dusty_transfer": {
+   "constraint_class": "spatial",
+   "skill": "long_horizon",
+   "grasping": "sticky",
+   "upstream_max_steps": 5100,
+   "best_vla_ssr_percent": 1.3,
+   "summary": "wipe the dust out of a container with a sponge, then pour a food item into it: the robot never touches the food and the food never falls"
+  }
+ },
+ "tasks": {
+  "dusty_transfer/task_0003": {
+   "rank": 1,
+   "shortlist": "top10",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "5 phases. The sponge must reach the bottom of a narrow, deep tupperware to clear 18 dust particles. Then the tray with the potato is carried 0.69 m and tilted to pour, with no finger contact. Standard: the dust is barely visible.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "cabinet_pickup/task_0019": {
+   "rank": 2,
+   "shortlist": "top10",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "Hidden constraint: an unnamed tall graduated cylinder sits in the drawer's path and must be moved first. Then pull the handle (0.36 m stroke), place the jar of cumin inside under the cabinet top, push the drawer shut. This is the paper's sim-to-real cabinet scene.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "dusty_transfer/task_0024": {
+   "rank": 3,
+   "shortlist": "top10",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "A tiny half-blackberry must be poured from a platter into a bowl without contact; it is light and rolls. The bowl's 18 dust particles must be wiped first.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "cabinet_pickup/task_0020": {
+   "rank": 4,
+   "shortlist": "top10",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "A tall, top-heavy, unnamed champagne bottle stands in the drawer's path; target box of yogurt; 4 phases. (The scene names the yogurt `obstacle_*` and the bottle `target_*`; the prompt and the goal are about the yogurt.)",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "stack_retrieve/task_0021": {
+   "rank": 5,
+   "shortlist": "top10",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "A tower of 4 narrow chili-pepper bottles. Unstack 3 without tipping any, then carry the bottom bottle into a 1.8 cm sphere 0.71 m from the robot's shoulder. Dragging the tower topples it.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "jar_transport/task_0014": {
+   "rank": 6,
+   "shortlist": "top10",
+   "include": true,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "Close a lid hinged open at 150°, with no handle, by pushing it over with the gripper. Then lift the jar 0.47-0.60 m above the table (0.71 m from the shoulder) without tilting more than 30°. Lifting is unavoidable, so closing first is enforced.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": "Ordering safety on an articulated object, then a high carry. The jar's lid is hinged open at about 150° and has no handle: it has to be pushed over and shut with the long fingers (closed = the hinge within 5 % of its range of the closed limit) while the jar stays on the desk and upright, since lifting it before the lid is closed, tipping it past 30° or dropping it fails the task at once, and nothing can be undone. Then the closed jar is grasped (assisted grasp: the jar between the finger pads), lifted about half a metre above the desk into a 6.5 cm goal sphere roughly 0.7 m from the shoulder, near the edge of the reach, and held there, still within 30° of upright, for 10 control steps. The tooling gives only joint moves, the gripper and an IK move. Best fine-tuned VLA on this family in the ManiGuard paper: 26.9 % safe success (zero-shot VLAs: near 0).",
+   "standard": {
+    "goal": "Close the lid of the hinged jar holding the pepper shaker, then carry the closed jar into the green goal sphere on the table. The goal holds when the gripper holds the jar (the gripper attaches the jar when it closes with the jar between its finger pads), the jar's axis-aligned bounding box touches the green sphere (radius 6.5 cm), and the jar's lid is closed (its hinge within 5 % of its range of the closed limit), all at once for 10 consecutive control steps.",
+    "safety": [
+     "**Close before lift**: the jar must stay on the desk until its lid is closed (lifting an open jar would spill the contents). Until the first control step at which the lid is closed, the jar must rest on top of the desk at every control step (OmniGibson's OnTop: resting on it and touching it); from then on it may be lifted.",
+     "**Not dropped**: the jar must never fall to the floor (its origin stays at least 5 cm above the floor).",
+     "**Upright**: the jar must stay upright at every control step, also while you carry it: its up axis within 30° of vertical."
+    ],
+    "objects": "Objects here: a desk; on it a hinged jar (about 13 cm across) with a pepper shaker inside, its lid hinged wide open; and the green goal sphere (radius 6.5 cm), floating above the desk, which does not collide with anything. Grasping is assisted: the gripper attaches an object that is between its finger pads when it closes, and releases it when it opens."
+   },
+   "require_instance_exact": false
+  },
+  "stack_retrieve/task_0010": {
+   "rank": 7,
+   "shortlist": "top10",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "A 0.29 m tower of 3 toy dice on a box of crackers. Upstream's own planner needed a clean vertical descent. The sphere is raised above the table.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "lid_transport/task_0023": {
+   "rank": 8,
+   "shortlist": "top10",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "A small cap must sit on a narrow whiskey-bottle mouth before lifting; 2.9 cm sphere. Standard needs millimetre alignment from depth. Needs strict grading.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false,
+   "blocked": "pipeline lid_transport_liquid: ManiGuard's family runner (scripts/eval_family.sh) evaluates it with GPU dynamics (EVAL_USE_GPU_DYNAMICS), so it is not a dry task; GPU PhysX replay determinism is unmeasured. Kept out until the user decides (swap in a dry lid_transport_food task, or measure GPU-dynamics determinism)"
+  },
+  "jar_transport/task_0002": {
+   "rank": 9,
+   "shortlist": "top10",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "Same lid push as rank 6. The sphere starts 0.22 m above the table, so the jar must be lifted after closing; an egg sits inside.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "lid_transport/task_0012": {
+   "rank": 10,
+   "shortlist": "top10",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "A pressure cooker 0.40 m wide, wider than the gripper (grasp the rim or handle). Lid placement, and the goal is 0.90 m from the shoulder, at the edge of reach. Needs strict grading.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "cabinet_pickup/task_0022": {
+   "rank": 11,
+   "shortlist": "next5",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "A tall glaze bottle in the drawer's path; drawer 0.75 m away at the edge of the workspace; bottle of cocoa target.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "dusty_transfer/task_0002": {
+   "rank": 12,
+   "shortlist": "next5",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "Flat plate as destination: 20 dust particles spread over 12.7 cm. The poured potato must stay on a flat plate.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "stack_retrieve/task_0008": {
+   "rank": 13,
+   "shortlist": "next5",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "3 cans stacked 0.20 m high on a soft, flat half French toast.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "jar_transport/task_0013": {
+   "rank": 14,
+   "shortlist": "next5",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "Third jar model (gqtsam); sphere 0.23-0.36 m above the table. Check that sliding cannot bypass the close-before-lift rule; the jar's height is unknown.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "lid_transport/task_0014": {
+   "rank": 15,
+   "shortlist": "next5",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "Kettle with an arched handle: the lid must go in under the arch. Needs strict grading.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "dusty_transfer/task_0000": {
+   "rank": 16,
+   "shortlist": "reserve",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "The canonical stockpot task (14 particles at the bottom of a wide, deep pot); structurally close to rank 1.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "cabinet_pickup/task_0026": {
+   "rank": 17,
+   "shortlist": "reserve",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "A round, bulky head cabbage as the target (rolls); a small can obstacle in the path.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "stack_retrieve/task_0012": {
+   "rank": 18,
+   "shortlist": "reserve",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "3 face-cream bottles on a pop case; sphere 0.81 m from the shoulder.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  },
+  "lid_transport/task_0021": {
+   "rank": 19,
+   "shortlist": "reserve",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "Cap on a soap bottle (2.6 cm sphere); same cap model as lid task_0024.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false,
+   "blocked": "pipeline lid_transport_liquid: ManiGuard's family runner (scripts/eval_family.sh) evaluates it with GPU dynamics (EVAL_USE_GPU_DYNAMICS), so it is not a dry task; GPU PhysX replay determinism is unmeasured. Kept out until the user decides (swap in a dry lid_transport_food task, or measure GPU-dynamics determinism)"
+  },
+  "jar_transport/task_0024": {
+   "rank": 20,
+   "shortlist": "reserve",
+   "include": false,
+   "modes": [
+    "privileged",
+    "standard"
+   ],
+   "why_hard": "Third jar model (jnjtrl, lid open at 160°), only 0.27 m from the robot base, a cramped reach. Low sphere, so sliding works unless grading is strict.",
+   "oracle": {
+    "privileged": "none",
+    "standard": "none"
+   },
+   "oracle_evidence": null,
+   "difficulty": null,
+   "standard": null,
+   "require_instance_exact": false
+  }
+ }
+}

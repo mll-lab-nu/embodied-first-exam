@@ -1,0 +1,572 @@
+{
+    "versions": {
+        "omnigibson": {
+            "version": "3.7.2",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "bddl": {
+            "version": "3.7.0",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "behavior-1k-assets": {
+            "version": "3.7.2rc1"
+        },
+        "omnigibson-robot-assets": {
+            "version": null,
+            "git_hash": null
+        }
+    },
+    "metadata": {},
+    "state": {
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ori": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "registry": {
+            "system_registry": {},
+            "object_registry": {
+                "bar_jvkwcc_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            2.766995429992676,
+                            5.873109817504883,
+                            0.682338297367096
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            -4.331257628109597e-07
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "target_toilet_soap_bottle_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            2.6989126205444336,
+                            5.87066125869751,
+                            1.3548665046691895
+                        ],
+                        "ori": [
+                            5.391330341808498e-05,
+                            1.16090177471051e-05,
+                            0.0019835883285850286,
+                            0.9999980330467224
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        },
+                        "AttachedTo": {
+                            "attached_obj_uuid": -1
+                        }
+                    }
+                },
+                "lid_cap_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            2.8087027072906494,
+                            5.870991230010986,
+                            1.2401769161224365
+                        ],
+                        "ori": [
+                            0.0006550895050168037,
+                            0.00024513225071132183,
+                            -0.0011546555906534195,
+                            0.9999991059303284
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        }
+                    }
+                },
+                "goal_region__target_toilet_soap_bottle_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            2.6988794803619385,
+                            6.044317722320557,
+                            1.3706467151641846
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    "non_kin": {},
+                    "radius": 0.026047468185424805,
+                    "height": -1,
+                    "size": -1
+                },
+                "agent_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            2.2416610717773438,
+                            5.870750427246094,
+                            1.2513178586959839
+                        ],
+                        "ori": [
+                            -9.313225746154785e-10,
+                            0.0,
+                            -1.1641532182693481e-10,
+                            1.0000004768371582
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "joint_vel": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "controllers": {
+                        "arm_0": {
+                            "goal_is_valid": false,
+                            "goal": null
+                        },
+                        "gripper_0": {
+                            "goal_is_valid": false,
+                            "goal": null,
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        -0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": false
+                            }
+                        }
+                    },
+                    "non_kin": {},
+                    "ag_obj_constraint_params": {
+                        "0": {}
+                    }
+                }
+            }
+        }
+    },
+    "init_info": {
+        "class_module": "omnigibson.scenes.scene_base",
+        "class_name": "Scene",
+        "args": {
+            "scene_file": {
+                "versions": {
+                    "omnigibson": {
+                        "version": "3.7.2",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "bddl": {
+                        "version": "3.7.0",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "behavior-1k-assets": {
+                        "version": "3.7.2rc1"
+                    },
+                    "omnigibson-robot-assets": {
+                        "version": null,
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    }
+                },
+                "metadata": {},
+                "state": {
+                    "pos": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "ori": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "registry": {
+                        "system_registry": {},
+                        "object_registry": {
+                            "bar_jvkwcc_0": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        2.766995429992676,
+                                        5.873109817504883,
+                                        0.682338297367096
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        1.0,
+                                        -4.331257628109597e-07
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "target_toilet_soap_bottle_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        2.6989099979400635,
+                                        5.870662689208984,
+                                        1.354866862297058
+                                    ],
+                                    "ori": [
+                                        5.2148337999824435e-05,
+                                        2.446397047606297e-06,
+                                        0.001990653807297349,
+                                        0.9999980330467224
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    },
+                                    "AttachedTo": {
+                                        "attached_obj_uuid": -1
+                                    }
+                                }
+                            },
+                            "lid_cap_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        2.8087027072906494,
+                                        5.870991230010986,
+                                        1.240176796913147
+                                    ],
+                                    "ori": [
+                                        0.0006539672613143921,
+                                        0.00024563842453062534,
+                                        -0.001176178571768105,
+                                        0.9999991059303284
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    }
+                                }
+                            },
+                            "goal_region__target_toilet_soap_bottle_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        2.6988794803619385,
+                                        6.044317722320557,
+                                        1.3706467151641846
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                },
+                                "non_kin": {},
+                                "radius": 0.026047468185424805,
+                                "height": -1,
+                                "size": -1
+                            }
+                        }
+                    }
+                },
+                "init_info": {
+                    "class_module": "omnigibson.scenes.scene_base",
+                    "class_name": "Scene",
+                    "args": {
+                        "scene_file": null
+                    }
+                },
+                "objects_info": {
+                    "init_info": {
+                        "bar_jvkwcc_0": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "bar_jvkwcc_0",
+                                "category": "bar",
+                                "model": "jvkwcc",
+                                "scale": [
+                                    0.9999293088912964,
+                                    0.9999783635139465,
+                                    0.9999604821205139
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "60d91632ceb823b4fa26a609505ba37a"
+                            }
+                        },
+                        "target_toilet_soap_bottle_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "target_toilet_soap_bottle_ep1_1",
+                                "category": "toilet_soap_bottle",
+                                "model": "iyrrna",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "4067fc3588b7b4aac66e174cc49ceb5f"
+                            }
+                        },
+                        "lid_cap_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "lid_cap_ep1_1",
+                                "category": "cap",
+                                "model": "mgirzi",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "5333d06b0843b747682b8b065646e0d3"
+                            }
+                        },
+                        "goal_region__target_toilet_soap_bottle_ep1_1": {
+                            "class_module": "omnigibson.objects.primitive_object",
+                            "class_name": "PrimitiveObject",
+                            "args": {
+                                "name": "goal_region__target_toilet_soap_bottle_ep1_1",
+                                "primitive_type": "Sphere",
+                                "relative_prim_path": "/goal_region__target_toilet_soap_bottle_ep1_1",
+                                "category": "goal_region_marker",
+                                "fixed_base": true,
+                                "visual_only": true,
+                                "rgba": [
+                                    0.1,
+                                    0.8,
+                                    0.2,
+                                    1.0
+                                ],
+                                "radius": 0.026047468185424805
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "objects_info": {
+        "init_info": {
+            "bar_jvkwcc_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "bar_jvkwcc_0",
+                    "category": "bar",
+                    "model": "jvkwcc",
+                    "scale": [
+                        0.9999293088912964,
+                        0.9999783635139465,
+                        0.9999604821205139
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "60d91632ceb823b4fa26a609505ba37a"
+                }
+            },
+            "target_toilet_soap_bottle_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "target_toilet_soap_bottle_ep1_1",
+                    "category": "toilet_soap_bottle",
+                    "model": "iyrrna",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "4067fc3588b7b4aac66e174cc49ceb5f"
+                }
+            },
+            "lid_cap_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "lid_cap_ep1_1",
+                    "category": "cap",
+                    "model": "mgirzi",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "5333d06b0843b747682b8b065646e0d3"
+                }
+            },
+            "goal_region__target_toilet_soap_bottle_ep1_1": {
+                "class_module": "omnigibson.objects.primitive_object",
+                "class_name": "PrimitiveObject",
+                "args": {
+                    "name": "goal_region__target_toilet_soap_bottle_ep1_1",
+                    "primitive_type": "Sphere",
+                    "relative_prim_path": "/goal_region__target_toilet_soap_bottle_ep1_1",
+                    "category": "goal_region_marker",
+                    "fixed_base": true,
+                    "visual_only": true,
+                    "rgba": [
+                        0.1,
+                        0.8,
+                        0.2,
+                        1.0
+                    ],
+                    "radius": 0.026047468185424805
+                }
+            },
+            "agent_0": {
+                "class_module": "omnigibson.robots.franka",
+                "class_name": "FrankaPanda",
+                "args": {
+                    "name": "agent_0",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self_collisions": true,
+                    "fixed_base": true,
+                    "controller_config": {
+                        "arm_0": {
+                            "name": "JointController",
+                            "motor_type": "position",
+                            "command_input_limits": null,
+                            "command_output_limits": null,
+                            "use_delta_commands": false,
+                            "use_impedances": false
+                        },
+                        "gripper_0": {
+                            "name": "MultiFingerGripperController",
+                            "command_input_limits": null,
+                            "mode": "binary"
+                        }
+                    },
+                    "action_type": "continuous",
+                    "action_normalize": false,
+                    "reset_joint_pos": [
+                        -5.3026444220449775e-05,
+                        1.8788106899592094e-05,
+                        -2.5438053853577003e-05,
+                        -0.06982734799385071,
+                        2.4163360649254173e-05,
+                        0.08138709515333176,
+                        -6.366393790813163e-05,
+                        0.01997165009379387,
+                        0.01966499350965023
+                    ],
+                    "obs_modalities": [
+                        "rgb"
+                    ],
+                    "include_sensor_names": null,
+                    "exclude_sensor_names": null,
+                    "grasping_mode": "assisted",
+                    "expected_file_hash": "9ddd461281d1c875d2ae552f61751c3f"
+                }
+            }
+        }
+    }
+}

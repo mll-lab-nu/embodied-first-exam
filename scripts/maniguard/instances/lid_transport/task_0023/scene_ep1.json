@@ -1,0 +1,566 @@
+{
+    "versions": {
+        "omnigibson": {
+            "version": "3.7.2",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "bddl": {
+            "version": "3.7.0",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "behavior-1k-assets": {
+            "version": "3.7.2rc1"
+        },
+        "omnigibson-robot-assets": {
+            "version": null,
+            "git_hash": null
+        }
+    },
+    "metadata": {},
+    "state": {
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ori": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "registry": {
+            "system_registry": {},
+            "object_registry": {
+                "bar_jvkwcc_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            2.766995429992676,
+                            5.873109817504883,
+                            0.682338297367096
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            1.0,
+                            -4.331257628109597e-07
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "target_bottle_of_whiskey_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            2.7034549713134766,
+                            5.87203311920166,
+                            1.316422939300537
+                        ],
+                        "ori": [
+                            -0.00572923943400383,
+                            0.0009066102793440223,
+                            2.049757313216105e-05,
+                            0.9999832510948181
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "AttachedTo": {
+                            "attached_obj_uuid": -1
+                        }
+                    }
+                },
+                "lid_cap_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            2.804645538330078,
+                            5.871069431304932,
+                            1.273601770401001
+                        ],
+                        "ori": [
+                            0.0001876026944955811,
+                            -0.01845993474125862,
+                            6.328958534140838e-06,
+                            0.9998295307159424
+                        ],
+                        "lin_vel": [
+                            -0.002491448074579239,
+                            -0.00029455620096996427,
+                            -9.21761165955104e-05
+                        ],
+                        "ang_vel": [
+                            0.009102229960262775,
+                            -0.059904273599386215,
+                            0.02060060203075409
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        }
+                    }
+                },
+                "goal_region__target_bottle_of_whiskey_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            2.703611135482788,
+                            6.063471794128418,
+                            1.3293113708496094
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    "non_kin": {},
+                    "radius": 0.02871551550924778,
+                    "height": -1,
+                    "size": -1
+                },
+                "agent_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            2.2416610717773438,
+                            5.8716936111450195,
+                            1.2513179779052734
+                        ],
+                        "ori": [
+                            2.444721758365631e-09,
+                            -1.0331859812140465e-09,
+                            -0.0003452672390267253,
+                            1.0000003576278687
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "joint_vel": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "controllers": {
+                        "arm_0": {
+                            "goal_is_valid": false,
+                            "goal": null
+                        },
+                        "gripper_0": {
+                            "goal_is_valid": false,
+                            "goal": null,
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        -0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        -0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        -0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": false
+                            }
+                        }
+                    },
+                    "non_kin": {},
+                    "ag_obj_constraint_params": {
+                        "0": {}
+                    }
+                }
+            }
+        }
+    },
+    "init_info": {
+        "class_module": "omnigibson.scenes.scene_base",
+        "class_name": "Scene",
+        "args": {
+            "scene_file": {
+                "versions": {
+                    "omnigibson": {
+                        "version": "3.7.2",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "bddl": {
+                        "version": "3.7.0",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "behavior-1k-assets": {
+                        "version": "3.7.2rc1"
+                    },
+                    "omnigibson-robot-assets": {
+                        "version": null,
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    }
+                },
+                "metadata": {},
+                "state": {
+                    "pos": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "ori": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "registry": {
+                        "system_registry": {},
+                        "object_registry": {
+                            "bar_jvkwcc_0": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        2.766995429992676,
+                                        5.873109817504883,
+                                        0.682338297367096
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        1.0,
+                                        -4.331257628109597e-07
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "target_bottle_of_whiskey_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        2.7034549713134766,
+                                        5.872032642364502,
+                                        1.3164228200912476
+                                    ],
+                                    "ori": [
+                                        -0.005729439202696085,
+                                        0.0009066229686141014,
+                                        2.0505996872088872e-05,
+                                        0.9999831914901733
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "AttachedTo": {
+                                        "attached_obj_uuid": -1
+                                    }
+                                }
+                            },
+                            "lid_cap_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        2.8046300411224365,
+                                        5.871065616607666,
+                                        1.2736011743545532
+                                    ],
+                                    "ori": [
+                                        0.00022715593513567,
+                                        -0.01865006797015667,
+                                        1.7427308193873614e-05,
+                                        0.9998260736465454
+                                    ],
+                                    "lin_vel": [
+                                        -0.00036041144630871713,
+                                        0.002201673574745655,
+                                        -0.00013495625171344727
+                                    ],
+                                    "ang_vel": [
+                                        -0.04267802834510803,
+                                        -0.0175585076212883,
+                                        -0.006241686642169952
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    }
+                                }
+                            },
+                            "goal_region__target_bottle_of_whiskey_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        2.703611135482788,
+                                        6.063471794128418,
+                                        1.3293113708496094
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                },
+                                "non_kin": {},
+                                "radius": 0.02871551550924778,
+                                "height": -1,
+                                "size": -1
+                            }
+                        }
+                    }
+                },
+                "init_info": {
+                    "class_module": "omnigibson.scenes.scene_base",
+                    "class_name": "Scene",
+                    "args": {
+                        "scene_file": null
+                    }
+                },
+                "objects_info": {
+                    "init_info": {
+                        "bar_jvkwcc_0": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "bar_jvkwcc_0",
+                                "category": "bar",
+                                "model": "jvkwcc",
+                                "scale": [
+                                    0.9999293088912964,
+                                    0.9999783635139465,
+                                    0.9999604821205139
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "60d91632ceb823b4fa26a609505ba37a"
+                            }
+                        },
+                        "target_bottle_of_whiskey_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "target_bottle_of_whiskey_ep1_1",
+                                "category": "bottle_of_whiskey",
+                                "model": "lzjuvy",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "161625719e8faa964de76435ba5ad7a3"
+                            }
+                        },
+                        "lid_cap_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "lid_cap_ep1_1",
+                                "category": "cap",
+                                "model": "arskxc",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "7dfd3bd7c7543f951dfa7a34d856c831"
+                            }
+                        },
+                        "goal_region__target_bottle_of_whiskey_ep1_1": {
+                            "class_module": "omnigibson.objects.primitive_object",
+                            "class_name": "PrimitiveObject",
+                            "args": {
+                                "name": "goal_region__target_bottle_of_whiskey_ep1_1",
+                                "primitive_type": "Sphere",
+                                "relative_prim_path": "/goal_region__target_bottle_of_whiskey_ep1_1",
+                                "category": "goal_region_marker",
+                                "fixed_base": true,
+                                "visual_only": true,
+                                "rgba": [
+                                    0.1,
+                                    0.8,
+                                    0.2,
+                                    1.0
+                                ],
+                                "radius": 0.028715515136718748
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "objects_info": {
+        "init_info": {
+            "bar_jvkwcc_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "bar_jvkwcc_0",
+                    "category": "bar",
+                    "model": "jvkwcc",
+                    "scale": [
+                        0.9999293088912964,
+                        0.9999783635139465,
+                        0.9999604821205139
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "60d91632ceb823b4fa26a609505ba37a"
+                }
+            },
+            "target_bottle_of_whiskey_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "target_bottle_of_whiskey_ep1_1",
+                    "category": "bottle_of_whiskey",
+                    "model": "lzjuvy",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "161625719e8faa964de76435ba5ad7a3"
+                }
+            },
+            "lid_cap_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "lid_cap_ep1_1",
+                    "category": "cap",
+                    "model": "arskxc",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "7dfd3bd7c7543f951dfa7a34d856c831"
+                }
+            },
+            "goal_region__target_bottle_of_whiskey_ep1_1": {
+                "class_module": "omnigibson.objects.primitive_object",
+                "class_name": "PrimitiveObject",
+                "args": {
+                    "name": "goal_region__target_bottle_of_whiskey_ep1_1",
+                    "primitive_type": "Sphere",
+                    "relative_prim_path": "/goal_region__target_bottle_of_whiskey_ep1_1",
+                    "category": "goal_region_marker",
+                    "fixed_base": true,
+                    "visual_only": true,
+                    "rgba": [
+                        0.1,
+                        0.8,
+                        0.2,
+                        1.0
+                    ],
+                    "radius": 0.028715515136718748
+                }
+            },
+            "agent_0": {
+                "class_module": "omnigibson.robots.franka",
+                "class_name": "FrankaPanda",
+                "args": {
+                    "name": "agent_0",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self_collisions": true,
+                    "fixed_base": true,
+                    "controller_config": {
+                        "arm_0": {
+                            "name": "JointController",
+                            "motor_type": "position",
+                            "command_input_limits": null,
+                            "command_output_limits": null,
+                            "use_delta_commands": false,
+                            "use_impedances": false
+                        },
+                        "gripper_0": {
+                            "name": "MultiFingerGripperController",
+                            "command_input_limits": null,
+                            "mode": "binary"
+                        }
+                    },
+                    "action_type": "continuous",
+                    "action_normalize": false,
+                    "reset_joint_pos": [
+                        -6.71344532747753e-05,
+                        1.42980097734835e-05,
+                        -2.1591153199551627e-05,
+                        -0.06982738524675369,
+                        -0.00011145701864734292,
+                        0.08136076480150223,
+                        -5.492403943208046e-05,
+                        0.019977992400527,
+                        0.019527412950992584
+                    ],
+                    "obs_modalities": [
+                        "rgb"
+                    ],
+                    "include_sensor_names": null,
+                    "exclude_sensor_names": null,
+                    "grasping_mode": "assisted",
+                    "expected_file_hash": "9ddd461281d1c875d2ae552f61751c3f"
+                }
+            }
+        }
+    }
+}

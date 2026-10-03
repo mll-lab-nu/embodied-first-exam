@@ -2157,3 +2157,11 @@ digest = "sha256:d32d50c30108ec23fee7840b5671feb34d94082e0784ce77706ce58cfc118d6
 name = "robot-coding-bench/robowits-stand-pages-i00-standard"
 digest = "sha256:377d61310dff1c29f67a487ed9e98e039f9069821491679c50bd624521446764"
 
+[[tasks]]
+name = "robot-coding-bench/maniguard-jar-transport-i14-privileged"
+digest = "sha256:61209c79f1dbcb7099b6076580c4e256aa83d8d1835d6b29ede72218812b8a8b"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-jar-transport-i14-standard"
+digest = "sha256:5890cd7cdc009aeb0bdd89a62835cbccc30db3ce7bff078b0b6cadebcbed1370"
+
