@@ -307,7 +307,7 @@ footer ul { padding-left: 1.2em; }
         <tr><td>朝向机器人的刺伸出笼壁</td><td>19.5 mm</td><td>19.5 mm</td><td>要求 ≥ 15 mm，夹爪只夹笼外这一段</td></tr>
         <tr><td>保持初始朝向能否平移出笼</td><td class="ok">能</td><td class="no">不能</td><td>2 mm 平移网格上的广度优先搜索</td></tr>
         <tr><td>证明过的路径（只算刺球）</td><td>抬 5 mm → 朝 172° 直拉</td><td>抬 15 mm → 绕刺轴转 75° → 朝 174° 直拉</td><td><code>RigidPathChecker</code> 逐段证明，表面余量 ≥ 1 mm</td></tr>
-        <tr><td>加 2F-85 夹住该刺</td><td>直拉出口 10–11/160</td><td>直拉 0/160；先抬 15 mm，再绕接近轴转 70° 后有出口（抬 20 mm、转 75° 时 4/160）</td><td><code>scripts/design_viewer/exit_check.py --spike 7</code>，手指竖向和侧向开合结果相同</td></tr>
+        <tr><td>加 2F-85 夹住该刺</td><td>直拉出口 10–11/160</td><td>直拉 0/160；先抬 15 mm，再绕接近轴转 70° 后有出口（抬 20 mm、转 75° 时 4/160）</td><td><code>exit_check.py --spike 7</code>（提交 5d5a67b，之后已移除），手指竖向和侧向开合结果相同</td></tr>
         <tr><td>扰动稳健性（位置 ±1 mm、姿态 ±2°，20 个样本）</td><td>20/20 仍能平移出笼</td><td>20/20 仍出不去（零余量和 0.5 mm 余量都是）</td><td>同上平移搜索</td></tr>
         <tr><td>从写入的位姿再落稳 3 s</td><td>移动 0.30 mm，转 0.00°</td><td>移动 0.30 mm，转 0.00°</td><td>Genesis CPU，25 ms tick / 40 子步，机器人保持 home（位姿是在 106 mm 笼中落稳得到的）</td></tr>
       </tbody>
@@ -328,7 +328,7 @@ footer ul { padding-left: 1.2em; }
     </table>
   </div>
   <p class="note prose">加上“有一根刺朝向机器人、伸出笼壁 ≥ 18 mm”的条件后（偏航角步长 2°），能满足的朝向里 very_easy 型 / easier 型的数量：102 mm 17 / 3，106 mm 26 / 5，110 mm 38 / 8，116 mm 60 / 8。现在的位姿在 106 mm 下是 easier 型，在 116 mm 下是 very_easy 型，所以两档只差窗口宽度。</p>
-  <p class="note prose"><span class="tag mine">设计过程记录</span> 第一版只按刺球设计（转轴是笼的 x 轴），2F-85 检查发现夹爪伸进笼里夹球心时 very_easy 只有正对窗口中心才行、easier 转动时手指扫到环箍。第二版改为夹笼外的刺、绕刺轴转，两档共用 106 mm 窗口，但 very_easy 加夹爪后只剩 1/160 个直拉方向。现在的第三版把 very_easy 的窗口放宽到 116 mm，可行方向增加到 10–11/160。夹爪检查由另一个 session 的 <code>scripts/design_viewer/exit_check.py --spike</code> 完成。</p>
+  <p class="note prose"><span class="tag mine">设计过程记录</span> 第一版只按刺球设计（转轴是笼的 x 轴），2F-85 检查发现夹爪伸进笼里夹球心时 very_easy 只有正对窗口中心才行、easier 转动时手指扫到环箍。第二版改为夹笼外的刺、绕刺轴转，两档共用 106 mm 窗口，但 very_easy 加夹爪后只剩 1/160 个直拉方向。现在的第三版把 very_easy 的窗口放宽到 116 mm，可行方向增加到 10–11/160。夹爪检查由另一个 session 的 <code>exit_check.py --spike</code> 完成；该脚本已从仓库移除，可用 <code>git show 5d5a67b:scripts/design_viewer/exit_check.py</code> 取回。</p>
   <p class="note prose">边界：夹爪检查只含 2F-85，不含 Panda 手腕、IK 和动力学；机器人完整执行和 Harbor 任务包是下一步。</p>
 </section>
 
@@ -480,12 +480,13 @@ python ci_checks/test-hedgehog-below-easy.py     <span class="cm"># 约 40 s，�
 <footer>
   <div><b>相关文件</b></div>
   <ul>
-    <li>交互 3D 工具实施计划：<code>docs/tasks_simplifications/interactive_3d_impl_plan_zh.md</code>（另一个 session 正在实现，代码在 <code>scripts/design_viewer/</code>）。</li>
+    <li>鼠标拖动零件的 3D 查看器：<code>design_viewer/</code>（只用于理解谜题，不含机械臂；启动方法见其 README）。实施计划：<code>docs/tasks_simplifications/interactive_3d_impl_plan_zh.md</code>。</li>
     <li>刺球两档的检查报告：<code>runs/below_easy/hedgehog_{very_easy,easier}/below_easy_check.json</code>（本地，git 忽略）。</li>
   </ul>
   <div><b>维护记录</b></div>
   <ul>
     <li>2026-10-02 第 1–4 版：任务说明、来源标注、定式解法、长孔立柱评估、3D 工具计划。</li>
+    <li>2026-10-02 第 8 版：夹爪检查脚本与 3D 查看器的路径更新（脚本已移除，结果不变）。</li>
     <li>2026-10-02 第 7 版：两档改为同一刺球位姿、只差窗口宽度（116 / 106 mm）；very_easy 加夹爪后的可行方向从 1/160 增加到 10–11/160。</li>
     <li>2026-10-02 第 6 版：刺球两档改为按夹爪设计（夹笼外的刺、绕刺轴转），2F-85 复核通过。</li>
     <li>2026-10-02 第 5 版：改为实现跟踪页；刺球两档实现完成并附验证；分水岭评估；马蹄环方案调整；长孔立柱在“不加部件”约束下重新评估。旧的说明性内容已精简。</li>
