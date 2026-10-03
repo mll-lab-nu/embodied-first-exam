@@ -41,14 +41,17 @@ def build(scene):
 
 def _base_xml(scene):
     cable, equality = _cable(scene) if "cord" in scene.extras else ("", "")
+    dt = scene.extras.get("timestep", .002)
     return f"""<mujoco model="{scene.name}">
-  <option timestep="{scene.extras.get('timestep', .002)}" integrator="implicitfast" cone="{'pyramidal' if cable else 'elliptic'}"/>
+  <option timestep="{dt}" integrator="implicitfast" cone="{'pyramidal' if cable else 'elliptic'}"/>
   <statistic center="0 0 .12" extent=".35"/>
   <!-- Mouse springs, scaled by the grabbed body's mass / inertia. MuJoCo's defaults (100, 500)
        barely move the horseshoe ring that carries the 1 kg assembly: 1.4 mm of a 10 cm pull,
        7 deg of a 45 deg turn; these give 69 mm and 36 deg with <3 mm contact penetration. -->
   <visual><map stiffness="1000" stiffnessrot="5000"/></visual>
-  <default><geom friction=".3" condim="3" solref=".004 1"/></default>
+  <!-- Stiff contacts (time constant two steps): MuJoCo contacts soften with the lighter body's
+       mass, and a pulled ring otherwise squeezes the light cord into itself or the post. -->
+  <default><geom friction=".3" condim="3" solref="{2*dt} 1" solimp=".95 .99 .001"/></default>
   <worldbody>
     <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
     <geom name="floor" type="plane" size=".4 .4 .01" rgba=".82 .82 .8 1"/>
@@ -60,14 +63,16 @@ def _base_xml(scene):
 
 def _cable(scene, n=64):
     """Slotted cord as a chain of capsules on ball joints, both ends tied to the discs (a stand-in for
-    the FEM cord). No elasticity plugin: the browser's WebAssembly client crashes on plugins."""
+    the FEM cord). No elasticity plugin: the browser's WebAssembly client crashes on plugins.
+    Density 3x a real cord: with the stiff contacts this keeps a hard-pulled ring from squeezing
+    the cord through itself or the post (5 -> 0.8 mm penetration)."""
     cord, radius = scene.extras["cord"], scene.extras["layout"].rope_radius_m
     arc = np.r_[0, np.cumsum(np.linalg.norm(np.diff(cord, axis=0), axis=1))]
     s = np.linspace(0, arc[-1], n)
     vertices = np.column_stack([np.interp(s, arc, cord[:, i]) for i in range(3)])
     cable = f"""<composite prefix="cord" type="cable" vertex="{' '.join(map(str, vertices.ravel()))}" initial="free">
       <joint kind="main" damping=".002"/>
-      <geom type="capsule" size="{radius}" density="1100" rgba=".9 .88 .8 1"/>
+      <geom type="capsule" size="{radius}" density="3300" rgba=".9 .88 .8 1"/>
     </composite>"""
     equality = """<equality>
     <connect body1="cordB_first" body2="disc_left" anchor="0 0 0"/>

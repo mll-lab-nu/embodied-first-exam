@@ -25,7 +25,7 @@ python -m design_viewer.view --scene hedgehog_in_cage_easy --port 18080
 | 在空白处或固定件上拖动 | 视角：左键旋转，右键平移；滚轮缩放 |
 | 空格 / Backspace | 暂停 / 回到初始状态 |
 
-右上角的下拉框用来切换场景，`held` 一行显示当前被按住的零件。再次拖动被按住的零件时，会自动放开它。想看碰撞形状时，在左侧 Visibility Groups 里勾选 group 3。
+鼠标拉力最多 30 N，零件被卡住时会停在原处，不会被甩飞或拉穿绳；重的零件会比鼠标慢一点。右上角的下拉框用来切换场景，`held` 一行显示当前被按住的零件。再次拖动被按住的零件时，会自动放开它。想看碰撞形状时，在左侧 Visibility Groups 里勾选 group 3。
 
 ## 怎么实现的
 

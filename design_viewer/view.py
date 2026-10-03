@@ -23,6 +23,7 @@ KEYS = (("left-drag", "move piece"), ("Shift + left-drag", "move flat"), ("right
         ("G", "hold / let go"), ("R", "let all go"), ("drag empty space", "camera"),
         ("wheel", "zoom"), ("Space / Backspace", "pause / reset"))
 LEFT, RIGHT = imgui.MouseButton.Left, imgui.MouseButton.Right
+MAX_PULL = 30.  # N; lifts the 1.8 kg slotted ring, but a yank no longer drives it through the 7 mm cord
 
 
 class GameViewer(viewer_app.ViewerApp):
@@ -69,6 +70,11 @@ class GameViewer(viewer_app.ViewerApp):
             self.requests.put(("hold", m.body(picked.body).name))
         return True
 
+    def apply_perturb(self):
+        if self.viewer.perturb.active & mujoco.mjtPertBit.mjPERT_TRANSLATE:
+            limit_pull(self.model, self.data, self.viewer.perturb)
+        super().apply_perturb()
+
     def handle_keyboard_events(self):
         body = selected_body(self.model, self.viewer.perturb.select)
         if imgui.IsKeyPressed(imgui.Key.G, False):
@@ -96,6 +102,17 @@ class GameViewer(viewer_app.ViewerApp):
                 imgui.EndTable()
             imgui.Text(f"held: {', '.join(self.held) or '-'}")
         imgui.End()
+
+
+def limit_pull(model, data, pert, max_force=MAX_PULL):
+    """Keep the drag target close enough to the grabbed point that the mouse spring pulls with at
+    most `max_force`: a yanked mouse then moves a piece steadily instead of flinging it."""
+    b = pert.select
+    grabbed = data.xpos[b]+data.xmat[b].reshape(3, 3)@pert.localpos
+    lead = pert.refselpos-grabbed
+    reach = max_force/(model.vis.map.stiffness*model.body_subtreemass[b])
+    if np.linalg.norm(lead) > reach:
+        pert.refselpos[:] = grabbed+lead*reach/np.linalg.norm(lead)
 
 
 def selected_body(model, select):

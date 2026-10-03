@@ -103,10 +103,17 @@ def _mouse(m, d, body, active):
 
 
 def _hold_mouse(m, d, pert, seconds=1.5):
-    for _ in range(int(seconds/m.opt.timestep)):
-        d.xfrc_applied[:] = 0
-        mujoco.mjv_applyPerturbForce(m, d, pert)
+    """As the viewer does: once per 60 Hz frame, cap the pull and set the force; the sim keeps it."""
+    target, worst, frame = pert.refselpos.copy(), 0., max(1, round(1/(60*m.opt.timestep)))
+    for k in range(int(seconds/m.opt.timestep)):
+        if k % frame == 0:
+            pert.refselpos[:] = target  # where the mouse is
+            view.limit_pull(m, d, pert)
+            d.xfrc_applied[:] = 0
+            mujoco.mjv_applyPerturbForce(m, d, pert)
         mujoco.mj_step(m, d)
+        worst = max(worst, _penetration(d))
+    return worst
 
 
 def test_mouse_pull_lifts_the_horseshoe_ring():
@@ -116,6 +123,19 @@ def test_mouse_pull_lifts_the_horseshoe_ring():
     pert.refselpos[:] = pert.refselpos+[0, 0, .1]  # drag 10 cm up
     _hold_mouse(m, d, pert)
     assert d.xpos[pert.select, 2]-z > .05
+
+
+def test_lifting_the_slotted_ring_neither_pushes_through_the_cord_nor_frees_the_ring():
+    """By design only the cord (through the slot, around the right rail) traps the ring."""
+    m, d = _start("slotted_post_ring_easy")
+    _run(m, d, 1.)
+    discs = [m.body(n).id for n in ("disc_left", "disc_right")]
+    start = d.xpos[discs].copy()
+    pert = _mouse(m, d, "target_ring", mujoco.mjtPertBit.mjPERT_TRANSLATE)
+    pert.refselpos[:] = pert.refselpos+[0, 0, .35]  # yank the mouse 35 cm up, above the post
+    worst = _hold_mouse(m, d, pert, seconds=3.)
+    assert worst < 3e-3  # the 3.5 mm-radius cord is not pushed through the ring or the post
+    assert np.linalg.norm(d.xpos[discs]-start, axis=1).max() > .02  # the lifted ring carries the cord along
 
 
 def test_mouse_turn_rotates_the_horseshoe_ring():
