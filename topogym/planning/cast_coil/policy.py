@@ -1,4 +1,4 @@
-"""Three registered Coil assembly routes with measured-pose progress control.
+"""Registered Coil geometry/routes and the original three feedback policies.
 
 The policy reads the explicitly granted world observation and emits EE_ABS.
 Contact-triggered grasp assistance belongs to the simulator, not the policy.
@@ -13,9 +13,21 @@ from topogym.planning.motions.cast_coil import prototype_route, variant_route
 from .baseline import CastCoilBaselinePolicy, PARTS
 
 
-def variant_reference(variant):
+def variant_reference(variant, *, task_parameters=None, seed=0):
     """Resolve geometry and motion together, including the frozen 9 mm value."""
-    task = task_definition("cast_coil", variant)()
+    task = task_definition("cast_coil", variant, seed)(task_parameters, seed=seed)
+    if getattr(task, "geometry_resource", None):
+        from topogym.assets.geometry.cast_coil_simplified import SimplifiedCoilAssembly
+        from topogym.utils.geometry.rigid_motion import RigidMotionSegment
+        assembly = SimplifiedCoilAssembly(record=task.geometry())
+        s = assembly.record["parameters"]["slide_mm"]*.001
+        entry = np.array([0., s, 0.])
+        route = []
+        if s:
+            route.append(RigidMotionSegment("slide_to_offset", 2., np.eye(3), np.zeros(3), entry))
+        route.append(RigidMotionSegment("extract_straight", 3., np.eye(3), entry,
+                                        entry+[.08*task.config["scale"], 0., 0.]))
+        return assembly, route
     template = read_json(task.template_resource) if task.template_resource else None
     assembly = CoilAssembly(template=template, scale=float(task.config["scale"]))
     if template is None:
@@ -31,6 +43,8 @@ class CastCoilPolicy(CastCoilBaselinePolicy):
 
     def __init__(self, *, body_origins, variant="easy", part="all"):
         assembly, route = variant_reference(variant)
+        if hasattr(assembly, "record"):
+            raise ValueError("Use SimplifiedCoilPolicy for the cube variants")
         super().__init__(body_origins=body_origins, part=part, route=route)
         self.place_from_rest = "inverse_design" in assembly.template
         self.variant = variant

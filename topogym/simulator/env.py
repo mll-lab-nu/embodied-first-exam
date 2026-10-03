@@ -57,8 +57,13 @@ class Env:
 
     _active_env = None
 
-    def __init__(self, config: SimulatorConfig | None = None):
+    def __init__(self, config: SimulatorConfig | None = None, *, sensor_factory=None):
         self._config = config or SimulatorConfig()
+        # Owner-only construction extension. Operator handles and formal
+        # defaults remain unchanged; adapters must preserve state identities.
+        if sensor_factory is not None and not callable(sensor_factory):
+            raise TypeError("sensor_factory must be callable")
+        self._sensor_factory = sensor_factory
         # "seeded" picks its tier from the episode seed; without a configured
         # seed the tier is known only at reset.
         self._variation = self._task_class = None
@@ -382,7 +387,7 @@ class Env:
             if settling is not None:
                 self._world.configure_final_settling(settling.rigid_targets)
             self._task.initialize(self._world.read_state())
-            self._sensors = SensorSuite(
+            self._sensors = (self._sensor_factory or SensorSuite)(
                 self._world, self._robot, enable_rgb=self.config.enable_rgb,
                 enable_depth=self.config.enable_depth,
                 observation_mode=self.config.observation_mode,

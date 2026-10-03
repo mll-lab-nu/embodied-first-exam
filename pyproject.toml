@@ -29,7 +29,7 @@ dataset = ["h5py"]
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["topogym*"]
-exclude = ["topogym.agents.deferred*", "topogym.redundants*", "topogym.tasks.legacy*"]
+exclude = ["topogym.agents.deferred*", "topogym.redundants*", "topogym.tasks.legacy*", "topogym.planning.calibration_tools*"]
 namespaces = true
 
 [tool.setuptools.package-data]

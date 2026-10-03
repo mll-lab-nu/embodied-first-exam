@@ -435,14 +435,32 @@
     },
     "variations/cast_keyhole/very_easy/geometry.json": {
       "path": "variations/cast_keyhole/very_easy/geometry.json",
-      "sha256": "5582cca7d34c94f563eadf2885b8385b5066e44fa9071a45515fc7fd91ac3016",
+      "sha256": "8b7505c923888dc8d17b3f89b80be7ca6eefeb3c9b3ecd659c05100738282eec",
       "source": "topogym/assets/geometry/cast_keyhole_simplified.py",
       "license": null
     },
     "variations/cast_keyhole/easier/geometry.json": {
       "path": "variations/cast_keyhole/easier/geometry.json",
-      "sha256": "d627d674b6908819b3e0e23f70b652cd2063f502b2828d7f7fa733a3029f8224",
+      "sha256": "7156ac8edac9107d31e902f643b2e011e883d78c4189a54f4a249a1babafde9d",
       "source": "topogym/assets/geometry/cast_keyhole_simplified.py",
+      "license": null
+    },
+    "variations/cast_coil/very_easy/geometry.json": {
+      "path": "variations/cast_coil/very_easy/geometry.json",
+      "sha256": "45a846811b5bc8f60ed1a61bbde628a9dbb26a9ce94f7a9a5211869d5eb5f0ef",
+      "source": "topogym.assets.geometry.cast_coil_simplified.geometry_record",
+      "license": null
+    },
+    "variations/cast_coil/easier/geometry.json": {
+      "path": "variations/cast_coil/easier/geometry.json",
+      "sha256": "ea8fd2b0a819925ab03b44f9d3e40771ab90d0b20540226096295428e9373511",
+      "source": "topogym.assets.geometry.cast_coil_simplified.geometry_record",
+      "license": null
+    },
+    "variations/interlocked_claws/easier/reference_route.json": {
+      "path": "variations/interlocked_claws/easier/reference_route.json",
+      "sha256": "04526a27976bf7afc5772fdca372a1a797ab470eb8e52529fd24653ba2f06a58",
+      "source": "approved Claws geometry; certified SE(3) reference route",
       "license": null
     }
   }

@@ -70,7 +70,9 @@ def geometry_record(level):
                                silver_lower_bar_height_mm=4.7,
                                inlet_radius_mm=5.6, inlet_center_y_mm=20., inlet_bottom_y_mm=8.5),
         grasp_regions=dict(
-            gold=dict(center_plate_mm=[8., 27., 0.], radius_m=.022),
+            # Outer gold prong: keep both hands away from the central bore.
+            # The slanted face grasp spans about 24 mm from this centre.
+            gold=dict(center_plate_mm=[28./3., -83./3., 0.], radius_m=.026),
             silver=dict(center_plate_mm=[0., 29., 0.], radius_m=.022)),
         geometry_status="authored_simplification; runtime and robot qualification are separate",
         source="topogym.assets.geometry.cast_keyhole_simplified.geometry_record",

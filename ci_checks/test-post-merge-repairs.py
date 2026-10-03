@@ -6,9 +6,11 @@ import importlib.util
 import json
 import os
 import subprocess
+import struct
 import sys
 import tempfile
 import unittest
+import zipfile
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -38,6 +40,78 @@ def server_function(name, namespace):
 
 
 class Repairs(unittest.TestCase):
+    def test_zip_edge_cases_are_invalid_submissions_and_queue_continues(self):
+        import collect_batch_results as collector
+        grade = module('zip_grade', 'harbor_templates/topogym/unlimited/tests/grade.py')
+        # Exercise both the early header read and a later NumPy member read.
+        for member in ('actions.npy', 'task.npy'):
+            for encrypted in (False, True):
+                with self.subTest(member=member, encrypted=encrypted), tempfile.TemporaryDirectory() as d:
+                    root = Path(d)
+                    path = root / 'bad.npz'
+                    np.savez(path, task='fixture', actions=np.zeros((1, 2)))
+                    raw = bytearray(path.read_bytes())
+                    with zipfile.ZipFile(path) as archive:
+                        local = archive.getinfo(member).header_offset
+                        central = archive.start_dir
+                        for info in archive.infolist():
+                            if info.filename == member:
+                                break
+                            central += 46 + sum(struct.unpack_from('<HHH', raw, central + 28))
+                    for offset in (local + (6 if encrypted else 8), central + (8 if encrypted else 10)):
+                        struct.pack_into('<H', raw, offset, (struct.unpack_from('<H', raw, offset)[0] | 1) if encrypted else 99)
+                    path.write_bytes(raw)
+                    (root / 'instance.json').write_text('{"action_dim":2}')
+                    row = dict(task_id='fixture', task_number=1, difficulty='easy', sample_id='s00',
+                               scene_seed=0, slug='topogym-fixture-easy-s00', evaluable_for_task_success=True)
+                    ev = DifficultyEvaluation.__new__(DifficultyEvaluation)
+                    ev.run = root; ev.jobs = root / 'jobs'; ev.harbor = Path(sys.executable)
+                    ev.args = SimpleNamespace(rerun_incomplete=False)
+                    ev.manifest = dict(instances=[row], trial_count=2)
+                    ev.collector = collector
+                    ev.task_dir = lambda row, mode: root / mode
+                    for name in ('verify_image', 'verify_packages', 'require_phase_complete', 'canary', 'gpu_ready', 'collect'):
+                        setattr(ev, name, Mock())
+                    launched = []
+                    def launch(task, job):
+                        mode = task.name; launched.append(mode)
+                        trial = ev.jobs / job / 'trial'; logs = trial / 'verifier'; logs.mkdir(parents=True)
+                        if mode == 'unlimited':
+                            args = ['grade', '--family', 'fixture', '--instance', str(root / 'instance.json'), '--traj', str(path)]
+                            with patch.object(grade, 'LOG_DIR', str(logs)), patch.object(sys, 'argv', args), patch.object(tool, 'Session') as scene:
+                                self.assertEqual(grade.main(), 0); scene.assert_not_called()
+                            reward = json.loads((logs / 'reward.json').read_text())
+                            self.assertEqual((reward['success'], reward['bad_trajectory'], reward['grader_error']), (0, 1, 0))
+                            self.assertTrue((logs / 'submission_error.json').is_file())
+                        else:
+                            reward = dict(success=0, finalized=1, grader_error=0)
+                            (logs / 'reward.json').write_text(json.dumps(reward))
+                        (trial / 'result.json').write_text(json.dumps(dict(task_name=row['slug'] +
+                            ('-privileged' if mode == 'unlimited' else '-standard'), finished_at='fixture',
+                            verifier_result=dict(rewards=reward))))
+                        self.assertEqual(collector.classify_trial(trial.parent, row, mode)[0],
+                                         'invalid_submission' if mode == 'unlimited' else 'unsolved')
+                        return 0
+                    ev.launch_job = launch
+                    ev.run_trials()
+                    self.assertEqual(launched, ['unlimited', 'limited'])
+
+    def test_valid_npz_and_physics_runtime_error_keep_their_meaning(self):
+        grade = module('runtime_grade', 'harbor_templates/topogym/unlimited/tests/grade.py')
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d); path = root / 'good.npz'
+            for save in (np.savez, np.savez_compressed):
+                save(path, task='fixture', actions=np.zeros((1, 2)))
+                np.testing.assert_array_equal(tool.load_trajectory(path, 'fixture', 2)[0], np.zeros((1, 2)))
+            (root / 'instance.json').write_text('{"action_dim":2}')
+            args = ['grade', '--family', 'fixture', '--instance', str(root / 'instance.json'), '--traj', str(path)]
+            with patch.object(grade, 'LOG_DIR', d), patch.object(sys, 'argv', args), \
+                    patch.object(tool, 'Session', side_effect=RuntimeError('physics startup failure')):
+                self.assertEqual(grade.main(), 0)
+            reward = json.loads((root / 'reward.json').read_text())
+            self.assertEqual(reward['grader_error'], 1)
+            self.assertNotIn('bad_trajectory', reward)
+
     def test_standard_startup_mismatch_is_not_an_infrastructure_crash(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)

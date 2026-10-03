@@ -9,6 +9,9 @@ artifacts = [
   { source = "/data/server.log", service = "sim" },               # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },              # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },           # crash recovery: one line per service start
+  { source = "/data/replay.verdict.json", service = "sim" },
+  { source = "/data/replay.frame_map.jsonl", service = "sim" },
+  { source = "/data/replay.recording_manifest.json", service = "sim" },
   { source = "/data/replay.json", service = "sim" },              # the collect hook's fresh-process replay
   { source = "/data/replay.log", service = "sim" },
   "/app/output/",
@@ -16,7 +19,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/topogym-fiber-bundling-medium-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): TopoGym fiber_bundling on the same frozen instance as the privileged task. Manipulate the thick sheath to pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.3): TopoGym fiber_bundling on the same frozen instance as the privileged task. Manipulate the thick sheath to pass every fine fiber and the front sheath through the fixed copper ring; keep the rear terminal anchored. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "standard-mode", "trajectory", "fiber_bundling"]
 
@@ -27,13 +30,13 @@ simulator = "topogym"
 robot = "panda_robotiq"
 family = "fiber_bundling"
 mode = "standard"                  # RGB + proprioception only; no object poses, no success predicate, no reset
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/2.3"
 oracle = "none"
 oracle_evidence = "No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol \u00a72.7)."
 difficulty = "medium"
 grasp = "physical (no assisted grasping)"
 success_rule = "his default success (goal_complete True; terminal revision terminal_v4_fiber_ring_plane)"
-tooling_version = "4"
+tooling_version = "5"
 instance_seed = 0
 expert_time_estimate_hours = 3
 

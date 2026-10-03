@@ -16,6 +16,8 @@ def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
     from topogym.config.registry import task_definition
     from topogym.utils.grasp import GraspAssistConfig, GraspTarget
     task = task_definition("cast_coil", variation_id, seed)(task_parameters, seed=seed)
+    if getattr(task, "geometry_resource", None):
+        return task.grasp_assist()
     template = read_json(task.template_resource) if task.template_resource else None
     assembly = CoilAssembly(template=template, scale=float(task.config["scale"]))
     points = {"coil_silver": np.array([.022, .032, .0405]),
@@ -54,6 +56,9 @@ class CastCoilTask(RigidTaskDefinition):
         template = read_json(self.template_resource) if self.template_resource else None
         return generate_assets(folder, scale=float(self.config["scale"]), template=template)
 
+    def initial_silver_rotation(self, rotation):
+        return rotation * Rotation.from_euler("y", -90, degrees=True)
+
     def declare(self, asset_dir, table_height_m):
         self.table_height_m = float(table_height_m)
         cfg, folder = self.config, Path(asset_dir)
@@ -79,7 +84,7 @@ class CastCoilTask(RigidTaskDefinition):
             offset = np.asarray(cfg["initial_xy_offset_m"], dtype=float)
             if offset.shape != (2,) or not np.isfinite(offset).all():
                 raise ValueError("initial_xy_offset_m must be a finite XY offset")
-            silver_rotation = rotation * Rotation.from_euler("y", -90, degrees=True)
+            silver_rotation = self.initial_silver_rotation(rotation)
             silver_bottom = silver_rotation.apply(assembly.bodies[1].visual.vertices)[:, 2].min()
             poses[1] = (silver_rotation, np.r_[xy+offset, self.table_height_m-silver_bottom+clearance])
             world_bounds = [(r.apply(b.visual.vertices)+p) for b, (r, p) in zip(assembly.bodies, poses)]

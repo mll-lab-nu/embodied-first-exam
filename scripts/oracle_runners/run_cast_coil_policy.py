@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import signal
 from pathlib import Path
 import subprocess
 import sys
@@ -18,10 +19,9 @@ def worker(output, no_rgb=False, part="all", physics_dt=None, control_decimation
     import numpy as np
     import torch
     from topogym.simulator import Env, SimulatorConfig, SegmentRunner
-    from topogym.assets.geometry.cast_coil import CoilAssembly
-    from topogym.planning.cast_coil.baseline import CastCoilBaselinePolicy, GRASP_POINTS, PARTS
+    from topogym.planning.cast_coil.baseline import CastCoilBaselinePolicy, PARTS
     from topogym.planning.cast_coil.policy import CastCoilPolicy, variant_reference
-    from topogym.utils.grasp import GraspAssistConfig, GraspTarget
+    from topogym.tasks.cast_coil.common import recommended_grasp_assist
     from topogym.utils.io import write_json_atomic, to_jsonable
     from topogym.simulator.rollout_simulation.segment_contract import fingerprint
     torch.set_num_threads(1)
@@ -30,14 +30,15 @@ def worker(output, no_rgb=False, part="all", physics_dt=None, control_decimation
     control_decimation = defaults.control_decimation if control_decimation is None else control_decimation
     solver_substeps = defaults.solver_substeps if solver_substeps is None else solver_substeps
     assembly, route = variant_reference(variant)
-    origins = {b.name: b.visual.center_mass for b in assembly.bodies}
-    targets = tuple(GraspTarget(name, name, tuple(GRASP_POINTS[s]-origins[name]), .025) for s, name in PARTS.items())
+    simplified = hasattr(assembly, "record")
+    if simplified and policy_kind != "feedback":
+        raise ValueError("Cube variants require their dedicated feedback policy")
     config = SimulatorConfig(task_id="cast_coil", variation_id="cast_coil_"+variant, robot_id="aloha",
         control_mode="EE_ABS", enable_privileged=True, enable_rgb=not no_rgb,
         compute_backend=compute_backend,
         physics_dt_s=physics_dt, control_decimation=control_decimation, solver_substeps=solver_substeps,
         max_physics_steps=round(episode_seconds/physics_dt), work_dir=output/"scene",
-        grasp_assist=GraspAssistConfig(model="contact_weld_v1", targets=targets))
+        grasp_assist=recommended_grasp_assist(variant, seed))
     report = dict(status="running", started=time.time(), config=to_jsonable(config), events=[],
                   from_default_home=True, mode="unlimited", part=part, segments=[],
                   variant=variant, seed=seed, policy=policy_kind, task_success=False,
@@ -75,7 +76,11 @@ def worker(output, no_rgb=False, part="all", physics_dt=None, control_decimation
             report["contact_link_names"] = {str(link.idx): f"{name}/{link.name}" for name, entity in env._world.entities.items()
                                              for link in getattr(entity, "links", ())}
             write_json_atomic(output/"run_report.json", report)
-            if policy_kind == "baseline":
+            if simplified:
+                from topogym.planning.cast_coil.simplified_policy import SimplifiedCoilPolicy
+                policy = SimplifiedCoilPolicy(body_origins=env._task.body_origins, part=part,
+                    variant=variant, seed=seed, task_parameters=env._task.config)
+            elif policy_kind == "baseline":
                 policy = CastCoilBaselinePolicy(body_origins=env._task.body_origins, part=part, route=route)
             else:
                 policy = CastCoilPolicy(body_origins=env._task.body_origins, part=part, variant=variant)
@@ -119,6 +124,7 @@ def worker(output, no_rgb=False, part="all", physics_dt=None, control_decimation
                         task_success=bool(env._task.result.task_success), simulation_time_s=env._world.sim_time_s,
                         phase_endpoints=getattr(policy, "samples", []))
                     success = (env._task.result.task_success and not world["assist_active"] if part == "all" else result["reason"] == "policy_done")
+                    success = success and result.get("evidence_complete", False) and result.get("physics_tick_complete", False)
                     if not success:
                         raise RuntimeError(f"Run did not pass: {result['reason']} in {policy.phase}")
                     report["status"] = "passed"
@@ -137,7 +143,7 @@ def main():
     parser.add_argument("--output", required=True)
     parser.add_argument("--no-rgb", action="store_true")
     parser.add_argument("--part", choices=["all", "pickup"], default="all")
-    parser.add_argument("--variant", choices=["easy", "medium", "hard"], default="easy")
+    parser.add_argument("--variant", choices=["very_easy", "easier", "easy", "medium", "hard"], default="easy")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--compute-backend", choices=["cpu", "cuda"], default="cuda")
     parser.add_argument("--episode-seconds", type=float, default=240.)
@@ -168,11 +174,30 @@ def main():
         command.append("--no-rgb")
     (output/"invocation.json").write_text(json.dumps(dict(command=command), indent=2))
     with (output/"runtime.log").open("x") as log:
-        result = subprocess.run(command, cwd=source, stdout=log, stderr=subprocess.STDOUT,
+        process = subprocess.Popen(command, cwd=source, stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
             env=dict(os.environ, PYTHONPATH=str(source), OMP_NUM_THREADS="1", MKL_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1",
                      TOPOGYM_VISUAL_ASSET_ROOT=str(ROOT/".external/nyx-assets")))
-    print(f"exit={result.returncode}; {output}")
-    raise SystemExit(result.returncode)
+        import psutil
+        try:
+            with (output/"resources.jsonl").open("x", buffering=1) as monitor:
+                while process.poll() is None:
+                    row = dict(time=time.time(), cpu_percent=psutil.cpu_percent(),
+                               memory_percent=psutil.virtual_memory().percent)
+                    monitor.write(json.dumps(row)+"\n")
+                    if row["memory_percent"] >= 90:
+                        (output/"resource_stop.json").write_text(json.dumps(row, indent=2))
+                        raise RuntimeError("System memory reached 90%; stopping this run")
+                    time.sleep(1)
+        finally:
+            if process.poll() is None:
+                os.killpg(process.pid, signal.SIGTERM)
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    os.killpg(process.pid, signal.SIGKILL)
+                    process.wait()
+    print(f"exit={process.returncode}; {output}")
+    raise SystemExit(process.returncode)
 
 
 if __name__ == "__main__":

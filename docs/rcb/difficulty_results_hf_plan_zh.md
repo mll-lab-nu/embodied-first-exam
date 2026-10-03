@@ -176,6 +176,10 @@ LGVamper/toponym_evaluation_results/
 
 每个 run 的 `_run/trials.jsonl` 使用同一列定义，供跨实验汇总。客户端只写自己的 run 前缀；全仓库索引和 dataset card 由维护方另行维护，避免多人同时覆盖根目录 `summary.csv`。后续为 HF Dataset Viewer 增加明确的数据文件选择配置，不能让异构 metadata、reward 和 trial JSON 被自动当成同一张表。
 
+### 2026-10-02 证据清单对齐
+
+已实施 `artifact_contract_version=2`，原 `schema_version=1` 保留兼容。standard artifact 模式额外导出各运行模式适用的 verdict、media/final、replay verdict、frame map 和 recording manifest；metrics 模式维持精简结果。文本文件记录原始 `source_sha256` 与导出 `sha256`，录像 manifest 的引用哈希与导出字节对齐；错误诊断文件只在存在时导出。具体清单、旧 run 生效范围及验收见 [A01/A03 修复记录](../debug_logs/run_trials_a01_a03_repair_20261002_zh.md)。
+
 ## 调度与失败恢复
 
 正常路径为：完成本地 collect → 生成发布快照 → 校验文件与身份 → 上传证据 → 最后发布完成标记和汇总。上传过程可以失败，本地结果及 trial 状态独立保存。

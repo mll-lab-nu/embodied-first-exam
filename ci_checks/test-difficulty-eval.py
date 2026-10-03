@@ -316,7 +316,7 @@ class ResultTests(unittest.TestCase):
             self.assertEqual(p.returncode,0,p.stdout+p.stderr)
             u=tomllib.loads((tasks/(slug+'-privileged')/'task.toml').read_text()); l=tomllib.loads((tasks/(slug+'-standard')/'task.toml').read_text())
             self.assertEqual((u['agent']['timeout_sec'],l['agent']['timeout_sec']),(21600,21600))
-            self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),('5','5'))
+            self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),('6','6'))
             self.assertEqual(l['metadata']['protocol'], 'eai-standard/2.3')
             tools=[tasks/(slug+'-privileged')/'environment/rcb_topogym.py',tasks/(slug+'-privileged')/'tests/rcb_topogym.py',
                    tasks/(slug+'-standard')/'environment/sim/rcb_topogym.py']

@@ -26,7 +26,7 @@ from topogym.utils.io import make_asset_tree_readable
 from cuda_profiles import image_tag
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
-TOOLING_VERSION = "5"
+TOOLING_VERSION = "6"
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = image_tag(root)
@@ -457,7 +457,9 @@ def main() -> None:
         f"python /tests/grade.py --family {fam} --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \\\n"
         "  2> /logs/verifier/grade.log\n"
         "# Recover compatibility rewards if the replay process died after committing its verdict.\n"
-        "python -c \"import sys; sys.path.insert(0, '/tests'); from rcb_topogym import recover_reward; recover_reward('/logs/verifier')\"\n")
+        "python -c \"import sys; sys.path.insert(0, '/tests'); from rcb_topogym import recover_reward; recover_reward('/logs/verifier')\"\n"
+        "# Atomic publication creates mode 0600 files; the host Harbor reader may have a different UID.\n"
+        "chmod 0644 /logs/verifier/reward.txt /logs/verifier/reward.json\n")
     (dst / "tests/test.sh").chmod(0o755)
     difficulty = a.difficulty or (f"{robot_words(d).capitalize()} with a {len(d['action_layout'])}-D joint-target action space at {d['control_hz']:g} Hz; "
                                   f"success needs the task's predicate (above) held for {d['stable_duration_s']:g} s. Grasping: "

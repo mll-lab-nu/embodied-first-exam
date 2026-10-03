@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "cast_coil_very_easy_cubic_comb_v2",
+  "level": "very_easy",
+  "model_revision": "cubic_comb_v2",
+  "units": "mm",
+  "density_kg_m3": 6700.0,
+  "parameters": {
+    "edge_mm": 102.0,
+    "seam_mm": 0.6,
+    "tooth_reach_mm": 20.4,
+    "band_count": 5,
+    "slide_mm": 0.0
+  },
+  "colors": {
+    "coil_gold": [
+      0.53,
+      0.39,
+      0.12,
+      1.0
+    ],
+    "coil_silver": [
+      0.39,
+      0.43,
+      0.47,
+      1.0
+    ]
+  },
+  "coordinate_frame": "final assembly center; X insertion, Y depth, Z up",
+  "geometry_status": "authored mesh candidate; robot and runtime not validated",
+  "source": "topogym.assets.geometry.cast_coil_simplified.geometry_record"
+}

@@ -1,5 +1,21 @@
 # 双爪互锁
 
+## 2026-10-02：very_easy / easier 候选模型预览
+
+按用户修正建立两个可单独选择的 `experimental` 入口：`interlocked_claws_very_easy` / `very_easy` 和 `interlocked_claws_easier` / `easier`。沿用当前 Claw 的真实 ALOHA、双臂预抓持、共享终态和 `contact_weld_v1` 推荐配置；以 easy 的 260 mm TCP 间距和安装坐标中的 305.28805 mm 高度为基准，仅为几何连接关系调整两手的局部位置并重求 IK。握持块参考 medium/hard，为 30 × 28 × 24 mm。旧三档和 `base` / `seeded` 映射保持原含义。
+
+- **very_easy（v2）：**两件 L 分别位于 xz / xy 平面，两个 40 mm 短边沿 z / −y，彼此垂直交错卡住。两根长杆在高度和侧向各错开 22 mm；短边表面沿 x 留 4 mm 间隙，各短端越过另一短边的投影边缘 6 mm。沿长杆向外拉动 5 mm 时已有短边碰撞见证。版本为 `perpendicular_short_legs_pregrasp_candidate_v2`；原平行短边 v1 的截图和证据保留在旧预览目录。
+- **easier：**十字两臂沿 y/z，握杆沿 x，三轴互相垂直。十字总跨度 120 mm，方框外边长 132 mm、净开口 88 mm；框侧沿 y 伸出 28 mm，再接沿 x 的握杆。两握杆横向错开 94 mm。十字头初始位于方框后方，杆穿过开口；初始最小件间净空约 8 mm。沿杆直拉有碰撞见证，完整逐臂退出路线与替代捷径尚未验证。
+
+截图使用统一 `topogym.make → Env.reset → SensorFrame`、Nyx + compact_lab，保留原机器人模型；仅在预览进程中增加局部相机。截图位于第 0 个物理步，不能作为抓持稳定、完整解锁或难度通过的证据。
+
+| 变体 | 实际场景截图 | 构建与截图记录 |
+| --- | --- | --- |
+| very_easy v2 | [垂直短边卡合近景](../../../runs/test_results/claws_simplified_preview_20261002_v2/very_easy/detail.png) · [反向斜视](../../../runs/test_results/claws_simplified_preview_20261002_v2/very_easy/oblique.png) · [卡合处特写](../../../runs/test_results/claws_simplified_preview_20261002_v2/very_easy/joint_closeup.png) · [标准高位相机](../../../runs/test_results/claws_simplified_preview_20261002_v2/very_easy/cam_high.png) | [预览报告](../../../runs/test_results/claws_simplified_preview_20261002_v2/very_easy/preview_report.json) |
+| easier | [十字与方框近景](../../../runs/test_results/claws_simplified_preview_20261002/easier/detail.png) · [横向连接俯视](../../../runs/test_results/claws_simplified_preview_20261002/easier/top.png) · [标准高位相机](../../../runs/test_results/claws_simplified_preview_20261002/easier/cam_high.png) | [预览报告](../../../runs/test_results/claws_simplified_preview_20261002/easier/preview_report.json) |
+
+几何源码：[claws_simplified.py](../../../topogym/assets/geometry/claws_simplified.py)。两件均由长方体实体求并生成可视模型，复用现有 `FamilyModel.save` 输出等价的原生长方体碰撞组和实体惯量。候选检查包括单件连通／水密、正惯量、件间初始无穿透、预抓持 IK 和有限的轴向直拉反例；尚未运行物理动作、完整解题、Harbor 冻结或新五档采样。very_easy v2 调整后按相同场景配置重新生成 easier，其全部 8 个场景资产文件与用户认可的上一版逐字节一致。
+
 2026-09-30：medium 与 easy/hard 统一声明 `pregrasp_weld=True`，新评测实例通过 `recommended_grasp_assist()` 启用 `contact_weld_v1`。两只手分别对各自零件取得辅助抓持，保持取得时零件相对 hand link 的位置与朝向；两件之间的相对运动和碰撞仍由物理求解器处理。闭合预抓初态使用 `initial_intent="close"`，仍需双指接触连续满足准入 0.02 s，张开夹爪即解除该手约束。实际启用以实例的 `simulator.grasp_assist` 为准，旧实例不会自动开启；此配置调整不新增完整物理成功记录。
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。

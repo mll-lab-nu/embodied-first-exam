@@ -25,7 +25,9 @@ COMB_TARGET_M = .0115
 # Judged at the ring plane (terminal_v4), a strand only has to reach the half of
 # the tube front that guides it inward. The 2026-09-21 16-strand demo stopped
 # combing below 16 mm (plan.json entry_envelope_m) and every strand threaded.
-GUIDED_TARGET_M = .015
+# (15 mm was tried first: hard_guided_04 ended with tips at 15.4-15.9 mm that a
+# further press moved by tenths of a millimetre.)
+GUIDED_TARGET_M = .016
 MAXIMUM_BEND_DEG = 60.
 CLEARANCE_M = .001
 SPEEDS = dict(joint_speed=.25, translation_speed=.015, rotation_speed=.35)
@@ -117,12 +119,19 @@ def plan_sector_comb(kin, state, layout, parameters, target=COMB_TARGET_M):
     rows = strand_measures(state, layout)
     _, axis = ring_frame(state)
     current = current_roll_deg(state, axis)
-    usable = [row for row in sector_choices(rows, parameters["d_press_m"], target)
-              if len(roll_choices(row["psi_deg"], current)) > parameters["roll_rank"]]
-    if parameters["sector_rank"] >= len(usable):
-        raise ValueError(f"Only {len(usable)} press directions with roll rank {parameters['roll_rank']}")
-    choice = usable[parameters["sector_rank"]]
-    roll = roll_choices(choice["psi_deg"], current)[parameters["roll_rank"]]
+    if "psi_deg" in parameters:
+        # A recorded choice (a selection.json entry) is replayed exactly, whatever
+        # the ranking under the current target would pick.
+        choice = dict(psi_deg=parameters["psi_deg"], contacted=list(parameters["contacted"]),
+                      gained=list(parameters.get("predicted_gain", ())))
+        roll = parameters["roll_deg"]
+    else:
+        usable = [row for row in sector_choices(rows, parameters["d_press_m"], target)
+                  if len(roll_choices(row["psi_deg"], current)) > parameters["roll_rank"]]
+        if parameters["sector_rank"] >= len(usable):
+            raise ValueError(f"Only {len(usable)} press directions with roll rank {parameters['roll_rank']}")
+        choice = usable[parameters["sector_rank"]]
+        roll = roll_choices(choice["psi_deg"], current)[parameters["roll_rank"]]
     guide_a, guide_b, geometry = comb_keyframes(state, layout, choice["contacted"], parameters["d_press_m"], roll,
                                                 psi_deg=choice["psi_deg"],
                                                 approach_margin_m=parameters["approach_margin_m"],

@@ -9,6 +9,9 @@ artifacts = [
   { source = "/data/server.log", service = "sim" },               # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },              # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },           # crash recovery: one line per service start
+  { source = "/data/replay.verdict.json", service = "sim" },
+  { source = "/data/replay.frame_map.jsonl", service = "sim" },
+  { source = "/data/replay.recording_manifest.json", service = "sim" },
   { source = "/data/replay.json", service = "sim" },              # the collect hook's fresh-process replay
   { source = "/data/replay.log", service = "sim" },
   "/app/output/",
@@ -16,7 +19,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/topogym-blanket-flatten-hard-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): TopoGym blanket_flatten on the same frozen instance as the privileged task. Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.3): TopoGym blanket_flatten on the same frozen instance as the privileged task. Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "jianwen" }]
 keywords = ["robotics", "topogym", "genesis", "aloha", "standard-mode", "trajectory", "blanket_flatten"]
 
@@ -27,14 +30,13 @@ simulator = "topogym"
 robot = "aloha"
 family = "blanket_flatten"
 mode = "standard"                  # RGB + proprioception only; no object poses, no success predicate, no reset
-protocol = "eai-standard/2.2"
+protocol = "eai-standard/2.3"
 oracle = "none"
 oracle_evidence = "No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol \u00a72.7)."
 difficulty = "hard"
 grasp = "physical (no assisted grasping)"
 success_rule = "his default success (goal_complete True; terminal revision release_settling_v1)"
-initial_state = "re-prepared in rcb-topogym 0.2.3 with his scripts/prepare_blanket_initial_states.py (--tier, seed 0, --acceptance scene_layout); his archived gathered_scene_v1 states do not restore in 0.2.3 (backend identity: world_sha256 of topogym/world/genesis_world.py, changed by his seed fix in 76583213; underneath, the RigidSolver layout mismatch of 0.2.1 / 0.2.2: collision verts 13876 archive vs 14008 live)"
-tooling_version = "4"
+tooling_version = "5"
 instance_seed = 0
 expert_time_estimate_hours = 3
 

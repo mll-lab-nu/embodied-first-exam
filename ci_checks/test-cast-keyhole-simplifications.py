@@ -138,12 +138,16 @@ class SimplificationTests(unittest.TestCase):
                     else:
                         np.testing.assert_allclose(frames, reference, atol=1e-9, err_msg=level)
 
-    def test_old_full_policy_cannot_silently_use_new_initial_assembly(self):
+    def test_full_policy_requires_the_current_initial_assembly(self):
         for level, (task, _, report) in self.scenes.items():
+            kwargs = dict(variation=level,
+                body_origins={b["name"]: b["origin_m"] for b in report["bodies"]},
+                goal_region={}, mount_position=[0., 0., 0.], canonical_vertices={}, part="all")
+            geometry = read_json(task.geometry_resource)
+            self.assertEqual(SimplifiedKeyholePolicy(geometry=geometry, **kwargs).part, "all")
+            stale = dict(geometry, initial_relative_pose_id="old_transverse_layout")
             with self.assertRaisesRegex(NotImplementedError, "restored v4 initial pose"):
-                SimplifiedKeyholePolicy(geometry=read_json(task.geometry_resource), variation=level,
-                    body_origins={b["name"]: b["origin_m"] for b in report["bodies"]},
-                    goal_region={}, mount_position=[0., 0., 0.], canonical_vertices={}, part="all")
+                SimplifiedKeyholePolicy(geometry=stale, **kwargs)
 
     @staticmethod
     def _gold_frame():

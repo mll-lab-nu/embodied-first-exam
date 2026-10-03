@@ -25,11 +25,11 @@ from urllib.parse import quote
 import uuid
 
 from difficulty_hf_auth import HFError, error_from_exception
+from collect_batch_results import ARTIFACT_CONTRACT_VERSION, OPTIONAL_DIAGNOSTICS, result_artifacts
 
 SCHEMA = 1
 COMPLETE = {"solved", "unsolved", "not_evaluable", "invalid_submission"}
 STATUSES = COMPLETE | {"pending", "blocked_preflight", "interrupted", "infra_failed", "invalid_job", "identity_mismatch"}
-MEDIA = ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl")
 ROW_FIELDS = ("task_id", "difficulty", "sample_id", "scene_seed", "mode", "trial", "attempt", "status", "success",
               "evaluable_for_task_success", "tokens_in", "tokens_out", "cost_usd_api_price", "exception")
 
@@ -307,21 +307,33 @@ def export_snapshot(run, args, log, guard=lambda: None):
                 rel = f"{row['task_id']}/{row['difficulty']}/seed_{row['scene_seed']}/{row['mode']}/trial_01/attempt_{row['attempt']:03d}"
                 origin = run / "results" / row["task_id"] / row["difficulty"] / row["sample_id"] / row["mode"] / "trial_01" / f"attempt_{row['attempt']:03d}"
                 item = {k: row.get(k) for k in ROW_FIELDS}
-                item.update(schema_version=SCHEMA, run_uuid=identity["run_uuid"], run_id=args.run_id,
+                item.update(schema_version=SCHEMA, artifact_contract_version=ARTIFACT_CONTRACT_VERSION,
+                            run_uuid=identity["run_uuid"], run_id=args.run_id,
                             exp_date=identity["exp_date"], sample_sha256=sample["sample_sha256"],
                             source_sha256=manifest["source_sha256"], manifest_sha256=manifest["manifest_sha256"],
                             artifacts={}, missing_files=[])
                 item.update(execution)
                 item["agent_wall_clock_s"] = manifest["settings"].get("agent_wall_clock_s")
-                for name in ("reward.json", *(MEDIA if args.hf_artifacts == "standard" else ())):
+                for name in result_artifacts(row["mode"], media=args.hf_artifacts == "standard"):
                     src = safe_file(run, origin / name, required=False)
                     dst = staging / rel / name
                     if src is None:
-                        item["missing_files"].append(name)
+                        if name not in OPTIONAL_DIAGNOSTICS:
+                            item["missing_files"].append(name)
                         continue
                     dst.parent.mkdir(parents=True, exist_ok=True)
+                    source_sha = None
+                    if name.endswith((".json", ".jsonl")):
+                        source_sha = file_identity(src, guard)["sha256"]
                     if name.endswith(".json"):
-                        put(f"{rel}/{name}", json_file(src))
+                        value = json_file(src)
+                        if name == "replay.recording_manifest.json":
+                            # Point at the exported bytes, retaining original file
+                            # identity in result.json rather than forging raw evidence.
+                            for ref in [value.get("frame_map"), *(value.get("videos") or {}).values()]:
+                                if isinstance(ref, dict) and ref.get("path") in item["artifacts"]:
+                                    ref["sha256"] = item["artifacts"][ref["path"]]["sha256"]
+                        put(f"{rel}/{name}", value)
                     elif name.endswith(".jsonl"):
                         with src.open() as inp, dst.open("wb") as out:
                             for line in inp:
@@ -335,6 +347,8 @@ def export_snapshot(run, args, log, guard=lambda: None):
                                 out.write(block)
                         record(f"{rel}/{name}")
                     item["artifacts"][name] = dict(inventory[f"{rel}/{name}"], path=f"{identity['prefix']}/{rel}/{name}")
+                    if source_sha is not None:
+                        item["artifacts"][name]["source_sha256"] = source_sha
                 put(f"{rel}/result.json", item)
                 if row["status"] in COMPLETE:
                     terminal[rel] = {p: h["sha256"] for p, h in inventory.items() if p.startswith(rel + "/")}
@@ -357,6 +371,7 @@ def export_snapshot(run, args, log, guard=lambda: None):
             summary["evaluation_complete"] = summary["completed_trials"] == summary["planned_trials"]
             summary["incomplete_trials"] = summary["planned_trials"] - summary["completed_trials"]
             put("_run/metadata.json", dict(identity, **summary, provenance=provenance,
+                artifact_contract_version=ARTIFACT_CONTRACT_VERSION,
                 input_sha256={name: file_identity(run / name, guard)["sha256"] for name in ("manifest.lock.json", "source_identity.json", "trials.jsonl")},
                 exporter_sha256=file_identity(Path(__file__), guard)["sha256"]))
             (staging / "_run/trials.jsonl").write_bytes(b"".join(encoded(row) for row in exported))

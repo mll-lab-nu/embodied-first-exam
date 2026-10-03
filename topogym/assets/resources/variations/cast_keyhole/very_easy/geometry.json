@@ -437,11 +437,11 @@
   "grasp_regions": {
     "gold": {
       "center_plate_mm": [
-        8.0,
-        27.0,
+        9.333333333333334,
+        -27.666666666666668,
         0.0
       ],
-      "radius_m": 0.022
+      "radius_m": 0.026
     },
     "silver": {
       "center_plate_mm": [

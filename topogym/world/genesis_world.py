@@ -11,6 +11,36 @@ from topogym.utils.arrays import to_numpy
 from topogym.world.state import WorldState, capture_engine_buffers, capture_rng, copy_native_state, restore_engine_buffers, restore_rng, require_finite_state
 
 
+class _RigidReadout:
+    """The rigid solver's state of one tick in one host transfer per field: every link's pose and velocity, every q, every
+    dof velocity. RigidEntity and RigidLink getters are thin wrappers of these solver getters that select one link (or the
+    entity's q / dof range); each value is a per-link gather plus the per-link relative-pose offset, so slicing the full
+    arrays on the host gives the same numbers (scripts/check_read_state_batch.py compares both every tick, bit for bit).
+    Reading each link on its own cost about 700 synchronous GPU->CPU copies per tick on a two-arm scene, 63-84 % of a rigid
+    control step (2026-10-01 profiles)."""
+
+    def __init__(self, solver):
+        self.pos = to_numpy(solver.get_links_pos(relative=True)).reshape(-1, 3)
+        self.quat = to_numpy(solver.get_links_quat(relative=True)).reshape(-1, 4)
+        self.vel = to_numpy(solver.get_links_vel()).reshape(-1, 3)
+        self.ang = to_numpy(solver.get_links_ang()).reshape(-1, 3)
+        self.qpos = to_numpy(solver.get_qpos()).reshape(-1)
+        self.dofs_vel = to_numpy(solver.get_dofs_velocity()).reshape(-1)
+
+    def link(self, i):
+        return dict(position_m=self.pos[i].copy(), quaternion_wxyz=self.quat[i].copy(),
+                    linear_velocity_m_s=self.vel[i].copy(), angular_velocity_rad_s=self.ang[i].copy())
+
+    def entity(self, entity):
+        body = dict(self.link(entity.base_link_idx), link_indices=tuple(link.idx for link in entity.links))
+        qpos = self.qpos[entity.q_start:entity.q_start + entity.n_qs]
+        velocity = self.dofs_vel[entity.dof_start:entity.dof_start + entity.n_dofs]
+        return body, dict(
+            joints={joint.name: dict(position=qpos[list(joint.qs_idx_local)].copy(),
+                    velocity=velocity[list(joint.dofs_idx_local)].copy()) for joint in entity.joints},
+            links={link.name: self.link(link.idx) for link in entity.links})
+
+
 class GenesisWorld:
     """Own a single, non-differentiable rigid/PBD/FEM scene.
 
@@ -344,6 +374,7 @@ class GenesisWorld:
     def read_state(self):
         self._require_built()
         bodies, particles, articulations, fem = {}, {}, {}, {}
+        rigid, readout = self.scene.sim.rigid_solver, None
         for name, entity in self.entities.items():
             if hasattr(entity, "material_coordinates"):
                 from .physics.fem import read_vertices
@@ -351,6 +382,9 @@ class GenesisWorld:
             elif hasattr(entity, "get_particles_pos"):
                 particles[name] = dict(position_m=to_numpy(entity.get_particles_pos()).reshape(-1, 3),
                                        velocity_m_s=to_numpy(entity.get_particles_vel()).reshape(-1, 3))
+            elif getattr(entity, "_solver", None) is rigid:
+                readout = readout or _RigidReadout(rigid)
+                bodies[name], articulations[name] = readout.entity(entity)
             elif hasattr(entity, "get_pos"):
                 bodies[name] = dict(position_m=to_numpy(entity.get_pos()).reshape(-1, 3)[0],
                                     quaternion_wxyz=to_numpy(entity.get_quat()).reshape(-1, 4)[0],
@@ -366,7 +400,6 @@ class GenesisWorld:
                             quaternion_wxyz=to_numpy(link.get_quat()).reshape(-1, 4)[0],
                             linear_velocity_m_s=to_numpy(link.get_vel()).reshape(-1, 3)[0],
                             angular_velocity_rad_s=to_numpy(link.get_ang()).reshape(-1, 3)[0]) for link in entity.links})
-        rigid = self.scene.sim.rigid_solver
         coupler = self.scene.sim.coupler
         if hasattr(coupler, "rigid_velocities"):
             for name, (linear, angular) in coupler.rigid_velocities().items():

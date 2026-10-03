@@ -1,0 +1,62 @@
+工具：内置 image_gen.imagegen；未使用 CLI/API fallback。
+版本：正方体外轮廓 v2，2026-10-02。
+用途：工程方案概念图，不是 CAD 或物理验证。
+参考图来源：Hanayama 官方商店 https://store.hanayamatoys.co.jp/items/55630234
+参考图角色：仅参考方形回绕、金银材质与中央方孔，不继承官方产品的非等边比例或完整动作路线。
+参考图片 URL：
+https://baseec-img-mng.akamaized.net/images/item/origin/770d5436462ff1543e9ee9e46d8e2b8b.png
+https://baseec-img-mng.akamaized.net/images/item/origin/990b87805e125f0d7c8e22915f6e32bc.png
+
+生成提示词
+
+Use case: infographic-diagram.
+Create a new Chinese technical concept storyboard for two simplified Cast Coil puzzles, using the two provided Hanayama official photos ONLY as visual references for gold/silver cast metal, square-return frame parts, and a square central through-hole. Do NOT copy the commercial puzzle's multistep mechanics or its non-cubic proportions. Do NOT copy any logos or lettering from photos. This is a new engineering proposal, not a replica.
+
+Critical design: In BOTH rows, the two assembled rigid parts form ONE TRUE CUBE with width = depth = height = L, a straight square through-hole running from FRONT to BACK, and flush outer faces. There are EXACTLY TWO rigid parts, a gold left U-frame half and silver right U-frame half, comparable volume. No third part, no external handle, no knobs, no screw, no appendage protruding from the final cube. Each half has one full-depth outside sidewall and upper/lower horizontal arms that form half the square frame. Their arms meet at the middle of the top and bottom frame bars. This is a hollow cubic square-frame block, not a thin flat square ring, and not a solid cube without a hole. The bore runs through the full cube depth. View from front/top/right, with true isometric equal foreshortening of all three cube axes. It should be easy to see that final depth equals width and height. Subtle thin seams distinguish the two bodies; no decorative stripes falsely suggesting extra pieces.
+
+Layout: wide landscape 3:2, white background, restrained engineering CAD shading, excellent Simplified Chinese typesetting, large clearly separated panels, two horizontal rows, three equal panels per row. Gold is ALWAYS same single left frame part, silver ALWAYS same right frame part. Objects must have consistent shapes and dimensions through motion within each row. Make the final cube prominent in panel 3 of each row.
+
+Title exact: "Cast Coil｜正方体装配方案 v2"
+Subtitle exact: "两件拼合 · 三边等长 · 保留中央方孔"
+Small footer exact: "概念示意，非 CAD 或物理验证；图中完成指几何到位"
+
+Top row heading: "very_easy｜对齐后，一次直线拼合"
+Panel 1 label: "① 两件对齐".
+Show left gold U-shaped chunky half-frame with its two arms opening toward the right, and right silver reversed-U complementary half-frame with arms toward the left. Both U cross sections visible in the front face; both extruded to substantial full-cube depth. Small concealed rectangular tongues at upper and lower silver arm ends match pockets in gold arm ends. The tongues occupy only frame-wall material and do not cross the central bore. They are short internal join features, not extended handles.
+Panel 2 label: "② 沿 X 直线靠近".
+Same parts correctly aligned, translating toward each other horizontally, nearly joined. One blue straight arrow from silver toward gold. No rotation here.
+Panel 3 label: "③ 外表面齐平，形成正方体".
+One complete TRUE hollow cube, gold left and silver right with subtly stepped seam at top/bottom joints. Big centered square front aperture. NO exposed tongues or protrusions. Three discreet dimension lines on the cube's width, height, and depth, EACH labeled "L", unmistakably showing all are equal. Green check.
+Top row caption: "直榫藏在框条内；对齐后无需转腕"
+
+Bottom row heading: "easier｜对齐 → 直插 → 横移齐平"
+Same overall cube envelope and U-frame concept as top row, but upper and lower arm mating faces contain INTERNAL short T-head lugs and L-shaped sliding pockets. After aligning orientation, silver half starts offset along the depth axis Y relative to gold, with silver half projecting slightly toward the viewer/front and falling short at the rear. It inserts along X (horizontal leftward) while retaining this FRONT-BACK offset, then slides backward along Y (cube depth) to bring all outer faces flush. During the depth slide there is NO rotation and no second insertion. The T-heads remain concealed within thick top and bottom rails, behind internal retaining lips. No surface keyhole plate or exposed rod. All grips are frame outer surfaces.
+Panel 1 label: "① 对齐入口，保留前后错位".
+Show separated left gold and right silver U-frame half-cubes with silver shifted toward front by a modest depth offset. Same shape consistency and wide square bore.
+Panel 2 label: "② 沿 X 插入，仍未齐平".
+Show parts joined across width, forming a square front opening, BUT silver half is visibly offset forward along depth by s relative to gold. The front edge has a clear step and the rear edge complementary step, so this is NOT yet a cube. Thin dashed outline indicates eventual flush cube boundary. Blue X arrow shows insertion direction. Amber text "尚未完成".
+Panel 3 label: "③ 沿 Y 横移，恢复正方体".
+The SAME silver half now slides backward along cube-depth axis Y, no shape change or rotation, so it becomes fully flush with gold. Both front and rear faces aligned. Final cube identical outer size and square bore to top final cube. A green Y arrow parallel to the cube-depth edge shows depth slide, NOT horizontal X insertion and NOT vertical motion. A subtle dashed silhouette outside indicates the prior forward offset position. Small annotation "横移 s". Green check. Again NO handles or protrusions.
+Bottom caption: "挡肩和横移槽均位于框条内部；横移后长 = 宽 = 高"
+
+Optional small inset positioned only if enough space below: labeled "内部接头示意", a simple CUTAWAY of one rail joint showing a small T-head first entering a wider gate along X, then sliding along perpendicular Y behind a shoulder. Explicit small label "剖视，不是外部零件". Keep it secondary; final true cube silhouettes are the most important.
+
+Constraints: cast gold/silver parts, white background, no robots, no table fixtures, no flexible deformation, no snap hooks, no springs. Preserve the square bore. Correct perspective; final cube is NOT a squat cuboid. Do not show two complete rings nested or two cubes linked by a rod. Exactly two complementary U-shaped halves form one cubic body.
+
+修订提示词
+
+Use case: precise-object-edit.
+Correct the supplied Cast Coil v2 concept sheet while preserving its two rows, Chinese titles, gold left U-frame and silver right U-frame, white background and core mechanisms. Two critical engineering corrections:
+
+A. TRUE CUBES, not tall rectangular blocks. Both final assembled objects currently look too tall and too narrow. Redraw the two final panel-3 assemblies as honest ORTHOGRAPHIC ISOMETRIC CUBES. The three mutually perpendicular outer edges projecting from any corner have EQUAL SCREEN LENGTH, around 135 pixels each in the final panel: vertical Z edge 135 pixels, X edge at 30 degrees downward-right 135 pixels, Y edge at 30 degrees upward-right 135 pixels. The silhouette of a full cube is a symmetric hexagon, with matching width and height overall. The front opening is an actual square through-hole, properly foreshortened with the front square face. Keep gold left and silver right complementary U halves and fine seams; no extra pieces, no handles. THREE equal L dimensions. Adjust all other panels' part proportions and isometric projection to match those SAME cube halves, maintaining same shapes throughout.
+
+B. EASIER Y direction and offset. Local X goes across the front face from right to left (insertion). Y is PERPENDICULAR in 3D, following the cube's DEPTH edge toward the BACK: on screen it must slope diagonally UP AND RIGHT, at +30 degrees, NOT point left or horizontally. In lower panel 2 the silver right half must project forward along the depth direction, i.e. shifted DOWN AND LEFT relative to its flush position, while its X insertion is already complete. The front faces show a clear step along depth. In lower panel 3 the silver slides diagonally UP AND RIGHT along Y to become completely flush at front and rear. Put the ghost previous silver position slightly DOWN AND LEFT of the final silver, with one GREEN ARROW parallel to depth edges pointing UP-RIGHT toward final position, labeled "沿 Y 横移 s". Gold must stay fixed. Remove all misleading horizontal s offset dimension marks from lower panels 1 and 2; replace with small diagonal dimension marks parallel to the depth edges. Silver must translate without changing shape or rotating.
+
+C. Remove the entire bottom "内部接头示意" strip: its X and Y arrows were incorrectly collinear. Replace this strip with a clean small TWO-DIMENSIONAL MOTION PATH diagram and text. Label at left: "对齐后的相对路径". Draw two side-by-side simple diagrams:
+- very_easy: one blue straight segment pointing RIGHT, label "X 直插", endpoint green dot labeled "齐平".
+- easier: an L-shaped path, first blue segment RIGHT labeled "X 直插", then green segment UP labeled "Y 横移", square corner marker for 90 degrees, endpoint green dot labeled "齐平". Caption "两段平移，角度保持不变".
+This path diagram is in LOCAL XY coordinates and independent of the isometric view.
+
+Keep small footer exact "概念示意，非 CAD 或物理验证；图中完成指几何到位".
+Do not add other text. Main purpose is that the assembled shape unmistakably reads as a regular cube, with correct depth-slide arrows.
+

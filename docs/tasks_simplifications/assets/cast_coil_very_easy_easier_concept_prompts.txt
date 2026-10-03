@@ -1,0 +1,39 @@
+工具：内置 image_gen.imagegen；未使用 CLI/API fallback。
+用途：工程计划中的概念示意，不是 CAD 或物理验证。
+
+首次生成提示词
+
+Use case: infographic-diagram.
+Create a crisp Chinese engineering concept illustration, landscape 3:2, high resolution, white background, comparing two simplified Cast Coil assembly tasks. Title exact: "Cast Coil｜两档简化装配方案". Subtitle: "概念示意 · 非仿真结果". This is a technical storyboard showing the SAME two rigid parts moving within each row. Gold/brass is the female socket block, silver is the male keyed part. Soft CAD shading, clean fine outlines, ample whitespace, professional engineering presentation, very legible simplified Chinese typography. No robot arms, no screws, no springs, no flexible deformation.
+
+Two horizontal rows each with three large numbered panels, left to right. Each panel contains a large isometric CAD-style view. Colors identify the two whole rigid parts consistently; never recolor parts. Arrows outside parts show motions. The female gold part stays fixed in every panel for clarity; the silver male part moves. Pair with a small accurate orthographic mechanism inset at the right of the lower row, using a cutaway or ghosted gold front wall only for explanatory visibility.
+
+UPPER ROW heading: "very_easy｜一次对齐 + 直线插入".
+The gold part is a simple chunky U-shaped female socket with a broad straight rectangular channel open at its FRONT facing the silver part. The silver part is a chunky grippable block with one projecting rectangular tongue. A conventional mortise-and-tenon / convex-into-concave assembly, neither round pins nor helical coils. Exactly the same solid shapes in all three panels.
+Panel 1 label "① 找准角度": separated gold socket and silver tongue, silver slightly yawed relative to socket. Small curved arrow to indicate initial alignment.
+Panel 2 label "② 沿 X 直线靠近": correctly aligned rectangular tongue faces channel opening with gap; one straight teal arrow along tongue axis INTO the socket.
+Panel 3 label "③ 插到底，完成": silver tongue sits fully within gold socket, shoulders seated at mouth, both whole pieces visible and physically nonoverlapping. Small green check.
+Caption upper row: "对齐后保持相对角度不变；只需一段直线运动".
+
+LOWER ROW heading: "easier｜一次对齐 + 直插 + 横移".
+Mechanical design is a slide-to-seat joint: the gold female block has an enclosed internal cavity behind its front wall. The FRONT WALL has one LARGE rectangular entry window connected to a NARROW horizontal lateral slit on its right, ending at a closed stop. The silver male piece has a grippable block, a narrow neck, and a wider rectangular T-head at the end of the neck. The head fits through the large entry window but CANNOT pass through the narrow slit; the narrow neck fits the slit. The chamber BEHIND the wall is tall enough for the whole head to translate sideways. This lets the head first enter along X (normal to the front wall), and then move right along Y (parallel to wall, perpendicular to X), seating behind the front-wall retaining lips at the slit end. It is one insertion and then one orthogonal translation, with constant relative angle after initial alignment. The female is a single connected gold rigid body, not multiple parts. The male is a single connected silver rigid body.
+Panel 1 label "① 对齐入口": separated parts, T-head facing the large window, initial small curved alignment arrow if needed.
+Panel 2 label "② 沿 X 插入": head fully behind entry window, neck through window, silver remains at entry lateral position. Ghosted front wall reveals the head. A straight teal X arrow perpendicular to wall indicates insertion. Amber label "尚未完成".
+Panel 3 label "③ 沿 Y 横移到位": same silver part translated sideways to end of narrow slit, T-head behind lips, body OUTSIDE wall; green arrow parallel to wall and perpendicular to X. Ghost silver outline at previous entry position to show lateral shift. Small green check.
+Caption lower row: "插入后不再转腕；横移使凸头进入挡肩后方".
+
+Small lower mechanism inset titled "入口与挡肩（正视图）": gold rectangle with large rectangular hole at LEFT joined to a narrow horizontal slit extending RIGHT to an end stop. Dashed silver wider head at final right position behind the wall and small visible silver neck within slit; right-pointing Y arrow. Label large opening "宽入口", narrow slit "窄导槽", hidden head region "挡肩后方". Must show this aperture silhouette accurately. No impossible intersecting solids, no extra rotation after insertion, no diagonal combined insertion/sliding arrow. Local X and Y defined relative to gold piece, not page or robot world. Footer: "金色：凹件　银色：凸件　X：插入方向　Y：横移方向".
+
+修订提示词
+
+Use case: precise-object-edit.
+Edit this Chinese Cast Coil engineering illustration. Preserve title, all upper-row panels, lower-row panels 1 and 2, overall layout, gold/silver colors, labels and style. Make just the following technical corrections:
+
+1. LOWER ROW PANEL 3, labeled "③ 沿 Y 横移到位": the silver T-head has moved RIGHT completely BEHIND the gold front wall retaining lips at the END of the narrow slot. The big entry window on the LEFT must now be EMPTY, showing dark empty cavity; remove the solid silver plate currently incorrectly occupying the large left entry window. The silver stem exits from the RIGHT END of the NARROW slot and connects to its same outside silver grippable block. The T-head is hidden BEHIND the right-side gold front wall; illustrate it using dashed silver lines through a locally ghosted small patch of gold surrounding the slot end, so it is clearly larger vertically than the narrow slit. Do NOT show a solid silver head at the old left position. Previous entry pose can appear as a subtle dashed outline OUTSIDE the gold block, below and left of current grippable block, not as a second solid object. Green Y arrow shows rightward motion parallel to front face. Maintain geometric consistency: silver whole part moved sideways without rotation, no shape change; big head is inside cavity, small neck in slit, grippable block outside.
+
+2. LOWER RIGHT mechanism inset: in the little axis legend below the front view, X is normal INTO THE PAGE, depicted as circled-cross symbol ⊗ and text "X 向里插入"; Y is a rightward arrow labeled "Y 横移". Remove the erroneous upward in-plane X arrow. Preserve the large-window/narrow-slot diagram above it and the horizontal green arrow.
+
+3. UPPER ROW panel 3 label check caption replace "完成装袋" if present with exact "完成装配". All completion text must spell "完成装配".
+
+This is a conceptual illustration, not a simulation result. Do not add dimensions or new mechanics.
+

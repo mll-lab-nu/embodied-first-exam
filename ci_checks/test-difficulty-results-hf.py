@@ -148,6 +148,70 @@ class HFContracts(unittest.TestCase):
             self.assertNotIn("trajectory.npz", exported["missing_files"])
             self.assertIn("trajectory.npz", exported["artifacts"])
 
+    def test_collect_and_export_mode_evidence_with_sanitized_manifest_hashes(self):
+        from collect_batch_results import collect_manifest
+        # Use the real collector first, including its trusted verifier source rule.
+        self.test_collect_existing_jobs_includes_unlimited_trajectory_in_export()
+        jobs = self.work / 'jobs'
+        names = {
+            'unlimited': ('verdict.json', 'media.json', 'submission_error.json', 'instance_error.json'),
+            'limited': ('final.json', 'replay.verdict.json'),
+        }
+        originals = {}
+        for mode, sidecars in names.items():
+            trial = jobs / f'd01-easy-s00-{mode}-a001' / 'trial'
+            verifier = trial / 'verifier'
+            for name in sidecars:
+                hf.atomic_json(verifier / name, dict(success=0, note=self.secret, path='/home/private/data'))
+            frame_map = verifier / 'replay.frame_map.jsonl'
+            frame_map.write_text(json.dumps(dict(physics_step=0, note=self.secret, path='/home/private/frame')) + '\n')
+            (verifier / 'replay.mp4').write_bytes(b'fixture video, no physics')
+            manifest = dict(schema_version=2, frame_count=1,
+                frame_map=dict(path=frame_map.name, sha256=hashlib.sha256(frame_map.read_bytes()).hexdigest()),
+                videos=dict(combined=dict(path='replay.mp4', sha256=hashlib.sha256((verifier / 'replay.mp4').read_bytes()).hexdigest())))
+            hf.atomic_json(verifier / 'replay.recording_manifest.json', manifest)
+            names_for_mode = (*sidecars, frame_map.name, 'replay.recording_manifest.json')
+            originals[mode] = {name: (verifier / name).read_bytes() for name in names_for_mode}
+            untrusted = trial / 'artifacts/app/output'; untrusted.mkdir(parents=True, exist_ok=True)
+            (untrusted / sidecars[0]).write_text('{"injected":true}')
+            (verifier / 'unlisted.log').write_text('not allowlisted')
+        self.assertEqual(collect_manifest(self.run / 'manifest.lock.json', jobs), 0)
+        staging, descriptor = self.export()
+        for mode, sidecars in names.items():
+            local = self.run / 'results/test_task/easy/s00' / mode / 'trial_01/attempt_001'
+            target = staging / 'test_task/easy/seed_123' / mode / 'trial_01/attempt_001'
+            item = hf.json_file(target / 'result.json')
+            self.assertEqual(item['artifact_contract_version'], 2)
+            for name, raw in originals[mode].items():
+                self.assertEqual((local / name).read_bytes(), raw)
+                self.assertNotIn(self.secret, (target / name).read_text())
+                self.assertNotIn('/home/private', (target / name).read_text())
+                self.assertEqual(item['artifacts'][name]['source_sha256'], hashlib.sha256(raw).hexdigest())
+                self.assertEqual(item['artifacts'][name]['sha256'], hashlib.sha256((target / name).read_bytes()).hexdigest())
+                self.assertNotIn(name, item['missing_files'])
+            exported_manifest = hf.json_file(target / 'replay.recording_manifest.json')
+            self.assertEqual(exported_manifest['frame_map']['sha256'], hashlib.sha256((target / 'replay.frame_map.jsonl').read_bytes()).hexdigest())
+            self.assertEqual(exported_manifest['videos']['combined']['sha256'], hashlib.sha256((target / 'replay.mp4').read_bytes()).hexdigest())
+            self.assertNotEqual(exported_manifest['frame_map']['sha256'], hashlib.sha256(originals[mode]['replay.frame_map.jsonl']).hexdigest())
+            other = names['limited' if mode == 'unlimited' else 'unlimited'][0]
+            self.assertNotIn(other, item['missing_files'])
+            self.assertFalse((target / 'unlisted.log').exists())
+        self.assertEqual(self.export()[1], descriptor)
+
+    def test_sidecars_remain_optional_for_old_runs_and_metrics_stays_small(self):
+        staging, _ = self.export()
+        target = staging / 'test_task/easy/seed_123/unlimited/trial_01/attempt_001'
+        self.assertIn('verdict.json', hf.json_file(target / 'result.json')['missing_files'])
+        self.assertNotIn('submission_error.json', hf.json_file(target / 'result.json')['missing_files'])
+        self.assertNotIn('instance_error.json', hf.json_file(target / 'result.json')['missing_files'])
+        # A separate publication uses the existing metrics-only contract.
+        (self.run / 'hf_publication.lock.json').unlink()
+        self.args.hf_artifacts = 'metrics'
+        staging, _ = self.export()
+        item = hf.json_file(staging / 'test_task/easy/seed_123/unlimited/trial_01/attempt_001/result.json')
+        self.assertEqual(set(item['artifacts']), {'reward.json'})
+        self.assertEqual(item['missing_files'], [])
+
     def export(self):
         return hf.export_snapshot(self.run, self.args, self.log)
 

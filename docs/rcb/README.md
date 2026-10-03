@@ -1,6 +1,8 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
-2026-10-01 合并后修复：新生成包使用 tooling v5 / standard 2.3，候选运行镜像为 0.2.6-cu128。已实现的修复、实际验收和未关闭范围见[实施报告](../debug_logs/run_trials_post_merge_repair_20261001_zh.md)；历史冻结包及下文历史结果不追溯修改。
+2026-10-02：新生成包使用 tooling v6 / standard 2.3，修复无效 NPZ 提交分类并对齐本地/HF 评分与录像证据，见 [A01/A03 修复记录](../debug_logs/run_trials_a01_a03_repair_20261002_zh.md)。历史冻结包和旧 run 不追溯改写。
+
+2026-10-01 合并后修复及当时的 v5 / 0.2.6-cu128 验收，见[实施报告](../debug_logs/run_trials_post_merge_repair_20261001_zh.md)；下文历史结果不追溯修改。
 
 2026-10-01：本次 pull 的 39 个三档实例与双模式交付，以及 builder 反馈 A 至 F 的逐项解释、修补顺序和验收标准，见 [RCB builder 反馈修补工程计划](builder_feedback_repair_plan_zh.md)。计划同时覆盖预检工具和镜像标签不一致；下文带日期的历史验收记录保留原有范围。
 
@@ -654,7 +656,7 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 
 ## 8. 难度评测入口
 
-当前修复候选使用 tooling v5 / standard 2.3；新旧轨迹、评分和恢复差异见 [2.3 合同](STANDARD_MODE_2_3.md)。镜像构建通过与逐任务物理资格分别报告。
+当前新生成包使用 tooling v6 / standard 2.3；新旧轨迹、评分和恢复差异见 [2.3 合同](STANDARD_MODE_2_3.md)，v6 的输入分类修复见 [A01/A03 修复记录](../debug_logs/run_trials_a01_a03_repair_20261002_zh.md)。镜像构建通过与逐任务物理资格分别报告。
 
 合并后 B04–B13 的修复顺序、接口合同及验收安排见 [Run trials 合并后问题修复工程计划](run_trials_post_merge_repair_plan_zh.md)；该文是待实施计划，实际问题状态以链接的审查与验收记录为准。
 

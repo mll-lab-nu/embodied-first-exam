@@ -36,11 +36,11 @@ def check(tasks):
         meta = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
         version = meta.get("tooling_version")
         mode = "limited" if task.name.endswith(("-limited", "-standard")) else "unlimited"
-        if version == "5":
+        if version == "6":
             if not task.name.endswith(("-privileged", "-standard")):
-                errors.append(f"{task.name}: tooling v5 requires protocol v1.0 task names")
+                errors.append(f"{task.name}: tooling v6 requires protocol v1.0 task names")
             expected = current_files(mode)
-        elif version in ("3", "4"):
+        elif version in ("3", "4", "5"):
             expected = frozen["v" + version][mode]
         elif "tooling_version" in meta:
             errors.append(f"{task.name}: unknown tooling_version {version!r}")
@@ -67,5 +67,5 @@ if __name__ == "__main__":
     for error in errors:
         print("FAIL " + error)
     if not errors:
-        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v5 checked")
+        print(f"ok TopoGym tooling: {count} packages; frozen inputs and public v6 checked")
     raise SystemExit(bool(errors))

@@ -127,6 +127,14 @@ class Robot:
         return self._spec
 
     def _post(self, path: str, meta: dict, parts: list, timeout: float) -> Result:
+        import uuid
+        budget = float(self._spec.get("max_call_wall_s", 900))
+        timeout = max(timeout, budget + 120)
+        meta = dict(meta)
+        if self._spec.get("protocol") == "eai-standard/2.3":
+            meta.setdefault("operation_id", uuid.uuid4().hex)
+            meta.setdefault("request_deadline_unix_s", time.time() + budget)
+            self.last_operation_id = meta["operation_id"]
         body = rcb1.encode(meta, parts)
         r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"}, timeout=(5, timeout))
         if r.status_code == 409:
@@ -169,6 +177,12 @@ class Robot:
             print(f"[rcb_client] the service stopped this watch early ({res.stopped}) after {res.meta.get('control_steps_watch')} control "
                   "steps", file=sys.stderr)
         return res
+
+    def operation_status(self, operation_id=None):
+        operation_id = operation_id or self.last_operation_id
+        r = requests.get(self.base + "/operations/" + operation_id, timeout=(5, 60))
+        r.raise_for_status()
+        return r.json()
 
     def status(self) -> dict:
         r = requests.get(self.base + "/status", timeout=(5, 60)); r.raise_for_status(); return r.json()

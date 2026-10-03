@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "cast_coil_easier_cubic_baffle_v2",
+  "level": "easier",
+  "model_revision": "cubic_baffle_v2",
+  "units": "mm",
+  "density_kg_m3": 6700.0,
+  "parameters": {
+    "edge_mm": 102.0,
+    "wall_mm": 18.0,
+    "seam_mm": 0.6,
+    "baffle_width_mm": 15.0,
+    "baffle_depth_mm": 15.0,
+    "slide_mm": 18.0
+  },
+  "colors": {
+    "coil_gold": [
+      0.53,
+      0.39,
+      0.12,
+      1.0
+    ],
+    "coil_silver": [
+      0.39,
+      0.43,
+      0.47,
+      1.0
+    ]
+  },
+  "coordinate_frame": "final assembly center; X insertion, Y lateral (positive at entry), Z up",
+  "geometry_status": "authored mesh candidate; robot and runtime not validated",
+  "source": "topogym.assets.geometry.cast_coil_simplified.geometry_record"
+}

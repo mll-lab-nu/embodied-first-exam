@@ -144,7 +144,10 @@ def load_trajectory(path, task, dim, *, trusted=False):
                         raise InvalidTrajectory('invalid executed tick ledger')
                     ticks = ticks[:live].copy()
             return actions, ticks
-    except (ValueError, TypeError, KeyError, EOFError, zipfile.BadZipFile) as exc:
+    # ZIP raises NotImplementedError for unsupported compression/flags and
+    # RuntimeError for encrypted entries. This boundary only parses the submitted
+    # file; simulator construction and replay exceptions remain infrastructure errors.
+    except (ValueError, TypeError, KeyError, EOFError, zipfile.BadZipFile, NotImplementedError, RuntimeError) as exc:
         raise InvalidTrajectory(str(exc)) from exc
 
 # Interaction log (the same contract as rcb_robowits.py): every Session appends one line per session start/reset/record/

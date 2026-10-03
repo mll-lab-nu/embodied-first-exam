@@ -4,6 +4,12 @@
 
 更新：2026-09-28。全项目进度见[当前进度](../../progress/current_zh.md)，历史视频直链见[Demo 目录](../../../demos/README.md)。
 
+## very_easy 与 easier 模型候选
+
+已生成两档模型候选：用户已确认的 very_easy 保持 `cubic_comb_v2`，金色三齿与银色双齿直线拼合。easier 按新手绘改为 `cubic_baffle_v2`：金色前挡板对应银色大凸起根部的开口镂空；侧向错开 18 mm 后插合，再横移让挡板进入槽内。两档终态均为 102 × 102 × 102 mm 实心正方体轮廓，预留 0.6 mm 装配缝。9 项几何回归通过，包含连续平移通路和阻挡反例；尚未注册新 Task，也未验证机器人抓持或物理装配。下文原三档成功证据不适用于新模型。
+
+[工程计划与建模结果](../../tasks_simplifications/cast_coil_very_easy_easier_engineering_plan_zh.md#9-本次建模结果) · [very_easy 模型](../../tasks_simplifications/assets/cast_coil_very_easy_actual_models_v2.png) · [easier 拼合过程](../../tasks_simplifications/assets/cast_coil_easier_actual_models_v2.png) · [easier 挡板与镂空](../../tasks_simplifications/assets/cast_coil_easier_baffle_parts_v2.png) · [本次运行产物](../../../runs/test_results/cast_coil_easier_baffle_20261002_03/)
+
 ## 当前三档 policy 与可解性验收
 
 按 [action / IK 计划](task_variant_solutions_action_ik_zh.md#coil)，本轮验收要求是具名变体的 policy 经 `SegmentRunner → Env.step → Genesis IK → 物理执行` 达到真实 `task_success`。关闭 RGB 和视频，保留全部当前配置 tick 的状态、动作、冻结源码和资产哈希。使用 unlimited 对象状态及自动 `contact_weld_v1` 抓持，不能称为纯摩擦抓持证明。

@@ -6,6 +6,24 @@ TopoGym (adapted from robot_coding_bench fa59c1a6): topogym-* trials and a neutr
 import json, pathlib, shutil, sys, datetime as dt
 
 
+ARTIFACT_CONTRACT_VERSION = 2
+OPTIONAL_DIAGNOSTICS = ("submission_error.json", "instance_error.json")
+
+
+def result_artifacts(mode, *, media=True):
+    """Ordered verifier evidence shared by collection and HF export.
+
+    The recording manifest follows the files it references so exports can update
+    hashes after JSONL sanitization. Historical runs may lack the new sidecars.
+    """
+    if not media:
+        return ("reward.json",)
+    verdicts = (("verdict.json", "media.json", *OPTIONAL_DIAGNOSTICS)
+                if mode == "unlimited" else ("final.json", "replay.verdict.json"))
+    return ("reward.json", "replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl",
+            *verdicts, "replay.frame_map.jsonl", "replay.recording_manifest.json")
+
+
 def load_json(path):
     try:
         value = json.loads(path.read_text())
@@ -90,7 +108,7 @@ def collect_manifest(manifest_path, jobs):
                 if trial:
                     target = run / "results" / sample["task_id"] / sample["difficulty"] / sample["sample_id"] / mode / "trial_01" / f"attempt_{row['attempt']:03d}"
                     target.mkdir(parents=True, exist_ok=True)
-                    for name in ("reward.json", "replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):
+                    for name in result_artifacts(mode):
                         src = artifact_source(trial, mode, name)
                         if src is not None:
                             dest = target / name
@@ -136,7 +154,7 @@ def legacy_main():
             rw=json.load(open(trial/"verifier/reward.json")) if (trial/"verifier/reward.json").exists() else {}
             ar=r.get("agent_result") or {}
             d=out/name/mode; d.mkdir(parents=True, exist_ok=True)
-            for f in ("replay.mp4","replay.last.png","reward.json","episode.jsonl","trajectory.npz"):
+            for f in result_artifacts(mode):
                 src = artifact_source(trial, mode, f)
                 if src is not None: shutil.copy(src, d/f)
             for f in ("gen.py",):

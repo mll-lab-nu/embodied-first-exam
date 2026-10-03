@@ -232,6 +232,7 @@ def simplified_worker(args, output):
     from topogym.assets.variation_resources import read_json
     from topogym.tasks.cast_keyhole.common import recommended_grasp_assist
     from topogym.planning.cast_keyhole.simplified_policy import SimplifiedKeyholePolicy
+    from topogym.planning.cast_keyhole.oracle_artifacts import PolicyTrace, export_native_reference
     from topogym.planning.cast_keyhole.policy import PARTS
     from topogym.assets.geometry.cast_keyhole import plate_assembly_transforms
     from scipy.spatial.transform import Rotation
@@ -253,32 +254,81 @@ def simplified_worker(args, output):
         control_decimation=round(.025/args.tick), max_physics_steps=round(args.horizon/args.tick),
         work_dir=output/"scene", grasp_assist=recommended_grasp_assist(args.variation, args.seed))
     report = dict(status="running", config=to_jsonable(config), reference_status="candidate",
-                  variation=task.variation_id, part=args.part, started=time.time())
+                  variation=task.variation_id, part=args.part, started=time.time(),
+                  from_default_home=True, timings={},
+                  assistance="automatic contact_weld_v1; actual opposing finger contacts required",
+                  timing_scope="default" if args.tick == .0025 else "explicit nondefault grouped tick",
+                  recording="Nyx RGB" if args.rgb else "numerical tick evidence; no video")
     write_json_atomic(output/"run_report.json", report)
+    policy = trace = None
     try:
+        built = time.monotonic()
         with Env(config) as env:
             env.reset(seed=args.seed)
+            report["timings"]["build_reset_s"] = time.monotonic()-built
             report.update(instance_id=env._task.instance_id, asset_sha256=env._asset_build.sha256,
                           terminal=env._task.terminal_metadata())
             policy = SimplifiedKeyholePolicy(geometry=record, variation=task.variation_id,
                 body_origins=origins, goal_region=report["terminal"]["goal_region"],
                 mount_position=[0., 0., 0.], canonical_vertices=vertices,
                 part=args.part, speed=args.speed)
+            def before_phase(candidate):
+                if candidate.phase != "gold_raise_clear":
+                    return
+                from topogym.planning.cast_keyhole.kinematics import preflight_simplified_goal
+                started = time.monotonic()
+                plan = preflight_simplified_goal(env._robot, env._world.entities, origins,
+                    record, candidate, env._task.table_height_m)
+                report["timings"]["goal_planning_s"] = time.monotonic()-started
+                write_json_atomic(output/"goal_plan.json", plan)
+                if not plan["passed"]:
+                    raise RuntimeError("Native carried-piece goal preflight failed; see goal_plan.json")
+            trace = PolicyTrace(policy, output, before_phase=before_phase)
+            initialized = time.monotonic()
             with SegmentRunner(env, output, prepared_output=True) as runner:
+                report["timings"]["runner_init_s"] = time.monotonic()-initialized
+                # Keep the naturally settling initial assembly and its full
+                # action prefix in this same ordinary execution history.
+                settled = runner.interaction(privileged=True).run_segment(
+                    request_id="keyhole-settle", actions=[
+                        {s: dict(gripper_position_m=.024) for s in PARTS}]+[{}]*29)
+                report["settle_segment"] = to_jsonable(settled)
+                if settled["reason"] != "segment_complete":
+                    raise RuntimeError("Initial settling did not complete")
+                from topogym.planning.cast_keyhole.kinematics import preflight_simplified_pickup
+                policy.obs = dict(privileged=dict(world=env._world.read_state()),
+                                  robot=env._robot.observe())
+                planned = time.monotonic()
+                plan = preflight_simplified_pickup(env._robot, env._world.entities, origins,
+                    record, policy, env._task.table_height_m)
+                report["timings"]["pickup_planning_s"] = time.monotonic()-planned
+                write_json_atomic(output/"pickup_plan.json", plan)
+                if not plan["passed"]:
+                    raise RuntimeError("Native pickup preflight failed; see pickup_plan.json")
+                policy.pickup_transit = plan["tcp_path"]
+                executed = time.monotonic()
                 result = runner.run_policy(request_id="keyhole-"+args.variation,
-                    policy=policy, mode="unlimited", state_fields=("world",),
+                    policy=trace, mode="unlimited", state_fields=("world",),
                     submission_hash=fingerprint(dict(geometry=record, config=to_jsonable(config))))
+                report["timings"]["policy_execution_s"] = time.monotonic()-executed
+                closing = time.monotonic()
+            report["timings"]["runner_close_s"] = time.monotonic()-closing
             success = bool(env.is_solved())
             pickup = args.part == "pickup" and result["reason"] == "policy_done"
             report.update(status="passed" if success else "pickup_passed" if pickup else "failed",
                           task_success=success, segment=to_jsonable(result), last_phase=policy.phase,
                           task_result=to_jsonable(env._task.result))
+            report["native_reference"] = export_native_reference(output, env.action_spec, report)
             if not (success or pickup):
                 raise RuntimeError("Reference candidate did not complete the requested task")
     except BaseException:
         report.update(status="failed", error=traceback.format_exc())
         raise
     finally:
+        if policy is not None:
+            report.update(last_phase=policy.phase, diagnostics=to_jsonable(policy.diagnostics))
+        if trace is not None:
+            report["phases"] = trace.events
         report["wall_time_s"] = time.time()-report["started"]
         write_json_atomic(output/"run_report.json", report)
 

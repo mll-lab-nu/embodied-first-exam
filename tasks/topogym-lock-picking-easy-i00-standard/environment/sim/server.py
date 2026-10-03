@@ -76,7 +76,7 @@ def write_final() -> None:
         return
     n = int(E.get("episode_control_steps") or ctrl_steps())
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
+        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error"), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK,
         "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"),
         "live_sha": E.get("live_sha"), **EP.final_fields()})
@@ -97,7 +97,7 @@ def dump() -> None:
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     n = int(E.get("episode_control_steps") or 0)
     L._write_json(os.path.join(DATA, "episode.json"), {
-        "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
+        "success": bool(E["success"]), "infra_error": int(E["reason"] == "error"), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
         "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"), **EP.final_fields()})
     write_final()
@@ -116,7 +116,17 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 import rcb_topogym as M  # noqa: E402
-S = M.Session(TASK, instance=INSTANCE, strict=True)
+try:
+    S = M.Session(TASK, instance=INSTANCE, strict=True)
+except M.InstanceMismatch as exc:
+    # This frozen instance is not evaluable. Do not restart it as a GPU crash
+    # or wait for a trajectory that could never have been executed.
+    EP.scene_built()  # cancel the startup watchdog before clean exit
+    M.atomic_json(os.path.join(DATA, "final.json"), {
+        "success": False, "replay_success": False, "done": True, "finalized": True,
+        "instance_mismatch": True, "infra_error": 0, "reason": "instance_mismatch",
+        "error": str(exc), "task": TASK, "protocol": PROTOCOL, **EP.final_fields()})
+    raise SystemExit(0)
 EP.scene_built()                        # the startup watchdog stands down: a long resume replay is not a hang
 E["ready"] = True                       # S exists: ctrl_steps() counts its control steps (a resume replay included)
 CTRL_HZ = float(S.control_hz); SUBSTEPS = int(S.physics_substeps)
@@ -216,12 +226,12 @@ def calib(cameras: list[str]) -> dict:
 
 
 def recorder(cams: list[str], fps: int, meta: dict) -> L.Recorder:
-    return L.Recorder(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ)
+    return L.Recorder(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ, time_clock=lambda: S.sim_time_s, fps=fps)
 
 
 def meta_common(cams) -> dict:
     n = ctrl_steps()
-    return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS, "sim_time_s": round(n / CTRL_HZ, 3),
+    return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
             "time_s": round(time.time() - E["t0"], 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"]), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
             **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
@@ -248,38 +258,43 @@ def clip_joint_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
     return r
 
 
-def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
+def ctrl_step(a: np.ndarray, rec: L.Recorder, *, row_start=False) -> bool:
     """One recorded control step. True when the call must stop here: the episode is over (runaway guard, the task's own
     failure predicate, the wall clock), or the call ran past max_call_wall_s / its client hung up (EP.journal)."""
     if deadline_reached():
         finish("timeout")
         return True
     row = np.asarray(a, dtype=np.float32)   # exactly what the simulator gets (Session.step casts to float32): the journal row
-    guard = S.step(row); stop = EP.journal(row); rec.tick()
+    if EP.poll_stop():
+        return True
+    before = S.n_steps
+    guard = S.step(row)
+    if S.n_steps != before and row_start:
+        E["step"] += 1
+    stop = EP.journal(S.hold_action(), physics_steps=S.last_step_ticks) if S.n_steps != before else EP.poll_stop()
+    rec.tick()
     if S.episode_end is not None and "end_row" not in E and S._recording is not None:
         E["end_row"] = len(S._recording)      # the row at which the live episode ended (success or a failure predicate)
-    if guard: finish("step_guard")
-    elif S.episode_end not in (None, "success"): finish("task_failed")
+    if S.episode_end is not None: finish(S.episode_end)
+    elif guard: finish("step_guard")
     return E["done"] or stop
 
 
 def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: L.Recorder, clipped: list) -> None:
-    steps_per_row = max(1, int(round(dt * CTRL_HZ)))
+    steps_per_row = L.control_periods(dt, CTRL_HZ)
     q_prev = np.asarray(S.hold_action(), dtype=np.float64)
     grips = [ARM[a][1] for a in ARMS]
     for ri, row in enumerate(A):
-        E["step"] += 1
         target = clip_joint_row(row.astype(np.float64), clipped, ri)
         for k in range(1, steps_per_row + 1):
             a = target if interp == "hold" else q_prev + (target - q_prev) * (k / steps_per_row)
             a[grips] = target[grips]                          # the gripper switches at the row
-            if ctrl_step(a, rec): return
+            if ctrl_step(a, rec, row_start=k == 1): return
         q_prev = target
 
 
 def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
     for ri, row in enumerate(A):
-        E["step"] += 1
         cur = np.asarray(S.hold_action(), dtype=np.float64); goal = cur.copy(); st = {"row": ri}
         for i, arm in enumerate(ARMS):
             sl, gi = ARM[arm]; off = 8 * i
@@ -297,7 +312,7 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
         for k in range(1, n + 1):
             a = cur + (goal - cur) * (k / n)
             for arm in ARMS: a[ARM[arm][1]] = goal[ARM[arm][1]]
-            if ctrl_step(a, rec): return
+            if ctrl_step(a, rec, row_start=k == 1): return
 
 
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
@@ -308,20 +323,21 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     dim = SPEC["action_types"][typ]["dim"]
     if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
-    if not (1.0 / CTRL_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, 0.5] s")
+    if typ == "joint_position":
+        L.control_periods(dt, CTRL_HZ)
     if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
     if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
     if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []
     E["calls"] += 1; step0 = E["step"]
-    before = ctrl_steps(); rec.tick(force=True)
+    before = ctrl_steps(); before_ticks = S.physics_steps; rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan)
     rec.tick(force=True, last=True)
     succ = check_success(); E["success"] = E["success"] or succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
-           "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
+           "physics_steps_chunk": S.physics_steps - before_ticks, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": (meta.get("note") or "")[:500],
          "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
@@ -333,9 +349,9 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 def do_observe(meta: dict) -> tuple[dict, list]:
     cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
     seconds = float(meta.get("seconds", 0)); fps = int(meta.get("video_fps", 10)); video = meta.get("video", "frames")
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
-    rec = recorder(cams, fps, meta); before = ctrl_steps()
+    rec = recorder(cams, fps, meta); before = ctrl_steps(); before_ticks = S.physics_steps
     watch = seconds > 0 and not E["done"]
     rec.tick(force=True, last=not watch)
     if watch:
@@ -347,7 +363,7 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         if succ: finish("success")
     E["calls"] += 1
     out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
-           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True}
+           "physics_steps_watch": S.physics_steps - before_ticks, "ok": True}
     log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before})
     if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
@@ -397,7 +413,7 @@ def replay_row(row) -> None:
 # ---------------------------------------------------------------- start, or resume after a crash
 E["deadline"] = float("inf")
 S.record_start()                        # before begin(): a resume replay of the journal is recorded too
-EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
+EP.begin(step_ticks=lambda row, ticks: S.step(row, _physics_steps=ticks), state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
          start_event={"task": TASK, "eval_index": S.eval_index})
 E["deadline"] = time.monotonic() + SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"])   # the wall clock runs from the first start
 write_final()
