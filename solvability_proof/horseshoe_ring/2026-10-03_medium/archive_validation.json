@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "checked_at_utc": "2026-10-03T10:29:17.103180+00:00",
+  "archive_manifest_sha256": "2f78263aa1f7303cfb302c38cbc584d3f3f292e0e5f3df0695ed2562a4ac5dad",
+  "summary_sha256": "bddf0232e731a4e26807990817e41330bcf4ee0b7c7a9be9da4f973b6551f196",
+  "file_count": 6798,
+  "total_bytes": 1889051393,
+  "frozen_source_files_checked": 620,
+  "accepted_success_and_audit": 1,
+  "fresh_physics_executions": 0,
+  "fresh_task_reevaluations": 0,
+  "checks": [
+    "All copies have matching SHA-256 and independent inodes",
+    "Frozen source manifest verified",
+    "Native full success and independent audit accepted, zero rewinds",
+    "Complete physical state stream hash equals audited evidence",
+    "All five policy inputs copied and hash verified"
+  ]
+}

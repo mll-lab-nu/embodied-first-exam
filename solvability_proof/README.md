@@ -1,17 +1,23 @@
 # 可解性证明
 
-统一保存已完成的 policy、IK 规划与模拟器实际成功证据。目前收录 **4 项任务、11 个变体实例**，均连续执行到对应 Task 的 `task_success=True`，并通过独立逐 tick 复核。Claws 从任务预抓姿态开始，其余已收录批次从默认 home 开始。
+统一保存已完成的 policy、IK 规划与模拟器实际成功证据。目前收录 **6 项任务、18 个变体实例**，均连续执行到对应 Task 的 `task_success=True`，并通过独立逐 tick 复核。Claws 从任务预抓姿态开始，其余已收录批次从默认 home 开始。
 
 | 任务 | 已验收变体 | 证明与完整证据 |
 | --- | --- | --- |
 | Cast Keyhole | easy / F1、medium / F2、hard / F3，3/3 | [证明目录](cast_keyhole/README.md) |
 | Cast Coil | easy、medium、hard，3/3 | [证明目录](cast_coil/README.md) |
-| Hedgehog in Cage | easy、medium 已验收，三档总体 2/3；hard 待补齐 | [证明目录](hedgehog_in_cage/README.md) |
+| Fiber Bundling | easy、medium、hard，3/3；easy 历史 v3 同轨迹另通过 v4 | [证明目录](fiber_bundling/README.md) |
+| Hedgehog in Cage | easy、medium、hard 高位支座新版，3/3 | [证明目录](hedgehog_in_cage/README.md) |
 | Interlocked Claws | easy、medium、hard 收薄新版，3/3；hard 允许有界滑动接触 | [证明目录](interlocked_claws/README.md) |
+| Horseshoe Ring | 扩环新版 easy / medium / hard 的 seed 0 均已验收，3/3 | [证明目录](horseshoe_ring/README.md) |
 
-[机器索引](catalog.json)记录批次、数量、清单及哈希；多批次任务使用 `batches` 保留各独立归档。每个变体目前只覆盖默认参数、seed 0、CPU 双精度和接触触发的 `contact_weld_v1` 辅助抓持；Coil/Keyhole 使用 ALOHA + EE_ABS，Hedgehog 使用 Panda/Robotiq + JOINT_ABS。显式采用 25 ms World tick / 40 solver 子步，40 Hz action 与 Task/assist 检查，积分子步 0.625 ms；无 RGB 或视频。证明绑定各次冻结源码与配置，不扩大为整个随机参数域、默认 400 Hz 检查时序、纯摩擦抓持或连续时间无穿透资格。
+[机器索引](catalog.json)记录批次、数量、清单及哈希；多批次任务使用 `batches` 保留各独立归档。每个变体目前只覆盖默认参数、seed 0、CPU 双精度和接触触发的 `contact_weld_v1` 辅助抓持；Coil/Keyhole 使用 ALOHA + EE_ABS，Hedgehog/Fiber 使用 Panda/Robotiq + JOINT_ABS，Horseshoe 使用 ALOHA + JOINT_ABS。显式采用 25 ms World tick / 40 solver 子步，40 Hz action 与 Task/assist 检查，积分子步 0.625 ms；原物理取证关闭 RGB。Horseshoe easy 的四路完整 Nyx 状态重渲染视频见[任务页](../docs/develop/tasks/horseshoe_ring_zh.md)，不增加执行成功次数。证明绑定各次冻结源码与配置，不扩大为整个随机参数域、默认 400 Hz 检查时序、纯摩擦抓持或连续时间无穿透资格。
 
 [现有 run 与下一批证明候选](run_candidates.md)逐项核对其余任务可复用的运行、当前缺口和执行顺序；候选与历史成功不计入上表的已验收数量。
+
+2026-10-03：[Knot 冻结实例与 native replay 证据](knot_untying/README.md) 已归档交接的 easy／medium
+原生成功轨迹和三档 IPC 存档；medium 本轮首遍完整回放未达成功，当前优先补 hard 完整执行。此批次以 verifier 原有 replay
+为目标，没有全程逐 tick 网格状态，不自动并入上方独立逐 tick 复核的计数。
 
 2026-09-30：[Lock Picking 三档分阶段证明](lock_picking/README.md)现已补齐默认 home 起步、抓取、1／2／3 次回退、支撑换抓、最终释放撤离的实际机器人流程，3,813 次运行中 IK 查询及 4,789 个保存状态通过独立复核。使用接触辅助抓持；原生 `task_success=False`，正式数量不增加。此前物体路径、5,466 点名义 IK 与历史视频另批保留；[本批证据与边界](lock_picking/2026-09-30_robot_process/README.md)。
 
@@ -45,4 +51,4 @@ solvability_proof/
 
 计入已完成须同时具有完整连续机器人执行、实际 `task_success=True` 和通过的独立复核。几何/IK 候选、旧版本 demo、初始化验收及失败尝试保留其原范围。Keyhole 必需的旧资格运行已单独归档，仍保留 `task_success=False`，不计入上述成功次数；Hedgehog 的旧资格运行同样保留原始 false。
 
-其余任务的已有研究与历史执行入口见[任务说明](../docs/develop/tasks/README.md)和[解法及 action / IK 研究](../docs/develop/tasks/task_variant_solutions_action_ik_zh.md)。例如 Lock 本目录历史完整观测流程仍有正式 terminal 资格缺口，Claws 原始未收薄 hard 及 Hedgehog 未列出的变体无本目录完整成功证明，均不并入这里的通过数量。
+其余任务的已有研究与历史执行入口见[任务说明](../docs/develop/tasks/README.md)和[解法及 action / IK 研究](../docs/develop/tasks/task_variant_solutions_action_ik_zh.md)。例如 Lock 本目录历史完整观测流程仍有正式 terminal 资格缺口，Claws 原始未收薄 hard 及 Hedgehog 原低位初态 hard无本目录完整成功证明，均不并入这里的通过数量。

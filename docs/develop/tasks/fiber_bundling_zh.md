@@ -1,12 +1,20 @@
 # 光纤收束
 
-更新：2026-10-02（两档简化变体与完整执行）；terminal 说明为 2026-09-29，旧三档 demo 状态为 2026-09-21。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见下文。
+更新：2026-10-03（原三档独立审计完成）；两档简化变体为 2026-10-02，terminal 说明为 2026-09-29，旧三档 demo 状态为 2026-09-21。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见下文。
 
 ## 任务与实现
 
 固定电源终端和被动细线保持连续，机器人只操作粗护套，使分叉端先进入闭环并完成整束穿环；需要逐步检查细线禁碰、抓持及受载稳定性。
 
 当前源码：[任务与判据](../../../topogym/tasks/fiber_bundling/common.py) · [几何生成](../../../topogym/assets/geometry/fiber_bundling.py) · [穿孔历史](../../../topogym/utils/geometry/passage.py) · [子步接触](../../../topogym/world/physics/rigid_contacts.py)。参数与成功定义见[任务卡](../../../configs/task_cards/fiber_bundling.yaml)，统一运行入口见 [Simulator API](../modules/simulator_api_zh.md)。旧 bootstrap、robot_sequence 和 recording_adapter 不再是当前入口。
+
+## easy / medium / hard：独立审计已完成
+
+2026-10-03 对 `easy_02`、`medium_full_01`、`hard_full_01` 的已有连续运行补齐独立审计，**原三档 seed 0 正式通过 3/3**。分别为 190.075／344.000／639.125 s，共核对 7,604／13,761／25,566 个状态。从默认 home 开始、零回溯，实际双指接触后辅助抓住 `trunk_04`，完整穿环并稳定 0.5 s；夹爪细丝禁碰、固定支架、关节限位及连续抓持检查均通过。
+
+审计重新生成全部资产并严格核对原源码／资产哈希，逐 tick 重算原 Task，另外用冻结的当前 v4 重算完整历史，并与带哈希的分段 world／动作日志交叉核对。easy 原执行是 v3，其历史实例身份保留；同一轨迹通过 v4，几何文件逐字节不变。medium／hard 原执行已是 v4。采用原 `.venv-gs121`（trimesh 4.12.2、numpy 2.4.4）；更换导出依赖后的资产哈希不匹配会被拒绝。
+
+[正式证明与复核命令](../../../solvability_proof/fiber_bundling/2026-10-03/README.md) · [机器汇总](../../../solvability_proof/fiber_bundling/2026-10-03/summary.json)。资格仅覆盖各自冻结 seed 0、CPU float64、25 ms tick／40 子步及接触辅助抓持。本次没有新增物理执行或录像；不扩大为默认 400 Hz、纯摩擦、其他 seed 或 Harbor 正向评分资格。历史报告的 pending 状态不改写，正式接受结论记录在独立报告和证明索引。
 
 ## very_easy / easier
 

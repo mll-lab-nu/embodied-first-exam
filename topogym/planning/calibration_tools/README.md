@@ -91,9 +91,42 @@ with open_session(dict(task_id="cast_keyhole", variation_id="easier",
 
 `plot_geometry_comparison(task, parameters, poses, output)` 将原始和候选的实际生成三角网格作同尺度、同相机的工程投影，保存正面／侧面 PNG 与坐标对齐清单。它不是 Nyx 帧、物理截图或录制模块的替代；仅供审核建模尺寸，不能提供机器人或动力学证据。
 
+`normal_passage_guard(task, parameters)` 检查马蹄平面正对圆环时能否沿法向直接穿过：用完整马蹄网格（含端部小环）的投影材料点间距，与圆环内孔的保守跨度上界比较，覆盖任意平面内转动和平移。返回 `blocked_proven` 或 `inconclusive`；后者不能解释为可通过，也不检查倾斜／折合路线。新预览清单包含这项证据。
+
+新物理候选可显式指定 `geometry.initial_layout_lift_m`（0–0.02 m），在建场景时统一抬升五个部件，以便改尺寸后重新自然落稳。它保留部件之间的相对姿态，记录初态干预，不修改运行中的状态；落稳、拓扑和接触仍须独立检查，不能继承原静置模型的资格。
+
+圆环还支持 `target_ring.initial_phase_deg`（0 ≤ 角度 < 360），用于调整椭圆在自身平面内的朝向，改动后同样重新自然静置。`settled_pose_window(task, parameters, records)` 单独检查连续物理记录中默认 1 秒内的材料位置变化，上界默认 0.25 mm；拒绝抓持辅助、接触超限、拓扑变化和断续历史。报告保留末子步速度峰值及原生 quiet 计数；这只是采样姿态稳定证据，不代表速度为零，不修改 Task 的 quiet 或成功判据，也不授予 oracle 资格。
+
+`retarget_reference(task, parameters, source, output)` 将旧物体参考按候选质心重新表达，导出匹配新几何身份的独立轨迹提示。它校验原模板、保存来源哈希，并移除旧修复与成功标签，输出 `passed=false`；几何、IK 和物理资格必须重新取得。正式策略只读取导出的数据，不调用开发工具。
+
 `check_robot_path` 的 path 是**完整 robot qpos 的列表**，只检查提交的采样，不替调用者做连续关节插值。`allowed_contacts` 是显式的 `entity/link` 名称对；结果记录所有允许项。无碰撞候选不等于机器人成功抓持或完成任务。
 
 `check_robot_path(..., include_tcp=True)` 还返回相同采样点的原生 FK `tcp_path`（各臂的 `position_m` / `quaternion_wxyz`）。开发方可据此构造沿关节路径的 EE 接近路点，避免只在几个独立 Cartesian 目标上求 IK 而忽略中间构型。此选项不发送控制命令，也不推进物理；实际 EE 执行仍会经过公共 IK 校验。
+
+
+### Rope Threading 接力诊断
+
+`adapters.rope_threading.relay_diagnostics(tick_record, policy)` 在属主 tick sink 中读取
+材料坐标对应的实测绳站点、关节误差、手指开度及 `explain_grasp` 的拒绝原因／条件余量。
+它不改变场景，不重新运行 admission，也不将整条绳当成刚体计算位姿误差。
+`run_rope_threading_relay.py` 已在每个控制步边界把这些数据写入 `private/relay_monitor.jsonl`。
+其中 TCP 参考是端点插值，只用于跟踪诊断，不是关节插值的逐点 FK 碰撞证书。
+
+`compare_material_track(world, track, sigma, stations_m)` 可读取已解码的属主物理证据，按材料坐标
+比较实测绳形与物体规划；它不作刚体对齐，保留绳尖下垂和拉伸造成的偏差。`sigma` 是调用方
+提供的规划进度假设，不能作为实际穿环进度。`recheck_relay` 对缓存轨迹逐点重新检查目标场景
+的机器人、夹具和模型绳；调用方同时重建目标物体路径证书，不能直接继承来源变体的成功标签。
+
+`MeasuredKeeperPlanner` 将静止辅助抓持的实测 FEM 站点、当前关节目标和原样本保存下来，
+在独立 CPU 进程中调用 `plan_measured_keeper` 选取可达姿态，再返回普通关节路点；
+`plan_keeper_retreat` 检查从新姿态撤手并返回规划停放姿态的路径。每次修复保存完整输入、
+检查与路径。允许手臂与可变形绳接触；环架检查使用 Task 原生 IPC 的链接集合
+（`fingers` 候选为手指，`full` 为整臂），台面、自碰撞和双臂检查仍覆盖整臂。
+`replan_held_branch` 可从实测抓取分支重算后续整段 TCP 推进，保存 `follow_rows` 和
+刚性几何检查；未知未来 FEM 状态不作为静态证书。另一手按缓存停放姿态检查，其实际
+撤离另行校准。`measured_grasp_families`／`measured_rolls_deg` 可限定离线姿态搜索，
+`progress.json` 保存当前候选与拒绝原因。所有路径仍通过普通机器人指令执行。
+工具不写 CUDA 场景；实际抓持必须经过原生 admission 和 healthy 状态，静态通过不代表物理完成。
 
 ## 状态摘要与接触／夹爪读数
 

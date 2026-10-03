@@ -67,7 +67,8 @@ def plan_free_ring_transport(planner, observation, goals, *, iterations=5000, pa
         margin=.00005 if contact_release else .0005
         if min(distance(ring,m) for n,(_,m) in ik.bodies.items()
                if n!='target_ring' and n not in passive_contact_names)<margin:
-            cache[key]=False;return False
+            if checker.contact_limit_m is None or checker.penetration((p,r))>checker.contact_limit_m:
+                cache[key]=False;return False
         # A released body may move on contact, but a candidate should not
         # depend on passing its currently observed closed eye through the
         # ring. Preserve the initial linkage in this conservative snapshot.

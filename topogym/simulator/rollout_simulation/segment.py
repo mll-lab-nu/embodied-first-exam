@@ -13,7 +13,7 @@ from topogym.utils.snapshots import freeze
 from .segment_contract import SegmentError, action_copy, fingerprint, public_info, request_id
 from .evidence import SegmentEvidence, EvidenceError
 from .artifacts import ArtifactStore
-from .history import SegmentHistory
+from .history import SegmentHistory, PRIVILEGED_STORAGES
 
 
 class SegmentRunner:
@@ -24,7 +24,9 @@ class SegmentRunner:
     """
 
     def __init__(self, env, output_root, *, prepared_output=False,
-                 initial_observation_steps=0, initial_profile=None):
+                 initial_observation_steps=0, initial_profile=None, history_privileged="inline"):
+        if history_privileged not in PRIVILEGED_STORAGES:
+            raise ValueError("history_privileged must be inline or reference")
         if type(initial_observation_steps) is not int or not 0 <= initial_observation_steps <= 1000:
             raise ValueError("initial_observation_steps must be an integer in [0, 1000]")
         if initial_profile is not None:
@@ -63,8 +65,10 @@ class SegmentRunner:
         self._interaction = env.interaction()
         self._artifacts = ArtifactStore(self.root)
         self._last_tick = None
+        self._history_privileged = history_privileged
         self._report = dict(schema_version=1, episode_id=self.episode_id, status="running",
-                            segments=[], errors=[], enable_rgb=env.config.enable_rgb)
+                            segments=[], errors=[], enable_rgb=env.config.enable_rgb,
+                            history_privileged=history_privileged)
         try:
             if not env._mutation_lock.acquire(blocking=False):
                 raise SegmentError("execution_busy")
@@ -266,7 +270,7 @@ class SegmentRunner:
                 from topogym.recording.segment import SegmentMedia
                 record["media"] = SegmentMedia(self.root, identity,
                     self._select_frame(self.env.sensor_frame(), camera_ids))
-            record["history"] = SegmentHistory(self.root, identity, profile)
+            record["history"] = SegmentHistory(self.root, identity, profile, self._history_privileged)
             record["history"].tick(self._last_tick, initial=True)
             write_json_atomic(self.root / f"segments/segment_{identity}/result.json", self._descriptor(record))
             self._evidence.write("control_steps", dict(kind="begin", segment_id=identity,
@@ -411,7 +415,8 @@ class SegmentRunner:
             public["logs"] = {kind: self._artifacts.add(path, required_state_fields=fields)
                               for kind, path in history.finish().items()}
             public["history"] = dict(**history.counts, mode=profile.mode if profile else "limited",
-                                     privileged_fields=list(profile.state_fields) if profile else [])
+                                     privileged_fields=list(profile.state_fields) if profile else [],
+                                     privileged_storage=history.privileged_storage)
             self._evidence.write("control_steps", dict(kind="end", segment_id=identity,
                 reason=reason, end_state_ref=end, errors=record["errors"]))
         except BaseException as error:

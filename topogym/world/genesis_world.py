@@ -142,7 +142,8 @@ class GenesisWorld:
         try:
             materials = dict(robot_material=gs.materials.Rigid(gravity_compensation=1.0))
             if ipc:
-                materials.update(robot_material=gs.materials.Rigid(gravity_compensation=1., coup_type="external_articulation"),
+                materials.update(robot_material=gs.materials.Rigid(gravity_compensation=1., coup_type="external_articulation",
+                                     coup_collision_links=options["ipc"].get("robot_collision_links")),
                                  static_material=gs.materials.Rigid(coup_type="ipc_only"),
                                  table_material=gs.materials.Rigid(coup_type="ipc_only"),
                                  decoration_material=gs.materials.Rigid(needs_coup=False))

@@ -1,0 +1,158 @@
+{
+  "variant": "medium",
+  "seed": 0,
+  "instance_id": "14b0649275c6fa4cede62daf7016722d9d97ff5930856997b50daf55a321a87e",
+  "model_revision": "ring_clearance_grasp_candidate_v5",
+  "terminal_revision": "placement_region_v3_grasp_contact_2mm",
+  "resource_sha256": {
+    "variations/horseshoe_ring/u_mild.json": "4e4d5bfe15e830af54041f0428c226e261722a589d717158f336810f46ce6f82",
+    "variations/horseshoe_ring/u_mild_settled_poses.json": "76261b9bfba74b71dcdaa3ae5c47cef48c5ebf6dc721d7c62304acdebfc0ab29"
+  },
+  "config": {
+    "task_id": "horseshoe_ring",
+    "robot_id": "aloha",
+    "variation_id": "medium",
+    "task_parameters": {},
+    "compute_backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "terminal_contract_version": 1,
+    "control_decimation": 1,
+    "max_physics_steps": 80000,
+    "history_storage": "segment",
+    "reset_physics_steps": 0,
+    "rigid_options": {
+      "use_contact_island": false
+    },
+    "ipc_options": {},
+    "ipc_settled_state": null,
+    "enable_rgb": false,
+    "enable_depth": false,
+    "observation_mode": "JOINT",
+    "control_mode": "JOINT_ABS",
+    "enable_privileged": true,
+    "seed": null,
+    "render_backend": "nyx",
+    "asset_root": null,
+    "work_dir": "/home/jianwen/topogym/runs/oracle_dev/horseshoe_20261003/medium_phase0_open16_5_prefix/scene",
+    "grasp_assist": {
+      "model": "contact_weld_v1",
+      "targets": [
+        {
+          "entity": "horseshoe_left",
+          "link": "horseshoe_left",
+          "center_m": [
+            0.013658686977917174,
+            -1.3877787807814457e-17,
+            0.0
+          ],
+          "radius_m": 0.09055211523025057
+        },
+        {
+          "entity": "horseshoe_right",
+          "link": "horseshoe_right",
+          "center_m": [
+            -0.013658686977917146,
+            1.3877787807814457e-17,
+            0.0
+          ],
+          "radius_m": 0.09055211523025057
+        },
+        {
+          "entity": "target_ring",
+          "link": "target_ring",
+          "center_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "radius_m": 0.08166170200612914
+        }
+      ],
+      "stable_time_s": 0.02,
+      "max_tcp_distance_m": 0.12055211523025057,
+      "max_penetration_m": 0.002,
+      "max_translation_error_m": 0.01,
+      "max_rotation_error_rad": 0.15,
+      "max_finger_opening_fraction": 0.15,
+      "intent_deadband": 0.002,
+      "initial_intent": "open"
+    }
+  },
+  "selection": [
+    {
+      "step": "prefix",
+      "parameters": {
+        "grasps": {
+          "path": "evidence/runs/medium_from_home_08/oracle_inputs/grasps.json",
+          "sha256": "277cc96ae59747584ad7505895755aa428f3dd351d5af31c8d6c651af051c200"
+        },
+        "reference": {
+          "path": "evidence/runs/medium_from_home_08/oracle_inputs/reference.json",
+          "sha256": "3ab3d9af280804dad9a4ae17f3314abce609b8a0b779d7c00fa83364e257d2df"
+        },
+        "fold": {
+          "path": "evidence/runs/medium_from_home_08/oracle_inputs/fold.json",
+          "sha256": "b90c7c72188e67a2747455ab959dbde862ce53c4ae9cd9ece4d711b64743c4ca"
+        },
+        "support": {
+          "path": "evidence/runs/medium_from_home_08/oracle_inputs/support.json",
+          "sha256": "095964339285a930bd6c6deb76133510aeeda8ec715d512b2600622e7f776550"
+        },
+        "approach": {
+          "path": "evidence/runs/medium_from_home_08/oracle_inputs/approach.json",
+          "sha256": "ad5b8fffaa01c98684fdd4136a8750311e2c89d400defa0bbe3b12a62fdd8c75"
+        }
+      }
+    },
+    {
+      "step": "orient_for_handoff",
+      "parameters": {
+        "angle_deg": 90.0,
+        "yaw_deg": 0.0,
+        "translation_m": [
+          0.0,
+          0.1,
+          -0.04
+        ],
+        "hold_s": 8.0,
+        "sample_duration_s": 0.1,
+        "restore": false,
+        "position_bias_limit_m": 0.05
+      }
+    },
+    {
+      "step": "support_release",
+      "parameters": {
+        "suspended_upper": true
+      }
+    },
+    {
+      "step": "clear_remainder_for_table_pickup",
+      "parameters": {}
+    },
+    {
+      "step": "grasp_ring",
+      "parameters": {
+        "choice": {
+          "tcp_backoff_m": 0.01531
+        }
+      }
+    },
+    {
+      "step": "place_ring",
+      "parameters": {}
+    },
+    {
+      "step": "verify_goal",
+      "parameters": {}
+    }
+  ],
+  "qualification": {
+    "accepted_proof": true,
+    "instance_id": "14b0649275c6fa4cede62daf7016722d9d97ff5930856997b50daf55a321a87e",
+    "audit": "evidence/runs/medium_from_home_08/independent_audit.json",
+    "audit_sha256": "8d7ea231fbe7df220d45f6208d3afd1a46aae52c279ca77af138cb3292a778f1"
+  }
+}

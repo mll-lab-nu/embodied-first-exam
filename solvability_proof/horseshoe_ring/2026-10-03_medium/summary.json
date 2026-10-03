@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task": "horseshoe_ring",
+  "batch": "2026-10-03_medium",
+  "accepted_proofs": 1,
+  "cases": [
+    {
+      "variation": "medium",
+      "model_revision": "ring_clearance_grasp_candidate_v5",
+      "seed": 0,
+      "path": "evidence/runs/medium_from_home_08",
+      "role": "accepted_success",
+      "report": "evidence/runs/medium_from_home_08/run_report.json",
+      "audit": "evidence/runs/medium_from_home_08/independent_audit.json",
+      "source_manifest": "evidence/runs/medium_from_home_08/run_source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "14b0649275c6fa4cede62daf7016722d9d97ff5930856997b50daf55a321a87e",
+      "report_sha256": "8701a37231f56e59d62ee2fd02d462599ced0d35cc44ddc1fdf09b583a27ce09",
+      "audit_sha256": "8d7ea231fbe7df220d45f6208d3afd1a46aae52c279ca77af138cb3292a778f1",
+      "simulation_time_s": 264.5,
+      "states": 10581,
+      "rewinds": 0
+    }
+  ],
+  "scope": {
+    "seed": 0,
+    "robot": "aloha",
+    "action": "JOINT_ABS",
+    "backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "control_decimation": 1,
+    "task_checks_hz": 40,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "rgb": false,
+    "video": false,
+    "rigid_options": {
+      "use_contact_island": false
+    }
+  },
+  "stage_factory": "topogym.planning.horseshoe_ring.stages:gravity_release_table_pickup_stages",
+  "limitations": [
+    "Only this variant seed 0 and recorded configuration; other instances require separate qualification",
+    "Contact-triggered assisted grasp, not friction-only",
+    "World-tick evidence, not continuous-time or default 400 Hz qualification",
+    "Native report retains pre-audit status; independent_audit.json contains acceptance",
+    "Model screenshots are zero-physics previews, not additional executions"
+  ],
+  "note": "Original bytes retained; original absolute paths are provenance. Use archive-relative paths to access copies."
+}

@@ -4,6 +4,7 @@
 
 | 脚本 | 职责 |
 | --- | --- |
+| `harbor_oracle.py` | 跨任务的冻结实例检查、私有 oracle 候选打包和 Harbor oracle/nop 批量执行；[接入说明](../../topogym/planning/harbor_bridge/README.md) |
 | `run_lock_picking_policy.py` | 两档双片 simplified、原三档 reindex 及历史 medium 策略；标准 Env 执行，可录制逐动作 IK/FK |
 | `run_cast_coil_policy.py` | Coil 原三档策略，以及 very_easy 大齿直插、easier 挡板加横移装配策略 |
 | `run_cast_keyhole_policy.py` | Keyhole 拾取、换抓和放置策略 |
@@ -12,16 +13,35 @@
 | `run_buzz_wire_simplified_policy.py` | Buzz very_easy / easier 的源码冻结、home 抓取、走线与终点释放验证 |
 | `run_hedgehog_oracle.py` | 从 home 执行带显式辅助抓持选项的 Hedgehog oracle |
 | `run_horseshoe_policy.py` | Horseshoe 几何、IK 和机器人分阶段诊断 |
+| `run_horseshoe_oracle.py` | Horseshoe 从默认 home 的反馈 IK 完整执行，校验模型及规划输入哈希，冻结源码并自动独立审计；正式运行不加载 calibration-tools |
 | `run_interlocked_claws_policy.py` | Claws very_easy / easier 的辅助抓持参考策略；旧三档仍调用原几何及摩擦抓持诊断 |
 | `run_interlocked_claws_simplified_policy.py` | 两档简化 Claws 的源码冻结、连续几何检查、双臂预检和 SegmentRunner 执行 |
 | `run_claws_oracle.py` | 原三档 Claws 的交接路线重认证、实测抓持 IK、JOINT_ABS 分离与停稳 |
+| `run_blanket_oracle.py` | Blanket easy / medium / hard 从默认 home 双臂接近、局部辅助抓持、按路线拖展、释放撤手和原生展平判定 |
+| `run_knot_oracle.py` | Knot 冻结实例的纯摩擦抓取、实测选点、JOINT_ABS 记录及原生成功收尾 |
+| `run_knot_branching.py` | Knot 决策存档、失败后回溯上游换候选和经前缀回放验证的续跑 |
 | `run_hedgehog_policy.py` | Hedgehog 旧几何／反馈诊断入口，保留其原有阶段限制 |
 | `run_rigid_reference_policy.py` | Hedgehog／Claws 共用的几何、抓持诊断管理器 |
 | `run_solvability_workflow.py` | 按任务提供的 stage factory 执行诊断或连续证明候选 |
-| `run_rope_threading_relay.py` | Wang 0° easy / medium / hard 接力 IK 样本执行；普通 EE_ABS、抓持反馈和原生 Task 判定 |
+| `run_rope_threading_relay.py` | Wang 0° easy / medium / hard 接力 IK 样本执行；JOINT_ABS、v12 IPC 选项、calibration 诊断和原生 Task 判定 |
 | `run_rope_threading_policy.py` | very_easy / easier 的搭绳和单环双手交接开发策略 |
 
 只读规划器 `scripts/plan_*`、独立审计器 `scripts/audit_*`、通用接口测试及源码快照工具 `scripts/test_*` 继续放在上级目录。difficulty trials 使用独立的 Harbor 执行链，不调用这些 oracle runner。
+
+Knot 的 easy／medium／hard 配方、实例重建、分支续跑及正式回放命令见
+[Knot oracle](../../topogym/planning/knot_untying/README.md)。默认夹爪开口 5 mm、端部抓点偏移 35 mm；
+hard 默认完整拉 0.55 m。执行器返回 0 只表示原生成功，正式轨迹须再通过 `scripts/audit_knot_oracle.py`。
+
+## Horseshoe 完整反馈 IK oracle
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_horseshoe_oracle.py \
+  --variant medium --seed 0 --output runs/test_results/horseshoe_medium_new
+```
+
+默认读取[已验收配方索引](../../solvability_proof/horseshoe_ring/recipes.json)；各档资格见[证明目录](../../solvability_proof/horseshoe_ring/README.md)。输出目录必须尚不存在。入口核对安装模型、原生判据和五份规划输入的哈希，冻结源码，从标准 ALOHA home 执行反馈 IK，原生成功后自动进行独立逐 tick 审计；只有实例一致且审计接受时返回 0。
+
+`oracle_result.json` 是最终结果，`independent_audit.json` 保留审计细节；底层 `run_report.json` 的成功报告仍含审计前 pending 状态。使用显式 CPU float64、25 ms / 40 子步、`use_contact_island=False` 和接触触发辅助抓持。正式策略没有 calibration-tools 导入或调用；开发候选可用 `--recipe <路径>` 指定，但只有完整运行并通过审计才有资格。
 
 ## Claws easy / medium / hard 交接路线
 
@@ -67,12 +87,86 @@ TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets" \
 恢复全部关节（含被动手指）。本地本轮 GPU 驱动不可用，尚未验证这个视频入口的实际渲染。
 完整结果与边界见 [Claws 任务页](../../docs/develop/tasks/interlocked_claws_zh.md)。
 
-Rope Threading 三档先通过 `scripts/plan_rope_threading_oracle.py --variation easy|medium|hard`
+Rope Threading 的显式开发参考可用
+`python -m topogym.planning.rope_threading.profiles --variation easy|medium|hard --execute-reference --output <新目录>`
+从 home 执行，三档均已取得 seed 0 原生成功。入口校验参考轨迹字节、模型及完整原生成功证据，
+自动带上已记录的加速与接触配置，默认无 RGB。
+重新规划常规场景时，先通过 `scripts/plan_rope_threading_oracle.py --variation easy|medium|hard`
 生成物体路径，再用 `scripts/plan_rope_threading_ik.py --witness <object_witness.json>` 生成对应轨迹。
 执行：`run_rope_threading_relay.py --variant easy|medium|hard --seed 0 --samples <relay_samples.npz> --output <新目录>`。
 三档各自的默认配方、完整命令和证据边界见
 [Rope Threading oracle](../../topogym/planning/rope_threading/README.md)。默认 Nyx 四视角，`--no-rgb` 可关闭；
 导入的 IK 证据不等于完整物理成功。
+
+## Blanket easy / medium / hard 双手展平路线
+
+从仓库根目录执行，输出目录必须尚不存在。Nyx 资源先按 `scripts/prepare_nyx_studio.py` 准备；
+下面的资源路径沿用交接环境，已有资源放在别处时设置为对应目录。
+
+```bash
+export XDG_CACHE_HOME="$PWD/.cache" TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.cache/topogym/visuals/nyx"
+.venv-gs121-nyx/bin/python scripts/plan_blanket_object_oracle.py \
+  --variation easy --seed 0 --output runs/test_results/blanket_easy_object_new
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_blanket_oracle.py \
+  --variation easy --seed 0 --output runs/test_results/blanket_easy_run_new
+.venv-gs121-nyx/bin/python scripts/audit_blanket_oracle.py \
+  --run runs/test_results/blanket_easy_run_new --require-native-success \
+  --output runs/test_results/blanket_easy_audit_new
+```
+
+将 `easy` 和输出目录改为 `medium` / `hard` 可运行另两档。虚拟手见证分别需加
+`--settle-s 40` / `--settle-s 60`；默认 4 s 只够 easy。机器人 runner 按路线自动选择静置时间，
+物理步上限默认 easy / medium 28000、hard 40000，可用 `--max-physics-steps` 显式覆盖。
+
+路线和抓点见 [routes.py](../../topogym/planning/blanket_flatten/routes.py)，对应冻结初态
+`gathered_archive_v2`。见证与机器人读取相同路线：虚拟手只移动两个夹爪大小的局部 patch，
+机器人停在 home，不算机器人证明。机器人 oracle 通过 `SegmentRunner` 发送 JOINT_ABS，
+以 `pbd_local_patch_v1` 双指表面接近准入取得局部抓持，执行拖展、释放、上撤 8 cm，
+再等待原生 Task 判定。easy / medium 一段，hard 两段，包含重新抓取。
+
+冻结初态绑定 CUDA float64、2.5 ms tick、4 子步、每控制步 10 tick，以及硬件／依赖栈；
+`resource_profile()` 须与 `gathered_archive_v2/` 下的目录一致。交接的成功环境使用
+RTX 4090、torch 2.11.0+cu128、numpy 2.3.5、quadrants 1.0.2，profile 为
+`cuda_sm89_mp128_87407517a32a`；不能用其他 profile 的初态替代。
+场景身份包含相机，因此 RGB 保持启用；runner 设置 `env.defer_rgb = True` 并选择空相机列表，
+不渲染也不录视频。`assist_support.enable()` 只在 oracle 进程内登记出生材料坐标，
+并将常量材料映射设为只读，使冻结状态恢复的缓冲区清单保持一致。
+
+机器人执行产出 `oracle_report.json` 和 `trail/`，原生成功时 runner 返回 0；
+独立审计另行执行，产出 `execution_audit.json`，完整证明须检查其 `accepted_proof=true`。
+审计重算展平五门槛，并按密封的 `static_model.json` 重算释放、机器人碰撞包围盒距布
+至少 5 mm、速度至多 0.03 m/s、窗口内漂移至多 3 mm，以及连续 0.5 s 稳定窗口。
+独立成功 tick 必须与原生一致；另核对默认 home、冻结布料初态、连续 tick、每手每段一次抓放、
+无丢抓、持抓应变 guard、机器人与桌面接触和关节限位。
+
+交接材料报告的结果（2026-10-03，三档 seed 0，默认时序，无回溯）：
+
+| 档位 | 原生成功 tick / 仿真时长 | 独立审计 | 持抓峰值边长比 / guard | 终态覆盖率 |
+| --- | --- | --- | --- | --- |
+| easy | 7156 / 17.9 s | passed，成功 tick 一致 | 1.247 / 1.3 | 100.0% |
+| medium | 15657 / 39.1 s | passed，成功 tick 一致 | 1.292 / 1.5 | 99.98% |
+| hard | 33687 / 84.2 s | passed，每手两次抓放 | 1.293 / 1.5 | 93.2% |
+
+easy 另一次运行成功于 tick 7309，审计也通过；GPU PBD 运行间数值差异可能改变接触和成功时刻。
+这些是外部交接结果，原 `runs/test_results/blanket_*_20261003*` 的完整证据未随文本迁入，
+本次集成未新增物理成功记录或 `solvability_proof/` 归档。交接运行没有视频，单次逐 tick 证据约
+20 / 28 / 58 GB。范围限于这三个冻结实例和辅助局部抓持；不涵盖纯摩擦抓持、任意 seed、
+连续子步碰撞证明或机器人与布料穿透审计。任务状态见 [Blanket 任务页](../../docs/develop/tasks/blanket_flatten_zh.md)。
+
+CPU 回归：`.venv-gs121-nyx/bin/python ci_checks/test-blanket-oracle.py`；
+通用入口、CLI 和源码快照回归：`.venv-gs121-nyx/bin/python ci_checks/test-oracle-runners.py`。
+
+## Fiber 原三档独立审计
+
+easy / medium / hard 的 seed 0 已有完整连续运行，2026-10-03 独立审计通过，正式 3/3；[证明与复核命令](../../solvability_proof/fiber_bundling/2026-10-03/README.md)。使用原 `.venv-gs121`（trimesh 4.12.2、numpy 2.4.4）复核归档；不要将本节的依赖要求套到下方另有冻结身份的简化变体。
+
+```bash
+.venv-gs121/bin/python scripts/audit_fiber_bundling_robot.py \
+  --run solvability_proof/fiber_bundling/2026-10-03/evidence/runs/medium_full_01 \
+  --output runs/test_results/fiber_medium_independent_reaudit
+```
+
+该命令按运行的冻结 Task 检查；当前 v4 和封存 world／动作交叉核对命令见证明页。easy 原执行使用 v3，同一完整轨迹另通过 v4；复核不增加物理成功次数。三档资格限于 CPU64、25 ms／40 子步、接触辅助护套抓持；本次未复跑物理或新增视频。
 
 ## Fiber 两档简化变体
 
@@ -105,6 +199,16 @@ Rope Threading 三档先通过 `scripts/plan_rope_threading_oracle.py --variatio
 长时间逐 tick 证据会占数 GB，运行前留足空间。审计器同时支持经逐字节哈希
 核对后无损压缩的 `.jsonl.gz`。实际实例资格、录像及四个包见
 [Fiber 任务页](../../docs/develop/tasks/fiber_bundling_zh.md)。
+
+## Buzz Wire 原 medium / hard
+
+两档的完整 IK 动作已从默认 home 无回溯复验成功，并通过独立接触审计。
+`run_buzz_wire_policy.py --compiled-actions <动作文件> --v12-performance`
+使用正式 `CompiledJointPolicy` 执行普通关节目标；运行时不调用 calibration tools。
+两档的动作文件、具体命令、冻结源码与 RTX 4090 生成的三路 Nyx 视频见
+[Buzz policy 说明](../../topogym/planning/buzz_wire_3d/README.md)。
+资格限于各自冻结 seed 0、接触辅助抓持、CPU64 / 25 ms / 40 子步配置；
+每次重新执行后仍须运行 `python -m topogym.planning.buzz_wire_3d.audit <输出目录>`。
 
 ## Buzz Wire 两档简化变体
 

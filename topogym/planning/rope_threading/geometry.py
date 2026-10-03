@@ -67,7 +67,7 @@ def _fixture_meshes(layout, table_height_m):
     return meshes, names
 
 
-def frozen_problem(output, *, variation="medium", seed=0):
+def frozen_problem(output, *, variation="medium", seed=0, task_parameters=None):
     """Declare the registered task on CPU, no physics; return world geometry."""
     from topogym.config.registry import task_definition
     from topogym.config.scene import load_scene_config
@@ -80,11 +80,12 @@ def frozen_problem(output, *, variation="medium", seed=0):
         raise ValueError("Use a fresh asset directory")
     directory.mkdir(parents=True, exist_ok=True)
     config = SimulatorConfig(task_id="rope_threading", variation_id="rope_threading_"+variation,
+                             task_parameters=task_parameters or {},
                              enable_rgb=False, compute_backend="cpu")
     scene = load_scene_config(config)
     table = scene.env.world.table
     height = float(table.pos[2]+table.size[2]/2)
-    task = task_definition("rope_threading", "rope_threading_"+variation)(seed=seed)
+    task = task_definition("rope_threading", "rope_threading_"+variation)(config=task_parameters, seed=seed)
     spec = task.declare(directory, height)
     spec = task.finalize_spec(spec, asset_dir=directory, scene_config=scene)
     layout = task.layout
@@ -116,6 +117,8 @@ def frozen_problem(output, *, variation="medium", seed=0):
         robot_mount_world_m=list(map(float, scene.env.robot_mount.pos)),
         robot_scene=robot_scene_identity(scene),
         geometry_report=spec.metadata["geometry_report"])
+    if task_parameters:
+        identity["task_parameters"] = dict(task_parameters)
     for ring in rings:
         ring["center_world_m"] = (np.asarray(ring["center_m"])+[0, 0, height]).tolist()
     return FrozenProblem(task, variation, height, layout, rings, stations, initial, fixtures, names, identity, risers)
@@ -145,18 +148,24 @@ def task_like_evaluation(points, problem):
     terminal margins. Quiet/velocity and FEM integrity are physics-only and
     remain unverified here.
     """
+    from topogym.tasks.rope_threading.common import usable_rope_aperture_radius
     layout, terminal = problem.layout, problem.identity["terminal"]
     expected = problem.required
     hits, ambiguous, thickness_ok = [], False, True
     for ring in world_rings(problem):
         center, normal = np.asarray(ring["center_m"]), np.asarray(ring["normal"])
-        radius = ring["radius_m"]-ring["tube_radius_m"]-layout.rope_radius_m-terminal["aperture_margin_m"]
+        radius = usable_rope_aperture_radius(ring, layout.rope_radius_m, terminal,
+            problem.identity.get("task_parameters", {}).get("aperture_contact_allowance_m", 0.))
         crossings, uncertain = aperture_crossings(points, center, normal, radius)
         nominal, _ = aperture_crossings(points, center, normal, ring["radius_m"]-ring["tube_radius_m"])
         thickness_ok &= len(nominal) == len(crossings)
         ambiguous |= uncertain
         for offset in (-ring["tube_radius_m"], ring["tube_radius_m"]):
-            boundary, unsure = aperture_crossings(points, center+offset*normal, normal, radius)
+            parameters = problem.identity.get("task_parameters", {})
+            slice_radius = usable_rope_aperture_radius(ring, layout.rope_radius_m, terminal,
+                parameters.get("aperture_contact_allowance_m", 0.), axial_offset_m=offset,
+                profile=parameters.get("aperture_check_profile", "cylindrical"))
+            boundary, unsure = aperture_crossings(points, center+offset*normal, normal, slice_radius)
             ambiguous |= unsure
             thickness_ok &= [h["sign"] for h in boundary] == [h["sign"] for h in crossings]
         hits.extend(dict(hit, ring=ring["name"]) for hit in crossings)

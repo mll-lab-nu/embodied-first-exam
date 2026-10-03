@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "task": "fiber_bundling",
+  "batch": "2026-10-03",
+  "accepted_proofs": 3,
+  "cases": [
+    {
+      "variation": "easy",
+      "seed": 0,
+      "path": "evidence/runs/easy_02",
+      "report": "evidence/runs/easy_02/run_report.json",
+      "audit": "evidence/audits/easy/audit.json",
+      "crosscheck": "evidence/audits/easy/current_contract_and_seal.json",
+      "accepted_proof": true,
+      "native_task_success": true,
+      "independent_audit_passed": true,
+      "current_terminal_passed": true,
+      "instance_id": "042d201469ceffc82dfc5f68ea6eba17328c8f8714d3379ec744664e3fce97c9",
+      "evaluated_current_instance_id": "77ceead1e0ce0a8f62cff60227132f5bac29b37c2a278d9764ddbba2ac9d612e",
+      "original_terminal": "terminal_v3_fiber_contacts",
+      "evaluated_terminal": "terminal_v4_fiber_ring_plane",
+      "identity": {
+        "task_id": "fiber_bundling",
+        "variation_id": "easy",
+        "seed": 0,
+        "instance_id": "042d201469ceffc82dfc5f68ea6eba17328c8f8714d3379ec744664e3fce97c9",
+        "config_sha256": "3b4fea86ebb48a459158096f3fbde3499f7cb74f411e138a9c6bfbf9472df024",
+        "assets_sha256": "7a53197112fac041c2c0f2869d5c4bddb4e6eb83abb353f71171589c3fccd116",
+        "source_sha256": "61267db12fdef2374233d48978d8a8d42ea64e934d56101b3b0e5ffd83286ed1",
+        "engine_version": {
+          "genesis-world": "1.2.1",
+          "torch": "2.12.0+cu126",
+          "numpy": "2.4.4"
+        },
+        "owner_sources": {
+          "/home/jianwen/topogym/runs/test_results/fiber_quick_solvability_20260929/easy_02/source_snapshot/scripts/run_solvability_workflow.py": "df5d0bce775cb73db7dfc9cb73db68c43fdc716721bff4f98bd09e994655715b",
+          "/home/jianwen/topogym/runs/test_results/fiber_quick_solvability_20260929/easy_02/source_snapshot/topogym/planning/fiber_bundling/stages.py": "384197d3719bbfd0cf97f026a2909974fbcb6fd25a74cdc0398c05a0712abe00"
+        }
+      },
+      "simulation_time_s": 190.07500000000002,
+      "states": 7604,
+      "actions": 7603,
+      "solver_substep_summaries": 304120,
+      "rewinds": 0,
+      "stable_time_s": 0.5000000000000001,
+      "acquisition_ticks": [
+        547
+      ],
+      "maximum_sampled_bend_deg": 9.842503490722311,
+      "maximum_grasp_translation_error_m": 0.0006451915729700398,
+      "maximum_grasp_rotation_error_rad": 0.0068150018937558985,
+      "minimum_arm_joint_margin_rad": 0.4154437308864716,
+      "ring_plane_forward_crossings": {
+        "hole": 44,
+        "tube_band": 0,
+        "outside": 27
+      },
+      "report_sha256": "b6853fed3c00407e7423c15278e917140b1de63c6ad531b6a10ccd3223d5ec70",
+      "audit_sha256": "3d4faaf696177e08b444178ff9cd5e05564687e3740b13b82d53a5e31956d803",
+      "crosscheck_sha256": "290379328987ee2fade865255a4a8069e0bc8681cadf90713b13e8d7ad101dcc"
+    },
+    {
+      "variation": "medium",
+      "seed": 0,
+      "path": "evidence/runs/medium_full_01",
+      "report": "evidence/runs/medium_full_01/run_report.json",
+      "audit": "evidence/audits/medium/audit.json",
+      "crosscheck": "evidence/audits/medium/current_contract_and_seal.json",
+      "accepted_proof": true,
+      "native_task_success": true,
+      "independent_audit_passed": true,
+      "current_terminal_passed": true,
+      "instance_id": "9fde27b9036e7646b5e765cf8f2550d65a8809e84cfe208136fed6e3e0040390",
+      "evaluated_current_instance_id": "9fde27b9036e7646b5e765cf8f2550d65a8809e84cfe208136fed6e3e0040390",
+      "original_terminal": "terminal_v4_fiber_ring_plane",
+      "evaluated_terminal": "terminal_v4_fiber_ring_plane",
+      "identity": {
+        "task_id": "fiber_bundling",
+        "variation_id": "medium",
+        "seed": 0,
+        "instance_id": "9fde27b9036e7646b5e765cf8f2550d65a8809e84cfe208136fed6e3e0040390",
+        "config_sha256": "a33afc44bcada661f2728451d5771f1f237c65441c7698f3e1b809c968b32e61",
+        "assets_sha256": "fd5013ae09ee11ed909d0e57fe9c2b0d0b37a3ec3128c4c6f9f9f8cbf1d436df",
+        "source_sha256": "9f01cbbed80b10c5eb598da51ada0a342d7497c259a95571f7cfaf0ac4818971",
+        "engine_version": {
+          "genesis-world": "1.2.1",
+          "torch": "2.12.0+cu126",
+          "numpy": "2.4.4"
+        },
+        "owner_sources": {
+          "/home/jianwen/topogym/runs/test_results/fiber_quick_solvability_20260929/medium_full_01/source_snapshot/scripts/oracle_runners/run_solvability_workflow.py": "4bb24537e1443683c9c8ae539e0055bb08f8b1f43f5c29ccd345d399442a92eb",
+          "/home/jianwen/topogym/runs/test_results/fiber_quick_solvability_20260929/medium_full_01/source_snapshot/topogym/planning/fiber_bundling/stages.py": "433a78d63a964d463fd34111053bede06a27c7527f5af6f56866167ac39cd0ee"
+        }
+      },
+      "simulation_time_s": 344.0,
+      "states": 13761,
+      "actions": 13760,
+      "solver_substep_summaries": 550400,
+      "rewinds": 0,
+      "stable_time_s": 0.5000000000000001,
+      "acquisition_ticks": [
+        547
+      ],
+      "maximum_sampled_bend_deg": 9.804039919650531,
+      "maximum_grasp_translation_error_m": 0.0006447544682017472,
+      "maximum_grasp_rotation_error_rad": 0.006810436032059385,
+      "minimum_arm_joint_margin_rad": 0.4135972640487293,
+      "ring_plane_forward_crossings": {
+        "hole": 88,
+        "tube_band": 0,
+        "outside": 93
+      },
+      "report_sha256": "85c1794e6200a95d75036bd5ab50e314cb818d1dd7f47c4a5bb401863fd0cdc5",
+      "audit_sha256": "9bfdbb642bd774a6de92009887f978166abdc24ccce3cde5d8cb1a1d0168b2cb",
+      "crosscheck_sha256": "8a56e5323602f80f0eb2d83ea0f636aa26f0feb652e5969236287efaa3688a53"
+    },
+    {
+      "variation": "hard",
+      "seed": 0,
+      "path": "evidence/runs/hard_full_01",
+      "report": "evidence/runs/hard_full_01/run_report.json",
+      "audit": "evidence/audits/hard/audit.json",
+      "crosscheck": "evidence/audits/hard/current_contract_and_seal.json",
+      "accepted_proof": true,
+      "native_task_success": true,
+      "independent_audit_passed": true,
+      "current_terminal_passed": true,
+      "instance_id": "f5301b5d77ded21bf471fa7f5f39d74afffc20c79f7f592c9d433d055b1ec572",
+      "evaluated_current_instance_id": "f5301b5d77ded21bf471fa7f5f39d74afffc20c79f7f592c9d433d055b1ec572",
+      "original_terminal": "terminal_v4_fiber_ring_plane",
+      "evaluated_terminal": "terminal_v4_fiber_ring_plane",
+      "identity": {
+        "task_id": "fiber_bundling",
+        "variation_id": "hard",
+        "seed": 0,
+        "instance_id": "f5301b5d77ded21bf471fa7f5f39d74afffc20c79f7f592c9d433d055b1ec572",
+        "config_sha256": "698bb00af659f998cfd34a4f2bda93080028b7a5bf187a6c528e8ca8d2449f30",
+        "assets_sha256": "c79445365d8bb2b77e6a501d223d62651ee3840b9c694acf197c3421a104fc02",
+        "source_sha256": "0c123708b1d4b235895497a25edd791b9f0097bca514c06abe5e8195fd1afa58",
+        "engine_version": {
+          "genesis-world": "1.2.1",
+          "torch": "2.12.0+cu126",
+          "numpy": "2.4.4"
+        },
+        "owner_sources": {
+          "/home/jianwen/topogym/runs/test_results/fiber_quick_solvability_20260929/hard_full_01/source_snapshot/scripts/oracle_runners/run_solvability_workflow.py": "4bb24537e1443683c9c8ae539e0055bb08f8b1f43f5c29ccd345d399442a92eb",
+          "/home/jianwen/topogym/runs/test_results/fiber_quick_solvability_20260929/hard_full_01/source_snapshot/topogym/planning/fiber_bundling/stages.py": "433a78d63a964d463fd34111053bede06a27c7527f5af6f56866167ac39cd0ee"
+        }
+      },
+      "simulation_time_s": 639.125,
+      "states": 25566,
+      "actions": 25565,
+      "solver_substep_summaries": 1022600,
+      "rewinds": 0,
+      "stable_time_s": 0.5000000000000001,
+      "acquisition_ticks": [
+        547
+      ],
+      "maximum_sampled_bend_deg": 9.92922341902643,
+      "maximum_grasp_translation_error_m": 0.0006438948070087453,
+      "maximum_grasp_rotation_error_rad": 0.006801451319565749,
+      "minimum_arm_joint_margin_rad": 0.4259947523846832,
+      "ring_plane_forward_crossings": {
+        "hole": 176,
+        "tube_band": 0,
+        "outside": 386
+      },
+      "report_sha256": "e653a0bab5efdd9d15e1d62e029b6556fff69e33934437a1f5900a1e75b6a2bd",
+      "audit_sha256": "24d42d08564ef396982d22cd27fba3a8d05f4a50c3e6dc9e21a6e44f173bf4d2",
+      "crosscheck_sha256": "d22c352dffbd82e8271cb956f5279f67272e13bb38240e1d3395c69f33a1b1e6"
+    }
+  ],
+  "scope": {
+    "seed": 0,
+    "robot": "panda_robotiq",
+    "action": "JOINT_ABS",
+    "backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "control_decimation": 1,
+    "task_checks_hz": 40,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "grasp_link": "trunk_04",
+    "rgb": false,
+    "video": false
+  },
+  "audit_environment": {
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "trimesh": "4.12.2",
+    "genesis-world": "1.2.1"
+  },
+  "fresh_physics_executions": 0,
+  "limitations": [
+    "One recorded seed 0 instance per variant; no parameter-domain or default 400 Hz qualification",
+    "Contact-triggered sheath assistance; not friction-only",
+    "Saved native solver-substep contact summaries and sampled world poses; no continuous-time CCD claim",
+    "Easy native source is terminal v3; same trace also passes frozen current v4, whose terminal-only parameter change gives a different instance ID",
+    "Original reports retain pre-audit pending status; acceptance is recorded in this summary and the independent audits",
+    "No new RGB or video; prior demos are different runs",
+    "Initial trimesh 5.1.0 audits rejected asset identity; final audits use original trimesh 4.12.2 and numpy 2.4.4 without relaxing hashes"
+  ],
+  "note": "Original bytes retained; use archive-relative paths. Re-evaluation does not add physical execution successes."
+}

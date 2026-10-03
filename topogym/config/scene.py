@@ -28,6 +28,12 @@ def load_scene_config(config):
         # Apply before robot asset selection and native IPC initialization.
         with open_dict(scene.robot_control.robot):
             scene = OmegaConf.merge(scene, OmegaConf.load(root / "task_configs" / "rope_threading.yaml"))
+            if "robot_riser_height_m" in config.task_parameters:
+                import math
+                height = config.task_parameters["robot_riser_height_m"]
+                if isinstance(height, bool) or not isinstance(height, (int, float)) or not math.isfinite(height) or not 0 <= height <= .15:
+                    raise ValueError("robot_riser_height_m must be in [0, .15]")
+                scene.robot_control.robot.base_riser_height_m = float(height)
     # Task framing is calibrated for the standard Panda scene. Keep the robot's
     # resolution, wrist mount and observation keys when merging fixed views.
     camera_profile = _TASK_CAMERA_PROFILES.get(config.task_id)

@@ -74,3 +74,66 @@ def folded_ring_metric(planner, observation):
                 longitudinal_error_m=abs(actual-expected),maximum_separating_gap_m=separation,
                 reference_position_error_m=float(np.linalg.norm(observed_relative[0]-expected_relative[0])),
                 reference_rotation_error_rad=float((observed_relative[1]*expected_relative[1].inv()).magnitude()))
+
+
+def plan_supported_tilt(planner, observation, *, axis='tool', angle_deg=60.):
+    """Screen a right-hand turn after the left hand has withdrawn.
+
+    Passive pieces follow rigidly only in this screening calculation. Actual
+    execution gives them no pose targets or additional constraints.
+    """
+    angle=float(angle_deg)
+    if axis not in ('tool','x','y','z') or not np.isfinite(angle) or not 0<abs(angle)<=90:
+        raise ValueError('Supported tilt requires a named axis and angle within 90 degrees')
+    hands=observation['privileged']['world']['grasp']['hands']
+    if hands['left']['binding'] is not None or not hands['right']['binding'] or hands['right']['binding']['target'][0]!='horseshoe_right':
+        raise ValueError('Supported tilt requires only the right shoe held')
+    bodies,q=planner.observed(observation)
+    first=bodies['horseshoe_right'];tcp=tcp_pose(observation['robot']['right'])
+    offset=relative_pose(first,tcp)
+    direction=tcp[1].apply([1.,0.,0.]) if axis=='tool' else np.eye(3)[('x','y','z').index(axis)]
+    rows=[]
+    for index,u in enumerate(np.linspace(0,1,int(np.ceil(abs(angle)/.5))+1)):
+        turn=Rotation.from_rotvec(direction*np.deg2rad(angle*u))
+        world={n:(first[0]+turn.apply(p-first[0]),turn*r) for n,(p,r) in bodies.items()}
+        if min(float((r.apply(planner.task.placement_vertices[n])+p)[:,2].min()) for n,(p,r) in world.items())<planner.checker.table_height+.00005:
+            raise ValueError(f'Supported tilt screening reaches table at sample {index}')
+        p,r=world['horseshoe_right'];previous=q.copy()
+        q=planner.checker.solve('right',(p+r.apply(offset[0]),r*offset[1]),q)
+        checked=planner.checker.check(q,body_poses=world)
+        if not checked['passed'] or np.abs(q-previous).max()>.15:
+            raise ValueError(f'Supported tilt collision or joint branch change at sample {index}: {checked}')
+        rows.append(dict(right_pose=pose_dict((p,r)),qpos=q.tolist()))
+    result=dict(passed=True,axis=axis,axis_world=direction.tolist(),angle_deg=angle,poses=rows,
+        observed_state=observation['state'],scope='sampled single-arm IK with rigid passive screening; physical gravity response unverified')
+    write_json_atomic(planner.directory/'supported_tilt_plan.json',result)
+    return result
+
+
+def plan_held_pair_translation(planner, observation, translation_m):
+    """Relocate the held ring and shoe before releasing the free remainder."""
+    shift=np.asarray(translation_m,dtype=float)
+    if shift.shape!=(3,) or not np.isfinite(shift).all() or not 0<np.linalg.norm(shift)<=.4:
+        raise ValueError('Held-pair translation must be a finite vector within 0.4 m')
+    names={'left':'target_ring','right':'horseshoe_right'}
+    hands=observation['privileged']['world']['grasp']['hands']
+    if any(not hands[s]['binding'] or hands[s]['binding']['target'][0]!=n for s,n in names.items()):
+        raise ValueError('Relocation requires the ring and right shoe held separately')
+    bodies,q=planner.observed(observation)
+    offsets={s:relative_pose(bodies[n],tcp_pose(observation['robot'][s])) for s,n in names.items()}
+    rows=[]
+    for index,u in enumerate(np.linspace(0,1,int(np.ceil(np.linalg.norm(shift)/.001))+1)):
+        world={n:(p+u*shift,r) for n,(p,r) in bodies.items()};previous=q.copy()
+        if min(float((r.apply(planner.task.placement_vertices[n])+p)[:,2].min()) for n,(p,r) in world.items())<planner.checker.table_height+.00005:
+            raise ValueError(f'Relocation screening reaches table at sample {index}')
+        for side,name in names.items():
+            p,r=world[name];op,orr=offsets[side]
+            q=planner.checker.solve(side,(p+r.apply(op),r*orr),q)
+        checked=planner.checker.check(q,body_poses=world)
+        if not checked['passed'] or np.abs(q-previous).max()>.15:
+            raise ValueError(f'Relocation collision or joint branch change at sample {index}: {checked}')
+        rows.append(dict(poses={s:pose_dict(world[n]) for s,n in names.items()},qpos=q.tolist()))
+    result=dict(passed=True,translation_m=shift.tolist(),samples=rows,observed_state=observation['state'],
+        scope='sampled bimanual IK and native contacts; passive pieces rigid only in planning; execution required')
+    write_json_atomic(planner.directory/'held_pair_translation_plan.json',result)
+    return result

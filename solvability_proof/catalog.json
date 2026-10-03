@@ -1,8 +1,8 @@
 {
   "schema_version": 2,
-  "archived_at_utc": "2026-10-03T06:10:00.819175+00:00",
+  "archived_at_utc": "2026-10-03T14:37:59.476689+00:00",
   "scope": "Accepted finite-instance Task success proofs in the unified Env; original source/config identities retained",
-  "accepted_proofs": 11,
+  "accepted_proofs": 18,
   "tasks": [
     {
       "task": "cast_keyhole",
@@ -60,10 +60,10 @@
     },
     {
       "task": "hedgehog_in_cage",
-      "accepted_proofs": 2,
+      "accepted_proofs": 3,
       "readme": "hedgehog_in_cage/README.md",
       "summary": "hedgehog_in_cage/summary.json",
-      "summary_sha256": "9ba1b37e8a9a56c6ba719678a161cd6597fa8296cd35d0b69b6f3990c708ccfe",
+      "summary_sha256": "2e8c7c1ffe5877d7550a9dd9e18e1f4e2f5fa09540f2145163cd1f5375ebb29b",
       "batches": [
         {
           "batch": "2026-09-30",
@@ -138,10 +138,41 @@
             "rgb": false,
             "video": false
           }
+        },
+        {
+          "batch": "2026-10-03_hard_s5_post",
+          "accepted_proofs": 1,
+          "readme": "hedgehog_in_cage/2026-10-03_hard_s5_post/README.md",
+          "summary": "hedgehog_in_cage/2026-10-03_hard_s5_post/summary.json",
+          "manifest": "hedgehog_in_cage/2026-10-03_hard_s5_post/archive_manifest.json",
+          "validation": "hedgehog_in_cage/2026-10-03_hard_s5_post/archive_validation.json",
+          "manifest_sha256": "b1623fbed861d4f0634de1ffa342fa8ea985346d143c563c03ac851c778d6bab",
+          "evidence_files": 5849,
+          "evidence_bytes": 1109491318,
+          "scope": {
+            "seed": 0,
+            "robot": "panda_robotiq",
+            "action": "JOINT_ABS",
+            "backend": "cpu",
+            "precision": "64",
+            "physics_dt_s": 0.025,
+            "solver_substeps": 40,
+            "control_decimation": 1,
+            "task_checks_hz": 40,
+            "integration_substep_s": 0.000625,
+            "assistance": "contact_weld_v1",
+            "initial_geometry_policy": "strict",
+            "use_contact_island": false,
+            "history_storage": "segment",
+            "torch_threads": 4,
+            "rgb": false,
+            "video": false
+          }
         }
       ],
-      "evidence_files": 22183,
-      "evidence_bytes": 4888981603
+      "evidence_files": 28032,
+      "evidence_bytes": 5998472921,
+      "scope_review": "hedgehog_in_cage/2026-10-03_scope_review/summary.json"
     },
     {
       "task": "interlocked_claws",
@@ -176,6 +207,148 @@
         "original_hard_qualified": false,
         "default_task_package_timing_qualified": false,
         "multiple_seeds_qualified": false
+      }
+    },
+    {
+      "task": "horseshoe_ring",
+      "accepted_proofs": 3,
+      "readme": "horseshoe_ring/README.md",
+      "summary": "horseshoe_ring/summary.json",
+      "summary_sha256": "9887fe923760c480454a1db0f3bdacac8bda52031b3cae6dfd9b4638d8be0e93",
+      "batches": [
+        {
+          "batch": "2026-10-03_easy",
+          "accepted_proofs": 1,
+          "readme": "horseshoe_ring/2026-10-03_easy/README.md",
+          "summary": "horseshoe_ring/2026-10-03_easy/summary.json",
+          "manifest": "horseshoe_ring/2026-10-03_easy/archive_manifest.json",
+          "validation": "horseshoe_ring/2026-10-03_easy/archive_validation.json",
+          "manifest_sha256": "b96d4b149b31987d60ecf46bd4616dd2c531c06f6c75388fdc21d98cfcd8e92e",
+          "evidence_files": 6651,
+          "evidence_bytes": 1928069811,
+          "scope": {
+            "seed": 0,
+            "robot": "aloha",
+            "action": "JOINT_ABS",
+            "backend": "cpu",
+            "precision": "64",
+            "physics_dt_s": 0.025,
+            "solver_substeps": 40,
+            "control_decimation": 1,
+            "task_checks_hz": 40,
+            "integration_substep_s": 0.000625,
+            "assistance": "contact_weld_v1",
+            "rgb": false,
+            "video": false,
+            "rigid_options": {
+              "use_contact_island": false
+            }
+          },
+          "recordings": [
+            {
+              "mode": "saved_rigid_state_rerender",
+              "physics_integrated": false,
+              "archive_manifest": "runs/demo_metadata/horseshoe_ring/2026-10-03_waist_mild_v3_from_home/archive_manifest.json",
+              "archive_manifest_sha256": "73efc785eb8c2f58b36dc3cf1326afc269c812b6c80466b94af538b97489f8a5",
+              "cameras": [
+                "cam_high",
+                "cam_left_wrist",
+                "cam_low",
+                "cam_right_wrist"
+              ],
+              "source_simulation_time_s": 275.2,
+              "status": "passed"
+            }
+          ]
+        },
+        {
+          "batch": "2026-10-03_medium",
+          "accepted_proofs": 1,
+          "readme": "horseshoe_ring/2026-10-03_medium/README.md",
+          "summary": "horseshoe_ring/2026-10-03_medium/summary.json",
+          "manifest": "horseshoe_ring/2026-10-03_medium/archive_manifest.json",
+          "validation": "horseshoe_ring/2026-10-03_medium/archive_validation.json",
+          "manifest_sha256": "2f78263aa1f7303cfb302c38cbc584d3f3f292e0e5f3df0695ed2562a4ac5dad",
+          "evidence_files": 6798,
+          "evidence_bytes": 1889051393,
+          "scope": {
+            "seed": 0,
+            "robot": "aloha",
+            "action": "JOINT_ABS",
+            "backend": "cpu",
+            "precision": "64",
+            "physics_dt_s": 0.025,
+            "solver_substeps": 40,
+            "control_decimation": 1,
+            "task_checks_hz": 40,
+            "integration_substep_s": 0.000625,
+            "assistance": "contact_weld_v1",
+            "rgb": false,
+            "video": false,
+            "rigid_options": {
+              "use_contact_island": false
+            }
+          }
+        },
+        {
+          "batch": "2026-10-03_hard",
+          "accepted_proofs": 1,
+          "readme": "horseshoe_ring/2026-10-03_hard/README.md",
+          "summary": "horseshoe_ring/2026-10-03_hard/summary.json",
+          "manifest": "horseshoe_ring/2026-10-03_hard/archive_manifest.json",
+          "validation": "horseshoe_ring/2026-10-03_hard/archive_validation.json",
+          "manifest_sha256": "948dcd5486bf8ceb3e4893cb198ee5fae9031b169ec01afa251aab4ae9ac56b3",
+          "evidence_files": 7465,
+          "evidence_bytes": 1824873834,
+          "scope": {
+            "seed": 0,
+            "robot": "aloha",
+            "action": "JOINT_ABS",
+            "backend": "cpu",
+            "precision": "64",
+            "physics_dt_s": 0.025,
+            "solver_substeps": 40,
+            "control_decimation": 1,
+            "task_checks_hz": 40,
+            "integration_substep_s": 0.000625,
+            "assistance": "contact_weld_v1",
+            "rgb": false,
+            "video": false,
+            "rigid_options": {
+              "use_contact_island": false
+            }
+          }
+        }
+      ],
+      "evidence_files": 20914,
+      "evidence_bytes": 5641995038
+    },
+    {
+      "task": "fiber_bundling",
+      "batch": "2026-10-03",
+      "accepted_proofs": 3,
+      "readme": "fiber_bundling/README.md",
+      "summary": "fiber_bundling/2026-10-03/summary.json",
+      "manifest": "fiber_bundling/2026-10-03/archive_manifest.json",
+      "validation": "fiber_bundling/2026-10-03/archive_validation.json",
+      "manifest_sha256": "e5a5ee916a8fa7a997b192c94e2229b180a010d6a92a3a1e89aff6d700b06975",
+      "evidence_files": 3527,
+      "evidence_bytes": 15460661221,
+      "scope": {
+        "seed": 0,
+        "robot": "panda_robotiq",
+        "action": "JOINT_ABS",
+        "backend": "cpu",
+        "precision": "64",
+        "physics_dt_s": 0.025,
+        "solver_substeps": 40,
+        "control_decimation": 1,
+        "task_checks_hz": 40,
+        "integration_substep_s": 0.000625,
+        "assistance": "contact_weld_v1",
+        "grasp_link": "trunk_04",
+        "rgb": false,
+        "video": false
       }
     }
   ],

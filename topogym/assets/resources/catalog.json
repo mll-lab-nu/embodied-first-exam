@@ -286,6 +286,18 @@
       "sha256": "04dfc00ade3927f8faab84a2770604f39a006a2597c5ce937da7c1206525b590",
       "source": "assets/tasks/hedgehog_in_cage/seed_families_v2/gen_keyhole/prototype.json"
     },
+    "variations/hedgehog_in_cage/gen_keyhole_s5_post/assets.zip": {
+      "license": null,
+      "path": "variations/hedgehog_in_cage/gen_keyhole_s5_post/assets.zip",
+      "sha256": "d3cb83d2663e1dd2488b8b40cb802d847dc4b334d7a7936c6a24647d159e4267",
+      "source": "gen_keyhole/assets.zip plus approved model_change.json in this bundle"
+    },
+    "variations/hedgehog_in_cage/gen_keyhole_s5_post/prototype.json": {
+      "license": null,
+      "path": "variations/hedgehog_in_cage/gen_keyhole_s5_post/prototype.json",
+      "sha256": "f8ef1e492e1364dd8929f4478b01ce66b814c78aaa5080327bc616b8ef2db7b3",
+      "source": "User-approved S5 support and high initial pose, 2026-10-03"
+    },
     "variations/hedgehog_in_cage/helical_guide/assets.zip": {
       "license": null,
       "path": "variations/hedgehog_in_cage/helical_guide/assets.zip",
@@ -409,8 +421,8 @@
     "variations/horseshoe_ring/u_mild.json": {
       "license": null,
       "path": "variations/horseshoe_ring/u_mild.json",
-      "sha256": "971ed1077902ba9be9baac23ebd4cf12fd14e67ed5028e17d5b411668de33181",
-      "source": "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/references/u_mild/body_poses.json"
+      "sha256": "4e4d5bfe15e830af54041f0428c226e261722a589d717158f336810f46ce6f82",
+      "source": "runs/oracle_dev/horseshoe_20261003/medium_phase0_cached_trial"
     },
     "variations/horseshoe_ring/u_mild_chain17p0.json": {
       "license": null,
@@ -427,14 +439,14 @@
     "variations/horseshoe_ring/u_mild_settled_poses.json": {
       "license": null,
       "path": "variations/horseshoe_ring/u_mild_settled_poses.json",
-      "sha256": "ec99360b860adc2e819c431bba8e901c3f4805a1549dd0a5b25d43fe3afa1157",
-      "source": "runs/test_results/release_scene_fixes_20260929/horseshoe_settle/u_mild_settled_poses.json"
+      "sha256": "76261b9bfba74b71dcdaa3ae5c47cef48c5ebf6dc721d7c62304acdebfc0ab29",
+      "source": "runs/oracle_dev/horseshoe_20261003/medium_phase0_cached_trial"
     },
     "variations/horseshoe_ring/waist_ellipse.json": {
       "license": null,
       "path": "variations/horseshoe_ring/waist_ellipse.json",
-      "sha256": "bea91e70c48d63064150ec0e93b7c2538f2308b062e80f8ea9924d9d819b3135",
-      "source": "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/references/waist_ellipse/body_poses.json"
+      "sha256": "ee27f30b89fb847cb660f1ec0c38897ff7839af5006ece33a39281bc4aa4daea",
+      "source": "runs/oracle_dev/horseshoe_20261003/hard_circle83_v8_trial"
     },
     "variations/horseshoe_ring/waist_ellipse_chain17p0.json": {
       "license": null,
@@ -451,20 +463,20 @@
     "variations/horseshoe_ring/waist_ellipse_settled_poses.json": {
       "license": null,
       "path": "variations/horseshoe_ring/waist_ellipse_settled_poses.json",
-      "sha256": "4f03b4f03611925ac1f9486c728a27703f882bf17c8ea54413babf2abe1f499d",
-      "source": "runs/test_results/release_scene_fixes_20260929/horseshoe_settle/waist_ellipse_settled_poses.json"
+      "sha256": "02f2bfe44604306e7221aad5fa174dfbc0ae090c2eefab567346e5d74a1429ae",
+      "source": "runs/oracle_dev/horseshoe_20261003/hard_circle83_v8_trial"
     },
     "variations/horseshoe_ring/waist_mild.json": {
       "license": null,
       "path": "variations/horseshoe_ring/waist_mild.json",
-      "sha256": "e535f35ffb4f0a2320a6bf25ad5b2983573da9ddbbeb4abe1e55ac3a2f76c7da",
-      "source": "runs/environment-solvability/horseshoe_ring/coupled_shape_variants_v1/references/waist_mild/body_poses.json"
+      "sha256": "c018a2addd3136cdf446a8e48befe238447d36479d2fdfd0a2f51090963e19f1",
+      "source": "runs/test_results/horseshoe_approved_20261003/from_home_09/source_snapshot/topogym/assets/resources/variations/horseshoe_ring/waist_mild.json"
     },
     "variations/horseshoe_ring/waist_mild_settled_poses.json": {
       "license": null,
       "path": "variations/horseshoe_ring/waist_mild_settled_poses.json",
-      "sha256": "032da9fe87a666395d45a9f73a35828da0063ee8fe7416dfd0af58fd44042ae2",
-      "source": "runs/test_results/release_scene_fixes_20260929/horseshoe_settle/waist_mild_settled_poses.json"
+      "sha256": "7e7bdc075898d3c34ba915f63a7834d0affe5297906526b69a8c4acf5f939636",
+      "source": "runs/test_results/horseshoe_approved_20261003/from_home_09/source_snapshot/topogym/assets/resources/variations/horseshoe_ring/waist_mild_settled_poses.json"
     },
     "variations/lock_picking/families.json": {
       "license": null,

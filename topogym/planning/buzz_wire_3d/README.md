@@ -1,5 +1,37 @@
 # Buzz Wire 3D policy 与实际验收
 
+2026-10-03：原 medium / hard 均已从默认 home 连续完成原生 Task，并通过独立审计。
+Medium 使用用户批准的 `F2_terminal_xy40_20_deck_rest_v1` 布局，hard 布局保持原值。
+两档完整接触记录中工具和机器人触线均为 0，正式运行通过导入拦截确保没有加载 calibration tools。
+生产策略 [compiled.py](compiled.py) 只逐 tick 输出已检查 IK 解对应的关节动作，不恢复仿真状态。
+开发中使用的回溯仅用于寻找候选；成功资格来自另起的一局无回溯执行。
+
+| 变体 | 动作数 / 仿真时长 | 最终位置 / 角度误差 | 动作、源码与审计归档 | 三路 Nyx 视频 |
+| --- | ---: | ---: | --- | --- |
+| medium | 29,544 / 738.600 s | 2.036 mm / 3.466° | [归档](../../../runs/demo_metadata/buzz_wire_3d/2026-10-03_medium_v12_continuous/archive_manifest.json) | [全景](../../../demos/buzz_wire_3d/varaition_medium/agentview/varaition_medium_agentview.mp4) · [斜前](../../../demos/buzz_wire_3d/varaition_medium/front_oblique/varaition_medium_front_oblique.mp4) · [腕部](../../../demos/buzz_wire_3d/varaition_medium/wrist/varaition_medium_wrist.mp4) |
+| hard | 43,568 / 1089.200 s | 4.466 mm / 8.982° | [归档](../../../runs/demo_metadata/buzz_wire_3d/2026-10-03_hard_v12_continuous/archive_manifest.json) | [全景](../../../demos/buzz_wire_3d/varaition_hard/agentview/varaition_hard_agentview.mp4) · [斜前](../../../demos/buzz_wire_3d/varaition_hard/front_oblique/varaition_hard_front_oblique.mp4) · [腕部](../../../demos/buzz_wire_3d/varaition_hard/wrist/varaition_hard_wrist.mp4) |
+
+录像为 RTX 4090 上按全部原始关节状态重渲染，848×480、30 fps；
+完整连杆位姿核对、视频解码、同步与归档副本哈希检查均通过，不增加物理成功次数。
+两档补齐后，原 easy / medium / hard 各自冻结实例的完整成功证据为 **3/3**。
+
+```bash
+BUZZ_VARIANT=medium
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_buzz_wire_policy.py \
+  --variant "$BUZZ_VARIANT" --seed 0 --v12-performance \
+  --compiled-actions "runs/demo_metadata/buzz_wire_3d/2026-10-03_${BUZZ_VARIANT}_v12_continuous/execution/policy_actions.json" \
+  --output "runs/test_results/buzz_${BUZZ_VARIANT}_recheck"
+.venv-gs121-nyx/bin/python -m topogym.planning.buzz_wire_3d.audit \
+  "runs/test_results/buzz_${BUZZ_VARIANT}_recheck"
+```
+
+将 `BUZZ_VARIANT` 改为 `hard` 即可执行另一档；输出目录须尚不存在。
+入口会重新冻结执行源码，并报告与候选物理源码的差异；
+归档内的 `execution/source_snapshot/` 保留本次实际验收的版本。
+上述资格只覆盖冻结 seed 0、CPU64、25 ms / 40 子步 / 单 tick 控制及
+`contact_weld_v1`；`--v12-performance` 从建场启用全局刚体求解和目标触发静止检查。
+其他 seed、纯摩擦抓持及 Harbor 默认时序不继承此次结果。
+
 2026-10-02 新增两档的规划实现 [simplified_policy.py](simplified_policy.py)。
 `SimplifiedBuzzOracle.stages()` 根据每段开始时的实际状态，依次规划默认 home 抓取、换抓、
 完整走线、低位释放和终点摆正。`make_stage_policy()` 将阶段参数转换为普通机器人关节 action；
@@ -29,7 +61,7 @@
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
-下文历史记录覆盖注册的 `buzz_wire_3d_easy` / `medium` / `hard`，默认参数、seed 0。
+下文为截至 2026-09-29 的历史记录，覆盖 `buzz_wire_3d_easy` / `medium` / `hard`，默认参数、seed 0；10 月 3 日补齐的结果见本页开头。
 **关键姿态与历史走线夹持检查 3/3；含终态动作的分段证据 2/3（easy、hard）；连续完整 Task 成功与独立审计仍为 1/3（easy）。**
 最新结果见 [`buzz_three_tier_component_proof_20260929_01`](../../../runs/test_results/buzz_three_tier_component_proof_20260929_01/README.md)。
 Hard 新补的局部转正、释放和静置通过，最终误差 **0.057 mm / 8.146°**，持续满足终态 **5.95 s**。

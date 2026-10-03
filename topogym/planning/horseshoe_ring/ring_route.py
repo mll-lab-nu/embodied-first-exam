@@ -25,6 +25,12 @@ class HeldRingPath:
         self.checker=planner.checker
         self.bodies,self.seed=planner.observed(observation)
         self.passive_contact_names=tuple(passive_contact_names)
+        self.contact_limit_m=getattr(planner,'withdrawal_parameters',{}).get('puzzle_contact_limit_m')
+        if self.contact_limit_m is not None:
+            self.contact_limit_m=float(self.contact_limit_m)
+            native_limit=float(planner.task.terminal_metadata()['contact_penetration']['other_contacts_m'])
+            if not np.isfinite(self.contact_limit_m) or not 0<self.contact_limit_m<=native_limit:
+                raise ValueError('Puzzle planning contact exceeds the native contact limit')
         if any(n not in planner.task.placement_remainder for n in self.passive_contact_names):
             raise ValueError('Only released remainder bodies may be contact-planning participants')
         if self.passive_contact_names:
@@ -46,8 +52,9 @@ class HeldRingPath:
             for obj in objects:obj.setTransform(fcl.Transform(r.as_matrix(),p))
             manager.update()
         self.initial_penetration_m=self.penetration(self.start)
-        if self.initial_penetration_m>.0005:
-            raise ValueError('Ring contact release starts with more than 0.5 mm convex penetration')
+        initial_limit=.0005 if self.contact_limit_m is None else self.contact_limit_m
+        if self.initial_penetration_m>initial_limit:
+            raise ValueError(f'Ring contact starts beyond its {initial_limit:g} m planning tolerance')
 
     def set_ring(self, pose):
         self.bodies['target_ring']=pose
@@ -88,11 +95,13 @@ class HeldRingPath:
                 if name!='target_ring' and name not in self.passive_contact_names)
         escape=self.motion(pose,self.start)<=.003
         if gap<minimum_clearance_m:
-            if not escape:
+            if not escape and self.contact_limit_m is None:
                 self.rejections['ring_obstacle']+=1
                 return dict(passed=False,reason='ring_obstacle',clearance_m=gap)
             depth=self.penetration(pose)
-            if depth>max(.00001,self.initial_penetration_m+1e-6):
+            limit=(max(.00001,self.initial_penetration_m+1e-6)
+                   if self.contact_limit_m is None else self.contact_limit_m)
+            if depth>limit:
                 self.rejections['contact_release_penetration']+=1
                 return dict(passed=False,reason='contact_release_penetration',penetration_m=depth)
         op,orr=self.offset
@@ -106,7 +115,8 @@ class HeldRingPath:
         checked=self.checker.check(q,
             contacts={'left':'target_ring','right':('horseshoe_left','horseshoe_right')})
         self.rejections.update(checked['issues'])
-        result=dict(**checked,qpos=q.tolist(),ring_clearance_m=gap,contact_release_neighbourhood=escape)
+        result=dict(**checked,qpos=q.tolist(),ring_clearance_m=gap,contact_release_neighbourhood=escape,
+                    puzzle_contact_limit_m=self.contact_limit_m)
         if seed is None:self.cache[key]=result
         return result
 
@@ -147,6 +157,13 @@ class HeldRingPath:
         A global search may request a larger checked prefix to start away
         from the contact boundary. Measured short stages use minimal motion.
         """
+        if self.contact_limit_m is not None:
+            # A contact motion does not require an artificial positive gap
+            # before it can start. Each proposed pose still checks penetration,
+            # and execution checks the actual passive response at every tick.
+            checked=self.check(self.start)
+            if not checked['passed']:raise ValueError('Measured contact start failed native planning checks')
+            return [self.start]
         path=[self.start];rows=[]
         def signed_clearance(pose):
             self.set_ring(pose);ring=self.checker.bodies['target_ring'][1]

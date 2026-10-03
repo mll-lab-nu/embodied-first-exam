@@ -39,6 +39,49 @@ def exercise(window, *, intermittent):
 
 
 class TrackingWatchdogTests(unittest.TestCase):
+    def test_compliant_pose_can_use_an_explicit_bounded_tolerance(self):
+        def run(tolerance):
+            policy=HorseshoePolicy({'left':{}});policy.dt=.025
+            policy.held_entities={'left':'horseshoe_left'};policy.grip={'left':.018}
+            policy.bias={'left':np.zeros(3)};policy.angle_bias={'left':np.zeros(3)}
+            policy.offsets={'left':(np.zeros(3),Rotation.identity())}
+            program=policy.follow_bodies({'left':(np.zeros(3),Rotation.identity())},1.,'compliant',
+                tracking_m=tolerance,fixed_sides=('left',))
+            for tick in range(601):
+                policy.obs={'state':{'sim_time_s':tick*.025},'privileged':{'world':{'bodies':{
+                    'horseshoe_left':{'position_m':[.0026,0.,0.],'quaternion_wxyz':[1.,0.,0.,0.]}}}}}
+                try:next(program)
+                except StopIteration:return 'complete'
+                except RuntimeError as error:
+                    if 'Object tracking stalled' not in str(error):raise
+                    return 'stalled'
+            raise AssertionError('Unbounded tracking')
+        self.assertEqual(run(.002),'stalled')
+        self.assertEqual(run(.003),'complete')
+
+    def test_pickup_can_finish_slow_convergence_without_relaxing_accuracy(self):
+        def run(timeout, *, stationary=False):
+            policy=HorseshoePolicy({'left':{}})
+            policy.dt=.025;policy.grip={'left':.0165}
+            program=policy.move({'left':(np.zeros(3),Rotation.identity())},1.,'test',
+                                tracking_timeout_s=timeout)
+            for tick in range(601):
+                now=tick*policy.dt
+                error=.00055 if stationary else max(.0004,.003*np.exp(-.22*now))
+                policy.obs={'state':{'sim_time_s':now},'robot':{'left':{
+                    'tcp_position_world_m':[error,0.,0.],'tcp_orientation_wxyz':[1.,0.,0.,0.]}}}
+                try:next(program)
+                except StopIteration:return 'complete',error
+                except RuntimeError as failure:
+                    if 'TCP tracking failed' not in str(failure):raise
+                    return 'timeout',error
+            raise AssertionError('Unbounded TCP feedback')
+        self.assertEqual(run(5.)[0],'timeout')
+        status,error=run(10.)
+        self.assertEqual(status,'complete')
+        self.assertLess(error,.0005)
+        self.assertEqual(run(10.,stationary=True)[0],'timeout')
+
     def test_intermittent_progress_gets_the_remaining_stage_time(self):
         self.assertEqual(exercise(10.,intermittent=True),('complete',40.))
 

@@ -12,9 +12,54 @@ def phase_parts(phase):
     return (str(phase).split("/")[0].split(":") + ["", ""])[:3]
 
 
-def save_samples(path, samples, *, kin, track, holds, identity, plan, assignment, options):
+def validate_hold_timeline(samples, holds, assignment):
+    """A cached complete relay must acquire exactly the requested holds.
+
+    This also allows a supported regrasp cache to be rechecked for another
+    mesh/material candidate, without silently inserting or removing a keeper.
+    """
+    ordered = sorted(holds, key=lambda h: (h["sigma_start"], h["role"] == "pusher"))
+    pinches = [s for s in samples if phase_parts(s["phase"])[0] == "pinch"]
+    if len(pinches) != len(ordered):
+        raise ValueError("Cached grasp timeline differs from the target relay")
+    for sample, hold in zip(pinches, ordered):
+        _, hand, ring = phase_parts(sample["phase"])
+        if (hand != hold["hand"] or ring != hold["ring"] or sample["side"] != assignment[hand]
+                or abs(float(sample["sigma"])-hold["sigma_start"]) > 1e-8
+                or abs(float(sample["station"][3])-hold["station_m"]) > 1e-8):
+            raise ValueError("Cached grasp timeline differs from the target relay")
+
+
+def leading_holds(samples, metadata, holds, assignment):
+    """Select exact complete leading holds for a newly certified shorter relay.
+
+    This does not grant qualification: the caller must certify the entire new
+    target and recheck every selected robot sample. Partial source artifacts
+    remain ineligible. No endpoint is invented or interpolated here.
+    """
+    if not metadata.get("complete_relay", True):
+        raise ValueError("Leading-hold reuse requires a complete source relay")
+    ordered = sorted(holds, key=lambda h: (h["sigma_start"], h["role"] == "pusher"))
+    final = ordered[-1]
+    endpoints = [i for i, s in enumerate(samples)
+        if phase_parts(s["phase"]) == ["hold", final["hand"], final["ring"]]
+        and abs(float(s["sigma"])-final["sigma_end"]) < 1e-8]
+    if not endpoints:
+        raise ValueError("Cached path has no exact final held endpoint")
+    prefix = samples[:endpoints[-1]+1]
+    validate_hold_timeline(prefix, holds, assignment)
+    for hold in ordered:
+        rows = [s for s in prefix if phase_parts(s["phase"]) == ["hold", hold["hand"], hold["ring"]]]
+        # A zero-travel keeper may consist only of its pinch.
+        end = max((float(s["sigma"]) for s in rows), default=hold["sigma_start"])
+        if abs(end-hold["sigma_end"]) > 1e-8:
+            raise ValueError("Cached hold endpoint differs from the target relay")
+    return prefix
+
+
+def save_samples(path, samples, *, kin, track, holds, identity, plan, assignment, options, complete_relay=True):
     tcp = {side: [] for side in ("left", "right")}
-    stations, sides = [], []
+    stations, tangents, sides = [], [], []
     for sample in samples:
         q = np.asarray(sample["q"], float)
         for side in tcp:
@@ -27,14 +72,19 @@ def save_samples(path, samples, *, kin, track, holds, identity, plan, assignment
         hold = max(candidates, key=lambda h: h["sigma_start"], default=None)
         stations.append(np.r_[track.rope([hold["station_m"]], sample["sigma"])[0], hold["station_m"]]
                         if hold and kind in ("transit", "approach", "pinch", "hold") else np.full(4, np.nan))
+        tangents.append(track.tangent(np.array([hold["station_m"]+sample["sigma"]]))[0]
+                        if hold and kind in ("transit", "approach", "pinch", "hold") else np.full(3, np.nan))
     metadata = dict(schema_version=1, identity=identity, plan=plan, assignment=assignment, options=options,
+                    complete_relay=bool(complete_relay),
                     home_qpos=kin.home.tolist(), robot_ik_verified=True, robot_execution_verified=False,
-                    task_success=False, scope="sampled IK and collision checks; no physical execution")
+                    task_success=False, scope=("complete relay" if complete_relay else "partial relay probe")
+                    + ": sampled IK and collision checks; no physical execution")
     from topogym.utils.io import to_jsonable
     np.savez_compressed(path, sigma=np.array([s["sigma"] for s in samples]),
                         qpos=np.array([s["q"] for s in samples]), phase=np.array([s["phase"] for s in samples]),
                         side=np.array(sides), tcp_left=np.array(tcp["left"]), tcp_right=np.array(tcp["right"]),
-                        station=np.array(stations), metadata_json=json.dumps(to_jsonable(metadata), allow_nan=False))
+                        station=np.array(stations), station_tangent=np.array(tangents),
+                        metadata_json=json.dumps(to_jsonable(metadata), allow_nan=False))
     load_plan(path)  # Validate the serialization contract before advertising it.
 
 
@@ -56,6 +106,8 @@ def load_plan(path, *, variant=None, seed=None):
         if set(meta["assignment"]) != {"A", "B"} or set(meta["assignment"].values()) != {"left", "right"}:
             raise ValueError("A and B must map to distinct arms")
         arrays = {key: np.array(data[key]) for key in ("sigma", "phase", "side", "qpos", "tcp_left", "tcp_right", "station")}
+        if "station_tangent" in data:
+            arrays["station_tangent"] = np.array(data["station_tangent"])
     n = len(arrays["sigma"])
     if not n or any(len(a) != n for a in arrays.values()):
         raise ValueError("Relay arrays must have the same nonzero sample count")
@@ -66,6 +118,13 @@ def load_plan(path, *, variant=None, seed=None):
     for key in ("sigma", "qpos", "tcp_left", "tcp_right"):
         if not np.isfinite(arrays[key]).all():
             raise ValueError(f"Non-finite {key}")
+    if "station_tangent" in arrays:
+        t = arrays["station_tangent"]
+        present = np.isfinite(arrays["station"]).all(axis=1)
+        if (t.shape != (n, 3) or not np.isfinite(t[present]).all()
+                or not np.allclose(np.linalg.norm(t[present], axis=1), 1., atol=1e-6)
+                or not np.isnan(t[~present]).all()):
+            raise ValueError("Material tangents must be unit vectors at the planned stations")
     if np.any(np.diff(arrays["sigma"]) < -1e-9) or arrays["sigma"][0] < 0:
         raise ValueError("Relay travel must be nonnegative and monotone")
     for side in ("left", "right"):
@@ -75,12 +134,22 @@ def load_plan(path, *, variant=None, seed=None):
         if np.any(tcp[:, 7] < 0) or np.any(tcp[:, 7] > .037):
             raise ValueError("Invalid ALOHA gripper opening")
     rows = []
+    previous_q = np.asarray(meta["home_qpos"], float)
+    if previous_q.shape != (16,) or not np.isfinite(previous_q).all():
+        raise ValueError("Relay home must contain 16 finite ALOHA coordinates")
     for i in range(n):
         kind, hand, _ = phase_parts(arrays["phase"][i])
         if kind not in {"transit", "approach", "pinch", "hold", "retreat", "park"}:
             raise ValueError(f"Unknown relay phase: {arrays['phase'][i]}")
         if hand not in meta["assignment"] or arrays["side"][i] != meta["assignment"][hand]:
             raise ValueError("Relay phase/side mismatch")
+        # ALOHA qpos is [left arm(6), fingers(2), right arm(6), fingers(2)].
+        # A serialized relay sample moves exactly its named arm, including
+        # fingers; otherwise policy replay and the checked scene disagree.
+        inactive = slice(0, 8) if arrays["side"][i] == "right" else slice(8, 16)
+        if not np.allclose(arrays["qpos"][i, inactive], previous_q[inactive], atol=1e-8, rtol=0):
+            raise ValueError(f"Relay inactive arm jumps at sample {i} ({arrays['phase'][i]}); regenerate the plan")
+        previous_q = arrays["qpos"][i]
         station = arrays["station"][i]
         if kind in {"transit", "approach", "pinch", "hold"}:
             if not np.isfinite(station).all() or not 0 <= station[3] <= identity["rope_length_m"]:

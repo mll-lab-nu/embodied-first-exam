@@ -40,7 +40,14 @@ def scene_options(parameters):
         enable_rigid_rigid_contact=True,
         enable_rigid_ground_contact=True,
     )
-    return gs.options.IPCCouplerOptions(**(defaults | dict(parameters)))
+    parameters = dict(parameters)
+    # A scene-scoped positive link filter is consumed by the robot material,
+    # rather than passed as an unknown native solver option.
+    links = parameters.pop("robot_collision_links", None)
+    if links is not None and (not isinstance(links, (list, tuple)) or not links
+                              or any(not isinstance(name, str) or not name for name in links)):
+        raise ValueError("robot_collision_links must be a nonempty list of link names")
+    return gs.options.IPCCouplerOptions(**(defaults | parameters))
 
 
 @dataclass(frozen=True)
@@ -213,6 +220,14 @@ def install_for_scene(scene, *, initial_robot_positions=None):
                     a in native_dynamic or b in native_dynamic for a, b in names
                 ),
             )
+            robot = next((e for e in self.rigid_solver.entities if e.name == "robot"), None)
+            if robot is not None and robot.material.coup_collision_links is not None:
+                selected = list(robot.material.coup_collision_links)
+                missing = set(selected)-{link.name for link in robot.links}
+                if missing:
+                    raise ValueError(f"IPC robot collision links not found: {sorted(missing)}")
+                self.contact_ownership["robot_ipc_collision_links"] = selected
+                self.contact_ownership["robot_ipc_filter_scope"] = "all_ipc_contacts"
 
         def _init_ipc(self):
             super()._init_ipc()
@@ -392,7 +407,8 @@ def install_for_scene(scene, *, initial_robot_positions=None):
                 mesh = uipc.geometry.tetmesh(
                     to_numpy(entity.init_positions), entity.elems
                 )
-                rest = uipc.geometry.tetmesh(entity.material_coordinates, entity.elems)
+                rest = uipc.geometry.tetmesh(
+                    getattr(entity, "elastic_reference_coordinates", entity.material_coordinates), entity.elems)
                 contact = self._ipc_contact_tabular.create(f"fem_contact_{i}")
                 self._ipc_fem_contacts[entity] = contact
                 moduli = ElasticModuli.youngs_poisson(

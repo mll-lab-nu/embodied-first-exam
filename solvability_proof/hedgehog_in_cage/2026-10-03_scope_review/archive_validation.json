@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "file_count": 2365,
+  "archive_manifest_sha256": "1eff24ee474c13a0b8312a15aa195631977a9891466c283fcb07a6c54f39d80b",
+  "summary_sha256": "dd8b6feb19405c3375ba79d0cf03786768d608282b9bb53504d76e815991c74c",
+  "source_manifest_verified": true,
+  "native_evidence_hash_matches": true,
+  "original_goal_stable_time_s": 1.999999999999997
+}

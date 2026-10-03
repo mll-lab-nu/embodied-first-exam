@@ -1,8 +1,209 @@
 # 绳穿环：五档场景
 
-## easy / medium / hard 的 Wang oracle 整合（2026-10-03）
+## 三变体完成目标：模型与闭环接力开发（2026-10-03，已完成）
 
-已按提供的 Wang 源码接入三档物体路径、接力 IK 和 `EE_ABS` 回放策略。
+easy／medium／hard 均已从 home 经统一 Env／SegmentRunner 完成原生任务，视频按本轮范围暂不制作。
+本轮证据位于 `runs/test_results/rope_threading_goal_20261003/`，汇总见该目录 `goal_completion.json`。
+
+| 变体 | 原生结果 | 仿真时长 / 完整 tick | 证据 |
+| --- | --- | --- | --- |
+| easy | `task_success`，`R1− R2+` | 49.76 s / 1244 | [实测报告](../../../topogym/planning/rope_threading/reference_relays/easy_evidence.json) |
+| medium | `task_success`，`R1− R2+ R3+` | 74.68 s / 1867 | [实测报告](../../../topogym/planning/rope_threading/reference_relays/medium_evidence.json) |
+| hard | `task_success`，`R1− R2+ R3+` | 74.92 s / 1873 | [实测报告](../../../topogym/planning/rope_threading/reference_relays/hard_evidence.json) |
+
+三轮成功的 `from_default_home`、`robot_execution_verified`、`plan_complete`、
+`physics_tick_complete`、`control_step_complete`、`evidence_complete` 均为 true，原生停稳持续 0.52 s。
+这些是显式加速开发配置下的成功；报告保留 `qualification=unqualified`，未执行默认模型的
+物理精度、收敛性或视频验收。打包参考与单命令执行见 [oracle 入口](../../../topogym/planning/rope_threading/README.md)。
+Hard 的 489 个校准／重算路点另行开启整臂环架检查复核，未检出接触；该离线采样复核
+不改变当前候选仅让机器人手指参与 IPC 环架接触的物理条件。
+Medium 同样检查 489 个路点，3 点有环架重叠，最大估计 2.794 mm，均未超过 3 mm 额度；
+该估计来自 FCL 几何检查，不是接触力测量或连续路径证书。
+
+Agent 执行侧审计（2026-10-03）：仓库现有 easy／medium／hard 的 standard、privileged 共六个
+Harbor 任务包，均为 `task_parameters={}`、`grasp_assist.model=none`，并加载旧的
+`instance_assets/ipc_state/manifest.json`。它们没有同步到本轮成功 oracle 的模型、接触范围与抓持辅助；
+不能把页首成功直接当作这六个冻结实例的可解证明。逐包配置与哈希见
+[`agent_constraints_audit_20261003.json`](../../../runs/test_results/rope_threading_goal_20261003/agent_constraints_audit_20261003.json)。
+
+- oracle 的固定回放分支、直线归位、FCL 规划间隙、名义材料站点偏差和丢抓即停，均不是
+  普通 agent 关节动作的必经检查。agent 可自行换手、绕行、恢复抓取；Task 不规定 oracle 动作顺序。
+- 原生 Rope Task 的孔内余量、穿环顺序和停稳是最终成功条件；中途不满足不会立即判失败。
+  该 Task 没有“触碰环架即失败”规则，原生体积／IPC 有效性失败仍终止。
+- 当前 standard 的只读 `/kinematics` 默认容差为 2 mm／0.02 rad，可由请求调整，不做场景碰撞检查。
+  `ee_pose` 提交接受至 2 cm／0.35 rad；失败手臂保留原关节目标并返回逐行失败信息，
+  夹爪及另一手仍可能执行。不能把 oracle 的 0.1 mm／0.001 rad 精度当作该入口的限制。
+- 直接使用原生 Env 的 `EE_ABS/EE_DELTA` 才会走 0.1 mm／0.001 rad 的 `solve_checked` 默认门槛。
+  不可达输入以 `ValueError` 拒绝且保持 episode 可用；这条接口适合增加明确可配置的容差。
+- 共享 soft grasp 的全物体最大边长比、单 tick 跟随误差解除约束、`lost` 后需先打开才能重新抓取，
+  仅在启用辅助抓持后适用。现有六包没有启用它；后续对齐 oracle 时应同时提供相同辅助条件，
+  再评估局部材料健康检查、短时恢复窗口与重新抓取机制。
+
+优先统一 agent／oracle 的场景、抓持、孔径检查和停稳条件，并同步生成的任务说明；
+随后再增加抓持恢复与原生 EE 容差选项。现有 HTTP EE 的 2 cm／20° 额度不建议继续整体扩大。
+本节为源码与冻结配置审计，未新增 agent 物理执行证据。
+
+以下按版本保留试验过程；“尚未成功”等阶段性结论只描述对应旧版本，最终结果以页首表格为准。
+
+新增显式 Task 候选参数 `rope_mesh`、`rope_material`、`rope_reference_shape`、
+`robot_riser_height_m`，通过 object witness → IK → runner 传递并绑定实例及资产身份。
+默认值与旧任务身份保留。`rope_reference_shape=initial` 令初始 U 形成为弹性无应力形状；
+不可变材料坐标仍为原直绳坐标，不改变材料跟踪、抓持站点或穿环判断。
+IPC 读取独立的 `elastic_reference_coordinates`，未提供的体积资产继续使用原参考坐标。
+
+- v1：细网格间距 5.5 mm、12 边，4,939 顶点／23,008 四面体，原细网格为
+  33,070／141,247；E=5 MPa、底座升高 30 mm。物体路径通过，第一段 IK 未通过，未执行物理。
+- v2：保留原底座，使用上述较粗 TetGen 网格和初始 U 形无预应力参考。easy 完整 523 点
+  重新通过 IK／碰撞检查。4090 实测初始抓取误差约 0.8 mm／1.1°，在约 16 s 时原生
+  `crossing_sequence` 已为 `R1−`，厚度通过、无歧义；完整接力仍在验证。
+- v3：在 v2 基础上整体向左平移 50 mm；hard 对象路径通过，材料方向约束下的 R2 送绳
+  IK 仍未通过，未执行物理。
+- v4：显式 `structured_baseline` 网格（11 mm、8 边）及密度 65 kg/m³ 的开发候选。
+  easy 原 523 点复验通过；增加辅助抓持后的完整 622 点也通过。
+  粗网格、低密度、放宽求解容差或更大步长均需按各自运行报告理解，不继承默认物理资格。
+
+`--support-regrasps --support-separation .2` 在换抓前增加另一只手的静止抓持，顺序为
+辅助手抓住、原手释放并换抓、辅助手释放；10 cm 的候选支点碰到 R1，20 cm 候选通过。
+`--recover-wrist-branch` 尝试保持抓取点及 TCP 姿态的小幅变化来切换腕部 IK 分支，仍检查
+关节插值和碰撞；该分支恢复候选尚在验证。`--settle-seconds` 可保留最后抓持更久以等待
+原生停稳，不修改成功判据。47 项 oracle 合同检查通过，不能替代原生物理成功。
+
+后续实测已明确：v2 能完成 R1 穿环和左手接绳；无人抓持的换抓会让绳子回弹、失去 R1。
+v4 两次运行在第一段推进中因原生材料跟踪误差超过 1 cm 失去抓持，暂不继续采用该网格。
+v2 辅助抓持方案在约 21.24 s 保持 R1 与左手抓持，但辅助站点相对名义模型偏移 14.56 cm，
+超过反馈门槛而停止。新 `--measured-keeper` 使用独立 CPU 机器人场景重选姿态，真实失败状态
+下 across 45° 的接近路径通过。但 `easy_physics_measured_keeper` 实测中，右臂在接近时
+把绳段推低约 25 cm，最终辅助抓持超时；静态可达不能代替动态抓取。
+
+v10 加入显式 `rope_robot_contact=fingers`，只让四个手指链接参与机器人的 IPC 接触。
+核对底层 `coup_collision_links` 后明确：过滤同时作用于 IPC 环架，并非仅对软绳；
+绳／环、手指／环、机器人自碰撞及机器人／台面刚性接触保留。v14 起规划环架检查
+采用相同链接集合，避免对不参与原生接触的手臂额外拒绝；台面、自碰撞、双臂和底座
+检查仍覆盖整臂。原生 IPC 状态记录实际启用链接；默认 Task 仍使用全机器人接触。
+`easy_physics_v10_fingers` 使用 40 ms／1 子步、v12 容差倍率 3、E=5 MPa、抓持强度 1000、
+材料边长比门槛 2、跟随误差门槛 25 mm、挤压门槛 6 mm，已复现 R1 与左手接绳，继续验证换抓。
+这些是显式开发条件，不能转移成功标签给默认任务。
+
+hard v9 调整 R2 位置／朝向、R3 前移 6 cm 并换侧安装支架，保持环数量、孔径和原生有向
+目标 `R1− R2+ R3+`。修复了提前把上一持绳手冻结在交接点进行全段检查的过度限制；
+按接住后撤手的实际顺序检查后，通过前六段。最后一次接绳另有 IK 限制，因此缩短至
+最后送入 5 cm 后保留抓持，完整 632 点通过。medium 在自身场景复验时，将间距从 5–10 mm
+放宽到 0.5 mm 后，同一 632 点轨迹通过。easy 保留 6 cm 的最后送绳，精确截取完整缓存的
+前四段并重新认证对象路径和机器人样本，已通过；不会用局部缓存冒充完整目标。
+
+用户进一步授权接受轻度接触／挤压后，规划增加 `--max-penetration-mm`，显式记录 FCL
+估计接触深度，原生物理仍处理真实接触。44 项 oracle、16 项 runner、16 项 calibration grasp 合同检查通过。三个变体尚无完整原生成功。
+v10 easy 在辅助抓取处再次超时；诊断中双指近接与局部材料候选均满足，但重力向上的
+`exposed_patch` 排除了竖直绳段的侧抓。保存状态的离线复核显示，547 个邻近材料中心
+没有一个通过这项遮挡检查。新 `--allow-covered-grasp` 显式关闭该 target 的遮挡要求，
+保留双指表面近接、材料归属及抓后健康检查，其他任务默认不变。
+新 `--normalize-keeper` 在辅助抓稳后把下垂绳身抬回参考位置／姿态，再允许原持绳手释放；
+真实状态的 87 点路径已通过静态复验，easy/hard 的 v11 从 home 实测均完成辅助抓持、
+抬正和原手释放；分别在 32.84／33.32 s 因 R2 换抓站点偏差 11.09／9.50 cm 超过
+8 cm policy 上限而停止，IPC 有效、仍有一手保持抓持。
+`--measured-regrasps` 将同一实测规划与抓后归位用于后续接力抓取；easy 保存现场的
+70 点换抓／归位路径已通过静态预检。v12 三档对象证书与 IK 复验通过；easy／medium
+4090 实测分别到 40.80／41.16 s，均完成 R2 送绳手的新抓取及归位，R1 保持、IPC 有效。
+随后撤手校准输入中的 NaN 材料占位符触发严格 JSON 序列化错误，两轮完整留证但未成功。
+修复后撤手只传递所需姿态字段，异常原因也写入 policy tracking。
+另外发现归位 TCP 相同但腕部 IK 分支不同；校准现在要求回到后续缓存分支。
+保存现场分别找到 easy／medium 79 点、hard 78 点的合法分支路径（across −20°）。
+显式 Task 参数 `aperture_contact_allowance_m=.001` 给保守的绳中心线穿孔判定增加
+1 mm 接触／压缩余量；默认 0，上限为绳半径的一半。物理环孔、IPC 接触和有向穿越
+目标不变，原生判据与规划副本共用同一计算，参数进入实例身份。
+v11 保存现场还揭示厚度检查的直筒近似偏保守：easy／hard 的 R1 后侧检查平面分别
+超出恒定孔径约 1.47／1.95 mm，而中心线球形膨胀模型到圆环表面仍有 0.51／0.12 mm
+正余量（`v11_aperture_audit.json`；不是接触力测量或整个 FEM 表面的证书）。
+新增显式 `aperture_check_profile=round_ring` 按圆环膨胀截面计算两侧孔径，中央孔径不变，
+默认仍为 `cylindrical`。v13 候选采用此选项；已有运行不追溯改写配置或成功标签。
+旧 hard v10 在 R1 接绳后被属主中断，避免重复运行已明确的旧遮挡检查失败；有独立中断说明。
+
+v13 hard 连续实测到 45.28 s，原生有向序列为 `R1− R2+`，IPC 有效且左手健康持绳；
+随后 R2 右手接绳规划失败，仍不是完整成功。v13 easy 走完路径并等待停稳，但只保持 R1；
+实际绳端在 R2 平面附近的径向偏差约 9.7 cm，属于几何漏穿。v14 easy 将 R2 对齐到
+hard 已实际穿过的姿态，保留较大孔径；完整对象路径和 367 点机器人路径重新通过。
+`easy_physics_v14_aligned` 已从 home 走完 367 点，原生序列 `R1− R2+`、
+厚度通过；15 秒末尾观察后仅因未达到 1 mm/s 停稳而未成功。末速约 6.42 mm/s。
+离线阈值复核中，1 cm/s 条件曾连续满足约 6.68 s；不追溯改写旧运行结果。
+
+v16 新候选显式将停稳速度改为 1 cm/s，保留 0.5 秒持续时间，三档对象证书和完整
+机器人路径均重新通过。Hard 的原孔径现场接绳预检也已通过：across 45° 抓后归位
+使用可达的另一腕部分支，并将后续 10 个推进目标重新求解、完整检查，保持原 TCP
+路径。`hard_receiver_continuation_preflight_v16/result.json` 保存 68 个抓取／归位路点
+与 10 个后续关节替换；只属静态校准，不是完整物理成功。此前增加 R2 内半径 8 mm
+未解决腕部分支问题，v16 不采用该尺寸变化。新增单环孔径接口仍可用于后续建模。
+53 项 oracle、16 项 runner 合同检查通过。`hard_physics_v16_continuation` 和
+`easy_physics_v16_quiet` 已取得页首所列完整原生成功。Medium 的 v14 实测也完成 `R1− R2+`，
+在 44.20 s 的右手接绳规划中停止；其接近关节弦碰到 R2，估计挤压 5.2 mm。v17 增加
+肩／肘短绕行，保存现场的 69 点抓取／归位与 10 点后续推进已通过，允许挤压实际使用值为 0。
+`medium_physics_v17_detour` 已从 home 完整成功，真实 R2 接绳、分支续接及第三环推进均通过。Hard 在新 A 腕部分支下，
+第三环的名义绳形接绳及撤手预检通过后，真实第三环抓取与完整原生成功也已通过。
+
+旧 `medium_ik_v9_held/prefix_01.npz` 因失败复验导出范围错误不可执行，修正记录在该目录
+`validation_correction.json`；当前实现只导出实际检查通过的前缀，失败样本和未检查尾部均排除。
+
+## 接力 oracle 的连续性修复与实测（2026-10-03）
+
+当前执行器使用 JOINT_ABS 回放规划分支，抓取接近采用规划关节作种子的实测站点反馈。
+已接入 `--tooling-ipc`：v12 rope 的单子步、Newton/PCG 1e-3/1e-5、linear_bvh。
+75° Harbor 包的冻结静置态不适用于当前 0° 场景。属主证据用共享 history reference 模式去重，
+策略仍明确声明 world 权限。calibration adapter 记录材料站点、关节跟踪和抓持拒绝原因。
+
+发现并修复了 IK 分支搜索用整机 home 作为种子的问题：原 medium/hard 的 R3 pinch
+会使另一只持绳手跳变超过 2.4 rad。轨迹加载器现在拒绝非运动手跳变。
+hard 重算通过 546 点；medium 的 20 cm 换抓配方在真实保留送绳手后无法撤手，
+窄开度尝试也未通过，现改用 24 cm 配方，重新检查目标场景的 546 点后通过。
+easy 原 452 点未出现该跳变。三者仍只有采样运动学资格。
+
+RTX 4090 的两次 easy 实测保存在
+`runs/test_results/rope_threading_relay_continuation_20261003/`：
+
+- `easy_attempt01`：5 ms／1 子步，5.58 s 获得原生辅助抓持；6.175 s 因边长比
+  1.300079 超过辅助抓持门槛 1.3 而失去抓持。原生绳体有效性未失败。
+- `easy_attempt02`：10 ms／1 子步，辅助抓持门槛显式放宽为 2.0，持绳速度 0.04 m/s。
+  连续执行至 25.59 s／2559 tick，进入首次左手接绳时 IK 分支偏差 0.280 rad 而停止。
+  更早的实测已表明接绳材料站点偏离计划约 0.137 m，R1 穿越序列仍为空；
+  根因包含自由绳端下垂及抓持材料方向与几何路径不一致，不能仅靠放宽 IK 门槛解决。
+
+两次执行均有完整逐 tick 证据，明确关闭 RGB，没有新增正式 demo。
+第二次的 10 ms 时序使 Genesis 自动把约束时间常数从 10 ms 调为 20 ms，
+这是显式开发条件，不属于默认时序验收。三档均尚无完整原生 task_success。
+默认任务材料和成功检查未改动。后续实验加入了以下能力与证据：
+
+- 材料方向规划：`--material-tangent`、离桌后逐渐对齐、有限轴倾角，以及仅约束长自由绳端。
+  严格约束所有接力阶段的若干候选仍不可达；`easy_ik_material_pushers` 用短拉绳配方
+  `A10_B_pull12_B10_recvA` 得到新的完整 523 点 IK。它只约束两个送绳阶段，接绳端仅露出
+  1–2 cm，仍保留姿态自由度。审计中 R2 送绳的材料轴误差约 5°；这不是物理通过。
+- 局部探针：`--max-holds` 明确导出 `robot_ik_prefix_verified`，执行需要 `--allow-prefix`。
+  曾遗漏局部标签的原始产物已另存，修正说明及前后哈希保存在 `easy_ik_first_handoff_probe`。
+- 建场材料实验通过 calibration tools 将 E 从 50 kPa 提高到 5 MPa，报告保留完整候选差异。
+  `easy_material_probe01` 在 3.69 s 因反馈关节偏差超过 0.25 rad 停止；硬绳初始展开使
+  抓取站点偏移约 5.6 cm。`easy_material_probe02` 放宽到 0.6 rad，并显式使用 v12 容差的
+  3 倍值，约 5.5 s 成功抓取。实测抓取材料轴与规划相差约 26°，仅位置反馈无法消除。
+  该探针最终连续执行 22.14 s／2214 tick，完成第一段计划与保持，抓持未丢失，但 R1
+  穿越序列仍为空；终点绳尖偏差约 10 cm，状态为 `not_passed`。
+- 新增 `--material-feedback`，绕真实材料站点修正接近方向，保持指垫偏置；超过 0.8 rad
+  拒绝执行，随后在最初 10 cm 的持绳段平滑回到计划姿态。新轨迹附带材料切线，旧轨迹
+  需重新生成或逐点复验后导出。calibration adapter 同时记录实测材料轴在 TCP 坐标系中的方向。
+  `easy_material_probe03` 在 3.69 s 因反馈关节偏差 0.805 rad 超过本次 0.6 rad 门槛停止，
+  尚未抓取。随后用该 tick 的真实绳形进行静态复验：完整方向修正出现
+  `shoulder_link / gripper_base` 自碰撞；0、0.25、0.5、0.75、1 五种方向反馈比例
+  均没有整段无碰撞的接近路径（部分还碰到 base／finger）。因此没有继续增大门槛跑物理。
+- hard 首选配方的长绳端方向约束在 R2 送绳未通过，记录为 `hard_ik_material_pushers`。
+  medium/hard 当前仍以先前 546 点名义轨迹为采样运动学证据，不能继承 easy 的材料方案。
+
+后续物理缺口是：按真实绳形重新选择抓取分支／初态布局、控制自由绳端的形状，及用持续托持
+替代模型中的无人抓持换抓。现有 native 运行没有解决这些问题，不能宣称完整 oracle 已通过。
+当前相关回归为 32 项 oracle 检查、16 项 runner 检查通过。
+
+逐项状态、轨迹路径、源码哈希和回归结果见
+[本轮报告](../../../runs/test_results/rope_threading_relay_continuation_20261003/continuation_report.json)。
+旧 `easy_ik_material_tilt15` 虽通过几何／IK，但审计发现部分材料轴曾偏离 27°；不能按
+15° 方向约束使用。后续已修正对齐窗口，并独立重新规划，不覆盖旧快照和证据。
+
+## easy / medium / hard 的首次 Wang oracle 整合（2026-10-03）
+
+已按提供的 Wang 源码接入三档物体路径、接力 IK 和 `JOINT_ABS` 回放策略。
 算法位于 `topogym/planning/rope_threading/`；执行入口与其他 oracle 一致，位于
 `scripts/oracle_runners/run_rope_threading_relay.py`。只读规划入口按既有约定放在
 `scripts/plan_rope_threading_oracle.py` 和 `scripts/plan_rope_threading_ik.py`。
@@ -33,7 +234,7 @@ easy 的快照早于 CLI 异常报告重构和 profile 文档调整，核心 IK�
 `policy_done` 不能替代原生 Task success，成功还要求终止和完整逐 tick 证据，允许仍保持抓持。
 
 **完整物理执行未验收**：附件也注明三档物理作业均取消，已验证部分为 IK。
-几何模型假设绳沿轨道滑动，未抓持换抓阶段假设形状保持；EE 回放及实测反馈不会继承
+几何模型假设绳沿轨道滑动，未抓持换抓阶段假设形状保持；关节插值及实测反馈不会继承
 离散 IK 样本的关节分支或连续碰撞证明。本轮未新增实际机器人成功或正式演示视频。
 现有 very_easy/easier 使用独立 `ThreadingPolicy` 和原 `run_rope_threading_policy.py`，保持原验证范围。
 

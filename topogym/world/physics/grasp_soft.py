@@ -74,7 +74,9 @@ class SoftGraspBackend:
             indices = np.flatnonzero(near)
             strain = self.strain_ratio(name, x)
             self._admission[hand] = dict(entity=name, nearby_vertices=len(indices), qualified_region_centers=0,
-                                         max_material_edge_ratio=strain)
+                                         max_material_edge_ratio=strain, occluded_region_centers=0,
+                                         obstacle_rejected_region_centers=0,
+                                         require_exposed_patch=spec.require_exposed_patch)
             # A transient squeeze must settle before registering a constraint;
             # do not acquire an already unhealthy shape and lose it next tick.
             if not np.isfinite(x).all() or strain > spec.max_strain_ratio:
@@ -112,9 +114,12 @@ class SoftGraspBackend:
                 ordered = sorted(map(int, component), key=lambda i: (i != previous, np.linalg.norm(x[i]-tcp), i))
                 for center in ordered:
                     patch = patches[center]
-                    if (not exposed_patch(x, uv, patch, radius=spec.spatial_radius_m,
-                                          clearance=spec.contact_distance_m)
-                            or self.penetration_reason(name, patch)):
+                    if (spec.require_exposed_patch and not exposed_patch(x, uv, patch, radius=spec.spatial_radius_m,
+                                                                          clearance=spec.contact_distance_m)):
+                        self._admission[hand]['occluded_region_centers'] += 1
+                        continue
+                    if self.penetration_reason(name, patch):
+                        self._admission[hand]['obstacle_rejected_region_centers'] += 1
                         continue
                     key = (name, center)
                     # Never mutate an owned region while considering another hand.

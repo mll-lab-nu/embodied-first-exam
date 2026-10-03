@@ -67,10 +67,13 @@ class SoftGraspTarget:
     contact_distance_m: float = .006
     max_strain_ratio: float = 1.3
     strength: float = 100.
+    require_exposed_patch: bool = True
 
     def __post_init__(self):
         if not isinstance(self.entity, str) or not self.entity:
             raise ValueError("Soft grasp entity must be named")
+        if not isinstance(self.require_exposed_patch, bool):
+            raise ValueError("require_exposed_patch must be boolean")
         lo, hi = np.asarray(self.material_min_m), np.asarray(self.material_max_m)
         if lo.ndim != 1 or hi.shape != lo.shape or len(lo) not in (0, 1, 2):
             raise ValueError("Material bounds must be matching arc-length or UV coordinates")

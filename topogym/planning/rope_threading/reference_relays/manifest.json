@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "profile": "contact_relaxed_v16",
+  "seed": 0,
+  "scope": "Native task-success references for explicit accelerated development models; default-model physics accuracy and videos are not qualified",
+  "variants": {
+    "easy": {
+      "samples": "easy_seed0.npz",
+      "samples_sha256": "17c88dec6fac78cca483e45c7d2cffc6afc22a59d6cc7e1184eb15f954404796",
+      "evidence": "easy_evidence.json",
+      "source_run": "runs/test_results/rope_threading_goal_20261003/easy_physics_v16_quiet",
+      "source_manifest_sha256": "147f8e062fe7a3546b0127806d93d93231e2b9297adbd2ded8fd60b2f3accdd8",
+      "simulation_time_s": 49.76,
+      "physics_steps": 1244
+    },
+    "hard": {
+      "samples": "hard_seed0.npz",
+      "samples_sha256": "62935c581f16f4f5834580ac9939a0bdf78f62534f4d48a5362991a8cea21bd2",
+      "evidence": "hard_evidence.json",
+      "source_run": "runs/test_results/rope_threading_goal_20261003/hard_physics_v16_continuation",
+      "source_manifest_sha256": "1b5f593e70bc5fe144f6490fc39bf70b5fb0b81c799a992f7c12de7d3c877524",
+      "simulation_time_s": 74.92,
+      "physics_steps": 1873
+    },
+    "medium": {
+      "samples": "medium_seed0.npz",
+      "samples_sha256": "dc14b74f91f1eb92fe2ea1cb06c50c2b6c279e9d94ac5b7b1278935ddef92098",
+      "evidence": "medium_evidence.json",
+      "source_run": "runs/test_results/rope_threading_goal_20261003/medium_physics_v17_detour",
+      "source_manifest_sha256": "e29f9880d7ba811ee6fe71593f839280ad4d13f9077f335bc3dc624a9091d57c",
+      "simulation_time_s": 74.68,
+      "physics_steps": 1867
+    }
+  }
+}

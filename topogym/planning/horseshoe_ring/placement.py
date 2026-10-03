@@ -9,6 +9,72 @@ from topogym.planning.rigid_reference.geometry import interpolate, pose_dict
 from topogym.utils.io import write_json_atomic
 
 
+def clear_remainder_for_table_pickup(planner, observation):
+    """Move the held remainder aside after the ring has physically fallen free.
+
+    Passive pieces are screened as a rigid group; their actual response remains
+    subject to the workflow's per-tick contact and closed-loop checks.
+    """
+    from .settling import folded_ring_metric
+    metric=folded_ring_metric(planner,observation)
+    if metric['maximum_separating_gap_m']<.02:
+        raise ValueError('Table pickup requires measured complete ring separation')
+    bodies,seed=planner.observed(observation)
+    first=bodies['horseshoe_right'];checker=planner.checker
+    offset=relative_pose(first,tcp_pose(observation['robot']['right']))
+    attempts=[]
+    for shift in ([.24,.10,0.],[.20,.10,.03],[.28,.05,0.],[.20,.15,0.],[.15,.10,.08]):
+        q=seed.copy();rows=[];failure=None
+        for u in np.linspace(0,1,161):
+            world={name:(p+u*np.asarray(shift),r) if name in planner.task.placement_remainder else (p,r)
+                   for name,(p,r) in bodies.items()}
+            p,r=world['horseshoe_right']
+            try:
+                previous=q.copy()
+                q=checker.solve('right',(p+r.apply(offset[0]),r*offset[1]),q)
+                checked=checker.check(q,body_poses=world)
+                gap=min(distance(checker.bodies['target_ring'][1],checker.bodies[name][1])
+                        for name in planner.task.placement_remainder)
+                if not checked['passed'] or gap<.02 or np.abs(q-previous).max()>.15:
+                    failure=dict(fraction=float(u),check=checked,ring_gap_m=gap);break
+            except ValueError as error:
+                failure=dict(fraction=float(u),error=str(error));break
+            rows.append(dict(right_pose=pose_dict((p,r)),qpos=q.tolist()))
+        if failure:
+            attempts.append(dict(shift_m=shift,failure=failure));continue
+        result=dict(passed=True,shift_m=shift,poses=[row['right_pose'] for row in rows[::10]],
+                    joint_samples=rows,attempts=attempts,measured_separation=metric,
+                    scope='sampled native IK; passive remainder follows rigidly only in planning')
+        write_json_atomic(planner.directory/'table_pickup_clearance_plan.json',result)
+        return result
+    write_json_atomic(planner.directory/'table_pickup_clearance_plan.json',dict(passed=False,attempts=attempts))
+    raise ValueError('No checked support clearance for the fallen ring')
+
+
+def lift_ring_from_table(planner, observation):
+    """Screen a vertical lift which only opens the observed table contact."""
+    bodies,q=planner.observed(observation);start=bodies['target_ring']
+    checker=planner.checker;offset=relative_pose(start,tcp_pose(observation['robot']['left']))
+    vertices=planner.task.placement_vertices['target_ring']
+    initial_bottom=float((start[1].apply(vertices)+start[0])[:,2].min())
+    if initial_bottom<checker.table_height-.001:raise ValueError('Excessive initial ring/table penetration')
+    rows=[]
+    for height in np.linspace(0,.025,51):
+        p,r=start[0]+[0,0,height],start[1]
+        world=dict(bodies,target_ring=(p,r));previous=q.copy()
+        q=checker.solve('left',(p+r.apply(offset[0]),r*offset[1]),q)
+        checked=checker.check(q,body_poses=world)
+        gap=min(distance(checker.bodies['target_ring'][1],checker.bodies[name][1])
+                for name in planner.task.placement_remainder)
+        if not checked['passed'] or gap<.02 or np.abs(q-previous).max()>.15:
+            raise ValueError(f'No checked table lift: {checked}, remainder gap {gap}')
+        rows.append(dict(pose=pose_dict((p,r)),qpos=q.tolist()))
+    result=dict(passed=True,initial_table_gap_m=initial_bottom-checker.table_height,
+                samples=rows,scope='sampled native IK, fixed rotation and increasing table clearance; execution required')
+    write_json_atomic(planner.directory/'ring_table_lift_plan.json',result)
+    return result
+
+
 def place_ring(planner, observation):
     checker=HeldRingPath(planner,observation)
     region=planner.task.goal_region

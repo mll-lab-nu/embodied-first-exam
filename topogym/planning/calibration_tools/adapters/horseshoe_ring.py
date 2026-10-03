@@ -9,13 +9,13 @@ from ..contracts import UnsupportedCapability, digest
 
 
 ALLOWED = {
-    "target_ring": {"centerline_radii", "wire_radius"},
+    "target_ring": {"centerline_radii", "wire_radius", "initial_phase_deg"},
     "horseshoe": {"band_width", "thickness", "edge_bevel"},
 }
 
 
 @contextmanager
-def declaration(task, parameters):
+def declaration(task, parameters, *, initial_layout_lift_m=0.):
     """Override asset generation only during a disposable owner's declaration.
 
     The original layout is an unqualified candidate starting pose. A changed
@@ -24,6 +24,11 @@ def declaration(task, parameters):
     """
     from topogym.tasks.horseshoe_ring import common
     from topogym.assets import variation_resources
+    if (isinstance(initial_layout_lift_m, bool)
+            or not isinstance(initial_layout_lift_m, (int, float, np.integer, np.floating))
+            or not np.isfinite(initial_layout_lift_m)
+            or not 0 <= initial_layout_lift_m <= .02):
+        raise ValueError("Initial layout lift must be between zero and 20 mm")
     original, record = template_candidate(task, parameters)
     generate = common.generate_assets
     read = variation_resources.read_json
@@ -33,6 +38,10 @@ def declaration(task, parameters):
         rebased = rebase_poses(task, parameters, layout["poses"])
         layout = dict(layout, poses={name: dict(value, **rebased["poses"][name])
                                      for name, value in layout["poses"].items()})
+        for value in layout["poses"].values():
+            value["position_m"][2] += initial_layout_lift_m
+    elif initial_layout_lift_m:
+        raise UnsupportedCapability("Initial layout lift requires a frozen layout")
 
     def candidate_assets(output, *, template=None, scale=2.):
         if template != original:
@@ -47,7 +56,9 @@ def declaration(task, parameters):
     try:
         yield dict(source_resource=task.template_resource, base_sha256=digest(original),
                    candidate_sha256=digest(record), parameters=deepcopy(parameters),
-                   layout_material_frame_preserved=True,
+                   layout_material_frame_preserved=not initial_layout_lift_m,
+                   initial_layout_lift_m=float(initial_layout_lift_m),
+                   relative_material_frames_preserved=True,
                    settled_layout_requalified=False, formal_qualification=False)
     finally:
         common.generate_assets = generate
@@ -69,8 +80,10 @@ def template_candidate(task, parameters):
         for name, value in patch.items():
             values = np.asarray(value, dtype=float)
             shape = (2,) if name == "centerline_radii" else ()
-            if values.shape != shape or not np.isfinite(values).all() or (values <= 0).any():
-                raise ValueError(f"Invalid positive finite dimension: {section}.{name}")
+            valid_range = ((0 <= values).all() and (values < 360).all()
+                           if name == "initial_phase_deg" else (values > 0).all())
+            if values.shape != shape or not np.isfinite(values).all() or not valid_range:
+                raise ValueError(f"Invalid finite dimension or phase: {section}.{name}")
         record[section].update(deepcopy(patch))
     HorseshoeAssembly(record, scale=float(task.config["scale"]))
     return original, record
@@ -143,6 +156,83 @@ def normal_passage_guard(task, parameters):
         tilted_passage_checked=False, physical_execution_verified=False)
 
 
+def settled_pose_window(task, parameters, records, *, duration_s=1., maximum_material_diameter_m=.00025):
+    """Bound material drift in a measured passive-rest window.
+
+    Final-substep velocities can spike while sampled poses barely move. This
+    reports a separate pose-window criterion; it changes neither the physics
+    nor the native Task's velocity/quiet requirements. No task proof is issued.
+    """
+    from dataclasses import replace
+    from itertools import combinations
+    from topogym.assets.geometry.horseshoe_ring import HorseshoeAssembly
+    from ..tracking import pose
+    limits = (duration_s, maximum_material_diameter_m)
+    if (not records or any(isinstance(v, bool) or not isinstance(v, (int, float))
+                          or not np.isfinite(v) for v in limits)
+            or duration_s <= 0 or not 0 < maximum_material_diameter_m <= .0005):
+        raise ValueError("A measured window and a material-drift bound up to 0.5 mm are required")
+    _, template = template_candidate(task, parameters)
+    assembly = HorseshoeAssembly(template, scale=float(task.config["scale"]))
+    origins = {body.name: body.visual.center_mass for body in assembly.bodies}
+    # Enclose the material surfaces with an extra 2 mm numerical/mesh allowance.
+    radii = {body.name: float(np.linalg.norm(body.visual.vertices-origins[body.name], axis=1).max())+.002
+             for body in assembly.bodies}
+    first = records[0]
+    base = {name: pose(first["world"]["bodies"][name]) for name in origins}
+    maximum = {name: 0. for name in origins}
+    linear = {name: 0. for name in origins}
+    angular = {name: 0. for name in origins}
+    previous = expected_linkage = None
+    failures = []
+    quiet_count = 0
+    for row in records:
+        state, world = row["state"], row["world"]
+        if (state["episode_id"] != first["state"]["episode_id"] or state["branch_id"] != 0
+                or previous is not None and (state["physics_step"] != previous["physics_step"]+1
+                    or state["sim_time_s"] <= previous["sim_time_s"])):
+            raise ValueError("Rest window must be one uninterrupted physical history")
+        previous = state
+        if row["task"]["result"]["terminated"]:
+            failures.append("terminal_state_in_rest_window")
+        quiet_count += bool(row["task"]["result"].get("metrics", {}).get("quiet", False))
+        if max(world["contacts"]["penetration"], default=0.) > .001:
+            failures.append("native_contact_limit_exceeded")
+        grasp = world.get("grasp") or {}
+        if any(hand.get("binding") for hand in grasp.get("hands", {}).values()):
+            failures.append("assisted_binding_in_passive_rest_window")
+        poses = {name: pose(world["bodies"][name]) for name in origins}
+        loops = {name: replace(loop, center=poses[loop.body][0]+poses[loop.body][1].apply(
+                     loop.center-origins[loop.body]), rotation=poses[loop.body][1]*loop.rotation)
+                 for name, loop in assembly.loops.items()}
+        linkage = {a+"|"+b: loops[a].linking(loops[b]) for a, b in combinations(loops, 2)
+                   if loops[a].body != loops[b].body}
+        if expected_linkage is None:
+            expected_linkage = linkage
+        elif linkage != expected_linkage:
+            failures.append("changed_closed_loop_linkage")
+        for name, (p, r) in poses.items():
+            angle = float((r*base[name][1].inv()).magnitude())
+            displacement = float(np.linalg.norm(p-base[name][0])) + 2*radii[name]*np.sin(angle/2)
+            maximum[name] = max(maximum[name], displacement)
+            body = world["bodies"][name]
+            linear[name] = max(linear[name], float(np.linalg.norm(body["linear_velocity_m_s"])))
+            angular[name] = max(angular[name], float(np.linalg.norm(body["angular_velocity_rad_s"])))
+    elapsed = records[-1]["state"]["sim_time_s"]-first["state"]["sim_time_s"]
+    if elapsed+1e-9 < duration_s:
+        failures.append("insufficient_window_duration")
+    if max(maximum.values())*2 > maximum_material_diameter_m:
+        failures.append("material_window_too_large")
+    return dict(passed=not failures, failures=sorted(set(failures)), samples=len(records), duration_s=elapsed,
+        maximum_material_diameter_m=maximum_material_diameter_m,
+        material_diameter_upper_bound_m={name: 2*value for name, value in maximum.items()},
+        peak_final_substep_linear_velocity_m_s=linear, peak_final_substep_angular_velocity_rad_s=angular,
+        native_quiet_samples=quiet_count, native_quiet_required=False,
+        all_closed_loop_linkages_preserved="changed_closed_loop_linkage" not in failures,
+        initial_state=first["state"], final_state=records[-1]["state"], candidate_sha256=digest(template),
+        formal_qualification=False, scope="sampled 1 s passive material-pose stability; not zero velocity or Task success")
+
+
 def rebase_poses(task, parameters, poses):
     """Preserve the authored material frame when a candidate moves its COM.
 
@@ -166,6 +256,53 @@ def rebase_poses(task, parameters, poses):
     return dict(poses=result, com_shift_local_m=shifts,
                 scope="detached hypothesis with unchanged authored material frames",
                 physical_execution_verified=False)
+
+
+def retarget_reference(task, parameters, source, output):
+    """Export a new, unqualified pose guide with the candidate's COM frames.
+
+    Geometry identity must match before retargeting. Prior success claims and
+    repairs are not copied: consumers must recheck the proposed route against
+    candidate geometry and execute it before assigning any qualification.
+    """
+    import json
+    from scipy.spatial.transform import Rotation
+    from topogym.assets.geometry.horseshoe_ring import HorseshoeAssembly
+    from topogym.utils.io import sha256_file, write_json_atomic
+    if Path(source).resolve() == Path(output).resolve():
+        raise ValueError("Retargeting requires a separate output from its source")
+    original, record = template_candidate(task, parameters)
+    data = json.loads(Path(source).read_text())
+    scale = float(task.config["scale"])
+    if data["template"] != original or data["scale"] != scale:
+        raise ValueError("Reference source geometry does not match the original task")
+    before, after = (HorseshoeAssembly(t, scale=scale) for t in (original, record))
+    from topogym.planning.horseshoe_ring.oracle import load_reference
+    load_reference(source, before)
+    index = data["fold_end_index"]
+    if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(data["frames"]):
+        raise ValueError("Invalid reference fold endpoint index")
+    origins = {b.name: b.visual.center_mass for b in before.bodies}
+    shifts = {b.name: b.visual.center_mass-origins[b.name] for b in after.bodies}
+    frames = []
+    for frame in data["frames"]:
+        if set(frame) != set(shifts):
+            raise ValueError("Reference frame must include every puzzle body")
+        updated = {}
+        for name, value in frame.items():
+            p, q = np.asarray(value["pos"], dtype=float), np.asarray(value["quat"], dtype=float)
+            if p.shape != (3,) or q.shape != (4,) or not np.isfinite(np.r_[p, q]).all() or not np.isclose(q @ q, 1.):
+                raise ValueError("Invalid reference pose")
+            updated[name] = dict(pos=(p+Rotation.from_quat(q).apply(shifts[name])).tolist(), quat=q.tolist())
+        frames.append(updated)
+    result = dict(template=record, scale=scale, frames=frames, fold_end_index=data["fold_end_index"],
+        centers=[b.visual.center_mass.tolist() for b in after.bodies], passed=False,
+        qualification="Unqualified retargeted pose guide; geometry, IK and physical execution require new checks",
+        source_reference=dict(path=str(Path(source).resolve()), sha256=sha256_file(source)),
+        base_sha256=digest(original), candidate_sha256=digest(record),
+        com_shift_local_m={n: v.tolist() for n, v in shifts.items()}, formal_qualification=False)
+    write_json_atomic(output, result)
+    return result
 
 
 def plot_geometry_comparison(task, parameters, poses, output):

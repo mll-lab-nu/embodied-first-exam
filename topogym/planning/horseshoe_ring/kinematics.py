@@ -170,8 +170,12 @@ class HorseshoeIK:
         return dict(passed=not issues,issues=issues,table_clearance_m=minimum,
                     inter_arm_pairs=inter_arm_pairs,self_collisions=self_collisions)
 
-    def grasp_candidates(self, task, state, side):
+    def grasp_candidates(self, task, state, side, *, openings=(.027,.018)):
         from topogym.assets.geometry.horseshoe_ring import band_centerline
+        openings=tuple(openings)
+        if (not openings or len(set(openings))!=len(openings)
+                or any(isinstance(v,bool) or not np.isfinite(v) or not .002<v<=.027 for v in openings)):
+            raise ValueError('Distinct grasp openings must be above 2 mm and at most 27 mm')
         name = 'horseshoe_'+side
         p, r = body_pose(state['bodies'][name])
         h, unit = task.assembly.template['horseshoe'], task.assembly.unit
@@ -199,7 +203,7 @@ class HorseshoeIK:
                     # A fully open inner finger can enter the neighbouring
                     # ring even though the band is narrow. Screen a smaller
                     # opening as well; the subsequent descent is checked too.
-                    for opening in (.027,.018):
+                    for opening in openings:
                         for q in (pre, target):q[self.robot._q_indices[side][6:]]=opening
                         checks=[self.check(pre),self.check(target,contacts={side:name})]
                         if not all(c['passed'] for c in checks):

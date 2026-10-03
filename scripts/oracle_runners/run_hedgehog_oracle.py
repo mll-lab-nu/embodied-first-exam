@@ -10,6 +10,16 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 
+def oracle_config(args, grasp):
+    """Keep the oracle timing while applying the current rigid performance profile."""
+    from topogym.simulator import SimulatorConfig
+    return SimulatorConfig(task_id="hedgehog_in_cage", variation_id=args.variation, compute_backend="cpu", precision="64",
+        enable_rgb=False, enable_privileged=True, control_mode="JOINT_ABS", physics_dt_s=args.physics_dt,
+        solver_substeps=args.substeps, control_decimation=args.control_decimation,
+        rigid_options={"use_contact_island": args.contact_islands}, history_storage="segment",
+        max_physics_steps=args.max_physics_steps, grasp_assist=grasp, work_dir=args.output/"scene")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
@@ -23,16 +33,22 @@ def main():
     parser.add_argument("--substeps", type=int, default=40)
     parser.add_argument("--control-decimation", type=int, default=1)
     parser.add_argument("--max-physics-steps", type=int, default=12000)
+    parser.add_argument("--contact-islands", action=argparse.BooleanOptionalAction, default=False,
+                        help="Enable legacy island solves; default follows tooling v12 CPU rigid settings")
+    parser.add_argument("--torch-threads", type=int, default=4,
+                        help="Bound CPU getter threads, as in tooling v12 (default: 4)")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.torch_threads < 1:
+        parser.error("--torch-threads must be positive")
     if args.variation != "medium" and args.pickup is None:
         parser.error("An explicit --pickup is required for easy/hard until its default recipe is qualified")
     args.output = args.output.resolve()
     if args.worker:
         import torch
-        from topogym.simulator import Env, SimulatorConfig, SegmentRunner
+        from topogym.simulator import Env, SegmentRunner
         from topogym.planning.hedgehog_in_cage.recipes import run_medium_oracle
-        torch.set_num_threads(1)
+        torch.set_num_threads(args.torch_threads)
         pickup = json.loads(args.pickup.read_text()) if args.pickup else None
         grasp = dict(model="none")
         if args.assisted:
@@ -46,10 +62,17 @@ def main():
                 configuration_source="topogym.tasks.hedgehog_in_cage.common.recommended_grasp_assist",
                 grasp_assist=grasp,
                 acquisition="Fresh closing intent and bilateral native contacts for each binding"), indent=2)+"\n")
-        config = SimulatorConfig(task_id="hedgehog_in_cage", variation_id=args.variation, compute_backend="cpu",
-            enable_rgb=False, enable_privileged=True, control_mode="JOINT_ABS", physics_dt_s=args.physics_dt,
-            solver_substeps=args.substeps, control_decimation=args.control_decimation,
-            max_physics_steps=args.max_physics_steps, grasp_assist=grasp, work_dir=args.output/"scene")
+        config = oracle_config(args, grasp)
+        (args.output/"performance_profile.json").write_text(json.dumps(dict(
+            settings_source="tooling v12 rigid profile, retained by v13",
+            upstream_commit="7ca426d5dbf0a0e61e133e7cce1a53e165eb76f6",
+            compute_backend=config.compute_backend, precision=config.precision,
+            use_contact_island=args.contact_islands, history_storage=config.history_storage,
+            torch_threads=args.torch_threads, enable_rgb=config.enable_rgb,
+            physics_dt_s=config.physics_dt_s, solver_substeps=config.solver_substeps,
+            control_decimation=config.control_decimation,
+            note="Hedgehog uses rigid physics; IPC substep changes do not apply. Old trajectories require fresh verification."
+        ), indent=2)+"\n")
         with Env(config) as env:
             env.reset(seed=args.seed)
             with SegmentRunner(env, args.output/"trail") as runner:
@@ -71,6 +94,8 @@ def main():
                "--physics-dt", str(args.physics_dt), "--substeps", str(args.substeps),
                "--control-decimation", str(args.control_decimation),
                "--max-physics-steps", str(args.max_physics_steps), "--variation", args.variation,
+               "--torch-threads", str(args.torch_threads),
+               "--contact-islands" if args.contact_islands else "--no-contact-islands",
                "--search-iterations", str(args.search_iterations)]
     if args.pickup:
         import shutil

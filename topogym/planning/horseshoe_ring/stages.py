@@ -38,6 +38,12 @@ class ContinuationPolicy(HorseshoePolicy):
         elif self.operation=='support_and_grasp':
             yield from self.support_pair()
             yield from self.grasp_ring()
+        elif self.operation=='support_release':
+            yield from self.support_pair()
+        elif self.operation=='grasp_ring':
+            yield from self.grasp_ring()
+            if self.release_support:yield from self.release_support_and_lift()
+            elif self.table_pickup:yield from self.lift_ring_for_transport()
         elif self.operation=='table_support':
             from .table_support import execute_table_support
             yield from execute_table_support(self, self.table_support_guide,
@@ -60,17 +66,24 @@ class BirthRingPolicy(HorseshoePolicy):
 def stages(env, context, *, folded_settling=False, suspended_handoff=False, direct_birth=False,
            handoff_candidates=None, lower_reposition=False, withdrawal_defaults=None,
            reposition_parameters=None, require_prefix_replay=False, ring_grasp_choice=None,
-           require_ring_pivot=False, native_robot_contacts=False, table_supported=False):
+           require_ring_pivot=False, native_robot_contacts=False, table_supported=False,
+           table_pickup_after_release=False):
     """Bind the five prefix inputs and any optional withdrawal guide by hash."""
     if not isinstance(native_robot_contacts, bool):
         raise ValueError('Native robot contact screening option must be boolean')
     if not isinstance(table_supported, bool) or table_supported and not native_robot_contacts:
         raise ValueError('Table support requires native robot contact screening')
+    if (not isinstance(table_pickup_after_release,bool) or table_pickup_after_release and
+            not (folded_settling and suspended_handoff and native_robot_contacts)):
+        raise ValueError('Table pickup requires a checked suspended release')
     out=context.output;holder=[None];shared={};attempt=[0]
+    prefix_clearance_m=.0001 if native_robot_contacts else .0005
     monitor=(out/'private/horseshoe_monitor.jsonl').open('x',buffering=1)
     identity=dict(config=to_jsonable(env.config),seed=context.identity['seed'],
         instance_id=env._task.instance_id,from_default_home=True,
-        native_robot_contact_screening_after_handoff=native_robot_contacts,
+        native_robot_contact_screening_from_handoff=native_robot_contacts,
+        native_robot_contact_screening_at_approach=table_pickup_after_release,
+        prefix_robot_puzzle_clearance_m=prefix_clearance_m,
         table_supported_handoff=table_supported,
         terminal=env._task.terminal_metadata(),
         contact_link_names={str(link.idx):f'{name}/{link.name}' for name,entity in env._world.entities.items()
@@ -158,17 +171,24 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
         selection=json.loads(paths['grasps'].read_text())
         grasps={s:selection[s]['candidates'][0] for s in ('left','right')}
         reference,meta=load_reference(paths['reference'],env._task.assembly)
-        fold=expand_coupled_plan(reference,json.loads(paths['fold'].read_text()))
+        fold_data=json.loads(paths['fold'].read_text())
+        fold=expand_coupled_plan(reference,fold_data)
         support_data=json.loads(paths['support'].read_text())
         if not support_data['passed']:raise ValueError('Unverified support input')
         support=[body_pose(row['bodies']['horseshoe_left']) for row in support_data['trajectory']]
-        checker=HorseshoeIK(env)
+        if table_pickup_after_release:
+            from .native_contacts import ContactHorseshoeIK
+            checker=ContactHorseshoeIK(env,puzzle_clearance_m=prefix_clearance_m,ordinary_limit_m=.001)
+            checker.observed_grasp=env._world.read_state()['grasp']
+        else:
+            checker=HorseshoeIK(env,puzzle_clearance_m=prefix_clearance_m)
         for row in json.loads(paths['approach'].read_text()):
             permitted={s:'horseshoe_'+s for s in grasps} if row['phase']=='descend' and row['fraction']>.85 else {}
             checked=checker.check(np.asarray(row['qpos']),contacts=permitted)
             if not checked['passed']:raise ValueError(f'Approach recheck: {checked}')
         planner=ManipulationPlanner(env,out/'planning/prefix',checker,reference=reference,fold_end_index=meta['fold_end_index'])
-        policy=HorseshoePolicy(grasps,part='fold' if folded_settling else 'grasp_ring',fold=fold,support=support,planner=planner,fold_tracking_m=.002)
+        policy=HorseshoePolicy(grasps,part='fold' if folded_settling else 'grasp_ring',fold=fold,support=support,planner=planner,fold_tracking_m=.002,
+                              post_fold_hold_s=fold_data.get('post_fold_hold_s',2.))
         replayed='prefix_replay' in paths
         if replayed:
             if direct_birth:raise ValueError('Action prefix and direct birth are separate recipes')
@@ -213,12 +233,14 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
     def continuation(operation, budget, *, stage_index=None):
         def build(parameters):
             attempt[0]+=1
-            values=dict(parameters);limit=float(values.pop('contact_limit_m',.0008))
+            values=dict(parameters);limit=float(values.pop('contact_limit_m',.001 if native_robot_contacts else .0008))
             if not 0<limit<=.001:raise ValueError('Stage contact limit must be at most 1 mm')
             checker_type=HorseshoeIK
             checker_options=dict(puzzle_clearance_m=parameters.get('robot_puzzle_clearance_m',.0005))
-            if native_robot_contacts and (operation in ('withdraw_one','place_ring','place_remainder')
-                    or table_supported and operation in ('table_support','support_and_grasp')):
+            if native_robot_contacts and (operation in ('support_and_grasp','support_release','grasp_ring',
+                    'clear_remainder_for_table_pickup','lift_ring_for_transport','withdraw_one','place_ring','place_remainder')
+                    or table_supported and operation=='table_support'
+                    or table_pickup_after_release and operation=='gravity_settle_folded'):
                 from .native_contacts import ContactHorseshoeIK
                 checker_type=ContactHorseshoeIK
                 checker_options['ordinary_limit_m']=limit
@@ -236,21 +258,62 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
             policy.withdrawal_finished=None
             policy.replanned=replan or shared.get('guide_state') is None
             if operation=='gravity_settle_folded':
-                if set(values)-{'angle_deg','translation_m','hold_s','sample_duration_s','roll_deg','yaw_deg','restore'}:raise ValueError('Unexpected gravity-settling parameters')
+                if set(values)-{'angle_deg','translation_m','hold_s','sample_duration_s','roll_deg','yaw_deg','restore','position_bias_limit_m','tracking_m'}:raise ValueError('Unexpected gravity-settling parameters')
                 if not isinstance(values.get('restore',True),bool):raise ValueError('restore must be boolean')
                 hold=float(values.get('hold_s',8.))
                 if not np.isfinite(hold) or not 0<hold<=30:raise ValueError('Gravity hold must be within 30 seconds')
                 duration=float(values.get('sample_duration_s',.25))
                 if not np.isfinite(duration) or not .05<=duration<=1.:raise ValueError('Tilt sample duration must be within 0.05 to 1 seconds')
+                bias_limit=float(values.get('position_bias_limit_m',.03))
+                if not np.isfinite(bias_limit) or not .001<=bias_limit<=.10:
+                    raise ValueError('Tilt position feedback bias must be between 1 and 100 mm')
+                tracking=float(values.get('tracking_m',.002))
+                if isinstance(values.get('tracking_m'),bool) or not np.isfinite(tracking) or not .0005<=tracking<=.005:
+                    raise ValueError('Tilt material tracking tolerance must be between 0.5 and 5 mm')
                 policy.settling_parameters=values
-            elif operation=='support_and_grasp':
+            elif operation in ('support_and_grasp','support_release'):
                 policy.suspended_upper=values.pop('suspended_upper',False)
                 policy.table_supported=values.pop('table_supported',False)
+                policy.joint_release_retreat=values.pop('joint_release_retreat',False)
+                policy.active_ring_pickup=values.pop('active_ring_pickup',False)
+                policy.release_turn=values.pop('release_turn',None)
+                if policy.release_turn is not None:
+                    turn=policy.release_turn
+                    if (not policy.suspended_upper or not isinstance(turn,dict)
+                            or set(turn)-{'axis','angle_deg','tracking_m'}
+                            or turn.get('axis','tool') not in ('tool','x','y','z')
+                            or not np.isfinite(float(turn.get('angle_deg',60.)))
+                            or not 0<abs(float(turn.get('angle_deg',60.)))<=90
+                            or not np.isfinite(float(turn.get('tracking_m',.003)))
+                            or not .0005<=float(turn.get('tracking_m',.003))<=.005):
+                        raise ValueError('Invalid supported release turn')
                 policy.ring_grasp_choice=deepcopy(ring_grasp_choice)
                 policy.require_ring_pivot=require_ring_pivot
                 if (not isinstance(policy.suspended_upper,bool) or not isinstance(policy.table_supported,bool)
+                        or not isinstance(policy.joint_release_retreat,bool)
+                        or not isinstance(policy.active_ring_pickup,bool)
+                        or policy.active_ring_pickup and (operation!='support_release' or not policy.suspended_upper)
+                        or policy.joint_release_retreat and not (policy.suspended_upper or policy.table_supported)
                         or policy.suspended_upper and policy.table_supported or values):
                     raise ValueError('Invalid support handoff parameters')
+            elif operation=='grasp_ring':
+                policy.ring_grasp_choice=deepcopy(values.pop('choice',ring_grasp_choice))
+                policy.require_ring_pivot=False
+                policy.table_pickup=table_pickup_after_release
+                policy.release_support=values.pop('release_support',False)
+                policy.level_released_ring=values.pop('level_released_ring',False)
+                policy.release_translation_m=values.pop('release_translation_m',None)
+                if not isinstance(policy.release_support,bool) or policy.release_support and policy.table_pickup:
+                    raise ValueError('Support release requires an active suspended pickup')
+                if (not isinstance(policy.level_released_ring,bool)
+                        or policy.level_released_ring and not policy.release_support):
+                    raise ValueError('Ring leveling requires released support')
+                if policy.release_translation_m is not None:
+                    shift=np.asarray(policy.release_translation_m,dtype=float)
+                    if (not policy.release_support or shift.shape!=(3,) or not np.isfinite(shift).all()
+                            or not 0<np.linalg.norm(shift)<=.4):
+                        raise ValueError('Invalid relocation before support release')
+                if values:raise ValueError('Unexpected ring pickup parameters')
             elif operation=='table_support':
                 policy.table_tracking_m=float(values.pop('tracking_m',.0015))
                 if not np.isfinite(policy.table_tracking_m) or not .0005<=policy.table_tracking_m<=.0015:
@@ -275,12 +338,40 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
                     raise ValueError('Reposition velocity feedback must be within 0 and 1 second')
             elif operation!='withdraw_one' and values:raise ValueError('Unexpected placement parameters')
             holder[0]=policy
+            free_ring_operations=('support_release','clear_remainder_for_table_pickup','grasp_ring')
             condition=(holding_shoes if operation in ('gravity_settle_folded','table_support') else
-                       handoff_invariant if operation=='support_and_grasp' else holding)
-            entry=holding_shoes if operation in ('gravity_settle_folded','table_support','support_and_grasp') else holding
+                       handoff_invariant if operation in ('support_and_grasp',*free_ring_operations) else holding)
+            entry=(holding_shoes if operation in ('gravity_settle_folded','table_support','support_and_grasp','support_release')
+                   else handoff_invariant if operation in free_ring_operations else holding)
+            def holding_ring(row):
+                binding=row['world']['grasp']['hands']['left']['binding']
+                return dict(left_holds_ring=bool(binding and binding['target'][0]=='target_ring'))
+            if shared.get('support_released'):
+                condition=entry=holding_ring
+            elif operation=='grasp_ring' and policy.release_support:
+                # Acquisition starts with the hand free. Once the right hand
+                # is opened, the left ring binding must remain present.
+                def condition(row):
+                    hands=row['world']['grasp']['hands']
+                    return handoff_invariant(row) if hands['right']['binding'] else holding_ring(row)
             def invariant(row):return dict(common(row,limit),**condition(row))
             def exit(row):
                 result=holding_shoes(row) if operation in ('gravity_settle_folded','table_support') else holding(row)
+                if shared.get('support_released') or operation=='grasp_ring' and policy.release_support:
+                    result=holding_ring(row)
+                    if operation=='grasp_ring':
+                        result['support_released_and_ring_extracted']=getattr(policy,'support_released',False)
+                if operation in ('support_release','clear_remainder_for_table_pickup'):
+                    result=handoff_invariant(row)
+                    result['left_is_free']=row['world']['grasp']['hands']['left']['binding'] is None
+                    from .settling import folded_ring_metric
+                    # A hanging ring can be grasped and extracted under contact.
+                    # Separation is checked after that extraction, not before
+                    # the free hand is allowed to approach it.
+                    if not getattr(policy,'active_ring_pickup',False):
+                        result['ring_is_separated']=folded_ring_metric(planner,policy.obs)['maximum_separating_gap_m']>=.02
+                    if operation=='clear_remainder_for_table_pickup':
+                        result['support_clearance_completed']=getattr(policy,'table_pickup_clearance_result',{}).get('passed',False)
                 if operation=='table_support':
                     result['table_transport_reached']=getattr(policy,'table_support_result',{}).get('passed',False)
                 if operation=='gravity_settle_folded':
@@ -322,15 +413,40 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
             if table_supported:
                 yield Step('table_support',({'tracking_m':.0015},),continuation('table_support',600.))
                 shared['previous']=holder[0]
-            yield Step('support_and_grasp',({'table_supported':True} if table_supported else
+            operation='support_release' if table_pickup_after_release else 'support_and_grasp'
+            yield Step(operation,({'table_supported':True} if table_supported else
                                           {'suspended_upper':True} if suspended_handoff else {},),
-                       continuation('support_and_grasp',120. if suspended_handoff else 60.))
+                       continuation(operation,120. if suspended_handoff else 60.))
             shared['previous']=holder[0]
+            if table_pickup_after_release and getattr(holder[0],'active_ring_pickup',False):
+                table_pickup_after_release=False
+                yield Step('grasp_ring',({'choice':ring_grasp_choice},),continuation('grasp_ring',240.))
+                shared['previous']=holder[0]
+                if getattr(holder[0],'support_released',False):
+                    shared['support_released']=True
+                    yield Step('place_ring',({},),continuation('place_ring',500.))
+                    shared['previous']=holder[0]
+                    yield Step('verify_goal',({},),continuation('verify_goal',15.))
+                    return
+            if table_pickup_after_release:
+                yield Step('clear_remainder_for_table_pickup',({},),continuation('clear_remainder_for_table_pickup',120.))
+                shared['previous']=holder[0]
+                yield Step('grasp_ring',({'choice':ring_grasp_choice},),continuation('grasp_ring',120.))
+                shared['previous']=holder[0]
+        if table_pickup_after_release:
+            if shared.get('replayed_prefix'):
+                yield Step('lift_ring_for_transport',({},),continuation('lift_ring_for_transport',120.))
+                shared['previous']=holder[0]
+            yield Step('place_ring',({},),continuation('place_ring',500.))
+            shared['previous']=holder[0]
+            yield Step('verify_goal',({},),continuation('verify_goal',15.))
+            return
         if lower_reposition:
             yield Step('reposition_lower',(reposition_parameters or {},),continuation('reposition_lower',180.))
             shared['previous']=holder[0]
         parameters=dict(passive_contact_names=[] if folded_settling else ['horseshoe_left'],stage_motion_m=.004,speed_m_s=.002,
-                        tracking_m=.0015,maximum_stages=600,contact_limit_m=.0008,search_seed=922)
+                        tracking_m=.0015,maximum_stages=600,
+                        contact_limit_m=.001 if native_robot_contacts else .0008,search_seed=922)
         if withdrawal_defaults:parameters.update(withdrawal_defaults)
         stagnant=0;recovery_steps=0
         for index in range(1000):
@@ -588,6 +704,37 @@ def adaptive_upward_pivot_stages(env, context):
 def contact_upward_pivot_stages(env, context):
     """Use native contact classification after the unchanged fixed-grip handoff."""
     return patient_upward_pivot_stages(env,context,native_robot_contacts=True)
+
+
+def gravity_release_table_pickup_stages(env, context):
+    """Fold and transfer the ring, using gravity or an active suspended pickup."""
+    return stages(env,context,folded_settling=True,suspended_handoff=True,
+        handoff_candidates=(dict(angle_deg=90.,yaw_deg=0.,translation_m=[0.,.10,-.04],
+            hold_s=8.,sample_duration_s=.1,restore=False),),
+        native_robot_contacts=True,table_pickup_after_release=True,
+        ring_grasp_choice=dict(tcp_backoff_m=.01531))
+
+
+def zero_angle_ring_grasp_stages(env, context):
+    """Use the grasp screened for both pivot and complete ring withdrawal.
+
+    Candidate geometry is supplied by the scene owner. This recipe uses only
+    measured observations, native planning and ordinary robot actions.
+    """
+    return stages(env,context,folded_settling=True,suspended_handoff=True,
+        handoff_candidates=(dict(angle_deg=90.,yaw_deg=0.,translation_m=[0.,.10,-.04],
+            hold_s=8.,sample_duration_s=.1,restore=False),),
+        native_robot_contacts=True,
+        ring_grasp_choice=dict(angle_deg=0.,approach_sign=1,flip=-1,tangent_roll_deg=0.),
+        require_ring_pivot=True,
+        withdrawal_defaults=dict(rebase_support_each_stage=False,gate_support_tracking=False,
+            robot_puzzle_clearance_m=.0001,position_bias_limit_m=.1,
+            rotation_bias_limit_rad=.3,position_integral_gain_s_inv=2.,
+            position_velocity_gain_s=.25,position_velocity_filter_s=.1,
+            tracking_stall_timeout_s=30.,maximum_stages=1000,
+            exit_goal_mode='reference_pivot',search_seed=1005,joint_search_goal_tube=True,
+            refine_short_stage_prefix=True,refine_ik_compensation=True,direct_axis_exit_first=True,
+            passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1']))
 
 
 def reference_tube_exit_stages(env, context):

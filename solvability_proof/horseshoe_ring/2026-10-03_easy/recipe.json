@@ -1,0 +1,162 @@
+{
+  "variant": "easy",
+  "seed": 0,
+  "instance_id": "fe1976f266c8fe73966abaa6f8d8c8bb1c6dc45eb3e7088236d3e334448190cc",
+  "model_revision": "ring_clearance_candidate_v3",
+  "terminal_revision": "placement_region_v3_grasp_contact_2mm",
+  "resource_sha256": {
+    "variations/horseshoe_ring/waist_mild.json": "c018a2addd3136cdf446a8e48befe238447d36479d2fdfd0a2f51090963e19f1",
+    "variations/horseshoe_ring/waist_mild_settled_poses.json": "7e7bdc075898d3c34ba915f63a7834d0affe5297906526b69a8c4acf5f939636"
+  },
+  "config": {
+    "task_id": "horseshoe_ring",
+    "robot_id": "aloha",
+    "variation_id": "easy",
+    "task_parameters": {},
+    "compute_backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "terminal_contract_version": 1,
+    "control_decimation": 1,
+    "max_physics_steps": 80000,
+    "history_storage": "segment",
+    "reset_physics_steps": 0,
+    "rigid_options": {
+      "use_contact_island": false
+    },
+    "ipc_options": {},
+    "ipc_settled_state": null,
+    "enable_rgb": false,
+    "enable_depth": false,
+    "observation_mode": "JOINT",
+    "control_mode": "JOINT_ABS",
+    "enable_privileged": true,
+    "seed": null,
+    "render_backend": "nyx",
+    "asset_root": null,
+    "work_dir": "/home/jianwen/topogym/runs/test_results/horseshoe_approved_20261003/from_home_09/scene",
+    "grasp_assist": {
+      "model": "contact_weld_v1",
+      "targets": [
+        {
+          "entity": "horseshoe_left",
+          "link": "horseshoe_left",
+          "center_m": [
+            0.012781859274390302,
+            -2.7755575615628914e-17,
+            0.0
+          ],
+          "radius_m": 0.09055211523025057
+        },
+        {
+          "entity": "horseshoe_right",
+          "link": "horseshoe_right",
+          "center_m": [
+            -0.01278185927439026,
+            2.7755575615628914e-17,
+            0.0
+          ],
+          "radius_m": 0.09055211523025057
+        },
+        {
+          "entity": "target_ring",
+          "link": "target_ring",
+          "center_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "radius_m": 0.07790120932666852
+        }
+      ],
+      "stable_time_s": 0.02,
+      "max_tcp_distance_m": 0.12055211523025057,
+      "max_penetration_m": 0.002,
+      "max_translation_error_m": 0.01,
+      "max_rotation_error_rad": 0.15,
+      "max_finger_opening_fraction": 0.15,
+      "intent_deadband": 0.002,
+      "initial_intent": "open"
+    }
+  },
+  "selection": [
+    {
+      "step": "prefix",
+      "parameters": {
+        "grasps": {
+          "path": "evidence/runs/from_home_09/oracle_inputs/grasps.json",
+          "sha256": "da398cde28163b9c16041ddf12b3359fa39b58ad4986847b6d5d2a509119b492"
+        },
+        "reference": {
+          "path": "evidence/runs/from_home_09/oracle_inputs/reference.json",
+          "sha256": "de7d099d4c082248b1a16786f861e74ca5548ee19fb3be1039ba9bbdf6becb44"
+        },
+        "fold": {
+          "path": "evidence/runs/from_home_09/oracle_inputs/fold.json",
+          "sha256": "7895545a0f9d914cb2d919f248e6b89f8563049d99157d925a7751c52fb0f524"
+        },
+        "support": {
+          "path": "evidence/runs/from_home_09/oracle_inputs/support.json",
+          "sha256": "21f5e8375cf247f9b8a27d35ec5ecf8f2bcbd5bb3c24a3f37c9e68e4ee04a7fb"
+        },
+        "approach": {
+          "path": "evidence/runs/from_home_09/oracle_inputs/approach.json",
+          "sha256": "2af42255eef8c2ea56347a7c682ee32d9ad52ab2ef39aadedceb54a6616d59ab"
+        }
+      },
+      "parameters_sha256": "2e7af6a6010b38f4ce7a367471bee7792219aede305ab0caee330da4d87280b3"
+    },
+    {
+      "step": "orient_for_handoff",
+      "parameters": {
+        "angle_deg": 90.0,
+        "yaw_deg": 0.0,
+        "translation_m": [
+          0.0,
+          0.1,
+          -0.04
+        ],
+        "hold_s": 8.0,
+        "sample_duration_s": 0.1,
+        "restore": false
+      },
+      "parameters_sha256": "2cbcedb971a320a0a7264dd72a477e61843b88e9429111c10e1998cbfc8696d2"
+    },
+    {
+      "step": "support_release",
+      "parameters": {
+        "suspended_upper": true
+      },
+      "parameters_sha256": "dea67672845674f9813ef447324b2ddcc6dd7b7381be3bb514432efc78097526"
+    },
+    {
+      "step": "clear_remainder_for_table_pickup",
+      "parameters": {},
+      "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "step": "grasp_ring",
+      "parameters": {
+        "choice": {
+          "tcp_backoff_m": 0.01531
+        }
+      },
+      "parameters_sha256": "6dccbdad58b3581a297460e62aa664d227c91796c0ec7e51c17614e8af579b1f"
+    },
+    {
+      "step": "place_ring",
+      "parameters": {},
+      "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "step": "verify_goal",
+      "parameters": {},
+      "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    }
+  ],
+  "qualification": {
+    "accepted_proof": true,
+    "audit": "evidence/runs/from_home_09/independent_audit.json"
+  }
+}

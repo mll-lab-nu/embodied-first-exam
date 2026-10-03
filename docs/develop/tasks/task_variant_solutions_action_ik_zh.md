@@ -35,13 +35,13 @@
 |---|---|---|---|---|
 | [Cast Keyhole](#keyhole) | `long_stroke` | `eccentric_window` | `turnback` | 三档均有当前 home→拾取→换抓→解锁→目标区的实际 success，逐 tick 复核通过 |
 | [Cast Coil](#coil) | `baseline_assembly` | `axial_screw_turn`，9 mm | `split_turn_offset`，9 mm | 三档 policy 已在当前 Env 达到原 Task success 并通过逐 tick 复核；限 seed=0 默认实例、25 ms tick、辅助抓持 |
-| [Horseshoe Ring](#horseshoe) | `waist_mild` | `u_mild` | `waist_ellipse` | 当前形状三档有完整零件几何路径；旧 F1/F2/F3 是接近路线，不能等同新三档 |
-| [Hedgehog in Cage](#hedgehog) | `classic_3star` | **`elliptical_windows`** | `gen_keyhole` | easy/hard 有历史对应；新 medium 尚未找到完整通路 |
+| [Horseshoe Ring](#horseshoe) | `waist_mild` 扩环 v3 | `u_mild` v5 | `waist_ellipse` v8 | 三档 seed 0 从默认 home 完整机器人原生成功及独立审计通过，3/3；正式反馈 IK 配方可运行 |
+| [Hedgehog in Cage](#hedgehog) | `classic_3star` | `waisted_windows` | `gen_keyhole / fixed_v3_s5_post` | 三档默认 seed 0 已原生成功并归档；hard 使用批准的高位支座初态 |
 | [Lock Picking](#lock) | F1，一次回退设计 | `standard_150mm` / **`historical_physics_v2`** | F3，三次回退设计 | medium 已恢复两次回退槽形并有标准 runner 全流程；easy/hard 仍需独立机制计划 |
 | [Fiber Bundling](#fiber) | 4 芯 | 8 芯 | 16 芯 | 同为 13.5 mm 环内半径；可共用抓护套、整理、穿环策略，均有历史完整代表 |
-| [Buzz Wire 3D](#buzz) | F1 三拱 | F2 八字／回折 | F3 梳齿／W／Ω／螺旋 | 三族有历史 home 至释放的完整流程；当前垫高后必须重新求 IK 和避碰 |
+| [Buzz Wire 3D](#buzz) | F1 三拱 | F2 八字／回折 | F3 梳齿／W／Ω／螺旋 | 原三档各自冻结 seed 0 连续成功及独立审计 3/3；本轮补齐 medium / hard 完整动作与三路 Nyx 视频 |
 | [Interlocked Claws](#claws) | `helical_claws_balanced_v2` | **`acute_windows_opposed`** | `claw_weave` | 当前三档从双手预持件开始；新 medium 不继承旧正交窗解法，纯摩擦持件诊断未通过 |
-| [Knot Untying](#knot) | **`two_overlap_loop`** | **`overhand_trefoil`** | **`figure_eight`** | 旧单结完整路线对应现在 medium 的结型；新 easy 尚无完整 oracle，hard 有换抓候选 |
+| [Knot Untying](#knot) | **`two_overlap_loop`** | **`overhand_trefoil`** | **`figure_eight`** | easy 已有原生成功及回放；medium 原执行成功但本轮首遍回放未达成功；当前优先补 hard 完整拉绳与回溯执行 |
 | [Blanket Flatten](#blanket) | `simple_folds`，5 折 | `fold_roll`，3 折＋5 卷曲铰 | `gathered_twist`，**blocked** | 简单初态有旧机器人流程；复杂展开及 hard 初态资格仍缺 |
 | [Rope Threading](#rope) | `two_rings`，**planned** | `wang_reference_v1` | `three_tight_rings`，**planned** | 三环有参考路线、反馈换手候选和失败经验；未找到当前完整成功 |
 | [Slotted Post Ring](#slotted) | `large_ring`，内径 108 mm | `middle_ring`，内径 105 mm | `original_scale`，内径 102 mm | 三档 28 mm 槽场景已接入，静置验收见任务页；完整 FEM 机器人解法未验证 |
@@ -167,6 +167,8 @@ IK 建议顺序：当前实测 q → 同一路线前一候选 q → 同抓姿的
 <a id="horseshoe"></a>
 ### 3. Horseshoe Ring：先改变马蹄与链的相对构型，再取环
 
+**2026-10-03 更新：** 当前 easy / medium / hard 的 seed 0 均已从默认 home 连续完成折合、交接取环及固定目标区搬运，275.2 / 264.5 / 252.4 s 原生成功、零回溯，独立审计通过，三档 3/3。圆环尺寸仍阻止完整马蹄法向直接穿出，正式策略不调用 calibration-tools；范围及复现见[完整证明](../../../solvability_proof/horseshoe_ring/README.md)。下面三档几何证书说明对应扩环前模型，不能代替或否定新模型的物理证据。
+
 **动作骨架。** 历史成功路径采用双臂翻转、折合马蹄，让两端和链环形成可过环的局部构型，随后交接持件／抓环、使目标环依次越过限制部件，最后搬离。不是在初态直接拉铜环。当前形状三档的主要区别位于过环配合阶段。
 
 | 变体 | 具体差异与建议 |
@@ -175,14 +177,16 @@ IK 建议顺序：当前实测 q → 同一路线前一候选 q → 同抓姿的
 | `u_mild` | 较方 U 形，过肩／弯角时重点搜索环平面倾角、中心横移；不要只缩小 easy 直线步长 |
 | `waist_ellipse` | 椭圆长短轴使**环在自身平面内的相位**成为必要规划变量；既有路线相对种子增加约 58.66° 相位，但此数字只属于该路线 |
 
-来源：[当前形状三档与几何证书核对](../../../legacy/cleanup_20260929/docs/develop/tasks/horseshoe_existing_candidates_tier_review_20260925_zh.md)。已知路径的最小保守间隙下界约 0.1481／0.1274／0.1173 mm，均未取得对应完整机器人资格。58.66° 的去相位对照说明那一条路径依赖该调整，不能推出所有解法都必须转这个角度。
+来源：[当前形状三档与几何证书核对](../../../legacy/cleanup_20260929/docs/develop/tasks/horseshoe_existing_candidates_tier_review_20260925_zh.md)。已知路径的最小保守间隙下界约 0.1481／0.1274／0.1173 mm，这些扩环前证书当时未取得对应完整机器人资格。58.66° 的去相位对照说明那一条路径依赖该调整，不能推出所有解法都必须转这个角度。
 
 **action / IK 采样。** 建议用 `马蹄相对折角 × 链环姿态 × 环中心 × 环法向 × 椭圆相位` 表达对象关键构型，优先沿证书附近搜索。离开折合持件后，一只手转抓铜环，另一只手必须实际承托剩余机构；交接前后分别测抓持关系和重力下链形。对象见证里独立运动的多个零件不能直接视作双臂可施加的控制自由度。最终铜环全体进入目标区，其余系统留在分界另一侧。
 
-**复用范围。** [旧完整执行器及路线](../../../runs/demo_metadata/horseshoe_ring/2026-09-18_gravity_replanned_v1)可提供翻转／折合／交接经验；旧 high/outer/rear approach 的 F1/F2/F3 只改变接近方式。当前三个形状代表仍要验证夹爪能否通过、链在受载时是否改变瓶颈，不能继承旧圆环成功。
+**复用范围。** [旧完整执行器及路线](../../../runs/demo_metadata/horseshoe_ring/2026-09-18_gravity_replanned_v1)可提供翻转／折合／交接经验；旧 high/outer/rear approach 的 F1/F2/F3 只改变接近方式。当前扩环后三档的 seed 0 已各自取得新的完整机器人证明，没有继承旧圆环的成功资格；其他实例仍需验证夹爪通道与链的受载响应。
 
 <a id="hedgehog"></a>
 ### 4. Hedgehog in Cage：让刺逐组过窗，搜索全刺球姿态
+
+**2026-10-03 更新：** 当前 easy / 四腰窗 medium / 高位支座 hard 三档默认 seed 0 已完成物体通路、默认 home 机器人执行及独立审计，见[三档证明](../../../solvability_proof/hedgehog_in_cage/README.md)。hard 为 `fixed_v3_s5_post`，不继承旧低位模型范围；其顶部路线不要求窄槽必需。下面的椭圆窗构思和 09-27 未通过记录属于历史模型，保留作研究来源，不代表当前三档状态。
 
 厂商对 CLASSIC 的提示是寻找最宽窗和两根短刺；GEN 使用不同的顶部通行原理。这些提示支持“按刺的组合找通道”，不能当作我们新椭圆窗的精确动作角度。[RADEMIC 原厂提示](https://help.rademic.cz/)及[产品结构](https://puzzles.rademic.cz/gallery.htm)
 
@@ -220,6 +224,8 @@ IK 建议顺序：当前实测 q → 同一路线前一候选 q → 同抓姿的
 <a id="fiber"></a>
 ### 6. Fiber Bundling：抓粗护套，用固定环整理细丝，再整体送入
 
+**2026-10-03：原三档 seed 0 已完成独立审计，正式 3/3。** 4／8／16 芯分别从默认 home 连续执行 190.075／344.000／639.125 s，7,604／13,761／25,566 个状态经原冻结 Task 审计、当前 v4 复核及封存日志交叉核对全部通过。easy 原执行是 v3，保留历史身份；同一轨迹通过 v4，不计新物理执行。采用 CPU64、25 ms／40 子步、护套接触辅助抓持，无新增录像；[完整证据与复核命令](../../../solvability_proof/fiber_bundling/README.md)。
+
 **三档同一动作骨架。** easy／medium／hard 分别 4／8／16 芯，环内半径均为 13.5 mm。主要难点随芯数增加：外围丝的包络、彼此扰动、遮挡和重新整理次数；不应为了凑三档而强行设计三种不同 IK。当前 [common](../../../topogym/tasks/fiber_bundling/common.py)使用固定末端、被动关节细丝和固定铜环，不是可任意移动每根丝的控制问题。
 
 **已有解法细节。** [历史 RobotSequence](../../../runs/demo_metadata/fiber_bundling/2026-09-18_standard_08_r13p5mm_clean_v1/source/robot_sequence.py)的 `grasp → prepare → align_and_check_bundle → final_axial_feed` 可拆为：
@@ -232,23 +238,26 @@ IK 建议顺序：当前实测 q → 同一路线前一候选 q → 同抓姿的
 
 **action / IK。** 建议采样 `粗护套抓点、绕束轴 roll、环前停放距离、周向位置、压环径向量、馈入深度／速度`。以实测分叉根部中心为对象控制目标，转换到 TCP。逐段从前一 q 延续 IK，并检查大角度 roll 时的腕分支。历史 [ik_search.py](../../../runs/demo_metadata/fiber_bundling/2026-09-18_standard_08_r13p5mm_clean_v1/source/ik_search.py)另有整束轴向／螺旋试探，不必先人为规定丝的编号顺序；**材料顺序**是每根丝沿自身的穿越次序，不能误写成必须先 1 号丝再 2 号丝。
 
-**差异化建议。** 4 芯优先测试简单对中与少量整理；8 芯沿用闭环重查；16 芯增加对当前外围包络的采样，并降低接触附近推进速度。三档使用相同最大弯曲／穿越规则，不能以芯数多为理由放宽。历史 4／8／16 芯完整报告见[清单 §6](../../../legacy/cleanup_20260929/docs/develop/tasks/planner_oracle_inventory_20260925_zh.md#6-fiber-bundling)，抓持含辅助约束；当前终态资格仍关闭。
+**差异化建议。** 4 芯优先测试简单对中与少量整理；8 芯沿用闭环重查；16 芯增加对当前外围包络的采样，并降低接触附近推进速度。三档使用相同最大弯曲／穿越规则，不能以芯数多为理由放宽。历史 4／8／16 芯完整报告见[清单 §6](../../../legacy/cleanup_20260929/docs/develop/tasks/planner_oracle_inventory_20260925_zh.md#6-fiber-bundling)，抓持含辅助约束；当前 v4 已启用，有限实例资格以上述新审计为准。
 
 外部窄孔穿绳研究可启发“对准实际柔性端部，随观测重新计算手部运动”，但并不直接给出多芯线束的完整答案。[Wang 等，ICRA 2015 原文](https://rlab.cs.dartmouth.edu/publications/Wang2015b.pdf)
 
 <a id="buzz"></a>
 ### 7. Buzz Wire 3D：以弧长进度和工具朝向连续跟随导线
 
-**2026-09-28 执行中：已验收证明仍为 0/3。easy 的有回溯开发 episode 已取得实际完整
-Task success；无回溯重跑与独立审计尚未完成。** 已实现
+**2026-10-03：原三档各自冻结实例的已验收证明为 3/3（easy、medium、hard）。** 已实现
 [观测驱动 policy 与 IK／避障规划](../../../topogym/planning/buzz_wire_3d/README.md)、
 [无视频执行入口](../../../scripts/oracle_runners/run_buzz_wire_policy.py)和
-[逐 tick 独立审计](../../../legacy/research_tools_20260929/scripts/audit_buzz_wire_policy.py)。当前使用 Panda Robotiq、
+[逐 tick 独立审计](../../../topogym/planning/buzz_wire_3d/audit.py)。当前使用 Panda Robotiq、
 默认参数 seed 0、CPU 双精度、25 ms tick／40 子步、接触后辅助抓持。
-easy 已实测完成走线、多次换抓、释放与静止，开发末态位置误差 3.61 mm、角度误差 4.71°。
-medium 已实际走至后半段，hard 正在加密检查反向搜索所得路线。所有运行均关闭 RGB／录像。
-部分运行通过、静态 IK 候选与开发回溯均不计入完整证明。最终验收仍要求从默认 home
-连续执行、原任务阈值下 `task_success=true`，并通过独立审计。
+easy 的无回溯连续执行和独立审计已通过。Medium 使用已批准的末端平移布局，
+29,544 个普通关节动作从默认 home 完成走线、终点转正和释放，末态误差 2.036 mm / 3.466°，
+工具及机器人触线均为 0；[独立审计与三路 Nyx 视频](buzz_wire_3d_zh.md)已归档。
+Hard 同样以 43,568 个普通动作从 home 连续成功，末态误差 4.466 mm / 8.982°，
+工具和机器人触线均为 0；独立审计、三路 Nyx 视频与完整动作已归档。
+正式 `CompiledJointPolicy` 不调用 calibration tools；开发候选的动作须经新的连续物理执行验收。
+本轮启用 v12 CPU64 优化，RTX 4090 负责共享 Nyx 状态重渲染。部分运行、静态 IK 和开发回溯
+不计入完整证明；其他 seed、纯摩擦抓持及 Harbor 默认时序须分别验收。
 
 三族历史上都有 home → 拾取预套在线上的工具 → 完整走线 → 托架放回、释放、撤手的机器人流程，且历史归档明确无 assist。当前三档提高了底座，旧关节角不能原样重放。[任务与历史路线说明](buzz_wire_3d_zh.md)
 
@@ -292,9 +301,9 @@ medium 已实际走至后半段，hard 正在加密检查反向搜索所得路�
 
 | 入口 | 建议动作顺序 | 当前证据 |
 |---|---|---|
-| easy `two_overlap_loop` | 辨认两处上下交叠 → 支撑保留段 → 抬开／侧移可释放的绳弯或自由尾端 → 重新检查交叉 → 松手铺平 | 新家族；本轮未找到完整当前 oracle。直接拉尾能否解决，需作为候选对照实际检查 |
-| medium `overhand_trefoil` | 找靠自由端的首个下穿 → 一手稳定上穿／结区 → 另一手在下穿内侧的可抓材料段夹持 → 短程抽回 → 重新观测，必要时换抓 | 有旧单结完整机器人路线，不能继承旧材料／起点资格 |
-| hard `figure_eight` | 先支撑展开结区 → 找首下穿窗口 → 倾斜换抓 → 分段抽回 → 重抓支撑尾段补余量 → 处理剩余交叉 | 历史候选完成过两次换抓，仍有残余交叉和材料跨度瓶颈 |
+| easy `two_overlap_loop` | s=224 mm 上股抬 25 mm → 沿 −x 搬运 95 mm → 放回、松手、静置 | 2026-10-03 交接 easy05 已原生成功并有正式实例回放通过日志，575 actions、14.360 s |
+| medium `overhand_trefoil` | 远端固定 → 抓首个下穿之后 35 mm → 沿切向拉 → 两端离头 35 mm 处夹持并拉开 → 松手静置 | medium03 原执行成功；本轮正式首遍跑完 1,927 actions、48.170 s，未触发成功，原因待查 |
+| hard `figure_eight` | 远端固定 → 抓首个下穿之后 35 mm → 完整外拉 0.55 m → 两端拉开；失败回退上游换候选 | hard01 在 0.5 m 时提前停下，拉开后留下紧卷；完整机器人成功尚待验 |
 | 实验 `knot_untying_double_overhand` | 先抓尾端支撑 → 抬移目标上穿段打开窗口 → 在可达侧换抓下穿段 → 短行程抽拉／换抓，逐次复查 | 有局部候选；没有在此认定完整成功。源码来源为 (2,5) 环面曲线，不写成 5₂ 扭结 |
 
 **建议状态。** 以有材料顺序的中心线、端点、交叉的上／下关系、左右手所持材料坐标表示。投影交叉数只作辅助；相同二维交叉可能有不同高度关系，不能只把“交叉少了”当作解开证明。
@@ -307,7 +316,7 @@ medium 已实际走至后半段，hard 正在加密检查反向搜索所得路�
 
 可参考 HULK／LOKI／SPiDERMan 对“找解结关键点、细化抓姿、识别停滞并恢复”的分工；论文包含 overhand、figure-eight 和 double-overhand 实验，但没有覆盖本项目的新 FEM 模型和终态。[原论文](https://arxiv.org/abs/2107.08942)
 
-**结束条件。** 当前任务要求解除抓持、绳贴桌且稳定、投影无交叉／重叠；正确退出某个下穿只是中间事件。新 [common](../../../topogym/tasks/knot_untying/common.py)仍关闭正式判据资格。
+**结束条件。** 当前任务要求解除抓持、绳贴桌且稳定、投影无交叉／重叠；正确退出某个下穿只是中间事件。当前 [common](../../../topogym/tasks/knot_untying/common.py) 继承已启用的 `goal_complete=True`，可返回原生 `task_success`。完整命令和实例边界见 [Knot oracle](../../../topogym/planning/knot_untying/README.md)。
 
 <a id="blanket"></a>
 ### 10. Blanket Flatten：先露出可抓单层，再解卷／解扭和展开
@@ -418,10 +427,10 @@ medium 已实际走至后半段，hard 正在加密检查反向搜索所得路�
 |---|---|---|
 | Lock medium | 已有标准 policy 与特定配置全程 | 保留实测盘角／负载补偿，独立验证当前默认时序；之后才把状态图推广到 F1/F3 |
 | Coil 三档：本轮 success 验收已完成 | 当前 policy 在三档默认实例达到原 Task success，独立复核通过 | 本轮范围已完成；若另做过程资格，再验证默认检查时序、全部积分子步和参数域 |
-| Buzz 三族 | 旧 home、拾取、全程、释放最完整，且有无 assist 证据 | 在当前垫高／摆位下重定向一族，全工具避碰＋完整释放；再迁其余两族 |
+| Buzz 三族 | 历史无 assist 流程及当前接触辅助抓持的连续成功证据各自保留实例范围 | 原三档固定实例已完整成功；medium / hard 动作与三路 Nyx 已归档，其他 seed 和默认时序须另验 |
 | Keyhole 三族 | 当前 home、拾取、真实换抓与目标区后缀已接通；3/3 正式 success 通过 | 本轮已收口；复现命令、采样细节与逐 tick 证据见 Keyhole policy 说明 |
 | Fiber 与 Knot medium | 有已知机器人动作经验，主要缺新模型／接口闭环 | Fiber 完整材料顺序穿越；Knot 至少完成一次真实单股退穿并保留余量 |
-| Horseshoe 三档 | 有很窄的完整对象路径，缺对应抓持与机器人执行 | 完成一次“折合—交接—过环”全工具路径与受载持件验证 |
+| Horseshoe 三档 | easy / medium / hard 各自 seed 0 已有从 home 完整反馈 IK 执行、原生成功与独立审计；3/3 | 正式脚本及配方已交付；辅助抓持、冻结实例及显式时序范围，其他 seed 仍需独立验证 |
 | 新 Hedgehog／Claws medium | 当前全对象通路／抓持尚未过关 | 优先找到可核查的全对象路径，Claws 同时解决抗转保持；先不投入长程 solve |
 | Rope、Slotted、Orbits、复杂 Blanket | 瓶颈是换抓、材料可用性或初态资格 | 分别验证一次完整环口交接、窄槽送接、提圈过球、单层揭卷／受控解扭 |
 

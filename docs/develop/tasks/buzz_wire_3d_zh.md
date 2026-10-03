@@ -90,15 +90,53 @@ easier 的终点标定使用 `planning/calibration_tools` 的原生物理检查�
 
 ## 原 easy / medium / hard 验证记录
 
-### 2026-10-03：Medium 末端建模候选，待用户审核
+### 2026-10-03：Medium / hard 完整 oracle 均已验收
+
+**本轮 medium 与 hard 均从默认 home 连续完成原生 Task，并通过独立审计。** 原三档现各有完整成功证据，合计 **3/3（easy、medium、hard，各自冻结实例）**。两套正式 policy 只执行普通关节动作，不导入或调用 calibration tools；以下保留布局批准、开发失败及重新验收的边界。
+
+| 变体 | 普通动作 / 仿真时长 | 最终位置 / 角度误差 | 连续执行与独立审计 |
+| --- | ---: | ---: | --- |
+| medium | 29,544 / 738.600 s | 2.036 mm / 3.466° | [报告](../../../runs/test_results/buzz_medium_v12_stream_20261003_01/run_report.json) · [审计](../../../runs/test_results/buzz_medium_v12_stream_20261003_01/independent_audit.json) |
+| hard | 43,568 / 1089.200 s | 4.466 mm / 8.982° | [报告](../../../runs/test_results/buzz_hard_v12_stream_20261003_02/run_report.json) · [审计](../../../runs/test_results/buzz_hard_v12_stream_20261003_02/independent_audit.json) |
+
+两档均无回溯，工具触线、机器人触线及接触覆盖缺失均为 0，运行时 calibration-tools 模块列表为空。资格为 seed 0、接触辅助抓持 `contact_weld_v1`、v12 CPU64 / 25 ms / 40 子步 / 单 tick 控制；不扩展为其他 seed、纯摩擦抓持或 Harbor 默认时序通过。
 
 本轮继续原三档 oracle。现有 medium 的历史转正抓姿在只读复核中会使腕座或前臂与铜轨相交；该抓姿取得 IK 数值解不代表动作可执行。原模型的平放终点抓姿扫描也没有接通整个转正区间。这是所列搜索范围内的失败证据，不是全局不可解证明。
 
-新增开发工具 [calibration_tools/adapters/buzz_wire.py](../../../topogym/planning/calibration_tools/adapters/buzz_wire.py)，提供独立候选资产、隔离新场景声明、保守胶囊障碍查询及参数补丁导出。候选将终点立柱在场景坐标中移动 **X +40 mm、Y +20 mm**；只在最后 `exit_bend` 平滑过渡，末段立柱整体平移。底板、工具尺寸、前面线路的控制点、碰撞角色及原有成功阈值保持原值。正式布局资源尚未修改。
+新增开发工具 [calibration_tools/adapters/buzz_wire.py](../../../topogym/planning/calibration_tools/adapters/buzz_wire.py)，提供独立候选资产、隔离新场景声明、保守胶囊障碍查询及参数补丁导出。候选将终点立柱在场景坐标中移动 **X +40 mm、Y +20 mm**；只在最后 `exit_bend` 平滑过渡，末段立柱整体平移。底板、工具尺寸、前面线路的控制点、碰撞角色及原有成功阈值保持原值。用户随后明确批准此布局并要求继续；medium 现引用独立资源 `F2_terminal_xy40_20_v1/layout.json`，模型修订为 `F2_terminal_xy40_20_deck_rest_v1`，旧布局资源保留。注册资源与审核候选逐字段一致性检查通过；批准当时的连续执行缺口已由本节后续独立验收补齐。
 
-候选的 **6 段持工具转正 IK 路径**通过加密采样与关节参考加密检查，环朝向从 94° 分次转到 148°，最小记录净空 **1.837 mm**；这是离线规划，未推进物理。阶段之间需要释放／重新抓取，**换抓连接、实际双侧接触、从默认 home 开始的全流程及原生成功均未验收**，不能把六段路径称为连续完整解。原三档连续成功数量仍为 **easy 1/3**。
+候选的 **6 段持工具转正 IK 路径**通过加密采样与关节参考加密检查，环朝向从 94° 分次转到 148°，最小记录净空 **1.837 mm**；这是离线规划，未推进物理。阶段之间需要释放／重新抓取，当时**换抓连接、实际双侧接触、从默认 home 开始的全流程及原生成功均未验收**，不能把六段路径称为连续完整解。该离线候选阶段的连续成功数量当时仍为 **easy 1/3**。
 
-按用户要求，完成微调截图后停在建模审核，审核通过再继续候选上的抓取、完整 IK 动作与连续物理验证。[原始模型](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_original/finish_close.png) · [候选模型](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_candidate/finish_close.png) · [候选俯视图](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_candidate/top.png) · [证据汇总](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_summary.json)。候选截图使用 Genesis CPU 建场、GPU Nyx + compact_lab 取景，默认 home、零物理步；不作为执行录像。工具声明／资产检查 4/4 通过，Buzz 正式 policy 与 runner 的 AST 导入检查未发现 calibration-tools 调用依赖；静态打包隔离检查通过，未重复验证镜像。截图期间共享磁盘写满导致 Nyx 着色器库截断，已从同版本本机镜像恢复并按安装 RECORD 哈希校验；失败记录与修复记录保留在证据目录。
+按用户要求，完成微调截图后曾停在建模审核；布局批准后继续抓取、完整 IK 动作与连续物理验证。调查和编写 oracle 可以使用 calibration-tools，正式 oracle 及其运行依赖不得调用或导入该开发工具。[原始模型](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_original/finish_close.png) · [候选模型](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_candidate/finish_close.png) · [候选俯视图](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_candidate/top.png) · [证据汇总](../../../runs/oracle_dev/buzz_medium_terminal_20261003/review_summary.json)。候选截图使用 Genesis CPU 建场、GPU Nyx + compact_lab 取景，默认 home、零物理步；不作为执行录像。工具声明／资产检查 4/4 通过，Buzz 正式 policy 与 runner 的 AST 导入检查未发现 calibration-tools 调用依赖；静态打包隔离检查通过，未重复验证镜像。截图期间共享磁盘写满导致 Nyx 着色器库截断，已从同版本本机镜像恢复并按安装 RECORD 哈希校验；失败记录与修复记录保留在证据目录。
+
+批准后的开发证据位于 [buzz_medium_approved_20261003](../../../runs/oracle_dev/buzz_medium_approved_20261003/)。终点局部场景已通过实际双指接触抓取、94°→110°→120°→130° 分次转正及释放；工具初生于终点内侧 8 mm，该场景没有走线历史，不能计为完整成功。后续 `023_cycle` / `026_cycle` 的生成脚本漏接转正段，仅验证了换抓、下放与释放，已在 `terminal02/cycle04_05_scope_correction.json` 更正范围，不能算指定角度转正通过。继续通过带倾转和抬高的持工具动作后，`043_turn_release` 实际释放通过；[后续稳定检查](../../../runs/oracle_dev/buzz_medium_approved_20261003/terminal02/045_save_terminal_hold/local_terminal_result.json)的 120 个连续 tick 均满足终点位置、姿态、支撑、释放、静止和公共 settling 检查，末态误差 **3.870 mm / 3.433°**，观察窗口 **2.975 s**。该局部报告明确 `task_success=false`，不承担后续完整连续执行的成功资格。
+
+本地 `Env` 不会自动启用 Harbor tooling v12 的优化。初期运行遗漏了该入口；`terminal02` 从第 6527 tick、`continuous01` 从第 0 tick 接入上游 `_settle_only_when_reached`，同状态只读对照确认目标／失败判定及内部状态一致。新的 `continuous02` 从建场起另配置 CPU float64、`rigid_options.use_contact_island=False`，并启用该目标触发静止检查，保留 25 ms / 40 子步 / 1 倍降采样。旧运行未中途切换物理解算器；启用记录与源码身份在各运行目录。该优化接入阶段尚未报告整局加速倍数或新连续成功；后续正式连续结果见本节开头。
+
+正式入口 `scripts/oracle_runners/run_buzz_wire_policy.py --v12-performance` 现可显式启用同组优化，并将所用上游 helper 一起冻结到运行源码快照。`ci_checks/test-buzz-oracle-isolation.py` 对 Buzz policy、runner 及该 helper 做 AST 与禁止 calibration-tools 导入的冷启动检查，通过 **1/1**；此检查不替代完整物理复跑。
+
+终点调查另修正了 `BuzzIK` 的碰撞角色筛选：`wire` 实体同时包含铜轨和木质端部连接块，过去 `allow_wand_support=True` 仍把木连接块算入禁碰集合，与原生 Task 不一致。现在工具的该模式只禁止 `wire_metal`，机器人继续避开全部固定几何；未修改场景、接触求解器或任务判据。`ci_checks/test-buzz-collision-roles.py` 用真实 FCL 检查木连接块/底板的工具支撑许可、机器人禁碰和铜轨禁碰，**1/1 通过**；运行时 calibration-tools 隔离检查仍 **1/1 通过**。开发进程保存了此规划补丁的源码哈希，正式动作复验不依赖该在线规划补丁。
+
+
+本轮已完成 **medium 与 hard 两套完整 oracle**；以下为中间开发记录。Medium `continuous01` 已从默认 home 连续走到新末端低位并完成释放前内移，18,442 个普通动作、461.05 s，原生走线跟踪仍有效；尚未释放，不能计为成功。会话中断后 `continuous01` / `continuous02` 的物理进程已退出，状态日志不作为可恢复引擎检查点。后续 `continuous03` 从默认初态重新执行 `continuous02` 的 18,489 个普通关节动作；Hard 在 `buzz_hard_20261003/continuous01` 从默认 home 重跑已审计历史动作，再接终态验证。两者均从建场启用 v12 配置，不继承旧 episode 的成功标记。
+
+RTX 4090 已实际用于共享 Nyx + compact_lab 状态重渲染。Medium `continuous01` 的 18,443 个连续状态经完整关节恢复核对，连杆位置及姿态误差为零，生成 848×480、10 fps 的开发预览：[全景](../../../runs/oracle_dev/buzz_medium_approved_20261003/gpu_render01/replay/recording/videos/agentview.mp4) · [斜前](../../../runs/oracle_dev/buzz_medium_approved_20261003/gpu_render01/replay/recording/videos/front_oblique.mp4) · [腕部](../../../runs/oracle_dev/buzz_medium_approved_20261003/gpu_render01/replay/recording/videos/wrist.mp4)。该视频覆盖默认 home 至释放前，`source_task_success=false`，不是完整成功 demo，也不增加物理成功次数。
+
+`continuous03` 的第一条连续执行在第 18,619 tick 松夹时触线失败。原始失败状态、动作和报告已另存 `failed_release_evidence/`；随后使用原生检查点的试验均为开发分支，不计为连续成功。低位静态 IK 检查通过仍不足以保证释放：实测工具会绕尚未张开的夹爪转动，需继续调整释放动作。Hard 当时的新连续运行已完成走线及落稳；工具朝向与旧局部夹具不同，终点换抓按本次实测姿态重规划。旧、新资源间约 1.04% 的工具质量差异已定位到 trimesh 版本差异，未修改 hard 布局或成功判据；对照记录在 `runs/oracle_dev/buzz_hard_20261003/continuous01/historical_asset_comparison.json`。
+
+Hard 原始连续开发轨迹在第 40,024 tick 换抓接近时发生机器人—铜轨接触，守卫停止；工具未触线，但该执行仍不具备完整资格。失败原始历史冻结于 `failed_transfer_evidence/`，其 SHA-256 与已完成的三路 Nyx 重渲染一致；随后从第 39,831 tick 原生检查点继续的是开发分支。原因检查发现夹爪被动连杆在移动中偏离规划时的单一样本，后续自由移动同时检查实测被动关节变化范围，并通过普通关节目标跟踪已检查的路径。此处未修改物理模型或成功判据。
+
+两档另起独立 episode，从默认 home 执行正式 `CompiledJointPolicy`，通过导入拦截禁止加载 calibration tools。控制输入按哈希链追加普通关节动作，等待下一批时不推进物理。两档开发分支只能导出候选动作，完整成功资格来自新的无回溯执行及独立审计；最终通过的是 medium `_01` 与 hard `_02`。
+
+Hard 第一次独立复验执行了 43,516 个普通动作，全程未出现工具或机器人触线，但末态角度为 **10.044°**，原生 Task 未成功；开发分支的 **9.924°** 结果没有被当作正式成功。再次调整末端动作后，开发候选达到 **4.535 mm / 8.828°**，新一局 `buzz_hard_v12_stream_20261003_02` 最终以 **4.466 mm / 8.982°** 通过。Medium 的释放调查发现：仅小幅松夹后撤手会拖偏工具，充分张爪可减小偏转，落台后的姿态仍须通过实际执行确认。这些调整均为普通机器人动作，没有新增建模改动。
+
+**Medium 的关键修正是释放顺序。** 最后采用抬高倾转以对齐航向、下放到支撑面、原地充分张爪、检查后撤手的普通动作序列。它解决了小幅松夹后撤手拖偏工具的问题；新的无回溯执行最终通过，成功数量由此前 easy 单档的 **1/3** 补齐到本节列出的 **3/3**。
+
+Medium 的正式三路录像已通过完整解码、同步与副本哈希检查：[全景](../../../demos/buzz_wire_3d/varaition_medium/agentview/varaition_medium_agentview.mp4) · [斜前](../../../demos/buzz_wire_3d/varaition_medium/front_oblique/varaition_medium_front_oblique.mp4) · [腕部](../../../demos/buzz_wire_3d/varaition_medium/wrist/varaition_medium_wrist.mp4)。每路 848×480、30 fps、22,159 帧，时长 738.633 s；RTX 4090 / Nyx 按该成功 episode 的 29,545 个实测状态重渲染，完整关节恢复后的连杆位姿误差为零，不增加物理成功次数。[自包含归档](../../../runs/demo_metadata/buzz_wire_3d/2026-10-03_medium_v12_continuous/archive_manifest.json)包含动作文件、冻结源码、资产、逐 tick 证据和审计；[复跑命令](../../../topogym/planning/buzz_wire_3d/README.md)使用正式 `CompiledJointPolicy`。
+
+Hard 的正式录像同样通过完整解码、同步与副本哈希检查：[全景](../../../demos/buzz_wire_3d/varaition_hard/agentview/varaition_hard_agentview.mp4) · [斜前](../../../demos/buzz_wire_3d/varaition_hard/front_oblique/varaition_hard_front_oblique.mp4) · [腕部](../../../demos/buzz_wire_3d/varaition_hard/wrist/varaition_hard_wrist.mp4)。每路 848×480、30 fps、32,677 帧，时长 1089.233 s；全部 43,569 个实测状态属于同一条从 home 开始的无回溯谱系，重渲染连杆位姿误差为零。[自包含归档](../../../runs/demo_metadata/buzz_wire_3d/2026-10-03_hard_v12_continuous/archive_manifest.json)保留正式动作、源码、资产、原生结果及独立审计。两档本轮仿真、查询和录制进程均已结束。
+
+局部 `terminal02` 的压缩日志关闭不完整，仅无损恢复到第 8647 tick；末尾 8648–8651 缺少完整 tick 记录，详见 [trace_recovery.json](../../../runs/oracle_dev/buzz_medium_approved_20261003/terminal02/trace_recovery.json)。独立保存的 120 个终态测量仍作为局部诊断保留，不补造缺失接触记录，不将其提升为完整轨迹审计通过。
 
 2026-09-29 相机：Panda 默认使用任务专属斜上方角点主机位，让水平与两个竖直方向的线路展开；`front_oblique` 从另一侧补充观察交叉段。
 [相机配置](../../../topogym/config/profiles/camera_configs/buzz_wire_3d_observation.yaml) ·

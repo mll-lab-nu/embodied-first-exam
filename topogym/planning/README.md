@@ -1,5 +1,16 @@
 # 被动策略与参考运动
 
+2026-10-03 Knot：`knot_untying/` 已整合冻结实例执行、实际 tick 动作记录、上游决策回溯、
+前缀回放续跑及正式实例新进程回放检查。交接 easy／medium 原生成功证据和三档 IPC 存档已导入；
+easy 有已有回放通过日志；medium 本轮首遍完整回放未达成功，原因待查；当前优先验证 hard 完整执行。
+[命令与经验](knot_untying/README.md)，[当前证据](../../docs/develop/tasks/knot_untying_zh.md)。
+
+2026-10-03 Blanket：`blanket_flatten/` 接入 easy / medium / hard 共享双手路线、虚拟手见证、
+从默认 home 的 ALOHA `pbd_local_patch_v1` 执行及独立审计。外部交接报告三档 seed 0 均原生成功
+并通过审计；本次完成源码集成与 CPU 回归，完整运行证据未随文本迁入，未新增本地物理成功记录。
+范围见 [Blanket 任务页](../../docs/develop/tasks/blanket_flatten_zh.md)，
+[复现命令](../../scripts/oracle_runners/README.md#blanket-easy--medium--hard-双手展平路线)。
+
 2026-10-03 Claws：已接入交接的 easy / medium / hard 物体路线、实测抓持耦合 IK、
 JOINT_ABS 执行及独立审计。原三档完成分离停稳即可结束；hard 使用两件表面内移
 3 mm 的新版几何，原始未收薄 hard 不继承其结果。具体状态和有限实例范围见

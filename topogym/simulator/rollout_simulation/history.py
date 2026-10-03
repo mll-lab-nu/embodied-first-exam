@@ -11,11 +11,19 @@ STATE_KEYS = ("episode_id", "branch_id", "state_id", "control_step", "physics_st
               "sim_time_s", "terminated", "truncated")
 ROBOT_KEYS = ("joint_position_rad", "tcp_position_world_m", "tcp_orientation_wxyz",
               "finger_position_m", "finger_position_rad")
+# "inline": unlimited rows embed the privileged fields the policy received (an exportable log).
+# "reference": rows name the owner evidence row (same tick record, keyed by state_id) instead of
+# copying it, so an owner/oracle run writes the world once per tick; the log is then not self-contained.
+PRIVILEGED_STORAGES = ("inline", "reference")
+PHYSICS_EVIDENCE = "private/physics_states.jsonl"
 
 
 class SegmentHistory:
-    def __init__(self, root, segment_id, profile=None):
+    def __init__(self, root, segment_id, profile=None, privileged_storage="inline"):
+        if privileged_storage not in PRIVILEGED_STORAGES:
+            raise ValueError("privileged_storage must be inline or reference")
         self.root, self.segment_id, self.profile = root, segment_id, profile
+        self.privileged_storage = privileged_storage
         self.directory = root / f"segments/segment_{segment_id}"
         self.directory.mkdir(parents=True, exist_ok=True)
         self.streams = {}
@@ -48,7 +56,11 @@ class SegmentHistory:
                 state={key: record["state"][key] for key in STATE_KEYS}, robot=robot,
                 action=action, action_index=action_index)
             if self.profile is not None and self.profile.mode == "unlimited":
-                row["privileged"] = {name: record[name] for name in self.profile.state_fields}
+                if self.privileged_storage == "inline":
+                    row["privileged"] = {name: record[name] for name in self.profile.state_fields}
+                elif self.profile.state_fields:
+                    row["privileged_ref"] = dict(source=PHYSICS_EVIDENCE, state_id=record["state"]["state_id"],
+                                                 fields=list(self.profile.state_fields))
             self._write("steps", row)
         except EvidenceError:
             raise

@@ -60,9 +60,17 @@ class ManipulationPlanner:
             q[self.robot._q_indices[side][6:]]=state['finger_position_m']
         return bodies,q
 
-    def withdraw_left(self, observation, *, allow_release_contact=False):
+    def withdraw_left(self, observation, *, allow_release_contact=False, joint_retreat=False):
         """Check a short free-hand retreat from the measured released stack."""
+        if joint_retreat:
+            hands=observation['privileged']['world'].get('grasp',{}).get('hands',{})
+            if 'left' not in hands or hands['left'].get('binding','unknown') is not None:
+                raise ValueError('Joint retreat requires observed release of the left hand')
         bodies,seed=self.observed(observation)
+        if joint_retreat:
+            if not allow_release_contact or not hasattr(self.checker,'ordinary_limit_m'):
+                raise ValueError('Joint release retreat requires the native contact checker')
+            return self._withdraw_left_joint(bodies,seed)
         start=tcp_pose(observation['robot']['left'])
         outward=start[0]-bodies['horseshoe_left'][0];outward[2]=0.
         outward/=max(float(np.linalg.norm(outward)),1e-9)
@@ -82,6 +90,7 @@ class ManipulationPlanner:
             return max((float(c.penetration_depth) for c in data.result.contacts),default=0.)
         self.checker.check(seed,body_poses=bodies)
         initial_depth=depth() if allow_release_contact else 0.
+        release_limit=max(.00001,initial_depth)+.000001
         for delta in deltas:
             target=(start[0]+delta,start[1]);q=seed.copy();rows=[];cleared=False;peak=initial_depth
             try:
@@ -90,12 +99,15 @@ class ManipulationPlanner:
                     q=self.checker.solve('left',interpolate(start,target,u),q)
                     checked=self.checker.check(q,body_poses=bodies,
                         contacts={'right':('horseshoe_left','horseshoe_right')})
+                    if allow_release_contact:
+                        # Record the released-body depth independently of the
+                        # general check; this never grants held-finger status.
+                        current_depth=depth();peak=max(peak,current_depth)
+                        if current_depth>release_limit:
+                            raise ValueError(f'Released-body penetration exceeded its planning limit: fraction={u:.6g}, initial_m={initial_depth:.9g}, current_m={current_depth:.9g}, limit_m={release_limit:.9g}')
                     if not checked['passed']:
                         permitted=allow_release_contact and not cleared and checked['issues']==['left/horseshoe_left'] and u<1.
                         if not permitted:raise ValueError(str(checked))
-                        current_depth=depth();peak=max(peak,current_depth)
-                        if current_depth>max(.00001,initial_depth)+.000001:
-                            raise ValueError('Released-body penetration increased along retreat')
                     else:cleared=True
                     if np.abs(q-previous).max()>.15:raise ValueError('Joint branch changed')
                     rows.append(q.tolist())
@@ -136,13 +148,60 @@ class ManipulationPlanner:
                             free_transit=free_transit,
                             observed_bodies={n:pose_dict(v) for n,v in bodies.items()},attempts=attempts,
                             release_contact=allow_release_contact,initial_release_penetration_m=initial_depth,
+                            release_penetration_limit_m=release_limit,
                             maximum_release_penetration_m=peak,
-                            scope='sampled free-hand retreat; initial released-body contact may only decrease; physical validation required')
+                            scope='sampled Cartesian free-hand retreat with initial-depth escape bound; physical validation required')
                 write_json_atomic(self.directory/'free_hand_plan.json',result)
                 return result
             except ValueError as error:attempts.append(dict(translation_m=delta.tolist(),error=str(error)))
         write_json_atomic(self.directory/'free_hand_plan.json',dict(passed=False,attempts=attempts))
         raise ValueError('No checked free-hand retreat from the released stack')
+
+    def _withdraw_left_joint(self,bodies,seed):
+        return self._withdraw_hand_joint(bodies,seed,side='left')
+
+    def withdraw_released_hand(self,observation,side):
+        if side not in ('left','right'):
+            raise ValueError('Unknown free hand')
+        state=observation['privileged']['world']['grasp']['hands'][side]
+        if state.get('binding','unknown') is not None:
+            raise ValueError('Joint retreat requires observed release of the hand')
+        if not hasattr(self.checker,'ordinary_limit_m'):
+            raise ValueError('Contact retreat requires native contact screening')
+        bodies,seed=self.observed(observation)
+        return self._withdraw_hand_joint(bodies,seed,side=side)
+
+    def _withdraw_hand_joint(self,bodies,seed,*,side):
+        """Permit the released hand to turn while leaving the folded pair.
+
+        Native ordinary contact checks cover every sampled joint pose; the
+        released hand receives no held-finger exemption. The held arm stays
+        fixed, and the endpoint must clear every body and the other arm.
+        """
+        from .joint_transit import plan_transit
+        from topogym.planning.buzz_wire_3d.kinematics import distance
+        other='right' if side=='left' else 'left'
+        indices=self.robot._q_indices[side][:6];attempts=[]
+        for waist in (None,-1.,1.,-1.5,1.5):
+            goal=seed.copy();goal[indices]=self.robot.groups[side].home[:6]
+            if waist is not None:goal[indices[0]]=waist
+            checked=self.checker.check(goal,body_poses=bodies)
+            clearance=min([distance(self.checker.by_arm[side],m) for _,m in self.checker.bodies.values()]+
+                          [distance(self.checker.by_arm[side],self.checker.by_arm[other])])
+            if not checked['passed'] or clearance<.05:
+                attempts.append(dict(waist_rad=waist,endpoint_check=checked,clearance_m=clearance));continue
+            try:transit=plan_transit(self,seed,goal,bodies,side=side,direct_only=True)
+            except ValueError as error:
+                attempts.append(dict(waist_rad=waist,error=str(error)));continue
+            transit['endpoint_minimum_clearance_m']=clearance
+            result=dict(passed=True,joint_retreat=True,free_transit=transit,attempts=attempts,
+                observed_bodies={n:pose_dict(v) for n,v in bodies.items()},
+                release_penetration_limit_m=self.checker.ordinary_limit_m,
+                scope='direct joint retreat sampled at <= 0.015 rad under native contacts; physical validation required')
+            write_json_atomic(self.directory/'free_hand_plan.json',result)
+            return result
+        write_json_atomic(self.directory/'free_hand_plan.json',dict(passed=False,joint_retreat=True,attempts=attempts))
+        raise ValueError('No checked joint retreat from the released stack')
 
     def withdrawal_anchors(self, bodies, grasp_tcp, seed):
         """Diagnostic checkpoints; an alternate route may avoid these poses."""
@@ -195,11 +254,15 @@ class ManipulationPlanner:
                  'approach_sign':(-1,1),'flip':(1,-1),
                  'tangent_roll_deg':(0.,-45.,45.,-90.,90.),
                  'approach_distance_m':(.04,.08)}
+        backoff=.01381
         if choice is not None:
-            if (not isinstance(choice,dict) or not choice or set(choice)-set(options)
+            if (not isinstance(choice,dict) or not choice or set(choice)-set(options)-{'tcp_backoff_m'}
                     or any(isinstance(v,bool) or not isinstance(v,(int,float,np.integer,np.floating))
                            or not np.isfinite(v) for v in choice.values())):
                 raise ValueError('Invalid ring grasp candidate restriction')
+            choice=dict(choice)
+            backoff=float(choice.pop('tcp_backoff_m',backoff))
+            if not .01<=backoff<=.04:raise ValueError('Ring TCP backoff must be between 10 and 40 mm')
             for key,value in choice.items():
                 valid=(0<=value<360 if key=='angle_deg' else
                        -90<=value<=90 if key=='tangent_roll_deg' else value in options[key])
@@ -226,7 +289,7 @@ class ManipulationPlanner:
                         twist=Rotation.from_rotvec(np.deg2rad(roll)*tangent)
                         direction=twist.apply(normal);jaw=twist.apply(flip*radial)
                         turn=Rotation.from_matrix(np.column_stack([direction,jaw,np.cross(direction,jaw)]))
-                        target=(p+r.apply(point)+turn.apply([-.01381,0.,.00055]),turn)
+                        target=(p+r.apply(point)+turn.apply([-backoff,0.,.00055]),turn)
                         for approach_distance in options['approach_distance_m']:
                             pre=(target[0]-approach_distance*direction,turn)
                             # A round wire permits different approach angles
@@ -236,7 +299,8 @@ class ManipulationPlanner:
                             candidates.append((score,angle,approach_sign,flip,roll,approach_distance,point,pre,target))
         for _,angle,sign,flip,roll,approach_distance,point,pre,target in sorted(candidates,key=lambda row:row[0]):
             q=seed.copy();q[self.robot._q_indices[side][6:]]=.018
-            record=dict(angle_deg=angle,approach_sign=sign,flip=flip,tangent_roll_deg=roll,approach_distance_m=approach_distance)
+            record=dict(angle_deg=angle,approach_sign=sign,flip=flip,tangent_roll_deg=roll,
+                        approach_distance_m=approach_distance,tcp_backoff_m=backoff)
             try:
                 pre_q=self.checker.solve(side,pre,q)
                 target_q=self.checker.solve(side,target,pre_q)

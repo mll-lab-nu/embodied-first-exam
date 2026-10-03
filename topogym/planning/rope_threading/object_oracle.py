@@ -34,7 +34,7 @@ TUBE_SURFACE_ERROR = 1.-np.cos(np.pi/TUBE_SEGMENTS)
 FCL_DISTANCE_ERROR_M = 1e-6
 
 DEFAULT_ROUTE = dict(approach_m=.06, exit_m=.06, lift="hook", hop_m=0., tip_overhang_m=.13,
-                     smoothing_m=.002, control_alpha=.5, hook_forward_m=.10, hook_height_m=.24,
+                     smoothing_m=.002, control_alpha=.5, hook_forward_m=.10, hook_height_m=.24, lead_in_m=0.,
                      # Wang placement: after the last ring, turn the tail towards the right arm base.
                      tail_toward_xy=(0.333, -0.019))
 DEFAULT_HANDS = dict(hand_radius_m=.02, hand_separation_m=.045, overlap_m=.0)
@@ -100,6 +100,8 @@ def build_tip_route(problem, route):
         # towards the first ring on a wide arc: no hairpin at the lift-off.
         t_end = problem.initial_m[-1]-problem.initial_m[-2]
         t_end = t_end/np.linalg.norm(t_end)
+        if p["lead_in_m"] > 0:
+            controls.append(tip0+p["lead_in_m"]*t_end)
         controls.append(tip0+.6*p["hook_forward_m"]*t_end+[0., 0., .4*p["hook_height_m"]])
         controls.append(tip0+p["hook_forward_m"]*t_end+[0., 0., p["hook_height_m"]])
     elif p["lift"] != "diagonal":
@@ -197,6 +199,8 @@ def relay_schedule(problem, track, plan, hands, sigma_final):
         handoff = crossing+poke
         if handoff <= sigma:
             raise ValueError(f"Ring {name}: poke handoff does not advance travel")
+        if handoff > sigma_final+1e-9:
+            raise ValueError(f"Ring {name}: poke handoff exceeds final travel")
         events.append(dict(kind="poke", ring=name, sigma=handoff, tip_beyond_plane_m=poke,
                            pusher_beyond_plane_m=poke-s_p, pusher_position_m=track.rope([L-s_p], handoff)[0].tolist()))
         s_r = float(entry["receiver_station_m"])
@@ -235,6 +239,39 @@ def relay_schedule(problem, track, plan, hands, sigma_final):
 
 def route_pull(entry, last, remaining):
     return remaining if last else entry["pull_m"]
+
+
+def support_regrasps(holds, rope_length, *, separation_m=.10):
+    """Insert a stationary other-hand hold before each unsupported regrasp.
+
+    The IK timeline pinches this keeper, releases the former holder, acquires
+    its new station, then releases the keeper. The rope never advances while
+    both hands are attached. All added grasps still need object/robot checks.
+    """
+    from copy import deepcopy
+    if not np.isfinite(separation_m) or separation_m <= 0:
+        raise ValueError("Regrasp support separation must be positive")
+    result = []
+    for hold in deepcopy(holds):
+        if hold.get("unheld_regrasp"):
+            previous = result[-1]
+            if previous["hand"] != hold["hand"] or abs(previous["sigma_end"]-hold["sigma_start"]) > 1e-8:
+                raise ValueError("Unsupported regrasp must follow the same hand at constant travel")
+            # Put the keeper between the former near-tip station and the new
+            # pusher when possible, otherwise farther back along the rope.
+            behind = hold["station_behind_tip_m"]-separation_m
+            if behind <= previous["station_behind_tip_m"]+separation_m*.5:
+                behind = hold["station_behind_tip_m"]+separation_m
+            if not 0 < behind < rope_length:
+                raise ValueError("Keeper station lies outside the rope")
+            hand = "B" if hold["hand"] == "A" else "A"
+            result.append(dict(hand=hand, station_behind_tip_m=behind, station_m=rope_length-behind,
+                               sigma_start=hold["sigma_start"], sigma_end=hold["sigma_start"],
+                               role="keeper", ring=hold["ring"]+"_keeper", unheld_regrasp=False,
+                               orientation=None))
+            hold.update(unheld_regrasp=False, regrasp_support=hand)
+        result.append(hold)
+    return result
 
 
 def _rope_gap(problem, checker, track, sigma):
@@ -356,9 +393,9 @@ def material_budget(problem, track, sigma_final):
 
 
 def plan_object_path(output, *, variation="medium", seed=0, route=None, relay=None, hands=None,
-                     margin_m=.001, hand_margin_m=.003, step_m=.002, progress=None):
+                     margin_m=.001, hand_margin_m=.003, step_m=.002, progress=None, task_parameters=None):
     started = time.monotonic()
-    problem = frozen_problem(output, variation=variation, seed=seed)
+    problem = frozen_problem(output, variation=variation, seed=seed, task_parameters=task_parameters)
     hands = dict(DEFAULT_HANDS, **(hands or {}))
     rings = ordered_rings(problem)
     from .profiles import candidate_plans
@@ -401,7 +438,8 @@ def plan_object_path(output, *, variation="medium", seed=0, route=None, relay=No
 
 def audit_object_path(witness, output, *, progress=None):
     """Rebuild the task geometry and replay the witness route; ignore stored flags."""
-    problem = frozen_problem(output, variation=witness["variation_id"], seed=witness["seed"])
+    problem = frozen_problem(output, variation=witness["variation_id"], seed=witness["seed"],
+                             task_parameters=witness.get("task_parameters"))
     from topogym.utils.io import to_jsonable
     identity = ("task_id", "variation_id", "model_revision", "terminal_revision", "instance_id",
                 "asset_sha256", "required_crossings", "rings", "rope_radius_m", "rope_stations", "table_height_m", "robot_scene")

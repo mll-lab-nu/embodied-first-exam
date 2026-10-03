@@ -18,7 +18,8 @@ import time
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from .relay_kinematics import RopeThreadingKinematics, grasp_orientation, interpolate_pose, track_orientation
+from .relay_kinematics import (RopeThreadingKinematics, grasp_orientation, interpolate_pose,
+                             track_orientation, track_material_orientation)
 from topogym.utils.arrays import to_numpy
 from .object_oracle import Track, build_tip_route
 
@@ -26,17 +27,21 @@ FAMILIES = ("across", "along", "along_lead")
 ROLLS_DEG = (0., -90., 90., 180., 45., -45., 135., -135.)
 DEFAULT_OPTIONS = dict(hold_step_m=.01, joint_step_rad=.05, approach_m=.06, approach_step_m=.005,
                        max_joint_change_rad=.5, branch_seeds=16, pinch_opening_m=.0123, free_opening_m=.03,
-                       fixture_margin_m=.005, rope_margin_m=.003, inter_arm_m=.01)
+                       release_opening_m=.017,
+                       material_tangent=False, material_tangent_delay_m=0., material_tangent_min_lead_m=0.,
+                       material_axis_tolerance_deg=0., max_holds=None, recover_wrist_branch=False,
+                       fixture_margin_m=.005, rope_margin_m=.003, inter_arm_m=.01, max_penetration_m=0.)
 
 
 class RelayPlanner:
-    def __init__(self, problem, track, holds, assignment, options=None, progress=None, kin=None):
+    def __init__(self, problem, track, holds, assignment, options=None, progress=None, kin=None, attempt_progress=None):
         self.problem, self.track, self.holds = problem, track, holds
         self.assignment = dict(assignment)
         self.o = dict(DEFAULT_OPTIONS, **(options or {}))
         self.kin = RopeThreadingKinematics(problem) if kin is None else kin
         self.q = self.kin.home.copy()
         self.progress = progress or (lambda *a: None)
+        self.attempt_progress = attempt_progress or (lambda *a: None)
         self.samples = []
         self.phases = []
         self.stays = []
@@ -64,10 +69,18 @@ class RelayPlanner:
 
     def check(self, q, holding):
         return self.kin.check(q, holding=holding, margin_m=self.o["fixture_margin_m"],
-                              rope_margin_m=self.o["rope_margin_m"], inter_arm_m=self.o["inter_arm_m"])
+                              rope_margin_m=self.o["rope_margin_m"], inter_arm_m=self.o["inter_arm_m"],
+                              max_penetration_m=self.o["max_penetration_m"])
+
+    @staticmethod
+    def issues(result):
+        extra = {k: v for k, v in result.items() if k.endswith("_near_fixtures")
+                 or k in {"self_collisions", "rejected_contacts"}}
+        return str(result["issues"])+(f" {extra}" if extra else "")
 
     def other_holder(self, hold, sigma):
-        others = [h for h in self.holds if h is not hold and h["sigma_start"]-1e-9 <= sigma <= h["sigma_end"]+1e-9]
+        others = [h for h in self.holds if h["hand"] != hold["hand"]
+                  and h["sigma_start"]-1e-9 <= sigma <= h["sigma_end"]+1e-9]
         return self.side(others[0]["hand"]) if others else None
 
     def branches(self, side, pose, seed):
@@ -75,7 +88,12 @@ class RelayPlanner:
         idx = self.arm(side)
         lo, hi = self.kin.limits[side][:, 0]+.02, self.kin.limits[side][:, 1]-.02
         found = []
-        starts = [np.asarray(seed, float), self.kin.home.copy()]
+        # Only the moving arm may change its seed. Replacing the full qpos
+        # with home silently teleports the other (possibly holding) arm when
+        # this branch is committed at pinch, invalidating its collision audit.
+        home_seed = np.asarray(seed, float).copy()
+        home_seed[idx] = self.kin.home[idx]
+        starts = [np.asarray(seed, float), home_seed]
         for _ in range(self.o["branch_seeds"]):
             s = np.asarray(seed, float).copy()
             s[idx] = self.rng.uniform(lo, hi)
@@ -112,13 +130,16 @@ class RelayPlanner:
         minima = []
         for k in range(1, steps+1):
             pose = interpolate_pose(start, target, k/steps)
-            candidate = self.kin.solve(side, pose, q)
+            try:
+                candidate = self.kin.solve(side, pose, q)
+            except ValueError as error:
+                raise ValueError(f"{phase} at step {k}/{steps}: {error}") from error
             if np.abs(candidate[idx]-q[idx]).max() > self.o["max_joint_change_rad"]:
                 raise ValueError(f"{phase}: joint branch jump at step {k}/{steps}")
             candidate = self.set_fingers(candidate, side, opening)
             result = self.check(candidate, holding)
             if not result["passed"]:
-                raise ValueError(f"{phase}: {result['issues']} at step {k}/{steps}")
+                raise ValueError(f"{phase}: {self.issues(result)} at step {k}/{steps}")
             minima.append(result)
             q = candidate
             record.append(dict(phase=phase, sigma=float(sigma), q=q.tolist()))
@@ -136,20 +157,41 @@ class RelayPlanner:
             candidate[idx] = q_from[idx]+(k/steps)*(q_to[idx]-q_from[idx])
             result = self.check(candidate, holding)
             if not result["passed"]:
-                raise ValueError(f"{phase}: {result['issues']} at step {k}/{steps}")
+                raise ValueError(f"{phase}: {self.issues(result)} at step {k}/{steps}")
             minima.append(result)
             q = candidate
             record.append(dict(phase=phase, sigma=float(sigma), q=q.tolist()))
         return q, minima
 
     def transit(self, side, q_to, *, holding, phase, sigma, record):
-        """Direct joint-space transit, else via the arm's home configuration."""
+        """Try a direct joint path, short detours, home, then a Cartesian lift."""
         saved, saved_q = len(record), self.q.copy()
         try:
             return self.joint_transit(side, self.q, q_to, holding=holding, opening=self.o["free_opening_m"],
                                       phase=phase, sigma=sigma, record=record)
         except ValueError as direct:
             record[:] = record[:saved]
+            # A straight joint chord can clip a rim even when both ends are
+            # clear. Try short shoulder/elbow detours before a large trip home.
+            # The non-moving arm remains at its actual held configuration.
+            indices = self.arm(side)
+            lo = self.kin.limits[side][:, 0]+.02
+            hi = self.kin.limits[side][:, 1]-.02
+            for fraction in (.5, .75):
+                for joint, offset in ((1, -.2), (1, -.4), (2, .2), (2, -.2), (0, -.2), (0, .2)):
+                    middle = saved_q.copy()
+                    middle[indices] += fraction*(q_to[indices]-saved_q[indices])
+                    middle[indices[joint]] += offset
+                    if np.any(middle[indices] < lo) or np.any(middle[indices] > hi):
+                        continue
+                    try:
+                        q, m1 = self.joint_transit(side, saved_q, middle, holding=holding,
+                            opening=self.o["free_opening_m"], phase=phase+"/detour", sigma=sigma, record=record)
+                        q, m2 = self.joint_transit(side, q, q_to, holding=holding,
+                            opening=self.o["free_opening_m"], phase=phase+"/detour", sigma=sigma, record=record)
+                        return q, m1+m2
+                    except ValueError:
+                        record[:] = record[:saved]
             home = self.q.copy()
             home[self.arm(side)] = self.kin.home[self.arm(side)]
             try:
@@ -221,12 +263,15 @@ class RelayPlanner:
         holders = {side} if holding is None else set(holding)
         idx = self.arm(side)
         station = hold["station_m"]
+        align_material = (self.o["material_tangent"] and
+                          hold["station_behind_tip_m"] >= self.o["material_tangent_min_lead_m"])
         sigmas = np.arange(hold["sigma_start"], hold["sigma_end"], self.o["hold_step_m"])
         sigmas = np.r_[sigmas[1:], hold["sigma_end"]] if hold["sigma_end"] > hold["sigma_start"]+1e-12 else np.array([])
         q, minima = self.set_fingers(q_start, side, self.o["pinch_opening_m"]), []
         R = orientation if orientation is not None else self.grasp_pose(hold, hold["sigma_start"], family, roll)[1]
         adjustments = [(0., 0.)]+[(np.deg2rad(a), 0.) for a in (10, -10, 20, -20, 30, -30)] \
             +[(0., np.deg2rad(b)) for b in (10, -10, 20, -20)]
+        free_adjustments = adjustments
         for sigma in sigmas:
             self.kin.set_rope(self.track.rope(self.problem.stations_m, sigma))
             p = self.track.rope([station], sigma)[0]
@@ -238,10 +283,28 @@ class RelayPlanner:
                 angle = float(np.linalg.norm(delta))
                 if angle > 1e-9:
                     R = Rotation.from_rotvec(delta*min(1., np.deg2rad(15)/angle))*R
-            base = track_orientation(R, t)
+            material_active = align_material and (
+                hold["sigma_start"] > 1e-9 or sigma >= self.o["material_tangent_delay_m"])
+            base = track_material_orientation(R, t, family) if material_active else track_orientation(R, t)
+            if material_active and self.o["material_tangent_delay_m"] and hold["sigma_start"] <= 1e-9:
+                delta = (base*R.inv()).as_rotvec()
+                base = Rotation.from_rotvec(delta*min(1., .25/max(np.linalg.norm(delta), 1e-12)))*R
+            adjustments = ([(0., np.deg2rad(b)) for b in (0, 10, -10, 20, -20, 30, -30)]
+                           if material_active else free_adjustments)
+            if material_active and self.o["material_axis_tolerance_deg"]:
+                tolerance = self.o["material_axis_tolerance_deg"]
+                adjustments += [(np.deg2rad(a), 0.) for a in (5, -5, 10, -10, 15, -15, tolerance, -tolerance)
+                                if abs(a) <= tolerance]
             errors = []
             for about_y, about_t in adjustments:
                 candidate_r = Rotation.from_rotvec(about_t*t)*Rotation.from_rotvec(about_y*base.apply([0., 1., 0.]))*base
+                if material_active:
+                    allowed = max(np.deg2rad(self.o["material_axis_tolerance_deg"]),
+                                  (track_material_orientation(base, t, family)*base.inv()).magnitude())
+                    error = (track_material_orientation(candidate_r, t, family)*candidate_r.inv()).magnitude()
+                    if error > allowed+1e-8:
+                        errors.append("material axis tilt exceeds the alignment envelope")
+                        continue
                 pose = (p-candidate_r.apply(self.kin.pad_offset[side]), candidate_r)
                 try:
                     candidate = self.kin.solve(side, pose, q)
@@ -257,17 +320,55 @@ class RelayPlanner:
                         record.append(dict(phase=f"hold:{hold['hand']}:{hold['ring']}/reconfigure", sigma=float(sigma), q=qq.tolist()))
                 result = self.check(candidate, holders)
                 if not result["passed"]:
-                    errors.append(str(result["issues"])); continue
+                    errors.append(self.issues(result)); continue
                 q, R = candidate, candidate_r
                 minima.append(result)
                 record.append(dict(phase=f"hold:{hold['hand']}:{hold['ring']}", sigma=float(sigma), q=q.tolist()))
                 break
             else:
+                # A wrist branch can end at a joint limit even though the
+                # same TCP pose exists on the other branch. Switch at the
+                # previous material travel, keeping the captured band still,
+                # then try the next target from that branch.
+                if self.o["recover_wrist_branch"]:
+                    old_pose = self.kin.tcp_pose(q, side)
+                    old_pad = old_pose[0]+old_pose[1].apply(self.kin.pad_offset[side])
+                    recovered = False
+                    for branch in self.branches(side, old_pose, q):
+                        if np.max(np.abs(branch[idx]-q[idx])) < .3:
+                            continue
+                        branch = self.set_fingers(branch, side, self.o["pinch_opening_m"])
+                        flip = self.reconfiguration(side, q, branch, old_pad, holding=holders, substeps=24)
+                        if flip is None or any((self.kin.tcp_pose(qq, side)[1]*old_pose[1].inv()).magnitude() > .12
+                                               for qq, _ in flip):
+                            continue
+                        pose = (p-base.apply(self.kin.pad_offset[side]), base)
+                        try:
+                            candidate = self.kin.solve(side, pose, branch)
+                        except ValueError:
+                            continue
+                        candidate = self.set_fingers(candidate, side, self.o["pinch_opening_m"])
+                        result = self.check(candidate, holders)
+                        if not result["passed"] or np.max(np.abs(candidate[idx]-branch[idx])) > self.o["max_joint_change_rad"]:
+                            continue
+                        before_sigma = record[-1]["sigma"] if record else hold["sigma_start"]
+                        for qq, rr in flip:
+                            minima.append(rr)
+                            record.append(dict(phase=f"hold:{hold['hand']}:{hold['ring']}/branch",
+                                               sigma=float(before_sigma), q=qq.tolist()))
+                        minima.append(result)
+                        record.append(dict(phase=f"hold:{hold['hand']}:{hold['ring']}", sigma=float(sigma), q=candidate.tolist()))
+                        q, R, recovered = candidate, base, True
+                        break
+                    if recovered:
+                        continue
                 # Reorient the wrist about the rope (or the closing axis) in
                 # small sub-steps at constant travel before giving up.
                 done = False
                 for about_y, about_t in [(0., np.deg2rad(a)) for a in (45, -45, 90, -90, 135, -135, 180)] \
                         +[(np.deg2rad(b), 0.) for b in (45, -45, 90, -90)]:
+                    if material_active and about_y:
+                        continue
                     steps = int(np.ceil(max(abs(about_y), abs(about_t))/np.deg2rad(10)))
                     qq, path, ok = q, [], True
                     y_axis = base.apply([0., 1., 0.])
@@ -296,6 +397,10 @@ class RelayPlanner:
                         break
                 if not done:
                     raise ValueError(f"hold {hold['hand']}:{hold['ring']} at travel {sigma:.3f}: {sorted(set(errors))}")
+        if align_material and len(sigmas):
+            aligned = track_material_orientation(R, t, family)
+            if (aligned*R.inv()).magnitude() > np.deg2rad(max(5., self.o["material_axis_tolerance_deg"]))+1e-8:
+                raise ValueError("Material axis did not align before the handoff")
         return q, minima
 
     def retreat_and_park(self, hand, sigma, record, *, holding):
@@ -316,17 +421,22 @@ class RelayPlanner:
         holders = set() if holding is None else ({holding} if isinstance(holding, str) else set(holding))
         n = max(2, int(np.ceil(self.o["approach_m"]/self.o["approach_step_m"])))
         errors, minima = [], None
-        for name, direction in (("tool", -r.apply([1., 0., 0.])), ("up", np.array([0., 0., 1.])), ("base", towards_base)):
-            saved = len(record)
-            try:
-                q, minima = self.cartesian(side, self.q, (p+self.o["approach_m"]*direction, r), steps=n,
-                                           holding=holders | {side}, opening=self.o["free_opening_m"],
-                                           phase=f"retreat:{hand}/{name}", sigma=sigma, record=record)
-                self.q = q
+        # A wide-open pad can strike the next ring before the arm retreats.
+        # Try a narrower release if necessary; open fully only in a checked park.
+        for opening in (self.o["free_opening_m"], self.o["release_opening_m"]):
+            for name, direction in (("tool", -r.apply([1., 0., 0.])), ("up", np.array([0., 0., 1.])), ("base", towards_base)):
+                saved = len(record)
+                try:
+                    q, minima = self.cartesian(side, self.q, (p+self.o["approach_m"]*direction, r), steps=n,
+                                               holding=holders | {side}, opening=opening,
+                                               phase=f"retreat:{hand}/{name}", sigma=sigma, record=record)
+                    self.q = q
+                    break
+                except ValueError as error:
+                    errors.append(f"{name} opening={opening}: {error}")
+                    record[:] = record[:saved]
+            if minima is not None:
                 break
-            except ValueError as error:
-                errors.append(f"{name}: {error}")
-                record[:] = record[:saved]
         if minima is None:
             raise ValueError("retreat failed: " + "; ".join(errors))
         # Keep backing off along the same direction until the whole arm clears
@@ -337,7 +447,7 @@ class RelayPlanner:
                 break
             p, r = self.kin.tcp_pose(self.q, side)
             q, more = self.cartesian(side, self.q, (p+self.o["approach_m"]*direction, r), steps=n,
-                                     holding=holders | {side}, opening=self.o["free_opening_m"],
+                                     holding=holders | {side}, opening=opening,
                                      phase=f"retreat:{hand}/{name}+{extension+1}", sigma=sigma, record=record)
             self.q = q
             minima += more
@@ -443,10 +553,11 @@ class RelayPlanner:
                 both = {side} | ({holding_other} if holding_other else set())
                 result = self.check(pinched, both)
                 if not result["passed"]:
-                    raise ValueError(f"grasp pose: {result['issues']}")
-                q_end, hold_minima = self.follow(hold, family, roll, branch, [], holding=both)
-                # The branch survives the hold: connect to it. Restore the rope
-                # obstacle to the hold's start state (follow advanced it).
+                    raise ValueError(f"grasp pose: {self.issues(result)}")
+                # Connect, acquire and park the previous holder before checking
+                # the full hold. Testing the entire hold while the old holder
+                # remains frozen at the handoff creates false inter-arm failures.
+                # The follow below still rejects the complete branch on failure.
                 self.kin.set_rope(self.track.rope(self.problem.stations_m, sigma))
                 q_pre = self.kin.solve(side, pre, branch, iterations=200)
                 if np.abs(q_pre[self.arm(side)]-branch[self.arm(side)]).max() > self.o["max_joint_change_rad"]:
@@ -487,6 +598,8 @@ class RelayPlanner:
     def plan(self, candidates=None):
         candidates = candidates or [(f, np.deg2rad(d)) for f in FAMILIES for d in ROLLS_DEG]
         holds = sorted(self.holds, key=lambda h: (h["sigma_start"], h["role"] == "pusher"))
+        if self.o["max_holds"] is not None:
+            holds = holds[:self.o["max_holds"]]
         previous = None
         for index, hold in enumerate(holds):
             report = dict(hand=hold["hand"], side=self.side(hold["hand"]), role=hold["role"], ring=hold["ring"],
@@ -504,9 +617,11 @@ class RelayPlanner:
                 except ValueError as error:
                     report["attempts"].append(dict(family=family, roll_deg=float(np.rad2deg(roll)),
                                                    error=str(error)[:600], wall_s=time.monotonic()-started))
+                    self.attempt_progress(index, report)
                     continue
                 accepted["wall_s"] = time.monotonic()-started
                 report["accepted"] = accepted
+                self.attempt_progress(index, report)
                 self.samples += record
                 break
             self.phases.append(report)
@@ -514,29 +629,28 @@ class RelayPlanner:
             if report["accepted"] is None:
                 return dict(passed=False, failed_hold=index, phases=self.phases)
             previous = hold
-        record = []
-        try:
-            self.retreat_and_park(previous["hand"], previous["sigma_end"], record, holding=None)
-            self.samples += record
-            final = dict(passed=True, samples=len(record))
-        except ValueError as error:
-            final = dict(passed=False, error=str(error))
-        self.phases.append(dict(role="final_release", **final))
-        return dict(passed=final["passed"], phases=self.phases)
+        if len(holds) < len(self.holds):
+            return dict(passed=True, complete_relay=False, phases=self.phases)
+        # Native success permits retaining the final grasp. Keep that stable
+        # configuration instead of requiring an unrelated release/park path.
+        self.phases.append(dict(role="final_hold", passed=True, samples=0))
+        return dict(passed=True, phases=self.phases)
 
 
-def plan_relay_ik(problem, witness, *, assignment, options=None, progress=None, kin=None, holds=None, track=None):
+def plan_relay_ik(problem, witness, *, assignment, options=None, progress=None, kin=None, holds=None, track=None,
+                  attempt_progress=None):
     started = time.monotonic()
     if track is None:
         controls, dense, _ = build_tip_route(problem, witness["route"]["parameters"])
         track = Track(problem.initial_m, dense)
     holds = witness["schedule"]["holds"] if holds is None else holds
-    planner = RelayPlanner(problem, track, holds, assignment, options, progress, kin=kin)
+    planner = RelayPlanner(problem, track, holds, assignment, options, progress, kin=kin, attempt_progress=attempt_progress)
     result = planner.plan()
     return dict(scope="sampled dual-arm IK and collision checks along the object witness; no physics",
                 assignment=dict(assignment), options=planner.o, families=FAMILIES, rolls_deg=ROLLS_DEG,
                 pad_offset_m={s: v.tolist() for s, v in planner.kin.pad_offset.items()},
-                passed=bool(result["passed"]), phases=result["phases"], failed_hold=result.get("failed_hold"),
+                passed=bool(result["passed"]), complete_relay=result.get("complete_relay", True),
+                phases=result["phases"], failed_hold=result.get("failed_hold"),
                 unparked_arms=planner.stays,
                 sample_count=len(planner.samples), wall_time_s=time.monotonic()-started,
                 robot_ik_verified=bool(result["passed"]), robot_execution_verified=False, task_success=False), planner.samples

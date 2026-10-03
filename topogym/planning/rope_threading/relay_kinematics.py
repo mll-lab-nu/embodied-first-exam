@@ -18,6 +18,26 @@ BASE_LINKS = {"base_link", "waist_link", "shoulder_link"}
 FINGER_LINKS = {"left_finger_link", "right_finger_link"}
 
 
+def contact_depth(first, second):
+    """Maximum FCL contact depth estimate, or infinity for incomplete data.
+
+    Used only by explicitly relaxed planning checks. Native contact solving
+    still governs execution; triangle contact depth is a geometric estimate.
+    """
+    request = fcl.CollisionRequest(num_max_contacts=10000, enable_contact=True)
+    result = fcl.CollisionResult()
+    if isinstance(first, fcl.CollisionObject):
+        fcl.collide(first, second, request, result)
+    else:
+        data = fcl.CollisionData(request=request, result=result)
+        first.collide(second, data, fcl.defaultCollisionCallback)
+        result = data.result
+    depths = np.asarray([c.penetration_depth for c in result.contacts], float)
+    if not len(depths) or len(depths) >= 10000 or not np.isfinite(depths).all():
+        return float("inf")
+    return max(0., float(depths.max()))
+
+
 def _bvh(mesh_or_vf):
     if isinstance(mesh_or_vf, tuple):
         vertices, faces = mesh_or_vf
@@ -80,6 +100,24 @@ def track_orientation(previous, tangent):
     return Rotation.from_matrix(np.column_stack([x, y, np.cross(x, y)]))
 
 
+def track_material_orientation(previous, tangent, family):
+    """Parallel-transport the material axis captured by a finite grasp band.
+
+    Constraining only the closing axis lets the reference rope turn inside the
+    pad plane while the real assisted material patch keeps its local direction.
+    """
+    local = {"across": [0., 0., 1.], "along": [-1., 0., 0.], "along_lead": [1., 0., 0.]}[family]
+    before = previous.apply(local)
+    after = np.asarray(tangent, float)/np.linalg.norm(tangent)
+    axis = np.cross(before, after)
+    sine, cosine = np.linalg.norm(axis), np.clip(before@after, -1., 1.)
+    if sine < 1e-10:
+        turn = Rotation.identity() if cosine > 0 else Rotation.from_rotvec(np.pi*previous.apply([0., 1., 0.]))
+    else:
+        turn = Rotation.from_rotvec(axis/sine*np.arctan2(sine, cosine))
+    return turn*previous
+
+
 class RopeThreadingKinematics:
     def __init__(self, problem, *, seed=0):
         import genesis as gs
@@ -89,6 +127,7 @@ class RopeThreadingKinematics:
         from topogym.world.tabletop import StandardTabletopSceneBuilder
         from topogym.robot.joint_position import JointPositionRobot
         config = SimulatorConfig(task_id="rope_threading", variation_id=problem.identity["variation_id"],
+                                 task_parameters=problem.identity.get("task_parameters", {}),
                                  enable_rgb=False, compute_backend="cpu")
         scene_config = load_scene_config(config)
         if not getattr(gs, "_initialized", False):
@@ -130,11 +169,18 @@ class RopeThreadingKinematics:
         self.self_pairs = [(by_geom[int(a)], by_geom[int(b)]) for a, b in valid
                            if int(a) in by_geom and int(b) in by_geom and by_geom[int(a)][0] == by_geom[int(b)][0]]
         self.by_arm = {side: manager([x[4] for x in self.shapes if x[0] == side]) for side in self.robot.groups}
+        self.fingers = {side: manager([x[4] for x in self.shapes if x[0] == side and x[1] in FINGER_LINKS])
+                        for side in self.robot.groups}
+        self.finger_fixture_only = problem.identity.get("task_parameters", {}).get("rope_robot_contact", "full") == "fingers"
+        self.finger_rope_only = self.finger_fixture_only
         self.nonfinger = {side: manager([x[4] for x in self.shapes if x[0] == side and x[1] not in FINGER_LINKS])
                           for side in self.robot.groups}
         self.nonhand = {side: manager([x[4] for x in self.shapes if x[0] == side
                                        and x[1] not in FINGER_LINKS | {"gripper_base"}]) for side in self.robot.groups}
         self.fixtures = manager([_bvh(problem.fixtures)])
+        from .geometry import _fixture_meshes
+        meshes, names = _fixture_meshes(problem.layout, problem.table_height_m)
+        self.named_fixtures = [(name, manager([_bvh(mesh)])) for name, mesh in zip(names, meshes)]
         self.risers = manager([_bvh(mesh) for mesh in problem.risers])
         self.above_base = manager([x[4] for x in self.shapes if x[1] != "base_link"])
         # Pad centre relative to the TCP site, expressed in the TCP frame (per side).
@@ -224,7 +270,8 @@ class RopeThreadingKinematics:
         raise ValueError(f"IK failed: residual position {np.linalg.norm(error[:3]):.4g} m, orientation {np.linalg.norm(error[3:]):.4g} rad")
 
     # ----- checks --------------------------------------------------------
-    def check(self, q, *, holding=None, margin_m=.005, rope_margin_m=.003, inter_arm_m=.01):
+    def check(self, q, *, holding=None, margin_m=.005, rope_margin_m=.003, inter_arm_m=.01,
+              max_penetration_m=0.):
         """Geometric checks at one joint configuration. holding: side(s) pinching the rope."""
         holding = set() if holding is None else ({holding} if isinstance(holding, str) else set(holding))
         pose = self.fk.solve(q)
@@ -235,41 +282,60 @@ class RopeThreadingKinematics:
             obj.setTransform(fcl.Transform(rs[index].as_matrix(), ps[index]))
             if short not in BASE_LINKS:
                 table = min(table, float((rs[index].apply(local)+ps[index])[:, 2].min()-self.table_height))
-        for m in (*self.by_arm.values(), *self.nonfinger.values(), *self.nonhand.values()):
+        for m in (*self.by_arm.values(), *self.nonfinger.values(), *self.nonhand.values(), *self.fingers.values()):
             m.update()
         self.above_base.update()
         issues, detail = [], {}
-        self_hits = [[a[1], b[1], a[0]] for a, b in self.self_pairs
-                     if fcl.collide(a[2], b[2], fcl.CollisionRequest(), fcl.CollisionResult())]
+        def below(gap, margin, first, second, label):
+            if gap >= margin:
+                return False
+            if gap < 0 and max_penetration_m > 0:
+                depth = contact_depth(first, second)
+                if depth <= max_penetration_m:
+                    detail.setdefault("allowed_contacts", []).append(dict(pair=label, estimated_depth_m=depth))
+                    return False
+                detail.setdefault("rejected_contacts", []).append(dict(pair=label, estimated_depth_m=depth))
+            return True
+        self_hits = []
+        for a, b in self.self_pairs:
+            if fcl.collide(a[2], b[2], fcl.CollisionRequest(), fcl.CollisionResult()):
+                if below(-1., 0., a[2], b[2], f"{a[0]}/{a[1]}:{b[1]}"):
+                    self_hits.append([a[1], b[1], a[0]])
         if self_hits:
             issues.append("same_arm_collision"); detail["self_collisions"] = self_hits
         detail["table_clearance_m"] = table
-        if table < .0005:
+        if table < (-max_penetration_m if max_penetration_m > 0 else .0005):
             issues.append("table")
         arms = distance(self.by_arm["left"], self.by_arm["right"])
         detail["inter_arm_m"] = arms
-        if arms < inter_arm_m:
+        if below(arms, inter_arm_m, self.by_arm["left"], self.by_arm["right"], "inter_arm"):
             issues.append("inter_arm")
         # Fixed base links intentionally rest on these task-authored risers.
         riser_gap = distance(self.above_base, self.risers)
         detail["riser_clearance_m"] = riser_gap
-        if riser_gap < .0005:
+        if below(riser_gap, .0005, self.above_base, self.risers, "base_riser"):
             issues.append("base_riser")
         for side in self.by_arm:
-            gap = distance(self.by_arm[side], self.fixtures)
+            fixture_arm = self.fingers[side] if self.finger_fixture_only else self.by_arm[side]
+            detail["fixture_contact_links"] = "fingers" if self.finger_fixture_only else "all"
+            gap = distance(fixture_arm, self.fixtures)
             detail[side+"_fixture_m"] = gap
-            if gap < margin_m:
+            if below(gap, margin_m, fixture_arm, self.fixtures, side+"/fixtures"):
                 issues.append(side+"/fixtures")
-            if self.rope is not None:
-                checked = self.nonhand[side] if side in holding else self.by_arm[side]
+                detail[side+"_near_fixtures"] = {name: measured for name, fixture in self.named_fixtures
+                    if (measured := distance(fixture_arm, fixture)) < margin_m}
+            if self.rope is not None and not (self.finger_rope_only and side in holding):
+                checked = (self.fingers[side] if self.finger_rope_only else
+                           self.nonhand[side] if side in holding else self.by_arm[side])
                 gap = distance(checked, self.rope)
                 detail[side+"_rope_m"] = gap
-                if gap < rope_margin_m:
+                if below(gap, rope_margin_m, checked, self.rope, side+"/rope"):
                     issues.append(side+"/rope")
-                if side in holding:
-                    base_gap = distance(manager([x[4] for x in self.shapes if x[0] == side and x[1] == "gripper_base"]), self.rope)
+                if side in holding and not self.finger_rope_only:
+                    base = manager([x[4] for x in self.shapes if x[0] == side and x[1] == "gripper_base"])
+                    base_gap = distance(base, self.rope)
                     detail[side+"_gripper_base_rope_m"] = base_gap
-                    if base_gap < 0.:
+                    if below(base_gap, 0., base, self.rope, side+"/gripper_base_rope"):
                         issues.append(side+"/gripper_base_rope")
         for side, limits in self.limits.items():
             joints = q[self.robot._q_indices[side][:6]]

@@ -40,6 +40,7 @@ def add_volume(scene, spec, morph, physical_material, surface):
         rest, spawn, elements = (
             data[key].copy() for key in ("rest", "spawn", "elements")
         )
+        elastic_rest = data["elastic_rest"].copy() if "elastic_rest" in data else rest.copy()
     if rest.ndim != 2 or rest.shape[1] != 3 or spawn.shape != rest.shape:
         raise ValueError(
             "FEM rest and spawn coordinates must have matching (N, 3) shapes"
@@ -56,9 +57,11 @@ def add_volume(scene, spec, morph, physical_material, surface):
     if tuple(spec.quaternion_wxyz) != (1.0, 0.0, 0.0, 0.0):
         raise ValueError("Explicit FEM volume currently requires identity orientation")
     spawn += np.asarray(spec.position_m)
-    if not np.isfinite(rest).all() or not np.isfinite(spawn).all():
+    if elastic_rest.shape != rest.shape:
+        raise ValueError("Elastic rest coordinates must match material coordinates")
+    if not all(np.isfinite(v).all() for v in (rest, spawn, elastic_rest)):
         raise ValueError("FEM volume must be finite")
-    for vertices in (rest, spawn):
+    for vertices in (rest, spawn, elastic_rest):
         corners = vertices[elements]
         if np.any(np.linalg.det(corners[:, 1:] - corners[:, :1]) <= 0):
             raise ValueError("FEM tetrahedra must have strictly positive volume")
@@ -68,6 +71,7 @@ def add_volume(scene, spec, morph, physical_material, surface):
             self._uvs = None
             self.instantiate(spawn, elements)
             self.material_coordinates = rest.copy()
+            self.elastic_reference_coordinates = elastic_rest.copy()
 
     solver = scene.sim.fem_solver
     original = solver.add_entity

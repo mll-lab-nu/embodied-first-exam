@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "checked_at_utc": "2026-10-03T09:00:08.321240+00:00",
+  "archive_manifest_sha256": "b1623fbed861d4f0634de1ffa342fa8ea985346d143c563c03ac851c778d6bab",
+  "summary_sha256": "2f8bfa23352a2dd18f7a346626ca8c9cf82ceaf5538d74da82cc593055bb6b70",
+  "file_count": 5849,
+  "total_bytes": 1109491318,
+  "frozen_source_files_checked": 1858,
+  "accepted_success_and_audit": 1,
+  "checks": [
+    "Every copied file SHA-256 and size match its source",
+    "Independent inodes; no links",
+    "Every frozen source manifest verified",
+    "Native success and independent robot audit passed",
+    "Strict authored initial geometry and fresh same-tick native bilateral acquisition verified",
+    "Physical state evidence hash matches independent audit",
+    "Object witness independently rebuilt with matching final instance identity",
+    "Support collision primitive, final resource hash and original asset preservation checked",
+    "Fixed-orientation pull blocked; closed-stem success retained as a mechanism limitation"
+  ],
+  "fresh_physics_executions": 0,
+  "fresh_task_reevaluations": 0
+}

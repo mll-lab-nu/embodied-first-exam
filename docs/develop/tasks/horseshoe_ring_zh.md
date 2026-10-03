@@ -1,28 +1,96 @@
 # 马蹄环
 
-> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
+> 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移出活动目录，见[统一归档说明](../../maintenance/research_tools_archive_20260929_zh.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
-更新：2026-10-03。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见[Demo 目录](../../../demos/README.md)。
+更新：2026-10-03。全项目进度见[当前进度](../../progress/current_zh.md)，当前证据见[完整证明](../../../solvability_proof/horseshoe_ring/README.md)。
 
-## Calibration-tools 续作：建模候选待审核
+## 当前结果：三档完整机器人成功，3/3
 
-本轮仍为 **easy / seed 0 开发探索，完整机器人成功数没有增加**。正式 scripted policy 没有引入 calibration-tools；新增建模生成、参数补丁、质心坐标对齐及 Nyx 预览仅在 [开发适配器](../../../topogym/planning/calibration_tools/adapters/horseshoe_ring.py)。用户要求先审核建模截图，再继续采用新模型。
+**medium 和 hard 的 seed 0 均已完成从默认 home 到原生 `task_success=True` 的连续机械臂执行，独立审计 `accepted_proof=True`。** 与先前 easy 合计三档 3/3；每档零回溯、零抓持丢失，19 对闭环关系保持。正式策略不导入或调用 calibration-tools。
+
+| 变体 | 仿真时长 | 状态数 | 普通／合格夹指最大接触深度（mm） | 证据 |
+| --- | --- | --- | --- | --- |
+| easy | 275.2 s | 11,009 | 0.09107 / 0.28513 | [完整证明](../../../solvability_proof/horseshoe_ring/2026-10-03_easy/README.md) |
+| medium | 264.5 s | 10,581 | 0.15393 / 0.40365 | [完整证明](../../../solvability_proof/horseshoe_ring/2026-10-03_medium/README.md) |
+| hard | 252.4 s | 10,097 | 0.45776 / 0.31197 | [完整证明](../../../solvability_proof/horseshoe_ring/2026-10-03_hard/README.md) |
+
+正式入口为 [`run_horseshoe_oracle.py`](../../../scripts/oracle_runners/run_horseshoe_oracle.py)，例如：
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_horseshoe_oracle.py \
+  --variant hard --seed 0 --output runs/test_results/horseshoe_hard_new
+```
+
+将 hard 换成 medium 或 easy，并指定新输出目录即可运行另两档。入口读取已验收配方，核对模型及五份规划输入、冻结源码，执行反馈 IK 并自动审计。`oracle_result.json` 为最终结果；底层 `run_report.json` 保留审计前 pending 标记。medium 倾转 90°；hard 将右手抓点改到马蹄圆弧 270° 处，采用 90° 倾转，完成折合及交接。hard 在左手松开马蹄并撤离后，主动抓住仍悬挂的圆环；双手将环及右马蹄共同平移 [0, 220.0, 0] mm，再让右手松开并撤离。左手逐段上提圆环，直到观测到它与全部余件真实分离，随后送入固定目标区。余件自然落在分隔线系统侧；不要求圆环在左手抓取前就已自然脱落。
+
+| 变体 | 模型 revision | 实际环半轴（mm） | 法向直接穿出阻挡充分余量（mm） |
+| --- | --- | --- | --- |
+| medium | `ring_clearance_grasp_candidate_v5` | 73.862 / 70.535 | 21.372 |
+| hard | `ring_release_clearance_candidate_v8` | 83.000 / 83.000 | 1.855 |
+
+按用户预先授权，建模调整服务于该 policy：medium 环半轴各增加 4 mm；hard 为消除实测折合瓶颈，长／短半轴相对原值增加 6.877 / 16.806 mm。两档相位均为 0°，马蹄、链环、5.6 mm 环线径不变，完整马蹄仍不能正对圆环沿法向直接穿出。revision 保留取得证明时的原值以维持实例身份。
+
+修改后的初态建模截图：[medium Nyx 高视角](../../../solvability_proof/horseshoe_ring/2026-10-03_medium/evidence/supporting/medium_v5_model_screenshot/frames/479c139ab94148b3a618c99d1bffa9d5/raw.png) · [hard Nyx 高视角](../../../solvability_proof/horseshoe_ring/2026-10-03_hard/evidence/supporting/hard_v8_model_screenshot/frames/7e512145340c46bfa739b5147867ea84/raw.png)。低视角及自然静置证据见各档证明目录。截图为 compact_lab 零物理推进预览，不增加执行次数；本轮用户已免除 medium／hard 视频，easy 已验收视频继续保留。
+
+两档自然静置检查记录连续 1 s 材料姿态变化上界 ≤ 0.25 mm，该独立建模指标不修改原生 quiet。接近与倾转规划使用 `ContactHorseshoeIK`，按原生普通接触 1 mm、合格夹指 2 mm 分类，修正旧规划器额外净空过严的问题；[实测停点 289 点对照](../../../runs/oracle_dev/horseshoe_20261003/medium_tilt_contact_probe/result.json)保留证据。medium 右手接近开度 16.5 mm、收敛等待最长 10 s，TCP 精度仍为 0.5 mm；倾转补偿有界 50 mm，跟踪门槛仍为 2 mm。全部原生接触限值和终态判据保持原值。
+
+**easy / seed 0 已从默认 ALOHA home 连续完成，275.2 s 原生 `task_success=True`，独立审计 `accepted_proof=True`。** 共 11,008 个动作、11,009 个状态，零回溯、零审计失败，19 对跨物体闭环关系保持，无抓持丢失。普通接触最大 **0.0911 mm**，合格夹指最大 **0.2851 mm**，均低于原有 1 mm／2 mm 限值。证据为 [`from_home_09` 原报告](../../../solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/run_report.json)和[独立审计](../../../solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/independent_audit.json)；原报告保留审计之前的 pending 字段，最终接受结论在独立审计中。
+
+easy 的正式策略 [`gravity_release_table_pickup_stages`](../../../topogym/planning/horseshoe_ring/stages.py)依次完成抓取抬升、折合、按配方倾转、释放上件并退手、圆环自然脱落、右手移开余件、左手浅抓桌面圆环、抬起并运入固定目标区。最终环完整进入区域，四件余件都在系统侧，安静保持达到原生 0.5 s。全程采用反馈 IK 与普通关节动作，**正式策略没有 calibration-tools 调用**。
+
+已接入用户要求的 v12 适用优化：`rigid_options.use_contact_island=False`，现有 v13 代码已包含 v12。完整成功在该设置下取得，保留 CPU float64、25 ms World tick、40 solver 子步及既有接触判据。折合前缀[单轮对照](../../../runs/oracle_dev/horseshoe_20261003/approved_v12_prefix_performance.json)每 tick 墙钟时间约减少 5.1%；反馈路径和并发负载有差别，不能作为稳定提速倍数或求解器物理等价证明。
+
+已按用户“圆环不能大到让马蹄沿法向直接穿出”的条件审核并落地 easy 模型：环中心线半轴各增大 4 mm，线径、马蹄、链环、材料及原生成功判据保持原值；充分几何阻挡余量仍至少 **19.160 mm**。新布局经自然静置获得。easy 正式 revision 为 `ring_clearance_candidate_v3`，保留通过运行的资源原字节与模型身份；[落地复核](../../../runs/oracle_dev/horseshoe_20261003/approved_model_promotion.json)确认实例 ID、初态、目标区、全部生成资产和 oracle 源码一致。medium / hard 的完整资格见上表。
+
+成功终态截图：[Nyx 高视角](../../../runs/oracle_dev/horseshoe_20261003/approved_success_review_candidate/frames/2be6bb2163ac4470a715e71363ec78d9/raw.png) · [低视角](../../../runs/oracle_dev/horseshoe_20261003/approved_success_review_candidate/frames/dc01de40c0cf481ba3fed591717c1fed/raw.png)。使用 `compact_lab`，按通过运行 state 11008 重建；零物理推进，不增加成功次数。
+
+**完整视频：** [高视角](../../../demos/horseshoe_ring/varaition_waist_mild/cam_high/varaition_waist_mild_cam_high.mp4) · [低视角](../../../demos/horseshoe_ring/varaition_waist_mild/cam_low/varaition_waist_mild_cam_low.mp4) · [左腕](../../../demos/horseshoe_ring/varaition_waist_mild/cam_left_wrist/varaition_waist_mild_cam_left_wrist.mp4) · [右腕](../../../demos/horseshoe_ring/varaition_waist_mild/cam_right_wrist/varaition_waist_mild_cam_right_wrist.mp4)。由共享 `topogym.recording.rigid_replay` / `archive` 从同一次完整执行重渲染、归档，Nyx + compact_lab，四路均 848×480、30 fps、8,257 帧。包含默认 home 起步及全部被动夹爪关节；全部机器人链接逐帧 FK 与原记录核对，完整解码、同步与哈希检查通过。[录像与独立证据归档清单](../../../runs/demo_metadata/horseshoe_ring/2026-10-03_waist_mild_v3_from_home/archive_manifest.json)保留原执行身份；视频为实测状态重渲染，不是新增物理执行。
+
+完整独立副本及复现命令见[证明目录](../../../solvability_proof/horseshoe_ring/2026-10-03_easy/README.md)，[归档哈希校验](../../../solvability_proof/horseshoe_ring/2026-10-03_easy/archive_validation.json)通过。安装模型后重新运行 8 项建模合同、正式表面静态隔离检查，均通过；此前 16 项候选／抓持合同及 12 项会话合同通过。资格仅覆盖此 seed、配置及接触触发的 `contact_weld_v1` 辅助抓持；不扩展到纯摩擦、默认 400 Hz、全部积分子步或其他参数实例。
+
+## 建模与失败探索记录
+
+以下保留候选形成和失败原因，未通过运行不计入成功。建模生成、参数补丁、质心坐标对齐及 Nyx 预览位于[开发适配器](../../../topogym/planning/calibration_tools/adapters/horseshoe_ring.py)。正式资源在 `from_home_09` 完整通过之后落地；下文“候选／未应用”的表述对应各探索发生时的状态。
+
+[法向穿出阻挡证据](../../../runs/oracle_dev/horseshoe_20261003/selected_normal_passage_guard.json)：马蹄平面正对圆环时，两侧完整马蹄各有一对材料点的投影距离为 **167.362 mm**。候选圆环名义最大内孔跨度为 **142.602 mm**；即使忽略线材厚度，以整个中心线包围圆的直径 **148.202 mm** 作为内孔上界，仍至少短 **19.160 mm**。因此任意平面内转动或偏移均无法让整件沿法向直接穿过。这是充分几何阻挡证明，不推广为所有倾斜／折合运动均不可通过。该检查已纳入建模预览工具；超出证明范围时返回不确定，不虚报阻挡。
+
+[法向尺寸对照图](../../../runs/oracle_dev/horseshoe_20261003/selected_normal_passage_review.png)使用实际生成网格的平面投影，标出见证点和孔径上界；它是尺寸示意，不是装配状态或仿真帧。
 
 对原模型 844.5 s 停点的[接触对照](../../../runs/oracle_dev/horseshoe_20261003/original_contact_comparison.json)复现了全部机器人链接位置，128 项生成资产 SHA-256 与原运行完全相同。FCL 最大合格夹指穿透为 0.154 mm，原生记录为 0.165 mm，普通接触约 0.034 mm；该停点通过原生 1 mm／2 mm 上限。旧 oracle 的 0.8 mm 额外余量确曾造成失败，但不能据此认定原生判据普遍误报，或把放宽判据作为完整解法。
 
 当前送审候选只修改目标环：实际中心线半轴从 **70.101 / 66.763 mm** 增至 **74.101 / 70.763 mm**，线径仍为 5.6 mm，马蹄与链环尺寸保持原值。按原密度重新生成资产后，环质量从 81.66 g 变为 86.43 g。[候选及未应用参数补丁](../../../runs/oracle_dev/horseshoe_20261003/selected_candidate.json)保留原模板哈希；正式模板、材料、辅助抓持和任务判据没有修改。
 
-审核图：[正面同尺度对照](../../../runs/oracle_dev/horseshoe_20261003/selected_geometry_review_v2/front.png) · [侧面对照](../../../runs/oracle_dev/horseshoe_20261003/selected_geometry_review_v2/side.png)。这是实际生成网格的工程投影，**不是仿真截图**。早期原模型 Nyx 近景成功；最终候选的 Nyx 在原生 renderer `startup()` 处反复段错误，关闭离线内核缓存、独立工作目录／缓存及显式 CUDA 重试均未恢复，故不能交付这版的 Nyx 帧；失败日志保留在本轮目录，不将崩溃当作物理任务失败。
+审核图：[正面同尺度对照](../../../runs/oracle_dev/horseshoe_20261003/selected_geometry_review_v2/front.png) · [侧面对照](../../../runs/oracle_dev/horseshoe_20261003/selected_geometry_review_v2/side.png)。这是实际生成网格的工程投影，**不是仿真截图**。候选 Nyx 早期多次在原生 renderer `startup()` 段错误，日志保留。后续显式 CUDA 重试已成功输出 [Nyx 高视角](../../../runs/oracle_dev/horseshoe_20261003/approved_review_cuda_candidate/frames/994eedb951d74d7a81ae7aae88eeb06b/raw.png)和[低视角](../../../runs/oracle_dev/horseshoe_20261003/approved_review_cuda_candidate/frames/7b1b0b395c25486db31e61b5fbb387fe/raw.png)：采用 `compact_lab`，按新模型 `from_home_04` 的 163.05 s 实测构型重建，零物理推进，属于建模截图，不增加执行成功次数。恢复原因尚未确定，未据此声明 renderer 故障已修复。
 
 该候选从上述实测构型出发，在其余四个部件固定时找到[完整物体退出路线](../../../runs/oracle_dev/horseshoe_20261003/selected_exit_certificate.json)：7 个姿态，初始实体包含检查通过，全部视觉面和保守包围碰撞体、桌面参与连续边界检查，净空下界至少 0.150 mm，终点分隔面间隙约 8 mm。它只证明该假设起点的物体退出，不包含新模型从 home 到起点的物理过程、被动部件动力学或固定目标区成功。较早同时减薄／收窄马蹄的探索不再是送审方案；工具已处理尺寸变化造成的质心偏移，避免把非预期实体平移当作净空改善。
 
-[原生 IK／接触筛选](../../../runs/oracle_dev/horseshoe_20261003/selected_exit_ik.json)仍拒绝当前抓法：左手夹指与非抓持上马蹄的预测接触达到约 1.40 mm，超过普通接触 1 mm 上限。实际重新抓持与完整机器人路线未完成；不能将纯物体证书改写成 IK 成功。后续需在用户审核尺寸后重新规划抓姿、验证新初态并从 home 连续执行。
+[原生 IK／接触筛选](../../../runs/oracle_dev/horseshoe_20261003/selected_exit_ik.json)拒绝原抓法：左手夹指与非抓持上马蹄的预测接触达到约 1.40 mm，超过普通接触 1 mm 上限。[缩短路线复查](../../../runs/oracle_dev/horseshoe_20261003/approved_ik_search.json)还发现原抓法的终点不可达，故继续筛选新的圆环抓点，保留原生接触限值。实际重新抓持与完整机器人路线仍需验证；不能将纯物体证书改写成 IK 成功。
 
-工具验证：5 项新增建模合同、12 项既有会话合同、16 项候选／抓持合同及静态发布隔离检查通过；这些检查不授予任务成功或运行镜像资格。证据集中在 [`runs/oracle_dev/horseshoe_20261003/`](../../../runs/oracle_dev/horseshoe_20261003/)。
+新抓法已有局部完整 IK 结果：[0° 圆环抓点](../../../runs/oracle_dev/horseshoe_20261003/approved_grasp_route_audit.json)（approach sign +1、flip −1、roll 0°）的接近路线及整条退出路线通过，退出加密检查为 411 个采样、最大材料采样步长 0.75 mm。随后[进入目标区的路线](../../../runs/oracle_dev/horseshoe_20261003/approved_goal_plan.json)通过 2816 个加密采样。它们假设已经取得新抓持，其余部件固定在旧实测停点；尚无实际释放、重新抓持或被动部件随动证据。圆环到位后的[假设终态检查](../../../runs/oracle_dev/horseshoe_20261003/approved_goal_predicate.json)仍发现上马蹄部分越过分隔线，因此整任务仍需调整剩余组件。
 
-## 当前默认三档的 oracle 与证明工作
+[剩余组件调整](../../../runs/oracle_dev/horseshoe_20261003/approved_remainder_plan.json)随后通过 101 个联合 IK／碰撞采样，假设终态的完整目标区条件通过。右手调整支撑时，上马蹄和两条链的实际随动、最终稳定保持仍须物理执行；因此上述末段 IK 结果仍不等于完整机器人成功。
 
-当前 easy / medium / hard 分别是 `waist_mild` / `u_mild` / `waist_ellipse`，revision 为 `coupled_shapes_settled_v2`，从桌面物理静置姿态出生。下文 9 月 18–21 日的 F1/F2/F3 视频属于旧的接近方向家族，不能授予当前三档成功资格。
+增大圆环直接套用旧静置姿态时，其保守碰撞体与桌面重叠约 1.147 mm。开发工具现支持在建场景时将全部部件共同抬升；本候选经 3 mm 抬升后[自然落稳](../../../runs/oracle_dev/horseshoe_20261003/approved_settle_v2/settled_layout.json)，通过连续 1 s 静止检查，最大接触穿透 0.0757 mm，19 对闭环连接不变。早期 5 s 探针只累计到 22 个连续安静 tick，保留为未通过结果，没有降低静止要求。
+
+从 home 的冻结候选验证在[动作前检查](../../../runs/test_results/horseshoe_approved_20261003/from_home_03/run_report.json)拒绝旧右手接近轨迹与新圆环的接近／碰撞关系，尚未推进物理 tick，正在重新规划抓点。该独立源码快照使用重新落稳的初态和新模型身份，安装中的正式三档资源未改。新模型[完整旧物体参考复查](../../../runs/oracle_dev/horseshoe_20261003/approved_retargeted_reference_certificate.json)在第 2828 条边发现 45.54 µm 间隙，未满足要求的 50 µm，不能继承旧路线的证书；这不等同于实测物理穿透。
+
+[接近门槛对照](../../../runs/oracle_dev/horseshoe_20261003/approved_pickup_replan.json)进一步确认：只有下降终点被原 0.5 mm 规划净空拒绝，同姿态原生分类的最大普通穿透为零。`stages.py` 因此只在启用原生接触规划的流程中，将前缀净空统一到已有的 0.1 mm 选项；物理响应、1 mm 普通接触和 2 mm 合格夹指判据均未修改。新冻结执行 `from_home_04` 已从 home 完成抓取、抬升与折合，并通过截至 **127.225 s／5090 状态**的[独立前缀审计](../../../runs/test_results/horseshoe_approved_20261003/from_home_04/fold_prefix_audit.json)：零回溯、无抓持丢失、19 对闭环保持，普通接触最大 0.1064 mm、合格夹指 0.2851 mm。后续在 163.05 s 的松手退让规划停止，未触发原生任务失败。
+
+[实测退让复查](../../../runs/oracle_dev/horseshoe_20261003/approved_native_handoff_v2.json)按原生接触分类通过；释放物体的初始／沿路最大接触均约 0.0589 mm，额外约束该接触不得比初始加深超过数值余量。正式交接规划接入同一分类后，`from_home_05` 已实际完成松手、退让及悬挂稳定，但在 **180.975 s** 因固定 0° 抓法未找到 IK 解而停止。稳定后的实测环姿态不同于先前假设，须以新观测重新筛选；诊断流程已发生一次回溯，不能授予完整连续证明。候选配方 `zero_angle_ring_grasp_stages` 只使用原生规划和普通机器人动作，没有 calibration-tools 依赖。
+
+进一步检查发现，停点的圆环已完整落到桌面：[实测整体分隔间隙约 110.996 mm](../../../runs/oracle_dev/horseshoe_20261003/approved_actual_gravity_exit.json)。其[7240 状态前缀审计](../../../runs/test_results/horseshoe_approved_20261003/from_home_05/prefix_audit.json)覆盖到 180.975 s，源码、home、完整机器人观测、双指获取证据、19 对闭环与接触检查均通过，无抓持丢失；流程在这个有效前缀之后回溯一次，整次运行仍不授予完整证明。固定悬空抓法失败不能再解释为圆环仍然卡住。
+
+后续采用 `gravity_release_table_pickup_stages`：折合／倾转并释放后，先检测真实分离，再将右手持有的余件让位，左手抓桌面圆环并送入固定目标区。[让位及抓取只读检查](../../../runs/oracle_dev/horseshoe_20261003/approved_clear_then_grasp.json)通过 161 个右手 IK 样本，并找到 135°／normal −1／flip −1／roll 0° 抓点。TCP 沿接近方向后退量从 13.81 mm 改为 15.31 mm，夹指更浅插入以避开桌面，默认抓法不变。新[桌面抬升与放置 IK](../../../runs/oracle_dev/horseshoe_20261003/approved_table_transport_ik.json)通过 51／518 个采样；这些规划仍须物理执行。`from_home_06` 为补入显式桌面抬升在 10.3 s 主动取消，证据保留。
+
+`from_home_07` 真实完成右手让位和桌面双指抓环，连续有效前缀到 **226.75 s／9070 个动作**；随后起抬段在 0.5 mm 控制推进门槛下停滞，约 0.546 mm 误差时超时，诊断回溯一次。该门槛调整为既有 1.5 mm 跟踪门槛，仍要求实测环底至少离桌 10 mm，原生接触／闭环规则不变。`from_home_08` 用[普通动作缓存](../../../runs/oracle_dev/horseshoe_20261003/approved_home_to_table_grasp_actions.json)从 home 重新推进全部物理 tick，但在严格终点检查失败：环位置偏差约 35.55 mm、姿态偏差约 0.581 rad，左手没有有效抓环绑定。该运行回溯一次，未授予证明；没有放宽重放验收门槛，完整成功改用实时反馈策略。
+
+`from_home_09` 从 home 重新执行完整反馈策略，启用 v12 刚体全局求解并最终通过本页首节的完整验收。IPC 单子步和其他任务的条件静置检查不套用于本任务；不能将 `from_home_08` 的失败动作重放记为这次成功。
+
+工具验证：8 项建模合同、16 项候选／抓持合同及静态发布隔离检查通过；此前 12 项既有会话合同通过。这些检查不授予任务成功或运行镜像资格。证据集中在 [`runs/oracle_dev/horseshoe_20261003/`](../../../runs/oracle_dev/horseshoe_20261003/)。
+
+## 旧 v2 模型的 oracle 与证明工作（历史）
+
+本节是 easy / medium / hard 当时分别为 `waist_mild` / `u_mild` / `waist_ellipse`、revision 均为 `coupled_shapes_settled_v2` 的历史探索；当时尚无完整机器人证明。当前 easy 的 v3 成功见页首，不追溯授予旧几何成功。下文 9 月 18–21 日的 F1/F2/F3 视频属于更早的接近方向家族，不能授予当前三档成功资格。
 
 目前按物体路径、机器人 IK、连续物理执行的顺序补充证据，**尚未取得当前版本的完整机器人可解性证明**：
 

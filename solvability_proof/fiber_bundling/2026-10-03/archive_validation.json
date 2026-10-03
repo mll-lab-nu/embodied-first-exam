@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "checked_at_utc": "2026-10-03T14:36:56.633544+00:00",
+  "archive_manifest_sha256": "e5a5ee916a8fa7a997b192c94e2229b180a010d6a92a3a1e89aff6d700b06975",
+  "summary_sha256": "e25ddfdf19e3fb4a9a3bcf2b4bee36168fb2b06c0f63ebf6861de2aad8c20044",
+  "file_count": 3527,
+  "total_bytes": 15460661221,
+  "frozen_source_files_checked": 1480,
+  "accepted_success_and_audit": 3,
+  "checked_states": 46931,
+  "checked_actions": 46928,
+  "checked_solver_substeps": 1877120,
+  "fresh_physics_executions": 0,
+  "negative_probes_passed": 5,
+  "checks": [
+    "Independent copies, matching sizes and SHA-256, no links",
+    "Original run source manifests verified",
+    "All three original Task audits pass",
+    "All three current v4 re-evaluations and sealed tick/action crosschecks pass",
+    "Asset regeneration exact in original Python environment",
+    "Mutation probes reject missing substeps, altered unsealed world, altered targets and changed configuration; intact prefix control has only expected truncation failures"
+  ]
+}

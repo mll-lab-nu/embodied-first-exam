@@ -7,7 +7,7 @@ from topogym.planning.rigid_reference.geometry import interpolate
 
 
 class HorseshoePolicy:
-    def __init__(self, grasps, *, part='pickup', fold=None, support=None, planner=None, settle_tilt_deg=0., settle_axis='y', settle_secondary_y_deg=0., settle_translation=(0.,0.,0.), fold_tracking_m=.001, withdrawal_mode='full', withdrawal_parameters=None):
+    def __init__(self, grasps, *, part='pickup', fold=None, support=None, planner=None, settle_tilt_deg=0., settle_axis='y', settle_secondary_y_deg=0., settle_translation=(0.,0.,0.), fold_tracking_m=.001, post_fold_hold_s=2., withdrawal_mode='full', withdrawal_parameters=None):
         self.grasps, self.part, self.fold = grasps, part, fold
         self.support=support
         self.planner=planner
@@ -16,6 +16,9 @@ class HorseshoePolicy:
         self.settle_secondary_y_deg=float(settle_secondary_y_deg)
         self.settle_translation=np.asarray(settle_translation,dtype=float)
         self.fold_tracking_m=float(fold_tracking_m)
+        if isinstance(post_fold_hold_s,bool) or not np.isfinite(post_fold_hold_s) or not 0<=post_fold_hold_s<=10:
+            raise ValueError('Post-fold hold must be between 0 and 10 seconds')
+        self.post_fold_hold_s=float(post_fold_hold_s)
         self.withdrawal_mode=withdrawal_mode
         self.withdrawal_parameters=dict(speed_m_s=.004,tracking_m=.0015,stage_motion_m=.012,
             maximum_stages=200,search_seed=922,
@@ -35,6 +38,7 @@ class HorseshoePolicy:
             refine_ik_compensation=False,
             prefer_reference_exit_guide=False,
             direct_axis_exit_first=False,
+            puzzle_contact_limit_m=None,
             check_static_passive_links=True,
             passive_contact_names=['horseshoe_left','chain_upper_1','chain_lower_1'])
         if withdrawal_parameters:
@@ -79,6 +83,10 @@ class HorseshoePolicy:
         clearance=float(self.withdrawal_parameters['robot_puzzle_clearance_m'])
         if not np.isfinite(clearance) or not .00005<=clearance<=.0005:
             raise ValueError('Invalid robot/puzzle planning clearance')
+        contact=self.withdrawal_parameters['puzzle_contact_limit_m']
+        if contact is not None and (isinstance(contact,bool) or not np.isfinite(float(contact))
+                                    or not 0<float(contact)<=.001):
+            raise ValueError('Puzzle planning contact must be within the native 1 mm limit')
         for key in ('speed_m_s','tracking_m','stage_motion_m'):
             value=float(self.withdrawal_parameters[key])
             if not np.isfinite(value) or value<=0:raise ValueError(f'Invalid {key}')
@@ -119,7 +127,7 @@ class HorseshoePolicy:
         start=self.time()
         while self.time()-start<seconds-1e-8:yield {}
 
-    def move(self, target, seconds, phase):
+    def move(self, target, seconds, phase, *, tracking_timeout_s=5.):
         self.phase=phase;start=self.time();initial=self.tcp()
         while True:
             t=min(1.,(self.time()-start+self.dt)/seconds);u=t**3*(10+t*(-15+6*t))
@@ -132,7 +140,7 @@ class HorseshoePolicy:
             errors={s:float(np.linalg.norm(actual[s][0]-target[s][0])) for s in target}
             self.diagnostics=dict(tcp_errors_m=errors)
             if max(errors.values())<.0005:break
-            if self.time()-started>5.:raise RuntimeError(f'TCP tracking failed: {errors}')
+            if self.time()-started>tracking_timeout_s:raise RuntimeError(f'TCP tracking failed: {errors}')
             commands={}
             for s,(p,r) in target.items():
                 bias[s]=np.clip(bias[s]+2*self.dt*(p-actual[s][0]),-.015,.015)
@@ -290,8 +298,10 @@ class HorseshoePolicy:
         self.phase='release_upper_shoe';yield {'left':dict(gripper_position_m=.027)}
         yield from self.hold(1.)
         if self.planner is None:raise ValueError('Support handoff requires checked free-hand retreat')
-        retreat=self.planner.withdraw_left(self.obs,allow_release_contact=suspended or table_supported)
-        yield from self.move({'left':body_pose(retreat['target_tcp'])},3.,'withdraw_left_hand')
+        retreat=self.planner.withdraw_left(self.obs,allow_release_contact=suspended or table_supported,
+                                          joint_retreat=getattr(self,'joint_release_retreat',False))
+        if not retreat.get('joint_retreat'):
+            yield from self.move({'left':body_pose(retreat['target_tcp'])},3.,'withdraw_left_hand')
         if retreat.get('free_transit'):
             indices=self.planner.robot._q_indices['left'][:6]
             for index,q in enumerate(retreat['free_transit']['waypoints'][1:]):
@@ -305,16 +315,29 @@ class HorseshoePolicy:
             # of clamping the ring. The released shoe is free to hang from
             # the original chains. Wait for its measured motion and the
             # ring's motion to settle before planning the next grasp.
-            started=self.time();stable=0.;support=self.bodies()['right']
-            while stable<.5:
-                yield from self.follow_bodies({'right':support},.25,
-                    'settle_table_supported_pair' if table_supported else 'settle_suspended_pair',tracking_m=.002)
-                world=self.obs['privileged']['world']['bodies']
-                quiet=all(np.linalg.norm(world[n]['linear_velocity_m_s'])<.005 and
-                          np.linalg.norm(world[n]['angular_velocity_rad_s'])<.05
-                          for n in ('horseshoe_left','target_ring'))
-                stable=stable+.25 if quiet else 0.
-                if self.time()-started>30.:raise RuntimeError('Released shoe and ring did not become quiet')
+            turns=[None]
+            if getattr(self,'release_turn',None) is not None:turns.append(self.release_turn)
+            for turn in turns:
+                tracking=.002
+                if turn is not None:
+                    from .settling import plan_supported_tilt
+                    plan=plan_supported_tilt(self.planner,self.obs,axis=turn.get('axis','tool'),angle_deg=turn.get('angle_deg',60.))
+                    tracking=float(turn.get('tracking_m',.003))
+                    for index,row in enumerate(plan['poses'][1:]):
+                        yield from self.follow_bodies({'right':body_pose(row['right_pose'])},.1,
+                            f'turn_supported_pair_{index}',tracking_m=tracking,position_bias_limit_m=.05)
+                    yield from self.follow_bodies({'right':body_pose(plan['poses'][-1]['right_pose'])},3.,
+                        'hold_supported_turn',tracking_m=tracking,position_bias_limit_m=.05)
+                started=self.time();stable=0.;support=self.bodies()['right']
+                while stable<.5:
+                    yield from self.follow_bodies({'right':support},.25,
+                        'settle_table_supported_pair' if table_supported else 'settle_suspended_pair',tracking_m=tracking)
+                    world=self.obs['privileged']['world']['bodies']
+                    quiet=all(np.linalg.norm(world[n]['linear_velocity_m_s'])<.005 and
+                              np.linalg.norm(world[n]['angular_velocity_rad_s'])<.05
+                              for n in ('horseshoe_left','target_ring'))
+                    stable=stable+.25 if quiet else 0.
+                    if self.time()-started>30.:raise RuntimeError('Released shoe and ring did not become quiet')
         hands=self.obs['privileged']['world']['grasp']['hands']
         if hands['left']['binding'] is not None or not hands['right']['binding']:
             raise RuntimeError('Support handoff did not release only the left hand')
@@ -338,34 +361,58 @@ class HorseshoePolicy:
         from topogym.utils.io import write_json_atomic
         params=self.settling_parameters
         sample_duration=float(params.get('sample_duration_s',.25))
+        tracking=float(params.get('tracking_m',.002))
+        feedback=dict(position_bias_limit_m=float(params.get('position_bias_limit_m',.03)))
         self.phase='plan_folded_gravity_settle'
         before=folded_ring_metric(self.planner,self.obs)
         plan=plan_folded_tilt(self.planner,self.obs,params['angle_deg'],
             translation_m=params.get('translation_m',(0.,0.,0.)),roll_deg=params.get('roll_deg',0.),yaw_deg=params.get('yaw_deg',0.))
         poses=[{s:body_pose(row['shoes'][s]) for s in self.grasps} for row in plan['poses']]
         for index,target in enumerate(poses[1:]):
-            yield from self.follow_bodies(target,sample_duration,f'tilt_folded_pair_{index}',tracking_m=.002)
+            yield from self.follow_bodies(target,sample_duration,f'tilt_folded_pair_{index}',tracking_m=tracking,**feedback)
         yield from self.follow_bodies(poses[-1],float(params.get('hold_s',8.)),
-                                      'hold_folded_pair_for_gravity',tracking_m=.002)
+                                      'hold_folded_pair_for_gravity',tracking_m=tracking,**feedback)
         tilted=folded_ring_metric(self.planner,self.obs)
         write_json_atomic(self.planner.directory/'tilted_observation.json',self.obs)
         restore=params.get('restore',True)
         if restore:
             for index,target in enumerate(poses[-2::-1]):
-                yield from self.follow_bodies(target,sample_duration,f'restore_folded_pair_{index}',tracking_m=.002)
-            yield from self.follow_bodies(poses[0],2.,'settle_restored_folded_pair',tracking_m=.002)
+                yield from self.follow_bodies(target,sample_duration,f'restore_folded_pair_{index}',tracking_m=tracking,**feedback)
+            yield from self.follow_bodies(poses[0],2.,'settle_restored_folded_pair',tracking_m=tracking,**feedback)
         after=folded_ring_metric(self.planner,self.obs)
         write_json_atomic(self.planner.directory/('restored_observation.json' if restore else 'handoff_observation.json'),self.obs)
         improved=(after['longitudinal_position_m']>=after['reference_longitudinal_position_m']-.025
                   or after['maximum_separating_gap_m']>.005)
         actual=self.bodies();target=poses[0] if restore else poses[-1]
         errors={s:float(np.linalg.norm(actual[s][0]-target[s][0])+.10*(actual[s][1]*target[s][1].inv()).magnitude()) for s in target}
-        self.gravity_result=dict(passed=improved if restore else max(errors.values())<.002,
+        self.gravity_result=dict(passed=improved if restore else max(errors.values())<tracking,
+            material_tracking_tolerance_m=tracking,
             ring_relocated=improved,restored=restore,body_target_errors_m=errors,before=before,tilted=tilted,after=after,
             scope='measured gravity settling' if restore else 'orientation prepared for suspended handoff; no ring relocation requirement')
         write_json_atomic(self.planner.directory/'gravity_result.json',self.gravity_result)
         self.diagnostics=dict(gravity_result=self.gravity_result)
         self.phase='folded_gravity_settle_complete'
+
+    def clear_remainder_for_table_pickup(self):
+        from .placement import clear_remainder_for_table_pickup
+        plan=clear_remainder_for_table_pickup(self.planner,self.obs)
+        for index,row in enumerate(plan['poses'][1:]):
+            target=body_pose(row)
+            distance=float(np.linalg.norm(target[0]-self.bodies()['right'][0]))
+            yield from self.follow_bodies({'right':target},max(.5,distance/.008),
+                f'clear_remainder_{index}',tracking_m=.0015)
+        self.phase='clear_remainder_settle'
+        yield from self.hold(2.)
+        self.table_pickup_clearance_result=plan
+
+    def lift_ring_for_transport(self):
+        from .placement import lift_ring_from_table
+        plan=lift_ring_from_table(self.planner,self.obs)
+        yield from self.follow_bodies({'left':body_pose(plan['samples'][-1]['pose'])},4.,
+                                     'lift_ring_from_table',tracking_m=.0015)
+        p,r=self.bodies()['left']
+        gap=float((r.apply(self.planner.task.placement_vertices['target_ring'])+p)[:,2].min())-self.planner.checker.table_height
+        if gap<.01:raise RuntimeError('Measured ring did not lift clear of the table')
 
     def lift_ring_from_birth(self):
         """Contact diagnostic with free chains; a clear endpoint alone is insufficient.
@@ -418,6 +465,52 @@ class HorseshoePolicy:
         self.offsets['left']=relative_pose(self.bodies()['left'],self.tcp()['left'])
         self.bias['left'][:]=0.;self.angle_bias['left'][:]=0.
         self.phase='ring_grasp_complete';yield from self.hold(1.)
+
+    def release_support_and_lift(self):
+        """Let the free assembly move while the left hand retains the ring."""
+        from topogym.utils.io import write_json_atomic
+        hands=self.obs['privileged']['world']['grasp']['hands']
+        if not hands['left']['binding'] or hands['left']['binding']['target'][0]!='target_ring':
+            raise ValueError('Support release requires an observed left ring grasp')
+        if getattr(self,'release_translation_m',None) is not None:
+            from .settling import plan_held_pair_translation
+            plan=plan_held_pair_translation(self.planner,self.obs,self.release_translation_m)
+            target={s:body_pose(p) for s,p in plan['samples'][-1]['poses'].items()}
+            yield from self.follow_bodies(target,max(1.,np.linalg.norm(plan['translation_m'])/.01),
+                'relocate_before_support_release',tracking_m=.003,position_bias_limit_m=.05)
+        self.phase='release_right_support';self.grip['right']=.027
+        yield {'right':dict(gripper_position_m=.027)}
+        yield from self.hold(1.)
+        write_json_atomic(self.planner.directory/'released_support_observation.json',self.obs)
+        plan=self.planner.withdraw_released_hand(self.obs,'right')
+        indices=self.planner.robot._q_indices['right'][:6]
+        for index,q in enumerate(plan['free_transit']['waypoints'][1:]):
+            target=np.asarray(q)[indices]
+            current=np.asarray(self.obs['robot']['right']['joint_position_rad'])
+            yield from self.move_joints({'right':target},max(.5,float(np.max(np.abs(target-current)))/.3),
+                                       f'withdraw_right_support_{index}')
+        self.held_entities.pop('right',None)
+        self.phase='released_remainder_settle';yield from self.hold(3.)
+        if getattr(self,'level_released_ring',False):
+            first=self.bodies()['left'];tcp=self.tcp()['left']
+            down=np.array([0.,0.,-1.]);jaw=tcp[1].apply([0.,1.,0.]);jaw[2]=0.
+            if np.linalg.norm(jaw)<1e-6:jaw=np.array([0.,1.,0.])
+            jaw/=np.linalg.norm(jaw)
+            desired=Rotation.from_matrix(np.column_stack([down,jaw,np.cross(down,jaw)]))
+            delta=(desired*tcp[1].inv()).as_rotvec()
+            def leveling(u):
+                turn=Rotation.from_rotvec(u*delta)
+                return {'left':(tcp[0]+turn.apply(first[0]-tcp[0]),turn*first[1])}
+            # The free shoes and chains receive no pose targets. Their
+            # response is validated by the native per-tick physical guard.
+            yield from self.follow_bodies(leveling(1.),12.,'level_ring_over_free_remainder',
+                pose_at=leveling,tracking_m=.003,position_bias_limit_m=.05,
+                tracking_stall_timeout_s=10.)
+            yield from self.hold(3.)
+            write_json_atomic(self.planner.directory/'leveled_ring_observation.json',self.obs)
+        yield from self.lift_ring_from_birth()
+        self.support_released=True
+        write_json_atomic(self.planner.directory/'released_ring_observation.json',self.obs)
 
     def reposition_lower(self):
         from .alignment import plan_lower_reposition
@@ -568,7 +661,9 @@ class HorseshoePolicy:
         target={s:(np.asarray(g['tcp_position_m']),Rotation.from_quat(np.roll(g['tcp_quaternion_wxyz'],-1)))
                 for s,g in self.grasps.items()}
         yield from self.approach_joints(4.)
-        yield from self.move(target,3.,'descend_to_band')
+        # Small contact adjustments can keep converging beyond five seconds.
+        # Preserve the 0.5 mm endpoint requirement and allow that convergence.
+        yield from self.move(target,3.,'descend_to_band',tracking_timeout_s=10.)
         self.phase='close_and_confirm'
         self.grip={s:.002 for s in self.grasps}
         yield {s:dict(gripper_position_m=.002) for s in self.grasps}
@@ -601,7 +696,7 @@ class HorseshoePolicy:
             target={s:self.fold[0]['horseshoe_'+s] for s in self.grasps}
             yield from self.follow_bodies(target,5.,'align_fold_entry')
             yield from self.follow_fold()
-            self.phase='folded_settle';yield from self.hold(2.)
+            self.phase='folded_settle';yield from self.hold(self.post_fold_hold_s)
             self.phase='fold_complete'
         if self.part in ('support','grasp_ring','extract','solve'):yield from self.support_pair()
         if self.part in ('grasp_ring','extract','solve'):yield from self.grasp_ring()

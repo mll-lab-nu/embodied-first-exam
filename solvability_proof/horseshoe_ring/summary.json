@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "task": "horseshoe_ring",
+  "accepted_proofs": 3,
+  "cases": [
+    {
+      "variation": "easy",
+      "model_revision": "ring_clearance_candidate_v3",
+      "seed": 0,
+      "path": "2026-10-03_easy/evidence/runs/from_home_09",
+      "role": "accepted_success",
+      "report": "2026-10-03_easy/evidence/runs/from_home_09/run_report.json",
+      "audit": "2026-10-03_easy/evidence/runs/from_home_09/independent_audit.json",
+      "source_manifest": "2026-10-03_easy/evidence/runs/from_home_09/run_source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "fe1976f266c8fe73966abaa6f8d8c8bb1c6dc45eb3e7088236d3e334448190cc",
+      "report_sha256": "49dce7e82305e4f252395ba61b71bcc8ba65a550484023911320114d7f3bf309",
+      "audit_sha256": "f74039f5ce9d840b3527601c1f53110d1a2ede8664ae12ca0db2bf73f91638d1",
+      "simulation_time_s": 275.2,
+      "states": 11009,
+      "rewinds": 0,
+      "batch": "2026-10-03_easy"
+    },
+    {
+      "variation": "medium",
+      "model_revision": "ring_clearance_grasp_candidate_v5",
+      "seed": 0,
+      "path": "2026-10-03_medium/evidence/runs/medium_from_home_08",
+      "role": "accepted_success",
+      "report": "2026-10-03_medium/evidence/runs/medium_from_home_08/run_report.json",
+      "audit": "2026-10-03_medium/evidence/runs/medium_from_home_08/independent_audit.json",
+      "source_manifest": "2026-10-03_medium/evidence/runs/medium_from_home_08/run_source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "14b0649275c6fa4cede62daf7016722d9d97ff5930856997b50daf55a321a87e",
+      "report_sha256": "8701a37231f56e59d62ee2fd02d462599ced0d35cc44ddc1fdf09b583a27ce09",
+      "audit_sha256": "8d7ea231fbe7df220d45f6208d3afd1a46aae52c279ca77af138cb3292a778f1",
+      "simulation_time_s": 264.5,
+      "states": 10581,
+      "rewinds": 0,
+      "batch": "2026-10-03_medium"
+    },
+    {
+      "variation": "hard",
+      "model_revision": "ring_release_clearance_candidate_v8",
+      "seed": 0,
+      "path": "2026-10-03_hard/evidence/runs/hard_from_home_22",
+      "role": "accepted_success",
+      "report": "2026-10-03_hard/evidence/runs/hard_from_home_22/run_report.json",
+      "audit": "2026-10-03_hard/evidence/runs/hard_from_home_22/independent_audit.json",
+      "source_manifest": "2026-10-03_hard/evidence/runs/hard_from_home_22/run_source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "678bf8305fae599a7c0042a8be01ad4e87c1f32666d1ac4a8ddb9749e36ea4c4",
+      "report_sha256": "4c5ef1a624867bce67d9bcb491290eb1d9fd3bb71cc17e829854babf7336fbbd",
+      "audit_sha256": "2275d2b9e5760ee84e081f0e0c106c2f7447888ff39fa7ae76a7d1b62a4e92ab",
+      "simulation_time_s": 252.4,
+      "states": 10097,
+      "rewinds": 0,
+      "batch": "2026-10-03_hard"
+    }
+  ],
+  "scope": {
+    "seed": 0,
+    "robot": "aloha",
+    "action": "JOINT_ABS",
+    "backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "control_decimation": 1,
+    "task_checks_hz": 40,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "rgb": false,
+    "video": false,
+    "rigid_options": {
+      "use_contact_island": false
+    }
+  },
+  "limitations": [
+    "Each result covers only its named model, frozen source, seed 0 and explicit 25 ms / 40 substep configuration",
+    "Contact-triggered assisted grasp; no friction-only, continuous-time or full parameter-domain claim",
+    "Medium and hard videos waived by user; model screenshots are zero-physics previews"
+  ]
+}

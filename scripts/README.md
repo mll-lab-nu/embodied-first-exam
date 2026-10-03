@@ -8,6 +8,7 @@
 
 - `prepare_nyx_studio.py`：准备并核验运行时 Nyx HDRI 和纹理；镜像构建也会调用。
 - `prepare_blanket_initial_states.py`、`install_blanket_initial_state.py`：离线准备并安装 Blanket 初态资源。
+- `prepare_knot_instances.py`：按当前物理配置串行重建 knot 的 IPC 冻结实例，保存正式与无 RGB 开发副本，不覆盖 `tasks/`。
 - `import_rope_threading_reference.py`：从外部参考数据提取 Rope 几何与初态参数。
 - `compile_buzz_wire_actions.py`：将已选研究轨迹编译为后续 Buzz rollout 可读取的动作文件；编译本身不授予成功资格。
 - `plan_rope_threading_oracle.py`、`plan_rope_threading_ik.py`：Wang 0° 三档的物体路径和双臂接力 IK；执行入口为 `oracle_runners/run_rope_threading_relay.py`，完整命令见 [Rope oracle](../topogym/planning/rope_threading/README.md)。
@@ -18,6 +19,8 @@
 - `plan_lock_picking_oracle.py`：冻结当前 Lock 三档物体路径与 1／2／3 次回退证书，`--ik` 加做从 home 起步的当前 Genesis 只读 IK，不推进物理。`oracle_runners/run_lock_picking_policy.py --route-mode reindex --variation <variant> --audit-ik --part solve` 实际执行，原生 Task 成功即正常结束，允许仍抓持；`audit_lock_picking_robot.py` 独立复核连续状态、关节、抓持、碰撞及 success 时间窗口。历史完整释放流程及原证据不改写。
 - `plan_hedgehog_object_oracle.py`、`audit_hedgehog_oracle.py`：物体证书与独立逐 tick 审计工具仍在本目录；执行入口为 `oracle_runners/run_hedgehog_oracle.py`。[已验收范围](../solvability_proof/hedgehog_in_cage/README.md)。
 - `plan_claws_object_oracle.py`、`plan_claws_ik.py`、`audit_claws_oracle.py`：Claws 原三档的冻结几何、只读 IK 和执行审计；执行入口为 `oracle_runners/run_claws_oracle.py`，共享 Nyx 重渲染入口为 `render_claws_oracle.py`。[命令与范围](oracle_runners/README.md#claws-easy--medium--hard-交接路线)。
+- `plan_blanket_object_oracle.py`、`audit_blanket_oracle.py`：Blanket 三档虚拟手见证与独立逐 tick 审计；执行入口为 `oracle_runners/run_blanket_oracle.py`，从默认 home 经双手局部辅助抓持、展平、释放撤手到原生 Task 判定。[命令与交接结果范围](oracle_runners/README.md#blanket-easy--medium--hard-双手展平路线)。
+- `oracle_runners/run_knot_oracle.py`、`oracle_runners/run_knot_branching.py`：Knot 纯摩擦参考策略与决策回溯；`audit_knot_oracle.py` 在新进程调用任务原生 replay 评分。[命令与范围](../topogym/planning/knot_untying/README.md)。
 - `test_scripted_policy_rollout.py`：`act(obs)` 样板执行入口，输出至 `task_rollouts/`。
 - `test_policy_cube_transfer.py`：低层方块执行与控制模式矩阵入口；其 `snapshot()` 被多个 rollout 管理脚本复用。
 

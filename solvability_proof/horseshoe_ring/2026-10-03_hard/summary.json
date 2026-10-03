@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task": "horseshoe_ring",
+  "batch": "2026-10-03_hard",
+  "accepted_proofs": 1,
+  "cases": [
+    {
+      "variation": "hard",
+      "model_revision": "ring_release_clearance_candidate_v8",
+      "seed": 0,
+      "path": "evidence/runs/hard_from_home_22",
+      "role": "accepted_success",
+      "report": "evidence/runs/hard_from_home_22/run_report.json",
+      "audit": "evidence/runs/hard_from_home_22/independent_audit.json",
+      "source_manifest": "evidence/runs/hard_from_home_22/run_source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "678bf8305fae599a7c0042a8be01ad4e87c1f32666d1ac4a8ddb9749e36ea4c4",
+      "report_sha256": "4c5ef1a624867bce67d9bcb491290eb1d9fd3bb71cc17e829854babf7336fbbd",
+      "audit_sha256": "2275d2b9e5760ee84e081f0e0c106c2f7447888ff39fa7ae76a7d1b62a4e92ab",
+      "simulation_time_s": 252.4,
+      "states": 10097,
+      "rewinds": 0
+    }
+  ],
+  "scope": {
+    "seed": 0,
+    "robot": "aloha",
+    "action": "JOINT_ABS",
+    "backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "control_decimation": 1,
+    "task_checks_hz": 40,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "rgb": false,
+    "video": false,
+    "rigid_options": {
+      "use_contact_island": false
+    }
+  },
+  "stage_factory": "topogym.planning.horseshoe_ring.stages:gravity_release_table_pickup_stages",
+  "limitations": [
+    "Only this variant seed 0 and recorded configuration; other instances require separate qualification",
+    "Contact-triggered assisted grasp, not friction-only",
+    "World-tick evidence, not continuous-time or default 400 Hz qualification",
+    "Native report retains pre-audit status; independent_audit.json contains acceptance",
+    "Model screenshots are zero-physics previews, not additional executions"
+  ],
+  "note": "Original bytes retained; original absolute paths are provenance. Use archive-relative paths to access copies."
+}

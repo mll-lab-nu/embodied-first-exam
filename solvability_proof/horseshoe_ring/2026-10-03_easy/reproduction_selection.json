@@ -1,0 +1,74 @@
+[
+  {
+    "step": "prefix",
+    "parameters": {
+      "grasps": {
+        "path": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/grasps.json",
+        "sha256": "da398cde28163b9c16041ddf12b3359fa39b58ad4986847b6d5d2a509119b492"
+      },
+      "reference": {
+        "path": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/reference.json",
+        "sha256": "de7d099d4c082248b1a16786f861e74ca5548ee19fb3be1039ba9bbdf6becb44"
+      },
+      "fold": {
+        "path": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/fold.json",
+        "sha256": "7895545a0f9d914cb2d919f248e6b89f8563049d99157d925a7751c52fb0f524"
+      },
+      "support": {
+        "path": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/support.json",
+        "sha256": "21f5e8375cf247f9b8a27d35ec5ecf8f2bcbd5bb3c24a3f37c9e68e4ee04a7fb"
+      },
+      "approach": {
+        "path": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/approach.json",
+        "sha256": "2af42255eef8c2ea56347a7c682ee32d9ad52ab2ef39aadedceb54a6616d59ab"
+      }
+    }
+  },
+  {
+    "step": "orient_for_handoff",
+    "parameters": {
+      "angle_deg": 90.0,
+      "yaw_deg": 0.0,
+      "translation_m": [
+        0.0,
+        0.1,
+        -0.04
+      ],
+      "hold_s": 8.0,
+      "sample_duration_s": 0.1,
+      "restore": false
+    },
+    "parameters_sha256": "2cbcedb971a320a0a7264dd72a477e61843b88e9429111c10e1998cbfc8696d2"
+  },
+  {
+    "step": "support_release",
+    "parameters": {
+      "suspended_upper": true
+    },
+    "parameters_sha256": "dea67672845674f9813ef447324b2ddcc6dd7b7381be3bb514432efc78097526"
+  },
+  {
+    "step": "clear_remainder_for_table_pickup",
+    "parameters": {},
+    "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  {
+    "step": "grasp_ring",
+    "parameters": {
+      "choice": {
+        "tcp_backoff_m": 0.01531
+      }
+    },
+    "parameters_sha256": "6dccbdad58b3581a297460e62aa664d227c91796c0ec7e51c17614e8af579b1f"
+  },
+  {
+    "step": "place_ring",
+    "parameters": {},
+    "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  {
+    "step": "verify_goal",
+    "parameters": {},
+    "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  }
+]

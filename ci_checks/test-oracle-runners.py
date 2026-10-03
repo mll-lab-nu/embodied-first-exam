@@ -30,6 +30,8 @@ RUNNERS = (
     "run_hedgehog_oracle", "run_hedgehog_policy", "run_horseshoe_policy",
     "run_interlocked_claws_policy", "run_lock_picking_policy",
     "run_rigid_reference_policy", "run_solvability_workflow",
+    "run_blanket_oracle",
+    "run_knot_oracle", "run_knot_branching",
 )
 
 
@@ -187,7 +189,7 @@ class CompletionAuditTests(unittest.TestCase):
 
 
 class RunnerMigrationTests(unittest.TestCase):
-    def test_all_ten_modules_import_from_the_new_directory(self):
+    def test_all_modules_import_from_the_runner_directory(self):
         for name in RUNNERS:
             with self.subTest(runner=name):
                 module = importlib.import_module("scripts.oracle_runners."+name)
@@ -225,7 +227,7 @@ class RunnerMigrationTests(unittest.TestCase):
                            and isinstance(n.value, str) and n.value.startswith("scripts/") and n.value.endswith(".py")]
                 for worker in workers:
                     self.assertTrue((source / worker).is_file(), worker)
-                if name not in {"run_hedgehog_policy", "run_interlocked_claws_policy"}:
+                if name not in {"run_hedgehog_policy", "run_interlocked_claws_policy", "run_knot_oracle", "run_knot_branching"}:
                     self.assertIn(rel, workers)
 
 

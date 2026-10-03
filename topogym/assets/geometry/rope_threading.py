@@ -23,7 +23,11 @@ class ThreadingLayout:
     centerline_interpolation: str = 'linear'
     ring_ids: tuple[str, ...] | None = None
     ring_inner_radius_m: float | None = None
+    ring_inner_radii_m: dict | None = None
     ring_shape: str = "closed"
+    ring_offsets_m: dict | None = None
+    ring_yaw_deg: dict | None = None
+    ring_mount_sides: dict | None = None
 
     def __post_init__(self):
         if not np.isfinite(self.yaw_deg):
@@ -43,6 +47,26 @@ class ThreadingLayout:
             if isinstance(value, bool) or int(value) != value or value < lower:
                 raise ValueError(f"{key} must be an integer >= {lower}")
         source_ids = tuple(ring["name"] for ring in self.reference["rings"])
+        if self.ring_inner_radii_m is not None:
+            if not isinstance(self.ring_inner_radii_m, dict) or set(self.ring_inner_radii_m)-set(source_ids):
+                raise ValueError("ring_inner_radii_m must map source ring IDs to inner radii")
+            for radius in self.ring_inner_radii_m.values():
+                if (isinstance(radius, bool) or np.asarray(radius).shape != ()
+                        or not np.isfinite(radius) or radius <= self.radius):
+                    raise ValueError("Per-ring inner radius must be finite and larger than the rope radius")
+        if self.ring_mount_sides is not None and (
+                not isinstance(self.ring_mount_sides, dict) or set(self.ring_mount_sides)-set(source_ids)
+                or any(isinstance(v, bool) or v not in (-1, 1) for v in self.ring_mount_sides.values())):
+            raise ValueError("ring_mount_sides must map source ring IDs to -1 or 1")
+        for key, vector in (("ring_offsets_m", True), ("ring_yaw_deg", False)):
+            changes = getattr(self, key)
+            if changes is None:
+                continue
+            if not isinstance(changes, dict) or set(changes)-set(source_ids):
+                raise ValueError(f"{key} must map source ring IDs to finite values")
+            for value in changes.values():
+                if (np.asarray(value).shape != ((3,) if vector else ()) or not np.isfinite(value).all()):
+                    raise ValueError(f"Invalid {key} value")
         if self.ring_ids is not None:
             selected = tuple(self.ring_ids)
             if (not selected or len(set(selected)) != len(selected)
@@ -109,9 +133,26 @@ class ThreadingLayout:
         sources = self.reference["rings"]
         if self.ring_ids is not None:
             sources = [ring for ring in sources if ring["name"] in self.ring_ids]
-        if self.ring_inner_radius_m is not None:
+        for ring in sources:
+            name = ring["name"]
+            if name in (self.ring_yaw_deg or {}):
+                yaw = Rotation.from_euler("z", self.ring_yaw_deg[name], degrees=True)
+                center = np.asarray(ring["center_m"])
+                for key in ("normal", "basis_u", "basis_v"):
+                    ring[key] = yaw.apply(ring[key]).tolist()
+                for kind in ("stand", "base"):
+                    ring[kind]["position"] = (center+yaw.apply(np.asarray(ring[kind]["position"])-center)).tolist()
+            if name in (self.ring_offsets_m or {}):
+                offset = np.asarray(self.ring_offsets_m[name], float)
+                ring["center_m"] = (np.asarray(ring["center_m"])+offset).tolist()
+                for kind in ("stand", "base"):
+                    ring[kind]["position"] = (np.asarray(ring[kind]["position"])+offset).tolist()
+        if self.ring_inner_radius_m is not None or self.ring_inner_radii_m:
             for ring in sources:
-                new_radius = float(self.ring_inner_radius_m)+ring["tube_radius_m"]
+                inner = (self.ring_inner_radii_m or {}).get(ring["name"], self.ring_inner_radius_m)
+                if inner is None:
+                    continue
+                new_radius = float(inner)+ring["tube_radius_m"]
                 # Authored stands meet the rim along horizontal basis_u. Keep
                 # the ring centre/plane fixed; move its stand and foot together.
                 direction = np.asarray(ring["basis_u"], dtype=float)
@@ -121,6 +162,16 @@ class ThreadingLayout:
                 for kind in ("stand", "base"):
                     ring[kind]["position"] = (np.asarray(ring[kind]["position"])+shift).tolist()
                 ring["radius_m"] = new_radius
+        for ring in sources:
+            if (self.ring_mount_sides or {}).get(ring["name"], 1) == -1:
+                # Both authored rim mounts are horizontal; move the vertical
+                # post and its foot to the opposite rim without rotating the
+                # ring plane or lifting the foot off the table.
+                center = np.asarray(ring["center_m"])
+                for kind in ("stand", "base"):
+                    position = np.asarray(ring[kind]["position"]).copy()
+                    position[:2] = 2*center[:2]-position[:2]
+                    ring[kind]["position"] = position.tolist()
         return [dict(ring, shape=self.ring_shape,
                      center_m=self.transform(ring["center_m"]).tolist(),
                      **{key: rotation.apply(ring[key]).tolist()

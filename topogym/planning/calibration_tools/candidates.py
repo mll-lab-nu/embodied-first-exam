@@ -29,9 +29,12 @@ def validate_candidate(candidate):
             raise ValueError(name+" must be a mapping")
     if set(result.get("config", {}))-CONFIG_FIELDS:
         raise ValueError("Candidate config only supports timing, task_parameters and grasp_assist")
-    if "geometry" in result and (set(result["geometry"]) != {"parameters"}
-                                or not isinstance(result["geometry"]["parameters"], dict)):
+    if "geometry" in result and (set(result["geometry"])-{"parameters", "initial_layout_lift_m"}
+                                or not isinstance(result["geometry"].get("parameters"), dict)):
         raise ValueError("Geometry candidate requires a parameters mapping")
+    lift = result.get("geometry", {}).get("initial_layout_lift_m", 0.)
+    if isinstance(lift, bool) or not isinstance(lift, (int, float)) or not math.isfinite(lift) or not 0 <= lift <= .02:
+        raise ValueError("Initial layout lift must be between zero and 20 mm")
     if any(not isinstance(name, str) or name in {"robot", "table"} or kind not in {"rigid", "fem"}
            for name, kind in result.get("object_drives", {}).items()):
         raise ValueError("object_drives maps task entity names to 'rigid' or 'fem'")
@@ -126,7 +129,8 @@ def build_candidate(env, candidate):
             if self.task_id != "horseshoe_ring":
                 raise UnsupportedCapability("Fresh physics geometry candidates currently support Horseshoe Ring")
             from .adapters.horseshoe_ring import declaration
-            with declaration(self, candidate["geometry"]["parameters"]) as geometry:
+            with declaration(self, candidate["geometry"]["parameters"],
+                    initial_layout_lift_m=candidate["geometry"].get("initial_layout_lift_m", 0.)) as geometry:
                 result = super().declare(*args, **kwargs)
             report["geometry"] = geometry
             return result

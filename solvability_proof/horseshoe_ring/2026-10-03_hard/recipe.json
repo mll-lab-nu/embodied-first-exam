@@ -1,0 +1,162 @@
+{
+  "variant": "hard",
+  "seed": 0,
+  "instance_id": "678bf8305fae599a7c0042a8be01ad4e87c1f32666d1ac4a8ddb9749e36ea4c4",
+  "model_revision": "ring_release_clearance_candidate_v8",
+  "terminal_revision": "placement_region_v3_grasp_contact_2mm",
+  "resource_sha256": {
+    "variations/horseshoe_ring/waist_ellipse.json": "ee27f30b89fb847cb660f1ec0c38897ff7839af5006ece33a39281bc4aa4daea",
+    "variations/horseshoe_ring/waist_ellipse_settled_poses.json": "02f2bfe44604306e7221aad5fa174dfbc0ae090c2eefab567346e5d74a1429ae"
+  },
+  "config": {
+    "task_id": "horseshoe_ring",
+    "robot_id": "aloha",
+    "variation_id": "hard",
+    "task_parameters": {},
+    "compute_backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "terminal_contract_version": 1,
+    "control_decimation": 1,
+    "max_physics_steps": 80000,
+    "history_storage": "segment",
+    "reset_physics_steps": 0,
+    "rigid_options": {
+      "use_contact_island": false
+    },
+    "ipc_options": {},
+    "ipc_settled_state": null,
+    "enable_rgb": false,
+    "enable_depth": false,
+    "observation_mode": "JOINT",
+    "control_mode": "JOINT_ABS",
+    "enable_privileged": true,
+    "seed": null,
+    "render_backend": "nyx",
+    "asset_root": null,
+    "work_dir": "/home/jianwen/topogym/runs/oracle_dev/horseshoe_20261003/hard_v8_prefix/scene",
+    "grasp_assist": {
+      "model": "contact_weld_v1",
+      "targets": [
+        {
+          "entity": "horseshoe_left",
+          "link": "horseshoe_left",
+          "center_m": [
+            0.013098506071130105,
+            1.0408340855860843e-16,
+            0.0
+          ],
+          "radius_m": 0.09055211523025058
+        },
+        {
+          "entity": "horseshoe_right",
+          "link": "horseshoe_right",
+          "center_m": [
+            -0.013098506071130105,
+            -1.0408340855860843e-16,
+            0.0
+          ],
+          "radius_m": 0.09055211523025058
+        },
+        {
+          "entity": "target_ring",
+          "link": "target_ring",
+          "center_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "radius_m": 0.09080000000000002
+        }
+      ],
+      "stable_time_s": 0.02,
+      "max_tcp_distance_m": 0.12080000000000002,
+      "max_penetration_m": 0.002,
+      "max_translation_error_m": 0.01,
+      "max_rotation_error_rad": 0.15,
+      "max_finger_opening_fraction": 0.15,
+      "intent_deadband": 0.002,
+      "initial_intent": "open"
+    }
+  },
+  "selection": [
+    {
+      "step": "prefix",
+      "parameters": {
+        "grasps": {
+          "path": "evidence/runs/hard_from_home_22/oracle_inputs/grasps.json",
+          "sha256": "c24d875289e57ac278e7de3bd3e018b9f922d6c09efaa29bf44257012381337f"
+        },
+        "fold": {
+          "path": "evidence/runs/hard_from_home_22/oracle_inputs/fold.json",
+          "sha256": "89a42dba770d81bf2754042d955a21edf9c671bd1a1bc9e7b75b65a56843cda2"
+        },
+        "support": {
+          "path": "evidence/runs/hard_from_home_22/oracle_inputs/support.json",
+          "sha256": "d839d8ec882da33791dc05e15f566ac5f6ef2eb83d05c5236d0a35f4c766e755"
+        },
+        "approach": {
+          "path": "evidence/runs/hard_from_home_22/oracle_inputs/approach.json",
+          "sha256": "c5340931285a8bd13e0ececb5611026d1520e506942900d021221a59a103f62a"
+        },
+        "reference": {
+          "path": "evidence/runs/hard_from_home_22/oracle_inputs/reference.json",
+          "sha256": "6e16674e1f42ea6ebe76cf77eadb760cd52fcc7c9f8ca59781c12944e09a4086"
+        }
+      }
+    },
+    {
+      "step": "orient_for_handoff",
+      "parameters": {
+        "angle_deg": 90.0,
+        "translation_m": [
+          0.0,
+          0.08,
+          0.0
+        ],
+        "yaw_deg": 0.0,
+        "hold_s": 8.0,
+        "sample_duration_s": 0.05,
+        "restore": false,
+        "position_bias_limit_m": 0.05
+      }
+    },
+    {
+      "step": "support_release",
+      "parameters": {
+        "suspended_upper": true,
+        "joint_release_retreat": true,
+        "active_ring_pickup": true
+      }
+    },
+    {
+      "step": "grasp_ring",
+      "parameters": {
+        "choice": {
+          "tcp_backoff_m": 0.01531
+        },
+        "release_support": true,
+        "release_translation_m": [
+          0,
+          0.22,
+          0
+        ]
+      }
+    },
+    {
+      "step": "place_ring",
+      "parameters": {}
+    },
+    {
+      "step": "verify_goal",
+      "parameters": {}
+    }
+  ],
+  "qualification": {
+    "accepted_proof": true,
+    "instance_id": "678bf8305fae599a7c0042a8be01ad4e87c1f32666d1ac4a8ddb9749e36ea4c4",
+    "audit": "evidence/runs/hard_from_home_22/independent_audit.json",
+    "audit_sha256": "2275d2b9e5760ee84e081f0e0c106c2f7447888ff39fa7ae76a7d1b62a4e92ab"
+  }
+}

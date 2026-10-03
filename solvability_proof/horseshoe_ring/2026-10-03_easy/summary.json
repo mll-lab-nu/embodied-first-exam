@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "task": "horseshoe_ring",
+  "batch": "2026-10-03_easy",
+  "accepted_proofs": 1,
+  "cases": [
+    {
+      "variation": "easy",
+      "model_revision": "ring_clearance_candidate_v3",
+      "seed": 0,
+      "path": "evidence/runs/from_home_09",
+      "role": "accepted_success",
+      "report": "evidence/runs/from_home_09/run_report.json",
+      "audit": "evidence/runs/from_home_09/independent_audit.json",
+      "source_manifest": "evidence/runs/from_home_09/run_source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "fe1976f266c8fe73966abaa6f8d8c8bb1c6dc45eb3e7088236d3e334448190cc",
+      "report_sha256": "49dce7e82305e4f252395ba61b71bcc8ba65a550484023911320114d7f3bf309",
+      "audit_sha256": "f74039f5ce9d840b3527601c1f53110d1a2ede8664ae12ca0db2bf73f91638d1",
+      "simulation_time_s": 275.2,
+      "states": 11009,
+      "rewinds": 0
+    }
+  ],
+  "scope": {
+    "seed": 0,
+    "robot": "aloha",
+    "action": "JOINT_ABS",
+    "backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "control_decimation": 1,
+    "task_checks_hz": 40,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "rgb": false,
+    "video": false,
+    "rigid_options": {
+      "use_contact_island": false
+    }
+  },
+  "stage_factory": "topogym.planning.horseshoe_ring.stages:gravity_release_table_pickup_stages",
+  "limitations": [
+    "Only easy seed 0 and recorded configuration; medium/hard unverified",
+    "Contact-triggered assisted grasp, not friction-only",
+    "World-tick evidence, not continuous-time or default 400 Hz qualification",
+    "Native report retains pre-audit status; independent_audit.json contains acceptance",
+    "Screenshots and subsequent saved-state videos do not add physical executions"
+  ],
+  "note": "Original bytes retained; original absolute paths are provenance. Use archive-relative paths to access copies."
+}

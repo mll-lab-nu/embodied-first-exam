@@ -44,8 +44,8 @@
     "initial_tilt_deg": 90,
     "collision_segments": 64,
     "centerline_radii": [
-      34.93085100306457,
-      33.26747714577578
+      36.93085100306457,
+      35.26747714577578
     ],
     "initial_phase_deg": 0.0
   },

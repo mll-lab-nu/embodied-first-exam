@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "accepted_proofs": 0,
+  "fresh_physics_executions": 0,
+  "report": "evidence/review/scope_review.json",
+  "native_evidence": "../2026-10-03_hard_s5_post/evidence/runs/native_03",
+  "task": "hedgehog_in_cage",
+  "scope": "Current geometry and goal identity check; old hard goal evaluation of archived native trajectory"
+}

@@ -137,11 +137,18 @@ class BuzzIK:
                 local = r.inv().apply(to_numpy(geom.get_verts()).reshape(-1, 3)-p)
                 self.robot_shapes.append((link.idx_local, mesh_object(local, geom.init_faces)))
         self.robot_manager = manager([obj for _, obj in self.robot_shapes])
-        wire_count = sum(len(link.geoms) for link in env._world.entities["wire"].links)
+        fixed_geometries = [g for name in ("wire", "wire_base")
+                            for link in env._world.entities[name].links for g in link.geoms]
         fixed = [mesh_object(to_numpy(g.get_verts()).reshape(-1,3), g.init_faces)
-                 for name in ("wire", "wire_base") for link in env._world.entities[name].links for g in link.geoms]
+                 for g in fixed_geometries]
         self.fixed_objects, self.fixed = fixed, manager(fixed)
-        self.wire_fixed = manager(fixed[:wire_count])
+        # The wire entity also contains wooden endpoint connectors. Supported
+        # placement may touch those connectors, just as the native Task allows.
+        # Keep every fixed piece in the robot's collision manager, and use the
+        # authoritative contact roles for the tool's metal-only check.
+        roles = env._world._contact_collector.roles
+        self.wire_fixed = manager([obj for obj, geom in zip(fixed, fixed_geometries)
+                                   if roles[geom.idx] == "wire_metal"])
         wand = env._world.entities["wand"]
         p = to_numpy(wand.get_pos()).reshape(3)
         r = rotation(to_numpy(wand.get_quat()).reshape(4))

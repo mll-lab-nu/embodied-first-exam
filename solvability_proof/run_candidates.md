@@ -4,7 +4,7 @@
 
 核对日期：2026-09-28。范围为当前 13 个正式 Task，另列 Cube 等机制样板。检查现有报告、冻结源码、当前变体/终态与 policy 入口；本次未运行新仿真，未修改成功判据，也未增加已验收数量。[机器记录与所读证据哈希](run_candidates.json)。
 
-2026-09-30 补充：Hedgehog 当前四腰窗 medium 已完成新的物理执行与独立审计，并已收录[正式证明](hedgehog_in_cage/README.md)。下表更新该行；`run_candidates.json` 和下方 09-28 扫描结论仍保留原历史范围，当前数量以 [catalog.json](catalog.json) 为准。
+2026-10-03 补充：Hedgehog easy / medium / hard 高位支座新版三档已完成原生成功、独立审计与[正式归档](hedgehog_in_cage/README.md)。下表为当前状态，`run_candidates.json` 和下方 09-28 扫描结论保留原历史范围，数量以 [catalog.json](catalog.json) 为准。
 
 **除已归档的 Keyhole / Coil 六个实例，本轮未找到可以直接按当前正式 Task 的 success 标准追加的其他任务。** 最有复用价值的是 **Lock medium、Fiber 三档、Buzz Wire 三档、Horseshoe 三档**。它们距离新证明的缺口不同；建议首先处理 Lock medium 的终态诊断，再从 Fiber easy 开始迁移。
 
@@ -15,10 +15,10 @@
 | Cast Keyhole | F1/F2/F3 三次当前 Env 实际成功 | 已归档 3/3 | [已有证明](cast_keyhole/README.md) |
 | Cast Coil | easy/medium/hard 三次当前 Env 实际成功 | 已归档 3/3 | [已有证明](cast_coil/README.md) |
 | **Lock Picking** | 当前 medium 的 `trail_12_medium`、`trail_13_medium` 连续完成全控制链 | 最接近；仍无正式 Task success | 诊断同轴正间隙与转盘资格，修正后连续重跑；easy/hard 不继承 medium |
-| **Fiber Bundling** | 4/8/16 芯历史完整穿环、机器人命令及 IK | 当前 terminal 已启用，缺当前 Env 的成功执行 | 迁移护套抓取/穿环 policy，接入当前子步禁碰，先跑 4 芯 |
+| **Fiber Bundling** | easy_02 / medium_full_01 / hard_full_01 完整连续穿环 | 2026-10-03 独立审计及当前 v4 复核通过，seed 0 正式 3/3 | [三档证明](fiber_bundling/README.md)；其他 seed、默认时序和纯摩擦另行验收 |
 | **Buzz Wire** | F1/F2/F3 历史 home→拾取→全路线→放回，4/2 ms 复验均通过 | 历史证据完整；当前三档整体抬高 40 mm | 重算当前布局 IK、迁移反馈控制、补终态资格并重跑 |
 | **Horseshoe** | 当前三形状有完整对象几何路径；旧 F1/F2/F3 有机器人成功 | 当前形状证书明确未验证机器人/动力学 | 优先 `waist_mild`，补抓取/交接/IK 和固定目标区搬运 |
-| Hedgehog | 当前四腰窗 medium 已完成物体通路、IK 和辅助抓持完整执行 | medium 默认参数 seed 0 已正式收录；easy/hard 及随机实例未覆盖 | [medium 证明](hedgehog_in_cage/README.md)；其他实例另行验证 |
+| Hedgehog | easy / medium / hard 高位支座新版均完成物体通路、IK 和辅助抓持完整执行 | 默认参数 seed 0 三档已收录；旧低位 hard 和随机实例未覆盖 | [三档证明](hedgehog_in_cage/README.md) |
 | Interlocked Claws | 旧同形螺旋爪等完整辅助预抓持路线 | 当前 medium 通路未通过；当前三档摩擦保持诊断均失败 | 分开解决各档抓持和路线，不能把旧分离终点当当前目标区成功 |
 | Blanket Flatten | 旧简单折叠单臂展平成功；当前 PBD 抓放夹具通过 | 旧流程关闭 robot-soft coupling；当前复杂初态仅局部执行 | 可先迁移 easy，验证当前初态、抓区、耦合、释放后展平 |
 | Knot Untying | 旧 Trefoil 75 s 解结、释放及静置 | 不是默认 home 连续起步；完整物理/通用抓持资格未齐 | 当前 Trefoil 对应 medium；适配当前 FEM/抓持与 home 接近，再做终态资格 |
@@ -41,6 +41,8 @@
 当前可执行完整策略入口：[run_lock_picking_policy.py](../scripts/run_lock_picking_policy.py)；因此它比需重新迁移控制器的其他候选更接近新证明。
 
 ## 2. Fiber：先做 4 芯，再扩展 8/16 芯
+
+2026-10-03：当前三档 seed 0 的原生成功运行已补齐独立审计，分别核对 7,604／13,761／25,566 个状态，正式收录 3/3。easy 的历史 v3 身份与同轨迹 v4 复核分开记录；[正式证明](fiber_bundling/README.md)。下文保留 09-28 的历史候选说明，不再代表当前缺口。
 
 | 代表 | 历史完整执行报告 | 仿真时间 | 半步长对照 |
 | --- | --- | ---: | --- |
@@ -68,7 +70,9 @@ F1 三拱、F2、F3 的归档均有 home 连续接近、实际摩擦抓取、全
 
 当前三档 revision 均为 `*_raised40mm`，相对旧成功布局整体升高 40 mm。机器人关节轨迹不能直接平移继承；需要沿旧对象相对路线在新摆位重求 TCP/IK 和接近/撤退，再迁移为当前 policy。当前 Task `goal_complete=False`，出生、触线与支撑/释放资格仍需补齐。旧报告证明原固定实例，不能直接作为新摆位 success。
 
-## 4. Horseshoe：当前三档有对象路径，尚无机器人执行
+## 4. Horseshoe：扩环 easy 已验收，medium / hard 待验证
+
+2026-10-03：`waist_mild` 扩环 v3、seed 0 从默认 ALOHA home 连续执行 275.2 s，原生成功且独立审计通过，11,009 状态零回溯。正式反馈策略完成折合、倾转释放、桌面抓环和目标区搬运；采用 v12 刚体优化及接触辅助抓持。圆环仍有充分法向直接穿出阻挡证据；[完整证明与复现](horseshoe_ring/README.md)。下述路线证书对应原三档几何，当前 medium / hard 尚无新增机器人成功。
 
 当前三档是 `waist_mild` / `u_mild` / `waist_ellipse`，与旧 F1/F2/F3 的“接近方向”家族不同。对应现存路线和证书：
 
@@ -78,7 +82,7 @@ F1 三拱、F2、F3 的归档均有 home 连续接近、实际摩擦抓取、全
 
 三份证书均 `continuous_collision_free=True`，但明确 **`robot_execution_verified=False`、`dynamic_execution_verified=False`、`lab_obstacle_collision_verified=False`**。旁边的 `body_poses.json` 可用于路线生成；最小对象间隙下界约 0.148 / 0.127 / 0.117 mm，并非机器人跟踪误差余量。
 
-旧 [F1/F2/F3 完整物理资格](../runs/demo_metadata/horseshoe_ring/2026-09-19_variant_generator_v2/physical_evidence) 可供动作和交接设计参考。当前三形状仍需实际抓取、联合 IK、重力/自由链环执行，以及完整目标环进入固定区域、其余系统留在另一侧的后缀。先做 easy，不能将几何证书计成机器人成功。
+旧 [F1/F2/F3 完整物理资格](../runs/demo_metadata/horseshoe_ring/2026-09-19_variant_generator_v2/physical_evidence) 可供动作和交接设计参考。medium / hard 仍需实际抓取、联合 IK、重力/自由链环执行，以及完整目标环进入固定区域、其余系统留在另一侧的后缀。不能将几何证书计成机器人成功，也不将扩环 easy 的成功授予旧几何。
 
 ## 其余任务的具体阻挡证据
 

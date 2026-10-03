@@ -1,0 +1,28 @@
+{
+  "cage_bottom_m": -0.12,
+  "family_id": "gen_keyhole",
+  "prototype_id": "hedgehog_gen_keyhole_fixed_v3_s5_post",
+  "spike_count": 6,
+  "initial_support": {
+    "radius_m": 0.008,
+    "top_z_m": 0.023500000000000007,
+    "bottom_z_m": -0.102,
+    "center_xy_m": [
+      -0.01583115692613754,
+      -0.019335115098656826
+    ]
+  },
+  "initial_ball_pose": {
+    "position_m": [
+      -0.01583115692613754,
+      -0.019335115098656826,
+      0.07200000000000001
+    ],
+    "quaternion_wxyz": [
+      -3.5527802710877415e-07,
+      -0.3072272672081592,
+      0.9516361732740086,
+      2.852426941313269e-07
+    ]
+  }
+}

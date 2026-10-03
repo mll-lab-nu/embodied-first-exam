@@ -25,6 +25,7 @@ def main():
     parser.add_argument("--step-mm", type=float, default=2.)
     parser.add_argument("--route-json", type=Path, help="Route parameter overrides (JSON object)")
     parser.add_argument("--relay-json", type=Path, help="Per-ring relay plan (JSON list)")
+    parser.add_argument("--task-parameters-json", type=Path, help="Explicit model parameters bound to the witness identity")
     parser.add_argument("--audit", type=Path, help="Rebuild and verify an existing object_witness.json")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
@@ -45,6 +46,7 @@ def main():
             route = json.loads(args.route_json.read_text()) if args.route_json else None
             relay = json.loads(args.relay_json.read_text()) if args.relay_json else None
             report, problem, track = plan_object_path(args.output, variation=args.variation, seed=args.seed,
+                task_parameters=json.loads(args.task_parameters_json.read_text()) if args.task_parameters_json else None,
                 route=route, relay=relay, margin_m=args.clearance_mm/1000, hand_margin_m=args.hand_clearance_mm/1000,
                 step_m=args.step_mm/1000, progress=progress)
             import numpy as np
@@ -64,7 +66,8 @@ def main():
                "--output", str(args.output), "--seed", str(args.seed), "--variation", args.variation,
                "--clearance-mm", str(args.clearance_mm), "--hand-clearance-mm", str(args.hand_clearance_mm),
                "--step-mm", str(args.step_mm)]
-    for flag, path in (("--route-json", args.route_json), ("--relay-json", args.relay_json), ("--audit", args.audit)):
+    for flag, path in (("--route-json", args.route_json), ("--relay-json", args.relay_json), ("--audit", args.audit),
+                       ("--task-parameters-json", args.task_parameters_json)):
         if path is not None:
             target = args.output/("submitted_"+path.name)
             target.write_bytes(path.read_bytes())

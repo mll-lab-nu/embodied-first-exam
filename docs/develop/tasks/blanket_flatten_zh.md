@@ -1,5 +1,25 @@
 # 杂乱被子展平（blanket_flatten）
 
+**2026-10-03 三档 oracle 交接集成：** 已将交接最终源码接入
+[planning/blanket_flatten/](../../../topogym/planning/blanket_flatten/routes.py)，包括共享路线、
+虚拟手见证、从默认 ALOHA home 执行的 JOINT_ABS 机器人策略及独立逐 tick 审计。
+运行入口与参数见 [oracle runner](../../../scripts/oracle_runners/README.md#blanket-easy--medium--hard-双手展平路线)。
+交接报告称 easy / medium / hard 的 seed 0、`gathered_archive_v2` 均达到原生 Task success
+且独立审计 `accepted_proof=true`，分别为 tick 7156 / 15657 / 33687
+（17.9 / 39.1 / 84.2 s），终态覆盖率 100.0% / 99.98% / 93.2%。
+easy / medium 各一段，hard 先两端翻页解扭，再重新抓取并旋转拉展；持抓峰值材料边长比
+1.247 / 1.292 / 1.293，声明 guard 为 1.3 / 1.5 / 1.5。三档虚拟手见证也在同一初态通过。
+
+上述成功数据来自用户提供的外部交接材料（导出基线 `e49b116e`），完整逐 tick 证据未随文本迁入。
+本次集成保留其算法和参数，21 项 CPU 回归通过（Blanket 5 项，通用 runner 16 项），
+覆盖审计、三档配置／预算、原生失败退出、CLI 和源码快照；三档冻结资源的哈希校验也通过。
+检查记录见 [集成报告](../../../runs/test_results/blanket_oracle_integration_20261003_075624/report.json)。
+当前 NVIDIA 驱动不可用，本地 torch 2.12.0+cu126 也不同于交接冻结栈 2.11.0+cu128，
+未新增本地物理重跑，未将外部记录登记为本地 `solvability_proof/`。
+证明范围限于三个冻结实例、默认参数、CUDA float64 和 `pbd_local_patch_v1` 双指接近准入的
+局部辅助抓持；不是纯摩擦抓持，不涵盖任意 seed、难度排序或机器人与布料穿透审计。
+外部运行未录视频，现有历史视频的范围不变；hard 覆盖率距 90% 门槛约 3%。
+
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
 **2026-09-29 三档场景布设（seed=0 已验收）：** easy / medium / hard 已统一为相同八面板纵向聚褶，目标扭转角分别为 **0° / 135° / 270°**，实现见 [gathered.py](../../../topogym/tasks/blanket_flatten/gathered.py)。布料尺寸 0.60 × 0.48 m、粒径 8 mm、网格 12 mm、褶角 72°、轴向比例 0.92、中心 XY=(-0.1356786, 0.15) m，材质和桌面摩擦共用。难度标签仍是设计目标，不能从目标角度推导实际解题难度。旧五折保留为 `simple_folds` / `five_folds`，旧折卷保留为 `fold_roll`；历史视频与物理身份不改。

@@ -1,0 +1,31 @@
+{
+  "status": "in_progress",
+  "accepted_full_tick_proofs": 0,
+  "verification": "frozen_instance_native_replay",
+  "variations": [
+    {
+      "variation": "easy",
+      "instance": "evidence/instances/easy/instance.json",
+      "native_success": true,
+      "native_success_origin": "imported",
+      "replay_status": "imported_one_pass"
+    },
+    {
+      "variation": "medium",
+      "instance": "evidence/instances/medium/instance.json",
+      "native_success": true,
+      "native_success_origin": "imported",
+      "replay_status": "failed_first_pass",
+      "replay_count": 1,
+      "replay_report": "evidence/replays/medium03_first_pass/medium_first_replay_result.json",
+      "second_replay": "cancelled before actions per user request; prioritize hard"
+    },
+    {
+      "variation": "hard",
+      "instance": "evidence/instances/hard/instance.json",
+      "native_success": false,
+      "native_success_origin": null,
+      "replay_status": "pending"
+    }
+  ]
+}

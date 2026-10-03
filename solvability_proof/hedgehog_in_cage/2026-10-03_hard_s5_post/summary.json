@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "task": "hedgehog_in_cage",
+  "batch": "2026-10-03_hard_s5_post",
+  "accepted_proofs": 1,
+  "cases": [
+    {
+      "variation": "hard",
+      "model_revision": "fixed_v3_s5_post",
+      "seed": 0,
+      "run": "native_03",
+      "path": "evidence/runs/native_03",
+      "role": "accepted_success",
+      "report": "evidence/runs/native_03/oracle_report.json",
+      "audit": "evidence/runs/native_audit_02/execution_audit.json",
+      "source_manifest": "evidence/runs/native_03/source_manifest.json",
+      "task_success": true,
+      "independent_audit_passed": true,
+      "instance_id": "625734f302a6426de45349c1606574810eb007390bfac6c154169bf57c33a860",
+      "report_sha256": "52ddbaebd4e8506184f375a2f640cc24b1823ed92baf39ffae62b0820aae0b65",
+      "audit_sha256": "995f4104c7b12c610073319f18572105d2ffba372327297bee643f455c3f293b",
+      "simulation_time_s": 150.725,
+      "states": 6030
+    }
+  ],
+  "scope": {
+    "seed": 0,
+    "robot": "panda_robotiq",
+    "action": "JOINT_ABS",
+    "backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "control_decimation": 1,
+    "task_checks_hz": 40,
+    "integration_substep_s": 0.000625,
+    "assistance": "contact_weld_v1",
+    "initial_geometry_policy": "strict",
+    "use_contact_island": false,
+    "history_storage": "segment",
+    "torch_threads": 4,
+    "rgb": false,
+    "video": false
+  },
+  "object_witness": "evidence/supporting/body_proof_03/object_report.json",
+  "object_audit": "evidence/supporting/body_proof_03/object_audit.json",
+  "negative_controls": "evidence/supporting/body_proof_03/negative_controls.json",
+  "approval": "evidence/supporting/provenance/approval.json",
+  "limitations": [
+    "Finite seed/default-parameter instance",
+    "Contact-triggered assisted grasp; not friction-only",
+    "Tick-end evidence; no continuous-time/all-substep qualification",
+    "No RGB/video qualification",
+    "Robot mounting link0 contact with table is excluded",
+    "Approved elevated initial state and fixed S5 support replace the former low initial state; fixed_v2 remains unqualified",
+    "Closing the narrow keyhole stem does not block this route; this is not a proof of the real GEN narrow-slot mechanism"
+  ],
+  "superseded_metadata_runs_not_counted": [
+    "native_02",
+    "native_audit_01"
+  ],
+  "note": "Original bytes and internal provenance paths retained. Access via archive-relative paths. Existing easy/medium archives unchanged."
+}

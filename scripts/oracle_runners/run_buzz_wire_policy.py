@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT))
 
 
 def worker(args):
+    from dataclasses import replace
     import torch
     from topogym.simulator import Env, SimulatorConfig, SegmentRunner
     from topogym.config.registry import task_definition
@@ -47,6 +48,9 @@ def worker(args):
         if args.feedback_finish:
             values["max_physics_steps"] = max(values["max_physics_steps"],round(args.episode_seconds/values["physics_dt_s"]))
         config = SimulatorConfig(**values)
+    if args.v12_performance:
+        config = replace(config, compute_backend="cpu", precision="64",
+                         rigid_options={**config.rigid_options, "use_contact_island": False})
     report = dict(status="running", started=time.time(), config=to_jsonable(config), variant=args.variant,
         seed=args.seed, task_success=False, from_default_home=True, mode="unlimited", part=args.part,
         policy_parameters=dict(grasp_height_m=args.grasp_height, grasp_tilt_deg=args.grasp_tilt),
@@ -61,6 +65,11 @@ def worker(args):
     try:
         with Env(config) as env:
             env.reset(seed=args.seed)
+            if args.v12_performance:
+                from harbor_templates.topogym.common.rcb_topogym import _settle_only_when_reached
+                report["v12_performance"] = dict(
+                    settle_only_when_reached=_settle_only_when_reached(env._task),
+                    use_contact_island=False, enabled_from_physics_step=env._world.physics_step)
             def make_policy(**values):
                 inner = BuzzWirePolicy(**values)
                 if args.control_mode == "JOINT_ABS":
@@ -235,6 +244,8 @@ def main():
     parser.add_argument("--grasp-tilt", type=float, default=75.)
     parser.add_argument("--compiled-actions", type=Path,
                         help="Execute compiled ordinary actions afresh from home, without state restoration")
+    parser.add_argument("--v12-performance", action="store_true",
+                        help="Use v12 CPU float64/global rigid solve and goal-gated settling; retain action timing")
     parser.add_argument("--feedback-finish",action="store_true",
                         help="Easy seed-0 recipe: replay the held prefix, then remeasure and finish through observation policies")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
@@ -253,6 +264,17 @@ def main():
         extra_args[index+1] = str(frozen_actions)
     from scripts.test_policy_cube_transfer import snapshot
     source = snapshot(args.output)
+    if args.v12_performance:
+        # The local Env entry does not apply Harbor Session's optimization.
+        # Freeze the actual upstream helper alongside the ordinary policy.
+        helper = Path("harbor_templates/topogym/common/rcb_topogym.py")
+        target = source / helper
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / helper).read_bytes())
+        manifest_path = args.output / "source_manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest[str(helper)] = hashlib.sha256(target.read_bytes()).hexdigest()
+        manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
     (args.output/"source_manifest.json").rename(args.output/"run_source_manifest.json")
     command = [sys.executable, str(source/"scripts/oracle_runners/run_buzz_wire_policy.py"), *extra_args, "--worker"]
     (args.output/"invocation.json").write_text(json.dumps(dict(command=command), indent=2))
