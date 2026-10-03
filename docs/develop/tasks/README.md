@@ -21,6 +21,7 @@
 - [长孔立柱解环](slotted_post_ring_zh.md)
 - [Orbits 四环阶梯解绳](orbits_zh.md)
 
+- [刺球、马蹄环、长孔立柱的 easy 以下两档（very_easy / easier）：用法、设计与检查](../../tasks_simplifications/README.md)
 - [13 项任务 × 三难度场景描述、参数差异、占位缺口与部署记录](variation_deployment_implementation_20260925_zh.md)
 - [初始化场景反馈与本轮开发验证：39 项索引、八项反馈、实际首帧及剩余资格缺口（9 月 27 日）](initial_scene_feedback_20260927_zh.md)
 - [三难度 setting 补齐工程计划：Orbits 减环、Blanket 扭转递增及剩余档位](three_tier_setting_completion_plan_20260925_zh.md)

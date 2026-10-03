@@ -4,8 +4,8 @@ The ball is the easy tier's ball, resting in the same gravity-settled pose in bo
 28 mm toward the robot from the cage axis: a 60 mm spike points at the robot and reaches about
 29 mm outside the cage wall, so the gripper can hold it from outside. The common window width
 sets the difficulty: at 118 mm (very_easy) the held ball leaves by translation alone; at 108 mm
-(easier) it leaves only after one wrist roll about the held spike. Knobs: ``cage`` and
-``ball_pose``. See topogym/planning/hedgehog_in_cage/below_easy_witness.py. These are design
+(easier) it leaves only after one wrist roll about the held spike. Knob: ``cage``; both settings
+share ``ball_pose``. See topogym/planning/hedgehog_in_cage/below_easy_witness.py. These are design
 targets, not robot qualifications.
 """
 from copy import deepcopy
