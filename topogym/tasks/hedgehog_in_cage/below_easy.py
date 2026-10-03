@@ -1,9 +1,9 @@
-"""Below-easy Hedgehog: the CLASSIC ball in a cage whose window toward the robot is widened.
+"""Below-easy Hedgehog: the CLASSIC ball in a wider cage with three equal windows.
 
-The ball is the easy tier's ball, resting in the same gravity-settled pose in both settings:
-a 60 mm spike points at the robot and reaches about 19 mm outside the cage wall, so the
-gripper can hold it from outside. The width of the window toward the robot sets the
-difficulty: at 116 mm (very_easy) the held ball leaves by translation alone; at 106 mm
+The ball is the easy tier's ball, resting in the same gravity-settled pose in both settings,
+28 mm toward the robot from the cage axis: a 60 mm spike points at the robot and reaches about
+29 mm outside the cage wall, so the gripper can hold it from outside. The common window width
+sets the difficulty: at 118 mm (very_easy) the held ball leaves by translation alone; at 108 mm
 (easier) it leaves only after one wrist roll about the held spike. Knobs: ``cage`` and
 ``ball_pose``. See topogym/planning/hedgehog_in_cage/below_easy_witness.py. These are design
 targets, not robot qualifications.
@@ -24,36 +24,39 @@ from topogym.tasks.base import merge_parameters
 from .common import HedgehogInCageTask
 
 
-def cage(exit_window_mm):
-    """CLASSIC windows with the 144/216 deg pair merged into one window toward the robot (180 deg).
+def cage(window_mm):
+    """Three equal windows, one toward the robot (180 deg), so the bars stand evenly at 0/120/240 deg.
 
-    Windows are [centre_deg, chord width at the inner wall in mm]; collars drop from 30 to 18 mm.
+    Windows are [centre_deg, chord width at the inner wall in mm]. The cage is wider than CLASSIC
+    (150 instead of 117 mm inside): a straight exit needs a window of about 102 mm or more, which
+    three evenly spaced windows cannot give at 117 mm. Collars drop from 30 to 18 mm.
     """
-    return {"windows": [[0., 60.], [72., 55.5], [180., float(exit_window_mm)], [288., 55.5]],
-            "collar_height_mm": 18.}
+    return {"inner_diameter_mm": 150., "windows": [[60., float(window_mm)], [180., float(window_mm)],
+                                                   [300., float(window_mm)]], "collar_height_mm": 18.}
 
 
 class HedgehogBelowEasyTask(HedgehogInCageTask):
-    """Shared construction; very_easy / easier set only the exit window width."""
+    """Shared construction; very_easy / easier set only the window width."""
 
-    model_revision = "below_easy_v1"
-    family_id = "below_easy_wide_window"
-    # Gravity-settled on CPU (Genesis, 25 ms tick / 40 substeps, 5 s) in the 106 mm cage and
-    # lifted 0.2 mm out of contact; re-settling it in either cage moves the ball 0.3 mm.
+    model_revision = "below_easy_v2"
+    family_id = "below_easy_three_windows"
+    # Gravity-settled on CPU (Genesis, 25 ms tick / 40 substeps, 5 s) in the 108 mm cage and
+    # lifted 0.2 mm out of contact.
     defaults = merge_parameters(HedgehogInCageTask.defaults, {
-        "cage": cage(106.),
-        "ball_pose": {"position_m": [0., 0., -0.058757],
-                      "quaternion_wxyz": [0.419726, 0.426712, 0.800963, -0.014313]},
+        "cage": cage(108.),
+        "ball_pose": {"position_m": [-0.027999, 0., -0.049957],
+                      "quaternion_wxyz": [0.422212, 0.423279, -0.060657, 0.799307]},
     })
     fixed_parameters = ("scale", "cage", "ball_pose")
 
     def template(self):
-        """The CLASSIC template with this setting's windows and collar (template units = mm/scale)."""
+        """The CLASSIC template with this setting's cage size, windows and collar (template units = mm/scale)."""
         template = deepcopy(load_template())
         cage, scale = self.config["cage"], float(self.config["scale"])
         windows = np.asarray(cage["windows"], dtype=float)
         template["template_id"] += "+below_easy"
-        template["cage"].update(window_count=len(windows),
+        template["cage"].update(outer_diameter=cage["inner_diameter_mm"] / scale + 2 * template["cage"]["wall_thickness"],
+                                window_count=len(windows),
                                 window_centers_deg=windows[:, 0].tolist(),
                                 window_widths=(windows[:, 1] / scale).tolist(),
                                 collar_height=cage["collar_height_mm"] / scale)

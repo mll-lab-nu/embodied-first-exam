@@ -13,7 +13,7 @@ sys.path.insert(0, str(ROOT))
 
 from topogym.config.registry import seeded_variation, task_definition
 from topogym.planning.hedgehog_in_cage.below_easy_witness import GRIP_LENGTH_M, check_variant
-from topogym.tasks.hedgehog_in_cage.below_easy import HedgehogBelowEasyTask
+from topogym.tasks.hedgehog_in_cage.below_easy import HedgehogBelowEasyTask, cage
 
 
 class Registration(unittest.TestCase):
@@ -28,12 +28,10 @@ class Registration(unittest.TestCase):
         drawn = {seeded_variation("hedgehog_in_cage", seed)["difficulty"] for seed in range(12)}
         self.assertEqual(drawn, {"easy", "medium", "hard"})
 
-    def test_settings_differ_only_in_the_exit_window(self):
+    def test_settings_differ_only_in_the_window_width(self):
         very_easy, easier = (task_definition("hedgehog_in_cage", n)() for n in ("very_easy", "easier"))
-        self.assertEqual(very_easy.config["ball_pose"], easier.config["ball_pose"])
-        wide, narrow = very_easy.config["cage"]["windows"], easier.config["cage"]["windows"]
-        changed = [(a, b) for a, b in zip(wide, narrow) if a != b]
-        self.assertEqual(changed, [([180., 116.], [180., 106.])])
+        self.assertEqual({k for k in very_easy.config if very_easy.config[k] != easier.config[k]}, {"cage"})
+        self.assertEqual((very_easy.config["cage"], easier.config["cage"]), (cage(118.), cage(108.)))
         easy = task_definition("hedgehog_in_cage", "easy")()
         self.assertEqual(len({easy.instance_id, very_easy.instance_id, easier.instance_id}), 3)
 
