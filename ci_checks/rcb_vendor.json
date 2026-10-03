@@ -146,7 +146,7 @@
   "ci_checks/check-limited-protocol.py": {
    "upstream_path": "ci_checks/check-limited-protocol.py",
    "upstream_blob": "d810d7a3a782e55bc4b1fc2bb7c69da7cf59921e",
-   "reason": "accept explicit compatible eai-standard/2.3"
+   "reason": "accept explicit compatible eai-standard/2.3; accept TopoGym's meta[\"safety\"] (the safety rules' measurements since the previous call, rules 2026-10-03)"
   },
   "scripts/eai_standard/selftest.py": {
    "upstream_path": "scripts/eai_standard/selftest.py",

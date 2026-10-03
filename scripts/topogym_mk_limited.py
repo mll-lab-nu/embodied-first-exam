@@ -15,7 +15,7 @@ import numpy as np
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
 from topogym_mk_task import MAX_BUDGET_S, startup_instruction, goal_words, validate_goal_instance, oracle_evidence
-from topogym_rules import details_section, limited_timing, step_seconds, step_time_words
+from topogym_rules import details_section, limited_timing, step_seconds, step_time_words, table_guard_words
 from topogym.utils.io import make_asset_tree_readable
 
 root = pathlib.Path(__file__).resolve().parents[1]
@@ -164,12 +164,20 @@ the PD gains and the tool frames; `spec["world"]` the frame conventions.
   ({"; ".join(f"{arm}: {g[0]:g} = closed .. {g[1]:g} = open" for arm, g in grip.items())}). Absolute targets tracked by PD controllers.
   Rows are `dt` apart (`1/{d['control_hz']:g} ≤ dt ≤ 0.5` s, a multiple of the control period); a chunk may cover at most 10 s;
   out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). The gripper switches at the
-  row. Use `obs.meta["proprio"]["now"][:{dim}]` as the starting row to move smoothly.
+  row. Use `obs.meta["proprio"]["now"][:{dim}]` as the starting row to move smoothly. An arm joint target moves at most
+  0.04 rad per control step ({0.04 * d['control_hz']:g} rad/s, the same speed as `ee_pose` rows): a row that asks for more takes
+  the control steps it needs, and `meta["clipped"]` says so.
 - `ee_pose` ({8 * len(arms)}): per arm (in the order {arms}) `x y z qw qx qy qz gripper`; world frame (robot base at ({base}),
   +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and driven to in joint
   space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is each gripper's **tool frame** (TCP;
   its approach and finger-closing axes are in `spec["robot_spec"]["tcp"]`), the same convention as the proprio TCP
-  poses, so an observed pose is a valid target. At most 50 rows per submit.
+  poses, so an observed pose is a valid target. At most 50 rows per submit. A row whose IK solution lies more than
+  0.5 rad from the current joints on any joint is refused the same way as a failed IK (for a small pose change that is
+  another IK branch, which would swing the arm): split long moves into rows a few cm and degrees apart.
+- Both action types: no gripper target goes lower than {table_guard_words()}; a target that would bring any part of
+  a gripper lower is stopped there and listed in `meta["clipped"]`. Every response's `meta["safety"]` reports, since the
+  previous call, the deepest task contact and the longest time above its sustained limit (rigid families), the lowest
+  rope / cord volume ratio (soft families) and the table-guard stops, against the limits above.
 
 Grasping: {d['grasp_rules']}.
 

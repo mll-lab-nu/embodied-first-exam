@@ -203,6 +203,8 @@ runpy.run_path(root+'/harbor_templates/topogym/unlimited/tests/grade.py', run_na
             dict(task_success=True, physics_steps=3, action_duration_s=.0075))))
         s.episode_done = False; s.episode_end = None; s.n_steps = 0; s.max_steps = 100
         s.physics_steps = 0; s.sim_time_s = 0.; s._video = None; s._recording = []; s._recorded_ticks = []
+        s.table_guard = SimpleNamespace(apply=lambda target, previous: target)   # rules 2026-10-03
+        s._targets = None
         return s
 
     def test_standard_verdict_survives_media_process_kill(self):
@@ -264,7 +266,7 @@ runpy.run_path(root+'/harbor_templates/topogym/limited/environment/sim/replay.py
         import time
         fn = server_function('meta_common', dict(ctrl_steps=lambda: 1,
             E=dict(step=1, calls=1, t0=time.time(), done=True, reason='time_limit'),
-            S=SimpleNamespace(physics_steps=3, sim_time_s=.0075), CTRL_HZ=40, time=time,
+            S=SimpleNamespace(physics_steps=3, sim_time_s=.0075, safety=lambda: {}), CTRL_HZ=40, time=time,
             SPEC=dict(budget=dict(wall_clock_s=30), proprio_layout=[]), proprio_row=lambda: np.zeros(0), OBS_CALIBRATION=False))
         meta = fn([])
         self.assertEqual((meta['physics_steps'], meta['sim_time_s']), (3, .0075))
