@@ -75,5 +75,5 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 - **Kinematics** (stateless: no physics, no time): `r.fk(q7)`, `r.ik({"tcp": pose7}, seed=q7)` in the world frame.
 - `spec["static"]["goal_sphere_radius_m"]`: the radius of the green goal sphere (where it is, the cameras show).
 
-Objects here: a desk; on it a hinged jar (about 13 cm across) with a pepper shaker inside, its lid hinged wide open; and the green goal sphere (radius 6.5 cm), floating above the desk, which does not collide with anything. Grasping is assisted: the gripper attaches an object that is between its finger pads when it closes, and releases it when it opens.
+Objects here: a desk with a dark wooden top; on it a clear glass hinged jar (about 13 cm across) with a dark pepper shaker inside, its glass lid hinged wide open; and the green goal sphere (radius 6.5 cm), floating above the desk, which does not collide with anything. Grasping is assisted: the gripper attaches an object that is between its finger pads when it closes, and releases it when it opens.
 

@@ -75,5 +75,5 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 - **Kinematics** (stateless: no physics, no time): `r.fk(q7)`, `r.ik({"tcp": pose7}, seed=q7)` in the world frame.
 - `spec["static"]["goal_sphere_radius_m"]` is null: this task has no goal sphere.
 
-Objects here: a desk; on it a cabinet with four drawers (about 44 cm wide, 46 cm deep and 55 cm tall; each drawer slides out 36 cm), a jar of cumin (6 cm across, 7 cm tall) and a graduated cylinder (8.5 cm across, 26 cm tall). Grasping is sticky: the gripper attaches an object as soon as a finger touches it when it closes (a drawer too), and releases it when it opens.
+Objects here: a desk with a black top; on it a dark-brown wooden cabinet with four drawers (about 44 cm wide, 46 cm deep and 55 cm tall; each drawer slides out 36 cm), a small clear glass jar of cumin with dark contents (6 cm across, 7 cm tall) and a tall, thin clear glass graduated cylinder on a wider foot (8.5 cm across at the foot, 26 cm tall). Grasping is sticky: the gripper attaches an object as soon as a finger touches it when it closes (a drawer too), and releases it when it opens.
 

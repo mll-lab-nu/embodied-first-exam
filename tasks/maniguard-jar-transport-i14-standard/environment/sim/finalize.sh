@@ -43,9 +43,9 @@ for dev in ("/dev/nvidiactl", "/dev/nvidia0"):
             print(f"[finalize] cannot open {dev}: {exc}", file=sys.stderr); sys.exit(1)
 PY
 then
-    RCB_SESSION_LOG= python "$TOOL" replay --task "$TASK" --instance "$INSTANCE" --traj "$DATA/trajectory.npz" > "$DATA/replay1.json" 2> "$DATA/replay1.log"
+    RCB_SESSION_LOG= python "$TOOL" replay --task "$TASK" --instance "$INSTANCE" --traj "$DATA/trajectory.npz" --checkpoint-every 50 > "$DATA/replay1.json" 2> "$DATA/replay1.log"
     echo "[finalize] replay 1 exit $?"
-    RCB_SESSION_LOG= python "$TOOL" replay --task "$TASK" --instance "$INSTANCE" --traj "$DATA/trajectory.npz" --video "$DATA/replay.mp4" > "$DATA/replay2.json" 2> "$DATA/replay2.log"
+    RCB_SESSION_LOG= python "$TOOL" replay --task "$TASK" --instance "$INSTANCE" --traj "$DATA/trajectory.npz" --checkpoint-every 50 --video "$DATA/replay.mp4" > "$DATA/replay2.json" 2> "$DATA/replay2.log"
     echo "[finalize] replay 2 exit $?"
 else
     echo '{"gpu_lost": true}' > "$DATA/replay1.json"; echo '{"gpu_lost": true}' > "$DATA/replay2.json"

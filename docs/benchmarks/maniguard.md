@@ -8,11 +8,11 @@ by a Spot-compiled monitor. It runs on BEHAVIOR-1K **v3.7.2** (OmniGibson 3.7.2 
 standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the ManiGuard-Bench task index, base level.
 
 Status (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy smoke
-(`jar_transport/task_0000`) passes in the image. Two privileged tasks are frozen (the same state hash in fresh containers,
-also without network) and have a `full` oracle, a time-resampled public demonstration that Harbor's oracle run scores 1
-(two fresh replays identical), with `nop` 0: `maniguard-jar-transport-i14-privileged` (state hash `5d235d1b51a76116`) and
-`maniguard-cabinet-pickup-i19-privileged` (`d2191aa0e0587eb3`). Their standard twins and the other 18 shortlisted tasks
-have not run yet.
+(`jar_transport/task_0000`) passes in the image. Two tasks are frozen (the same state hash in fresh containers, also without
+network) and have a `full` oracle in both modes, a time-resampled public demonstration that Harbor's oracle run scores 1
+(privileged: two fresh replays identical; standard: streamed through the service, live = both fresh replays), with `nop` 0:
+`maniguard-jar-transport-i14` (state hash `5d235d1b51a76116`) and `maniguard-cabinet-pickup-i19` (`d2191aa0e0587eb3`).
+Both standard twins pass the eai-standard/2.2 conformance check. The other 18 shortlisted tasks have not run yet.
 
 ## Prerequisites (every ManiGuard run)
 - **The image** `ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:<images/maniguard/VERSION>`, built on the host
@@ -94,7 +94,8 @@ enforced: time is the budget, as for BEHAVIOR-1K; `MAX_STEPS` = 50,000 only stop
   `success = live ∧ replay ∧ deterministic ∧ instance_ok`.
 - Measured (laptop, 2026-10-03): fresh-process replays are bit-exact (PhysX on the CPU: the final hash, the 50-step
   checkpoints and the label hash agree, `first_divergence_step` = -1), and a fresh container rebuilds the frozen instance
-  to the exact recorded hash, also with `--network none` (Isaac Sim starts offline). Not measured: whether another host
+  to the exact recorded hash, also with `--network none` and an empty cache (Isaac Sim starts offline: the image holds the
+  two Kit extensions it used to fetch at a first launch). Not measured: whether another host
   (another GPU or driver) rebuilds it exactly. Until then `instance_ok` (tolerance) is the default rather than
   `--require-instance-exact` (families.json `require_instance_exact`), and the standard resume class stays `approx`.
 
@@ -106,7 +107,9 @@ fetches the pinned episode (sha256-checked), reads the generator's commanded joi
 step and appends 40 rows holding the last one; `oracle_trajectory.npz` is its output, `README_oracle.md` its record (the
 task README's reference solution). Both go to `solution/` only (the oracle agent's mount; the leak check keeps them and the
 dataset's name out of everything the agent reads). A task's `oracle` becomes `full` only once Harbor's oracle run scores 1.
-The standard twin stays `none` until the same trajectory has been driven through its service.
+The standard twin's oracle streams the same rows through its service (`solution/oracle_replay.py`: one-second
+`joint_position` chunks, `interpolate="hold"`, one row per control step) and is `full` once Harbor's oracle run of the twin
+scores 1 too.
 
 ## Time budget (D8)
 7200 s for every task of both modes (user decision 2026-10-03): every Python process pays an Isaac Sim 4.5 launch and the
@@ -128,6 +131,14 @@ deletes it.
 episode ends when the goal has held for 10 control steps (`reason` = `goal_held`); the safety rules are checked after every
 step but never reported live (they are part of the success predicate). `/spec.static` has the goal sphere's radius and the
 floor convention only.
+
+Measured (laptop, 2026-10-03): `ci_checks/check-limited-protocol.py --launch` passes on both twins (193 checks, no
+failure: spec, cameras and depth, kinematics, projection). Harbor's oracle runs score 1: jar 14 in 7 min (the live episode
+ends at step 599), cabinet 19 in 11 min (step 2240); the live state equals the collect hook's two fresh replays
+(`live_matches_replay`); `nop` scores 0 (an empty episode). Three fixes came out of these runs: the sidecar's Isaac Sim
+could not start behind the agent's egress allowlist (Kit fetched two extensions from NVIDIA's CDN at every first launch;
+the image now holds them), OmniGibson's camera intrinsics read zero until a camera has rendered (the tooling renders until
+they are valid, else derives K from the USD camera: the same values), and a spec key outside the protocol.
 
 ## Tooling (file names)
 | main's convention | ManiGuard |
@@ -166,6 +177,7 @@ NVIDIA proprietary, hence BUILD_ONLY. Spot: GPL-3.0-or-later (in the never-distr
 
 ## Open items
 - The other 18 shortlisted tasks: `make-instance`, a resampled demonstration through the verifier, Harbor oracle and `nop`.
-- The standard service, its collect hook and grader are written but have never run (jar 14's twin is next).
+- Standard mode: the crash-recovery path (a killed service resuming its episode from the journal) has not been exercised;
+  its resume class stays `approx`.
 - Another host: whether it rebuilds the frozen instances exactly (`instance_exact`).
 - A cold start compiles with up to 32 torch inductor workers and peaks at about 13 GiB of RAM (about 4 GB of VRAM).
