@@ -1,6 +1,6 @@
 # Cast Keyhole 两个简单档：oracle 调用说明与工程步骤
 
-日期：2026-10-02。适用场景：`very_easy` / `easier`，`simplified_original_layout_v4`。本文保留实施计划和调用说明；第 7 节记录当前开发验证。两档的外端面夹持、连续解锁和目标区收尾均已在独立普通运行中通过，并有完整录像；Harbor 验收单独记录。
+日期：2026-10-02（本地日期；最终评分完成于 UTC 2026-10-03）。适用场景：`very_easy` / `easier`，`simplified_original_layout_v4`。两档的外端面夹持、连续解锁和目标区收尾已实际通过；Harbor standard／privileged 均为 oracle 1、nop 0，独立回放和完整录像检查通过。四个新任务已在本地 `tasks/` 登记 `oracle = "full"`；资格限定当前冻结 seed 0 和 v6 本地镜像。本文保留实施计划和调用说明，第 7 节记录结果及失败对照。
 
 结论：继续使用现有本地 `SegmentRunner` 开发参考策略。两档共用接近、外端抓取、入口转姿和搬运，仅让通道段不同。当前已补齐原装配到退出姿态的连续动作；开发成功不能代替冻结实例的 Harbor 回放验收。正常模型评测不会自动调用 oracle。
 
@@ -14,7 +14,7 @@ Oracle 就是一份我们写好的参考解，用来验证这个实例确实能�
 | Harbor 专门跑参考解 | 显式执行 `harbor run ... -a oracle`，运行该任务私有 `solution/solve.sh` | 用正式评分流程验收参考解。任务包需要先包含 solution。 |
 | 正常模型评测 | 调度器启动所选模型 agent，由模型提交动作／轨迹，再由 verifier 评分 | 评测模型；不自动运行或读取参考解。 |
 
-因此，“仓库里有本地 policy”与“Harbor 任务包已配好 oracle”是两件事。当前 Keyhole 的 easy / medium / hard 本地有历史成功证据，但六个正式双模式任务包仍标为 `oracle = "none"`；两个新档已有本地候选及开发成功证据，尚未登记合格的 Harbor 参考解。
+因此，“仓库里有本地 policy”与“Harbor 任务包已配好 oracle”是两件事。本轮核对时，Keyhole 的 easy / medium / hard 本地有历史成功证据，但六个正式双模式任务包仍标为 `oracle = "none"`；两个新档则已分别通过双模式实际验收，新增四个 `oracle = "full"` 任务包。旧三档的登记状态不因新档通过而改变。
 
 ### 本地 SegmentRunner 如何运行 policy
 
@@ -100,7 +100,7 @@ privileged 的评分器在独立 verifier 环境中，对提交轨迹运行两�
 
 ## 5. Harbor 接入建议与文件范围
 
-第一版建议采用：**本地闭环策略生成经验证的关节控制目标，Harbor 的私有 oracle 回放这些目标。** 这样不用在每次参考验收时重新搜索路线，也不用把整个本地开发框架搬入任务包。回放仍要运行真实物理，只省去重复规划；它只证明绑定的冻结实例，不代表任意 seed 都可解。
+最终采用两条已有接口上的交付方式：**very_easy 回放本地闭环策略生成的关节控制目标；easier 在冻结的正式 `Session` 内根据实际状态生成闭环参考。** easier 的两份跨环境直接回放参考失败，原因对照及适配过程见第 7 节。两档生成的正式轨迹均已通过独立物理回放，standard 使用对应实际公开动作序列。这只证明绑定的冻结实例，不代表任意 seed 都可解。
 
 本地动作是 `EE_ABS`，Harbor 记录接口是关节目标，需显式导出适配：读取公共执行反馈 `info.executed_joint_targets`，按实例 `action_layout` 排列，并保留实际执行步数／时序。不能用观测到的关节位置代替目标，也不能把旧运行的实例身份直接写到新轨迹上。先在目标冻结实例和相同物理时序下回放通过，再作为该实例的参考。
 
@@ -111,8 +111,9 @@ privileged 私有入口逐行调用现有 `session.step()`，由 `run-oracle` �
 | `topogym/planning/cast_keyhole/simplified_policy.py` | 主要实现位置：共用抓取／搬运、两档通道段、实际反馈、超时和失败诊断。 |
 | `topogym/planning/cast_keyhole/kinematics.py` | 按需增加 v4 初态及转姿的 IK／完整网格检查，限定新增逻辑范围。 |
 | `scripts/oracle_runners/run_cast_keyhole_policy.py` | 保留现有分派和 SegmentRunner；补分段计时、完整验证、实际关节目标导出。 |
-| `scripts/oracle_runners/package_cast_keyhole_oracle.py`（拟新增） | 核对成功证据和冻结实例，生成私有 `solution/` 的回放脚本、目标序列及身份清单；不再实现物理执行器。 |
-| `ci_checks/test-cast-keyhole-oracle.py`（拟新增）及现有简化场景检查 | 检查初态／资源不匹配拒绝、阶段和实际执行时间、目标导出布局、明确失败案例及旧三档回归。 |
+| `topogym/planning/cast_keyhole/public_session.py` | easier 的私有适配器：读取当前状态、调用原生动作编译／IK，全部动作经现有 `Session.step()`；不提供物体写入、重置或强制抓持。只随私有 solution 打包。 |
+| `scripts/oracle_runners/package_cast_keyhole_oracle.py` | 核对成功证据和冻结实例，生成私有 `solution/` 的回放脚本、目标序列及身份清单；不再实现物理执行器。 |
+| `ci_checks/test-cast-keyhole-oracle.py`及现有简化场景检查 | 检查初态／资源不匹配拒绝、阶段和实际执行时间、目标导出布局、明确失败案例及旧三档回归。 |
 | `scripts/topogym_mk_task.py`、`scripts/topogym_mk_limited.py` | Harbor 交付时按需支持私有配套文件及已验证的 oracle 元数据。当前前者只复制传入的单个 oracle 脚本，二者的 `task.toml` 模板仍写 `oracle = "none"`，仅传 `--oracle`／轨迹还不等于完整登记。默认无 oracle 行为保持。 |
 | 生成的 `tasks/<新实例>-{privileged,standard}/solution/` | 只放参考解私有交付物；由工具生成，正式接入时更新 `tasks/dataset.toml`。 |
 | `runs/test_results/`、本任务说明与 planning README | 保存成功／失败、计时、实际动作、录像、配置和哈希，更新可复现命令。 |
@@ -205,7 +206,7 @@ channel_deltas = {
 
 收尾采用“金片先竖直抬高 12 cm → 金片回到分界系统侧 → 银片调整 y/z → 银片移入目标区 → 停稳”。原候选将金片横向移开时碰到右前臂；现在的预检会同时移动两个被抓物体，检查机械臂与持件之间的干涉。它是离散原生碰撞网格检查，不覆盖仅有视觉的相机外壳，也不代替真实物理执行。
 
-抓取区域、孔形和旧三档回归 10 项通过；实际命令导出、持件收尾预检触发、私有打包身份拒绝及夹爪宽度转换检查 8 项通过。单元／几何检查不计物理成功。
+抓取区域、孔形和旧三档回归 10 项通过；实际命令导出、持件收尾预检触发、私有打包身份拒绝及夹爪宽度转换检查由初期 8 项扩展到最终 15 项，全部通过。单元／几何检查不计物理成功。
 
 `oracle_artifacts.py` 导出的是已经执行的关节控制目标，保留终止时不足一个控制周期的实际 tick 数。`package_cast_keyhole_oracle.py` 只接受从 home 完整成功且哈希匹配的记录，生成绑定冻结实例的私有回放候选；通过目标实例的夹爪适配器转换开口宽度，随后仍需真实 float32 动作回放。该工具不会自动将任务登记为 `oracle = "full"`，不会改动正式测评调用链。
 
@@ -223,10 +224,38 @@ easier 的四路录像完整解码、同组时间线核对通过：[俯视](../.
 
 已构建不含 planning／参考解的本地验收镜像并冻结两档实例。very_easy 的私有候选已通过 `run-oracle` 的公开 float32 关节／夹爪宽度动作重跑，仍在 125.3325 s / 50,133 tick 成功，执行结果为 `exec.ok=true`；[实际记录](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/very_easy_harbor_replay_02/runtime.log)。首轮容器因缺少显式 NVIDIA runtime，在动作开始前图形初始化失败，记录保留，不算策略失败或成功。
 
-两档 × 两种模式共四个 `nop` 均正常得 0，无评分器／基础设施错误：[汇总](../../../runs/test_results/cast_keyhole_oracle_20261002_01/harbor_nop_summary.json)。首个 privileged nop 暴露了原子输出 reward 文件为 0600、宿主 Harbor 无权读取的问题；生成器现在只将最终 `reward.txt`／`reward.json` 设为 0644，判分逻辑未改，修复后重新跑通负对照。完整 oracle 的双模式正式评分仍在运行，尚未登记 `oracle = "full"`。
+两档 × 两种模式共四个 `nop` 均正常得 0，无评分器／基础设施错误：[汇总](../../../runs/test_results/cast_keyhole_oracle_20261002_01/harbor_nop_summary.json)。首个 privileged nop 暴露了原子输出 reward 文件为 0600、宿主 Harbor 无权读取的问题；生成器只将最终 `reward.txt`／`reward.json` 设为 0644，判分逻辑未改，修复后重新跑通负对照。最终四个 oracle 的正式评分也均通过，完整结果见本节末尾。
 
-Harbor 后续发现的缺口：very_easy 的 privileged 和 standard 实际执行均成功，独立评分回放仍在运行；easier 的首轮公开回放执行完 6,203 行后未成功，银片入区和金片留在系统侧均为 false，不能解释成仅差一个停稳窗口。已保留实际轨迹、失败输出，并停止该失败 job 的重复评分；其 `RewardFileNotFoundError` 来自这次主动停止，不冒充正常评分结果。[失败说明](../../../runs/test_results/cast_keyhole_oracle_20261002_01/easier_public_replay_failure_01.json)。
+very_easy 两种模式的正式评分均已完成：standard 为 `success=1, live_success=1, replay_success=1`，无基础设施或评分器错误；[standard 评分](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/harbor_jobs/very-easy-standard-oracle01/topogym-cast-keyhole-very-easy-i__hCxTssZ/verifier/reward.json)。privileged 的独立两遍回放均成功，`success=1, all_success=1, replays=2, instance_ok=1`；[privileged 评分](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/harbor_jobs/very-easy-privileged-oracle01/topogym-cast-keyhole-very-easy-i__WpdiLPK/verifier/reward.json)。均为 5,014 个动作、50,133 tick。GPU 最终状态哈希不相同（`deterministic=0`），现有评分规则允许这种差异，但不能称为逐位确定性复现。
 
-正在对照公开回放前段。已实测发现夹爪闭合端转换不一一对应：本地原生目标 `0.002 m` 转为公开宽度 `0` 后，再转回原生坐标变成 `0.00746875 m`，相差约 5.47 mm。这个差异可能改变抓持，须用实际状态确认；不能因为 very_easy 能成功就认为 easier 也必然能复现。当前未修改公共转换器、物理或成功判据。
+easier 首轮公开回放执行完 6,203 行后未成功，银片入区和金片留在系统侧均为 false，不能解释成仅差一个停稳窗口。已保留实际轨迹、失败输出，并停止该失败 job 的重复评分；其 `RewardFileNotFoundError` 来自这次主动停止，不冒充正常评分结果。[失败说明](../../../runs/test_results/cast_keyhole_oracle_20261002_01/easier_public_replay_failure_01.json)。
 
-对本轮实际使用的 limited、privileged、sim、verifier 四类镜像，均已在无挂载的新容器内检查 calibration tools 无法导入；并核对实际运行容器没有开发源码挂载：[隔离报告](../../../runs/test_results/cast_keyhole_oracle_20261002_01/harbor_calibration_isolation.json)。检查范围是这些具体镜像和部署，不代替其他部署的隔离检查。
+公开回放前段对照确认：本地原生夹爪目标 `0.002 m` 转为公开宽度 `0` 后，再转回原生坐标变成 `0.00746875 m`，相差约 5.47 mm。两手仍抓住了，但实际抓持绑定相对原运行变化约为金片 0.354 mm / 0.381°、银片 0.238 mm / 0.141°；[对照记录](../../../runs/test_results/cast_keyhole_oracle_20261002_01/easier_public_grasp_comparison.json)。这是回放敏感性的一个具体来源，尚不能证明是唯一原因。已以 `--gripper-close 0.00746875` 重新生成完整参考，没有修改公共转换器、物理、几何或成功判据。
+
+新的 easier 参考从 home 连续执行、branch 0，在 **156.2075 s / 62,483 tick** 完成，导出 6,249 行动作；[完整报告](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_public_compatible_full_01/run_report.json)。墙钟约 44.0 分钟，其中建场 92.7 s、抓取规划 6.45 s、持件收尾预检 2.27 s。四路录像均完整解码、同组同步：[俯视](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_public_compatible_full_01/segments/segment_2/videos/cam_high.mp4)、[低视角](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_public_compatible_full_01/segments/segment_2/videos/cam_low.mp4)、[左腕](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_public_compatible_full_01/segments/segment_2/videos/cam_left_wrist.mp4)、[右腕](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_public_compatible_full_01/segments/segment_2/videos/cam_right_wrist.mp4)。保存的 62,184 个策略阶段状态中，没有抓持丢失或非预期机器人接触；[审计](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_public_compatible_full_01/recorded_contacts_audit.json)。这份参考的正式公开回放也失败了，本地成功不等于公开关节轨迹可直接重放。
+
+打包器已增加运行前的夹爪往返检查：原生目标经 float32 宽度再恢复的误差超过 1 μm 时，在提交任何动作前拒绝；已通过包括闭合端平台反例、公开动作保持省略目标和拒绝静默裁剪以及冻结策略源码变更拒绝在内的 15 项证据／打包测试。旧参考若有意试验有损转换，必须显式提供原因并保留记录，不因此获得资格。当前新参考沿用本轮冻结的 v6 运行时，Harbor 重试只替换原任务包的私有 `solution/`，不混入其他成员正在更新的公共模板。
+
+easier 第二次公开回放通过夹爪往返检查，仍在 6,249 行之后未满足 Task；[失败记录](../../../runs/test_results/cast_keyhole_oracle_20261002_01/easier_public_replay_failure_02.json)。前段逐步对照发现，在机器人尚未碰到物体时，自然落稳已经与本地参考不同：1 s 时金片约差 1.35 mm / 0.89°、银片约差 2.02 mm / 0.58°，同期机器人 TCP 差异仅约 3×10⁻⁶ mm。因此不能将失败全归因于夹爪转换。正式 Session 会在建场后恢复冻结 S0，本地与容器环境也不同；尚未分离证明哪项导致该差异。
+
+当前解决方式是在 **同一个正式冻结 Session 内**生成闭环参考：`public_session.py` 读取实际落稳／抓持位姿，复用同一抓取和通道策略，经原生 `compile_action(..., "EE_ABS")` 求解，再转换为公开宽度和 float32 关节动作交给 `Session.step()`。`run-oracle` 负责完整记录；生成的实际轨迹仍须 privileged 两遍独立回放，以及 standard 的实际执行和回放全部通过。只在 solution 中加入列明哈希的被动规划模块，不将 calibration tools 或参考解加入公共镜像。
+
+`package_cast_keyhole_oracle.py --feedback` 生成这种私有候选。清单将本地成功标为设计依据（`local_basis_rows`），实际提交轨迹来自正式 Session；不会把失败的本地导出轨迹追溯标为回放合格。首个闭环候选因生成报告的文件读取方式错误在 0 个动作时退出，第二个候选在自然落稳后被接近预检拒绝：最终手指最低点低于桌面约 0.021 mm，IK 通过但零桌面穿透要求不通过。当前私有适配器依次尝试 0、1、2 mm 的向上 TCP 抓点偏移，仍以同一 IK／整段碰撞预检决定是否采用。没有改变模型、初态或检查阈值；候选 05 选择向上 1 mm，121 个接近路径样本的最小桌面净空约 0.98 mm，并在正式 Session 中完成了整个任务：6,225 个动作、62,242 tick、155.605 s、零 reset，Task 判定整片银片入区、金片留在系统侧及 0.5 s 停稳窗口均成立。执行墙钟 1,230.7 s（约 20.5 分钟），建场另约 159 s。实际报告见[正式闭环执行](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/harbor_jobs/easier-privileged-oracle05/topogym-cast-keyhole-easier-i00__gqgni5P/artifacts/app/output/feedback_report.json)。standard 随后也实际执行成功：6,225 个动作、16 个提交批次、零裁剪、零重启，墙钟约 2,582.6 s。随后两种模式的独立回放均成功，录像完整解码通过；easier 已登记 `oracle = "full"`。资格对应这次实际公开轨迹，不追溯赋予两份失败的本地导出轨迹。
+
+对本轮实际使用的 limited、privileged、sim、verifier 四类镜像，均已在无挂载的新容器内检查 calibration tools 无法导入；并核对实际运行容器没有开发源码挂载：[隔离报告](../../../runs/test_results/cast_keyhole_oracle_20261002_01/harbor_calibration_isolation.json)。easier 候选 05 的实际私有模块挂载也已单独检查，仍无法导入开发工具：[部署检查](../../../runs/test_results/cast_keyhole_oracle_20261002_01/easier_feedback_deployment.json)。检查范围是这些具体镜像和部署，不代替其他部署的隔离检查。
+
+### 最终验收与交付
+
+| 难度 | 实际动作／模拟时间 | standard | privileged | nop |
+| --- | --- | --- | --- | --- |
+| very_easy | 5,014 行／125.3325 s | live 和独立 replay 均成功 | 两遍独立 replay 均成功 | 两种模式均为 0 |
+| easier | 6,225 行／155.605 s | live 和独立 replay 均成功 | 两遍独立 replay 均成功 | 两种模式均为 0 |
+
+四个 oracle 均得 `success=1`，无评分器／基础设施错误；四份正式回放视频均完整解码。easier 的 standard 独立回放墙钟约 2,050.7 s，privileged 两遍回放合计约 4,554.0 s。GPU 回放的最终状态不逐位相同（`deterministic=0`），成功资格依据现有 Task／实例检查，而非逐位确定性。
+
+- [完整资格记录](../../../runs/test_results/cast_keyhole_oracle_20261002_01/harbor_qualification.json)：八次 oracle／nop 实际结果、实例／脚本／轨迹／媒体哈希和开发工具隔离证据。
+- [very_easy 正式回放](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/harbor_jobs/very-easy-standard-oracle01/topogym-cast-keyhole-very-easy-i__hCxTssZ/artifacts/data/replay.mp4)、[easier 正式回放](../../../runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/harbor_jobs/easier-standard-oracle01/topogym-cast-keyhole-easier-i00__2fMYZEj/artifacts/data/replay.mp4)。
+- [easier 实际夹持姿态](../../../runs/test_results/cast_keyhole_oracle_20261002_01/easier_standard_channel_90s.jpg)：正式 standard 执行约 90 s 的原始相机帧，可见双手位于两片外端。
+- [登记清单](../../../runs/test_results/cast_keyhole_oracle_20261002_01/registered_tasks.json)：`tasks/topogym-cast-keyhole-{very-easy,easier}-i00-{privileged,standard}/` 四个新目录及 `tasks/dataset.toml` 四项追加记录。登记只更新说明和 oracle 元数据，运行／评分输入及私有动作与已测试候选逐文件一致；结构等 24 项检查、四包协议检查和 dataset 清单检查通过。
+
+运行环境固定为 `topogym-local/cast-keyhole-oracle:20261002-02`（镜像 ID `sha256:fdd96c20cd04d04ab80b23ad629cb8d4cc6f7c12b49d9495d196b49b69ea727c`），未混入另一会话更新的公共运行时。这是本地主机可运行的参考包，未发布远端镜像，也未扩展批量评测的难度采样。抓持仍采用真实双指接触后启用的既有 `contact_weld_v1`。

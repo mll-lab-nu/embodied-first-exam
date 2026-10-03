@@ -292,7 +292,13 @@ def stages(env, context, comb_mode="single", target=COMB_TARGET_M):
         else:
             yield Step(f"comb_{index:02d}", COMBS, lambda parameters, name=f"comb_{index:02d}": comb(name, parameters))
     yield Step("verify_combed", (dict(hold_s=1.),), verify)
-    yield Step("feed", (FEED,), feed)
+    # The simplified cable's measured return pose can retain about 0.34 mm of
+    # axial offset. Permit up to 0.5 mm in the checked incoming path; connect()
+    # still requires 1 mm collision clearance and feeds to the ring axis. This
+    # is a planning gate, never a change to the native passage/bend predicate.
+    simplified = variant in {"very_easy", "easier", "fiber_bundling_very_easy", "fiber_bundling_easier"}
+    feed_parameters = dict(FEED, maximum_front_offset_m=.0005) if simplified else FEED
+    yield Step("feed", (feed_parameters,), feed)
 
 
 def pickup_only(env, context):

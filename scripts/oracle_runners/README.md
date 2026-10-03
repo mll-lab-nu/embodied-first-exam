@@ -4,10 +4,12 @@
 
 | 脚本 | 职责 |
 | --- | --- |
-| `run_lock_picking_policy.py` | 三档 Lock reindex 策略及历史 medium 策略，标准 Env 执行，可录制逐动作 IK/FK |
+| `run_lock_picking_policy.py` | 两档双片 simplified、原三档 reindex 及历史 medium 策略；标准 Env 执行，可录制逐动作 IK/FK |
 | `run_cast_coil_policy.py` | Coil 原三档策略，以及 very_easy 大齿直插、easier 挡板加横移装配策略 |
 | `run_cast_keyhole_policy.py` | Keyhole 拾取、换抓和放置策略 |
+| `run_fiber_bundling_policy.py` | Fiber 两档对称分叉，从 home 连续抓护套、逐根收拢、完整穿环；独立审计和录像入口见下文 |
 | `run_buzz_wire_policy.py` | Buzz 策略及已编译参考动作执行 |
+| `run_buzz_wire_simplified_policy.py` | Buzz very_easy / easier 的源码冻结、home 抓取、走线与终点释放验证 |
 | `run_hedgehog_oracle.py` | 从 home 执行带显式辅助抓持选项的 Hedgehog oracle |
 | `run_horseshoe_policy.py` | Horseshoe 几何、IK 和机器人分阶段诊断 |
 | `run_interlocked_claws_policy.py` | Claws very_easy / easier 的辅助抓持参考策略；旧三档仍调用原几何及摩擦抓持诊断 |
@@ -17,6 +19,61 @@
 | `run_solvability_workflow.py` | 按任务提供的 stage factory 执行诊断或连续证明候选 |
 
 只读规划器 `scripts/plan_*`、独立审计器 `scripts/audit_*`、通用接口测试及源码快照工具 `scripts/test_*` 继续放在上级目录。difficulty trials 使用独立的 Harbor 执行链，不调用这些 oracle runner。
+
+## Fiber 两档简化变体
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_fiber_bundling_policy.py \
+  --variant very_easy --seed 0 --no-rgb \
+  --output runs/test_results/fiber_very_easy_new
+.venv-gs121-nyx/bin/python scripts/audit_fiber_bundling_robot.py \
+  --run runs/test_results/fiber_very_easy_new \
+  --output runs/test_results/fiber_very_easy_new_audit
+.venv-gs121-nyx/bin/python scripts/render_fiber_bundling_run.py \
+  --run runs/test_results/fiber_very_easy_new \
+  --output runs/test_results/fiber_very_easy_new_video
+```
+
+`--variant easier` 使用三根三角排列细线。默认 proof 禁止回溯，CPU float64、
+2.5 ms tick、4 子步、每控制步 10 tick，与新任务包动力学配置一致。
+接触触发的 `contact_weld_v1` 只作用于护套；细线禁碰和完整穿环判据保持启用。
+每次从标准 home 开始，通过 SegmentRunner 执行；原生 success 后仍须运行
+独立审计，不能把 `accepted_proof=False` 的初步结果当成数据资格。
+`--mode diagnostic` 可诊断候选，`--selection` 可固定已选参数。
+
+`--replay-run <成功的连续运行>` 从 home 重执行保存的普通关节目标；可搭配
+`--config` 比较另一物理时序，但必须保持同一变体和控制周期。最后最多追加
+2 s 原目标保持以覆盖稳定窗口差异，真实终态会提前停止。它是新物理执行，
+需要新的独立审计；完整 World 仍逐 tick 保存到 private evidence。
+
+省略 `--no-rgb` 会在执行时录制三视角；上例最后一条从已保存状态重渲染，
+不执行新物理，也不增加成功次数。需要 Nyx/CUDA；输出目录必须尚不存在。
+长时间逐 tick 证据会占数 GB，运行前留足空间。审计器同时支持经逐字节哈希
+核对后无损压缩的 `.jsonl.gz`。实际实例资格、录像及四个包见
+[Fiber 任务页](../../docs/develop/tasks/fiber_bundling_zh.md)。
+
+## Buzz Wire 两档简化变体
+
+这是 [planning/buzz_wire_3d/simplified_policy.py](../../topogym/planning/buzz_wire_3d/simplified_policy.py) 的管理侧执行入口。每段按实际观测重新规划；常规执行不依赖历史 run。very_easy 的新版 oracle 已从默认 home 完整成功，easier 已完成终点标定，独立完整复验中。任务包默认时序的正分资格仍单独记录，详见任务页。
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_buzz_wire_simplified_policy.py \
+  --variant very_easy --regrasp --finish-mode low_slide_regrasp --seed 0 \
+  --compute-backend cpu --no-rgb \
+  --physics-dt .025 --control-decimation 1 --solver-substeps 40 \
+  --episode-seconds 450 \
+  --output runs/test_results/buzz_very_easy_new
+```
+
+`easier` 选择已确认的横弯接下凹弯。两档沿用 easy 的默认 home、工具尺寸与原生完整判据；`--regrasp` 使用已有的起点换抓动作，随后等待夹爪被动关节稳定，再执行只读 IK/碰撞采样得到的关节参考。所有动作仍通过公共控制接口执行。默认 `--part solve` 必须获得原生 Task success；`pickup` / `plan` 只证明各自阶段。此 oracle 入口默认 CPU 64 位、25 ms、1 倍控制降采样、40 子步；公共 simulator / 任务包默认仍为 2.5 ms、10 倍、4 子步，二者验证范围不能混用。
+
+执行完成后运行 `.venv-gs121-nyx/bin/python -m topogym.planning.buzz_wire_3d.audit <输出目录>`，独立核对原生成功、出生到终点的连续谱系、普通 action 覆盖以及工具/机器人无触线。审计支持原始 JSONL 与经过字节哈希验证的无损 gzip 日志。
+
+`--replay-run <已成功的输出目录>` 从默认 home 重新执行该次记录的普通关节动作，继承其物理配置并核对运行源码。省略 `--no-rgb` 会通过公共 SegmentRunner / RecordingSession 录制三路 Nyx 视频；这是一轮新物理执行，不是状态重渲染。输出目录必须尚不存在。报告包含源码身份、逐 tick 证据、辅助抓持事件、规划采样及原生判定；达到系统内存 90% 时只停止本轮 worker。实际验证范围见 [Buzz Wire 任务页](../../docs/develop/tasks/buzz_wire_3d_zh.md)。
+
+默认启用起点换抓及低位终点释放。`--prefix-run <输出目录>` 可复用已完成的 `traverse` / `prepare_finish_slide` / `finish_recipe_0` 段之前的动作序列，仍从 home 真实重跑，不恢复物体状态；报告记录截断 tick 和实际动作指纹。两种重跑均继承来源冻结的运行源码，避免其他任务的并行修改改变物理身份；允许用 `--episode-seconds` 延长运行时限，不改变物理步长。每次全程逐 tick 记录会占用数 GB，运行前应留足磁盘空间。
+
+`--terminal-contact-close` 保留慢速双侧接触闭爪实验入口；当前 easier 实例使用这一方式仍未成功建立终点抓持，不能当作已修复的策略。
 
 ## Claws 两档简化变体
 
@@ -37,6 +94,15 @@
 输出保存源码快照和哈希、几何报告、原生 IK／网格碰撞预检、逐 tick 状态、资源占用、阶段误差、Task 结果及公共录制产物。物体通路做连续检查；机械臂预检是采样检查，二者不能混称连续机器人无碰撞证明。系统内存达到 90% 时仅停止本次 worker，保留失败证据。
 
 回归入口：`.venv-gs121-nyx/bin/python ci_checks/test-interlocked-claws-simplifications.py`。实际验收状态和形状说明见 [Claws 任务页](../../docs/develop/tasks/interlocked_claws_zh.md)。两档先作为独立具名入口接入，保留旧 `base` / `seeded` 三档含义。
+
+2026-10-02 两档 seed 0 的完整参考求解在以下显式配置下通过；将 `easier` 换为 `very_easy` 可复现另一档。去掉 `--no-rgb` 会使用 CUDA Nyx 录制，物理仍在 CPU；very_easy 已完成这一录制复验。
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_interlocked_claws_policy.py \
+  --variant easier --seed 0 --compute-backend cpu --no-rgb \
+  --physics-dt .025 --control-decimation 1 --solver-substeps 40 \
+  --output runs/test_results/claws_easier_cpu_new
+```
 
 ## Coil 正方体变体
 
@@ -79,6 +145,32 @@
 
 medium 使用 `--variation medium`；hard 使用 `--variation hard --endpoint-depth 4.10`。这些参数来自历史物理流程，目录迁移及收尾回归不代表新增了三档真实执行验收。
 
+两档双片变体使用 `--route-mode simplified`：`very_easy` 抓起后直接插入，`easier` 先让前齿进入第一片槽内，转动钥匙消除槽齿间隙、以真实接触带动第一片对齐，再插入。沿用默认物理时序与短柄抓持区域，不设置物体位姿、盘片角度或人工绑定；成功时允许保持抓持，不要求换抓或释放。
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_lock_picking_policy.py \
+  --variation very_easy --route-mode simplified --part solve \
+  --grasp-style side --grasp-roll-deg -45 \
+  --physics-dt .0025 --solver-substeps 4 --control-decimation 10 \
+  --compute-backend cuda --audit-ik \
+  --output runs/test_results/lock_very_easy_oracle_new
+
+.venv-gs121-nyx/bin/python scripts/audit_lock_picking_robot.py \
+  --run runs/test_results/lock_very_easy_oracle_new \
+  --output runs/test_results/lock_very_easy_oracle_new_audit
+```
+
+easier 将 variation 换成 `easier`，并使用新的输出目录；默认最终插入深度为 3.08 个片距。双片审计核对一次自动抓持、零回退，以及 easier 的实际转片阶段；按当前 `contact_weld_v1` 合同核验两指在同一原生接触快照内位于握柄区域且穿透非负，零力接触不自动视为未接触。实际通过范围和录像见 [Lock Picking 任务文档](../../docs/develop/tasks/lock_picking_zh.md)。
+
 新报告标记 `completion_contract="task_success"`。审计会从保存的每个 tick 重算 Task 稳定窗口并核对原生结果，同时保留 home 起点、连续性、IK/FK、双指接触、必要回退和碰撞检查；末次释放不是必需项。旧报告没有该字段，仍按原 `route_completed`、完整释放阶段和释放后静置规则审计，不追溯改判。复现旧流程应使用旧 run 自己的 `source_snapshot/scripts/...` 入口。
 
 CPU 回归：`python ci_checks/test-oracle-runners.py`，覆盖成功时在松手前正常停止、失败／超时、未完成稳定窗口、仅拾取、历史审计边界，以及迁移入口与快照路径；不运行新的物理仿真。
+
+## Rope Threading 简化任务开发
+
+`run_rope_threading_policy.py --variant very_easy|easier --part pickup|solve --output <新目录>`
+从 ALOHA 标准 home 开始，经实际碰撞网格预检和接触触发 FEM 辅助抓持执行候选动作。
+使用共享 SegmentRunner 和 Nyx 四路录像；`--no-rgb` 明确选择纯物理。
+默认 dt=2.5 ms、4 子步；可显式设置 `--physics-dt`、`--solver-substeps`、`--speed-scale` 做开发试验。
+尚不是已验收 oracle，报告分别记录局部 `pickup_passed` 与原生 `task_success`，物理资格仍为 unqualified。
+场景、判据与实际验证范围见 [Rope Threading 任务页](../../docs/develop/tasks/rope_threading_zh.md)。

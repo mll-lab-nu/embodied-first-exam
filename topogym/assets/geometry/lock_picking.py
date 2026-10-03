@@ -6,6 +6,7 @@ Collision pieces are explicit convex sectors. No convex hull spans a hole.
 Angles run from +z toward +y, i.e. about the negative x axis.
 """
 from dataclasses import dataclass, replace, asdict
+from typing import ClassVar
 from pathlib import Path
 import json
 import numpy as np
@@ -28,6 +29,9 @@ def angle_error(a, b):
 
 @dataclass(frozen=True)
 class LockGeometry:
+    # Class constants preserve the serialized identity of the original geometry.
+    disc_count: ClassVar[int] = 3
+    tab_count: ClassVar[int] = 3
     first_x: float = .20
     center_y: float = .20
     axis_z: float = 1.105
@@ -58,13 +62,13 @@ class LockGeometry:
         return result
 
     def validate(self):
-        if len(self.slots) != 3 or len(self.initial_disc_deg) != 3:
-            raise ValueError('Three passive discs are required')
+        if len(self.slots) != self.disc_count or len(self.initial_disc_deg) != self.disc_count:
+            raise ValueError(f'{self.disc_count} passive discs are required')
         if not 0 < self.shaft_radius < self.bore_radius < self.tab_radius < self.slot_radius < self.disc_radius:
             raise ValueError('Invalid radial clearance')
         if not 0 < self.tab_half_deg < self.slot_half_deg < 30:
             raise ValueError('Invalid angular clearance')
-        if self.pitch <= 2*self.disc_thickness or self.grip_offset <= 3*self.pitch + .03:
+        if self.pitch <= 2*self.disc_thickness or self.grip_offset <= self.disc_count*self.pitch + .03:
             raise ValueError('Insufficient axial separation or handle clearance')
         for row in self.slots:
             if not row or any(angle_error(a,b) <= 2*self.slot_half_deg for i,a in enumerate(row) for b in row[i+1:]):
@@ -85,13 +89,13 @@ class LockGeometry:
     def clearance(self, depth, angle, disc_angles, tolerance=0.):
         # Check all tabs against the finite thickness of every crossed disc.
         issues=[]
-        for tab in range(3):
+        for tab in range(self.tab_count):
             x=self.tip_x(depth)-tab*self.pitch
-            for i in range(3):
+            for i in range(self.disc_count):
                 if abs(x-self.disc_x(i)) < (self.tab_thickness+self.disc_thickness)/2:
                     if self.slot_margin(angle,disc_angles[i],i) < -tolerance:
                         issues.append(f'tab{tab}/disc{i}')
-            if abs(x-self.disc_x(3)) < (self.tab_thickness+self.disc_thickness)/2:
+            if abs(x-self.disc_x(self.disc_count)) < (self.tab_thickness+self.disc_thickness)/2:
                 if self.slot_half_deg-self.tab_half_deg-angle_error(angle,self.endpoint_deg) < -tolerance:
                     issues.append(f'tab{tab}/endpoint')
         return issues
@@ -279,7 +283,7 @@ def write_key(g, folder, mass, visual_finish=None):
     shaft.apply_transform(trimesh.transformations.rotation_matrix(np.pi/2,(0,1,0)))
     shaft.apply_translation((-length/2+.015,0,0))
     pieces=[shaft]
-    for i in range(3):
+    for i in range(g.tab_count):
         tab=sector(g.shaft_radius,g.tab_radius,-g.tab_half_deg,g.tab_half_deg,g.tab_thickness)
         tab.apply_translation((-i*g.pitch,0,0));pieces.append(tab)
     handle=trimesh.creation.cylinder(radius=g.handle_radius,height=.035,sections=32)

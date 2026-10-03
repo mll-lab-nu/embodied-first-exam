@@ -33,8 +33,8 @@ class RigidProbe:
         self.output = Path(output)
         self.output.mkdir(parents=True, exist_ok=False)
         self.config = config if isinstance(config, SimulatorConfig) else SimulatorConfig(**config)
-        if self.config.task_id != "cast_keyhole":
-            raise UnsupportedCapability("Rigid probe adapter currently supports Cast Keyhole")
+        if self.config.task_id not in {"cast_keyhole", "horseshoe_ring"}:
+            raise UnsupportedCapability("Rigid probe adapters support Cast Keyhole and Horseshoe Ring")
         if self.config.variation_id == "seeded":
             raise UnsupportedCapability("Probe requires an explicit frozen variation, not seeded scene perturbations")
         seed = self.config.seed or 0
@@ -183,7 +183,10 @@ class RigidProbe:
                     obstacles=names, scene_revision=self.scene_revision, probe_revision=self.revision)
 
     def preview(self, parameters):
-        from .adapters.cast_keyhole import preview
+        if self.task.task_id == "horseshoe_ring":
+            from .adapters.horseshoe_ring import preview
+        else:
+            from .adapters.cast_keyhole import preview
         token = uuid4().hex
         result = preview(self.task, parameters, self.output / "candidates" / token)
         self.candidates[token] = result

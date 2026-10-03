@@ -16,8 +16,27 @@ from topogym.evaluation.task_metrics import body_points
 from topogym.utils.geometry.passage import passage_initial, advance_passage
 
 
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """Contact-gated sheath grasp for the two simplified settings only.
+
+    Preserve the original settings' unassisted package contract. Fine strands
+    are never grasp targets and their gripper-contact failure remains enabled.
+    """
+    from topogym.config.registry import task_definition
+    from topogym.utils.grasp import GraspAssistConfig, GraspTarget
+    task = task_definition("fiber_bundling", variation_id, seed)(task_parameters, seed=seed)
+    if task.variation_id not in {"fiber_bundling_very_easy", "fiber_bundling_easier"}:
+        return None
+    layout = task.layout_class(**{**task.config["geometry"], "seed": task.seed})
+    step = layout.trunk_length_m / layout.trunk_segments
+    target = GraspTarget("fiber_bundle", f"trunk_{layout.trunk_segments - 2:02d}",
+                         (step / 2, 0., 0.), .025)
+    return GraspAssistConfig("contact_weld_v1", (target,))
+
+
 class FiberBundlingTask(TaskDefinition):
     task_id = "fiber_bundling"
+    layout_class = FiberLayout
     instruction = ('Manipulate only the thick sheath. Pass every fiber tip first through the copper ring '
                    'in material order, without sharp bends, until the roots and front sheath have passed. '
                    'Any gripper contact with a fine strand fails the task; keep the rear terminal anchored.')
@@ -39,7 +58,7 @@ class FiberBundlingTask(TaskDefinition):
     def declare(self, asset_dir, table_height_m):
         preset = record_preset(self, asset_dir)
         self.table_height_m = float(table_height_m)
-        layout = FiberLayout(**{**self.config["geometry"], "seed": self.seed})
+        layout = self.layout_class(**{**self.config["geometry"], "seed": self.seed})
         anchor = AnchoredLayout(**self.config["anchor"])
         self.layout, report = generate_anchored_assets(asset_dir, layout, anchor)
         self.origin = np.r_[

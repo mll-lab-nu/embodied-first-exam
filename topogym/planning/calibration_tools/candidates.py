@@ -8,7 +8,7 @@ from .contracts import UnsupportedCapability, digest, identifier, json_value
 
 
 CONFIG_FIELDS = {"physics_dt_s", "control_decimation", "solver_substeps", "task_parameters", "grasp_assist"}
-FIELDS = {"name", "config", "materials", "primitive_masses_kg", "robot_material", "phase_actions", "object_drives"}
+FIELDS = {"name", "config", "materials", "primitive_masses_kg", "robot_material", "phase_actions", "object_drives", "geometry"}
 
 
 def merge(base, patch):
@@ -29,6 +29,9 @@ def validate_candidate(candidate):
             raise ValueError(name+" must be a mapping")
     if set(result.get("config", {}))-CONFIG_FIELDS:
         raise ValueError("Candidate config only supports timing, task_parameters and grasp_assist")
+    if "geometry" in result and (set(result["geometry"]) != {"parameters"}
+                                or not isinstance(result["geometry"]["parameters"], dict)):
+        raise ValueError("Geometry candidate requires a parameters mapping")
     if any(not isinstance(name, str) or name in {"robot", "table"} or kind not in {"rigid", "fem"}
            for name, kind in result.get("object_drives", {}).items()):
         raise ValueError("object_drives maps task entity names to 'rigid' or 'fem'")
@@ -117,6 +120,17 @@ def build_candidate(env, candidate):
     from topogym.world.tabletop import StandardTabletopSceneBuilder
     original_class, original_builder = env._task_class, StandardTabletopSceneBuilder.create
     class CandidateTask(original_class):
+        def declare(self, *args, **kwargs):
+            if "geometry" not in candidate:
+                return super().declare(*args, **kwargs)
+            if self.task_id != "horseshoe_ring":
+                raise UnsupportedCapability("Fresh physics geometry candidates currently support Horseshoe Ring")
+            from .adapters.horseshoe_ring import declaration
+            with declaration(self, candidate["geometry"]["parameters"]) as geometry:
+                result = super().declare(*args, **kwargs)
+            report["geometry"] = geometry
+            return result
+
         def finalize_spec(self, spec, **kwargs):
             spec = super().finalize_spec(spec, **kwargs)
             if candidate.get("materials") or candidate.get("primitive_masses_kg") or candidate.get("robot_material"):

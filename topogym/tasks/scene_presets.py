@@ -28,7 +28,7 @@ PRESETS = {
         ],
     },
     "fiber_bundling": {},
-    "rope_threading": {"geometry": {"translation_m": [-0.1156786, 0.03, 0.0015], "yaw_deg": 75.}},
+    "rope_threading": {"geometry": {"translation_m": [-0.1356786, 0., 0.0009], "yaw_deg": 0.}},
     "knot_untying": {},
     "orbits": {
         "linear_scale": 0.85, "yaw_deg": 90.0,

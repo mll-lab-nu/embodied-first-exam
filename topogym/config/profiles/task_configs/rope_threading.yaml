@@ -1,0 +1,4 @@
+# Shared by all five Rope Threading scenes. Keep the standard ALOHA home.
+robot_control:
+  robot:
+    base_riser_height_m: 0.0209

@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from topogym.utils.io import write_json_atomic
-from topogym.utils.grasp import relative_pose, relative_error
+from topogym.utils.grasp import relative_pose, relative_error, bilateral_contact_rows
 from .lock_picking_medium_planning import rotation
 from .robot_geometry import LockRobotGeometry
 
@@ -34,11 +34,40 @@ def recompute_task_tick(task, world, recorded_result, physics_dt_s):
     return errors
 
 
+def simplified_acquisition_rows(evidence, fingers, target_link, *, center_m, radius_m, max_penetration_m):
+    """Recheck the current assist contract: bilateral geometric contact.
+
+    A zero-force touching row is allowed by contact_weld_v1. Its measured
+    position and nonnegative penetration still have to satisfy the region gate.
+    The caller separately matches these rows against the saved native buffer.
+    """
+    contacts = {name: [r[field] for r in evidence] for name, field in (
+        ("link_a", "link_a"), ("link_b", "link_b"),
+        ("position", "position_m"), ("penetration", "penetration_m"))}
+    return bilateral_contact_rows(contacts, fingers, target_link, center_m=center_m,
+        radius_m=radius_m, max_penetration_m=max_penetration_m)
+
+
 def completion_errors(report, phase_names, event_names, *, retreats, expected,
                       released_completion, native_success):
     """Keep historical released-route acceptance distinct from native success."""
     errors = []
     contract = report.get("completion_contract", "released_route")
+    if report.get("route_mode") == "simplified":
+        required = {"close_and_wait_for_automatic_assist", "lift_to_lock_axis",
+                    "pass_first_rotor", "pass_second_rotor", "insert_END"}
+        if report["variation"] == "easier":
+            required |= {"engage_first_rotor", "turn_first_rotor", "center_first_slot"}
+        if (contract != "task_success" or not native_success
+                or not report["task_result"]["task_success"] or report["status"] != "task_success"):
+            errors.append("Native simplified Task success was not independently reproduced")
+        if event_names != ["acquired"]:
+            errors.append("Unexpected simplified grasp event sequence: "+str(event_names))
+        if not required <= set(phase_names):
+            errors.append("Missing simplified robot phases: "+str(sorted(required-set(phase_names))))
+        if retreats != 0 or expected != 0:
+            errors.append("Simplified route must not require a reindex retreat")
+        return errors
     required = {"close_and_wait_for_automatic_assist", "lift_to_lock_axis", "insert_third_disc",
                 "open_for_supported_regrasp", "close_for_automatic_regrasp", "insert_endpoint"}
     if contract == "task_success":
@@ -153,6 +182,14 @@ def audit_robot_process(env, run, output):
                         pair = {row["link_a"], row["link_b"]}
                         if pair & key_links and np.linalg.norm(row["force_n"]) > .01:
                             hits |= pair & fingers
+                    if report.get("route_mode") == "simplified":
+                        target = next(t for t in env.config.grasp_assist.targets if t.entity == "lock_key")
+                        body = world["articulations"]["lock_key"]["links"]["key"]
+                        center = np.asarray(body["position_m"])+rotation(body["quaternion_wxyz"]).apply(target.center_m)
+                        valid = simplified_acquisition_rows(binding["acquisition_evidence"]["rows"], sorted(fingers),
+                            binding["links"][1], center_m=center, radius_m=target.radius_m,
+                            max_penetration_m=env.config.grasp_assist.max_penetration_m)
+                        hits = fingers if valid else set()
                     if hits != fingers or tick != index or binding["target"] != ["lock_key", "key"]:
                         errors.append(f"Invalid automatic bilateral acquisition at {index}")
                     def array(value):
@@ -164,7 +201,10 @@ def audit_robot_process(env, run, output):
                     for contact in binding["acquisition_evidence"]["rows"]:
                         found = any(a == contact["link_a"] and b == contact["link_b"]
                             and np.array_equal(f, contact["force_n"]) and d == contact["penetration_m"]
-                            for a,b,f,d in zip(native["link_a"],native["link_b"],native["force"],native["penetration"]))
+                            and (report.get("route_mode") != "simplified" or "position" not in native
+                                 or np.array_equal(p, contact["position_m"]))
+                            for a,b,f,d,p in zip(native["link_a"],native["link_b"],native["force"],native["penetration"],
+                                                native.get("position", [None]*len(native["link_a"]))))
                         if not found:
                             errors.append(f"Acquisition evidence differs from native contacts at {index}")
                 parent = world["articulations"]["robot"]["links"]["hand"]
@@ -215,7 +255,7 @@ def audit_robot_process(env, run, output):
     axis, tip, g = r.apply([1.,0.,0.]), np.asarray(key["position_m"]), env._task.layout
     offsets = []
     if axis[0] > .99:
-        for plate in range(4):
+        for plate in range(g.disc_count+1):
             for side in (-1.,1.):
                 at = tip+axis*((g.disc_x(plate)+side*g.disc_thickness/2-tip[0])/axis[0])
                 offsets.append(float(np.linalg.norm(at[1:]-[g.center_y,g.axis_z])))
@@ -264,6 +304,10 @@ def audit_robot_process(env, run, output):
         geometry_violations=geometry_violations, measured_robot_fixture_contact_violations=contact_violations,
         maximum_sampled_key_fixture_force_n=max_force, maximum_sampled_key_fixture_penetration_m=max_depth,
         contact_coverage="last solver substep at every saved World tick; not every substep",
+        acquisition_position_crosschecked_against_world_contacts="position" in last_state["world"]["contacts"],
+        acquisition_position_scope=("Region checked using native positions captured in the binding evidence; "
+                                    "World contact records may omit positions. Link pairs, force and penetration "
+                                    "are crosschecked exactly against the independent World record."),
         native_instantaneous_goal_reached_ticks=native_reached_ticks,
         native_task_success=report["task_result"]["task_success"],
         completion_contract=report.get("completion_contract", "released_route"),

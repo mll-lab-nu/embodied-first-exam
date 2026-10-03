@@ -43,7 +43,8 @@ def channel_guides(variation, *, scale=3.):
 class SimplifiedKeyholePolicy(CastKeyholePolicy):
     """Reuse feedback/placement primitives, with new grasps and no old regrasp route."""
 
-    def __init__(self, *, geometry, variation, part="all", pickup_transit=None, **kwargs):
+    def __init__(self, *, geometry, variation, part="all", pickup_transit=None,
+                 gripper_closed_native_m=.002, **kwargs):
         if part not in {"pickup", "all"}:
             raise ValueError("Simplified policy supports pickup or all")
         if geometry.get("initial_relative_pose_id") != "perpendicular_lower_bore_v1":
@@ -51,6 +52,9 @@ class SimplifiedKeyholePolicy(CastKeyholePolicy):
                 "This candidate requires the restored v4 initial pose; older layouts need their own route.")
         self.geometry = geometry
         self.pickup_transit = pickup_transit
+        self.gripper_closed_native_m = float(gripper_closed_native_m)
+        if not np.isfinite(self.gripper_closed_native_m) or not 0 <= self.gripper_closed_native_m < .024:
+            raise ValueError("Native close target must be finite and below the 0.024 m open target")
         self.grasp_points = {side: np.asarray(geometry["grasp_regions"][name]["center_plate_mm"])
                             * geometry["scale"]/1000.
                             for side, name in (("left", "gold"), ("right", "silver"))}
@@ -117,7 +121,7 @@ class SimplifiedKeyholePolicy(CastKeyholePolicy):
         # against the current observation, not the authored first frame.
         yield from self.move(self.grasp_targets(self.bodies()), 3., "approach_outer_faces")
         self.phase = "close_on_faces"
-        self.grip = {s: .002 for s in PARTS}
+        self.grip = {s: self.gripper_closed_native_m for s in PARTS}
         yield {s: dict(gripper_position_m=self.grip[s]) for s in PARTS}
         yield from self.hold(.8)
         hands = self.obs["privileged"]["world"]["grasp"]["hands"]

@@ -1,5 +1,69 @@
 # 开锁
 
+2026-10-02 两档 oracle：已实现 [SimplifiedLockPickingPolicy](../../../topogym/planning/lock_picking/simplified_policy.py)，复用已有 home 出发的抓取动作，通过 [统一 runner](../../../scripts/oracle_runners/run_lock_picking_policy.py) 的 `--route-mode simplified` 执行。`very_easy` 抓起、抬至孔高后直线插入；`easier` 先让前齿进入第一片槽，转动钥匙，以真实接触带动被动锁片对齐，再直线插入。动作不回退、不换抓，终点允许保持抓持。沿用现有 `contact_weld_v1` 自动辅助抓持：两指接触握柄后自动取得绑定；策略仅提交普通机械臂控制，不直接设置钥匙位姿、锁片角度或绑定关系。
+
+| 变体 | 原生 Task 结果 | 从 home 起仿真时间 | 物理 tick | 独立审计 |
+| --- | --- | --- | --- | --- |
+| very_easy | success，连续确认 0.5 s | 35.6325 s | 14,253 | 14,254 个保存状态、1,162 次 IK 查询通过 |
+| easier | success，连续确认 0.5 s | 48.2575 s | 19,303 | 19,304 个保存状态、1,623 次 IK 查询通过 |
+
+两档均在首个完整策略执行中成功。使用 seed 0、默认 home、CUDA float32、2.5 ms tick／4 子步／40 Hz 控制、Nyx 三视角和公共 `SegmentRunner`／`RecordingSession`；模型、物理参数、成功判据均未为 oracle 调整。每档 1,272 个生成资产与此前冻结的 Harbor 实例逐项同哈希。两次执行各只有一次自动抓持，无重新绑定或回退。easier 第一片从 20° 转至最终约 −1.205°，已在槽齿间隙允许的对齐范围内，第二片保持 0°；转片阶段测得钥匙对第一片的接触力峰值 0.277 N、穿透峰值 2.62 μm。
+
+独立审计重算每个保存 tick 的 Task 判据及稳定窗口，检查 home 起点、动作连续性、IK/FK、关节限位、机器人禁止碰撞与抓持证据，两档均通过。接触检查覆盖每个 World tick 的末子步，不声明连续时间或所有积分子步均已审计。抓持位置取原生 binding 接触证据；World 接触记录不含位置，只能独立比对 link 对、力和穿透。最初 very_easy 审计误要求 World 保存接触位置而失败，修正字段可用性处理后复验通过，失败报告保留。新增 oracle 检查 4 项、原路线 6 项、runner 合同 16 项，共 26 项通过。
+
+两档还分别在新进程中，从默认 home 重新执行原运行记录的原生关节目标；重新创建场景并核对实例与资产身份，不恢复旧物体状态。两次回放均再次获得原生 Task success，成功 tick 与原执行相同（14,253／19,303）。下列三视角来自各自同一次连续物理回放，包含接近、抓取、转片／插入和成功确认；三路均为 848×480、30 fps，分别 1,070／1,449 帧，已完整解码核验：
+
+- very_easy：[主视角](../../../runs/test_results/lock_picking_oracles_20261002/very_easy_replay01/segments/segment_1/videos/agentview.mp4) · [侧视角](../../../runs/test_results/lock_picking_oracles_20261002/very_easy_replay01/segments/segment_1/videos/front_oblique.mp4) · [腕相机](../../../runs/test_results/lock_picking_oracles_20261002/very_easy_replay01/segments/segment_1/videos/wrist.mp4)。
+- easier：[主视角](../../../runs/test_results/lock_picking_oracles_20261002/easier_replay01/segments/segment_1/videos/agentview.mp4) · [侧视角](../../../runs/test_results/lock_picking_oracles_20261002/easier_replay01/segments/segment_1/videos/front_oblique.mp4) · [腕相机](../../../runs/test_results/lock_picking_oracles_20261002/easier_replay01/segments/segment_1/videos/wrist.mp4)。
+
+[验证汇总及视频哈希](../../../runs/test_results/lock_picking_oracles_20261002/oracle_validation_report.json) · [very_easy 执行报告](../../../runs/test_results/lock_picking_oracles_20261002/very_easy_attempt01/run_report.json) · [独立审计](../../../runs/test_results/lock_picking_oracles_20261002/very_easy_audit02/robot_process_audit.json) · [easier 执行报告](../../../runs/test_results/lock_picking_oracles_20261002/easier_attempt01/run_report.json) · [独立审计](../../../runs/test_results/lock_picking_oracles_20261002/easier_audit01/robot_process_audit.json)。系统内存采样峰值 44.0%，未触发 90% 停止阈值；CPU 峰值 99.8%，按现有授权仅监控记录。上述 runs 目录对应 `/data/jianwen/topogym/lock_picking_oracles_20261002`，开发证据与缓存均保留。
+
+复现使用 [runner 中的双片命令](../../../scripts/oracle_runners/README.md#lock-的结束规则)，选择 `--variation very_easy` 或 `--variation easier`；完整源码快照、配置、动作、状态和独立审计保存在 [本地 oracle 证据目录](../../../runs/test_results/lock_picking_oracles_20261002)。验证范围限于这两个具名变体的 seed 0；未开展五档难度排序，也未把本地原生关节动作回放等同于 Harbor 公开宽度动作或 standard 服务的完整求解资格。
+
+2026-10-02 两档简化变体：新增具名入口 `lock_picking_very_easy` / `very_easy` 和 `lock_picking_easier` / `easier`，登记在 experimental 池，不改变 `base` 或原三档 seeded 采样。两档均为 **两个被动圆锁片＋双齿钥匙杆＋原有固定 END 板**。沿用 easy 的 Panda/Robotiq 默认 home、实验室布设、160 mm 锁片直径、150 mm 片距、10 mm 片厚、7.5 mm 孔半径、36 mm 钥匙齿半径、V 型托架与物理参数；握柄偏移从 495 mm 缩至 345 mm，保留两倍片距加 45 mm 的原有余量，底座和托架随钥匙长度调整。钥匙仍先放在低于锁孔轴线的托架上，需要抓起并抬至孔高。
+
+- `very_easy`：两片单槽均竖直对齐，初始角度 `[0°, 0°]`；两片限位为 ±3°，位于原有槽齿角间隙内，设计上可直接直线插入。
+- `easier`：第二片仍对齐；第一片初始偏转 20°，限位为 −3°～23°。先将第一片转回对齐，再直线插入。保留用户确认的预览结构；后续已完成机器人接触旋转与完整求解，见页首 oracle 记录。
+
+源码：[双片几何](../../../topogym/assets/geometry/lock_picking_simplified.py) · [共享简化参数](../../../topogym/tasks/lock_picking/simplified.py) · [very_easy](../../../topogym/tasks/lock_picking/lock_picking_very_easy.py) · [easier](../../../topogym/tasks/lock_picking/lock_picking_easier.py)。模型完全由包内 Python 构造器生成，无新增外部 Blender 素材或运行目录资产依赖。模型版本 `two_rotor_v1`，判据版本 `terminal_v5_two_rotor_bore_contact`，按两片锁片加 END 共三片板检查有限杆长和插入距离，保留原有接触容差与连续 0.5 s 确认时间，不要求最后释放。
+
+两档接入相同的公共 simulator、观测、动作、回溯及终止流程。`contact_weld_v1` 辅助抓持由任务按实际握柄位置生成：新两档为 key 局部坐标 `(-0.345, 0, 0)`，旧三档仍为 `(-0.495, 0, 0)`；旧五个入口（easy / medium / hard / base / seeded）的 seed 0 归一化 simulator 配置核对一致。Harbor 说明同步描述两片转盘、三片板／六个表面和 365 mm 有效杆长，模板 tooling 升至 11，旧 tooling 10 的文件哈希已冻结。
+
+本地通过 `topogym.make("lock_picking", variation_id="very_easy")` 或 `variation_id="easier"` 选择场景，再使用公共 `env.reset(seed=0)`。需要复现 Harbor 的完整配置（含抓持辅助）时，以各包的 `environment/instance.json` 或 standard 的 `environment/sim/instance.json` 为准。
+
+场景集成阶段按用户要求暂缓 oracle；后续本地 oracle 验证见页首。此前生成的 Harbor 包仍为 `oracle="none"`、无 `solution/`，本次本地成功未改写这些冻结包或 registry 的整体验收资格。短程接口、完整机器人求解、Harbor 资格与难度排序分别记录。
+
+预览采用公共 `Env.reset(seed=0)`、CPU 物理初始化和 Nyx RGB，零物理 tick，机器人保持默认 home；PNG 通过共享 `topogym.recording.segment.save_rgb` 导出。记录包含源码快照、资产哈希、实际初态和资源采样。初次串行渲染分别用时 48.1 / 49.6 s，整卡显存峰值 11,722 MiB / 24,564 MiB，系统内存峰值 31.3%；只证明该次共享负载下能初始化和截图，不是完整物理或机器人成功证据。补拍只改变观察机位，不改变场景或机器人姿态。
+
+[初次预览与资源记录](../../../runs/test_results/lock_picking_simplified_preview_20261002) ·
+[清晰视角预览](../../../runs/test_results/lock_picking_simplified_preview_20261002_clear_views) ·
+[very_easy 场景](../../../runs/test_results/lock_picking_simplified_preview_20261002_clear_views/very_easy/overview/front_oblique.png) ·
+[easier 场景](../../../runs/test_results/lock_picking_simplified_preview_20261002_clear_views/easier/overview/front_oblique.png)。
+
+代码检查：新增双片场景 7 项、原 terminal 10 项、原 route 6 项、公开目标说明 10 项、tooling 合并 11 项，共 44 项通过。新增检查覆盖双片双齿、第一片错位阻挡、对齐后的直线路径、初态未解、三片板终态、连续确认窗口、限位失败和短柄抓持配置，不等同于动态可解证明。旧 easy / medium / hard 的 seed 0 实例身份与 5,085 个生成资产哈希全部不变。执行：`.venv-gs121-nyx/bin/python ci_checks/test-lock-picking-simplifications.py`。
+
+生成四个 privileged / standard 包，执行包结构、字段、Dockerfile、公开说明、验证器隔离和 standard 文本六类检查，共 24 次脚本调用通过（部分按模式跳过，`check-limited-texts.sh` 尚只匹配旧 `-limited` 名称）；另人工核对新 standard 任务说明。四包均通过 Harbor Task schema 解析。全仓公共模板身份检查仍存在本轮开始前已有的 `limited/solution/oracle_replay.py` 与 robot_coding_bench 固定版本哈希不一致；本轮未修改该 oracle 文件，也未将此项计为通过。
+
+四包已登记到 [tasks/dataset.toml](../../../tasks/dataset.toml)，登记目录与验收副本的内容哈希一致（排除运行产生的 Python 字节码）；dataset 清单及全仓 114 个任务包的 tooling 检查通过：
+
+| 变体 | privileged | standard |
+| --- | --- | --- |
+| very_easy | [任务包](../../../tasks/topogym-lock-picking-very-easy-i00-privileged) | [任务包](../../../tasks/topogym-lock-picking-very-easy-i00-standard) |
+| easier | [任务包](../../../tasks/topogym-lock-picking-easier-i00-privileged) | [任务包](../../../tasks/topogym-lock-picking-easier-i00-standard) |
+
+实际运行使用冻结镜像中的 CUDA float32／Genesis 1.2.1／Nyx／compact_lab，默认 home，物理 tick 2.5 ms、4 子步、每 10 tick 一条控制动作。两档各保持 40 条控制动作（400 tick、1 s），钥匙最大漂移均为 0.101 mm、末速 0.0675 mm/s，两片角度漂移均为 0°；保持未解，无异常终止。同进程回溯重放及 privileged 评分器两次独立回放均通过，`instance_ok=1`、`grader_error=0`。standard 使用包内客户端提交 3 条保持动作，完成服务收尾、新进程回放与评分，`finalized=1`，基础设施／评分／实例不匹配错误均为 0。测试动作没有求解，两个模式评分均为预期的 0。CUDA 回放末态哈希并非全部逐位一致，按既有协议作为诊断记录，不混同于实例兼容性失败。
+
+上述场景集成检查在诊断容器内调用生成包的原始客户端、服务和评分入口；该批未运行完整 Harbor 模型 agent 作业，也未执行抓取、接触旋转和插入全过程。12 个视频均完成解码核验；1 s 保持录像为三路 848×480、30 fps，以下合成视图便于查阅，独立视角保留在相邻 `videos/` 目录：
+
+- very_easy：[初态稳定性录像](../../../runs/test_results/lock_picking_variants_20261002/very_easy_runtime/segments/segment_0/videos/combined.mp4) · [privileged 评分回放](../../../runs/test_results/lock_picking_variants_20261002/very_easy_privileged_verifier_retry1/replay.mp4) · [standard 评分回放](../../../runs/test_results/lock_picking_variants_20261002/very_easy_standard_retry4/replay.mp4)。
+- easier：[初态稳定性录像](../../../runs/test_results/lock_picking_variants_20261002/easier_runtime/segments/segment_0/videos/combined.mp4) · [privileged 评分回放](../../../runs/test_results/lock_picking_variants_20261002/easier_privileged_verifier_retry1/replay.mp4) · [standard 评分回放](../../../runs/test_results/lock_picking_variants_20261002/easier_standard_retry4/replay.mp4)。
+
+独立机位：[very_easy 主视角](../../../runs/test_results/lock_picking_variants_20261002/very_easy_runtime/segments/segment_0/videos/agentview.mp4) · [侧视角](../../../runs/test_results/lock_picking_variants_20261002/very_easy_runtime/segments/segment_0/videos/front_oblique.mp4) · [腕相机](../../../runs/test_results/lock_picking_variants_20261002/very_easy_runtime/segments/segment_0/videos/wrist.mp4)；[easier 主视角](../../../runs/test_results/lock_picking_variants_20261002/easier_runtime/segments/segment_0/videos/agentview.mp4) · [侧视角](../../../runs/test_results/lock_picking_variants_20261002/easier_runtime/segments/segment_0/videos/front_oblique.mp4) · [腕相机](../../../runs/test_results/lock_picking_variants_20261002/easier_runtime/segments/segment_0/videos/wrist.mp4)。
+
+[验收汇总](../../../runs/test_results/lock_picking_variants_20261002/validation_report.json) · [视频完整解码与哈希](../../../runs/test_results/lock_picking_variants_20261002/media_validation.json)。资源采样中系统内存最高 58.0%，未触发 90% 停止阈值；CPU 峰值 93.9%，按现有授权仅记录。首次构建及验收脚本的失败尝试保留在证据目录，不计为通过。
+
+构建使用独立本地镜像 `topogym-local/lock-picking-variants:20261002-01`，镜像 ID `sha256:6d72a5549023a2d8357cceadf1b043de62af7ee988714f95c37f7e0303b0bff9`，冻结运行源码 digest `4f0a1bd523ee4954db100990df1603e629c24afffe9d15190896ec2a4f521db6`（306 个文件）。未推送镜像；其他机器需先具备同一镜像。详细构建、源码快照、配置与运行证据位于[本轮证据目录](../../../runs/test_results/lock_picking_variants_20261002)。该目录因根盘空间不足迁至 `/data/jianwen/topogym/lock_picking_variants_20261002`，仓库内路径保留软链接；迁移前后全部文件哈希已核对一致。
+
 2026-09-30 oracle 收尾更新：执行入口迁至 [scripts/oracle_runners/run_lock_picking_policy.py](../../../scripts/oracle_runners/run_lock_picking_policy.py)。`--part solve` 在原生 Task success 时正常结束，报告 `status="task_success"` 和 `completion_contract="task_success"`，允许尚未松手；`policy_done` 本身不足以判成功。失败、超时及证据不完整仍报错。独立审计同步重算 success 时间窗口，历史 `route_completed` 报告继续要求完整释放流程。[入口和用法](../../../scripts/oracle_runners/README.md)。此项为控制流修复，未新增三档物理执行。
 
 2026-09-30 判据修正：v3 允许正常靠壁及几何上可穿孔的倾斜，取消额外 0.1 mm 空隙和独立 1° 倾角门槛，使用 10 μm 接触数值容差；同时要求有限钥匙杆仍贯穿全部四片板。前齿穿出 END 至少 1 mm、齿槽和转盘约束、连续 0.5 s 保留，不强制释放。三档共 4789 个已保存状态离线重算，释放后末态全部通过；没有新增物理执行。当前 `terminal_v4_bore_contact_default_success` 保留这些判据，并统一默认开启 `goal_complete=True`，不再受物理资格限制。详见[当前 success 条件](success_conditions_zh.md)和[重算结果](../../../runs/test_results/lock_contact_fix_20260930_01/replay.json)。历史报告与旧成绩不变；新实例使用新 terminal 参数，旧完整参数不能直接套用新修订。

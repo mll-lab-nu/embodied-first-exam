@@ -1,0 +1,351 @@
+{
+ "task": "cast_keyhole",
+ "topogym_task": "cast_keyhole",
+ "variation_id": "very_easy",
+ "seed": 0,
+ "eval_index": null,
+ "text": "Separate and place the entire silver keyhole piece inside the green dashed goal region. Keep the gold piece on the puzzle/system side.\n\n## Success requirements\n\n- Put every part of the entire silver keyhole piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.\n- Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 244.54 mm above the tabletop.\n- Keep the gold piece, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.\n- Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required.\n- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.\n\n## Task failure conditions\n\n- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.",
+ "simulator": {
+  "task_id": "cast_keyhole",
+  "robot_id": "aloha",
+  "variation_id": "very_easy",
+  "task_parameters": {},
+  "compute_backend": "cuda",
+  "precision": "64",
+  "physics_dt_s": 0.0025,
+  "solver_substeps": 4,
+  "terminal_contract_version": 1,
+  "control_decimation": 10,
+  "max_physics_steps": null,
+  "history_storage": "segment",
+  "reset_physics_steps": 0,
+  "enable_rgb": true,
+  "enable_depth": true,
+  "observation_mode": "JOINT",
+  "control_mode": "JOINT_ABS",
+  "enable_privileged": true,
+  "seed": 0,
+  "render_backend": "nyx",
+  "asset_root": null,
+  "work_dir": null,
+  "grasp_assist": {
+   "model": "contact_weld_v1",
+   "targets": [
+    {
+     "entity": "keyhole_gold",
+     "link": "keyhole_gold",
+     "center_m": [
+      2.3052760072363073e-17,
+      0.024828375289208292,
+      -0.0791669090497841
+     ],
+     "radius_m": 0.026
+    },
+    {
+     "entity": "keyhole_silver",
+     "link": "keyhole_silver",
+     "center_m": [
+      0.0003473795773758317,
+      2.9540327260251974e-17,
+      0.08944567935910178
+     ],
+     "radius_m": 0.022
+    }
+   ],
+   "stable_time_s": 0.02,
+   "max_tcp_distance_m": 0.06,
+   "max_penetration_m": 0.002,
+   "max_translation_error_m": 0.01,
+   "max_rotation_error_rad": 0.15,
+   "max_finger_opening_fraction": 0.15,
+   "intent_deadband": 0.002,
+   "initial_intent": "open"
+  }
+ },
+ "state_sha": "6fc10953569a4c33",
+ "action_dim": 14,
+ "action_layout": [
+  "left/waist",
+  "left/shoulder",
+  "left/elbow",
+  "left/forearm_roll",
+  "left/wrist_angle",
+  "left/wrist_rotate",
+  "left_gripper",
+  "right/waist",
+  "right/shoulder",
+  "right/elbow",
+  "right/forearm_roll",
+  "right/wrist_angle",
+  "right/wrist_rotate",
+  "right_gripper"
+ ],
+ "control_hz": 40.0,
+ "backend": "cuda",
+ "reset_joint_targets": [
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128,
+  0.0,
+  -0.96,
+  1.16,
+  0.0,
+  -0.3,
+  0.0,
+  0.000128
+ ],
+ "objects": {
+  "keyhole_gold": {
+   "position": [
+    -0.20851,
+    0.05224,
+    0.95314
+   ],
+   "orientation_wxyz": [
+    0.653281,
+    0.270598,
+    0.653281,
+    0.270598
+   ],
+   "euler_xyz": [
+    1.5708,
+    0.7854,
+    1.5708
+   ],
+   "bounds": [
+    [
+     -0.30968,
+     0.01924,
+     0.92014
+    ],
+    [
+     -0.10268,
+     0.08076,
+     0.98166
+    ]
+   ],
+   "size": [
+    0.207,
+    0.06152,
+    0.06152
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "keyhole_silver": {
+   "position": [
+    -0.06612,
+    0.04975,
+    0.95115
+   ],
+   "orientation_wxyz": [
+    0.653281,
+    0.270598,
+    0.653281,
+    0.270598
+   ],
+   "euler_xyz": [
+    1.5708,
+    0.7854,
+    1.5708
+   ],
+   "bounds": [
+    [
+     -0.16868,
+     0.01924,
+     0.92014
+    ],
+    [
+     0.03832,
+     0.08076,
+     0.98166
+    ]
+   ],
+   "size": [
+    0.207,
+    0.06152,
+    0.06152
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "euler_xyz": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     -0.26395,
+     0.11476,
+     0.91984
+    ],
+    [
+     -0.00741,
+     0.3713,
+     0.92004
+    ]
+   ],
+   "size": [
+    0.25654,
+    0.25654,
+    0.0002
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ },
+ "instance_contract_version": 2,
+ "soft_state": {},
+ "asset_identity": {
+  "assembly.glb": "e078558b1e88eec4765e2e641adb2d2130d91a5fb8b8573afb35997448eb78c2",
+  "geometry_report.json": "8bf74b8704d736bd529c639bb32c760023584e5719a2591d64b035a892716f7e",
+  "goal_region.obj": "f83421c8a75d660ba1feb3d58c7a5818140f5297ac22ef9a383c0fa9c5e55665",
+  "inverse_geometry.json": "455aff5646096bb7466731b1bf4bd0e65654f05806e609a5686bc718d10b53a4",
+  "keyhole_gold/collision_000.obj": "e537598213035c632992e4781883666393aa2eff18e67a3914736449c134ee67",
+  "keyhole_gold/collision_001.obj": "2615aa260201a8a8486f71a3a2d884caf3ab29be414619dc82bb103fa47826b8",
+  "keyhole_gold/collision_002.obj": "2948ea590a6cf22f5c756af3822939526d42ef5aeca4e44f6ed76f1851287754",
+  "keyhole_gold/collision_003.obj": "adf6ba0f61f1f6474622fbab494f460b11dd250a9cf928719baab9a81a68608f",
+  "keyhole_gold/collision_004.obj": "6be90cd54523bbf51be240e15d2d470f6dd8a69038585321a4d0907160c95f95",
+  "keyhole_gold/collision_005.obj": "287571be8c2241bcbf3eaa1798995b07d46bbeabe2eb7eb8068139223306939d",
+  "keyhole_gold/collision_006.obj": "40a9ed287c4bea68dd712edf22686a0d9c7c6586ca183c12f5749ee93b1080ef",
+  "keyhole_gold/collision_007.obj": "7c5fc6ad2ed18580a0e1cd908a1e04df864f47169cebffef07cfa55188799c2f",
+  "keyhole_gold/collision_008.obj": "5e2bc9e71457c6df85df7d446fb829c645b93c3a068fae8a82e608f7920e6ed1",
+  "keyhole_gold/collision_009.obj": "70cf9288886f87faaddfec83093575c81e9c5cbd1386cbb11287e7d69e8de120",
+  "keyhole_gold/collision_010.obj": "134934b07a7da6e470fb3a2e8bc0aa695d9952cd6e69cb14226542160b120c6f",
+  "keyhole_gold/collision_011.obj": "e3dd6ca6ebbd1f110b48826ea6c25a58def8fa7e49537948d69c8b185282ce85",
+  "keyhole_gold/collision_012.obj": "1d93efdc6b44645b0fb68a774d114b9e7fc9323ef8f58067795505e72341fd69",
+  "keyhole_gold/collision_013.obj": "4675a346128f80949f1516c2d43ed41ed26035096156c27fd95bc5adb2b6e249",
+  "keyhole_gold/collision_014.obj": "e4ea4ab41d805b8aabdd4593277c9ab8bb4f7d24babce735d519671ab61a367e",
+  "keyhole_gold/collision_015.obj": "bab76e2a90e1f506fcdbaa09b1d045dacd6d0bcad2347453676128669de9a0b8",
+  "keyhole_gold/collision_016.obj": "4f22318d65199e3861dca22c8e22bf299106950c662a1011ff91fd19c4b2eadc",
+  "keyhole_gold/collision_017.obj": "b78243cba0f06f81b9a144c365de7e8e62b9edb1df4d4254bebe060de7eacd33",
+  "keyhole_gold/collision_018.obj": "0fb57e74931146f808de1a04c39991ba0db6d63b164371c66fb236b2d1aa7682",
+  "keyhole_gold/collision_019.obj": "75aaff3770216d0d3849dbb5e0422e169bec058c0f428de0e3281a03a5cb2ae6",
+  "keyhole_gold/collision_020.obj": "8e9678041fd9894bcc1c1ebc6ef5960edbd78f9abee02e56845071dd44749476",
+  "keyhole_gold/collision_021.obj": "d97fc2e6db81cbf833eaf424e57d6b23c6dd9a0bc814436bbd306116d3be3ced",
+  "keyhole_gold/collision_022.obj": "c7ce44f7e10f594c2c1ea73adefda7763c62856eddca21af0bdcca2ddf6f582f",
+  "keyhole_gold/collision_023.obj": "3e9d0ffc6b5c2fd9a1466c904c8f9049fcac6293222d39ff059cb562c73f1372",
+  "keyhole_gold/collision_024.obj": "31b613d069f3a981c9b2aaf638c67f14cceda4ee3e8a11682687c07bd300490a",
+  "keyhole_gold/collision_025.obj": "7a9cbc389408818d61192cdbea2a8613f9e82d2eb488bed432959e51bdbb91e3",
+  "keyhole_gold/collision_026.obj": "590ed914fa868535813b6d182eb759e34c6cd2e9b1e8b095d09ca055e0141b30",
+  "keyhole_gold/collision_027.obj": "8101fa8d7d8a6ef33374092e564150019bc80e7b83bb1786266aab288c49339d",
+  "keyhole_gold/collision_028.obj": "46881aa5db45fba0aab4615561b02ee74be0cc4dc87d9313fa788e707809ce47",
+  "keyhole_gold/collision_029.obj": "0e6d900586691ad178f081984f84d181cc13a324518f36a1bd4bc147fc172da4",
+  "keyhole_gold/collision_030.obj": "839408bc163a9a301fa689f4844b90638fbe106ae9914b65cec647f51fefc6c4",
+  "keyhole_gold/collision_031.obj": "e329cf5c4878056ffd1d6a3e41084266f9a92f57bb745fd471b9119be6cd73be",
+  "keyhole_gold/collision_032.obj": "221f5e11873b42f40609238420e1efc2820240e8d9c2b6bdc713c29d0901b764",
+  "keyhole_gold/collision_033.obj": "269c86d314feafaee61bcd17eef423fef68caecb3116adffd1fdfd91ba896044",
+  "keyhole_gold/collision_034.obj": "ffc882ead4911d79858f0b120f3be2b308c1082372b19f1c91399791e43373d2",
+  "keyhole_gold/collision_035.obj": "98fdf891d51cf64a710f2336c747191e6990023edf043db8cfab8698d99e0533",
+  "keyhole_gold/collision_036.obj": "bc3f2904ade96ef65a527af45f4d6d118d4543d42fc291a69b778138fb81d9e0",
+  "keyhole_gold/collision_037.obj": "683686b437178e31d5efa287493e1824b63d7c88add9005cda2f5bc620b62c9c",
+  "keyhole_gold/collision_038.obj": "56006cb31cefae7f8e0466761576b72b396bc1b0b1083848d6162e567f309aa1",
+  "keyhole_gold/collision_039.obj": "0f413a4a8524012e6e8f798426353ec6b64771743702d870bc836e0892f87240",
+  "keyhole_gold/collision_040.obj": "7d1b62e6d6b08372a57dc59073aafce79e29677c2b2b43a70298295eb511970b",
+  "keyhole_gold/collision_041.obj": "75d9bfc9e89b0fde61b6d5643b35f8673ab829a6c004ad8a36454b6130e69312",
+  "keyhole_gold/collision_042.obj": "69c8b1357b29e884c4708cdfbea6536a5604ed5701ddc5e82862a752de3f877e",
+  "keyhole_gold/collision_043.obj": "edbffa1657a74db2cebdcf4a354cd135aa249877876c9d332d9547ed81e6c72e",
+  "keyhole_gold/collision_044.obj": "af7e66c7a6a455f0316bf8eef4c6616e830c02970ff4b1ace50d34889b3a5e83",
+  "keyhole_gold/collision_045.obj": "63333b9f897b11fa22be6041f49283861f4e80dea4be6a3826d07c9958d03918",
+  "keyhole_gold/collision_046.obj": "8ec4af6743492215aaa6b724278df5e0a765e43b11ccb02c23b0a7173aa94aae",
+  "keyhole_gold/collision_047.obj": "4df4c97aa415137df77e4c62ff68b6fcab281637319116c69af9889ca9685d7f",
+  "keyhole_gold/keyhole_gold.urdf": "5acecc9bfa9330be5fa85f661f2a9ed4b453857d13e88cf9cf9268ffbe37db8c",
+  "keyhole_gold/visual.glb": "77dcb73710dffaf60a8ea08030514192a7907f87946a9b2ecfedc0eec3043779",
+  "keyhole_silver/collision_000.obj": "f237237e72d9400fca2f0c5af4fbcb178177fbca329daf18627f99257548da40",
+  "keyhole_silver/collision_001.obj": "25d19dd7b02d8baf20e21a3f80909e73c1d008afccee1802b7217a55562235a5",
+  "keyhole_silver/collision_002.obj": "3d54388975a0a46a56639a612fb7b35b2ae41796aa5f2fb7a3c654c9015a9e9e",
+  "keyhole_silver/collision_003.obj": "e0f253e9b8965e9f6d30f4b243ab16acac426b2938d0a95e437621b45c89ff78",
+  "keyhole_silver/collision_004.obj": "e57ad74326356b40f69dba400726d8e8df8ce4e606174e640bfedaee8171550d",
+  "keyhole_silver/collision_005.obj": "bc7065aca522c312c3e8b5c57bb654c68b0dc35b939889320c2bf74f3265981c",
+  "keyhole_silver/collision_006.obj": "45e0e9720c0a547991c9882b8eddaf3f4529e33bab1438b975fe403b64fa4204",
+  "keyhole_silver/collision_007.obj": "bb7d363ed8efe01dd059376ec4055d492366d4c2a7c7a296b0b9b8bb6ca3bbd0",
+  "keyhole_silver/collision_008.obj": "7450d763b7ccedca864ecf99300c46692d224f7a00de5606b92c71bebe820965",
+  "keyhole_silver/collision_009.obj": "02cb6ed0eac7fb1a5825d0d137211974ef2e2c713b8ae3c340cff08037dff5dd",
+  "keyhole_silver/collision_010.obj": "683b12e1419d9851e26f3763ef1bdc1000b3fc73fe4aca4d7122eed7516a33e0",
+  "keyhole_silver/collision_011.obj": "b172de7531ff52457df9a0af30f4c3bb0bf6129ea15df2484fb6aab7b7f04525",
+  "keyhole_silver/collision_012.obj": "87394c77393231d2648778d5cd9b1eedffafeb385e154e5c58533824d7de2475",
+  "keyhole_silver/collision_013.obj": "0f228190b1509e0ad0aebeb1207d3ab4528bac4190d458920c83d8e98dd65f24",
+  "keyhole_silver/collision_014.obj": "32fb17eb3db5f9dbb4860c081a581167e48f08e6ed0eb9d1d946c31fd124f34b",
+  "keyhole_silver/collision_015.obj": "b90a9cc3280b3d19ed53a4fe03486b6d56242a8f2bab762ade923e4a47a9df01",
+  "keyhole_silver/collision_016.obj": "e904498c0100870daeb52865296bbf6d04afc1306f464111c4ddd830b24c9df1",
+  "keyhole_silver/collision_017.obj": "dc0b87efc91797188e4dc645f48ed46ef6d08b8440d9da4bf3be208e531609a5",
+  "keyhole_silver/collision_018.obj": "af40979748456866b074a370d54b6c582054c2b7414b920613683896a5cb2d01",
+  "keyhole_silver/collision_019.obj": "9957f9b958300a2fc84a07bfa6bc4256f0af5e912f5d96ba0437e39a96d34006",
+  "keyhole_silver/collision_020.obj": "21de9d89ad443d3a1ffda86cded7cff4376c8041b525f069e6fbd3ac13f9e98b",
+  "keyhole_silver/collision_021.obj": "73be4137671e3c8f5564e114696f926f71c0cbddf4ef4896b44c21a2cbc14266",
+  "keyhole_silver/keyhole_silver.urdf": "bf3a26acf9bdf45fcfa155afb5af5009eda104ae4359fd7ebd5e579e1d2d6c59",
+  "keyhole_silver/visual.glb": "59dc02f3a010737f67717067f050e25c26fca82e57dcf4995b02f1d18320a935",
+  "template.json": "05ef9de9c7b49c75911123f48378eaf593b3c0c76609b7b5ed96fc6ef4787b8d"
+ },
+ "genesis_version": "1.2.1",
+ "topogym_source": {
+  "sha256": "9b569aabe36d571402b80526cde1c7e57abf1d90834c986987191fda675e2595",
+  "files": 287
+ },
+ "resolved_variation_id": "cast_keyhole_very_easy",
+ "scene_variation": null,
+ "effective_task_parameters": {
+  "scale": 3.0,
+  "center_xy_m": [
+   -0.1356786,
+   0.05
+  ],
+  "yaw_deg": 0.0,
+  "initial_floor_clearance_m": 0.0005,
+  "stable_duration_s": 0.5,
+  "minimum_separation_m": 0.02,
+  "piece_tint": {
+   "gold": 1.0,
+   "silver": 1.0
+  }
+ },
+ "public_goal": {
+  "schema_version": 1,
+  "task_id": "cast_keyhole",
+  "variation_id": "cast_keyhole_very_easy",
+  "seed": 0,
+  "terminal_revision": "cast_keyhole_placement_v4_grasp_contact_2mm",
+  "summary": "Separate and place the entire silver keyhole piece inside the green dashed goal region. Keep the gold piece on the puzzle/system side.",
+  "stable_duration_s": 0.5,
+  "success_conditions": [
+   "Put every part of the entire silver keyhole piece inside the fixed goal volume, leaving at least 1 mm inside its horizontal border. The centre alone is insufficient; no tip, spike, ring segment or cord segment may remain outside.",
+   "Keep the target above the tabletop (contact tolerance 1 mm below the surface) and within the goal volume's height. It need not touch the table. The goal volume extends 244.54 mm above the tabletop.",
+   "Keep the gold piece, and every other remaining puzzle component, entirely on the system side of the fixed separator. Moving the whole puzzle into the goal is not completion.",
+   "Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. Holding the target with the gripper is allowed; release is not required."
+  ],
+  "failure_conditions": [
+   "A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure."
+  ]
+ },
+ "evaluable_for_task_success": true,
+ "success_rule": "his default success (goal_complete True; terminal revision cast_keyhole_placement_v4_grasp_contact_2mm)"
+}

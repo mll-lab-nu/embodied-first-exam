@@ -31,6 +31,7 @@ COPPER_EXPOSURE_M = .003
 
 @dataclass(frozen=True)
 class FiberLayout:
+    minimum_fiber_count = 3
     seed: int = 7
     fiber_count: int = 8
     trunk_radius_m: float = .012
@@ -57,8 +58,8 @@ class FiberLayout:
         for name in ("seed", "fiber_count", "trunk_segments", "fiber_segments", "ring_segments"):
             if isinstance(values[name], bool) or not isinstance(values[name], int):
                 raise ValueError(f"{name} must be an integer")
-        if self.seed < 0 or not 3 <= self.fiber_count <= 16:
-            raise ValueError("Use a nonnegative seed and 3–16 fibers")
+        if self.seed < 0 or not self.minimum_fiber_count <= self.fiber_count <= 16:
+            raise ValueError(f"Use a nonnegative seed and {self.minimum_fiber_count}–16 fibers")
         if min(self.trunk_segments, self.fiber_segments) < 2 or self.ring_segments < 32:
             raise ValueError("Insufficient cable or ring resolution")
         if any(v <= 0 for k, v in values.items() if k != "seed"):

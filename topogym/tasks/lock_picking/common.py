@@ -20,8 +20,22 @@ from ..scene_presets import defaults, record_preset, PRESETS
 from topogym.assets.scene_visuals import surface, finish_generated_urdf, localize_generated_urdfs
 
 
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """Place the existing contact-gated grasp region on this key's handle."""
+    from topogym.config.registry import task_definition
+    from topogym.utils.grasp import GraspAssistConfig, GraspTarget
+    task = task_definition("lock_picking", variation_id, seed)(task_parameters, seed=seed)
+    geometry = task.geometry_type(**task.config["geometry"])
+    geometry.validate()
+    return GraspAssistConfig(
+        model="contact_weld_v1", stable_time_s=.05,
+        targets=(GraspTarget("lock_key", "key", (-geometry.grip_offset, 0., 0.), .032),),
+    )
+
+
 class LockPickingTask(TaskDefinition):
     task_id = "lock_picking"
+    geometry_type = LockGeometry
     instruction = 'Insert the key through the lock until its leading tab clears the final plate. The rotor pins must remain constrained by their physical slots.'
     terminal_revision = "terminal_v4_bore_contact_default_success"
     physics_model = "rigid_articulated"
@@ -51,7 +65,7 @@ class LockPickingTask(TaskDefinition):
         passive_urdf = {"merge_fixed_links": False, "default_armature": physics["passive_armature"]}
         mechanism_material = {"friction": physics["friction"]}
         preset = record_preset(self, asset_dir)
-        self.layout = g = LockGeometry(
+        self.layout = g = self.geometry_type(
             **{"axis_z": table_height_m + 0.185,
                **PRESETS[self.task_id]["geometry"], **self.config["geometry"]}
         )
@@ -61,15 +75,15 @@ class LockPickingTask(TaskDefinition):
         base_height = .028
         rest = key_rest_layout(g)
         x_min = rest["tray_start"]-.065
-        x_max = g.first_x+3*g.pitch+.07
+        x_max = g.disc_x(g.disc_count)+.07
         entities = [EntitySpec("lock_base", "box", None,
             ((x_min+x_max)/2, g.center_y, table_height_m+base_height/2), fixed=True,
             morph_options={"size": (x_max-x_min, .21, base_height)},
             surface=surface(self.config["base_finish"]))]
         stops = self.config["rotor_stops"]
         outlines = {}
-        if len(stops) != 3:
-            raise ValueError("Three rotor-stop definitions are required")
+        if len(stops) != g.disc_count:
+            raise ValueError(f"{g.disc_count} rotor-stop definitions are required")
         for i, slots in enumerate(g.slots):
             stop = OmegaConf.create(stops[i])
             if not stop.bounds_deg[0] <= g.initial_disc_deg[i] <= stop.bounds_deg[1]:
@@ -131,7 +145,7 @@ class LockPickingTask(TaskDefinition):
         lower = table_height_m+base_height
         upper = g.axis_z-g.disc_radius
         entities.append(EntitySpec("lock_goal_post", "box", None,
-            (g.first_x+3*g.pitch, g.center_y, (lower+upper)/2), fixed=True,
+            (g.disc_x(g.disc_count), g.center_y, (lower+upper)/2), fixed=True,
             morph_options={"size": (.035, .08, upper-lower)},
             surface=surface("engineering_plastic")))
         entities.extend(
@@ -140,7 +154,7 @@ class LockPickingTask(TaskDefinition):
                     "lock_goal",
                     "urdf",
                     goal,
-                    (g.first_x + 3 * g.pitch, g.center_y, g.axis_z),
+                    (g.disc_x(g.disc_count), g.center_y, g.axis_z),
                     fixed=True,
                     material=mechanism_material,
                 ),
@@ -216,7 +230,7 @@ class LockPickingTask(TaskDefinition):
         radial = rotation.apply([0., 0, 1.])
         angle = float(np.degrees(np.arctan2(radial[1], radial[2])))
         depth = (p[0]-g.first_x)/g.pitch+1
-        # Tilt is constrained by passage through all four finite bores, not by
+        # Tilt is constrained by passage through every finite bore, not by
         # an independent coaxiality angle. Backwards/transverse keys cannot pass.
         aligned = axis[0] > 1e-8
         offsets = []
@@ -225,7 +239,7 @@ class LockPickingTask(TaskDefinition):
         shaft_through_all = False
         bore_excess = None
         if aligned:
-            for i in range(4):
+            for i in range(g.disc_count+1):
                 x = g.disc_x(i)
                 for face in (x-g.disc_thickness/2, x+g.disc_thickness/2):
                     coordinate = (face-p[0])/axis[0]
@@ -247,17 +261,17 @@ class LockPickingTask(TaskDefinition):
             shaft_through_all = spans(shaft_coordinates)
         # Conservative x extent of the leading tab under small residual tilt.
         tab_back = p[0]-g.tab_thickness/2*abs(axis[0])-g.tab_radius*np.linalg.norm(rotation.as_matrix()[0, 1:])
-        inserted = tab_back >= g.disc_x(3)+g.disc_thickness/2+cfg["insertion_margin_m"]
+        inserted = tab_back >= g.disc_x(g.disc_count)+g.disc_thickness/2+cfg["insertion_margin_m"]
         issues = g.clearance(depth, angle, angles)
         # Expand slab tests for tilt and angular tests for the allowed offset.
         radial_error = max(offsets, default=g.bore_radius)
         angular_allowance = np.degrees(np.arcsin(min(1., radial_error/g.tab_radius)))+tilt
-        for tab in range(3):
+        for tab in range(g.tab_count):
             tab_center = p+rotation.apply([-tab*g.pitch, 0, 0])
             extent = g.tab_thickness/2*abs(axis[0])+g.tab_radius*np.linalg.norm(rotation.as_matrix()[0, 1:])
-            for i in range(4):
+            for i in range(g.disc_count+1):
                 if abs(tab_center[0]-g.disc_x(i)) <= extent+g.disc_thickness/2:
-                    margin = (g.slot_margin(angle, angles[i], i) if i < 3 else
+                    margin = (g.slot_margin(angle, angles[i], i) if i < g.disc_count else
                               g.slot_half_deg-g.tab_half_deg-abs((angle-g.endpoint_deg+180)%360-180))
                     if margin < angular_allowance:
                         issues.append(f"tab{tab}/plate{i}/pose_clearance")

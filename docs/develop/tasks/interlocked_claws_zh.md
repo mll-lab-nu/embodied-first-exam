@@ -34,7 +34,31 @@
 
 very_easy 参考动作是约 12° 小角度解钩后拉开；easier 使用十段相对旋转／平移通路退出方框。两者的物体间连续净空证书均使用 1.5 mm 余量；双臂预检通过不等于连续机器人碰撞证明，也不代表物理执行成功或难度排名已校准。
 
-运行命令见 [Oracle 入口说明](../../../scripts/oracle_runners/README.md#claws-两档简化变体)。本轮独立证据保存在 [开发运行目录](../../../runs/test_results/claws_simplified_development_20261002/)，保留各次失败尝试、源码哈希及实际时序。新增 10 项回归、现有 Oracle 16 项回归和独立 wheel 加载检查已通过；完整物理执行及任务包验证以各运行最终报告为准，不由这些静态检查推断。
+### 验收结果
+
+运行命令见 [Oracle 入口说明](../../../scripts/oracle_runners/README.md#claws-两档简化变体)。本轮独立证据保存在 [开发运行目录](../../../runs/test_results/claws_simplified_development_20261002/)，保留各次失败尝试、源码哈希及实际时序。
+
+| 变体 | 完整真实执行 | 媒体与证据 |
+| --- | --- | --- |
+| very_easy | seed 0，CPU float64，108.775 s / 4,351 ticks；`task_success=True`，低速保持 0.5 s | [无 RGB 报告](../../../runs/test_results/claws_simplified_development_20261002/very_easy_attempt04_cpu/run_report.json) · [Nyx 录制运行报告](../../../runs/test_results/claws_simplified_development_20261002/very_easy_attempt05_cpu_rgb/run_report.json) |
+| easier | seed 0，CPU float64，517.675 s / 20,707 ticks；`task_success=True`，低速保持 0.5 s | [完整运行报告](../../../runs/test_results/claws_simplified_development_20261002/easier_attempt04_cpu/run_report.json) · [实际逐 tick 状态](../../../runs/test_results/claws_simplified_development_20261002/easier_attempt04_cpu/private/physics_states.jsonl)；本次完整执行未开 RGB |
+
+完整执行使用显式 25 ms World tick × 40 solver substeps、40 Hz 控制、终态合同 1，以及声明的预抓持辅助。very_easy 的无 RGB 与 Nyx 运行均成功，物理步数、用时和最大采样接触深度相同。四路解锁／搬运录像来自同一录制运行的 segment 2：[cam_high](../../../runs/test_results/claws_simplified_development_20261002/very_easy_attempt05_cpu_rgb/segments/segment_2/videos/cam_high.mp4) · [cam_low](../../../runs/test_results/claws_simplified_development_20261002/very_easy_attempt05_cpu_rgb/segments/segment_2/videos/cam_low.mp4) · [左腕](../../../runs/test_results/claws_simplified_development_20261002/very_easy_attempt05_cpu_rgb/segments/segment_2/videos/cam_left_wrist.mp4) · [右腕](../../../runs/test_results/claws_simplified_development_20261002/very_easy_attempt05_cpu_rgb/segments/segment_2/videos/cam_right_wrist.mp4)。取得抓持的前 0.2 s 单独保存在该运行的 segment 1，未拼接成新视频。
+
+[交付审计](../../../runs/test_results/claws_simplified_development_20261002/delivery_audit.json)核对了全部 tick 连续性、执行证据完整性、当前 Claws 源码与成功快照一致，以及两手全程未丢失抓持。采样件间最大穿透为 very_easy 0、easier 约 0.000436 mm；包含握持接触的任务件最大穿透分别约 0.881 / 0.626 mm。记录范围是 World tick，未据此声称连续子步接触、完整机器人自碰撞或驱动力资格。上述用时含保守等待，不是难度排名；完整默认 CUDA 物理时序、更多 seed 和全族资格尚未认证。
+
+新增 10 项回归、现有 Oracle 16 项回归、[最终源码的独立 wheel 检查](../../../runs/test_results/claws_simplified_development_20261002/package_check04_final/report.json)通过。几何与参考 JSON 在独立安装中可用，评测镜像排除了规划解法。
+
+### 冻结任务包
+
+通过公共生成器生成并登记到 [tasks/dataset.toml](../../../tasks/dataset.toml)：
+
+- [very_easy privileged](../../../tasks/topogym-interlocked-claws-very-easy-i00-privileged/) / [standard](../../../tasks/topogym-interlocked-claws-very-easy-i00-standard/)
+- [easier privileged](../../../tasks/topogym-interlocked-claws-easier-i00-privileged/) / [standard](../../../tasks/topogym-interlocked-claws-easier-i00-standard/)
+
+本地镜像 `topogym-local/interlocked-claws-variants:20261002-01`，源码身份 `8f919bfd6ac1017c46e58724863bd190a163f1eded5ae7b0ffcb1ad05d04f9e1`，见[镜像记录](../../../runs/test_results/claws_simplified_development_20261002/harbor_image/report.json)。两个模式的实例文件逐字节一致。任务包保留工具冻结的 CPU、2.5 ms tick × 4 substeps、40 Hz 和终态合同 1；该时序与上方完整参考求解不同。
+
+两档完成真实三步保持、重置和 Nyx 录像，以及独立 privileged verifier 两遍重放：均 `instance_exact=1`、`deterministic=1`、`grader_error=0`，未解题前缀正确得到 0 分，媒体完整，见[评分验收](../../../runs/test_results/claws_simplified_development_20261002/harbor_verifier_retry02/report.json)。初次验证命令的不可写工作目录导致 Nyx 缓存错误，失败记录保留；修正的是验证命令。四包结构／字段检查、数据集清单检查和全库 110 包 tooling v10 身份检查通过。此处没有宣称 standard live 服务全链路、Harbor 完整正例评分或远端镜像发布已经完成。
 
 2026-09-30：medium 与 easy/hard 统一声明 `pregrasp_weld=True`，新评测实例通过 `recommended_grasp_assist()` 启用 `contact_weld_v1`。两只手分别对各自零件取得辅助抓持，保持取得时零件相对 hand link 的位置与朝向；两件之间的相对运动和碰撞仍由物理求解器处理。闭合预抓初态使用 `initial_intent="close"`，仍需双指接触连续满足准入 0.02 s，张开夹爪即解除该手约束。实际启用以实例的 `simulator.grasp_assist` 为准，旧实例不会自动开启；此配置调整不新增完整物理成功记录。
 

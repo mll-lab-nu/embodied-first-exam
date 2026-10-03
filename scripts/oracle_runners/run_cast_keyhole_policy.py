@@ -255,6 +255,7 @@ def simplified_worker(args, output):
         work_dir=output/"scene", grasp_assist=recommended_grasp_assist(args.variation, args.seed))
     report = dict(status="running", config=to_jsonable(config), reference_status="candidate",
                   variation=task.variation_id, part=args.part, started=time.time(),
+                  policy_parameters=dict(gripper_closed_native_m=args.gripper_close),
                   from_default_home=True, timings={},
                   assistance="automatic contact_weld_v1; actual opposing finger contacts required",
                   timing_scope="default" if args.tick == .0025 else "explicit nondefault grouped tick",
@@ -271,7 +272,7 @@ def simplified_worker(args, output):
             policy = SimplifiedKeyholePolicy(geometry=record, variation=task.variation_id,
                 body_origins=origins, goal_region=report["terminal"]["goal_region"],
                 mount_position=[0., 0., 0.], canonical_vertices=vertices,
-                part=args.part, speed=args.speed)
+                part=args.part, speed=args.speed, gripper_closed_native_m=args.gripper_close)
             def before_phase(candidate):
                 if candidate.phase != "gold_raise_clear":
                     return
@@ -343,12 +344,16 @@ def main():
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--horizon", type=float, default=900.)
     parser.add_argument("--speed", type=float, default=1.)
+    parser.add_argument("--gripper-close", type=float, default=.002,
+                        help="Simplified policy native close target; frozen Harbor v6 width zero maps to 0.00746875 m")
     parser.add_argument("--tick", type=float, choices=[.0025, .025], default=.0025,
                         help=".025 groups ten integration blocks per saved tick; explicit faster qualification timing")
     parser.add_argument("--worker", action="store_true")
     args = parser.parse_args()
     if args.speed <= 0 or args.horizon <= 0:
         parser.error("speed and horizon must be positive")
+    if not 0 <= args.gripper_close < .024:
+        parser.error("--gripper-close must lie in [0, 0.024)")
     output = Path(args.output).resolve()
     if args.worker:
         return worker(args, output)
@@ -359,7 +364,7 @@ def main():
     command = [sys.executable, str(source/"scripts/oracle_runners/run_cast_keyhole_policy.py"), "--worker",
         "--output", str(output), "--variation", args.variation, "--part", args.part,
         "--backend", args.backend, "--seed", str(args.seed), "--horizon", str(args.horizon), "--speed", str(args.speed),
-        "--tick", str(args.tick)]
+        "--tick", str(args.tick), "--gripper-close", str(args.gripper_close)]
     if args.rgb:
         command.append("--rgb")
     (output/"invocation.json").write_text(json.dumps(dict(command=command), indent=2)+"\n")

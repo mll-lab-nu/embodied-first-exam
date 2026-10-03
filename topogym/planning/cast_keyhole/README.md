@@ -1,10 +1,16 @@
 # Cast Keyhole policy 与实际可解性验证
 
-2026-10-02：`very_easy`／`easier` 使用原三档标准尺寸、初始装配和默认摆位。新增策略从 home 连续接近自然落稳后的两片，左手抓金片开口侧外端、右手抓银片闭合外端，双指接触片面后提起、转姿和退出。very_easy 走直通槽，easier 在两处错位横移；最后将银片送入原目标区。两档均已在普通 `Env + SegmentRunner` 中独立完整成功，分别为 125.3325 s 和 155.0575 s，有四路完整录像及接触审计；Harbor 资格另行验收。当前范围、失败对照与证据见[工程说明第 7 节](../../../docs/tasks_simplifications/devs/cast_keyhole_very_easy_easier_oracle_plan_zh.md#7-开发中调整外端面夹持)。下方历史成功结果只适用于 F1／F2／F3。
+2026-10-02：`very_easy`／`easier` 使用原三档标准尺寸、初始装配和默认摆位。新增策略从 home 连续接近自然落稳后的两片，左手抓金片开口侧外端、右手抓银片闭合外端，双指接触片面后提起、转姿和退出。very_easy 走直通槽，easier 在两处错位横移；最后将银片送入原目标区。两档均已在普通 `Env + SegmentRunner` 中独立完整成功，有四路完整录像及接触审计。两档的 Harbor standard／privileged 验收也均已完成：oracle 得 1，nop 得 0，独立物理回放与录像完整解码通过。正式参考的模拟时间分别为 125.3325 s 和 155.605 s；easier 使用正式 Session 内生成的闭环参考，其两份本地导出轨迹仍保留公开回放失败记录。四个新任务已在 `tasks/` 登记 `oracle = "full"`，限定本轮 seed 0 和冻结 v6 本地镜像。当前范围、失败对照与证据见[工程说明第 7 节](../../../docs/tasks_simplifications/devs/cast_keyhole_very_easy_easier_oracle_plan_zh.md#7-开发中调整外端面夹持)。下方历史成功结果只适用于 F1／F2／F3。
 
 新两档的入口仍为 `scripts/oracle_runners/run_cast_keyhole_policy.py`：使用 `--variation very_easy` 或 `--variation easier`，`--part all --rgb --backend cuda --output <新的输出目录>`。`--part pickup` 只验收抓取和提起。默认采用 2.5 ms 物理 tick、4 个求解子步和 40 Hz 控制；保留原生 IK 精度与 Task 判据。
 
 `kinematics.py` 在接近前检查原生 IK 和碰撞网格，在收尾前同时检查双臂及被抓住的两片。`oracle_artifacts.py` 只记录阶段、导出实际执行的关节目标；原生指关节坐标不等于 Harbor 开口宽度。私有候选打包入口为 `scripts/oracle_runners/package_cast_keyhole_oracle.py --run <完整成功目录> --instance <冻结实例> --output <新目录>`，需独立回放和 Harbor 双模式验证后才能登记正式 oracle。开发工具不进入策略或正式镜像。
+
+候选脚本在第一个动作前检查「原生夹爪目标 → float32 公开宽度 → 原生目标」的往返误差，超过 1 μm 默认拒绝。冻结的 Harbor v6 中，原生 `.002 m` 和 `.00746875 m` 都会变成零开口，但零开口反算为后者；这会改变实际抓持变换。重新生成参考时可用 `--gripper-close 0.00746875`，仍须实际完整成功及公开回放验证。该值只适用于已经测过的冻结适配器，不作为其他版本的通用常量。旧参考有意测试有损转换时，打包器要求 `--allow-gripper-roundtrip-loss '<原因>'` 并保留记录；这不授予成功资格。
+
+本轮 easier 的接口兼容参考使用 `--variation easier --gripper-close 0.00746875 --part all --rgb --backend cuda`；156.2075 s 成功记录及冻结源码保存在 `runs/test_results/cast_keyhole_oracle_20261002_01/large_runs/easier_public_compatible_full_01/`。这份本地参考和默认 `.002` 的旧参考均未通过跨环境公开重放；它们保留为本地成功证据。
+
+easier 的自然落稳在机器人接触之前就出现约 1–2 mm 差异。`package_cast_keyhole_oracle.py --feedback` 因此只将必要的被动策略及 `public_session.py` 放入私有 solution，在冻结 Session 内根据实际状态生成动作。适配器沿用原生 IK，经 `Session.step()` 执行，由既有 recorder 记录；没有物体写入、强制抓持、reset 或开发工具依赖。候选还需独立回放成功，不能仅以闭环执行通过登记资格。清单中的本地命令哈希是设计依据，实际资格绑定正式执行产生的轨迹及所有私有辅助模块哈希。
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 

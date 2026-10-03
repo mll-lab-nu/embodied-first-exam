@@ -215,7 +215,7 @@ class DevelopmentOwner:
             step=self.env is not None, run_policy=self.env is not None, checkpoint=True,
             capture_frame=bool(self.env is not None and self.config.enable_rgb),
             rendering="on-demand shared Nyx SensorSuite; no RGB during control steps",
-            probe_adapter=self.config.task_id == "cast_keyhole" and self.config.variation_id != "seeded",
+            probe_adapter=self.config.task_id in {"cast_keyhole", "horseshoe_ring"} and self.config.variation_id != "seeded",
             object_edits="detached geometry only", probe_grasp="kinematic constraint; no contact qualification",
             solve_ik=self.env is not None, check_robot_path=self.env is not None,
             dynamic_teleport=False, dynamic_pin=False, cross_process_native_checkpoint=False,

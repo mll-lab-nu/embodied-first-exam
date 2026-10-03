@@ -190,6 +190,11 @@ def install_for_scene(scene, *, initial_robot_positions=None):
                     qpos, qs_idx=slice(robot.q_start, robot.q_end)
                 )
             super().build()
+            # Upstream articulation arrays start at zero although the native
+            # geometry is already built at the configured home. Scene.build's
+            # first warm-up precedes reset(), so initialize the same reference
+            # here too: a home angle is a pose, not the first joint increment.
+            self._reset_articulation_reference()
             geoms = self.rigid_solver.geoms
             pairs = self.rigid_solver.collider._valid_collision_pairs
             names = [(geoms[a].entity.name, geoms[b].entity.name) for a, b in pairs]
@@ -323,6 +328,13 @@ def install_for_scene(scene, *, initial_robot_positions=None):
             # state and the next joint update. Rebuild those inputs from reset
             # Genesis/native states, without advancing either clock.
             self._target_substep = 0
+            self._reset_articulation_reference()
+            self._retrieve_fem_states()
+            self._retrieve_rigid_states()
+            self._sync_check_active = True
+
+        def _reset_articulation_reference(self):
+            """Align Python joint references with the current Genesis pose."""
             self._store_gs_rigid_states()
             for data in self._articulation_data_by_entity.values():
                 data.ref_dof_prev[:] = data.qpos_stored
@@ -333,9 +345,6 @@ def install_for_scene(scene, *, initial_robot_positions=None):
                 data.prev_links_transform = [
                     [None] * self.sim._B for _ in data.joints_child_link
                 ]
-            self._retrieve_fem_states()
-            self._retrieve_rigid_states()
-            self._sync_check_active = True
 
         def _register_contact_pairs(self):
             super()._register_contact_pairs()

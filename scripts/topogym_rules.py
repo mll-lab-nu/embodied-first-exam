@@ -93,18 +93,22 @@ def grader_details(fam, inst, *, limited):
             "contact coverage (a simulator-side condition), the episode can no longer succeed.",
         ]
     if fam == "lock_picking":
+        rotors = len(g.get("slots", [None]*3))
+        faces = 2*(rotors+1)
+        rotor_word = {2: "two", 3: "three"}[rotors]
+        tilt_word = "0.38" if rotors == 2 else "0.25"
         bore, shaft = float(g.get("bore_radius", .0075)), float(g.get("shaft_radius", .0065))
         tab_r, tab_h, slot_h = float(g.get("tab_radius", .036)), float(g.get("tab_half_deg", 4)), float(g.get("slot_half_deg", 8))
         tol = float((tp.get("terminal", {}) or {}).get("shaft_contact_tolerance_m", 1e-5))
         rot_tol = float((tp.get("terminal", {}) or {}).get("rotor_tolerance_deg", .5))
         out += [
-            f"Sizes: bore radius {_mm(bore)}, shaft radius {_mm(shaft)}. At each of the 8 plate faces (three "
+            f"Sizes: bore radius {_mm(bore)}, shaft radius {_mm(shaft)}. At each of the {faces} plate faces ({rotor_word} "
             f"{_mm(g.get('disc_thickness', .01))} rotor plates and END, {_mm(g.get('pitch', .15), 0)} apart), the shaft axis' "
             f"distance from the bore axis plus {_mm(shaft)} / cos(tilt) may exceed {_mm(bore)} by at most {_mm(tol, 2)}: "
             f"about {_mm(bore - shaft + tol, 2)} of offset when the key is straight, which over the stack allows only about "
-            "0.25 degrees of tilt.",
+            f"{tilt_word} degrees of tilt.",
             f"The shaft reaches from {_mm(float(g.get('grip_offset', .495)) + .02, 0)} behind the leading tab to 15 mm in "
-            "front of it; all 8 plate faces must lie within that length.",
+            f"front of it; all {faces} plate faces must lie within that length.",
             f"Tabs: radius {_mm(tab_r, 0)}, half-width {tab_h:g} degrees; slots: half-width {slot_h:g} degrees. A tab that "
             f"overlaps a plate must sit inside one of that plate's slots with an angular margin of at least asin(axis offset / "
             f"{_mm(tab_r, 0)}) + the tilt.",
@@ -113,14 +117,24 @@ def grader_details(fam, inst, *, limited):
         lim = []
         for k, st in enumerate(stops[:3]):
             lo, hi = (st["bounds_deg"] if isinstance(st, dict) else st)
+            if rotors == 2:
+                initial = g.get("initial_disc_deg", [0., 0.])[k]
+                if k == 0 and initial > 0:
+                    lim.append(f"rotor 1 can turn {initial-lo:g} degrees toward the second rotor's slot "
+                               f"({initial:g} degrees aligns the slots), or {hi-initial:g} degrees away")
+                else:
+                    lim.append(f"rotor {k+1} can turn {hi-initial:g} degrees one way and {initial-lo:g} degrees the other")
+                continue
             if hi - lo < 360:
                 lim.append(f"rotor {k + 1} {abs(lo):g} degrees one way and {abs(hi):g} degrees the other"
                            if lo < 0 < hi and abs(lo) != abs(hi) else f"rotor {k + 1} {abs(hi):g} degrees either way")
             else:
                 lim.append(f"rotor {k + 1} turns freely")
         if lim:
-            out.append("Rotor stops (from each rotor's start angle; \"the other way\" is the sense that turns rotor 2's slot "
-                       f"toward the tabs' starting angle): {'; '.join(lim)}. Going more than {rot_tol:g} degrees beyond a "
+            reference = ("Rotor stops (from each rotor's start angle)" if rotors == 2 else
+                         "Rotor stops (from each rotor's start angle; \"the other way\" is the sense that turns rotor 2's slot "
+                         "toward the tabs' starting angle)")
+            out.append(f"{reference}: {'; '.join(lim)}. Going more than {rot_tol:g} degrees beyond a "
                        "stop ends the episode.")
     if fam == "fiber_bundling":
         n = g.get("fiber_count")
@@ -149,12 +163,16 @@ def grader_details(fam, inst, *, limited):
         ]
     if fam == "rope_threading":
         inner = g.get("ring_inner_radius_m") or .069
-        out += [
-            f"Sizes: each ring's inner radius is {_mm(inner)} and its tube 12 mm thick (radius 6 mm); the rope's radius is "
-            f"4 mm. So the rope's centreline must pass less than {_mm(float(inner) - .004 - .0001, 1)} from a ring's centre, "
-            "and the passage is checked on the ring's middle plane and on the planes 6 mm to either side of it.",
-            "The material start is the rope end that is farther from the rings at the start.",
-        ]
+        if g.get("ring_shape") == "lower_semicircle":
+            out.append("The cyan fixture is the lower semicircle of a 75 mm centreline-radius ring, with a 6 mm tube "
+                       "radius. Its upper half is physically absent; the rope radius is 4 mm. This is a draping task.")
+        else:
+            out += [
+                f"Sizes: each ring's inner radius is {_mm(inner)} and its tube 12 mm thick (radius 6 mm); the rope's radius is "
+                f"4 mm. So the rope's centreline must pass less than {_mm(float(inner) - .004 - .0001, 1)} from a ring's centre, "
+                "and the passage is checked on the ring's middle plane and on the planes 6 mm to either side of it.",
+                "The material start is the rope end that is farther from the rings at the start.",
+            ]
     if fam == "blanket_flatten":
         L, W = float(tp.get("length_m", .6)), float(tp.get("width_m", .48))
         cov, pad = float(tp.get("minimum_coverage_ratio", .9)), float(tp.get("particle_size_m", .008))

@@ -232,7 +232,7 @@ TASKS: dict[str, dict] = {
              "the ring. The rear terminal stays anchored and must not pass through the ring. Any gripper contact with a "
              "fine fiber ends the task in failure. Avoid sharp bends and collisions; passing only the tips is not "
              "completion. Keep the completed configuration stable.",
-        instances=[dict(variation_id="fiber_bundling_medium", seed=0)]),
+        instances=[dict(variation_id="fiber_bundling_medium", seed=0)], grasp_assist="recommended"),
     "hedgehog_in_cage": dict(
         task_id="hedgehog_in_cage", robot="panda_robotiq",
         text="Extract the spiked hedgehog ball from the cage. Place the whole ball, including every spike, inside the "
@@ -263,10 +263,9 @@ TASKS: dict[str, dict] = {
              "bores and the leading tab beyond END; normal wall contact and geometrically valid tilt are allowed. "
              "Respect the tab slots and rotor stops. Holding is allowed; preserve the completed insertion during confirmation.",
         instances=[dict(variation_id="lock_picking_medium", seed=0)],
-        # Match the reference policy's handle grasp for all three current tiers.
+        # Resolve the handle region from the selected variant's shaft length.
         # Frozen instances retain their own simulator config, including legacy none.
-        grasp_assist=dict(model="contact_weld_v1", stable_time_s=0.05,
-            targets=[dict(entity="lock_key", link="key", center_m=(-0.495, 0., 0.), radius_m=0.032)])),
+        grasp_assist="recommended"),
     "orbits": dict(
         task_id="orbits", robot="aloha",
         text="Free the complete cord and wooden handle from the fixed ring-and-post assembly. Place the entire cord and "

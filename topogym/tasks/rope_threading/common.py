@@ -1,6 +1,7 @@
 """Threading FEM rope and rigid ring declarations; no second simulation backend."""
 
 from pathlib import Path
+from dataclasses import replace
 import numpy as np
 from scipy.spatial.transform import Rotation
 from topogym.utils.geometry.rope import load_centerline_map, sample_material_centerline
@@ -25,7 +26,7 @@ class RopeThreadingTask(TaskDefinition):
 
     def declare(self, asset_dir, table_height_m):
         self.table_height_m = float(table_height_m)
-        # Keep the whole source assembly clear of the ALOHA mounting feet.
+        # The task-specific ALOHA risers restore the Wang reference clearance.
         self.layout = ThreadingLayout(**(PRESETS[self.task_id]["geometry"] | self.config["geometry"]))
         folder = Path(asset_dir)
         preset = record_preset(self, folder)
@@ -74,6 +75,27 @@ class RopeThreadingTask(TaskDefinition):
                 goal_evaluation_complete=bool(self.goal_complete),
             ),
         )
+
+    def finalize_spec(self, spec, *, asset_dir, scene_config):
+        if scene_config.robot_control.robot.name != "aloha":
+            return spec
+        height = float(scene_config.robot_control.robot.get("base_riser_height_m", 0.))
+        if height <= 0:
+            return spec
+        mount = scene_config.env.robot_mount
+        rotation = Rotation.from_euler("xyz", mount.euler, degrees=True)
+        quaternion = tuple(rotation.as_quat()[[3, 0, 1, 2]])
+        # Narrow supports under the original base axes leave the tabletop rope
+        # free below the overhanging flanges. The robot itself is not rescaled.
+        risers = tuple(EntitySpec(
+            f"{side}_base_riser", "box", None,
+            tuple(np.asarray(mount.pos) + rotation.apply((x, -.019, height / 2))),
+            quaternion, fixed=True, material={"coup_type": "ipc_only"},
+            morph_options={"size": (.07, .07, height)},
+            surface={"color": (.24, .26, .28, 1.), "metallic": .5, "roughness": .5},
+        ) for side, x in (("left", -.469), ("right", .469)))
+        return replace(spec, entities=(*spec.entities, *risers),
+                       metadata={**spec.metadata, "aloha_base_riser_height_m": height})
 
     def evaluate_state(self, state):
         soft = state["fem"]["rope"]

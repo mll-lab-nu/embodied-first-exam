@@ -6,5 +6,5 @@ from .common import RopeThreadingTask
 class RopeThreadingMediumTask(RopeThreadingTask):
     variation_id = 'rope_threading_medium'
     family_id = 'wang_reference_v1'
-    model_revision = 'simulator_v1_fem_soft50_fine_v1'
+    model_revision = 'three_rings_yaw0_v2_fem_soft50_fine_v1'
     difficulty = 'medium'

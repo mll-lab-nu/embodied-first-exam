@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Record a lock oracle through standard passive policy dispatch and Env.step.
 
-The historical medium route remains available. Reindex mode supports all three
-current families and can record IK/FK for every Cartesian action. All physics
+The historical medium route remains available. Reindex supports the three
+original families; simplified supports the two-rotor variants. Both can record
+IK/FK for every Cartesian action. All physics
 parameters and measured engine properties are recorded, including failed runs.
 Solve runs end at native Task success, which may occur while still grasping.
 """
@@ -120,6 +121,7 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
     from topogym.simulator import Env, SimulatorConfig, SegmentRunner
     from topogym.planning.lock_picking.lock_picking_medium_planning import LockPickingMediumPolicy
     from topogym.utils.grasp import GraspAssistConfig, GraspTarget
+    from topogym.tasks.lock_picking.common import recommended_grasp_assist
     from topogym.utils.io import write_json_atomic, to_jsonable
     from topogym.utils.arrays import to_numpy
     from topogym.simulator.rollout_simulation.segment_contract import fingerprint
@@ -131,9 +133,10 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
         enable_privileged=True, task_parameters=parameters(setting),
         physics_dt_s=physics_dt, solver_substeps=solver_substeps, control_decimation=control_decimation,
         max_physics_steps=round((360 if route_mode == "reindex" else 240)/physics_dt), enable_rgb=not no_rgb,
-        work_dir=output/"scene", grasp_assist=GraspAssistConfig("contact_weld_v1",
+        work_dir=output/"scene", grasp_assist=(recommended_grasp_assist(variation)
+            if route_mode == "simplified" else GraspAssistConfig("contact_weld_v1",
             (GraspTarget("lock_key", "key", center_m=(-.495, 0., 0.), radius_m=.032),),
-            stable_time_s=max(.05, 2*physics_dt)))
+            stable_time_s=max(.05, 2*physics_dt))))
     report = dict(status="running", setting=setting, variation=variation, route_mode=route_mode,
         requested_part=part, config=to_jsonable(config), audit_ik=audit_ik,
         policy_parameters=dict(grasp_style=grasp_style, grasp_roll_deg=grasp_roll_deg,
@@ -145,8 +148,10 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
         qualification="Native Task success is recorded; independent physical process audit remains separate",
         from_default_home=True, policy_access="unlimited world state; ordinary EE_ABS actions only",
         provenance=dict(commit="cb60f01b32786cc9c26f754f91b7be4bef3f9ca6",
-            semantic_route="2026-09-18_standard_150mm_purple_trace_v1 commands.jsonl",
-            changes=("Current family slots and stops with repeated passive reindexing; "
+            semantic_route=("two_rotor_v1 straight insertion / first-rotor contact turn" if route_mode == "simplified"
+                            else "2026-09-18_standard_150mm_purple_trace_v1 commands.jsonl"),
+            changes=("Two-rotor route and short-handle grasp; " if route_mode == "simplified" else
+                     "Current family slots and stops with repeated passive reindexing; "
                      if route_mode == "reindex" else "Recovered mechanism physics and two-retreat slots; ")
                     + "current Panda/Robotiq and lab placement; automatic grasp and regrasp through measured-pose EE actions"))
     write_json_atomic(output/"run_report.json", report)
@@ -163,14 +168,15 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                 initial_robot=to_jsonable(env._robot.observe()),
                 initial_task=to_jsonable(env._task.result), asset_sha256=to_jsonable(env._asset_build.sha256))
             properties = {}
-            for name in ("lock_disc_0", "lock_disc_1", "lock_disc_2", "lock_key"):
+            disc_names = [f"lock_disc_{i}" for i in range(env._task.layout.disc_count)]
+            for name in [*disc_names, "lock_key"]:
                 entity = env._world.entities[name]
                 properties[name] = dict(mass_kg=float(entity.get_mass()),
                     armature=to_numpy(entity.get_dofs_armature()).tolist(),
                     damping=to_numpy(entity.get_dofs_damping()).tolist())
             report["measured_engine_properties"] = properties
             report["task_physics"] = env._task.config["physics"]
-            for name in ("lock_disc_0", "lock_disc_1", "lock_disc_2"):
+            for name in disc_names:
                 measured = properties[name]
                 if not (np.allclose(measured["armature"], 0.) and np.allclose(measured["damping"], .03)
                         and np.isclose(measured["mass_kg"], .12)):
@@ -206,6 +212,8 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                     report["events"].extend(events)
                     progress = dict(state=row["state"], phase=getattr(active[0], "phase", "initial"),
                         key=world["bodies"]["lock_key"], grasp=grasp,
+                        disc_angles_deg=[float(np.degrees(np.asarray(world["articulations"][name]["joints"]["disc_hinge"]["position"]).item()))
+                                         for name in disc_names],
                         task_result=env._task.result, contacts=interesting,
                         robot_qpos=to_numpy(env._robot.entity.get_qpos()).reshape(-1).tolist())
                     monitor.write(json.dumps(to_jsonable(progress), allow_nan=False)+"\n")
@@ -215,7 +223,12 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                 source = json.loads((output/"run_source_manifest.json").read_text())
                 def policy_factory(name):
                     kwargs = dict(geometry=geometry, part=name, grasp_roll_deg=grasp_roll_deg, grasp_style=grasp_style)
-                    if route_mode == "reindex":
+                    if route_mode == "simplified":
+                        from topogym.planning.lock_picking.simplified_policy import SimplifiedLockPickingPolicy
+                        kwargs["rotor_stops"] = env._task.config["rotor_stops"]
+                        kwargs["endpoint_depth"] = endpoint_depth
+                        policy = SimplifiedLockPickingPolicy(**kwargs)
+                    elif route_mode == "reindex":
                         from topogym.planning.lock_picking.reindex_policy import LockPickingReindexPolicy
                         kwargs["rotor_stops"] = env._task.config["rotor_stops"]
                         kwargs["endpoint_depth"] = endpoint_depth
@@ -254,17 +267,24 @@ def main():
     parser.add_argument("--control-decimation", type=int, default=5)
     parser.add_argument("--no-rgb", action="store_true", help="Explicit physics diagnostic; no video qualification")
     parser.add_argument("--compute-backend", choices=("cuda", "cpu"), default="cuda")
-    parser.add_argument("--variation", choices=("easy", "medium", "hard"), default="medium")
-    parser.add_argument("--route-mode", choices=("historical", "reindex"), default="historical")
+    parser.add_argument("--variation", choices=("very_easy", "easier", "easy", "medium", "hard"), default="medium")
+    parser.add_argument("--route-mode", choices=("historical", "reindex", "simplified"), default="historical")
     parser.add_argument("--audit-ik", action="store_true", help="Record checked IK/FK for each robot action")
     parser.add_argument("--precision", choices=("32", "64"), default="32")
-    parser.add_argument("--endpoint-depth", type=float, default=4.08,
-                        help="Final reindex-route insertion in pitches; record extra release-slip margin")
+    parser.add_argument("--endpoint-depth", type=float,
+                        help="Final insertion in pitches: 3.08 for simplified, 4.08 for reindex by default")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
-    if args.variation != "medium" and (args.route_mode != "reindex" or args.setting != "current"):
+    simplified = args.variation in {"very_easy", "easier"}
+    if simplified != (args.route_mode == "simplified") or (simplified and args.setting != "current"):
+        parser.error("very_easy/easier require --route-mode simplified --setting current")
+    if not simplified and args.variation != "medium" and (args.route_mode != "reindex" or args.setting != "current"):
         parser.error("easy/hard require --route-mode reindex --setting current")
-    if not 4.06 <= args.endpoint_depth <= 4.12 or (args.route_mode != "reindex" and args.endpoint_depth != 4.08):
+    if args.endpoint_depth is None:
+        args.endpoint_depth = 3.08 if simplified else 4.08
+    if simplified and not 3.07 <= args.endpoint_depth <= 3.10:
+        parser.error("Simplified endpoint depth must be in [3.07,3.10]")
+    if not simplified and (not 4.06 <= args.endpoint_depth <= 4.12 or (args.route_mode != "reindex" and args.endpoint_depth != 4.08)):
         parser.error("Custom endpoint depth requires reindex mode and a value in [4.06,4.12]")
     output = args.output.resolve()
     if args.worker:

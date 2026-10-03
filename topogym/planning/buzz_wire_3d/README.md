@@ -1,5 +1,32 @@
 # Buzz Wire 3D policy 与实际验收
 
+2026-10-02 新增两档的规划实现 [simplified_policy.py](simplified_policy.py)。
+`SimplifiedBuzzOracle.stages()` 根据每段开始时的实际状态，依次规划默认 home 抓取、换抓、
+完整走线、低位释放和终点摆正。`make_stage_policy()` 将阶段参数转换为普通机器人关节 action；
+不需要已有 run、保存的物理状态或历史动作文件。只读 IK / 碰撞检查沿用当前 easy 的实现，
+工具尺寸、初态、接触判据与成功阈值均由场景提供。
+
+运行入口负责源码冻结、`Env` / `SegmentRunner` 执行及证据记录：
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_buzz_wire_simplified_policy.py \
+  --variant very_easy --seed 0 --no-rgb --output runs/test_results/buzz_very_easy_new
+.venv-gs121-nyx/bin/python -m topogym.planning.buzz_wire_3d.audit \
+  runs/test_results/buzz_very_easy_new
+```
+
+将 `very_easy` 换成 `easier`，并使用新的输出目录，即可选择另一档。
+入口默认 **CPU 64 位、25 ms tick、每 tick 一次控制、40 子步**，使用双指接触触发的
+`contact_weld_v1` 辅助抓持。`--no-rgb` 只关闭图像；完整动作与逐 tick 物理证据仍保留。
+开启 RGB 需要 Nyx / CUDA。该开发时序与任务包默认 2.5 ms / 10 倍降采样 / 4 子步不同，
+不能直接继承 Harbor 正分资格，也不代表纯摩擦抓持或其他 seed 已通过。
+
+[audit.py](audit.py) 独立核对出生到终点的连续谱系、普通 action 覆盖、完整刚体接触报告、
+工具/机器人无触线及原生 Task 成功；兼容已无损压缩的历史 JSONL。
+`--prefix-run` / `--replay-run` 是显式开发选项，常规 oracle 不使用它们。
+布局、两档实测结果与任务包资格见 [任务页](../../../docs/develop/tasks/buzz_wire_3d_zh.md)；
+下文三档历史成功数量不包含这两个新变体。
+
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
 当前范围是注册的 `buzz_wire_3d_easy` / `medium` / `hard`，默认参数、seed 0。

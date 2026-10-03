@@ -1,0 +1,16 @@
+services:
+  main:
+    runtime: nvidia
+    shm_size: 2gb
+    environment:
+      NVIDIA_DRIVER_CAPABILITIES: all
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities:
+            - gpu
+    labels:
+      topogym.difficulty-run: keyhole-harbor-20261002

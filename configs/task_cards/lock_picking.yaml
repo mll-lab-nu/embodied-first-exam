@@ -38,7 +38,9 @@ axes:
 assets:
 - location: configs/lock_picking_baseline.yaml
   status: local_source
-- location: topogym/tasks/lock_picking/_staged_lock_geometry.py
+- location: topogym/assets/geometry/lock_picking.py
+  status: local_source
+- location: topogym/assets/geometry/lock_picking_simplified.py
   status: local_source
 physics:
   backend: genesis_1.2.1_rigid
@@ -47,6 +49,30 @@ physics:
   grasp_model: explicit assisted grasp only after contact, when applicable
 initialization:
   description: free key on physical V rests; passive discs; third joint continuous
+named_simplifications:
+  model_revision: two_rotor_v1
+  pool: experimental
+  disc_count: 2
+  key_tab_count: 2
+  fixed_endpoint_count: 1
+  pitch_m: 0.15
+  grip_offset_m: 0.345
+  oracle: local_scripted_policy
+  oracle_entry: scripts/oracle_runners/run_lock_picking_policy.py
+  oracle_route_mode: simplified
+  oracle_scope: seed 0, default home, contact_weld_v1, native task success; Harbor qualification separate
+  very_easy:
+    variation_id: lock_picking_very_easy
+    initial_angles_deg: [0, 0]
+    slot_centers_deg: [[0], [0]]
+    stop_bounds_deg: [[-3, 3], [-3, 3]]
+    objective_zh: 抓起双齿钥匙杆，穿过已对齐的两片锁片并插至 END。
+  easier:
+    variation_id: lock_picking_easier
+    initial_angles_deg: [20, 0]
+    slot_centers_deg: [[0], [0]]
+    stop_bounds_deg: [[-3, 23], [-3, 3]]
+    objective_zh: 将第一片锁片转回对齐，再将双齿钥匙杆插至 END。
 robot:
   family: Panda + Robotiq 2F-85
   arms: 1

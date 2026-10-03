@@ -13,6 +13,35 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from topogym.planning.cast_keyhole.oracle_artifacts import PolicyTrace, read_native_commands
 from scripts.oracle_runners.package_cast_keyhole_oracle import package, digest
+from topogym.planning.cast_keyhole.public_session import public_row
+
+
+class PublicFeedbackAdapterTests(unittest.TestCase):
+    def setUp(self):
+        from types import SimpleNamespace
+        self.targets = {'left': dict(joint_position_rad=[.1, .2], gripper_position_m=.024)}
+        self.session = SimpleNamespace(
+            env=SimpleNamespace(_robot=SimpleNamespace(
+                capture_state=lambda: SimpleNamespace(targets=self.targets),
+                groups={'left': SimpleNamespace(gripper_field='gripper_position_m')})),
+            hold_action=lambda: np.array([.1, .2, .024], dtype=np.float32),
+            robot=SimpleNamespace(arm_slice={'left': slice(0, 2)}, grip_index={'left': 2},
+                native_to_width=lambda side, value: max(0., value-.00746875),
+                width_to_native=lambda side, value: value+.00746875,
+                clip=lambda row: np.clip(np.asarray(row, float), [-1., -1., 0.], [1., 1., .05])))
+
+    def test_omitted_targets_are_preserved_without_changing_the_robot(self):
+        row = public_row(self.session, {'left': {'gripper_position_m': .00746875}})
+        np.testing.assert_array_equal(row, np.array([.1, .2, 0.], dtype=np.float32))
+        self.assertEqual(self.targets['left']['gripper_position_m'], .024)
+
+    def test_feedback_cannot_silently_use_an_unrepresentable_gripper_target(self):
+        with self.assertRaisesRegex(ValueError, 'not representable'):
+            public_row(self.session, {'left': {'gripper_position_m': .002}})
+
+    def test_feedback_cannot_silently_clip_joint_targets(self):
+        with self.assertRaisesRegex(ValueError, 'clipped'):
+            public_row(self.session, {'left': {'joint_position_rad': [2., .2]}})
 
 
 class NativeCommandEvidenceTests(unittest.TestCase):
@@ -137,8 +166,42 @@ class PrivatePackageTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
-    def build(self):
-        return package(self.run, self.instance_path, self.root/"package")
+    def build(self, **kwargs):
+        return package(self.run, self.instance_path, self.root/"package", **kwargs)
+
+    def feedback_sources(self):
+        paths = ["planning/__init__.py", "planning/cast_keyhole/__init__.py",
+                 "planning/cast_keyhole/policy.py", "planning/cast_keyhole/simplified_policy.py",
+                 "planning/cast_keyhole/kinematics.py", "planning/rigid_reference/__init__.py",
+                 "planning/rigid_reference/geometry.py", "planning/rigid_reference/feedback.py"]
+        hashes = {}
+        for name in paths:
+            target = self.run/"source_snapshot/topogym"/name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("# Frozen test policy source\n")
+            hashes[name] = digest(target)
+        self.write("source_manifest.json", dict(source_hashes=hashes))
+        reference = json.loads((self.run/"native_reference.json").read_text())
+        reference["source_manifest_sha256"] = digest(self.run/"source_manifest.json")
+        self.write("native_reference.json", reference)
+
+    def test_feedback_marks_native_trace_as_basis_and_binds_private_helpers(self):
+        self.feedback_sources()
+        manifest = self.build(feedback=True)
+        self.assertEqual(manifest["execution"], "public_session_feedback")
+        self.assertIsNone(manifest["rows"])
+        self.assertEqual(manifest["local_basis_rows"], 2)
+        self.assertIs(manifest["harbor_qualified"], False)
+        self.assertEqual(len(manifest["private_helpers_sha256"]), 9)
+        for name, expected in manifest["private_helpers_sha256"].items():
+            self.assertEqual(digest(self.root/"package/solution"/name), expected)
+        self.assertFalse(any("calibration_tools" in name for name in manifest["private_helpers_sha256"]))
+
+    def test_feedback_rejects_policy_changed_since_successful_run(self):
+        self.feedback_sources()
+        (self.run/"source_snapshot/topogym/planning/cast_keyhole/policy.py").write_text("# Changed\n")
+        with self.assertRaisesRegex(ValueError, "Changed successful-run policy source"):
+            self.build(feedback=True)
 
     def test_pickup_cannot_be_packaged_as_complete_reference(self):
         self.report.update(status="pickup_passed", task_success=False, part="pickup")
@@ -158,24 +221,52 @@ class PrivatePackageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "native control artifact"):
             self.build()
 
-    def test_private_script_uses_width_adapter_and_rejects_another_instance(self):
+    def session(self, rows):
         from types import SimpleNamespace
-        manifest = self.build()
-        self.assertIs(manifest["harbor_qualified"], False)
-        source = (self.root/"package/solution/oracle_cast_keyhole.py").read_text()
-        rows = []
-        session = SimpleNamespace(config=self.instance["simulator"],
+        return SimpleNamespace(config=self.instance["simulator"],
             asset_identity=self.instance["asset_identity"], instance_sha="initial-state",
             env=SimpleNamespace(_task=SimpleNamespace(instance_id="local-instance")),
             action_layout=self.instance["action_layout"], n_steps=0,
             robot=SimpleNamespace(grip_index={"left": 6, "right": 13},
-                                  native_to_width=lambda side, value: value+.01),
+                                  native_to_width=lambda side, value: value+.01,
+                                  width_to_native=lambda side, width: width-.01),
             step=lambda row: rows.append(row.copy()) or False, success=lambda: True)
+
+    def test_private_script_uses_width_adapter_and_rejects_another_instance(self):
+        manifest = self.build()
+        self.assertIs(manifest["harbor_qualified"], False)
+        source = (self.root/"package/solution/oracle_cast_keyhole.py").read_text()
+        rows = []
+        session = self.session(rows)
         exec(compile(source, "private_oracle.py", "exec"), dict(session=session))
         np.testing.assert_allclose(np.array(rows)[:, [6, 13]], [[.034, .012], [.034, .012]])
         session.instance_sha = "another-state"
         with self.assertRaisesRegex(ValueError, "exact frozen instance"):
             exec(compile(source, "private_oracle.py", "exec"), dict(session=session))
+        self.assertEqual(len(rows), 2)
+
+    def test_closed_width_plateau_rejected_before_any_physics(self):
+        self.build()
+        source = (self.root/"package/solution/oracle_cast_keyhole.py").read_text()
+        rows = []
+        session = self.session(rows)
+        session.robot.native_to_width = lambda side, value: max(0., value-.00746875)
+        session.robot.width_to_native = lambda side, width: width+.00746875
+        with self.assertRaisesRegex(ValueError, "not representable"):
+            exec(compile(source, "private_oracle.py", "exec"), dict(session=session))
+        self.assertEqual(rows, [])
+
+    def test_lossy_experiment_requires_recorded_opt_in_and_is_not_qualified(self):
+        reason = "Legacy candidate replay experiment; physical result still required"
+        manifest = self.build(allow_gripper_roundtrip_loss=reason)
+        self.assertEqual(manifest["gripper_roundtrip_audit"]["allowed_loss_reason"], reason)
+        self.assertIs(manifest["harbor_qualified"], False)
+        source = (self.root/"package/solution/oracle_cast_keyhole.py").read_text()
+        rows = []
+        session = self.session(rows)
+        session.robot.native_to_width = lambda side, value: max(0., value-.00746875)
+        session.robot.width_to_native = lambda side, width: width+.00746875
+        exec(compile(source, "private_oracle.py", "exec"), dict(session=session))
         self.assertEqual(len(rows), 2)
 
 

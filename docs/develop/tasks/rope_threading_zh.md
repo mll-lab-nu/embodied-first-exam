@@ -1,8 +1,153 @@
-# 绳穿环：Easy / Medium / Hard 场景
+# 绳穿环：五档场景
+
+## 0° 布局与两档简化任务（2026-10-02）
+
+按本轮场景确认要求，五档统一采用 Wang 参考的 0° 布设：
+`translation_m=[-0.1356786, 0, 0.0009]`、`yaw_deg=0`。
+ALOHA 底座抬高 20.9 mm，并在两臂原底座轴线下增加 70 × 70 × 20.9 mm 实体垫座；
+保留统一 ALOHA 默认 home（含手指位置），机器人、夹爪和绳均不缩放。
+垫高配置仅作用于 Rope Threading 的 ALOHA 场景，在机器人资产选择和 IPC 初始化前生效。
+
+| 入口 | 本轮场景 | 目标与状态 |
+|---|---|---|
+| `rope_threading_very_easy` | 单个 R1 的下半圆，上方整个半圈移除，管端封闭，保留原侧支柱与底座 | 搭绳判据已启用；完整机器人解法待验收 |
+| `rope_threading_easier` | 单个完整 R1，净孔径 138 mm | 单环穿越、双手换绳历史及终态判据已启用；完整机器人解法待验收 |
+| `rope_threading_easy` | 原 R1、R2 双环，净孔径 138 mm | 保留原判据，更新 0° 摆位与模型版本 |
+| `rope_threading_medium` / `base` | 原 R1、R2、R3 三环，净孔径 138 mm | 保留原判据，更新 0° 摆位与模型版本 |
+| `rope_threading_hard` | 原三环，净孔径 100 mm | 保留原判据，更新 0° 摆位与模型版本 |
+
+沿用包内 `rope_threading/reference.json`，无新增外部资源依赖。五档共用约 1.1 m 长、
+8 mm 直径、双端自由的 U 形绳，以及原 FEM 材料、体网格配方和 IPC 参数。
+绳两端 XY 为 `(-0.50600535, 0.05)`、`(0.1943214, 0.05)` m；
+R1/R2/R3 法线水平角为 0°/36.8699°/71.5651°，R3 仰角 18.4349°。
+R1 中心距桌面 331.9 mm、中心线半径 75 mm、环管直径 12 mm；very-easy 仅删除上半圈，
+既不降低高度，也不放大开口。旧三档本轮均更新模型版本，不沿用旧 75° 场景的实例身份。
+
+两档新入口现在均为 `goal_complete=True`，分别使用 `rope_drape_v1` 和
+`rope_single_ring_handoff_v1`。可通过统一 `topogym.make()`、`Env`、交互句柄和
+`SegmentRunner` 执行、评分、保存和回溯。任务注册状态为 integrated，验证状态为
+`terminal_implemented_pending_robot_qualification`；启用评分不表示已有成功机器人演示。
+`seeded` 仍只在原 easy/medium/hard 间选择。此轮交付 simulator 任务定义，未生成新的 Harbor 包。
+
+### 成功条件
+
+- **very-easy**：绳身跨过半圆所在平面，搭在下方中央弧段内侧（跨越点至少低于环中心半个中心线半径）。
+  名义绳面到支承弧的间隙不超过 1 mm、重叠不超过 0.5 mm；跨越点沿绳的两侧各至少保留 25 mm，
+  两侧沿材料距离 20 mm 的点必须处于环平面的相反侧，并越过环管与绳半径合计的厚度。
+  悬空、只碰切口、仅绳尖触碰或与环相切不算搭上。
+- **easier**：沿原绳材料方向恰有一次 `R1−` 穿越，绳全厚度通过中心面和前后两侧厚度面。
+  送绳手先在入口侧抓住某一端的 120 mm 材料区；穿过后，接绳手在出口侧抓同一端区，
+  两手有同时抓持的重叠阶段，再由送绳手放开。每次抓持至少持续 20 ms；入口／出口抓持中心
+  须分别离开环平面至少 12 mm。单手穿环、第二只手无关触碰、先放开再接住均不计换手。
+  抓持证据使用健康的原生接触触发 FEM 辅助抓持，或同一端区与两块实际指面同时近接触（0.3 mm）。
+  不使用 TCP 距离或夹爪指令冒充接触。退出环孔、反向穿越或原生完整性证据缺失会取消换手信用。
+- 两档都检查整条 FEM 绳的原生有效性及正体积；整绳最大速度不超过 1 mm/s，并持续满足目标 0.5 s。
+  允许继续抓持，不额外要求释放或放回桌面。绳体失效立即终止失败；缺少完整性证据时不能成功。
+  easier 的送绳／接绳历史与稳定窗口随正式 Task checkpoint 保存和回溯，旧未来不会保留信用。
+
+```python
+from topogym.simulator import Env, SimulatorConfig
+from topogym.tasks.rope_threading.simplified import recommended_grasp_assist
+
+config = SimulatorConfig(
+    task_id="rope_threading", variation_id="easier", compute_backend="cuda",
+    grasp_assist=recommended_grasp_assist("easier"),  # 可选，必须显式启用
+)
+with Env(config) as env:
+    observation, info = env.reset(seed=0)
+    # 后续由交互句柄或 SegmentRunner 提交真实机器人动作。
+```
+
+离线检查入口：
+
+```bash
+.venv-gs121-nyx/bin/python ci_checks/test-rope-threading-scenes.py
+.venv-gs121-nyx/bin/python ci_checks/test-rope-threading-terminal.py
+```
+
+模拟器截图与逐场景配置、资产哈希、机器人实测初态、相机参数、资源记录存放于
+`runs/test_results/rope_threading_scenes_20261002/`。
+截图使用 Genesis + Nyx + compact_lab，在 reset 后、物理步 0 拍摄；`cam_*.png` 是标准观测，
+`overview.png` / `detail.png` 是同一初态的展示视角。它们不证明接近、抓取、双手换绳或完整可解性。
+首轮正常建场在引擎的动力学预热阶段出现 `Newton Iteration Exits with Max Iteration: 1024`，
+452 秒后主动停止，日志保留于 `very_easy_warmup_attempt01/`。本轮静态截图仅在独立预览进程中
+跳过 `Scene.build()` 内随后会被 reset 丢弃的那一个预热步；仍使用相同的 FEM/IPC 资产、
+原生建场和 Nyx 渲染，没有修改当时的公共引擎或任务物理参数。这批旧图片仅用于确认场景几何和摆位，
+后续物理验收不使用跳过预热的方式。
+
+本轮 7 项离线检查通过，五档各保存 6 张截图；逐数组核对确认五档 FEM 绳的参考态、
+初态、四面体、材料坐标和中心线完全一致，实测双臂 home 一致。
+详见[截图与验证清单](../../../runs/test_results/rope_threading_scenes_20261002/preview_manifest.json)。
+
+- [very-easy 全景](../../../runs/test_results/rope_threading_scenes_20261002/very_easy/overview.png) · [半圆近景](../../../runs/test_results/rope_threading_scenes_20261002/very_easy/detail.png)
+- [easier 全景](../../../runs/test_results/rope_threading_scenes_20261002/easier/overview.png) · [单环近景](../../../runs/test_results/rope_threading_scenes_20261002/easier/detail.png)
+- [easy](../../../runs/test_results/rope_threading_scenes_20261002/easy/overview.png) · [medium](../../../runs/test_results/rope_threading_scenes_20261002/medium/overview.png) · [hard](../../../runs/test_results/rope_threading_scenes_20261002/hard/overview.png)
+
+### 初始化修复与执行入口
+
+正常初始化已修复：Genesis 为 IPC 创建的碰撞几何采用 home 姿态，但其 Python 关节参考初始为零，
+预热首步因此把整个 home 角度作为增量。`topogym/world/physics/ipc.py` 现在在 native build 后、
+预热前同步关节参考，复用 reset 的同一同步逻辑，不改变绳材料、碰撞模型或求解容差。
+在原 Newton 容差 `1e-4`、物理步长 2.5 ms、4 子步下，easier 正常预热并完成 4 个空闲物理步；
+末步 native frame 16，最小体积比约 0.99087、最大体积比约 1.00986。
+该诊断显式使用线性系统容差 `1e-5` 与 `linear_bvh`，只证明初始化和短程推进，不证明穿环成功。
+证据见[初始化复测报告](../../../runs/test_results/rope_threading_development_20261002/init_reference_fix_attempt03/report.json)。
+
+`scripts/oracle_runners/run_rope_threading_policy.py` 提供从标准 home 开始的开发控制器，
+复用原生 IK/FK、实际机器人碰撞网格和非凸环网格进行采样预检，再通过普通关节动作执行。
+FEM 辅助抓持只有双指实际接触后才建立，禁止写物体姿态、直接注入抓持或替换绳物理。
+录制、动作记录、状态证据和回溯均由共享 `SegmentRunner` 管理，RGB 使用 Nyx + compact_lab。
+
+```bash
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_rope_threading_policy.py \
+  --variant very_easy --part pickup \
+  --output runs/test_results/rope_threading_pickup_new
+# --variant easier 选择单环；--part solve 执行完整候选动作。
+# 默认物理时间步 0.0025 s、4 子步；更改时序仅作为显式记录的开发试验。
+```
+
+该控制器仍是开发候选，`run_report.json` 分开记录 `pickup_passed`、原生 `task_success` 和
+`qualification`，不能以进程退出码、路径预检、局部抓取或合成状态测试宣称完整 oracle 成功。
+源代码快照、失败尝试、资源监控和视频保留在
+`runs/test_results/rope_threading_development_20261002/`；只有系统内存达到 90% 才因资源使用停止本轮进程。
+
+当前验证范围：6 项场景／公开目标检查、12 项终态／接触／回溯检查通过；原三档目标描述及
+IPC 诊断的相关回归也通过。`very_easy_pickup_attempt02` 从默认 home 连续执行 547 步／5.47 s，
+原生完整性在全部 548 条含初态的记录中有效，没有误报成功。最后下降姿态因张开的手指与右臂底座
+发生预测自碰撞而被预检拒绝，尚未抓取；这是开发失败尝试。它使用显式 10 ms／1 子步，
+Genesis 相应把约束时间常数从 10 ms 调为 20 ms，不属于默认物理资格。
+后续只读全路径预检确认：距材料末端 65 mm 的两种夹爪朝向均碰底座，改为距末端 85 mm 后通过。
+这项修正仅改变抓取策略，保留所有场景、机器人和绳尺寸。
+
+- [接近阶段四路视频记录与结果](../../../runs/test_results/rope_threading_development_20261002/very_easy_pickup_attempt02/run_report.json)
+- [俯视视频：home → 抓绳前，未成功抓取](../../../runs/test_results/rope_threading_development_20261002/very_easy_pickup_attempt02/segments/segment_1/videos/cam_high.mp4)
+- [连续物理记录审计](../../../runs/test_results/rope_threading_development_20261002/very_easy_pickup_attempt02/execution_audit.json)
+- [85 mm 抓取候选与 easier 正常初始化报告](../../../runs/test_results/rope_threading_development_20261002/pickup_preflight_attempt03/report.json)
+
+`very_easy_pickup_attempt04` 已在不改变场景的情况下从 home 到达 85 mm 抓取点。
+第 506 步获得真实双指接触（指面间隙约 0.019／0.015 mm），注册了 632 个顶点的 FEM 抓持区；
+第 507 步继续收紧夹爪时出现局部负体积，抓持健康检查报 `inverted_material`，Task 报
+`rope_volume_invalid` 并终止。这次仍使用 10 ms／1 子步，不能据此声称默认时序夹取失败或任务已解。
+控制器已改为逐小步收紧，并在双指接触进入 qualifying／registered 时保持当前闭合目标；
+默认时序的局部诊断与从 home 的完整复验分别记录，局部预抓取初态不计为完整机器人流程。
+
+- [双指夹取后失效的简要证据](../../../runs/test_results/rope_threading_development_20261002/very_easy_pickup_attempt04/grasp_summary.json)
+- [实际接近与闭合视频（失败尝试）](../../../runs/test_results/rope_threading_development_20261002/very_easy_pickup_attempt04/segments/segment_1/videos/cam_high.mp4)
+
+默认时序局部诊断 `grasp_default_timing_attempt06` 使用明确标注的预抓取机器人初态，未改正式任务的
+home、绳或环。完全张开的初态通过检查，完成 144 步／0.36 s，已保存步的原生状态全部有效、
+最小体积比约 0.9821；在 600 秒墙钟预算到期时尚未建立双指抓持，按超时结束。
+因此“小步收紧后能稳定夹取／抬起”的修正还没有获得物理通过证据；完整搭绳、双手穿环及
+默认时序的完整机器人演示均仍待验收。
+见[局部诊断报告](../../../runs/test_results/rope_threading_development_20261002/grasp_default_timing_attempt06/report.json)、
+[超时退出记录](../../../runs/test_results/rope_threading_development_20261002/grasp_default_timing_attempt06/process_result.json)和
+[最终代码检查清单](../../../runs/test_results/rope_threading_development_20261002/implementation_checks.json)。
+
+以下是历史记录，其中 75° 摆位、旧入口和旧验证结论不代表本轮更新后的场景。
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
-## 当前三档场景（2026-09-29）
+## 历史三档场景（2026-09-29，75° 布局）
 
 三档均已接入统一 `topogym.make("rope_threading", variation_id=...)`，本轮先完成场景布设。
 `base` 继续选择 medium，原 medium 的配置、实例身份、三环几何和绳初态保持一致。

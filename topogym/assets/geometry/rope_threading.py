@@ -23,6 +23,7 @@ class ThreadingLayout:
     centerline_interpolation: str = 'linear'
     ring_ids: tuple[str, ...] | None = None
     ring_inner_radius_m: float | None = None
+    ring_shape: str = "closed"
 
     def __post_init__(self):
         if not np.isfinite(self.yaw_deg):
@@ -33,6 +34,10 @@ class ThreadingLayout:
             raise ValueError("rope_height_offset_m must be finite and nonnegative")
         if self.centerline_interpolation not in ('linear', 'circular_arc'):
             raise ValueError('Unknown centerline interpolation')
+        if self.ring_shape not in ("closed", "lower_semicircle"):
+            raise ValueError("ring_shape must be closed or lower_semicircle")
+        if self.ring_shape == "lower_semicircle" and tuple(self.ring_ids or ()) != ("R1",):
+            raise ValueError("The open cradle uses only the upright source ring R1")
         for key, lower in (("rope_subdivisions", 1), ("radial_segments", 8), ("ring_radial_segments", 12)):
             value = getattr(self, key)
             if isinstance(value, bool) or int(value) != value or value < lower:
@@ -116,7 +121,8 @@ class ThreadingLayout:
                 for kind in ("stand", "base"):
                     ring[kind]["position"] = (np.asarray(ring[kind]["position"])+shift).tolist()
                 ring["radius_m"] = new_radius
-        return [dict(ring, center_m=self.transform(ring["center_m"]).tolist(),
+        return [dict(ring, shape=self.ring_shape,
+                     center_m=self.transform(ring["center_m"]).tolist(),
                      **{key: rotation.apply(ring[key]).tolist()
                         for key in ('normal','basis_u','basis_v')})
                 for ring in sources]
@@ -127,6 +133,8 @@ class ThreadingLayout:
         Task terminal integration must consume this instead of assuming R1/R2/R3
         before a reduced-ring layout can be published as a difficulty tier.
         """
+        if self.ring_shape != "closed":
+            return []  # An open cradle has no topological threading requirement.
         selected = {ring["name"] for ring in self.rings()}
         return [(entry[:-1], 1 if entry[-1] == "+" else -1)
                 for entry in self.reference["target_material_order"] if entry[:-1] in selected]
@@ -196,6 +204,31 @@ def surface_intersects_ring_disk(vertices, faces, ring):
 
 
 def ring_mesh(ring, radial_segments=24):
+    if ring.get("shape", "closed") == "lower_semicircle":
+        # R1's basis_v points down: theta=0..pi is precisely the lower half.
+        # Cap both tube ends; leave the entire upper approach physically open.
+        theta = np.linspace(0., np.pi, ring["segments"] // 2 + 1)
+        phi = np.arange(radial_segments) * 2 * np.pi / radial_segments
+        radial = (np.cos(theta)[:, None] * ring["basis_u"]
+                  + np.sin(theta)[:, None] * ring["basis_v"])
+        centers = np.asarray(ring["center_m"]) + ring["radius_m"] * radial
+        vertices = (centers[:, None, :] + ring["tube_radius_m"] * (
+            np.cos(phi)[None, :, None] * radial[:, None, :]
+            + np.sin(phi)[None, :, None] * np.asarray(ring["normal"]))).reshape(-1, 3)
+        faces = []
+        for i in range(len(theta) - 1):
+            for j in range(radial_segments):
+                a, b = i * radial_segments + j, i * radial_segments + (j + 1) % radial_segments
+                faces.extend(((a, b, a + radial_segments), (b, b + radial_segments, a + radial_segments)))
+        start, end = len(vertices), len(vertices) + 1
+        vertices = np.vstack((vertices, centers[[0, -1]]))
+        last = (len(theta) - 1) * radial_segments
+        for j in range(radial_segments):
+            k = (j + 1) % radial_segments
+            faces.extend(((start, k, j), (end, last + j, last + k)))
+        mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=False)
+        mesh.fix_normals()
+        return mesh
     mesh = trimesh.creation.torus(major_radius=ring["radius_m"], minor_radius=ring["tube_radius_m"],
                                  major_sections=ring["segments"], minor_sections=radial_segments)
     basis = np.column_stack((ring["basis_u"], ring["basis_v"], ring["normal"]))
@@ -252,6 +285,8 @@ def inspect_geometry(layout):
         ring_aperture_diameter_m=2*(rings[0]["radius_m"]-rings[0]["tube_radius_m"]),
         ring_aperture_diameters_m={r["name"]: 2*(r["radius_m"]-r["tube_radius_m"]) for r in rings},
         selected_ring_ids=[r["name"] for r in rings],
+        ring_shape=layout.ring_shape,
+        source_to_world_yaw_deg=layout.yaw_deg,
         source_to_world_translation_m=list(layout.translation_m),
         target_material_order=[name+("+" if sign > 0 else "-") for name, sign in layout.required_crossings()],
         geometry_verified=True)
@@ -279,8 +314,9 @@ def generate_assets(folder, layout=None):
     assembly.add_geometry(rope, node_name="rope")
     for ring in layout.rings():
         mesh = _material(ring_mesh(ring, layout.ring_radial_segments), ring["rgba"])
-        if not mesh.is_watertight or mesh.euler_number != 0:
-            raise ValueError("Ring must be a closed genus-one mesh with an open aperture")
+        expected_euler = 0 if layout.ring_shape == "closed" else 2
+        if not mesh.is_watertight or not mesh.is_volume or mesh.euler_number != expected_euler:
+            raise ValueError("Fixture must enclose positive volume with the declared ring/cradle topology")
         mesh.export(folder/f'{ring["name"]}.obj', mtl_name=f'{ring["name"]}.mtl')
         mesh.export(folder/f'{ring["name"]}.glb')
         assembly.add_geometry(mesh, node_name=ring["name"])
@@ -303,7 +339,10 @@ def generate_assets(folder, layout=None):
     np.save(folder/"centerline.npy", layout.centerline())
     (folder/"layout.json").write_text(json.dumps(dict(rings=layout.rings(), **report), indent=2)+"\n")
     report["reference_sha256"] = hashlib.sha256(REFERENCE.read_bytes()).hexdigest()
-    report["ring_collision_model"] = "nonconvex watertight torus mesh; 64 x 24 by default; aperture preserved"
+    report["ring_collision_model"] = (
+        "nonconvex watertight torus mesh; 64 x 24 by default; aperture preserved"
+        if layout.ring_shape == "closed" else
+        "nonconvex capped lower half-torus; upper half absent; 32 x 24 by default")
     report["source_ring_discretization_deviation_bound_m"] = (
         max(r["radius_m"]*(1-np.cos(np.pi/64))
             +r["tube_radius_m"]*(1-np.cos(np.pi/layout.ring_radial_segments)) for r in layout.rings()))

@@ -11,5 +11,5 @@ class RopeThreadingEasyTask(RopeThreadingTask):
     fixed_parameters = ('geometry.ring_ids', 'geometry.ring_inner_radius_m')
     variation_id = 'rope_threading_easy'
     family_id = 'two_rings'
-    model_revision = 'two_rings_v1_fem_soft50_fine_v1'
+    model_revision = 'two_rings_yaw0_v2_fem_soft50_fine_v1'
     difficulty = 'easy'

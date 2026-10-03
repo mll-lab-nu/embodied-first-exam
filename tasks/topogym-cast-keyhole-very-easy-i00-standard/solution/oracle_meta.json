@@ -1,0 +1,6 @@
+{
+ "K": 1,
+ "interpolate": "hold",
+ "rows": 5014,
+ "source": "topogym-cast-keyhole-very-easy-i00 solution/solve.sh (run-oracle)"
+}

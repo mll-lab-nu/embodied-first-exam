@@ -1,6 +1,32 @@
 schema_version: 1
 task_id: buzz_wire_3d
 title_zh: 立体电流棒
+named_simplifications:
+  reference: current buzz_wire_3d_easy deck-rest scene
+  variants:
+    very_easy:
+      variation_id: buzz_wire_3d_very_easy
+      model_revision: straight_span_deck_rest_v1
+      layout_resource: variations/buzz_wire_3d/straight_span_deck_rest_v1/layout.json
+      description: vertical entry and exit joined by rounded elbows and one straight span
+    easier:
+      variation_id: buzz_wire_3d_easier
+      model_revision: sideways_then_down_deck_rest_v2
+      layout_resource: variations/buzz_wire_3d/sideways_then_down_deck_rest_v2/layout.json
+      description: first lobe bends sideways 35 mm; second bends downward 35 mm; smooth change of plane
+  robot: panda_robotiq
+  initial_robot_pose: robot_control.home.qpos
+  initial_tool_pose: same deck-supported prethreaded pose as current easy
+  grasp_model: contact_weld_v1 acquired through bilateral handle contact
+  terminal_revision: terminal_v4_traversal_then_deck_release
+  success: full continuous traversal without metal-wire contact, then release on finish support and settle
+  base_size_m: [0.5201, 0.3689, 0.0175]
+  base_elevation_m: 0.125
+  wire_radius_m: 0.00147
+  loop_centerline_radius_m: 0.0154
+  loop_tube_radius_m: 0.00126
+  default_pool: experimental
+  validation: see docs/develop/tasks/buzz_wire_3d_zh.md
 # Preserve the historical planar probe baseline and its parameter contract.
 spatial_scene:
   template_id: spatial_maze_v2

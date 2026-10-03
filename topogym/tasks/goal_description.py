@@ -73,7 +73,11 @@ def _threading(task):
                 directions.append(f"{names[name]}: cross {direction} the side containing the {names[other['name']]}")
                 break
         else:
-            raise ValueError("Threading direction has no visible ring-side reference")
+            if len(rings) == 1 and abs(ring['normal'][0]) > .5:
+                arm = 'left' if ring['normal'][0]*sign < 0 else 'right'
+                directions.append(f"{names[name]}: cross toward the side containing the {arm} robot base")
+            else:
+                raise ValueError("Threading direction has no visible ring-side reference")
     order = " then ".join(names[name] for name, _ in crossings)
     return order, "; ".join(directions)
 
@@ -114,6 +118,20 @@ def describe_goal(task):
             failures.append("Broken attachments or invalid cord volume end the episode in failure.")
         else:
             failures.append(_rigid_contact_failure())
+    elif name == "rope_threading" and cfg['geometry'].get('ring_shape') == 'lower_semicircle':
+        summary = "Lift the rope and drape its body across the lower inside of the cyan semicircle through the open top."
+        rules += [
+            "The rope must cross the fixture plane over the lower supporting rim, with material extending to both sides. "
+            "Touching a cut end, an endpoint-only touch, or hovering inside the open half-circle is insufficient.",
+            "Use the lower central portion of the cradle, at least half the ring centreline radius below its centre.",
+            f"Keep the supported rope within {mm(terminal['support_gap_m'])} of the rim; "
+            f"nominal rope-to-rim overlap may not exceed {mm(terminal['support_penetration_m'])}.",
+            f"At least {mm(terminal['minimum_drape_length_m']/2)} of rope must remain on either side along the material. "
+            f"The points {mm(terminal['drape_span_m'])} along the rope on either side of the crossing must clear the fixture's thickness.",
+            f"Keep every rope point at or below {mm(terminal['maximum_speed_m_s'])}/s. Holding is allowed; release is not required.",
+            "Keep the rope intact; collapsed or inverted rope volume is not accepted.",
+        ]
+        failures.append("Invalid rope volume ends the episode in failure.")
     elif name == "rope_threading":
         order, directions = _threading(task)
         summary = f"Thread the rope through the {order}, in that order along the rope from material start to material end."
@@ -125,14 +143,33 @@ def describe_goal(task):
             f"Keep every rope point at or below {mm(terminal['maximum_speed_m_s'])}/s. Holding is allowed; release is not required.",
             "Keep the rope intact; collapsed or inverted rope volume is not accepted.",
         ]
+        if task.family_id == 'single_ring_bimanual':
+            summary = "Use both hands to feed and receive the same rope end through the single cyan ring. " + summary
+            rules.append(
+                f"Before threading, grasp one of the terminal {mm(terminal['handoff_band_m'])} rope bands on the entry side. "
+                "After the end passes through the hole, the other hand must grasp the same end band on the exit side "
+                "while the feeding hand still holds it; then release the feeding hand while the receiving hand keeps its grasp. "
+                f"Each grip must persist for at least {terminal['handoff_grip_duration_s']:g} s. "
+                "A single-hand passage or unrelated touches by the second hand are insufficient. "
+                "The transfer is invalidated if the threaded crossing is lost or reversed, and is reset when rewinding "
+                "to a state before it occurred.")
         failures.append("Invalid rope volume ends the episode in failure.")
     elif name == "lock_picking":
-        summary = "Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops."
+        rotor_count = len(cfg["geometry"].get("slots", [None]*3))
+        rotor_word = {2: "two", 3: "three"}[rotor_count]
+        plate_word = {2: "three", 3: "four"}[rotor_count]
+        summary = f"Insert the tabbed key through all {rotor_word} rotor plates and the final END plate, while respecting their slots and stops."
+        if rotor_count == 2:
+            summary = "Pick up the two-tab key from its rest. " + summary
+            if task.family_id == "two_rotor_first_turn":
+                summary += " Align the first rotor's slot with the second rotor's slot to allow insertion."
+            else:
+                summary += " Both rotor slots start aligned for straight insertion."
         rules += [
-            "Keep the finite-length shaft passing through the full thickness of all four plates at once, facing the insertion direction. "
+            f"Keep the finite-length shaft passing through the full thickness of all {plate_word} plates at once, facing the insertion direction. "
             "Reaching END with only the shaft tip is insufficient.",
             f"The rear edge of the leading tab must clear the outer face of END by at least {mm(terminal['insertion_margin_m'])}.",
-            f"Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all four bores. "
+            f"Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all {plate_word} bores. "
             f"The radial numerical contact tolerance is {mm(terminal['shaft_contact_tolerance_m'])}; do not push the shaft through solid plate material.",
             "Keep every tab clear of solid plate material whenever it overlaps a plate; account for the key's offset and tilt, not just its rotation about the shaft.",
             f"Keep limited-travel rotor pins within their physical slot bounds (angular tolerance {terminal['rotor_tolerance_deg']:g} degrees).",

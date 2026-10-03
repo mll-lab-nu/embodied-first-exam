@@ -12,5 +12,5 @@ class RopeThreadingHardTask(RopeThreadingTask):
     fixed_parameters = ('geometry.ring_ids', 'geometry.ring_inner_radius_m')
     variation_id = 'rope_threading_hard'
     family_id = 'three_tight_rings'
-    model_revision = 'three_rings_id100_v1_fem_soft50_fine_v1'
+    model_revision = 'three_rings_id100_yaw0_v2_fem_soft50_fine_v1'
     difficulty = 'hard'

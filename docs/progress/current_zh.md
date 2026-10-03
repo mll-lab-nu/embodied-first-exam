@@ -1,5 +1,11 @@
 # 当前开发进度（2026-09-21）
 
+> 2026-10-02 Fiber Bundling：新增 2 根相对的 `very_easy` 和 3 根三角排列的 `easier`，seed 0 均已从标准 home 连续完成穿环并通过独立审计，采用接触触发的护套辅助抓持。两档三路正式录像和四个任务包已生成；默认时序及双模式流程验收见 [Fiber 任务页](../develop/tasks/fiber_bundling_zh.md)。旧三档实例 ID 和资产字节回归不变，难度排序尚未做模型评测。
+
+> 2026-10-02 新增两档变体的专项进度见[两个更简单变体的任务进度表](../tasks_simplifications/two_simpler_variants_progress_zh.md)：覆盖 10 个任务、20 个变体，排除其他成员负责的 Hedgehog、Slotted Post Ring、Horseshoe；按场景实现、机器人成功、录像和双模式验收分别维护。
+
+> 2026-10-02 Lock Picking：双片 `very_easy`／`easier` 本地 oracle 均已从默认 home 实际完成，原生 Task success 分别为 35.6325／48.2575 s，独立逐 tick 审计通过。使用默认时序、CUDA、Nyx 与接触触发的辅助抓持；源码、三视角视频和验证边界见 [Lock Picking 任务页](../develop/tasks/lock_picking_zh.md)。Harbor 双模式完整正向评分未扩大。
+
 > 2026-09-30 Hedgehog：当前四腰窗 medium、默认参数、seed 0 已通过物体通路、机械臂 IK、从默认 home 连续执行及独立审计，56.5 s 原生 Task success。使用接触触发辅助抓持、CPU，无新增视频；见[正式证明](../../solvability_proof/hedgehog_in_cage/README.md)。其他实例与纯摩擦资格未扩大。
 
 > 2026-09-29 Slotted Post Ring：Easy / Medium / Hard 三档场景已接入（环内径 108 / 105 / 102 mm，均为 28 mm 槽），几何、资产复现与相关回归通过。当前 Genesis FEM/IPC 的 10 s 静置及半步长验收被 CUDA OOM / InvalidDevice 阻塞，未标通过；Easy/Medium 仅有失败尝试的短程 Nyx 诊断片段。详见[当前任务页](../develop/tasks/slotted_post_ring_zh.md)与[证据](../../runs/test_results/slotted_post_tiers_20260929_review/README.md)。
@@ -21,7 +27,7 @@
 | # | 任务 | 基础环境搭建 | 完整机器人 demo | 变体生成逻辑与剩余缺口 |
 | --- | --- | --- | --- | --- |
 | 1 | [双爪互锁 Interlocked Claws](../develop/tasks/interlocked_claws_zh.md) | **已搭建，资格分版本**。A0 独立接触资格仍有缺口；B0 同形双螺旋爪和 C0 固定原型通过双步长检查 | **有**。B0 新版 16.55 s，双臂分离停稳即结束；A0/C0 保留旧完整流程。每族各五视角，均声明辅助预抓持 | **部分接通**。`claw_seed_v1` 可采样、构建/恢复 A0；B/C 仍被旧接口拒绝。新版 B0/C0 尚未接入 seed 生成器，三族随机闭环未完成 |
-| 2 | [绳穿环 Rope Threading](../develop/tasks/rope_threading_zh.md) | **三档场景已接入（9 月 29 日）**。Easy 两环 138 mm 净孔、Medium 原三环 138 mm、Hard 三环 100 mm；共用原绳与 FEM/IPC。31 项静态／合同检查通过，Nyx 重验受显存占用阻塞，见[本轮记录](../../runs/test_results/rope_threading_scenes_20260929/README.md) | **未完成**。9 月 21 日运行到 66.115 s，已出现第一、第二环穿越；第二环出口接绳因反馈目标 IK 不可达停止。新反馈执行器已接入；当前重新执行/排队状态见下方运行入口 | **固定三档已有，任务级生成器未完成**。三档资产同 seed 重建一致；连续解法、机器人可达与难度排序仍待验 |
+| 2 | [绳穿环 Rope Threading](../develop/tasks/rope_threading_zh.md) | **五档已接入（10 月 2 日）**。统一 0° 布局、ALOHA 底座垫高 20.9 mm；Very-easy 下半圆搭绳，Easier 单环双手交接。两档评分与可回溯历史已实现；正常 IPC 预热参考错误已修复并通过短程推进，五档 Nyx 静态截图已保存 | **完整机器人解法待验收**。新增从 home 连续接近、接触触发 FEM 抓持和搭绳／穿环开发控制器；局部执行不计为成功 demo，实际证据见任务页 | **五档固定场景已有，任务级生成器未完成**。原绳尺寸、材料、FEM 网格与 home 保持；连续可解性、物理资格及难度排序仍待验 |
 | 3 | [开锁 Lock Picking](../develop/tasks/lock_picking_zh.md) | **基础实例已跑通**。150 mm 盘距、三齿、两次必要回退的完整物理执行成功 | **有流程证据**。159.35 s 三视角来自成功物理状态重渲染；被动夹爪关节按开合量重建，不能计为一次新的完整物理执行 | **几何/IK 级已接通**。1/2/3 回退家族、固定 S/M/L、seed、确定性重试及保存/重载；256 个 seed 通过几何/IK。新实例的机器人场景碰撞、接触动力学及完整流程资格仍未运行 |
 | 4 | [刺球出笼 Hedgehog in Cage](../develop/tasks/hedgehog_in_cage_zh.md) | **基础实例已跑通**。CLASSIC 及当前三个原型有对应场景与执行证据 | **有**。CLASSIC 以及单斜窗、固定六刺侧孔、GEN 顶部钥匙孔均有完整辅助抓持流程 | **几何/IK 级已接通**。v2 使用当前三原型，支持尺寸、位置、朝向、木质外观和保存/重载；随机后代仍为 `physical_execution=not_run`。侧孔与 CLASSIC 可共享策略，不把“三族 IK 必须本质不同”列为缺口 |
 | 5 | [光纤收束 Fiber Bundling](../develop/tasks/fiber_bundling_zh.md) | **基础实例已跑通**。固定终端、被动细线、闭环、机器人只抓粗护套的操作链路存在 | **有**。4/8/16 芯、R=13.5 mm 三个密度代表各三视角，按变体/视角分目录；8 芯直接迁移，4/16 芯由各自完整物理状态补录 | **实例/几何级已接通**。稀疏/标准/密集，线数 4–16、R=12.8–15.0 mm，具名 seed、资产、保存/重载。300 个 seed 初态几何通过；随机实例仍需 IK、禁碰、受载稳定性、完整穿环及时间步对照。按已确认要求，密度家族无需不同 IK 机制 |

@@ -1,6 +1,6 @@
 # 光纤收束
 
-更新：2026-09-28（terminal）；历史 demo 状态为 2026-09-21。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见[Demo 目录](../../../demos/README.md)。
+更新：2026-10-02（两档简化变体与完整执行）；terminal 说明为 2026-09-29，旧三档 demo 状态为 2026-09-21。全项目进度见[当前进度](../../progress/current_zh.md)，正式视频直链见下文。
 
 ## 任务与实现
 
@@ -8,9 +8,59 @@
 
 当前源码：[任务与判据](../../../topogym/tasks/fiber_bundling/common.py) · [几何生成](../../../topogym/assets/geometry/fiber_bundling.py) · [穿孔历史](../../../topogym/utils/geometry/passage.py) · [子步接触](../../../topogym/world/physics/rigid_contacts.py)。参数与成功定义见[任务卡](../../../configs/task_cards/fiber_bundling.yaml)，统一运行入口见 [Simulator API](../modules/simulator_api_zh.md)。旧 bootstrap、robot_sequence 和 recording_adapter 不再是当前入口。
 
+## very_easy / easier
+
+2026-10-02 按确认的初态布置新增具名入口，并完成 seed 0 的连续机器人穿环与独立审计：
+
+| 入口 | 分叉布置 |
+| --- | --- |
+| `fiber_bundling_very_easy`（别名 `very_easy`） | 2 根细线，绕护套轴相隔 180°，截面上相对。 |
+| `fiber_bundling_easier`（别名 `easier`） | 3 根细线，绕护套轴相隔 120°，截面上构成等边三角形。 |
+
+两档均继承现有 easy–hard 场景：240 mm 长、24 mm 直径的工作护套，80 mm 长、2.4 mm 直径的细线，8 mm 根部展开半径，13.5 mm 名义铜环内半径、4 mm 环管半径；分叉根部到环平面 110 mm，轴线高于桌面 240 mm，工作护套原点 xy 为 `[-0.1, -0.25]` m。固定终端、松弛引线、U 型托架、环支架和 Panda + Robotiq 的 home 姿态均复用当前实现。
+
+[简化几何](../../../topogym/assets/geometry/fiber_bundling_simplified.py) 复用旧生成器的第一根 seeded 曲线，并绕轴复制，使根部、沿途各截面与尖端都保持对称。只规定 reset 时的形状；运行时各细线仍为原有被动关节，没有保持对称的弹簧、驱动或位姿写入。运行所需资产由包内 Python 生成器在 reset 时生成，不依赖历史 `runs/` 或根目录资产副本。
+
+任务入口：[very_easy](../../../topogym/tasks/fiber_bundling/fiber_bundling_very_easy.py)、[easier](../../../topogym/tasks/fiber_bundling/fiber_bundling_easier.py)。例如 `topogym.make("fiber_bundling", variation_id="very_easy", seed=0)`；原有 `base` 仍对应 medium，`seeded` 仍只采样 easy／medium／hard。新两档沿用 `terminal_v4_fiber_ring_plane` 的完整穿环和细线禁碰要求。
+
+预览证据放在 [runs/test_results/fiber_bundling_simplified_preview_20261002](../../../runs/test_results/fiber_bundling_simplified_preview_20261002/)，包括生成资产、源码哈希、相机位姿、截图与逐档报告。截图使用 Genesis/CUDA + Nyx + compact_lab，在标准 home 初态、零 physics tick 下保存；标准相机图保留，额外近景与轴向图仅调整展示相机。[几何检查](../../../ci_checks/test-fiber-bundling-simplifications.py) 覆盖对称、线长、初始间隙、被动关节、夹爪禁碰角色及旧入口；[资产回归报告](../../../runs/test_results/fiber_bundling_simplified_preview_20261002/regression_report.json) 对 seed=0 的原 easy／medium／hard 分别核对 236／372／644 个文件，生成字节及实例 ID 均与修改前一致。
+
+### 完整执行与录像
+
+参考策略从标准 home 接近并抓住 `trunk_04` 护套，依次利用环外侧收拢 2／3 根细线，再回正并完整送入环内。使用已有 `contact_weld_v1`，取得双指 native 接触后才建立辅助抓持；细线不属于辅助目标。执行没有物体位姿写入、预抓跳转或 rewind。两档送入阶段允许至多 0.5 mm 起点偏心，仍通过原有 1 mm 规划碰撞间隙检查，不修改终态判据。旧三档策略参数不变。
+
+| seed 0 连续执行 | 原生终态 | 仿真时间 | 独立核对状态数 | 全程最大采样弯折 |
+| --- | --- | --- | --- | --- |
+| very_easy，25 ms / 40 子步 / 1 倍控制降采样 | 成功 | 106.350 s | 4,255 | 8.167° |
+| easier，相同时序 | 成功 | 155.425 s | 6,218 | 8.244° |
+| very_easy，默认 2.5 ms / 4 子步 / 10 倍控制降采样 | 成功 | 106.635 s | 42,655 | 8.172° |
+| easier，默认时序，以已成功动作从 home 重新执行 | 成功 | 155.417 s | 62,168 | 8.247° |
+
+以上为 CPU float64；默认时序还使用任务包的 `use_contact_island=False`。每例检查所有细线 tip-to-root 穿环、前护套清出、0.5 s 稳定窗口、完整子步禁碰覆盖、固定环／终端不动、home 起点、关节限位及连续健康抓持。[独立审计](../../../topogym/planning/fiber_bundling/audit.py)重新生成资产并核对身份，重算每 tick 的 Task。easier 首次默认时序复验约 127 s 被 SIGTERM 中断，保留原记录；第二次以已成功动作从 home 全程重跑并审计通过。详情见[交付报告](../../../runs/test_results/fiber_bundling_simplified_development_20261002/delivery_report.json)。
+
+录像来自前两条已审计完整历史，由共享 `rigid_replay` 恢复全部记录关节（含被动夹爪关节），逐帧核对所有 link 位姿后以 Nyx + compact_lab / RecordingSession 重渲染。位置与旋转恢复误差均为 0；三视角 848×480、30 fps，已全量解码并核对同步。重渲染不增加物理成功次数。
+
+- very_easy：[全景](../../../demos/fiber_bundling/varaition_very_easy/agentview/varaition_very_easy_agentview.mp4) · [近景](../../../demos/fiber_bundling/varaition_very_easy/front_oblique/varaition_very_easy_front_oblique.mp4) · [腕部](../../../demos/fiber_bundling/varaition_very_easy/wrist/varaition_very_easy_wrist.mp4)；3,191 帧，106.367 s。[证据与清单](../../../runs/demo_metadata/fiber_bundling/2026-10-02_very_easy_symmetric_v1/archive_manifest.json)。
+- easier：[全景](../../../demos/fiber_bundling/varaition_easier/agentview/varaition_easier_agentview.mp4) · [近景](../../../demos/fiber_bundling/varaition_easier/front_oblique/varaition_easier_front_oblique.mp4) · [腕部](../../../demos/fiber_bundling/varaition_easier/wrist/varaition_easier_wrist.mp4)；4,664 帧，155.467 s。[证据与清单](../../../runs/demo_metadata/fiber_bundling/2026-10-02_easier_symmetric_v1/archive_manifest.json)。
+
+### 判据与任务包
+
+[几何和注册检查](../../../ci_checks/test-fiber-bundling-simplifications.py) 6 项、[终态正反例](../../../ci_checks/test-fiber-bundling-terminal.py) 3 项通过，覆盖缺一根、只过尖端、环外绕行、逆序、接触证据缺失、过度弯折、稳定窗口与恢复。两档另在真实 Genesis 中以约 0.05 mm 浅接触验证：夹爪碰细线立即失败，碰护套可继续，rewind 能恢复。这些探针有明确的管理方位姿干预，只验证机制。原 easy／medium／hard 的 seed 0 资产和实例 ID 回归不变。
+
+两档各生成 privileged / standard 包，使用本地镜像 `topogym-local/fiber-bundling-variants:20261002-01`、tooling v11、terminal v4，登记在 [dataset.toml](../../../tasks/dataset.toml)：
+
+- very_easy：[privileged](../../../tasks/topogym-fiber-bundling-very-easy-i00-privileged/README.md) · [standard](../../../tasks/topogym-fiber-bundling-very-easy-i00-standard/README.md)。
+- easier：[privileged](../../../tasks/topogym-fiber-bundling-easier-i00-privileged/README.md) · [standard](../../../tasks/topogym-fiber-bundling-easier-i00-standard/README.md)。
+
+辅助抓持写入新包 frozen instance；旧三档默认配置不变。两档 privileged 的三条 hold 动作、严格实例重建、独立 verifier 两遍回放和视频收尾通过，正常得到 0 分。两档 standard 也已通过公开 HTTP 观察／三条动作、服务结束、独立进程回放及 verifier；live/replay 状态哈希一致，无基础设施或评分错误，录像完整。该服务检查未覆盖 Harbor 容器隔离资格。所有包保留 `oracle="none"`：本地参考求解、包流程可运行与 Harbor 完整参考解评分分别记录；镜像未推送到远程，未运行模型难度评估。详见[交付报告](../../../runs/test_results/fiber_bundling_simplified_development_20261002/delivery_report.json)。
+
+复现命令见 [runner 用法](../../../scripts/oracle_runners/README.md#fiber-两档简化变体)。完整日志、冻结源码、资产、配置、接触探针及各次尝试见 [development 目录](../../../runs/test_results/fiber_bundling_simplified_development_20261002/)。已结束运行的大日志按需无损压缩，`lossless_compression.json` 保留原文件哈希；审计和重渲染支持 `.jsonl.gz`。
+
+结果只证明所测 seed 0 在所列配置下可完成，不外推到所有 seed，不宣称 `very_easy < easier < easy` 已由模型评测确认。保留 `thresholds_calibrated=False`，没有新增连续时间 CCD 或长期物理资格。
+
 ## 当前自动终态
 
-`terminal_v4_fiber_ring_plane` 对 base/easy/medium/hard 启用 `goal_complete=True`。所有细芯必须按尖端到根部的材料顺序穿过环心平面，穿过时离环轴小于圆管中心线半径（孔最窄半径 + 管半径 = 17.48 mm），最后全部离环心平面超过管半径 + 细芯半径（5.2 mm）、留在出口侧；前护套端面按同一规则穿过环心平面，并越过环心 16 mm 清出；实际弯折角不超过 60°，连续满足默认 0.5 s。允许保持粗护套抓持。前护套采用 [2026-09-25 设计 §5.3](terminal_judgement_engineering_plan_20260925_zh.md#53-fiber-bundling) 的端面通过条件；旧任务卡的额外 30 mm 深度不用于本版本，历史验收记录不追溯修改。
+`terminal_v4_fiber_ring_plane` 对 very_easy/easier/base/easy/medium/hard 启用 `goal_complete=True`。所有细芯必须按尖端到根部的材料顺序穿过环心平面，穿过时离环轴小于圆管中心线半径（孔最窄半径 + 管半径 = 17.48 mm），最后全部离环心平面超过管半径 + 细芯半径（5.2 mm）、留在出口侧；前护套端面按同一规则穿过环心平面，并越过环心 16 mm 清出；实际弯折角不超过 60°，连续满足默认 0.5 s。允许保持粗护套抓持。前护套采用 [2026-09-25 设计 §5.3](terminal_judgement_engineering_plan_20260925_zh.md#53-fiber-bundling) 的端面通过条件；旧任务卡的额外 30 mm 深度不用于本版本，历史验收记录不追溯修改。
 
 **为什么从 v3 改成 v4（2026-09-29）。** v3 在环心前后各 5.2 mm 的入口/出口平面上检查离轴距离，并且都用孔最窄处的尺寸：细芯 ≤ 12.18 mm（13.479 − 1.2 − 0.1），前护套 ≤ 1.379 mm。可是入口平面在环前表面再往前 1.2 mm，那里圆管还没收窄。细芯在那里离轴 13–15 mm，继续前进会被圆管前侧的弧面导进孔里，却被 v3 判成没穿过。
 

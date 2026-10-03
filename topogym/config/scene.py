@@ -11,7 +11,7 @@ _TASK_CAMERA_PROFILES = {
 
 def load_scene_config(config):
     from hydra import compose, initialize_config_dir
-    from omegaconf import OmegaConf
+    from omegaconf import OmegaConf, open_dict
 
     from .registry import task_registration
 
@@ -23,6 +23,11 @@ def load_scene_config(config):
     root = Path(__file__).parent / "profiles"
     with initialize_config_dir(config_dir=str(root.resolve()), version_base="1.3"):
         scene = compose(config_name=f"tabletop_{robot_id}")
+    if config.task_id == "rope_threading" and robot_id == "aloha":
+        # The Wang layout needs the original robot/table relative height.
+        # Apply before robot asset selection and native IPC initialization.
+        with open_dict(scene.robot_control.robot):
+            scene = OmegaConf.merge(scene, OmegaConf.load(root / "task_configs" / "rope_threading.yaml"))
     # Task framing is calibrated for the standard Panda scene. Keep the robot's
     # resolution, wrist mount and observation keys when merging fixed views.
     camera_profile = _TASK_CAMERA_PROFILES.get(config.task_id)

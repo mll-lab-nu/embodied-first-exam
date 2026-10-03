@@ -451,3 +451,67 @@ digest = "sha256:c64462ee0841797eec9bb6a769372d54e9dcfe95df186dc47cd85ce33c2db01
 name = "robot-coding-bench/topogym-interlocked-claws-easier-i00-standard"
 digest = "sha256:1fb4514aecd0b2b8a5ca023644e413256af251b9ee9526fe333ae005e8e81b5d"
 
+
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-very-easy-i00-privileged"
+digest = "sha256:95ebacce510490861c9a439b3b416597a15fed5c75f69f5abb0f147f86a1a82e"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-very-easy-i00-standard"
+digest = "sha256:504b8d912f74b0effcdaa67ccc96a6a7bdfeaa0f6d69294622151b4f22bfb200"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-easier-i00-privileged"
+digest = "sha256:041ab27030829c3ac93f884c82b7790de4318416d05eeaa4b02caa8e8392e014"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-lock-picking-easier-i00-standard"
+digest = "sha256:3515414d3c90811db9933c8c9582d5d739b0f35708c75c7b06363ca29021c0bc"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-easier-i00-privileged"
+digest = "sha256:d0fabb760c9c90cc7373a89ae2f3674755be4d5412e6565320d24456f7bf2e3c"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-easier-i00-standard"
+digest = "sha256:10b9471b911e4f940c31d7e8425e92c2352e100e2c32ab331b1f60006c7c08c6"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-very-easy-i00-privileged"
+digest = "sha256:20db71ebc9bda0e56e1b5317a94128a389e83399d78fc4a7f0466cf27e3838ad"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-buzz-wire-3d-very-easy-i00-standard"
+digest = "sha256:89c84bab68c913d91998a2ea23f903b4416c3a0ba16eb224e9f1139c2d1a3a33"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-very-easy-i00-privileged"
+digest = "sha256:3ab5e5fa1e086516b5717a2fbef2f327486e0203dcfc79cfec663782442d3b3a"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-very-easy-i00-standard"
+digest = "sha256:c81441228ed3edb02aee0ea3f2b11d1cdbb176dfe80a8bba64324314f808f15c"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-easier-i00-privileged"
+digest = "sha256:14bbd51eb5a0d4e3203d802bd20adae570290866228993493d7c3ac076f81033"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-fiber-bundling-easier-i00-standard"
+digest = "sha256:53ed6d49eabf4e1e3e1e62605a82b2b22c43467ba3d5c564719059d0154b8663"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-very-easy-i00-privileged"
+digest = "sha256:17d44b6318ac8367469731d373c16736e97f1394422d32a248cf1a15c86aab6f"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-very-easy-i00-standard"
+digest = "sha256:c32425bc344914c00f481b8293130ea4183ceb09e40df1cd762dac6ed064839b"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-easier-i00-privileged"
+digest = "sha256:5931f5ed4b2ca35d6e68ee766be0e529cf88246110edb3113471fddd4844bbb9"
+
+[[tasks]]
+name = "robot-coding-bench/topogym-cast-keyhole-easier-i00-standard"
+digest = "sha256:b21bdf6b2c96119304bc329d05321b2ace22d7497257db2f65e586d7ae413a53"

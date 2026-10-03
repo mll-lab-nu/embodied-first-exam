@@ -456,6 +456,18 @@
       "sha256": "ea8fd2b0a819925ab03b44f9d3e40771ab90d0b20540226096295428e9373511",
       "source": "topogym.assets.geometry.cast_coil_simplified.geometry_record",
       "license": null
+    },
+    "variations/buzz_wire_3d/straight_span_deck_rest_v1/layout.json": {
+      "path": "variations/buzz_wire_3d/straight_span_deck_rest_v1/layout.json",
+      "sha256": "083fca92cf9f7ba1def1f9695eb7e1f7aa33ec73b863ba472c35991d9181f794",
+      "source": "topogym/assets/geometry/buzz_wire_3d_simplified.py",
+      "license": null
+    },
+    "variations/buzz_wire_3d/sideways_then_down_deck_rest_v2/layout.json": {
+      "path": "variations/buzz_wire_3d/sideways_then_down_deck_rest_v2/layout.json",
+      "sha256": "2d1ca08daaabe2f52e43fc625c9ae60f15c5dfaf299c653251dbfb112de9f842",
+      "source": "topogym/assets/geometry/buzz_wire_3d_simplified.py",
+      "license": null
     }
   }
 }
