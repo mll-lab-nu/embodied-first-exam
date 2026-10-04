@@ -7,7 +7,7 @@
 | Twin | `molmospaces-pick-and-place-color-i00-privileged` |
 | Simulator / robot | `molmospaces` / `franka-robotiq-2f85` |
 | Family / instance | `pick-and-place-color` |
-| Oracle | `none` — upstream record: learned policies are evaluated on the MolmoSpaces benchmark episodes in arXiv 2602.11337 (MolmoSpaces) and arXiv 2603.16861 (MolmoBot); no reference solution is shipped |
+| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-pick-and-place-color__hMCxv9C (run codex-gpt6_luna-medium, batch molmospaces-luna-1003; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/pick_and_place_color/unlimited/); human review in PR #47 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.0` |
 
@@ -31,7 +31,8 @@ None is shipped (see `molmospaces-pick-and-place-color-i00-privileged`).
 `Task.step` per executed row; it ends at upstream's `is_done()` (606 control steps), at the agent's `done`,
 or when the agent's time is up; then upstream's `judge_success()` on the final state: the rule of pick-and-place, for the receptacle of the named colour (the other, differently coloured receptacle does not count): the robot does not touch the object; that receptacle supports the object (at least 50% of its weight through contact, or upstream's on-receptacle test, or within 5 mm and 10 degrees, relative to the receptacle, of a pose in which it was supported at an earlier control step); and that receptacle has moved at most 15 cm and tilted at most 60 degrees. The two fresh-process
 replays of the recorded rows (`rcb_molmospaces.py replay`) must succeed and end in the same state; `replay.mp4` is
-rendered after the verdict.
+rendered after the verdict. No oracle; human review in PR #47 (PROTOCOL §2.7: per family, this task
+and its twin, a positive example and the `nop` result).
 
 ## Details
 | | |

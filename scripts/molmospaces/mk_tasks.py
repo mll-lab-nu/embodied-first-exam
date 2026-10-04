@@ -27,10 +27,35 @@ REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(
     l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#")
 )
-ORACLE_EVIDENCE = (
-    "upstream record: learned policies are evaluated on the MolmoSpaces benchmark episodes in arXiv 2602.11337 "
-    "(MolmoSpaces) and arXiv 2603.16861 (MolmoBot); no reference solution is shipped"
-)
+SITE_RUNS = "https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter"
+# Per family, GPT-6 Luna's privileged trial on the kept episode that the separate verifier graded 1 (batch
+# molmospaces-luna-1003; open-door: the earlier round's batch molmospaces-luna-rby1-r2c, same scene and success rule).
+POSITIVE = {
+    "pick": "molmospaces-pick-i02-privileged__wN67cFo",
+    "pick-and-place": "molmospaces-pick-and-place-i01-p__ywMYWxy",
+    "pick-and-place-next-to": "molmospaces-pick-and-place-next__3W4hmcz",
+    "pick-and-place-color": "molmospaces-pick-and-place-color__hMCxv9C",
+    "open": "molmospaces-open-i00-privileged__zxfmJNN",
+    "close": "molmospaces-close-i00-privileged__U2cQyVE",
+    "navigate-to": "molmospaces-navigate-to-i01-priv__Nxshh8t",
+    "open-door": "molmospaces-open-door-i01-privil__7zEbSdU",
+}
+REVIEW_PR = 47  # the pull request whose human review covers these tasks (PROTOCOL §2.7)
+
+
+def oracle_evidence(family: str) -> str:
+    where = (
+        "run codex-gpt6_luna-medium, batch molmospaces-luna-rby1-r2c of 2026-10-03: an earlier round on the same "
+        "episode, kept with the run's records, not on the results site"
+        if family == "open-door"
+        else f"run codex-gpt6_luna-medium, batch molmospaces-luna-1003; {SITE_RUNS}/{family.replace('-', '_')}/unlimited/"
+    )
+    return (
+        f"no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by "
+        f"the separate verifier: {POSITIVE[family]} ({where}); human review in PR #{REVIEW_PR}"
+    )
+
+
 LAYER_FILES = (
     ("environment/rcb_client.py", "rcb_client.py"),
     ("environment/rcb1.py", "rcb1.py"),
@@ -115,7 +140,9 @@ def values(inst: dict, fam: dict, robot: dict, version: str) -> dict:
         else "",
         "IMAGE": f"{REGISTRY}/eai-molmospaces:{version}",
         "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(),
-        "ORACLE_EVIDENCE": toml_str(ORACLE_EVIDENCE),
+        "ORACLE_EVIDENCE": toml_str(oracle_evidence(inst["family"])),
+        "REVIEW_PR": REVIEW_PR,
+        "UNITS_YAML": json.dumps(robot["units"]).replace("$", "$$"),
     }
 
 

@@ -5,7 +5,8 @@
 #      It exits 2 when final.json already holds the verdict (the service gave up after crashes): that verdict stays.
 #   2. replay the trajectory from the frozen instance in TWO fresh processes (`rcb_molmospaces.py replay`, the privileged
 #      verifier's replay): determinism = fresh process == fresh process; live_matches_replay = live == replay.
-#   3. merge everything into final.json, the only thing the verifier sandbox grades.
+#   3. merge everything into final.json, the only thing the verifier sandbox grades;
+#   4. a third replay renders replay.mp4, after the verdict is on disk (it never changes it).
 set -u
 DATA="${RCB_DATA:-/data}"; TOOL="${RCB_TOOL:?}"; INSTANCE="${RCB_INSTANCE:?}"
 python /srv/rcb_limited.py end "$DATA" --timeout "${RCB_COLLECT_END_TIMEOUT_S:-900}"; rc=$?
@@ -28,35 +29,31 @@ print(json.dumps(out))
 PY
     exit 0
 fi
+replay() {  # <n> [--video FILE]: one replay in a fresh process, its result in $DATA/replay<n>.json
+    n=$1; shift
+    RCB_SESSION_LOG= python "$TOOL" replay --instance "$INSTANCE" --traj "$DATA/trajectory.npz" --out "$DATA/replay$n.json" \
+        "$@" > /dev/null 2> "$DATA/replay$n.log"
+    echo "[finalize] replay $n exit $?"
+}
 echo "[finalize] episode dumped; replaying twice in fresh processes"
-RCB_SESSION_LOG= python "$TOOL" replay --instance "$INSTANCE" --traj "$DATA/trajectory.npz" --video "$DATA/replay.mp4" > "$DATA/replay1.json" 2> "$DATA/replay1.log"
-echo "[finalize] replay 1 exit $?"
-RCB_SESSION_LOG= python "$TOOL" replay --instance "$INSTANCE" --traj "$DATA/trajectory.npz" > "$DATA/replay2.json" 2> "$DATA/replay2.log"
-echo "[finalize] replay 2 exit $?"
+rm -f "$DATA/replay1.json" "$DATA/replay2.json" "$DATA/replay3.json"
+replay 1
+replay 2
 python - <<'PY'
 import json, os
 d = os.environ.get("RCB_DATA", "/data")
-def last_json(name):
-    """The replay's result: the last stdout line that is a JSON object (upstream prints other text, a multi-line JSON
-    block included, e.g. its pinned asset versions)."""
-    out = {}
+def result(name):
     try:
-        lines = open(os.path.join(d, name)).read().splitlines()
-    except OSError:
-        return out
-    for line in lines:
-        try:
-            v = json.loads(line)
-        except ValueError:
-            continue
-        out = v if isinstance(v, dict) else out
-    return out
+        v = json.load(open(os.path.join(d, name)))
+    except (OSError, ValueError):
+        return {}
+    return v if isinstance(v, dict) else {}
 out = {"replay_success": False, "deterministic": False, "video": False}
 try:
     out.update(json.load(open(os.path.join(d, "episode.json"))))
 except Exception as exc:
     out["error"] = f"no episode.json: {exc!r}"
-a, b = last_json("replay1.json"), last_json("replay2.json")
+a, b = result("replay1.json"), result("replay2.json")
 out["replay_success"] = bool(a.get("success")) and bool(b.get("success"))
 out["replay_sha"], out["replay_sha2"] = a.get("state_sha"), b.get("state_sha")
 out["deterministic"] = bool(a.get("state_sha")) and a.get("state_sha") == b.get("state_sha")
@@ -64,8 +61,20 @@ out["live_matches_replay"] = bool(a.get("state_sha")) and a.get("state_sha") == 
 if not (a.get("state_sha") and b.get("state_sha")):  # a replay process died (e.g. the GPU ran out of memory): not the agent's 0
     out.update({"replay_failed": 1, "infra_error": 1,
                 "error": "a replay process gave no result (replay1.log / replay2.log)"})
-out["video"] = os.path.exists(os.path.join(d, "replay.mp4"))
+elif not (a.get("instance_ok") and b.get("instance_ok")):  # the image no longer builds the frozen start: not the agent's 0
+    out.update({"instance_mismatch": 1, "infra_error": 1, "error": "a replay did not start in the instance's t = 0 state"})
 out["finalized"] = True
 json.dump(out, open(os.path.join(d, "final.json"), "w"))
 print(json.dumps(out))
+PY
+replay 3 --video "$DATA/replay.mp4"
+python - <<'PY'
+import json, os
+d = os.environ.get("RCB_DATA", "/data")
+try:
+    shown = json.load(open(os.path.join(d, "replay3.json"))).get("video")
+except (OSError, ValueError):
+    shown = False
+if shown:
+    p = os.path.join(d, "final.json"); out = json.load(open(p)); out["video"] = True; json.dump(out, open(p, "w"))
 PY

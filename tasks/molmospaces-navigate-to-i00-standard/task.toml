@@ -9,6 +9,7 @@ artifacts = [
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
   { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
   { source = "/data/replay2.log", service = "sim" },
+  { source = "/data/replay3.log", service = "sim" },           # and its third, which renders replay.mp4
   "/app/output/",
 ]
 
@@ -28,7 +29,7 @@ mode = "standard"                  # robot as a service: images + proprioception
 protocol = "eai-standard/2.2"
 expert_time_estimate_hours = 3.0
 oracle = "none"
-oracle_evidence = "upstream record: learned policies are evaluated on the MolmoSpaces benchmark episodes in arXiv 2602.11337 (MolmoSpaces) and arXiv 2603.16861 (MolmoBot); no reference solution is shipped"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-navigate-to-i01-priv__Nxshh8t (run codex-gpt6_luna-medium, batch molmospaces-luna-1003; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/navigate_to/unlimited/); human review in PR #47"
 
 [verifier]
 timeout_sec = 600.0
@@ -37,7 +38,7 @@ network_mode = "no-network"
 
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
 timeout_sec = 1800
 
 [agent]

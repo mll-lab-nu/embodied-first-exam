@@ -2,7 +2,8 @@
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # Rendering runs on an NVIDIA GPU (EGL), physics on the CPU. Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits
 # non-zero when the service crashes and compose restarts the same container (its /data kept); the service resumes the
-# episode from its journal. RCB_STARTUP_TIMEOUT_S: the startup watchdog (an episode builds in ~10 s).
+# episode from its journal. RCB_STARTUP_TIMEOUT_S: the startup watchdog (an episode starts 8-52 s after Harbor's
+# environment setup begins, docs/STANDARD_MODE_2_2.md §13.4).
 services:
   main:
     depends_on: [sim]
@@ -19,6 +20,7 @@ services:
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "3600"
       RCB_STARTUP_TIMEOUT_S: "300"
+      RCB_ACTION_UNITS: "fr3_joint1..7 in rad; gripper: the Robotiq command, 0 = open .. 255 = closed"
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""
     deploy:

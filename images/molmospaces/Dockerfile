@@ -40,11 +40,11 @@ WORKDIR /app
 
 FROM base
 # The assets of the frozen instances as prepare_assets.sh left them (install_assets.py install: downloaded with upstream's
-# resource manager, traced, pruned), checked here: every instance rebuilds to its recorded t = 0 state hash. No GPU
-# during the build: OSMesa.
+# resource manager, traced, pruned), checked here without network (so nothing is fetched at run time): every instance
+# rebuilds to its recorded t = 0 state hash. No GPU during the build: OSMesa.
 COPY build/assets /opt/molmospaces/assets
 COPY build/cache /opt/molmospaces/cache
 COPY build/check /tmp/check
-RUN cd /tmp/check && MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa PYTHONPATH=/tmp/check RCB_SESSION_LOG= \
+RUN --network=none cd /tmp/check && MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa PYTHONPATH=/tmp/check RCB_SESSION_LOG= \
       python install_assets.py verify instances && \
     rm -rf /tmp/check /root/.cache /tmp/rcb_molmospaces && chmod -R a+rX /opt/molmospaces

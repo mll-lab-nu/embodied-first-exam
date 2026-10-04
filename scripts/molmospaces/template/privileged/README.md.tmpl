@@ -16,7 +16,8 @@ Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in t
 Each replay is upstream's evaluation loop: one upstream `Task.step` per row until upstream's `is_done()` (the
 benchmark's @@HORIZON_S@@ s horizon = @@HORIZON_STEPS@@ control steps) or the last row, then upstream's `judge_success()`
 on the final state: @@SUCCESS@@. Pass iff both replays succeed and end in the same state; `replay.mp4` is rendered after
-the verdict.
+the verdict. No oracle; human review in PR #@@REVIEW_PR@@ (PROTOCOL §2.7: per family, this task and its twin, a
+positive example and the `nop` result).
 
 ## Details
 | | |

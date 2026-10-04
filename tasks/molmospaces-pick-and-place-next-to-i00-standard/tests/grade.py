@@ -1,7 +1,7 @@
 """Standard-mode verifier (MolmoSpaces): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (live success, two fresh-process replays of the recorded trajectory, determinism, crash-recovery
-fields), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic.
-Numeric-only reward.json."""
+fields), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic, the
+replays having started in the instance's t = 0 state. Numeric-only reward.json."""
 
 import json, os, shutil
 
@@ -24,6 +24,7 @@ for f in ("replay.mp4", "trajectory.npz", "episode.jsonl"):
     if os.path.exists(f"/data/{f}"):
         shutil.copy(f"/data/{f}", f"{LOG}/{f}")
 ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic"))
+ok = ok and not d.get("instance_mismatch")
 num = lambda k: float(d.get(k) or 0)  # noqa: E731
 write(
     ok,
@@ -40,10 +41,12 @@ write(
         "steps": int(d.get("steps") or 0),
         "elapsed_s": float(d.get("elapsed_s") or 0),
         "video_rendered": int(bool(d.get("video"))),
-        "grader_error": int(bool(d.get("replay_failed"))),  # a replay process gave no result: not the agent's 0
+        # a replay process gave no result, or the image no longer builds the frozen start: not the agent's 0
+        "grader_error": int(bool(d.get("replay_failed") or d.get("instance_mismatch"))),
+        "instance_mismatch": int(bool(d.get("instance_mismatch"))),
         # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
         # resume (docs/STANDARD_MODE_2_2.md §13), the service not ending its episode for the collect hook, a replay
-        # process that gave no result
+        # process that gave no result, replays that did not start in the instance's t = 0 state
         "infra_error": int(bool(d.get("infra_error"))),
         "gave_up": int(bool(d.get("gave_up"))),
         "sim_error": int(d.get("reason") == "error"),
