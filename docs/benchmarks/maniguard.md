@@ -7,12 +7,12 @@ by a Spot-compiled monitor. It runs on BEHAVIOR-1K **v3.7.2** (OmniGibson 3.7.2 
 `simulator = "maniguard"`, `robot = "franka-panda-longfinger"`. Tasks: `maniguard-<family>-i<NN>-privileged` and the
 standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the ManiGuard-Bench task index, base level.
 
-Status (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy smoke
-(`jar_transport/task_0000`) passes in the image. The included tasks below are frozen (the same state hash and object poses
-in fresh containers, also without network) and have a `full` oracle in both modes: a time-resampled public demonstration
-that Harbor's oracle run scores 1 (privileged: two fresh replays identical; standard: streamed through the service, live =
-both fresh replays), with `nop` 0; every standard twin passes the eai-standard/2.2 conformance check. The other shortlisted
-tasks have not run yet.
+Status (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy
+smoke (`jar_transport/task_0000`) passes in the image. The included tasks below are frozen (the same state hash and
+object poses in fresh containers, also without network) and have a `full` oracle in both modes: a time-resampled public
+demonstration (lid 16: with its cap placement redone) that Harbor's oracle run scores 1 (privileged: two fresh replays
+identical; standard: streamed through the service, live = both fresh replays), with `nop` 0; every standard twin passes
+the eai-standard/2.2 conformance check. The other shortlisted tasks have not run yet.
 
 | Task | ManiGuard-Bench | State hash | Strict goal held at step (oracle) |
 |---|---|---|---|
@@ -121,7 +121,13 @@ ManiGuard publishes 40 scripted demonstrations per task (`IDEAS-Lab-Northwestern
 trajectory is one of them, time-resampled to the evaluator's 20 Hz: `scripts/maniguard/oracles/<family>/<task>/oracle_gen.py`
 fetches the pinned episode (sha256-checked), reads the generator's commanded joint targets at the midpoint of each control
 step and appends 40 rows holding the last one; `oracle_trajectory.npz` is its output, `README_oracle.md` its record (the
-task README's reference solution). Both go to `solution/` only (the oracle agent's mount; the leak check keeps them and the
+task README's reference solution). The generator re-samples each episode's placements (the sponge, the dust, the cap), so a
+demonstration replays only approximately in the frozen scene: per task, its demonstrations are replayed in order until one
+reaches the strict goal (the README says which failed and why). Where none can, the oracle keeps the demonstration and
+redoes the failing step on the tooling: `lid_transport/task_0016`, whose four demonstrations tried never get the cap welded
+to the jug (it falls off when the jug is lifted, though ManiGuard's own evaluator counts them as successes), lowers the cap
+with its attachment point over the jug's until OmniGibson welds it; its `oracle_gen.py` runs in two steps (host resampling,
+then `rcb_maniguard.py run-oracle` in the image). Both go to `solution/` only (the oracle agent's mount; the leak check keeps them and the
 dataset's name out of everything the agent reads). A task's `oracle` becomes `full` only once Harbor's oracle run scores 1.
 The standard twin's oracle streams the same rows through its service (`solution/oracle_replay.py`: one-second
 `joint_position` chunks, `interpolate="hold"`, one row per control step) and is `full` once Harbor's oracle run of the twin
