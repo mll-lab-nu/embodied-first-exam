@@ -36,10 +36,14 @@ def environment_inputs(family, tier, *, variation=None, seed=0, parameters=None)
                 targets=[dict(entity="rope", max_strain_ratio=2., strength=1000., require_exposed_patch=False)]))
         changes.append("contact_relaxed_v16: explicit geometry/material/contact/grasp/timing/terminal candidate")
     elif family == "blanket_flatten":
+        # v16 live goal (the user's decision, 2026-10-03): the task default 0.90 accepted a folded corner. The graders'
+        # replay hold accepts 0.92 (harbor_templates/topogym/common/rcb_topogym.py REPLAY_TOLERANCES). The packaged v14
+        # cloth states are re-keyed for it, not prepared again (scripts/topogym_merge_candidate.py).
+        params = merge(params, dict(minimum_coverage_ratio=.95))
         overrides["grasp_assist"] = dict(model="pbd_local_patch_v1", stable_time_s=.03,
             targets=[dict(entity="blanket", spatial_radius_m=.018, material_radius_m=.018,
                           max_strain_ratio=1.3 if tier == "easy" else 1.5)])
-        changes.append("public birth UV support and explicit two-hand patch assistance")
+        changes.append("public birth UV support and explicit two-hand patch assistance; live coverage 0.95")
     elif family == "horseshoe_ring":
         changes.append("local default ring-clearance geometry and matching recommended grasp")
     elif family == "hedgehog_in_cage" and tier == "hard":

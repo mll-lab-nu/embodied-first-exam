@@ -18,7 +18,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / "scripts"), str(ROOT / "harbor_templates/t
 import rcb_topogym as M
 from topogym_rules import grader_details, grasp_regions
 from topogym_mk_task import require_current_destination
-from topogym_merge_candidate import candidate_inputs
+from topogym_merge_candidate import candidate_inputs, rekey_goal_parameters
 from topogym.planning.harbor_bridge.packaging import collect_helpers
 from topogym.planning.rope_threading.profiles import contact_relaxed_profile
 from topogym.simulator.config import SimulatorConfig
@@ -232,6 +232,72 @@ class NativeGoalAndSafety(unittest.TestCase):
                         self.assertFalse(result.task_success)
                 self.assertTrue(result.terminated)
                 self.assertEqual(bool(result.task_success), expected)
+
+
+class FrozenStateRekey(unittest.TestCase):
+    """v16's blanket coverage 0.95 against the packaged v14 cloth states (identity 0.90): a re-keyed copy, arrays untouched."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.folder = Path(self.temp.name)
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def blanket(self):
+        source = ROOT / "tasks/topogym-blanket-flatten-easy-i00-privileged/environment"
+        baseline = self.folder / "baseline"
+        baseline.mkdir()
+        (baseline / "instance.json").write_bytes((source / "instance.json").read_bytes())
+        state = baseline / "instance_assets/initial_state"
+        state.mkdir(parents=True)
+        for name in ("manifest.json", "arrays.npz"):
+            (state / name).write_bytes((source / "instance_assets/initial_state" / name).read_bytes())
+        return json.loads((baseline / "instance.json").read_text()), baseline / "instance.json", state
+
+    def test_profile_coverage_rekeys_a_copy_with_identical_arrays(self):
+        from topogym.utils.io import canonical_hash
+        inst, path, state = self.blanket()
+        before = {name: (state / name).read_bytes() for name in ("manifest.json", "arrays.npz")}
+        rekeyed, record = rekey_goal_parameters("blanket_flatten", "easy", inst, path, self.folder / "rekeyed")
+        self.assertEqual({name: (state / name).read_bytes() for name in before}, before)          # the source is only read
+        self.assertEqual((self.folder / "rekeyed/arrays.npz").read_bytes(), before["arrays.npz"])
+        manifest = json.loads((self.folder / "rekeyed/manifest.json").read_text())["metadata"]
+        self.assertEqual(manifest["identity"]["parameters"]["minimum_coverage_ratio"], .95)
+        self.assertEqual(manifest["identity_sha256"], canonical_hash(manifest["identity"]))
+        self.assertEqual(record["changed"], {"identity.parameters.minimum_coverage_ratio": [.9, .95]})
+        self.assertEqual(record["previous_manifest_sha256"], hashlib.sha256(before["manifest.json"]).hexdigest())
+        params = rekeyed["simulator"]["task_parameters"]
+        self.assertEqual(params["initial_state_sha256"],
+                         hashlib.sha256((self.folder / "rekeyed/manifest.json").read_bytes()).hexdigest())
+        self.assertEqual(Path(params["initial_state_path"]), self.folder / "rekeyed/manifest.json")
+        self.assertEqual(json.loads(path.read_text()), inst)                                      # the input is a copy
+        # candidate_inputs then carries the profile's coverage and the re-keyed archive, nothing else changes
+        cand, _, _, changes, _ = candidate_inputs("blanket_flatten", "easy", rekeyed, path)
+        self.assertEqual(cand["minimum_coverage_ratio"], .95)
+        self.assertEqual(cand["initial_state_sha256"], params["initial_state_sha256"])
+        self.assertTrue(any("coverage 0.95" in c for c in changes))
+
+    def test_no_rekey_without_a_goal_only_change(self):
+        inst, path, _ = self.blanket()
+        inst["simulator"]["task_parameters"]["minimum_coverage_ratio"] = .95
+        manifest = path.parent / "instance_assets/initial_state/manifest.json"
+        data = json.loads(manifest.read_text())
+        data["metadata"]["identity"]["parameters"]["minimum_coverage_ratio"] = .95
+        from topogym.utils.io import canonical_hash
+        data["metadata"]["identity_sha256"] = canonical_hash(data["metadata"]["identity"])
+        manifest.write_text(json.dumps(data))
+        self.assertIsNone(rekey_goal_parameters("blanket_flatten", "easy", inst, path, self.folder / "rekeyed"))
+        rope = ROOT / "tasks/topogym-rope-threading-easy-i00-privileged/environment/instance.json"
+        self.assertIsNone(rekey_goal_parameters("rope_threading", "easy", json.loads(rope.read_text()), rope,
+                                                self.folder / "rope"))
+        self.assertFalse((self.folder / "rekeyed").exists() or (self.folder / "rope").exists())
+
+    def test_rekey_refuses_an_archive_the_instance_does_not_pin(self):
+        inst, path, _ = self.blanket()
+        inst["simulator"]["task_parameters"]["initial_state_sha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "initial_state_sha256"):
+            rekey_goal_parameters("blanket_flatten", "easy", inst, path, self.folder / "rekeyed")
 
 
 if __name__ == "__main__":
