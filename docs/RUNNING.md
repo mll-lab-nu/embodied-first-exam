@@ -61,7 +61,8 @@ refreshes every 5 s. It shows every trial as pending, setup, running (agent time
 success or failed, with live tokens when the usage gateway runs, the reward, the videos and the tail of the agent's
 output. Pending trials come from `$JOBS/.plan/<batch>.json`, which the runner writes when it starts. Reach the page from
 another machine with `ssh -N -L 8765:127.0.0.1:<port> <host>`; it shows the agent's output, so keep it off public
-addresses.
+addresses. It has no login (every user of a shared host can open it) and serves a running trial's files before the
+runner's secret scan has redacted them.
 
 Runner-side tools (they run on the host, never in a task): `scripts/log_mirror.py` (in the `rcb-log-mirror` container: an
 append-only copy of every trial's `agent/` record that neither the agent nor the host user can delete),
