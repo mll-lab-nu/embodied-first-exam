@@ -12,7 +12,10 @@ smoke (`jar_transport/task_0000`) passes in the image. The included tasks below 
 object poses in fresh containers, also without network) and have a `full` oracle in both modes: a time-resampled public
 demonstration (lid 16: with its cap placement redone) that Harbor's oracle run scores 1 (privileged: two fresh replays
 identical; standard: streamed through the service, live = both fresh replays), with `nop` 0; every standard twin passes
-the eai-standard/2.2 conformance check. The other shortlisted tasks have not run yet.
+the eai-standard/2.2 conformance check. Blocked (no oracle that meets the bar; `families.json` `blocked` says why):
+`dusty_transfer/task_0002` and `task_0000` (the poured potato bounces off the flat plate; the potato rolls into the
+fingers when the tray is lifted) and `lid_transport/task_0014` (its lid-on-kettle goal cannot hold under the handle
+arch; replaced by `lid_transport/task_0007`). The other reserve tasks have not run.
 
 | Task | ManiGuard-Bench | State hash | Strict goal held at step (oracle) |
 |---|---|---|---|
