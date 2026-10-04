@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 """Offline tooling-v15 re-grade of ONE finished TopoGym trial from what it saved, into a separate output dir.
 
-Tooling v15 (2026-10-03) changes only the grading replays of the GPU families (rcb_topogym.py "grading replays": the
-final targets held for up to 2 s after the last row, the replay tolerances). The live criteria of knot_untying,
-rope_threading, slotted_post_ring, orbits and lock_picking are unchanged, so their v14 trials can be graded again from
-their saved trajectory with the v15 task dir's own graders:
+Tooling v15 (2026-10-03) changes the grading replays of the GPU families (rcb_topogym.py "grading replays": the final
+targets held for up to 2 s after the last row, the replay tolerances) and, for every family, the physical-validity policy
+(rcb_topogym.py "physical-validity policy": v14's R1 no longer ends an episode, the protective stop does, a breakdown is an
+infrastructure error unless forced, a success with a deep task contact is held for review). A v14 trial whose live
+episode was not ended by R1 can be graded again from its saved trajectory with the v15 task dir's own graders:
   * privileged: the task's tests/grade.py replays the agent's /app/output/trajectory.npz twice, as its verifier does;
   * standard: the live verdict stays (the trial's final.json: live success, live rows, crash-recovery fields); the task's
     environment/sim/replay.py replays the live rows once (the collect hook's grading replay, with the video), the merge of
     its environment/sim/finalize.sh writes final.json, and its tests/grade.py grades that.
-blanket_flatten trials are refused: v15 also changes its live criterion (coverage 0.90 -> 0.95), so they are rerun. The
-CPU families have no grading-replay change (nothing to re-grade). The trial dir is only read: mount it read-only.
+blanket_flatten trials are refused: v15 also changes its live criterion (coverage 0.90 -> 0.95), so they are rerun. So is a
+standard trial whose live episode R1 ended (final.json reason task_contact_forced / held_contact_forced: its agent never
+got to continue); a v14 final.json has no live review record, so only its replay's counts. The trial dir is only read:
+mount it read-only.
 
 Run it in a fresh container of the task's image on one GPU (the trial's frozen instance must be the task's: the
 trajectory's instance_sha is checked), e.g. on lab:
@@ -94,6 +97,8 @@ def main() -> int:
             sys.exit("the trial saved no final.json / trajectory.npz: nothing to re-grade")
         if final.get("gave_up") or final.get("instance_mismatch"):
             sys.exit("the trial's verdict did not come from a replay (gave_up / instance_mismatch): it stands")
+        if str(final.get("reason") or "").startswith(("task_contact_forced", "held_contact_forced")):
+            sys.exit("v14's R1 ended the live episode (its agent never got to continue): rerun it, it cannot be re-graded")
         data, log = Path("/data"), Path("/logs/verifier")
         (out / "data").mkdir(exist_ok=True)
         if not (data.is_dir() and log.is_dir() and os.path.samefile(data, out / "data")):
@@ -120,8 +125,8 @@ def main() -> int:
                   mode="standard" if standard else "privileged", task=name, trial=str(trial),
                   original_reward=original, reward=reward, grading=grading)
     (out / "regrade.json").write_text(json.dumps(record, indent=1))
-    keys = ("success", "live_success", "replay_success", "all_success", "replay_hold_steps", "replay_tolerance_needed",
-            "grader_error", "infra_error")
+    keys = ("success", "success_pending_review", "live_success", "replay_success", "all_success", "replay_hold_steps",
+            "replay_tolerance_needed", "grader_error", "infra_error")
     print(json.dumps(dict(task=name, v14={k: (original or {}).get(k) for k in keys if k in (original or {})},
                           v15={k: (reward or {}).get(k) for k in keys if k in (reward or {})})), flush=True)
     return 0

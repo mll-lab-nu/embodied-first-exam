@@ -95,10 +95,16 @@ class InfrastructureReporting(unittest.TestCase):
         tree = ast.parse((SIM / 'server.py').read_text())
         nodes = [n for n in tree.body if (isinstance(n, ast.Assign) and any(getattr(t, 'id', '') == 'INFRA_REASONS' for t in n.targets))
                  or (isinstance(n, ast.FunctionDef) and n.name == 'instability_fields')]
-        ns = {'E': {'reason': 'simulator_instability'}, 'S': type('S', (), {'instability': {'max_speed_m_s': 21.4}})()}
+        review = {'pending': True, 'count': 1}
+        monitor = type('Monitor', (), {'review': lambda self: review})()
+        ns = {'E': {'reason': 'simulator_instability'},
+              'S': type('S', (), {'instability': {'max_speed_m_s': 21.4}, 'monitor': monitor})()}
         exec(compile(ast.Module(body=nodes, type_ignores=[]), 'server.py', 'exec'), ns)
         self.assertIn('simulator_instability', ns['INFRA_REASONS'])
-        self.assertEqual(ns['instability_fields'](), {'simulator_instability': True, 'instability': {'max_speed_m_s': 21.4}})
+        self.assertEqual(ns['instability_fields'](), {'simulator_instability': True, 'instability': {'max_speed_m_s': 21.4},
+                                                      'review': None})        # before the scene is ready: no episode yet
+        ns['E']['ready'] = True                                              # the live episode's review events go along
+        self.assertEqual(ns['instability_fields']()['review'], review)
 
 
 if __name__ == '__main__':

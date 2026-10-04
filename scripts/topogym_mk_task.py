@@ -263,8 +263,8 @@ s.object_pose(name); s.object_bounds(name); s.state_sha()          # one object'
 p["object_in_hand"]("{arm}"); p["set_joint_targets"](row, steps=1); p["gripper_quat"](yaw, approach)   # help(p[...])
 s.step(action)                     # one low-level action ({len(d['action_layout'])} entries, below) = one control step (1/{d['control_hz']:g} s)
 s.record_start(); ...; actions = s.record_stop()   # (T, {len(d['action_layout'])}) actions, one row per control step
-s.status()                         # {{'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}}
-s.safety()                         # since the last call: deepest contacts / rope volume ratio / table-guard stops vs the limits
+s.status()                         # {{'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end', 'review'}}
+s.safety()                         # since the last call: pressing loads / deepest contacts / rope volume / table-guard stops vs the limits
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video

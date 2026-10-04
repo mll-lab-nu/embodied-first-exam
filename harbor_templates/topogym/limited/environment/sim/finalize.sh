@@ -81,15 +81,20 @@ if isinstance(a, dict):                  # a replay result (None: the replay pro
     g = a.get("grading") or {}             # the grading replay's hold and replay tolerances (GPU families, tooling v15)
     out["replay_grading"] = g or None; out["replay_grading_policy"] = bool(r.get("grading_replay"))
     out["replay_hold_steps"] = int(g.get("hold_steps", 0)); out["replay_tolerance_needed"] = bool(g.get("tolerance_needed"))
+    out["replay_review"] = a.get("review")   # the replay's review events (deep task contacts; the live ones: "review")
+    out["review_frames"] = r.get("review_frames") or []
 elif r.get("error"):
     out["error"] = f"replay: {r['error']}"
 if isinstance(a, dict) and a.get("episode_end") == "simulator_instability":
     out["replay_instability"] = a.get("instability")
-# A numerically unstable simulation (rcb_topogym.SIMULATOR_INSTABILITY), in the live episode or in this replay (GPU physics:
-# either may meet it without the other), is an infrastructure failure: never the agent's success, never the task's failure.
+# A simulator breakdown without forcing (rcb_topogym.SIMULATOR_INSTABILITY), in the live episode or in this replay (GPU
+# physics: either may meet it without the other), is an infrastructure failure: never the agent's success, never the task's
+# failure. A breakdown right after forcing ends the episode as the agent's "forced_breakdown: ..." instead.
 if out.get("reason") == "simulator_instability" or out.get("replay_episode_end") == "simulator_instability":
     out["simulator_instability"] = True; out["infra_error"] = 1
-    out.setdefault("error", "simulator_instability: a cloth particle exceeded the simulator's plausibility speed limit")
+    from rcb_topogym import breakdown_words
+    ev = out.get("instability") if out.get("reason") == "simulator_instability" else out.get("replay_instability")
+    out.setdefault("error", "simulator_instability: " + (breakdown_words(ev) if isinstance(ev, dict) else "a simulator breakdown"))
 out["video"] = bool(r.get("video")) and os.path.exists(os.path.join(d, "replay.mp4"))
 if r.get("gpu_lost"):
     out["gpu_lost"] = True; out["infra_error"] = 1

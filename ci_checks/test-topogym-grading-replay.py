@@ -251,10 +251,14 @@ def module(name, relative):
     return result
 
 
-def replay_status(success, strict=None, hold=0, row=4):
+REVIEW = dict(pending=True, count=1, max_depth_mm=3.4, events=[dict(kind="deep", step=3, physics_step=27, ticks=2,
+                                                                     bodies=["the claw 1", "the claw 0"], depth_mm=3.4, force_n=42.)])
+
+
+def replay_status(success, strict=None, hold=0, row=4, review=None):
     """A Session.replay status: strict=None -> a plain replay (no grading record)."""
     st = dict(success=success, state_sha="s", sim_steps=row + hold, physics_steps=10 * (row + hold), sim_time_s=.25,
-              progress=float(success), episode_end="success" if success else None)
+              progress=float(success), episode_end="success" if success else None, review=review)
     if strict is not None:
         st["grading"] = dict(revision=M.GRADING_REVISION, rows=row, strict_success=strict, success_row=row if strict else None,
                              hold_steps=hold, hold_limit_steps=80, success_in_hold=success and hold > 0,
@@ -286,6 +290,10 @@ class Graders(unittest.TestCase):
 
             def stop_video(self):
                 pass
+
+            def render_review_frames(self, acts, events, out_dir, **kw):
+                calls.append(dict(frames=[e["step"] for e in events]))
+                return [os.path.join(out_dir, "step_00003.png")]
 
             def close(self):
                 pass
@@ -320,6 +328,22 @@ class Graders(unittest.TestCase):
     def test_privileged_cpu_family_unchanged(self):
         reward, verdict, _ = self.privileged([replay_status(True), replay_status(True)])
         self.assertEqual((reward["success"], reward["strict_goal_reached"], reward["replay_hold_steps"]), (1, 1, 0))
+        self.assertEqual((reward["success_pending_review"], reward["review_events"]), (0, 0))
+        self.assertIsNone(verdict["evidence"]["review"])
+
+    def test_privileged_a_success_with_a_deep_contact_is_held_for_review(self):
+        reward, verdict, calls = self.privileged([replay_status(True), replay_status(True, review=REVIEW)])
+        self.assertEqual((reward["success"], reward["success_pending_review"], reward["all_success"]), (0, 1, 1))
+        self.assertEqual((reward["review_events"], reward["review_max_depth_mm"]), (1, 3.4))
+        self.assertFalse(verdict["success"])
+        self.assertEqual(verdict["evidence"]["review"]["replays"], [None, REVIEW])
+        self.assertEqual(verdict["evidence"]["review"]["frames"], ["review_frames/step_00003.png"])
+        self.assertIn(dict(frames=[3]), calls)                      # frames around the event, one more replay
+
+    def test_privileged_review_never_rescues_a_failure(self):
+        reward, verdict, calls = self.privileged([replay_status(False, review=REVIEW), replay_status(True)])
+        self.assertEqual((reward["success"], reward["success_pending_review"], reward["review_events"]), (0, 0, 1))
+        self.assertFalse(any("frames" in c for c in calls))
 
     def standard(self, final):
         """The standard tests/grade.py over a final.json (paths rewritten as test-post-merge-repairs.py does)."""
@@ -344,6 +368,16 @@ class Graders(unittest.TestCase):
         self.assertEqual((reward["success"], reward["replay_hold_steps"], reward["replay_tolerance_needed"]), (1, 12, 1))
         reward = self.standard(dict(base, success=True, replay_success=False, reason="success"))
         self.assertEqual(reward["success"], 0)
+
+    def test_standard_a_success_with_a_deep_contact_is_held_for_review(self):
+        base = dict(finalized=True, deterministic=True, instance_matches=True, success=True, replay_success=True, reason="success")
+        reward = self.standard(dict(base, review=None, replay_review=None))
+        self.assertEqual((reward["success"], reward["success_pending_review"], reward["review_events"]), (1, 0, 0))
+        for live, replay in ((REVIEW, None), (None, REVIEW), (REVIEW, REVIEW)):
+            reward = self.standard(dict(base, review=live, replay_review=replay))
+            self.assertEqual((reward["success"], reward["success_pending_review"], reward["review_max_depth_mm"]), (0, 1, 3.4))
+        reward = self.standard(dict(base, success=False, review=REVIEW, reason="task_failed"))
+        self.assertEqual((reward["success"], reward["success_pending_review"]), (0, 0))
 
     def test_standard_replay_is_tolerant_only_after_a_live_success(self):
         import json

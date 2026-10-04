@@ -9,7 +9,9 @@ grading replay (Session.replay(grading=True), tooling v15): for the GPU families
 thresholds and, if the episode has not ended after the last row, the final targets are held for up to 2 s with the replay
 tolerances (rcb_topogym.REPLAY_TOLERANCES); replays[0]["grading"] records it. After a live failure the replay is plain
 (the instance's thresholds, no hold): a live failure is final, and a tolerant replay must never look like a success.
-The verdict is committed before video finalization; a finalization failure does not rerun physics. Prints one JSON line
+The verdict is committed before video finalization; a finalization failure does not rerun physics. After a live success
+whose live episode or replay had a review event (a deep task contact, rcb_topogym.CONTACT_RULE: the success is held for
+review), one more pass renders frames around the events into <data>/review_frames/ (`review_frames`). Prints one JSON line
 (replays[0] = Session.status())."""
 from __future__ import annotations
 import argparse, json, os, sys, time, traceback
@@ -58,6 +60,14 @@ def main() -> int:
             except Exception as exc:
                 traceback.print_exc(); video_error = repr(exc)[:300]
             out.update(media_status="error" if video_error else "complete", video_error=video_error)
+            M.atomic_json(os.path.join(a.data, "replay.verdict.json"), out)
+        review = st.get("review") or dump.get("review")
+        if grading and review:               # a live success held for review: frames around its events
+            try:
+                files = s.render_review_frames(live, review["events"], os.path.join(a.data, "review_frames"), physics_steps=ticks)
+                out["review_frames"] = [os.path.relpath(f, a.data) for f in files]
+            except Exception as exc:
+                traceback.print_exc(); out["review_frames_error"] = repr(exc)[:300]
             M.atomic_json(os.path.join(a.data, "replay.verdict.json"), out)
         print(json.dumps(out), flush=True)
     finally:

@@ -16,6 +16,13 @@ The 78 tier dirs: tooling v15, `eai-standard/2.3`, `rcb-topogym:0.2.12-cu128`; J
   tolerances on continuous thresholds; a tolerant replay only confirms a strict success (standard: the live one; a live
   failure is final; privileged: one replay must reach the strict goal within the trajectory's rows). Details in Grading
   replays below; the live episode and the agent's own Session are unchanged. The texts state all of it.
+  - v15 also replaces v14's contact rule with the user's general physical-validity policy (2026-10-03 ~21:30; details in
+    Physical-validity policy below). v14's R1 (a rigid task contact deeper than 3 mm, or deeper than 1 mm for 0.25 s,
+    ended the episode) ended a passive impact: standard trial QKSrtdL (interlocked_claws hard) had opened both grippers
+    and held every joint target when the released claw landed on the other one, 4.6 mm deep for 3 ticks. Now penetration
+    depth is evidence (a success with a deep task contact is held for review, not credited automatically), a protective
+    stop ends an episode whose arm drive stays at its torque cap while that arm, or a part it holds, presses on something,
+    and a simulator breakdown is an infrastructure error unless the arm was forcing just before it.
   - blanket_flatten's 3 instances were made again (`make-instance --task-parameters`: `minimum_coverage_ratio` 0.95). Their
     frozen cloth state is bound to the scene identity, which includes every task parameter, so the archive was re-keyed
     (`identity.parameters.minimum_coverage_ratio` and `identity_sha256` updated, an `identity_rekey` record added,
@@ -279,6 +286,89 @@ metrics, margins against the live thresholds, positions).
 | slotted_post_ring | ring speed 1 mm/s / 0.02 rad/s, containment (1 mm boundary, z band), separator | unchanged | unchanged | v12 agent ULq3ATD (92 rows + hold), 3 replays: ring position 3 um, speeds 6e-6 m/s / 6e-5 rad/s (< 1 %); the cord, beads and discs (remainder) diverge by 0.3-8 mm (branch-like) |
 | orbits | target speed 1 mm/s / 0.02 rad/s (cord and handle), containment, separator | unchanged | unchanged | v12 agent HHnLEzf (154 rows + 80 hold), 1 replay (the second was stopped by the RAM guard): the cord crept at 1.9-3.3 mm/s through the hold (above the limit, not near it); handle 0.9-2.1e-3 rad/s; separator and z margins constant. No spread measured: no slack |
 | lock_picking | shaft-bore excess 10 um, insertion margin 1 mm, slot clearances | unchanged | unchanged | v12 agents oRtMyhk (1178 rows) / JPLHPHT (1285 rows), 3 replays each: bit-identical up to control step 543 / 476, then a contact branch (32-42 um at onset, 1.2 / 5.7 mm key position and 0.27 rad rotor angle at the end); no success trajectory exists to measure at the goal |
+
+## Physical-validity policy (tooling v15)
+The user's general policy (2026-10-03 ~21:30) replaces v14's R1 as the episode-ending contact rule. Penetration depth
+measures the contact solver, not the agent: a passive impact reaches 4-5 mm (QKSrtdL: the released claw landing on the
+other one, 4.6-4.9 mm; a released claw falling, 4.4 mm), the press and push rams at the capped torques stay at 0.1-2.4 mm,
+and the deepest readings come from jams and impacts (below). So the policy separates who caused what, with no
+per-artifact exceptions
+(`rcb_topogym.py` "physical-validity policy", `_install_rules`; every family; the t = 0 states and hashes unchanged):
+1. Guards (unchanged from v14): arm drive torque caps, the fingertip-table guard, the standard service's joint-speed
+   limit and IK-jump refusal.
+2. Failures the agent caused, which end the episode: the task's own rules (wire / fiber touch, rotor limit, chain link, a
+   body or the cloth fallen, R2: a crushed soft volume or a stretched cord attachment persisting 0.25 s) and the
+   **protective stop** (`PROTECTIVE_STOP`): an arm drive, not a gripper drive, at 95 % of its torque cap or more while
+   that arm, or a movable body it holds (both fingers touching it, or its assisted-grasp binding), presses on anything
+   else with 20 N or more in total, on every physics tick for 0.5 s. Reason (oDonuzB below): `protective_stop: the right
+   arm's waist drive was at 100 % of its torque cap (12.9 N m) while the piece 1 it holds pressed on the piece 0 with
+   102 N, on every physics tick for 0.5 s. ...`.
+3. A simulator breakdown ends the episode as an infrastructure error (`simulator_instability`, evidence in
+   `status()["instability"]`): a non-finite rigid state, a cloth particle faster than 20 m/s, an invalid native IPC
+   state, a rigid task contact deeper than 10 mm (`BREAKDOWN_PENETRATION_M`); unless the protective stop's condition held
+   on any tick of the 0.25 s before it (`PROTECTIVE_STOP["attribution_s"]`): then it is the agent's
+   `forced_breakdown: the simulation broke down (<what>) right after forcing: <which arm, drive, contact, how long ago>`.
+4. Evidence only: every tick's deepest non-held and held-finger task contact (`s.safety()`, the service's
+   `meta["safety"]`). A tick deeper than 3 mm (held finger: 4 mm), or a contact above 1 mm (held: 2 mm) for 0.25 s, is a
+   review event (`status()["review"]`: kind, control step, physics tick, bodies, depth, force, length). A success whose
+   episode or replay had one is not credited automatically: success 0 with `success_pending_review` 1 (and
+   `review_events`, `review_max_depth_mm`), the events in `verdict.json` `evidence.review` (privileged) or
+   `review.json` (standard, from `final.json` `review` / `replay_review`), frames around them in `review_frames/`
+   (`Session.render_review_frames`: one more replay, after the verdict). A clean success is credited automatically.
+
+The protective stop's counters, the forcing memory that attributes a breakdown and the review contacts' persistence are
+task history (`task_state["rcb_rules"]`, absent while zero), so a rewind restores them. Standard trials whose live episode
+v14's R1 ended need a rerun (their agent never got to continue): QKSrtdL (claws hard) and diFXNtw (claws medium). No
+finished v14 privileged replay was cut by R1 (all ended without an episode end, or in success).
+
+### Calibration and validation (lab 2026-10-03)
+Per physics tick, per arm: the largest arm-drive control force as a fraction of its cap and the contact force between
+the arm's own bodies and the rest (`/DATA2/qineng/rcb/topogym_v1/v15/bin/pstop_probe.py`, outputs in `v15/out/pstop/`;
+the old tooling with R1's verdicts off for the measurement, then the committed tooling for the outcomes). "Longest" = the
+longest run of consecutive ticks with the stop's condition (95 % of cap, 20 N); the stop fires at 200 (0.5 s).
+
+| case | longest run (ticks) | deepest task contact | outcome with the v15 tooling |
+|---|---|---|---|
+| claws hard privileged success qqiVt2v | 0 | 0.6 mm | success, clean; state hash `0074e6165c952f48` = v14's verifier replays |
+| claws easy privileged success UWPrhoN | 0 (wrist wraps at 99 % in free air, 1 N) | 0.2 mm | success, clean; `78159f7d9288c104` = v14's |
+| claws easy reference oracle (`claws_easy.npz`) | 131 | 0.5 mm | success at step 881, clean; `057df6735858e33c` = v14's |
+| **claws easy standard success oDonuzB** | **890** (2.2 s: the right waist at 100 % of 12.9 N m while piece 1 pressed piece 0 with 80-130 N; later 300+ ticks at 300 N) | 0.5 mm | **protective stop at step 984** (the user decides, below) |
+| claws hard standard QKSrtdL (the passive impact), its 50 rows + an 80-step hold | 0 (drives at 2-10 %) | 4.9 mm | no failure in its rows (a review event); in the hold the released claws fall: "A task body fell below the table" at step 75 |
+| the same with the breakdown bound lowered to 4 mm | 0 | 4.6 mm | `simulator_instability` at step 50: a breakdown without forcing |
+| claws medium standard diFXNtw, its 8313 rows + 80 | 43 | 0.9 mm | no episode end, no review event (its live R1 failure, 1.5 mm, is in no replay: live state != replay state) |
+| hedgehog press ram, fast (Panda; rulesfix_1003) | 446 | 0.5 mm | protective stop at step 164 (joint 3 at 100 % of 50 N m, 124 N on the cage) |
+| held-claw ram, 15 cm (claws easy) | 1230 | 0.3 mm | stops at its step 31 (measurement) |
+| claws easy push ram | 130 | 0.3 mm | no stop (0.33 s) |
+| press rams, fast (coil / horseshoe / keyhole; rulesfix_1003) | 0 (the table guard stops the press 15 mm below the tabletop: drives at 12-85 %) | 2.4 / 1.1 / 1.3 mm | no stop |
+| held-claw ram, fast, 6 cm (claws hard; rulesfix's `d_claws_hard_heldfast_rules`) | 1 (one impact at 100 %, then the claw slides to its target) | 0.6 mm | no stop |
+| held-claw ram, 15 cm (claws hard) | 0 (the drive follows the ramp at 85 %) | 78.7 mm for 2 ticks (the claw into the other gripper's finger) | `simulator_instability` (not forced) |
+| tug-of-war: both arms pull their interlocked pieces 6 cm apart (claws hard) | 5 (intermittent) | 9.4 mm (150 kN contact spikes) | review events; with the bound at 4 mm: `forced_breakdown` (left forearm roll at 100 %, 150 kN) |
+| the same, 15 cm | 2 | 4.8 mm (62 kN for 3 ticks: the pieces pass through each other) | **success**, held for review (end to end below) |
+| tug-of-war 6 / 15 cm (claws easy) | 0-2 (the physical grips slip) | 0.4-0.7 mm | no stop |
+| blanket easy privileged success Pxz524p (5361 rows); blanket easy standard uYyNBH5 (2087 rows) | 0: the robot touched nothing rigid (the cloth is PBD) | - | Pxz524p succeeds at step 4060 on v15's 95 % instance (uYyNBH5, a 90 % success, does not reach 95 %); no stop |
+| blanket medium privileged success ccaPmiU (1817 rows) | 0 (the grippers pressed the table with up to 66 N, drives at 73 % at most) | - | success at step 1636 on v15's 95 % instance, clean |
+| knot easy privileged success WWfaVD9 (365 rows) | 0 (the right gripper on the table: 2.8 N at most, drives below 92 %) | - (IPC) | success at row 365, clean |
+
+The claws easy standard success forces longer and harder than every scripted ram: no threshold of drive fraction,
+contact force or window separates them (a 0.25 s window would also stop the reference oracle, 131 ticks). Open user
+decision: keep the protective stop as an episode end (oDonuzB is stopped), or make it review evidence like the deep
+contacts (a success with 0.5 s of the stop's condition held for review). The exploit R1 was made for (bodies forced
+through each other: the 15 cm tug) takes 3 ticks at 4.8 mm: R1 failed it at once, as it failed QKSrtdL's passive impact;
+the stop does not see 3 ticks of forcing and the breakdown bound is 10 mm, so v15 credits nothing automatically there: the
+deep contact holds the success for review.
+
+End to end on lab with the committed task dirs (`v15/root_v15c`): the 15 cm tug's trajectory (74 rows, a success)
+through the privileged verifier: both replays succeed with the same state hash, `success` 0, `success_pending_review` 1,
+`review_events` 1, `review_max_depth_mm` 4.8, verdict.json `evidence.review` (control step 2, physics tick 13, 3 ticks,
+claw 1 / claw 0, 22980 N) and `review_frames/` around it. The standard pipeline in one sim container (the sidecar
+service, QKSrtdL's 50 rows sent back through the real client plus a 2 s watch, the collect hook, the grader): the live
+episode runs past row 49 (`meta["safety"]["review"]`: one deep event, 4.8 mm), the released claws fall at step 75 ("A
+task body fell below the table"), the replay matches the live state, `success` 0, `success_pending_review` 0,
+`review_events` 1, `review.json` written. A Harbor nop of interlocked_claws easy standard (main + sidecar + the separate
+verifier): `finalized` 1, `success` 0, `success_pending_review` 0, no infrastructure or grader error, video rendered.
+CPU determinism: the claws hard / easy privileged successes and
+the claws easy oracle end with v14's verifier state hashes, and QKSrtdL / diFXNtw (rows + hold) with the hashes of the
+v14 tooling's own replays with R1's verdicts off: the policy reads, it never changes the physics.
 
 ## Grading GPU
 - Privileged: the verifier is its own container; on a host with a spare GPU (lab) the host's copy of

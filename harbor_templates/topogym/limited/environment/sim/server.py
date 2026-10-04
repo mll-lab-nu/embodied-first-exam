@@ -78,7 +78,10 @@ INFRA_REASONS = ("error", "simulator_instability")
 
 
 def instability_fields() -> dict:
-    return {"simulator_instability": E["reason"] == "simulator_instability", "instability": getattr(S, "instability", None)}
+    """The breakdown evidence and the live episode's review events (deep task contacts: a success with any is held for
+    review by the grader, rcb_topogym.CONTACT_RULE)."""
+    return {"simulator_instability": E["reason"] == "simulator_instability", "instability": getattr(S, "instability", None),
+            "review": S.monitor.review() if E.get("ready") else None}
 
 
 def write_final() -> None:
@@ -211,10 +214,17 @@ SPEC = {
                              "(x right, y up, z backward)"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
-                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, or on a "
-                "simulator error; a numerically unstable simulation (any cloth particle faster than "
-                f"{M.PARTICLE_SPEED_LIMIT_M_S:g} m/s) ends it with reason {M.SIMULATOR_INSTABILITY}, graded as an infrastructure "
-                "error, not as the task's failure; the recorded trajectory is then replayed once in a fresh process and graded"),
+                "when the task's own failure predicate fires (reason task_failed), when the protective stop fires (reason "
+                f"{M.PROTECTIVE_STOP_CODE}: an arm drive at {M.PROTECTIVE_STOP['near_cap']:.0%} of its torque cap or more while the "
+                f"gripper, or a part it holds, presses on something with {M.PROTECTIVE_STOP['contact_n']:g} N or more, for "
+                f"{M.PROTECTIVE_STOP['window_s']:g} s), when the wall-clock budget is used up, or on a simulator error; a simulator "
+                f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
+                f"soft-body solver state, a rigid task contact deeper than {M.BREAKDOWN_PENETRATION_M * 1000:g} mm) ends it with "
+                f"reason {M.SIMULATOR_INSTABILITY}, graded as an infrastructure error, not as the task's failure, unless an arm was "
+                f"forcing within the {M.PROTECTIVE_STOP['attribution_s']:g} s before (reason {M.FORCED_BREAKDOWN}: the agent's failure); "
+                "task-contact penetration does not end it, but a success with a deep task contact (meta safety review) is held "
+                "for review instead of credited automatically; the recorded trajectory is then replayed once in a fresh process "
+                "and graded"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,

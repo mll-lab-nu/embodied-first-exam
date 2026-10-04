@@ -7,7 +7,10 @@ required. A replay that produced no result is a grader error, not the agent's 0.
 success the replay is a grading replay (tooling v15): for the GPU families, if the episode has not ended after the last
 live row, it holds the final targets for up to 2 s with the replay tolerances; final.json's replay_grading has the record,
 replay_hold_steps / replay_tolerance_needed summarize it. It only confirms: a live failure is final whatever the replay
-shows (the collect hook then replays plainly)."""
+shows (the collect hook then replays plainly). Task-contact penetration is evidence, not a verdict (tooling v15): a success
+whose live episode or replay had a deep task contact (final.json `review` / `replay_review`, rcb_topogym.CONTACT_RULE) is
+held for review: success 0 with success_pending_review 1, the events in review.json, the frames around them in
+review_frames/."""
 import hashlib, json, os, shutil
 from pathlib import Path
 LOG = "/logs/verifier"; os.makedirs(LOG, exist_ok=True)
@@ -45,8 +48,23 @@ mismatch = mismatch or not binding_ok
 grader_error = not infra and not mismatch and not d.get("gave_up") and not replayed
 # the live (strict) success first: a tolerant replay success never stands in for a live failure
 ok = bool(d.get("success")) and bool(d.get("replay_success")) and (bool(d.get("deterministic")) or gpu) and not infra and not grader_error and not mismatch
+# a success with a deep task contact, live or in the replay, is held for review instead of credited automatically
+reviews = [r if isinstance(r, dict) else None for r in (d.get("review"), d.get("replay_review"))]
+pending = ok and any(reviews)
+credited = ok and not pending
+if any(reviews):
+    try:
+        with open(f"{LOG}/review.json", "w") as stream:
+            json.dump({"pending": pending, "live": reviews[0], "replay": reviews[1], "frames": d.get("review_frames") or []}, stream, indent=1)
+        if pending and os.path.isdir("/data/review_frames"):
+            shutil.copytree("/data/review_frames", f"{LOG}/review_frames", dirs_exist_ok=True)
+    except OSError as exc:
+        print(f"review evidence copy failed: {exc}")
 num = lambda k, cast=int: cast(d.get(k) or 0)  # noqa: E731
-write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "replay_success": int(bool(d.get("replay_success"))),
+write(credited, {"success": int(credited), "success_pending_review": int(pending),
+           "review_events": max(int((r or {}).get("count", 0)) for r in reviews),
+           "review_max_depth_mm": max(float((r or {}).get("max_depth_mm", 0.)) for r in reviews),
+           "live_success": int(bool(d.get("success"))), "replay_success": int(bool(d.get("replay_success"))),
            "runtime_binding_ok": int(binding_ok),
            "deterministic": int(bool(d.get("deterministic"))), "live_matches_replay": int(bool(d.get("live_matches_replay"))),
            "gpu_backend": int(gpu), "finalized": int(bool(d.get("finalized"))), "n_actions": num("n_actions"), "live_rows": num("live_rows"),
