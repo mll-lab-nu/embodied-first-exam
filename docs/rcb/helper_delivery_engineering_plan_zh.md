@@ -2,7 +2,7 @@
 
 2026-10-04。状态：待实施。本轮仅制定计划，未修改运行代码、启动真实模型评测或上传结果。
 
-> 2026-10-04 对齐：helper 手册只保留一份，即 robot_coding_bench `dev/qineng` 的 `docs/SHARING_RUNS.md`（英文，所有基准共用）。本计划的派单、结果包和导入实现后，W7 把已验收的命令写入该手册（§3b），不再新增 `helper_quickstart_zh.md` / `helper_import_zh.md`。
+> 2026-10-04 对齐：helper 手册只保留一份，即本目录的 [`SHARING_RUNS.md`](SHARING_RUNS.md)（英文，所有基准共用；与 robot_coding_bench `dev/qineng` 的 `docs/SHARING_RUNS.md` 逐字相同，两处一起改）。本计划的派单、结果包和导入实现后，W7 把已验收的命令写入该手册（§3b），不再新增 `helper_quickstart_zh.md` / `helper_import_zh.md`。
 
 目标：维护方提供固定任务单和发行版本，helper 在自己的 GPU 主机上执行，交回经过脱敏和校验的完整记录包；维护方在不同机器、不同目录下，仅凭交付包和对应的读取工具即可重建汇总与审查材料。helper 不需要访问评测网站或维护方机器。
 
