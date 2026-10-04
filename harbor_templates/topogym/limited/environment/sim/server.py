@@ -19,7 +19,7 @@ process, rendering /data/replay.mp4 during that replay, and completes /data/fina
 
 Differences from the RoboWits service, all from the simulator: the physics runs on the GPU, so `deterministic` (live and
 replay state hashes equal) is reported and not required; rows are streamed at the task's control rate (control_hz,
-physics_substeps physics steps each); the joint action is per arm the arm joint targets plus the gripper opening width;
+physics_substeps physics steps each); the joint action is per arm the arm joint targets plus the frozen instance gripper target;
 `ee_pose` is solved by bounded least squares over the robot's Genesis forward kinematics; a task whose own failure
 predicate fires (e.g. touching the buzz wire) ends the episode with reason "task_failed"; a family may enable passive grasp
 assistance (the gripper `command` text of /spec says the rule). Genesis' CUDA context belongs to the thread that built the
@@ -128,6 +128,8 @@ def finish(reason: str) -> None:
 import rcb_topogym as M  # noqa: E402
 try:
     S = M.Session(TASK, instance=INSTANCE, strict=True)
+    M.atomic_json(os.path.join(DATA, "startup_binding.json"), dict(
+        instance_exact=S.instance_exact, runtime_binding=S.runtime_binding))
 except M.InstanceMismatch as exc:
     # This frozen instance is not evaluable. Do not restart it as a GPU crash
     # or wait for a trajectory that could never have been executed.
@@ -171,13 +173,15 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
 WORLD_FRAME = (f"TopoGym world frame: +z up, the table top horizontal; the robot base at "
                f"({', '.join(f'{v:.3f}' for v in R_SPEC['base']['pose'][:3])}) (robot_spec.base)")
 SPEC = {
+    "gripper_space": S.gripper_space,
+    "instance_binding_id": (S.runtime_binding or {}).get("binding_id"),
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "topogym (Genesis 1.2.1, Nyx RGB)", "robot": R_SPEC["name"],
     "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
                     "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": CAM_INFO[c]["mount"], "depth_range_m": CAM_INFO[c]["depth_range_m"]} for c in CAMS},
     "default_cameras": list(CAMS),
     "action_types": {
-        "joint_position": {"dim": N, "layout": LAYOUT, "units": "rad for the arm joints; gripper opening width in metres, 0 = closed .. the limit = open",
+        "joint_position": {"dim": N, "layout": LAYOUT, "units": ("rad for arm joints; native gripper drive targets (ALOHA m, Robotiq rad), see robot_spec.grippers" if S.gripper_space == "native" else "rad for the arm joints; gripper opening width in metres, 0 = closed .. the limit = open"),
                            "limits": LIMITS,
                            "semantics": f"absolute joint targets tracked by the robot's PD controllers, streamed at the {CTRL_HZ:g} Hz control rate; rows "
                                         f"`dt` apart (a multiple of 1/{CTRL_HZ:g} s), hold or linear interpolation between rows (the gripper switches "
@@ -188,6 +192,7 @@ SPEC = {
                                         "that would is stopped there (reported in clipped[])"},
         "ee_pose": {"dim": 8 * len(ARMS), "layout": [f"{a}_{k}" for a in ARMS for k in ("x", "y", "z", "qw", "qx", "qy", "qz", "gripper")],
                     "frame": WORLD_FRAME, "quaternion": "wxyz, unit norm",
+                    "gripper_units": "same command space and limits as joint_position / robot_spec.grippers",
                     "semantics": "each row is solved by inverse kinematics (bounded least squares on the robot's forward kinematics, no collision "
                                  "checking) and driven to in joint space; `dt` is ignored (the joint distance sets the duration); an arm whose IK "
                                  "fails holds and is reported in plan[]. A solution more than "

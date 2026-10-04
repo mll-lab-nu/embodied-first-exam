@@ -41,8 +41,8 @@ def variant_reference(variant, *, task_parameters=None, seed=0):
 class CastCoilPolicy(CastCoilBaselinePolicy):
     """Pause path time when measured tracking leaves its local error budget."""
 
-    def __init__(self, *, body_origins, variant="easy", part="all"):
-        assembly, route = variant_reference(variant)
+    def __init__(self, *, body_origins, variant="easy", part="all", task_parameters=None, seed=0):
+        assembly, route = variant_reference(variant, task_parameters=task_parameters, seed=seed)
         if hasattr(assembly, "record"):
             raise ValueError("Use SimplifiedCoilPolicy for the cube variants")
         super().__init__(body_origins=body_origins, part=part, route=route)

@@ -8,7 +8,7 @@ TopoGym (adapted from robot_coding_bench fa59c1a6): topogym task names and the v
 import json, pathlib, shutil, sys, re, glob, datetime as dt, ast
 jobs, job, slug, label = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
 root = pathlib.Path(__file__).resolve().parents[1]
-tasks_root = pathlib.Path(sys.argv[sys.argv.index("--tasks-root") + 1]) if "--tasks-root" in sys.argv else root / "tasks"
+tasks_root = pathlib.Path(sys.argv[sys.argv.index("--tasks-root") + 1]) if "--tasks-root" in sys.argv else None
 base = pathlib.Path(sys.argv[sys.argv.index("--out") + 1]) if "--out" in sys.argv else root / "jobs" / "results" / job
 analysis = {}
 if "--analysis" in sys.argv:
@@ -28,17 +28,24 @@ n = 0
 for trial in sorted((jobs / job).glob("*__*")):
     if not (trial / "result.json").exists(): continue
     r = json.load(open(trial / "result.json")); task = r["task_name"].split("/")[-1]
-    tdir = tasks_root / task
-    if not tdir.is_dir(): continue
+    from regrade_trials import original_task
+    tdir = original_task(trial)
+    if tasks_root and (tasks_root / task).resolve() != tdir.resolve():
+        raise ValueError(f"Report task root differs from this trial's recorded package: {trial}")
+    if not tdir.is_dir():
+        raise ValueError(f"Recorded task package is unavailable: {tdir}")
+    release_path = tdir / "task_release.json"
+    release_record = json.loads(release_path.read_text())["release"] if release_path.exists() else {"name": "historical_unrecorded"}
     rw = json.load(open(trial / "verifier/reward.json")) if (trial / "verifier/reward.json").exists() else {}
-    ar = r.get("agent_result") or {}; limited = task.endswith("-limited"); fam = task.replace("topogym-", "").replace("-limited", "")
+    ar = r.get("agent_result") or {}; limited = task.endswith(("-limited", "-standard")); fam = re.sub(r"-(limited|standard|privileged)$", "", task.removeprefix("topogym-"))
     out = base / task / slug; out.mkdir(parents=True, exist_ok=True)
     for f in ("replay.mp4", "replay.last.png"):
         if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)
     ok = rw.get("success") == 1
     an = analysis.get(fam, {}).get("L" if limited else "U", "")
     lines = [f"# {label} — {task}\n",
-             f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{'limited (robot as a service)' if limited else 'unlimited'}**.\n",
+             f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{'standard (robot as a service)' if limited else 'privileged'}**.\n",
+             f"Release: `{json.dumps(release_record, sort_keys=True)}`.\n",
              "| | |", "|---|---|",
              f"| result | {'**1 (success)**' if ok else '**0**' + (' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
              f"| agent time | {span(r.get('agent_execution') or {})} s |",

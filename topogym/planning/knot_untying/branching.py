@@ -15,20 +15,39 @@ import time
 import numpy as np
 
 from . import robot_oracle as oracle
-from .cli import validate_parameters
+from .parameters import validate_parameters
 from topogym.utils.io import write_json_atomic
 
-ROUTE_KEYS = ("lift", "hold", "direction", "straighten")
+ROUTE_KEYS = ("lift", "hold", "direction", "straighten", "end_choice", "arm_order",
+              "grasp_yaw_deg", "grasp_tilt_deg", "pull_yaw_deg", "pull_pitch_deg",
+              "pull_offset", "anchor_offset", "path_arch_m", "path_lateral_m",
+              "grasp_shift_m", "grasp_search_m", "pinch_height_m", "span_ratio",
+              "spread_lift", "clear_spread_steps", "retreat_height", "grasp_flip", "approach_s", "approach_wait_s")
 ARG_KEYS = ("close", "speed", "max_pull", "full_pull", "end_offset")
 CANDIDATES = {
-    "withdraw": [{}, dict(full_pull=True, max_pull=.55), dict(full_pull=True, max_pull=.65),
-                 dict(full_pull=True, max_pull=.55, direction="tangent"),
-                 dict(full_pull=True, max_pull=.55, direction="away")],
-    "straighten": [{}, dict(end_offset=.05), dict(straighten=.8)],
+    "withdraw": [{}, dict(end_choice='A'), dict(end_choice='B'), dict(arm_order='swapped'),
+                 dict(max_pull=.65), dict(direction='tangent'), dict(hold='over'),
+                 dict(grasp_tilt_deg=20.), dict(grasp_tilt_deg=-20.),
+                 dict(grasp_yaw_deg=30.), dict(grasp_yaw_deg=-30.), dict(grasp_flip=1), dict(grasp_flip=-1),
+                 dict(pull_yaw_deg=45., path_arch_m=.04), dict(pull_yaw_deg=-45., path_arch_m=.04),
+                 dict(pull_pitch_deg=15., max_pull=.3), dict(path_lateral_m=.08, path_arch_m=.06),
+                 dict(path_lateral_m=-.08, path_arch_m=.06), dict(lift=.06), dict(lift=.01),
+                 dict(pull_offset=.06), dict(pull_offset=.015), dict(pinch_height_m=.002),
+                 *[dict(end_choice=end, arm_order='swapped', grasp_tilt_deg=tilt,
+                        pull_yaw_deg=yaw, path_arch_m=.04)
+                   for end in ('A', 'B') for tilt, yaw in ((20., 30.), (-20., -30.))]],
+    "straighten": [{}, dict(end_offset=.05), dict(arm_order='swapped'), dict(straighten=.8),
+                   dict(grasp_tilt_deg=20.), dict(grasp_tilt_deg=-20.),
+                   dict(grasp_yaw_deg=30.), dict(grasp_yaw_deg=-30.), dict(grasp_flip=1), dict(grasp_flip=-1), dict(end_offset=.015),
+                   dict(spread_lift=.035), dict(pull_yaw_deg=30.), dict(pull_yaw_deg=-30.),
+                   dict(pull_pitch_deg=15.), dict(pull_pitch_deg=-15.),
+                   dict(arm_order='swapped', grasp_tilt_deg=20., end_offset=.06)],
+    "retreat": [{}, dict(retreat_height=.15)],
+    "laydown": [{}, dict(arm_order='swapped'), dict(grasp_tilt_deg=20.), dict(grasp_tilt_deg=-20.)],
     "carry": [{}],
 }
 SESSION_FIELDS = ("n_steps", "physics_steps", "sim_time_s", "last_step_ticks", "_reward", "episode_end", "episode_done")
-RUNNER_FIELDS = ("q", "g", "bias", "full_q", "grasps", "grasp_turn", "decisions", "log", "lines")
+RUNNER_FIELDS = ("q", "g", "bias", "full_q", "grasps", "grasp_turn", "decisions", "log", "lines", "motion_options")
 
 
 def validate_candidate(candidate):
@@ -39,10 +58,21 @@ def validate_candidate(candidate):
         raise ValueError("hold must be far or over")
     if "direction" in candidate and candidate["direction"] not in ("tangent", "away"):
         raise ValueError("direction must be tangent or away")
-    for key, upper in (("lift", .1), ("straighten", .95)):
-        if key in candidate and (isinstance(candidate[key], bool) or not isinstance(candidate[key], (float, int))
-                                 or not 0 < candidate[key] <= upper):
-            raise ValueError(f"{key} must be in (0, {upper}]")
+    for key, allowed in (('end_choice', ('auto', 'A', 'B')), ('arm_order', ('auto', 'swapped'))):
+        if key in candidate and candidate[key] not in allowed:
+            raise ValueError(f'{key} must be one of {allowed}')
+    if 'grasp_flip' in candidate and candidate['grasp_flip'] not in (-1, 1):
+        raise ValueError('grasp_flip must be -1 or 1')
+    for key in set(ROUTE_KEYS)-{'hold', 'direction', 'end_choice', 'arm_order'}:
+        if key not in candidate or (key == 'span_ratio' and candidate[key] is None):
+            continue
+        value = candidate[key]
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not np.isfinite(value):
+            raise ValueError(f'{key} must be finite')
+        if key in {'lift', 'spread_lift', 'grasp_search_m', 'clear_spread_steps', 'retreat_height', 'approach_wait_s'} and value < 0:
+            raise ValueError(f'{key} must be nonnegative')
+        if key in {'straighten', 'span_ratio', 'pull_offset', 'anchor_offset', 'approach_s'} and value <= 0:
+            raise ValueError(f'{key} must be positive')
     return candidate
 
 
@@ -157,15 +187,21 @@ class Branching:
         validate_candidate(candidate)
         r = self.r
         cfg = {**self.base_cfg, **{x: v for x, v in candidate.items() if x in ROUTE_KEYS}}
+        r.motion_options = cfg
         for name in ARG_KEYS:
             setattr(self.args, name, candidate.get(name, self.base_args[name]))
         if kind == "carry":
             record = r.carry(cfg)
         elif kind == "straighten":
             record = r.straighten(k, cfg)
+        elif kind in {'retreat', 'laydown'}:
+            record = r.arrange(k, cfg, kind)
         else:
             from .route_rule import choose
-            action = choose(r.line(), r.stations, r.crossings(), r.length, cfg["hold"], cfg["direction"])
+            action = choose(r.line(), r.stations, r.crossings(), r.length, cfg["hold"], cfg["direction"],
+                end_choice=cfg.get('end_choice', 'auto'), pull_offset=cfg.get('pull_offset', .035),
+                anchor_offset=cfg.get('anchor_offset', .015), yaw_deg=cfg.get('pull_yaw_deg', 0.),
+                pitch_deg=cfg.get('pull_pitch_deg', 0.))
             if action is None:
                 raise RuntimeError("no under-crossing to withdraw")
             record = dict(r.withdraw(k, action, cfg), crossings_before=before)
@@ -177,7 +213,7 @@ class Branching:
             flags.append("tight_curl_after_spread")
         best, stagnant = self.progress(record)
         record.update(heuristic_flags=flags, best_crossings=best, nonprogress_decisions=stagnant)
-        if stagnant > self.args.max_nonprogress_decisions:
+        if self.args.max_nonprogress_decisions is not None and stagnant > self.args.max_nonprogress_decisions:
             return record, (f"search nonprogress budget exhausted ({stagnant} > "
                             f"{self.args.max_nonprogress_decisions}); best crossings={best}")
         return record, None
@@ -234,7 +270,18 @@ class Branching:
         before the other is tried. Wait for operator additions only after both.
         """
         preferred = self.kind(crossings)
-        kinds = [preferred] if preferred == "carry" else [preferred, "straighten" if preferred == "withdraw" else "withdraw"]
+        if not crossings:
+            metrics = getattr(self.r.task.result, 'metrics', {})
+            kinds = ['retreat', 'laydown', 'straighten']
+            if metrics.get('final_settling', {}).get('robot_clear') is True:
+                kinds = ['laydown', 'straighten', 'retreat'] if not metrics.get('on_table') else ['straighten', 'retreat', 'laydown']
+            if self.r.decisions and self.r.decisions[-1]['kind'] in kinds:
+                previous = self.r.decisions[-1]['kind']
+                kinds.remove(previous)
+                kinds.append(previous)
+            preferred = kinds[0]
+        else:
+            kinds = [preferred] if preferred == "carry" else [preferred, "straighten" if preferred == "withdraw" else "withdraw"]
         pending = {kind: iter(self.candidates(k, kind)) for kind in kinds}
         while pending:
             for kind, candidates in list(pending.items()):
@@ -250,11 +297,12 @@ class Branching:
     def search(self, k):
         r = self.r
         crossings = r.crossings()
-        if not crossings:
+        if not crossings and not (r.decisions and r.decisions[-1].get('terminal_waited')):
             deadline = r.session.sim_time_s+self.args.settle
             while r.session.sim_time_s < deadline:
                 r.step("final_settle")
-            return False  # geometric completion without native success is not a solution
+            # Geometry alone is not success. Continue with release/laydown/spread
+            # candidates when the native on-table or release/settling tests fail.
         if k > self.args.max_decisions or len(self.attempts) >= self.args.max_attempts:
             return False
         before = len(crossings)
@@ -263,7 +311,10 @@ class Branching:
             if len(self.attempts) >= self.args.max_attempts:
                 break
             started = time.time()
-            row = dict(decision=k, kind=kind, candidate=candidate, n=n,
+            # Descendant searches append attempts before this frame can reject.
+            # Keep the row's own ID so unwinding cannot overwrite child evidence.
+            attempt_id = len(self.attempts)+1
+            row = dict(attempt_id=attempt_id, decision=k, kind=kind, candidate=candidate, n=n,
                        t0=r.session.sim_time_s, crossings_before=before, result="running")
             self.attempts.append(row)
             self.dump("running")
@@ -289,7 +340,10 @@ class Branching:
             except Exception as error:
                 reason = f"{type(error).__name__}: {error}"
             row.update(result="rejected", reason=reason, t1=r.session.sim_time_s, wall_s=time.time()-started)
+            row['terminal_metrics'] = dict(getattr(r.task.result, 'metrics', {}))
             print("ATTEMPT", json.dumps(row), flush=True)
+            if callable(getattr(r, 'save_attempt_evidence', None)):
+                r.save_attempt_evidence(self.args.output/'rejected_attempts'/f'attempt_{attempt_id:03d}')
             self.restore(mark)
             r.dump(partial=True)
             self.dump("running")
@@ -314,7 +368,7 @@ class Branching:
     def dump(self, result=None):
         write_json_atomic(self.args.output/"branching.json", dict(variation=self.args.variation,
             instance=str(self.args.instance), result=result, base_route=self.base_cfg, base_args=self.base_args,
-            search_policy=dict(revision="bounded_nonmonotonic_v1", tight_curl_is_diagnostic=True,
+            search_policy=dict(revision="native_rules_tracking_search_v3", tight_curl_is_diagnostic=True,
                                max_nonprogress_decisions=self.args.max_nonprogress_decisions,
                                max_decisions=self.args.max_decisions, max_attempts=self.args.max_attempts),
             selection=self.selection, attempts=self.attempts, backtracks=self.backtracks,

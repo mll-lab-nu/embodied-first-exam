@@ -21,6 +21,7 @@ route=eval
 provider=openai
 api_var=
 run_id=
+resume=0
 hf_enabled=0
 hf_dry_run=0
 hf_token_file=
@@ -32,6 +33,7 @@ files=()
 # Parse only launcher concerns and host paths. Python validates experiment options.
 while (($#)); do
   case "$1" in
+    --resume) resume=1; args+=("$1"); shift ;;
     --results_to_hf|--results-to-hf) hf_enabled=1; args+=("$1"); shift ;;
     --hf-dry-run) hf_dry_run=1; args+=("$1"); shift ;;
     --hf-token-file) hf_token_file="${2:?--hf-token-file needs a path}"; hf_file_set=1; shift 2 ;;
@@ -176,6 +178,19 @@ else
   actual_sha="$(docker image inspect --format '{{index .Config.Labels "topogym.bootstrap-sha"}}' "$controller_image")"
   [[ "$actual_sha" == "$bootstrap_sha" ]] || fail 'cached controller does not match the source inputs'
   flock -u "$build_lock"
+fi
+# Explicit controller images also have to match the chosen release. A resumed
+# v15 run keeps its original controller/source; its manifest is checked inside.
+if [[ "$route" == eval && "$help_only" == 0 && -f "$ROOT/ci_checks/topogym_active_release.json" ]]; then
+  docker run --rm --network none --entrypoint python \
+    --mount "type=bind,src=$ROOT,dst=/requested-release,readonly" "$controller_image" -c '
+import sys
+sys.path.insert(0, "/opt/topogym/scripts")
+from topogym_versions import identity
+actual, expected = identity("/opt/topogym"), identity("/requested-release")
+if actual["tooling_version"] != expected["tooling_version"] or (sys.argv[1] == "0" and actual != expected):
+    raise SystemExit("Controller does not match the active release; rebuild it, or resume the original v15 run")
+' "$resume" || fail 'controller release validation failed'
 fi
 # Credentials/argv cross the Docker boundary through a private read-only file mount,
 # never Docker Config.Cmd/Env. Do not print this directory's content.

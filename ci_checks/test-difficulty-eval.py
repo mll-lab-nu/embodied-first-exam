@@ -172,7 +172,8 @@ class SamplingTests(unittest.TestCase):
         for row in rows:
             with self.subTest(task=row["task_id"], tier=row["difficulty"]):
                 assist = row["simulator"]["grasp_assist"]
-                expected = "contact_weld_v1" if row["task_id"] in rigid else "none"
+                expected = {"rope_threading": "ipc_soft_band_v1", "blanket_flatten": "pbd_local_patch_v1",
+                            "fiber_bundling": "contact_weld_v1"}.get(row["task_id"], "contact_weld_v1" if row["task_id"] in rigid else "none")
                 self.assertEqual(assist["model"], expected)
                 self.assertEqual(bool(assist["targets"]), expected != "none")
                 self.assertIs(row["evaluable_for_task_success"], True)
@@ -308,16 +309,31 @@ class ResultTests(unittest.TestCase):
             root=Path(tmp); tasks=root/'tasks'; build=root/'build'; slug='topogym-cast-coil-easy-s00'
             (build/slug).mkdir(parents=True)
             # Fixed text-generation fixture; no ignored run data or simulation is required.
-            shutil.copy(ROOT/'ci_checks/fixtures/difficulty_eval_describe.json',build/slug/'describe.json')
-            p=subprocess.run([sys.executable,str(ROOT/'scripts/topogym_mk_task.py'),'cast_coil','--instance',str(ROOT/'tasks/topogym-cast-coil-i00/environment/instance.json'),
-                '--slug',slug,'--tasks-root',str(tasks),'--build-root',str(build),'--reuse-describe','--agent-wall-clock-s','21600'],capture_output=True,text=True)
-            self.assertEqual(p.returncode,0,p.stdout+p.stderr)
-            p=subprocess.run([sys.executable,str(ROOT/'scripts/topogym_mk_limited.py'),'cast_coil','-','--unlimited-task',str(tasks/(slug+'-privileged')),'--tasks-root',str(tasks),
-                '--build-root',str(build),'--agent-wall-clock-s','21600'],capture_output=True,text=True)
-            self.assertEqual(p.returncode,0,p.stdout+p.stderr)
+            from topogym_versions import identity
+            from topogym.planning.harbor_bridge.binding import lock_for_task, image_reference
+            import topogym_mk_task, topogym_mk_limited
+            runtime = dict(source=identity(ROOT)["source"])
+            describe = json.loads((ROOT/'ci_checks/fixtures/difficulty_eval_describe.json').read_text())
+            describe['runtime_identity'] = runtime
+            fixture_instance = json.loads((ROOT/'tasks/topogym-cast-coil-easy-i00-privileged/environment/instance.json').read_text())
+            describe['grasp_assist'] = fixture_instance['simulator']['grasp_assist']
+            describe['public_goal'] = fixture_instance['public_goal']
+            instance_file = root/'synthetic_instance.json'
+            instance_file.write_text(json.dumps(fixture_instance))
+            (build/slug/'describe.json').write_text(json.dumps(describe))
+            def inspected(task):
+                return lock_for_task(task, dict(reference=image_reference(task), id="sha256:"+"0"*64, repo_digests=[]), runtime)
+            with patch('topogym.planning.harbor_bridge.binding.inspect_task', side_effect=inspected), patch.object(sys, 'argv',
+                ['topogym_mk_task.py','cast_coil','--instance',str(instance_file),
+                 '--slug',slug,'--tasks-root',str(tasks),'--build-root',str(build),'--reuse-describe','--agent-wall-clock-s','21600']):
+                topogym_mk_task.main()
+            with patch.object(sys, 'argv', ['topogym_mk_limited.py','cast_coil','-',
+                 '--unlimited-task',str(tasks/(slug+'-privileged')),'--tasks-root',str(tasks),
+                 '--build-root',str(build),'--agent-wall-clock-s','21600']):
+                topogym_mk_limited.main()
             u=tomllib.loads((tasks/(slug+'-privileged')/'task.toml').read_text()); l=tomllib.loads((tasks/(slug+'-standard')/'task.toml').read_text())
             self.assertEqual((u['agent']['timeout_sec'],l['agent']['timeout_sec']),(21600,21600))
-            current=re.search(r'^TOOLING_VERSION = "(\d+)"',(ROOT/'scripts/topogym_mk_task.py').read_text(),re.M).group(1)
+            current=identity(ROOT)["tooling_version"]
             self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),(current,current))
             self.assertEqual(l['metadata']['protocol'], 'eai-standard/2.3')
             tools=[tasks/(slug+'-privileged')/'environment/rcb_topogym.py',tasks/(slug+'-privileged')/'tests/rcb_topogym.py',
@@ -425,16 +441,16 @@ print(os.environ.get('OPENAI_API_KEY','stub subscription: no key'))
         p=self.call('--phase','plan','--tasks','8')
         self.assertEqual(p.returncode,0,p.stdout+p.stderr)
         manifest=json.loads((self.run/'manifest.lock.json').read_text())
-        (self.run/'image.json').write_text(json.dumps(dict(id='sha256:stub',source_sha256=manifest['source_sha256'])))
+        (self.run/'image.json').write_text(json.dumps(dict(id='sha256:'+'0'*64,source_sha256=manifest['source_sha256'])))
         for row in manifest['instances']:
             build=self.run/'build'/row['slug']; (build/'smoke/initial_rgb').mkdir(parents=True)
             # Canary only copies this file in the stub test, no physical image is implied.
             (build/'smoke/initial_rgb/camera.png').write_bytes(b'synthetic test image')
             (build/'prepared.json').write_text('{"files":{}}')
             for suffix in ('-privileged','-standard'):
-                path=self.run/'tasks'/(row['slug']+suffix); path.mkdir(parents=True)
-            tool = self.run/'tasks'/(row['slug']+'-privileged')/'environment/rcb_topogym.py'
-            tool.parent.mkdir(); tool.write_text('# synthetic tool, never physics\n')
+                from v15_fixtures import bound_task
+                bound_task(self.run/'tasks'/(row['slug']+suffix), self.root,
+                           mode='standard' if suffix == '-standard' else 'privileged', row=row)
             from difficulty_eval import DifficultyEvaluation
             from types import SimpleNamespace
             fixture = SimpleNamespace(run=self.run, source=self.root, gpu_device='0',
@@ -514,6 +530,9 @@ print(os.environ.get('OPENAI_API_KEY','stub subscription: no key'))
     def test_all_blocks_models_after_partial_prepare_failure(self):
         build = next((self.run / 'build').iterdir())
         (build / 'prepared.json').unlink()
+        # Both the marker and one twin are missing: this is genuinely incomplete.
+        # Complete, bound twins without a marker can now be recovered safely.
+        shutil.rmtree(self.run/'tasks'/(build.name+'-privileged'))
         # Keep a stale preflight marker to ensure it cannot bypass failed preparation.
         p = self.call('--phase', 'all', '--resume', '--model', 'contract-model', '--api-key', self.key)
         self.assertEqual(p.returncode, 2, p.stdout + p.stderr)

@@ -88,6 +88,9 @@ def sample_instances(settings, source=ROOT):
     from topogym.utils.variant_rng import VARIANT_RNG_VERSION
     sys.path.insert(0, str(source / "harbor_templates/topogym/common"))
     from rcb_topogym import simulator_config
+    from topogym.tasks.release_profile import environment_inputs, PROFILE
+    from topogym_versions import identity
+    selected_release = identity(source)
     rows = []
     for task in settings["task_ids"]:
         for difficulty in DIFFICULTIES:
@@ -95,15 +98,28 @@ def sample_instances(settings, source=ROOT):
                 reg = variation_registration(task, "seeded", seed)
                 cls = task_definition(task, "seeded", seed)
                 draws = draw(cls, seed)
-                instance = cls(draws, seed=seed)
-                cfg = simulator_config(task, variation_id="seeded", seed=seed, task_parameters=draws)
+                params, overrides, _ = environment_inputs(task, difficulty, variation="seeded", seed=seed, parameters=draws)
+                if task == "blanket_flatten":
+                    # The controller plans arbitrary seeds without a physics stack.
+                    # Initial state resources are created in prepare_blanket inside
+                    # the selected runtime, never chosen from the controller's stack.
+                    from topogym.tasks.base import merge_parameters
+                    effective = merge_parameters(cls.defaults, params)
+                    goal_complete = cls.goal_complete
+                else:
+                    instance = cls(params, seed=seed)
+                    effective, goal_complete = instance.config, instance.goal_complete
+                cfg = simulator_config(task, variation_id="seeded", seed=seed, task_parameters=params, simulator_overrides=overrides)
                 slug = f"topogym-{task.replace('_', '-')}-{difficulty}-s{index:02d}"
                 row = dict(task_id=task, task_number=TASK_IDS.index(task) + 1, difficulty=difficulty,
                            sample_id=f"s{index:02d}", slug=slug, variation_id="seeded", scene_seed=seed,
                            resolved_variation_id=reg["variation_id"], variant_rng_version=VARIANT_RNG_VERSION,
                            scene_variation_version=SCENE_VARIATION_VERSION, draws=draws, simulator=cfg,
-                           effective_task_parameters=to_jsonable(instance.config),
-                           evaluable_for_task_success=bool(instance.goal_complete))
+                           task_parameters=params, simulator_overrides=overrides, environment_profile=PROFILE,
+                           tooling_version=selected_release["tooling_version"], release_definition_sha256=selected_release["definition_sha256"],
+                           effective_task_parameters=to_jsonable(effective),
+                           initial_state_pending=task == "blanket_flatten",
+                           evaluable_for_task_success=bool(goal_complete))
                 row["sample_sha256"] = digest(row)
                 rows.append(row)
     return rows
@@ -208,7 +224,9 @@ def prepare_manifest(output, *, setting=None, tasks=None, sampling_seed=None,
             if file_hash(source_root / rel) != sha:
                 raise ValueError("source changed during plan; use a new run-id")
         atomic_json(output / "source_identity.json", source)
-        manifest = dict(schema_version=1, task_mapping_version=TASK_MAPPING_VERSION,
+        from topogym_versions import identity
+        selected_release = identity(output / "source")
+        manifest = dict(schema_version=1, task_mapping_version=TASK_MAPPING_VERSION, release=selected_release,
                         task_selector=selector, settings=cfg, source_sha256=source["sha256"],
                         instances=rows, instance_count=len(rows), trial_count=2 * len(rows))
         manifest["manifest_sha256"] = digest(manifest)

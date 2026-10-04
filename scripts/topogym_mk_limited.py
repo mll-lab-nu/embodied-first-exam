@@ -14,7 +14,8 @@ import argparse, json, os, pathlib, re, shutil, sys
 import numpy as np
 
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
-from topogym_mk_task import MAX_BUDGET_S, startup_instruction, goal_words, validate_goal_instance, oracle_evidence
+from topogym_mk_task import (layout_words, MAX_BUDGET_S, TOOLING_VERSION, startup_instruction, goal_words,
+                             validate_goal_instance, oracle_evidence, require_current_destination)
 from topogym_rules import details_section, limited_timing, step_seconds, step_time_words, table_guard_words
 from topogym.utils.io import make_asset_tree_readable
 
@@ -32,7 +33,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("family"); ap.add_argument("traj"); ap.add_argument("goal", nargs="?"); ap.add_argument("objects", nargs="?")
     ap.add_argument("--eval-index", type=int, default=0); ap.add_argument("--K", type=int, default=1)
-    ap.add_argument("--tasks-root", type=pathlib.Path, default=root / "tasks")
+    ap.add_argument("--tasks-root", type=pathlib.Path, default=root / "runs/task_candidates" / ("v" + TOOLING_VERSION))
     ap.add_argument("--build-root", type=pathlib.Path, default=root / "runs/task_build")
     ap.add_argument("--unlimited-task", type=pathlib.Path)
     ap.add_argument("--agent-wall-clock-s", type=int, default=BUDGET_S)
@@ -45,7 +46,11 @@ def main() -> None:
     unl = a.unlimited_task.resolve() if a.unlimited_task else a.tasks_root.resolve() / f"{slug}-privileged"
     slug = unl.name.removesuffix("-privileged")
     dst = a.tasks_root.resolve() / f"{slug}-standard"
+    require_current_destination(dst)
     assert unl.is_dir(), unl
+    import tomllib
+    if tomllib.loads((unl / "task.toml").read_text())["metadata"].get("tooling_version") != TOOLING_VERSION:
+        raise ValueError("Build the privileged twin with current tooling before generating its standard twin")
     d = json.loads((a.build_root / slug / "describe.json").read_text())
     sys.path.insert(0, str(unl / "environment"))
     import rcb_topogym as M
@@ -63,6 +68,12 @@ def main() -> None:
             f.unlink()
     for rel in ("tests/test.sh", "environment/sim/run.sh", "environment/sim/finalize.sh"):
         (dst / rel).chmod(0o755)
+    # Keep the shared upstream verifier Dockerfile verbatim. Only the generated
+    # TopoGym candidate gains this task-specific trusted input.
+    verifier_dockerfile = dst / "tests/Dockerfile"
+    binding_copy = "COPY runtime_binding.json /tests/runtime_binding.json"
+    if binding_copy not in verifier_dockerfile.read_text():
+        verifier_dockerfile.write_text(verifier_dockerfile.read_text() + binding_copy + "\n")
     # sim sidecar gets this task's instance + the unlimited task's tooling copy
     shutil.copy(unl / "environment/instance.json", dst / "environment/sim/instance.json")
     assets = unl / "environment/instance_assets"
@@ -73,6 +84,8 @@ def main() -> None:
     if tomllib.loads((unl / "task.toml").read_text())["agent"]["timeout_sec"] != BUDGET_S:
         raise ValueError("standard/privileged wall-clock budgets must match")
     shutil.copy(unl / "environment/rcb_topogym.py", dst / "environment/sim/rcb_topogym.py")
+    for directory in (dst / "environment/sim", dst / "tests"):
+        shutil.copy(unl / "environment/runtime_binding.json", directory / "runtime_binding.json")
     img = os.environ.get("TOPOGYM_TOOL_IMAGE") or re.search(r"^FROM\s+(\S+)", (unl / "tests/Dockerfile").read_text(), re.M).group(1)
     compose = (TEMPLATE / "environment/docker-compose.yaml").read_text()
     compose = re.sub(r"RCB_TASK: \S+", f"RCB_TASK: {fam}", compose)
@@ -96,7 +109,7 @@ def main() -> None:
     robot = rs["description"].split(" (TopoGym")[0]
     mount = {c: ("static" if d["cameras"][c]["mount"]["type"] == "static" else f"on the robot link `{d['cameras'][c]['mount']['parent_link']}`; it moves, so use the pose that comes with each frame")
              for c in cams}
-    grip = {arm: d["limits"][d["action_layout"].index(f"{arm}_gripper")] for arm in arms}
+    gripper_description = layout_words(d)
     layout = ", ".join(f"`{x}`" for x in d["action_layout"])
     names = [n for n in d["objects"]]
     objects = a.objects or ("Objects here: " + ", ".join(f"`{n}`" for n in names) + "." if names else "")
@@ -160,8 +173,7 @@ depth is that Z. `spec["robot_spec"]` lists the joints with their position, velo
 the PD gains and the tool frames; `spec["world"]` the frame conventions.
 
 ### Action types
-- `joint_position` ({dim}): {layout}; radians, gripper = opening width in metres
-  ({"; ".join(f"{arm}: {g[0]:g} = closed .. {g[1]:g} = open" for arm, g in grip.items())}). Absolute targets tracked by PD controllers.
+- `joint_position` ({dim}): {layout}. {gripper_description}. Absolute targets tracked by PD controllers.
   Rows are `dt` apart (`1/{d['control_hz']:g} ≤ dt ≤ 0.5` s, a multiple of the control period); a chunk may cover at most 10 s;
   out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). The gripper switches at the
   row. Use `obs.meta["proprio"]["now"][:{dim}]` as the starting row to move smoothly. An arm joint target moves at most
@@ -235,6 +247,7 @@ artifacts = [
   {{ source = "/data/server.log", service = "sim" }},               # the service's own output (Harbor keeps none)
   {{ source = "/data/journal.f64", service = "sim" }},              # crash recovery: every executed control step (float64 rows)
   {{ source = "/data/startups.jsonl", service = "sim" }},           # crash recovery: one line per service start
+  {{ source = "/data/startup_binding.json", service = "sim" }},
   {{ source = "/data/replay.verdict.json", service = "sim" }},
   {{ source = "/data/replay.frame_map.jsonl", service = "sim" }},
   {{ source = "/data/replay.recording_manifest.json", service = "sim" }},
@@ -283,6 +296,10 @@ memory_mb = 16384
 """)
     from task_conventions import normalize
     normalize(dst)                        # protocol v1.0: fields, protocol spelling, test.sh, graders, README layout
+    from topogym.planning.harbor_bridge.binding import check_lock_for_task
+    check_lock_for_task(dst, json.loads((dst / "tests/runtime_binding.json").read_text()))
+    from topogym_versions import stamp_task
+    stamp_task(dst, root)
     normalize(unl)                        # the privileged twin's README now names this twin (its key table row Twin)
     print("generated", dst.name, "oracle rows:", len(np.load(dst / "solution/oracle_qpos.npy")) if oracle else "none")
 

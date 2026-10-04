@@ -23,6 +23,8 @@ TIERS = {  # object-level settings validated 2026-09-30 (docs/develop/tasks/knot
 }
 DT = .025  # control step of the instances (2.5 ms x 10)
 PRE = .05  # pregrasp and retreat height above the pinch, m
+COMMAND_TABLE_GAP_M = .0005  # planner margin, not an allowed physical penetration
+COMMAND_TABLE_RAISE_PAD_M = .0001  # clear IK's 10 um stopping tolerance on an upward retry
 
 
 class Solved(Exception):
@@ -34,13 +36,18 @@ def task_dir(variation):
 
 
 class Runner:
-    def __init__(self, args):
+    def __init__(self, args, *, session=None):
         from .artifacts import load_tooling, instance_identity
         from topogym.planning.knot_untying.kinematics import KnotIK
         self.args, self.started = args, time.time()
         self.identity = instance_identity(args.instance)
-        self.session = s = load_tooling(args.variation).Session("knot_untying", instance=str(args.instance))
-        s.reset()
+        self.owns_session = session is None
+        self.session = s = (load_tooling(args.variation).Session("knot_untying", instance=str(args.instance))
+                            if session is None else session)
+        if self.owns_session:
+            s.reset()
+        elif s.n_steps or s._resets or getattr(s, "gripper_space", "width") != "width":
+            raise ValueError("Knot requires a fresh caller-owned Session with width actions")
         self.build_s = time.time()-self.started
         self.env = s.env
         self.task, self.world, self.robot = self.env._task, self.env._world, self.env._robot
@@ -59,7 +66,9 @@ class Runner:
         # Joint PD tracking leaves a few mm of TCP error at rest: every Cartesian target is shifted
         # by a per-arm bias learned while holding still before a pinch.
         self.bias = {side: np.zeros(3) for side in ("left", "right")}
-        s.record_start()
+        self.motion_options = {}
+        if self.owns_session:
+            s.record_start()
 
     # ---------- observation ----------
     def line(self):
@@ -77,6 +86,11 @@ class Runner:
         return np.asarray(self.robot.observe()[side]["tcp_position_world_m"])
 
     # ---------- actuation ----------
+    @property
+    def native_command_guard(self):
+        """v14+ Session owns its command rules; use the fallback only for older tooling."""
+        return callable(getattr(getattr(self.session, 'table_guard', None), 'apply', None))
+
     def step(self, phase):
         s = self.session
         if s.episode_end == "success":
@@ -87,11 +101,26 @@ class Runner:
         for side in self.q:
             row[s.robot.arm_slice[side]] = self.q[side]
             row[s.robot.grip_index[side]] = self.g[side]
+        self.validate_command(row)
         ended = s.step(row)
+        if self.native_command_guard:
+            # Session records the targets after native R4 clipping. Use those
+            # accepted targets for the next IK seed instead of the rejected ask.
+            accepted_row = s.hold_action()
+            self.full_q = self.command_positions(accepted_row)
+            for side in self.q:
+                self.q[side] = self.full_q[self.robot._q_indices[side][:6]].copy()
+                self.g[side] = float(accepted_row[s.robot.grip_index[side]])
         result = self.task.result
         k = len(self.log)
         row = dict(t=float(s.sim_time_s), physics_steps=int(s.physics_steps), phase=phase, gripper=dict(self.g),
                    stable_time_s=float(result.metrics.get("stable_time_s", 0.)), failure=result.reason if result.terminated else None)
+        if k % 8 == 0 or ended:
+            # Preserve all terminal diagnostics, including nested release/clearance
+            # reasons, while the worker is live and before a possible rewind.
+            from topogym.utils.io import write_json_atomic
+            write_json_atomic(self.args.output/"native_progress.json", dict(
+                **row, metrics=dict(result.metrics), task_success=bool(result.task_success)))
         if k % 8 == 0:
             line = self.line()
             self.lines.append((row["t"], line.astype(np.float32)))
@@ -110,11 +139,56 @@ class Runner:
                 raise Solved()
             raise RuntimeError(f"episode ended: {s.episode_end}")
 
+    def command_positions(self, row):
+        """Exact accepted joint/finger targets, including width conversion and clipping."""
+        command = self.session.robot.command(self.session.robot.clip(np.asarray(row, dtype=np.float32).astype(np.float64)))
+        q = self.full_q.copy()
+        for side, group in self.robot.groups.items():
+            ids = self.robot._q_indices[side]
+            q[ids[:6]] = command[side]['joint_position_rad']
+            q[ids[6:]] = command[side][group.gripper_field]
+        return q
+
+    def validate_command(self, row):
+        if self.native_command_guard:
+            return  # Session.step applies the published rule once, before physics.
+        gaps = self.ik.gripper_table_clearance(self.command_positions(row))
+        if min(gaps.values()) < COMMAND_TABLE_GAP_M-1e-9:
+            raise ValueError(f'Unsafe gripper command above table: {gaps}')
+
     def solve(self, side, p, turn, seed=None):
         q = self.full_q.copy() if seed is None else seed
-        q = self.ik.solve(side, (np.asarray(p)+self.bias[side], turn), q)
-        self.full_q = q
-        return q[self.robot._q_indices[side][:6]]
+        initial_q = np.asarray(q).copy()
+        target = np.asarray(p, float)+self.bias[side]
+        native_guard = self.native_command_guard
+        trace = []
+        for _ in range(1 if native_guard else 4):
+            try:
+                q = self.ik.solve(side, (target, turn), q)
+            except ValueError as error:
+                detail = dict(side=side, target_m=target.tolist(), seed_qpos=np.asarray(q).tolist(),
+                              turn_xyzw=None if turn is None else turn.as_quat().tolist(), reason=str(error))
+                raise ValueError('Cartesian IK rejected: '+json.dumps(detail)) from error
+            row = self.session.hold_action()
+            for arm in self.robot.groups:
+                row[self.session.robot.arm_slice[arm]] = q[self.robot._q_indices[arm][:6]]
+                row[self.session.robot.grip_index[arm]] = self.g[arm]
+            accepted = self.command_positions(row)
+            if native_guard:
+                self.full_q = accepted
+                return accepted[self.robot._q_indices[side][:6]]
+            gap = self.ik.gripper_table_clearance(accepted, (side,))[side]
+            trace.append(dict(target_m=target.tolist(), gap_m=float(gap)))
+            if gap >= COMMAND_TABLE_GAP_M:
+                self.full_q = accepted
+                return accepted[self.robot._q_indices[side][:6]]
+            # A micron-sized correction can leave the seed inside IK's stopping
+            # tolerance and return the same unsafe command on every retry.
+            target[2] += COMMAND_TABLE_GAP_M-gap+COMMAND_TABLE_RAISE_PAD_M
+        detail = dict(side=side, required_gap_m=COMMAND_TABLE_GAP_M,
+                      gripper_widths_m=dict(self.g), initial_qpos=initial_q.tolist(),
+                      turn_xyzw=None if turn is None else turn.as_quat().tolist(), trace=trace)
+        raise ValueError('No reachable gripper command above the table: '+json.dumps(detail))
 
     def cartesian(self, side, targets, turn, phase, *, allow_partial=False):
         """TCP through the given points, one per control step; returns False when IK fails (reach limit)."""
@@ -135,9 +209,9 @@ class Runner:
 
     # ---------- grasp primitives ----------
     def clearance(self, line, s):
-        """Horizontal distance from the centre line at s to the nearest strand more than 40 mm of rope away."""
-        p = self.at(line, s)[:2]
-        a, b = line[:-1, :2], line[1:, :2]
+        """Spatial distance to the nearest strand more than 40 mm of material away."""
+        p = self.at(line, s)
+        a, b = line[:-1], line[1:]
         far = np.abs(self.stations-s) > .04
         keep = far[:-1] & far[1:]
         ab = b-a
@@ -146,33 +220,73 @@ class Runner:
         return float(distances.min()) if len(distances) else float("inf")
 
     def grasp_site(self, s):
-        """(arc, opening width): open the jaws only as wide as the free space beside the rope allows
-        (half gap <= clearance - 4 mm radius - 3 mm margin, at most 19 mm); if fewer than 6 mm remain,
-        move the grasp toward the rope's middle in 5 mm steps (at most 80 mm)."""
+        """Rank nearby 3-D grasp sites; crowding is a preference, not a veto."""
         line = self.line()
         toward = 1. if s < self.length/2 else -1.
-        for k in range(17):
-            arc = float(np.clip(s+toward*.005*k, .01, self.length-.01))
-            half = min(.019, self.clearance(line, arc)-.007)
+        options = getattr(self, 'motion_options', {})
+        s += options.get('grasp_shift_m', 0.)
+        extent = options.get('grasp_search_m', .16)
+        offsets = [0.]+[sign*toward*x for x in np.arange(.005, extent+.0025, .005) for sign in (1., -1.)]
+        candidates = []
+        for offset in offsets:
+            arc = float(np.clip(s+offset, .001, self.length-.001))
+            half = min(.019, self.clearance(line, arc)-.004)
+            candidates.append((half, -abs(offset), arc))
             if half >= .006:
-                return arc, 2*half  # opening width (gap between the pads)
-        raise RuntimeError(f"no grasp site with free space within 80 mm of s={s:.3f}")
+                return arc, 2*half
+        half, _, arc = max(candidates)
+        return arc, float(np.clip(2*half, .009, .038))
 
     def pose(self, side, s, flips=(1, -1)):
         """Vertical pinch over the live rope at s: (tcp, turn, flip, pregrasp joints)."""
         from topogym.planning.knot_untying.kinematics import vertical_pinch
         line = self.line()
         point, tangent = self.at(line, s), (self.at(line, s+.01)-self.at(line, s-.01))[:2]
-        errors = []
+        options = getattr(self, 'motion_options', {})
+        point = point+[0., 0., options.get('pinch_height_m', 0.)]
+        errors, candidates = [], []
+        if len(flips) > 1 and options.get('grasp_flip') is not None:
+            flips = (options['grasp_flip'],)
+        indices = self.robot._q_indices[side][:6]
+        measured = np.asarray(self.robot.observe()[side]['joint_position_rad'])
         for flip in flips:
-            tcp, turn = vertical_pinch(point, tangent, flip)
+            tcp, turn = vertical_pinch(point, tangent, flip,
+                yaw_deg=options.get('grasp_yaw_deg', 0.), tilt_deg=options.get('grasp_tilt_deg', 0.))
             try:
                 pre = self.ik.solve(side, (tcp+[0, 0, PRE], turn), self.full_q.copy())
                 self.ik.solve(side, (tcp, turn), pre)
-                return tcp, turn, flip, pre[self.robot._q_indices[side][:6]]
+                joints = pre[indices]
+                travel = np.abs(joints-measured)
+                candidates.append(((float(travel.max()), float(travel@travel)),
+                                   (tcp, turn, flip, joints)))
             except ValueError as error:
                 errors.append(str(error)[:80])
+        if candidates:
+            return min(candidates, key=lambda item: item[0])[1]
         raise RuntimeError(f"{side} cannot reach s={s:.3f}: {errors}")
+
+    def wait_for_pregrasp(self, sides, plans, phase):
+        """Let torque-limited arms reach the requested orientation before Cartesian descent.
+
+        These tolerances schedule the transition only. The native IK and safety
+        rules still validate every command; a timeout does not reject a grasp.
+        """
+        from scipy.spatial.transform import Rotation
+        limit = getattr(self, 'motion_options', {}).get('approach_wait_s', 4.)
+        steps = int(np.ceil(limit/self.dt))
+        errors = {}
+        for k in range(steps+1):
+            observation = self.robot.observe()
+            for side in sides:
+                actual = observation[side]
+                turn = Rotation.from_quat(np.asarray(actual['tcp_orientation_wxyz'])[[1, 2, 3, 0]])
+                errors[side] = dict(position_m=float(np.linalg.norm(
+                    np.asarray(actual['tcp_position_world_m'])-(plans[side][0]+[0, 0, PRE]))),
+                    orientation_rad=float((turn.inv()*plans[side][1]).magnitude()))
+            ready = all(x['position_m'] <= .02 and x['orientation_rad'] <= .1 for x in errors.values())
+            if ready or k == steps:
+                return dict(waited_s=k*self.dt, ready=ready, errors=errors)
+            self.step(phase+':approach_settle')
 
     def grasp(self, sides, ss, phase):
         """Both listed arms open, approach, re-aim on the live rope, descend and pinch together."""
@@ -184,7 +298,7 @@ class Runner:
         ss = [arc for arc, _ in sites]
         opening = {side: cmd for side, (_, cmd) in zip(sides, sites)}
         plans = {side: self.pose(side, s) for side, s in zip(sides, ss)}
-        n = int(round(1./self.dt))
+        n = max(1, int(np.ceil(getattr(self, 'motion_options', {}).get('approach_s', 1.)/self.dt)))
         start = {side: self.q[side].copy() for side in sides}
         g0 = {side: self.g[side] for side in sides}
         for k, u in enumerate(np.linspace(0, 1, n+1)[1:]):
@@ -192,6 +306,8 @@ class Runner:
                 self.q[side] = start[side]+(plans[side][3]-start[side])*(10*u**3-15*u**4+6*u**5)
                 self.g[side] = g0[side]+(opening[side]-g0[side])*min(1., 4*u)
             self.step(phase+":approach")
+        tracking = self.wait_for_pregrasp(sides, plans, phase)
+        print(f'   {phase}: pregrasp tracking {json.dumps(tracking)}', flush=True)
         # The rope keeps relaxing during the approach: aim again with the same jaw flip.
         plans = {side: self.pose(side, s, (plans[side][2],)) for side, s in zip(sides, ss)}
         paths = {side: self.smooth(self.tcp(side), plans[side][0], .1) for side in sides}
@@ -203,7 +319,7 @@ class Runner:
         # The descent ends before the PD-tracked TCP arrives: learn the bias until every TCP is within
         # 2 mm, re-aim once if the rope moved, then close.
         self.grasp_turn = {side: plans[side][1] for side in sides}
-        record = {}
+        record = dict(pregrasp_tracking=tracking)
         for attempt in range(2):
             error = self.converge(sides, {side: plans[side][0] for side in sides}, phase+":converge")
             again = {side: self.pose(side, s, (plans[side][2],)) for side, s in zip(sides, ss)}
@@ -261,7 +377,11 @@ class Runner:
         g = self.grasps.pop(side)
         tcp = self.tcp(side)
         if lower:
-            self.cartesian(side, self.smooth(tcp, tcp-[0, 0, lower], .03), g["turn"], phase+":lower")
+            from .kinematics import CONTACT_IN_TCP_M
+            rest_z = self.task.table_height_m+self.task.layout.rope_radius_m-g['turn'].apply(CONTACT_IN_TCP_M)[2]
+            target = tcp.copy()
+            target[2] = max(float(tcp[2]-lower), float(rest_z))
+            self.cartesian(side, self.smooth(tcp, target, .03), g["turn"], phase+":lower")
             tcp = self.tcp(side)
         start = self.g[side]
         for u in np.linspace(0, 1, int(round(.25/self.dt))+1)[1:]:
@@ -278,7 +398,8 @@ class Runner:
         """Left arm takes the point nearer the left base (-X side)."""
         line = self.line()
         xs = [self.at(line, s)[0] for s in s_points]
-        return ("left", "right") if xs[0] <= xs[1] else ("right", "left")
+        arms = ("left", "right") if xs[0] <= xs[1] else ("right", "left")
+        return arms[::-1] if getattr(self, 'motion_options', {}).get('arm_order') == 'swapped' else arms
 
     def withdraw(self, k, action, cfg):
         anchor_side, pull_side = self.arms_for((action["s_anchor"], action["s_pull"]))
@@ -287,13 +408,23 @@ class Runner:
         record["grasps"] = self.grasp((anchor_side, pull_side), (action["s_anchor"], action["s_pull"]), f"d{k}:grasp")
         turn = self.grasps[pull_side]["turn"]
         tcp = self.tcp(pull_side)
-        self.cartesian(pull_side, self.smooth(tcp, tcp+[0, 0, cfg["lift"]], .03), turn, f"d{k}:lift")
+        raised = tcp+[0, 0, cfg["lift"]]
+        self.cartesian(pull_side, self.smooth(tcp, raised, .03), turn, f"d{k}:lift")
         count0, pulled = len(self.crossings()), 0.
-        direction = np.r_[action["direction"], 0.]
+        direction = np.asarray(action["direction"], float)
+        if direction.shape == (2,):
+            direction = np.r_[direction, 0.]
+        origin = raised.copy()
+        lateral = np.array([-direction[1], direction[0], 0.])
+        lateral /= max(np.linalg.norm(lateral), 1e-12)
         while pulled < self.args.max_pull-1e-9:
             tcp = self.tcp(pull_side)
             increment = min(.05, self.args.max_pull-pulled)
-            reached = self.cartesian(pull_side, self.smooth(tcp, tcp+increment*direction, self.args.speed), turn, f"d{k}:pull", allow_partial=True)
+            fraction = (pulled+increment)/self.args.max_pull
+            target = origin+(pulled+increment)*direction
+            target += np.sin(np.pi*fraction)*(cfg.get('path_lateral_m', 0.)*lateral
+                                              +np.array([0., 0., cfg.get('path_arch_m', 0.)]))
+            reached = self.cartesian(pull_side, self.smooth(tcp, target, self.args.speed), turn, f"d{k}:pull", allow_partial=True)
             pulled += increment
             count = len(self.crossings())
             span = float(np.linalg.norm(self.contact_point(pull_side)-self.contact_point(anchor_side)))
@@ -303,8 +434,9 @@ class Runner:
                 break
             if count < count0 and not self.args.full_pull:
                 break
-            if span >= .95*abs(self.grasps[pull_side]["s"]-self.grasps[anchor_side]["s"]):
-                record["stopped"] = "band distance reached 0.95 of the rope between the grasps"
+            if cfg.get('span_ratio') is not None and span >= cfg['span_ratio']*abs(
+                    self.grasps[pull_side]["s"]-self.grasps[anchor_side]["s"]):
+                record["stopped"] = "optional configured grasp-span budget reached"
                 break
         self.release(pull_side, cfg["lift"], f"d{k}:release")
         self.release(anchor_side, 0., f"d{k}:release")
@@ -317,25 +449,35 @@ class Runner:
         record = dict(k=k, kind="straighten", t=self.log[-1]["t"] if self.log else 0., arms={str(a): side_a, str(b): side_b},
                       crossings_before=len(self.crossings()), increments=[])
         record["grasps"] = self.grasp((side_a, side_b), (a, b), f"d{k}:grasp_ends")
+        heights = {}
         for side in (side_a, side_b):
             tcp = self.tcp(side)
-            self.cartesian(side, self.smooth(tcp, tcp+[0, 0, .015], .03), self.grasps[side]["turn"], f"d{k}:lift")
+            raised = tcp+[0, 0, cfg.get('spread_lift', .015)]
+            heights[side] = float(raised[2])
+            self.cartesian(side, self.smooth(tcp, raised, .03), self.grasps[side]["turn"], f"d{k}:lift")
         extra = 0
         for _ in range(60):
             pa, pb = self.contact_point(side_a), self.contact_point(side_b)
             span = float(np.linalg.norm((pb-pa)[:2]))
             count = len(self.crossings())
             record["increments"].append(dict(t=self.log[-1]["t"], span_m=round(span, 3), crossings=count))
-            if span >= min(cfg["straighten"], .95)*self.length or (count == 0 and (extra := extra+1) > 2):
+            if span >= cfg["straighten"]*self.length or (count == 0 and (extra := extra+1) > cfg.get('clear_spread_steps', 2)):
                 break
             if span < 1e-6:
                 raise RuntimeError("end-spread grasps coincide in the table plane")
-            axis = np.r_[(pb-pa)[:2]/span, 0.]
+            angle = np.arctan2(pb[1]-pa[1], pb[0]-pa[0])+np.deg2rad(cfg.get('pull_yaw_deg', 0.))
+            pitch = np.deg2rad(cfg.get('pull_pitch_deg', 0.))
+            axis = np.array([np.cos(angle)*np.cos(pitch), np.sin(angle)*np.cos(pitch), np.sin(pitch)])
             # Both arms move together: interleave their Cartesian targets step by step.
             ta, tb = self.tcp(side_a), self.tcp(side_b)
-            path_a, path_b = self.smooth(ta, ta-.025*axis, self.args.speed), self.smooth(tb, tb+.025*axis, self.args.speed)
+            target_a, target_b = ta-.025*axis, tb+.025*axis
+            heights[side_a] -= .025*axis[2]
+            heights[side_b] += .025*axis[2]
+            target_a[2], target_b[2] = heights[side_a], heights[side_b]
+            path_a, path_b = self.smooth(ta, target_a, self.args.speed), self.smooth(tb, target_b, self.args.speed)
             ok = True
-            for qa, qb in zip(path_a, path_b):
+            for index in range(max(len(path_a), len(path_b))):
+                qa, qb = path_a[min(index, len(path_a)-1)], path_b[min(index, len(path_b)-1)]
                 try:
                     self.q[side_a] = self.solve(side_a, qa, self.grasps[side_a]["turn"])
                     self.q[side_b] = self.solve(side_b, qb, self.grasps[side_b]["turn"])
@@ -347,8 +489,42 @@ class Runner:
                 record["stopped"] = "reach limit"
                 break
         for side in (side_a, side_b):
-            self.release(side, .015, f"d{k}:release")
+            self.release(side, cfg.get('spread_lift', .015), f"d{k}:release")
         record["crossings_after"] = len(self.crossings())
+        return record
+
+    def arrange(self, k, cfg, mode):
+        """Continue after zero crossings: retreat, lay a raised strand down, or wait."""
+        before = len(self.crossings())
+        record = dict(k=k, kind=mode, t=self.session.sim_time_s, crossings_before=before)
+        if mode == 'laydown':
+            line = self.line()
+            high = float(self.stations[int(np.argmax(line[:, 2]))])
+            partner = self.args.end_offset if high > self.length/2 else self.length-self.args.end_offset
+            sides = self.arms_for((high, partner))
+            self.grasp(sides, (high, partner), f'd{k}:laydown')
+            for side in sides:
+                # release computes the nominal rope-on-table pose itself.
+                self.release(side, max(.01, self.tcp(side)[2]-self.task.table_height_m), f'd{k}:laydown')
+        elif mode == 'retreat':
+            for side in list(self.grasps):
+                self.release(side, 0., f'd{k}:release')
+            for side in self.q:
+                self.g[side] = .038
+            for _ in range(int(.3/self.dt)):
+                self.step(f'd{k}:open')
+            from scipy.spatial.transform import Rotation
+            observation = self.robot.observe()
+            for side in self.q:
+                tcp = self.tcp(side)
+                turn = Rotation.from_quat(np.asarray(observation[side]['tcp_orientation_wxyz'])[[1, 2, 3, 0]])
+                self.cartesian(side, self.smooth(tcp, tcp+[0, 0, cfg.get('retreat_height', .08)], .05),
+                               turn, f'd{k}:retreat', allow_partial=True)
+        deadline = self.session.sim_time_s+self.args.settle
+        while self.session.sim_time_s < deadline:
+            self.step(f'd{k}:arrange_settle')
+        record['crossings_after'] = len(self.crossings())
+        record['terminal_waited'] = True
         return record
 
     def carry(self, cfg):
@@ -399,7 +575,25 @@ class Runner:
         self.dump(partial=False)
         return bool(self.task.result.task_success)
 
-    def dump(self, partial):
+    def save_attempt_evidence(self, output):
+        """Keep a rejected prefix and its last committed state before rewind."""
+        from topogym.simulator.rollout_simulation.evidence import SegmentEvidence
+        from topogym.utils.io import write_json_atomic
+        output.mkdir(parents=True, exist_ok=False)
+        self.dump(partial=True, output=output)
+        folder = output/'last_tick'
+        folder.mkdir()
+        writer = SegmentEvidence(folder, self.env)
+        try:
+            record = self.env.tick_record()
+            writer.tick(record, segment_id=1)
+            write_json_atomic(folder/'scope.json', dict(
+                scope='One last committed tick of a rejected attempt; not a complete trajectory capture',
+                state=record['state'], **writer.statistics()))
+        finally:
+            writer.close()
+
+    def dump(self, partial, output=None):
         result = self.task.result
         metrics = {k: v for k, v in result.metrics.items() if isinstance(v, (bool, int, float, str))}
         report = dict(variation=self.args.variation, instance=str(self.args.instance), instance_identity=self.identity, robot="aloha",
@@ -407,24 +601,26 @@ class Runner:
                           physics_dt_s=self.env.config.physics_dt_s, substeps=self.env.config.solver_substeps,
                           control_decimation=self.env.config.control_decimation),
                       close_width_m=self.args.close, build_s=self.build_s, wall_s=time.time()-self.started,
+                      command_safety=dict(owner='native_session' if self.native_command_guard else 'legacy_oracle_fallback',
+                          native_rules=getattr(self.session, 'rules', None),
+                          extra_oracle_table_margin_m=None if self.native_command_guard else COMMAND_TABLE_GAP_M),
                       session_status={k: v for k, v in self.session.status().items()},
                       simulated_s=float(self.session.sim_time_s), partial=partial, decisions=self.decisions,
                       terminal_predicate_met=bool(metrics.get("stable_time_s", 0.) >= self.task.config["stable_duration_s"]),
                       env_task_success=bool(result.task_success), goal_complete_flag=bool(self.task.goal_complete),
-                      final_metrics=metrics)
-        out = self.args.output
+                      final_metrics=metrics, terminal_metrics=dict(result.metrics))
+        out = self.args.output if output is None else output
         from topogym.utils.io import write_json_atomic
         write_json_atomic(out/"report.json", report)
         with (out/"steps.jsonl").open("w") as f:
             for r in self.log:
                 f.write(json.dumps(r, default=float)+"\n")
-        if not partial:
+        if not partial and self.owns_session:
             actions = self.session.record_stop()
             self.session.save_trajectory(actions, out/"trajectory.npz", dict(oracle="run_knot_oracle.py", decisions=len(self.decisions)))
-        else:
+        elif self.owns_session:
             from .artifacts import save_recording
             save_recording(self.session, out/"trajectory.partial.npz")
         if self.lines:
             np.savez_compressed(out/"centerlines.npz", t=np.array([t for t, _ in self.lines]),
-                                centerline_m=np.stack([l for _, l in self.lines]), station_s_m=self.stations)
-
+                                centerline_m=np.stack([line for _, line in self.lines]), station_s_m=self.stations)

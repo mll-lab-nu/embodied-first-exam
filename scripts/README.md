@@ -1,5 +1,14 @@
 # 当前运行工具
 
+新实验统一使用 `ci_checks/topogym_active_release.json` 选定的 v15。
+`topogym_versions.py tasks-root/list/check` 解析并校验任务；未生成完整候选时拒绝回退历史目录。
+`topogym_merge_candidate.py --output <新目录>` 冻结构建输入；构建镜像后运行
+`topogym_candidate_pipeline.py --candidate <目录> --phase all`，可按 build / preflight / harbor-smoke 分阶段恢复。
+只有完整 39 实例、78 包的初态及 Harbor nop 验收通过才激活；oracle 成功资格单独取得。
+`bash_scripts/run_difficulty_trials.sh` 的新 run 使用同一公开环境参数，随机 seed 仍独立采样；恢复旧 run 不改其锁。
+`regrade_trials.sh` 只重评绑定 v15 的原任务路径，写新目录；新旧结果不会互相覆盖。
+
+
 2026-09-29：独立研究、诊断、初态预览、验收与源码盘点脚本已移入
 [研究工具归档](../legacy/research_tools_20260929/README.md)。原始内容与路径映射保留在归档中，
 当前 rollout 和 Harbor 不导入归档代码。
@@ -20,7 +29,7 @@
 - `plan_hedgehog_object_oracle.py`、`audit_hedgehog_oracle.py`：物体证书与独立逐 tick 审计工具仍在本目录；执行入口为 `oracle_runners/run_hedgehog_oracle.py`。[已验收范围](../solvability_proof/hedgehog_in_cage/README.md)。
 - `plan_claws_object_oracle.py`、`plan_claws_ik.py`、`audit_claws_oracle.py`：Claws 原三档的冻结几何、只读 IK 和执行审计；执行入口为 `oracle_runners/run_claws_oracle.py`，共享 Nyx 重渲染入口为 `render_claws_oracle.py`。[命令与范围](oracle_runners/README.md#claws-easy--medium--hard-交接路线)。
 - `plan_blanket_object_oracle.py`、`audit_blanket_oracle.py`：Blanket 三档虚拟手见证与独立逐 tick 审计；执行入口为 `oracle_runners/run_blanket_oracle.py`，从默认 home 经双手局部辅助抓持、展平、释放撤手到原生 Task 判定。[命令与交接结果范围](oracle_runners/README.md#blanket-easy--medium--hard-双手展平路线)。
-- `oracle_runners/run_knot_oracle.py`、`oracle_runners/run_knot_branching.py`：Knot 纯摩擦参考策略与决策回溯；`audit_knot_oracle.py` 在新进程调用任务原生 replay 评分。[命令与范围](../topogym/planning/knot_untying/README.md)。
+- `oracle_runners/run_knot_oracle.py`、`oracle_runners/run_knot_branching.py`：Knot 纯摩擦参考策略与决策回溯；`audit_knot_oracle.py` 在新进程调用任务原生 replay，可记录逐 tick 状态和共享四路视频；`audit_knot_physics.py` 离线检查体积、绳自交及机器人／绳／桌面几何分离。[命令与范围](../topogym/planning/knot_untying/README.md)。
 - `test_scripted_policy_rollout.py`：`act(obs)` 样板执行入口，输出至 `task_rollouts/`。
 - `test_policy_cube_transfer.py`：低层方块执行与控制模式矩阵入口；其 `snapshot()` 被多个 rollout 管理脚本复用。
 
@@ -29,6 +38,11 @@
 
 ## Harbor 构建、运行及结果处理
 
+- `topogym_versions.py`：读取 `ci_checks/topogym_active_release.json`，区分唯一开发目标与冻结正式版；缺少活动任务树时拒绝退回历史任务。
+- `oracle_runners/harbor_oracle.py`：全任务共享的 `bind`、精确恢复 `preflight`、私有 oracle `package/check/run`；正式执行要求模拟器与 verifier 使用同一运行绑定。独立 Env runner 的产物仍是开发证据，完整接入步骤见 [Harbor oracle bridge](../topogym/planning/harbor_bridge/README.md)。
+- `oracle_runners/test_harbor_oracles.py`：逐 oracle 的双模式 Harbor 评分回归；保存覆盖缺口，核验 privileged 至少两次回放、standard live 与独立回放以及实际轨迹，默认带 nop 负对照。候选单任务冒烟用 `--tasks-root <目录> --candidate --families cast_coil --tiers easy --execute`，完整参数见上面的 bridge 文档。
+- `../bash_scripts/run_harbor_oracle_grades.sh`：easy–hard 的 11 类 oracle 串行实机评分交接入口；支持自动生成候选、单项选择、断点继续和逐项汇总。默认完整双模式评分，可用 `--smoke-steps 3` 进行明确区分的接线检查。[运行方式](../topogym/planning/harbor_bridge/README.md#逐项实机-grade-交接easyhard)。
+- `topogym_merge_candidate.py`：保存合并候选的源码和 39 个实例构建配方，生成新镜像及 78 个候选包的构建命令，保留 v14 原包。
 - `sample_difficulty_instances.py`：13 项编号选择器、每难度随机抽样、源码快照及冻结 manifest；默认全任务、每档 1 个样本。
 - `difficulty_eval.py`：难度评测调度；解析参数、准备任务、物理 preflight、认证 canary、逐次 `harbor run`、中断处理和恢复；默认 agent 预算 21600 秒，使用公共 `harbor_templates/topogym/`。
 - `../bash_scripts/run_difficulty_trials.sh`：默认自动准备并启动 Docker 控制器；`check`、容器内 `auth login` 与实验共用入口，默认工作目录为启动目录的 `topogym-work`；`--backend local` 显式保留宿主环境。
@@ -42,7 +56,7 @@
 - `check_cast_keyhole_simplifications.py`：Cast Keyhole 五档的静置诊断，默认 3 个控制步，可用 `--steps 100` 检查 2.5 s；新两档支持 `--check-grasp` 进行只读 IK／完整网格接近检查。冻结源码并保存 Nyx 初始帧、共享录像和漂移报告，实际抓持与完整求解另行验证；CPU 只监控，系统内存达到 90% 停止本次子进程。见[修订文档](../docs/tasks_simplifications/cast_keyhole_very_easy_easier_revision_plan_zh.md)。
 - `build_images.sh`、`push_images.sh`、`vendor_rcb.py`、`set_agent_egress.py`：镜像、参考工具及任务出网配置。
 - `run_agent_batch.sh`、`regrade_trials.sh`：批量运行与重评分。
-- `account_failure_check.py`、`log_mirror.py`、`mem_guard.py`、`scan_secrets.py`：账号异常检测、日志镜像、资源监控与产物密钥检查。
+- `account_failure_check.py`、`log_mirror.py`、`topogym_guarded.py`、`scan_secrets.py`：账号异常检测、日志镜像、本次进程资源监控与产物密钥检查。旧 `mem_guard.py` 不再由活动批处理启动。
 - `collect_batch_results.py`、`write_task_results.py`、`make_two_mode_report_zh.py`：收集结果并生成报告。
 
 完整命令见 [Harbor 手册](../docs/rcb/README.md)。任务静态检查仍为 `bash ci_checks/run_all.sh`。

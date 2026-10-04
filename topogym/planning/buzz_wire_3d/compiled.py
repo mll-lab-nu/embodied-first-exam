@@ -19,10 +19,11 @@ class CompiledJointPolicy:
         if abs(context["timing_spec"]["control_dt_s"]-self.document["control_dt_s"]) > 1e-12:
             raise ValueError("Compiled action timing differs")
         self.index = 0
+        self.physics_steps_per_action = int(context["timing_spec"]["control_decimation"])
 
     def act(self, observation):
         state = observation["state"]
-        if state["physics_step"] != self.index or state["branch_id"] != 0:
+        if state["physics_step"] != self.index * self.physics_steps_per_action or state["branch_id"] != 0:
             raise ValueError("Compiled policy requires consecutive ticks from episode birth")
         events = observation["privileged"]["world"]["contact_events"]["events"]
         if any(e["touching"] and {e["role_a"], e["role_b"]} == {"robot", "wire_metal"} for e in events):

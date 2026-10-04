@@ -65,6 +65,7 @@ class Repairs(unittest.TestCase):
                     row = dict(task_id='fixture', task_number=1, difficulty='easy', sample_id='s00',
                                scene_seed=0, slug='topogym-fixture-easy-s00', evaluable_for_task_success=True)
                     ev = DifficultyEvaluation.__new__(DifficultyEvaluation)
+                    ev.source = ROOT
                     ev.run = root; ev.jobs = root / 'jobs'; ev.harbor = Path(sys.executable)
                     ev.args = SimpleNamespace(rerun_incomplete=False)
                     ev.manifest = dict(instances=[row], trial_count=2)
@@ -93,7 +94,10 @@ class Repairs(unittest.TestCase):
                                          'invalid_submission' if mode == 'unlimited' else 'unsolved')
                         return 0
                     ev.launch_job = launch
-                    ev.run_trials()
+                    # This synthetic fixture isolates invalid-submission queue handling.
+                    # Real release/instance rejection is covered by test-v15-release-selection.py.
+                    with patch('topogym_versions.require_task'):
+                        ev.run_trials()
                     self.assertEqual(launched, ['unlimited', 'limited'])
 
     def test_valid_npz_and_physics_runtime_error_keep_their_meaning(self):
@@ -184,7 +188,7 @@ def stop():
  assert n[0] == 2
  os.kill(os.getpid(), signal.SIGKILL)
 t.Session = lambda *a, **kw: SimpleNamespace(instance_matches=True, instance_exact=True, replay=replay,
- start_video=lambda *a, **kw:None, stop_video=stop, close=lambda:None)
+ runtime_binding={'binding_id':'cpu-fixture'}, start_video=lambda *a, **kw:None, stop_video=stop, close=lambda:None)
 root, data = sys.argv[1:3]
 os.environ['RCB_VERIFIER_LOG_DIR'] = data
 sys.argv = ['grade', '--family', 'fixture', '--instance', data+'/instance.json', '--traj', data+'/trajectory.npz']
@@ -221,6 +225,7 @@ root, data = sys.argv[1:3]
 sys.path.insert(0, root + '/harbor_templates/topogym/common')
 import rcb_topogym as t
 t.Session = lambda *a, **kw: SimpleNamespace(instance_matches=True, instance_exact=True, instance_sha='s',
+ runtime_binding={'binding_id':'cpu-fixture'},
  replay=lambda *a, **kw:dict(success=True,state_sha='s',sim_steps=1), start_video=lambda *a, **kw:None,
  stop_video=lambda:os.kill(os.getpid(), signal.SIGKILL), close=lambda:None)
 sys.argv=['replay', '--data', data, '--task', 'fixture', '--instance', data+'/instance.json', '--video', data+'/replay.mp4']

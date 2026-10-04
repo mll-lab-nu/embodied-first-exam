@@ -9,7 +9,7 @@ usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded 
                 Without it solve.sh says there is none and the oracle agent scores 0
   --instance    an existing frozen instance to copy; otherwise one is made with `rcb_topogym.py make-instance` (needs the GPU)
   --python      the interpreter that has topogym + a GPU (default .venv-gs121-nyx/bin/python), for make-instance / describe
-Then: run-oracle + replay, `harbor run -a oracle` / `-a nop`, scripts/topogym_mk_limited.py, and `cd tasks && harbor add --scan .`.
+Default output: runs/task_candidates/v15/. Use topogym_candidate_pipeline.py for fixed-suite generation and activation.
 Shared files are copied from one tooling generation. New packages record its version;
 historical frozen generations keep their pinned bytes (ci_checks/check-tooling-identity.sh).
 Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600, at most 36000).
@@ -26,12 +26,26 @@ from topogym.utils.io import make_asset_tree_readable
 from cuda_profiles import image_tag
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
 TOOL = root / "harbor_templates/topogym/common/rcb_topogym.py"
-TOOLING_VERSION = "14"
+from topogym_versions import release
+TOOLING_VERSION = release(root)["tooling_version"]
 SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile",
           "tests/docker-compose.yaml", "tests/grade.py"]
 IMAGE = image_tag(root)
+TOOL_RUNTIME_IMAGE = None
 BUDGET_S = 21600                      # TopoGym's explicit six-hour protocol exception.
 MAX_BUDGET_S = 36000
+
+
+def require_current_destination(dst):
+    """Never overwrite a frozen tooling generation while preparing candidates."""
+    import tomllib
+    manifest = pathlib.Path(dst) / "task.toml"
+    if manifest.is_file():
+        previous = tomllib.loads(manifest.read_text()).get("metadata", {}).get("tooling_version")
+        if previous != TOOLING_VERSION:
+            raise ValueError(f"{dst} is frozen tooling {previous}; use a new --tasks-root for tooling {TOOLING_VERSION}")
+        if any(pathlib.Path(dst).glob("**/runtime_binding.json")):
+            raise ValueError(f"{dst} already has a frozen runtime binding; use a new --tasks-root")
 
 
 def tier_of(inst: dict):
@@ -88,7 +102,7 @@ def run_tool(python, *args, tool=TOOL) -> dict:
                "--label", "topogym.difficulty-run=" + os.environ["TOPOGYM_RUN_ID"],
                "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "RCB_SESSION_LOG=",
                "-e", "NVIDIA_VISIBLE_DEVICES=" + os.environ.get("TOPOGYM_GPU_UUID", "0"),
-               "-v", f"{mount}:{mount}", "-w", mount, os.environ["TOPOGYM_TOOL_IMAGE"],
+               "-v", f"{mount}:{mount}", "-w", mount, TOOL_RUNTIME_IMAGE or os.environ["TOPOGYM_TOOL_IMAGE"],
                "python", str(tool), *map(str, args)]
         if os.environ.get("TOPOGYM_RESOURCE_LABELS"):
             from difficulty_delivery import label_args
@@ -111,8 +125,12 @@ def layout_words(d: dict) -> str:
     for arm in d["arms"]:
         n = sum(1 for x in d["action_layout"] if not x.endswith("_gripper") and x in d["kinematics"]["joint_names"]
                 and any(j["name"] == x and j["group"] == f"arm_{arm}" for j in d["robot_spec"]["joints"]))
-        lo, hi = d["limits"][d["action_layout"].index(f"{arm}_gripper")]
-        parts.append(f"arm `{arm}`: {n} joint targets (rad), then `{arm}_gripper` = opening width (m, {lo:g} closed .. {hi:g} open)")
+        native = d["robot_spec"].get("gripper_space", "width") == "native"
+        name = f"{arm}_native_gripper" if native else f"{arm}_gripper"
+        lo, hi = d["limits"][d["action_layout"].index(name)]
+        unit = d["robot_spec"]["grippers"][arm].get("unit", "m") if native else "m"
+        meaning = f"native drive target ({unit}, limits {lo:g} .. {hi:g}; open/closed targets in robot_spec)" if native else f"opening width (m, {lo:g} closed .. {hi:g} open)"
+        parts.append(f"arm `{arm}`: {n} joint targets (rad), then `{name}` = {meaning}")
     return "; ".join(parts)
 
 
@@ -382,7 +400,9 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("family"); ap.add_argument("--eval-index", type=int); ap.add_argument("--oracle", default=None)
     ap.add_argument("--variation"); ap.add_argument("--scene-seed", type=int); ap.add_argument("--task-parameters")
-    ap.add_argument("--tasks-root", type=pathlib.Path, default=root / "tasks")
+    ap.add_argument("--simulator-overrides", help="JSON manager build options for a new candidate instance")
+    ap.add_argument("--ipc-settled-state", help="matching export-ipc-state archive for a new instance")
+    ap.add_argument("--tasks-root", type=pathlib.Path, default=root / "runs/task_candidates" / ("v" + TOOLING_VERSION))
     ap.add_argument("--build-root", type=pathlib.Path, default=root / "runs/task_build")
     ap.add_argument("--slug"); ap.add_argument("--image", default=IMAGE)
     ap.add_argument("--agent-wall-clock-s", type=int, default=BUDGET_S)
@@ -393,6 +413,8 @@ def main() -> None:
     a = ap.parse_args()
     if not 0 < a.agent_wall_clock_s <= MAX_BUDGET_S:
         ap.error(f"--agent-wall-clock-s must be in 1..{MAX_BUDGET_S}")
+    if a.instance and (a.task_parameters or a.simulator_overrides or a.ipc_settled_state):
+        ap.error("--instance cannot be combined with configuration overrides")
     if a.variation is not None or a.scene_seed is not None:
         if a.variation is None or a.scene_seed is None or a.eval_index is not None or a.instance:
             ap.error("--variation and --scene-seed must be paired, without --eval-index/--instance")
@@ -407,6 +429,13 @@ def main() -> None:
     if not re.fullmatch(r"topogym-[a-z0-9-]+", slug):
         ap.error("invalid task slug")
     dst = a.tasks_root.resolve() / f"{slug}-privileged"
+    require_current_destination(dst)
+    global TOOL_RUNTIME_IMAGE
+    if os.environ.get("TOPOGYM_TOOL_IMAGE"):
+        if os.environ["TOPOGYM_TOOL_IMAGE"] != IMAGE:
+            raise ValueError("TOPOGYM_TOOL_IMAGE must match --image for frozen task generation")
+        from topogym.planning.harbor_bridge.binding import inspect_image
+        TOOL_RUNTIME_IMAGE = inspect_image(IMAGE)["id"]
     for d in ("environment", "tests") + (("solution",) if a.oracle else ()):   # no reference solution: no solution/ (oracle = "none")
         (dst / d).mkdir(parents=True, exist_ok=True)
     if dst != TEMPLATE:
@@ -432,6 +461,10 @@ def main() -> None:
         selection = ["--variation", a.variation, "--scene-seed", a.scene_seed] if a.variation else ["--eval-index", a.eval_index]
         if a.task_parameters:
             selection += ["--task-parameters", a.task_parameters]
+        if a.simulator_overrides:
+            selection += ["--simulator-overrides", a.simulator_overrides]
+        if a.ipc_settled_state:
+            selection += ["--ipc-settled-state", a.ipc_settled_state]
         run_tool(a.python, "make-instance", "--task", fam, *selection, "--out", inst_path, tool=tool)
     assets = dst / "environment/instance_assets"
     assets.mkdir(exist_ok=True)
@@ -483,6 +516,18 @@ def main() -> None:
     (dst / "task.toml").write_text(task_toml(slug, fam, goal_text, d, a.eval_index, inst["variation_id"], inst["seed"], hours, tier_of(inst), inst))
     from task_conventions import normalize
     normalize(dst)                        # protocol v1.0: fields, protocol spelling, test.sh, graders, README layout
+    # Record the actual image, independently of the instance's creation source.
+    # Generation is not complete until both simulator and verifier carry it.
+    from topogym.planning.harbor_bridge.binding import inspect_task
+    runtime_lock = inspect_task(dst)
+    if TOOL_RUNTIME_IMAGE is not None and runtime_lock["image"]["id"] != TOOL_RUNTIME_IMAGE:
+        raise ValueError("Image tag changed during task generation; use a new build directory")
+    if d.get("runtime_identity") != runtime_lock["runtime"]:
+        raise ValueError("describe was not measured in the selected runtime; rebuild it in TOPOGYM_TOOL_IMAGE")
+    for directory in (dst / "environment", dst / "tests"):
+        (directory / "runtime_binding.json").write_text(json.dumps(runtime_lock, indent=2) + "\n")
+    from topogym_versions import stamp_task
+    stamp_task(dst, root)
     print("generated", dst.name, "oracle:", "yes" if a.oracle else "none", "state_sha:", inst["state_sha"], "sec/step:", d["sec_per_step"])
 
 

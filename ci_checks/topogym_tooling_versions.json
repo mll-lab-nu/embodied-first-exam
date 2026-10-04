@@ -441,7 +441,8 @@
     "12": "ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128",
     "v11_local_grasp": "ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128",
     "v11_local_lock": "ghcr.io/luigivamper/rcb-topogym:0.2.10-cu128",
-    "13": "ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128"
+    "13": "ghcr.io/luigivamper/rcb-topogym:0.2.11-cu128",
+    "14": "ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128"
   },
   "v10": {
     "unlimited": {
@@ -599,6 +600,25 @@
       "environment/sim/replay.py": "34f680abb6288a6c13fdf50d305af9135f537d1f0be5b3396cc8e9c897c4cf77",
       "tests/grade.py": "0dc12e12b4237565cc074e404618171581076531fca3abf0defc9a50050eb4a8",
       "environment/sim/rcb_topogym.py": "05d63ca273a9dbbb3ff76258d2c58c7d2558a55aab8bfb89bb1362fa61dd67be"
+    }
+  },
+  "v14": {
+    "unlimited": {
+      "tests/grade.py": "0f38b79ec428684b7a8ff7504f8503e9ee609f275b62eb7b47b938a16ebb7892",
+      "environment/rcb_topogym.py": "062af946525d3374c6a2b0bb5506d87911aa730a130480b7eeb5946186c60bfc",
+      "tests/rcb_topogym.py": "062af946525d3374c6a2b0bb5506d87911aa730a130480b7eeb5946186c60bfc"
+    },
+    "limited": {
+      "environment/rcb_client.py": "8ce0b6981d5272b7600a4a721a79c187b0c5c39fb1aa1ce92f44da13aeb32215",
+      "environment/rcb1.py": "a930d8eb6619b669908aff12a33c7dea19b0eb33c5b73138f0b5371bf3fe5040",
+      "environment/sim/server.py": "249dae281c358fe3d91ac045939e0c6b7630f65181e42d9c9d4e0a0e9c74bab0",
+      "environment/sim/finalize.sh": "8f5d756af830ac64b506f94ef71008af449787819e039b3b05044078e40bcd52",
+      "environment/sim/run.sh": "5a3fb29ea050a005cb0e441f9129b347fa0af5d536d9d210178b1398df032f64",
+      "environment/sim/rcb1.py": "a930d8eb6619b669908aff12a33c7dea19b0eb33c5b73138f0b5371bf3fe5040",
+      "environment/sim/rcb_limited.py": "fb8531c1e8d1dc204882f1a6c05dcbc92aac4376e22dbff72793eb7791bb4a61",
+      "environment/sim/replay.py": "34f680abb6288a6c13fdf50d305af9135f537d1f0be5b3396cc8e9c897c4cf77",
+      "tests/grade.py": "be5aec56497c7a47381e48b5eb2f7d416c0c010b17c7bf155340e0da6dc71db0",
+      "environment/sim/rcb_topogym.py": "062af946525d3374c6a2b0bb5506d87911aa730a130480b7eeb5946186c60bfc"
     }
   }
 }

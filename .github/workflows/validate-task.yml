@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tasks:
-        description: "space-separated task dirs, e.g. tasks/foo-privileged (default: all)"
+        description: "space-separated task names from the active v15 catalog (default: all)"
         required: false
         default: ""
 permissions:
@@ -24,12 +24,10 @@ jobs:
       - name: Resolve task list
         run: |
           set -eu
-          list=${TASKS:-$(ls -d tasks/*/)}
-          for t in $list; do
-            [[ "$t" =~ ^tasks/[A-Za-z0-9_.-]+/?$ ]] || { echo "bad task dir: $t"; exit 1; }
-            [ -f "${t%/}/task.toml" ] || { echo "not a task: $t"; exit 1; }
-          done
-          echo "TASK_LIST=$(echo $list)" >> "$GITHUB_ENV"
+          # A frozen v15 task tree/catalog and its images must be present on this runner.
+          # No fallback to the historical root tasks/ when the candidate is absent.
+          uv run --python 3.12 --with numpy --with scipy python scripts/topogym_versions.py list --inspect-docker $TASKS > /tmp/topogym-ci-tasks-${GITHUB_RUN_ID}.txt
+          echo "TASK_LIST=$(paste -sd ' ' /tmp/topogym-ci-tasks-${GITHUB_RUN_ID}.txt)" >> "$GITHUB_ENV"
           echo "JOBS=jobs/validate-${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
       - name: oracle == 1 (tasks with oracle = "full")
         run: |
@@ -38,6 +36,7 @@ jobs:
             n=$(basename "$t")
             grep -Eq '^oracle *= *"full"' "${t%/}/task.toml" || { echo "skip $n (oracle is not full)"; continue; }
             harbor run -p "$t" -a oracle -o "$JOBS" --job-name "oracle-$n"
+            python3 scripts/check_topogym_trial.py "$JOBS/oracle-$n" --expected 1
             grep -qx 1 "$JOBS/oracle-$n"/*/verifier/reward.txt || { echo "oracle failed on $t"; exit 1; }
           done
       - name: nop == 0
@@ -46,5 +45,6 @@ jobs:
           for t in $TASK_LIST; do
             n=$(basename "$t")
             harbor run -p "$t" -a nop -o "$JOBS" --job-name "nop-$n"
+            python3 scripts/check_topogym_trial.py "$JOBS/nop-$n" --expected 0
             grep -qx 0 "$JOBS/nop-$n"/*/verifier/reward.txt || { echo "nop passed on $t"; exit 1; }
           done

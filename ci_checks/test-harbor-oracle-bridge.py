@@ -16,6 +16,7 @@ from unittest.mock import Mock, patch
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT))
 from topogym.planning.harbor_bridge.actions import SessionExecutor, native_row, public_row
 from topogym.planning.harbor_bridge.batch import assess_job, plan
@@ -54,13 +55,19 @@ def fixture(root, family="cast_keyhole", mode="privileged"):
             control_decimation=10, solver_substeps=4, grasp_assist=dict(model="contact_weld_v1")))
     folder = task / ("environment/sim" if mode == "standard" else "environment")
     write_json(folder / "instance.json", instance)
-    (folder / "rcb_topogym.py").write_text('# frozen task tooling\n')
+    (folder / "rcb_topogym.py").write_text('BINDING_API = 1\n')
     write_json(folder / "instance_assets/state.json", {"state": [0, 1]})
     (task / "tests/instance.json").write_bytes((folder / "instance.json").read_bytes())
     (task / "solution/oracle.py").write_text('session.step(session.hold_action())\n')
     (task / "solution/solve.sh").write_text(
         '#!/bin/bash\npython /opt/tools/rcb_topogym.py run-oracle --code /solution/oracle.py\n')
     return task, folder / "instance.json"
+
+
+def fixture_lock(task):
+    from topogym.planning.harbor_bridge.binding import lock_for_task
+    return lock_for_task(task, dict(reference="example:1", id="sha256:" + "0"*64, repo_digests=[]),
+                         dict(source=dict(sha256="1"*64, files=1)))
 
 
 def fake_session(binding, *, solved=True):
@@ -77,7 +84,7 @@ def fake_session(binding, *, solved=True):
         clip=lambda row: np.clip(row, [-1., 0.] * n, [1., .05] * n))
     s = SimpleNamespace(task=inst["task"], config=deepcopy(inst["simulator"]), instance_sha=inst["state_sha"],
         asset_identity=inst["asset_identity"], action_layout=inst["action_layout"], n_steps=0, _resets=0,
-        instance_matches=True, env=SimpleNamespace(_robot=robot), robot=adapter,
+        instance_matches=True, instance_exact=True, env=SimpleNamespace(_robot=robot), robot=adapter,
         hold_action=lambda: np.array([.125, .01653125] * n, np.float32), success=lambda: solved)
     def step(row):
         s.n_steps += 1
@@ -112,6 +119,18 @@ class FixtureCase(unittest.TestCase):
 
 
 class Contracts(FixtureCase):
+    def test_ipc_settled_state_resolves_only_to_the_bound_asset(self):
+        data = read_json(self.instance)
+        data["simulator"]["ipc_settled_state"] = "instance_assets/state.json"
+        write_json(self.instance, data)
+        binding = instance_binding(self.instance)
+        session = fake_session(binding)
+        session.config["ipc_settled_state"] = str(self.instance.parent / "instance_assets/state.json")
+        check_session(session, binding, instance_path=self.instance)
+        session.config["ipc_settled_state"] = str(self.root / "different-state.json")
+        with self.assertRaises(BridgeError):
+            check_session(session, binding, instance_path=self.instance)
+
     def test_soft_state_path_resolves_only_to_the_bound_asset(self):
         data = read_json(self.instance)
         data["simulator"]["task_parameters"] = {"initial_state_path": "instance_assets/state.json"}
@@ -234,6 +253,53 @@ class Contracts(FixtureCase):
         with self.assertRaises(BridgeError): instance_binding(self.instance)
 
 
+class NativeCommandSpace(unittest.TestCase):
+    def robot(self, limit=.041, field="gripper_position_m"):
+        sys.path.insert(0, str(ROOT / "harbor_templates/topogym/common"))
+        from rcb_topogym import _Robot
+        r = _Robot.__new__(_Robot)
+        r.gripper_space = "native"
+        r.layout, r.grip_index, r.arm_slice = ["joint", "arm_native_gripper"], {"arm": 1}, {"arm": slice(0, 1)}
+        group = SimpleNamespace(gripper_field=field, gripper_limits=(0., limit))
+        r.groups = {"arm": group}
+        r.robot = SimpleNamespace(groups=r.groups, validate_action=lambda commands: commands,
+            capture_state=lambda: SimpleNamespace(targets={"arm": {"joint_position_rad": [0.], field: .024}}))
+        r.width_table = {"arm": (np.array([0., .05]), np.array([.00746875, limit]))}
+        hi = np.float32(limit)
+        if float(hi) > limit: hi = np.nextafter(hi, np.float32(-np.inf))
+        r.lo, r.hi = np.array([-1., 0.]), np.array([1., float(hi)])
+        r.limits = list(zip(r.lo, r.hi))
+        return SimpleNamespace(robot=r, env=SimpleNamespace(_robot=r.robot), action_layout=r.layout)
+
+    def test_aloha_close_targets_survive_actual_command_encoder(self):
+        s = self.robot()
+        for value in (.002, .006):
+            row = native_row(s, [0., value])
+            command = s.robot.command(row)
+            self.assertAlmostEqual(command["arm"]["gripper_position_m"], value, places=8)
+        self.assertNotEqual(native_row(s, [0., .002])[1], native_row(s, [0., .006])[1])
+        s.robot.gripper_space = "width"
+        with self.assertRaisesRegex(BridgeError, "not representable"):
+            native_row(s, [0., .002])
+
+    def test_robotiq_float32_limit_rounds_inward_without_saturating_invalid_input(self):
+        s = self.robot(.8, "gripper_angle_rad")
+        row = native_row(s, [0., .8])
+        self.assertLessEqual(float(row[1]), .8)
+        self.assertAlmostEqual(s.robot.command(row)["arm"]["gripper_angle_rad"], .8, places=6)
+        with self.assertRaisesRegex(BridgeError, "outside model limits"):
+            native_row(s, [0., .8001])
+
+    def test_grader_refuses_same_dimension_different_gripper_semantics(self):
+        import rcb_topogym
+        with tempfile.TemporaryDirectory() as directory:
+            p = Path(directory) / "trajectory.npz"
+            np.savez(p, task="cast_coil", actions=np.zeros((3, 2)), action_layout=["joint", "arm_gripper"])
+            with self.assertRaisesRegex(rcb_topogym.InvalidTrajectory, "layout differs"):
+                rcb_topogym.load_trajectory(p, "cast_coil", 2, layout=["joint", "arm_native_gripper"])
+            self.assertEqual(len(rcb_topogym.load_trajectory(p, "cast_coil", 2, layout=["joint", "arm_gripper"])[0]), 3)
+
+
 class Packaging(FixtureCase):
     def test_existing_reference_preserves_public_bytes_and_original_qualification(self):
         before = file_hashes(self.task)
@@ -308,8 +374,9 @@ class Packaging(FixtureCase):
         path.write_text('pass')
         with self.assertRaises(BridgeError): package(self.task, self.root / "out", kind="existing")
 
-    def test_batch_has_no_model_or_credentials_and_does_not_execute_on_plan(self):
-        result = package(self.task, self.root / "candidates", kind="existing")
+    @patch("topogym_versions.require_task", return_value={})
+    def test_batch_has_no_model_or_credentials_and_does_not_execute_on_plan(self, _active_guard):
+        result = package(self.task, self.root / "candidates", kind="existing", runtime_lock=fixture_lock(self.task))
         output = self.root / "batch"
         document = plan([result["task"]], output, "harbor")
         self.assertEqual([j["agent"] for j in document["jobs"]], ["oracle", "nop"])
@@ -317,8 +384,9 @@ class Packaging(FixtureCase):
         self.assertFalse(output.exists())
         self.assertFalse(document["harbor_qualified"])
 
-    def test_original_tier_scope_rejects_simplified_tasks_before_launch(self):
-        result = package(self.task, self.root / "candidates", kind="existing")
+    @patch("topogym_versions.require_task", return_value={})
+    def test_original_tier_scope_rejects_simplified_tasks_before_launch(self, _active_guard):
+        result = package(self.task, self.root / "candidates", kind="existing", runtime_lock=fixture_lock(self.task))
         candidate = Path(result["task"])
         document = plan([candidate], self.root / "jobs", "harbor", tiers=["easy", "medium", "hard"])
         self.assertEqual(document["jobs"][0]["difficulty"], "easy")
@@ -368,6 +436,7 @@ class Session:
         self.task, self.config = task, data["simulator"]
         self.instance_sha, self.asset_identity = data["state_sha"], data["asset_identity"]
         self.action_layout, self.instance_matches = data["action_layout"], True
+        self.instance_exact = True
         self.n_steps = self.physics_steps = self._resets = 0
         self.env = SimpleNamespace(_episode_id="frozen", _branch_id=1, _control_step=0,
             _world=SimpleNamespace(physics_step=0), config=SimpleNamespace(**self.config))
@@ -401,6 +470,22 @@ class Session:
 
     def invoke(self, result):
         task = Path(result["task"])
+        # An independently installed CPU fixture deliberately differs from the
+        # instance creator; only explicit runtime binding permits its use.
+        import hashlib
+        from topogym.simulator.frozen_binding import installed_runtime
+        files = {"topogym/" + name: value for name, value in file_hashes(self.installed / "topogym").items()}
+        write_json(self.installed / "SOURCE.json", dict(
+            sha256=hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest(), files=len(files)))
+        runtime = installed_runtime(self.installed, check_imports=False)
+        recipe_path = task / "solution/bridge_manifest.json"
+        recipe = read_json(recipe_path)
+        bound = recipe["binding"]
+        recipe["runtime_binding"] = dict(schema_version=1, instance_sha256=bound["instance_sha256"],
+            asset_files=bound["asset_files"], tooling_sha256=recipe["tooling_sha256"],
+            creation_source=bound["instance"]["topogym_source"], runtime=runtime,
+            image=dict(reference="example:1", id="sha256:" + "0"*64, repo_digests=[]))
+        write_json(recipe_path, recipe)
         output = self.root / (task.parent.name + "-results")
         output.mkdir()
         command = '''

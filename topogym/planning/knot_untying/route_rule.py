@@ -33,7 +33,9 @@ def only_local_loops(crossings, stations):
                for k, (lo, hi) in enumerate(spans))
 
 
-def choose(line, stations, crossings, length, hold="far", pull_direction="tangent"):
+def choose(line, stations, crossings, length, hold="far", pull_direction="tangent", *,
+           end_choice="auto", pull_offset=.035, anchor_offset=.015,
+           yaw_deg=0., pitch_deg=0.):
     """Pick the end with the shorter tail to its first under-crossing.
 
     Returns dict(end, s_under, s_pull, s_anchor, direction) with the pull band
@@ -45,14 +47,16 @@ def choose(line, stations, crossings, length, hold="far", pull_direction="tangen
     best = None
     ps = passes(crossings, stations)
     for end in ("A", "B"):
+        if end_choice != "auto" and end != end_choice:
+            continue
         walk = ps if end == "A" else ps[::-1]
         first, over = next(((s, o) for s, under, o in walk if under), (None, None))
         if first is None:
             continue
         tail = first if end == "A" else length-first
         if best is None or tail < best[0]:
-            pull = first+.035 if end == "A" else first-.035
-            anchor = length-.015 if end == "A" else .015
+            pull = np.clip(first+pull_offset if end == "A" else first-pull_offset, .001, length-.001)
+            anchor = length-anchor_offset if end == "A" else anchor_offset
             best = (tail, end, first, pull, anchor, over)
     if best is None:
         return None
@@ -61,5 +65,11 @@ def choose(line, stations, crossings, length, hold="far", pull_direction="tangen
     if hold == "over":
         anchor = max((over-.02, over+.02), key=lambda s: np.linalg.norm(at(s)-at(pull)))
     direction = at(pull)-at(under) if pull_direction == "tangent" else at(pull)-at(anchor)
+    norm = np.linalg.norm(direction)
+    if norm < 1e-12:
+        return None
+    angle = np.arctan2(direction[1], direction[0])+np.deg2rad(yaw_deg)
+    pitch = np.deg2rad(pitch_deg)
+    direction = np.array([np.cos(angle)*np.cos(pitch), np.sin(angle)*np.cos(pitch), np.sin(pitch)])
     return dict(end=end, s_under=under, s_pull=pull, s_anchor=float(anchor),
-                direction=(direction/np.linalg.norm(direction)).tolist())
+                direction=direction.tolist())

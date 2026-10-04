@@ -77,6 +77,8 @@ def classify_trial(job, row, mode):
         return "invalid_submission", result, reward, trial
     if reward.get("instance_mismatch") or not row["evaluable_for_task_success"]:
         return "not_evaluable", result, reward, trial
+    if row.get("tooling_version") == "15" and reward["success"] == 1 and reward.get("runtime_binding_ok") != 1:
+        return "not_evaluable", result, reward, trial
     return ("solved" if reward["success"] == 1 else "unsolved"), result, reward, trial
 
 
@@ -98,7 +100,10 @@ def collect_manifest(manifest_path, jobs):
                     status = "blocked_preflight"
                 agent = result.get("agent_result") or {}
                 row = dict(task_id=sample["task_id"], difficulty=sample["difficulty"], sample_id=sample["sample_id"],
-                           scene_seed=sample["scene_seed"], mode=mode, trial=1, attempt=int(job.name[-3:]),
+                           scene_seed=sample["scene_seed"], mode=mode, trial=1,
+                           tooling_version=sample.get("tooling_version", "historical_unrecorded"),
+                           release_definition_sha256=sample.get("release_definition_sha256"),
+                           environment_profile=sample.get("environment_profile"), attempt=int(job.name[-3:]),
                            status=status, success=reward.get("success"),
                            evaluable_for_task_success=sample["evaluable_for_task_success"],
                            tokens_in=agent.get("n_input_tokens"), tokens_out=agent.get("n_output_tokens"),
@@ -129,7 +134,7 @@ def collect_manifest(manifest_path, jobs):
         if key not in latest or row["attempt"] > latest[key]["attempt"]:
             latest[key] = row
     eligible = [r for r in latest.values() if r["status"] in {"solved", "unsolved"}]
-    lines = ["# Difficulty evaluation", "", f"Planned trials: {manifest['trial_count']}; observed attempt rows: {len(rows)}.", "",
+    lines = ["# Difficulty evaluation", "", "Release: " + json.dumps(manifest.get("release", {"name": "historical_unrecorded"}), sort_keys=True), "", f"Planned trials: {manifest['trial_count']}; observed attempt rows: {len(rows)}.", "",
              f"Evaluable completed trials (latest attempt each): {sum(r['status'] == 'solved' for r in eligible)}/{len(eligible)} solved.",
              "Not-evaluable, invalid submissions and infrastructure failures are excluded from this denominator.", "",
              "| task | difficulty | sample | mode | attempt | status |", "|---|---|---|---|---|---|"]
@@ -140,6 +145,17 @@ def collect_manifest(manifest_path, jobs):
     return 0 if all(r["status"] in {"solved", "unsolved", "not_evaluable", "invalid_submission"} for r in latest.values()) else 2
 def legacy_main():
     jobs, ju, jl, out = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], pathlib.Path(sys.argv[4])
+    from regrade_trials import original_task
+    release_ids = set()
+    for job in (ju, jl):
+        for result_path in (jobs/job).glob("*/result.json"):
+            try:
+                record = json.loads((original_task(result_path.parent)/"task_release.json").read_text())["release"]
+                release_ids.add(record["definition_sha256"])
+            except (OSError, ValueError, KeyError):
+                release_ids.add("historical_unrecorded")
+    if len(release_ids) > 1:
+        raise ValueError("Input jobs use different releases; collect them separately")
     out.mkdir(parents=True, exist_ok=True)
     def span(x):
         try:
@@ -160,7 +176,7 @@ def legacy_main():
             for f in ("gen.py",):
                 src=trial/"artifacts/app/output"/f
                 if src.exists(): shutil.copy(src, d/f)
-            info={"success": rw.get("success"), "agent_s": span(r.get("agent_execution") or {}), "verifier_s": span(r.get("verifier") or {}),
+            info={"release_definition_sha256": next(iter(release_ids), "historical_unrecorded"), "success": rw.get("success"), "agent_s": span(r.get("agent_execution") or {}), "verifier_s": span(r.get("verifier") or {}),
                   "tokens_in": ar.get("n_input_tokens"), "tokens_out": ar.get("n_output_tokens"), "cost_usd_api_price": ar.get("cost_usd"),
                   "n_actions": rw.get("n_actions"), "sim_steps": rw.get("sim_steps"), "steps": rw.get("steps"),
                   "agent_resets": rw.get("agent_resets"), "agent_sim_steps": rw.get("agent_sim_steps"),

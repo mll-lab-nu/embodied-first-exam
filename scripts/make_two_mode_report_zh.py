@@ -5,7 +5,7 @@ TopoGym (adapted from robot_coding_bench fa59c1a6, whose version was written for
 from the two jobs unless a batch plan gives one ({"all_tasks": [...], "keep": [...], "seeds": {...}, "note": "..."});
 difficulty labels come from RCB_TASKLIST_STATE (a YAML {task: {difficulty: easy|medium|hard|extreme}}) if it is set; the
 failure analysis of a batch is written by hand into ANALYSIS below (write_task_results.py --analysis reads it from here)."""
-import json, os, pathlib, shutil, subprocess, sys, datetime as dt, glob
+import json, os, pathlib, shutil, subprocess, sys, datetime as dt, glob, re
 jobs, ju, jl, rep = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], pathlib.Path(sys.argv[4])
 plan = json.load(open(sys.argv[5])) if len(sys.argv) > 5 else {}
 STATE = pathlib.Path(os.environ["RCB_TASKLIST_STATE"]) if os.environ.get("RCB_TASKLIST_STATE") else None
@@ -34,9 +34,9 @@ def task_name(t):
     except Exception: return ""
 def trial_for(job, task, limited):
     """Map by result.json task_name (Harbor truncates long trial directory names)."""
-    want = task + ("-limited" if limited else "")
+    want = {task + suffix for suffix in (("-standard", "-limited") if limited else ("-privileged", ""))}
     for t in sorted((jobs / job).glob("topogym-*")):
-        if t.is_dir() and (t / "result.json").exists() and task_name(t) == want: return t
+        if t.is_dir() and (t / "result.json").exists() and task_name(t) in want: return t
     return None
 def media(trial, task, mode):
     v = trial / "verifier"; out = {}
@@ -61,11 +61,24 @@ def fmt_res(i):
     if not i["done"]: return "运行中" if not i["exc"] else f"⚠ {i['exc']}"
     if i["rw"].get("grader_error"): return "⚠ verifier 报错（待重判）"
     return "✅ 成功" if i["success"] == 1 else ("❌ 失败（未交付轨迹）" if i["rw"].get("missing_trajectory") else "❌ 失败")
-tasks = plan.get("all_tasks") or sorted({task_name(t).removesuffix("-limited") for job in (ju, jl) for t in (jobs / job).glob("topogym-*")
+tasks = plan.get("all_tasks") or sorted({re.sub(r"-(limited|standard|privileged)$", "", task_name(t)) for job in (ju, jl) for t in (jobs / job).glob("topogym-*")
                                          if t.is_dir() and task_name(t)})
+from regrade_trials import original_task
+releases = {}
+for job in (ju, jl):
+    for trial in (jobs / job).glob("*/result.json"):
+        try:
+            release_file = original_task(trial.parent) / "task_release.json"
+            record = json.loads(release_file.read_text())["release"]
+        except (OSError, ValueError, KeyError):
+            record = {"name": "historical_unrecorded"}
+        releases[record.get("definition_sha256", record["name"])] = record
+if len(releases) > 1:
+    raise ValueError("Input jobs have different releases; generate separate reports")
 L = ["# TopoGym — unlimited 与 limited 两种模式对比报告\n",
      f"生成时间 {dt.datetime.now().strftime('%Y-%m-%d %H:%M')}。Harbor 作业：`{ju}`（unlimited）、`{jl}`（limited）。" + (plan.get("note") or ""),
      "",
+     "Release: `" + json.dumps(list(releases.values()), ensure_ascii=False) + "`",
      "## 两种模式",
      "| | unlimited | limited（机器人即服务） |", "|---|---|---|",
      "| 仿真器 | 与 agent 同一容器，可直接 import（rcb_topogym） | 独立 sidecar 容器，agent 打不开 |",

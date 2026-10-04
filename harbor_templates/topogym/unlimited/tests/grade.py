@@ -7,8 +7,7 @@ Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Har
 human-viewable replay video /logs/verifier/replay.mp4 (all cameras tiled) plus replay.last.png, rendered during the last of
 the `--repeat` (2) replays in this fresh process: two passes in all, no separate video replay. TopoGym's physics runs on
 the GPU, whose contact solver is not bit-exact (the rule of robot_coding_bench's GPU backend): every replay must complete
-the task; the final-state hashes (`deterministic`) and the rebuilt frozen scene (`instance_ok`: exact state hash, or
-every object / joint pose within tolerance). Instance compatibility is required; exact GPU hashes are diagnostic.
+the task. Initial state and runtime binding must match exactly; final-state determinism is reported separately.
 """
 from __future__ import annotations
 import argparse, json, os, sys, time, traceback
@@ -62,7 +61,7 @@ def main() -> int:
         if type(inst.get("action_dim")) is not int or not 0 < inst["action_dim"] <= 1024:
             raise ValueError("invalid action dimension in trusted instance")
         try:
-            acts, _ = load_trajectory(a.traj, a.family, int(inst["action_dim"]))
+            acts, _ = load_trajectory(a.traj, a.family, int(inst["action_dim"]), layout=inst["action_layout"])
         except InvalidTrajectory as exc:
             atomic_json(os.path.join(LOG_DIR, "submission_error.json"), {"error": str(exc)})
             write(False, {"success": 0, "bad_trajectory": 1, "grader_error": 0, **cost})
@@ -70,8 +69,8 @@ def main() -> int:
         if a.repeat < 2:
             raise ValueError("grading requires at least two replays")
         s = Session(a.family, instance=a.instance, strict=True)
-        if not s.instance_matches:
-            raise InstanceMismatch("rebuilt instance differs from the frozen instance")
+        if not s.instance_matches or not s.instance_exact or not s.runtime_binding:
+            raise InstanceMismatch("verifier requires an exact frozen instance and a runtime binding")
         t0 = time.time()
         outs, video_error = [], None
         while len(outs) < a.repeat:
@@ -91,6 +90,7 @@ def main() -> int:
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": 1,
                "infra_error": int(unstable), "simulator_instability": int(unstable),
                "instance_ok": int(bool(s.instance_matches)), "instance_exact": int(bool(s.instance_exact)),
+               "runtime_binding_ok": 1,
                "n_actions": int(outs[-1]["sim_steps"]), "submitted_actions": int(len(acts)),
                "sim_steps": int(outs[-1]["sim_steps"]), "physics_steps": int(outs[-1].get("physics_steps", 0)),
                "sim_time_s": float(outs[-1].get("sim_time_s", 0)), "final_reward": float(outs[-1].get("progress") or 0.0),
@@ -98,6 +98,7 @@ def main() -> int:
         import hashlib, uuid
         from pathlib import Path
         evidence = dict(commit_id=uuid.uuid4().hex, replays=outs,
+                        runtime_binding=s.runtime_binding,
                         trajectory_sha256=hashlib.sha256(Path(a.traj).read_bytes()).hexdigest(),
                         instance_sha256=hashlib.sha256(Path(a.instance).read_bytes()).hexdigest())
         write(ok, out, evidence=evidence)

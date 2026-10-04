@@ -3,10 +3,12 @@
 共享入口是 `scripts/oracle_runners/harbor_oracle.py`，使用仓库的 Python 3.11+ 环境。
 本模块负责冻结身份、动作转换、私有依赖打包和 Harbor oracle/nop 批量执行。
 策略、IK、场景和原生成功判据仍由原任务提供；执行使用任务包原有的 `Session.step`。
-所有运行代码随 `solution/` 上传，不进入公共 simulator / verifier 镜像。
+oracle 运行代码随 `solution/` 上传，不进入公共 simulator / verifier 镜像。
 
-当前已完成公共基础设施，以及 Keyhole very_easy / easier 的候选包接入检查。
-候选包仍需完整 Harbor 物理回放验收；这不表示所有任务已经接通。
+当前已接入 11 类 easy / medium / hard 的私有算法回调和参考数据，33 项打包检查通过。
+Coil easy 已实测完成 3 步 oracle 前缀的 privileged 两遍回放，以及 standard 服务执行和独立进程回放；
+两模式均有录像、基础设施错误为 0、实际 grade 为 0。其余任务仍待逐项实机验证。
+短程接线通过不构成完整可解性证明。
 原任务包、原 oracle runner、既有证据和成功资格均保留。
 
 当前实测范围按用户要求仅为 **easy / medium / hard**，不运行 very_easy / easier。
@@ -19,7 +21,7 @@
 | --- | --- | --- | --- |
 | `existing` | 原 `solve.sh` 中 `run-oracle --code` 指向的脚本及私有依赖 | 支持 | 不支持 |
 | `session` | `topogym.planning.*` 内的 `callback(session, output, **kwargs)` | 支持 | 不支持 |
-| `public_trajectory` | 同一冻结实例的公开关节/夹爪宽度轨迹 | 支持 | 通过原 HTTP client 提交 |
+| `public_trajectory` | 同一冻结实例声明的公开关节/夹爪布局轨迹 | 支持 | 通过原 HTTP client 提交 |
 | `native_trajectory` | 同一冻结实例的原生关节/夹爪目标 | 逐行预检转换后执行 | 不支持 |
 
 现有创建 Env、reset 或自行录制的独立 runner 不能直接作为 `existing` 输入。
@@ -36,10 +38,16 @@
 
 - 精确绑定完整 `instance.json`、源码身份、资产身份、`instance_assets/` 文件哈希及 task tooling。
   缺少身份信息的旧包会报告 `blocked_identity`；先从正确版本生成新冻结包，不能补写虚构身份。
+- `instance.topogym_source` 只说明实例生成来源。独立的 `runtime_binding.json` 记录实际镜像 ID、
+  镜像中的源码文件重算哈希、Python/物理依赖版本和 UIPC 构建身份，允许旧实例经新运行环境精确恢复。
+  这不自动证明语义兼容或可解性。源码、工具、实例和状态资产任一错配均在执行前拒绝。
 - 参考来源与目标包的 seed、场景、判据、机器人、物理时序及辅助抓持必须一致。
   soft-state 相对路径只允许按现有 tooling 解析到同一份绑定资产。
-- 不自动重排、裁剪、重采样动作或修改夹爪目标。原生夹爪经过公开宽度转换再反解，
-  误差须不超过 1 µm；关节 float32 转换误差须不超过 1e-6 rad。
+- 不自动重排、重采样动作或改变夹爪目标。新候选由冻结实例声明 `gripper_space=native`，
+  夹爪列为 `<arm>_native_gripper`，保留 ALOHA 的驱动位置（m）及 Robotiq 的驱动角度（rad）；
+  privileged、standard 和 grader 使用相同布局。原宽度实例及 Knot 保留 `gripper_space=width`。
+  原生目标往返误差须不超过 1e-6（对应 m 或 rad），关节误差须不超过 1e-6 rad；
+  只允许 float32 在模型限位处向内舍入。旧宽度布局无法表达的目标仍拒绝，不饱和代替。
 - 每行执行一个原控制周期。只接受最后一行因 Task 结束而缩短的 tick 记录；
   不把任意 `_physics_steps` 覆盖传给 Session。轨迹结束不追加保持或静置动作。
 - wrapper 统一开始/结束轨迹记录；回调不能 reset、rewind、替换配置或 recorder。
@@ -47,7 +55,8 @@
 - 脚本异常、仅策略完成、原生 Task 未成功均返回失败；尽可能保留部分轨迹与失败报告。
   原生成功报告为 `native_success_pending_harbor_verifier`，仍须独立 verifier 通过。
 - standard 模式只使用公开 HTTP。断连后按服务确认的控制步前缀续传，不重复已确认动作；
-  HTTP 本身不提供完整实例哈希，因此身份保证来自绑定的 task 包及后续 verifier。
+  HTTP spec 提供不泄露状态的 `instance_binding_id`。agent 核对该 ID，verifier 独立核对服务启动和
+  fresh-process replay 两份绑定记录，且两者均必须 `instance_exact=true`。
 
 公开 NPZ 必须包含 `actions`（可精确表示为 float32 的二维数组）、`action_layout`、
 `task`、`instance_sha`（对应冻结 `state_sha`）和 `scene_seed`，可附带
@@ -55,11 +64,96 @@
 夹爪列必须显式命名为 `<arm>_native_gripper`。两种轨迹都必须另传 `--source-instance`，
 不根据数组形状推断来源或控制语义。
 
+## 连接到评测语义及验收标准
+
+直接 `Env` 的历史成功只作为参考来源。实际接入必须由冻结 task tooling 创建 `Session`，
+在该 Session 安装安全规则、力矩限制、桌面保护、PBD 接触修复及不稳定检测后，
+让原策略读取此 Session 的环境反馈，并且只经其 `step()` 推进。不能在旁边新建 Env 执行。
+`SessionPolicyRunner` 遇到 Session 的成功/失败终止立即停止请求动作。
+
+privileged bridge 的 `bridge_report.json.evaluation` 记录运行前后的规则参数、
+PBD 修复参数、粒子速度 guard 和整段 safety 摘要，以及请求/实际执行动作的 float32 哈希、
+调整行数、逐关节最大差和前八个调整样本。Session 的桌面保护允许按评测规则修改目标，
+bridge 保留该行为并明确报告，不能把它称为与旧 Env 逐动作等效。
+规则对象替换、规则参数修改、绕过受观测的 Session.step 会使候选失败。
+这些记录来自 agent 进程，是诊断证据；最终资格仍由隔离 verifier 判定。
+
+“连接正确”与“效力保留”分别验收：前者检查身份、动作语义、生命周期及规则路径；
+后者要求每个 easy / medium / hard 冻结实例在当前规则下完整成功，再通过其模式原有的
+独立回放（privileged 两遍；standard live + fresh-process replay）、oracle/nop 和视觉验收。
+只有前者通过时不能报告后者通过，也不能靠放宽安全规则或修改成功判据恢复历史成功标签。
+如需调整策略来遵守当前规则，应另存 oracle 版本并重新验收。
+
 ## 使用
 
 从仓库根目录执行。所有候选输出为 `<output>/<原任务目录名>`；已有目录不覆盖。
-`environment/` 和 `tests/` 保持字节一致，仅生成新的私有 solution 和候选元数据。
+实例及状态资产保留原字节；支持绑定的候选 tooling 会在 `environment/`、`tests/` 增加同一运行绑定。
+其文件和 Dockerfile COPY 改动逐项记入 `binding_additions`；不会改写来源任务包。
 候选包始终标记 `oracle = "none"`、`harbor_qualified = false`，不继承来源的 full 资格。
+
+### 逐项实机 grade 交接（easy–hard）
+
+入口：[run_harbor_oracle_grades.sh](../../../bash_scripts/run_harbor_oracle_grades.sh)。
+默认范围为 Coil、Keyhole、Lock Picking、Buzz Wire、Fiber、Horseshoe、Hedgehog、Claws、
+Blanket、Rope、Knot 的 easy / medium / hard，共 33 个实例、最多 66 个模式结果。
+排除 Orbits、Slotted Post Ring、very_easy、easier。它执行完整 oracle，不带 nop 负对照，
+不激活发布版本。完整执行可能耗时很长；`--wall-seconds` 是每个实例双模式的总时限，
+不是整个 33 项队列的一小时时限。
+
+在本机工作区运行，保留 `.venv-gs121-nyx`、`.venv-harbor`、`solvability_proof/` 和
+私有 planning 数据；仅复制 bash 文件到另一台机器不足以运行。需要 Docker daemon、
+NVIDIA Container Toolkit、可用 CUDA/Nyx GPU，以及与当前公共源码一致的本地候选镜像。
+本轮使用 `ghcr.io/luigivamper/rcb-topogym:0.2.13-dev-cu128`；镜像身份会严格核验。
+不要在队列运行时修改其源码、镜像标签或任务包。
+
+先查看队列（不启动 Docker）：
+
+```bash
+cd /home/jianwen/topogym
+bash bash_scripts/run_harbor_oracle_grades.sh \
+  --output runs/test_results/harbor_grade_handoff_20261004 --plan
+```
+
+先用本轮已生成的 Coil easy 包跑完整评分：
+
+```bash
+bash bash_scripts/run_harbor_oracle_grades.sh \
+  --tasks-root runs/test_results/oracle_harbor_connectivity_20261003_01/candidate_02/tasks \
+  --output runs/test_results/harbor_grade_coil_easy_20261004 \
+  --families cast_coil --tiers easy
+```
+
+若交接者只想再次确认接线，在上述命令末尾加 `--smoke-steps 3 --wall-seconds 600`，
+同时换一个全新输出目录。短程 `smoke_passed` 允许实际 grade 为 0，不能当作 grade 1。
+
+运行全部 33 项完整评分（自动准备独立候选，逐家族构建并逐实例评分）：
+
+```bash
+bash bash_scripts/run_harbor_oracle_grades.sh \
+  --output runs/test_results/harbor_grade_all_20261004
+```
+
+也可选择 `--families cast_keyhole,lock_picking --tiers easy`。生成阶段默认等待 GPU 空闲
+且至少有 12000 MiB 可用，最长等 600 秒；可用 `--gpu-wait-seconds 3600` 延长等待。
+`--gpu` 选择生成时设备，Harbor 执行设备仍由任务 compose 配置决定（本机单卡）。
+脚本复用当前匹配的本地镜像；如构建日志报告镜像不匹配，先检查并执行
+`<output>/candidate/build_image.sh`，然后恢复队列。不会静默使用旧发布包。
+
+中断后使用完全相同的命令加 `--resume`：已完成的结果保留，包括失败结果；
+未完成项写入新的 attempt 目录。重测已完成的失败项，指定对应 family/tier 和新的输出目录。
+构建阶段的完成回执也可复用。脚本对自身队列加锁；资源监控在系统内存达到 90% 时
+停止本轮拥有的 worker，CPU 只记录。不要用 `kill -9` 跳过 Harbor 的清理。
+
+查看 `<output>/summary.tsv` 或 `summary.json`；逐项的 `results` 列指向详细 `results.json`，
+其 `runs` 给出原生 Harbor job、`reward.json`、轨迹及 verifier 录像的位置。
+每个 attempt 旁的 `.dispatch.log` 是调度日志，构建日志为 `build-<family>-*.log`。
+退出码 0 表示所选范围全部通过；非 0 时根据汇总区分任务 grade 0、未运行、绑定失败和基础设施错误。
+正式模式仅在 privileged 获得 grade 1 后，将同实例轨迹交给 standard 服务执行；否则 standard
+为 `blocked_dependency`。这与 standard 实际执行后得到 grade 0 不同。单项失败不会跳过其他家族。
+
+本轮接线证据：`runs/test_results/oracle_harbor_connectivity_20261003_01/static_matrix/results.json`
+（33 项私有打包检查）及 `trials_02/cast_coil/results.json`（相对同一证据根目录；双模式实机短程评分）。
+其余 10 类的实机接线和所有任务的完整 grade 1 均留待本脚本验证。
 
 ```bash
 .venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py inventory
@@ -69,30 +163,33 @@
 .venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py compare \
   --reference-instance <参考-instance.json> --target-instance <目标-instance.json>
 
-.venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py package \
-  --task tasks/topogym-cast-keyhole-very-easy-i00-privileged \
-  --output runs/test_results/oracle_bridge_new --kind existing
+.venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py bind \
+  --task <选定的候选任务目录> --output runs/test_results/runtime_bindings_new
+
+.venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py preflight \
+  --task <选定的候选任务目录> --runtime-lock <该任务的绑定JSON> \
+  --output runs/test_results/exact_restore_new --gpu 0 --execute
 
 .venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py package \
-  --task tasks/topogym-cast-keyhole-easier-i00-privileged \
-  --output runs/test_results/oracle_callback_new --kind session \
-  --source-root tasks/topogym-cast-keyhole-easier-i00-privileged/solution \
-  --entrypoint topogym.planning.cast_keyhole.public_session:run_feedback_policy
-
-.venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py package \
-  --task tasks/topogym-cast-keyhole-very-easy-i00-standard \
+  --task <同一实例的standard候选目录> --runtime-lock <该任务的绑定JSON> \
   --output runs/test_results/oracle_standard_new --kind public_trajectory \
-  --source-instance tasks/topogym-cast-keyhole-very-easy-i00-privileged/environment/instance.json \
+  --source-instance <该实例的privileged目录>/environment/instance.json \
   --trajectory <同一实例已验收的-trajectory.npz>
 
 .venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py check \
-  --task runs/test_results/oracle_bridge_new/topogym-cast-keyhole-very-easy-i00-privileged
+  --task <生成的私有oracle候选目录>
 
 .venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py run \
   --task <已绑定参考的原三档候选目录> \
   --tiers easy medium hard \
   --output runs/test_results/oracle_jobs_new
 ```
+
+`bind` 未传 `--task` 时仅选择活动版本；显式 `--release published` 才选择冻结 v14 的 78 个三档包。
+活动版本未生成任务树、目标镜像缺失、镜像 tag 移动或任一输入不完整都会失败，不退回旧镜像。
+`preflight` 不加 `--execute` 只保存命令；执行仅加载精确初态，不运行 oracle，也不授予成功资格。
+旧 v14 可以使用独立的管理方绑定/预检；正式双模式绑定评分需要本轮候选 tooling，
+原 v14 标准服务没有绑定回执接口，不能通过偷偷替换旧服务实现来声称它已支持。
 
 `run` 默认只输出完整 Harbor 命令，不创建 job；加 `--execute` 顺序运行 oracle/nop，
 无需模型或模型凭证。宿主需要可用 Docker、匹配镜像和 NVIDIA GPU。
@@ -103,24 +200,96 @@
 退出成功只表示本批评分符合预期；两种模式的 oracle=1、nop=0、独立回放、视觉证据和隔离检查
 仍须一起审查后才能授予资格。此入口不修改现有 `difficulty_eval.py` 的模型评测流程。
 
-## 逐任务剩余接入工作
+## Oracle 的双模式回归入口
+
+`scripts/oracle_runners/test_harbor_oracles.py` 逐任务验收正式 Harbor 流程。
+默认选择 easy / medium / hard、privileged / standard，并执行 oracle 与 nop；
+`--families`、`--tiers`、`--modes` 可以缩小范围。每个任务的接入缺口也进入报告，
+不会将没有 oracle、缺失 twin 或旧版本任务跳过后报告全通过。
+
+```bash
+# 只生成全量覆盖清单与计划；活动版本没有任务树时，旧包仅用于列举缺口。
+.venv-gs121-nyx/bin/python scripts/oracle_runners/test_harbor_oracles.py \
+  --output runs/test_results/harbor_oracle_inventory_new
+
+# 活动版本逐任务执行；输出目录必须全新。
+.venv-gs121-nyx/bin/python scripts/oracle_runners/test_harbor_oracles.py \
+  --output runs/test_results/harbor_oracle_regression_new --execute
+
+# 单实例候选冒烟：使用当前 v15 的真实生成包，不要求先激活全量 78 包。
+.venv-gs121-nyx/bin/python scripts/oracle_runners/test_harbor_oracles.py \
+  --tasks-root <候选目录>/tasks --candidate --families cast_coil --tiers easy \
+  --output runs/test_results/harbor_oracle_coil_new --execute
+```
+
+`--candidate` 仅允许当前源码、tooling、镜像和冻结输入匹配的候选包，仍使用原生 Harbor
+容器隔离与正式 grader；它不激活 release，也不授予全量环境资格。
+默认路径仍要求已登记的活动任务。执行前后均核对绑定及包完整性，禁用 Harbor 自动重试。
+系统内存达到 90% 时停止本轮 worker；基础设施或评分证据异常停止后续队列，
+正常 grade 0 则记录为 oracle 回归失败并继续其他任务。
+
+入口复用现有 bridge 的私有打包与回调。已有 bridge 包直接运行；本轮 11 类任务
+自动选择已登记的 Session 回调及私有参考数据；生成器原有 `run-oracle --code` 脚本也可直接打包。
+standard 默认取同名 privileged 在本批次得到 grade 1 的轨迹，经公共 HTTP 服务实际执行。
+实例不匹配、privileged 未成功或尚无适配的独立 Env runner 均明确报告 blocked。
+其他 oracle 用 `--references references.json` 指定 `package()` 输入，键为完整任务目录名，例如：
+
+```json
+{
+  "topogym-horseshoe-ring-easy-i00-privileged": {
+    "kind": "public_trajectory",
+    "trajectory": "/absolute/path/reference.npz",
+    "source_instance": "/absolute/path/instance.json"
+  }
+}
+```
+
+引用轨迹必须满足上述冻结身份与动作布局合同；本地 demo 成功标签不能代替这些检查。
+只运行 standard 时须提供它的显式参考轨迹或已有 bridge 包。`--no-nop` 可省略负对照。
+
+`results.json` 保存每项 grade、状态、命令和原生证据路径；`jobs/` 保留 Harbor 全部产物，
+`supervision/` 保存日志与 CPU/内存记录。验收同时读取 Harbor result、verifier reward 和可信侧证据：
+
+- privileged：至少两次回放逐次成功，完整 runtime binding、精确初态及提交轨迹哈希一致。
+- standard：live 与 fresh-process replay 均成功，服务启动/回放的绑定回执一致，并保存服务端执行历史。
+- reward 不一致、未结束 trial、grader/infra 错误不能成为通过或正常负对照。
+
+GPU 末态 `deterministic=0` 和视频状态单独报告，沿用正式 grader 语义，不额外改变 grade 规则。
+`grade_one_count` 只计证据核验通过的 oracle；`all_passed` 还要求所有选中任务及启用的 nop 通过。
+此报告是评分回归结果，`harbor_qualified` 保持 false，媒体与 release 资格仍按原流程审查。
+CPU 回归：`python ci_checks/test-harbor-oracle-suite.py`，使用合成证据，不代表物理成功。
+
+修复前的 Cast Coil easy / seed 0 候选诊断使用当时匹配的 tooling 15 / `0.2.13-dev-cu128`：
+privileged oracle 执行 371 行后，原策略 `close_and_acquire` 的原生夹爪目标 `.002 m`
+不能无损转换成公共开口宽度，bridge 拒绝继续。独立 grader 重放两遍均未成功，grade 0；
+精确初态、运行绑定正常，grader/infra error 均为 0。随后显式把这条 **未完成轨迹** 提交到
+同实例 standard 服务，live 371 行与 fresh-process replay 均未成功、grade 0；两个模式 nop 均为 0。
+因此已运行两条完整评分通道，但没有新的 grade-1 可解性证明，也没有修改原策略或放宽规则。
+原批次的 standard 自动依赖仍标记 blocked；未完成轨迹诊断另存一批，不能混同为成功 oracle。
+证据见 [privileged 批次](../../../runs/test_results/harbor_oracle_suite_20261003_coil_easy/results.json)、
+[privileged 逐次回放核验](../../../runs/test_results/harbor_oracle_suite_20261003_coil_easy/privileged_evidence_recheck.json)
+及 [standard 未完成轨迹诊断](../../../runs/test_results/harbor_oracle_suite_20261003_coil_standard_prefix/results.json)。
+构建/初态预检的 Docker 命令已补齐 `--runtime nvidia`；仅 `--gpus` 在本机不会注入 Vulkan ICD，
+会导致 Nyx 建场景失败。Harbor Compose 原有 NVIDIA runtime 声明保持有效。
+
+## 逐任务接入状态与剩余验证
 
 下表是当前冻结实例的接入路线，不推断新 seed 的可解性。运行 `inventory` 获取当前任务包列表；
 runner 文件存在不代表已有完整成功证据。任何物理/几何版本差异都需要另建对应版本的新 task 包。
 
 | 任务 | 当前接入重点 |
 | --- | --- |
-| Cast Keyhole | 两档简化任务已有可打包脚本/反馈回调；原三档参考与现包时序不同，需绑定匹配版本 |
-| Lock Picking | 两档 simplified 的 Session 回调与原生目标转换；原三档仍需区分流程完成与 Task success |
-| Cast Coil | 接入现有策略回调；将已验证候选对应的实例、物理 profile 和证据成套绑定 |
-| Fiber Bundling | 复用收拢策略；原三档的辅助抓持/物理 profile 与旧 Harbor 包差异需明确处理 |
-| Buzz Wire | 编译动作索引与物理 tick 的语义需显式接入；不能默认等于 control step；部分包缺源码身份 |
-| Hedgehog | 接入反馈回调；对齐支撑、初态及场景修订对应的实例 |
-| Interlocked Claws | 对齐原三档分离停稳目标和新版几何；旧包入区目标不能沿用其成功证据 |
-| Horseshoe | 沿用配方哈希约束；提取接收 Session 的执行回调并绑定相同几何/时序 |
-| Knot Untying | runner 注入外部 Session，归并 recorder 所有权；保留 IPC 配置、初态及各档证据范围 |
-| Blanket Flatten | 先把原 oracle 专用 material/PBD 支持变成 simulator 与 verifier 一致的运行支持，再接执行回调 |
-| Rope Threading | 对齐开发参考的材质、网格、接触、辅助抓持和时序；不能直接重放到旧无辅助抓持包 |
+| Cast Keyhole | 原三档 orchestration 已迁入私有 runner 并注入 Session；F1/F2/F3 数据随包；待实机验证 |
+| Lock Picking | 原三档 reindex 求解流程已接 Session 和原生目标；待实机核对 Task success |
+| Cast Coil | easy 双模式 3 步接线与 grading 实测通过；三档完整 grade 1 待验证 |
+| Fiber Bundling | 包初始化、既有 stages 和三档 selection 已接入；候选显式保留 sheath assistance；待实机验证 |
+| Buzz Wire | 既有反馈算法已接入；编译策略使用 control_decimation 核对 tick；历史编译证明不自动继承 |
+| Hedgehog | 反馈回调及 easy/hard 已选 pickup 数据已接入；待核验当前模型与实机执行 |
+| Interlocked Claws | 既有机器人策略、witness 和只读几何审计已接入，保留预抓持 birth；待实机验证 |
+| Horseshoe | stages、配方及五份输入已打包并核对哈希；当前模型检查保留；待实机验证 |
+| Knot Untying | runner 已可注入 Session，由 bridge 持有 recorder；保留宽度协议和 IPC 初态；待实机验证 |
+| Blanket Flatten | v15 候选已统一公共 material/PBD 支持并接入 Session 回调；待新镜像完整回放 |
+| Rope Threading | v15 候选已显式绑定参考模型并接入 Session 回调；待新镜像完整回放，旧无辅助包仍不兼容 |
 | Slotted Post Ring | 尚缺完整机器人 oracle，公共 bridge 不能补出任务策略 |
 | Orbits | 尚缺完整机器人 oracle，历史外力流程不能作为机器人参考 |
 | Cube fixture | 旧包缺完整冻结身份，需从匹配版本生成新包后才能接入 |
@@ -130,9 +299,67 @@ runner 文件存在不代表已有完整成功证据。任何物理/几何版本
 再处理 Knot / Rope / Blanket 的冻结状态及共享运行支持；缺完整 oracle 的任务单独完成策略验证。
 每个任务优先只增加参数/证据声明及薄回调，共享模块不增加按任务名分支的执行逻辑。
 
+## v14 基线与合并候选
+
+已发布的 v14 / `0.2.12-cu128` 工具哈希与镜像引用冻结在
+`ci_checks/topogym_tooling_versions.json`，现有 78 个三档任务目录和 dataset 保留。
+活动模板暂用 **tooling 15 / image 0.2.13-dev**，这是待验收候选编号。
+唯一开发目标由 `ci_checks/topogym_active_release.json` 的 `active` 指定，`published` 保留正式基线。
+当前 active 的 `tasks_root=null`，明确表示新镜像/任务树尚未完成，不能把 `tasks/` 下的旧版本当成候选。
+两种生成器拒绝覆盖其他 tooling 版本的目录，standard twin 必须来自同版本 privileged 包。
+
+合并保留 v14 的 R1–R5、PBD 多接触修复和 simulator-instability 分类。
+本地 Horseshoe 几何、Hedgehog hard 模型进入候选；Rope 的 `contact_relaxed_v16`、
+Blanket 的 patch assistance、Fiber 的 sheath assistance 作为显式候选配置，三方使用同一冻结值。
+旧刚体 oracle 的时间积分参数、开发时材质 monkeypatch 不自动提升为任务规则。
+Rope 的 40 ms tick 下，0.25 s 持续窗口在第 7 tick 判断；原 v14 的 2.5 ms tick 仍是 100 tick。
+
+Blanket 的 birth UV 及只读材质绑定已进入公共 task/PBD 代码，原 `assist_support.enable()`
+保留为无操作兼容入口。Rope 的反馈规划依赖移到私有 `relay_feedback`，不需要打包 calibration_tools。
+以下回调复用既有策略，通过 `SessionPolicyRunner` 仅调用当前 Session 推进：
+
+| 家族 | `--entrypoint` | 私有数据 |
+| --- | --- | --- |
+| Blanket | `topogym.planning.blanket_flatten.public_session:run_feedback_policy` | 无额外文件；`--kwargs <JSON文件>`，内容如 `{"variation":"easy"}` |
+| Rope | `topogym.planning.rope_threading.public_session:run_feedback_policy` | 用 `--include` 加入 `reference_relays/manifest.json`、所选档的 `<tier>_seed0.npz` 与 `<tier>_evidence.json`；同样传 variation |
+| Coil | `topogym.planning.cast_coil.public_session:run_feedback_policy` | 从绑定 Session 读取 variation、seed 和任务参数；EE_ABS 经转换器提交 |
+| Keyhole | `topogym.planning.cast_keyhole.harbor_session:run_feedback_policy` | F1/F2/F3 私有参考 |
+| Lock | `topogym.planning.lock_picking.public_session:run_feedback_policy` | 原 reindex 算法 |
+| Buzz | `topogym.planning.buzz_wire_3d.public_session:run_feedback_policy` | 原反馈算法；不继承旧 compiled 运行资格 |
+| Fiber | `topogym.planning.fiber_bundling.public_session:run_feedback_policy` | 三档 selection |
+| Horseshoe | `topogym.planning.horseshoe_ring.public_session:run_feedback_policy` | recipe + 哈希绑定的五份数据 |
+| Hedgehog | `topogym.planning.hedgehog_in_cage.public_session:run_feedback_policy` | easy/hard pickup；medium 原内置配方 |
+| Claws | `topogym.planning.interlocked_claws.public_session:run_feedback_policy` | witness + reference_routes |
+| Knot | `topogym.planning.knot_untying.public_session:run_feedback_policy` | 原决策算法；使用冻结宽度布局 |
+
+`--include` 的路径均从 `topogym/planning/rope_threading/` 开始，`--source-root` 指向源码根。
+回调的旧参考证据用于确认输入来源，不能继承为新环境成功。它们仍需新镜像完整执行及独立评分。
+`SessionPolicyRunner` 不生成 SegmentRunner 完整 tick 证明；Harbor wrapper 负责记录动作和检查生命周期。
+
+先生成 39 个实例的独立输入与源码快照（不伪造 instance 或 describe）：
+
+```bash
+.venv-gs121-nyx/bin/python scripts/topogym_merge_candidate.py \
+  --output runs/test_results/v15_candidate_new --gpu 0
+```
+
+产物 `candidate.json` 逐项列出相对 v14 的配置差异；`source_manifest.json` 绑定复制的源码。
+`build_image.sh` 从该快照构建唯一的 dev 镜像标签，不更新 latest；`build_candidates.sh` 在该镜像中
+为 IPC 导出初态、生成新 instance、实测 describe，再渲染 privileged/standard 共 78 个候选目录。
+生成器同时检查 describe 的实际运行身份并写入双模式 runtime binding；旧 describe 缓存不得冒充新镜像实测。
+专用 privileged agent 镜像可以包含额外工具，但它的公共 simulator 源码和物理依赖必须与 verifier 相同。
+这两个构建脚本应在有 GPU/镜像构建依赖的主机上运行并沿用资源监控；prepare 本身不执行 Docker。
+脚本保留基线实例与资产副本，运行不依赖另一个会话正在修改的源码。
+
+之后对选定包调用上述 `harbor_oracle.py package/check/run`。保持 `oracle = "none"`、
+`harbor_qualified = false`，直到严格初态重载、完整原生成功、fresh-process replay、视频与两种模式的
+oracle/nop 独立评分均通过。候选镜像未构建或 GPU 未运行时，CPU 合同通过只代表合并接线检查通过。
+
 ## 检查范围
 
 `ci_checks/test-harbor-oracle-bridge.py` 检查跨机器人动作、实例错配、私有依赖闭包、
 打包完整性、隔离进程中的 wrapper 生命周期、失败证据、标准服务续传和评分分类。
 隔离进程使用假的 task tooling；这些检查不运行 Genesis，也不构成可解性或物理回放证据。
 源码隔离静态规则可用 `ci_checks/check-calibration-isolation.py` 检查；真实镜像验证需显式传入镜像。
+`ci_checks/test-frozen-runtime-binding.py` 覆盖旧生成来源/新运行身份分离、源码替换、镜像漂移、
+错误绑定拒绝、服务/回放双回执及 39 组正式实例副本一致性。它同样不构成物理可解性证据。

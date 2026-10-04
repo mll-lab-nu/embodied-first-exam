@@ -26,8 +26,17 @@ def native_row(session, row, *, gripper_tolerance=1e-6, joint_tolerance=1e-6):
         raise BridgeError("Invalid native target row")
     converted = original.copy()
     for arm, column in session.robot.grip_index.items():
-        width = float(np.float32(session.robot.native_to_width(arm, original[column])))
-        recovered = float(session.robot.width_to_native(arm, width))
+        encode = getattr(session.robot, "native_to_action", session.robot.native_to_width)
+        decode = getattr(session.robot, "action_to_native", session.robot.width_to_native)
+        width = float(np.float32(encode(arm, original[column])))
+        if getattr(session.robot, "gripper_space", "width") == "native":
+            # Only float32 outward rounding at an authored limit is adjusted.
+            # Out-of-range native requests still fail; no drive target is saturated.
+            lo, hi = session.env._robot.groups[arm].gripper_limits
+            if not lo <= original[column] <= hi:
+                raise BridgeError(f"Native gripper target outside model limits: {arm}")
+            width = float(np.clip(width, *session.robot.limits[column]))
+        recovered = float(decode(arm, width))
         if not np.isfinite(recovered) or abs(recovered - original[column]) > gripper_tolerance:
             raise BridgeError(f"Native gripper target is not representable by public widths: {arm}")
         converted[column] = width
@@ -72,3 +81,62 @@ class SessionExecutor:
 
     def step_public(self, row):
         return self.session.step(public_action(self.session, row))
+
+
+class SessionPolicyRunner:
+    """Run existing act(observation) policies through the caller's Session.
+
+    This adapter has no Env/recorder lifecycle and emits no SegmentRunner proof.
+    The bridge wrapper and independent Harbor verifier own trajectory evidence.
+    """
+
+    def __init__(self, session, *, control_mode="JOINT_ABS"):
+        if control_mode not in {"JOINT_ABS", "JOINT_DELTA", "EE_ABS", "EE_DELTA"}:
+            raise BridgeError("Unknown policy control mode")
+        self.session = session
+        self.env = session.env
+        self.executor = SessionExecutor(session)
+        self.control_mode = control_mode
+
+    def run_policy(self, *, request_id, policy, submission_hash, mode="unlimited",
+                   observation_profile=None, state_fields=()):
+        if mode != "unlimited" or set(state_fields) - {"world", "task"}:
+            raise BridgeError("Session policy adapter supports private robot/world observations only")
+        if observation_profile not in (None, {"rgb_camera_ids": []}):
+            raise BridgeError("Session policy adapter does not own camera recording")
+        from topogym.robot.control import action_spec
+        session, env = self.session, self.session.env
+        start, tick = session.n_steps, env._world.physics_step
+        observation = None
+        initialize = getattr(policy, "initialize", None)
+        if initialize is not None:
+            initialize(dict(action_spec=action_spec(env._robot.description, self.control_mode), timing_spec=env.timing_spec))
+        def observe():
+            observation = dict(state=dict(env.tick_record()["state"]),
+                               robot=env._robot.observe())
+            if "world" in state_fields:
+                observation["privileged"] = dict(world=env._world.read_state())
+            if "task" in state_fields:
+                from topogym.utils.io import to_jsonable
+                observation.setdefault("privileged", {})["task"] = to_jsonable(env._task.result)
+            return observation
+
+        while not session.episode_done and session.episode_end is None:
+            observation = observe()
+            action = policy.act(observation)
+            if action is None:
+                break
+            if self.executor.step(action, mode=self.control_mode):
+                break
+        result = dict(request_id=request_id, submission_hash=submission_hash,
+                    reason="env_terminal" if session.episode_done or session.episode_end is not None else "policy_done",
+                    control_steps=session.n_steps - start, physics_steps=env._world.physics_step - tick,
+                    task_success=bool(session.success()), evidence_scope="caller-owned Session trajectory; verifier pending")
+        complete = (len(session._recording) == session.n_steps and
+                    sum(session._recorded_ticks[start:]) == env._world.physics_step - tick)
+        result.update(evidence_complete=complete, physics_tick_complete=complete,
+                      control_step_complete=complete, uncheckpointed_physics_steps=0 if complete else None)
+        on_end = getattr(policy, "on_segment_end", None)
+        if callable(on_end) and observation is not None:
+            on_end(observe(), result)
+        return result

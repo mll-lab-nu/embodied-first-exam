@@ -30,7 +30,7 @@
 #   RESULTS      a directory OUTSIDE the repository: after each job scripts/write_task_results.py writes the per-task results
 #                for the results site there, <RESULTS>/<batch>/<task>/<RUN_ID>/ (PROTOCOL D3: no results in the repository);
 #                default <repo>/../rcb_results; "" = skip
-#   LOG_MIRROR / MEM_GUARD   1 (default) = start the agent-record mirror / the memory guard below if none runs; 0 = not
+#   LOG_MIRROR / MEM_GUARD   1 (default) = enable the agent-record mirror / owned-job memory guard; 0 = disable
 #   GATEWAY      0 (default) = the agent calls its API directly, as Harbor runs it; 1 = route the agent's model API
 #                calls through scripts/usage_gateway/gateway.py, which forwards
 #                them unchanged (the agent keeps its own credentials) and records each trial's tokens per request in
@@ -40,7 +40,7 @@
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
 # Runner-side tools (not task code): while trials run, the container rcb-log-mirror copies every trial's agent/ directory
 # append-only into ${JOBS}_mirror/ (scripts/log_mirror.py; root-owned: neither the agent nor the host user can delete it),
-# and scripts/mem_guard.py keeps 2 GiB of host memory available. After each job: a key scan with redaction
+# and scripts/topogym_guarded.py stops this job if host memory reaches 90%. After each job: a key scan with redaction
 # (scripts/scan_secrets.py), the task results, the summary table $JOBS/<batch>.summary.md, and a lane stop on structured
 # model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log.
 set -u
@@ -52,6 +52,8 @@ AGENT_CONFIG="${AGENT_CONFIG:-}"; ENV_FILE="${ENV_FILE:-}"
 MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${N_S:-2}"; K="${K:-1}"; WAIT_FOR="${WAIT_FOR:-}"
 JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"; LABEL="${LABEL:-$AGENT + $MODEL ($EFFORT)}"
 LOG_MIRROR="${LOG_MIRROR:-1}"; MEM_GUARD="${MEM_GUARD:-1}"
+PYTHON="${TOPOGYM_PYTHON:-$R/.venv-gs121-nyx/bin/python}"
+TASKS_ROOT="$("$PYTHON" "$R/scripts/topogym_versions.py" tasks-root)" || exit 2
 GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-0}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
@@ -75,6 +77,15 @@ case "${CODEX_FORCE_AUTH_JSON:-}" in 1|true|TRUE|yes) SCAN+=(--codex-auth "${COD
 # hosts that keep harbor only in ~/.local/bin still find it.
 case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) export PATH="$PATH:$HOME/.local/bin" ;; esac
 mkdir -p "$JOBS"
+# A batch name cannot silently resume against a different release/instance set.
+selected=()
+for t in "${tasks[@]}"; do
+  for m in $MODES; do
+    case "$m" in standard|limited) suffix=standard ;; privileged|unlimited) suffix=privileged ;; *) echo "unknown mode: $m" >&2; exit 2 ;; esac
+    selected+=("$TASKS_ROOT/$t-$suffix")
+  done
+done
+"$PYTHON" "$R/scripts/topogym_versions.py" freeze-run --output "$JOBS/$batch.release.json" "${selected[@]}" || exit 2
 LOG="$JOBS/$batch.log"
 log() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
 if [ -n "$ENV_FILE" ] && [ ! -f "$ENV_FILE" ]; then log "no env file $ENV_FILE"; exit 2; fi
@@ -88,12 +99,7 @@ if [ "$LOG_MIRROR" = 1 ] && ! docker ps --format '{{.Names}}' | grep -qx rcb-log
     && log "started rcb-log-mirror ($JOBS -> ${JOBS}_mirror)" || log "WARNING: could not start rcb-log-mirror"
 fi
 
-# host memory red line: scripts/mem_guard.py keeps 2 GiB available (the largest benchmark container is killed first)
-pid="$(cat "$R/jobs/journal/mem_guard.pid" 2>/dev/null)"
-if [ "$MEM_GUARD" = 1 ] && ! grep -qs mem_guard.py "/proc/${pid:-0}/cmdline"; then
-  setsid nohup python3 "$R/scripts/mem_guard.py" >/dev/null 2>&1 </dev/null &
-  log "started mem_guard (2 GiB red line; log jobs/journal/mem_guard.log)"
-fi
+# Each Harbor child is supervised below; no host-wide container killer is started.
 
 # transparent usage gateway (one per runner, stopped with it): the agent's base URL points at it, it forwards unchanged
 if [ "$GATEWAY" = 1 ]; then
@@ -147,7 +153,7 @@ wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
 finish_job() {  # <job>: no key in any saved file (+redact); the task results (D3)
   [ -d "$JOBS/$1" ] || return 0
   python3 "$R/scripts/scan_secrets.py" "$JOBS/$1" "${SCAN[@]}" --redact 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
-  [ -n "$RESULTS" ] && python3 "$R/scripts/write_task_results.py" "$JOBS" "$1" "$RUN_ID" "$LABEL" --out "$RESULTS/$batch" 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
+  [ -n "$RESULTS" ] && "$PYTHON" "$R/scripts/write_task_results.py" "$JOBS" "$1" "$RUN_ID" "$LABEL" --tasks-root "$TASKS_ROOT" --out "$RESULTS/$batch" 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
 }
 
 summary() {  # one table over every job of this batch, rewritten after each job (atomically: lanes share it)
@@ -194,7 +200,7 @@ stamp_task_dirs() {  # <harbor -i args...>: give every file of each task dir abo
     a="$1"; shift
     if [ "$a" = -i ] && [ $# -gt 0 ]; then
       ts="$(date +%s.%N)"
-      [ -d "$R/tasks/$1" ] && find "$R/tasks/$1" -exec touch -h -m -d "@$ts" {} +
+      [ -d "$TASKS_ROOT/$1" ] && find "$TASKS_ROOT/$1" -exec touch -h -m -d "@$ts" {} +
       shift
     fi
   done
@@ -203,10 +209,21 @@ stamp_task_dirs() {  # <harbor -i args...>: give every file of each task dir abo
 run_job() {  # <job> <concurrency> <harbor -i args...>
   local job="$1" n="$2"; shift 2
   local envf=(); [ -n "$ENV_FILE" ] && envf=(--env-file "$ENV_FILE")
+  local check_tasks=() args=("$@") i
+  for ((i=0; i<${#args[@]}; i++)); do
+    if [ "${args[$i]}" = -i ]; then check_tasks+=("$TASKS_ROOT/${args[$((i+1))]}"); fi
+  done
+  "$PYTHON" "$R/scripts/topogym_versions.py" check --registered --inspect-docker "${check_tasks[@]}" >> "$JOBS/$job.harbor.log" 2>&1 || return 2
   stamp_task_dirs "$@"
   log "start $job: $* (concurrency $n, attempts $K)"
-  (cd "$R" && harbor run -p tasks "$@" "${AGENT_ARGS[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
-  log "done $job (harbor rc=$?)"
+  local guarded=()
+  if [ "$MEM_GUARD" = 1 ]; then
+    guarded=("$PYTHON" "$R/scripts/topogym_guarded.py" --output "$JOBS/supervision/$job-$(date +%s%N)" --cwd "$R" --)
+  fi
+  (cd "$R" && "${guarded[@]}" harbor run -p "$TASKS_ROOT" "$@" "${AGENT_ARGS[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
+  local result=$?
+  log "done $job (harbor rc=$result)"
+  return "$result"
 }
 
 name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard (PROTOCOL §2.2)
@@ -216,16 +233,17 @@ name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard 
   esac
 }
 
+batch_rc=0
 if [ "$SEQ" = 1 ]; then
   mkdir -p "$JOBS/.claims"
   for t in "${tasks[@]}"; do
     for m in $MODES; do
       job="$batch-$m-$t"
-      if [ ! -d "$R/tasks/$(name "$m" "$t")" ]; then log "skip $job (no task dir $(name "$m" "$t"))"; continue; fi
+      if [ ! -d "$TASKS_ROOT/$(name "$m" "$t")" ]; then log "skip $job (no task dir $(name "$m" "$t"))"; continue; fi
       if [ -f "$JOBS/$job/result.json" ]; then log "skip $job (already has result.json)"; continue; fi
       mkdir "$JOBS/.claims/$job" 2>/dev/null || continue   # another lane of this batch took it
       wait_for "$m"
-      run_job "$job" 1 -i "$(name "$m" "$t")"
+      run_job "$job" 1 -i "$(name "$m" "$t")" || batch_rc=1
       finish_job "$job"; summary
       # the model account is out of credits, rate-limited or logged out: every further job would fail within minutes. Only
       # structured evidence counts (Codex's rate_limits and last event, Claude Code's result event): scripts/account_failure_check.py
@@ -240,13 +258,13 @@ if [ "$SEQ" = 1 ]; then
 else
   pids=()
   for m in $MODES; do
-    inc=(); for t in "${tasks[@]}"; do [ -d "$R/tasks/$(name "$m" "$t")" ] && inc+=(-i "$(name "$m" "$t")"); done
+    inc=(); for t in "${tasks[@]}"; do [ -d "$TASKS_ROOT/$(name "$m" "$t")" ] && inc+=(-i "$(name "$m" "$t")"); done
     [ ${#inc[@]} -eq 0 ] && continue
     n="$N_P"; case "$m" in standard|limited) n="$N_S" ;; esac
     (wait_for "$m"; run_job "$batch-$m" "$n" "${inc[@]}") &
     pids+=($!)
   done
-  wait "${pids[@]}"
+  for pid in "${pids[@]}"; do wait "$pid" || batch_rc=1; done
   for m in $MODES; do finish_job "$batch-$m"; done
 fi
 [ -d "${JOBS}_mirror" ] && python3 "$R/scripts/scan_secrets.py" "${JOBS}_mirror" "${SCAN[@]}" 2>&1 | tail -2 | sed "s/^/[mirror] /" | tee -a "$LOG"
@@ -254,3 +272,4 @@ summary
 log "summary: $JOBS/$batch.summary.md"
 cat "$JOBS/$batch.summary.md" | tee -a "$LOG" >/dev/null
 log "runner $$ of batch $batch finished (no unclaimed job left)"
+exit "$batch_rc"

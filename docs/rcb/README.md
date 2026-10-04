@@ -1,6 +1,19 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
-2026-10-03：新生成包使用 tooling v13 / standard 2.3，合并远端 v12 的 IPC 初态恢复、性能设置与稳定判据优化，以及本地 Fiber/Lock 变体推荐抓持。远端 v12、本地 v11 和既有历史包保持各自身份；两套 v11 按完整工具 hash 与镜像分别检查。见 [版本说明](benchmarks/topogym.md)。
+当前唯一新实验目标是 tooling **v15** / `0.2.13-dev-cu128`。根目录 `tasks/` 是历史任务包。
+先按根 README 的候选构建流程完成 `topogym_candidate_pipeline.py --phase all`，再设置：
+
+```bash
+export TASKS_ROOT="$(.venv-gs121-nyx/bin/python scripts/topogym_versions.py tasks-root)"
+.venv-gs121-nyx/bin/python scripts/topogym_versions.py list --inspect-docker
+```
+
+选择器在 v15 尚未具备完整验收证据时明确报错。新批量实验和随机难度实验使用同一份 v15 环境参数；
+随机实验仍保留随机 seed 和场景扰动。下方历史验收记录保留发生时的版本，不作为 v15 成功证据。
+重评分只读取原任务路径，并把结果写入新的 `regrades/` 目录，不覆盖原始 verdict。
+
+
+历史记录（2026-10-03、v15 迁移前）：当时新生成包使用 tooling v13 / standard 2.3，合并远端 v12 的 IPC 初态恢复、性能设置与稳定判据优化，以及本地 Fiber/Lock 变体推荐抓持。远端 v12、本地 v11 和既有历史包保持各自身份；两套 v11 按完整工具 hash 与镜像分别检查。见 [版本说明](benchmarks/topogym.md)。
 
 2026-10-01 合并后修复及当时的 v5 / 0.2.6-cu128 验收，见[实施报告](../debug_logs/run_trials_post_merge_repair_20261001_zh.md)；下文历史结果不追溯修改。
 
@@ -39,7 +52,7 @@ TopoGym 提供场景、物理、相机、机器人控制和任务判定；Harbor
 
 | 阶段 | Unlimited：产出一条可重放轨迹 | Limited：在同一局里在线控制 |
 | --- | --- | --- |
-| 任务入口 | `tasks/topogym-cast-coil-i00` | `tasks/topogym-cast-coil-i00-limited` |
+| 任务入口 | `$TASKS_ROOT/topogym-cast-coil-easy-i00-privileged` | `$TASKS_ROOT/topogym-cast-coil-easy-i00-standard` |
 | 模拟器位置 | agent 容器内 | 独立 `sim` 容器，agent 容器只装客户端 |
 | 初始化责任 | agent 的 Python 调用 `Session(...)` | `sim/server.py` 启动时创建一个 `Session`；`Robot()` 等待服务就绪 |
 | 观测 | 图像、深度、自身状态、物体位姿等特权信息 | 图像、可选深度、自身状态、标定和机器人模型；不提供物体真值与判定源码 |
@@ -166,22 +179,23 @@ scripts/build_images.sh topogym             # 构建基础镜像 ghcr.io/luigiva
 ### 1.2 先确认环境（可选，约 10 分钟）
 
 ```bash
-harbor run -p $PWD/tasks/topogym-cube-pick-place-i00 -a nop -o $PWD/jobs --job-name check-nop      # 应得 0
+harbor run -p "$TASKS_ROOT/topogym-cast-coil-easy-i00-standard" -a nop -o "$PWD/jobs" --job-name check-nop
+python3 scripts/check_topogym_trial.py jobs/check-nop --expected 0
 ```
 
 ### 1.3 用真实模型跑一个 unlimited 任务
 
-任务名是 `tasks/` 下的目录名，例如 `topogym-cast-coil-i00`。`-p` 和 `-o` 都用绝对路径。
+任务名来自活动目录 `$TASKS_ROOT`，例如 `topogym-cast-coil-easy-i00-privileged`。`-p` 和 `-o` 都用绝对路径。
 
 ```bash
 # Claude Code（Harbor 官方 agent）
-harbor run -p $PWD/tasks/topogym-cast-coil-i00 -a claude-code -m anthropic/<模型ID> -o $PWD/jobs --job-name coil-u-claude
+harbor run -p $TASKS_ROOT/topogym-cast-coil-easy-i00-privileged -a claude-code -m anthropic/<模型ID> -o $PWD/jobs --job-name coil-u-claude
 
 # Codex（Harbor 官方 agent）
-harbor run -p $PWD/tasks/topogym-cast-coil-i00 -a codex -m openai/<模型ID> --ak reasoning_effort=medium -o $PWD/jobs --job-name coil-u-codex
+harbor run -p $TASKS_ROOT/topogym-cast-coil-easy-i00-privileged -a codex -m openai/<模型ID> --ak reasoning_effort=medium -o $PWD/jobs --job-name coil-u-codex
 
 # 经 OpenRouter，走参考仓库的容器内模型网关：真实 key 不进 agent 环境，锁定上游提供方，限流时重试
-PYTHONPATH=. harbor run -p $PWD/tasks/topogym-cast-coil-i00 -a harbor_agents.codex_openrouter:CodexOpenRouter \
+PYTHONPATH=. harbor run -p $TASKS_ROOT/topogym-cast-coil-easy-i00-privileged -a harbor_agents.codex_openrouter:CodexOpenRouter \
   -m openrouter/<提供方>/<模型ID> --env-file .env --ak reasoning_effort=medium --ak provider_only=<提供方>/<档位> \
   -o $PWD/jobs --job-name coil-u-openrouter
 
@@ -219,7 +233,7 @@ codex -c 'cli_auth_credentials_store="file"' login status
 nvidia-smi
 COIL_JOB="coil-luna-max-subscription-$(date +%Y%m%d-%H%M%S)"
 harbor run \
-  -p "$PWD/tasks/topogym-cast-coil-i00" \
+  -p "$TASKS_ROOT/topogym-cast-coil-easy-i00-privileged" \
   -a codex -m openai/gpt-6-luna \
   --ak version=0.157.0 --ak reasoning_effort=max \
   --ak config='{"forced_login_method":"chatgpt"}' \
@@ -234,7 +248,7 @@ harbor view "$PWD/jobs"
 
 判断 rollout → eval 是否完整接通，查看这个 job 中 trial 的 `result.json`、`artifacts/app/output/trajectory.npz` 和 `verifier/`：应有真实模型交互和模拟器执行记录、提交的轨迹、`verifier_environment_mode="separate"`、评分文件以及实际重放记录。`grader_error`、`missing_trajectory`、`bad_trajectory`、`wrong_family` 等不能为 1，基础设施或认证异常需单独处理。`success=0` 可以是正常完成重放后任务未解开；只有一个 0 分文件而没有轨迹或重放证据，不能证明整条链路已接通。
 
-该任务是 `cast_coil_easy`、seed 0、ALOHA 双臂，agent 预算 5400 秒，评分另计。它没有 Harbor oracle 参考解，因此首次模型运行使用上面的模型 agent；不能用 `-a oracle` 来代替。要跑 limited，只把任务路径改成 `tasks/topogym-cast-coil-i00-limited`，并使用新的 job 名。
+该任务是 `cast_coil_easy`、seed 0、ALOHA 双臂，agent 预算 5400 秒，评分另计。它没有 Harbor oracle 参考解，因此首次模型运行使用上面的模型 agent；不能用 `-a oracle` 来代替。要跑 limited，只把任务路径改成 `$TASKS_ROOT/topogym-cast-coil-easy-i00-standard`，并使用新的 job 名。
 
 如果需要使用参考仓库的自定义 ChatGPT 网关，保留同一登录准备，在根目录加 `export PYTHONPATH="$PWD${PYTHONPATH:+:$PYTHONPATH}"`，并把 agent / model 改为 `-a harbor_agents.codex_chatgpt:CodexChatGPT -m chatgpt/openai/gpt-6-luna`，去掉标准 Codex 专用的 `--ak config='{"forced_login_method":"chatgpt"}'`。这个适配器也使用 ChatGPT 登录；文件头的历史实验参数是 `xhigh`，本次仍可显式指定 `--ak reasoning_effort=max`。
 
@@ -253,7 +267,7 @@ export CODEX_AUTH_JSON_PATH="${CODEX_HOME:-$HOME/.codex}/auth.json"
 
 COIL_JOB="coil-smoke-$(date +%Y%m%d-%H%M%S)"
 harbor run \
-  -p "$PWD/tasks/topogym-cast-coil-i00" \
+  -p "$TASKS_ROOT/topogym-cast-coil-easy-i00-privileged" \
   -a codex -m openai/gpt-6-luna \
   --ak version=0.157.0 --ak reasoning_effort=max \
   --ak config='{"forced_login_method":"chatgpt"}' \
@@ -279,7 +293,7 @@ harbor view "$PWD/jobs"
 ### 1.4 跑 limited（机器人即服务）
 
 ```bash
-harbor run -p $PWD/tasks/topogym-cast-coil-i00-limited -a codex -m openai/<模型ID> -o $PWD/jobs --job-name coil-l-codex
+harbor run -p $TASKS_ROOT/topogym-cast-coil-easy-i00-standard -a codex -m openai/<模型ID> -o $PWD/jobs --job-name coil-l-codex
 ```
 
 一次 limited trial 依次发生：
@@ -308,12 +322,12 @@ harbor run -p $PWD/tasks/topogym-cast-coil-i00-limited -a codex -m openai/<模�
 
 ```bash
 AGENT=codex MODEL=openai/<模型ID> AK="--ak reasoning_effort=medium" ENV_FILE=$PWD/.env \
-  scripts/run_agent_batch.sh <批次名> topogym-cast-coil-i00 topogym-horseshoe-ring-i00
+  scripts/run_agent_batch.sh <批次名> topogym-cast-coil-easy-i00 topogym-horseshoe-ring-easy-i00
 scripts/collect_batch_results.py jobs/agents <批次名>-unlimited-<任务> <批次名>-limited-<任务> <输出目录>
 scripts/make_two_mode_report_zh.py jobs/agents <unlimited 作业> <limited 作业> <报告目录>
 ```
 
-- `run_agent_batch.sh` 默认 `SEQ=1`，按顺序跑每个任务及其 `-limited` 孪生任务；`SEQ=0` 才让两种模式并行。它还会启动日志镜像容器 `rcb-log-mirror` 和内存保护 `mem_guard.py`。批次结束后这两个会继续常驻，不需要时要手动停掉。
+- `run_agent_batch.sh` 默认 `SEQ=1`，按顺序跑每个任务的 `-privileged` / `-standard` 孪生任务；`SEQ=0` 才让两种模式并行。`topogym_guarded.py` 监控本次 Harbor 进程，内存达到 90% 时停止；CPU 仅记录。日志镜像容器 `rcb-log-mirror` 会继续常驻，可用 `LOG_MIRROR=0` 关闭启动。
 - 它会在每个作业后扫描输出里是否泄漏 key，并写出汇总表 `jobs/agents/<批次名>.summary.md`。
 
 注意事项：
@@ -395,22 +409,22 @@ scripts/make_two_mode_report_zh.py jobs/agents <unlimited 作业> <limited 作�
 - **limited：`tests/grade.py`（21 行）**：只读 sim 写的 `/data/final.json`。`success = 现场成功 且 sim 的重放也成功`（17 行）。没有 `final.json` 时写 `missing_log=1`。
 - **`test.sh`**：第一件事是清空 `/logs/verifier`。Harbor 把这个目录也挂进了 agent 的容器，清空后，agent 预先放进去的假分数文件不可能被当成成绩。
 
-**regrade（重判）是什么意思**：不是换一种评分，而是“用同一个评分器，在新容器里把同一条轨迹再判一次解开没有”。参考仓库有这个脚本（`scripts/regrade_trials.sh`），是因为评分容器偶尔会因为基础设施问题出错，比如和其他作业抢 GPU 导致 CUDA 显存不足。这时 `grader_error=1`，或者没有录出视频。重判不需要 agent 重新跑一遍，原来的 `reward.json` 另存为 `reward.orig.json`。
+**regrade（重判）是什么意思**：不是换一种评分，而是“用同一个评分器，在新容器里把同一条轨迹再判一次解开没有”。参考仓库有这个脚本（`scripts/regrade_trials.sh`），是因为评分容器偶尔会因为基础设施问题出错，比如和其他作业抢 GPU 导致 CUDA 显存不足。这时 `grader_error=1`，或者没有录出视频。重判不需要 agent 重新跑一遍，v15 重评写入独立输出目录，原来的 `reward.json` 保持不变。
 
 ### 2.4 两个生成器：`scripts/topogym_mk_task.py`、`scripts/topogym_mk_limited.py`（对应参考仓库的 `robowits_mk_task.py`、`robowits_mk_limited.py`）
 
-- **`topogym_mk_task.py <家族>`** 生成 unlimited 任务目录 `tasks/topogym-<家族>-i00/`：
+- **`topogym_mk_task.py <家族>`** 默认生成候选目录 `runs/task_candidates/v15/topogym-<家族>-i00-privileged/`，固定套件由 candidate pipeline 指定独立目录：
   1. 从 cube 模板复制共享文件（`SHARED`，19 行）：工具、Dockerfile、compose、`grade.py`；
   2. 调用 `rcb_topogym.py make-instance` 冻结实例（需要 GPU，把场景建一次）；
   3. 调用 `describe` 读出相机、机器人、判据源码和实测每步耗时，缓存到 `runs/task_build/<任务>/describe.json`；
   4. 按参考仓库的章节结构写出 `instruction.md`（80 行）、`README.md`（138 行）、`task.toml`（171 行）、`tests/test.sh` 和 `solution/solve.sh`。有参考解时 `solve.sh` 执行 `run-oracle`，没有时按参考写法 `exit 1`。
-- **`topogym_mk_limited.py <家族> <参考解轨迹 | ->`** 生成 limited 孪生任务 `tasks/topogym-<家族>-i00-limited/`：
+- **`topogym_mk_limited.py <家族> <参考解轨迹 | ->`** 在同一候选根目录生成 `-standard` 孪生任务：
   - 复制客户端、共享层、`server.py`、评分器；
   - 复制同一份冻结实例；
   - 写出 compose（sim 服务的配置，collect 钩子写在 task.toml 里，等待时长由 `polls`（170 行）按预算推出）；
   - 有参考解轨迹时，把它存成 `oracle_qpos.npy`，交给原样复制来的 `oracle_replay.py` 逐块发送。
   - 这个脚本不需要 GPU，读的是上一步缓存的 `describe.json`。
-- 生成后执行 `cd tasks && harbor add --scan .`，更新清单里的摘要。
+- candidate pipeline 生成清单与 runtime catalog；完成实例恢复和双模式 Harbor 验收后才激活目录。
 
 ## 3. 改了哪些
 
@@ -722,7 +736,7 @@ OpenRouter 使用 `--provider openrouter --model openrouter/<provider>/<model>`�
 
 每个 run 的实际源码和机器人资源复制到 `runs/difficulty_trials/<run-id>/source/`，按哈希构建独立镜像。
 真实建场、describe、preflight、正式双模式使用这份镜像。Blanket 会先为抽中 seed 生成数值初态，并将依赖打包到实例中；失败不换 seed。
-`tasks/` 根目录中的历史实例不被这次评测覆盖；它们的共享工具副本仍与公共模板同步。
+`tasks/` 根目录中的历史实例不被这次评测覆盖；它们的共享工具副本按历史版本冻结，不随 v15 模板更新。
 
 Docker 模式下，以下目录都位于 `topogym-work/`（可用 `--work-dir` 覆盖）；本地后端仍位于仓库根目录。`runs/difficulty_trials/<run-id>/` 保存 `manifest.lock.json`、源码/镜像身份、任务包、逐实例检查、`trials.jsonl`、`summary.csv` / `summary.md`；原始 Harbor job 在 `jobs/difficulty_trials/<run-id>/`。
 汇总保留所有 attempt，按每个计划 trial 的最后一次 attempt 判断批次完成。缺轨迹为 `invalid_submission`，基础设施错误为 `infra_failed`，判据未完成为 `not_evaluable`，三者均不进入已有效评分场景的 solved/unsolved 比率。

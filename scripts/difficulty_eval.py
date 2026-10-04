@@ -425,6 +425,11 @@ class DifficultyEvaluation:
                        "agent_wall_clock_s", "concurrency", "resume")}
             new_manifest = not self.manifest_path.exists()
             self.manifest = sampling.prepare_manifest(self.run, **options)
+            from topogym_versions import identity as release_identity
+            selected_release = release_identity(self.source)
+            if (self.args.phase not in ("collect", "upload") and
+                    (self.manifest.get("release") != selected_release or selected_release["tooling_version"] != "15")):
+                raise EvaluationError("New evaluation execution requires a frozen v15 run; use a new run-id for migration")
             if new_manifest and self.args.results_to_hf:
                 from difficulty_results_hf import utc
                 sampling.atomic_json(self.run / "run-created.json", dict(created_at=utc()))
@@ -618,12 +623,15 @@ class DifficultyEvaluation:
             raise EvaluationError("frozen image identity changed")
 
     def verify_packages(self):
+        from topogym_versions import require_task
         for row in self.manifest["instances"]:
             marker = self.build_dir(row) / "prepared.json"
             if marker.exists():
                 for name, sha in read_json(marker)["files"].items():
                     if sampling.file_hash(self.run / name) != sha:
                         raise EvaluationError("prepared package changed: " + name)
+                for mode in sampling.MODES:
+                    require_task(self.task_dir(row, mode), self.source)
 
     def docker_sim(self, *args):
         from difficulty_delivery import label_args
@@ -712,25 +720,52 @@ class DifficultyEvaluation:
             task_progress(row, index, self.manifest["instance_count"], "preparing")
             progress(f"Preparation log: {build / 'prepare.log'}")
             self.gpu_ready()
-            params = []
+            params = dict(row["task_parameters"])
             if row["task_id"] == "blanket_flatten":
                 state = self.prepare_blanket(row, build)
                 if state is None:
                     continue
-                sampling.atomic_json(build / "parameters.json", dict(initial_state_path=str(state), initial_state_resource=None,
-                                                                    initial_state_sha256=sampling.file_hash(state)))
-                params = ["--task-parameters", build / "parameters.json"]
-            instance_path = self.task_dir(row) / "environment/instance.json"
-            selection = ["--variation", "seeded", "--scene-seed", row["scene_seed"]]
-            if instance_path.exists():
-                self.check_selection(row, read_json(instance_path))
-                selection, params = ["--instance", instance_path], []
-            code, _ = self.commands.run_command([self.python, self.source / "scripts/topogym_mk_task.py", row["task_id"], *selection,
-                "--slug", row["slug"], "--tasks-root", self.run / "tasks", "--build-root", self.run / "build", "--image", self.image,
-                "--agent-wall-clock-s", self.budget, *params], log=build / "prepare.log", monitor=True)
+                params.update(initial_state_path=str(state), initial_state_resource=None,
+                              initial_state_sha256=sampling.file_hash(state))
+            sampling.atomic_json(build / "parameters.json", params)
+            sampling.atomic_json(build / "overrides.json", row["simulator_overrides"])
+            selection = ["--variation", "seeded", "--scene-seed", row["scene_seed"],
+                         "--task-parameters", build / "parameters.json", "--simulator-overrides", build / "overrides.json"]
+            task = self.task_dir(row)
+            from topogym_versions import require_task
+            if (task / "task_release.json").exists():
+                # Recover a completed privileged twin after an interrupted standard build.
+                require_task(task, self.source, inspect_docker=True)
+                self.check_selection(row, read_json(task / "environment/instance.json"))
+                code = 0
+            else:
+                if task.exists():
+                    task.rename(task.with_name(task.name + ".incomplete." + str(time.time_ns())))
+                from topogym.tasks.release_profile import IPC_FAMILIES
+                if row["task_id"] in IPC_FAMILIES:
+                    settled = build / "ipc_state/manifest.json"
+                    if not settled.exists():
+                        code, _ = self.commands.run_command(self.docker_sim("python",
+                            self.source / "harbor_templates/topogym/common/rcb_topogym.py", "export-ipc-state",
+                            "--task", row["task_id"], *selection, "--out", build / "ipc_state"),
+                            log=build / "prepare.log", append=True, monitor=True)
+                        if code:
+                            progress(f"IPC state export blocked: {row['slug']}", error=True)
+                            continue
+                    selection += ["--ipc-settled-state", settled]
+                code, _ = self.commands.run_command([self.python, self.source / "scripts/topogym_mk_task.py", row["task_id"], *selection,
+                    "--slug", row["slug"], "--tasks-root", self.run / "tasks", "--build-root", self.run / "build", "--image", self.image,
+                    "--agent-wall-clock-s", self.budget], log=build / "prepare.log", append=True, monitor=True)
             if code:
                 progress(f"Preparation blocked: {row['slug']}; see {build / 'prepare.log'}", error=True)
                 continue
+            standard = self.task_dir(row, "limited")
+            if (standard / "task_release.json").exists():
+                require_task(standard, self.source, inspect_docker=True)
+                self.freeze_package(row)
+                continue
+            if standard.exists():
+                standard.rename(standard.with_name(standard.name + ".incomplete." + str(time.time_ns())))
             code, _ = self.commands.run_command([self.python, self.source / "scripts/topogym_mk_limited.py", row["task_id"], "-",
                 "--unlimited-task", self.task_dir(row), "--tasks-root", self.run / "tasks", "--build-root", self.run / "build",
                 "--agent-wall-clock-s", self.budget], log=build / "prepare.log", append=True, monitor=True)
@@ -888,7 +923,13 @@ class DifficultyEvaluation:
                         ["docker", "exec", "-e", "RCB_COLLECT_END_TIMEOUT_S=900", container, "sh", "/srv/finalize.sh"],
                         log=build/"preflight.log", append=True, monitor=True, timeout=1800)
                     data = self.collector.load_json(build / "limited/final.json")
+                    from check_topogym_trial import bound_sidecar
+                    try:
+                        bound_sidecar(build / "limited", read_json(task / "tests/runtime_binding.json"))
+                    except (OSError, ValueError, KeyError):
+                        return False
                     passed = (code == 0 and data.get("finalized") is True
+                              and data.get("deterministic") is True and data.get("instance_exact") is True
                               and isinstance(data.get("replay_success"), bool)
                               and data.get("video") is True and (build/"limited/replay.mp4").is_file()
                               and not any(data.get(key) for key in ("infra_error", "gpu_lost", "error"))
@@ -1015,6 +1056,8 @@ class DifficultyEvaluation:
                 task_progress(row, trial_index, self.manifest["trial_count"], f"starting attempt {number}", mode=mode)
                 self.gpu_ready()
                 self.verify_image()
+                from topogym_versions import require_task
+                require_task(task, self.source, inspect_docker=True)
                 code = self.launch_job(task, job)
                 self.collect()
                 if code:

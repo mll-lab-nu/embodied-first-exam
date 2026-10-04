@@ -59,5 +59,7 @@ def bind_material_map(entity, path):
             values = np.einsum('ni,nij->nj', w, uv[faces[near]])
             if np.max(np.linalg.norm(values-mapped[i], axis=1)) > 1e-5:
                 raise ValueError("Ambiguous coincident PBD material layers")
+    # Immutable birth geometry must not enter the engine checkpoint inventory.
+    mapped.flags.writeable = False
     entity.grasp_material_coordinates = mapped
     entity.grasp_material_identity = hashlib.sha256(Path(path).read_bytes()).hexdigest()

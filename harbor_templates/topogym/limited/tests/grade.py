@@ -4,7 +4,8 @@ crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. Adapted from rob
 grader. success = live success AND replay success, and no infrastructure failure; TopoGym's physics runs on the GPU (the
 RoboWits GPU-backend rule): the live and replayed states need not agree bit for bit, so `deterministic` is reported, not
 required. A replay that produced no result is a grader error, not the agent's 0. Numeric-only reward.json."""
-import json, os, shutil
+import hashlib, json, os, shutil
+from pathlib import Path
 LOG = "/logs/verifier"; os.makedirs(LOG, exist_ok=True)
 def write(ok, out):
     for name, value in (("reward.json", out), ("reward.txt", int(ok))):
@@ -17,7 +18,7 @@ p = "/data/final.json"
 if not os.path.exists(p):
     write(False, {"success": 0, "missing_log": 1, "infra_error": 1, "grader_error": 0}); raise SystemExit   # the service never started
 try:
-    d = json.load(open(p))
+    d = json.loads(Path(p).read_text())
 except ValueError:
     write(False, {"success": 0, "missing_log": 1, "infra_error": 1, "grader_error": 1}); raise SystemExit
 gpu = True  # CUDA physics: determinism reported, not required
@@ -26,10 +27,22 @@ gpu = True  # CUDA physics: determinism reported, not required
 infra = bool(d.get("infra_error")) or bool(d.get("gpu_lost")) or not (d.get("finalized") or d.get("gave_up"))
 replayed = d.get("replay_success") is not None and os.path.isfile("/data/trajectory.npz")
 mismatch = bool(d.get("instance_mismatch")) or d.get("instance_matches") is False
+binding_ok = False
+try:
+    expected = json.loads(Path("/tests/runtime_binding.json").read_text())
+    wanted = hashlib.sha256(json.dumps(expected, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+    startup = json.loads(Path("/data/startup_binding.json").read_text())
+    replay = json.loads(Path("/data/replay.verdict.json").read_text())
+    binding_ok = all(row.get("instance_exact") is True and
+                     (row.get("runtime_binding") or {}).get("binding_id") == wanted for row in (startup, replay))
+except (OSError, ValueError, TypeError):
+    pass
+mismatch = mismatch or not binding_ok
 grader_error = not infra and not mismatch and not d.get("gave_up") and not replayed
 ok = bool(d.get("success")) and bool(d.get("replay_success")) and (bool(d.get("deterministic")) or gpu) and not infra and not grader_error and not mismatch
 num = lambda k, cast=int: cast(d.get(k) or 0)  # noqa: E731
 write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "replay_success": int(bool(d.get("replay_success"))),
+           "runtime_binding_ok": int(binding_ok),
            "deterministic": int(bool(d.get("deterministic"))), "live_matches_replay": int(bool(d.get("live_matches_replay"))),
            "gpu_backend": int(gpu), "finalized": int(bool(d.get("finalized"))), "n_actions": num("n_actions"), "live_rows": num("live_rows"),
            "sim_steps": num("control_steps"), "physics_steps": num("physics_steps"), "steps": num("steps"), "elapsed_s": num("elapsed_s", float),
@@ -40,7 +53,7 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "rep
            "resume_max_joint_dev": num("resume_max_joint_dev", float), "instance_mismatch": int(mismatch), "grader_error": int(grader_error)})
 
 # Commit rewards before copying optional artifacts.
-for f in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl", "startups.jsonl", "server.log", "replay.log", "replay.verdict.json", "final.json", "replay.frame_map.jsonl", "replay.recording_manifest.json"):
+for f in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl", "startups.jsonl", "startup_binding.json", "server.log", "replay.log", "replay.verdict.json", "final.json", "replay.frame_map.jsonl", "replay.recording_manifest.json"):
     try:
         if os.path.exists(f"/data/{f}"): shutil.copy(f"/data/{f}", f"{LOG}/{f}")
     except OSError as exc:

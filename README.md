@@ -8,15 +8,14 @@ RGB observations use **Nyx + compact_lab**.
 
 The Harbor layer follows **robot_coding_bench** (`dev/qineng@fa59c1a6`): self-contained tasks, unlimited
 and limited evaluation modes, and a verifier in its own sandbox. Scores are binary, with numeric
-diagnostics and replay videos. There are **28 Harbor tasks: 13 manipulation families plus a cube
+diagnostics and replay videos. The original release contained **28 Harbor tasks: 13 manipulation families plus a cube
 example, each in two modes**. See the [protocol](docs/rcb/PROTOCOL.md),
 [task manifest](tasks/dataset.toml) and [中文 CLI 手册与验收记录](docs/rcb/README.md).
 
-**Protocol v1.0 tier tasks.** 39 further frozen instances (13 families × easy / medium / hard) follow robot_coding_bench's
-protocol v1.0 in both modes, privileged and standard (`eai-standard/2.2` with crash recovery):
-`tasks/topogym-<family>-<tier>-i00-{privileged,standard}`, 3 h budget, grading in two passes (the video is rendered
-during the second); see [docs/rcb/benchmarks/topogym.md](docs/rcb/benchmarks/topogym.md). The 28 tasks described below
-are the original pre-v1.0 set.
+**Active development release: tooling v15 / image 0.2.13-dev-cu128.**
+The release selector is `ci_checks/topogym_active_release.json`. It remains a source candidate
+until its 39 instances / 78 packages pass exact restoration and Harbor qualification.
+Historical packages under `tasks/` retain their original identities and are not the default for new runs.
 
 ## Run
 
@@ -34,11 +33,17 @@ uv venv --python 3.12 .venv-harbor
 uv pip install --python .venv-harbor/bin/python 'harbor==0.23.0'
 source .venv-harbor/bin/activate
 
-scripts/build_images.sh topogym
+# Prepare one frozen source + task-definition candidate; choose a new output name.
+.venv-gs121-nyx/bin/python scripts/topogym_merge_candidate.py --output runs/releases/v15-candidate
+bash runs/releases/v15-candidate/build_image.sh
+.venv-gs121-nyx/bin/python scripts/topogym_candidate_pipeline.py --candidate runs/releases/v15-candidate --phase all
+# Activation requires all exact restores and both-mode Harbor nop checks to pass.
+export TASKS_ROOT="$(python scripts/topogym_versions.py tasks-root)"
+python scripts/topogym_versions.py list --inspect-docker
 nvidia-smi
 ```
 
-**Build the base image locally**: `ghcr.io/luigivamper/rcb-topogym:0.1.0` is not currently published.
+**Build the selected v15 base image locally**; the development tag is not a published release.
 `scripts/push_images.sh` disables publication pending confirmation of Nyx redistribution terms.
 Rebuild after changing simulator code; task containers use the source copied into the image at build
 time. Use the local-checkout workflow; `harbor run --repo` has not been validated for TopoGym.
@@ -51,12 +56,12 @@ For an OpenAI API-key run:
 # Set OPENAI_API_KEY in this shell, or in a local .env passed with --env-file .env.
 unset CODEX_FORCE_AUTH_JSON CODEX_AUTH_JSON_PATH
 
-harbor run -p "$PWD/tasks/topogym-cast-coil-i00" \
+harbor run -p "$TASKS_ROOT/topogym-cast-coil-easy-i00-privileged" \
   -a codex -m openai/gpt-6-luna --ak version=0.157.0 --ak reasoning_effort=max \
   -n 1 -k 1 -o "$PWD/jobs" --job-name "coil-u-$(date +%Y%m%d-%H%M%S)"
 
 # Limited twin: the robot is exposed through a service, with no reset.
-harbor run -p "$PWD/tasks/topogym-cast-coil-i00-limited" \
+harbor run -p "$TASKS_ROOT/topogym-cast-coil-easy-i00-standard" \
   -a codex -m openai/gpt-6-luna --ak version=0.157.0 --ak reasoning_effort=max \
   -n 1 -k 1 -o "$PWD/jobs" --job-name "coil-l-$(date +%Y%m%d-%H%M%S)"
 
@@ -64,7 +69,7 @@ harbor view "$PWD/jobs"
 ```
 
 `-n` controls concurrent trials; `-k` controls attempts per task. Use absolute task/output paths and
-a new job name per run. Each task currently gives the agent **5,400 seconds**; builds, agent setup,
+a new job name per run. Each task currently gives the agent **21,600 seconds**; builds, agent setup,
 artifact collection and verification take additional time.
 
 ### Codex with a ChatGPT subscription
@@ -84,7 +89,7 @@ export CODEX_FORCE_AUTH_JSON=1
 export CODEX_AUTH_JSON_PATH="${CODEX_HOME:-$HOME/.codex}/auth.json"
 
 COIL_JOB="coil-luna-max-$(date +%Y%m%d-%H%M%S)"
-harbor run -p "$PWD/tasks/topogym-cast-coil-i00" \
+harbor run -p "$TASKS_ROOT/topogym-cast-coil-easy-i00-privileged" \
   -a codex -m openai/gpt-6-luna \
   --ak version=0.157.0 --ak reasoning_effort=max \
   --ak config='{"forced_login_method":"chatgpt"}' \
@@ -106,7 +111,7 @@ independent verification. It checks the pipeline; holding still is expected to s
 
 ```bash
 COIL_JOB="coil-smoke-$(date +%Y%m%d-%H%M%S)"
-harbor run -p "$PWD/tasks/topogym-cast-coil-i00" \
+harbor run -p "$TASKS_ROOT/topogym-cast-coil-easy-i00-privileged" \
   -a codex -m openai/gpt-6-luna \
   --ak version=0.157.0 --ak reasoning_effort=max \
   --ak config='{"forced_login_method":"chatgpt"}' \
@@ -131,7 +136,7 @@ Harbor's `claude-code` agent and the vendored `harbor_agents.codex_chatgpt:Codex
 ## Layout
 
 ```text
-tasks/                              # 28 self-contained Harbor tasks + dataset.toml
+tasks/                              # immutable historical packages; use the active release selector
 ├── topogym-<family>-i00/            # unlimited: agent controls the simulator
 │   ├── instruction.md task.toml README.md
 │   ├── environment/                # Dockerfile, GPU compose, instance.json, rcb_topogym.py
@@ -187,7 +192,7 @@ robot, variation, seed, grasping mode and success predicate. A Harbor task fixes
 the simulator's broader variation catalog is separate.
 
 Tooling records one row of joint targets and gripper widths per control step: `(T, 8)` for Panda/Robotiq,
-`(T, 14)` for ALOHA. Instances are frozen in `instance.json`; task digests are in `tasks/dataset.toml`.
+`(T, 14)` for ALOHA. Instances are frozen in `instance.json`; current packages are listed in the selected release dataset and bound runtime catalog.
 GPU state hashes and initial-state agreement are diagnostics, not pass conditions. Unlimited success
 requires both graded replays to succeed; limited success requires the live episode and its replay.
 

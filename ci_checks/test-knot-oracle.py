@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT))
 
 from topogym.planning.knot_untying.cli import normalize, parser
 from topogym.planning.knot_untying.robot_oracle import Runner, Solved
-from topogym.planning.knot_untying.branching import ARG_KEYS, Branching, SESSION_FIELDS, validate_candidate
+from topogym.planning.knot_untying.branching import ARG_KEYS, CANDIDATES, Branching, SESSION_FIELDS, validate_candidate
 from topogym.planning.knot_untying.artifacts import save_recording
 from topogym.planning.knot_untying.replay_audit import assess, install_progress
 
@@ -34,22 +34,34 @@ class KnotContracts(unittest.TestCase):
             self.assertEqual(a.end_offset, .035)
             self.assertEqual(a.full_pull, tier == "hard")
             self.assertEqual(a.max_pull, .55 if tier == "hard" else .6)
-            self.assertEqual(a.max_nonprogress_decisions, 2)
+            self.assertIsNone(a.max_nonprogress_decisions)
         self.assertFalse(arguments("/tmp/knot-unused", "hard", "--no-full-pull").full_pull)
 
+    def test_default_input_matches_current_tooling_and_explicit_history_is_preserved(self):
+        for tier in ("easy", "medium", "hard"):
+            args = arguments("/tmp/knot-unused", tier)
+            self.assertEqual(args.instance, ROOT / "tasks" /
+                             f"topogym-knot-untying-{tier}-i00-privileged/environment/instance.json")
+        historical = ROOT / "solvability_proof/knot_untying/2026-10-03_frozen_replay/evidence/instances/hard/instance.json"
+        self.assertEqual(arguments("/tmp/knot-unused", "hard", "--instance", str(historical)).instance, historical)
+
     def test_invalid_commands_rejected_before_build(self):
-        for key, value in (("close", "0"), ("close", ".008"), ("speed", "nan"),
+        for key, value in (("close", "-0.001"), ("close", "nan"), ("speed", "nan"),
                            ("max-pull", "-1"), ("settle", "-1"), ("max-decisions", "0"),
                            ("max-nonprogress-decisions", "-1")):
             with self.subTest(key=key, value=value), self.assertRaises(ValueError):
                 arguments("/tmp/knot-unused", "hard", "--"+key, value)
-        for candidate in ({"close": 0}, {"full_pull": "false"}, {"unknown": 3},
-                          {"direction": "x"}, {"lift": float("nan")}, {"straighten": 1.1}, []):
+        for candidate in ({"close": -1}, {"full_pull": "false"}, {"unknown": 3},
+                          {"direction": "x"}, {"lift": float("nan")}, {"straighten": 0}, []):
             with self.subTest(candidate=candidate), self.assertRaises(ValueError):
                 validate_candidate(candidate)
 
     def test_terminal_step_uses_actual_tick_time_and_never_steps_twice(self):
         r = Runner.__new__(Runner)
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        r.args = SimpleNamespace(output=Path(directory.name))
+        r.validate_command = Mock()
         r.q, r.g, r.log = {}, {}, [dict(t=.025)]  # skip diagnostic sampling in this test
         s = SimpleNamespace(episode_end=None, episode_done=False, sim_time_s=.025, physics_steps=10,
                             hold_action=lambda: np.zeros(14))
@@ -58,7 +70,7 @@ class KnotContracts(unittest.TestCase):
             return True
         s.step = Mock(side_effect=step)
         r.session = s
-        r.task = SimpleNamespace(result=SimpleNamespace(metrics={"stable_time_s": .5}, reason=None, terminated=True))
+        r.task = SimpleNamespace(result=SimpleNamespace(metrics={"stable_time_s": .5}, reason=None, terminated=True, task_success=True))
         with self.assertRaises(Solved): r.step("settle")
         self.assertAlmostEqual(r.log[-1]["t"], .0325)
         self.assertEqual(r.log[-1]["physics_steps"], 13)
@@ -124,6 +136,10 @@ class KnotContracts(unittest.TestCase):
                                 task=SimpleNamespace(result=SimpleNamespace(task_success=False)), prefix=[])
             r.crossings = lambda: [None]*r.count
             r.dump = Mock(); b.r = r; b.dump = Mock()
+            def save_attempt_evidence(path):
+                path.mkdir(parents=True, exist_ok=False)
+                (path/"prefix.json").write_text(json.dumps(r.prefix))
+            r.save_attempt_evidence = save_attempt_evidence
             b.kind = lambda _: "withdraw" if r.count == 4 else "straighten"
             def checkpoint(k):
                 return copy.deepcopy((r.count, r.decisions, r.prefix, b.selection, r.session.sim_time_s))
@@ -148,7 +164,13 @@ class KnotContracts(unittest.TestCase):
             self.assertEqual([x[1].get("max_pull") for x in r.prefix], [.65, None])
             self.assertEqual(len(b.selection), 2)
             self.assertEqual([x["result"] for x in b.attempts], ["rejected", "rejected", "solved_path", "solved_path"])
+            self.assertEqual([x["attempt_id"] for x in b.attempts], [1, 2, 3, 4])
             self.assertEqual(b.backtracks, 2)
+            evidence = Path(d)/"rejected_attempts"
+            self.assertEqual(sorted(p.name for p in evidence.iterdir()), ["attempt_001", "attempt_002"])
+            self.assertEqual(json.loads((evidence/"attempt_001/prefix.json").read_text()), [[1, {"max_pull": .55}]])
+            self.assertEqual(json.loads((evidence/"attempt_002/prefix.json").read_text()),
+                             [[1, {"max_pull": .55}], [2, {}]])
 
     def synthetic_search(self, output, outcomes):
         """A reversible primitive graph; executes the real search and heuristic handling."""
@@ -195,6 +217,7 @@ class KnotContracts(unittest.TestCase):
     def test_crossing_oscillation_does_not_reset_nonprogress_budget(self):
         with tempfile.TemporaryDirectory() as d:
             b = self.synthetic_search(d, [5, 4, 5, "success"])
+            b.args.max_nonprogress_decisions = 2
             self.assertFalse(b.run())
             self.assertEqual(len(b.attempts), 3)
             self.assertIn("nonprogress budget exhausted", b.attempts[-1]["reason"])
@@ -204,6 +227,12 @@ class KnotContracts(unittest.TestCase):
             b = self.synthetic_search(d, [5, 4, 5, "success"])
             b.args.max_nonprogress_decisions = 3
             self.assertTrue(b.run())
+
+    def test_default_search_does_not_prune_a_long_nonprogress_prefix(self):
+        with tempfile.TemporaryDirectory() as d:
+            b = self.synthetic_search(d, [5, 4, 5, 4, 'success'])
+            self.assertTrue(b.run())
+            self.assertEqual(len(b.attempts), 5)
 
     def test_new_best_crossing_count_replenishes_nonprogress_budget(self):
         with tempfile.TemporaryDirectory() as d:
@@ -232,24 +261,51 @@ class KnotContracts(unittest.TestCase):
         b.kind = lambda _: "withdraw"
         b.base_cfg = {}; b.base_args = {}
         b.extra_candidates = Mock(return_value=iter([{"max_pull": .7}]))
-        choices = b.choices(1, [])
+        choices = b.choices(1, [1])
         self.assertEqual(next(choices), ("withdraw", {}))
         self.assertEqual(next(choices), ("straighten", {}))
         b.extra_candidates.assert_not_called()
         remaining = list(choices)
         self.assertEqual(remaining[-1], ("withdraw", {"max_pull": .7}))
-        self.assertEqual(sum(kind == "straighten" for kind, _ in remaining), 2)
+        self.assertEqual(sum(kind == "straighten" for kind, _ in remaining), len(CANDIDATES['straighten'])-1)
         b.extra_candidates.assert_called_once_with(1, "withdraw")
 
     def test_zero_crossings_without_native_success_is_unsolved(self):
         with tempfile.TemporaryDirectory() as d:
             b = Branching.__new__(Branching); b.args = arguments(d)
-            b.args.settle = .05; b.start = 1; b.dump = Mock()
+            b.args.settle = .05; b.start = 1; b.dump = Mock(); b.attempts = []
+            b.checkpoint = Mock(return_value={}); b.choices = Mock(return_value=iter([]))
             r = SimpleNamespace(decisions=[], session=SimpleNamespace(sim_time_s=0.), crossings=lambda: [],
                                 dump=Mock(), task=SimpleNamespace(result=SimpleNamespace(task_success=False)))
             r.step = lambda phase: setattr(r.session, "sim_time_s", r.session.sim_time_s+.025)
             b.r = r
             self.assertFalse(b.run())
+            b.choices.assert_called_once_with(1, [])
+            self.assertGreaterEqual(r.session.sim_time_s, .05)
+
+    def test_zero_crossing_repair_can_reach_native_success(self):
+        with tempfile.TemporaryDirectory() as d:
+            b = self.synthetic_search(d, ['success'])
+            b.r.count = 0
+            b.args.settle = .05
+            b.r.step = lambda phase: setattr(b.r.session, 'sim_time_s', b.r.session.sim_time_s+.025)
+            calls = []
+            def arrange(k, cfg, mode):
+                calls.append(mode)
+                b.r.task.result.task_success = True
+                raise Solved()
+            b.r.arrange = arrange
+            b.choices = lambda k, crossings: iter([('laydown', {})])
+            self.assertTrue(b.run())
+            self.assertEqual(calls, ['laydown'])
+
+    def test_expanded_candidates_accept_native_valid_ranges(self):
+        for rows in CANDIDATES.values():
+            for candidate in rows:
+                validate_candidate(candidate)
+        validate_candidate(dict(lift=.2, straighten=1.1, close=0., span_ratio=None))
+        for key in ('end_choice', 'arm_order', 'grasp_tilt_deg', 'grasp_yaw_deg', 'pull_pitch_deg', 'path_arch_m'):
+            self.assertTrue(any(key in c for c in CANDIDATES['withdraw']), key)
 
     def test_audit_requires_actual_success_exact_instance_and_all_replays(self):
         report = dict(instance_matches=True, instance_exact=True, all_success=True, n_actions=5,

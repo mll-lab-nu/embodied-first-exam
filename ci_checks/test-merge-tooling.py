@@ -92,13 +92,17 @@ class MergeTests(unittest.TestCase):
             path.write_bytes(original)
         # The imported remote generation keeps its pinned image: a downgrade fails.
         name = 'topogym-interlocked-claws-hard-i00-standard'
-        image = checker.current_image().rsplit(':', 1)[1]
+        frozen = json.loads((ROOT/'ci_checks/topogym_tooling_versions.json').read_text())
+        metadata = checker.tomllib.loads((ROOT/'tasks'/name/'task.toml').read_text())['metadata']
+        image = frozen['version_images'][metadata['tooling_version']]
         with tempfile.TemporaryDirectory() as folder:
             target = Path(folder)/name
             shutil.copytree(ROOT/'tasks'/name, target)
             self.assertFalse(checker.check(Path(folder))[1])
             compose = target/'environment/docker-compose.yaml'
-            compose.write_text(compose.read_text().replace(image, '0.2.10-cu128'))
+            original = compose.read_text()
+            self.assertIn(image, original)
+            compose.write_text(original.replace(image, image.rsplit(':', 1)[0]+':0.2.10-cu128'))
             self.assertTrue(any('image' in error for error in checker.check(Path(folder))[1]))
 
     def protocol_check(self, task, *, strict=False):

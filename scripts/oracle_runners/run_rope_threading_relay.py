@@ -34,8 +34,7 @@ def worker(output, samples_path, variant, seed, *, physics_dt, control_decimatio
     from topogym.simulator import Env, SimulatorConfig, SegmentRunner
     from topogym.planning.rope_threading.relay_policy import RopeRelayPolicy, LiveArmIK
     from topogym.planning.rope_threading.relay_artifact import load_plan, validate_scene
-    from topogym.planning.calibration_tools.adapters.rope_threading import relay_diagnostics, MeasuredKeeperPlanner
-    from topogym.planning.calibration_tools.candidates import build_candidate
+    from topogym.planning.rope_threading.relay_feedback import relay_diagnostics, MeasuredKeeperPlanner
     from topogym.utils.grasp import GraspAssistConfig, SoftGraspTarget
     from topogym.utils.io import write_json_atomic, to_jsonable
     from topogym.simulator.rollout_simulation.segment_contract import fingerprint
@@ -73,8 +72,15 @@ def worker(output, samples_path, variant, seed, *, physics_dt, control_decimatio
             raise RuntimeError("CUDA unavailable; FEM/IPC requires a CUDA host")
         report["gpu"] = torch.cuda.get_device_name()
         with Env(config) as env:
-            with build_candidate(env, candidate) as material_report:
+            if candidate:
+                # Explicit legacy material experiments stay in development;
+                # published profiles encode material in task_parameters.
+                from topogym.planning.calibration_tools.candidates import build_candidate
+                with build_candidate(env, candidate) as material_report:
+                    env.reset(seed=seed)
+            else:
                 env.reset(seed=seed)
+                material_report = dict(requested={}, applied={})
             report["material_candidate"] = to_jsonable(material_report)
             from topogym.config.scene import load_scene_config
             from topogym.utils.arrays import to_numpy

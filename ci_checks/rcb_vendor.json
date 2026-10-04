@@ -15,7 +15,6 @@
   "harbor_templates/topogym/limited/tests/test.sh": "tasks/robowits-stack-cubes-i00-standard/tests/test.sh",
   "harbor_templates/topogym/limited/tests/Dockerfile": "tasks/robowits-stack-cubes-i00-standard/tests/Dockerfile",
   "harbor_templates/topogym/limited/solution/solve.sh": "tasks/robowits-stack-cubes-i00-standard/solution/solve.sh",
-  "scripts/run_agent_batch.sh": "scripts/run_agent_batch.sh",
   "scripts/log_mirror.py": "scripts/log_mirror.py",
   "scripts/account_failure_check.py": "scripts/account_failure_check.py",
   "scripts/set_agent_egress.py": "scripts/set_agent_egress.py",
@@ -27,7 +26,6 @@
   "ci_checks/check-robopaint-tooling.sh": "ci_checks/check-robopaint-tooling.sh",
   "ci_checks/check-standard-client.sh": "ci_checks/check-standard-client.sh",
   ".github/workflows/static-checks.yml": ".github/workflows/static-checks.yml",
-  ".github/workflows/validate-task.yml": ".github/workflows/validate-task.yml",
   ".github/pull_request_template.md": ".github/pull_request_template.md",
   ".env.example": ".env.example",
   "docs/rcb/PROTOCOL.md": "docs/PROTOCOL.md",
@@ -58,7 +56,9 @@
   "harbor_templates/topogym/limited/environment/rcb_client.py": "scripts/eai_standard/rcb_client.py",
   "ci_checks/check-limited-protocol.py": "ci_checks/check-limited-protocol.py",
   "scripts/eai_standard/selftest.py": "scripts/eai_standard/selftest.py",
-  "ci_checks/run_all.sh": "ci_checks/run_all.sh"
+  "ci_checks/run_all.sh": "ci_checks/run_all.sh",
+  "scripts/run_agent_batch.sh": "scripts/run_agent_batch.sh",
+  ".github/workflows/validate-task.yml": ".github/workflows/validate-task.yml"
  },
  "blobs": {
   "scripts/eai_standard/rcb_limited.py": "1ce117178770929994c35602cf78dbe8f8028a40",
@@ -162,6 +162,8 @@
    "upstream_path": "ci_checks/run_all.sh",
    "upstream_blob": "c9303f9421cb80d08510b971103312f4b63a434d",
    "reason": "retain the local calibration isolation CI check in addition to the upstream task/protocol checks"
-  }
+  },
+  "scripts/run_agent_batch.sh": "v15 active-release task selection, immutable batch identities, and supervision restricted to the owned Harbor process",
+  ".github/workflows/validate-task.yml": "v15 active catalog selection and bound deterministic verifier evidence"
  }
 }

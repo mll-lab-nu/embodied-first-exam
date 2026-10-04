@@ -22,7 +22,7 @@ def main() -> int:
     import rcb_topogym as M
     dump = json.load(open(os.path.join(a.data, "episode.json")))
     inst = json.load(open(a.instance))
-    acts, ticks = M.load_trajectory(os.path.join(a.data, "trajectory.npz"), a.task, int(inst["action_dim"]), trusted=True)
+    acts, ticks = M.load_trajectory(os.path.join(a.data, "trajectory.npz"), a.task, int(inst["action_dim"]), trusted=True, layout=inst["action_layout"])
     n_live = dump.get("live_rows")
     live = acts if n_live is None else acts[:int(n_live)]
     if ticks is not None:
@@ -41,6 +41,7 @@ def main() -> int:
                 video_error = repr(exc)
         st = s.replay(live, physics_steps=ticks)
         out = {"replays": [st], "n_actions": int(len(acts)), "live_rows": int(len(live)), "instance_sha": s.instance_sha,
+               "runtime_binding": s.runtime_binding,
                "instance_exact": bool(s.instance_exact), "instance_matches": bool(s.instance_matches),
                "wall_s": round(time.time() - t0, 1), "video": False, "media_status": "pending" if a.video else "disabled"}
         M.atomic_json(os.path.join(a.data, "replay.verdict.json"), out)

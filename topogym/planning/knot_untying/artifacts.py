@@ -20,10 +20,8 @@ def task_dir(variation):
 
 
 def default_instance(variation):
-    """Prefer the integrated i00 archive, whose friction settings match the current task."""
-    tier = variation.removeprefix("knot_untying_")
-    archive = ROOT/"solvability_proof/knot_untying/2026-10-03_frozen_replay/evidence/instances"/tier/"instance.json"
-    return archive if archive.is_file() else task_dir(variation)/"environment/instance.json"
+    """Use the instance shipped alongside the loaded tooling; historical inputs must be explicit."""
+    return task_dir(variation)/"environment/instance.json"
 
 
 def load_tooling(variation):

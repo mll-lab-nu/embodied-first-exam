@@ -19,25 +19,25 @@ from topogym.utils.io import sha256_file, write_json_atomic
 def parser(*, branching=False):
     p = argparse.ArgumentParser(description="Frozen-instance knot oracle; records JOINT_ABS and actual physics ticks.")
     p.add_argument("--variation", choices=sorted(TIERS), required=True)
-    p.add_argument("--instance", type=Path, help="frozen instance.json; default: integrated i00 archive, then task directory")
+    p.add_argument("--instance", type=Path, help="frozen instance.json; default: current task directory (historical inputs must be explicit)")
     p.add_argument("--output", type=Path, required=True, help="new evidence directory")
-    p.add_argument("--close", type=float, default=.005, help="pinch opening width in metres (default 5 mm; never zero)")
+    p.add_argument("--close", type=float, default=.005, help="pinch opening width in metres; native robot limits apply")
     p.add_argument("--end-offset", type=float, default=.035, help="end-spread grasp distance from each tip, m")
     p.add_argument("--full-pull", action=argparse.BooleanOptionalAction, default=None,
                    help="continue after the first removed crossing; default on for hard")
     p.add_argument("--max-pull", type=float, help="withdraw distance, m; default .55 for hard, .6 otherwise")
     p.add_argument("--speed", type=float, default=.04, help="Cartesian pull speed parameter, m/s")
-    p.add_argument("--max-decisions", type=int, default=8)
+    p.add_argument("--max-decisions", type=int, default=16)
     p.add_argument("--settle", type=float, default=10., help="final settling budget, simulated seconds")
     p.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     if branching:
         p.add_argument("--tight-curl-m", type=float, default=.12, help="diagnostic curl span; does not reject a branch")
-        p.add_argument("--max-nonprogress-decisions", type=int, default=2,
-                       help="allowed consecutive operations without a new crossing minimum along a branch")
+        p.add_argument("--max-nonprogress-decisions", type=int, default=None,
+                       help="optional crossing-progress budget; disabled by default")
         p.add_argument("--resume", type=Path, help="trusted local checkpoints/d<k>_*.pkl; verified before replay")
         p.add_argument("--wait-hours", type=float, default=0.,
                        help="optional root-level wait for control/next.json after automatic candidates are exhausted")
-        p.add_argument("--max-attempts", type=int, default=30, help="whole-search candidate budget")
+        p.add_argument("--max-attempts", type=int, default=128, help="whole-search candidate budget")
     return p
 
 
@@ -55,22 +55,7 @@ def normalize(args):
     return args
 
 
-def validate_parameters(values):
-    for key in ("close", "end_offset", "speed", "max_pull", "max_decisions", "tight_curl_m", "max_attempts"):
-        if key in values and (isinstance(values[key], bool) or not isinstance(values[key], (int, float))
-                              or not math.isfinite(values[key]) or values[key] <= 0):
-            raise ValueError(f"{key} must be finite and positive")
-    for key in ("settle", "wait_hours"):
-        if key in values and (not math.isfinite(values[key]) or values[key] < 0):
-            raise ValueError(f"{key} must be finite and nonnegative")
-    if "max_nonprogress_decisions" in values:
-        value = values["max_nonprogress_decisions"]
-        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-            raise ValueError("max_nonprogress_decisions must be a nonnegative integer")
-    if "close" in values and values["close"] >= .008:
-        raise ValueError("close must be below the rope diameter (8 mm)")
-    if "full_pull" in values and not isinstance(values["full_pull"], bool):
-        raise ValueError("full_pull must be boolean")
+from .parameters import validate_parameters
 
 
 def freeze_sources(output):
@@ -98,7 +83,8 @@ def supervise(command, output, source):
         try:
             while p.poll() is None:
                 row = dict(time=time.time(), cpu_percent=psutil.cpu_percent(), memory_percent=psutil.virtual_memory().percent)
-                resources.write(json.dumps(row)+"\n"); resources.flush()
+                resources.write(json.dumps(row)+"\n")
+                resources.flush()
                 if row["memory_percent"] >= 90:
                     import signal
                     os.killpg(p.pid, signal.SIGTERM)

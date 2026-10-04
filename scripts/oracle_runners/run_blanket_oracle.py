@@ -35,7 +35,7 @@ def main():
             grasp_assist=dict(model="pbd_local_patch_v1", stable_time_s=.03,
                               targets=[dict(entity="blanket", **PATCH,
                                             max_strain_ratio=ROUTES[args.variation]["max_strain_ratio"])]))
-        assist_support.enable()   # cloth material map for pbd_local_patch_v1; see assist_support.py
+        assist_support.enable()   # compatibility call; material support is now public runtime
         with Env(config) as env:
             # Tooling v7: the oracle reads no frames, so observations skip the camera pass (physics identical).
             env.defer_rgb = True

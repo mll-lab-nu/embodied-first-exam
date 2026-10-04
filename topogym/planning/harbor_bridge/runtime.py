@@ -10,8 +10,26 @@ import traceback
 import numpy as np
 
 from .actions import native_row, public_action
-from .contracts import (BridgeError, check_session, digest, file_hashes, instance_binding, load_trajectory,
+from .contracts import (BridgeError, SmokeComplete, check_session, digest, file_hashes, instance_binding, load_trajectory,
                         member, read_json, require_same_instance)
+from .evidence import SessionEvidence
+
+
+def require_runtime_binding(recipe, instance_path, tooling_path):
+    # Imported under its copied private name in Harbor, public name in authoring.
+    try:
+        from .frozen_binding import check_inputs, check_runtime, binding_id
+    except ModuleNotFoundError as error:
+        if error.name != __package__ + ".frozen_binding":
+            raise
+        from topogym.simulator.frozen_binding import check_inputs, check_runtime, binding_id
+    lock = recipe.get("runtime_binding")
+    if lock is None:
+        raise BridgeError("No runtime binding; run the manager bind command before formal execution")
+    check_inputs(instance_path, tooling_path, lock)
+    runtime = check_runtime(lock)
+    return dict(binding_id=binding_id(lock), runtime=runtime,
+                creation_source=lock["creation_source"], image=lock["image"])
 
 
 def verify_files(solution, recipe):
@@ -72,6 +90,7 @@ def execute(session, recipe, solution, output, *, instance_path=None):
 def run_privileged(solution, recipe, output, *, instance_path=Path("/app/instance.json"),
                    tooling_path=Path("/opt/tools/rcb_topogym.py")):
     require_same_instance(recipe["binding"], instance_binding(instance_path))
+    bound_runtime = require_runtime_binding(recipe, instance_path, tooling_path)
     if digest(tooling_path) != recipe["tooling_sha256"]:
         raise BridgeError("Installed task tooling differs from the packaged reference")
     sys.path.insert(0, str(tooling_path.parent))
@@ -80,10 +99,11 @@ def run_privileged(solution, recipe, output, *, instance_path=Path("/app/instanc
         raise BridgeError("Wrong task tooling was imported")
     if not callable(getattr(tooling, "_source", None)):
         raise BridgeError("Task tooling does not expose installed-source identity")
-    require_same_instance(recipe["binding"]["instance"]["topogym_source"], tooling._source())
     private_imports(solution, recipe)
     session = tooling.Session(recipe["binding"]["instance"]["task"], instance=instance_path, strict=True)
-    report = dict(status="running", harbor_qualified=False, execution=recipe["execution"]["kind"])
+    report = dict(status="running", harbor_qualified=False, execution=recipe["execution"]["kind"],
+                  runtime_binding=bound_runtime,
+                  tooling_sha256=recipe["tooling_sha256"], instance_sha256=recipe["binding"]["instance_sha256"])
     try:
         check_session(session, recipe["binding"], instance_path=instance_path)
         env = session.env
@@ -92,8 +112,17 @@ def run_privileged(solution, recipe, output, *, instance_path=Path("/app/instanc
         start_controls, start_ticks = env._control_step, env._world.physics_step
         session.record_start()
         recording = session._recording
+        smoke_steps = recipe["execution"].get("smoke_steps")
+        evidence = SessionEvidence(session, smoke_steps=smoke_steps)
         try:
-            execute(session, recipe, solution, output, instance_path=instance_path)
+            smoke_complete = False
+            try:
+                execute(session, recipe, solution, output, instance_path=instance_path)
+            except SmokeComplete:
+                if smoke_steps is None or session.n_steps != smoke_steps:
+                    raise BridgeError("Unexpected smoke termination")
+                smoke_complete = True
+            evidence.check()
             if (session.env is not env or env._episode_id != episode or env._branch_id != branch or session._resets != 0
                     or session._recording is not recording):
                 raise BridgeError("Reference replaced the bound episode or the caller-owned recorder")
@@ -110,18 +139,26 @@ def run_privileged(solution, recipe, output, *, instance_path=Path("/app/instanc
                     or not np.all(ticks[:-1] == decimation) or not 1 <= ticks[-1] <= decimation
                     or int(ticks.sum()) != session.physics_steps):
                 raise BridgeError("Reference changed the frozen control timing")
-            report["status"] = "native_success_pending_harbor_verifier"
+            report["status"] = "connectivity_smoke_complete" if smoke_complete else "native_success_pending_harbor_verifier"
+            report["smoke_steps"] = smoke_steps
         except BaseException as error:
             report.update(status="failed", error=f"{type(error).__name__}: {error}")
             raise
         finally:
-            # Evidence survives failure, but a failed callback still exits nonzero.
-            if session._recording is recording:
-                actions = session.record_stop()
-                session.save_trajectory(actions, output / "trajectory.npz", meta=dict(
-                    source="harbor_bridge", execution=recipe["execution"]["kind"],
-                    instance_sha256=recipe["binding"]["instance_sha256"], status=report["status"]))
-            report["session"] = session.status()
+            try:
+                report["evaluation"] = evidence.report()
+            except BaseException as error:
+                report.update(status="failed", evidence_error=f"{type(error).__name__}: {error}")
+                raise
+            finally:
+                evidence.close()
+                # Keep the trajectory even if diagnostics fail; the run still fails.
+                if session._recording is recording:
+                    actions = session.record_stop()
+                    session.save_trajectory(actions, output / "trajectory.npz", meta=dict(
+                        source="harbor_bridge", execution=recipe["execution"]["kind"],
+                        instance_sha256=recipe["binding"]["instance_sha256"], status=report["status"]))
+                report["session"] = session.status()
     except BaseException as error:
         report.update(status="failed", error=f"{type(error).__name__}: {error}")
         raise
@@ -134,6 +171,15 @@ def stream_standard(robot, recipe, rows, *, connection_errors=(), episode_errors
     """Public HTTP only; never append settling actions or change the reference rate."""
     instance = recipe["binding"]["instance"]
     spec = robot.spec()
+    if recipe.get("runtime_binding") is not None:
+        try:
+            from .frozen_binding import binding_id
+        except ModuleNotFoundError as error:
+            if error.name != __package__ + ".frozen_binding":
+                raise
+            from topogym.simulator.frozen_binding import binding_id
+        if spec.get("instance_binding_id") != binding_id(recipe["runtime_binding"]):
+            raise BridgeError("Standard service runtime binding differs from the selected instance/runtime")
     action = spec["action_types"]["joint_position"]
     dt = instance["simulator"]["physics_dt_s"] * instance["simulator"]["control_decimation"]
     if (action["layout"] != instance["action_layout"] or action["dim"] != instance["action_dim"]
@@ -213,6 +259,8 @@ def main(solution=None):
         if recipe["mode"] == "privileged":
             run_privileged(solution, recipe, output)
         elif recipe["mode"] == "standard":
+            if recipe.get("runtime_binding") is None:
+                raise BridgeError("Standard execution requires a runtime binding")
             import requests
             sys.path.insert(0, "/opt/tools")
             from rcb_client import Robot, EpisodeOver

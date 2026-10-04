@@ -68,6 +68,11 @@ def grader_details(fam, inst, *, limited):
     """Bullet lines (without the leading "- ") for one instance."""
     tp = inst.get("effective_task_parameters", {}) or {}
     g = tp.get("geometry", {}) or {}
+    sim = inst.get("simulator", {}) or {}
+    dt, decimation = float(sim.get("physics_dt_s", .0025)), int(sim.get("control_decimation", 10))
+    substeps = int(sim.get("solver_substeps", 4))
+    import math
+    window_ticks = max(1, math.ceil(CONTACT_RULE["window_s"] / dt - 1e-12))
     out = []
     if fam in PLACEMENT:
         side = _square_mm(inst)
@@ -90,10 +95,10 @@ def grader_details(fam, inst, *, limited):
         out.append(f"Contact limits as this benchmark grades them (they replace the \"at most {_mm(c['sustained_m'], 0)} / "
                    f"{_mm(c['held_sustained_m'], 0)}\" wording above): brief contacts up to {_mm(c['deep_m'], 0)} are tolerated. A task "
                    f"contact deeper than {_mm(c['deep_m'], 0)} ends the episode at once, and one deeper than {_mm(c['sustained_m'], 0)} "
-                   f"ends it once it has stayed deeper than {_mm(c['sustained_m'], 0)} for {c['window_s']:g} s (100 consecutive physics "
+                   f"ends it once it has stayed deeper than {_mm(c['sustained_m'], 0)} for at least {c['window_s']:g} s ({window_ticks} consecutive physics "
                    f"ticks); for a finger contact with a held piece the limits are {_mm(c['held_deep_m'], 0)} at once and "
                    f"{_mm(c['held_sustained_m'], 0)} for {c['window_s']:g} s.")
-        out.append("Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per "
+        out.append(f"Contact penetration is read from the contacts at the end of every physics tick ({dt * 1000:g} ms; {decimation} ticks per "
                    "control step). \"Held\" is decided anew at every tick: a zero-force touch counts, and if one finger "
                    "loses contact (with no active assisted grasp), the other finger is back at the non-held limits in the same "
                    "tick." + (" The cage is fixed, so finger contact with it is never held (always the non-held limits)."
@@ -101,11 +106,13 @@ def grader_details(fam, inst, *, limited):
     if fam in SOFT:
         what = "rope" if fam in ("knot_untying", "rope_threading") else "cord"
         w = SOFT_RULE["window_s"]
-        out.append(f"The {what} is very soft (Young's modulus 50 kPa): a full close of a gripper on it, or landing on it, "
-                   f"crushes it. A crushed {what} volume (an inverted volume element)"
+        modulus = float((tp.get("rope_material") or {}).get("E", 50000.))
+        out.append(f"The {what}'s Young's modulus is {modulus / 1000:g} kPa. Gripper pressure can deform it. "
+                   f"A crushed {what} volume (an inverted volume element)"
                    + (f" or a permanent cord attachment stretched by more than {_mm(SOFT_RULE['residual_m'], 0)}"
                       if what == "cord" else "")
-                   + f" ends the episode only once it has lasted {w:g} s (while it lasts, the goal cannot be confirmed); an "
+                   + f" ends the episode only once it has lasted at least {w:g} s "
+                   f"({max(1, math.ceil(w / dt - 1e-12))} consecutive physics ticks; while it lasts, the goal cannot be confirmed); an "
                    f"invalid soft-body solver state ends it at once. Close to about half the {what}'s diameter and slow down "
                    "in the last centimetre.")
     out.append(f"Robot safety (this benchmark's tooling): no gripper target goes lower than {table_guard_words()}; a commanded "
@@ -133,7 +140,7 @@ def grader_details(fam, inst, *, limited):
             "The finish support is the deck, and the finish resting pose is the start resting pose repeated at the wire's "
             "finishing end: the tool lies on the deck with its loop at that end of the wire and its handle pointing inward, "
             "the way it lies at the start.",
-            "Metal contact is sampled at all 4 solver substeps of every tick. If any tick since the start had incomplete "
+            f"Metal contact is sampled at all {substeps} solver substeps of every tick. If any tick since the start had incomplete "
             "contact coverage (a simulator-side condition), the episode can no longer succeed.",
         ]
     if fam == "lock_picking":
@@ -194,7 +201,7 @@ def grader_details(fam, inst, *, limited):
             "of the sheath's front face more than 16 mm past it (tube + sheath radius). The exit side is the side opposite "
             "to where the fibers start.",
             "The failure counts contact between a fine fiber and the gripper (fingers and hand, housing included); arm links "
-            "touching a fiber do not count. Contact is sampled at all 4 solver substeps of every tick; if any tick since the "
+            f"touching a fiber do not count. Contact is sampled at all {substeps} solver substeps of every tick; if any tick since the "
             "start had incomplete contact coverage (a simulator-side condition), the episode can no longer succeed.",
         ]
     if fam == "knot_untying":
@@ -206,17 +213,28 @@ def grader_details(fam, inst, *, limited):
             "the rope (refined per tetrahedron where they are close).",
         ]
     if fam == "rope_threading":
-        inner = g.get("ring_inner_radius_m") or .069
         if g.get("ring_shape") == "lower_semicircle":
             out.append("The cyan fixture is the lower semicircle of a 75 mm centreline-radius ring, with a 6 mm tube "
                        "radius. Its upper half is physically absent; the rope radius is 4 mm. This is a draping task.")
         else:
-            out += [
-                f"Sizes: each ring's inner radius is {_mm(inner)} and its tube 12 mm thick (radius 6 mm); the rope's radius is "
-                f"4 mm. So the rope's centreline must pass less than {_mm(float(inner) - .004 - .0001, 1)} from a ring's centre, "
-                "and the passage is checked on the ring's middle plane and on the planes 6 mm to either side of it.",
-                "The material start is the rope end that is farther from the rings at the start.",
-            ]
+            from topogym.assets.geometry.rope_threading import ThreadingLayout
+            from topogym.tasks.rope_threading.common import PRESETS, usable_rope_aperture_radius
+            layout = ThreadingLayout(**(PRESETS[fam]["geometry"] | g))
+            allowance = float(tp.get("aperture_contact_allowance_m", 0.))
+            profile = tp.get("aperture_check_profile", "cylindrical")
+            terminal = {"aperture_margin_m": .0001, **(tp.get("terminal") or {})}
+            sizes = []
+            for ring in layout.rings():
+                middle = usable_rope_aperture_radius(ring, layout.rope_radius_m, terminal, allowance)
+                side = usable_rope_aperture_radius(ring, layout.rope_radius_m, terminal, allowance,
+                                                   axial_offset_m=ring["tube_radius_m"], profile=profile)
+                sizes.append(f"{ring['name']}: inner radius {_mm(ring['radius_m'] - ring['tube_radius_m'])}, "
+                             f"tube radius {_mm(ring['tube_radius_m'])}, centreline passage radius "
+                             f"{_mm(middle)} on the middle plane and {_mm(side)} on the two tube-offset planes")
+            out += [f"Sizes (rope radius {_mm(layout.rope_radius_m)}): " + "; ".join(sizes) + ".",
+                    f"Aperture check: {profile}, compression allowance {_mm(allowance)}. "
+                    "This allowance changes the geometric passage test; the collision geometry stays as declared.",
+                    "The material start is the rope end that is farther from the rings at the start."]
     if fam == "blanket_flatten":
         L, W = float(tp.get("length_m", .6)), float(tp.get("width_m", .48))
         cov, pad = float(tp.get("minimum_coverage_ratio", .9)), float(tp.get("particle_size_m", .008))
@@ -252,6 +270,17 @@ def grasp_regions(fam, inst, *, limited):
     targets = [t for t in ga.get("targets", []) if isinstance(t, dict)]
     if ga.get("model", "none") == "none" or not targets:
         return None
+    if ga["model"] in {"ipc_soft_band_v1", "pbd_local_patch_v1"}:
+        regs = []
+        for t in targets:
+            regs.append(f"{t['entity']}: spatial radius {_mm(t.get('spatial_radius_m', .014))}, "
+                        f"material radius {_mm(t.get('material_radius_m', .018))}, "
+                        f"finger proximity {_mm(t.get('contact_distance_m', .006))}, "
+                        f"maximum material strain ratio {t.get('max_strain_ratio', 1.3):g}, "
+                        f"exposed patch {'required' if t.get('require_exposed_patch', True) else 'not required'}")
+        return ("Soft grasp patches: " + "; ".join(regs) + ". Both fingers must be near the same material patch; "
+                "penetration and native constraint health checks still apply. Two hands may hold disjoint patches "
+                "of one object. Material bounds, when present, restrict the admissible region.")
     regs = []
     for t in targets:
         where = "enclosing the whole part" if fam in GRASP_WHOLE else GRASP_WHERE.get((fam, t["entity"]))

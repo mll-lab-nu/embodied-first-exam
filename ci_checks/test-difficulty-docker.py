@@ -5,6 +5,7 @@ Run inside the controller with a host-identical work-dir and Docker socket.
 No model, task physics or solve qualification is involved.
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -58,20 +59,34 @@ def lifecycle(work, cmd, base, image):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--work-dir',type=Path,required=True)
+    parser.add_argument('--client-image', help='Pinned local image ID or registry digest for CPU-only testing; no GPU precheck is claimed')
     args=parser.parse_args()
     work=args.work_dir.resolve()
-    check=json.loads((work/'check.json').read_text())
-    assert check['passed'], 'run check first'
+    if args.client_image:
+        import subprocess
+        from difficulty_release import load_build_info
+        assert args.client_image.startswith('sha256:') or '@sha256:' in args.client_image, 'use an immutable image reference'
+        actual=json.loads(subprocess.run(['docker','image','inspect',args.client_image],
+            check=True,capture_output=True,text=True).stdout)[0]
+        release_id=load_build_info(ROOT)['release_id']
+        # BuildKit FROM cannot use an image-config ID as a registry digest.
+        # Resolve the already installed image's immutable manifest reference.
+        image=args.client_image if '@sha256:' in args.client_image else actual['RepoDigests'][0]
+    else:
+        check=json.loads((work/'check.json').read_text())
+        assert check['passed'], 'run check first or select --client-image for CPU-only testing'
+        release_id=check['release_id']
+        image=check['images']['client']['image']
+    (work/'cache/tmp').mkdir(parents=True,exist_ok=True)
     base=work/f'harbor-boundary-{time.time_ns()}'
     task=base/'tasks/topogym-delivery-nop'
     for folder in ('environment/sim','tests','solution'): (task/folder).mkdir(parents=True)
-    image=check['images']['client']['image']
     payload='host-path-to-sibling-sidecar'
     (task/'environment/sim/probe.txt').write_text(payload)
     (task/'environment/Dockerfile').write_text(f'FROM {image}\nRUN mkdir -p /app/output\nWORKDIR /app\n')
     (task/'instruction.md').write_text('Infrastructure probe: no action is required.\n')
     (task/'solution/solve.sh').write_text('#!/bin/bash\nexit 0\n')
-    labels=resource_labels('integration-'+base.name,base.name,check['release_id'])
+    labels=resource_labels('integration-'+base.name,base.name,release_id)
     # /data is private to this synthetic service; the real runtime provides it too.
     compose={'services':{'main':{'depends_on':['sim']},'sim':{'image':image,'volumes':['./sim:/srv:ro'],
         'command':['python','-c',"from pathlib import Path; import json,time; "
@@ -117,7 +132,9 @@ timeout_sec = 30
             data.get('verifier_environment_mode')=='separate')
     unreadable=[str(p) for p in base.rglob('*') if p.is_file() and not os.access(p,os.R_OK)]
     report=dict(passed=bool(passed and not unreadable),scope='real_docker_harbor_synthetic_sidecar_nop_separate_verifier',
-                model_calls=0,physics_executed=False,unreadable=unreadable,harbor_exit_code=code,result=data)
+                model_calls=0,physics_executed=False,gpu_environment_qualified=False,
+                test_source_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                client_image=image,release_id=release_id,unreadable=unreadable,harbor_exit_code=code,result=data)
     if report['passed']:
         report['lifecycle']=lifecycle(work,cmd,base,image)
     atomic_json(base/'report.json',report)

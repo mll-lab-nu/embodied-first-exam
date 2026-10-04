@@ -14,7 +14,7 @@ import tomllib
 from .contracts import (BridgeError, differences, digest, file_hashes, instance_binding,
                         load_trajectory, member, read_json, require_same_instance)
 
-RUNTIME_FILES = ("__init__.py", "contracts.py", "actions.py", "runtime.py")
+RUNTIME_FILES = ("__init__.py", "contracts.py", "actions.py", "evidence.py", "runtime.py", "frozen_binding.py")
 PRIVATE_PREFIX = "topogym.planning"
 FORBIDDEN_PARTS = {"calibration_tools", "legacy", "deferred"}
 
@@ -131,10 +131,19 @@ def _original_script(solution):
 
 
 def package(task, output, *, kind, trajectory=None, source_instance=None,
-            entrypoint=None, source_root=None, includes=(), kwargs=None):
+            entrypoint=None, source_root=None, includes=(), kwargs=None, runtime_lock=None,
+            data_files=None, smoke_steps=None):
     """Write output/<original-task-name>, atomically; never promote oracle metadata."""
     task, mode, instance, tooling = task_inputs(task)
     binding = instance_binding(instance)
+    if runtime_lock is not None:
+        from .binding import check_lock_for_task
+        check_lock_for_task(task, runtime_lock)
+        binding_api = any(isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "BINDING_API" for t in n.targets)
+                          and isinstance(n.value, ast.Constant) and n.value.value == 1
+                          for n in ast.parse(tooling.read_text()).body)
+        if mode == "standard" and not binding_api:
+            raise BridgeError("Bound standard execution needs candidate tooling with BINDING_API=1; frozen v14 stays unchanged")
     output = Path(output).resolve()
     destination = output / task.name
     if destination.exists() or output == task or output.is_relative_to(task):
@@ -146,6 +155,10 @@ def package(task, output, *, kind, trajectory=None, source_instance=None,
     # Validate the complete source tree before creating anything; no external symlinks.
     original_hashes = file_hashes(task)
     copied, execution = {}, dict(kind=kind)
+    if smoke_steps is not None:
+        if type(smoke_steps) is not int or not 1 <= smoke_steps <= 1000 or kind != "session":
+            raise BridgeError("Smoke steps require a session callback and an integer in [1, 1000]")
+        execution["smoke_steps"] = smoke_steps
     if kind.endswith("trajectory"):
         if trajectory is None or source_instance is None:
             raise BridgeError("Trajectories require an explicit source instance")
@@ -172,15 +185,42 @@ def package(task, output, *, kind, trajectory=None, source_instance=None,
             raise BridgeError("Session callback requires source root and a JSON object of kwargs")
         copied = collect_helpers(source_root, entrypoint.split(":")[0], includes)
         execution.update(entrypoint=entrypoint, kwargs=kwargs or {})
+    for name, path in (data_files or {}).items():
+        relative = Path(name)
+        if (not name.startswith("topogym/planning/") or relative.is_absolute() or ".." in relative.parts
+                or FORBIDDEN_PARTS & set(relative.parts) or relative.suffix not in {".json", ".npz"}
+                or name in copied):
+            raise BridgeError(f"Invalid private reference data destination: {name}")
+        source = Path(path).resolve(strict=True)
+        if not source.is_file():
+            raise BridgeError(f"Reference data is not a file: {source}")
+        copied[name] = source
     source_hashes = {name: digest(path) for name, path in copied.items()}
     # Only the runtime (not the catalog or packager) goes into solution/.
     runtime_root = Path(__file__).parent
     for name in RUNTIME_FILES:
-        copied["_harbor_oracle_bridge/" + name] = runtime_root / name
+        copied["_harbor_oracle_bridge/" + name] = (runtime_root.parents[1] / "simulator/frozen_binding.py"
+            if name == "frozen_binding.py" else runtime_root / name)
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".oracle-candidate-", dir=output) as temporary:
         staging = Path(temporary) / task.name
         shutil.copytree(task, staging, ignore=shutil.ignore_patterns("solution", "__pycache__"))
+        binding_additions = {}
+        if runtime_lock is not None and binding_api:
+            sub = "environment/sim" if mode == "standard" else "environment"
+            for relative in (sub + "/runtime_binding.json", "tests/runtime_binding.json"):
+                target = staging/relative
+                target.write_text(json.dumps(runtime_lock, indent=2)+'\n')
+                if original_hashes.get(relative) != digest(target):
+                    binding_additions[relative] = digest(target)
+            # Generated templates already contain these COPY lines. This also
+            # supports candidate task trees made before binding was introduced.
+            for relative, command in (("tests/Dockerfile", "COPY runtime_binding.json /tests/runtime_binding.json"),
+                                      ("environment/Dockerfile", "COPY runtime_binding.json /app/runtime_binding.json")):
+                target = staging/relative
+                if target.is_file() and (mode == "privileged" or relative.startswith("tests/")) and command not in target.read_text():
+                    target.write_text(target.read_text()+"\n"+command+"\n")
+                    binding_additions[relative] = digest(target)
         solution = staging / "solution"
         solution.mkdir()
         for name, source in copied.items():
@@ -202,7 +242,7 @@ def package(task, output, *, kind, trajectory=None, source_instance=None,
         original_readme = readme.read_text() if readme.is_file() else ""
         # Do not inherit a source package's oracle qualification statement.
         note = ("This copy is a private Harbor oracle bridge candidate. Its reference is not yet Harbor-qualified.\n"
-                "Public environment, frozen instance and verifier inputs are unchanged.\n"
+                "Frozen instance inputs are unchanged; added runtime bindings are listed in the manifest.\n"
                 "See `solution/bridge_manifest.json` for the bound inputs and reference hashes.\n")
         if "## Reference solution" in original_readme:
             original_readme = re.sub(r"(?ms)^## Reference solution\s*\n.*?(?=^## |\Z)",
@@ -212,15 +252,17 @@ def package(task, output, *, kind, trajectory=None, source_instance=None,
                          if k.startswith(("environment/", "tests/"))}
         expected_public = {k: v for k, v in original_hashes.items()
                            if k.startswith(("environment/", "tests/"))}
+        expected_public.update(binding_additions)
         require_same_instance(expected_public, public_hashes)
         manifest = dict(schema_version=1, status="private_candidate", harbor_qualified=False,
                         mode=mode, binding=binding, tooling_sha256=digest(tooling), execution=execution,
+                        runtime_binding=runtime_lock,
                         source_task=str(task), source_reference_sha256=source_hashes,
-                        public_files=public_hashes, files=file_hashes(solution),
+                        public_files=public_hashes, binding_additions=binding_additions, files=file_hashes(solution),
                         qualification_required=["privileged_oracle", "privileged_nop", "standard_oracle", "standard_nop"],
                         limitations=["Packaging does not prove physical replay or task success",
                                      "Dynamic imports/data files must be included explicitly",
-                                     "Standard HTTP does not expose full frozen-instance identity"])
+                                     "Standard HTTP exposes only an opaque instance binding ID"])
         (solution / "bridge_manifest.json").write_text(json.dumps(manifest, indent=2, allow_nan=False) + "\n")
         # A changing source checkout must not silently become a mixed candidate.
         require_same_instance(original_hashes, file_hashes(task))
@@ -228,7 +270,8 @@ def package(task, output, *, kind, trajectory=None, source_instance=None,
             raise BridgeError("Candidate appeared during packaging; refusing overwrite")
         staging.rename(destination)
     return dict(task=str(destination), mode=mode, kind=execution["kind"], harbor_qualified=False,
-                private_files=len(manifest["files"]), public_files_unchanged=True,
+                private_files=len(manifest["files"]), public_files_unchanged=not binding_additions,
+                frozen_instance_unchanged=True,
                 instance_sha256=binding["instance_sha256"])
 
 
@@ -237,6 +280,9 @@ def check_package(task):
     task, mode, instance, tooling = task_inputs(task)
     solution = task / "solution"
     recipe = read_json(solution / "bridge_manifest.json")
+    if recipe.get("runtime_binding") is not None:
+        from .binding import check_lock_for_task
+        check_lock_for_task(task, recipe["runtime_binding"])
     verify_files(solution, recipe)
     require_same_instance(recipe["binding"], instance_binding(instance))
     if mode != recipe["mode"] or digest(tooling) != recipe["tooling_sha256"]:

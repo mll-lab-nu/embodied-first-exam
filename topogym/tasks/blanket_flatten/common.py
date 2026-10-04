@@ -133,6 +133,13 @@ class BlanketFlattenTask(TaskDefinition):
             )
         self.birth_vertices, self.birth_uv, self.birth_panels = vertices, uv, panels
         self.birth_faces = faces.copy()
+        material_map = None
+        if mode != "authored":
+            # Birth UV is derived before restoring a folded numeric state.
+            # Immutable annotations live beside the prepared-state asset tree,
+            # preserving its geometry hashes in agent and verifier alike.
+            material_map = path.parent.parent / "blanket_material_map.npz"
+            np.savez(material_map, vertices=vertices, faces=faces.astype(np.int64), uv=uv)
         entity = EntitySpec(
             "blanket",
             "mesh",
@@ -145,6 +152,7 @@ class BlanketFlattenTask(TaskDefinition):
                 "file_meshes_are_zup": True,
             },
             surface=surface,
+            material_map_path=material_map,
         )
         return TaskSpec(
             (entity,),

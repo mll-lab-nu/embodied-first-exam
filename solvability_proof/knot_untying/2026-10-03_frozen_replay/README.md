@@ -23,14 +23,18 @@ medium 的[首遍原生返回值](evidence/replays/medium03_first_pass/medium_fi
 
 ```bash
 KNOT_BATCH=solvability_proof/knot_untying/2026-10-03_frozen_replay/evidence
-python scripts/audit_knot_oracle.py \
+KNOT_REPLAY_SOURCE="$KNOT_BATCH/replays/medium03_first_pass/source_snapshot"
+PYTHONPATH="$KNOT_REPLAY_SOURCE" python "$KNOT_REPLAY_SOURCE/scripts/audit_knot_oracle.py" \
   --instance "$KNOT_BATCH/instances/medium/instance.json" \
   --traj "$KNOT_BATCH/runs/medium03/trajectory.npz" \
   --repeat 2 --output runs/test_results/knot_medium_reaudit_new
 ```
 
-入口使用任务目录自己的 `rcb_topogym.py replay --strict`，只在每一遍都原生成功且初态
+以上历史复现命令需在原 0.2.6 运行环境中使用归档源码；当前工作区的 v14 tooling 不替代历史版本。
+入口使用该快照任务目录自己的 `rcb_topogym.py replay --strict`，只在每一遍都原生成功且初态
 exact 时通过。单次 `deterministic=true` 不能证明重复确定性；GPU state hash 不同本身也
 不否定每遍原生成功，与 verifier 原有规则一致。
-本批次不提供全程逐 tick 网格状态、逐子步机器人禁碰、网格／时间步收敛或新录像。
+本批次当前尚无全程逐 tick 网格状态、逐子步机器人禁碰、网格／时间步收敛或新录像。
+hard05 成功后的队列已准备首遍正式回放的逐 tick 数值证据、共享四路视频和独立几何检查，
+尚未实际产出或通过，不能提前计入证明数量。其旧实例结果也不代表 v14 新实例通过。
 完整命令与抓取／回溯经验见 [oracle README](../../../topogym/planning/knot_untying/README.md)。

@@ -8,15 +8,20 @@
 当前证据、导入产物与剩余物理验证见 [任务页](../../../docs/develop/tasks/knot_untying_zh.md)。
 2026-10-03 交接包已导入 `runs/test_results/knot_handoff_20261003/`，保留原始字节和 SHA-256 清单。
 统一归档在 [solvability_proof/knot_untying](../../../solvability_proof/knot_untying/README.md)。
-未指定 `--instance` 时优先使用归档内与当前代码兼容的 i00 实例；完整 `evidence/` 需随项目传递。
+未指定 `--instance` 时使用当前 `tasks/` 中与 tooling 同目录的 i00 实例。
+历史归档需显式指定 `--instance`，并使用那次记录的源码快照和镜像；旧轨迹不自动代表新实例通过。
 
 ## 执行和回放
 
 下列命令需要有兼容 Genesis 1.2.1、Nyx 和 CUDA IPC 的 Python；正式 IPC 存档还核对
 pyuipc 版本和 libuipc build，不绕过身份检查。
 
-本机已验证的容器入口如下；在仓库根目录运行。随后可将最后的 Python 命令替换为下方的
-medium、hard 或 audit 命令。编译与 Nyx 缓存使用可写目录，容器内沿用当前用户身份。
+当前任务包要求镜像 **0.2.12**，以下是对应入口；截至 v14 对比时，本机尚未安装该镜像、
+尚未完成此版本的物理验证；实际拉取被 registry 拒绝，镜像来源待补。
+`hard06`、`hard07` 已保留证据并停止。当前 `hard08` 使用 v14 任务工具、v14 hard 初态及本机
+`0.2.13-dev` 镜像；真实预检初态 exact、一个控制步及 8 个抓姿 IK 通过。
+这是上述明确版本组合的验证，不能称为官方 0.2.12 镜像已通过。
+编译与 Nyx 缓存使用可写目录，容器内沿用当前用户身份。
 
 ```bash
 docker run --rm --runtime nvidia --gpus all --user "$(id -u):$(id -g)" \
@@ -24,36 +29,54 @@ docker run --rm --runtime nvidia --gpus all --user "$(id -u):$(id -g)" \
   -e XDG_CACHE_HOME=/work/runs/knot_cache \
   -e NUMBA_CACHE_DIR=/work/runs/knot_cache/numba \
   -e MPLCONFIGDIR=/work/runs/knot_cache/matplotlib \
-  -v "$PWD":/work -w /work ghcr.io/luigivamper/rcb-topogym:0.2.6-cu128 \
+  -v "$PWD":/work -w /work ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128 \
   python scripts/oracle_runners/run_knot_oracle.py \
     --variation knot_untying_easy --output runs/test_results/knot_easy_new
 ```
 
 ```bash
-KNOT_INPUT=solvability_proof/knot_untying/2026-10-03_frozen_replay/evidence
-
 python scripts/oracle_runners/run_knot_oracle.py \
   --variation knot_untying_medium \
-  --instance "$KNOT_INPUT/instances/medium/instance_norgb.json" \
   --output runs/test_results/knot_medium_new
 
 python scripts/audit_knot_oracle.py \
-  --instance "$KNOT_INPUT/instances/medium/instance.json" \
-  --traj "$KNOT_INPUT/runs/medium03/trajectory.npz" \
+  --instance tasks/topogym-knot-untying-medium-i00-privileged/environment/instance.json \
+  --traj runs/test_results/knot_medium_new/trajectory.npz \
   --repeat 2 --output runs/test_results/knot_medium_replay_new
 
 python scripts/oracle_runners/run_knot_branching.py \
   --variation knot_untying_hard \
-  --instance "$KNOT_INPUT/instances/hard/instance_norgb.json" \
   --output runs/test_results/knot_hard_new
 ```
 
 所有输出目录必须尚不存在。入口冻结实际源码、任务工具和机器人资源，worker 使用该快照；
 `resources.jsonl` 记录 CPU／内存，只有系统内存达到 90% 才停止本轮子进程。
 正式回放须使用启用 RGB 的 `instance.json`，开发可使用同物理配置的 `instance_norgb.json`。
+v14 的 R2 允许短于 0.25 s 的体积异常恢复，R4 的目标高度下限为桌面下 15 mm；
+这些是 benchmark 的判定与命令保护，不构成全程无穿模资格。原生 R2 决定体积异常持续时间的
+任务结论；独立审计记录每 tick 异常，并另行区分接触、实体内部相交和未解决的几何证据。
 Nyx 初始化不等于已录视频；本套工具记录动作与中心线，不另外实现录像流程。
 
 运行产物为 `report.json`、`steps.jsonl`、`centerlines.npz`、`trajectory.npz`。
+`native_progress.json` 每 8 控制步及终止时保存完整原生指标；被拒分支在回溯前保存动作前缀、
+终态指标及共享 `SegmentEvidence` 的最后一 tick 状态，后者不构成全程碰撞证明。
+控制器保持计划路径高度，释放不重复扣除已经损失的抬升高度。有原生 `Session.table_guard`
+时不额外检查 +0.5 mm 命令间隙，也不强制抬高目标；下一次 IK 使用原生实际接受的目标。
+只有兼容旧 tooling 的分支仍保留旧命令保护。实际状态另做独立物理审计。
+工作区命令检查使用 `chain_fk.py` 的只读 CPU FK，与原生模型对照通过；它在构建时复制链参数，
+每次查询不触碰实时 solver。hard07 起已采用该实现；原生 IK 仍使用共享适配器。
+
+`native_rules_tracking_search_v3` 默认不按交叉数停滞剪枝，总预算 16 层／128 次尝试。
+候选包括两端选择、交换手臂、抓姿偏转／倾斜、不同抓点、上股固定、三维拉向和抬升／侧移路径。
+IK 可尝试当前、home 和两个扰动种子，接受误差为 0.5 mm／0.01 rad；关节限制仍由原生模型执行。
+抓点在三维中排序，拥挤点不再仅因投影间隙不足直接被否决；95% 材料跨度停止线默认关闭。
+零交叉等待超时后继续撤手、重新落绳或拉开，仍以原生 task_success 为完成条件。
+抓姿在可达的两个夹爪朝向中优先选择相对实测关节转动较小的一种，也可用 `grasp_flip` 指定。
+接近默认 1 s，之后最多等待 4 s，让实际预抓位跟上；20 mm／0.1 rad 是下降时序的判断值，
+超时仍尝试原生 IK，不是额外抓取否决条件。`approach_s`／`approach_wait_s` 可配置。
+此修复针对 hard07 的真实跟踪滞后：左腕尚差 1.56 rad 时就要求固定最终朝向的笛卡尔下降，
+导致 IK 不可达；未修改 v14 力矩限制。hard08 已完成首轮 29.125 s／11,650 ticks 的退绳、
+释放及退开，交叉 4→1，动作前缀与第二轮检查点一致；完整解结及物理资格仍待验证。
 轨迹保留每条 action 的实际物理 tick 数；原生成功会使最后一个控制步短于 25 ms。
 只在原生成功时执行器返回 0。`audit_knot_oracle.py` 调用任务工具原有 `replay --strict`，
 检查所有回放原生成功、正式初态 exact 和动作身份，写 `replay_audit.json`，失败返回非零。
@@ -61,24 +84,67 @@ Nyx 初始化不等于已录视频；本套工具记录动作与中心线，不�
 同时记录原生终态指标，每遍完成写 `replay_passes.jsonl`；
 动作、实际 tick 请求、原生 replay 循环和结束规则保持由任务工具处理。
 单次回放的 `deterministic=true` 不表示重复运行已确定；至少两次才记录 determinism_tested。
+
+独立全 tick 审计可加 `--workers 8` 使用多个 CPU 进程。每 tick 的实体测量函数相同，主进程按
+原顺序计算证据哈希、验证状态链并汇总体积异常连续时长；最多保留 `2*workers` 条待处理状态。
+9 项审计回归覆盖串并行等价、1 µm 穿透、跨批次体积异常和非法回溯。11 个真实 hold 状态的
+串行／4 进程／8 进程结果及证据哈希一致，耗时约 10.85／4.74／4.32 s；该短样本不代表
+完整轨迹吞吐。hard08 原生冻结运行和原串行审计调度继续工作；单独冻结的并行审计等待队列
+已启动，在首遍正式回放 capture 完整封存后自动运行 8 个 CPU 进程。两套结果分别保存，
+正式归档需明确选择合格结果并绑定其源码哈希；归档助手的 `--parallel` 支持该选择。
 GPU 非逐位确定性本身不否决全部回放的原生成功，与任务 verifier 保持一致。
+
+`audit_knot_oracle.py --physics-evidence` 可通过共享 `SegmentEvidence` 保存每遍回放的初态和
+每个已提交物理 tick，输出在 `physics_replay_*/`，并保存实际 FEM 网格、刚体碰撞网格与碰撞配对。
+这会增加磁盘和运行开销；它只观察原生 reset／step／replay，不补动作或改变判据。
+可加 `--physics-evidence-passes 1` 只记录首遍的完整 tick，其他原生 replay 仍全部执行；
+记录过程保留 10 GiB 磁盘余量，不足时失败并封存不完整状态。
+Knot 完整回放启用共享 `SegmentEvidence` 的可选 `deduplicate_arrays=True`：按字段路径复用
+上一条相同 dtype、shape 和逐字节内容的数组引用，连接表等不变数据不重复落盘；每个 tick 和字段仍完整保存。
+缓存只保留每条当前字段路径的上一值，原读取器可直接解码；其他调用者默认关闭该选项。
+再加 `--video-evidence`，使用共享 `RecordingSession` 同步保存该遍的四路 Nyx 视频，
+录像和数值证据的 episode／branch／state ID 必须对应，完成后全量解码核对帧数。
+网格导出只读静态顶点和原生几何位姿，不调用会刷新物理顶点缓存的 `get_verts()`。
+`capture.json.complete` 仅表示证据连续、完整，**不代表碰撞审计通过**。
+`collision_audit.py` 已提供独立四面体体积检查和非相邻绳面三角形自交检查；
+`physics_audit.py` 使用 `contact_geometry.py` 对接触候选做实体检查：原生凸网格／BOX 的精确凸体、
+解析球及闭合凹网格。边界接触允许通过，凸包重叠只触发进一步检查；未实现的几何组合明确记为
+unresolved，不称为穿透或完整合格。1 nm 为几何比较精度，不是毫米级穿透许可。
+绳自接触由非相邻表面三角形及其相邻实体四面体区分边界接触与内部相交；不覆盖共享顶点面的
+自折叠、无表面接触的完整自包含或 tick 间 CCD。每 tick 体积异常和原生接触深度保留诊断。
+以下为 hard05/hard06 的旧审计设计：当时对全部填充四面体与原生启用刚体配对检查外包络分离，
+包括完全包含的情况；外包络可能把凹槽算入实体，所以重叠只能判为不能认证，不能直接当作真实穿透。
+原生球体按解析半径使用外接多面体，BOX 使用解析角点；不能把内接球面网格当作完整球体，未知 primitive 拒绝认证。
+命令如下；非完整证据、碰撞疑点或原生未成功均返回非零。正式回放上的实际验证仍待进行。
+
+```bash
+python scripts/audit_knot_physics.py \
+  --capture runs/test_results/knot_hard_replay/physics_replay_01 \
+  --output runs/test_results/knot_hard_collision_audit
+```
+
+自交检查排除共享顶点／边的相邻三角形，检查范围为记录时刻，不作连续时间 CCD 声明。
 
 ## 分支与经验
 
 - 默认闭合开口为 **5 mm**，是两指之间的实际宽度；旧 Env 执行器的原生夹爪坐标不可直接搬来。
-  零开口曾压翻绳的四面体，CLI 拒绝零值。两端拉开默认离端头 **35 mm**，避开 medium 的端头压坏。
+  零开口曾在旧运行中压翻绳的四面体；当前 CLI 允许非负开口，由原生机器人限制处理命令，
+  不把这条经验当成参数禁令。两端拉开默认离端头 **35 mm**，候选也包含其他端部距离。
 - hard 默认 `full_pull=True, max_pull=.55`。交叉刚从 4 降到 3 就停会留下拉紧小卷；完整拉绳
   来自物体路线经验，机器人成功须另验。`--no-full-pull` 可显式复现旧策略。
-- 分支候选包含 0.65 m 完整拉绳、方向调整和端部抓点调整；跨度接近抓点间材料长度的 95%
-  或 IK 到达边界时停止延伸，不放宽原生体积有效性或终态门槛。
+- 分支候选包含 0.65 m 完整拉绳、方向调整和端部抓点调整。退绳的材料跨度停止线默认关闭，
+  只有显式提供 `span_ratio` 才启用；IK 到达边界可结束当前延伸，再释放和尝试后续动作。
+  两端拉开默认尝试到绳长的 90%，或零交叉后再延伸两段；这是可配置动作配方，不是任务成功条件。
 - `branching.py` 在每个决策点补全 Env checkpoint；当前动作或后续决策失败都会回退并换候选。
   `branching.json` 保留全部尝试，最终 trajectory 只保留当前有效分支，仍须新进程回放认证。
-- 搜索默认允许连续 **2 次操作未取得本分支更低的交叉数**（`--max-nonprogress-decisions 2`），
-  支持交叉暂时不变或增加后的恢复。取得新低会刷新预算，`4→5→4` 的振荡不会刷新；
-  超过预算只表示该搜索分支耗尽，不是原生物理失败。8 层决策／30 次总尝试的上限仍保留。
+  工作区的拒绝证据目录使用尝试开始时分配的 `attempt_id`，避免父子分支回退时重名；
+  该修复已通过 CPU 回归并用于 hard08；旧 hard06 快照保留原实现。
+- 搜索默认不按交叉数停滞剪枝，支持交叉暂时不变或增加后的恢复。
+  可选 `--max-nonprogress-decisions` 才限制未刷新最低交叉数的操作次数；`4→5→4` 不刷新该可选预算。
+  总预算默认为 **16 层决策／128 次尝试**；预算耗尽只表示本次搜索未找到解，不是原生物理失败。
   小于 12 cm 的紧圈只写诊断标记，不再直接回退；`--tight-curl-m` 仅调诊断阈值。
   medium / hard 在每个节点交替尝试删交叉和两端拉开的候选，旧规则只决定优先级。
-  `branching.json.search_policy` 标明 `bounded_nonmonotonic_v1`；旧运行快照不随工作区修改。
+  `branching.json.search_policy` 标明 `native_rules_tracking_search_v3`；旧运行快照不随工作区修改。
 - `checkpoints/d<k>_a<n>.pkl` 是受信本地控制器存档及动作前缀，不是跨进程原生物理存档。
   `--resume <文件>` 重建同一实例，回放全部前缀，核对绳形和关节后继续；需要原来的模拟时间。
   不接收缺少身份与 tick 校验的旧格式 checkpoint。

@@ -11,7 +11,7 @@ instance   : one TopoGym scene = a task family's variation built from a fixed se
              hash of the built scene (state_sha) is stored too. On load, `instance_exact` = hash equality and
              `instance_matches` = hash equality or every object / joint pose within tolerance.
 trajectory : the (T, action_dim) JOINT_ABS actions handed to the simulator, one row per control step: per arm (the order
-             of ACTION_LAYOUT) the arm joint targets (rad) and the gripper opening width (m, 0 = closed .. open width).
+             of ACTION_LAYOUT) the arm joint targets (rad) and the gripper target declared by the frozen instance / robot_spec.
              The physics runs where the instance's `simulator.compute_backend` says: the GPU (CUDA) for the soft-body
              families and lock_picking, whose contact solver is not bit-deterministic (repeated replays agree to ~1e-11
              in the state but not bit for bit), and the CPU for the other rigid families, whose replays are
@@ -119,7 +119,7 @@ def recover_reward(directory):
     return True
 
 
-def load_trajectory(path, task, dim, *, trusted=False):
+def load_trajectory(path, task, dim, *, trusted=False, layout=None):
     """Validate before scene creation. Tick metadata is accepted only from the trusted service."""
     try:
         # Inspect the array header before NumPy allocates from an untrusted shape.
@@ -136,6 +136,8 @@ def load_trajectory(path, task, dim, *, trusted=False):
         with np.load(path, allow_pickle=False) as data:
             if str(data['task']) != task:
                 raise InvalidTrajectory('wrong task family')
+            if layout is not None and ('action_layout' not in data or data['action_layout'].tolist() != list(layout)):
+                raise InvalidTrajectory('trajectory action layout differs from frozen instance')
             raw = data['actions']
             if raw.dtype.kind not in 'fiu' or raw.ndim != 2 or raw.shape[1] != dim or not (0 if trusted else 1) <= len(raw) <= MAX_STEPS:
                 raise InvalidTrajectory('actions must be a nonempty bounded numeric (T, action_dim) array')
@@ -332,7 +334,8 @@ for _name, _ticks in (("rope_threading", 300), ("slotted_post_ring", 800), ("kno
 
 
 def simulator_config(task: str, eval_index: int | None = None, *, variation_id: str | None = None,
-                     seed: int | None = None, task_parameters: dict | None = None) -> dict:
+                     seed: int | None = None, task_parameters: dict | None = None,
+                     simulator_overrides: dict | None = None) -> dict:
     """The full SimulatorConfig of eval index `eval_index` of `task`, as instance.json stores it."""
     spec = TASKS[task]
     if variation_id is not None or seed is not None:
@@ -360,6 +363,14 @@ def simulator_config(task: str, eval_index: int | None = None, *, variation_id: 
         cfg["grasp_assist"] = assist
     if task_parameters:
         cfg["task_parameters"] = task_parameters
+    if simulator_overrides is not None:
+        # Manager/build input only. Validated values are saved in the instance;
+        # a loaded episode cannot accept these overrides.
+        allowed = {"physics_dt_s", "solver_substeps", "control_decimation", "reset_physics_steps",
+                   "rigid_options", "ipc_options", "ipc_settled_state", "grasp_assist"}
+        if not isinstance(simulator_overrides, dict) or set(simulator_overrides) - allowed:
+            raise ValueError(f"simulator_overrides permits only {sorted(allowed)}")
+        cfg.update(simulator_overrides)
     from topogym.simulator.config import SimulatorConfig
     from topogym.utils.io import to_jsonable
     return to_jsonable(SimulatorConfig(**cfg))  # validate and freeze defaults before construction
@@ -579,10 +590,13 @@ def _register_cube() -> None:
 # --------------------------------------------------------------------------- the robot: layout, gripper widths, FK / IK
 class _Robot:
     """Action layout, measured state and stateless kinematics of the TopoGym robot (Genesis FK on a fixed qpos template).
-    Every group ("arm" for the Panda, "left" / "right" for ALOHA) is one arm: its arm joints then its gripper width."""
+    Every group ("arm" for the Panda, "left" / "right" for ALOHA) is one arm: its arm joints then its declared gripper target."""
 
-    def __init__(self, robot, timing):
+    def __init__(self, robot, timing, *, gripper_space="width"):
         from topogym.robot.grasp_geometry import read_grasp_geometry
+        if gripper_space not in {"width", "native"}:
+            raise ValueError("gripper_space must be width or native")
+        self.gripper_space = gripper_space
         self.robot, self.entity, self.timing = robot, robot.entity, timing
         self.groups = {g.name: g for g in robot.description.groups}
         self.arms = list(self.groups)
@@ -596,7 +610,8 @@ class _Robot:
             self.layout += list(g.arm_joints); self.limits += [list(map(float, l)) for l in g.arm_limits_rad]
             self.arm_slice[g.name] = slice(first, len(self.layout))
             self.grip_index[g.name] = len(self.layout)
-            self.layout.append(f"{g.name}_gripper"); self.limits.append(None)
+            self.layout.append(f"{g.name}_native_gripper" if gripper_space == "native" else f"{g.name}_gripper")
+            self.limits.append(None)
         self.arm_joints = [n for g in self.groups.values() for n in g.arm_joints]
         self.tcp_frames = {name: f"{name}_tcp" for name in self.groups}
         self.hand_T_tcp = {name: _T(g.tcp_position_in_hand_m, g.tcp_orientation_in_hand_wxyz) for name, g in self.groups.items()}
@@ -615,6 +630,8 @@ class _Robot:
             self.width_table[name] = (widths[keep][::-1].copy(), cmds[keep][::-1].copy())    # increasing widths
             lo, hi = float(self.width_table[name][0][0]), float(self.width_table[name][0][-1])
             self.limits[self.grip_index[name]] = [round(max(0.0, lo), 6), round(hi, 6)]
+            if gripper_space == "native":
+                self.limits[self.grip_index[name]] = list(map(float, g.gripper_limits))
         # limits as float32 values: actions are float32 rows, and a row at a limit must not read as beyond it. The model
         # (topogym/robot/joint_position.py validate_action) checks the EXACT limits and raises beyond them, so where
         # float32 rounds a limit outward (e.g. float32(3.14158) = 3.141580104827881) take the next float32 inside it
@@ -680,6 +697,13 @@ class _Robot:
         order = np.argsort(c)
         return float(np.interp(float(native), c[order], w[order]))
 
+    def native_to_action(self, arm, native) -> float:
+        """The frozen action layout declares whether the gripper column is a drive or a gap."""
+        return float(native) if self.gripper_space == "native" else self.native_to_width(arm, native)
+
+    def action_to_native(self, arm, value) -> float:
+        return float(value) if self.gripper_space == "native" else self.width_to_native(arm, value)
+
     # -- actions
     @property
     def action_dim(self) -> int:
@@ -699,7 +723,8 @@ class _Robot:
         for name, g in self.groups.items():
             width = float(row[self.grip_index[name]])
             current = float(targets[name][g.gripper_field])
-            native = (current if abs(width - self.native_to_width(name, current)) <= 1e-7
+            native = (float(width) if self.gripper_space == "native" else
+                      current if abs(width - self.native_to_width(name, current)) <= 1e-7
                       else self.width_to_native(name, width))
             out[name] = {"joint_position_rad": row[self.arm_slice[name]].tolist(),
                          g.gripper_field: native}
@@ -710,7 +735,7 @@ class _Robot:
         row = np.zeros(self.action_dim)
         for name, g in self.groups.items():
             row[self.arm_slice[name]] = t[name]["joint_position_rad"]
-            row[self.grip_index[name]] = self.native_to_width(name, t[name][g.gripper_field])
+            row[self.grip_index[name]] = self.native_to_action(name, t[name][g.gripper_field])
         return row
 
     # -- measured state
@@ -730,7 +755,8 @@ class _Robot:
         q = self.measured_full(); row = np.zeros(self.action_dim)
         for name, g in self.groups.items():
             row[self.arm_slice[name]] = [q[self.joint[n].qs_idx_local[0]] for n in g.arm_joints]
-            row[self.grip_index[name]] = self.opening(name)
+            row[self.grip_index[name]] = (q[self.joint[g.actuated_fingers[0]].qs_idx_local[0]]
+                                          if self.gripper_space == "native" else self.opening(name))
         return row
 
     def velocities(self) -> np.ndarray:
@@ -740,6 +766,8 @@ class _Robot:
             row[self.arm_slice[name]] = [v[self.joint[n].dofs_idx_local[0]] for n in g.arm_joints]
             fj = self.joint[g.actuated_fingers[0]]; nq = q[fj.qs_idx_local[0]]
             slope = (self.native_to_width(name, nq + 1e-4) - self.native_to_width(name, nq - 1e-4)) / 2e-4
+            if self.gripper_space == "native":
+                slope = 1.
             row[self.grip_index[name]] = slope * v[fj.dofs_idx_local[0]]
         return row
 
@@ -1056,8 +1084,8 @@ def table_guard_words() -> str:
 
 
 def rule_window_ticks(physics_dt_s: float, window_s: float) -> int:
-    """The persistence window in physics ticks (0.25 s at 2.5 ms = 100 ticks)."""
-    return max(1, int(round(float(window_s) / float(physics_dt_s))))
+    """First whole tick reaching the window; never fail before its duration."""
+    return max(1, int(math.ceil(float(window_s) / float(physics_dt_s) - 1e-12)))
 
 
 def contact_rule_tick(counts: dict, nonheld_m: float, held_m: float, window: int, rule: dict = CONTACT_RULE):
@@ -1509,7 +1537,7 @@ class _TableGuard:
         """arm -> the lowest world z of its gripper at the joint row `row` (action layout)."""
         r, row = self.s.robot, np.asarray(row, dtype=np.float64)
         q = r.q_full(np.concatenate([row[r.arm_slice[a]] for a in r.arms]))
-        q = r._with_fingers(q, {a: r.width_to_native(a, row[r.grip_index[a]]) for a in r.arms})
+        q = r._with_fingers(q, {a: r.action_to_native(a, row[r.grip_index[a]]) for a in r.arms})
         T = self.fk(q)
         return {arm: min(float((local @ T[name][2, :3] + T[name][2, 3]).min()) for name, local in pts)
                 for arm, pts in self.points.items() if pts}
@@ -1872,22 +1900,40 @@ def _guard_particle_speeds(task, on_trip: Callable[[dict], None]) -> bool:
     return True
 
 
+BINDING_API = 1
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
+                 simulator_overrides: dict | None = None, gripper_space: str | None = None,
                  strict: bool = True, max_steps: int | None = None, backend: str = DEFAULT_BACKEND):
         if task not in TASKS:
             raise KeyError(f"unknown task {task!r}; known: {list(TASKS)}")
         if backend != "cuda":
             raise ValueError("TopoGym sessions follow the GPU-backend rule; the physics device comes from the instance")
         self.task, self.spec = task, dict(TASKS[task])
+        self.runtime_binding = None
         inst = None
         if instance is not None:
-            if any(x is not None for x in (eval_index, variation_id, seed, task_parameters)):
+            if gripper_space is not None:
+                raise ValueError("The frozen instance owns gripper_space")
+            if any(x is not None for x in (eval_index, variation_id, seed, task_parameters, simulator_overrides)):
                 raise ValueError("frozen instance cannot be combined with scene overrides")
             inst = json.load(open(instance))
             if inst.get("task") != task:
                 raise ValueError(f"instance task {inst.get('task')} != session task {task}")
+            lock_path = Path(instance).resolve().parent / "runtime_binding.json"
+            if lock_path.is_file():
+                from topogym.simulator.frozen_binding import check_inputs, check_runtime, binding_id
+                try:
+                    lock = json.loads(lock_path.read_text())
+                    check_inputs(instance, __file__, lock)
+                    runtime = check_runtime(lock)
+                except (OSError, ValueError, KeyError) as exc:
+                    raise InstanceMismatch(f"Frozen runtime binding failed: {exc}") from exc
+                self.runtime_binding = dict(binding_id=binding_id(lock), runtime=runtime,
+                                            creation_source=lock["creation_source"], image=lock["image"])
             eval_index = inst["eval_index"]
             cfg = dict(inst["simulator"])       # the frozen configuration: the task directory's own copy
             cfg["task_parameters"] = dict(cfg.get("task_parameters", {}))
@@ -1898,7 +1944,8 @@ class Session:
             if settled and not Path(settled).is_absolute():
                 cfg["ipc_settled_state"] = str(Path(instance).resolve().parent / settled)
         else:
-            cfg = simulator_config(task, eval_index, variation_id=variation_id, seed=seed, task_parameters=task_parameters)
+            cfg = simulator_config(task, eval_index, variation_id=variation_id, seed=seed,
+                                   task_parameters=task_parameters, simulator_overrides=simulator_overrides)
         self.eval_index, self.max_steps, self.backend = eval_index, int(max_steps or MAX_STEPS), backend
         self.config = cfg
         if self.spec["fixture"]:
@@ -1929,7 +1976,8 @@ class Session:
             # The family catalog is only a short catalog label. Public goals
             # come from the selected instance, for both Session and limited SPEC.
             self.spec["text"] = self.env._task.public_instruction()
-        self.robot = _Robot(self.env._robot, self.env.timing_spec)
+        self.gripper_space = (inst.get("gripper_space", "width") if inst else gripper_space or "width")
+        self.robot = _Robot(self.env._robot, self.env.timing_spec, gripper_space=self.gripper_space)
         self.control_hz = 1.0 / float(self.env.timing_spec["control_dt_s"])
         self.physics_substeps = int(self.env.config.control_decimation)
         self.S0 = dict(self.env._info()["state_ref"])
@@ -1955,6 +2003,9 @@ class Session:
         self.instance_matches = assets_match and (self.instance_exact or (inst is not None and self._poses_match(inst)))
         if not self.instance_exact or not assets_match:
             msg = f"instance state sha {self.instance_sha} != expected {expected}"
+            if strict or self.runtime_binding is not None:
+                self.env.close()
+                raise InstanceMismatch(msg + "; exact frozen state and assets are required by candidate tooling")
             if self.instance_matches:
                 _log(f"WARNING: {msg}, but every object/joint pose matches within tolerance")
             else:
@@ -2073,7 +2124,7 @@ class Session:
         return list(self.robot.layout)
 
     def step(self, action, *, _physics_steps=None) -> bool:
-        """Apply one low-level action (ACTION_LAYOUT: per arm its joint targets, then its gripper width) for one control
+        """Apply one low-level action (ACTION_LAYOUT: per arm its joint targets, then its declared gripper target) for one control
         step. Out-of-limit values are clipped to the joint / gripper limits. Returns True once max_steps control steps
         have run (a runaway guard, not a budget); further steps raise. After the task's own episode end (success or a
         failure predicate) steps return True without changing the scene or execution ledger. A numerically unstable
@@ -2144,7 +2195,8 @@ class Session:
         return {"success": self.success(), "progress": round(self._reward, 4), "sim_steps": int(self.n_steps),
                 "physics_steps": self.physics_steps, "sim_time_s": self.sim_time_s,
                 "resets": self._resets, "state_sha": self.state_sha(), "episode_end": self.episode_end,
-                "instability": self.instability}
+                "instability": self.instability, "instance_exact": self.instance_exact,
+                "runtime_binding": self.runtime_binding}
 
     # ---- recording / trajectories
     def record_start(self) -> None:
@@ -2166,7 +2218,8 @@ class Session:
         np.savez(path, actions=np.asarray(actions, dtype=np.float32), task=self.task, topogym_task=self.config["task_id"],
                  variation_id=self.config["variation_id"], eval_index=-1 if self.eval_index is None else self.eval_index,
                  scene_seed=int(self.config["seed"]), instance_sha=self.instance_sha,
-                 action_dim=self.action_dim, action_layout=np.array(self.action_layout), meta=json.dumps(meta or {}), **extra)
+                 action_dim=self.action_dim, action_layout=np.array(self.action_layout),
+                 gripper_space=self.gripper_space, meta=json.dumps(meta or {}), **extra)
 
     def replay(self, actions: np.ndarray, *, physics_steps=None) -> dict[str, Any]:
         """Open-loop replay after reset(): what the verifier does, twice, in its own process."""
@@ -2377,7 +2430,7 @@ class Session:
         return np.asarray(o["bounds"], dtype=np.float64)
 
     def joint_positions(self) -> np.ndarray:
-        """Current joint positions in action layout (gripper entries = measured opening width in metres)."""
+        """Current joint positions in action layout (gripper entries use the frozen instance command space)."""
         return self.robot.positions()
 
     def ee_pose(self, arm: str) -> tuple[np.ndarray, np.ndarray]:
@@ -2510,6 +2563,18 @@ class Session:
             return ("physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's "
                     "PD force; friction holds it")
         parts = ", ".join(sorted({t.entity for t in ga.targets}))
+        if ga.model in {"ipc_soft_band_v1", "pbd_local_patch_v1"}:
+            mechanics = ("an elastic IPC attachment" if ga.model == "ipc_soft_band_v1"
+                         else "a local kinematic PBD attachment")
+            return (f"assisted grasping ({ga.model}): closing intent and bilateral finger proximity to a material patch "
+                    f"of {parts} must persist for {ga.stable_time_s:g} s, with penetration at most "
+                    f"{ga.max_penetration_m * 1000:g} mm and the TCP within {ga.max_tcp_distance_m * 100:g} cm. "
+                    f"The admitted patch follows through {mechanics}; the rest remains deformable. "
+                    f"Opening by more than {ga.intent_deadband * 100:g} % of gripper travel releases it. "
+                    f"A hold is lost on excessive opening, material strain, invalid volume or follow error above "
+                    f"{ga.max_translation_error_m * 1000:g} mm; a lost hand must open before reacquiring. "
+                    "Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. "
+                    "Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets")
         held = ("; the grippers start closed on their parts and may acquire after the same bilateral-contact confirmation without another close command"
                 if getattr(ga, "initial_intent", "open") == "close" else "")
         return (f"assisted grasping ({ga.model}): a gripper whose command moves towards closed takes hold of a graspable "
@@ -2546,13 +2611,21 @@ class Session:
                                      f"entry: the target opening width in metres, {lo:g} = closed .. {hi:g} = open (the nominal gap "
                                      f"between the finger pads), converted to the gripper's native drive coordinate; it switches at "
                                      f"the row (no interpolation). Grasping: {self.grasp_rules()}"}
+            if r.gripper_space == "native":
+                unit = "m" if g.gripper_field.endswith("_m") else "rad"
+                grip[name].update(opening_m=[float(r.width_table[name][0][0]), float(r.width_table[name][0][-1])],
+                    command_space="native", command_unit=unit, command_limits=[lo, hi],
+                    open_target=float(g.grasp.open_position), closed_target=float(g.grasp.closed_position),
+                    command=f"{r.layout[r.grip_index[name]]}: native actuator target in {unit}; "
+                            f"open={g.grasp.open_position:g}, closed={g.grasp.closed_position:g}. "
+                            f"This is a drive coordinate, not a finger-pad gap. Grasping: {self.grasp_rules()}")
             a, c = r.axes[name]
             tcp[r.tcp_frames[name]] = {"parent_link": g.hand_link, "link_T_frame": _r(r.hand_T_tcp[name]),
                                        "definition": f"the {name} gripper's tool frame (TCP): a fixed point near the closed finger pads; "
                                                      f"approach axis (hand -> fingertips) = local {_r(a, 3)}, finger-closing axis = local "
                                                      f"{_r(c, 3)}. The ee_pose action, the proprio tcp pose and the IK use this frame."}
         base = r.entity.links[0].name
-        return {"name": self.env._robot.description.robot_id,
+        return {"name": self.env._robot.description.robot_id, "gripper_space": r.gripper_space,
                 "description": {"panda_robotiq": "a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base",
                                 "aloha": "two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base"}.get(
                                     self.env._robot.description.robot_id, "fixed-base manipulator") + " (TopoGym, Genesis 1.2.1)",
@@ -2600,17 +2673,23 @@ class Session:
 
         def set_gripper(arm: str, width: float, steps: int = 15):
             """Command the gripper opening width of `arm` (m; see robot_spec()["grippers"]) and hold for `steps` steps."""
-            t = s.hold_action(); t[r.grip_index[arm]] = float(np.clip(width, *r.limits[r.grip_index[arm]]))
+            value = r.width_to_native(arm, width) if r.gripper_space == "native" else width
+            t = s.hold_action(); t[r.grip_index[arm]] = float(np.clip(value, *r.limits[r.grip_index[arm]]))
             for _ in range(int(steps)):
                 s.step(t)
 
         def open_gripper(arm: str, steps: int = 15):
             """Open the gripper of `arm` fully."""
-            set_gripper(arm, r.limits[r.grip_index[arm]][1], steps)
+            set_gripper(arm, float(r.width_table[arm][0][-1]), steps)
 
         def close_gripper(arm: str, steps: int = 15):
             """Close the gripper of `arm` (width target 0; the PD controller squeezes whatever is between the fingers)."""
-            set_gripper(arm, 0.0, steps)
+            if r.gripper_space == "native":
+                t = s.hold_action(); t[r.grip_index[arm]] = r.groups[arm].grasp.closed_position
+                for _ in range(int(steps)):
+                    s.step(t)
+            else:
+                set_gripper(arm, 0.0, steps)
 
         def move_joints(arm: str, q_arm, *, max_dq: float = 0.04, steps: int | None = None, settle: int = 0):
             """Interpolate the arm joint targets of `arm` linearly from the current targets to `q_arm` (rad), at most
@@ -2714,7 +2793,10 @@ def _load_traj(path: str) -> dict[str, Any]:
 
 def _source() -> dict:
     p = Path(os.environ.get("TOPOGYM_SOURCE", "/opt/topogym/SOURCE.json"))
-    return json.loads(p.read_text()) if p.is_file() else {}
+    if not p.is_file():
+        return {}
+    from topogym.simulator.frozen_binding import installed_runtime
+    return installed_runtime(p.parent)["source"]
 
 
 def success_enabled(task) -> bool:
@@ -2728,9 +2810,7 @@ def grasp_words(s: "Session") -> str:
     ga = s.config.get("grasp_assist") or {}
     if ga.get("model", "none") == "none":
         return "physical grasping"
-    source = s.spec["grasp_assist"]
-    source = "his recommended" if source == "recommended" else "his explicit" if isinstance(source, dict) else "frozen"
-    return f"{source} {ga['model']} grasp assistance"
+    return f"frozen {ga['model']} grasp assistance"
 
 
 def success_rule(s: "Session") -> str:
@@ -2741,7 +2821,7 @@ def success_rule(s: "Session") -> str:
     if not success_enabled(task):
         return "not evaluable (goal_complete False)"
     meta = task.terminal_metadata()
-    out = f"his default success (goal_complete True; terminal revision {meta.get('revision', task.terminal_revision)})"
+    out = f"task-native success (goal_complete True; frozen parameters; terminal revision {meta.get('revision', task.terminal_revision)})"
     record = meta.get("qualification")
     if record:
         out += (f"; his qualification record for this variation matches, as metadata only (record profile: "
@@ -2756,7 +2836,9 @@ def cmd_export_ipc_state(a) -> None:
     """Build the scene with the family's settling (reset_physics_steps) and archive the settled IPC state (-> make-instance
     --ipc-settled-state): every build of that instance then restores the same bits instead of settling again."""
     from topogym.world.physics.ipc_settled_state import export_settled_state, identity
-    s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed)
+    params, overrides = _build_options(a)
+    s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed,
+                task_parameters=params, simulator_overrides=overrides)
     env = s.env
     manifest = export_settled_state(env._world, a.out, scene_identity=identity(env._world, env._task, env._scene_spec,
                                     env._asset_build), metadata=dict(settled_ticks=int(s.config["reset_physics_steps"]),
@@ -2766,17 +2848,26 @@ def cmd_export_ipc_state(a) -> None:
     s.close()
 
 
+def _build_options(a):
+    def read(name):
+        path = getattr(a, name, None)
+        return json.loads(Path(path).read_text()) if path else None
+    return read("task_parameters"), read("simulator_overrides")
+
+
 def cmd_make_instance(a) -> None:
-    params = json.loads(Path(a.task_parameters).read_text()) if a.task_parameters else None
+    params, overrides = _build_options(a)
     if a.ipc_settled_state:   # restore the archived settled state instead of settling at every build
-        TASKS[a.task]["simulator"] = {**TASKS[a.task]["simulator"], "reset_physics_steps": 0,
-                                      "ipc_settled_state": str(Path(a.ipc_settled_state).resolve())}
-    s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed, task_parameters=params)
+        overrides = {**(overrides or {}), "reset_physics_steps": 0,
+                     "ipc_settled_state": str(Path(a.ipc_settled_state).resolve())}
+    s = Session(a.task, eval_index=a.eval_index, variation_id=a.variation, seed=a.scene_seed,
+                task_parameters=params, simulator_overrides=overrides, gripper_space=getattr(a, "gripper_space", "width"))
     import genesis as gs
     from topogym.tasks.goal_description import TASK_IDS, describe_goal
     out = {"task": a.task, "topogym_task": s.config["task_id"], "variation_id": s.config["variation_id"], "seed": s.config["seed"],
            "eval_index": s.eval_index, "text": s.spec["text"], "simulator": s.config, "state_sha": s.instance_sha,
-           "action_dim": s.action_dim, "action_layout": s.action_layout, "control_hz": s.control_hz, "backend": s.backend,
+           "action_dim": s.action_dim, "action_layout": s.action_layout, "gripper_space": s.gripper_space,
+           "control_hz": s.control_hz, "backend": s.backend,
            "reset_joint_targets": [round(float(x), 6) for x in s.joint_positions()], "objects": s.objects(),
            "instance_contract_version": 2, "soft_state": s._soft_state(), "asset_identity": s.asset_identity,
            "genesis_version": gs.__version__, "topogym_source": _source(),
@@ -2796,13 +2887,14 @@ def cmd_make_instance(a) -> None:
         relative = "instance_assets/initial_state/" + Path(dependency).name
         out["simulator"]["task_parameters"]["initial_state_path"] = relative
         out["effective_task_parameters"]["initial_state_path"] = relative
-    if a.ipc_settled_state:
+    if s.config.get("ipc_settled_state"):
         import shutil
-        source = Path(a.ipc_settled_state).resolve().parent
+        settled = Path(s.config["ipc_settled_state"])
+        source = settled.resolve().parent
         target = Path(a.out).resolve().parent / "instance_assets" / "ipc_state"
         if source != target:
             shutil.copytree(source, target, dirs_exist_ok=True)
-        out["simulator"]["ipc_settled_state"] = "instance_assets/ipc_state/" + Path(a.ipc_settled_state).name
+        out["simulator"]["ipc_settled_state"] = "instance_assets/ipc_state/" + settled.name
     from topogym.utils.io import to_jsonable
     out = to_jsonable(out)
     Path(a.out).write_text(json.dumps(out, indent=1))
@@ -2829,7 +2921,7 @@ def cmd_replay(a) -> None:
     if str(traj.get("task")) != a.task:
         print(json.dumps({"error": f"trajectory task {traj.get('task')} != {a.task}"}), flush=True); sys.exit(2)
     s = Session(a.task, instance=a.instance, strict=a.strict)
-    acts, ticks = load_trajectory(a.traj, a.task, s.action_dim, trusted=True)
+    acts, ticks = load_trajectory(a.traj, a.task, s.action_dim, trusted=True, layout=s.action_layout)
     t0 = time.time()
     outs = [s.replay(acts, physics_steps=ticks) for _ in range(a.repeat)]
     out = {"n_actions": int(len(acts)), "instance_sha": s.instance_sha, "instance_matches": s.instance_matches,
@@ -2844,7 +2936,7 @@ def cmd_replay(a) -> None:
 def cmd_render(a) -> None:
     s = Session(a.task, instance=a.instance)
     cams = tuple(a.cameras.split(",")) if a.cameras else None
-    actions, ticks = load_trajectory(a.traj, a.task, s.action_dim, trusted=True)
+    actions, ticks = load_trajectory(a.traj, a.task, s.action_dim, trusted=True, layout=s.action_layout)
     print(json.dumps(s.render_video(actions, a.out, every=a.every, fps=a.fps, cameras=cams, cols=a.cols, physics_steps=ticks)), flush=True)
     s.close()
 
@@ -2853,6 +2945,8 @@ def cmd_describe(a) -> None:
     """What the task generator writes into instruction.md / README.md: cameras, robot, kinematics, the success predicate's
     source, the table height; one JSON line."""
     import inspect
+    from topogym.simulator.frozen_binding import installed_runtime
+    runtime_identity = installed_runtime()
     s = Session(a.task, instance=a.instance)
     t = s.env._task
     from topogym.tasks.goal_description import TASK_IDS, describe_goal
@@ -2866,7 +2960,8 @@ def cmd_describe(a) -> None:
         s.step(s.hold_action())
     sec_per_step = (time.time() - t0) / 3
     s.reset()
-    out = {"sec_per_step": round(sec_per_step, 3), "cameras": s.camera_info(), "robot_spec": s.robot_spec(), "kinematics": s.kinematics_spec(), "arms": list(s.robot.arms),
+    out = {"runtime_identity": runtime_identity,
+           "sec_per_step": round(sec_per_step, 3), "cameras": s.camera_info(), "robot_spec": s.robot_spec(), "kinematics": s.kinematics_spec(), "arms": list(s.robot.arms),
            "action_layout": s.action_layout, "limits": s.robot.limits, "control_hz": s.control_hz, "physics_substeps": s.physics_substeps,
            "table_z": s.table_z(), "objects": s.objects(), "predicate": predicate, "task_class": type(t).__name__,
            "task_module": "rcb_topogym" if type(t).__module__ == "__main__" else type(t).__module__, "stable_duration_s": float(t.config.get("stable_duration_s", 0.5)),
@@ -2934,10 +3029,14 @@ def main() -> None:
     sub = p.add_subparsers(dest="cmd", required=True)
     q = sub.add_parser("make-instance"); q.add_argument("--task", required=True); q.add_argument("--eval-index", type=int)
     q.add_argument("--variation"); q.add_argument("--scene-seed", type=int); q.add_argument("--task-parameters")
+    q.add_argument("--simulator-overrides", help="manager-only JSON build options, frozen with the instance")
     q.add_argument("--ipc-settled-state", help="an export-ipc-state archive (manifest.json) to restore instead of settling")
+    q.add_argument("--gripper-space", choices=("width", "native"), default="width",
+                   help="Frozen public gripper command representation; native preserves actuator targets without gap inversion")
     q.add_argument("--out", required=True); q.set_defaults(fn=cmd_make_instance)
     q = sub.add_parser("export-ipc-state"); q.add_argument("--task", required=True); q.add_argument("--eval-index", type=int)
     q.add_argument("--variation"); q.add_argument("--scene-seed", type=int); q.add_argument("--out", required=True)
+    q.add_argument("--task-parameters"); q.add_argument("--simulator-overrides")
     q.set_defaults(fn=cmd_export_ipc_state)
     q = sub.add_parser("run-oracle"); q.add_argument("--task", required=True); q.add_argument("--instance", required=True)
     q.add_argument("--code", required=True); q.add_argument("--out", required=True); q.set_defaults(fn=cmd_run_oracle)

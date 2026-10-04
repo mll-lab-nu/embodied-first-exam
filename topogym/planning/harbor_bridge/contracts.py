@@ -11,6 +11,10 @@ SCHEMA = 1
 MAX_ROWS = 1_000_000
 
 
+class SmokeComplete(BaseException):
+    """An explicitly bounded connectivity run stopped before its next control action."""
+
+
 class BridgeError(ValueError):
     """An incompatibility that must not be repaired by changing the oracle."""
 
@@ -119,14 +123,17 @@ def require_same_instance(expected, actual):
 
 def check_session(session, binding, *, instance_path=None):
     instance = binding["instance"]
-    # Existing task tooling resolves this one portable asset path before making
-    # its Session. Accept that exact resolution, without changing physics fields.
+    # Task tooling resolves portable PBD and IPC state paths before making its
+    # Session. Accept only those bound assets, without changing physics fields.
     config = dict(instance["simulator"])
     parameters = dict(config.get("task_parameters") or {})
     dependency = parameters.get("initial_state_path")
     if dependency and instance_path is not None:
         parameters["initial_state_path"] = str(member(Path(instance_path).parent, dependency))
         config["task_parameters"] = parameters
+    settled = config.get("ipc_settled_state")
+    if settled and instance_path is not None:
+        config["ipc_settled_state"] = str(member(Path(instance_path).parent, settled))
     fields = dict(task=session.task, config=session.config, state_sha=session.instance_sha,
                   assets=session.asset_identity, layout=list(session.action_layout))
     expected = dict(task=instance["task"], config=config, state_sha=instance["state_sha"],
@@ -136,6 +143,8 @@ def check_session(session, binding, *, instance_path=None):
         raise BridgeError("Reference requires the fresh frozen episode")
     if not session.instance_matches:
         raise BridgeError("Runtime did not restore the frozen instance")
+    if getattr(session, "instance_exact", False) is not True:
+        raise BridgeError("Pose-tolerance matching is not exact frozen-instance restoration")
 
 
 def load_trajectory(path, binding, *, native=False):
@@ -153,7 +162,7 @@ def load_trajectory(path, binding, *, native=False):
             raise BridgeError("Trajectory belongs to a different frozen instance")
         layout = data[layout_key].tolist()
         expected_layout = [name.removesuffix("_gripper") + "_native_gripper"
-                           if name.endswith("_gripper") else name for name in instance["action_layout"]] if native else instance["action_layout"]
+                           if name.endswith("_gripper") and not name.endswith("_native_gripper") else name for name in instance["action_layout"]] if native else instance["action_layout"]
         if layout != expected_layout:
             raise BridgeError("Trajectory action layout differs; automatic reordering is disabled")
         raw = data[array_key]

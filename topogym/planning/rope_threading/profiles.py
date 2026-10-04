@@ -107,6 +107,11 @@ def contact_relaxed_profile(variation):
         relay += [leg(1, "B", "A", .1), leg(2, "B", None, 0.)]
         name, overhang = "three_ring_finish_held", .05
     return dict(name="contact_relaxed_v16", variation=variation, qualification="development",
+        simulator_overrides=dict(physics_dt_s=.04, control_decimation=1, solver_substeps=1, reset_physics_steps=0,
+            ipc_options=dict(newton_tolerance=.003, linear_system_tolerance=.00003,
+                             collision_detection_method="linear_bvh"),
+            grasp_assist=dict(model="ipc_soft_band_v1", max_translation_error_m=.025, max_penetration_m=.006,
+                targets=[dict(entity="rope", max_strain_ratio=2., strength=1000., require_exposed_patch=False)])),
         task_parameters=task, route=dict(tip_overhang_m=overhang), relay=relay, plans=[[name, relay]],
         ik_args=["--material-tangent", "--material-tangent-delay", ".2", "--material-tangent-min-lead", ".05",
                  "--material-axis-tolerance-deg", "15", "--support-regrasps", "--support-separation", ".2",

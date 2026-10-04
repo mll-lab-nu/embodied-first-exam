@@ -16,13 +16,19 @@ class EvidenceError(RuntimeError):
 
 
 class SegmentEvidence:
-    def __init__(self, root, env):
+    def __init__(self, root, env, *, deduplicate_arrays=False):
         self.root = Path(root)
         self.private = self.root / "private"
         self.private.mkdir(mode=0o700)
         (self.private / "arrays").mkdir()
         self.streams = {}
         self.ticks = self.array_chunks = self.bytes = 0
+        self.deduplicate_arrays = bool(deduplicate_arrays)
+        # One previous value per field path bounds memory independently of run
+        # length. Compare exact C-order bytes; no hash collision or float rounding
+        # can merge different physical measurements.
+        self._previous_arrays = {}
+        self.array_references_reused = self.array_bytes_reused = 0
         self.started = time.monotonic()
         self.closed = False
         try:
@@ -56,19 +62,35 @@ class SegmentEvidence:
     def tick(self, record, *, segment_id):
         """Commit numerical chunks before any JSONL reference becomes visible."""
         arrays = {}
+        previous = self._previous_arrays
+        pending = {}
+        reused = reused_bytes = 0
         chunk = f"arrays/chunk_{self.array_chunks:08d}.npz"
-        def encode(value):
+        def encode(value, path=()):
+            nonlocal reused, reused_bytes
             if isinstance(value, np.ndarray) and value.nbytes >= 512:
                 if value.dtype.hasobject:
                     raise ValueError("Object arrays are not evidence")
+                identity = None
+                if self.deduplicate_arrays:
+                    identity = (value.dtype, value.shape, value.tobytes(order='C'))
+                    cached = previous.get(path)
+                    if cached is not None and identity == cached[0]:
+                        pending[path] = cached
+                        reused += 1
+                        reused_bytes += value.nbytes
+                        return dict(cached[1])
                 key = f"a{len(arrays)}"
                 arrays[key] = value
-                return {"chunk_id": self.array_chunks, "array_file": chunk, "key": key, "dtype": str(value.dtype),
-                        "shape": list(value.shape)}
+                reference = {"chunk_id": self.array_chunks, "array_file": chunk, "key": key, "dtype": str(value.dtype),
+                             "shape": list(value.shape)}
+                if identity is not None:
+                    pending[path] = (identity, reference)
+                return reference
             if isinstance(value, Mapping):
-                return {key: encode(child) for key, child in value.items()}
+                return {key: encode(child, (*path, ('key', key))) for key, child in value.items()}
             if isinstance(value, (tuple, list)):
-                return [encode(child) for child in value]
+                return [encode(child, (*path, ('index', index))) for index, child in enumerate(value)]
             return to_jsonable(value)
         try:
             row = encode(record)
@@ -85,6 +107,11 @@ class SegmentEvidence:
                 self.bytes += path.stat().st_size
             self.write("physics_states", row)
             self.ticks += 1
+            if self.deduplicate_arrays:
+                # Only publish references after both chunk and JSONL succeeded.
+                self._previous_arrays = pending
+                self.array_references_reused += reused
+                self.array_bytes_reused += reused_bytes
         except Exception as error:
             raise EvidenceError("Tick evidence failed") from error
 
@@ -103,6 +130,8 @@ class SegmentEvidence:
     def statistics(self):
         return dict(tick_records=self.ticks, array_chunks=self.array_chunks,
                     evidence_bytes=self.bytes, wall_time_s=time.monotonic() - self.started,
+                    array_references_reused=self.array_references_reused,
+                    array_bytes_reused=self.array_bytes_reused,
                     peak_rss_bytes=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss * 1024,
                     checkpoint_exported=False, ipc_contact_coverage=False,
                     actuator_force_coverage=False)
