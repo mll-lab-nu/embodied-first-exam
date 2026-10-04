@@ -17,7 +17,8 @@ verdict.json `evidence.strict_goal`). Each replay's "grading" record is in verdi
 Task-contact penetration is evidence, not a verdict (tooling v15): a success during whose replays a task contact went deep
 (rcb_topogym.CONTACT_RULE, each replay's status "review") is not credited automatically: success 0 with
 `success_pending_review` 1, the events in verdict.json `evidence.review` and frames around them in review_frames/ (one more
-replay, after the verdict and the video); a clean success is credited.
+replay, after the verdict and the video); a clean success is credited. Forcing (rcb_topogym.FORCING, each replay's status
+"forcing") is evidence only: verdict.json `evidence.forcing`, `forcing_events`, and frames around it when a success is held.
 """
 from __future__ import annotations
 import argparse, json, os, sys, time, traceback
@@ -103,10 +104,12 @@ def main() -> int:
         reviews = [o.get("review") for o in outs]
         pending = ok and any(reviews)
         credited = ok and not pending
+        forcing = [o.get("forcing") for o in outs]          # evidence only: never a verdict
         grading = [o.get("grading") or {} for o in outs]
         out = {"success": int(credited), "success_pending_review": int(pending),
                "review_events": max(int((r or {}).get("count", 0)) for r in reviews),
                "review_max_depth_mm": max(float((r or {}).get("max_depth_mm", 0.)) for r in reviews),
+               "forcing_events": max(int((f or {}).get("count", 0)) for f in forcing),
                "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": 1,
                "infra_error": int(unstable), "simulator_instability": int(unstable),
                "instance_ok": int(bool(s.instance_matches)), "instance_exact": int(bool(s.instance_exact)),
@@ -124,6 +127,7 @@ def main() -> int:
                         runtime_binding=s.runtime_binding,
                         strict_goal=dict(replay=goal[0], row=goal[1]) if goal else None,
                         review=dict(pending=pending, replays=reviews) if any(reviews) else None,
+                        forcing=forcing if any(forcing) else None,
                         trajectory_sha256=hashlib.sha256(Path(a.traj).read_bytes()).hexdigest(),
                         instance_sha256=hashlib.sha256(Path(a.instance).read_bytes()).hexdigest())
         write(credited, out, evidence=evidence)
@@ -136,9 +140,10 @@ def main() -> int:
                 traceback.print_exc(file=sys.stderr); video_error = repr(exc)[:200]
             atomic_json(os.path.join(LOG_DIR, "media.json"), {"status": "error" if video_error else "complete", "error": video_error})
             write(credited, out, evidence=evidence)
-        if pending:      # frames around the review events, for the reviewer (one more replay; the verdict is committed)
+        if pending:      # frames around the review and forcing events, for the reviewer (one more replay; the verdict is committed)
             try:
-                events = next(r for r in reviews if r)["events"]
+                k = next(i for i, r in enumerate(reviews) if r)
+                events = reviews[k]["events"] + ((forcing[k] or {}).get("events") or [])
                 files = s.render_review_frames(acts, events, os.path.join(LOG_DIR, "review_frames"))
                 evidence["review"]["frames"] = [os.path.relpath(f, LOG_DIR) for f in files]
             except Exception as exc:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The tooling's physical-validity policy (rcb_topogym.py, tooling v15; before it the 2026-10-03 rules R1-R4): persistence
-counters, thresholds, the protective stop, the breakdown attribution, the review evidence and the guards on synthetic
+counters, thresholds, the forcing evidence, the breakdown attribution, the review evidence and the guards on synthetic
 contact / IPC / particle states and fake robots. No Genesis, no physics: the lab replays in
 docs/rcb/benchmarks/topogym.md are the physical evidence."""
 import ast
@@ -20,8 +20,8 @@ from topogym.tasks.base import RigidTaskDefinition, TaskDefinition  # noqa: E402
 
 DT = .0025
 WINDOW = M.rule_window_ticks(DT, M.CONTACT_RULE["window_s"])
-STOP = M.rule_window_ticks(DT, M.PROTECTIVE_STOP["window_s"])          # the protective stop's window (ticks)
-ATTRIBUTION = M.rule_window_ticks(DT, M.PROTECTIVE_STOP["attribution_s"])
+EVENT = M.rule_window_ticks(DT, M.FORCING["event_s"])                  # a forcing event's length (ticks)
+ATTRIBUTION = M.rule_window_ticks(DT, M.FORCING["attribution_s"])
 
 
 class ContactTask(RigidTaskDefinition):
@@ -124,25 +124,18 @@ class PureRules(unittest.TestCase):
         self.assertEqual(M.soft_rule_tick({}, {"rope": float("nan")}, {"a": float("inf")}), {})
 
     def test_history_validation(self):
-        M._validate_rules_history({"contact": {"over": 3}, "soft": {"inverted": {"rope": 2}}, "stop": {"left": 4}, "forced": 7})
+        M._validate_rules_history({"contact": {"over": 3}, "soft": {"inverted": {"rope": 2}}, "forced": 7})
         for bad in ({"contact": {"over": 0}}, {"contact": {"over": 1.5}}, {"other": {}}, {"soft": {"inverted": 3}},
-                    {"contact": {"x": 1}}, [], {"soft": []}, {"contact": None}, {"stop": {"left": 0}}, {"stop": []},
+                    {"contact": {"x": 1}}, [], {"soft": []}, {"contact": None}, {"stop": {"left": 4}},
                     {"forced": 0}, {"forced": 1.5}, {"forced": True}):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 M._validate_rules_history(bad)
 
-    def test_protective_stop_counters_per_arm(self):
-        counts, arm = M.protective_stop_tick({}, {"left": True, "right": False}, 3)
-        self.assertEqual((counts, arm), ({"left": 1}, None))
-        counts, arm = M.protective_stop_tick(counts, {"left": True, "right": True}, 3)
-        counts, arm = M.protective_stop_tick(counts, {"left": True, "right": True}, 3)
-        self.assertEqual((counts, arm), ({"left": 3, "right": 2}, "left"))
-        self.assertEqual(M.protective_stop_tick({"left": 99}, {}, 3), ({}, None))          # a break restarts it
-
     def test_policy_numbers(self):
-        self.assertEqual((STOP, ATTRIBUTION), (200, 100))
+        self.assertEqual((EVENT, ATTRIBUTION), (200, 100))
         self.assertGreater(M.BREAKDOWN_PENETRATION_M, M.CONTACT_RULE["held_deep_m"])
-        self.assertTrue(0. < M.PROTECTIVE_STOP["near_cap"] <= 1. and M.PROTECTIVE_STOP["contact_n"] > 0.)
+        self.assertTrue(0. < M.FORCING["near_cap"] <= 1. and M.FORCING["contact_n"] > 0.)
+        self.assertFalse(hasattr(M, "PROTECTIVE_STOP"))           # forcing is evidence only (the user, 2026-10-04)
 
 
 def rigid_entities():
@@ -246,11 +239,11 @@ class RigidContactEvidence(unittest.TestCase):
             self.task.validate_task_state({"rcb_rules": {"contact": {"over": -1}}})
 
 
-class ProtectiveStop(RigidContactEvidence):
-    """Layer 2: an arm drive at PROTECTIVE_STOP["near_cap"] of its cap or more while the arm or a part it holds presses
-    on something with PROTECTIVE_STOP["contact_n"] or more, on every tick of its window, ends the episode; within its
-    attribution window after it a breakdown is the agent's (forced_breakdown)."""
-    FORCE = M.PROTECTIVE_STOP["contact_n"] + 5.
+class Forcing(RigidContactEvidence):
+    """Layer 4: an arm drive at FORCING["near_cap"] of its cap or more while the arm or a part it holds presses on something
+    with FORCING["contact_n"] or more is forcing; a run of it for FORCING["event_s"] is a forcing event in the evidence. It
+    never ends the episode; within FORCING["attribution_s"] after it a breakdown is the agent's (forced_breakdown)."""
+    FORCE = M.FORCING["contact_n"] + 5.
 
     def setUp(self):
         super().setUp(arm=True)
@@ -264,42 +257,53 @@ class ProtectiveStop(RigidContactEvidence):
             return self.tick(0., held=True, force=100., extra=[(1, 2, depth, force)])
         return self.tick(depth, a=10, b=2, force=force)
 
-    def test_fires_after_the_window_only_with_a_readable_reason(self):
-        for _ in range(STOP - 1):
+    def test_forcing_is_recorded_and_never_ends_the_episode(self):
+        self.assertIsNone(self.session.monitor.forcing())
+        for _ in range(3 * EVENT):
             self.assertFalse(self.press().terminated)
-        result = self.press()
-        self.assertTrue(result.terminated)
-        self.assertFalse(result.task_success)
-        self.assertTrue(result.reason.startswith(
-            f"protective_stop: the arm's j1 drive was at 100 % of its torque cap (10 N m) while the gripper's finger pressed "
-            f"on the other with {self.FORCE:.0f} N, on every physics tick for 0.5 s"), result.reason)
-        report = self.session.monitor.read(episode=True)["protective_stop"]
-        self.assertEqual((report["longest_forcing_s"], report["max_drive_fraction_while_pressing"]), (STOP * DT, 1.))
+        forcing = self.session.monitor.forcing()
+        self.assertEqual((forcing["count"], forcing["longest_s"]), (1, 3 * EVENT * DT))
+        e = forcing["events"][0]
+        self.assertEqual((e["arm"], e["joint"], e["fraction"], e["cap_nm"], e["ticks"], e["max_force_n"]),
+                         ("arm", "j1", 1., 10., 3 * EVENT, self.FORCE))
+        self.assertEqual((e["pressing"], e["on"], e["physics_step"]), ("the gripper's finger", "the other", EVENT))
+        report = self.session.monitor.read(episode=True)["forcing"]
+        self.assertEqual((report["events"], report["longest_forcing_s"], report["max_drive_fraction_while_pressing"]),
+                         (1, 3 * EVENT * DT, 1.))
+        self.assertNotIn("stop", (self.task.task_state.get("rcb_rules") or {}))
 
-    def test_below_the_cap_fraction_or_the_contact_force_never_stops(self):
-        for _ in range(2 * STOP):
-            self.assertFalse(self.press(frac=M.PROTECTIVE_STOP["near_cap"] - .01).terminated)
-            self.assertFalse(self.press(force=M.PROTECTIVE_STOP["contact_n"] - 1.).terminated)
+    def test_below_the_cap_fraction_or_the_contact_force_is_no_forcing(self):
+        for _ in range(2 * EVENT):
+            self.assertFalse(self.press(frac=M.FORCING["near_cap"] - .01).terminated)
+            self.assertFalse(self.press(force=M.FORCING["contact_n"] - 1.).terminated)
         self.effort[0] = np.array([CAPS[0], CAPS[1]])                     # at the cap in free air
-        for _ in range(2 * STOP):
+        for _ in range(2 * EVENT):
             self.assertFalse(self.tick(0., a=1, b=2, force=500.).terminated)    # the piece alone on the other body
+        self.assertIsNone(self.session.monitor.forcing())
+        self.assertEqual(self.session.monitor.read(episode=True)["forcing"]["longest_forcing_s"], 0.)
 
-    def test_a_break_restarts_the_window(self):
-        for _ in range(STOP - 1):
+    def test_a_break_ends_an_event_and_a_short_run_records_none(self):
+        for _ in range(EVENT - 1):
             self.press()
         self.press(frac=.1)
-        for _ in range(STOP - 1):
-            self.assertFalse(self.press().terminated)
-        self.assertEqual(self.task.task_state["rcb_rules"]["stop"], {"arm": STOP - 1})
+        self.assertIsNone(self.session.monitor.forcing())                  # 199 ticks: no event
+        for _ in range(EVENT):
+            self.press()
+        self.press(frac=.1)
+        for _ in range(EVENT + 5):
+            self.press()
+        forcing = self.session.monitor.forcing()
+        self.assertEqual((forcing["count"], [e["ticks"] for e in forcing["events"]]), (2, [EVENT, EVENT + 5]))
 
     def test_a_held_piece_pressing_counts_its_own_grip_does_not(self):
         self.effort[0] = np.array([CAPS[0], 0.])
-        for _ in range(2 * STOP):                                           # gripping hard, nothing else touched
+        for _ in range(2 * EVENT):                                          # gripping hard, nothing else touched
             self.assertFalse(self.tick(0., held=True, force=500.).terminated)
-        for _ in range(STOP - 1):
+        self.assertIsNone(self.session.monitor.forcing())
+        for _ in range(EVENT):
             self.assertFalse(self.press(held=True).terminated)
-        result = self.press(held=True)
-        self.assertIn("while the piece it holds pressed on the other", result.reason)
+        e = self.session.monitor.forcing()["events"][0]
+        self.assertEqual((e["pressing"], e["on"]), ("the piece it holds", "the other"))
 
     def test_a_breakdown_within_the_window_after_forcing_is_the_agents(self):
         for _ in range(10):
@@ -312,6 +316,7 @@ class ProtectiveStop(RigidContactEvidence):
         self.assertIn("right after forcing: the arm's j1 drive was at 100 %", result.reason)
         self.assertIn("(0.25 s before)", result.reason)
         self.assertIsNone(self.session.instability)
+        self.assertIsNone(self.session.monitor.forcing())                  # 10 ticks: forcing, but no event
 
     def test_a_breakdown_later_than_the_window_is_a_simulator_instability(self):
         for _ in range(10):
@@ -337,18 +342,17 @@ class ProtectiveStop(RigidContactEvidence):
         self.assertEqual(self.task.update(state, DT).reason, M.SIMULATOR_INSTABILITY)
         self.assertEqual(self.session.instability["kind"], "particle_speed")
 
-    def test_the_counters_follow_rewind(self):
-        for _ in range(60):
+    def test_the_forcing_memory_follows_rewind(self):
+        for _ in range(5):
             self.press()
         saved = self.task.get_state()
-        self.assertEqual(saved["task_state"]["rcb_rules"], {"stop": {"arm": 60}, "forced": ATTRIBUTION})
-        for _ in range(30):
-            self.press()
-        self.task.set_state(saved)
-        self.step = 60
-        for _ in range(STOP - 61):
-            self.assertFalse(self.press().terminated)
-        self.assertTrue(self.press().terminated)
+        self.assertEqual(saved["task_state"]["rcb_rules"], {"forced": ATTRIBUTION})
+        for _ in range(ATTRIBUTION + 10):
+            self.press(frac=0.)                                             # the memory runs out
+        self.assertNotIn("rcb_rules", self.task.task_state)
+        self.task.set_state(saved)                                          # a rewind restores it
+        self.step = 5
+        self.assertTrue(self.tick(.012).reason.startswith("forced_breakdown:"))
 
 
 class SoftIntegrityRule(unittest.TestCase):
@@ -571,13 +575,22 @@ class InstructionText(unittest.TestCase):
         import topogym_rules as R
         self.assertEqual(R.CONTACT_RULE, M.CONTACT_RULE)
         self.assertEqual(R.SOFT_RULE, M.SOFT_RULE)
-        self.assertEqual(R.PROTECTIVE_STOP, M.PROTECTIVE_STOP)
+        self.assertEqual(R.FORCING, M.FORCING)
         self.assertEqual(R.BREAKDOWN_PENETRATION_M, M.BREAKDOWN_PENETRATION_M)
         self.assertEqual(R.PARTICLE_SPEED_LIMIT_M_S, M.PARTICLE_SPEED_LIMIT_M_S)
         self.assertEqual(R.TABLE_GUARD_MARGIN_M, M.TABLE_GUARD_MARGIN_M)
         self.assertEqual(R.table_guard_words(), M.table_guard_words())
-        self.assertEqual(R.FAIL_STRINGS["all"], [f'"{M.PROTECTIVE_STOP_CODE}: <what>"', f'"{M.FORCED_BREAKDOWN}: <what>"'])
+        self.assertEqual(R.FAIL_STRINGS["all"], [f'"{M.FORCED_BREAKDOWN}: <what>"'])
         self.assertFalse(any("forced" in s and "breakdown" not in s for v in R.FAIL_STRINGS.values() for s in v))
+        import json
+        for fam in ("interlocked_claws", "knot_untying", "blanket_flatten"):
+            slug = fam.replace("_", "-")
+            inst = json.loads((ROOT / f"tasks/topogym-{slug}-easy-i00-privileged/environment/instance.json").read_text())
+            for limited in (False, True):
+                text = " ".join(R.grader_details(fam, inst, limited=limited))
+                self.assertNotIn("protective", text)
+                self.assertIn("Forcing is recorded, not judged", text)
+                self.assertIn("does not end the episode", text)
         text = (ROOT / "scripts/topogym_mk_limited.py").read_text()
         self.assertIn(f"{M.JOINT_STEP_LIMIT_RAD:g} rad per control step", text)
         self.assertIn(f"{M.IK_JUMP_LIMIT_RAD:g} rad from the current joints", text)

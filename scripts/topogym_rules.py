@@ -13,7 +13,7 @@ SOFT = {"knot_untying", "rope_threading", "orbits", "slotted_post_ring"}
 # numbers match): it replaces the "at most 1 mm / 2 mm" and the instant volume-failure wording of his text.
 CONTACT_RULE = dict(deep_m=.003, sustained_m=.001, held_deep_m=.004, held_sustained_m=.002, window_s=.25)   # review events
 SOFT_RULE = dict(window_s=.25, residual_m=.002)
-PROTECTIVE_STOP = dict(near_cap=.95, contact_n=20., window_s=.5, attribution_s=.25)
+FORCING = dict(near_cap=.95, contact_n=20., event_s=.5, attribution_s=.25)
 BREAKDOWN_PENETRATION_M = .010
 PARTICLE_SPEED_LIMIT_M_S = 20.0
 TABLE_GUARD_MARGIN_M = -.015
@@ -48,7 +48,7 @@ TOLERANCE_WORDS = {
 }
 # failure strings as `s.status()["episode_end"]` reports them (unlimited); limited mode reports `task_failed`
 FAIL_STRINGS = {
-    "all": ['"protective_stop: <what>"', '"forced_breakdown: <what>"'],
+    "all": ['"forced_breakdown: <what>"'],
     "rigid": ['"A task body fell below the table"'],
     "horseshoe_ring": ['"Physical chain/eye connection lost"'],
     "buzz_wire_3d": ['"wire_touched"', '"Wand fell below table"'],
@@ -117,10 +117,10 @@ def grader_details(fam, inst, *, limited):
         c = CONTACT_RULE
         out.append(f"Contact penetration as this benchmark grades it (it replaces the \"at most {_mm(c['sustained_m'], 0)} / "
                    f"{_mm(c['held_sustained_m'], 0)}\" wording above): penetration is recorded, it never ends the episode by "
-                   f"itself. A success during which a task contact went deeper than {_mm(c['deep_m'], 0)}, or stayed deeper than "
-                   f"{_mm(c['sustained_m'], 0)} for at least {c['window_s']:g} s ({window_ticks} consecutive physics ticks), is not "
-                   f"credited automatically but held for review, with the recorded evidence and frames (for a finger contact with "
-                   f"a held piece: {_mm(c['held_deep_m'], 0)}, or {_mm(c['held_sustained_m'], 0)} for {c['window_s']:g} s); a "
+                   f"itself. A success with deep interpenetration (a task contact deeper than {_mm(c['deep_m'], 0)}, or deeper "
+                   f"than {_mm(c['sustained_m'], 0)} for at least {c['window_s']:g} s: {window_ticks} consecutive physics ticks; for a "
+                   f"finger contact with a held piece {_mm(c['held_deep_m'], 0)}, or {_mm(c['held_sustained_m'], 0)} for "
+                   f"{c['window_s']:g} s) is not credited automatically but reviewed, with the recorded evidence and frames; a "
                    f"clean success is credited automatically. A task contact deeper than {_mm(BREAKDOWN_PENETRATION_M, 0)} is a "
                    "simulator breakdown (below).")
         out.append(f"Contact penetration is read from the contacts at the end of every physics tick ({dt * 1000:g} ms; {decimation} ticks per "
@@ -145,18 +145,20 @@ def grader_details(fam, inst, *, limited):
                + FINGERTIP_WORDS.get(_robot_of(inst), "beyond the tool frame (TCP)")
                + ". Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle "
                "stalls at that torque.")
-    ps = PROTECTIVE_STOP
-    out.append(f"Protective stop: if an arm drive (not a gripper drive) stays at {ps['near_cap']:.0%} of its torque cap or more "
-               f"while that arm's gripper, or a part it holds, presses on anything else with {ps['contact_n']:g} N or more in total, "
-               f"on every physics tick for {ps['window_s']:g} s, the episode ends as a failure (protective_stop: which drive, "
-               "what it pressed on, how hard). Pushing on through a stalled motion is forcing; easing off ends the condition.")
+    ps = FORCING
+    out.append(f"Forcing is recorded, not judged: an arm drive (not a gripper drive) at {ps['near_cap']:.0%} of its torque cap "
+               f"or more while that arm's gripper, or a part it holds, presses on anything else with {ps['contact_n']:g} N or "
+               f"more in total is forcing; {ps['event_s']:g} s of it on every physics tick is a forcing event in the evidence "
+               + ("(`meta[\"safety\"]`)" if limited else "(`s.safety()`, `s.status()[\"forcing\"]`)")
+               + ", shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the "
+               "grade by itself.")
     broken = (["a non-finite state", f"a task contact deeper than {_mm(BREAKDOWN_PENETRATION_M, 0)}"] if fam in RIGID else
               ["an invalid soft-body solver state"] if fam in SOFT else
               [f"a cloth particle faster than {PARTICLE_SPEED_LIMIT_M_S:g} m/s"] if fam == "blanket_flatten" else [])
     if broken:
         out.append(f"Simulator breakdown ({_or(broken)}): the episode ends as an infrastructure error, not your failure, "
-                   f"unless the protective stop's condition held (even briefly) within the {ps['attribution_s']:g} s before it: then "
-                   "it is your failure (forced_breakdown: what broke and what forced it).")
+                   f"unless an arm was forcing (even for one tick) within the {ps['attribution_s']:g} s before it: then it is "
+                   "your failure (forced_breakdown: what broke and what forced it).")
     if fam == "horseshoe_ring":
         out.append("The four permanent connections (the upper and lower eye of each horseshoe with its chain link) are "
                    "checked at every tick by the linking number of the two loops.")
@@ -290,9 +292,9 @@ def grader_details(fam, inst, *, limited):
     if not limited:
         strings = (FAIL_STRINGS["rigid"] if fam in RIGID else []) + FAIL_STRINGS.get(fam, []) + FAIL_STRINGS["all"]
         out.append("A failure is reported in `s.status()[\"episode_end\"]` as " + _or(strings) + " (<what>: the "
-                   "readable reason); `s.safety()` reports the arms' pressing loads, contact depths, volume ratios and "
-                   "table-guard stops against these limits" + (", and `s.status()[\"review\"]` the deep task contacts that "
-                   "would hold a success for review" if fam in RIGID else "") + ".")
+                   "readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops "
+                   "against these limits" + (", and `s.status()[\"review\"]` the deep task contacts that would hold a success "
+                   "for review" if fam in RIGID else "") + ".")
     return out
 
 

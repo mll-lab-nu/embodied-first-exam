@@ -188,7 +188,7 @@ the PD gains and the tool frames; `spec["world"]` the frame conventions.
   another IK branch, which would swing the arm): split long moves into rows a few cm and degrees apart.
 - Both action types: no gripper target goes lower than {table_guard_words()}; a target that would bring any part of
   a gripper lower is stopped there and listed in `meta["clipped"]`. Every response's `meta["safety"]` reports, since the
-  previous call, the arms' pressing loads against the protective stop, the deepest task contact, the longest time above
+  previous call, forcing (the arms' pressing loads and forcing events), the deepest task contact, the longest time above
   its sustained limit and the review events (rigid families), the lowest rope / cord volume ratio (soft families) and the
   table-guard stops, against the limits above.
 

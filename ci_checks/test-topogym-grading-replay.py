@@ -253,12 +253,14 @@ def module(name, relative):
 
 REVIEW = dict(pending=True, count=1, max_depth_mm=3.4, events=[dict(kind="deep", step=3, physics_step=27, ticks=2,
                                                                      bodies=["the claw 1", "the claw 0"], depth_mm=3.4, force_n=42.)])
+FORCING = dict(count=1, longest_s=.6, events=[dict(arm="right", joint="waist", step=2, physics_step=17, ticks=240, fraction=1.,
+                                                   cap_nm=12.9, max_force_n=102., pressing="the piece 1 it holds", on="the piece 0")])
 
 
-def replay_status(success, strict=None, hold=0, row=4, review=None):
+def replay_status(success, strict=None, hold=0, row=4, review=None, forcing=None):
     """A Session.replay status: strict=None -> a plain replay (no grading record)."""
     st = dict(success=success, state_sha="s", sim_steps=row + hold, physics_steps=10 * (row + hold), sim_time_s=.25,
-              progress=float(success), episode_end="success" if success else None, review=review)
+              progress=float(success), episode_end="success" if success else None, review=review, forcing=forcing)
     if strict is not None:
         st["grading"] = dict(revision=M.GRADING_REVISION, rows=row, strict_success=strict, success_row=row if strict else None,
                              hold_steps=hold, hold_limit_steps=80, success_in_hold=success and hold > 0,
@@ -332,13 +334,21 @@ class Graders(unittest.TestCase):
         self.assertIsNone(verdict["evidence"]["review"])
 
     def test_privileged_a_success_with_a_deep_contact_is_held_for_review(self):
-        reward, verdict, calls = self.privileged([replay_status(True), replay_status(True, review=REVIEW)])
+        reward, verdict, calls = self.privileged([replay_status(True), replay_status(True, review=REVIEW, forcing=FORCING)])
         self.assertEqual((reward["success"], reward["success_pending_review"], reward["all_success"]), (0, 1, 1))
-        self.assertEqual((reward["review_events"], reward["review_max_depth_mm"]), (1, 3.4))
+        self.assertEqual((reward["review_events"], reward["review_max_depth_mm"], reward["forcing_events"]), (1, 3.4, 1))
         self.assertFalse(verdict["success"])
         self.assertEqual(verdict["evidence"]["review"]["replays"], [None, REVIEW])
+        self.assertEqual(verdict["evidence"]["forcing"], [None, FORCING])
         self.assertEqual(verdict["evidence"]["review"]["frames"], ["review_frames/step_00003.png"])
-        self.assertIn(dict(frames=[3]), calls)                      # frames around the event, one more replay
+        self.assertIn(dict(frames=[3, 2]), calls)                   # frames around the event and the forcing, one more replay
+
+    def test_privileged_forcing_alone_is_evidence_and_the_success_is_credited(self):
+        reward, verdict, calls = self.privileged([replay_status(True, forcing=FORCING), replay_status(True, forcing=FORCING)])
+        self.assertEqual((reward["success"], reward["success_pending_review"], reward["forcing_events"]), (1, 0, 1))
+        self.assertEqual(verdict["evidence"]["forcing"], [FORCING, FORCING])
+        self.assertIsNone(verdict["evidence"]["review"])
+        self.assertFalse(any("frames" in c for c in calls))
 
     def test_privileged_review_never_rescues_a_failure(self):
         reward, verdict, calls = self.privileged([replay_status(False, review=REVIEW), replay_status(True)])
@@ -373,6 +383,8 @@ class Graders(unittest.TestCase):
         base = dict(finalized=True, deterministic=True, instance_matches=True, success=True, replay_success=True, reason="success")
         reward = self.standard(dict(base, review=None, replay_review=None))
         self.assertEqual((reward["success"], reward["success_pending_review"], reward["review_events"]), (1, 0, 0))
+        reward = self.standard(dict(base, forcing=FORCING, replay_forcing=FORCING))          # forcing alone: evidence only
+        self.assertEqual((reward["success"], reward["success_pending_review"], reward["forcing_events"]), (1, 0, 1))
         for live, replay in ((REVIEW, None), (None, REVIEW), (REVIEW, REVIEW)):
             reward = self.standard(dict(base, review=live, replay_review=replay))
             self.assertEqual((reward["success"], reward["success_pending_review"], reward["review_max_depth_mm"]), (0, 1, 3.4))

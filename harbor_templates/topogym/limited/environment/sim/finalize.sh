@@ -82,6 +82,7 @@ if isinstance(a, dict):                  # a replay result (None: the replay pro
     out["replay_grading"] = g or None; out["replay_grading_policy"] = bool(r.get("grading_replay"))
     out["replay_hold_steps"] = int(g.get("hold_steps", 0)); out["replay_tolerance_needed"] = bool(g.get("tolerance_needed"))
     out["replay_review"] = a.get("review")   # the replay's review events (deep task contacts; the live ones: "review")
+    out["replay_forcing"] = a.get("forcing")  # the replay's forcing events (evidence only; the live ones: "forcing")
     out["review_frames"] = r.get("review_frames") or []
 elif r.get("error"):
     out["error"] = f"replay: {r['error']}"
