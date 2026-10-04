@@ -10,12 +10,12 @@ standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the
 Status (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy
 smoke (`jar_transport/task_0000`) passes in the image. The included tasks below are frozen (the same state hash and
 object poses in fresh containers, also without network) and have a `full` oracle in both modes: a time-resampled public
-demonstration (lid 16: with its cap placement redone) that Harbor's oracle run scores 1 (privileged: two fresh replays
-identical; standard: streamed through the service, live = both fresh replays), with `nop` 0; every standard twin passes
-the eai-standard/2.2 conformance check. Blocked (no oracle that meets the bar; `families.json` `blocked` says why):
-`dusty_transfer/task_0002` and `task_0000` (the poured potato bounces off the flat plate; the potato rolls into the
-fingers when the tray is lifted) and `lid_transport/task_0014` (its lid-on-kettle goal cannot hold under the handle
-arch; replaced by `lid_transport/task_0007`). The other reserve tasks have not run.
+demonstration (lid 16 and lid 7: with one step redone on the tooling) that Harbor's oracle run scores 1 (privileged: two
+fresh replays identical; standard: streamed through the service, live = both fresh replays), with `nop` 0; every
+standard twin passes the eai-standard/2.2 conformance check. Blocked (no oracle that meets the bar; `families.json`
+`blocked` says why): `dusty_transfer/task_0002` and `task_0000` (the poured potato bounces off the flat plate; the
+potato rolls into the fingers when the tray is lifted) and `lid_transport/task_0014` (its lid-on-kettle goal cannot hold
+under the handle arch; replaced by `lid_transport/task_0007`). The other reserve tasks have not run.
 
 | Task | ManiGuard-Bench | State hash | Strict goal held at step (oracle) |
 |---|---|---|---|
@@ -134,7 +134,9 @@ reaches the strict goal (the README says which failed and why). Where none can, 
 redoes the failing step on the tooling: `lid_transport/task_0016`, whose four demonstrations tried never get the cap welded
 to the jug (it falls off when the jug is lifted, though ManiGuard's own evaluator counts them as successes), lowers the cap
 with its attachment point over the jug's until OmniGibson welds it; its `oracle_gen.py` runs in two steps (host resampling,
-then `rcb_maniguard.py run-oracle` in the image). Both go to `solution/` only (the oracle agent's mount; the leak check keeps them and the
+then `rcb_maniguard.py run-oracle` in the image). `lid_transport/task_0007`, whose demonstrations carry the jar by its welded
+lid (the evaluator counts only a grasp of the jar itself as holding it), keeps the demonstration up to the welded lid and
+then takes the jar by its wall and carries it (the same two-step `oracle_gen.py`). Both go to `solution/` only (the oracle agent's mount; the leak check keeps them and the
 dataset's name out of everything the agent reads). A task's `oracle` becomes `full` only once Harbor's oracle run scores 1.
 The standard twin's oracle streams the same rows through its service (`solution/oracle_replay.py`: one-second
 `joint_position` chunks, `interpolate="hold"`, one row per control step) and is `full` once Harbor's oracle run of the twin
