@@ -10,12 +10,12 @@ standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the
 Status (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy
 smoke (`jar_transport/task_0000`) passes in the image. The included tasks below are frozen (the same state hash and
 object poses in fresh containers, also without network) and have a `full` oracle in both modes: a time-resampled public
-demonstration (lid 16 and lid 7: with one step redone on the tooling) that Harbor's oracle run scores 1 (privileged: two
-fresh replays identical; standard: streamed through the service, live = both fresh replays), with `nop` 0; every
-standard twin passes the eai-standard/2.2 conformance check. Blocked (no oracle that meets the bar; `families.json`
-`blocked` says why): `dusty_transfer/task_0002` and `task_0000` (the poured potato bounces off the flat plate; the
-potato rolls into the fingers when the tray is lifted) and `lid_transport/task_0014` (its lid-on-kettle goal cannot hold
-under the handle arch; replaced by `lid_transport/task_0007`). The other reserve tasks have not run.
+demonstration (lid 16, lid 7 and cabinet 20: with one step redone on the tooling) that Harbor's oracle run scores 1
+(privileged: two fresh replays identical; standard: streamed through the service, live = both fresh replays), with `nop`
+0; every standard twin passes the eai-standard/2.2 conformance check. Blocked (no oracle that meets the bar;
+`families.json` `blocked` says why): `dusty_transfer/task_0002` and `task_0000` (the poured potato bounces off the flat
+plate; the potato rolls into the fingers when the tray is lifted) and `lid_transport/task_0014` (its lid-on-kettle goal
+cannot hold under the handle arch; replaced by `lid_transport/task_0007`). The other reserve tasks have not run.
 
 | Task | ManiGuard-Bench | State hash | Strict goal held at step (oracle) |
 |---|---|---|---|
@@ -25,7 +25,7 @@ under the handle arch; replaced by `lid_transport/task_0007`). The other reserve
 | `maniguard-stack-retrieve-i21` | `stack_retrieve/task_0021` | `188ff9254232eb3f` | 1474 |
 | `maniguard-dusty-transfer-i24` | `dusty_transfer/task_0024` | `547e404cadce1203` | 972 |
 | `maniguard-stack-retrieve-i10` | `stack_retrieve/task_0010` | `54fd5209a5c360c5` | 1560 |
-| `maniguard-cabinet-pickup-i20` | `cabinet_pickup/task_0020` | `23d6be8e9af9ba1e` | 2130 |
+| `maniguard-cabinet-pickup-i20` | `cabinet_pickup/task_0020` | `23d6be8e9af9ba1e` | 2125 |
 | `maniguard-lid-transport-i16` | `lid_transport/task_0016` | `e5b674c6e3831f68` | 687 |
 | `maniguard-jar-transport-i02` | `jar_transport/task_0002` | `58f0cb6d7738fb8d` | 514 |
 | `maniguard-lid-transport-i12` | `lid_transport/task_0012` | `1a9beafecba5e52f` | 561 |
@@ -136,7 +136,9 @@ to the jug (it falls off when the jug is lifted, though ManiGuard's own evaluato
 with its attachment point over the jug's until OmniGibson welds it; its `oracle_gen.py` runs in two steps (host resampling,
 then `rcb_maniguard.py run-oracle` in the image). `lid_transport/task_0007`, whose demonstrations carry the jar by its welded
 lid (the evaluator counts only a grasp of the jar itself as holding it), keeps the demonstration up to the welded lid and
-then takes the jar by its wall and carries it (the same two-step `oracle_gen.py`). Both go to `solution/` only (the oracle agent's mount; the leak check keeps them and the
+then takes the jar by its wall and carries it (the same two-step `oracle_gen.py`). `cabinet_pickup/task_0020`, whose demonstration pushes the drawer
+only just inside the closed tolerance (0.7 mm), ends that push 2 cm deeper so the drawer shuts fully (the same two-step
+`oracle_gen.py`). Both go to `solution/` only (the oracle agent's mount; the leak check keeps them and the
 dataset's name out of everything the agent reads). A task's `oracle` becomes `full` only once Harbor's oracle run scores 1.
 The standard twin's oracle streams the same rows through its service (`solution/oracle_replay.py`: one-second
 `joint_position` chunks, `interpolate="hold"`, one row per control step) and is `full` once Harbor's oracle run of the twin
