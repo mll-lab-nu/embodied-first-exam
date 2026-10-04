@@ -29,8 +29,8 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.0.1) and `CONTRIBUTING.md
   Unattended batches: `scripts/run_agent_batch.sh` (lanes with per-job claims; configured by environment variables,
   docs/RUNNING.md); its runner-side tools (`log_mirror.py`, `mem_guard.py`, `scan_secrets.py`, `account_failure_check.py`)
   are not task code.
-- `eai-standard/2.2` (docs/STANDARD_MODE_2_2.md), served by the BEHAVIOR-1K, RoboLab, RoboWits and RoboPaint standard
-  tasks: its layer (`rcb_limited.py` with crash recovery, `rcb_client.py`, `rcb1.py`, `run.sh`) has one source,
+- `eai-standard/2.2` (docs/STANDARD_MODE_2_2.md), served by the BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint and
+  MolmoSpaces standard tasks: its layer (`rcb_limited.py` with crash recovery, `rcb_client.py`, `rcb1.py`, `run.sh`) has one source,
   `scripts/eai_standard/` (D9), copied unchanged into every 2.2 task (`check-tooling-identity.sh`); each benchmark adds
   only its adapter `environment/sim/server.py` (`scripts/eai_standard/toy_server.py` is the smallest one).
   `python3 scripts/eai_standard/selftest.py` tests the crash recovery on the CPU in about two minutes.
