@@ -63,7 +63,7 @@ def main(argv=None):
             for path in paths if isinstance(paths, list) else [paths]:
                 require_task(path, ROOT)
             if args.command == "bind" and args.release != "active":
-                raise BridgeError("New oracle experiments use the active v15 release")
+                raise BridgeError("New oracle experiments use the active release")
         if args.command == "inventory":
             from topogym.planning.harbor_bridge.catalog import inventory as inspect
             sys.path.insert(0, str(ROOT / "scripts"))

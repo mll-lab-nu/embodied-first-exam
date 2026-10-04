@@ -9,6 +9,15 @@ import sys
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
+FIRST_BOUND_RELEASE = 15   # tooling v15 introduced runtime bindings and release receipts (task_release.json)
+
+
+def bound_release(version):
+    """True for a tooling version whose packages carry a runtime binding (v15 and later), False for older labels."""
+    try:
+        return int(str(version)) >= FIRST_BOUND_RELEASE
+    except (TypeError, ValueError):
+        return False
 
 
 def digest(value):
@@ -99,7 +108,8 @@ def stamp_task(task, root=ROOT):
     task = Path(task)
     expected, lock = identity(root), task_lock(task)
     if lock["runtime"]["source"] != expected["source"] or lock["tooling_sha256"] != expected["tooling_sha256"]:
-        raise ValueError("Task runtime/tooling differs from the selected v15 source; rebuild the image and task")
+        raise ValueError(f"Task runtime/tooling differs from the selected v{expected['tooling_version']} source; "
+                         "rebuild the image and task")
     document = dict(schema_version=1, release=expected, runtime_binding_sha256=digest(lock))
     (task / "task_release.json").write_text(json.dumps(document, indent=2) + "\n")
     return document
@@ -140,7 +150,7 @@ def require_task(task, root=ROOT, *, inspect_docker=False, registered=False):
             variation=instance["variation_id"], seed=instance["seed"],
             parameters=instance["simulator"].get("task_parameters"))
         if params != (instance["simulator"].get("task_parameters") or {}):
-            raise ValueError("Task parameters omit or override the selected v15 environment profile")
+            raise ValueError(f"Task parameters omit or override the selected v{expected['tooling_version']} environment profile")
         def contains(actual, required):
             if isinstance(required, dict):
                 return isinstance(actual, dict) and all(k in actual and contains(actual[k], v) for k, v in required.items())
@@ -148,12 +158,12 @@ def require_task(task, root=ROOT, *, inspect_docker=False, registered=False):
                 return isinstance(actual, list) and len(actual) == len(required) and all(contains(a, b) for a, b in zip(actual, required))
             return actual == required
         if not contains(instance["simulator"], overrides):
-            raise ValueError("Simulator options differ from the selected v15 environment profile")
+            raise ValueError(f"Simulator options differ from the selected v{expected['tooling_version']} environment profile")
     if registered:
         target = release(root)
         catalog_path = target.get("runtime_catalog")
         if not catalog_path:
-            raise ValueError("Active v15 task catalog has not been frozen yet")
+            raise ValueError(f"Active v{expected['tooling_version']} task catalog has not been frozen yet")
         catalog = json.loads((root / catalog_path).read_text())
         matches = [row for row in catalog["tasks"] if Path(row["task"]).name == task.name]
         if len(matches) != 1:

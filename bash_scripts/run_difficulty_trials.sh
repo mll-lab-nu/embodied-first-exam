@@ -180,7 +180,7 @@ else
   flock -u "$build_lock"
 fi
 # Explicit controller images also have to match the chosen release. A resumed
-# v15 run keeps its original controller/source; its manifest is checked inside.
+# run keeps its original controller/source (v15 or later); its manifest is checked inside.
 if [[ "$route" == eval && "$help_only" == 0 && -f "$ROOT/ci_checks/topogym_active_release.json" ]]; then
   docker run --rm --network none --entrypoint python \
     --mount "type=bind,src=$ROOT,dst=/requested-release,readonly" "$controller_image" -c '
@@ -189,7 +189,7 @@ sys.path.insert(0, "/opt/topogym/scripts")
 from topogym_versions import identity
 actual, expected = identity("/opt/topogym"), identity("/requested-release")
 if actual["tooling_version"] != expected["tooling_version"] or (sys.argv[1] == "0" and actual != expected):
-    raise SystemExit("Controller does not match the active release; rebuild it, or resume the original v15 run")
+    raise SystemExit("Controller does not match the active release; rebuild it, or resume the original run")
 ' "$resume" || fail 'controller release validation failed'
 fi
 # Credentials/argv cross the Docker boundary through a private read-only file mount,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare explicit v15 merge inputs and image-backed build commands; no success claims.
+"""Prepare explicit merge inputs of the active release and image-backed build commands; no success claims.
 
 The published v14 task tree is read-only. Outputs are manager build recipes, not
 frozen instances: only make-instance in the candidate image can create those.

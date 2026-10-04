@@ -1,11 +1,11 @@
-"""Public v15 environment choices shared by fixed and sampled task builders.
+"""Public environment choices of the active release (merged-v16), shared by fixed and sampled task builders.
 
 This module contains environment parameters only, never oracle routes. Scene
 draws keep their seed and placement; explicit release leaves override defaults.
 """
 from copy import deepcopy
 
-PROFILE = "merged-v15"
+PROFILE = "merged-v16"
 IPC_FAMILIES = frozenset({"knot_untying", "rope_threading", "orbits", "slotted_post_ring"})
 
 

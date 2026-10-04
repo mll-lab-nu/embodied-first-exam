@@ -1,6 +1,6 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
-当前唯一新实验目标是 tooling **v15** / `0.2.13-dev-cu128`。根目录 `tasks/` 是历史任务包。
+当前唯一新实验目标是 tooling **v16** / `0.2.14-dev-cu128`（merged-v16：v15 候选流程与环境参数，加上评分回放和物理有效性规则，见 [版本说明](benchmarks/topogym.md)；v15 候选的工具哈希已冻结）。根目录 `tasks/` 是历史任务包。
 先按根 README 的候选构建流程完成 `topogym_candidate_pipeline.py --phase all`，再设置：
 
 ```bash
@@ -8,8 +8,8 @@ export TASKS_ROOT="$(.venv-gs121-nyx/bin/python scripts/topogym_versions.py task
 .venv-gs121-nyx/bin/python scripts/topogym_versions.py list --inspect-docker
 ```
 
-选择器在 v15 尚未具备完整验收证据时明确报错。新批量实验和随机难度实验使用同一份 v15 环境参数；
-随机实验仍保留随机 seed 和场景扰动。下方历史验收记录保留发生时的版本，不作为 v15 成功证据。
+选择器在活动版本尚未具备完整验收证据时明确报错。新批量实验和随机难度实验使用同一份活动版本环境参数；
+随机实验仍保留随机 seed 和场景扰动。下方历史验收记录保留发生时的版本，不作为当前版本的成功证据。
 重评分只读取原任务路径，并把结果写入新的 `regrades/` 目录，不覆盖原始 verdict。
 
 
@@ -409,11 +409,11 @@ scripts/make_two_mode_report_zh.py jobs/agents <unlimited 作业> <limited 作�
 - **limited：`tests/grade.py`（21 行）**：只读 sim 写的 `/data/final.json`。`success = 现场成功 且 sim 的重放也成功`（17 行）。没有 `final.json` 时写 `missing_log=1`。
 - **`test.sh`**：第一件事是清空 `/logs/verifier`。Harbor 把这个目录也挂进了 agent 的容器，清空后，agent 预先放进去的假分数文件不可能被当成成绩。
 
-**regrade（重判）是什么意思**：不是换一种评分，而是“用同一个评分器，在新容器里把同一条轨迹再判一次解开没有”。参考仓库有这个脚本（`scripts/regrade_trials.sh`），是因为评分容器偶尔会因为基础设施问题出错，比如和其他作业抢 GPU 导致 CUDA 显存不足。这时 `grader_error=1`，或者没有录出视频。重判不需要 agent 重新跑一遍，v15 重评写入独立输出目录，原来的 `reward.json` 保持不变。
+**regrade（重判）是什么意思**：不是换一种评分，而是“用同一个评分器，在新容器里把同一条轨迹再判一次解开没有”。参考仓库有这个脚本（`scripts/regrade_trials.sh`），是因为评分容器偶尔会因为基础设施问题出错，比如和其他作业抢 GPU 导致 CUDA 显存不足。这时 `grader_error=1`，或者没有录出视频。重判不需要 agent 重新跑一遍，重评写入独立输出目录，原来的 `reward.json` 保持不变。
 
 ### 2.4 两个生成器：`scripts/topogym_mk_task.py`、`scripts/topogym_mk_limited.py`（对应参考仓库的 `robowits_mk_task.py`、`robowits_mk_limited.py`）
 
-- **`topogym_mk_task.py <家族>`** 默认生成候选目录 `runs/task_candidates/v15/topogym-<家族>-i00-privileged/`，固定套件由 candidate pipeline 指定独立目录：
+- **`topogym_mk_task.py <家族>`** 默认生成候选目录 `runs/task_candidates/v<活动 tooling>/topogym-<家族>-i00-privileged/`，固定套件由 candidate pipeline 指定独立目录：
   1. 从 cube 模板复制共享文件（`SHARED`，19 行）：工具、Dockerfile、compose、`grade.py`；
   2. 调用 `rcb_topogym.py make-instance` 冻结实例（需要 GPU，把场景建一次）；
   3. 调用 `describe` 读出相机、机器人、判据源码和实测每步耗时，缓存到 `runs/task_build/<任务>/describe.json`；
@@ -738,7 +738,7 @@ OpenRouter 使用 `--provider openrouter --model openrouter/<provider>/<model>`�
 
 每个 run 的实际源码和机器人资源复制到 `runs/difficulty_trials/<run-id>/source/`，按哈希构建独立镜像。
 真实建场、describe、preflight、正式双模式使用这份镜像。Blanket 会先为抽中 seed 生成数值初态，并将依赖打包到实例中；失败不换 seed。
-`tasks/` 根目录中的历史实例不被这次评测覆盖；它们的共享工具副本按历史版本冻结，不随 v15 模板更新。
+`tasks/` 根目录中的历史实例不被这次评测覆盖；它们的共享工具副本按历史版本冻结，不随当前模板更新。
 
 Docker 模式下，以下目录都位于 `topogym-work/`（可用 `--work-dir` 覆盖）；本地后端仍位于仓库根目录。`runs/difficulty_trials/<run-id>/` 保存 `manifest.lock.json`、源码/镜像身份、任务包、逐实例检查、`trials.jsonl`、`summary.csv` / `summary.md`；原始 Harbor job 在 `jobs/difficulty_trials/<run-id>/`。
 汇总保留所有 attempt，按每个计划 trial 的最后一次 attempt 判断批次完成。缺轨迹为 `invalid_submission`，基础设施错误为 `infra_failed`，判据未完成为 `not_evaluable`，三者均不进入已有效评分场景的 solved/unsolved 比率。

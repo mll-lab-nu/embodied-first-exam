@@ -11,6 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from topogym_versions import release
 CURRENT_VERSION = release(ROOT)["tooling_version"]
+# Superseded candidates of the release mechanism (tooling v15 = Jianwen's merged-v15 source candidate, 4aac2a4e6 /
+# ba01d029c): their packages keep their tooling hashes (topogym_tooling_versions.json) and their own runtime binding.
+BOUND_FROZEN = ("15",)
 SHARED = ("environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py",
           "environment/sim/finalize.sh", "environment/sim/run.sh", "environment/sim/rcb1.py",
           "environment/sim/rcb_limited.py", "environment/sim/replay.py", "tests/grade.py")
@@ -81,7 +84,7 @@ def check(tasks):
         mode = "limited" if task.name.endswith(("-limited", "-standard")) else "unlimited"
         if version == CURRENT_VERSION:
             if not task.name.endswith(("-privileged", "-standard")):
-                errors.append(f"{task.name}: tooling v15 requires protocol v1.0 task names")
+                errors.append(f"{task.name}: tooling v{CURRENT_VERSION} requires protocol v1.0 task names")
             expected = current_files(mode)
             try:
                 # Sampled runs use their own content-addressed image names. Their
@@ -90,7 +93,7 @@ def check(tasks):
                 require_task(task, ROOT)
             except (OSError, ValueError, KeyError) as error:
                 errors.append(f"{task.name}: runtime binding: {error}")
-        elif version in ("3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"):
+        elif version in ("3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14") + BOUND_FROZEN:
             expected = frozen["v" + version][mode]
             # Independent branches reused version numbers. Identify the local
             # lineage by its tool hash, then validate EVERY shared file.
@@ -113,6 +116,14 @@ def check(tasks):
             elif image:
                 errors.extend(f"{task.name}/{rel}: image {ref} != frozen tooling {version} image {image}"
                               for rel, ref in image_references(task) if ref != image)
+            elif version in BOUND_FROZEN:
+                # Release-bound packages name their image in their own runtime binding (a registry knob or a
+                # content-addressed tag); the simulator and the verifier must carry the same binding.
+                try:
+                    from topogym_versions import task_lock
+                    task_lock(task)
+                except (OSError, ValueError, KeyError) as error:
+                    errors.append(f"{task.name}: frozen tooling {version} runtime binding: {error}")
         elif "tooling_version" in meta:
             errors.append(f"{task.name}: unknown tooling_version {version!r}")
             continue
@@ -140,5 +151,6 @@ if __name__ == "__main__":
     for error in errors:
         print("FAIL " + error)
     if not errors:
-        print(f"ok TopoGym tooling: {count} packages; frozen inputs through v14 and candidate v15 checked")
+        print(f"ok TopoGym tooling: {count} packages; frozen inputs through v{int(CURRENT_VERSION) - 1} and the active "
+              f"candidate v{CURRENT_VERSION} checked")
     raise SystemExit(bool(errors))

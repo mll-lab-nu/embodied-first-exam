@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "active": {
-    "name": "merged-v15",
-    "tooling_version": "15",
-    "image_version": "0.2.13-dev",
+    "name": "merged-v16",
+    "tooling_version": "16",
+    "image_version": "0.2.14-dev",
     "status": "source_candidate",
     "tasks_root": null,
     "runtime_catalog": null

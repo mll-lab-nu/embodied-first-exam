@@ -5,6 +5,7 @@ usage: collect_batch_results.py <jobs_dir> <unlimited_job> <limited_job> <out_di
 TopoGym (adapted from robot_coding_bench fa59c1a6): topogym-* trials and a neutral title."""
 import json, pathlib, shutil, sys, datetime as dt
 from helper_assignment import planned_trials
+from topogym_versions import bound_release
 
 
 ARTIFACT_CONTRACT_VERSION = 2
@@ -78,7 +79,7 @@ def classify_trial(job, row, mode):
         return "invalid_submission", result, reward, trial
     if reward.get("instance_mismatch") or not row["evaluable_for_task_success"]:
         return "not_evaluable", result, reward, trial
-    if row.get("tooling_version") == "15" and reward["success"] == 1 and reward.get("runtime_binding_ok") != 1:
+    if bound_release(row.get("tooling_version")) and reward["success"] == 1 and reward.get("runtime_binding_ok") != 1:
         return "not_evaluable", result, reward, trial
     return ("solved" if reward["success"] == 1 else "unsolved"), result, reward, trial
 

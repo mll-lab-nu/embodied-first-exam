@@ -25,6 +25,7 @@ import time
 import sample_difficulty_instances as sampling
 import difficulty_hf_auth as hf_auth
 import helper_assignment as helper
+from topogym_versions import bound_release
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_KEY = object()
@@ -446,8 +447,9 @@ class DifficultyEvaluation:
             from topogym_versions import identity as release_identity
             selected_release = release_identity(self.source)
             if (self.args.phase not in ("collect", "upload") and
-                    (self.manifest.get("release") != selected_release or selected_release["tooling_version"] != "15")):
-                raise EvaluationError("New evaluation execution requires a frozen v15 run; use a new run-id for migration")
+                    (self.manifest.get("release") != selected_release or not bound_release(selected_release["tooling_version"]))):
+                raise EvaluationError("New evaluation execution requires a run frozen on a bound release (tooling v15 or "
+                                      "later); use a new run-id for migration")
             if new_manifest and self.args.results_to_hf:
                 from difficulty_results_hf import utc
                 sampling.atomic_json(self.run / "run-created.json", dict(created_at=utc()))

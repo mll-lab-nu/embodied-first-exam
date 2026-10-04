@@ -15,6 +15,7 @@ from v15_fixtures import bound_task
 from topogym.tasks.release_profile import environment_inputs
 from topogym_merge_candidate import candidate_inputs
 from regrade_trials import original_task
+ACTIVE = V.release(ROOT)["tooling_version"]     # the bound release under test (written for v15)
 
 
 class Selection(unittest.TestCase):
@@ -27,7 +28,7 @@ class Selection(unittest.TestCase):
         self.temp.cleanup()
 
     def test_current_bound_task_and_private_copy_pass(self):
-        self.assertEqual(V.require_task(self.task)["release"]["tooling_version"], "15")
+        self.assertEqual(V.require_task(self.task)["release"]["tooling_version"], ACTIVE)
         copy = self.folder / "private" / self.task.name
         shutil.copytree(self.task, copy)
         (copy / "solution").mkdir(exist_ok=True)
@@ -36,8 +37,8 @@ class Selection(unittest.TestCase):
 
     def test_old_version_is_rejected_even_with_valid_binding(self):
         p = self.task / "task.toml"
-        p.write_text(p.read_text().replace('tooling_version = "15"', 'tooling_version = "14"'))
-        with self.assertRaisesRegex(ValueError, "require tooling 15"):
+        p.write_text(p.read_text().replace(f'tooling_version = "{ACTIVE}"', 'tooling_version = "14"'))
+        with self.assertRaisesRegex(ValueError, f"require tooling {ACTIVE}"):
             V.require_task(self.task)
 
     def test_missing_release_receipt_cannot_fall_back(self):

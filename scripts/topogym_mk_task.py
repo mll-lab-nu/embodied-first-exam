@@ -9,7 +9,8 @@ usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded 
                 Without it solve.sh says there is none and the oracle agent scores 0
   --instance    an existing frozen instance to copy; otherwise one is made with `rcb_topogym.py make-instance` (needs the GPU)
   --python      the interpreter that has topogym + a GPU (default .venv-gs121-nyx/bin/python), for make-instance / describe
-Default output: runs/task_candidates/v15/. Use topogym_candidate_pipeline.py for fixed-suite generation and activation.
+Default output: runs/task_candidates/v<active tooling>/. Use topogym_candidate_pipeline.py for fixed-suite generation and
+activation.
 Shared files are copied from one tooling generation. New packages record its version;
 historical frozen generations keep their pinned bytes (ci_checks/check-tooling-identity.sh).
 Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600, at most 36000).

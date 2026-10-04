@@ -9,7 +9,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / "scripts")]
 
 
 def bound_task(path, source=ROOT, *, mode="privileged", row=None, reference="example:1"):
-    from topogym_versions import identity, stamp_task
+    from topogym_versions import identity, release, stamp_task
     from topogym.planning.harbor_bridge.binding import lock_for_task
     path, source = Path(path), Path(source)
     baseline = ROOT / f"tasks/topogym-cast-coil-easy-i00-{mode}"
@@ -21,7 +21,8 @@ def bound_task(path, source=ROOT, *, mode="privileged", row=None, reference="exa
             continue
         dest = path / relative; dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source / "harbor_templates/topogym" / template_mode / relative, dest)
-    text = (path / "task.toml").read_text().replace('tooling_version = "14"', 'tooling_version = "15"')
+    active = release(source)["tooling_version"]       # the active release's tooling (v15 when this fixture was written)
+    text = (path / "task.toml").read_text().replace('tooling_version = "14"', f'tooling_version = "{active}"')
     (path / "task.toml").write_text(text.replace(baseline.name, path.name))
     actor = path / ("environment/sim" if mode == "standard" else "environment")
     for folder in ((actor,) if mode == "standard" else (actor, path / "tests")):
