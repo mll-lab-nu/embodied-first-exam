@@ -4,6 +4,7 @@ replay tolerances, the confirmation-window record, and that every other family a
 unchanged. Session.replay itself runs on a scripted world (a real TaskDefinition's update, its stability window and
 failure path); no Genesis, no physics: the lab replays in docs/rcb/benchmarks/topogym.md are the physical evidence."""
 import contextlib
+import importlib.util
 import io
 import os
 import sys
@@ -28,17 +29,21 @@ GPU = {"blanket_flatten", "knot_untying", "rope_threading", "slotted_post_ring",
 
 
 class CoverageTask(TaskDefinition):
-    """blanket_flatten's goal shape: covered when the tick's coverage reaches minimum_coverage_ratio; a scripted failure."""
+    """blanket_flatten's goal shape: covered (coverage >= minimum_coverage_ratio), settled (the fastest particle at most
+    maximum_speed_m_s) and still (displacement since the confirmation started at most maximum_drift_m); a scripted
+    failure."""
     task_id = "grading_regression"
-    defaults = dict(minimum_coverage_ratio=.95, stable_duration_s=STABLE_S)
+    defaults = dict(minimum_coverage_ratio=.95, maximum_speed_m_s=.03, maximum_drift_m=.003, stable_duration_s=STABLE_S)
 
     def evaluate_state(self, state):
-        coverage = state["coverage"]
-        return (coverage >= self.config["minimum_coverage_ratio"], "Cloth fell below the table" if state.get("fell") else None,
-                dict(coverage_ratio=coverage))
+        cfg, coverage, speed = self.config, state["coverage"], state.get("speed", 0.)
+        reached = (coverage >= cfg["minimum_coverage_ratio"] and speed <= cfg["maximum_speed_m_s"]
+                   and state.get("drift", 0.) <= cfg["maximum_drift_m"])
+        return (reached, "Cloth fell below the table" if state.get("fell") else None,
+                dict(coverage_ratio=coverage, maximum_speed_m_s=speed))
 
 
-def scripted_session(family, coverage, fell_at=None):
+def scripted_session(family, coverage, fell_at=None, speed=lambda k: 0., drift=lambda k: 0.):
     """A Session without Genesis: the real replay() / _GradingReplay over a scripted world whose coverage at physics tick
     k is coverage(k). step() runs the env's tick loop (task.update per tick, the end at the first terminated tick)."""
     task = CoverageTask()
@@ -59,7 +64,8 @@ def scripted_session(family, coverage, fell_at=None):
         for _ in range(TICKS if _physics_steps is None else int(_physics_steps)):
             world["tick"] += 1
             k = world["tick"]
-            result = task.update(dict(physics_step=k, coverage=coverage(k), fell=fell_at is not None and k >= fell_at), DT)
+            result = task.update(dict(physics_step=k, coverage=coverage(k), speed=speed(k), drift=drift(k),
+                                      fell=fell_at is not None and k >= fell_at), DT)
             if result.terminated:
                 s.episode_end = "success" if result.task_success else result.reason
                 break
@@ -87,7 +93,8 @@ class GradingReplay(unittest.TestCase):
                 self.assertIn(name, M._GRADING_VALUES)
                 self.assertIn(side, ("at_least", "at_most"))
                 self.assertTrue(slack < 0 if side == "at_least" else slack > 0, (fam, name))    # always towards passing
-        self.assertEqual(M.REPLAY_TOLERANCES["blanket_flatten"], {"coverage": ("minimum_coverage_ratio", "at_least", -.02)})
+        self.assertEqual(M.REPLAY_TOLERANCES["blanket_flatten"], {"coverage": ("minimum_coverage_ratio", "at_least", -.03),
+                                                                  "particle_speed": ("maximum_speed_m_s", "at_most", .05)})
         self.assertEqual(M.GRADING_HOLD_S, 2.0)
 
     def test_a_success_within_the_rows_is_strict(self):
@@ -110,7 +117,7 @@ class GradingReplay(unittest.TestCase):
         self.assertEqual((g["rows"], g["strict_success"], g["success_row"], g["hold_steps"], g["success_in_hold"]),
                          (5, False, None, 2, True))
         cov = g["thresholds"]["coverage"]
-        self.assertEqual((cov["live"], cov["replay"], cov["window_ticks"]), (.95, .93, 11))
+        self.assertEqual((cov["live"], cov["replay"], cov["window_ticks"]), (.95, .92, 11))
         self.assertAlmostEqual(cov["window_worst"], .94)
         self.assertFalse(cov["live_held"])
         self.assertTrue(g["tolerance_needed"])
@@ -143,7 +150,7 @@ class GradingReplay(unittest.TestCase):
         self.assertAlmostEqual(g["thresholds"]["coverage"]["window_worst"], .94)
 
     def test_no_success_holds_the_full_two_seconds_then_stops(self):
-        s, _ = scripted_session("blanket_flatten", lambda k: .92)
+        s, _ = scripted_session("blanket_flatten", lambda k: .91)
         st = s.replay(ROWS, grading=True)
         g = st["grading"]
         self.assertFalse(st["success"])
@@ -191,8 +198,49 @@ class GradingReplay(unittest.TestCase):
         s.step = broken
         with self.assertRaises(RuntimeError):
             s.replay(ROWS, grading=True)                              # faults in the hold, thresholds relaxed
-        self.assertEqual(task.config["minimum_coverage_ratio"], .95)
+        self.assertEqual((task.config["minimum_coverage_ratio"], task.config["maximum_speed_m_s"]), (.95, .03))
         self.assertNotIn("update", task.__dict__)
+
+    def test_the_hold_relaxes_the_speed_but_never_the_displacement(self):
+        s, task = scripted_session("blanket_flatten", lambda k: .96, speed=lambda k: .05)
+        st = s.replay(ROWS, grading=True)
+        g = st["grading"]
+        self.assertTrue(st["success"])                                # 0.05 m/s: settled only at the hold's 0.08 m/s
+        self.assertEqual((g["strict_success"], g["success_in_hold"], g["tolerance_needed"]), (False, True, True))
+        spd = g["thresholds"]["particle_speed"]
+        self.assertEqual((spd["live"], spd["replay"], spd["live_held"]), (.03, .08, False))
+        self.assertAlmostEqual(spd["window_worst"], .05)
+        self.assertTrue(g["thresholds"]["coverage"]["live_held"])
+        s, task = scripted_session("blanket_flatten", lambda k: .96, speed=lambda k: .05, drift=lambda k: .004)
+        st = s.replay(ROWS, grading=True)                             # 4 mm of drift: the 3 mm limit is not relaxed
+        self.assertFalse(st["success"])
+        self.assertEqual(st["grading"]["hold_steps"], 80)
+        s, task = scripted_session("blanket_flatten", lambda k: .96, speed=lambda k: .09)
+        self.assertFalse(s.replay(ROWS, grading=True)["success"])     # faster than the hold's 0.08 m/s
+        self.assertEqual((task.config["maximum_speed_m_s"], task.config["maximum_drift_m"]), (.03, .003))
+
+    @unittest.skipUnless(importlib.util.find_spec("torch"), "the real blanket task needs the simulator image (torch)")
+    def test_the_real_blanket_task_relaxes_only_its_speed_and_coverage(self):
+        from topogym.tasks.blanket_flatten.blanket_flatten_medium import BlanketFlattenMediumTask
+        task = BlanketFlattenMediumTask(dict(minimum_coverage_ratio=.95))
+        seen = []
+        s = object.__new__(M.Session)
+        s.task, s.env, s.control_hz = "blanket_flatten", SimpleNamespace(_task=task), 40.
+        s.episode_end, s.episode_done = None, False
+        s.hold_action = lambda: None
+
+        def step(action):
+            spec = task.final_settling_spec()
+            seen.append((task.config["minimum_coverage_ratio"], task.config["maximum_speed_m_s"], spec.maximum_speed_m_s,
+                         task.config["maximum_drift_m"], spec.maximum_drift_m, task.config["stable_duration_s"]))
+            s.episode_end = "success"                                 # one hold step is enough to look
+        s.step = step
+        policy = M._GradingReplay(s)
+        policy.hold()
+        policy.remove()
+        self.assertEqual(seen, [(.92, .08, .08, .003, .003, .5)])     # the cheap gate and the settling speed, never the drift
+        self.assertEqual((task.config["minimum_coverage_ratio"], task.config["maximum_speed_m_s"]), (.95, .03))
+        self.assertEqual(task.final_settling_spec().maximum_speed_m_s, .03)
 
 
 def module(name, relative):
@@ -343,11 +391,13 @@ class Texts(unittest.TestCase):
 
     def test_blanket_words(self):
         import topogym_rules as R
-        inst = {"effective_task_parameters": {"minimum_coverage_ratio": .95}}
+        inst = {"effective_task_parameters": {"minimum_coverage_ratio": .95, "maximum_speed_m_s": .03}}
         for limited in (False, True):
             text = R.grading_replay_words("blanket_flatten", inst, limited=limited)
             self.assertIn("up to 2 s (80 control steps)", text)
-            self.assertIn("a blanket coverage of 93% instead of 95%", text)
+            self.assertIn("a blanket coverage of 92% instead of 95%", text)
+            self.assertIn("cloth speeds up to 80 mm/s instead of 30 mm/s (the displacement limit during the confirmation stays)",
+                          text)
             self.assertIn("not bit-deterministic", text)
         details = R.grader_details("blanket_flatten", {**inst, "simulator": {}}, limited=True)
         self.assertTrue(any(line.startswith("Grading:") for line in details))

@@ -28,7 +28,8 @@ FREE_REMAINDER = {"cast_keyhole": "the gold piece", "interlocked_claws": "the ot
 # must match: ci_checks/test-topogym-grading-replay.py). family -> {threshold: (task parameter, passing side, slack)}.
 GRADING_HOLD_S = 2.0
 REPLAY_TOLERANCES = {
-    "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.02)},
+    "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.03),
+                        "particle_speed": ("maximum_speed_m_s", "at_most", .05)},
     "knot_untying": {"rope_speed": ("terminal.maximum_speed_m_s", "at_most", .00025)},
     "rope_threading": {},
     "slotted_post_ring": {},
@@ -38,6 +39,8 @@ REPLAY_TOLERANCES = {
 # threshold -> words for (live value, replay value)
 TOLERANCE_WORDS = {
     "coverage": lambda live, replay: f"a blanket coverage of {replay:.0%} instead of {live:.0%}",
+    "particle_speed": lambda live, replay: (f"cloth speeds up to {replay * 1000:g} mm/s instead of {live * 1000:g} mm/s (the "
+                                            "displacement limit during the confirmation stays)"),
     "rope_speed": lambda live, replay: f"rope speeds up to {replay * 1000:g} mm/s instead of {live * 1000:g} mm/s",
 }
 # failure strings as `s.status()["episode_end"]` reports them (unlimited); limited mode reports `task_failed`

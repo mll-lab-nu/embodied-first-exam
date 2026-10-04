@@ -1931,11 +1931,15 @@ BINDING_API = 1
 GRADING_REVISION = "replay_tolerance_2026-10-03b"
 GRADING_HOLD_S = 2.0
 # family -> {threshold: (task parameter, the side that passes, slack in the parameter's unit, towards passing)}.
-# blanket's coverage: the user's numbers (live 0.95, replay 0.93). knot's rope speed: 2 x the largest replay-to-replay spread
-# measured in a success's confirmation window (0.12 mm/s, lab 2026-10-03). The other families: no measured spread that a
-# small slack would absorb (docs/rcb/benchmarks/topogym.md, "Grading replays"), so the hold only.
+# blanket_flatten: the user's numbers (2026-10-03 20:50): coverage live 0.95 / hold 0.92; particle speed live 0.03 / hold
+# 0.08 m/s (maximum_speed_m_s: the cheap "settled" gate and the final settling's speed; the 3 mm displacement from the start
+# of confirmation, maximum_drift_m, and the 0.5 s window stay). PBD reports a particle's last-substep velocity: on cloth at
+# rest it spikes to 0.04-0.07 m/s and restarts the confirmation (ihy7Nru's replays). knot's rope speed: 2 x the largest
+# replay-to-replay spread measured in a success's confirmation window (0.12 mm/s, lab 2026-10-03). The other families: no
+# measured spread that a small slack would absorb (docs/rcb/benchmarks/topogym.md, "Grading replays"), so the hold only.
 REPLAY_TOLERANCES: dict[str, dict[str, tuple[str, str, float]]] = {
-    "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.02)},
+    "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.03),
+                        "particle_speed": ("maximum_speed_m_s", "at_most", .05)},
     "knot_untying": {"rope_speed": ("terminal.maximum_speed_m_s", "at_most", .00025)},
     "rope_threading": {},
     "slotted_post_ring": {},
@@ -1945,6 +1949,7 @@ REPLAY_TOLERANCES: dict[str, dict[str, tuple[str, str, float]]] = {
 # threshold -> the quantity the task compares with it at a tick, from the tick's world state and the task's metrics
 _GRADING_VALUES: dict[str, Callable] = {
     "coverage": lambda task, state, metrics: metrics.get("coverage_ratio"),
+    "particle_speed": lambda task, state, metrics: metrics.get("maximum_speed_m_s"),
     "rope_speed": lambda task, state, metrics: metrics.get("maximum_speed_m_s"),
 }
 
