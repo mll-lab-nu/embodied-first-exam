@@ -1,0 +1,450 @@
+{
+ "benchmark": "molmospaces",
+ "family": "navigate-to",
+ "upstream": {
+  "benchmark": "molmospaces-bench-v2/20260415",
+  "package": "holodeck-objaverse/NavToObjDataGenConfig/NavToObjHolodeckBench_20260115_json_benchmark",
+  "episode_index": 94,
+  "name": "Navigation, Holodeck houses (MolmoSpaces benchmarks; the ProcTHOR-10k package was built on scene version 20251121, 0.2.9 loads 20251217 and its episodes miss objects)"
+ },
+ "robot_config": "RBY1Config",
+ "policy_dt_ms": 200.0,
+ "agent_cameras": [
+  "head_camera",
+  "wrist_camera_l",
+  "wrist_camera_r"
+ ],
+ "episode": {
+  "house_index": 1430,
+  "scene_dataset": "holodeck-objaverse",
+  "data_split": "val",
+  "seed": null,
+  "robot": {
+   "robot_name": "rby1",
+   "init_qpos": {
+    "base": [
+     2.924999952316284,
+     7.684000015258789,
+     -0.14048907160758972
+    ],
+    "torso": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "left_arm": [
+     0.5,
+     0.0,
+     0.0,
+     -2.299999952316284,
+     0.0,
+     -0.5,
+     0.0
+    ],
+    "right_arm": [
+     0.5,
+     0.0,
+     0.0,
+     -2.299999952316284,
+     0.0,
+     -0.5,
+     0.0
+    ],
+    "left_gripper": [
+     -0.05000000074505806,
+     0.05000000074505806
+    ],
+    "right_gripper": [
+     -0.05000000074505806,
+     0.05000000074505806
+    ],
+    "head": [
+     0.07580822706222534,
+     0.32181012630462646
+    ]
+   }
+  },
+  "cameras": [
+   {
+    "name": "head_camera",
+    "type": "robot_mounted",
+    "reference_body_names": [
+     "robot_0/link_head_2"
+    ],
+    "camera_offset": [
+     0.05000000074505806,
+     0.0,
+     0.05000000074505806
+    ],
+    "lookat_offset": [
+     0.0,
+     0.0,
+     0.07999999821186066
+    ],
+    "camera_quaternion": [
+     0.5,
+     0.5,
+     -0.5,
+     -0.5
+    ],
+    "fov": 139.0,
+    "record_depth": false
+   },
+   {
+    "name": "wrist_camera_l",
+    "type": "robot_mounted",
+    "reference_body_names": [
+     "robot_0/link_left_arm_6"
+    ],
+    "camera_offset": [
+     0.0,
+     -0.10000000149011612,
+     -0.15000000596046448
+    ],
+    "lookat_offset": [
+     0.0,
+     0.0,
+     0.07999999821186066
+    ],
+    "camera_quaternion": [
+     0.0,
+     0.0,
+     -0.25881895422935486,
+     0.9659258723258972
+    ],
+    "fov": 45.0,
+    "record_depth": true
+   },
+   {
+    "name": "wrist_camera_r",
+    "type": "robot_mounted",
+    "reference_body_names": [
+     "robot_0/link_right_arm_6"
+    ],
+    "camera_offset": [
+     0.0,
+     0.10000000149011612,
+     -0.15000000596046448
+    ],
+    "lookat_offset": [
+     0.0,
+     0.0,
+     0.07999999821186066
+    ],
+    "camera_quaternion": [
+     0.9659258723258972,
+     -0.25881895422935486,
+     0.0,
+     0.0
+    ],
+    "fov": 45.0,
+    "record_depth": true
+   },
+   {
+    "name": "camera_follower",
+    "type": "robot_mounted",
+    "reference_body_names": [
+     "robot_0/base"
+    ],
+    "camera_offset": [
+     -1.2999999523162842,
+     0.0,
+     2.700000047683716
+    ],
+    "lookat_offset": [
+     0.0,
+     0.0,
+     0.07999999821186066
+    ],
+    "camera_quaternion": [
+     0.6532880067825317,
+     0.27058228850364685,
+     -0.27058228850364685,
+     -0.6532880067825317
+    ],
+    "fov": 45.0,
+    "record_depth": false
+   }
+  ],
+  "scene_modifications": {
+   "added_objects": {},
+   "object_poses": {
+    "fabric_18e9b6cf20b5f3d36c694df9b9012137_1_0_0": [
+     0.19626569185815743,
+     12.04629030668312,
+     0.4134126067098959,
+     -0.21829776096203155,
+     -0.21872831953823854,
+     0.6723015079495981,
+     0.6726921228910284
+    ],
+    "fabric_c21db0f46643d25061825e5ee59c62eb_1_0_0": [
+     0.2615124635965997,
+     12.357476967962269,
+     0.4315374435985925,
+     0.5858970739930421,
+     0.5865583925436902,
+     0.39537210068489104,
+     0.3954172136148984
+    ],
+    "houseplant_70451f91981395edf773114de3a28b67_1_0_0": [
+     0.19627300011939505,
+     12.513099999660326,
+     0.4618878194479082,
+     0.5756667363005187,
+     0.5756667363308616,
+     -0.41061881189430244,
+     -0.4106188119385118
+    ],
+    "laptop_2220555560afd18604d0de667d0fcc5e_1_0_0": [
+     0.628727014246806,
+     8.401357686572931,
+     0.5793214229020095,
+     0.5015678738087055,
+     0.4984215075203422,
+     0.4986943619201058,
+     0.5013078916127918
+    ],
+    "cellulartelephone_8c2887320948bf2580f27f36caf806e5_1_0_0": [
+     0.629803954400549,
+     8.703619603012521,
+     0.5278551759011224,
+     0.520513130225455,
+     0.5221557176397119,
+     -0.47932265520327016,
+     -0.4760979731189191
+    ],
+    "houseplant_af522629621e5a199e6e1517db24f95c_1_0_0": [
+     4.462499993529493,
+     10.258300002544187,
+     0.6918201414951001,
+     0.49999999999968026,
+     0.5000000000002544,
+     0.5000000000074211,
+     0.49999999999264433
+    ],
+    "pillow_88441ccdce8826753b25ec07fed4a5e3_1_0_0": [
+     10.000092343992927,
+     6.316230288659289,
+     0.7899451707056931,
+     0.7096683580231108,
+     0.7045356287127039,
+     0.00043009519584261005,
+     -0.00042955011254871786
+    ],
+    "alarmclock_40f610168cc3c772c1f6b7f3b22ef12d_1_0_0": [
+     10.723500374822748,
+     6.315707534757873,
+     0.821015433814421,
+     0.5684799035786117,
+     0.5683344285993434,
+     -0.420662952169702,
+     -0.420558268457275
+    ],
+    "candle_1b82c5d62bcdb9c9e0fbc639fdc9e22a_1_0_0": [
+     11.5349,
+     10.565,
+     0.9014392741128409,
+     -0.11061601590013949,
+     -0.11061601590041713,
+     0.6984011003908597,
+     0.6984011003896937
+    ],
+    "pillow_87d454cec75cae7f8d7c8b2a9579f0b7_1_0_0": [
+     9.308173321734296,
+     4.236414370315415,
+     0.57414007148394,
+     0.5039910379308374,
+     0.4956211282549738,
+     0.5127603779194484,
+     0.4872674068194674
+    ],
+    "pillow_4b2c3143f409251db55cb5ac5dcb1f3c_1_0_0": [
+     10.523081523226816,
+     4.400466134061042,
+     0.579672081487809,
+     0.49802174557122997,
+     0.5033236185667088,
+     0.49832599949392586,
+     0.500310777576777
+    ],
+    "pillow_6452090508df9a6b064d30e3553d5969_1_0_0": [
+     9.796725773328014,
+     4.734348856243843,
+     0.5914286973767302,
+     0.4897125187235769,
+     0.5100686043032642,
+     0.5103794314278666,
+     0.48941240675415887
+    ],
+    "pillow_6452090508df9a6b064d30e3553d5969_2_0_0": [
+     9.802268989165391,
+     5.712344244238883,
+     0.9850523366988775,
+     0.6923457619147957,
+     0.7215658334399202,
+     0.00022083844845932233,
+     -0.00021260563027327933
+    ],
+    "pillow_1405ef91d923ce8ea7063cae845d1b6b_1_0_0": [
+     9.285337343291348,
+     5.784550924582241,
+     0.959923878930504,
+     0.7062519928109497,
+     0.7079602249999284,
+     0.0004718075810214295,
+     -0.00046889894395864365
+    ],
+    "cup_05d16f89a21c46b95ab001a518206bad_1_0_0": [
+     9.285020453551606,
+     5.508910756618004,
+     0.9953491596238505,
+     0.4693872264380945,
+     0.4676946864238869,
+     0.5292412446408666,
+     0.5299443526622407
+    ]
+   }
+  },
+  "task": {
+   "task_cls": "molmo_spaces.tasks.nav_task.NavToObjTask",
+   "robot_base_pose": [
+    2.924999999999992,
+    7.683999919891358,
+    0.0,
+    0.997533866754159,
+    0.0,
+    0.0,
+    -0.07018678421537537
+   ],
+   "pickup_obj_name": "bed_564075481b6a5abb7a7bbf43dd7f0995_1_0_0",
+   "succ_pos_threshold": 1.5,
+   "pickup_obj_candidates": [
+    "bed_d93614e32123dcd78d53db8c533bec23_1_0_0",
+    "bed_564075481b6a5abb7a7bbf43dd7f0995_1_0_0"
+   ],
+   "task_horizon_sec": 100,
+   "task_type": "nav_to_obj"
+  },
+  "language": {
+   "task_description": "Navigate to any bed (2 available)",
+   "referral_expressions": {
+    "object_name": "Bed 564075481B6A5Abb7A7Bbf43Dd7F0995 1 0 0"
+   },
+   "referral_expressions_priority": {
+    "object_name": [
+     [
+      1.0,
+      1.0,
+      "Bed 564075481B6A5Abb7A7Bbf43Dd7F0995 1 0 0"
+     ]
+    ]
+   }
+  },
+  "img_resolution": [
+   640,
+   480
+  ]
+ },
+ "instance": "i00",
+ "variant": "several objects of the target type (the nearest counts)",
+ "facts": {
+  "goal": "Navigate to any bed (2 available)",
+  "horizon_steps": 500,
+  "horizon_s": 100,
+  "control_hz": 5.0,
+  "near_m": 1.5,
+  "candidates": "one of the 2 target objects"
+ },
+ "t0": {
+  "state_sha": "f2b45a931f26578353b2b1f294259ad1fb7704b2",
+  "horizon_steps": 500,
+  "action_dim": 25,
+  "layout": [
+   "base_x",
+   "base_y",
+   "base_theta",
+   "torso_0",
+   "torso_1",
+   "torso_2",
+   "torso_3",
+   "torso_4",
+   "torso_5",
+   "left_arm_0",
+   "left_arm_1",
+   "left_arm_2",
+   "left_arm_3",
+   "left_arm_4",
+   "left_arm_5",
+   "left_arm_6",
+   "right_arm_0",
+   "right_arm_1",
+   "right_arm_2",
+   "right_arm_3",
+   "right_arm_4",
+   "right_arm_5",
+   "right_arm_6",
+   "left_gripper",
+   "right_gripper"
+  ],
+  "tcp_frames": [
+   "left_gripper",
+   "right_gripper"
+  ],
+  "joint_names": [
+   "base_x",
+   "base_y",
+   "base_theta",
+   "torso_0",
+   "torso_1",
+   "torso_2",
+   "torso_3",
+   "torso_4",
+   "torso_5",
+   "left_arm_0",
+   "left_arm_1",
+   "left_arm_2",
+   "left_arm_3",
+   "left_arm_4",
+   "left_arm_5",
+   "left_arm_6",
+   "right_arm_0",
+   "right_arm_1",
+   "right_arm_2",
+   "right_arm_3",
+   "right_arm_4",
+   "right_arm_5",
+   "right_arm_6"
+  ],
+  "targets": [
+   2.924999952316284,
+   7.684000015258789,
+   -0.14048907160758972,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.5,
+   0.0,
+   0.0,
+   -2.299999952316284,
+   0.0,
+   -0.5,
+   0.0,
+   0.5,
+   0.0,
+   0.0,
+   -2.299999952316284,
+   0.0,
+   -0.5,
+   0.0,
+   -0.05,
+   -0.05
+  ]
+ }
+}
