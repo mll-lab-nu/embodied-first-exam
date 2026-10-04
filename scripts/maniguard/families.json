@@ -380,7 +380,8 @@
    "oracle_evidence": null,
    "difficulty": null,
    "standard": null,
-   "require_instance_exact": false
+   "require_instance_exact": false,
+   "blocked": "no oracle: all six of ManiGuard's demonstrations tried (episodes 80-85) wipe the plate clean, but the poured potato bounces off the flat plate in the frozen scene (also with the pour 12 cm lower); kept out. A scripted pour would be needed"
   },
   "stack_retrieve/task_0008": {
    "rank": 13,
@@ -484,7 +485,8 @@
    "oracle_evidence": null,
    "difficulty": null,
    "standard": null,
-   "require_instance_exact": false
+   "require_instance_exact": false,
+   "blocked": "no oracle: all six of ManiGuard's demonstrations tried (episodes 0-5) clear the dust, but when the tray is lifted the potato rolls into the fingers (no_food_touched broken at steps 1554-1857), also with the tray phase played 3x slower; kept out (it was tried as the replacement of dusty_transfer/task_0002). A scripted tray carry would be needed"
   },
   "cabinet_pickup/task_0026": {
    "rank": 17,
