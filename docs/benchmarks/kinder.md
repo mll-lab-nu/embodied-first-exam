@@ -18,10 +18,10 @@ multi-object manipulation, geometric and dynamic constraints.
 | family | challenge | the robot must | positive example |
 |---|---|---|---|
 | dynamo | nonprehensile | drive into a floor square that three chairs block (fixture) | oracle, both modes; Luna, both |
-| sweep-into-drawer | nonprehensile, tool, dynamic | open a drawer, sweep five cubes into it | none known |
+| sweep-into-drawer | nonprehensile, tool, dynamic | open a drawer, sweep five cubes into it | Luna, privileged (2026-10-04) |
 | scoop-pour | nonprehensile, tool, dynamic | move 30 cubes between bins with a scoop | none known |
 | constrained-cupboard | geometric | six identical rods, each into the compartment it is owed | Luna, privileged only |
-| sweep-simple | nonprehensile, tool | ten cubes into a box marked on the floor, with a wiper | Luna, standard (50 resets): both |
+| sweep-simple | nonprehensile, tool | ten cubes into a box marked on the floor, with a wiper | Luna, privileged (2026-10-04); Luna, standard (50 resets): both |
 
 Why these: the hardest of the eleven families this benchmark had until 2026-10-04 (six Dynamic3D tasks where physics
 decides the outcome and a camera can see the goal or a sentence can name it, and five that a screening of every other
