@@ -2167,11 +2167,11 @@ digest = "sha256:6368fd8a28ea7777fcdcc0a0befcdcc98659e04ec7ca8b070c386d29fc0204b
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-cabinet-pickup-i19-privileged"
-digest = "sha256:ec717204bfd65d7f8dc77ddae3b5709ea54134f3c7279a55cc617e58554a6809"
+digest = "sha256:b5a9e8e9d89d9a1005cb7bfd879517555af2663919a5f27bfafc65f5f3d9bf85"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-cabinet-pickup-i19-standard"
-digest = "sha256:789d154170954dda68782be55025e5f60d64da729b94481245a97e7b8ba61620"
+digest = "sha256:b2a8c5e524977992edbd2f370a10e29826ceb2f2dbdbe7541fdd760fed27b1d8"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-dusty-transfer-i03-privileged"

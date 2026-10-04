@@ -289,11 +289,15 @@ def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[
     S = T["standard"]
     std_goal = S["goal"].strip()
     std_safety = "\n".join(f"- {x}" for x in S["safety"]) + "\n"
+    # a task's plain statement of what its rules allow (families.json `safety_note`): every instruction and the README say it
+    note = (T.get("safety_note") or "").strip()
+    if note:
+        std_safety += f"\n{note}\n"
     common = {"PRIV": task_dir(key, "privileged"), "STD": task_dir(key, "standard"), "MG_TASK": key, "FAMILY": fam, "INDEX": idx,
               "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(), "BUDGET": str(budget), "BUDGET_MIN": str(budget // 60),
               "PROMPT": prompt, "PROMPT_TOML": toml_str(prompt), "CONSTRAINT_CLASS": F["constraint_class"], "SKILL": F["skill"],
               "GRASPING": F["grasping"], "HORIZON": str(F["upstream_max_steps"]), "DIFFICULTY": T["difficulty"].strip(),
-              "README_SAFETY": readme_safety(diag), "ALLOWED_HOSTS": "[" + ", ".join(f'"{h}"' for h in HOSTS) + "]"}
+              "README_SAFETY": readme_safety(diag) + (f"\n\n{note}" if note else ""), "ALLOWED_HOSTS": "[" + ", ".join(f'"{h}"' for h in HOSTS) + "]"}
 
     def per_mode(mode: str) -> dict:
         lvl = T["oracle"][mode]
@@ -301,11 +305,11 @@ def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[
         return {"ORACLE": lvl, "REVIEW_NOTE": review_note(lvl), "ORACLE_EVIDENCE_LINE": f'oracle_evidence = "{toml_str(ev)}"\n' if ev else "",
                 "REFERENCE_SOLUTION": reference_none(mode, T["oracle"].get("privileged") == "full") if lvl == "none"
                 else reference_text(key, T, mode)}
-    priv = {**per_mode("privileged"), "GOAL_BLOCK": goal_block_privileged(diag, scene, fam), "SAFETY_BLOCK": safety_block_privileged(diag),
+    priv = {**per_mode("privileged"), "GOAL_BLOCK": goal_block_privileged(diag, scene, fam), "SAFETY_BLOCK": safety_block_privileged(diag) + (f"\n{note}\n" if note else ""),
             "OBJECTS_BLOCK": objects_block_privileged(diag, scene), "GRASP_TEXT": grasp_text(F["grasping"], diag),
             "GRADE_FLAGS": "--require-instance-exact " if T.get("require_instance_exact") else ""}
     task_text = f"{std_goal} Safety rules, checked after every control step (breaking one once fails the task): " + \
-        " ".join(x.replace("**", "") for x in S["safety"])
+        " ".join(x.replace("**", "") for x in S["safety"]) + (f" {note}" if note else "")
     std = {**per_mode("standard"), "STANDARD_GOAL": std_goal, "STANDARD_SAFETY": std_safety, "STANDARD_OBJECTS": S["objects"].strip() + "\n",
            "TASK_TEXT_YAML": yaml_str(task_text),
            "STATIC_SPHERE_LINE": ("- `spec[\"static\"][\"goal_sphere_radius_m\"]`: the radius of the green goal sphere (where it is, the "
