@@ -12,7 +12,10 @@ States: pending (in a batch's plan, not started; scripts/run_agent_batch.sh writ
 else Harbor's count at the end), reward, exception, the replay / live videos, and the tail of the agent's output.
 
 It serves the agent's output and the videos, which can hold the whole conversation: keep it on 127.0.0.1 (the default)
-and reach it through an SSH tunnel; bind elsewhere only on a trusted network.
+and reach it through an SSH tunnel; bind elsewhere only on a trusted network. There is no login: on a shared host every
+local user can open it, and files of a running trial are served before the runner's secret scan has redacted them. On
+127.0.0.1 it answers only requests addressed to localhost / 127.0.0.1 / [::1] (a web page cannot reach it through DNS
+rebinding).
 """
 from __future__ import annotations
 
@@ -34,6 +37,8 @@ SKIP = {"agent", "artifacts", "verifier", "gateway", "sessions", "_logs", "node_
 MEDIA = {".mp4": "video/mp4", ".png": "image/png", ".jpg": "image/jpeg", ".md": "text/plain; charset=utf-8",
          ".json": "application/json", ".txt": "text/plain; charset=utf-8", ".log": "text/plain; charset=utf-8"}
 ARGS: argparse.Namespace
+LOOPBACK = {"localhost", "127.0.0.1", "::1"}
+LOOPBACK_BIND = True          # bound to a loopback address: answer only requests addressed to one (main sets it)
 CACHE: dict = {"t": 0.0, "state": None}
 LOCK = threading.Lock()
 
@@ -72,10 +77,12 @@ def task_info(task: str) -> dict:
 
 
 def run_id(agent: dict) -> str:
-    """<harness>-<model>-<effort> as scripts/run_agent_batch.sh derives it; a deployment suffix (gpt-6-luna-3) dropped."""
+    """<harness>-<model>-<effort> as scripts/run_agent_batch.sh derives it, except that an Azure deployment replica's
+    suffix is dropped (gpt-6-luna-3 -> gpt6_luna; claude-fable-5-1 stays fable_5_1)."""
     f = lambda s: re.sub(r"^_+|_+$", "", re.sub(r"[^a-z0-9]+", "_", s.lower()))
     model = (agent.get("model_name") or "").split("/")[-1].lower()
-    model = re.sub(r"-\d+$", "", re.sub(r"^gpt-(\d+)", r"gpt\1", re.sub(r"^claude-", "", model)))
+    model = re.sub(r"^(gpt-\d+(?:\.\d+)?-[a-z]+)-\d+$", r"\1", model)
+    model = re.sub(r"^gpt-(\d+)", r"gpt\1", re.sub(r"^claude-", "", model))
     effort = (agent.get("kwargs") or {}).get("reasoning_effort") or "default"
     return f"{f(agent.get('name') or '?')}-{f(model)}-{f(effort)}"
 
@@ -172,9 +179,17 @@ def collect() -> dict:
             jc = jload(jd / "config.json")
             jr = jload(jd / "result.json")
             name = jc.get("job_name") or jd.name
-            for t in sorted(jd.iterdir()):
-                if t.is_dir() and "__" in t.name and (t / "config.json").exists():
-                    trials.append(trial_state(t, {"job_name": name, **jr}, ri, root, plan_of.get(name) or plan_of.get(jd.name)))
+            try:
+                tds = sorted(jd.iterdir())
+            except OSError:                        # the job directory moved away (archived) during the scan
+                continue
+            for t in tds:
+                try:
+                    if t.is_dir() and "__" in t.name and (t / "config.json").exists():
+                        trials.append(trial_state(t, {"job_name": name, **jr}, ri, root,
+                                                  plan_of.get(name) or plan_of.get(jd.name)))
+                except OSError:                    # a file vanished mid-scan: the next refresh picks the trial up
+                    continue
     started = {(t["job"], t["task"]) for t in trials}
     for ri, p, j in plans:
         if (j["job"], j["task"]) in started:
@@ -329,6 +344,10 @@ class Handler(BaseHTTPRequestHandler):
         self.do_GET()
 
     def do_GET(self):
+        host = (self.headers.get("Host") or "").lower()
+        host = host[1:].split("]")[0] if host.startswith("[") else host.rsplit(":", 1)[0]
+        if LOOPBACK_BIND and host not in LOOPBACK:
+            return self.send(403, b"use http://localhost:<port>/ (or 127.0.0.1)", "text/plain")
         u = urllib.parse.urlparse(self.path)
         q = urllib.parse.parse_qs(u.query)
         if u.path == "/":
@@ -345,26 +364,44 @@ class Handler(BaseHTTPRequestHandler):
         self.send(404, b"not found", "text/plain")
 
     def file(self, p: pathlib.Path) -> None:
+        """The file, or one byte range of it (video seeking), streamed in 1 MB pieces."""
         size = p.stat().st_size
-        a, b = 0, size - 1
-        m = re.match(r"bytes=(\d*)-(\d*)$", self.headers.get("Range", ""))
-        if m and (m.group(1) or m.group(2)):                  # video seeking
+        a, b, partial = 0, size - 1, False
+        m = re.match(r"bytes=(\d*)-(\d*)$", self.headers.get("Range", "").strip())
+        if m and (m.group(1) or m.group(2)):
             if m.group(1):
                 a, b = int(m.group(1)), int(m.group(2)) if m.group(2) else size - 1
             else:
-                a = max(0, size - int(m.group(2)))
-            b = min(b, size - 1)
+                a = max(0, size - int(m.group(2))) if int(m.group(2)) else size
+            b, partial = min(b, size - 1), True
+            if a > b:
+                return self.send(416, b"", "text/plain", {"Content-Range": f"bytes */{size}"})
+        self.send_response(206 if partial else 200)
+        self.send_header("Content-Type", MEDIA[p.suffix])
+        self.send_header("Content-Length", str(b - a + 1))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Accept-Ranges", "bytes")
+        if partial:
+            self.send_header("Content-Range", f"bytes {a}-{b}/{size}")
+        self.end_headers()
+        if self.command == "HEAD":
+            return
         with open(p, "rb") as f:
             f.seek(a)
-            body = f.read(b - a + 1)
-        extra = {"Accept-Ranges": "bytes"}
-        if m:
-            extra["Content-Range"] = f"bytes {a}-{b}/{size}"
-        self.send(206 if m else 200, body, MEDIA[p.suffix], extra)
+            left = b - a + 1
+            while left > 0:
+                chunk = f.read(min(left, 1 << 20))
+                if not chunk:
+                    break
+                try:
+                    self.wfile.write(chunk)
+                except OSError:                    # the browser hung up (seeking elsewhere)
+                    return
+                left -= len(chunk)
 
 
 def main() -> int:
-    global ARGS
+    global ARGS, LOOPBACK_BIND
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--jobs", type=pathlib.Path, action="append", help="a Harbor -o directory (repeatable; default jobs/agents)")
     p.add_argument("--port", type=int, help="default: the first free port from 8765")
@@ -372,6 +409,7 @@ def main() -> int:
     p.add_argument("--once", action="store_true", help="print the state as JSON and exit")
     ARGS = p.parse_args()
     ARGS.jobs = [j.resolve() for j in (ARGS.jobs or [REPO / "jobs" / "agents"])]
+    LOOPBACK_BIND = ARGS.bind in LOOPBACK or ARGS.bind.startswith("127.")
     if ARGS.once:
         json.dump(collect(), sys.stdout, indent=1)
         return 0
