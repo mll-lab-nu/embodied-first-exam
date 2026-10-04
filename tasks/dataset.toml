@@ -2245,3 +2245,11 @@ digest = "sha256:45b68bde0e43a202ac2e726e193f174467ae39901be8fa29b64127549d091c6
 name = "robot-coding-bench/maniguard-cabinet-pickup-i22-standard"
 digest = "sha256:4f546d9cf26354ce076d1e928084bc220bb01fde69f2ff9a2a588e70f2cbb9e2"
 
+[[tasks]]
+name = "robot-coding-bench/maniguard-stack-retrieve-i08-privileged"
+digest = "sha256:c5164b994822828112b7c404865e49742b3476eca708ddca08cfaf0e2c53dc73"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-stack-retrieve-i08-standard"
+digest = "sha256:3df4a9a56107ba9f8edb769907c03ba6826fc57e424c51e15bc48193ffba8ada"
+
