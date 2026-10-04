@@ -94,6 +94,7 @@ fi
 exec 9>"$output/.queue.lock"
 flock -n 9 || { printf 'Another process owns this queue\n' >&2; exit 2; }
 cd -- "$ROOT"
+"$PYTHON" ci_checks/check-oracle-portability.py --families "${family_list[@]}" --tiers "${tier_list[@]}"
 "$PYTHON" - "$output" "$families" "$tiers" "$tasks_root" "$gpu" "$smoke" "$wall" "$HARBOR" <<'PY'
 import json,sys
 from pathlib import Path
@@ -144,6 +145,17 @@ if [[ -z "$tasks_root" ]]; then
   fi
 fi
 summarize
+if ((build)) && [[ ! -f "$output/candidate/image.lock.json" ]]; then
+  log="$output/image-build-$(date -u +%Y%m%dT%H%M%S)-$$"
+  mkdir -p -- "$log"
+  printf 'Building frozen candidate image; %s/runtime.log\n' "$log"
+  "$PYTHON" - "$output/candidate/build_image.sh" "$log" <<'PY'
+import os,sys
+from pathlib import Path
+from topogym.utils.process_limits import run_guarded
+raise SystemExit(run_guarded(["bash",sys.argv[1]],Path(sys.argv[2]),cwd=Path.cwd(),env=dict(os.environ)))
+PY
+fi
 for family in "${family_list[@]}"; do
   if ((build)); then
     log="$output/build-${family}-$(date -u +%Y%m%dT%H%M%S).log"

@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-from .contracts import BridgeError, digest
+from .contracts import BridgeError, digest, member
 
 
 def reference_data(root, family, tier, seed):
@@ -11,35 +11,42 @@ def reference_data(root, family, tier, seed):
         raise BridgeError("These adapters cover only easy / medium / hard")
     files, includes = {}, []
     prefix = "topogym/planning/harbor_bridge/reference_data/"
+    base = root / prefix
 
-    def add(name, source, expected=None):
-        source = Path(source)
-        if not source.is_file() or expected is not None and digest(source) != expected:
+    def add(name, expected=None):
+        relative = family + "/" + tier + "/" + name
+        source = member(base, relative)
+        manifest = json.loads(member(base, "manifest.json").read_text())
+        record = manifest["files"][relative]
+        actual = digest(source)
+        if (manifest.get("schema_version") != 1 or actual != record["sha256"]
+                or source.stat().st_size != record["bytes"]
+                or expected is not None and actual != expected):
             raise BridgeError(f"Missing or changed reference data: {source}")
-        files[prefix + family + "/" + tier + "/" + name] = str(source.resolve())
+        files[prefix + relative] = str(source)
+        return source
 
     if family == "cast_keyhole":
         includes = [f"topogym/planning/cast_keyhole/references/F{i}.json" for i in (1, 2, 3)]
     if family in {"fiber_bundling", "horseshoe_ring", "hedgehog_in_cage", "interlocked_claws", "rope_threading"} and seed != 0:
         raise BridgeError(f"Selected {family} reference data currently bind seed 0")
     if family == "fiber_bundling":
-        name = {"easy": "easy_02", "medium": "medium_full_01", "hard": "hard_full_01"}[tier]
-        add("selection.json", root / "solvability_proof/fiber_bundling/2026-10-03/evidence/runs" / name / "qualification/selection.json")
+        add("selection.json")
     elif family == "horseshoe_ring":
-        index = json.loads((root / "solvability_proof/horseshoe_ring/recipes.json").read_text())
-        path = root / index[tier]
+        path = add("recipe.json")
         recipe = json.loads(path.read_text())
-        add("recipe.json", path)
         for name, item in recipe["selection"][0]["parameters"].items():
-            add(name + ".json", path.parent / item["path"], item["sha256"])
+            add(name + ".json", item["sha256"])
     elif family == "hedgehog_in_cage" and tier != "medium":
-        path = {"easy": "2026-09-30_easy/evidence/runs/easy_qualified_native_01",
-                "hard": "2026-10-03_hard_s5_post/evidence/runs/native_03"}[tier]
-        add("pickup.json", root / "solvability_proof/hedgehog_in_cage" / path / "submitted_pickup.json")
+        add("pickup.json")
+        includes = ["topogym/planning/hedgehog_in_cage/reference_routes.json"]
     elif family == "interlocked_claws":
-        add("witness.json", root / "solvability_proof/interlocked_claws/2026-10-03/evidence" / tier / "run/submitted_witness.json")
+        add("witness.json")
         includes = ["topogym/planning/interlocked_claws/reference_routes.json"]
     elif family == "rope_threading":
-        base = "topogym/planning/rope_threading/reference_relays/"
-        includes = [base + n for n in ("manifest.json", f"{tier}_seed{seed}.npz", f"{tier}_evidence.json")]
+        relay_base = "topogym/planning/rope_threading/reference_relays/"
+        includes = [relay_base + n for n in ("manifest.json", f"{tier}_seed{seed}.npz", f"{tier}_evidence.json")]
+        includes.append("topogym/planning/rope_threading/hard_plans.json")
+    for name in includes:
+        member(root, name)
     return files, includes

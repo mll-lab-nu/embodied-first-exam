@@ -99,7 +99,7 @@ def prepare(output, families=(), tiers=("easy", "medium", "hard"), *, image=None
         # Generators' run_tool executes describe in this same candidate image.
         env = {"TOPOGYM_TOOL_IMAGE": image, "TOPOGYM_RUN_ROOT": str(output),
                "TOPOGYM_RUN_ID": output.name, "TOPOGYM_GPU_UUID": gpu}
-        python = str(ROOT / ".venv-gs121-nyx/bin/python")
+        python = sys.executable
         render = [python, str(snapshot / "scripts/topogym_mk_task.py"), family, "--instance", str(folder / "instance.json"),
                   "--tasks-root", str(output / "tasks"), "--build-root", str(output / "build"),
                   "--slug", slug, "--image", image]

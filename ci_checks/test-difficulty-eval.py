@@ -202,7 +202,7 @@ class SamplingTests(unittest.TestCase):
         from types import SimpleNamespace
         import numpy as np
         session=SimpleNamespace(task='cast_coil',config=dict(task_id='cast_coil',variation_id='seeded',seed=4),
-                                eval_index=None,instance_sha='test',action_dim=2,action_layout=['a','b'])
+                                eval_index=None,instance_sha='test',action_dim=2,action_layout=['a','b'],gripper_space='width')
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'trajectory.npz'
             rcb_topogym.Session.save_trajectory(session,np.zeros((3,2)),path)

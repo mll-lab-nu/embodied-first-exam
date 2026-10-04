@@ -3,6 +3,7 @@
 import copy
 from pathlib import Path
 import json
+import pickle
 import sys
 import tempfile
 from types import SimpleNamespace
@@ -284,20 +285,74 @@ class KnotContracts(unittest.TestCase):
             self.assertGreaterEqual(r.session.sim_time_s, .05)
 
     def test_zero_crossing_repair_can_reach_native_success(self):
+        for mode in ('laydown', 'translate'):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as d:
+                b = self.synthetic_search(d, ['success'])
+                b.r.count = 0
+                b.args.settle = .05
+                b.r.step = lambda phase: setattr(b.r.session, 'sim_time_s', b.r.session.sim_time_s+.025)
+                calls = []
+                def arrange(k, cfg, selected):
+                    calls.append(selected)
+                    b.r.task.result.task_success = True
+                    raise Solved()
+                b.r.arrange = arrange
+                b.choices = lambda k, crossings: iter([(mode, {})])
+                self.assertTrue(b.run())
+                self.assertEqual(calls, [mode])
+
+    def test_checkpoint_resume_does_not_repeat_completed_wait_or_skip_a_new_decision(self):
+        def make_branch(folder):
+            b = Branching.__new__(Branching)
+            b.args = arguments(folder); b.args.settle = .05
+            b.attempts, b.selection, b.start, b.backtracks = [], [], 1, 0
+            b.base_args, b.base_cfg = {}, {}
+            b.choices = Mock(side_effect=lambda *args: iter([]))
+            (folder/'checkpoints').mkdir()
+            s = SimpleNamespace(n_steps=0, physics_steps=0, sim_time_s=0., last_step_ticks=0,
+                _reward=0., episode_end=None, episode_done=False, _recording=[], _recorded_ticks=[],
+                _targets=np.zeros(1), action_dim=1, action_layout=['a'], physics_substeps=10,
+                joint_positions=lambda: np.zeros(1))
+            def step(action, _physics_steps=10):
+                s._recording.append(np.array(action)); s._recorded_ticks.append(_physics_steps)
+                s.n_steps += 1; s.physics_steps += _physics_steps
+                s.sim_time_s = s.physics_steps*.0025; s.last_step_ticks = _physics_steps
+                return False
+            s.step = step
+            r = SimpleNamespace(session=s, identity={'instance': 'fixed'}, line=lambda: np.zeros((2, 3)),
+                crossings=lambda: [], q={}, g={}, bias={}, full_q=np.zeros(1), grasps={}, grasp_turn={},
+                decisions=[], log=[], lines=[], motion_options={},
+                env=SimpleNamespace(_checkpoint_current=Mock(), _info=lambda: {'state_ref': {'state_id': 1}}))
+            def runner_step(phase):
+                s.step(np.zeros(1)); r.log.append(dict(t=s.sim_time_s, phase=phase))
+            r.step = runner_step; b.r = r
+            return b
+
         with tempfile.TemporaryDirectory() as d:
-            b = self.synthetic_search(d, ['success'])
-            b.r.count = 0
-            b.args.settle = .05
-            b.r.step = lambda phase: setattr(b.r.session, 'sim_time_s', b.r.session.sim_time_s+.025)
-            calls = []
-            def arrange(k, cfg, mode):
-                calls.append(mode)
-                b.r.task.result.task_success = True
-                raise Solved()
-            b.r.arrange = arrange
-            b.choices = lambda k, crossings: iter([('laydown', {})])
-            self.assertTrue(b.run())
-            self.assertEqual(calls, ['laydown'])
+            root = Path(d)
+            source = root/'source'; source.mkdir()
+            original = make_branch(source)
+            self.assertFalse(original.search(1))
+            saved = pickle.loads((source/'checkpoints/d1_a0.pkl').read_bytes())
+            self.assertEqual(saved['search_phase'], 'candidates')
+            self.assertEqual(original.r.session.n_steps, 2)
+            for mode in ('tagged', 'legacy_complete', 'legacy_short'):
+                with self.subTest(mode=mode):
+                    folder = root/mode; folder.mkdir()
+                    resumed = make_branch(folder)
+                    checkpoint = copy.deepcopy(saved)
+                    if mode != 'tagged':
+                        del checkpoint['search_phase']
+                    if mode == 'legacy_short':
+                        checkpoint['runner']['log'][0]['phase'] = 'move'
+                    resumed.resume(checkpoint)
+                    self.assertEqual(resumed.r.session.n_steps, 2)
+                    self.assertFalse(resumed.search(1))
+                    resumed.choices.assert_called_once_with(1, [])
+                    self.assertEqual(resumed.r.session.n_steps, 4 if mode=='legacy_short' else 2)
+                    before = resumed.r.session.n_steps
+                    self.assertFalse(resumed.search(2))
+                    self.assertGreaterEqual(resumed.r.session.n_steps-before, 2)
 
     def test_expanded_candidates_accept_native_valid_ranges(self):
         for rows in CANDIDATES.values():
@@ -306,6 +361,124 @@ class KnotContracts(unittest.TestCase):
         validate_candidate(dict(lift=.2, straighten=1.1, close=0., span_ratio=None))
         for key in ('end_choice', 'arm_order', 'grasp_tilt_deg', 'grasp_yaw_deg', 'pull_pitch_deg', 'path_arch_m'):
             self.assertTrue(any(key in c for c in CANDIDATES['withdraw']), key)
+
+    def test_zero_crossing_clearance_failure_prioritizes_rope_translation(self):
+        b = Branching.__new__(Branching)
+        b.kind = lambda _: 'straighten'
+        b.base_cfg = {}; b.base_args = {}
+        b.extra_candidates = Mock(return_value=iter([]))
+        b.r = SimpleNamespace(decisions=[dict(kind='retreat')],
+            task=SimpleNamespace(result=SimpleNamespace(metrics=dict(on_table=True,
+                final_settling=dict(robot_clear=False)))),
+            rank_translations=lambda k, rows: list(rows))
+        choices = list(b.choices(3, []))
+        self.assertEqual(choices[0][0], 'translate')
+        self.assertEqual(sum(kind == 'translate' for kind, _ in choices), len(CANDIDATES['translate']))
+        self.assertEqual({kind for kind, _ in choices}, {'translate', 'retreat', 'laydown', 'straighten'})
+
+    def test_translation_ranking_uses_native_clearance_without_pruning(self):
+        with tempfile.TemporaryDirectory() as d:
+            r = Runner.__new__(Runner)
+            r.args = SimpleNamespace(output=Path(d))
+            r.task = SimpleNamespace(final_settling_spec=lambda: SimpleNamespace(clearance_m=.005))
+            points = np.array([[.1, -.004, .1], [.102, -.004, .1], [.1, -.006, .1], [.1, -.004, .102]])
+            original = points.copy()
+            state = dict(physics_step=7, fem={'rope': dict(position_m=points)}, release_geometry=dict(
+                schema_version=2, complete=True, physics_step=7, fem_elements={'rope': np.array([[0, 1, 2, 3]])},
+                robot_bounds_m=np.array([[[0., 0., 0.], [.3, .3, .3]]]), robot_convex_planes_m=[np.empty((0, 4))]))
+            r.world = SimpleNamespace(read_state=lambda: state)
+            candidates = [dict(translate_y_m=.02), dict(translate_y_m=-.02), dict(translate_y_m=-.04)]
+            ranked = r.rank_translations(3, candidates)
+            self.assertEqual(ranked, [candidates[1], candidates[2], candidates[0]])
+            np.testing.assert_array_equal(state['fem']['rope']['position_m'], original)
+            state['release_geometry']['physics_step'] = 6
+            self.assertEqual(r.rank_translations(3, candidates), candidates)
+
+    def translation_runner(self):
+        r = Runner.__new__(Runner)
+        r.args = SimpleNamespace(end_offset=.035, speed=.04, settle=0.)
+        r.length, r.dt = 1., .025
+        r.session = SimpleNamespace(sim_time_s=0.)
+        r.q = {'left': np.array([-.4, -.15, 1.]), 'right': np.array([.4, -.15, 1.])}
+        positions = {side: value.copy() for side, value in r.q.items()}
+        r.grasps = {side: dict(turn=None) for side in r.q}
+        r.crossings = lambda: []
+        r.arms_for = lambda _: ('left', 'right')
+        r.tcp = lambda side: positions[side].copy()
+        r.grasp = Mock(return_value=[])
+        r.release = Mock()
+        r.smooth = lambda a, b, speed: np.linspace(a, b, 3)
+        r.solve = lambda side, target, turn: np.asarray(target).copy()
+        commands = []
+        def step(phase):
+            commands.append({side: value.copy() for side, value in r.q.items()})
+            positions.update({side: value.copy() for side, value in r.q.items()})
+            r.session.sim_time_s += r.dt
+        r.step = Mock(side_effect=step)
+        return r, positions, commands
+
+    def test_translation_moves_both_ends_together_then_releases(self):
+        r, positions, commands = self.translation_runner()
+        before = {side: value.copy() for side, value in positions.items()}
+        record = r.arrange(3, dict(translate_y_m=-.02, translate_lift_m=.005), 'translate')
+        for side in positions:
+            np.testing.assert_allclose(positions[side]-before[side], [0., -.02, 0.])
+        for command in commands:
+            np.testing.assert_allclose(command['right']-command['left'], [.8, 0., 0.])
+        self.assertGreater(commands[1]['left'][2], before['left'][2])
+        self.assertEqual(r.release.call_count, 2)
+        self.assertTrue(record['terminal_waited'])
+        self.assertEqual(record['commanded_translation_m'], [0., -.02, 0.])
+
+    def test_translation_ik_failure_does_not_execute_one_arm_alone(self):
+        r, positions, commands = self.translation_runner()
+        before = {side: value.copy() for side, value in r.q.items()}
+        r.smooth = lambda a, b, speed: np.array([b])
+        def solve(side, target, turn):
+            if side == 'right':
+                raise ValueError('unreachable')
+            return target
+        r.solve = solve
+        record = r.arrange(3, dict(translate_y_m=-.02), 'translate')
+        self.assertEqual(record['stopped'], 'translation arm reach limit')
+        self.assertEqual(commands, [])
+        for side in r.q:
+            np.testing.assert_array_equal(r.q[side], before[side])
+        self.assertEqual(r.release.call_count, 2)
+
+    def test_clearance_translation_regrasps_limited_segment_and_keeps_end_fallback(self):
+        r, _, _ = self.translation_runner()
+        r.stations = np.array([0., .4, 1.])
+        r.line = lambda: np.array([[-.3, .1, 0.], [.008, 0., 0.], [.5, .1, 0.]])
+        points = np.array([[.006, 0., 0.], [.009, 0., 0.], [.006, .001, 0.], [.006, 0., .001]])
+        geometry = dict(schema_version=2, complete=True, physics_step=1,
+            fem_elements={'rope': np.array([[0, 1, 2, 3]])},
+            robot_bounds_m=np.array([[[-.005]*3, [.005]*3], [[-.1, -.03, -.03], [-.09, .03, .03]]]),
+            robot_convex_planes_m=[np.empty((0, 4)), np.empty((0, 4))])
+        state = dict(physics_step=1, release_geometry=geometry, fem={'rope': {'position_m': points}})
+        r.world = SimpleNamespace(read_state=Mock(return_value=state))
+        r.task = SimpleNamespace(final_settling_spec=lambda: SimpleNamespace(clearance_m=.005))
+        record = r.arrange(3, dict(translate_grasp='clearance', translate_y_m=-.02), 'translate')
+        self.assertEqual(record['grasp_selection']['robot_box_index'], 0)
+        r.grasp.assert_called_once_with(('left', 'right'), (.4, .965), 'd3:translate:grasp')
+        shifted, _ = r.translation_stations(dict(translate_grasp='clearance', translate_grasp_offset_m=-.04))
+        np.testing.assert_allclose(shifted, [.36, .965])
+        r.world.read_state.reset_mock()
+        self.assertEqual(r.translation_stations({})[0], (.035, .965))
+        r.world.read_state.assert_not_called()
+        geometry['physics_step'] = 0
+        stations, info = r.translation_stations(dict(translate_grasp='clearance'))
+        self.assertEqual(stations, (.035, .965))
+        self.assertIn('stale', info['fallback'])
+
+    def test_translation_grasp_candidates_preserve_both_modes(self):
+        self.assertEqual({row['translate_grasp'] for row in CANDIDATES['translate']}, {'ends', 'clearance'})
+        self.assertEqual(len(CANDIDATES['translate']), 72)
+        self.assertEqual({row['translate_grasp_offset_m'] for row in CANDIDATES['translate']
+                          if row['translate_grasp']=='clearance'}, {-.08, .08})
+        validate_candidate(dict(translate_grasp='clearance', translate_grasp_offset_m=-.04))
+        with self.assertRaises(ValueError):
+            validate_candidate(dict(translate_grasp='unknown'))
 
     def test_audit_requires_actual_success_exact_instance_and_all_replays(self):
         report = dict(instance_matches=True, instance_exact=True, all_success=True, n_actions=5,

@@ -28,6 +28,8 @@ topogym/**/legacy
 topogym/**/redundants
 topogym/**/rollout_simulation
 **/*.md
+# Relay robot identity includes the original robot documentation bytes.
+!assets/robots/**/*.md
 **/__pycache__/**
 **/*.pyc
 **/.env*

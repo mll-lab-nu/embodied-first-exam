@@ -1,0 +1,657 @@
+{
+  "task_id": "interlocked_claws",
+  "variation_id": "interlocked_claws_medium",
+  "seed": 0,
+  "model_revision": "opposed_pregrasp_wide2_v1",
+  "terminal_revision": "claws_separation_v1_grasp_contact_2mm",
+  "instance_id": "ba6f4e4e2f379de6ba3e1ed0270223860ac1362a1af70bb2e6a12d07b3a91947",
+  "targets": [
+    "piece_0"
+  ],
+  "remainder": [
+    "piece_1"
+  ],
+  "initial_poses": {
+    "piece_0": {
+      "position_m": [
+        -0.18388530900674327,
+        -0.019,
+        1.154518709762609
+      ],
+      "quaternion_wxyz": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "piece_1": {
+      "position_m": [
+        -0.18388530900674327,
+        -0.019,
+        1.154518709762609
+      ],
+      "quaternion_wxyz": [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "goal_region": {
+    "center_xy_m": [
+      -0.13567859999999998,
+      0.31209887803112785
+    ],
+    "half_size_m": [
+      0.20709887803112786,
+      0.20709887803112786
+    ],
+    "table_height_m": 0.9196429,
+    "placement_height_m": 0.4041977560622558,
+    "separator_normal_xy": [
+      0.0,
+      1.0
+    ],
+    "separator_offset_m": 4.321336751975102e-10,
+    "separation_margin_m": 0.03,
+    "yaw_deg": 0.0,
+    "boundary_margin_m": 0.001,
+    "penetration_tolerance_m": 0.001
+  },
+  "asset_sha256": {
+    "geometry_report.json": "8012b9621247b50e695787af39d1eef6b82105612a74e5cbdea670f700c0ecd5",
+    "goal_region.obj": "7d36772a68c47dbe77571ec40085a93ff3a02647279a3b3ecd3374adde8c2a59",
+    "material.mtl": "afbdd35109a5eeab8d376b8fe86e27868670daefac91c0af80bb917a9bd8e455",
+    "piece_0.glb": "74552e2eab94edebb4d7e3d6ef579697c946255a26169bacba7ca983b2fc0438",
+    "piece_0.obj": "3502a4b764468f5434b95b47d6a3f805604f197856b9d5922133e5375ac9b457",
+    "piece_0.urdf": "45ed0d2b94b0629794c540f789ceecbf2c5f728390063a965406d84175025c83",
+    "piece_1.glb": "bf142d478eb43580069d1e81b7c6cc2c9c7090541d5c3a0ffff9af762f2334da",
+    "piece_1.obj": "9bfc99437b4b493cf03bb254e883aa1e6f15086122b94310a2d508efa662ef9c",
+    "piece_1.urdf": "70cc8b8eb7a7861580426fe280d4eeb77a4e50f361b546e393b4cd162c4061ac"
+  },
+  "geometry_scope": "visible surfaces plus authored collision shapes; convexification respected",
+  "native_primitive_enclosure": "64-sided circumscribed cylinders; circumscribed subdivision-3 spheres",
+  "robot_execution_verified": false,
+  "task_success": false,
+  "process_quality_passed": null,
+  "asset_report": {
+    "family": "acute_windows_opposed",
+    "angle_deg": 55.0,
+    "scale": 0.6301530589116767,
+    "gate_extra_per_side_m": [
+      0.002,
+      0.002
+    ],
+    "aperture_m": [
+      0.10482448942586828,
+      0.1174275506041018
+    ],
+    "gate_b_aperture_m": [
+      0.10482448942586828,
+      0.1174275506041018
+    ],
+    "initial_surface_gap_m": 0.0045206137001514435,
+    "finger_joint_position_m": 0.0222,
+    "grip_width_m": 0.028,
+    "grip_height_m": 0.024,
+    "collision_model": "compound_boxes_cylinders_spheres",
+    "robot_geometry_modified": false,
+    "initialization": "bilateral friction pregrasp",
+    "full_path_verified": false,
+    "two_turns_necessary_verified": false
+  },
+  "target": "piece_0",
+  "other": "piece_1",
+  "frame": "target piece authored frame",
+  "variation": "medium",
+  "status": "object_witness_verified",
+  "scope": "finite-instance object-only constructive witness",
+  "accepted_proof": false,
+  "robot_ik_verified": false,
+  "clearance_requested_m": 0.004,
+  "interpolation": "linear translation and shortest quaternion SLERP per edge",
+  "distance_error_assumption_m": 1e-06,
+  "route_provenance": {
+    "provenance": "2026-09-30 staged search in the frame piece's authored coordinates: yaw 15 deg + side shift to the first window, roll 36 deg about the shaft, advance through gate A, turn to gate B (yaw 55) with the shaft crossing near the top bar, advance through gate B; bidirectional RRT joined the two staged segments; edges certified at 0.5 mm during the search; then refined to a 1 mm certificate by inserting hill-climbed midpoints on blocked edges; final pose shortened to 0.15 model units past gate B (reachability); widened to a 4 mm certificate by inserting drift-bounded hill-climbed midpoints after the first physical runs brushed the frame at the window passages",
+    "goal_parameters": {
+      "yaw": 50,
+      "roll": 37,
+      "yB": -0.055,
+      "zB": 0.074,
+      "poses": null,
+      "lb": 0.0005139899084299697
+    },
+    "frame": "piece_0",
+    "moving": "piece_1",
+    "search_lower_bound_m": 0.0040005227602761505
+  },
+  "separation_certificate": {
+    "passed": true,
+    "edges": [
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.0041210340694672245,
+        "leaves": 128,
+        "queries": 255,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.004026762023840172,
+        "leaves": 95,
+        "queries": 189,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.004008818552427251,
+        "leaves": 91,
+        "queries": 181,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.0040005227602761505,
+        "leaves": 81,
+        "queries": 161,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.0040054540926996035,
+        "leaves": 37,
+        "queries": 73,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.004026390049644729,
+        "leaves": 21,
+        "queries": 41,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.004002467756889224,
+        "leaves": 40,
+        "queries": 79,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.004045704405438709,
+        "leaves": 38,
+        "queries": 75,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.004002887225192168,
+        "leaves": 18,
+        "queries": 35,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.004007566999920337,
+        "leaves": 39,
+        "queries": 77,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.02450846276796549,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      }
+    ],
+    "clearance_lower_bound_m": 0.0040005227602761505
+  },
+  "separation_table_certificate": {
+    "passed": true,
+    "edges": [
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.1050239931545115,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.10754862259126377,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.11901140164683119,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.1551766190836374,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.16551404759961016,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.16431612055350847,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.15317428953541098,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.10020907377559997,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.14689811102186828,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.1441107736016447,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      },
+      {
+        "passed": true,
+        "clearance_lower_bound_m": 0.16761646559645652,
+        "leaves": 1,
+        "queries": 1,
+        "distance_error_m": 1e-06,
+        "coverage": "bounded rigid surface motion; no robot/SDF qualification"
+      }
+    ],
+    "clearance_lower_bound_m": 0.10020907377559997
+  },
+  "mechanism_geometry_path_verified": true,
+  "separation_goal": {
+    "evaluation_status": "available",
+    "separated": true,
+    "quiet": true,
+    "separating_plane_gap_m": 0.03939808399641697,
+    "minimum_separation_m": 0.01,
+    "maximum_linear_speed_m_s": 0.0,
+    "maximum_angular_speed_rad_s": 0.0,
+    "holding_allowed": true,
+    "goal_kind": "whole_piece_separation"
+  },
+  "queries": 1178,
+  "route": {
+    "frame": "piece_0",
+    "moving": "piece_1",
+    "relative_poses": [
+      {
+        "position_m": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "quaternion_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "position_m": [
+          0.0,
+          -0.03150765294558384,
+          0.0
+        ],
+        "quaternion_wxyz": [
+          0.9914448613738104,
+          0.0,
+          0.0,
+          0.13052619222005157
+        ]
+      },
+      {
+        "position_m": [
+          -0.0043028463271259695,
+          -0.017436394794089642,
+          0.0008852963054286512
+        ],
+        "quaternion_wxyz": [
+          0.9795429696585444,
+          0.15622570991236034,
+          0.020006225566280542,
+          0.12525513599645427
+        ]
+      },
+      {
+        "position_m": [
+          -0.007669215681669272,
+          -0.002885750367390128,
+          0.009627882015581825
+        ],
+        "quaternion_wxyz": [
+          0.9429200959569076,
+          0.3063733111502213,
+          0.04033481160704699,
+          0.12413778565807383
+        ]
+      },
+      {
+        "position_m": [
+          0.03582752278388191,
+          0.005188510028293575,
+          0.009739700436994748
+        ],
+        "quaternion_wxyz": [
+          0.9410371258952691,
+          0.31369071366438894,
+          0.044789759826349175,
+          0.11849532168906808
+        ]
+      },
+      {
+        "position_m": [
+          0.058721847977724825,
+          0.009553399783254458,
+          0.01014128592615127
+        ],
+        "quaternion_wxyz": [
+          0.9410061891976665,
+          0.3114908687803866,
+          0.05925321313137008,
+          0.11819410853225254
+        ]
+      },
+      {
+        "position_m": [
+          0.07754614029482908,
+          0.01994763544924325,
+          0.009627882015581825
+        ],
+        "quaternion_wxyz": [
+          0.9429200959569076,
+          0.3063733111502213,
+          0.04033481160704699,
+          0.12413778565807383
+        ]
+      },
+      {
+        "position_m": [
+          0.082051276404217,
+          0.008847912471914368,
+          0.009493031033258858
+        ],
+        "quaternion_wxyz": [
+          0.9252386768917124,
+          0.31763701626625673,
+          0.07332527703623196,
+          0.19407091597842066
+        ]
+      },
+      {
+        "position_m": [
+          0.09832443127685928,
+          -0.02451408003663283,
+          0.00637031759052098
+        ],
+        "quaternion_wxyz": [
+          0.8594731133444375,
+          0.28757568096292363,
+          0.13409874233214994,
+          0.40077889473083034
+        ]
+      },
+      {
+        "position_m": [
+          0.13428743668986,
+          0.01157536062020092,
+          0.009159805569422804
+        ],
+        "quaternion_wxyz": [
+          0.8549808578016662,
+          0.3090380386133023,
+          0.14717498294170492,
+          0.38967005001523913
+        ]
+      },
+      {
+        "position_m": [
+          0.16718370961752388,
+          0.05754921230929888,
+          0.00637031759052098
+        ],
+        "quaternion_wxyz": [
+          0.8594731133444375,
+          0.28757568096292363,
+          0.13409874233214994,
+          0.40077889473083034
+        ]
+      },
+      {
+        "position_m": [
+          0.1793353469717588,
+          0.07203096978211035,
+          0.00637031759052098
+        ],
+        "quaternion_wxyz": [
+          0.8594731133444375,
+          0.28757568096292363,
+          0.13409874233214994,
+          0.40077889473083034
+        ]
+      }
+    ],
+    "other_world_poses": [
+      {
+        "position_m": [
+          -0.18388530900674327,
+          -0.019,
+          1.154518709762609
+        ],
+        "quaternion_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      {
+        "position_m": [
+          -0.18388530900674327,
+          -0.050507652945583834,
+          1.154518709762609
+        ],
+        "quaternion_wxyz": [
+          0.9914448613738104,
+          0.0,
+          0.0,
+          0.13052619222005157
+        ]
+      },
+      {
+        "position_m": [
+          -0.18818815533386923,
+          -0.03643639479408964,
+          1.1554040060680377
+        ],
+        "quaternion_wxyz": [
+          0.9795429696585444,
+          0.15622570991236034,
+          0.020006225566280542,
+          0.12525513599645427
+        ]
+      },
+      {
+        "position_m": [
+          -0.19155452468841255,
+          -0.021885750367390128,
+          1.1641465917781908
+        ],
+        "quaternion_wxyz": [
+          0.9429200959569076,
+          0.3063733111502213,
+          0.04033481160704699,
+          0.12413778565807383
+        ]
+      },
+      {
+        "position_m": [
+          -0.14805778622286137,
+          -0.013811489971706423,
+          1.1642584101996039
+        ],
+        "quaternion_wxyz": [
+          0.9410371258952691,
+          0.31369071366438894,
+          0.044789759826349175,
+          0.11849532168906808
+        ]
+      },
+      {
+        "position_m": [
+          -0.12516346102901843,
+          -0.009446600216745541,
+          1.1646599956887604
+        ],
+        "quaternion_wxyz": [
+          0.9410061891976665,
+          0.3114908687803866,
+          0.05925321313137008,
+          0.11819410853225254
+        ]
+      },
+      {
+        "position_m": [
+          -0.10633916871191419,
+          0.000947635449243249,
+          1.1641465917781908
+        ],
+        "quaternion_wxyz": [
+          0.9429200959569076,
+          0.3063733111502213,
+          0.04033481160704699,
+          0.12413778565807383
+        ]
+      },
+      {
+        "position_m": [
+          -0.10183403260252627,
+          -0.010152087528085631,
+          1.1640117407958679
+        ],
+        "quaternion_wxyz": [
+          0.9252386768917124,
+          0.31763701626625673,
+          0.07332527703623196,
+          0.19407091597842066
+        ]
+      },
+      {
+        "position_m": [
+          -0.085560877729884,
+          -0.04351408003663283,
+          1.16088902735313
+        ],
+        "quaternion_wxyz": [
+          0.8594731133444375,
+          0.28757568096292363,
+          0.13409874233214994,
+          0.40077889473083034
+        ]
+      },
+      {
+        "position_m": [
+          -0.04959787231688326,
+          -0.00742463937979908,
+          1.163678515332032
+        ],
+        "quaternion_wxyz": [
+          0.8549808578016662,
+          0.3090380386133023,
+          0.14717498294170492,
+          0.38967005001523913
+        ]
+      },
+      {
+        "position_m": [
+          -0.01670159938921939,
+          0.03854921230929888,
+          1.16088902735313
+        ],
+        "quaternion_wxyz": [
+          0.8594731133444375,
+          0.28757568096292363,
+          0.13409874233214994,
+          0.40077889473083034
+        ]
+      },
+      {
+        "position_m": [
+          -0.004549962034984478,
+          0.053030969782110346,
+          1.16088902735313
+        ],
+        "quaternion_wxyz": [
+          0.8594731133444375,
+          0.28757568096292363,
+          0.13409874233214994,
+          0.40077889473083034
+        ]
+      }
+    ]
+  },
+  "limitations": [
+    "Numerical FCL distances assume the stated 1 micrometre error budget",
+    "One world realization with the target fixed; the robot may choose another",
+    "No robot, gripper, contact dynamics, or Task success qualification"
+  ],
+  "wall_time_s": 2.2182491729035974
+}

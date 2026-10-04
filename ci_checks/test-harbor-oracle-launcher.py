@@ -38,6 +38,20 @@ if len(sys.argv)>1 and sys.argv[1].endswith('/test_harbor_oracles.py'):
     (out/'results.json').write_text(json.dumps(dict(status='complete',tasks=rows)))
     with open(os.environ['TEST_DISPATCH_LOG'],'a') as f: f.write(json.dumps(a)+'\\n')
     raise SystemExit(0 if ok else 1)
+if len(sys.argv)>1 and sys.argv[1].endswith('/topogym_merge_candidate.py'):
+    a=sys.argv[2:]; out=Path(a[a.index('--output')+1]); out.mkdir(parents=True)
+    (out/'candidate.json').write_text('{}')
+    (out/'build_image.sh').write_text('#!/bin/bash\\nset -eu\\nprintf built > "$(dirname -- "$0")/image-built"\\n')
+    raise SystemExit(0)
+if len(sys.argv)>1 and sys.argv[1].endswith('/topogym_candidate_pipeline.py'):
+    a=sys.argv[2:]; out=Path(a[a.index('--candidate')+1])
+    if not (out/'image-built').exists(): raise SystemExit('Image was never built')
+    (out/'image.lock.json').write_text('{}')
+    family=a[a.index('--families')+1].replace('_','-')
+    for mode in ('privileged','standard'):
+        task=out/'tasks'/f'topogym-{family}-easy-i00-{mode}'
+        task.mkdir(parents=True,exist_ok=True); (task/'task_release.json').write_text('{}')
+    raise SystemExit(0)
 os.execv(os.environ['TEST_REAL_PYTHON'],[os.environ['TEST_REAL_PYTHON'],*sys.argv[1:]])
 ''')
         self.shim.chmod(0o755)
@@ -89,6 +103,18 @@ os.execv(os.environ['TEST_REAL_PYTHON'],[os.environ['TEST_REAL_PYTHON'],*sys.arg
     def test_unsupported_tier_is_rejected_before_work(self):
         self.assertEqual(self.run_queue("--tiers", "very_easy").returncode, 2)
         self.assertFalse((self.root / "output").exists())
+
+    def test_fresh_host_builds_image_before_tasks_and_resume_keeps_bound_image(self):
+        command = ["bash", str(SCRIPT), "--output", str(self.root / "output"),
+                   "--families", "cast_keyhole", "--tiers", "easy"]
+        result = subprocess.run(command, env=self.env, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        image = self.root / "output/candidate/image-built"
+        self.assertTrue(image.exists())
+        before = image.stat().st_mtime_ns
+        result = subprocess.run([*command, "--resume"], env=self.env, text=True, capture_output=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(image.stat().st_mtime_ns, before)
 
 
 if __name__ == "__main__":

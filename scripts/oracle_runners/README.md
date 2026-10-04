@@ -2,6 +2,12 @@
 
 从仓库根目录执行 `python scripts/oracle_runners/<脚本名>.py --help`。原有参数不变；每个管理入口冻结当前源码，然后从快照中的同一子目录启动 worker。目录迁移不修改 `runs/`、`task_rollouts/`、`solvability_proof/` 的源码快照、历史命令、哈希或结果。
 
+跨机器的三档 Harbor oracle grading 使用
+[完整交接流程](../../topogym/planning/harbor_bridge/README.md#逐项实机-grade-交接easyhard)。
+先运行 `python ci_checks/check-oracle-portability.py --check-git`；所需参考输入已放入
+`topogym/planning/harbor_bridge/reference_data/`，应与代码一起提交。
+此交付范围是 Harbor 的 Session 回调；下文历史独立审计／重渲染命令仍需要其原始证据目录。
+
 | 脚本 | 职责 |
 | --- | --- |
 | `harbor_oracle.py` | 跨任务的冻结实例检查、私有 oracle 候选打包和 Harbor oracle/nop 批量执行；[接入说明](../../topogym/planning/harbor_bridge/README.md) |

@@ -22,7 +22,8 @@ ROUTE_KEYS = ("lift", "hold", "direction", "straighten", "end_choice", "arm_orde
               "grasp_yaw_deg", "grasp_tilt_deg", "pull_yaw_deg", "pull_pitch_deg",
               "pull_offset", "anchor_offset", "path_arch_m", "path_lateral_m",
               "grasp_shift_m", "grasp_search_m", "pinch_height_m", "span_ratio",
-              "spread_lift", "clear_spread_steps", "retreat_height", "grasp_flip", "approach_s", "approach_wait_s")
+              "spread_lift", "clear_spread_steps", "retreat_height", "grasp_flip", "approach_s", "approach_wait_s",
+              "translate_x_m", "translate_y_m", "translate_lift_m", "translate_grasp", "translate_grasp_offset_m")
 ARG_KEYS = ("close", "speed", "max_pull", "full_pull", "end_offset")
 CANDIDATES = {
     "withdraw": [{}, dict(end_choice='A'), dict(end_choice='B'), dict(arm_order='swapped'),
@@ -43,6 +44,12 @@ CANDIDATES = {
                    dict(pull_pitch_deg=15.), dict(pull_pitch_deg=-15.),
                    dict(arm_order='swapped', grasp_tilt_deg=20., end_offset=.06)],
     "retreat": [{}, dict(retreat_height=.15)],
+    "translate": [dict(translate_x_m=dx*distance, translate_y_m=dy*distance, translate_lift_m=.005,
+                       translate_grasp=mode, translate_grasp_offset_m=offset)
+                  for distance in (.02, .04, .08)
+                  for mode, offset in (('clearance', .08), ('clearance', -.08), ('ends', 0.))
+                  for dx, dy in ((0., -1.), (0., 1.), (-1., 0.), (1., 0.),
+                                 (-1., -1.), (1., -1.), (-1., 1.), (1., 1.))],
     "laydown": [{}, dict(arm_order='swapped'), dict(grasp_tilt_deg=20.), dict(grasp_tilt_deg=-20.)],
     "carry": [{}],
 }
@@ -58,18 +65,20 @@ def validate_candidate(candidate):
         raise ValueError("hold must be far or over")
     if "direction" in candidate and candidate["direction"] not in ("tangent", "away"):
         raise ValueError("direction must be tangent or away")
-    for key, allowed in (('end_choice', ('auto', 'A', 'B')), ('arm_order', ('auto', 'swapped'))):
+    for key, allowed in (('end_choice', ('auto', 'A', 'B')), ('arm_order', ('auto', 'swapped')),
+                         ('translate_grasp', ('ends', 'clearance'))):
         if key in candidate and candidate[key] not in allowed:
             raise ValueError(f'{key} must be one of {allowed}')
     if 'grasp_flip' in candidate and candidate['grasp_flip'] not in (-1, 1):
         raise ValueError('grasp_flip must be -1 or 1')
-    for key in set(ROUTE_KEYS)-{'hold', 'direction', 'end_choice', 'arm_order'}:
+    for key in set(ROUTE_KEYS)-{'hold', 'direction', 'end_choice', 'arm_order', 'translate_grasp'}:
         if key not in candidate or (key == 'span_ratio' and candidate[key] is None):
             continue
         value = candidate[key]
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not np.isfinite(value):
             raise ValueError(f'{key} must be finite')
-        if key in {'lift', 'spread_lift', 'grasp_search_m', 'clear_spread_steps', 'retreat_height', 'approach_wait_s'} and value < 0:
+        if key in {'lift', 'spread_lift', 'grasp_search_m', 'clear_spread_steps', 'retreat_height', 'approach_wait_s',
+                   'translate_lift_m'} and value < 0:
             raise ValueError(f'{key} must be nonnegative')
         if key in {'straighten', 'span_ratio', 'pull_offset', 'anchor_offset', 'approach_s'} and value <= 0:
             raise ValueError(f'{key} must be positive')
@@ -88,6 +97,7 @@ class Branching:
         (args.output/"checkpoints").mkdir()
         self.start = 1
         self.backtracks = 0
+        self._resume_candidate_decision = None
         if args.resume:
             try:
                 self.resume(pickle.loads(args.resume.read_bytes()))
@@ -126,13 +136,28 @@ class Branching:
         self.start = saved["decision"]
         self.base_cfg, self.base_args = saved["base_cfg"], saved["base_args"]
         self.backtracks = saved["backtracks"]
+        # New checkpoints are taken after the initial terminal wait. Resume
+        # replays that wait too, so enter the saved decision at its candidates.
+        # Legacy checkpoints can prove the same phase with a complete recorded
+        # final_settle suffix. Unknown/short histories retain the old wait.
+        log = saved['runner']['log']
+        first_wait = len(log)
+        while first_wait and log[first_wait-1].get('phase') == 'final_settle':
+            first_wait -= 1
+        waited = 0.
+        if first_wait < len(log):
+            start_time = float(log[first_wait-1]['t']) if first_wait else 0.
+            waited = float(log[-1]['t'])-start_time
+        candidates_ready = (saved.get("search_phase") == "candidates" or
+                            (np.isfinite(waited) and waited+1e-9 >= self.args.settle))
+        self._resume_candidate_decision = self.start if candidates_ready else None
         print(f"RESUMED at {s.sim_time_s:.3f}s: {len(r.crossings())} crossings", flush=True)
 
     def checkpoint(self, k):
         r, s = self.r, self.r.session
         r.env._checkpoint_current()  # required by history_storage='segment'
         state = {name: copy.deepcopy(getattr(r, name, None)) for name in RUNNER_FIELDS}
-        saved = dict(schema_version=2, decision=k, instance_identity=r.identity,
+        saved = dict(schema_version=2, decision=k, search_phase="candidates", instance_identity=r.identity,
                      action_layout=s.action_layout, actions=np.asarray(s._recording, np.float32).reshape(-1, s.action_dim),
                      ticks=np.asarray(s._recorded_ticks, np.int64), centerline=r.line(), joint_positions=s.joint_positions(),
                      attempts=self.attempts, selection=self.selection, runner=state,
@@ -194,7 +219,7 @@ class Branching:
             record = r.carry(cfg)
         elif kind == "straighten":
             record = r.straighten(k, cfg)
-        elif kind in {'retreat', 'laydown'}:
+        elif kind in {'retreat', 'laydown', 'translate'}:
             record = r.arrange(k, cfg, kind)
         else:
             from .route_rule import choose
@@ -220,7 +245,10 @@ class Branching:
 
     def candidates(self, k, kind):
         seen = set()
-        for candidate in CANDIDATES[kind]:
+        candidates = CANDIDATES[kind]
+        if kind == 'translate':
+            candidates = self.r.rank_translations(k, candidates)
+        for candidate in candidates:
             key = json.dumps({**self.base_cfg, **self.base_args, **candidate}, sort_keys=True)
             if key not in seen:
                 seen.add(key)
@@ -272,9 +300,12 @@ class Branching:
         preferred = self.kind(crossings)
         if not crossings:
             metrics = getattr(self.r.task.result, 'metrics', {})
-            kinds = ['retreat', 'laydown', 'straighten']
+            kinds = ['retreat', 'translate', 'laydown', 'straighten']
+            if metrics.get('on_table') and metrics.get('final_settling', {}).get('robot_clear') is False:
+                kinds = ['translate', 'retreat', 'laydown', 'straighten']
             if metrics.get('final_settling', {}).get('robot_clear') is True:
-                kinds = ['laydown', 'straighten', 'retreat'] if not metrics.get('on_table') else ['straighten', 'retreat', 'laydown']
+                kinds = (['laydown', 'straighten', 'translate', 'retreat'] if not metrics.get('on_table')
+                         else ['straighten', 'translate', 'retreat', 'laydown'])
             if self.r.decisions and self.r.decisions[-1]['kind'] in kinds:
                 previous = self.r.decisions[-1]['kind']
                 kinds.remove(previous)
@@ -297,7 +328,9 @@ class Branching:
     def search(self, k):
         r = self.r
         crossings = r.crossings()
-        if not crossings and not (r.decisions and r.decisions[-1].get('terminal_waited')):
+        resumed_candidates = getattr(self, '_resume_candidate_decision', None) == k
+        self._resume_candidate_decision = None
+        if not crossings and not resumed_candidates and not (r.decisions and r.decisions[-1].get('terminal_waited')):
             deadline = r.session.sim_time_s+self.args.settle
             while r.session.sim_time_s < deadline:
                 r.step("final_settle")
@@ -368,7 +401,7 @@ class Branching:
     def dump(self, result=None):
         write_json_atomic(self.args.output/"branching.json", dict(variation=self.args.variation,
             instance=str(self.args.instance), result=result, base_route=self.base_cfg, base_args=self.base_args,
-            search_policy=dict(revision="native_rules_tracking_search_v3", tight_curl_is_diagnostic=True,
+            search_policy=dict(revision="native_rules_clearance_search_v6", tight_curl_is_diagnostic=True,
                                max_nonprogress_decisions=self.args.max_nonprogress_decisions,
                                max_decisions=self.args.max_decisions, max_attempts=self.args.max_attempts),
             selection=self.selection, attempts=self.attempts, backtracks=self.backtracks,

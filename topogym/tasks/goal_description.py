@@ -250,9 +250,15 @@ def describe_goal(task):
 
     settling = task.final_settling_spec()
     if settling is not None:
+        release = (f"Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least {mm(settling.clearance_m)} "
+                   "of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.")
+        if settling.robot_contact_policy == "fixed_contact_active_clearance_v1":
+            release = (f"Release all target parts and disengage any assisted grasp. Keep at least {mm(settling.clearance_m)} "
+                       "of verified clearance between the rope and grippers or other robot links that can move. "
+                       "World-fixed bases may touch the rope normally. Interior overlap with any robot part is forbidden; "
+                       "ambiguous bounding-volume overlaps require a native-solid geometry check.")
         rules += [
-            f"Release all target parts and disengage any assisted grasp. Withdraw the robot until there is at least {mm(settling.clearance_m)} "
-            "of verified clearance from every target part; opening the fingers while still touching or surrounding the target is insufficient.",
+            release,
             f"During confirmation, every target point or rigid body's linear speed must be at most {mm(settling.maximum_speed_m_s)}/s "
             f"and its displacement from the start of confirmation at most {mm(settling.maximum_drift_m)}."
             + (f" Each target rigid body's angular speed must be at most {settling.maximum_angular_speed_rad_s:g} rad/s "

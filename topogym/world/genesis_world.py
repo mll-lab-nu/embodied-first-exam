@@ -378,11 +378,11 @@ class GenesisWorld:
         if self._contact_collector is not None:
             self._contact_collector.birth()
 
-    def configure_final_settling(self, rigid_targets):
+    def configure_final_settling(self, rigid_targets, *, exact_robot_contact=False):
         """Enable read-only clearance evidence only for tasks that require release."""
         self._require_built()
         from .physics.release_geometry import ReleaseGeometry
-        self._release_geometry = ReleaseGeometry(self, rigid_targets)
+        self._release_geometry = ReleaseGeometry(self, rigid_targets, exact_robot_contact=exact_robot_contact)
 
     def read_state(self):
         self._require_built()

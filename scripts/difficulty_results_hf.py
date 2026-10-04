@@ -26,6 +26,7 @@ import uuid
 
 from difficulty_hf_auth import HFError, error_from_exception
 from collect_batch_results import ARTIFACT_CONTRACT_VERSION, OPTIONAL_DIAGNOSTICS, result_artifacts
+from helper_assignment import planned_trials
 
 SCHEMA = 1
 COMPLETE = {"solved", "unsolved", "not_evaluable", "invalid_submission"}
@@ -191,7 +192,7 @@ class UploadLog:
 def load_results(run):
     run = Path(run)
     manifest = json_file(safe_file(run, run / "manifest.lock.json"))
-    if manifest.get("schema_version") != 1 or manifest.get("manifest_sha256") != digest(
+    if manifest.get("schema_version") not in (1, 2) or manifest.get("manifest_sha256") != digest(
             {k: v for k, v in manifest.items() if k != "manifest_sha256"}):
         raise HFError("invalid_results", "manifest identity check failed")
     source = json_file(safe_file(run, run / "source_identity.json"))
@@ -232,7 +233,8 @@ def load_results(run):
         if isinstance(error, HFError):
             raise
         raise HFError("invalid_results", "invalid trials.jsonl; collect results before uploading") from None
-    planned = {(*key, mode) for key in samples for mode in ("limited", "unlimited")}
+    planned = {(sample['task_id'], sample['difficulty'], sample['sample_id'], mode)
+               for sample, mode in planned_trials(manifest)}
     if not planned or {key[:-1] for key in seen} != planned or manifest["trial_count"] != len(planned):
         raise HFError("invalid_results", "collected results must include every planned trial")
     return manifest, source, samples, sorted(rows, key=lambda r: tuple(r[k] for k in ("task_id", "difficulty", "sample_id", "mode", "attempt")))

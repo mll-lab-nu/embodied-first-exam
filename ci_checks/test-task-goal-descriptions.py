@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT), str(ROOT/'scripts')]
@@ -66,7 +67,9 @@ class PublicGoalTests(unittest.TestCase):
     def test_release_requirements_include_shared_settling(self):
         for name in ('knot_untying', 'cast_coil', 'buzz_wire_3d', 'blanket_flatten'):
             text = task_definition(name, 'medium')().public_instruction()
-            self.assertIn('5 mm of verified clearance', text)
+            self.assertIn(('1' if name == 'knot_untying' else '5')+' mm of verified clearance', text)
+            if name == 'knot_untying':
+                self.assertIn('World-fixed bases may touch', text)
             self.assertIn('displacement from the start of confirmation', text)
 
     def test_generator_refuses_stale_or_mismatched_describe(self):
@@ -104,6 +107,14 @@ class PublicGoalTests(unittest.TestCase):
             cfg = instance['simulator']
             task = task_definition(name, cfg['variation_id'], cfg['seed'])(cfg.get('task_parameters', {}), seed=cfg['seed'])
             requirements = render_goal(describe_goal(task))
+            if name == 'knot_untying' and 'public_goal' not in instance:
+                # These untiered i00 packages predate public_goal metadata and
+                # remain frozen on their original image/release contract. A
+                # local v5 oracle result must not relabel their v4 text.
+                from topogym.evaluation.terminal import SettlingSpec
+                with patch.object(task, 'final_settling_spec', return_value=SettlingSpec(fem_targets=('rope',),
+                        maximum_speed_m_s=task.config['terminal']['maximum_speed_m_s'])):
+                    requirements = render_goal(describe_goal(task))
             for target in (folder, folder.with_name(folder.name+'-limited')):
                 with self.subTest(task=name, mode=target.name):
                     self.assertIn(requirements, (target/'instruction.md').read_text())

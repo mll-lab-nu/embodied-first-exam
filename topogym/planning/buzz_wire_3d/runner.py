@@ -18,12 +18,14 @@ ROOT = Path(__file__).resolve().parents[3]
 def worker(args, *, session=None):
     from dataclasses import replace
     import torch
-    from topogym.simulator import Env, SimulatorConfig, SegmentRunner
+    from topogym.simulator import Env, SimulatorConfig
+    if session is None:
+        from topogym.simulator import SegmentRunner
     from topogym.config.registry import task_definition
     from topogym.planning.buzz_wire_3d import BuzzWirePolicy
     from topogym.utils.grasp import GraspAssistConfig, GraspTarget
     from topogym.utils.io import write_json_atomic, to_jsonable
-    from topogym.simulator.rollout_simulation.segment_contract import fingerprint
+    from topogym.planning.harbor_bridge.callbacks import fingerprint
     torch.set_num_threads(1)
     output = args.output
     compiled = json.loads(args.compiled_actions.read_text()) if args.compiled_actions else None
@@ -233,4 +235,3 @@ def worker(args, *, session=None):
     finally:
         report["wall_time_s"] = time.time()-report["started"]
         write_json_atomic(output/"run_report.json", report)
-

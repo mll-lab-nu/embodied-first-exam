@@ -100,26 +100,55 @@ Blanket、Rope、Knot 的 easy / medium / hard，共 33 个实例、最多 66 �
 不激活发布版本。完整执行可能耗时很长；`--wall-seconds` 是每个实例双模式的总时限，
 不是整个 33 项队列的一小时时限。
 
-在本机工作区运行，保留 `.venv-gs121-nyx`、`.venv-harbor`、`solvability_proof/` 和
-私有 planning 数据；仅复制 bash 文件到另一台机器不足以运行。需要 Docker daemon、
-NVIDIA Container Toolkit、可用 CUDA/Nyx GPU，以及与当前公共源码一致的本地候选镜像。
-本轮使用 `ghcr.io/luigivamper/rcb-topogym:0.2.13-dev-cu128`；镜像身份会严格核验。
-不要在队列运行时修改其源码、镜像标签或任务包。
+接收方需要完整 Git checkout、Python 3.12 管理环境、Docker daemon、NVIDIA Container Toolkit
+及可用 CUDA/Nyx GPU。三档 Harbor 回调的参考输入随 `topogym/planning/` 交付，
+无需复制原机器的 `runs/` 或 `solvability_proof/*/*/evidence/`。
+首次执行从独立源码快照构建候选镜像，再生成双模式任务；默认镜像标签为
+`ghcr.io/luigivamper/rcb-topogym:0.2.13-dev-cu128`，本地构建不会 push 镜像。
+恢复已绑定队列时不重新构建镜像，镜像 ID 和源码身份仍须匹配。
+不要在队列运行时修改其源码、镜像标签或任务包；其他运行若使用同一开发镜像标签，
+应先协调构建时间，或显式准备独立镜像与候选任务后传 `--tasks-root`。
+
+新机器从仓库根目录准备管理环境（需要已有 `uv`）：
+
+```bash
+uv venv --python 3.12 .venv-harbor
+uv pip install --python .venv-harbor/bin/python --require-hashes \
+  -r requirements/difficulty-eval-controller.lock
+export TOPOGYM_PYTHON="$PWD/.venv-harbor/bin/python"
+export TOPOGYM_HARBOR="$PWD/.venv-harbor/bin/harbor"
+"$TOPOGYM_PYTHON" ci_checks/check-oracle-portability.py --check-git
+```
+
+该环境负责准备输入和调度，正式物理依赖由镜像的 runtime lock 安装。
+已有管理环境可通过上面两个环境变量指定，不要求沿用作者的虚拟环境目录名。
+`--check-git` 检查三档参考输入及私有 Python 依赖是否收录；发送前须把新增的
+`reference_data/`、检查脚本及代码修改一起提交。仅 push 旧提交不会带上未提交文件。
+文件检查通过只表示交付依赖齐全，不表示 Task 成功或完整 Harbor 评分通过。
+
+Blanket 的冻结初态还有硬件约束：当前三档 `tasks/.../instance_assets/initial_state/manifest.json`
+绑定 `cuda_sm120_mp188_87407517a32a`，来源为 RTX PRO 6000 Blackwell Max-Q，
+Genesis 1.2.1、torch 2.11.0+cu128、numpy 2.3.5、quadrants 1.0.2。
+v15 候选准备会保留这些初态字节；4090（sm89/mp128）不能直接恢复它们。
+接收机器须匹配完整兼容性清单；使用其他硬件时，经 `scripts/prepare_blanket_initial_states.py`
+准备对应 profile 的初态，再生成并验收新的冻结实例。更换初态属于新实例，不能继承旧分数或改写兼容性哈希。
+
+当前 active 为 v15，`tasks_root=null`；仓库 `tasks/` 中的 78 个原三档包仍为 v14。
+因此新机器使用下面的构建入口生成候选，或显式传入同源码生成的 v15 `--tasks-root`。
+直接运行默认 `test_harbor_oracles.py` 会因活动任务树未冻结而 blocked，这是版本保护。
 
 先查看队列（不启动 Docker）：
 
 ```bash
-cd /home/jianwen/topogym
 bash bash_scripts/run_harbor_oracle_grades.sh \
-  --output runs/test_results/harbor_grade_handoff_20261004 --plan
+  --output runs/test_results/harbor_grade_handoff_new --plan
 ```
 
-先用本轮已生成的 Coil easy 包跑完整评分：
+先生成 Coil easy 候选并跑完整评分（输出目录必须不存在）：
 
 ```bash
 bash bash_scripts/run_harbor_oracle_grades.sh \
-  --tasks-root runs/test_results/oracle_harbor_connectivity_20261003_01/candidate_02/tasks \
-  --output runs/test_results/harbor_grade_coil_easy_20261004 \
+  --output runs/test_results/harbor_grade_coil_easy_new \
   --families cast_coil --tiers easy
 ```
 
@@ -130,14 +159,14 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
 
 ```bash
 bash bash_scripts/run_harbor_oracle_grades.sh \
-  --output runs/test_results/harbor_grade_all_20261004
+  --output runs/test_results/harbor_grade_all_new
 ```
 
 也可选择 `--families cast_keyhole,lock_picking --tiers easy`。生成阶段默认等待 GPU 空闲
 且至少有 12000 MiB 可用，最长等 600 秒；可用 `--gpu-wait-seconds 3600` 延长等待。
 `--gpu` 选择生成时设备，Harbor 执行设备仍由任务 compose 配置决定（本机单卡）。
-脚本复用当前匹配的本地镜像；如构建日志报告镜像不匹配，先检查并执行
-`<output>/candidate/build_image.sh`，然后恢复队列。不会静默使用旧发布包。
+镜像构建日志和资源监控在 `image-build-*/`；任务构建日志为 `build-<family>-*.log`。
+已绑定镜像不匹配时应准备新的队列，保留旧运行证据；不会静默使用旧发布包。
 
 中断后使用完全相同的命令加 `--resume`：已完成的结果保留，包括失败结果；
 未完成项写入新的 attempt 目录。重测已完成的失败项，指定对应 family/tier 和新的输出目录。
@@ -154,6 +183,43 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
 本轮接线证据：`runs/test_results/oracle_harbor_connectivity_20261003_01/static_matrix/results.json`
 （33 项私有打包检查）及 `trials_02/cast_coil/results.json`（相对同一证据根目录；双模式实机短程评分）。
 其余 10 类的实机接线和所有任务的完整 grade 1 均留待本脚本验证。
+
+### 交付审计结果（2026-10-04）
+
+证据根目录为 `runs/test_results/oracle_portability_20261004/`，它是本机检查产物，
+接收方运行不依赖这个目录。检查使用独立源码副本；公共物理源码仍有其他会话并行修改，
+对应文件身份见 `effective_checkout_manifest03.json`，不能将结果外推到未经检查的新修改。
+
+| 范围 | 定位与处理 |
+| --- | --- |
+| Fiber、Claws、Horseshoe | 默认参考曾指向被 Git 忽略的证明 evidence；现将必需文件复制到私有 `reference_data/` 并校验原始哈希 |
+| Hedgehog easy/hard | 同样缺 pickup 文件，且打包遗漏 `reference_routes.json`；两项均补齐，medium 不需要 pickup 文件 |
+| Keyhole、Buzz、Lock | Session worker 曾无条件导入镜像裁剪的 SegmentRunner／记录哈希模块；现在仅独立本地 runner 加载 SegmentRunner，记录哈希算法保持一致 |
+| Fiber、Horseshoe 共享 stages | `planning/solvability.py` 的记录哈希也依赖裁剪模块，隔离容器复现后已替换为同一私有哈希函数 |
+| Rope | 补齐 `hard_plans.json`；机器人资产按安装目录解析，保留原文档文件哈希，不再查找 `/solution/assets/` |
+| Coil、Blanket、Knot | 默认回调无额外本机 oracle JSON 依赖；仍需对应的冻结实例、完整物理执行与 verifier |
+| 新机器入口 | 首次评分实际执行镜像构建；生成命令沿用调用者 Python；提交检查检测遗漏文件及尚未暂存的私有依赖修改 |
+| Orbits、Slotted Post Ring | 尚无完整机器人 oracle，不在默认 33 项队列中 |
+| very_easy/easier、旧无分档包与 Cube 示例 | 未迁入当前三档 v15 oracle 流程；当前目录中的历史版本不能绕过活动版本身份检查 |
+
+已完成的检查：
+
+- `packages03/`：11 个家族 × 3 个难度，共 33 个私有候选完成文件打包及完整性检查。
+  为隔离检查使用 v14 包作公共文件载体，没有执行这些旧包或伪造 v15 runtime binding。
+- `container_imports03/summary.json`：33/33 在无网络、只读容器中通过私有模块与参考数据读取。
+  使用已有运行镜像的第三方依赖、按正式规则裁剪的候选公共源码及每项独立 `solution/`；
+  不挂载原 `runs/`／proof evidence，不启用 GPU，也不创建物理场景。
+- `controller_bootstrap/`：105 个管理依赖全部匹配 controller lock；无 Genesis 的容器成功生成
+  39 组候选输入，尚未执行 make-instance 或镜像构建。
+- `checks03.json`：124 项 CPU 回归及源码隔离静态检查通过。
+- `default_release_plan/results.json`：当前默认套件 78 项明确 blocked，原因为活动 v15 任务树尚未冻结，
+  不是 78 项实际执行得零分。采用上方候选构建入口后方可进行真实评分。
+
+以上结果不新增任何完整物理成功或 grade 1。截图的 Keyhole/Buzz “BUG 1”未提供完整堆栈，
+本次确认的是上述可独立复现的裁剪依赖错误，不能据此断言两者是同一个缺陷。
+IDE 中的 `oracle_v12_replay_20261003_easy_retry01` 则是 Knot 的 CUDA 内存分配失败：
+`native_replay.log` 报 `cudaErrorMemoryAllocation`，容器退出 139、无最终 replay 报告，
+最后进度为 100 controls / 1000 physics ticks；这属于运行时失败，不能当作正常 grade 0。
 
 ```bash
 .venv-gs121-nyx/bin/python scripts/oracle_runners/harbor_oracle.py inventory
@@ -185,10 +251,10 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
   --output runs/test_results/oracle_jobs_new
 ```
 
-`bind` 未传 `--task` 时仅选择活动版本；显式 `--release published` 才选择冻结 v14 的 78 个三档包。
+`bind` 与其他新实验入口仅接受活动版本；CLI 会拒绝 `--release published` 和旧 tooling。
 活动版本未生成任务树、目标镜像缺失、镜像 tag 移动或任一输入不完整都会失败，不退回旧镜像。
 `preflight` 不加 `--execute` 只保存命令；执行仅加载精确初态，不运行 oracle，也不授予成功资格。
-旧 v14 可以使用独立的管理方绑定/预检；正式双模式绑定评分需要本轮候选 tooling，
+管理方底层绑定工具可检查历史 v14，但不构成活动版本实验；正式双模式绑定评分需要候选 tooling，
 原 v14 标准服务没有绑定回执接口，不能通过偷偷替换旧服务实现来声称它已支持。
 
 `run` 默认只输出完整 Harbor 命令，不创建 job；加 `--execute` 顺序运行 oracle/nop，

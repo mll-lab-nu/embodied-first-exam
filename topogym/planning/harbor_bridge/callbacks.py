@@ -7,6 +7,13 @@ from types import SimpleNamespace
 from .actions import SessionPolicyRunner
 
 
+def fingerprint(value):
+    """Same numerical record hash without the development-only SegmentRunner."""
+    from topogym.utils.io import to_jsonable
+    from .contracts import json_digest
+    return json_digest(to_jsonable(value))
+
+
 def prepare_output(session, output, module_file):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)

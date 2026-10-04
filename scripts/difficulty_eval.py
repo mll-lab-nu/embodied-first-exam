@@ -24,6 +24,7 @@ import time
 
 import sample_difficulty_instances as sampling
 import difficulty_hf_auth as hf_auth
+import helper_assignment as helper
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_KEY = object()
@@ -62,17 +63,19 @@ def parse_args(argv=None):
                "Docker subcommands: check, auth login --device-auth, auth status. "
                "Direct keys may enter shell history/process argv. Use --api-key without a value for hidden TTY input.")
     parser.add_argument("--run-id")
+    parser.add_argument("--assignment", type=Path, help="maintainer-frozen helper assignment")
+    parser.add_argument("--retry-plan", type=Path, help="maintainer trial list for explicit helper retries")
     parser.add_argument("--phase", choices=("plan", "prepare", "preflight", "run", "collect", "upload", "all"), default="all")
     parser.add_argument("--list-tasks", action="store_true")
     parser.add_argument("--work-dir", type=Path, help="Docker default: launcher cwd/topogym-work; direct Python default: repository")
     parser.add_argument("--gpu-device", default="0", help="host GPU index or UUID")
-    parser.add_argument("--cuda-flavor", choices=("cu128", "cu130"), default="cu128",
+    parser.add_argument("--cuda-flavor", choices=("cu128", "cu130"),
                         help="runtime CUDA profile; cu130 requires host NVIDIA driver R580+")
     parser.add_argument("--release-lock", type=Path, help="published image digest manifest; otherwise build from fixed recipes")
     sampling.add_sampling_arguments(parser)
     parser.add_argument("--rerun-incomplete", action="store_true", help="with --resume, create a new attempt for interrupted/infra jobs")
     parser.add_argument("--auth", choices=("subscription", "api-key"))
-    parser.add_argument("--provider", choices=("openai", "openrouter"), default="openai")
+    parser.add_argument("--provider", choices=("openai", "openrouter"))
     parser.add_argument("--agent")
     parser.add_argument("--model", help="required for run/all; no implicit model substitution")
     parser.add_argument("--agent-arg", action="append", default=[], metavar="KEY=VALUE", help="version or reasoning_effort; repeatable")
@@ -86,6 +89,11 @@ def parse_args(argv=None):
     args = parser.parse_args(argv)
     if args.list_tasks:
         return args
+    helper.bind_arguments(args)
+    if args.retry_plan and not args.assignment:
+        raise EvaluationError("--retry-plan requires --assignment")
+    args.provider = args.provider or "openai"
+    args.cuda_flavor = args.cuda_flavor or "cu128"
     hf_auth.validate_arguments(args)
     if not re.fullmatch(r"(?:[0-9]+|GPU-[A-Za-z0-9-]+)", args.gpu_device):
         raise EvaluationError("invalid --gpu-device")
@@ -328,6 +336,8 @@ class DifficultyEvaluation:
         self.source = self.run / "source"
         self.manifest_path = self.run / "manifest.lock.json"
         self.manifest = self.collector = self.auth_env = None
+        self.helper_assignment = getattr(args, "helper_assignment", None)
+        self.retry_ids = helper.retry_targets(args.retry_plan, self.helper_assignment) if args.retry_plan else set()
         self.owns_gpu_lock = False
         self.python = sys.executable
         self.harbor = os.environ.get("TOPOGYM_HARBOR", str(ROOT / ".venv-harbor/bin/harbor"))
@@ -424,7 +434,15 @@ class DifficultyEvaluation:
             options = {name: getattr(self.args, name) for name in ("setting", "tasks", "sampling_seed", "samples_per_difficulty",
                        "agent_wall_clock_s", "concurrency", "resume")}
             new_manifest = not self.manifest_path.exists()
-            self.manifest = sampling.prepare_manifest(self.run, **options)
+            if self.helper_assignment:
+                self.manifest = helper.prepare_run(self.run, self.helper_assignment, ROOT, self.args.resume)
+                if self.args.retry_plan:
+                    retry = read_json(self.args.retry_plan)
+                    helper.atomic_json(self.run / "retry-plans" / (helper.digest(retry) + ".json"), retry)
+            else:
+                if (self.run / "assignment.json").exists():
+                    raise EvaluationError("this run requires its original --assignment")
+                self.manifest = sampling.prepare_manifest(self.run, **options)
             from topogym_versions import identity as release_identity
             selected_release = release_identity(self.source)
             if (self.args.phase not in ("collect", "upload") and
@@ -1019,7 +1037,7 @@ class DifficultyEvaluation:
         if attempts and self.canary_passed(attempts[-1]):
             progress(f"Canary: skip; {attempts[-1].name} already passed")
             return
-        if attempts and not self.args.rerun_incomplete:
+        if attempts and (not self.args.rerun_incomplete or (self.helper_assignment and "canary" not in self.retry_ids)):
             raise EvaluationError("previous canary incomplete/failed; use --resume --rerun-incomplete to create a new attempt")
         number = int(attempts[-1].name[-3:]) + 1 if attempts else 1
         if number > 999:
@@ -1040,32 +1058,30 @@ class DifficultyEvaluation:
             raise EvaluationError("Harbor executable missing: set TOPOGYM_HARBOR")
         self.jobs.mkdir(parents=True, exist_ok=True)
         self.canary()
-        for index, row in enumerate(self.manifest["instances"], 1):
-            for mode_index, mode in enumerate(sampling.MODES, 1):
-                trial_index = (index - 1) * len(sampling.MODES) + mode_index
-                task = self.task_dir(row, mode)
-                stem = f"d{row['task_number']:02d}-{row['difficulty']}-{row['sample_id']}-{mode}"
-                attempts = sorted(self.jobs.glob(stem + "-a[0-9][0-9][0-9]"))
-                if attempts and not (self.args.rerun_incomplete and self.collector.classify_trial(attempts[-1], row, mode)[0] in RETRYABLE):
-                    task_progress(row, trial_index, self.manifest["trial_count"], f"skip: preserving {attempts[-1].name}", mode=mode)
-                    continue
-                number = int(attempts[-1].name[-3:]) + 1 if attempts else 1
-                if number > 999:
-                    raise EvaluationError("too many attempts")
-                job = f"{stem}-a{number:03d}"
-                task_progress(row, trial_index, self.manifest["trial_count"], f"starting attempt {number}", mode=mode)
-                self.gpu_ready()
-                self.verify_image()
-                from topogym_versions import require_task
-                require_task(task, self.source, inspect_docker=True)
-                code = self.launch_job(task, job)
-                self.collect()
-                if code:
-                    raise EvaluationError(f"Harbor failed; pending queue preserved (see {job}.log)")
-                status = self.collector.classify_trial(self.jobs / job, row, mode)[0]
-                progress(f"Trial result: {job} | status={status}")
-                if status not in COMPLETE:
-                    raise EvaluationError(f"trial infrastructure incomplete ({status}); pending queue preserved")
+        for trial_index, (row, mode) in enumerate(helper.planned_trials(self.manifest), 1):
+            task = self.task_dir(row, mode)
+            stem = f"d{row['task_number']:02d}-{row['difficulty']}-{row['sample_id']}-{mode}"
+            attempts = sorted(self.jobs.glob(stem + "-a[0-9][0-9][0-9]"))
+            if attempts and not (self.args.rerun_incomplete and (not self.helper_assignment or stem in self.retry_ids) and self.collector.classify_trial(attempts[-1], row, mode)[0] in RETRYABLE):
+                task_progress(row, trial_index, self.manifest["trial_count"], f"skip: preserving {attempts[-1].name}", mode=mode)
+                continue
+            number = int(attempts[-1].name[-3:]) + 1 if attempts else 1
+            if number > 999:
+                raise EvaluationError("too many attempts")
+            job = f"{stem}-a{number:03d}"
+            task_progress(row, trial_index, self.manifest["trial_count"], f"starting attempt {number}", mode=mode)
+            self.gpu_ready()
+            self.verify_image()
+            from topogym_versions import require_task
+            require_task(task, self.source, inspect_docker=True)
+            code = self.launch_job(task, job)
+            self.collect()
+            if code:
+                raise EvaluationError(f"Harbor failed; pending queue preserved (see {job}.log)")
+            status = self.collector.classify_trial(self.jobs / job, row, mode)[0]
+            progress(f"Trial result: {job} | status={status}")
+            if status not in COMPLETE:
+                raise EvaluationError(f"trial infrastructure incomplete ({status}); pending queue preserved")
 
 
 def on_signal(signum, frame):

@@ -674,6 +674,8 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 
 合并后 B04–B13 的修复顺序、接口合同及验收安排见 [Run trials 合并后问题修复工程计划](run_trials_post_merge_repair_plan_zh.md)；该文是待实施计划，实际问题状态以链接的审查与验收记录为准。
 
+外部 helper 的固定派单、完整记录封包、严格脱敏、异机导入及接收端验收，见 [Helper 执行与结果交付工程计划](helper_delivery_engineering_plan_zh.md)。该计划待实施，现有 HF 指标上传不等于完整原始记录交付。
+
 主逻辑在 [`scripts/difficulty_eval.py`](../../scripts/difficulty_eval.py)，[`bash_scripts/run_difficulty_trials.sh`](../../bash_scripts/run_difficulty_trials.sh) 默认负责 Docker 镜像准备与控制器启动，实验阶段由 Python 调度器执行。配置在
 [`configs/sweeps/difficulty_eval.yaml`](../../configs/sweeps/difficulty_eval.yaml)。默认全部 **13 tasks × 3 难度 × 1 sample × 2 模式 = 78 trials**，每次 agent 最长 **21600 秒**。
 `--samples-per-difficulty 3` 或 `5` 可扩展样本；三档和双模式固定，每个实例/模式只跑一次。

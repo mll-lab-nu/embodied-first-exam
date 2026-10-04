@@ -493,11 +493,137 @@ class Runner:
         record["crossings_after"] = len(self.crossings())
         return record
 
+    def rank_translations(self, k, candidates):
+        """Order cleanup moves using native clearance; estimates never reject a move.
+
+        Translating the measured rope rigidly at fixed robot poses is only a
+        planning estimate. Real grasping, deformation, release and native success
+        remain necessary, and every original candidate remains in the search.
+        """
+        from topogym.evaluation.terminal.clearance import fem_clearance_lower_bound
+        from topogym.utils.io import write_json_atomic
+        rows, error, tick = [], None, None
+        try:
+            state = self.world.read_state()
+            tick = state['physics_step']
+            geometry = state['release_geometry']
+            if geometry['schema_version'] not in (2, 3) or not geometry['complete'] or geometry['physics_step'] != tick:
+                raise ValueError('Incomplete or stale native release geometry')
+            if not len(geometry['robot_bounds_m']):
+                raise ValueError('No robot collision geometry to rank against')
+            points = np.asarray(state['fem']['rope']['position_m'])
+            cells = geometry['fem_elements']['rope']
+            required = self.task.final_settling_spec().clearance_m
+            indices = self.release_search_colliders(points, cells, geometry, required)
+            boxes = np.asarray(geometry['robot_bounds_m'])[indices]
+            planes = [geometry['robot_convex_planes_m'][i] for i in indices]
+            if not len(indices):
+                raise ValueError('No active or contact-failing collider requires translation')
+            for candidate in candidates:
+                delta = np.array([candidate.get('translate_x_m', 0.), candidate.get('translate_y_m', -.02), 0.])
+                distance = fem_clearance_lower_bound(points+delta, cells, boxes, planes, required)
+                rows.append(dict(candidate=dict(candidate), predicted_clear=bool(distance >= required),
+                                 clearance_lower_bound_m=float(distance), displacement_m=float(np.linalg.norm(delta))))
+        except (KeyError, ValueError, AttributeError) as exc:
+            error = f'{type(exc).__name__}: {exc}'
+            rows = []
+        ranked = sorted(rows, key=lambda row: (not row['predicted_clear'],
+                        row['displacement_m'] if row['predicted_clear'] else -row['clearance_lower_bound_m']))
+        folder = self.args.output/'clearance_plans'
+        folder.mkdir(exist_ok=True)
+        write_json_atomic(folder/f'd{k}_{time.time_ns()}.json', dict(physics_step=tick, candidates=ranked,
+            fallback_error=error, scope='Rigid rope translation at fixed measured robot poses; ranking only, '
+            'no candidate rejection or physical/success qualification. Native final clearance is unchanged.'))
+        return [row['candidate'] for row in ranked] if ranked else list(candidates)
+
+    @staticmethod
+    def release_search_colliders(points, cells, geometry, required):
+        """Do not move away from an already permitted fixed-base contact."""
+        indices = list(range(len(geometry['robot_bounds_m'])))
+        if geometry['schema_version'] == 3:
+            from topogym.evaluation.terminal.robot_contact import evaluate_robot_contact
+            _, metrics = evaluate_robot_contact({'rope': points}, {'rope': cells}, geometry, required)
+            failing = {f['collider'] for f in metrics['robot_contact_failures']}
+            indices = [i for i in indices if not geometry['robot_solids'][i]['fixed_to_world'] or i in failing]
+        return indices
+
+    def translation_stations(self, cfg):
+        """Pair a clearance-limited rope segment with its farther material end.
+
+        Ends alone may drag only slack while the nearby base segment stays put.
+        Native filled-volume bounds identify the limiting collider; centerline
+        supporting-plane distances then locate a grasp candidate. This changes
+        grasp priority only, and never certifies the resulting physical motion.
+        """
+        ends = (self.args.end_offset, self.length-self.args.end_offset)
+        record = dict(mode=cfg.get('translate_grasp', 'ends'), stations_m=list(ends))
+        if record['mode'] == 'ends':
+            return ends, record
+        from topogym.evaluation.terminal.clearance import fem_clearance_lower_bound
+        try:
+            state = self.world.read_state()
+            geometry = state['release_geometry']
+            if geometry['schema_version'] not in (2, 3) or not geometry['complete'] or geometry['physics_step'] != state['physics_step']:
+                raise ValueError('Incomplete or stale native release geometry')
+            boxes = np.asarray(geometry['robot_bounds_m'])
+            planes = geometry['robot_convex_planes_m']
+            if not len(boxes):
+                raise ValueError('No robot collision geometry to select a grasp against')
+            points = np.asarray(state['fem']['rope']['position_m'])
+            cells = geometry['fem_elements']['rope']
+            required = self.task.final_settling_spec().clearance_m
+            indices = self.release_search_colliders(points, cells, geometry, required)
+            bounds = [fem_clearance_lower_bound(points, cells, boxes[i:i+1], [plane], required)
+                      if i in indices else float('inf') for i, plane in enumerate(planes)]
+            index = int(np.argmin(bounds))
+            if bounds[index] >= required:
+                record['fallback'] = 'Current measured robot clearance already satisfied'
+                return ends, record
+            line = self.line()
+            box, plane = boxes[index], np.asarray(planes[index])
+            distance = np.linalg.norm(np.maximum(np.maximum(line-box[1], box[0]-line), 0.), axis=1)
+            if len(plane):
+                distance = np.maximum(distance, (line@plane[:, :3].T+plane[:, 3]).max(axis=1))
+            station = float(self.stations[int(np.argmin(distance))])
+            local = float(np.clip(station+cfg.get('translate_grasp_offset_m', 0.), 0., self.length))
+            partner = max(ends, key=lambda end: abs(end-local))
+            stations = (local, partner)
+            record.update(stations_m=list(stations), physics_step=state['physics_step'],
+                robot_box_index=index, clearance_lower_bound_m=float(bounds[index]),
+                limiting_station_m=station, scope='Native volume clearance selects the collider; '
+                'centerline supporting-plane distances choose a nearby grasp, not a motion certificate.')
+            return stations, record
+        except (KeyError, ValueError, AttributeError) as error:
+            record['fallback'] = f'{type(error).__name__}: {error}'
+            return ends, record
+
     def arrange(self, k, cfg, mode):
-        """Continue after zero crossings: retreat, lay a raised strand down, or wait."""
+        """Continue after zero crossings with release, placement or rope translation."""
         before = len(self.crossings())
         record = dict(k=k, kind=mode, t=self.session.sim_time_s, crossings_before=before)
-        if mode == 'laydown':
+        if mode == 'translate':
+            stations, record['grasp_selection'] = self.translation_stations(cfg)
+            sides = self.arms_for(stations)
+            record['grasps'] = self.grasp(sides, stations, f'd{k}:translate:grasp')
+            delta = np.array([cfg.get('translate_x_m', 0.), cfg.get('translate_y_m', -.02), 0.])
+            record['commanded_translation_m'] = delta.tolist()
+            record['translation_arch_m'] = cfg.get('translate_lift_m', .005)
+            paths = {side: self.smooth(self.tcp(side), self.tcp(side)+delta, self.args.speed) for side in sides}
+            count = max(len(path) for path in paths.values())
+            for index in range(count):
+                arch = record['translation_arch_m']*np.sin(np.pi*index/max(1, count-1))
+                try:
+                    targets = {side: self.solve(side, paths[side][min(index, len(paths[side])-1)]+[0., 0., arch],
+                                               self.grasps[side]['turn']) for side in sides}
+                except ValueError:
+                    record['stopped'] = 'translation arm reach limit'
+                    break
+                # A failed IK for either arm must not execute the other arm alone.
+                self.q.update(targets)
+                self.step(f'd{k}:translate')
+            for side in sides:
+                self.release(side, 0., f'd{k}:translate:release')
+        elif mode == 'laydown':
             line = self.line()
             high = float(self.stations[int(np.argmax(line[:, 2]))])
             partner = self.args.end_offset if high > self.length/2 else self.length-self.args.end_offset

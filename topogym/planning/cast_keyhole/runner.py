@@ -19,13 +19,15 @@ def worker(args, output, *, session=None):
         return simplified_worker(args, output, session=session)
     import numpy as np
     import torch
-    from topogym.simulator import Env, SimulatorConfig, SegmentRunner
+    from topogym.simulator import Env, SimulatorConfig
+    if session is None:
+        from topogym.simulator import SegmentRunner
     from topogym.assets.geometry.cast_keyhole import generate_variant_assets
     from topogym.planning.cast_keyhole.policy import (CastKeyholePolicy, ASSEMBLY_ROTATIONS,
         GRASP_POINTS, REGRASP_POINTS, PARTS, FAMILIES, canonical_offsets)
     from topogym.utils.grasp import GraspAssistConfig, GraspTarget
     from topogym.utils.io import write_json_atomic, to_jsonable
-    from topogym.simulator.rollout_simulation.segment_contract import fingerprint
+    from topogym.planning.harbor_bridge.callbacks import fingerprint
     torch.set_num_threads(1)
     family = FAMILIES[args.variation]
     assembly, geometry = generate_variant_assets(output/"planning_assets",
@@ -244,8 +246,10 @@ def simplified_worker(args, output, *, session=None):
     from topogym.planning.cast_keyhole.policy import PARTS
     from topogym.assets.geometry.cast_keyhole import plate_assembly_transforms
     from scipy.spatial.transform import Rotation
-    from topogym.simulator import Env, SimulatorConfig, SegmentRunner
-    from topogym.simulator.rollout_simulation.segment_contract import fingerprint
+    from topogym.simulator import Env, SimulatorConfig
+    if session is None:
+        from topogym.simulator import SegmentRunner
+    from topogym.planning.harbor_bridge.callbacks import fingerprint
     from topogym.utils.io import to_jsonable, write_json_atomic
     torch.set_num_threads(1)
     task = task_definition("cast_keyhole", args.variation)(seed=args.seed)
@@ -344,4 +348,3 @@ def simplified_worker(args, output, *, session=None):
             report["phases"] = trace.events
         report["wall_time_s"] = time.time()-report["started"]
         write_json_atomic(output/"run_report.json", report)
-

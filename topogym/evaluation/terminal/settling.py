@@ -22,6 +22,7 @@ class SettlingSpec:
     maximum_drift_m: float = .001
     maximum_rotation_drift_rad: float = .02
     particle_radius_m: float = 0.
+    robot_contact_policy: str = "all_parts_clearance"
 
     def __post_init__(self):
         if any(not isinstance(names, tuple) for names in (self.rigid_targets, self.fem_targets, self.particle_targets)):
@@ -29,8 +30,12 @@ class SettlingSpec:
         names = self.targets
         if not names or len(set(names)) != len(names) or any(not isinstance(n, str) or not n for n in names):
             raise ValueError("Settling requires distinct named targets")
+        if self.robot_contact_policy not in {"all_parts_clearance", "fixed_contact_active_clearance_v1"}:
+            raise ValueError("Unknown robot release contact policy")
+        if self.robot_contact_policy != "all_parts_clearance" and (self.rigid_targets or self.particle_targets):
+            raise ValueError("Exact robot contact policy currently requires FEM targets")
         for key, value in asdict(self).items():
-            if key.endswith("targets"):
+            if key.endswith("targets") or key == "robot_contact_policy":
                 continue
             if (isinstance(value, (bool, np.bool_)) or not isinstance(value, (int, float, np.number))
                     or not np.isfinite(value) or value < 0 or (key != "particle_radius_m" and value == 0)):
@@ -127,11 +132,11 @@ def evaluate_settling(state, spec, reference=None):
     released = assist is not None and not assist
     geometry = state.get("release_geometry")
     clearance, coarse_clearance, clear = None, None, False
-    refined = []
+    refined, contact_metrics = [], {}
     if geometry is None:
         missing.append("release_geometry")
     else:
-        if geometry["schema_version"] not in (1, 2) or geometry["physics_step"] != state["physics_step"]:
+        if geometry["schema_version"] not in (1, 2, 3) or geometry["physics_step"] != state["physics_step"]:
             raise ValueError("Stale or unsupported release geometry")
         if not isinstance(geometry["complete"], bool):
             raise ValueError("Invalid release geometry coverage")
@@ -144,7 +149,7 @@ def evaluate_settling(state, spec, reference=None):
             if not geometry["robot_present"] and len(robot):
                 raise ValueError("Unexpected robot collision bounds")
             planes, topology = None, {}
-            if geometry["schema_version"] == 2:
+            if geometry["schema_version"] >= 2:
                 from .clearance import validate_robot_planes, validate_elements, fem_clearance_lower_bound
                 planes = validate_robot_planes(geometry["robot_convex_planes_m"], len(robot))
                 topology = geometry["fem_elements"]
@@ -157,7 +162,16 @@ def evaluate_settling(state, spec, reference=None):
                 if not len(target_boxes[name]):
                     raise ValueError("Missing target collision bounds")
             clear = True
-            for name, boxes in target_boxes.items():
+            if spec.robot_contact_policy != "all_parts_clearance":
+                from .robot_contact import evaluate_robot_contact
+                if geometry["schema_version"] != 3 or set(topology) != set(spec.fem_targets):
+                    missing.append("exact_robot_contact_geometry")
+                    clear = False
+                else:
+                    clear, contact_metrics = evaluate_robot_contact(current, topology, geometry, spec.clearance_m)
+                    clearance = contact_metrics["active_clearance_lower_bound_m"]
+                    refined = list(spec.fem_targets)
+            for name, boxes in (target_boxes.items() if spec.robot_contact_policy == "all_parts_clearance" else ()):
                 if len(robot):
                     gaps = np.maximum(np.maximum(boxes[:, None, 0]-robot[None, :, 1],
                                                  robot[None, :, 0]-boxes[:, None, 1]), 0.)
@@ -181,4 +195,7 @@ def evaluate_settling(state, spec, reference=None):
         sampling_scope="physics_tick_end", coarse_clearance_lower_bound_m=coarse_clearance,
         refined_fem_targets=refined,
         clearance_method="conservative_convex_volume_bounds" if refined else "conservative_collision_bounds")
+    if spec.robot_contact_policy != "all_parts_clearance":
+        metrics.update(contact_metrics, robot_contact_policy=spec.robot_contact_policy,
+                       clearance_method="volume_bounds_then_native_solid_geometry")
     return reached, metrics, (current if reference is None else reference) if reached else None

@@ -400,7 +400,8 @@ class Env:
                 self._world.configure_grasp(self._robot, self.config.grasp_assist)
             settling = self._task.final_settling_spec()
             if settling is not None:
-                self._world.configure_final_settling(settling.rigid_targets)
+                self._world.configure_final_settling(settling.rigid_targets,
+                    exact_robot_contact=settling.robot_contact_policy != "all_parts_clearance")
             self._task.initialize(self._world.read_state())
             self._sensors = (self._sensor_factory or SensorSuite)(
                 self._world, self._robot, enable_rgb=self.config.enable_rgb,

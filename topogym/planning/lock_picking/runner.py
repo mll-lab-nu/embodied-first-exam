@@ -119,13 +119,15 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
            variation="medium", route_mode="historical", audit_ik=False, precision="32", endpoint_depth=4.08, session=None):
     import numpy as np
     import torch
-    from topogym.simulator import Env, SimulatorConfig, SegmentRunner
+    from topogym.simulator import Env, SimulatorConfig
+    if session is None:
+        from topogym.simulator import SegmentRunner
     from topogym.planning.lock_picking.lock_picking_medium_planning import LockPickingMediumPolicy
     from topogym.utils.grasp import GraspAssistConfig, GraspTarget
     from topogym.tasks.lock_picking.common import recommended_grasp_assist
     from topogym.utils.io import write_json_atomic, to_jsonable
     from topogym.utils.arrays import to_numpy
-    from topogym.simulator.rollout_simulation.segment_contract import fingerprint
+    from topogym.planning.harbor_bridge.callbacks import fingerprint
     torch.set_num_threads(1)
     output = Path(output)
     config = SimulatorConfig(task_id="lock_picking", variation_id=f"lock_picking_{variation}",
@@ -258,4 +260,3 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
             ik_stream.close()
         report["wall_time_s"] = time.time()-report["started"]
         write_json_atomic(output/"run_report.json", report)
-

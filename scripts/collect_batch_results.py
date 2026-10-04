@@ -4,6 +4,7 @@ replay.mp4 / replay.last.png / reward.json plus agent cost, and a summary.md tab
 usage: collect_batch_results.py <jobs_dir> <unlimited_job> <limited_job> <out_dir> [<oracle_job_unlimited> <oracle_job_limited>]
 TopoGym (adapted from robot_coding_bench fa59c1a6): topogym-* trials and a neutral title."""
 import json, pathlib, shutil, sys, datetime as dt
+from helper_assignment import planned_trials
 
 
 ARTIFACT_CONTRACT_VERSION = 2
@@ -89,37 +90,36 @@ def collect_manifest(manifest_path, jobs):
     run = manifest_path.parent
     manifest = json.loads(manifest_path.read_text())
     rows = []
-    for sample in manifest["instances"]:
-        for mode in ("unlimited", "limited"):
-            stem = f"d{sample['task_number']:02d}-{sample['difficulty']}-{sample['sample_id']}-{mode}"
-            # Explicit mapping from manifest; never infer task identity from truncated trial folders.
-            attempts = sorted(jobs.glob(stem + "-a[0-9][0-9][0-9]")) or [jobs / (stem + "-a001")]
-            for job in attempts:
-                status, result, reward, trial = classify_trial(job, sample, mode)
-                if status == "pending" and not (run / "build" / sample["slug"] / "preflight.ok.json").exists():
-                    status = "blocked_preflight"
-                agent = result.get("agent_result") or {}
-                row = dict(task_id=sample["task_id"], difficulty=sample["difficulty"], sample_id=sample["sample_id"],
-                           scene_seed=sample["scene_seed"], mode=mode, trial=1,
-                           tooling_version=sample.get("tooling_version", "historical_unrecorded"),
-                           release_definition_sha256=sample.get("release_definition_sha256"),
-                           environment_profile=sample.get("environment_profile"), attempt=int(job.name[-3:]),
-                           status=status, success=reward.get("success"),
-                           evaluable_for_task_success=sample["evaluable_for_task_success"],
-                           tokens_in=agent.get("n_input_tokens"), tokens_out=agent.get("n_output_tokens"),
-                           cost_usd_api_price=agent.get("cost_usd"), exception=(result.get("exception_info") or {}).get("exception_type"),
-                           job=str(job), harbor_trial=str(trial) if trial else None)
-                rows.append(row)
-                if trial:
-                    target = run / "results" / sample["task_id"] / sample["difficulty"] / sample["sample_id"] / mode / "trial_01" / f"attempt_{row['attempt']:03d}"
-                    target.mkdir(parents=True, exist_ok=True)
-                    for name in result_artifacts(mode):
-                        src = artifact_source(trial, mode, name)
-                        if src is not None:
-                            dest = target / name
-                            if not dest.exists() or src.stat().st_size != dest.stat().st_size or src.stat().st_mtime > dest.stat().st_mtime:
-                                shutil.copy2(src, dest)
-                    atomic_json(target / "agent_summary.json", row)
+    for sample, mode in planned_trials(manifest):
+        stem = f"d{sample['task_number']:02d}-{sample['difficulty']}-{sample['sample_id']}-{mode}"
+        # Explicit mapping from manifest; never infer task identity from truncated trial folders.
+        attempts = sorted(jobs.glob(stem + "-a[0-9][0-9][0-9]")) or [jobs / (stem + "-a001")]
+        for job in attempts:
+            status, result, reward, trial = classify_trial(job, sample, mode)
+            if status == "pending" and not (run / "build" / sample["slug"] / "preflight.ok.json").exists():
+                status = "blocked_preflight"
+            agent = result.get("agent_result") or {}
+            row = dict(task_id=sample["task_id"], difficulty=sample["difficulty"], sample_id=sample["sample_id"],
+                       scene_seed=sample["scene_seed"], mode=mode, trial=1,
+                       tooling_version=sample.get("tooling_version", "historical_unrecorded"),
+                       release_definition_sha256=sample.get("release_definition_sha256"),
+                       environment_profile=sample.get("environment_profile"), attempt=int(job.name[-3:]),
+                       status=status, success=reward.get("success"),
+                       evaluable_for_task_success=sample["evaluable_for_task_success"],
+                       tokens_in=agent.get("n_input_tokens"), tokens_out=agent.get("n_output_tokens"),
+                       cost_usd_api_price=agent.get("cost_usd"), exception=(result.get("exception_info") or {}).get("exception_type"),
+                       job=str(job), harbor_trial=str(trial) if trial else None)
+            rows.append(row)
+            if trial:
+                target = run / "results" / sample["task_id"] / sample["difficulty"] / sample["sample_id"] / mode / "trial_01" / f"attempt_{row['attempt']:03d}"
+                target.mkdir(parents=True, exist_ok=True)
+                for name in result_artifacts(mode):
+                    src = artifact_source(trial, mode, name)
+                    if src is not None:
+                        dest = target / name
+                        if not dest.exists() or src.stat().st_size != dest.stat().st_size or src.stat().st_mtime > dest.stat().st_mtime:
+                            shutil.copy2(src, dest)
+                atomic_json(target / "agent_summary.json", row)
     temp = run / "trials.jsonl.tmp"
     temp.write_text("".join(json.dumps(row, sort_keys=True) + "\n" for row in rows))
     temp.replace(run / "trials.jsonl")

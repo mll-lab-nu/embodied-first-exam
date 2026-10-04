@@ -11,7 +11,7 @@ from pathlib import Path
 import math
 import time
 
-from topogym.simulator.rollout_simulation.segment_contract import fingerprint
+from topogym.planning.harbor_bridge.callbacks import fingerprint
 from topogym.utils.io import sha256_file, to_jsonable, write_json_atomic
 
 

@@ -16,7 +16,7 @@ from topogym.assets.scene_visuals import surface
 class KnotUntyingTask(TaskDefinition):
     task_id = "knot_untying"
     instruction = 'Untangle the rope and leave it still on the table with no projected crossings or overlapping segments.'
-    terminal_revision = "terminal_v4_release_settling_default_success"
+    terminal_revision = "terminal_v5_fixed_contact_active_clearance_1mm"
     physics_model = "fem_ipc"
     defaults = defaults(task_id, geometry={}, stable_duration_s=0.5,
         origin_xy_m=[0., 0.], yaw_deg=0., rope_finish="orange_rope",
@@ -25,7 +25,8 @@ class KnotUntyingTask(TaskDefinition):
 
     def final_settling_spec(self):
         from topogym.evaluation.terminal import SettlingSpec
-        return SettlingSpec(fem_targets=("rope",),
+        return SettlingSpec(fem_targets=("rope",), clearance_m=.001,
+            robot_contact_policy="fixed_contact_active_clearance_v1",
             maximum_speed_m_s=self.config["terminal"]["maximum_speed_m_s"])
 
     def declare(self, asset_dir, table_height_m):

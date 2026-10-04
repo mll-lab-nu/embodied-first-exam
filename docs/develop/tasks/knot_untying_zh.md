@@ -2,6 +2,26 @@
 
 > **2026-09-27 更新：** 正式 easy 为两次重叠单绳圈；medium 为原 easy 的 overhand_trefoil；hard 为原 medium 的 figure_eight。double_overhand 已移到实验附表。 建模、录像与验证边界见[本轮开发报告](initial_scene_feedback_20260927_zh.md#9-本轮开发与验证2026-09-27)；全部当前入口见[39 项初始化索引](../../../runs/test_results/base_acceptance_final/README.md)。下文历史证据仍保留原版本含义。
 
+## 当前释放规则与 hard11（2026-10-04）
+
+按用户授权，Knot 改为 `terminal_v5_fixed_contact_active_clearance_1mm`。这是本地任务判据的新版本，不能将其结果标为原始 v14 任务通过；v14 安全规则、动力学、绳体和碰撞模型保留。
+
+- 夹爪及所有可活动连杆与绳体的释放间隙为 **1 mm**，取消统一 **5 mm** 要求。
+- 世界固定底座允许正常边界接触，不要求额外间隙。部件身份使用 Genesis 沿关节祖先链计算的 `is_fixed`；连接在活动腕部上的固定关节／夹爪仍属于活动部件。
+- 每个机器人部件都保留与完整绳体四面体的内部相交检查。外包盒或凸包不能证明分离时，继续检查原生凸实体、解析球或闭合凹网格；活动部件的正间隙使用面／顶点及边／边距离细化。真实穿透或无法判定均不能通过。
+- **1 nm** 是几何比较的数值分辨率，不是允许穿透深度。影像只作补充，不能凭肉眼放行几何穿透。原有全 tick 接触／穿透审计保留，含固定底座；全过程无穿透资格仍待完整审计。
+- 无投影交叉／重叠、落桌、IPC 完整性、无辅助抓持、速度 ≤1 mm/s、漂移 ≤1 mm，以及连续 0.5 s 稳定均保留。搜索也不再为已允许的底座接触追加搬绳动作。
+
+[源码和验证计划](../../../runs/test_results/knot_oracle_20261003/hard11_native_launcher/launch_plan.json)已冻结；96 项相关 CPU 检查通过，包括 9 项新释放边界测试、120 对三角形距离与独立 FCL 的对照、原有碰撞／物理审计与命令安全检查。公共目标文字检查中的 Knot 部分通过，完整套件仍有既有 Claws 的 6 个失败，日志保留，未改动 Claws。
+
+[两个实测状态的离线复核](../../../runs/test_results/knot_oracle_20261003/diagnostics/release_v5_saved_states/report.json)中，hard10 的 54.3925 s 样本原先 `robot_clear=false`、间隙下界为零；实际底座实体与 5 个可疑体单元精查均为分离，其余 35 个碰撞体间隙下界至少 38.696 mm。64.7125 s 样本也通过新释放检查。它们只证明单时刻释放条件，不代表连续稳定、完整回放或全过程无穿透已通过。
+
+hard10 已在 91.425 s [主动停止并保留原版本证据](../../../runs/test_results/knot_oracle_20261003/hard10/release_policy_upgrade_stop.json)。hard11 从保存的 73.275 s 动作前缀开始新进程回放准备；不恢复旧 Task 成功状态。[原生预检已通过](../../../runs/test_results/knot_oracle_20261003/hard11_preflight_retry01/report.json)：物理 world、机器人读数、控制目标和资产均逐项一致，并完成 10 个真实物理 ticks。旧证据中零接触向量的 `[]` 与 `(0,3)` 仅规范化空数组表示，其余数据不放宽比较。新评价 SHA 为 `182eb5736b649784`，与旧 `a4fbd7af273b0379` 分别保留；仅左右 `base_link` 被原生模型判为世界固定。成功后仍执行两遍正式回放、首遍全 tick／共享四路录像及独立审计。
+
+[hard11 专用归档与四视角发布助手](../../../runs/test_results/knot_oracle_20261003/supporting/archive_helpers/release_v5_hard11/preparation.json)已完成语法和缺证据拒绝检查。正式归档前再次核对录像回放的物理 S0、完整 tick 数据哈希及新规则身份，独立存入新批次；当前没有发布成功证明或视频。
+
+当前调度器：`/tmp/knot_hard11_supervisor_retry01.py`；[实时状态](../../../runs/test_results/knot_oracle_20261003/background_status.json)。镜像固定为本机 `0.2.13-dev`，不代表官方 `0.2.12` 已验证。下面 hard10 及更早的 5 mm 记录保留历史含义。
+
 ## 冻结实例 oracle 交接与整合（2026-10-03）
 
 已导入用户提供的 `knot_untying_oracle_artifacts.tar.gz`：原始运行、三档 IPC 存档及日志位于
@@ -14,7 +34,7 @@
 |---|---|---|
 | easy | `easy05` 原生成功，575 actions、5,744 ticks、14.360 s；已有正式实例新进程回放成功日志，exact=true | 原证据已核验导入；单次回放不证明重复确定性 |
 | medium | `medium03` 原生成功，1,927 actions、19,268 ticks、48.170 s | 正式初态精确恢复；本轮首遍跑完全部动作但 `success=false, episode_end=null`，第二遍按用户要求取消，原因待查 |
-| hard | `hard01` 部分执行 53.075 s，4→3→1，仍有紧卷；没有完整成功 | `hard06` 完成第一轮 30.0 s、4→1，后为原生规则优先迁移保留证据并停止；`hard07` 两个候选因接近跟踪滞后导致 IK 失败；`hard08` 修复抓姿选择和等待时序，沿用 v14 工具／精确新初态／0.2.13-dev，尚无完整成功 |
+| hard | `hard01` 部分执行 53.075 s，4→3→1，仍有紧卷；没有完整成功 | `hard09` 已解结、落桌和停稳，但两端平移 2 cm 后底座附近绳段跟随不足；83.15 s 完整前缀保留，86.025 s 主动停止升级。`hard10` 冻结 v6 已真实重放 57.475 s 前缀并通过偏差核对，首次局部抓取、平移及释放已执行；64.7125 s 的间隙下界约 2.15 mm，仍低于 5 mm；平面解结、落桌、静止和松手已实测通过，原生机器人间隙未通过；完整成功与验证待完成 |
 
 medium 首遍返回值见 [原生结果](../../../runs/test_results/knot_oracle_20261003/medium_first_replay_result.json)。
 原命令请求两遍；第一遍完成后在第二遍初态恢复期间暂停，通过只读进程检查保存第一遍
@@ -277,13 +297,56 @@ hard08 使用[新的冻结源码](../../../runs/test_results/knot_oracle_2026100
 [检查点核对](../../../runs/test_results/knot_oracle_20261003/hard08_milestones/decision_1_validation.json)确认前缀 action／tick 数组与第二轮检查点逐项相同，文件哈希一致；命令保护归原生 Session，R4 为 −15 mm，额外 oracle 桌面余量为 null。此处证明一轮操作及其证据完整，不表示原生任务成功或全 tick 无穿透资格。
 第二轮两端抓取已完成位置收敛，31.425 s 进入闭合，未出现旧的额外桌面保护拒绝，见[该阶段实测记录](../../../runs/test_results/knot_oracle_20261003/hard08_milestones/second_grasp_convergence.json)。它使用新的初态／运行版本，不是 hard06 失败命令的对照重放；第二轮完整结果仍待验证。
 
-当前调度器为 `/tmp/knot_hard08_supervisor.py`，状态见
+随后 hard08 在 37.625 s／15,050 ticks 的第二轮拉开阶段收到外部 SIGTERM，监督进程和容器已退出，见[中断记录](../../../runs/test_results/knot_oracle_20261003/hard08/interruption_sigterm.json)。当时仍为一个交叉、无原生失败；不能把进程终止计为解法失败。用户确认并非其主动停止，并要求继续。
+`hard08_resume01` 已按[恢复方案](../../../runs/test_results/knot_oracle_20261003/hard08_resume01_native_launcher/launch_plan.json)完成从精确初态 `a4fbd7af273b0379` 的首轮真实回放：控制器与原 hard08 冻结源码逐字节相同，1,165 actions／11,650 ticks 后中心线最大坐标偏差为 0.09750 mm、关节最大偏差为 1.610×10⁻⁷ rad，均通过 0.2 mm／0.2 mrad 容差，见[恢复检查结果](../../../runs/test_results/knot_oracle_20261003/hard08_resume01/resume.json)。日志确认 `RESUMED at 29.125s: 1 crossings`，已进入第二轮两端抓取；没有直接设置中断姿态。
+原续跑循环仅打印开始／结束；[外部只读计数采样](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard08_resume01_progress_probe/plan.json)曾按实际容器、PID、创建时间和源码哈希绑定当前 worker，在不暂停模拟的情况下连续读取两次 Session 已提交动作数／tick／时间，核对一致性。观察器已在恢复检查通过后自动结束，见[观察器结果](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard08_resume01_progress_probe/watcher.json)；其最后一次计数仅属历史恢复诊断。后续进度直接读取 [native_progress.json](../../../runs/test_results/knot_oracle_20261003/hard08_resume01/native_progress.json)，计数采样不构成完整物理证明。
+恢复使用的控制器历史日志包含原第一轮采样；最终物理证明和视频必须来自随后的一次完整连续正式回放。
+
+恢复后第二轮已完成抓取收敛、夹紧和抬升，持续拉开超过原中断点；约 41.82 s 的日志首次记录交叉 1→0。42.425 s／16,970 ticks 的原生指标为 `planar_clear=true`、`on_table=false`、`quiet=false`、`failure=null`，见[清零阶段证据](../../../runs/test_results/knot_oracle_20261003/hard08_resume01_milestones/first_zero_crossing.json)。此时仍在抓持，程序继续执行零交叉后的额外拉开、释放和终态整理；不能将交叉清零当作完整成功或无穿透证明。
+
+第二轮于 47.45 s／1,898 actions／18,980 ticks 完成两端释放并退开，[完整前缀](../../../runs/test_results/knot_oracle_20261003/hard08_resume01_milestones/prefix_18980_67cb85e294eb/manifest.json)五个文件哈希已核对。52.425 s 的[原生终态指标](../../../runs/test_results/knot_oracle_20261003/hard08_resume01_milestones/settle_robot_clearance_pending.json)显示零交叉、落桌、低速及有界漂移均通过，但 `robot_clear=false`，保守体积间隙下界为 0；这是终态间隙未通过，不能等同于确认穿透。原静置窗口结束后已进入第三步 `retreat`，58.025 s 仍在真实执行；原生间隙阈值与任务规则未修改。
+
+第三步额外退开后，机器人间隙仍未通过。对 tick 27,332 的两次一致只读几何采样离线核对，36 个机器人包络中仅右臂固定底座（`geom_20`／`right/base_link`）未通过，见[定位结果](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard08_resume01_clearance_probe/clearance_localization.json)。底座的全部支撑平面与冻结模型吻合，误差小于 2×10⁻¹⁶ m；[实体相交查询](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard08_resume01_clearance_probe/fixed_base_contact_check.json)未发现该 tick 绳体穿入底座、边界接触或 unresolved。另有一处[实测顶点距离](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard08_resume01_clearance_probe/fixed_base_proximity.json)仅 0.383 mm，确实不满足原生 5 mm 终态间隙。这是单 tick、单底座诊断，不是完整无穿透资格；抬高夹爪不会移动固定底座附近的绳子。
+
+已增加 `native_rules_clearance_search_v4`：零交叉、已落桌但间隙不足时，优先尝试双端平移，保留撤手／落绳／拉开的其他候选。八个桌面方向、2／4／8 cm 位移及 5 mm 临时拱形抬升由两臂同步执行；每一步两臂 IK 都成功后才提交动作。现有原生几何只用于排序，不删除预测较差的候选或修改成功判据。该采样上沿 −Y 平移 1／2／4 cm 的几何估算可通过原生间隙检查，仍需真实物理验收。[候选代码与 37 项 CPU 检查](../../../runs/test_results/knot_oracle_20261003/supporting/clearance_translation_candidate/validation.json)已保存。
+
+hard08_resume01 第四步重新落绳后仍未通过机器人间隙检查；最后记录为 80.425 s／32,170 ticks，零交叉、落桌、低速均通过，`failure=null`。已保存[策略升级停止记录](../../../runs/test_results/knot_oracle_20261003/hard08_resume01/strategy_upgrade_stop.json)，确认旧监督进程、容器和观察器退出，再启动 [hard09 冻结运行](../../../runs/test_results/knot_oracle_20261003/hard09_native_launcher/launch_plan.json)。新运行只替换控制器、候选搜索及其参数依赖／检查，任务、物理和安全源码保持原冻结版本。初态 `a4fbd7af273b0379` 已加载，正在从头真实重放 `d3_a2.pkl` 的 2,299 actions／22,990 ticks（57.475 s），之后核对 0.2 mm／0.2 mrad 容差并执行整理候选。没有直接设置绳形或机器人姿态；恢复日志中继承的历史采样不替代新的连续物理证明。
+
+恢复期间另做了[CPU 运动学预检](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard09_translation_ik/report.json)：使用该检查点绳形、实测关节与已学习偏差，两端默认抓姿均可解，24 条平移候选中 23 条的首／中／末段 IK 采样通过，包含沿 −Y 移动 2 cm 的候选。预检没有推进物理，不覆盖实际接近、跟踪、抓持变形、R4 裁剪或穿透；未据此删减候选。当前恢复计数见[只读采样](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard09_progress_probe/latest.json)，其中进度比例仅指恢复前缀，不代表整个任务完成比例。
+
+hard09 已实际重放完前 1,165 个动作并进入第二轮，[第一轮恢复计数证据](../../../runs/test_results/knot_oracle_20261003/hard09_milestones/resume_first_primitive_completed.json)不宣称已通过完整检查点偏差核对。另在第二轮拉开的 tick 14,056（35.14 s）取得[两次一致的只读物理采样](../../../runs/test_results/knot_oracle_20261003/hard09_milestones/replayed_spread_metrics.json)：原生 `planar_clear/on_table/quiet=false`，绳体最大速度约 40.5 mm/s。这些是本次回放的实际指标；单时刻采样不替代随后完整回放的逐 tick 穿透检查。
+后续 tick 16,804（42.01 s）的[一致物理采样](../../../runs/test_results/knot_oracle_20261003/hard09_milestones/replayed_planar_clear.json)已观察到原生 `planar_clear=true`，非局部投影间距约 15.53 mm；落桌和静止条件仍未通过。这是本次回放再次达到无交叉的证据，不是完整 hard 成功，也不确定清零发生的精确时刻。
+静置至 tick 21,444（53.61 s）的[一致物理采样](../../../runs/test_results/knot_oracle_20261003/hard09_milestones/replayed_settled_clearance_unmet.json)显示 `planar_clear/on_table/quiet=true`、已松手、最大速度约 0.535 mm/s，但原生 `robot_clear=false`，稳定时间仍为零。当前剩余终态问题确认为机器人间隙，恢复后的平移候选将针对它尝试整理；保守间隙下界为零本身不能证明实际穿透。
+
+2,299 actions／22,990 ticks 已全部真实重放，[恢复检查](../../../runs/test_results/knot_oracle_20261003/hard09/resume.json)通过：中心线最大坐标误差 0.05613 mm，关节最大误差 4.255×10⁻⁸ rad。当前冻结 v4 的搜索入口会再静置 10 s，因为旧检查点未记录已完成初始等待；本轮保持原冻结源码继续运行。工作区 v5 已为新检查点记录 `search_phase=candidates`，恢复后仅跳过已执行的入口等待，旧检查点保守兼容，下一层新决策仍正常等待。[26 项 CPU 回归](../../../runs/test_results/knot_oracle_20261003/diagnostics/resume_settle_phase_fix.json)通过；该记账修复未部署到 hard09，也不改变原生稳定时间或成功判据。
+
+额外静置已于 67.475 s 结束，[首个实际平移尝试](../../../runs/test_results/knot_oracle_20261003/hard09_milestones/translation_started.json)选择两端沿 −Y 移动 2 cm、临时拱升 5 mm，已进入抓取接近。24 个候选全部保留，首选的刚性平移估计间隙下界为 5.007 mm；这只用于排序，仍须验证真实摩擦抓持、绳体跟随、释放及原生终态。
+
+hard09 的平移尝试已完整结束于 83.15 s，[动作前缀](../../../runs/test_results/knot_oracle_20261003/hard09_milestones/prefix_33260_ba175bb7e7e7/manifest.json)保留 3,326 actions／33,260 ticks。73.6525 s 的[静置绳体诊断](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard09_translation_result/report.json)仍只有右臂固定底座间隙未通过，下界约 0.124 mm。相比本轮 53.61 s，底座附近顶点沿 −Y 位移中位数仅 1.47 mm，原近点仅 0.35 mm；刚性平移估计没有反映局部绳段的实际跟随。该比较包含中间静置和抓取过程，不是穿透资格检查。
+
+已在 86.025 s [主动停止 hard09](../../../runs/test_results/knot_oracle_20261003/hard09/strategy_upgrade_stop.json)并启动 [hard10 / v6](../../../runs/test_results/knot_oracle_20261003/hard10_native_launcher/launch_plan.json)。新策略按原生体网格间隙定位受限机器人部件，以其附近材料绳段前后 8 cm 的抓点和远端配合，保留两端抓取；共 72 条默认平移候选，参数 `translate_grasp`／`translate_grasp_offset_m` 可配置。v6 同时识别旧检查点已记录的完整 `final_settle` 尾段，避免重等；物理前缀仍全部真实重放并核对恢复偏差。
+
+40 项冻结 CPU 检查通过。[局部抓取预检](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard10_local_grasp_preflight/report.json)中两种偏移各 24 条路径的首／中／末 IK 均通过。+8 cm 首选的张开夹爪下降采样未发现顶点进入固定底座；−8 cm 在恢复前绳形上仍有 4 个规划顶点进入底座，不作为首选。这是命令姿态的局部采样，不能保证真实接近、所有碰撞对或整条路径无穿透。直接抓最近绳段及 ±4 cm 的规划重叠见[诊断](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard09_local_grasp_ik/approach_geometry.json)；没有通过允许实际穿透来消除这些问题。hard10 仅更改控制器、分支搜索及测试，沿用 v14 任务／物理／安全源码和本机固定 0.2.13-dev 镜像。
+
+hard10 的[实际平面解结采样](../../../runs/test_results/knot_oracle_20261003/hard10_milestones/replayed_planar_clear.json)已在 tick 17,101（42.7525 s）确认原生 `planar_clear=true`，非局部投影间距约 15.49 mm；`on_table/quiet=false`，最大速度约 43.46 mm/s。该证据来自本轮进程的两次一致只读状态采样，Task／world／geometry tick 一致，没有暂停或修改模拟。它只证明该时刻的平面解结条件，不确定首次清零时刻，也不代表完整 hard 成功或逐 tick 穿透资格。此时仍在恢复前缀中的拉直段，新的局部抓取尚未执行。
+
+随后 tick 21,757（54.3925 s）的[停稳采样](../../../runs/test_results/knot_oracle_20261003/hard10_milestones/replayed_settled_clearance_unmet.json)确认本轮 `planar_clear/on_table/quiet=true`、`assist_released=true`，最大速度约 0.790 mm/s；`robot_clear=false`、稳定时间为零。原生保守间隙下界为零本身不能证明真实穿透。恢复后的局部抓取将针对剩余机器人间隙尝试整理；此时尚未完成完整恢复偏差核对、实际局部抓取和逐 tick 资格检查。
+
+hard10 的[完整恢复检查](../../../runs/test_results/knot_oracle_20261003/hard10_milestones/resume_verified.json)已通过：2,299 actions／22,990 ticks 全部真实重放，中心线最大坐标误差 0.06839 mm、关节误差 5.056×10⁻⁹ rad，均在 0.2 mm／0.2 mrad 容差内。首个新候选从 57.475 s 立即开始，使用 `translate_grasp=clearance`、材料偏移 +8 cm，沿 −Y 平移 2 cm、临时拱升 5 mm；没有再等待额外 10 s。局部抓取、平移及释放已实际执行，原生终态仍须继续验证。
+
+对 `robot_clear` 的[规则复核与阈值扫描](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard10_robot_clear_review/report.json)使用本轮 54.3925 s 的停稳样本：36 个机器人碰撞体中仅 index 18（与既有右臂固定底座边界一致）未通过，其余部件的保守间隙至少 38.696 mm。按冻结原生算法将阈值分别设为 5／2／1／0.5／0.1 mm 离线复算，该样本仍全部失败，底座间隙下界均为零；这不是精确距离或穿透结论。`robot_clear` 属于共享释放完成条件：Knot 使用默认 5 mm，范围含所有机器人碰撞几何。是否允许与固定底座正常接触、是否改用更精确的几何分离证明，是任务判据的设计问题；本次仅核对并提出调整建议，未修改 hard10 的 v14 成功条件或物理规则。
+
+首次局部整理后的[实际绳段跟随诊断](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard10_translation_result/report.json)比较本轮 tick 21,757 与 25,885（54.3925／64.7125 s）：底座附近材料顶点沿 −Y 位移中位数约 4.46 mm，旧近点移动约 3.23 mm，原生机器人间隙下界从零增至 2.147 mm，仍只有右臂固定底座未达 5 mm。后一个样本的平面解结、落桌、静止、松手均通过；这只证明该时刻的改善，后续静置间隙可能变化。比较包含中间静置、抓取、平移和释放，不等同于独立因果试验或整条轨迹无穿透资格。该次采样时仍执行原 v14 判据下的整理搜索；现已按上方新授权转入 hard11。
+
+首次局部整理已完整结束于 73.275 s，[一致动作前缀](../../../runs/test_results/knot_oracle_20261003/hard10_milestones/prefix_29310_d514f10acd7c/manifest.json)保存 2,931 actions／29,310 ticks；[输入一致性核对](../../../runs/test_results/knot_oracle_20261003/diagnostics/hard10_first_local_prefix_identity.json)确认前 2,299 个动作、22,990 ticks 和动作布局与恢复检查点完全相同。实际抓点为右臂材料位置 0.266851 m、左臂远端 1.319632 m，未记录 IK 提前停止。该整理未取得原生成功，搜索已进入第 4 步撤手；动作前缀的一致性不替代后续正式回放和逐 tick 物理资格。
+
+hard10 当时的调度器为 `/tmp/knot_hard10_supervisor.py`，状态见
 [background_status.json](../../../runs/test_results/knot_oracle_20261003/background_status.json)。
 原生成功后仍做两遍正式实例回放，首遍全 tick／共享四路录像及独立几何审计。
-另已启动独立的只读 CPU 并行审计等待队列：9 项审计测试通过，同一 11 个真实状态的
+只读 CPU 并行审计的 9 项测试通过，同一 11 个真实状态的
 逐 tick 结果、汇总和证据哈希与串行完全一致，1／4／8 进程耗时约 10.85／4.74／4.32 s。
 [独立冻结方案及基准](../../../runs/test_results/knot_oracle_20261003/hard08_parallel_audit_launcher/launch_plan.json)
-只改调度与 CLI；接触、穿透、体积和资格判据相同。队列绑定当前监督进程，在完整 capture 封存后启动 8 个 CPU 测量进程；原生运行和原串行调度不被替换。归档助手已支持 `--parallel` 显式选择及对应源码哈希核对，缺证据时仍拒绝发布；完整结果与最终归档仍待验证。
+只改调度与 CLI；接触、穿透、体积和资格判据相同。原 hard08 审计等待队列已随上游中断退出。恢复队列使用相同的已验证审计源码，在完整 capture 封存后直接启动 8 个 CPU 测量进程，不再重复运行串行审计。恢复运行的归档助手已绑定该审计源码及前缀检查点，语法和缺证据拒绝检查通过；尚未发布。
 完整 hard 原生成功、正式回放和最终物理资格尚待验证。
 
 ## 三档物体路线与 IK 的历史记录（2026-09-30）

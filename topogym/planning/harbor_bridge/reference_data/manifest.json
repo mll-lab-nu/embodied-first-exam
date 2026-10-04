@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "scope": "Private oracle inputs only; historical evidence is provenance, not current Harbor qualification.",
+  "files": {
+    "fiber_bundling/easy/selection.json": {
+      "sha256": "3484fd86edc33dd2281a4152152c912a474175f9dcde3d859608b448095659ee",
+      "bytes": 1837,
+      "source": "solvability_proof/fiber_bundling/2026-10-03/evidence/runs/easy_02/qualification/selection.json"
+    },
+    "fiber_bundling/medium/selection.json": {
+      "sha256": "5c61672a18e7d20e9957dbe4d2aebb0ffb8201e2f5627cf5cd096435b6ddda11",
+      "bytes": 3064,
+      "source": "solvability_proof/fiber_bundling/2026-10-03/evidence/runs/medium_full_01/qualification/selection.json"
+    },
+    "fiber_bundling/hard/selection.json": {
+      "sha256": "fe5468475b2b818b8a5a3e5fc13b3b80d4750d06115c487f80cd67a45b4d134f",
+      "bytes": 6749,
+      "source": "solvability_proof/fiber_bundling/2026-10-03/evidence/runs/hard_full_01/qualification/selection.json"
+    },
+    "horseshoe_ring/easy/recipe.json": {
+      "sha256": "fba7882a2c251d6fac1e6341dc190eac85fc9581a394222e23857790195243fd",
+      "bytes": 5075,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_easy/recipe.json"
+    },
+    "horseshoe_ring/easy/grasps.json": {
+      "sha256": "da398cde28163b9c16041ddf12b3359fa39b58ad4986847b6d5d2a509119b492",
+      "bytes": 3762,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/grasps.json"
+    },
+    "horseshoe_ring/easy/reference.json": {
+      "sha256": "de7d099d4c082248b1a16786f861e74ca5548ee19fb3be1039ba9bbdf6becb44",
+      "bytes": 4987441,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/reference.json"
+    },
+    "horseshoe_ring/easy/fold.json": {
+      "sha256": "7895545a0f9d914cb2d919f248e6b89f8563049d99157d925a7751c52fb0f524",
+      "bytes": 7038369,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/fold.json"
+    },
+    "horseshoe_ring/easy/support.json": {
+      "sha256": "21f5e8375cf247f9b8a27d35ec5ecf8f2bcbd5bb3c24a3f37c9e68e4ee04a7fb",
+      "bytes": 4682,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/support.json"
+    },
+    "horseshoe_ring/easy/approach.json": {
+      "sha256": "2af42255eef8c2ea56347a7c682ee32d9ad52ab2ef39aadedceb54a6616d59ab",
+      "bytes": 95577,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/approach.json"
+    },
+    "horseshoe_ring/medium/recipe.json": {
+      "sha256": "8b82c375fb4b68cd840293796c654cc5d4387d9bfecfd48b4c7c4b34e8ae4064",
+      "bytes": 4675,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_medium/recipe.json"
+    },
+    "horseshoe_ring/medium/grasps.json": {
+      "sha256": "277cc96ae59747584ad7505895755aa428f3dd351d5af31c8d6c651af051c200",
+      "bytes": 3845,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_medium/evidence/runs/medium_from_home_08/oracle_inputs/grasps.json"
+    },
+    "horseshoe_ring/medium/reference.json": {
+      "sha256": "3ab3d9af280804dad9a4ae17f3314abce609b8a0b779d7c00fa83364e257d2df",
+      "bytes": 4999791,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_medium/evidence/runs/medium_from_home_08/oracle_inputs/reference.json"
+    },
+    "horseshoe_ring/medium/fold.json": {
+      "sha256": "b90c7c72188e67a2747455ab959dbde862ce53c4ae9cd9ece4d711b64743c4ca",
+      "bytes": 6564430,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_medium/evidence/runs/medium_from_home_08/oracle_inputs/fold.json"
+    },
+    "horseshoe_ring/medium/support.json": {
+      "sha256": "095964339285a930bd6c6deb76133510aeeda8ec715d512b2600622e7f776550",
+      "bytes": 3721,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_medium/evidence/runs/medium_from_home_08/oracle_inputs/support.json"
+    },
+    "horseshoe_ring/medium/approach.json": {
+      "sha256": "ad5b8fffaa01c98684fdd4136a8750311e2c89d400defa0bbe3b12a62fdd8c75",
+      "bytes": 138716,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_medium/evidence/runs/medium_from_home_08/oracle_inputs/approach.json"
+    },
+    "horseshoe_ring/hard/recipe.json": {
+      "sha256": "51a2c3646508b2b543961389b919def0d1082e2892d045db11de62af03255d2a",
+      "bytes": 4769,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/recipe.json"
+    },
+    "horseshoe_ring/hard/grasps.json": {
+      "sha256": "c24d875289e57ac278e7de3bd3e018b9f922d6c09efaa29bf44257012381337f",
+      "bytes": 5132,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/evidence/runs/hard_from_home_22/oracle_inputs/grasps.json"
+    },
+    "horseshoe_ring/hard/fold.json": {
+      "sha256": "89a42dba770d81bf2754042d955a21edf9c671bd1a1bc9e7b75b65a56843cda2",
+      "bytes": 6850676,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/evidence/runs/hard_from_home_22/oracle_inputs/fold.json"
+    },
+    "horseshoe_ring/hard/support.json": {
+      "sha256": "d839d8ec882da33791dc05e15f566ac5f6ef2eb83d05c5236d0a35f4c766e755",
+      "bytes": 3723,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/evidence/runs/hard_from_home_22/oracle_inputs/support.json"
+    },
+    "horseshoe_ring/hard/approach.json": {
+      "sha256": "c5340931285a8bd13e0ececb5611026d1520e506942900d021221a59a103f62a",
+      "bytes": 138436,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/evidence/runs/hard_from_home_22/oracle_inputs/approach.json"
+    },
+    "horseshoe_ring/hard/reference.json": {
+      "sha256": "6e16674e1f42ea6ebe76cf77eadb760cd52fcc7c9f8ca59781c12944e09a4086",
+      "bytes": 4913166,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/evidence/runs/hard_from_home_22/oracle_inputs/reference.json"
+    },
+    "hedgehog_in_cage/easy/pickup.json": {
+      "sha256": "9a7fb6b160dc3c4adb7b2017743296a3b2c8370487362289f33e2499274f2b61",
+      "bytes": 9963,
+      "source": "solvability_proof/hedgehog_in_cage/2026-09-30_easy/evidence/runs/easy_qualified_native_01/submitted_pickup.json"
+    },
+    "hedgehog_in_cage/hard/pickup.json": {
+      "sha256": "1ae6ca68ce4616b259b8a99ece5e4cbf778f49186642815e8fdd81c109072f2e",
+      "bytes": 4358,
+      "source": "solvability_proof/hedgehog_in_cage/2026-10-03_hard_s5_post/evidence/runs/native_03/submitted_pickup.json"
+    },
+    "interlocked_claws/easy/witness.json": {
+      "sha256": "7fd05438bec90401aaedfc5cfdaaa94a4028163fd509b0754e91fc136a8996cd",
+      "bytes": 372329,
+      "source": "solvability_proof/interlocked_claws/2026-10-03/evidence/easy/run/submitted_witness.json"
+    },
+    "interlocked_claws/medium/witness.json": {
+      "sha256": "9e6845a13931cd5b42cd711783d88549f0c8ea47db719bd5abf64a6fcff0edf1",
+      "bytes": 18307,
+      "source": "solvability_proof/interlocked_claws/2026-10-03/evidence/medium/run/submitted_witness.json"
+    },
+    "interlocked_claws/hard/witness.json": {
+      "sha256": "0d0872b02596d75e17ff2b4243ad5ddc1e3cc0f157391bafcaf45a36e91745c3",
+      "bytes": 141017,
+      "source": "solvability_proof/interlocked_claws/2026-10-03/evidence/hard/run/submitted_witness.json"
+    }
+  }
+}

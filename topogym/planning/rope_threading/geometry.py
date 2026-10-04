@@ -127,11 +127,14 @@ def frozen_problem(output, *, variation="medium", seed=0, task_parameters=None):
 def robot_scene_identity(scene):
     """Pin home, mount, controller and authored robot assets across plan/replay."""
     from omegaconf import OmegaConf
+    from topogym.assets.robot import asset_root
     robot = OmegaConf.to_container(scene.robot_control, resolve=True)
-    root = Path(__file__).resolve().parents[3]
-    asset_root = root / Path(robot["robot"]["asset"]).parent
-    hashes = {str(p.relative_to(root)): hashlib.sha256(p.read_bytes()).hexdigest()
-              for p in sorted(asset_root.rglob("*")) if p.is_file()}
+    root = asset_root(robot["robot"].get("asset_root"))
+    asset = Path(robot["robot"]["asset"]).relative_to("assets")
+    if not (root / asset).is_file():
+        raise FileNotFoundError(f"Relay robot asset is missing: {root / asset}")
+    hashes = {"assets/" + p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in sorted((root / asset.parent).rglob("*")) if p.is_file()}
     return dict(control=robot, mount=OmegaConf.to_container(scene.env.robot_mount, resolve=True),
                 asset_sha256=hashes)
 

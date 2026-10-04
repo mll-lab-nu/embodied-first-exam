@@ -1,0 +1,266 @@
+[
+  {
+    "step": "pickup",
+    "parameters": {
+      "tilt_deg": 30.0,
+      "approach_m": 0.1
+    },
+    "parameters_sha256": "d9fbc6c270ae8d3411535f4f2ac95d106f8a5ec3ff460ce1912975d2dffd0331"
+  },
+  {
+    "step": "comb_01",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 9,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "df36a95eb71027f78c9a17920232aad00b3977c1f323776d87959d540eabdf6b"
+  },
+  {
+    "step": "comb_02",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 3,
+      "roll_deg": -70.0
+    },
+    "parameters_sha256": "c77fc612dc4de13e0161781cdd6b15ba1af6552b60077d0121a3324d98c27ea7"
+  },
+  {
+    "step": "comb_03",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 15,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "56d88c170249d792b0398296994009476e1f86437dea5fac7896506b1699e59c"
+  },
+  {
+    "step": "comb_04",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 11,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "e10a0f11b02bd083a917bf2ae19f973127f534f59b9056fcac19a99d60a97edd"
+  },
+  {
+    "step": "comb_05",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 13,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "fdfeb254351b2dda6b0bd5540c69e7690708a118631fa7c30856633e48dfd007"
+  },
+  {
+    "step": "comb_06",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 6,
+      "roll_deg": 70.0
+    },
+    "parameters_sha256": "cc7297ed4464ab194da915881a2332363565b9df791fdfac4bb86340309439a9"
+  },
+  {
+    "step": "comb_07",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 1,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "221af43d67890e6e85578944c7438ef156a012251c6c234e85cfb022cc517eba"
+  },
+  {
+    "step": "comb_08",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 7,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "34a09680e481ed151a55fa5881d16427eb7e61f6d89e4491469d245929d8a991"
+  },
+  {
+    "step": "comb_09",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 4,
+      "roll_deg": -70.0
+    },
+    "parameters_sha256": "aec34df1cbbfc987c055092a469df1c80123f2b974b250ba20a1e4b5b682fd19"
+  },
+  {
+    "step": "comb_10",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 14,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "7e5f77700814a7a6383a2a536e8784e4bf389949eed9ac8d050440536b44b674"
+  },
+  {
+    "step": "comb_11",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 12,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "654b34ca6cbd672698d2cf2ea9140b483e97c3fa77581436032048359e0e7979"
+  },
+  {
+    "step": "comb_12",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 11,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "e10a0f11b02bd083a917bf2ae19f973127f534f59b9056fcac19a99d60a97edd"
+  },
+  {
+    "step": "comb_13",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 2,
+      "roll_deg": -70.0
+    },
+    "parameters_sha256": "0148db46b23ffc725b5a39eff2024a387f860a68c8d768c7ecb471c4892cef88"
+  },
+  {
+    "step": "comb_14",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 7,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "34a09680e481ed151a55fa5881d16427eb7e61f6d89e4491469d245929d8a991"
+  },
+  {
+    "step": "comb_15",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 0,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "e9c7dac2515bc6db94d9792bd5c2ce98441841e53f73b615cb117887f7c3a8b8"
+  },
+  {
+    "step": "comb_16",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 4,
+      "roll_deg": -70.0
+    },
+    "parameters_sha256": "aec34df1cbbfc987c055092a469df1c80123f2b974b250ba20a1e4b5b682fd19"
+  },
+  {
+    "step": "comb_17",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 12,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "654b34ca6cbd672698d2cf2ea9140b483e97c3fa77581436032048359e0e7979"
+  },
+  {
+    "step": "comb_18",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 14,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "7e5f77700814a7a6383a2a536e8784e4bf389949eed9ac8d050440536b44b674"
+  },
+  {
+    "step": "comb_19",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 1,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "221af43d67890e6e85578944c7438ef156a012251c6c234e85cfb022cc517eba"
+  },
+  {
+    "step": "comb_20",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 11,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "e10a0f11b02bd083a917bf2ae19f973127f534f59b9056fcac19a99d60a97edd"
+  },
+  {
+    "step": "verify_combed",
+    "parameters": {
+      "hold_s": 1.0
+    },
+    "parameters_sha256": "50b0635dbc02ad2df05505cf1cb8000d179235a74382abbbbba9f027223b028b"
+  },
+  {
+    "step": "feed",
+    "parameters": {
+      "front_s_m": 0.03,
+      "maximum_front_offset_m": 0.0003,
+      "hold_s": 1.5
+    },
+    "parameters_sha256": "a222e03c4ed11967dbc73286bc66f4a28e8c68f1aa77e74e84f2a6a8292d76d2"
+  }
+]
