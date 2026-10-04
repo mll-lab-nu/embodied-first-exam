@@ -28,9 +28,8 @@ Python (privileged mode):
     s.kinematics({"op": "fk", "q": q}); s.kinematics({"op": "ik", "targets": {tcp: pose7}})   # upstream's kinematic model
     s.reset()                              # rebuild the frozen episode (unlimited)
     s.replay(rows); s.save_trajectory(rows, "/app/output/trajectory.npz")
-CLI:
-    python rcb_molmospaces.py replay --instance instance.json --traj trajectory.npz [--video replay.mp4]
-    python rcb_molmospaces.py info   --instance instance.json
+CLI (the verifiers):
+    python rcb_molmospaces.py replay --instance instance.json --traj trajectory.npz [--video replay.mp4] [--out r.json]
 """
 
 import argparse
@@ -56,6 +55,23 @@ ASSET_SOURCES = {
     "objects": ("thor", "objaverse", "objathor_metadata"),
 }
 SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jsonl")
+# The frame of upstream's kinematic model (MlSpacesKinematics.fk) each robot-mounted camera is rigidly attached to: the
+# DROID wrist camera to the Robotiq gripper's base (the `gripper` frame's body), the DROID shoulder camera to the FR3's
+# fixed base; the RB-Y1 head camera to link_head_2 (`head`), its wrist cameras to the arm's last link, rigid with
+# EE_BODY (`left_gripper` / `right_gripper`), its third-person follower camera (MJCF mode "fixed") to its base. A
+# camera's mount = this frame's pose^-1 . the camera's pose.
+GRIPPER_COMMAND = {  # what the gripper entry of a row means, by upstream's gripper class
+    "RobotIQGripperGroup": "the Robotiq 2F-85 command, 0 = open .. 255 = closed",
+    "RBY1GripperGroup": "the finger motor's force, positive closes, negative opens, 0 exerts none",
+}
+CAMERA_PARENTS = {
+    "wrist_camera_zed_mini": "gripper",
+    "droid_shoulder_light_randomization": "base",
+    "head_camera": "head",
+    "wrist_camera_l": "left_gripper",
+    "wrist_camera_r": "right_gripper",
+    "camera_follower": "base",
+}
 
 
 def boot(install: bool = False):
@@ -208,6 +224,7 @@ class Episode:
                 [_short(m.joint(j).name) for j in rv.get_move_group(g).joint_ids] if g not in self.grippers else [g]
             )
         ]
+        self.q0 = self.proprio()["joint_pos"]  # the frozen start's joints: the IK's default seed (stateless, §8)
 
     # ---- acting
     def action(self, row) -> dict:
@@ -280,28 +297,24 @@ class Episode:
 
     def camera_info(self, camera: str) -> dict:
         """Calibration at the current state: OpenCV intrinsics, world -> camera extrinsics (OpenCV axes), cam2world in
-        OpenGL axes, image size, and the mount (static, or the robot link it moves with and its fixed offset)."""
+        OpenGL axes, image size, and the mount (static, or the frame of the kinematic model it is rigid on and the fixed
+        offset)."""
         cam = self._camera(camera)
         w, h = (int(v) for v in self.inst["episode"]["img_resolution"])
         f = 0.5 * h / np.tan(np.radians(cam.fov) / 2)
         c2w = np.asarray(cam.get_pose(), dtype=np.float64)  # OpenCV axes: x right, y down, z forward
-        mount = {"type": "static", "extrinsic_cv": np.linalg.inv(c2w)[:3].tolist()}
-        body = getattr(cam, "_active_reference_body_name", None)
-        if body:
-            from molmo_spaces.env.data_views import create_mlspaces_body
-
-            T_body = np.asarray(create_mlspaces_body(self.env.current_data, body).pose, dtype=np.float64)
-            mount = {
-                "type": "link",
-                "link": body.split("/", 1)[-1],
-                "T_link_cam_cv": (np.linalg.inv(T_body) @ c2w).tolist(),
-            }
+        cam2world_gl = (c2w @ np.diag([1.0, -1.0, -1.0, 1.0])).tolist()
+        mount = {"type": "static", "extrinsic_cv": np.linalg.inv(c2w)[:3].tolist(), "cam2world_gl": cam2world_gl}
+        if getattr(cam, "_active_reference_body_name", None):  # robot-mounted: rigid on a frame of the kinematic model
+            parent, rv = CAMERA_PARENTS[camera], self.robot.robot_view
+            T_parent = self.robot.kinematics.fk(rv.get_qpos_dict(), rv.base.pose)[parent]
+            mount = {"type": "link", "parent_link": parent, "link_T_cam_cv": (np.linalg.inv(T_parent) @ c2w).tolist()}
         return {
             "intrinsic_cv": [[f, 0.0, w / 2], [0.0, f, h / 2], [0.0, 0.0, 1.0]],
             "image_size": [w, h],
             "fovy_deg": float(cam.fov),
             "extrinsic_cv": np.linalg.inv(c2w)[:3].tolist(),
-            "cam2world_gl": (c2w @ np.diag([1.0, -1.0, -1.0, 1.0])).tolist(),
+            "cam2world_gl": cam2world_gl,
             "mount": mount,
         }
 
@@ -319,26 +332,114 @@ class Episode:
             "tcp_pose": np.concatenate([_pose7(rv.get_move_group(g).leaf_frame_to_world) for g in self.grippers]),
         }
 
+    def command_limits(self) -> np.ndarray:
+        """(action_dim, 2): each row entry's range: upstream's controller range, within the joint's range where the
+        model limits the joint (the RB-Y1's base_theta: +-3.14 in the model, +-pi in the controller)."""
+        lim = np.concatenate(
+            [np.asarray(self.robot.controllers[g].ctrl_range, dtype=np.float64).reshape(-1, 2) for g in self.groups]
+        )
+        m, rv = self.env.current_model, self.robot.robot_view
+        joints = [j for g in self.groups for j in ([None] if g in self.grippers else rv.get_move_group(g).joint_ids)]
+        for i, j in enumerate(joints):
+            if j is not None and m.jnt_limited[j]:
+                lim[i] = np.clip(lim[i], *m.jnt_range[j])
+        return lim
+
     def robot_spec(self) -> dict:
-        rv = self.robot.robot_view
-        groups = {}
+        """The robot's spec sheet (eai-standard/2.2 §5 robot_spec), read off the robot's MuJoCo model: every joint of
+        the controlled move groups with the limits the simulator enforces, the grippers, the controller and its gains,
+        the tool frames and the base. Nothing about the scene."""
+        rv, m = self.robot.robot_view, self.env.current_model
+        lims = dict(zip(self.layout, self.command_limits().tolist()))
+        acts = {int(m.actuator_trnid[a, 0]): a for a in range(m.nu) if m.actuator_trntype[a] == 0}  # joint -> actuator
+        joints, gains = [], {}
         for g in self.groups:
             mg = rv.get_move_group(g)
-            ctl = np.asarray(self.robot.controllers[g].ctrl_range, dtype=np.float64).reshape(-1, 2)
-            groups[g] = {"command_range": ctl.tolist(), "dim": self.dims[g]}
-            if g in self.grippers:
-                groups[g]["opening_range_m"] = list(rv.get_gripper(g).inter_finger_dist_range)
-            else:
-                groups[g]["joints"] = [_short(self.env.current_model.joint(j).name) for j in mg.joint_ids]
-                groups[g]["joint_limits"] = np.asarray(mg.joint_pos_limits, dtype=np.float64).tolist()
+            for j in mg._joint_ids:  # every group's joints (`joint_ids` exists on simply actuated groups only)
+                name, a = _short(m.joint(j).name), acts.get(int(j))
+                limited = bool(m.jnt_limited[j])
+                rng = m.jnt_range[j] if limited else lims.get(name)
+                frc = float(m.jnt_actfrcrange[j][1]) if m.jnt_actfrclimited[j] else None
+                if frc is None and a is not None and m.actuator_forcelimited[a]:
+                    frc = float(m.actuator_forcerange[a][1])
+                joints.append(
+                    {
+                        "name": name,
+                        "type": "prismatic" if m.jnt_type[j] == 2 else "revolute",
+                        "unit": "m" if m.jnt_type[j] == 2 else "rad",
+                        "position_limits": None if rng is None else [round(float(v), 6) for v in rng],
+                        "velocity_limit": None,
+                        "effort_limit": round(frc, 6) if frc else None,
+                        "group": g,
+                        **(
+                            {}
+                            if limited
+                            else {
+                                "note": "the joint has no range in the model; the limits are the "
+                                "controller's, which clips every target to them"
+                            }
+                        ),
+                    }
+                )
+                if a is not None:
+                    gains[name] = {
+                        "stiffness": float(m.actuator_gainprm[a][0]),
+                        "damping": float(-m.actuator_biasprm[a][2]),
+                    }
+        grippers, tcp = {}, {}
+        for g in self.grippers:
+            mg = rv.get_move_group(g)
+            site = int(mg.leaf_frame_id)
+            body = int(m.site_bodyid[site])
+            d = self.env.current_data
+            T_body, T_site = np.eye(4), np.eye(4)
+            T_body[:3, :3], T_body[:3, 3] = d.xmat[body].reshape(3, 3), d.xpos[body]
+            T_site[:3, :3], T_site[:3, 3] = d.site_xmat[site].reshape(3, 3), d.site_xpos[site]
+            lo, hi = lims[g]
+            grippers[g] = {
+                "joints": [_short(m.joint(j).name) for j in mg._joint_ids],
+                "opening_m": [float(v) for v in rv.get_gripper(g).inter_finger_dist_range],
+                "command": f"joint_position entry {g}: {GRIPPER_COMMAND.get(type(mg).__name__, 'the gripper command')} "
+                f"({lo:g} .. {hi:g})",
+                "tcp_frame": g,
+            }
+            tcp[g] = {
+                "parent_link": m.body(body).name.split("/", 1)[-1],  # the MJCF body, e.g. the Robotiq's gripper/base
+                "link_T_frame": (np.linalg.inv(T_body) @ T_site).round(9).tolist(),
+                "definition": f"upstream's grasp site `{_short(m.site(site).name)}`, between the fingertips: the `{g}` "
+                "frame of /kinematics and of the proprio tcp_pose",
+            }
+        if "base" in self.groups:
+            root = rv.base.root_body_id  # upstream's RB-Y1 base gives the body itself, not its id
+            base = {
+                "type": "mobile",
+                "root_link": _short(m.body(getattr(root, "id", root)).name),
+                "pose_in_proprio": [n for n in self.layout if n.startswith("base_")],
+                "command": "joint_position entries base_x, base_y (m) and base_theta (rad): absolute targets in the "
+                "world frame, held by position actuators",
+                "limits": {n: lims[n] for n in self.layout if n.startswith("base_")},
+            }
+        else:
+            base = {
+                "type": "fixed",
+                "pose": _pose7(rv.base.pose).tolist(),
+                "note": "the world pose of the robot's base: x y z qw qx qy qz",
+            }
         return {
-            "robot": self.inst["episode"]["robot"]["robot_name"],
-            "robot_config": self.inst["robot_config"],
-            "control_hz": 1.0 / self.dt,
-            "physics_dt_s": float(self.env.current_model.opt.timestep),
-            "action_layout": self.layout,
-            "move_groups": groups,
-            "tcp_frames": list(self.grippers),
+            "name": self.inst["episode"]["robot"]["robot_name"],
+            "description": f"MolmoSpaces' {self.inst['robot_config']} (molmo-spaces 0.2.9), move groups "
+            f"{', '.join(self.groups)}",
+            "base": base,
+            "joints": joints,
+            "grippers": grippers,
+            "controller": {
+                "type": "upstream's JointPosController per move group: MuJoCo position actuators on the joints, PD",
+                "control_hz": 1.0 / self.dt,
+                "physics_hz": 1.0 / float(m.opt.timestep),
+                "gains": gains,
+                "note": "one control step is one upstream Task.step: the targets are held for its physics substeps",
+            },
+            "tcp": tcp,
         }
 
     # ---- kinematics: upstream's MlSpacesKinematics on the robot's own model (never the scene)
@@ -348,20 +449,27 @@ class Episode:
         return [a for a in arms if a.split("_")[0] == gripper.split("_")[0]] if len(arms) > 1 else list(arms)
 
     def kinematics_spec(self) -> dict:
+        mounts = [CAMERA_PARENTS[c] for c in self.cameras if c in CAMERA_PARENTS]
         return {
             "endpoint": "/kinematics",
             "joint_names": self.joint_names,
             "frame": "world",
             "quaternion_order": "wxyz",
-            "links": list(self.grippers),
+            "links": list(dict.fromkeys([*self.grippers, *mounts])),  # the TCP frames and the cameras' parent frames
             "tcp_frames": list(self.grippers),
             "ee_frames": list(self.grippers),
             "ik_targets": list(self.grippers),
             "ik": {
                 "solver": "upstream MlSpacesKinematics.ik: damped least squares on the robot's MuJoCo model, no "
-                "collision checking",
+                "collision checking; one target after the other, each moving its arm"
+                + (
+                    "; where an arm alone fails, each target with the torso and its arm, then each with its arm "
+                    "alone again (the torso moved them)"
+                    if "torso" in self.joint_groups
+                    else ""
+                ),
                 "moves": {g: self._ik_arm(g) for g in self.grippers},
-                "seed": "the measured joint positions",
+                "seed": "the joint positions at the episode's start (or the request's `seed`)",
                 "tol_pos_m": 0.005,
                 "tol_rot_rad": 0.05,
                 "max_iters": 1000,
@@ -386,38 +494,47 @@ class Episode:
         kin, base = self.robot.kinematics, self.robot.robot_view.base.pose
         spec = self.kinematics_spec()
         if req.get("op") == "fk":
+            links = req.get("links") or self.grippers
+            if any(k not in spec["links"] for k in links):
+                raise ValueError(f"links must be among {spec['links']}")
             T = kin.fk(self._qpos(req["q"]), base)
-            return {
-                "ok": True,
-                "op": "fk",
-                "frame": "world",
-                "poses": {k: _pose7(T[k]).tolist() for k in (req.get("links") or self.grippers)},
-            }
+            return {"ok": True, "op": "fk", "frame": "world", "poses": {k: _pose7(T[k]).tolist() for k in links}}
         if req.get("op") != "ik":
             raise ValueError("op must be 'fk' or 'ik'")
         seed = req.get("seed")
-        qd = self._qpos(self.proprio()["joint_pos"] if seed is None else seed)
+        qd = self._qpos(self.q0 if seed is None else seed)
         targets = {k: _mat(v) for k, v in req["targets"].items()}
-        for g, T in targets.items():
-            sol = kin.ik(g, T, self._ik_arm(g), qd, base, max_iter=int(req.get("max_iters") or spec["ik"]["max_iters"]))
-            if sol is None:
-                return {
-                    "ok": False,
-                    "op": "ik",
-                    "frame": "world",
-                    "q": None,
-                    "error": {k: {"pos_m": None, "rot_rad": None} for k in targets},
-                }
-            qd = {k: np.asarray(v, dtype=np.float64) for k, v in sol.items()}
+        if any(k not in spec["ik_targets"] for k in targets):
+            raise ValueError(f"targets must be among {spec['ik_targets']}")
+        tp = float(req.get("tol_pos_m") or spec["ik"]["tol_pos_m"])
+        tr = float(req.get("tol_rot_rad") or spec["ik"]["tol_rot_rad"])
+        iters = int(req.get("max_iters") or spec["ik"]["max_iters"])
+
+        def solve(q, unlocked):  # upstream's IK, one target frame after the other
+            for g, T in targets.items():
+                q = kin.ik(g, T, unlocked(g), q, base, eps=min(tp, tr), max_iter=iters)
+                if q is None:
+                    return None
+            return q
+
+        sol = solve(qd, self._ik_arm)
+        if sol is None and "torso" in self.joint_groups:
+            sol = solve(qd, lambda g: ["torso", *self._ik_arm(g)])
+            sol = None if sol is None else solve(sol, self._ik_arm)
+        if sol is None:
+            return {
+                "ok": False,
+                "op": "ik",
+                "frame": "world",
+                "q": None,
+                "error": {k: {"pos_m": None, "rot_rad": None} for k in targets},
+            }
+        qd = {k: np.asarray(v, dtype=np.float64) for k, v in sol.items()}
         reached = kin.fk(qd, base)
         err = {
             k: {"pos_m": float(np.linalg.norm(reached[k][:3, 3] - T[:3, 3])), "rot_rad": _rot_err(reached[k], T)}
             for k, T in targets.items()
         }
-        tp, tr = (
-            float(req.get("tol_pos_m") or spec["ik"]["tol_pos_m"]),
-            float(req.get("tol_rot_rad") or spec["ik"]["tol_rot_rad"]),
-        )
         return {
             "ok": all(e["pos_m"] <= tp and e["rot_rad"] <= tr for e in err.values()),
             "op": "ik",
@@ -432,31 +549,48 @@ class Episode:
 
 def replay(instance, rows, video: str | None = None, fps: int = 15) -> dict:
     """A fresh episode from the frozen instance, the rows in order until upstream ends the episode, then the verdict
-    (upstream judge_success on the final state) and the final state hash."""
+    (upstream judge_success on the final state) and the final state hash. `instance_ok`: the fresh episode starts in the
+    instance's recorded t = 0 state. With `video`, the first agent camera is encoded on the way (a failing encoder only
+    drops the video: `video` false)."""
     t0 = time.time()
     ep = Episode(instance)
+    start_sha = ep.state_sha()
     rows = np.asarray(rows, dtype=np.float64).reshape(-1, ep.action_dim)
-    frames, every = [], max(1, round(1 / (ep.dt * fps)))
+    writer, every = None, max(1, round(1 / (ep.dt * fps)))
+    if video:
+        try:
+            import imageio
+
+            writer = imageio.get_writer(video, fps=fps)
+        except Exception:  # noqa: BLE001 -- the video is for humans: it never decides the verdict
+            writer = None
     executed = 0
     for row in rows:
         if not ep.step(row):
             break
         executed += 1
-        if video and executed % every == 0:
-            frames.append(ep.render(ep.agent_cameras[0]))
+        if writer is not None and executed % every == 0:
+            try:
+                writer.append_data(ep.render(ep.agent_cameras[0]))
+            except Exception:  # noqa: BLE001
+                writer = None
     out = {
         "success": ep.success(),
         "state_sha": ep.state_sha(),
+        "instance_ok": start_sha == ep.inst["t0"]["state_sha"],
         "n_rows": int(len(rows)),
         "executed_rows": executed,
         "horizon": ep.horizon,
         "reached_horizon": ep.done,
         "replay_s": round(time.time() - t0, 1),
+        "video": False,
     }
-    if video and frames:
-        import imageio
-
-        imageio.mimsave(video, frames, fps=fps)
+    if writer is not None:
+        try:
+            writer.close()
+            out["video"] = executed >= every
+        except Exception:  # noqa: BLE001
+            pass
     ep.close()
     return out
 
@@ -573,9 +707,13 @@ def main(argv=None) -> int:
     r.add_argument("--instance", required=True)
     r.add_argument("--traj", required=True)
     r.add_argument("--video")
+    r.add_argument("--out", help="also write the result there (JSON); upstream prints its own text on stdout")
     a = ap.parse_args(argv)
     rows = np.load(a.traj, allow_pickle=False)["actions"]
-    print(json.dumps(replay(a.instance, rows, video=a.video)), flush=True)
+    result = replay(a.instance, rows, video=a.video)
+    if a.out:
+        Path(a.out).write_text(json.dumps(result))
+    print(json.dumps(result), flush=True)
     return 0
 
 

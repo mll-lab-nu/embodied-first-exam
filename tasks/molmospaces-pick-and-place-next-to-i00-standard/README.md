@@ -7,7 +7,7 @@
 | Twin | `molmospaces-pick-and-place-next-to-i00-privileged` |
 | Simulator / robot | `molmospaces` / `franka-robotiq-2f85` |
 | Family / instance | `pick-and-place-next-to` |
-| Oracle | `none` — upstream record: learned policies are evaluated on the MolmoSpaces benchmark episodes in arXiv 2602.11337 (MolmoSpaces) and arXiv 2603.16861 (MolmoBot); no reference solution is shipped |
+| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-pick-and-place-next__3W4hmcz (run codex-gpt6_luna-medium, batch molmospaces-luna-1003; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/pick_and_place_next_to/unlimited/); human review in PR #47 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.0` |
 
@@ -31,7 +31,8 @@ None is shipped (see `molmospaces-pick-and-place-next-to-i00-privileged`).
 `Task.step` per executed row; it ends at upstream's `is_done()` (455 control steps), at the agent's `done`,
 or when the agent's time is up; then upstream's `judge_success()` on the final state: the horizontal gap between the two objects' axis-aligned bounding boxes is between 0 and 6 cm; both rest on the same supporting body; and the reference object has moved at most 15 cm and rotated at most 60 degrees from its start pose. The two fresh-process
 replays of the recorded rows (`rcb_molmospaces.py replay`) must succeed and end in the same state; `replay.mp4` is
-rendered after the verdict.
+rendered after the verdict. No oracle; human review in PR #47 (PROTOCOL §2.7: per family, this task
+and its twin, a positive example and the `nop` result).
 
 ## Details
 | | |

@@ -7,7 +7,7 @@
 | Twin | `molmospaces-open-door-i00-privileged` |
 | Simulator / robot | `molmospaces` / `rainbow-rby1` |
 | Family / instance | `open-door` |
-| Oracle | `none` — upstream record: learned policies are evaluated on the MolmoSpaces benchmark episodes in arXiv 2602.11337 (MolmoSpaces) and arXiv 2603.16861 (MolmoBot); no reference solution is shipped |
+| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-door-i01-privil__7zEbSdU (run codex-gpt6_luna-medium, batch molmospaces-luna-rby1-r2c of 2026-10-03: an earlier round on the same episode, kept with the run's records, not on the results site); human review in PR #47 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.0` |
 
@@ -31,7 +31,8 @@ None is shipped (see `molmospaces-open-door-i00-privileged`).
 `Task.step` per executed row; it ends at upstream's `is_done()` (400 control steps), at the agent's `done`,
 or when the agent's time is up; then upstream's `judge_success()` on the final state: the door's hinge is open at least 67% of its 90-degree range. The two fresh-process
 replays of the recorded rows (`rcb_molmospaces.py replay`) must succeed and end in the same state; `replay.mp4` is
-rendered after the verdict.
+rendered after the verdict. No oracle; human review in PR #47 (PROTOCOL §2.7: per family, this task
+and its twin, a positive example and the `nop` result).
 
 ## Details
 | | |

@@ -4,14 +4,16 @@
 
 Two replays, each in its own fresh process (`rcb_molmospaces.py replay`: upstream's episode, one Task.step per row until
 upstream ends the episode, upstream's judge_success on the final state). success = both replays succeed and end in the
-same state. Writes /logs/verifier/reward.txt (1/0), reward.json (numbers only) and replay.mp4 (never part of the verdict).
+same state. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders
+replay.mp4, after the verdict is on disk (it never changes it).
 """
 
-import argparse, json, os, subprocess, sys, traceback
+import argparse, json, os, subprocess, sys, tempfile, traceback
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_molmospaces.py")
+REPLAY_TIMEOUT_S = 500  # three replays fit the verifier's 1800 s (a replay takes 20-120 s)
 
 
 def write(ok: bool, out: dict) -> None:
@@ -54,19 +56,23 @@ def agent_cost(path: str = "/app/output/rcb_session_log.jsonl") -> dict:
 
 
 def replay(instance: str, traj: str, video: str | None) -> dict:
-    cmd = [sys.executable, TOOL, "replay", "--instance", instance, "--traj", traj] + (
-        ["--video", video] if video else []
-    )
-    p = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=sys.stderr,
-        text=True,
-        timeout=1500,
-        env={**os.environ, "RCB_SESSION_LOG": ""},
-    )
-    lines = [ln for ln in p.stdout.splitlines() if ln.startswith("{")]
-    return json.loads(lines[-1]) if lines else {"error": f"replay process rc={p.returncode}"}
+    """One replay in a fresh process; its result (`--out`), or {"error": ...}."""
+    with tempfile.NamedTemporaryFile(suffix=".json") as out:
+        cmd = [sys.executable, TOOL, "replay", "--instance", instance, "--traj", traj, "--out", out.name]
+        try:
+            p = subprocess.run(
+                cmd + (["--video", video] if video else []),
+                stdout=subprocess.DEVNULL,
+                stderr=sys.stderr,
+                timeout=REPLAY_TIMEOUT_S,
+                env={**os.environ, "RCB_SESSION_LOG": ""},
+            )
+        except subprocess.TimeoutExpired:
+            return {"error": f"replay took over {REPLAY_TIMEOUT_S} s"}
+        try:
+            return json.load(open(out.name))
+        except ValueError:
+            return {"error": f"replay process rc={p.returncode}"}
 
 
 def main() -> int:
@@ -98,32 +104,39 @@ def main() -> int:
                 },
             )
             return 0
-        runs = [replay(a.instance, a.traj, None), replay(a.instance, a.traj, os.path.join(LOG_DIR, "replay.mp4"))]
+        runs = [replay(a.instance, a.traj, None), replay(a.instance, a.traj, None)]
         if any("error" in r for r in runs):
             write(False, {"success": 0, "grader_error": 1, **cost})
+            return 0
+        if not all(r["instance_ok"] for r in runs):  # the image no longer builds the frozen start: not the agent's 0
+            write(False, {"success": 0, "grader_error": 1, "instance_mismatch": 1, **cost})
             return 0
         all_success = all(r["success"] for r in runs)
         deterministic = runs[0]["state_sha"] == runs[1]["state_sha"]
         ok = all_success and deterministic
-        write(
-            ok,
-            {
-                "success": int(ok),
-                "replay_success": int(all_success),
-                "deterministic": int(deterministic),
-                "n_actions": int(len(acts)),
-                "sim_steps": int(runs[0]["executed_rows"]),
-                "horizon": int(runs[0]["horizon"]),
-                "reached_horizon": int(bool(runs[0]["reached_horizon"])),
-                "replay_s": float(runs[0]["replay_s"]),
-                "grader_error": 0,
-                "video_rendered": int(os.path.isfile(os.path.join(LOG_DIR, "replay.mp4"))),
-                **cost,
-            },
-        )
+        out = {
+            "success": int(ok),
+            "replay_success": int(all_success),
+            "deterministic": int(deterministic),
+            "n_actions": int(len(acts)),
+            "sim_steps": int(runs[0]["executed_rows"]),
+            "horizon": int(runs[0]["horizon"]),
+            "reached_horizon": int(bool(runs[0]["reached_horizon"])),
+            "replay_s": float(runs[0]["replay_s"]),
+            "grader_error": 0,
+            "video_rendered": 0,
+            **cost,
+        }
+        write(ok, out)  # the verdict, before any video
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
         write(False, {"success": 0, "grader_error": 1, **cost})
+        return 0
+    try:  # the video, for humans: it never changes the verdict
+        if replay(a.instance, a.traj, os.path.join(LOG_DIR, "replay.mp4")).get("video"):
+            write(ok, {**out, "video_rendered": 1})
+    except Exception:  # noqa: BLE001
+        traceback.print_exc(file=sys.stderr)
     return 0
 
 

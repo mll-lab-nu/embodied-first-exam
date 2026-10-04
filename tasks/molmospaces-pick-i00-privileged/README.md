@@ -7,7 +7,7 @@
 | Twin | `molmospaces-pick-i00-standard` |
 | Simulator / robot | `molmospaces` / `franka-robotiq-2f85` |
 | Family / instance | `pick` |
-| Oracle | `none` — upstream record: learned policies are evaluated on the MolmoSpaces benchmark episodes in arXiv 2602.11337 (MolmoSpaces) and arXiv 2603.16861 (MolmoBot); no reference solution is shipped |
+| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-pick-i02-privileged__wN67cFo (run codex-gpt6_luna-medium, batch molmospaces-luna-1003; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/pick/unlimited/); human review in PR #47 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.0` |
 
@@ -28,7 +28,8 @@ Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in t
 Each replay is upstream's evaluation loop: one upstream `Task.step` per row until upstream's `is_done()` (the
 benchmark's 20 s horizon = 303 control steps) or the last row, then upstream's `judge_success()`
 on the final state: the object touches the robot and nothing else, and it is at least 1 cm higher than where it started. Pass iff both replays succeed and end in the same state; `replay.mp4` is rendered after
-the verdict.
+the verdict. No oracle; human review in PR #47 (PROTOCOL §2.7: per family, this task and its twin, a
+positive example and the `nop` result).
 
 ## Details
 | | |

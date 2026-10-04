@@ -10,13 +10,15 @@ set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 TASK=$(cd "${1:-$ROOT/tasks/molmospaces-pick-i00-standard}" && pwd)
 IMAGE=$(awk '$1 == "image:" {print $2; exit}' "$TASK/environment/docker-compose.yaml")
+UNITS=$(sed -n 's/^ *RCB_ACTION_UNITS: //p' "$TASK/environment/docker-compose.yaml" |
+        python3 -c 'import json, sys; print(json.load(sys.stdin).replace("$$", "$"))')
 NAME="rcb-molmospaces-kill-$$"
 dk() { if docker ps >/dev/null 2>&1; then docker "$@"; else sg docker -c "docker $(printf '%q ' "$@")"; fi; }
 trap 'dk rm -f "$NAME" >/dev/null 2>&1 || true' EXIT
 dk run -d --name "$NAME" --gpus all --restart on-failure:6 -w /tmp \
    -v "$TASK/environment/sim:/srv:ro" -v "$ROOT/scripts/eai_standard:/client:ro" \
    -e RCB_INSTANCE=/srv/instance.json -e RCB_TOOL=/srv/rcb_molmospaces.py -e RCB_DATA=/data -e PYTHONPATH=/srv \
-   -e RCB_SESSION_LOG= "$IMAGE" sh /srv/run.sh >/dev/null
+   -e RCB_ACTION_UNITS="$UNITS" -e RCB_SESSION_LOG= "$IMAGE" sh /srv/run.sh >/dev/null
 drive() {  # one phase of the client, inside the container (the service is localhost:8000 there)
   dk exec -i "$NAME" env PYTHONPATH=/client python - "$1" <<'PY'
 import sys, numpy as np
