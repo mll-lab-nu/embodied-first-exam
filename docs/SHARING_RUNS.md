@@ -10,6 +10,9 @@ This is the only helper manual, for every benchmark (TopoGym included). Jianwen'
 difficulty trials (a maintainer-frozen assignment, a bundle with a file inventory, a fail-closed scan, an importer); as
 its parts are implemented, their commands go into this file (§3b), not into a second manual.
 
+Names: the project is Embodied Agent Interface v2 (EAI). A few code identifiers still carry the old name RCB
+(`RCB_BEHAVIOR_DATA`, TopoGym's image `rcb-topogym` and its `docs/rcb/`); use them exactly as written here.
+
 ## 1. What we send you first (the assignment)
 
 | Item | Example | Why it matters |
@@ -19,7 +22,7 @@ its parts are implemented, their commands go into this file (§3b), not into a s
 | **Batch name** | `robowits-lunaxh-alice-1004` | Every job name starts with it; our site finds your run by it. Use it verbatim |
 | Agent settings | `AGENT=codex MODEL=openai/gpt-6-luna EFFORT=xhigh` | The run id is derived from them |
 | Release (TopoGym only) | `merged-v16`, image `rcb-topogym:0.2.14-dev-cu128` | The runner only runs the active release's frozen packages |
-| Upload target | a private Hugging Face dataset folder plus a write token, or a shared-folder link | Where the archive goes |
+| Upload target | our private Hugging Face dataset `eai-v2-internal/helper-uploads` and a write token for it, or a shared-folder link | Where the archive goes |
 
 Do not invent your own batch name, change budgets, seeds, models or efforts, edit task directories or modify the runner.
 If something forces a change, ask us first. Only we decide reruns (§3).
@@ -43,7 +46,7 @@ If something forces a change, ask us first. Only we decide reruns (§3).
 git clone git@github.com:JamesKrW/robot_coding_bench.git && cd robot_coding_bench && git checkout <commit>
 export JOBS=$PWD/jobs/agents                 # keep the default layout: jobs/agents/<batch>-<mode>-<task>/
 B=<batch name we sent>
-AGENT=codex MODEL=openai/gpt-6-luna EFFORT=xhigh ENV_FILE=$HOME/rcb.env \
+AGENT=codex MODEL=openai/gpt-6-luna EFFORT=xhigh ENV_FILE=$HOME/eai.env \
   nohup scripts/run_agent_batch.sh "$B" <task-base> [<task-base> ...] > "run_$B.out" 2>&1 &
 ```
 - The variables above are those of `main`'s runner (and TopoGym's). The runner in your checkout lists its own in its
@@ -69,8 +72,8 @@ freeze and send, reruns only by our retry plan, `helper export` / `upload` / `im
 ## 4. Check for secrets (mandatory)
 The runner already scans and redacts each job. Scan once more over everything you will send:
 ```bash
-python3 scripts/scan_secrets.py "$JOBS" --env-file "$HOME/rcb.env" --codex-auth "$HOME/.codex/auth.json" --redact
-python3 scripts/scan_secrets.py "$JOBS" --env-file "$HOME/rcb.env" --codex-auth "$HOME/.codex/auth.json"   # must find none
+python3 scripts/scan_secrets.py "$JOBS" --env-file "$HOME/eai.env" --codex-auth "$HOME/.codex/auth.json" --redact
+python3 scripts/scan_secrets.py "$JOBS" --env-file "$HOME/eai.env" --codex-auth "$HOME/.codex/auth.json"   # must find none
 ```
 - "Must find none": TopoGym's scanner (`dev/jianwen`) exits 0 and prints `"clean": true`; it exits 1 when a secret is
   left and 2 when the scan was incomplete (an unreadable file, no credential loaded): both block the upload. The scanner
@@ -118,11 +121,15 @@ docker image inspect --format '{{index .RepoDigests 0}} {{.Id}}' <image>
 
 ## 7. Upload
 Put the archive, its `.sha256` and `MANIFEST.md` in one folder `upload_<batch>/`, then do one of:
-- **Hugging Face** (private dataset, write token from us):
+- **Hugging Face:** our private dataset `eai-v2-internal/helper-uploads`, with the token we sent you. The token can
+  write to this one repository only, and we revoke it after your delivery. Keep it in a private file, never in a script,
+  a repository or your shell history:
   ```bash
   pip install -U huggingface_hub
-  HF_TOKEN=<token we sent> hf upload <org>/<dataset> "upload_$B" "helpers/$H/$B" --repo-type dataset
+  install -m 600 /dev/null ~/.eai_hf_token        # then paste the token into this file with an editor
+  HF_TOKEN=$(cat ~/.eai_hf_token) hf upload eai-v2-internal/helper-uploads "upload_$B" "helpers/$H/$B" --repo-type dataset
   ```
+  The files land in `helpers/<your name>/<batch>/`; a later delivery has a new bundle id and never overwrites one.
 - **Shared folder:** upload the three files to the link we sent.
 
 Then message us the batch name, the archive name and its sha256.
@@ -132,14 +139,16 @@ batch's jobs.
 
 ## For us (receiving side)
 ```bash
+hf download eai-v2-internal/helper-uploads --repo-type dataset --include "helpers/<helper>/<batch>/*" \
+  --local-dir ~/eai_helper_runs/_downloads            # our own HF login (org members); then, in that batch folder:
 sha256sum -c <batch>__<helper>__<id>.tar.gz.sha256
 tar -tzf <batch>__<helper>__<id>.tar.gz | grep -Ev '^(agents|agents_mirror)/<batch>|^INVENTORY_' && echo "unexpected paths"
-mkdir -p ~/rcb_helper_runs/<helper>/jobs && tar -xzf <batch>__<helper>__<id>.tar.gz -C ~/rcb_helper_runs/<helper>/jobs
-(cd ~/rcb_helper_runs/<helper>/jobs && sha256sum -c --quiet INVENTORY_<batch>__<helper>__<id>.sha256)
+mkdir -p ~/eai_helper_runs/<helper>/jobs && tar -xzf <batch>__<helper>__<id>.tar.gz -C ~/eai_helper_runs/<helper>/jobs
+(cd ~/eai_helper_runs/<helper>/jobs && sha256sum -c --quiet INVENTORY_<batch>__<helper>__<id>.sha256)
 ```
 Never run anything from a bundle (agent code, scripts). On the review site:
 1. Add `data/runs/hosts.<helper>.local.yml` containing
-   `<helper>: {jobs: /home/<user>/rcb_helper_runs/<helper>/jobs/agents}` (gitignored).
+   `<helper>: {jobs: /home/<user>/eai_helper_runs/<helper>/jobs/agents}` (gitignored).
 2. Register the batch in `state/runs/<benchmark>.yml` (`batch` / `rerun_batches`, and the extra modes' `batches`).
 3. Run `make runs RUNS="--benchmark <benchmark>"`.
 
