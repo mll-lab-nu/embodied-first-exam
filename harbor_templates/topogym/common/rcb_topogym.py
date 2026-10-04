@@ -596,7 +596,7 @@ def _register_cube() -> None:
 
 # --------------------------------------------------------------------------- the robot: layout, gripper widths, FK / IK
 class _Robot:
-    """Action layout, measured state and stateless kinematics of the TopoGym robot (Genesis FK on a fixed qpos template).
+    """Action layout, measured state and stateless kinematics of the TopoGym robot (_ChainFK on a fixed qpos template).
     Every group ("arm" for the Panda, "left" / "right" for ALOHA) is one arm: its arm joints then its declared gripper target."""
 
     def __init__(self, robot, timing, *, gripper_space="width"):
@@ -800,12 +800,13 @@ class _Robot:
         m = self.robot.observe()[arm]
         return np.asarray(m["tcp_position_world_m"], dtype=np.float64), np.asarray(m["tcp_orientation_wxyz"], dtype=np.float64)
 
-    # -- kinematics (stateless: a fixed qpos template, never the simulator's state)
+    # -- kinematics (stateless: a fixed qpos template, never the simulator's state). Genesis' own FK / IK queries run their
+    # kernels on the live solver and leave links_state / joints_state changed in the last bits, so a live run that queried
+    # kinematics stopped replaying bit for bit (lab BUG 7); _ChainFK is the same model in numpy and never touches the solver.
     def _fk_full(self, q_full) -> dict:
-        from topogym.solvers.genesis_kinematics import GenesisFKSolver
-        res = GenesisFKSolver(self.entity).solve(np.asarray(q_full, dtype=np.float64))
-        P = np.asarray(res["position_world_m"]).reshape(-1, 3); Q = np.asarray(res["orientation_wxyz"]).reshape(-1, 4)
-        out = {l.name: _T(P[l.idx_local], Q[l.idx_local]) for l in self.entity.links}
+        if getattr(self, "_chain", None) is None:
+            self._chain = _ChainFK(self.entity)
+        out = self._chain(np.asarray(q_full, dtype=np.float64))
         for name, g in self.groups.items():
             out[self.tcp_frames[name]] = out[g.hand_link] @ self.hand_T_tcp[name]
         return out
@@ -1663,7 +1664,7 @@ class _ChainFK:
                     elif kind == prismatic:
                         pos = pos + quat_to_mat(quat) @ self.mvel[self.jdof[j]] * angle
                     elif kind != fixed:
-                        raise ValueError(f"table guard kinematics: unsupported joint type {kind}")
+                        raise ValueError(f"kinematics: unsupported joint type {kind}")
                 P[i], Q[i] = pos, quat
             out[self.names[i]] = _T(P[i], Q[i])
         return out
