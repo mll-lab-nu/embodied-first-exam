@@ -93,6 +93,28 @@ class RawLogTest(unittest.TestCase):
         got = list(rawlog.read(path))
         self.assertEqual(len(got), len(recs) - 1)
 
+    def test_restart_after_crash_mid_write(self):
+        recs = conversation()
+        self.write(recs[:5])
+        path = self.d / rawlog.NAME
+        path.write_bytes(path.read_bytes()[:-20])     # the gateway died writing request 5
+        w = self.write(recs[5:])                       # the restarted gateway cuts the partial member, then appends
+        self.assertEqual(w.n, len(recs) - 1)
+        got = list(rawlog.read(path))
+        self.assertEqual([g["n"] for g in got], list(range(1, len(recs))))
+        for g, r in zip(got, recs[:4] + recs[5:], strict=True):
+            self.assertEqual(g["request"], r["request"])
+            self.assertEqual(g["response"], r["response"])
+        self.assertIn("->", rawlog.compact(self.d))
+        self.assertEqual(len(list(rawlog.read(self.d / rawlog.PACKED))), len(recs) - 1)
+
+    def test_damaged_member_stops_reading(self):
+        recs = conversation()
+        self.write(recs[:3])
+        path = self.d / rawlog.NAME
+        path.write_bytes(path.read_bytes() + gzip.compress(b"x" * 5000)[:-30] + gzip.compress(b'{"n": 99}\n'))
+        self.assertEqual(len(list(rawlog.read(path))), 3)   # no exception; nothing behind the broken member
+
     def test_compact(self):
         recs = conversation()
         self.write(recs)

@@ -10,10 +10,11 @@ every distinct piece of a request body once and each request as references to th
 request body and response is reconstructed byte for byte.
 
 Format: one JSON object per line. While the trial runs, the gateway appends them to raw.jsonl.gz as gzip members (one
-stream to zcat; a crash loses only the last append). Each member is compressed on its own, so after the trial `compact`
-rewrites the log as one xz stream (raw.jsonl.xz, LZMA's 64 MB window also finds the repeats between requests, e.g. the
-request settings every response echoes): one 1,994-request trial is 5.9 GB as raw/, 66 MB as raw.jsonl.gz, 32 MB as
-raw.jsonl.xz. Both are plain compressed JSON Lines (zcat / xzcat).
+stream to zcat). A crash mid-write loses only that append: readers stop before an incomplete member, and a restarted
+gateway first cuts the file back to its last complete member, so nothing is appended behind a broken one. Each member is
+compressed on its own, so after the trial `compact` rewrites the log as one xz stream (raw.jsonl.xz, LZMA's 64 MB window
+also finds the repeats between requests, e.g. the request settings every response echoes): one 1,994-request trial is
+5.9 GB as raw/, 66 MB as raw.jsonl.gz, 32 MB as raw.jsonl.xz. Both are plain compressed JSON Lines (zcat / xzcat).
 
     {"item": 7, "v": <JSON value>}             a body piece (a list element or a large field), the first time it is sent
     {"n": 12, "request": {...}, "response": {...}}
@@ -41,12 +42,14 @@ import json
 import lzma
 import pathlib
 import sys
+import zlib
 from collections.abc import Iterator
 
 NAME = "raw.jsonl.gz"      # live: gzip members appended by the gateway
 PACKED = "raw.jsonl.xz"    # compacted: one xz stream
 XZ_PRESET = 9              # 64 MB dictionary; ~0.7 GB of memory while compressing
 INLINE_MAX = 256    # a non-list field whose JSON is shorter than this stays inline
+CHUNK = 1 << 20
 
 
 def dumps(v, ascii: bool = False) -> str:
@@ -82,31 +85,74 @@ def expand(rs: list) -> Iterator[int]:
             yield r
 
 
+def members(path: pathlib.Path) -> Iterator[tuple[int, list[dict]]]:
+    """(end offset, objects) of each complete gzip member of a raw.jsonl.gz (one append each), in order; stops at the
+    first incomplete or damaged member (a crash mid-write)."""
+    with open(path, "rb") as f:
+        start, pending = 0, b""
+        while True:
+            d = zlib.decompressobj(zlib.MAX_WBITS | 16)
+            out, fed = [], 0
+            chunk = pending or f.read(CHUNK)
+            while chunk:
+                fed += len(chunk)
+                try:
+                    out.append(d.decompress(chunk))
+                except zlib.error:
+                    return
+                if d.eof:
+                    break
+                chunk = f.read(CHUNK)
+            if not d.eof:
+                return
+            pending = d.unused_data
+            end = start + fed - len(pending)
+            try:
+                objs = [json.loads(ln) for ln in b"".join(out).decode("utf-8").split("\n") if ln]
+            except ValueError:                     # UnicodeDecodeError included
+                return
+            yield end, objs
+            start = end
+
+
 def lines(path: pathlib.Path) -> Iterator[dict]:
-    """The log's objects; stops quietly at a truncated last append (a crash mid-write)."""
-    opener = lzma.open if ".xz" in path.name else gzip.open
+    """The log's objects; stops quietly at a truncated or damaged append (a crash mid-write)."""
+    if ".xz" not in path.name:
+        for _, objs in members(path):
+            yield from objs
+        return
     try:
-        with opener(path, "rt", encoding="utf-8") as f:
+        with lzma.open(path, "rt", encoding="utf-8") as f:
             for line in f:
-                if line.endswith("\n"):
-                    yield json.loads(line)
-    except (EOFError, gzip.BadGzipFile, lzma.LZMAError):
+                if not line.endswith("\n"):
+                    return
+                yield json.loads(line)
+    except (EOFError, lzma.LZMAError, ValueError):
         return
 
 
 class Writer:
-    """Appends records to one trial's raw.jsonl.gz; resumes the item table from an existing file."""
+    """Appends records to one trial's raw.jsonl.gz; resumes the item table from an existing file, cut back to its last
+    complete append first (a crash mid-write leaves a partial gzip member, and anything appended behind it would be
+    unreadable)."""
 
     def __init__(self, path: pathlib.Path):
         self.path = path
         self.ids: dict[bytes, int] = {}
         self.n = 0
         if path.exists():
-            for obj in lines(path):
-                if "item" in obj:
-                    self.ids[self._key(obj["v"])] = obj["item"]
-                elif "n" in obj:
-                    self.n = obj["n"]
+            end = 0
+            for end, objs in members(path):
+                for obj in objs:
+                    if "item" in obj:
+                        self.ids[self._key(obj["v"])] = obj["item"]
+                    elif "n" in obj:
+                        self.n = obj["n"]
+            size = path.stat().st_size
+            if size > end:
+                with open(path, "r+b") as f:
+                    f.truncate(end)
+                print(f"rawlog: {path}: dropped {size - end} bytes of an incomplete append", file=sys.stderr)
 
     @staticmethod
     def _key(v) -> bytes:
@@ -144,7 +190,7 @@ class Writer:
         """Record {"request": {..., "body"}, "response": {...}}; returns its n."""
         new: list[bytes] = []
         req = dict(raw["request"])
-        enc = self._encode(req["body"], new) if req.get("body_as") != "base64" else None
+        enc = self._encode(req["body"], new) if req.get("body_as", "text") == "text" else None
         if enc is not None:
             del req["body"]
             req.update(enc)
@@ -261,18 +307,21 @@ def verify(d: pathlib.Path) -> str:
     path = log_of(d)
     if path is None:
         return "no log"
-    recs = list(read(path))
-    if [r["n"] for r in recs] != list(range(1, len(recs) + 1)):
-        return f"{path.name}: records out of order"
     files = legacy(d)
+    n = 0
+    for rec in read(path):                     # streamed: a long trial's records add up to gigabytes
+        n += 1
+        if rec["n"] != n:
+            return f"{path.name}: records out of order"
+        if files and n > len(files):
+            return f"{path.name}: more records than the {len(files)} raw/ files: differs"
+        if files and not same(rec, json.loads(gzip.decompress(files[n - 1].read_bytes()))):
+            return f"{path.name}: differs from raw/{files[n - 1].name}"
     if files:
-        if len(files) != len(recs):
-            return f"{path.name}: {len(recs)} records, {len(files)} raw/ files: differs"
-        for f, rec in zip(files, recs):
-            if not same(rec, json.loads(gzip.decompress(f.read_bytes()))):
-                return f"{path.name}: differs from raw/{f.name}"
-        return f"{path.name}: {len(recs)} records, identical to raw/"
-    return f"{path.name}: {len(recs)} records"
+        if len(files) != n:
+            return f"{path.name}: {n} records, {len(files)} raw/ files: differs"
+        return f"{path.name}: {n} records, identical to raw/"
+    return f"{path.name}: {n} records"
 
 
 def main() -> int:
