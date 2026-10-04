@@ -9,6 +9,8 @@ This is the only helper manual, for every benchmark (TopoGym included). Jianwen'
 `docs/rcb/helper_delivery_engineering_plan_zh.md` on `dev/jianwen` is the engineering plan for TopoGym's sampled
 difficulty trials (a maintainer-frozen assignment, a bundle with a file inventory, a fail-closed scan, an importer); as
 its parts are implemented, their commands go into this file (§3b), not into a second manual.
+This file exists word for word in two places: `docs/SHARING_RUNS.md` on `dev/qineng` and `docs/rcb/SHARING_RUNS.md`
+on `dev/jianwen` (where TopoGym helpers start). Change both together.
 
 Names: the project is Embodied Agent Interface v2 (EAI). A few code identifiers still carry the old name RCB
 (`RCB_BEHAVIOR_DATA`, TopoGym's image `rcb-topogym` and its `docs/rcb/`); use them exactly as written here.
