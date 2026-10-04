@@ -2261,3 +2261,11 @@ digest = "sha256:d67c753bd25cd782d7227528fb1da7ac70a4c92fb8c7f958fd4a12cb95f5e5b
 name = "robot-coding-bench/maniguard-jar-transport-i13-standard"
 digest = "sha256:2d82cd939d38f35549483685cda7bcfacc351cc8b6990d7583e3af61ce36707e"
 
+[[tasks]]
+name = "robot-coding-bench/maniguard-lid-transport-i07-privileged"
+digest = "sha256:7184b47b9c8b2b33ab15281ace69262e7b7679e3c62c76cb4de7324f531bcf3a"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-lid-transport-i07-standard"
+digest = "sha256:9d95f73b1347d6fb125b9f6b4a864bbeb9b196a5361da5f5db7ed44e508f2b7f"
+

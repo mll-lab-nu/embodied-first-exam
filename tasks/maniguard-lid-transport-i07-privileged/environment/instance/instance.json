@@ -1,0 +1,101 @@
+{
+ "task": "lid_transport/task_0007",
+ "family": "lid_transport",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "a3b77fd2e82ae23067b4fe3364e3c57619293596605ed3731d39aff1072a4007",
+ "diagnostics_sha256": "63218585bbd26ff8f8d0e07c507907beb199b212f6acbfb93bbd868c9c3f37ad",
+ "pipeline": "lid_transport_food",
+ "gpu_dynamics": false,
+ "state_sha": "d7a82682cd27834f",
+ "objects": {
+  "countertop_kelzer_0": {
+   "category": "countertop",
+   "position": [
+    6.02946,
+    -1.98371,
+    0.86949
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.66913,
+    0.74314
+   ]
+  },
+  "apple_220": {
+   "category": "apple",
+   "position": [
+    6.56202,
+    -1.83556,
+    0.92848
+   ],
+   "orientation_xyzw": [
+    -0.05866,
+    -0.19609,
+    0.0513,
+    0.97749
+   ]
+  },
+  "lid_221": {
+   "category": "lid",
+   "position": [
+    7.17998,
+    -1.84398,
+    0.91632
+   ],
+   "orientation_xyzw": [
+    1e-05,
+    1e-05,
+    0.0,
+    1.0
+   ]
+  },
+  "hingeless_jar_222": {
+   "category": "hingeless_jar",
+   "position": [
+    6.57622,
+    -1.84393,
+    0.96047
+   ],
+   "orientation_xyzw": [
+    -4e-05,
+    1e-05,
+    0.00017,
+    1.0
+   ]
+  },
+  "goal_region__hingeless_jar_222": {
+   "category": "goal_region_marker",
+   "position": [
+    7.46814,
+    -1.84394,
+    0.97145
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}
