@@ -2,7 +2,7 @@
 #
 # Which tasks: KinDER's Dynamic3D tasks (MuJoCo, a TidyBot++ mobile manipulator) whose goal a camera can see or a
 # sentence can name, and (the section at the end) the families a screening of all of KinDER found hard, one variant
-# each; of those, the four hardest (models' runs in docs/benchmarks/kinder.md) and the fixture. Each ships twice (docs/PROTOCOL.md): privileged mode (tasks/kinder-<family>-i00:
+# each. Of all of these, only the four hardest stay (models' runs in docs/benchmarks/kinder.md), with the fixture. Each ships twice (docs/PROTOCOL.md): privileged mode (tasks/kinder-<family>-i00:
 # the simulator and its state, one replayable trajectory) and standard mode (-standard: the robot as a service,
 # eai-standard/2.1, its own sensors only).
 #
@@ -54,7 +54,7 @@ expert_hours = 4.0
 difficulty = """Nonprehensile, tool use, dynamics: open a closed drawer, then sweep five small cubes off the counter into it
 with a wiper. KinDER's paper reports at most 0.14 success for its best method on this variant and 0.00 for sampling
 MPC on the true simulator."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; no standard-mode example is known"""
+oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet"""
 task_statement = """get the five small dark-red cubes on top of the kitchen island into the middle drawer of the
 island's upper row of drawers, which starts closed; a wiper lies next to the cubes. The task succeeds the moment all
 five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls."""
@@ -103,7 +103,7 @@ env_id = "kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitc
 expert_hours = 3.0
 difficulty = """Nonprehensile, tool use: ten small cubes on the floor into a box marked at the kitchen island's end, with a
 wiper at hand."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04 and its graded standard-mode episode with 50 resets recorded before protocol v1.0, run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores both 1, and so does the standard service when the episode is sent through the client"""
+oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04 (it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc) and its graded standard-mode episode with 50 resets recorded before protocol v1.0, run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores both 1, and the standard service scores the episode 1 when it is sent through the client"""
 task_statement = """get the ten small dark-red cubes scattered on the floor into the translucent grey box marked on the
 floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the
 floor next to the cubes. The task succeeds the moment all ten cubes' centres are inside that box."""
