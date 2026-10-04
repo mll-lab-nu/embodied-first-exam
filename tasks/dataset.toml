@@ -483,19 +483,19 @@ digest = "sha256:955fc8377b349a4106cd24f7e11e1f37a2bd2e690129660dddd7f67a1961da8
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-into-drawer-i00-privileged"
-digest = "sha256:3b623c10327e6cd5f03245a220b5e2c4a98c6f4f687381e6a4dc3f8393d80de1"
+digest = "sha256:71109548fd5d3f20754f09220c3642bd55e5092188787f02d522186bc25be588"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-into-drawer-i00-standard"
-digest = "sha256:b23502c59767eae9f359cc8400ede32e8f5ce90383703b1cf17d7b8cc32a101c"
+digest = "sha256:ee373d59e62c1a550abf1a10976384a3267a0df23b8e94d5922810cc31c45b6e"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-simple-i00-privileged"
-digest = "sha256:282d62ac924d7caf0a021ec86fc0a21155f3fe15ee49e9d974a9e8c952a8af22"
+digest = "sha256:c9693589a1a2f9510e81520b779bd5ae1e1a3a03ab725a6758153ee9776fa8e8"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-simple-i00-standard"
-digest = "sha256:70d6057e8ee0e751daf5b6eaeaa62e0771d5f0d36e619f7ed95688d038aa1dc7"
+digest = "sha256:01789635596cdb8d065b80715b5224655fedc88348a9d347c008560ce36d5582"
 
 [[tasks]]
 name = "robot-coding-bench/metaworldplus-assembly-i00-privileged"
