@@ -31,7 +31,7 @@ episode end: a task's success predicate, or one of its failure predicates (e.g. 
 grasping   : a family may enable TopoGym's passive grasp assistance (instance.json simulator.grasp_assist; the rules are
              in robot_spec()["grippers"][...]["command"]); primitives()["object_in_hand"] says what a gripper holds.
 budget     : there is no step budget: the agent's wall clock is the limit. MAX_STEPS only stops runaway trajectories.
-safety     : the tooling's physical-validity policy (tooling v15, _install_rules): arm drive torques are capped and no
+safety     : the tooling's physical-validity policy (tooling v16, _install_rules): arm drive torques are capped and no
              gripper target goes lower than 15 mm below the tabletop (TABLE_GUARD_MARGIN_M); a crushed rope volume or a
              stretched cord attachment fails after 0.25 s; forcing (an arm drive at its torque cap while the gripper or a
              part it holds presses on another body, FORCING) and task-contact penetration are evidence only: a success
@@ -1038,7 +1038,7 @@ def _speed_up_knot_predicate(task_id: str) -> bool:
     return True
 
 
-# --------------------------------------------------------------------------- physical-validity policy (tooling v15)
+# --------------------------------------------------------------------------- physical-validity policy (tooling v16)
 # The 2026-10-03 rules audit (robot_coding_bench jobs/journal/2026-10-03/rules_audit/AUDIT.md: every finished v12 failure
 # classified, nine trajectories replayed) found TopoGym's any-tick 1 mm contact limit and its any-tick tet-inversion rule
 # without margin; v14's replacement (R1: a rigid task contact deeper than 3 mm, or deeper than 1 mm for 0.25 s, failed the
@@ -1048,12 +1048,19 @@ def _speed_up_knot_predicate(task_id: str) -> bool:
 # what, with no per-artifact exceptions. Installed per Session by _install_rules, like the fast paths above: TopoGym's
 # files are not edited, and everything is installed after Env.reset recorded the frozen first checkpoint (the t = 0 state
 # and its hash do not change).
+#  Layer 0, the environment model, the task owner's (Jianwen's release profile, topogym/tasks/release_profile.py, frozen in
+#     the instance and stated in the texts): materials, solver settings and timing, grasp assistance, which robot links
+#     collide with soft bodies (merged-v16 rope_threading: the fingers only). Live episode and every replay alike; this
+#     policy never changes it.
 #  Layer 1, guards: arm drive torque caps (ARM_TORQUE_CAPS_NM: the PD force clamp of the arm joints; the gripper drives are
 #     unchanged); a fingertip-table guard on every control step (_TableGuard); the standard service's joint-speed limit
 #     and IK-jump refusal (JOINT_STEP_LIMIT_RAD, IK_JUMP_LIMIT_RAD, environment/sim/server.py).
-#  Layer 2, failures the agent caused (they end the episode): the task's own stated rules (wire / fiber touch, rotor limit,
-#     chain link, a body or the cloth fallen, and R2: a soft-body tet inversion, or a cord attachment stretched by more than
-#     2 mm, persisting for 0.25 s; while shorter the evidence reads as unavailable: no success credit, no failure).
+#  Layer 2, the task's own stated rules, the task owner's: its success predicate, strict live (thresholds, confirmation
+#     windows, release conditions such as knot_untying's terminal v5: 1 mm from every robot part that can move, world-fixed
+#     bases may touch, an overlap with any robot part's interior withholds success and never ends the episode), and the
+#     failures the agent caused, which end the episode (wire / fiber touch, rotor limit, chain link, a body or the cloth
+#     fallen, and this tooling's R2: a soft-body tet inversion, or a cord attachment stretched by more than 2 mm, persisting
+#     for 0.25 s; while shorter the evidence reads as unavailable: no success credit, no failure).
 #  Layer 3, simulator breakdown (ends the episode): a non-finite rigid state, a cloth particle faster than
 #     PARTICLE_SPEED_LIMIT_M_S, an invalid native soft-body solver state, a rigid task contact deeper than
 #     BREAKDOWN_PENETRATION_M -> SIMULATOR_INSTABILITY (an infrastructure error, evidence in Session.instability), unless
@@ -2157,7 +2164,7 @@ def _guard_particle_speeds(task, on_trip: Callable[[dict], None]) -> bool:
 BINDING_API = 1
 
 
-# --------------------------------------------------------------------------- grading replays (tooling v15, 2026-10-03)
+# --------------------------------------------------------------------------- grading replays (tooling v16, 2026-10-03)
 # The user's decisions (2026-10-03): live-strict, replay-tolerant grading for the families whose physics runs on the GPU,
 # which is not bit-deterministic (PBD cloth, the IPC FEM ropes and cords, lock_picking's GPU float32 rigid bodies), and a
 # tolerant replay may only CONFIRM a strict success, never turn a failure into one. A genuine live success could miss
@@ -2187,8 +2194,10 @@ GRADING_HOLD_S = 2.0
 # 0.08 m/s (maximum_speed_m_s: the cheap "settled" gate and the final settling's speed; the 3 mm displacement from the start
 # of confirmation, maximum_drift_m, and the 0.5 s window stay). PBD reports a particle's last-substep velocity: on cloth at
 # rest it spikes to 0.04-0.07 m/s and restarts the confirmation (ihy7Nru's replays). knot's rope speed: 2 x the largest
-# replay-to-replay spread measured in a success's confirmation window (0.12 mm/s, lab 2026-10-03). The other families: no
-# measured spread that a small slack would absorb (docs/rcb/benchmarks/topogym.md, "Grading replays"), so the hold only.
+# replay-to-replay spread measured in a success's confirmation window (0.12 mm/s, lab 2026-10-03); its release conditions
+# (terminal v5) are geometric and never relaxed. The other families: no measured spread that a small slack would absorb
+# (docs/rcb/benchmarks/topogym.md, "Grading replays"), so the hold only; rope_threading's live thresholds are the release
+# profile's (merged-v16: rope speed 10 mm/s, a 1 mm aperture allowance), never loosened again here.
 REPLAY_TOLERANCES: dict[str, dict[str, tuple[str, str, float]]] = {
     "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.03),
                         "particle_speed": ("maximum_speed_m_s", "at_most", .05)},

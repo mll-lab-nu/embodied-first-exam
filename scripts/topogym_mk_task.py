@@ -291,7 +291,7 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
     determinism = ("The physics runs on the CPU and is bit-deterministic on one host; the final-state hashes\n"
                    "(`deterministic`) are still diagnostic, as for the GPU families" if cpu_physics(inst) else
                    "The physics runs on the GPU, which is not bit-deterministic: the\nfinal-state hashes (`deterministic`) are diagnostic")
-    grading = ("\nThe replays are grading replays (tooling v15): if this GPU family's episode has not ended after the last row, the\n"
+    grading = (f"\nThe replays are grading replays (tooling v{TOOLING_VERSION}): if this GPU family's episode has not ended after the last row, the\n"
                "final targets are held for up to 2 s with the replay tolerances of the grader details; at least one replay must\n"
                "reach the goal with the instance's own thresholds within the trajectory's rows."
                if fam in REPLAY_TOLERANCES else "")

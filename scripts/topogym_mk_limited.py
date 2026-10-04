@@ -197,7 +197,7 @@ Grasping: {d['grasp_rules']}.
 {objects}
 """
     (dst / "instruction.md").write_text(ins)
-    grading = ("; after a live success it is a grading replay (tooling v15): if this GPU family's episode has not ended after the "
+    grading = (f"; after a live success it is a grading replay (tooling v{TOOLING_VERSION}): if this GPU family's episode has not ended after the "
                "last live row, the final targets are held for up to 2 s with the replay tolerances of the grader details; a live "
                "failure is final" if fam in REPLAY_TOLERANCES else "")
     ref = ("`solution/`: streams the privileged oracle's joint targets (one row per control step, `hold`) as `joint_position` chunks"

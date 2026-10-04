@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The grading replays of the GPU families (rcb_topogym.py tooling v15, 2026-10-03): the hold after the last row, the
+"""The grading replays of the GPU families (rcb_topogym.py tooling v16, 2026-10-03): the hold after the last row, the
 replay tolerances, the confirmation-window record, and that every other family and every non-grading replay is
 unchanged. Session.replay itself runs on a scripted world (a real TaskDefinition's update, its stability window and
 failure path); no Genesis, no physics: the lab replays in docs/rcb/benchmarks/topogym.md are the physical evidence."""
@@ -274,7 +274,7 @@ class Graders(unittest.TestCase):
         import json
         import tempfile
         from unittest.mock import patch
-        grade = module("v15_grade", "harbor_templates/topogym/unlimited/tests/grade.py")
+        grade = module("v16_grade", "harbor_templates/topogym/unlimited/tests/grade.py")
         calls = []
 
         class FakeSession:
@@ -457,6 +457,17 @@ class Texts(unittest.TestCase):
         details = R.grader_details("blanket_flatten", {**inst, "simulator": {}}, limited=True)
         self.assertTrue(any(line.startswith("Grading:") for line in details))
         self.assertFalse(any(line.startswith("Grading:") for line in R.grader_details("cast_coil", {"simulator": {}}, limited=True)))
+
+    def test_the_hold_is_counted_at_the_instance_control_rate(self):
+        """merged-v16 rope_threading runs one 40 ms tick per control step (25 Hz): 2 s are 50 control steps there, as the
+        tooling counts them (GRADING_HOLD_S x Session.control_hz)."""
+        import topogym_rules as R
+        rope = {"effective_task_parameters": {"terminal": {"maximum_speed_m_s": .01}},
+                "simulator": {"physics_dt_s": .04, "control_decimation": 1}}
+        self.assertEqual(R.control_hz(rope), 25.)
+        self.assertIn("up to 2 s (50 control steps)", R.grading_replay_words("rope_threading", rope, limited=True))
+        self.assertIn("(no tolerance for this family)", R.grading_replay_words("rope_threading", rope, limited=False))
+        self.assertEqual(R.control_hz({"simulator": {"physics_dt_s": .0025, "control_decimation": 10}}), 40.)
 
 
 if __name__ == "__main__":

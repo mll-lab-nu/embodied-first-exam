@@ -7,7 +7,7 @@
 #      crashes): that verdict stays, nothing is replayed.
 #   2. ONE fresh-process replay of the live rows from the frozen instance (replay.py), rendering replay.mp4 during that
 #      replay: two passes in all, the live episode and this replay. After a live success it is a grading replay (tooling
-#      v15): for the GPU families, if the episode has not ended after the last row, the final targets are held for up to
+#      v16): for the GPU families, if the episode has not ended after the last row, the final targets are held for up to
 #      2 s with the replay tolerances; after a live failure it is plain (a live failure is final). It runs on the
 #      sidecar's GPU after the live service has exited, so it takes the place of the live simulator there (Nyx renders
 #      only in a container that sees one GPU: a second GPU in the sidecar segfaults it, 2026-10-01).
@@ -78,7 +78,7 @@ if isinstance(a, dict):                  # a replay result (None: the replay pro
     out["replay_sha"] = a.get("state_sha"); out["replay_episode_end"] = a.get("episode_end")
     out["deterministic"] = out["live_matches_replay"] = bool(a.get("state_sha")) and a.get("state_sha") == out.get("live_sha")
     out["replay_wall_s"] = r.get("wall_s"); out["instance_exact"] = r.get("instance_exact"); out["instance_matches"] = r.get("instance_matches")
-    g = a.get("grading") or {}             # the grading replay's hold and replay tolerances (GPU families, tooling v15)
+    g = a.get("grading") or {}             # the grading replay's hold and replay tolerances (GPU families, tooling v16)
     out["replay_grading"] = g or None; out["replay_grading_policy"] = bool(r.get("grading_replay"))
     out["replay_hold_steps"] = int(g.get("hold_steps", 0)); out["replay_tolerance_needed"] = bool(g.get("tolerance_needed"))
     out["replay_review"] = a.get("review")   # the replay's review events (deep task contacts; the live ones: "review")

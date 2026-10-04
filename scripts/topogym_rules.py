@@ -9,7 +9,7 @@ of it. No positions or poses: conditions, thresholds, names and sizes only (the 
 
 RIGID = {"cast_coil", "cast_keyhole", "interlocked_claws", "hedgehog_in_cage", "horseshoe_ring"}
 SOFT = {"knot_untying", "rope_threading", "orbits", "slotted_post_ring"}
-# The tooling's physical-validity policy (rcb_topogym.py, tooling v15; ci_checks/test-topogym-safety-rules.py checks the
+# The tooling's physical-validity policy (rcb_topogym.py, tooling v16; ci_checks/test-topogym-safety-rules.py checks the
 # numbers match): it replaces the "at most 1 mm / 2 mm" and the instant volume-failure wording of his text.
 CONTACT_RULE = dict(deep_m=.003, sustained_m=.001, held_deep_m=.004, held_sustained_m=.002, window_s=.25)   # review events
 SOFT_RULE = dict(window_s=.25, residual_m=.002)
@@ -27,7 +27,7 @@ PLACEMENT = {"cast_keyhole", "interlocked_claws", "hedgehog_in_cage", "horseshoe
 # remaining components of the placement families that are free bodies (the rest are fixed), as named in s.objects()
 FREE_REMAINDER = {"cast_keyhole": "the gold piece", "interlocked_claws": "the other claw piece",
                   "horseshoe_ring": "the horseshoes and chain links", "slotted_post_ring": "the cord, beads and end discs"}
-# The grading replays of the GPU families (rcb_topogym.py GRADING_HOLD_S / REPLAY_TOLERANCES, tooling v15; the numbers
+# The grading replays of the GPU families (rcb_topogym.py GRADING_HOLD_S / REPLAY_TOLERANCES, tooling v16; the numbers
 # must match: ci_checks/test-topogym-grading-replay.py). family -> {threshold: (task parameter, passing side, slack)}.
 GRADING_HOLD_S = 2.0
 REPLAY_TOLERANCES = {
@@ -248,8 +248,7 @@ def grader_details(fam, inst, *, limited):
             "The rope is 8 mm thick (radius 4 mm), so its highest point may be at most 11 mm above the tabletop.",
             "\"Nonlocal\" means at least 16 mm apart along the rope: such parts of the rope's centreline must be at least "
             "8 mm apart in the top view. Closer parts are exempt, but an actual crossing always counts.",
-            "The release clearance is measured between axis-aligned bounding boxes of the robot's collision geometries and "
-            "the rope (refined per tetrahedron where they are close).",
+            knot_release_words(tp),
         ]
     if fam == "rope_threading":
         if g.get("ring_shape") == "lower_semicircle":
@@ -274,6 +273,12 @@ def grader_details(fam, inst, *, limited):
                     f"Aperture check: {profile}, compression allowance {_mm(allowance)}. "
                     "This allowance changes the geometric passage test; the collision geometry stays as declared.",
                     "The material start is the rope end that is farther from the rings at the start."]
+        if tp.get("rope_robot_contact") == "fingers":
+            # the environment profile's contact set (topogym/tasks/rope_threading/common.py finalize_spec: IPC
+            # robot_collision_links = the finger links, for all IPC contacts): an environment fact the agent must know
+            out.append("Only the grippers' fingers collide with the rope and the rings: every other robot part (palms, wrists, "
+                       "arm links, bases) passes through them without contact, so only the fingers can push, pinch or hold "
+                       "the rope.")
     if fam == "blanket_flatten":
         L, W = float(tp.get("length_m", .6)), float(tp.get("width_m", .48))
         cov, pad = float(tp.get("minimum_coverage_ratio", .9)), float(tp.get("particle_size_m", .008))
@@ -311,9 +316,32 @@ def replay_tolerances(fam, inst):
             for name, (path, _, slack) in REPLAY_TOLERANCES.get(fam, {}).items()]
 
 
+def knot_release_words(tp):
+    """knot_untying's release check in words, from the task's own settling spec (terminal v5 since tooling v16: 1 mm from the
+    links that can move, world-fixed bases may touch, no interior overlap with any robot part)."""
+    from types import SimpleNamespace
+    from topogym.tasks.knot_untying.common import KnotUntyingTask
+    terminal = {"maximum_speed_m_s": .001, **(tp.get("terminal") or {})}
+    spec = KnotUntyingTask.final_settling_spec(SimpleNamespace(config=dict(tp, terminal=terminal)))
+    if spec.robot_contact_policy == "fixed_contact_active_clearance_v1":
+        return ("The release check bounds every rope tetrahedron against the robot's collision geometries and decides the "
+                f"close ones with the exact solids: every robot part that can move (grippers, arm links) needs at least "
+                f"{_mm(spec.clearance_m)} of clearance from the rope; a world-fixed base may touch it. An overlap with the "
+                "interior of any robot part means the release is not certified: no success while it lasts, never a failure.")
+    return ("The release clearance is measured between axis-aligned bounding boxes of the robot's collision geometries and "
+            "the rope (refined per tetrahedron where they are close).")
+
+
+def control_hz(inst) -> float:
+    """The instance's control rate (simulator physics_dt_s x control_decimation; 40 Hz by default, 25 Hz for the merged-v16
+    rope_threading profile's 40 ms tick)."""
+    sim = (inst or {}).get("simulator") or {}
+    return 1.0 / (float(sim.get("physics_dt_s", .0025)) * int(sim.get("control_decimation", 10)))
+
+
 def grading_replay_words(fam, inst, *, limited):
-    """The grading-replay rule of a GPU family in plain words (rcb_topogym.py, tooling v15; 40 Hz control)."""
-    steps = int(round(GRADING_HOLD_S * 40))
+    """The grading-replay rule of a GPU family in plain words (rcb_topogym.py, tooling v16; the instance's control rate)."""
+    steps = int(round(GRADING_HOLD_S * control_hz(inst)))
     tol = [TOLERANCE_WORDS[name](live, replay) for name, live, replay in replay_tolerances(fam, inst)]
     hold = (f"runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final "
             f"targets for up to {GRADING_HOLD_S:g} s ({steps} control steps), stopping at the first success or failure, so a "

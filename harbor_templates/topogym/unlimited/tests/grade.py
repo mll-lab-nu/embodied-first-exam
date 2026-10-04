@@ -8,13 +8,13 @@ human-viewable replay video /logs/verifier/replay.mp4 (all cameras tiled) plus r
 the `--repeat` (2) replays in this fresh process: two passes in all, no separate video replay. TopoGym's physics runs on
 the GPU, whose contact solver is not bit-exact (the rule of robot_coding_bench's GPU backend): every replay must complete
 the task. Initial state and runtime binding must match exactly; final-state determinism is reported separately.
-The replays are grading replays (rcb_topogym.Session.replay(grading=True), tooling v15): for the GPU families the rows run
+The replays are grading replays (rcb_topogym.Session.replay(grading=True), tooling v16): for the GPU families the rows run
 with the instance's own thresholds and, if the episode has not ended after the last row, the final targets are held for up
 to 2 s with the replay tolerances (rcb_topogym.REPLAY_TOLERANCES). A tolerant pass only confirms: success also needs one
 replay that met the instance's own (strict) goal within the trajectory's rows (`strict_goal_reached`, `strict_goal_row`;
 verdict.json `evidence.strict_goal`). Each replay's "grading" record is in verdict.json; `replay_hold_steps` /
 `replay_tolerance_needed` summarize them.
-Task-contact penetration is evidence, not a verdict (tooling v15): a success during whose replays a task contact went deep
+Task-contact penetration is evidence, not a verdict (tooling v16): a success during whose replays a task contact went deep
 (rcb_topogym.CONTACT_RULE, each replay's status "review") is not credited automatically: success 0 with
 `success_pending_review` 1, the events in verdict.json `evidence.review` and frames around them in review_frames/ (one more
 replay, after the verdict and the video); a clean success is credited. Forcing (rcb_topogym.FORCING, each replay's status

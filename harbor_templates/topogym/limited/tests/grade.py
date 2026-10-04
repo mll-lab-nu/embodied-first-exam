@@ -4,10 +4,10 @@ crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. Adapted from rob
 grader. success = live success AND replay success, and no infrastructure failure; TopoGym's physics runs on the GPU (the
 RoboWits GPU-backend rule): the live and replayed states need not agree bit for bit, so `deterministic` is reported, not
 required. A replay that produced no result is a grader error, not the agent's 0. Numeric-only reward.json. After a live
-success the replay is a grading replay (tooling v15): for the GPU families, if the episode has not ended after the last
+success the replay is a grading replay (tooling v16): for the GPU families, if the episode has not ended after the last
 live row, it holds the final targets for up to 2 s with the replay tolerances; final.json's replay_grading has the record,
 replay_hold_steps / replay_tolerance_needed summarize it. It only confirms: a live failure is final whatever the replay
-shows (the collect hook then replays plainly). Task-contact penetration is evidence, not a verdict (tooling v15): a success
+shows (the collect hook then replays plainly). Task-contact penetration is evidence, not a verdict (tooling v16): a success
 whose live episode or replay had a deep task contact (final.json `review` / `replay_review`, rcb_topogym.CONTACT_RULE) is
 held for review: success 0 with success_pending_review 1, the events in review.json, the frames around them in
 review_frames/. Forcing (final.json `forcing` / `replay_forcing`, rcb_topogym.FORCING) is evidence only: `forcing_events`,

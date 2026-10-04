@@ -1,22 +1,48 @@
 # TopoGym tier tasks (protocol v1.0)
 
-39 frozen instances (13 families × easy / medium / hard) in both modes: 78 task dirs
-`tasks/topogym-<family>-<tier>-i00-{privileged,standard}`. `scripts/topogym_mk_task.py` (privileged) and
+39 frozen instances (13 families × easy / medium / hard) in both modes: 78 task packages. The published ones (v14) are
+the dirs `tasks/topogym-<family>-<tier>-i00-{privileged,standard}`. Since Jianwen's release mechanism
+(`ci_checks/topogym_active_release.json`, `scripts/topogym_versions.py`) the active release's packages are built by
+`scripts/topogym_merge_candidate.py` + `scripts/topogym_candidate_pipeline.py` into a frozen candidate tree outside `tasks/`
+(source snapshot, its own image, runtime bindings, exact restores and Harbor nop checks, then activation); new experiments
+take their tasks from the active release only (`scripts/topogym_versions.py list`). `scripts/topogym_mk_task.py` (privileged) and
 `scripts/topogym_mk_limited.py` (its standard twin) render them from `harbor_templates/topogym/` and the frozen instance;
 their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fields, README layout). Re-rendering needs no
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
-## Versions (2026-10-03)
-The 78 tier dirs: tooling v15, `eai-standard/2.3`, `rcb-topogym:0.2.12-cu128`; Jianwen's simpler variants
-(interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
-- v15 (2026-10-03) = v14 + live-strict, replay-tolerant grading for the six families whose physics runs on the GPU
+## Versions (2026-10-04)
+Active: **merged-v16** (tooling v16, `eai-standard/2.3`, image `rcb-topogym:0.2.14-dev-cu128`), a source candidate until
+its 78 packages are built and qualified. Published: v14 (the 78 dirs under `tasks/`, `rcb-topogym:0.2.12-cu128`).
+Jianwen's simpler variants (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v16 (2026-10-04) = Jianwen's merged-v15 source candidate (4aac2a4e6: release selection, runtime bindings, the candidate
+  pipeline and the environment profile `topogym/tasks/release_profile.py`; ba01d029c: oracle portability, knot_untying
+  terminal v5) + our grading rules, developed as the local "tooling v15" below and never published (live-strict,
+  replay-tolerant grading; the physical-validity policy) + blanket_flatten's live coverage 0.95 in the environment profile
+  + the blanket identity fix found by the lab oracle sweep (BUG 2: the frozen state's absolute path entered the instance
+  identity, so no blanket candidate restored exactly). Image 0.2.14-dev: the public source differs from 0.2.13-dev's, and
+  a new tag leaves the packages bound to 0.2.13-dev untouched. How the two sides' rules fit: One policy across both sides
+  (below).
+  - The environment profile (Jianwen's, merged-v16): rope_threading `contact_relaxed_v16` (his name for that profile, not a
+    release number): explicit ring geometry, a softer finer rope (E 5e6, 5.5 mm mesh), the fingers as the robot's only
+    contact with the rope and rings, a 1 mm aperture compression allowance with a round-ring passage test, a rope still-speed
+    of 10 mm/s (was 1), one 40 ms tick per control step (25 Hz), soft-band grasp assistance; blanket_flatten two-hand patch
+    assistance and coverage 0.95 (the packaged v14 cloth states re-keyed for it: `rekey_goal_parameters` in
+    `scripts/topogym_merge_candidate.py`, as for the local v15 instances); fiber_bundling sheath assistance; horseshoe_ring
+    ring-clearance geometry; hedgehog_in_cage hard's s5 post geometry. knot_untying terminal v5 is task code.
+  - Every instance is made again by the candidate pipeline (no inherited success). v14 trials can be re-graded with
+    `scripts/topogym_regrade_v16.py` only where the v16 instance's state hash equals the trial's (families whose task code,
+    profile and terminal revision did not change; known once the candidate is built); the others are rerun.
+- v15 (2026-10-04, Jianwen, not published) = the merged-v15 source candidate on image 0.2.13-dev. Its tooling hashes are frozen
+  in `ci_checks/topogym_tooling_versions.json` (`v15`); packages built from it (the lab oracle sweep's) keep their own
+  runtime binding.
+- Local tooling v15 (2026-10-03 / 04, ours, not published; its rules ship in v16) = v14 + live-strict, replay-tolerant grading for the six families whose physics runs on the GPU
   (blanket_flatten, knot_untying, rope_threading, slotted_post_ring, orbits, lock_picking; the user's decision, 2026-10-03)
   and blanket_flatten's live coverage threshold 0.95 (was 0.90: a folded corner passed). Image unchanged (0.2.12). The
   graders' replays run the rows with the instance's thresholds, then hold the final targets for up to 2 s with small replay
   tolerances on continuous thresholds; a tolerant replay only confirms a strict success (standard: the live one; a live
   failure is final; privileged: one replay must reach the strict goal within the trajectory's rows). Details in Grading
   replays below; the live episode and the agent's own Session are unchanged. The texts state all of it.
-  - v15 also replaces v14's contact rule with the user's general physical-validity policy (2026-10-03 ~21:30; details in
+  - It also replaces v14's contact rule with the user's general physical-validity policy (2026-10-03 ~21:30; details in
     Physical-validity policy below). v14's R1 (a rigid task contact deeper than 3 mm, or deeper than 1 mm for 0.25 s,
     ended the episode) ended a passive impact: standard trial QKSrtdL (interlocked_claws hard) had opened both grippers
     and held every joint target when the released claw landed on the other one, 4.6 mm deep for 3 ticks. Now penetration
@@ -29,7 +55,7 @@ The 78 tier dirs: tooling v15, `eai-standard/2.3`, `rcb-topogym:0.2.12-cu128`; J
     `arrays.npz` byte-identical) instead of prepared again (another GPU preparation would give another cloth). Against
     v14: `soft_state`, `objects`, `asset_identity` identical; `effective_task_parameters` and `public_goal` differ only in
     the threshold (95 %); strict fresh-process smokes pass (`instance_matches`; `instance_exact` 0, as for the v14 blanket
-    instances). The other 36 instances are v14's.
+    instances). The other 36 instances were v14's. (These local instances are superseded by the v16 candidate's.)
 - v14 (2026-10-03) = Jianwen's v13 (e49b116e3) + the rules of the 2026-10-03 rules audit + a PBD cloth-contact fix, on image
   0.2.12 (0.2.11's stack with v13's `topogym/`: the IPC articulation-reference fix and v13's task changes). The 10 instances
   those task changes touch were made again (knot_untying and rope_threading with a stored IPC settled state,
@@ -136,8 +162,9 @@ trial (the protocol's default is 100M / 10M, D10), applied after the run.
 
 ## Tooling
 Thin wrappers of the low-level action only (IK and joint moves, gripper, hold) plus state, recording, replay and
-rendering; no task-level skills. The 78 tier packages and new packages use tooling v15
-(`[metadata].tooling_version = "15"`; v14 is frozen in the inventory with its image 0.2.12):
+rendering; no task-level skills. New packages use the active release's tooling (v16, `[metadata].tooling_version = "16"`,
+bound to their image by `runtime_binding.json`); v14 (the published `tasks/`, image 0.2.12) and Jianwen's v15 candidate are
+frozen in the inventory:
 `harbor_templates/topogym/common/rcb_topogym.py`, byte-identical in every copy (`ci_checks/check-topogym-tooling.py`, run
 by `check-tooling-identity.sh`). v4 (Jianwen, 6a7c755b) folded the two family variants of the earlier render into it:
 - a gripper hold keeps the native target when the commanded width round-trips (the width table drops the closed-end
@@ -221,16 +248,16 @@ outcome of replayed agent trajectories, deviation against the baseline's own 1e-
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from
   `tests/instance.json` twice in a fresh process and renders `replay.mp4` **during the second replay**. Success: both
-  replays meet the task's predicate (grading replays since v15: see Grading replays). The physics runs on the GPU and is not bit-deterministic: `deterministic` is
+  replays meet the task's predicate (grading replays since v16: see Grading replays). The physics runs on the GPU and is not bit-deterministic: `deterministic` is
   reported, not required; the rebuilt frozen scene must match (`instance_ok`, v5).
 - **Standard.** Pass 1 is the live episode in the `sim` sidecar. When it ends the service writes `trajectory.npz` and
   `episode.json` (live result, final-state hash, `live_rows`: the rows the live episode executed). The collect hook
   `environment/sim/finalize.sh` sends SIGUSR1, waits until the service has exited (its GPU memory is free), then replays
-  the live rows **once** in a fresh process (`environment/sim/replay.py`, a grading replay since v15), rendering
+  the live rows **once** in a fresh process (`environment/sim/replay.py`, a grading replay since v16), rendering
   `replay.mp4` during that replay, and writes `final.json`. The verifier (shared client image, no network) grades `final.json`: success = live ∧ replay; a
   replay without a result is a `grader_error`, not the agent's 0.
 
-## Grading replays (tooling v15)
+## Grading replays (tooling v16)
 The physics of six families runs on the GPU, which is not bit-deterministic: blanket_flatten (PBD cloth), knot_untying,
 rope_threading, slotted_post_ring, orbits (IPC FEM rope / cord) and lock_picking (GPU float32 rigid bodies). A genuine
 live success could miss its own fresh replay: blanket medium standard trial ihy7Nru (v14) succeeded live at row 3089 and
@@ -262,8 +289,10 @@ never turn a failure into one.
   slack). Privileged: `verdict.json` `evidence.replays[].grading`; standard: `replay.verdict.json` and `final.json`
   `replay_grading` (+ `replay_grading_policy`: false after a live failure). Both graders add the numeric reward fields
   `replay_hold_steps` (the most hold steps a replay used) and `replay_tolerance_needed` (0/1).
-- The CPU families are not in the table: their grading replays are plain replays (bit-exact; v14 and v15 tooling give the
-  same verdicts and state hashes), and a plain replay's success is a strict success.
+- The CPU families are not in the table: their grading replays are plain replays (bit-exact; the v14 tooling and ours give
+  the same verdicts and state hashes), and a plain replay's success is a strict success.
+- The hold is 2 s of simulated time at the instance's control rate: 80 control steps at 40 Hz, 50 for merged-v16's
+  rope_threading (one 40 ms tick per control step).
 - The instruction texts (grader details) and READMEs of the six families state all of it; agents in privileged mode can
   call `s.replay(actions, grading=True)` to check a trajectory the way the verifier will.
 
@@ -281,23 +310,28 @@ metrics, margins against the live thresholds, positions).
 | blanket_flatten | particle speed (`maximum_speed_m_s`: the "settled" gate and the final settling's speed) | 0.03 m/s | 0.08 m/s | the user's numbers (20:50). PBD reports a particle's last-substep velocity; on cloth at rest it spikes and restarts the confirmation. ihy7Nru replays, control-step samples: replay B 0.0715 (row 3058), then in its hold 0.0633 / 0.0601 / 0.0666 (+10 / +50 / +70: no confirmation within 2 s at coverage 0.958); another replay 0.044 at the last row; a traced v15 replay 69 of its last 400 rows above 0.03 (4 above 0.08, max 0.097, the agent still moving) and 1 of 80 hold steps (0.065) |
 | blanket_flatten | displacement from the start of the confirmation 3 mm (`maximum_drift_m`), 0.5 s window, height, stretch | unchanged | unchanged | not relaxed: the displacement limit is what proves the cloth is still |
 | knot_untying | rope speed (`terminal.maximum_speed_m_s`: quiet and final settling) | 1 mm/s | 1.25 mm/s | v14 success WWfaVD9 (365 rows), 2 replays, both strict successes at row 365: the window's speeds 0.43-0.90 mm/s, same-step spread up to 0.12 mm/s (just after the release); rope vertices within 11.7 um |
-| knot_untying | planar clearance 8 mm, table band (z), release clearance 5 mm, drift 1 mm | unchanged | unchanged | same replays: 16.4 mm (spread 1.5e-8 m); margins 2.8 / 1.19 mm (< 1e-8 m); 0.7 um; 7e-8 m |
-| rope_threading | rope speed 1 mm/s, crossing aperture (0.1 mm margin), thickness planes | unchanged | unchanged | no trajectory on the v14 instances yet (the sweep's rope trials still ran): no slack until a measurement; its rope uses libuipc's default friction smoothing (10 mm/s, knot: 1 mm/s), so the knot's numbers do not carry over |
+| knot_untying | planar clearance 8 mm, table band (z), drift 1 mm; the release (terminal v5 since v16: 1 mm from every robot part that can move, world-fixed bases may touch, no overlap with any robot part's interior; v14: 5 mm from every part by bounding boxes) | unchanged | unchanged | same replays: 16.4 mm (spread 1.5e-8 m); margins 2.8 / 1.19 mm (< 1e-8 m); 0.7 um; 7e-8 m (measured on v14's release check). The release conditions are geometric: never relaxed |
+| rope_threading | merged-v16 profile: rope speed 10 mm/s (was 1), crossing aperture (0.1 mm margin, 1 mm compression allowance, round-ring passage test), thickness planes | unchanged | unchanged | no trajectory on the v14 instances yet (the sweep's rope trials still ran): no slack until a measurement; the profile's live thresholds are not loosened again. The lab oracle sweep's rope hard standard (4aac2a4e6) failed exactly where the hold helps: live success at row 1864, its replay of those rows without one |
 | slotted_post_ring | ring speed 1 mm/s / 0.02 rad/s, containment (1 mm boundary, z band), separator | unchanged | unchanged | v12 agent ULq3ATD (92 rows + hold), 3 replays: ring position 3 um, speeds 6e-6 m/s / 6e-5 rad/s (< 1 %); the cord, beads and discs (remainder) diverge by 0.3-8 mm (branch-like) |
 | orbits | target speed 1 mm/s / 0.02 rad/s (cord and handle), containment, separator | unchanged | unchanged | v12 agent HHnLEzf (154 rows + 80 hold), 1 replay (the second was stopped by the RAM guard): the cord crept at 1.9-3.3 mm/s through the hold (above the limit, not near it); handle 0.9-2.1e-3 rad/s; separator and z margins constant. No spread measured: no slack |
 | lock_picking | shaft-bore excess 10 um, insertion margin 1 mm, slot clearances | unchanged | unchanged | v12 agents oRtMyhk (1178 rows) / JPLHPHT (1285 rows), 3 replays each: bit-identical up to control step 543 / 476, then a contact branch (32-42 um at onset, 1.2 / 5.7 mm key position and 0.27 rad rotor angle at the end); no success trajectory exists to measure at the goal |
 
-## Physical-validity policy (tooling v15)
+## Physical-validity policy (tooling v16)
 The user's general policy (2026-10-03 ~21:30, its forcing rule settled 2026-10-04 ~01:10) replaces v14's R1 as the
 episode-ending contact rule. Penetration depth measures the contact solver, not the agent: a passive impact reaches 4-5 mm
 (QKSrtdL: the released claw landing on the other one, 4.6-4.9 mm; a released claw falling, 4.4 mm), the press and push
 rams at the capped torques stay at 0.1-2.4 mm, and the deepest readings come from jams and impacts (below). So the policy
 separates who caused what, with no per-artifact exceptions (`rcb_topogym.py` "physical-validity policy",
 `_install_rules`; every family; the t = 0 states and hashes unchanged):
+0. The environment model (the task owner's: the release profile and the task code, frozen in the instance, stated in the
+   texts; the same in the live episode and every replay): materials, timing, grasp assistance, which robot links touch a
+   soft body. The policy never changes it.
 1. Guards (unchanged from v14): arm drive torque caps, the fingertip-table guard, the standard service's joint-speed
    limit and IK-jump refusal.
-2. Failures the agent caused, which end the episode: the task's own rules (wire / fiber touch, rotor limit, chain link, a
-   body or the cloth fallen, R2: a crushed soft volume or a stretched cord attachment persisting 0.25 s).
+2. The task's own stated rules (the task owner's): the success predicate, strict live (thresholds, confirmation windows,
+   release conditions such as knot_untying's terminal v5, whose overlap check withholds success and never ends the
+   episode), and the failures the agent caused, which end the episode (wire / fiber touch, rotor limit, chain link, a body
+   or the cloth fallen, and the tooling's R2: a crushed soft volume or a stretched cord attachment persisting 0.25 s).
 3. A simulator breakdown ends the episode as an infrastructure error (`simulator_instability`, evidence in
    `status()["instability"]`): a non-finite rigid state, a cloth particle faster than 20 m/s, an invalid native IPC
    state, a rigid task contact deeper than 10 mm (`BREAKDOWN_PENETRATION_M`); unless the forcing condition (4) held on any
@@ -336,7 +370,7 @@ the arm's own bodies and the rest (`/DATA2/qineng/rcb/topogym_v1/v15/bin/pstop_p
 the old tooling with R1's verdicts off for the measurement, then the committed tooling for the outcomes). "Longest" = the
 longest run of consecutive ticks with the forcing condition (95 % of cap, 20 N); a forcing event from 200 (0.5 s).
 
-| case | longest run (ticks) | deepest task contact | outcome with the v15 tooling |
+| case | longest run (ticks) | deepest task contact | outcome with the local tooling v15 (the v16 rules) |
 |---|---|---|---|
 | claws hard privileged success qqiVt2v | 0 | 0.6 mm | success, clean; state hash `0074e6165c952f48` = v14's verifier replays |
 | claws easy privileged success UWPrhoN | 0 (wrist wraps at 99 % in free air, 1 N) | 0.2 mm | success, clean; `78159f7d9288c104` = v14's |
@@ -354,8 +388,8 @@ longest run of consecutive ticks with the forcing condition (95 % of cap, 20 N);
 | tug-of-war: both arms pull their interlocked pieces 6 cm apart (claws hard) | 5 (intermittent) | 9.4 mm (150 kN contact spikes) | review events; with the bound at 4 mm: `forced_breakdown` (left forearm roll at 100 %, 150 kN) |
 | the same, 15 cm | 2 | 4.8 mm (62 kN for 3 ticks: the pieces pass through each other) | **success**, held for review (end to end below) |
 | tug-of-war 6 / 15 cm (claws easy) | 0-2 (the physical grips slip) | 0.4-0.7 mm | no episode end |
-| blanket easy privileged success Pxz524p (5361 rows); blanket easy standard uYyNBH5 (2087 rows) | 0: the robot touched nothing rigid (the cloth is PBD) | - | Pxz524p succeeds at step 4060 on v15's 95 % instance (uYyNBH5, a 90 % success, does not reach 95 %); no forcing |
-| blanket medium privileged success ccaPmiU (1817 rows) | 0 (the grippers pressed the table with up to 66 N, drives at 73 % at most) | - | success at step 1636 on v15's 95 % instance, clean |
+| blanket easy privileged success Pxz524p (5361 rows); blanket easy standard uYyNBH5 (2087 rows) | 0: the robot touched nothing rigid (the cloth is PBD) | - | Pxz524p succeeds at step 4060 on the local v15 95 % instance (uYyNBH5, a 90 % success, does not reach 95 %); no forcing |
+| blanket medium privileged success ccaPmiU (1817 rows) | 0 (the grippers pressed the table with up to 66 N, drives at 73 % at most) | - | success at step 1636 on the local v15 95 % instance, clean |
 | knot easy privileged success WWfaVD9 (365 rows) | 0 (the right gripper on the table: 2.8 N at most, drives below 92 %) | - (IPC) | success at row 365, clean |
 
 The claws easy standard success forces longer and harder than every scripted ram: no threshold of drive fraction,
@@ -376,6 +410,42 @@ verifier): `finalized` 1, `success` 0, `success_pending_review` 0, no infrastruc
 CPU determinism: the claws hard / easy privileged successes and
 the claws easy oracle end with v14's verifier state hashes, and QKSrtdL / diFXNtw (rows + hold) with the hashes of the
 v14 tooling's own replays with R1's verdicts off: the policy reads, it never changes the physics.
+
+## One policy across both sides (merged-v16)
+Jianwen's merged-v15 candidate and ba01d029c change rules too: knot_untying's release (terminal v5) and the environment
+profile, whose rope_threading part he calls `contact_relaxed_v16`. Checked against the layers above, rule by rule, so that
+nothing is relaxed twice and no rule contradicts another (2026-10-04):
+
+| rule | layer, owner | live episode | grading replay (rows / hold) |
+|---|---|---|---|
+| materials, timing, grasp assistance, contact sets (rope: fingers only), geometry | 0, Jianwen (profile, task code) | frozen in the instance | identical |
+| torque caps, table guard, standard joint-speed limit and IK-jump refusal | 1, tooling | enforced | the recorded rows (as executed) |
+| success thresholds and windows, release checks (knot v5), aperture allowance (rope) | 2, Jianwen | strict | strict on the rows; in the hold only `REPLAY_TOLERANCES` (blanket coverage and cloth speed, knot rope speed) |
+| failure predicates; R2 (crushed volume, stretched attachment, 0.25 s) | 2, Jianwen; R2 tooling | end the episode | unchanged |
+| breakdowns (non-finite, cloth > 20 m/s, invalid IPC state, rigid contact > 10 mm) | 3, tooling | infrastructure error unless forced | the same |
+| forcing; deep rigid task contacts | 4, tooling | evidence; a deep one holds a success for review | the same |
+
+| quantity | Jianwen | ours | merged-v16 |
+|---|---|---|---|
+| knot release clearance | v5: 1 mm from parts that can move; fixed bases may touch (v4: 5 mm from every part, bounding boxes) | the hold leaves it unchanged | v5, live and replay; one relaxation (his, geometric), never loosened in the hold |
+| knot rope inside a robot part | v5: any interior overlap withholds success | penetration depth is evidence (rigid task contacts only; the rope is FEM) | consistent: a certification of the release, not a failure. All robot links collide with the knot rope in IPC, so an overlap means an IPC failure (layer 3) or a mismatch between IPC's collision geometry and the solids the check uses |
+| knot rope speed | 1 mm/s | hold 1.25 mm/s | one relaxation (ours, hold) |
+| rope still speed | 10 mm/s (was 1) | no slack (hold only) | one relaxation (his, live) |
+| rope rim | 1 mm compression allowance, round-ring passage test | none | his; the texts give the passage radii and the allowance |
+| rope and robot | fingers only (the IPC contact set, for rope and rings) | not measured (FEM) | his environment model; the texts now say so |
+| blanket coverage | task default 0.90 | live 0.95 (the user), hold 0.92 | 0.95 in his profile (re-keyed states), hold 0.92 |
+| keyhole standard oracle | his privileged references move a joint up to 0.10 rad per control step; his bridge refuses rows the service slows | the 0.04 rad per step limit exists only in the standard service | open (below) |
+
+For Jianwen to confirm:
+1. knot v5's overlap check: IPC and the release check see the same robot geometry (else a rope resting on a base could read
+   as an overlap and withhold success), and `unresolved` geometry is rare (it also withholds success).
+2. The rope profile's contact set: only the fingers touch the rope and the rings; now stated in the texts.
+3. blanket coverage 0.95 in his profile, with the packaged states re-keyed (arrays unchanged) rather than prepared again.
+4. The blanket identity fix (lab BUG 2) in `topogym/tasks/blanket_flatten/common.py`.
+5. Release labels: v16 = merged-v16, image 0.2.14-dev; his v15 frozen; the name `contact_relaxed_v16` stays his profile's.
+6. Open: the standard joint-speed limit (0.04 rad per control step) against privileged references that move faster
+   (keyhole). Options: references that respect the limit, a bridge that accepts slowed rows, or the same limit in both
+   modes.
 
 ## Grading GPU
 - Privileged: the verifier is its own container; on a host with a spare GPU (lab) the host's copy of
@@ -406,9 +476,10 @@ family (PROTOCOL §2.7). Model positives so far: interlocked_claws easy in both 
 the previous version of these dirs).
 
 ## Hosts
-- Base image `ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128`
-  (`images/topogym/VERSION` + the CUDA profile of `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a legacy
-  warning). Neither is on GHCR: build on the host with `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym` (a
+- Base image `ghcr.io/luigivamper/rcb-topogym:<images/topogym/VERSION>-cu128` (v16: 0.2.14-dev; the published v14 dirs:
+  0.2.12) (`images/topogym/VERSION` + the CUDA profile of `scripts/cuda_profiles.py`; outside the `eai-<sim>` registry: a
+  legacy warning). Neither is on GHCR: the candidate pipeline's `build_image.sh` builds the active one; by hand, build on
+  the host with `TOPOGYM_CUDA_FLAVOR=cu128 scripts/build_images.sh topogym` (a
   large host may add `--build-arg UIPC_BUILD_JOBS=16`; the default 3 took about 1.5 h on lab), then warm its cache on that
   host's GPU: `images/topogym/warm_cache.sh <built tag> <published tag> <gpu> tasks` (one Session per family; without it
   every container compiles the kernels again).

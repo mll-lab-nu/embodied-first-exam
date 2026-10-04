@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The tooling's physical-validity policy (rcb_topogym.py, tooling v15; before it the 2026-10-03 rules R1-R4): persistence
+"""The tooling's physical-validity policy (rcb_topogym.py, tooling v16; before it the 2026-10-03 rules R1-R4): persistence
 counters, thresholds, the forcing evidence, the breakdown attribution, the review evidence and the guards on synthetic
 contact / IPC / particle states and fake robots. No Genesis, no physics: the lab replays in
 docs/rcb/benchmarks/topogym.md are the physical evidence."""
@@ -594,6 +594,24 @@ class InstructionText(unittest.TestCase):
         text = (ROOT / "scripts/topogym_mk_limited.py").read_text()
         self.assertIn(f"{M.JOINT_STEP_LIMIT_RAD:g} rad per control step", text)
         self.assertIn(f"{M.IK_JUMP_LIMIT_RAD:g} rad from the current joints", text)
+
+    def test_texts_follow_jianwens_knot_release_and_rope_contact_set(self):
+        """The merged-v16 texts describe knot_untying's terminal v5 release (from its settling spec) and disclose the rope
+        profile's contact set (only the fingers touch the rope and rings), so an agent is judged only by stated rules."""
+        import json
+        import topogym_rules as R
+        knot = json.loads((ROOT / "tasks/topogym-knot-untying-easy-i00-privileged/environment/instance.json").read_text())
+        text = " ".join(R.grader_details("knot_untying", knot, limited=False))
+        self.assertIn("needs at least 1 mm of clearance", text)
+        self.assertIn("a world-fixed base may touch it", text)
+        self.assertIn("never a failure", text)
+        self.assertNotIn("axis-aligned bounding boxes of the robot's collision geometries and the rope", text)
+        rope = json.loads((ROOT / "tasks/topogym-rope-threading-easy-i00-privileged/environment/instance.json").read_text())
+        fingers = "Only the grippers' fingers collide with the rope and the rings"
+        self.assertNotIn(fingers, " ".join(R.grader_details("rope_threading", rope, limited=True)))   # v14: full contact
+        tp = dict(rope.get("effective_task_parameters") or {}, rope_robot_contact="fingers")
+        self.assertIn(fingers, " ".join(R.grader_details("rope_threading", dict(rope, effective_task_parameters=tp),
+                                                           limited=True)))
 
 
 if __name__ == "__main__":

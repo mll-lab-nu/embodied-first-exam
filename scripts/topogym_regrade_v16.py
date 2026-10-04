@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
-"""Offline tooling-v15 re-grade of ONE finished TopoGym trial from what it saved, into a separate output dir.
+"""Offline tooling-v16 re-grade of ONE finished (v14) TopoGym trial from what it saved, into a separate output dir.
 
-Tooling v15 (2026-10-03) changes the grading replays of the GPU families (rcb_topogym.py "grading replays": the final
+Tooling v16 (merged-v16; the rules decided 2026-10-03 / 04) changes the grading replays of the GPU families (rcb_topogym.py "grading replays": the final
 targets held for up to 2 s after the last row, the replay tolerances) and, for every family, the physical-validity policy
 (rcb_topogym.py "physical-validity policy": v14's R1 no longer ends an episode, the protective stop does, a breakdown is an
 infrastructure error unless forced, a success with a deep task contact is held for review). A v14 trial whose live
-episode was not ended by R1 can be graded again from its saved trajectory with the v15 task dir's own graders:
+episode was not ended by R1 can be graded again from its saved trajectory with the v16 task dir's own graders, provided
+it was recorded on the v16 task's frozen instance (the trajectory's instance_sha is checked): v16 rebuilt every instance
+from its own source (the merged-v16 environment profile, knot terminal v5, ...), so only families whose instance hash is
+unchanged qualify; the others are rerun. (scripts/regrade_trials.py is different: it re-runs the bound verifier of a
+trial of the active release after a grader error.)
   * privileged: the task's tests/grade.py replays the agent's /app/output/trajectory.npz twice, as its verifier does;
   * standard: the live verdict stays (the trial's final.json: live success, live rows, crash-recovery fields); the task's
     environment/sim/replay.py replays the live rows once (the collect hook's grading replay, with the video), the merge of
     its environment/sim/finalize.sh writes final.json, and its tests/grade.py grades that.
-blanket_flatten trials are refused: v15 also changes its live criterion (coverage 0.90 -> 0.95), so they are rerun. So is a
+blanket_flatten trials are refused: v16 also changes its live criterion (coverage 0.90 -> 0.95), so they are rerun. So is a
 standard trial whose live episode R1 ended (final.json reason task_contact_forced / held_contact_forced: its agent never
 got to continue); a v14 final.json has no live review record, so only its replay's counts. The trial dir is only read:
 mount it read-only.
@@ -19,14 +23,14 @@ Run it in a fresh container of the task's image on one GPU (the trial's frozen i
 trajectory's instance_sha is checked), e.g. on lab:
   privileged:
     docker run --rm --network none --gpus device=<g> -e NVIDIA_DRIVER_CAPABILITIES=all -e PYTHONDONTWRITEBYTECODE=1 \\
-      -v <trial>/verifier:/trial:ro -v <trial>/artifacts/app/output:/app/output:ro -v <v15 task dir>:/task:ro \\
-      -v <out>:/out -v scripts/topogym_regrade_v15.py:/regrade.py:ro -e PYTHONPATH=/task/tests:/opt/topogym \\
-      ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128 python /regrade.py
+      -v <trial>/verifier:/trial:ro -v <trial>/artifacts/app/output:/app/output:ro -v <v16 task dir>:/task:ro \\
+      -v <out>:/out -v scripts/topogym_regrade_v16.py:/regrade.py:ro -e PYTHONPATH=/task/tests:/opt/topogym \\
+      <the v16 task's image, e.g. ghcr.io/luigivamper/rcb-topogym:0.2.14-dev-cu128> python /regrade.py
   standard (the task's graders read /data and write /logs/verifier):
-    docker run ... -v <trial>/verifier:/trial:ro -v <v15 task dir>:/task:ro -v <out>:/out -v <out>/data:/data \\
-      -v <out>/verifier:/logs/verifier -v scripts/topogym_regrade_v15.py:/regrade.py:ro \\
-      -e PYTHONPATH=/task/environment/sim:/opt/topogym ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128 python /regrade.py
-It writes <out>/regrade.json (the trial, its v14 reward, the v15 reward, every grading replay's record) next to the
+    docker run ... -v <trial>/verifier:/trial:ro -v <v16 task dir>:/task:ro -v <out>:/out -v <out>/data:/data \\
+      -v <out>/verifier:/logs/verifier -v scripts/topogym_regrade_v16.py:/regrade.py:ro \\
+      -e PYTHONPATH=/task/environment/sim:/opt/topogym <the v16 task's image> python /regrade.py
+It writes <out>/regrade.json (the trial, its v14 reward, the v16 reward, every grading replay's record) next to the
 graders' own output (<out>/verifier: reward.json, verdict.json or final.json, replay.mp4, ...) and prints a summary line.
 """
 import argparse
@@ -39,6 +43,8 @@ import tomllib
 from pathlib import Path
 
 import numpy as np
+
+GRADERS = "16"      # the tooling whose graders (tests/grade.py, environment/sim/replay.py + finalize.sh) this script drives
 
 # what the standard service's dump() writes into episode.json (environment/sim/server.py); everything else in a trial's
 # final.json was added by its collect hook's replay and merge, which this re-grade redoes
@@ -62,7 +68,7 @@ def same_instance(traj, instance):
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--task", default="/task", help="the v15 task dir (-privileged or -standard), read-only")
+    ap.add_argument("--task", default="/task", help=f"the v{GRADERS} task dir (-privileged or -standard), read-only")
     ap.add_argument("--trial", default="/trial", help="the trial's verifier/ dir, read-only")
     ap.add_argument("--out", default="/out")
     ap.add_argument("--no-video", action="store_true")
@@ -71,10 +77,10 @@ def main() -> int:
     toml = tomllib.loads((task / "task.toml").read_text())
     meta, name = toml["metadata"], toml["task"]["name"].split("/")[-1]   # the mount point's name says nothing
     family, standard = meta["family"], (task / "environment/sim").is_dir()
-    if meta.get("tooling_version") != "15":
-        sys.exit(f"{task}: tooling v{meta.get('tooling_version')}, not v15")
+    if meta.get("tooling_version") != GRADERS:
+        sys.exit(f"{task}: tooling v{meta.get('tooling_version')}, not v{GRADERS}")
     if family == "blanket_flatten":
-        sys.exit("blanket_flatten: v15 changes the live criterion too (coverage 0.95), so its trials are rerun, not re-graded")
+        sys.exit("blanket_flatten: v16 changes the live criterion too (coverage 0.95), so its trials are rerun, not re-graded")
     out.mkdir(parents=True, exist_ok=True)
     env = dict(os.environ, RCB_SESSION_LOG="", PYTHONDONTWRITEBYTECODE="1")
     original = load(trial / "reward.json")
@@ -121,14 +127,14 @@ def main() -> int:
         subprocess.run([sys.executable, str(task / "tests/grade.py")], env=env, stdout=subprocess.DEVNULL, check=True)
         reward = load(log / "reward.json")
         grading = [(load(data / "final.json") or {}).get("replay_grading")]
-    record = dict(script="scripts/topogym_regrade_v15.py", tooling_version="15", family=family,
+    record = dict(script="scripts/topogym_regrade_v16.py", tooling_version=GRADERS, family=family,
                   mode="standard" if standard else "privileged", task=name, trial=str(trial),
                   original_reward=original, reward=reward, grading=grading)
     (out / "regrade.json").write_text(json.dumps(record, indent=1))
     keys = ("success", "success_pending_review", "live_success", "replay_success", "all_success", "replay_hold_steps",
             "replay_tolerance_needed", "grader_error", "infra_error")
     print(json.dumps(dict(task=name, v14={k: (original or {}).get(k) for k in keys if k in (original or {})},
-                          v15={k: (reward or {}).get(k) for k in keys if k in (reward or {})})), flush=True)
+                          v16={k: (reward or {}).get(k) for k in keys if k in (reward or {})})), flush=True)
     return 0
 
 
