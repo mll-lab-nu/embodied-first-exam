@@ -49,12 +49,12 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | | cabinet | h1hand | ⬜ | the bar cannot be reached |
 | | kitchen | h1hand | ⬜ | passed (privileged) |
 
-Why: one task per reward function, and holding still must earn under 40% of the bar, so passing takes control, not
-a pose. That left 23 tasks in 9 capability classes; since 2026-10-04 only the hardest stay: the 9 that neither GPT-6
-Luna nor GPT-6.1 Sol, the two models run on every task, has passed in either mode (their runs are on the results site),
-in 5 classes. Of the other tasks never passed, window came closest (95% of the bar), and spoon, insert_normal and cabinet
-have a bar that does not measure the task (their `difficulty` in `subset.toml` at 8c5594a4 has the derivation).
-Source, with the reasoning per task: `scripts/humanoidbench/subset.toml` (the generator's input).
+Why: one task per reward function, and holding still must earn under 40% of the bar (spoon, at 58%, was kept as an
+exception), so passing takes control, not a pose. That left 23 tasks in 9 capability classes. Since 2026-10-04 only the
+hardest 9 stay, in 5 classes: the 13 that no model passed in either mode (GPT-6 Luna and GPT-6.1 Sol ran all 23, GPT-6
+Sol and Claude Opus 5.5 five; their runs are on the results site) minus window, which came within 5% of the bar, and
+spoon, insert_normal and cabinet, whose bar does not measure the task (their `difficulty` in `subset.toml` at 8c5594a4
+has the derivation). Source, with the reasoning per task: `scripts/humanoidbench/subset.toml` (the generator's input).
 
 ## Modes
 

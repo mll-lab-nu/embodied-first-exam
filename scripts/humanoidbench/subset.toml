@@ -4,9 +4,9 @@
 #   HumanoidBench registers 32 tasks (31 classes). Keeping all of them would buy duplicates (`stair` and `slide`
 #   are the same reward function, byte for byte) and give-away scores (`pole` hands you 71% of its bar for
 #   standing to attention). The 32 fall into 9 capability classes (`capability_class`); 23 were kept, and of
-#   those only the 9 that no model has passed in either mode stay (GPT-6 Luna and GPT-6.1 Sol ran every task;
-#   docs/benchmarks/humanoidbench.md); this file is that decision in machine-readable form, and it drives the
-#   generator.
+#   those only the 9 hardest stay: never passed by any model in either mode, never within 5% of the bar, and
+#   with a bar that measures the task (docs/benchmarks/humanoidbench.md); this file is that decision in
+#   machine-readable form, and it drives the generator.
 #
 # WHAT IT DRIVES
 #   scripts/humanoidbench/gen_tasks.py turns each [[task]] here into a complete Harbor task directory
