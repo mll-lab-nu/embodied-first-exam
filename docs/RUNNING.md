@@ -98,7 +98,7 @@ Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts
 ```
 <trial>/gateway/usage.jsonl     one line per request: time, duration, host, path, status, model, input / cached / output tokens
 <trial>/gateway/totals.json     running totals, rewritten after every request
-<trial>/gateway/raw/            every request and response body (GATEWAY_RAW=1, the default with the gateway on), gzipped JSON (headers without credentials)
+<trial>/gateway/raw.jsonl.xz    every request and response body (GATEWAY_RAW=1, the default with the gateway on; headers without credentials)
 ```
 Input counts what the model read (Anthropic: input + cache read + cache creation; OpenAI: `input_tokens`, cached
 included); output includes reasoning: the same convention as Harbor's `n_input_tokens` / `n_output_tokens`, which the batch
@@ -108,7 +108,12 @@ before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly t
 (default 100M / 10M; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
 the agent stops; `totals.json` records `over_token_budget = 1`, the batch summary marks it, and `write_task_results.py`
 counts it as failed (PROTOCOL §5). Tested 2026-10-02: Codex 0.159.2 ends its turn on the first refusal, without retrying.
+The raw log stores each conversation item once and a request as references to the items it resends, like Codex's and
+Claude Code's own session files, and is lossless: `scripts/usage_gateway/rawlog.py cat <trial>/gateway` prints every
+request and response in full. The gateway appends to `raw.jsonl.gz` while the trial runs; after each job the runner
+compacts it to `raw.jsonl.xz` (one 1,994-request trial: 5.9 GB as one gzip file per request, the format before
+2026-10-02, 32 MB now; `rawlog.py pack --delete <dir>` converts such `raw/` directories).
 Switches: `GATEWAY=1` (record usage and, by default, raw bodies), `GATEWAY_RAW=0` (usage only; raw bodies are private: they hold the
 whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
-attempts); Codex request bodies are zstd-compressed and are stored as base64 unless `zstandard` is installed; OpenAI
-reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
+attempts); Codex request bodies are zstd-compressed and are stored as base64, and so not deduplicated, unless
+`zstandard` is installed on the runner host; OpenAI reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
