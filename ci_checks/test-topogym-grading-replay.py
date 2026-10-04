@@ -279,6 +279,7 @@ class Graders(unittest.TestCase):
 
         class FakeSession:
             instance_matches = instance_exact = True
+            runtime_binding = {"binding_id": "b"}
 
             def __init__(self, *a, **kw):
                 self.queue = list(statuses)
@@ -301,8 +302,8 @@ class Graders(unittest.TestCase):
                 pass
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
-            (root / "instance.json").write_text('{"action_dim": 2}')
-            np.savez(root / "trajectory.npz", task="fixture", actions=np.zeros((4, 2)))
+            (root / "instance.json").write_text('{"action_dim": 2, "action_layout": ["a", "b"]}')
+            np.savez(root / "trajectory.npz", task="fixture", actions=np.zeros((4, 2)), action_layout=np.array(["a", "b"]))
             args = ["grade", "--family", "fixture", "--instance", str(root / "instance.json"), "--traj", str(root / "trajectory.npz"),
                     "--no-video"]
             with patch.object(grade, "LOG_DIR", d), patch.object(sys, "argv", args), patch.object(M, "Session", FakeSession), \
@@ -362,9 +363,16 @@ class Graders(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
             (root / "final.json").write_text(json.dumps(final))
-            np.savez(root / "trajectory.npz", task="fixture", actions=np.zeros((4, 2)))
+            np.savez(root / "trajectory.npz", task="fixture", actions=np.zeros((4, 2)), action_layout=np.array(["a", "b"]))
             source = (ROOT / "harbor_templates/topogym/limited/tests/grade.py").read_text()
             source = source.replace("/data/", d + "/").replace("/logs/verifier", str(root / "verifier"))
+            source = source.replace("/tests/runtime_binding.json", str(root / "runtime_binding.json"))
+            import hashlib
+            expected = {"binding": "fixture"}
+            (root / "runtime_binding.json").write_text(json.dumps(expected))
+            wanted = hashlib.sha256(json.dumps(expected, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+            for name in ("startup_binding.json", "replay.verdict.json"):
+                (root / name).write_text(json.dumps({"instance_exact": True, "runtime_binding": {"binding_id": wanted}}))
             with contextlib.redirect_stdout(io.StringIO()):
                 exec(compile(source, "standard_grade", "exec"), {})
             return json.loads((root / "verifier/reward.json").read_text())
@@ -401,6 +409,7 @@ class Graders(unittest.TestCase):
 
             class FakeSession:
                 instance_sha, instance_exact, instance_matches = "s", True, True
+                runtime_binding = {"binding_id": "b"}
 
                 def __init__(self, *a, **kw):
                     pass
@@ -413,9 +422,9 @@ class Graders(unittest.TestCase):
                     pass
             with tempfile.TemporaryDirectory() as d:
                 root = Path(d)
-                (root / "instance.json").write_text('{"action_dim": 2}')
+                (root / "instance.json").write_text('{"action_dim": 2, "action_layout": ["a", "b"]}')
                 (root / "episode.json").write_text(json.dumps(dict(success=live, live_rows=4)))
-                np.savez(root / "trajectory.npz", task="fixture", actions=np.zeros((4, 2)))
+                np.savez(root / "trajectory.npz", task="fixture", actions=np.zeros((4, 2)), action_layout=np.array(["a", "b"]))
                 argv = ["replay", "--data", d, "--task", "fixture", "--instance", str(root / "instance.json")]
                 with patch.object(M, "Session", FakeSession), patch.object(sys, "argv", argv), \
                         patch.dict(sys.modules, {"rcb_topogym": M}), contextlib.redirect_stdout(io.StringIO()):
