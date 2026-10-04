@@ -13,6 +13,8 @@ after every control step but never tells you their state: watch your robot and t
 - **Yogurt not dropped**: the box of yogurt must never fall to the floor (its origin stays at least 5 cm above the floor).
 - **Bottle not dropped**: the champagne bottle must never fall to the floor either (the same rule).
 
+These rules forbid only tipping and dropping: pushing the box of yogurt or the champagne bottle aside (for example with the drawer as it opens) is allowed by the task's own specification; tipping either one past 45° or dropping it to the floor fails the task.
+
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends when the goal has held for 10 consecutive control
   steps (0.5 s; `meta["reason"]` = `goal_held`), when your time is up, or on a simulator error. Whatever you knock over or
