@@ -9,6 +9,7 @@ artifacts = [
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
   { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
   { source = "/data/replay2.log", service = "sim" },
+  { source = "/data/replay3.log", service = "sim" },           # and its third, which renders replay.mp4
   "/app/output/",
 ]
 
@@ -37,7 +38,7 @@ network_mode = "no-network"
 
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
 timeout_sec = 1800
 
 [agent]

@@ -10,7 +10,8 @@ client and one episode.
 - **No reset.** One episode. You see the robot's cameras (RGB, depth if you ask) and its proprioception (joints,
   grippers, tool poses, velocities, efforts). No object poses, no success check.
 - **The episode ends** after **606 control steps** (the benchmark's 40 s horizon at
-  15.152 Hz; `meta["steps_left"]`), when you submit `done` (`r.submit("done", [])`), or when your time is up.
+  15.152 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`), when you submit `done`
+  (`r.submit("done", [])`), or when your time is up.
 - **Success** is upstream's `judge_success()` on the state at that moment: the robot does not touch the object; the receptacle supports the object (it carries at least 50% of the object's weight through contact, or the object lies on it by upstream's on-receptacle test, or the object is within 5 mm and 10 degrees, relative to the receptacle, of a pose in which it was supported at an earlier control step); and the receptacle has moved at most 15 cm and tilted at most 60 degrees from its start pose. The task has to hold at the
   end: met earlier and undone by then does not count, so end the episode with `done` once it holds.
 - Your wall-clock budget is 3600 s from your start (the service's `time_s` and `elapsed_s` count from its own start,

@@ -23,11 +23,7 @@ INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.a
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
-UNITS = {  # the row's units, by robot (scripts/molmospaces/families.json words them the same for the instructions)
-    "franka": "fr3_joint1..7 in rad; gripper: the Robotiq command, 0 = open .. 255 = closed",
-    "rby1": "base_x, base_y in m and base_theta in rad (world frame); torso, arm joints in rad; grippers: the finger "
-    "motor's force, -100 .. 100 (positive closes, negative opens, 0 exerts none)",
-}
+UNITS = os.environ["RCB_ACTION_UNITS"]  # the row's units, as the instruction words them (compose, from families.json)
 LOCK = threading.Lock()
 PID_FILE = os.path.join(DATA, "server.pid")
 E = {
@@ -52,9 +48,7 @@ CTRL_HZ = 1.0 / S.dt
 SUBSTEPS = int(round(S.dt / float(S.env.current_model.opt.timestep)))
 CAMS = S.agent_cameras
 CAM0 = {c: S.camera_info(c) for c in CAMS}
-SPEC_ROBOT = S.robot_spec()
-LIMITS = np.array([lim for g in S.groups for lim in SPEC_ROBOT["move_groups"][g]["command_range"]], dtype=np.float64)
-P = S.proprio()
+LIMITS = S.command_limits()
 GROUPS = [
     ("joint_pos", S.joint_names, "measured joint positions of the controlled joints (rad; base x, y in m)"),
     ("joint_vel", [f"{j}_vel" for j in S.joint_names], "measured joint velocities (rad/s, m/s)"),
@@ -76,7 +70,7 @@ SPEC = {
     "protocol": L.PROTOCOL,
     "protocol_compat": list(L.COMPAT),
     "simulator": "molmospaces (molmo-spaces 0.2.9, MuJoCo 3.5.0)",
-    "robot": SPEC_ROBOT["robot"],
+    "robot": INST["episode"]["robot"]["robot_name"],
     "task_text": INST["facts"]["goal"],
     "control_hz": CTRL_HZ,
     "physics_substeps": SUBSTEPS,
@@ -99,7 +93,7 @@ SPEC = {
             "dim": S.action_dim,
             "layout": S.layout,
             "limits": dict(zip(S.layout, LIMITS.tolist())),
-            "units": UNITS["rby1" if "base_x" in S.layout else "franka"],
+            "units": UNITS,
             "semantics": "absolute targets of upstream's joint-position controllers, one per control step; rows `dt` "
             "apart (a multiple of the control period, at most 0.5 s), `hold` or `linear` between rows; "
             "values outside the limits are clipped and reported",
@@ -123,10 +117,11 @@ SPEC = {
         "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes",
     },
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
+    "max_control_steps": S.horizon,
     "episode": f"one episode, no reset (upstream's evaluation): it ends after {S.horizon} control steps (the benchmark's "
     f"{INST['facts']['horizon_s']} s horizon), when you submit `done`, or when your time is over; success is judged "
     "on the state at that moment, also when the task was met earlier and undone",
-    "robot_spec": {**SPEC_ROBOT, "base_pose": M._pose7(S.robot.robot_view.base.pose).tolist()},
+    "robot_spec": S.robot_spec(),
     "kinematics": S.kinematics_spec(),
     "depth": {
         "modes": list(L.DEPTH_MODES),
@@ -268,7 +263,7 @@ def meta_common(cams) -> dict:
         "physics_steps": n * SUBSTEPS,
         "sim_time_s": round(n * S.dt, 3),
         "time_s": round(time.time() - E["t0"], 2),
-        "steps_left": max(0, S.horizon - n),
+        "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - E["t0"]), 1)),
         "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()},
         "done": E["done"],
         "reason": E["reason"],
@@ -281,9 +276,17 @@ def meta_common(cams) -> dict:
 def do_submit(meta: dict, A: np.ndarray):
     typ = meta.get("type")
     if typ == "done":
+        rec = recorder(cameras_of(meta), 5, meta)
+        rec.tick(force=True, last=True)  # every response carries the last frames
         E["calls"] += 1
         finish("done")
-        return {**meta_common(CAMS), "chunk_id": E["calls"], "type": typ, "executed_rows": 0, "ok": True}, []
+        return {
+            **meta_common(cameras_of(meta)),
+            "chunk_id": E["calls"],
+            "type": typ,
+            "executed_rows": 0,
+            "ok": True,
+        }, rec.parts("none", 5)
     if typ != "joint_position":
         raise ValueError(f"type must be joint_position or done (not yet: {SPEC['action_types']['not_yet']})")
     dt = float(meta.get("dt", S.dt))
