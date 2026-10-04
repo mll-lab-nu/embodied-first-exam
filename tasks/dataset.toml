@@ -2253,3 +2253,11 @@ digest = "sha256:c5164b994822828112b7c404865e49742b3476eca708ddca08cfaf0e2c53dc7
 name = "robot-coding-bench/maniguard-stack-retrieve-i08-standard"
 digest = "sha256:3df4a9a56107ba9f8edb769907c03ba6826fc57e424c51e15bc48193ffba8ada"
 
+[[tasks]]
+name = "robot-coding-bench/maniguard-jar-transport-i13-privileged"
+digest = "sha256:d67c753bd25cd782d7227528fb1da7ac70a4c92fb8c7f958fd4a12cb95f5e5b2"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-jar-transport-i13-standard"
+digest = "sha256:2d82cd939d38f35549483685cda7bcfacc351cc8b6990d7583e3af61ce36707e"
+
