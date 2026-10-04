@@ -7,7 +7,7 @@
 #      finalize.sh, run.sh, rcb1.py);
 #    - the graders, tests/grade.py (one version per mode).
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as check-robopaint-tooling.sh.
-# 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint): the
+# 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
 #    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE_2_2.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
@@ -84,6 +84,6 @@ if bad:
     if len(bad) > 60:
         print(f"  ... {len(bad) - 60} more")
     sys.exit(1)
-print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits tasks")
+print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / MolmoSpaces tasks")
       + f"; the eai-standard/2.2 layer in {n_layer} task dirs")
 PY
