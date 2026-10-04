@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PROMPT_KEY = object()
 AUTH_VARIABLES = ("OPENAI_API_KEY", "OPENROUTER_API_KEY", "OPENAI_BASE_URL", "OPENAI_API_BASE",
                   "OPENROUTER_BASE_URL", "CODEX_FORCE_AUTH_JSON", "CODEX_AUTH_JSON_PATH")
-COMPLETE = {"solved", "unsolved", "not_evaluable", "invalid_submission"}
+COMPLETE = {"solved", "unsolved", "pending_review", "not_evaluable", "invalid_submission"}
 RETRYABLE = {"interrupted", "infra_failed", "invalid_job"}
 
 

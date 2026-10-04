@@ -436,6 +436,10 @@ nothing is relaxed twice and no rule contradicts another (2026-10-04):
 | blanket coverage | task default 0.90 | live 0.95 (the user), hold 0.92 | 0.95 in his profile (re-keyed states), hold 0.92 |
 | keyhole standard oracle | his privileged references move a joint up to 0.10 rad per control step; his bridge refuses rows the service slows | the 0.04 rad per step limit exists only in the standard service | open (below) |
 
+Results: a success held for review (`success_pending_review` 1) is `pending_review` in Jianwen's result pipeline
+(`scripts/collect_batch_results.py`, the difficulty runner, the HF export, helper assignments): complete, neither solved nor
+unsolved, out of the success rate until a reviewer decides; `scripts/write_task_results.py` says so on the result page.
+
 For Jianwen to confirm:
 1. knot v5's overlap check: IPC and the release check see the same robot geometry (else a rope resting on a base could read
    as an overlap and withhold success), and `unresolved` geometry is rare (it also withholds success).
@@ -443,7 +447,8 @@ For Jianwen to confirm:
 3. blanket coverage 0.95 in his profile, with the packaged states re-keyed (arrays unchanged) rather than prepared again.
 4. The blanket identity fix (lab BUG 2) in `topogym/tasks/blanket_flatten/common.py`.
 5. Release labels: v16 = merged-v16, image 0.2.14-dev; his v15 frozen; the name `contact_relaxed_v16` stays his profile's.
-6. Open: the standard joint-speed limit (0.04 rad per control step) against privileged references that move faster
+6. `pending_review` as a result status of his pipeline (above).
+7. Open: the standard joint-speed limit (0.04 rad per control step) against privileged references that move faster
    (keyhole). Options: references that respect the limit, a bridge that accepts slowed rows, or the same limit in both
    modes.
 

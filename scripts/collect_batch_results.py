@@ -81,6 +81,10 @@ def classify_trial(job, row, mode):
         return "not_evaluable", result, reward, trial
     if bound_release(row.get("tooling_version")) and reward["success"] == 1 and reward.get("runtime_binding_ok") != 1:
         return "not_evaluable", result, reward, trial
+    if reward.get("success_pending_review") == 1:
+        # The physical-validity policy (tooling v16): a success with a deep task contact is held for a human review, neither
+        # credited nor failed; the verifier saved the events and frames (verdict.json evidence.review / review.json).
+        return "pending_review", result, reward, trial
     return ("solved" if reward["success"] == 1 else "unsolved"), result, reward, trial
 
 
@@ -137,13 +141,16 @@ def collect_manifest(manifest_path, jobs):
     eligible = [r for r in latest.values() if r["status"] in {"solved", "unsolved"}]
     lines = ["# Difficulty evaluation", "", "Release: " + json.dumps(manifest.get("release", {"name": "historical_unrecorded"}), sort_keys=True), "", f"Planned trials: {manifest['trial_count']}; observed attempt rows: {len(rows)}.", "",
              f"Evaluable completed trials (latest attempt each): {sum(r['status'] == 'solved' for r in eligible)}/{len(eligible)} solved.",
-             "Not-evaluable, invalid submissions and infrastructure failures are excluded from this denominator.", "",
+             "Not-evaluable, invalid submissions and infrastructure failures are excluded from this denominator.",
+             f"Held for review (a success with a deep task contact, credited only after review): "
+             f"{sum(r['status'] == 'pending_review' for r in latest.values())}.", "",
              "| task | difficulty | sample | mode | attempt | status |", "|---|---|---|---|---|---|"]
     lines += [f"| {r['task_id']} | {r['difficulty']} | {r['sample_id']} | {r['mode']} | {r['attempt']} | {r['status']} |" for r in rows]
     (run / "summary.md.tmp").write_text("\n".join(lines) + "\n")
     (run / "summary.md.tmp").replace(run / "summary.md")
     print(json.dumps(counts, sort_keys=True))
-    return 0 if all(r["status"] in {"solved", "unsolved", "not_evaluable", "invalid_submission"} for r in latest.values()) else 2
+    return 0 if all(r["status"] in {"solved", "unsolved", "pending_review", "not_evaluable", "invalid_submission"}
+                    for r in latest.values()) else 2
 def legacy_main():
     jobs, ju, jl, out = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], pathlib.Path(sys.argv[4])
     from regrade_trials import original_task

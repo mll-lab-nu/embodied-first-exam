@@ -47,7 +47,7 @@ for trial in sorted((jobs / job).glob("*__*")):
              f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{'standard (robot as a service)' if limited else 'privileged'}**.\n",
              f"Release: `{json.dumps(release_record, sort_keys=True)}`.\n",
              "| | |", "|---|---|",
-             f"| result | {'**1 (success)**' if ok else '**0**' + (' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
+             f"| result | {'**1 (success)**' if ok else '**0**' + (' — no trajectory handed in' if rw.get('missing_trajectory') else ' — a success held for review (a deep task contact: verdict.json evidence.review / review.json, review_frames/)' if rw.get('success_pending_review') == 1 else '')} |",
              f"| agent time | {span(r.get('agent_execution') or {})} s |",
              f"| actions / physics steps | {rw.get('steps') or rw.get('n_actions') or '—'} / {rw.get('sim_steps') or '—'} |",
              f"| tokens in / out | {ar.get('n_input_tokens')} / {ar.get('n_output_tokens')} |",
