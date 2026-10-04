@@ -54,8 +54,7 @@ expert_hours = 4.0
 difficulty = """Nonprehensile, tool use, dynamics: open a closed drawer, then sweep five small cubes off the counter into it
 with a wiper. KinDER's paper reports at most 0.14 success for its best method on this variant and 0.00 for sampling
 MPC on the true simulator."""
-oracle_evidence = """none known: GPT-6 Luna failed both modes, and KinDER's paper reports success on this variant only as a rate (at most
-0.14, its best method), with no rollout of this instance"""
+oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; no standard-mode example is known"""
 task_statement = """get the five small dark-red cubes on top of the kitchen island into the middle drawer of the
 island's upper row of drawers, which starts closed; a wiper lies next to the cubes. The task succeeds the moment all
 five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls."""
@@ -104,7 +103,7 @@ env_id = "kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitc
 expert_hours = 3.0
 difficulty = """Nonprehensile, tool use: ten small cubes on the floor into a box marked at the kitchen island's end, with a
 wiper at hand."""
-oracle_evidence = """GPT-6 Luna's graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (recorded before protocol v1.0) on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client"""
+oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04 and its graded standard-mode episode with 50 resets recorded before protocol v1.0, run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores both 1, and so does the standard service when the episode is sent through the client"""
 task_statement = """get the ten small dark-red cubes scattered on the floor into the translucent grey box marked on the
 floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the
 floor next to the cubes. The task succeeds the moment all ten cubes' centres are inside that box."""
