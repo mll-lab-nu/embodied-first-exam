@@ -26,9 +26,18 @@ def prepare_kinematics(entity, link=None):
         )
 
 
+# What Genesis 1.2.1's entity FK / IK kernels write in the live rigid solver (func_forward_kinematics_entity; the kernels
+# also overwrite and copy back qpos). Their own "restore" re-runs FK on the restored qpos, which is not bit-identical to
+# what the physics step left there (1e-17..1e-16), so these arrays are copied back exactly.
+_LIVE_FIELDS = (("links_state", ("pos", "quat", "pos_bw", "quat_bw")), ("joints_state", ("xanchor", "xaxis")),
+                ("dofs_state", ("pos",)), ("_rigid_global_info", ("qpos",)))
+
+
 @contextmanager
 def _query_state(entity):
-    """Preserve RNG and Genesis query scratch fields on success and rejection."""
+    """Preserve RNG, Genesis query scratch fields and the live solver arrays the query writes, on success and rejection.
+
+    Without the last part a live run that queries kinematics stops replaying bit for bit (CPU backend)."""
     import torch
     host = random.getstate(), deepcopy(np.random.get_state())
     tensor = torch.get_rng_state().clone()
@@ -36,6 +45,9 @@ def _query_state(entity):
     fields = [(value, value.to_numpy()) for name, value in vars(entity).items()
               if (name.startswith("_IK_") or name == "_jacobian") and callable(getattr(value, "to_numpy", None))
               and callable(getattr(value, "from_numpy", None))]
+    solver = entity._solver
+    fields += [(value, np.array(value.to_numpy(), copy=True)) for struct, names in _LIVE_FIELDS
+               for value in (getattr(getattr(solver, struct), name) for name in names)]
     try:
         yield
     finally:
