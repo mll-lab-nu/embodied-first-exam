@@ -56,6 +56,14 @@ results site with `scripts/write_task_results.py --out` outside the repository (
 next to the checkout, gets `<batch>/<task>/<run id>/`; `RESULTS=` skips it), updates `$JOBS/<batch>.summary.md`, and
 stops its lane when a trial shows a model-account failure.
 
+To watch a batch live: `scripts/live_board.py --jobs <JOBS>` (repeatable; stdlib only) serves a page on 127.0.0.1 that
+refreshes every 5 s. It shows every trial as pending, setup, running (agent time against the task's limit), verifying,
+success or failed, with live tokens when the usage gateway runs, the reward, the videos and the tail of the agent's
+output. Pending trials come from `$JOBS/.plan/<batch>.json`, which the runner writes when it starts. Reach the page from
+another machine with `ssh -N -L 8765:127.0.0.1:<port> <host>`; it shows the agent's output, so keep it off public
+addresses. It has no login (every user of a shared host can open it) and serves a running trial's files before the
+runner's secret scan has redacted them.
+
 Runner-side tools (they run on the host, never in a task): `scripts/log_mirror.py` (in the `rcb-log-mirror` container: an
 append-only copy of every trial's `agent/` record that neither the agent nor the host user can delete),
 `scripts/mem_guard.py` (keeps 2 GiB of host memory available by killing the largest benchmark container first),
@@ -90,7 +98,7 @@ Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts
 ```
 <trial>/gateway/usage.jsonl     one line per request: time, duration, host, path, status, model, input / cached / output tokens
 <trial>/gateway/totals.json     running totals, rewritten after every request
-<trial>/gateway/raw/            every request and response body (GATEWAY_RAW=1, the default with the gateway on), gzipped JSON (headers without credentials)
+<trial>/gateway/raw.jsonl.xz    every request and response body (GATEWAY_RAW=1, the default with the gateway on; headers without credentials)
 ```
 Input counts what the model read (Anthropic: input + cache read + cache creation; OpenAI: `input_tokens`, cached
 included); output includes reasoning: the same convention as Harbor's `n_input_tokens` / `n_output_tokens`, which the batch
@@ -100,7 +108,12 @@ before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly t
 (default 100M / 10M; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
 the agent stops; `totals.json` records `over_token_budget = 1`, the batch summary marks it, and `write_task_results.py`
 counts it as failed (PROTOCOL §5). Tested 2026-10-02: Codex 0.159.2 ends its turn on the first refusal, without retrying.
+The raw log stores each conversation item once and a request as references to the items it resends, like Codex's and
+Claude Code's own session files, and is lossless: `scripts/usage_gateway/rawlog.py cat <trial>/gateway` prints every
+request and response in full. The gateway appends to `raw.jsonl.gz` while the trial runs; after each job the runner
+compacts it to `raw.jsonl.xz` (one 1,994-request trial: 5.9 GB as one gzip file per request, the format before
+2026-10-02, 32 MB now; `rawlog.py pack --delete <dir>` converts such `raw/` directories).
 Switches: `GATEWAY=1` (record usage and, by default, raw bodies), `GATEWAY_RAW=0` (usage only; raw bodies are private: they hold the
 whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
-attempts); Codex request bodies are zstd-compressed and are stored as base64 unless `zstandard` is installed; OpenAI
-reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
+attempts); Codex request bodies are zstd-compressed and are stored as base64, and so not deduplicated, unless
+`zstandard` is installed on the runner host; OpenAI reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
