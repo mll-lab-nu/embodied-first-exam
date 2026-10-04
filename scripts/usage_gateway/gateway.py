@@ -16,8 +16,11 @@ own agent/ and verifier/ (not inside agent/, which the agent's container mounts 
 
     usage.jsonl        one line per request: time, duration, host, path, status, model, normalized and raw usage
     totals.json        running totals (rewritten after every request): requests, input / cached / output tokens
-    raw/NNNNNN.json.gz with --raw: the request body and the response body (SSE text) as sent and received;
-                       credentials, cookies and account ids are removed from the recorded headers
+    raw.jsonl.gz       with --raw: every request body and response body (SSE text) as sent and received, deduplicated
+                       (rawlog.py: each conversation item is stored once, a request as references to them; lossless);
+                       credentials, cookies and account ids are removed from the recorded headers. usage.jsonl's "raw"
+                       is the request's n there. `rawlog.py compact` (run_agent_batch.sh, after each job) turns it into
+                       raw.jsonl.xz; `rawlog.py cat` prints the requests in full
 
 Token budget (PROTOCOL §5, D10; on by default when the gateway runs): once a trial's totals reach --budget-input input
 or --budget-output output tokens, totals.json gets over_token_budget = 1 and every further model request of that trial
@@ -46,6 +49,9 @@ import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import rawlog  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
@@ -196,6 +202,7 @@ class Trials:
 ARGS: argparse.Namespace
 TRIALS: Trials
 SEQ = {"n": 0}
+RAWLOGS: dict[pathlib.Path, rawlog.Writer] = {}     # per trial; a restarted gateway resumes from the file
 
 
 def log(msg: str) -> None:
@@ -214,11 +221,11 @@ def record(trial: pathlib.Path | None, rec: dict, raw: dict | None) -> None:
         d = trial / "gateway"
         d.mkdir(exist_ok=True)
         if raw is not None:
-            (d / "raw").mkdir(exist_ok=True)
-            n = sum(1 for _ in (d / "raw").glob("*.json.gz")) + 1
-            rec["raw_file"] = f"raw/{n:06d}.json.gz"
-            with gzip.open(d / rec["raw_file"], "wt", encoding="utf-8") as f:
-                json.dump(raw, f)
+            if d not in RAWLOGS:
+                if len(RAWLOGS) >= 256:                 # finished trials: drop the oldest table
+                    del RAWLOGS[next(iter(RAWLOGS))]
+                RAWLOGS[d] = rawlog.Writer(d / rawlog.NAME)
+            rec["raw"] = RAWLOGS[d].append(raw)
         with open(d / "usage.jsonl", "a") as f:
             f.write(json.dumps(rec) + "\n")
         tp = d / "totals.json"
@@ -366,7 +373,7 @@ def main() -> int:
     p.add_argument("--jobs", type=pathlib.Path, required=True, help="Harbor's -o directory")
     p.add_argument("--bind", default="172.17.0.1", help="the docker bridge address containers reach the host by")
     p.add_argument("--port", type=int, default=0, help="0 = any free port (written to --ready-file)")
-    p.add_argument("--raw", action="store_true", help="also record request and response bodies (raw/)")
+    p.add_argument("--raw", action="store_true", help="also record request and response bodies (raw.jsonl.gz)")
     p.add_argument("--ready-file", type=pathlib.Path, help="written with the port once the gateway listens")
     p.add_argument("--timeout", type=float, default=900.0, help="upstream socket timeout, seconds")
     p.add_argument("--extra-host", action="append", default=[], help="another model API host pattern to forward to (repeatable)")
