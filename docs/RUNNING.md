@@ -107,5 +107,5 @@ compacts it to `raw.jsonl.xz` (one 1,994-request trial: 5.9 GB as one gzip file 
 2026-10-02, 32 MB now; `rawlog.py pack --delete <dir>` converts such `raw/` directories).
 Switches: `GATEWAY=1` (record usage and, by default, raw bodies), `GATEWAY_RAW=0` (usage only; raw bodies are private: they hold the
 whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
-attempts); Codex request bodies are zstd-compressed and are stored as base64 unless `zstandard` is installed; OpenAI
-reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
+attempts); Codex request bodies are zstd-compressed and are stored as base64, and so not deduplicated, unless
+`zstandard` is installed on the runner host; OpenAI reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
