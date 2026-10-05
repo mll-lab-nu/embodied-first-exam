@@ -6,7 +6,7 @@
 
 可复制的当前 CLI 见 [把建文作为 helper 的正式流程小批次](helper_native_cli_zh.md)：只筛选 Coil easy、双模式、K=1，不增加 smoke 专用执行脚本。独立 release 导出、HF 权限检查、配置生成及独立 HF 下载验收入口已加入；真实 prepare 当前因 GPU 空闲显存低于 12 GB 被拦住，尚无本次真实 HF 结果。
 
-当前唯一新实验目标是 tooling **v16** / `0.2.14-dev-cu128`（merged-v16：v15 候选流程与环境参数，加上评分回放和物理有效性规则，见 [版本说明](benchmarks/topogym.md)；v15 候选的工具哈希已冻结）。根目录 `tasks/` 是历史任务包。
+当前唯一新实验目标是 tooling **v17** / `0.2.15-dev-cu128`（merged-v17：merged-v16 即 v15 候选流程与环境参数加评分回放和物理有效性规则，再加 R-hold 评分、fiber_bundling CPU 提速与确定性 GPU 物理，见 [版本说明](benchmarks/topogym.md)；v15、v16 候选的工具哈希已冻结）。根目录 `tasks/` 是历史任务包。
 先按根 README 的候选构建流程完成 `topogym_candidate_pipeline.py --phase all`，再设置：
 
 ```bash

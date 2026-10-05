@@ -11,10 +11,19 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-04)
-Active: **merged-v16** (tooling v16, `eai-standard/2.3`, image `rcb-topogym:0.2.15-dev-cu128`: 0.2.14-dev plus the fiber
-CPU speed-up below), a source candidate until
+Active: **merged-v17** (tooling v17, `eai-standard/2.3`, image `rcb-topogym:0.2.15-dev-cu128`), a source candidate until
 its 78 packages are built and qualified. Published: v14 (the 78 dirs under `tasks/`, `rcb-topogym:0.2.12-cu128`).
 Jianwen's simpler variants (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v17 (2026-10-05) = merged-v16 + the R-hold grading (privileged replays may confirm within the same tolerant hold as
+  standard) + fiber_bundling on the CPU (image 0.2.15-dev: Genesis tree patch, exact fast paths; below) + deterministic
+  GPU physics (tooling; below).
+  Release and environment profile are separate names: the release is merged-v17 (tooling 17, image 0.2.15-dev), while
+  its environment profile, `topogym/tasks/release_profile.py` `PROFILE = "merged-v16"`, is merged-v16's, unchanged. The
+  profile label names the environment choices (geometry, materials, contact, grasp assistance, timing, terminal), not the
+  tooling or the image; it is part of the image's public source, of the slotted oracle's submission fingerprints and of
+  the blanket re-key records, so it changes only when the environment does.
+  The built merged-v16 packages (7293af9d6's templates) keep their tooling hashes as frozen "v16"
+  (`ci_checks/topogym_tooling_versions.json`); v16 trials are graded with their own packages, not mixed with v17 results.
 - v16 (2026-10-04) = Jianwen's merged-v15 source candidate (4aac2a4e6: release selection, runtime bindings, the candidate
   pipeline and the environment profile `topogym/tasks/release_profile.py`; ba01d029c: oracle portability, knot_untying
   terminal v5) + our grading rules, developed as the local "tooling v15" below and never published (live-strict,
@@ -310,7 +319,7 @@ s2 over comb_01's stage time budget at step 2588, while s4 with every other chan
 still succeed, so only the closed loop separates them), a coarser slack lead (an instance change, not needed), the GPU
 backend (fp32: 2.11 s per control step for the 558-DOF tree), more CPU threads (1.5-2.1x slower).
 
-### Deterministic GPU physics (tooling, 2026-10-05)
+### Deterministic GPU physics (tooling v17, 2026-10-05)
 Grading replays re-run an agent's actions in fresh processes; on the GPU families they did not reproduce the live run. Two
 fresh replays of one blanket_flatten easy agent trajectory (EtWpiBp, v16) differed by 1.6e-13 m after the first control
 step, 1.7 mm by step 99, 37 mm at most, and in the outcome (one success, one not). Stage isolation (each sub-stage of a
