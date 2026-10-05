@@ -27,6 +27,15 @@ import rcb_topogym
 
 
 class SamplingTests(unittest.TestCase):
+    def test_fixed_reference_difficulty_subset_uses_same_scene_and_budget(self):
+        import yaml
+        cfg=yaml.safe_load((ROOT/'configs/sweeps/helper_oracle_reference.yaml').read_text())
+        full=sampler.sample_instances(cfg)
+        selected=sampler.sample_instances(dict(cfg,task_ids=['cast_coil'],difficulties=['easy']))
+        self.assertEqual(selected,[row for row in full if row['task_id']=='cast_coil' and row['difficulty']=='easy'])
+        self.assertEqual(len(selected),1); self.assertEqual(selected[0]['scene_seed'],0)
+        self.assertEqual(cfg['agent_wall_clock_s'],43200)
+
     def test_selector_mapping_and_validation(self):
         self.assertEqual(sampler.select_tasks("all"), list(sampler.TASK_IDS))
         self.assertEqual(sampler.select_tasks("9, 8-9,cast_coil"), ["cast_coil", "cast_keyhole"])
@@ -304,6 +313,12 @@ class ResultTests(unittest.TestCase):
             self.assertEqual(classify_trial(job,row,"unlimited")[0],"interrupted")
 
     def test_package_budgets_and_twins_without_physics(self):
+        self.check_package_budget(21600)
+
+    def test_twelve_hour_packages_and_collect_deadline(self):
+        self.check_package_budget(43200)
+
+    def check_package_budget(self,budget):
         import tomllib
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp); tasks=root/'tasks'; build=root/'build'; slug='topogym-cast-coil-easy-s00'
@@ -325,14 +340,14 @@ class ResultTests(unittest.TestCase):
                 return lock_for_task(task, dict(reference=image_reference(task), id="sha256:"+"0"*64, repo_digests=[]), runtime)
             with patch('topogym.planning.harbor_bridge.binding.inspect_task', side_effect=inspected), patch.object(sys, 'argv',
                 ['topogym_mk_task.py','cast_coil','--instance',str(instance_file),
-                 '--slug',slug,'--tasks-root',str(tasks),'--build-root',str(build),'--reuse-describe','--agent-wall-clock-s','21600']):
+                 '--slug',slug,'--tasks-root',str(tasks),'--build-root',str(build),'--reuse-describe','--agent-wall-clock-s',str(budget)]):
                 topogym_mk_task.main()
             with patch.object(sys, 'argv', ['topogym_mk_limited.py','cast_coil','-',
                  '--unlimited-task',str(tasks/(slug+'-privileged')),'--tasks-root',str(tasks),
-                 '--build-root',str(build),'--agent-wall-clock-s','21600']):
+                 '--build-root',str(build),'--agent-wall-clock-s',str(budget)]):
                 topogym_mk_limited.main()
             u=tomllib.loads((tasks/(slug+'-privileged')/'task.toml').read_text()); l=tomllib.loads((tasks/(slug+'-standard')/'task.toml').read_text())
-            self.assertEqual((u['agent']['timeout_sec'],l['agent']['timeout_sec']),(21600,21600))
+            self.assertEqual((u['agent']['timeout_sec'],l['agent']['timeout_sec']),(budget,budget))
             current=identity(ROOT)["tooling_version"]
             self.assertEqual((u['metadata']['tooling_version'],l['metadata']['tooling_version']),(current,current))
             self.assertEqual(l['metadata']['protocol'], 'eai-standard/2.3')
@@ -342,8 +357,8 @@ class ResultTests(unittest.TestCase):
             identity=subprocess.run(['bash',str(ROOT/'ci_checks/check-tooling-identity.sh'),str(tasks)],capture_output=True,text=True,
                 env=dict(os.environ,PATH=str(Path(sys.executable).parent)+os.pathsep+os.environ['PATH']))
             self.assertEqual(identity.returncode,0,identity.stdout+identity.stderr)
-            self.assertEqual(u['verifier']['timeout_sec'],45000)
-            self.assertEqual(l['verifier']['collect'][0]['timeout_sec'],27000)
+            self.assertEqual(u['verifier']['timeout_sec'],budget*2+1800)
+            self.assertEqual(l['verifier']['collect'][0]['timeout_sec'],budget+5400)
             self.assertEqual((tasks/(slug+'-privileged')/'environment/instance.json').read_bytes(),(tasks/(slug+'-standard')/'environment/sim/instance.json').read_bytes())
             from topogym.tasks.goal_description import render_goal
             public_goal=json.loads((build/slug/'describe.json').read_text())['public_goal']
@@ -355,7 +370,7 @@ class ResultTests(unittest.TestCase):
                 harbor_python=ROOT/'.venv-harbor/bin/python'
                 if harbor_python.exists():
                     p=subprocess.run([str(harbor_python),'-c',
-                        'import sys; from harbor.models.task.task import Task; t=Task(sys.argv[1]); assert t.config.agent.timeout_sec==21600',str(folder)],capture_output=True,text=True)
+                        'import sys; from harbor.models.task.task import Task; t=Task(sys.argv[1]); assert t.config.agent.timeout_sec==int(sys.argv[2])',str(folder),str(budget)],capture_output=True,text=True)
                     self.assertEqual(p.returncode,0,p.stdout+p.stderr)
                 for check in ('check-task-structure','check-task-fields','check-dockerfile','check-instruction','check-verifier-isolation','check-limited-texts'):
                     p=subprocess.run(['bash',str(ROOT/'ci_checks'/f'{check}.sh'),str(folder)],capture_output=True,text=True,

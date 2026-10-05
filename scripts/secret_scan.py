@@ -10,8 +10,8 @@ import stat
 import tempfile
 import zipfile
 
-DEFAULT_VARS = ('OPENAI_API_KEY', 'OPENROUTER_API_KEY', 'ANTHROPIC_API_KEY', 'HF_TOKEN')
-PATTERNS = (('API_TOKEN', re.compile(rb'(?:sk-[A-Za-z0-9_-]{16,}|hf_[A-Za-z0-9]{20,})')),
+DEFAULT_VARS = ('OPENAI_API_KEY', 'OPENROUTER_API_KEY', 'ANTHROPIC_API_KEY', 'HF_TOKEN', 'TOPOGYM_LAUNCH_KEY')
+PATTERNS = (('API_TOKEN', re.compile(rb'(?<![A-Za-z0-9_-])(?:sk-[A-Za-z0-9_-]{16,}|hf_[A-Za-z0-9]{20,})')),
             ('JWT', re.compile(rb'eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}')))
 BINARY = {'.npz', '.npy', '.mp4', '.png', '.jpg', '.jpeg', '.stl', '.glb', '.blend', '.gz', '.zip'}
 CHUNK = 1024 * 1024
@@ -35,7 +35,7 @@ def load_env(path):
 def load_secrets(*, env_files=(), variables=(), auth_files=(), process_env=False, pii=False):
     env = dict(os.environ) if process_env else {}
     for path in env_files: env.update(load_env(path))
-    names = variables or DEFAULT_VARS
+    names = tuple(dict.fromkeys((*DEFAULT_VARS, *variables)))
     if any(not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', n) for n in names):
         raise ScanError('invalid credential variable name')
     secrets = {name: env[name].encode() for name in names if env.get(name)}
@@ -100,10 +100,13 @@ def fingerprint(path):
     return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns)
 
 def sha(path):
-    with Path(path).open('rb') as stream: return hashlib.file_digest(stream, 'sha256').hexdigest()
+    result = hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda: stream.read(CHUNK), b''): result.update(block)
+    return result.hexdigest()
 
-def scan_tree(root, secrets, *, redact=False, patterns=True, pii=False, guard=lambda: None):
-    if not secrets: raise ScanError('no credentials loaded')
+def scan_tree(root, secrets, *, redact=False, patterns=True, pii=False, guard=lambda: None, allow_empty_secrets=False):
+    if not secrets and not (allow_empty_secrets and patterns): raise ScanError('no credentials loaded')
     root = Path(root)
     report = dict(schema_version=1, scanned_files=0, scanned_bytes=0, findings=[], redactions=[],
                   rules=list(secrets) + ([p[0] for p in PATTERNS] if patterns else []),
@@ -117,7 +120,12 @@ def scan_tree(root, secrets, *, redact=False, patterns=True, pii=False, guard=la
         with path.open('rb') as stream:
             hits, size = scan_stream(stream, secrets, patterns=patterns, pii=pii, guard=guard)
         compressed = {}
-        if path.suffix.lower() in {'.zip', '.npz'}:
+        suffix = re.sub(r'\.(?:v|seg)[0-9]+$', '', path.name.lower())
+        suffix = Path(suffix).suffix
+        with path.open('rb') as stream: magic = stream.read(8)
+        is_zip = suffix in {'.zip', '.npz'} or magic.startswith(b'PK\x03\x04')
+        is_gzip = suffix == '.gz' or magic.startswith(b'\x1f\x8b')
+        if is_zip:
             with zipfile.ZipFile(path) as archive:
                 infos = archive.infolist()
                 if len(infos) > 100000 or sum(i.file_size for i in infos) > 8 * 1024**3:
@@ -130,7 +138,7 @@ def scan_tree(root, secrets, *, redact=False, patterns=True, pii=False, guard=la
                     with archive.open(info) as stream:
                         found, _ = scan_stream(stream, secrets, patterns=patterns, pii=pii, limit=info.file_size, guard=guard)
                     for name, count in found.items(): compressed[name] = compressed.get(name, 0) + count
-        elif path.suffix.lower() == '.gz':
+        elif is_gzip:
             with gzip.open(path, 'rb') as stream:
                 compressed, _ = scan_stream(stream, secrets, patterns=patterns, pii=pii, limit=8*1024**3, guard=guard)
         if fingerprint(path) != before: raise ScanError('file changed while scanning')
@@ -139,7 +147,7 @@ def scan_tree(root, secrets, *, redact=False, patterns=True, pii=False, guard=la
             finding = dict(path=relative, matches=hits, compressed_matches=compressed)
             report['findings'].append(finding)
             if redact:
-                if path.suffix.lower() in BINARY or compressed:
+                if suffix in BINARY or is_zip or is_gzip or compressed:
                     raise ScanError('secret in binary/compressed artifact; refusing to corrupt evidence')
                 original = sha(path); fd, temp = tempfile.mkstemp(prefix='.redact-', dir=path.parent)
                 try:

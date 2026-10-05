@@ -14,7 +14,12 @@ patch = '''            # TopoGym delivery: retain token rotation in the private 
                 try:
                     from harbor_agents.persistent_auth import persist_auth
                     await persist_auth(environment, remote_auth_path, auth_json_path)
-                except Exception:
+                except Exception as refresh_error:
+                    status_path = self._get_env("TOPOGYM_AUTH_STATUS")
+                    if status_path:
+                        from pathlib import Path as StatusPath
+                        import json as status_json
+                        StatusPath(status_path).write_text(status_json.dumps({"status": "failed", "error_type": type(refresh_error).__name__}))
                     self.logger.warning("Could not persist refreshed login; run auth login if the next trial cannot authenticate")
 '''
 path.write_text(source.replace(anchor, patch + anchor))

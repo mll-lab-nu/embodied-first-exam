@@ -1,0 +1,210 @@
+[
+  {
+    "step": "pickup",
+    "parameters": {
+      "grasp_height": 0.012,
+      "grasp_tilt": 75.0
+    },
+    "parameters_sha256": "74d4f13196224d765265136437c72c30daebb27472106ffbf4f769ea1502df31"
+  },
+  {
+    "step": "regrasp",
+    "parameters": {},
+    "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  },
+  {
+    "step": "traverse",
+    "parameters": {
+      "route_search": [
+        [
+          0.008,
+          4
+        ],
+        [
+          0.004,
+          12
+        ],
+        [
+          0.002,
+          24
+        ]
+      ]
+    },
+    "parameters_sha256": "3b6ecd562cc4aa75502a10b5deac4c760fb148a30198bbc6216f1942a2b1cd10"
+  },
+  {
+    "step": "flatten_above_finish",
+    "parameters": {
+      "position_m": [
+        0.095,
+        -0.305,
+        1.164189305912137
+      ],
+      "quaternion_wxyz": [
+        -0.0588320132458664,
+        0.5359907735054749,
+        0.8413369866395914,
+        0.037480126022373994
+      ]
+    },
+    "parameters_sha256": "c819ee820c0d4222db6987b4f6aa600288228fad05422135baaa809e4360d43f"
+  },
+  {
+    "step": "release_onto_deck",
+    "parameters": {
+      "instructions": [
+        {
+          "operation": "tcp",
+          "local_translation_m": [
+            0.0,
+            0.0,
+            -0.1
+          ],
+          "seconds": 0.2,
+          "gripper_position_rad": 0.0
+        },
+        {
+          "operation": "hold",
+          "seconds": 2.0
+        },
+        {
+          "operation": "settle_gripper"
+        }
+      ]
+    },
+    "parameters_sha256": "66eb0e3bca46594a6d7d19d51a6581903fa1a195111fa625ad00a7aa384c4934"
+  },
+  {
+    "step": "acquire_1",
+    "parameters": {
+      "index": 1,
+      "yaw": 225.0,
+      "tilt": 45.0,
+      "advance": 0.0,
+      "approach": 0.04
+    },
+    "parameters_sha256": "4db66767978396eadd73332cf7821859842a878f3e623d9ee31f45daf64daa2a"
+  },
+  {
+    "step": "turn_1",
+    "parameters": {
+      "index": 1,
+      "yaws": [
+        145.0,
+        144.5,
+        144.0,
+        143.5,
+        143.0
+      ],
+      "offsets": [
+        [
+          0.003,
+          0.002
+        ]
+      ],
+      "final_height": 0.0,
+      "minimum_clearance": 0.0015,
+      "speeds": [
+        0.08,
+        0.004,
+        0.12,
+        0.002
+      ],
+      "errors": [
+        0.0008,
+        0.001
+      ]
+    },
+    "parameters_sha256": "81d280576a08108d2aca7cf5aed6071b1f6a9e64ba628e6a10283679c4937698"
+  },
+  {
+    "step": "partial_release",
+    "parameters": {
+      "instructions": [
+        {
+          "operation": "hold",
+          "seconds": 0.5
+        },
+        {
+          "operation": "grip",
+          "value": 0.78,
+          "seconds": 0.75
+        },
+        {
+          "operation": "tcp",
+          "local_translation_m": [
+            0.0,
+            0.0,
+            -0.08
+          ],
+          "seconds": 1.0
+        },
+        {
+          "operation": "hold",
+          "seconds": 1.0
+        },
+        {
+          "operation": "grip",
+          "value": 0.45,
+          "seconds": 2.0
+        }
+      ]
+    },
+    "parameters_sha256": "ac28a760a5c070af77a30c7514c675a241b04a0d4e8eab552aa657b56b64f269"
+  },
+  {
+    "step": "acquire_2",
+    "parameters": {
+      "index": 2,
+      "yaw": 265.0,
+      "tilt": 75.0,
+      "advance": 0.012,
+      "approach": 0.022,
+      "adaptive": true
+    },
+    "parameters_sha256": "f57855fb89cf3356e9174c15858c769c07a0e595358e0ea3f8859ce874131355"
+  },
+  {
+    "step": "turn_2",
+    "parameters": {
+      "index": 2,
+      "yaws": [
+        164.0,
+        163.0,
+        161.5
+      ],
+      "offsets": [
+        [
+          0.003,
+          0.002
+        ],
+        [
+          0.002,
+          0.002
+        ],
+        [
+          0.0,
+          0.003
+        ]
+      ],
+      "final_height": 0.003,
+      "minimum_clearance": 0.001,
+      "speeds": [
+        0.06,
+        0.003,
+        0.1,
+        0.0015
+      ],
+      "errors": [
+        0.0006,
+        0.0008
+      ]
+    },
+    "parameters_sha256": "7673d6812e63c6f389c86853b9fcb02acf11fc3de6e7e876c2d83e71fd1e09d5"
+  },
+  {
+    "step": "final_release",
+    "parameters": {},
+    "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+  }
+]

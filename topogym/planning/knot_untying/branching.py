@@ -18,7 +18,7 @@ from . import robot_oracle as oracle
 from .parameters import validate_parameters
 from topogym.utils.io import write_json_atomic
 
-ROUTE_KEYS = ("lift", "hold", "direction", "straighten", "end_choice", "arm_order",
+ROUTE_KEYS = ("lift", "anchor_lift_m", "hold", "direction", "straighten", "end_choice", "arm_order",
               "grasp_yaw_deg", "grasp_tilt_deg", "pull_yaw_deg", "pull_pitch_deg",
               "pull_offset", "anchor_offset", "path_arch_m", "path_lateral_m",
               "grasp_shift_m", "grasp_search_m", "pinch_height_m", "span_ratio",
@@ -34,6 +34,7 @@ CANDIDATES = {
                  dict(pull_pitch_deg=15., max_pull=.3), dict(path_lateral_m=.08, path_arch_m=.06),
                  dict(path_lateral_m=-.08, path_arch_m=.06), dict(lift=.06), dict(lift=.01),
                  dict(pull_offset=.06), dict(pull_offset=.015), dict(pinch_height_m=.002),
+                 dict(anchor_lift_m=.004), dict(anchor_lift_m=.008), dict(anchor_lift_m=0.),
                  *[dict(end_choice=end, arm_order='swapped', grasp_tilt_deg=tilt,
                         pull_yaw_deg=yaw, path_arch_m=.04)
                    for end in ('A', 'B') for tilt, yaw in ((20., 30.), (-20., -30.))]],
@@ -77,7 +78,7 @@ def validate_candidate(candidate):
         value = candidate[key]
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not np.isfinite(value):
             raise ValueError(f'{key} must be finite')
-        if key in {'lift', 'spread_lift', 'grasp_search_m', 'clear_spread_steps', 'retreat_height', 'approach_wait_s',
+        if key in {'lift', 'anchor_lift_m', 'spread_lift', 'grasp_search_m', 'clear_spread_steps', 'retreat_height', 'approach_wait_s',
                    'translate_lift_m'} and value < 0:
             raise ValueError(f'{key} must be nonnegative')
         if key in {'straighten', 'span_ratio', 'pull_offset', 'anchor_offset', 'approach_s'} and value <= 0:

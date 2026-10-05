@@ -1,5 +1,7 @@
 # 被动策略与参考运动
 
+2026-10-04 Slotted Post Ring：迁入 12 阶段控制器、IK/FK、拓扑探针和只读诊断代码，执行复用本地 v15 Session 规则；环境几何与物理保持原值。本轮不运行测试或仿真。外部直立端盘抓取尚不适配本地平放初态，未开放完整成功路线；差异与开发入口见 [oracle 说明](slotted_post_ring/README.md)。
+
 2026-10-03 Knot：`knot_untying/` 已整合冻结实例执行、实际 tick 动作记录、上游决策回溯、
 前缀回放续跑及正式实例新进程回放检查。交接 easy／medium 原生成功证据和三档 IPC 存档已导入；
 easy 有已有回放通过日志；medium 本轮首遍完整回放未达成功，原因待查；当前优先验证 hard 完整执行。
@@ -51,3 +53,5 @@ JOINT_ABS 执行及独立审计。原三档完成分离停稳即可结束；hard
 `cast_coil/baseline.py` 提供基础装配被动策略：从 ALOHA home 接近，双指接触取得自动 assist，以实测物体位姿补偿负载偏差，执行原型路线的逆向装配、落桌、释放和沿手爪轴线撤离。入口为 `scripts/oracle_runners/run_cast_coil_policy.py`，只通过 `SegmentRunner.run_policy` 执行。seed 0 的一次 Nyx 完整运行已经通过当前 Task terminal 及独立释放/桌面支承复核，视频与失败尝试见[运行报告](../../task_rollouts/cast_coil_assist_20260927/README.md)。该次运行显式采用 10 Hz 控制 / 160 子步，不能当作默认 tick、半时间步、多 seed 或纯摩擦抓取资格。
 
 后续[时序与接触复核](../../task_rollouts/cast_coil_assist_20260927/investigation_06/README.md)发现该视频有高接触力卡滞和突跳；策略过程质量尚需修正，不能仅凭末态成功视为合格装配。执行入口现继承 simulator 默认时序，60 秒 episode 预算单独设置；当前默认时序完整任务成功仍未验证。
+
+`orbits/`：移植精确越球不变量、绳弯搜索、环孔交接、helper 托举、提取及 ALOHA IK 审计，保留本地 v15 的任务几何、绳长、目标区和物理判据。入口为 `scripts/plan_orbits_robot_oracle.py`、`scripts/audit_orbits_oracle.py`，详见 [Orbits oracle](orbits/README.md)。这是独立 MuJoCo 规划工具，尚无 Genesis 原生执行；本次仅移植代码，未运行测试或继承来源成绩。

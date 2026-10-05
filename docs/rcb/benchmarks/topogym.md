@@ -107,7 +107,12 @@ The 78 tier dirs: tooling v14, `eai-standard/2.3`, `rcb-topogym:0.2.12-cu128`; J
   fresh-process smoke (build, 3 hold steps with RGB, replay; `instance_matches`). The rigid instances are unchanged.
 
 ## Budget
-Agent wall clock **21600 s** (6 h) for every family (decision of 2026-10-01; before: 6 h, knot_untying 10 h). This is above
+Current helper preset (2026-10-04): **43200 s (12 h), 150M input / 10M output per trial**, native Codex / GPT-6 Sol xhigh,
+10 tasks excluding Knot, Slotted Post Ring and Orbits, three named tiers, both modes, K=3 (180 trials).
+See [helper operations](../standard_helper_operations_zh.md). Token limits are applied during post-run scoring;
+missing usage blocks complete acceptance. These new packages have not yet been formally published.
+
+Historical packages: agent wall clock **21600 s** (6 h) for every family (decision of 2026-10-01; before: 6 h, knot_untying 10 h). This is above
 protocol v1.0's cap of 14400 s ([agent].timeout_sec ≤ 4 h): a TopoGym exception, so its results form their own budget
 group (PROTOCOL D8) and the tasks would need a shorter budget on main. The privileged verifier may take `2 × budget + 1800`
 s, the standard collect hook `3600 + budget + 1800` s. The token budget of the 2026-10 sweep is 120M input / 10M output per

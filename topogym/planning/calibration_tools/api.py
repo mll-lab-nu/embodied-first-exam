@@ -48,6 +48,10 @@ class CalibrationSession:
         """Async bounded external-force exploration in an explicitly prepared IPC session."""
         return self.submit("drive_object", entity=entity, request_id=request_id, **options)
 
+    def drive_object_groups(self, entity, *, request_id=None, **options):
+        """Async: several FEM vertex groups driven at once (virtual point grippers), see ObjectDrives.run_groups."""
+        return self.submit("drive_object_groups", entity=entity, request_id=request_id, **options)
+
     def pause(self):
         return self._supervisor.cancel()
 

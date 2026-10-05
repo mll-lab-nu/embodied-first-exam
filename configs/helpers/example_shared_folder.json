@@ -1,0 +1,21 @@
+{
+  "batch": "helper01-coil-easy-smoke",
+  "helper": {"id": "helper01"},
+  "repository": "TopoGym",
+  "tasks": "8",
+  "difficulties": ["easy"],
+  "modes": ["unlimited", "limited"],
+  "samples_per_difficulty": 1,
+  "sampling_seed": 20261004,
+  "agent_wall_clock_s": 432,
+  "agent": {
+    "provider": "openai",
+    "agent": "codex",
+    "model": "openai/gpt-6-luna",
+    "agent_args": ["version=0.157.0", "reasoning_effort=max"],
+    "auth_methods": ["subscription", "api-key"]
+  },
+  "cuda_flavor": "cu128",
+  "mirror": "required",
+  "upload": {"type": "shared-folder"}
+}

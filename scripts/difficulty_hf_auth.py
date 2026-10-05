@@ -120,3 +120,29 @@ def error_from_exception(error):
     if any(word in type(error).__name__.lower() for word in ("timeout", "connect", "network", "transport", "protocol")):
         return HFError("network_error", retryable=True)
     return HFError("hub_request_failed")
+
+
+def main():
+    """Store a credential interactively, without shell history or token arguments."""
+    import argparse
+    import getpass
+    import sys
+    p=argparse.ArgumentParser(description='Store an HF token using hidden terminal input.')
+    p.add_argument('command',choices=('store',))
+    p.add_argument('--file',type=Path,required=True)
+    a=p.parse_args()
+    try:
+        if not sys.stdin.isatty(): raise HFError('credentials','run token store in an interactive terminal')
+        path=a.file.expanduser().absolute(); root=Path(__file__).resolve().parents[1]
+        if path.resolve().is_relative_to(root): raise HFError('credentials','store the token outside the repository')
+        if path.exists() or path.is_symlink(): raise HFError('credentials','credential file already exists; preserve it')
+        value=token_text(getpass.getpass('HF token (hidden): '))
+        path.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+        fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+        with os.fdopen(fd,'w') as stream: stream.write(value+'\n')
+        read_token(path)
+        print('Private credential file saved; token not displayed.')
+    except (OSError,ValueError) as error: p.exit(2,str(error)+'\n')
+
+
+if __name__=='__main__': main()

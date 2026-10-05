@@ -93,12 +93,15 @@ def sample_instances(settings, source=ROOT):
     selected_release = identity(source)
     rows = []
     for task in settings["task_ids"]:
-        for difficulty in DIFFICULTIES:
-            for index, seed in enumerate(sample_seeds(task, difficulty, settings["sampling_seed"], settings["samples_per_difficulty"])):
-                reg = variation_registration(task, "seeded", seed)
-                cls = task_definition(task, "seeded", seed)
-                draws = draw(cls, seed)
-                params, overrides, _ = environment_inputs(task, difficulty, variation="seeded", seed=seed, parameters=draws)
+        for difficulty in settings.get("difficulties", DIFFICULTIES):
+            fixed = settings.get("instance_selection") == "oracle_reference"
+            seeds = [settings["reference_seeds"][task][difficulty]] if fixed else sample_seeds(task, difficulty, settings["sampling_seed"], settings["samples_per_difficulty"])
+            variation = difficulty if fixed else "seeded"
+            for index, seed in enumerate(seeds):
+                reg = variation_registration(task, variation, seed)
+                cls = task_definition(task, variation, seed)
+                draws = {} if fixed else draw(cls, seed)
+                params, overrides, _ = environment_inputs(task, difficulty, variation=variation, seed=seed, parameters=draws)
                 if task == "blanket_flatten":
                     # The controller plans arbitrary seeds without a physics stack.
                     # Initial state resources are created in prepare_blanket inside
@@ -109,10 +112,10 @@ def sample_instances(settings, source=ROOT):
                 else:
                     instance = cls(params, seed=seed)
                     effective, goal_complete = instance.config, instance.goal_complete
-                cfg = simulator_config(task, variation_id="seeded", seed=seed, task_parameters=params, simulator_overrides=overrides)
-                slug = f"topogym-{task.replace('_', '-')}-{difficulty}-s{index:02d}"
+                cfg = simulator_config(task, variation_id=variation, seed=seed, task_parameters=params, simulator_overrides=overrides)
+                slug = f"topogym-{task.replace('_', '-')}-{difficulty}-{'o' if fixed else 's'}{index:02d}"
                 row = dict(task_id=task, task_number=TASK_IDS.index(task) + 1, difficulty=difficulty,
-                           sample_id=f"s{index:02d}", slug=slug, variation_id="seeded", scene_seed=seed,
+                           sample_id=f"s{index:02d}", slug=slug, variation_id=variation, scene_seed=seed,
                            resolved_variation_id=reg["variation_id"], variant_rng_version=VARIANT_RNG_VERSION,
                            scene_variation_version=SCENE_VARIATION_VERSION, draws=draws, simulator=cfg,
                            task_parameters=params, simulator_overrides=overrides, environment_profile=PROFILE,
@@ -167,14 +170,15 @@ def add_sampling_arguments(parser):
     """Shared CLI names; None means the setting (or frozen run) supplies the value."""
     parser.add_argument("--setting", type=Path, help="default: configs/sweeps/difficulty_eval.yaml")
     parser.add_argument("--tasks", help="default: all 13; IDs, ascending ranges or names")
+    parser.add_argument("--difficulties", help="comma-separated subset of easy,medium,hard; default from setting")
     parser.add_argument("--sampling-seed", type=int, help="default: 20260929")
     parser.add_argument("--samples-per-difficulty", type=int, help="default: 1 per easy/medium/hard")
-    parser.add_argument("--agent-wall-clock-s", type=int, help="default/max: 21600 seconds")
+    parser.add_argument("--agent-wall-clock-s", type=int, help="default 21600; maximum 43200 seconds")
     parser.add_argument("--concurrency", type=int, help="currently only 1")
     parser.add_argument("--resume", action="store_true", help="validate and reuse the immutable manifest")
 
 
-def prepare_manifest(output, *, setting=None, tasks=None, sampling_seed=None,
+def prepare_manifest(output, *, setting=None, tasks=None, difficulties=None, sampling_seed=None,
                      samples_per_difficulty=None, agent_wall_clock_s=None, concurrency=None, resume=False,
                      source_root=None):
     """Create or validate a run and return its manifest, without starting a simulator."""
@@ -191,11 +195,13 @@ def prepare_manifest(output, *, setting=None, tasks=None, sampling_seed=None,
     cfg = yaml.safe_load(Path(setting).read_text()) if setting else dict(old["settings"])
     if not isinstance(cfg, dict):
         raise ValueError("setting must be a mapping")
-    allowed = {"schema_version", "task_ids", "difficulties", "modes", "samples_per_difficulty", "sampling_seed", "agent_wall_clock_s", "concurrency"}
+    allowed = {"schema_version", "task_ids", "difficulties", "modes", "samples_per_difficulty", "sampling_seed", "agent_wall_clock_s", "concurrency", "instance_selection", "reference_seeds", "reference_notes", "native_batch"}
     if set(cfg) - allowed:
         raise ValueError(f"unknown setting keys: {sorted(set(cfg) - allowed)}")
     selector = tasks if tasks is not None else ",".join(cfg["task_ids"])
     cfg["task_ids"] = select_tasks(selector)
+    if difficulties is not None:
+        cfg["difficulties"] = [value.strip() for value in difficulties.split(',')]
     overrides = dict(sampling_seed=sampling_seed, samples_per_difficulty=samples_per_difficulty,
                      agent_wall_clock_s=agent_wall_clock_s, concurrency=concurrency)
     for key, value in overrides.items():
@@ -203,12 +209,34 @@ def prepare_manifest(output, *, setting=None, tasks=None, sampling_seed=None,
             cfg[key] = value
         if type(cfg.get(key)) is not int:
             raise ValueError(f"{key} must be an integer")
-    if cfg.get("schema_version") != 1 or tuple(cfg.get("difficulties", [])) != DIFFICULTIES or tuple(cfg.get("modes", [])) != MODES:
-        raise ValueError("schema 1 fixes easy/medium/hard and unlimited/limited")
+    tiers=cfg.get("difficulties", [])
+    if (cfg.get("schema_version") != 1 or not isinstance(tiers,list) or not tiers
+            or any(t not in DIFFICULTIES for t in tiers) or len(set(tiers))!=len(tiers)
+            or tuple(cfg.get("modes", [])) != MODES):
+        raise ValueError("select unique easy/medium/hard difficulties and unlimited/limited modes")
+    cfg["difficulties"]=[t for t in DIFFICULTIES if t in tiers]
     if cfg["samples_per_difficulty"] < 1 or cfg["samples_per_difficulty"] > 10000:
         raise ValueError("samples_per_difficulty must be in 1..10000")
-    if not 0 <= cfg["sampling_seed"] < 2**32 or not 0 < cfg["agent_wall_clock_s"] <= 21600 or cfg["concurrency"] != 1:
-        raise ValueError("seed must be uint32; budget 1..21600; concurrency currently 1")
+    if not 0 <= cfg["sampling_seed"] < 2**32 or not 0 < cfg["agent_wall_clock_s"] <= 43200 or cfg["concurrency"] != 1:
+        raise ValueError("seed must be uint32; budget 1..43200; concurrency currently 1")
+    if 'native_batch' in cfg:
+        from agent_batch_contract import validate_token_budget
+        batch=cfg['native_batch']
+        if (not isinstance(batch,dict) or set(batch)!={'repetitions','agent','model','effort','token_budget'}
+                or type(batch['repetitions']) is not int or not 1<=batch['repetitions']<=10000
+                or batch['agent']!='codex' or not re.fullmatch(r'openai/[A-Za-z0-9_.-]+',batch['model'])
+                or batch['effort'] not in ('none','minimal','low','medium','high','xhigh','max')):
+            raise ValueError('invalid native_batch preset')
+        validate_token_budget(batch['token_budget'])
+    if cfg.get("instance_selection", "sampled") not in ("sampled", "oracle_reference"):
+        raise ValueError("unknown instance selection")
+    if cfg.get("instance_selection") == "oracle_reference":
+        if cfg["samples_per_difficulty"] != 1:
+            raise ValueError("oracle_reference fixes one instance per tier; repeat with Harbor K")
+        for task in cfg["task_ids"]:
+            seeds = cfg.get("reference_seeds", {}).get(task, {})
+            if set(seeds) != set(DIFFICULTIES) or any(type(s) is not int or not 0 <= s < 2**32 for s in seeds.values()):
+                raise ValueError("missing/invalid oracle reference seed: " + task)
     if old:
         if old["settings"] != cfg or old["manifest_sha256"] != digest({k: v for k, v in old.items() if k != "manifest_sha256"}):
             raise ValueError("immutable manifest differs; use a new run-id")

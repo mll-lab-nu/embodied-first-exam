@@ -2,6 +2,10 @@
 # Run one Harbor-native agent over tasks in both modes (<base>-privileged and <base>-standard), unattended; meant to be
 # started in the background (inside `sg docker -c` if docker needs the group):
 #   scripts/run_agent_batch.sh <batch-name> <base> [<base> ...]      # <base> = a task name without its -privileged / -standard
+# Published helper batches: configs/helper_batches/<batch>.json supplies K, modes, budgets and package identities.
+# Run bash scripts/setup_agent_batch.sh once (Python 3.12 + Node 22 + Docker/NVIDIA).
+# GPU_DEVICE selects one GPU per lane. Shared subscription auth caches serialize token refresh;
+# use independent logins or API keys for parallel model execution. Never move/delete jobs or claims.
 # Official runs use Harbor's native agents only (PROTOCOL D11): no adapter; the transparent usage gateway below only
 # records and is off by default. Env (defaults):
 #   AGENT        codex | claude-code (codex)        MODEL   the -m model (openai/gpt-6-luna)
@@ -21,7 +25,7 @@
 #                task and mode ($JOBS/<batch>-<mode>-<task>/). Start the same command again to add a lane: every job is
 #                claimed (mkdir $JOBS/.claims/<job>) by exactly one runner, so K runners run K trials at a time. A job that
 #                already has its result.json (Harbor writes it when the job starts) is skipped; to rerun an interrupted
-#                job, move its directory and its claim away first.
+#                job, obtain an authorized <batch>-rerun dispatch; retain the old directory and claim.
 #                0 = one job per mode ($JOBS/<batch>-<mode>/), the modes side by side, N_P / N_S concurrent trials (2 / 2)
 #   WAIT_FOR     a file that must exist before a mode starts, e.g. "standard:<path>" (default: none)
 #   JOBS         <repo>/jobs/agents     LABEL  the run's title for the results README
@@ -43,10 +47,16 @@
 # and scripts/topogym_guarded.py stops this job if host memory reaches 90%. After each job: a key scan with redaction
 # (scripts/scan_secrets.py), the task results, the summary table $JOBS/<batch>.summary.md, and a lane stop on structured
 # model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log.
-set -u
+set -uo pipefail
 R="$(cd "$(dirname "$0")/.." && pwd)"
 [ $# -ge 2 ] || { sed -n 2,40p "$0"; exit 2; }
 batch="$1"; shift; tasks=("$@")
+dispatch="${BATCH_ASSIGNMENT:-$R/configs/helper_batches/$batch.json}"
+if [ -f "$dispatch" ] || [ -n "${BATCH_ASSIGNMENT:-}" ]; then
+  export PATH="$R/.venv-agent-batch/bin:$R/.tools/agent-batch/node_modules/.bin:$PATH"
+  export PYTHONDONTWRITEBYTECODE=1
+  exec "${TOPOGYM_BATCH_PYTHON:-$R/.venv-agent-batch/bin/python}" "$R/scripts/agent_batch_runtime.py" --assignment "$dispatch" "$batch" "${tasks[@]}"
+fi
 AGENT="${AGENT:-codex}"; MODEL="${MODEL:-openai/gpt-6-luna}"; EFFORT="${EFFORT:-xhigh}"; AK="${AK:-}"
 AGENT_CONFIG="${AGENT_CONFIG:-}"; ENV_FILE="${ENV_FILE:-}"
 MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${N_S:-2}"; K="${K:-1}"; WAIT_FOR="${WAIT_FOR:-}"
@@ -71,7 +81,7 @@ AGENT_ARGS=(-a "$AGENT" -m "$MODEL")
 [ -n "$AGENT_CONFIG" ] && AGENT_ARGS+=(--ak "config=$AGENT_CONFIG")
 # shellcheck disable=SC2206
 AGENT_ARGS+=($AK)
-SCAN=(); [ -n "$ENV_FILE" ] && SCAN+=(--env-file "$ENV_FILE")
+SCAN=(--process-env); [ -n "$ENV_FILE" ] && SCAN+=(--env-file "$ENV_FILE")
 case "${CODEX_FORCE_AUTH_JSON:-}" in 1|true|TRUE|yes) SCAN+=(--codex-auth "${CODEX_AUTH_JSON_PATH:-$HOME/.codex/auth.json}") ;; esac
 # Append, so a harbor already on PATH wins (a shared account's ~/.local/bin may hold another user's older harbor);
 # hosts that keep harbor only in ~/.local/bin still find it.
@@ -152,8 +162,11 @@ wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
 
 finish_job() {  # <job>: no key in any saved file (+redact); the task results (D3)
   [ -d "$JOBS/$1" ] || return 0
-  python3 "$R/scripts/scan_secrets.py" "$JOBS/$1" "${SCAN[@]}" --redact 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
-  [ -n "$RESULTS" ] && "$PYTHON" "$R/scripts/write_task_results.py" "$JOBS" "$1" "$RUN_ID" "$LABEL" --tasks-root "$TASKS_ROOT" --out "$RESULTS/$batch" 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
+  python3 "$R/scripts/scan_secrets.py" "$JOBS/$1" "${SCAN[@]}" --redact 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG" || return 2
+  if [ -n "$RESULTS" ]; then
+    "$PYTHON" "$R/scripts/write_task_results.py" "$JOBS" "$1" "$RUN_ID" "$LABEL" --tasks-root "$TASKS_ROOT" --out "$RESULTS/$batch" 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG" || return 2
+  fi
+  return 0
 }
 
 summary() {  # one table over every job of this batch, rewritten after each job (atomically: lanes share it)
@@ -244,12 +257,13 @@ if [ "$SEQ" = 1 ]; then
       mkdir "$JOBS/.claims/$job" 2>/dev/null || continue   # another lane of this batch took it
       wait_for "$m"
       run_job "$job" 1 -i "$(name "$m" "$t")" || batch_rc=1
-      finish_job "$job"; summary
+      finish_job "$job" || { batch_rc=1; log "record scan/report failed; retain evidence and stop this lane"; break 2; }; summary
       # the model account is out of credits, rate-limited or logged out: every further job would fail within minutes. Only
       # structured evidence counts (Codex's rate_limits and last event, Claude Code's result event): scripts/account_failure_check.py
       why=$(python3 "$R/scripts/account_failure_check.py" "$JOBS/$job"/*__*/ 2>&1); rc=$?
       if [ $rc -eq 4 ]; then
-        log "STOP lane $$: $job hit a model-account or config failure ($(grep -m1 '"stop": true' <<< "$why" | cut -c1-300)); move its dir and claim aside to rerun it"; break 2
+        batch_rc=1
+        log "STOP lane $$: $job hit a model-account or config failure; preserve directory and claim, request an authorized $batch-rerun batch"; break 2
       elif [ $rc -ne 0 ]; then
         log "account check of $job failed (rc $rc): $(tail -1 <<< "$why" | cut -c1-200)"
       fi
@@ -265,9 +279,11 @@ else
     pids+=($!)
   done
   for pid in "${pids[@]}"; do wait "$pid" || batch_rc=1; done
-  for m in $MODES; do finish_job "$batch-$m"; done
+  for m in $MODES; do finish_job "$batch-$m" || batch_rc=1; done
 fi
-[ -d "${JOBS}_mirror" ] && python3 "$R/scripts/scan_secrets.py" "${JOBS}_mirror" "${SCAN[@]}" 2>&1 | tail -2 | sed "s/^/[mirror] /" | tee -a "$LOG"
+if [ -d "${JOBS}_mirror" ]; then
+  python3 "$R/scripts/scan_secrets.py" "${JOBS}_mirror" "${SCAN[@]}" 2>&1 | tail -2 | sed "s/^/[mirror] /" | tee -a "$LOG" || batch_rc=1
+fi
 summary
 log "summary: $JOBS/$batch.summary.md"
 cat "$JOBS/$batch.summary.md" | tee -a "$LOG" >/dev/null

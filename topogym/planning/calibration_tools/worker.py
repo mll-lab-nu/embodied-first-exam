@@ -283,6 +283,9 @@ class DevelopmentOwner:
     def drive_object(self, entity, **options):
         return self.object_drives.run(entity, **options)
 
+    def drive_object_groups(self, entity, **options):
+        return self.object_drives.run_groups(entity, **options)
+
     def capture_frame(self, camera="cam_high", **options):
         self.need_physics()
         from .rendering import capture

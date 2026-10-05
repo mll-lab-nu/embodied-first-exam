@@ -16,10 +16,11 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[3]
 
-TIERS = {  # object-level settings validated 2026-09-30 (docs/develop/tasks/knot_untying_zh.md)
+TIERS = {  # Route defaults; physical qualification is recorded separately for each run.
     "knot_untying_easy": dict(kind="carry", s=.224, delta=(-.095, 0.), lift=.025),
     "knot_untying_medium": dict(kind="closed_loop", hold="far", direction="tangent", lift=.015, straighten=.9),
-    "knot_untying_hard": dict(kind="closed_loop", hold="far", direction="away", lift=.03, straighten=.9),
+    "knot_untying_hard": dict(kind="closed_loop", hold="far", direction="away", lift=.03,
+                             anchor_lift_m=.002, pinch_height_m=.0015, straighten=.9),
 }
 DT = .025  # control step of the instances (2.5 ms x 10)
 PRE = .05  # pregrasp and retreat height above the pinch, m
@@ -379,6 +380,9 @@ class Runner:
         if lower:
             from .kinematics import CONTACT_IN_TCP_M
             rest_z = self.task.table_height_m+self.task.layout.rope_radius_m-g['turn'].apply(CONTACT_IN_TCP_M)[2]
+            # Retain the selected pinch height while lowering: opening the jaws
+            # lets the strand settle the remaining distance onto the table.
+            rest_z += getattr(self, 'motion_options', {}).get('pinch_height_m', 0.)
             target = tcp.copy()
             target[2] = max(float(tcp[2]-lower), float(rest_z))
             self.cartesian(side, self.smooth(tcp, target, .03), g["turn"], phase+":lower")
@@ -406,6 +410,15 @@ class Runner:
         record = dict(k=k, kind="withdraw", t=self.log[-1]["t"] if self.log else 0., **action,
                       arms=dict(anchor=anchor_side, pull=pull_side), increments=[])
         record["grasps"] = self.grasp((anchor_side, pull_side), (action["s_anchor"], action["s_pull"]), f"d{k}:grasp")
+        # The stationary anchor can keep sagging after the pinch as PD tracking
+        # settles. Lift the held strand before pulling instead of pressing the
+        # fingers into the table. This is a route option, not a command guard.
+        anchor_lift = float(cfg.get("anchor_lift_m", 0.))
+        record["anchor_lift_m"] = anchor_lift
+        if anchor_lift:
+            anchor_tcp = self.tcp(anchor_side)
+            self.cartesian(anchor_side, self.smooth(anchor_tcp, anchor_tcp+[0, 0, anchor_lift], .03),
+                           self.grasps[anchor_side]["turn"], f"d{k}:anchor_lift")
         turn = self.grasps[pull_side]["turn"]
         tcp = self.tcp(pull_side)
         raised = tcp+[0, 0, cfg["lift"]]

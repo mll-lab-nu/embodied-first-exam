@@ -28,10 +28,20 @@ def reference_data(root, family, tier, seed):
 
     if family == "cast_keyhole":
         includes = [f"topogym/planning/cast_keyhole/references/F{i}.json" for i in (1, 2, 3)]
-    if family in {"fiber_bundling", "horseshoe_ring", "hedgehog_in_cage", "interlocked_claws", "rope_threading"} and seed != 0:
+    if family in {"buzz_wire_3d", "fiber_bundling", "horseshoe_ring", "hedgehog_in_cage", "interlocked_claws", "rope_threading"} and seed != 0:
         raise BridgeError(f"Selected {family} reference data currently bind seed 0")
     if family == "fiber_bundling":
         add("selection.json")
+    elif family == "buzz_wire_3d":
+        recipe = json.loads(add("recipe.json").read_text())
+        expected = "selection.json" if tier == "easy" else "policy_actions.json"
+        if recipe.get("variation") != tier or recipe.get("seed") != seed or recipe["input"]["file"] != expected:
+            raise BridgeError("Buzz reference recipe differs from the selected tier/seed")
+        add(expected, recipe["input"]["sha256"])
+        if tier == "medium":
+            # Retain the historical staged guide for explicit development recipes;
+            # the default full medium oracle uses the complete action sequence.
+            add("medium_traverse_guide.json", "4511df68f53ded79077a12998ddfe76f1cbf65f6ac552b412fbdefa4bf16cd0f")
     elif family == "horseshoe_ring":
         path = add("recipe.json")
         recipe = json.loads(path.read_text())

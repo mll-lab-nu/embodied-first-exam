@@ -444,8 +444,10 @@ def _sdk_worker(pipe, token, repo, cache, action, params):
         from huggingface_hub import HfApi, CommitOperationAdd
         api = HfApi(endpoint="https://huggingface.co", token=token)
         if action == "auth":
-            api.auth_check(repo, repo_type="dataset", write=True)
+            api.auth_check(repo, repo_type="dataset", write=params.get("write", True))
             result = None
+        elif action == "private":
+            result = api.repo_info(repo, repo_type="dataset").private
         elif action == "head":
             # An existing, newly created dataset may have no commits/main yet.
             result = api.repo_info(repo, repo_type="dataset").sha
@@ -462,6 +464,13 @@ def _sdk_worker(pipe, token, repo, cache, action, params):
             entries = api.get_paths_info(repo, params["paths"], revision=params["revision"], repo_type="dataset") if params["revision"] else []
             result = {entry.path: dict(size=entry.size, sha256=entry.lfs.sha256 if entry.lfs else None,
                                       git_blob_sha1=entry.blob_id) for entry in entries if hasattr(entry, "blob_id")}
+        elif action == "download":
+            path = api.hf_hub_download(repo, params["path"], repo_type="dataset",
+                                       revision=params["revision"], cache_dir=cache)
+            # Destination is a fresh private staging file owned by the receiver.
+            with open(path, "rb") as source, open(params["destination"], "xb") as target:
+                shutil.copyfileobj(source, target, 1024 * 1024)
+            result = None
         elif action == "commit":
             result = api.create_commit(repo, repo_type="dataset", revision="main", parent_commit=params["parent"],
                 operations=[CommitOperationAdd(path_in_repo=rel, path_or_fileobj=Path(path)) for rel, path in params["files"]],
@@ -495,7 +504,7 @@ class Hub:
                 self.guard()
                 if not process.is_alive():
                     raise HFError("hub_worker_failed", retryable=True)
-                if time.monotonic() - started > (self.timeout_s if action == "commit" else 120):
+                if time.monotonic() - started > (self.timeout_s if action in ("commit", "download") else 120):
                     raise HFError("network_timeout", retryable=True)
             ok, value = parent.recv()
             if not ok:

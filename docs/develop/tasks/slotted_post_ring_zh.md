@@ -1,5 +1,7 @@
 # 第 12 项：长孔立柱解环
 
+> **2026-10-04 代码迁移：** 已迁入外部 12 阶段 oracle、IK/FK、拓扑探针及诊断入口，并将执行改为本地 v15 Session。按用户要求不运行测试或仿真，不修改现有几何、材料、网格、接触、规则或模型修订。外部直立端盘抓取与本地平放初态不兼容，完整入口明确拒绝，首阶段仅供未验证的开发使用。外部检查点续跑成功不授予本地资格。迁入内容、差异、经验和命令见 [oracle 说明](../../../topogym/planning/slotted_post_ring/README.md)。
+
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 
 > **2026-09-29 更新：** Easy / Medium / Hard 已有独立可构建场景，当前物理途径为 Genesis FEM/IPC。几何与相关回归通过；长时稳定性因 CUDA 显存不足及原生 IPC `cudaErrorInvalidDevice` 阻塞，未通过。见[本轮证据与复跑说明](../../../runs/test_results/slotted_post_tiers_20260929_review/README.md)。下文 2026-09-21 的 MuJoCo 一维绳与 FEM 试验是历史版本，不能授予当前场景资格。

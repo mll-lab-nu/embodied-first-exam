@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "assignment": "/path/to/robot_coding_bench/configs/helper_batches/helper01-oracle-v15-k3.json",
+  "jobs_dir": "/data/helper-work/jobs/agents",
+  "auth": {"method": "subscription", "auth_file": "~/.codex/auth.json"},
+  "lanes": [{"gpu": "0"}],
+  "images": {"archives": [], "pull_missing": false},
+  "hf_token_file": "/private/eai-helper-hf-token",
+  "upload": true,
+  "allow_partial": false,
+  "background": true,
+  "notes_file": null,
+  "rerun_assignments": []
+}

@@ -84,7 +84,7 @@ class ObjectDrives:
 
     def capabilities(self):
         return dict(declared=deepcopy(self.declarations), ready=list(self.slots),
-            modes=["constant_world_force", "bounded_position_pd"],
+            modes=["constant_world_force", "bounded_position_pd", "bounded_vertex_group_pd"],
             native_backend="libuipc external force constitutions",
             orientation_drive=False, direct_pose_setter=False, physical_acceptance=False)
 
@@ -109,6 +109,18 @@ class ObjectDrives:
         else:
             # force_world_n means total force, not an unintended per-vertex multiplier.
             values.reshape(-1, 3)[indices] = force/len(indices)
+
+    def set_vertex_forces(self, name, forces):
+        """Per-vertex world forces (N, 3) on a FEM entity; replaces the previous command."""
+        import uipc
+        row = self.slots[name]
+        if row["kind"] != "fem":
+            raise ValueError("Per-vertex forces apply to FEM entities")
+        values = uipc.view(row["attribute"]).reshape(-1, 3)
+        forces = np.asarray(forces)
+        if forces.shape != values.shape or forces.dtype.kind not in "fiu" or not np.isfinite(forces).all():
+            raise ValueError("Per-vertex forces must match the FEM vertex array and be finite")
+        values[:] = forces
 
     def measured(self, name, indices):
         world = self.owner.runner._last_tick["world"]
@@ -207,3 +219,93 @@ class ObjectDrives:
         return dict(drive_id=identifier, entity=entity, reason=reason, samples=rows,
             external_force_cleared=True, robot_actions="hold existing targets", formal_qualification=False,
             scope="same IPC model with explicit external force; not robot completion or a kinematic teleport")
+
+    def run_groups(self, entity, *, groups, control_steps, max_force_n, kp_n_per_m=100., kd_ns_per_m=5.,
+                   record_every=10):
+        """Several FEM vertex groups driven at once, e.g. two virtual point grippers on a cord.
+
+        groups: [{"vertex_indices": [...], "targets_world_m": [xyz or None] * control_steps}]. At control
+        step i each group whose target is not None gets its own bounded PD force (on its centroid, shared
+        equally by its vertices); None leaves that group free (released). Robot targets are held.
+        """
+        owner = self.owner
+        owner.need_physics()
+        if entity not in self.slots or self.slots[entity]["kind"] != "fem":
+            raise UnsupportedCapability("Declare candidate.object_drives {entity: 'fem'} before building a fresh session")
+        if self.active:
+            raise ValueError("Object drive is already active")
+        positive_int(control_steps, "control_steps", 10000)
+        positive_int(record_every, "record_every", 10000)
+        for label, value in (("max_force_n", max_force_n), ("kp_n_per_m", kp_n_per_m), ("kd_ns_per_m", kd_ns_per_m)):
+            if isinstance(value, bool) or not np.isfinite(value) or value < 0 or label == "max_force_n" and value == 0:
+                raise ValueError(label+" must be finite, with positive max_force_n and nonnegative gains")
+        count = len(owner.runner._last_tick["world"]["fem"][entity]["position_m"])
+        if not isinstance(groups, list) or not groups:
+            raise ValueError("groups must be a nonempty list")
+        plan, selected = [], set()
+        for g in groups:
+            idx = g.get("vertex_indices") if isinstance(g, dict) else None
+            if (not isinstance(idx, list) or not idx or any(type(i) is not int or not 0 <= i < count for i in idx)
+                    or len(set(idx)) != len(idx)):
+                raise ValueError("Each group needs distinct in-range FEM vertex_indices")
+            if selected.intersection(idx):
+                raise ValueError("FEM vertex groups must not overlap")
+            selected.update(idx)
+            targets = g.get("targets_world_m")
+            if not isinstance(targets, list) or len(targets) != control_steps:
+                raise ValueError("Each group needs one target (or None) per control step")
+            plan.append((idx, [None if t is None else vector(t, "target position") for t in targets]))
+        identifier = uuid4().hex
+        owner.evidence.event("object_drive_started", intervention=True, drive_id=identifier, entity=entity,
+            control_steps=control_steps, groups=[dict(vertex_indices=i) for i, _ in plan],
+            max_force_n=max_force_n, kp_n_per_m=kp_n_per_m, kd_ns_per_m=kd_ns_per_m, mode="groups")
+        self.active, rows, reason = True, [], "control_step_limit"
+        try:
+            for index in range(control_steps):
+                if owner.cancelled():
+                    reason = "cancelled"
+                    break
+                forces = np.zeros((count, 3))
+                commands = []
+                for idx, targets in plan:
+                    if targets[index] is None:
+                        commands.append(None)
+                        continue
+                    p, v = self.measured(entity, idx)
+                    f = force_command(p, v, targets[index], kp=kp_n_per_m, kd=kd_ns_per_m, maximum=max_force_n)
+                    forces[idx] += f/len(idx)
+                    commands.append(f.tolist())
+                self.set_vertex_forces(entity, forces)
+                owner.evidence.event("object_drive_command", intervention=True, drive_id=identifier,
+                    index=index, source_state_ref=owner.state_ref(), group_forces_world_n=commands,
+                    target_world_m=[None if t[index] is None else t[index].tolist() for _, t in plan])
+                result = owner.step({})
+                if index % record_every == 0 or index == control_steps-1:
+                    measured = [None if t[index] is None else self.measured(entity, i)[0].tolist() for i, t in plan]
+                    row = json_value(dict(index=index, state_ref=owner.state_ref(), measured_world_m=measured,
+                        target_world_m=[None if t[index] is None else t[index].tolist() for _, t in plan],
+                        group_forces_world_n=commands, completed_control_steps=result["control_steps"],
+                        physics_ticks=result["physics_steps"], reason=result["reason"]))
+                    rows.append(row)
+                    owner.evidence.event("object_drive_sample", intervention=True, drive_id=identifier, **row)
+                if result["control_steps"] != 1 or owner.env._terminated or owner.env._truncated:
+                    reason = result["reason"]
+                    break
+        except BaseException:
+            reason = "execution_error"
+            raise
+        finally:
+            try:
+                self.clear()
+                if not getattr(owner.env, "_faulted", False):
+                    owner.env._checkpoint_current()
+            except BaseException:
+                owner.poisoned = True
+                raise
+            finally:
+                self.active = False
+                owner.evidence.event("object_drive_finished", intervention=True, drive_id=identifier,
+                                     recorded_samples=len(rows), reason=reason)
+        return dict(drive_id=identifier, entity=entity, reason=reason, samples=rows,
+            external_force_cleared=True, robot_actions="hold existing targets", formal_qualification=False,
+            scope="same IPC model with explicit external forces on vertex groups; not robot completion")

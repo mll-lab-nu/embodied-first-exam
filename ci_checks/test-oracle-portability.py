@@ -46,7 +46,7 @@ class Portability(unittest.TestCase):
     def test_bundled_data_preserve_original_provenance_hashes(self):
         base = self.root / "topogym/planning/harbor_bridge/reference_data"
         manifest = json.loads((base / "manifest.json").read_text())
-        self.assertEqual(len(manifest["files"]), 26)
+        self.assertEqual(len(manifest["files"]), 33)
         for name, record in manifest["files"].items():
             self.assertEqual(digest(base / name), record["sha256"], name)
             self.assertEqual((base / name).stat().st_size, record["bytes"], name)
@@ -78,6 +78,126 @@ class Portability(unittest.TestCase):
                 candidate = Path(result["task"])
                 check_package(candidate)
                 self.assertTrue((candidate / "solution/topogym/planning" / family / required).is_file())
+
+    def test_buzz_medium_missing_or_changed_guide_blocks_portability(self):
+        path = self.root / "topogym/planning/harbor_bridge/reference_data/buzz_wire_3d/medium/medium_traverse_guide.json"
+        original = path.read_bytes()
+        try:
+            for content in (original + b" ", None):
+                if content is None:
+                    path.unlink()
+                else:
+                    path.write_bytes(content)
+                result = portability.check(self.root, families=["buzz_wire_3d"])
+                self.assertFalse(result["all_passed"])
+                self.assertEqual([r["tier"] for r in result["tasks"] if r["errors"]], ["medium"])
+                self.assertIn("medium_traverse_guide.json", str(result["tasks"][1]["errors"]))
+        finally:
+            path.write_bytes(original)
+
+    def test_buzz_complete_default_inputs_are_required_and_relocatable(self):
+        for tier in ("easy", "medium", "hard"):
+            with self.subTest(tier=tier), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder)
+                task = bound_task(root / "task-privileged")
+                data, includes = reference_data(self.root, "buzz_wire_3d", tier, 0)
+                result = package(task, root / "candidates", kind="session",
+                    entrypoint="topogym.planning.buzz_wire_3d.public_session:run_feedback_policy",
+                    source_root=self.root, includes=includes, data_files=data, kwargs=dict(variation=tier))
+                candidate = Path(result["task"])
+                check_package(candidate)
+                solution = root / "relocated solution"
+                shutil.move(str(candidate / "solution"), solution)
+                code = '''
+import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import topogym.planning
+solution = Path(sys.argv[2])
+topogym.planning.__path__ = [str(solution / 'topogym/planning')]
+from topogym.planning.buzz_wire_3d.reference_policy import load_reference
+recipe, document = load_reference(sys.argv[3])
+assert recipe['kind'] == ('staged_feedback' if sys.argv[3] == 'easy' else 'compiled_joint_actions')
+assert len(document if sys.argv[3] == 'easy' else document['actions']) == {'easy': 11, 'medium': 29544, 'hard': 43568}[sys.argv[3]]
+path = solution / 'topogym/planning/harbor_bridge/reference_data/buzz_wire_3d' / sys.argv[3] / recipe['input']['file']
+path.write_bytes(path.read_bytes() + b' ')
+try:
+    load_reference(sys.argv[3])
+except ValueError as error:
+    assert 'input changed' in str(error)
+else:
+    raise AssertionError('Changed complete policy was accepted')
+'''
+                completed = subprocess.run([sys.executable, "-c", code, str(ROOT), str(solution), tier],
+                    cwd=root, text=True, capture_output=True, timeout=60)
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                name = "selection.json" if tier == "easy" else "policy_actions.json"
+                path = self.root / "topogym/planning/harbor_bridge/reference_data/buzz_wire_3d" / tier / name
+                original = path.read_bytes()
+                try:
+                    path.unlink()
+                    result = portability.check(self.root, families=["buzz_wire_3d"], tiers=[tier])
+                    self.assertFalse(result["all_passed"])
+                    self.assertIn(name, str(result["tasks"][0]["errors"]))
+                finally:
+                    path.write_bytes(original)
+
+    def test_buzz_staged_guide_loads_from_relocated_solution_without_local_runs(self):
+        with tempfile.TemporaryDirectory(prefix="buzz portable solution ") as folder:
+            root = Path(folder)
+            task = bound_task(root / "task-privileged")
+            data, includes = reference_data(self.root, "buzz_wire_3d", "medium", 0)
+            result = package(task, root / "candidates", kind="session",
+                entrypoint="topogym.planning.buzz_wire_3d.public_session:run_feedback_policy",
+                source_root=self.root, includes=includes, data_files=data, kwargs=dict(variation="medium"))
+            candidate = Path(result["task"])
+            check_package(candidate)
+            # Move the actual packaged solution and resolve private imports only
+            # there; installed public simulator/task modules remain authoritative.
+            solution = root / "relocated solution"
+            shutil.move(str(candidate / "solution"), solution)
+            cwd = root / "unrelated cwd"
+            cwd.mkdir()
+            code = '''
+import itertools, sys
+from pathlib import Path
+from types import SimpleNamespace
+sys.path.insert(0, sys.argv[1])
+import topogym.planning
+solution = Path(sys.argv[2])
+topogym.planning.__path__ = [str(solution / 'topogym/planning')]
+from topogym.planning.buzz_wire_3d import stages
+from topogym.planning.harbor_bridge import callbacks
+assert Path(stages.__file__).is_relative_to(solution)
+assert Path(callbacks.__file__).is_relative_to(solution)
+env = SimpleNamespace(config=SimpleNamespace(variation_id='medium'))
+context = SimpleNamespace(output=Path.cwd())
+step = list(itertools.islice(stages.stages(env, context), 4))[-1]
+assert step.name == 'traverse'
+parameters = step.candidates[0]
+document = stages.load_traverse_guide(parameters)
+assert len(document['guide']) == 1187
+path = callbacks.data_path(parameters['guide_file'])
+assert path.is_relative_to(solution)
+original = path.read_bytes()
+path.write_bytes(original + b' ')
+try:
+    stages.load_traverse_guide(parameters)
+except ValueError as error:
+    assert 'Traverse guide changed' in str(error)
+else:
+    raise AssertionError('Changed guide was accepted')
+path.unlink()
+try:
+    stages.load_traverse_guide(parameters)
+except ValueError as error:
+    assert 'Missing private reference data' in str(error)
+else:
+    raise AssertionError('Missing guide silently fell back to the original checkout')
+'''
+            completed = subprocess.run([sys.executable, "-c", code, str(ROOT), str(solution)],
+                cwd=cwd, text=True, capture_output=True, timeout=60)
+            self.assertEqual(completed.returncode, 0, completed.stderr)
 
     def test_git_gate_rejects_existing_but_uncommittable_inputs(self):
         with tempfile.TemporaryDirectory() as folder:

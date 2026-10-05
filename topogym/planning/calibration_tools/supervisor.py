@@ -100,7 +100,7 @@ class Supervisor:
         params = json_value(params or {})
         token = identifier(request_id or uuid4().hex)
         signature = digest(dict(method=method, params=params))
-        timeout = (self.budgets.policy_s if method in {"run_policy", "step_until", "run_grasp_trial", "drive_object"} else
+        timeout = (self.budgets.policy_s if method in {"run_policy", "step_until", "run_grasp_trial", "drive_object", "drive_object_groups"} else
                    self.budgets.render_s if method == "capture_frame" else self.budgets.operation_s)
         if timeout_s is not None:
             from math import isfinite

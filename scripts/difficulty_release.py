@@ -89,7 +89,9 @@ def main():
         with args.output.open("xb") as stream, tarfile.open(fileobj=stream, mode="w:gz") as archive:
             for name in sorted(files):
                 archive.add(ROOT / name, arcname="topogym/" + name, recursive=False)
-            for name in ("docker_quickstart_zh.md", "difficulty_sweep_delivery_plan_zh.md"):
+            for name in ("docker_quickstart_zh.md", "difficulty_sweep_delivery_plan_zh.md",
+                         "helper_quickstart_zh.md", "helper_import_zh.md", "helper_quickstart.md",
+                         "helper_delivery_engineering_plan_zh.md"):
                 archive.add(ROOT / "docs/rcb" / name, arcname="topogym/docs/rcb/" + name)
             import io
             readme = ('# TopoGym Docker evaluation\n\nRun `bash run_difficulty_trials.sh --help`.\n\n'

@@ -3,7 +3,7 @@
 # timeout cap.
 # TopoGym (adapted from robot_coding_bench ad9f251e): the tier dirs topogym-<family>-{easy,medium,hard}-i00-{privileged,standard}
 # follow protocol v1.0 (the directory ends in -privileged or -standard and `mode` says the same; no `tier`), except the agent
-# cap: 6 h (21600 s) instead of the protocol's 4 h (user decision 2026-10-01; results grouped by budget, PROTOCOL D8).
+# cap: 12 h (43200 s), user decision 2026-10-04; old packages keep their budgets (PROTOCOL D8).
 # Jianwen's original frozen instances topogym-<family>-i00[-limited] are pre-v1.0 (legacy, superseded by the tier dirs; not
 # migrated): they keep [task].name = topogym/<folder>, `tier`, and the 10 h cap of their knot_untying budget.
 t="$1"; python3 - "$t" <<'PY'
@@ -31,6 +31,6 @@ if suffix not in ("privileged", "standard"): fail("directory name must end in -p
 if m.get("mode") not in ("privileged", "standard"): fail("[metadata].mode must be privileged|standard")
 elif m["mode"] != suffix: fail(f"[metadata].mode = {m['mode']!r} but the directory ends in -{suffix}")
 if "tier" in m: fail("[metadata].tier was removed in protocol v1.0 (use mode)")
-if d.get("agent", {}).get("timeout_sec", 0) > 21600: fail("[agent].timeout_sec > 6h cap (TopoGym; the protocol's is 4 h)")
+if d.get("agent", {}).get("timeout_sec", 0) > 43200: fail("[agent].timeout_sec > 12h cap (TopoGym)")
 sys.exit(rc)
 PY

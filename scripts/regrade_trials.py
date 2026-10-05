@@ -13,21 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from topogym_versions import require_task
 from topogym.utils.process_limits import run_guarded
-
-
-def original_task(trial):
-    """Use Harbor's recorded path, never reconstruct it from a same-named task."""
-    trial = Path(trial)
-    result = json.loads((trial / "result.json").read_text())
-    value = (result.get("task_id") or {}).get("path")
-    if not value and (trial / "config.json").is_file():
-        value = (json.loads((trial / "config.json").read_text()).get("task") or {}).get("path")
-    if not value:
-        raise ValueError(f"Trial has no recorded task path: {trial}")
-    path = Path(value)
-    if not path.is_absolute():
-        raise ValueError(f"Trial task path is relative/ambiguous: {value}")
-    return path
+from trial_task_paths import original_task
 
 
 def plan(trial, output, gpu):

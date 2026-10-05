@@ -126,11 +126,18 @@ def build_candidate(env, candidate):
         def declare(self, *args, **kwargs):
             if "geometry" not in candidate:
                 return super().declare(*args, **kwargs)
-            if self.task_id != "horseshoe_ring":
-                raise UnsupportedCapability("Fresh physics geometry candidates currently support Horseshoe Ring")
-            from .adapters.horseshoe_ring import declaration
-            with declaration(self, candidate["geometry"]["parameters"],
-                    initial_layout_lift_m=candidate["geometry"].get("initial_layout_lift_m", 0.)) as geometry:
+            lift = candidate["geometry"].get("initial_layout_lift_m", 0.)
+            if self.task_id == "horseshoe_ring":
+                from .adapters.horseshoe_ring import declaration
+                options = dict(initial_layout_lift_m=lift)
+            elif self.task_id == "orbits":
+                from .adapters.orbits import declaration
+                if lift:
+                    raise UnsupportedCapability("Orbits geometry candidates do not support initial_layout_lift_m")
+                options = {}
+            else:
+                raise UnsupportedCapability("Fresh physics geometry candidates currently support Horseshoe Ring and Orbits")
+            with declaration(self, candidate["geometry"]["parameters"], **options) as geometry:
                 result = super().declare(*args, **kwargs)
             report["geometry"] = geometry
             return result

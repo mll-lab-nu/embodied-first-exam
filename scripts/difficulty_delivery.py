@@ -345,8 +345,13 @@ def main(argv=None):
         key = launch.joinpath('api-key').read_text()
         if key:
             os.environ['TOPOGYM_LAUNCH_KEY'] = key
+        for credential in launch.glob('scan-env-*'):
+            name = credential.name.removeprefix('scan-env-')
+            if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', name):
+                raise DeliveryError('invalid credential source name')
+            os.environ[name] = credential.read_text()
         release_lock = launch / 'release.lock.json'
-        if release_lock.is_file() and '--release-lock' not in argv:
+        if release_lock.is_file() and '--release-lock' not in argv and argv[:1] != ['helper']:
             argv += ['--release-lock', str(release_lock)]
     if argv[:1] == ['auth']:
         if argv[1:] not in (['login', '--device-auth'], ['login'], ['status']):
@@ -358,6 +363,9 @@ def main(argv=None):
                                     *(['login', 'status'] if argv[1:] == ['status'] else ['login', '--device-auth'])])
     if work:
         argv += ['--work-dir', str(work)]
+    if argv[:1] == ['helper']:
+        from difficulty_helper import main as helper_main
+        return helper_main(argv[1:])
     if argv[:1] == ['check']:
         import argparse
         from difficulty_eval import ArgumentParser, Commands, on_signal
@@ -383,6 +391,7 @@ def main(argv=None):
     if work:
         (work/'logs').mkdir(parents=True, exist_ok=True)
         log = work / 'logs' / f'controller-{time.time_ns()}.log'
+        os.environ['TOPOGYM_CONTROLLER_LOG'] = str(log)
         original = sys.stdout, sys.stderr
         with log.open('a') as stream:
             sys.stdout, sys.stderr = Tee(sys.stdout, stream), Tee(sys.stderr, stream)

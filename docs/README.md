@@ -12,6 +12,8 @@
 - [当前模块职责](develop/modules/README.md) · [开发文档](develop/README.md)
 - [审计与重构记录](develop/dev-logs/README.md)
 - [问题排查与复验记录](debug_logs/README.md)
+- [Slotted Post Ring oracle 开发进度与当前问题](oracle_dev/README.md)
+- [Orbits oracle 开发进度与当前问题](oracle_dev/orbits/README.md)
 - [所有任务变体的初始化场景与多视角录像](../runs/test_results/base_acceptance_final/README.md)
 
 [旧架构](../legacy/cleanup_20260929/docs/develop/framework/architecture_zh.md)、[13 项任务资料](develop/tasks/README.md)、[旧 demo 进度](progress/current_zh.md)和[历史视频](../demos/README.md)保留作参考；它们不能证明新核心已可运行或通过物理验收。

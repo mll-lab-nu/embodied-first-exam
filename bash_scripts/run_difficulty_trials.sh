@@ -18,6 +18,12 @@ gpu_device=0
 phase=all
 help_only=0
 route=eval
+helper_command=
+archive_host=
+archive_index=0
+assignment_set=0
+api_var_set=0
+scan_vars=()
 provider=openai
 api_var=
 run_id=
@@ -54,20 +60,31 @@ while (($#)); do
     --run-id=*) run_id="${1#*=}"; args+=("$1"); shift ;;
     --provider) provider="${2:?--provider needs a value}"; args+=("$1" "$2"); shift 2 ;;
     --provider=*) provider="${1#*=}"; args+=("$1"); shift ;;
-    --api-key-env) api_var="${2:?--api-key-env needs a value}"; args+=("$1" "$2"); shift 2 ;;
-    --api-key-env=*) api_var="${1#*=}"; args+=("$1"); shift ;;
-    --setting|--env-file|--auth-json|--release-lock)
+    --api-key-env) api_var="${2:?--api-key-env needs a value}"; api_var_set=1; args+=("$1" "$2"); shift 2 ;;
+    --api-key-env=*) api_var="${1#*=}"; api_var_set=1; args+=("$1"); shift ;;
+    --var) scan_vars+=("${2:?--var needs a name}"); args+=("$1" "$2"); shift 2 ;;
+    --archive) archive_host="${2:?--archive needs a path}"; archive_index=$((${#args[@]}+1)); args+=("$1" "$2"); shift 2 ;;
+    --archive=*) archive_host="${1#*=}"; archive_index=$((${#args[@]}+1)); args+=(--archive "$archive_host"); shift ;;
+    --setting|--env-file|--auth-json|--release-lock|--assignment|--retry-plan|--spec|--codex-auth)
       opt="$1"; path="${2:?option requires a file}"; shift 2
+      [[ "$opt" != --assignment ]] || assignment_set=1
       files+=("$path"); args+=("$opt" "/run/topogym-launch/file-${#files[@]}") ;;
-    --setting=*|--env-file=*|--auth-json=*|--release-lock=*)
-      opt="${1%%=*}"; files+=("${1#*=}"); args+=("$opt" "/run/topogym-launch/file-${#files[@]}"); shift ;;
+    --setting=*|--env-file=*|--auth-json=*|--release-lock=*|--assignment=*|--retry-plan=*|--spec=*|--codex-auth=*)
+      opt="${1%%=*}"; [[ "$opt" != --assignment ]] || assignment_set=1
+      files+=("${1#*=}"); args+=("$opt" "/run/topogym-launch/file-${#files[@]}"); shift ;;
     check) [[ ${#args[@]} -ne 0 ]] || route=check; args+=("$1"); shift ;;
     auth) [[ ${#args[@]} -ne 0 ]] || route=auth; args+=("$1"); shift ;;
+    helper) [[ ${#args[@]} -ne 0 ]] || route=helper; args+=("$1"); shift ;;
     --help|-h) phase=plan; help_only=1; args+=("$1"); shift ;;
     --list-tasks) phase=plan; args+=("$1"); shift ;;
     *) args+=("$1"); shift ;;
   esac
 done
+if [[ "$route" == helper ]]; then
+  helper_command="${args[1]:-}"
+  phase=plan
+  [[ "$helper_command" != upload ]] || hf_enabled=1
+fi
 if ((hf_file_set && hf_env_set)); then printf 'ERROR: --hf-token-file and --hf-token-env are mutually exclusive\n' >&2; exit 2; fi
 if ((hf_env_set)) && [[ ! "$hf_token_env" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
   printf 'ERROR: invalid HF token environment variable name\n' >&2; exit 2
@@ -83,11 +100,15 @@ if [[ "$backend" == local ]]; then
   [[ "$work_dir_set" == 0 ]] || args+=(--work-dir "$work_dir")
   ((hf_file_set == 0)) || args+=(--hf-token-file "$hf_token_file")
   ((hf_env_set == 0)) || args+=(--hf-token-env "$hf_token_env")
+  if [[ "$route" == helper ]]; then
+    [[ -x "$PY" ]] || PY=python3
+    exec "$PY" "$ROOT/scripts/difficulty_helper.py" "${args[@]:1}"
+  fi
   exec "$PY" "$ROOT/scripts/difficulty_eval.py" "${args[@]}"
 fi
 hf_active=0
 hf_value=
-if [[ "$hf_enabled" == 1 && "$hf_dry_run" == 0 && "$help_only" == 0 && "$route" == eval && "$phase" =~ ^(all|run|collect|upload)$ ]]; then
+if [[ "$hf_enabled" == 1 && "$hf_dry_run" == 0 && "$help_only" == 0 && ( ( "$route" == eval && "$phase" =~ ^(all|run|collect|upload)$ ) || ( "$route" == helper && "$helper_command" == upload ) ) ]]; then
   hf_active=1
   if ((hf_file_set == 0)); then
     hf_selected_env="${hf_token_env:-HF_TOKEN}"
@@ -239,23 +260,52 @@ done
 if [[ -z "$api_var" ]]; then
   api_var=OPENAI_API_KEY; [[ "$provider" != openrouter ]] || api_var=OPENROUTER_API_KEY
 fi
-if [[ "$phase" == upload ]]; then
+if [[ "$phase" == upload || ( "$route" == helper && "$helper_command" != export ) || ( "$assignment_set" == 1 && "$api_var_set" == 0 ) ]]; then
   : > "$launch_dir/api-key"
 else
   printf '%s' "${!api_var-}" > "$launch_dir/api-key"
+fi
+if [[ "$route" == eval || ( "$route" == helper && "$helper_command" == export ) ]]; then
+  for key_name in OPENAI_API_KEY OPENROUTER_API_KEY "${scan_vars[@]}"; do
+    [[ "$key_name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || fail 'invalid scan credential variable'
+    [[ -z "${!key_name-}" ]] || printf '%s' "${!key_name}" > "$launch_dir/scan-env-$key_name"
+  done
+fi
+if [[ "$route" == eval && "$help_only" == 0 ]]; then
+  {
+    printf 'system\t%s\n' "$(uname -sr)"
+    printf 'cpu\t%s\n' "$(awk -F: '/model name/{sub(/^ +/, "", $2); print $2; exit}' /proc/cpuinfo)"
+    printf 'memory_kib\t%s\n' "$(awk '/MemTotal:/{print $2}' /proc/meminfo)"
+    printf 'docker\t%s\n' "$(docker --version)"
+    printf 'host_time\t%s\n' "$(date --iso-8601=seconds)"
+    if command -v nvidia-smi >/dev/null; then
+      printf 'gpu_driver\t%s\n' "$(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null | tr '\n' ';')"
+    fi
+  } > "$launch_dir/host-info.tsv"
 fi
 # Auth is independent of work-dir, so logging in once serves later experiments.
 auth_dir="${TOPOGYM_AUTH_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/topogym/codex}"
 workspace="$(printf '%s' "$work_dir" | sha256sum)"; workspace="${workspace%% *}"
 mounts=(--mount "type=bind,src=$work_dir,dst=$work_dir" \
   --mount "type=bind,src=$launch_dir,dst=/run/topogym-launch,readonly")
-if [[ "$phase" != upload ]]; then
+if [[ "$phase" != upload && ( "$route" != helper || "$helper_command" == export ) ]]; then
   mkdir -p -- "$auth_dir"
   chmod 700 "$auth_dir"
   auth_dir="$(realpath -- "$auth_dir")"
   mounts+=(--mount "type=bind,src=$auth_dir,dst=/var/lib/topogym/codex")
 fi
-if [[ "$route" != auth ]]; then
+if [[ -n "$archive_host" ]]; then
+  archive_abs="$(realpath -- "$archive_host")"
+  [[ "$archive_abs" != *[:,]* && "$archive_abs" != *$'\n'* ]] || fail 'archive path contains unsupported characters'
+  archive_name="${archive_abs##*/}"
+  args[archive_index]="/run/topogym-archive/$archive_name"
+  for part in "$archive_abs" "$archive_abs.sha256" "${archive_abs%/*}/MANIFEST.md"; do
+    [[ -f "$part" && ! -L "$part" ]] || fail 'archive, checksum and MANIFEST.md must be regular files in one folder'
+    mounts+=(--mount "type=bind,src=$part,dst=/run/topogym-archive/${part##*/},readonly")
+  done
+  printf '%s\0' "${args[@]}" > "$launch_dir/args"
+fi
+if [[ "$route" != auth && ( "$route" != helper || "$helper_command" == export ) ]]; then
   mounts+=(--mount "type=bind,src=$socket,dst=/var/run/docker.sock" --group-add "$(stat -c %g "$socket")" \
     --mount 'type=bind,src=/proc,dst=/host/proc,readonly')
 fi
@@ -264,8 +314,12 @@ if [[ "$help_only" == 0 && ( "$route" == check || ( "$route" == eval && "$phase"
   mounts+=(--gpus "device=$gpu_device" -e NVIDIA_DRIVER_CAPABILITIES=utility)
 fi
 tty=(); [[ ! -t 0 || ! -t 1 ]] || tty=(-t)
+controller_user="$(id -u):$(id -g)"
+# The trusted exporter needs to read root-owned agent records. It executes no
+# received code and returns staged output ownership to the run's host user.
+if [[ "$route" == helper && "$helper_command" == export ]]; then controller_user=0:0; fi
 log 'starting controller'
-docker create --name "$controller" --init --stop-timeout 180 -i "${tty[@]}" --user "$(id -u):$(id -g)" \
+docker create --name "$controller" --init --stop-timeout 180 -i "${tty[@]}" --user "$controller_user" \
   --label topogym.role=controller --label "topogym.workspace=$workspace" --label "topogym.difficulty-run=$run_id" \
   -e "TOPOGYM_CONTROLLER=$controller" -e "TOPOGYM_WORKSPACE=$workspace" \
   -e HOME=/tmp/topogym-home -e CODEX_HOME=/var/lib/topogym/codex \

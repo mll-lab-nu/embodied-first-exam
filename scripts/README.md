@@ -1,5 +1,9 @@
 # 当前运行工具
 
+Helper 一次配置入口：[bash_scripts/run_helper_batch.sh](../bash_scripts/run_helper_batch.sh)，编排代码 `helper_batch.py`；配置模板 [native_helper.example.json](../configs/helpers/native_helper.example.json)。维护方实验设置 [helper_oracle_reference.yaml](../configs/sweeps/helper_oracle_reference.yaml) 固定 10 任务×三档×双模式×K=3，Sol xhigh、每 trial 12 小时与 150M/10M token 事后评分限额。模型/预算随派单发布，helper 不重填；网站导入是另一个流程。
+
+标准 helper：`setup_agent_batch.sh` 安装固定工具；`publish_agent_batch.py` 发布已通过预检的包和不可变派单；`run_agent_batch.sh` 保留原入口，自动识别派单并调用 native Harbor。`check_agent_batch.py` 检查全部 K 结果；`finish_agent_batch.py` 记录备注/明确恢复；`agent_batch_delivery.py` 验收普通 agents tar；`create_agent_batch_rerun.py` 生成维护方重跑授权；`check_agent_batch_auth.py` / `check_agent_batch_hf.py` 分别检查模型认证和 HF 交付。见 [操作手册](../docs/rcb/standard_helper_operations_zh.md)。
+
 新实验统一使用 `ci_checks/topogym_active_release.json` 选定的 v15。
 `topogym_versions.py tasks-root/list/check` 解析并校验任务；未生成完整候选时拒绝回退历史目录。
 `topogym_merge_candidate.py --output <新目录>` 冻结构建输入；构建镜像后运行
@@ -49,6 +53,12 @@
 - `difficulty_delivery.py`：Docker 交付适配，管理固定镜像、共享路径检查、GPU UUID、daemon 内锁和所属容器清理，不复制实验阶段逻辑。
 - `difficulty_hf_auth.py`：显式读取 HF_TOKEN 或私有 token 文件，不交互登录；校验参数并隔离评测子进程环境。
 - `difficulty_results_hf.py`：白名单结果导出、快照身份、HF 分批 commit、恢复对账和上传日志；通过 difficulty_eval 的 `--results_to_hf` / `--phase upload` 使用，见 [HF 上传用法](../docs/rcb/docker_quickstart_zh.md#上传结果到私有-hf-dataset)。
+- `difficulty_helper.py` / `helper_assignment.py`：`run_difficulty_trials.sh helper assign/retry-plan/export/verify/import/upload`，冻结任务清单、限制重跑；见 [helper 手册](../docs/rcb/helper_quickstart_zh.md)。
+- `helper_runtime.py` / `helper_log_mirror.py`：helper 主机、时间和异常记录；每次 job 独立镜像 agent 日志，复用固定上游 `log_mirror.py` 的版本记录能力。
+- `secret_scan.py` / `scan_secrets.py`：严格凭据扫描、文本脱敏与独立复扫；exit 0 clean / 1 residual / 2 incomplete，二进制命中阻止交付。
+- `helper_bundle.py` / `helper_import.py` / `helper_upload.py`：本批完整原始证据封包、逐文件验包、异机 Markdown 审查入口、私有 HF 三文件传输；不调用模型。
+- `trial_task_paths.py`：按导入包内映射定位原任务，避免依赖 helper 主机绝对路径；供报告与重评分共用。
+
 - `difficulty_release.py`：无 Git 源码身份、build-info 与 Docker 源码发行包；使用方法见 [Docker 启动说明](../docs/rcb/docker_quickstart_zh.md)。
 - `topogym_mk_task.py`、`topogym_mk_limited.py`：生成 unlimited / limited 任务。
 - `check_builder_feedback.py`：Builder 反馈的持续回归入口，记录 seed 冷启动、夹爪保持／回放、IK 端点和 Lock 支架取件诊断；输出报告、逐 tick 记录与共享录制 MP4，不授予完整任务成功资格。见[修补计划](../docs/rcb/builder_feedback_repair_plan_zh.md)。

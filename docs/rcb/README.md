@@ -1,5 +1,9 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
+标准 helper 交付请使用 [固定 oracle 实例 K=3 操作手册](standard_helper_operations_zh.md)。统一入口 `bash_scripts/run_helper_batch.sh --config <本机配置>` 涵盖准备、运行、打包和 HF 交付，内部调用原 `scripts/run_agent_batch.sh`；接收/网站导入独立。当前预设排除 Knot/Slotted Post Ring/Orbits：10 任务、三档、双模式、K=3，共 60 包/180 trials；Sol xhigh，每 trial 12 小时、150M input/10M output（token 超预算运行后判失败）。正式任务包与真实实验仍待准备和放行。下述全局 active 选择器和历史流程继续保留。
+
+上游已确认私有 HF 接收库建好；第三方 helper 需要独立、可访问的固定 release。官方 `SHARING_RUNS.md` 同步、§3b、release 导出和真实上传/下载小测试见 [下一阶段工程计划](helper_release_and_hf_smoke_plan_zh.md)。
+
 当前唯一新实验目标是 tooling **v15** / `0.2.13-dev-cu128`。根目录 `tasks/` 是历史任务包。
 先按根 README 的候选构建流程完成 `topogym_candidate_pipeline.py --phase all`，再设置：
 
@@ -674,7 +678,7 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 
 合并后 B04–B13 的修复顺序、接口合同及验收安排见 [Run trials 合并后问题修复工程计划](run_trials_post_merge_repair_plan_zh.md)；该文是待实施计划，实际问题状态以链接的审查与验收记录为准。
 
-外部 helper 的固定派单、完整记录封包、严格脱敏、异机导入及接收端验收，见 [Helper 执行与结果交付工程计划](helper_delivery_engineering_plan_zh.md)。该计划待实施，现有 HF 指标上传不等于完整原始记录交付。
+外部 helper 后续按 [标准 helper 流程核对与修复计划](standard_helper_pipeline_engineering_plan_zh.md) 对齐 `run_agent_batch.sh`、`jobs/agents` 和原文交付命令；该标准链路尚未全部接通。此前 difficulty/helper-bundle 的实现记录见 [上一版工程计划](helper_delivery_engineering_plan_zh.md)，其独立格式操作见 [Helper 手册](helper_quickstart_zh.md) 与 [异机验收手册](helper_import_zh.md)。现有 HF 指标上传不等于完整原始记录交付。独立 GPU 主机与异机离线验收待完成；网站接通按用户决定暂缓。
 
 主逻辑在 [`scripts/difficulty_eval.py`](../../scripts/difficulty_eval.py)，[`bash_scripts/run_difficulty_trials.sh`](../../bash_scripts/run_difficulty_trials.sh) 默认负责 Docker 镜像准备与控制器启动，实验阶段由 Python 调度器执行。配置在
 [`configs/sweeps/difficulty_eval.yaml`](../../configs/sweeps/difficulty_eval.yaml)。默认全部 **13 tasks × 3 难度 × 1 sample × 2 模式 = 78 trials**，每次 agent 最长 **21600 秒**。

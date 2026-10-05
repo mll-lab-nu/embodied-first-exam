@@ -1,0 +1,44 @@
+# Current helper experiment. Keep oracle_reference.yaml as the older all-13 preset.
+schema_version: 1
+task_ids:
+  - interlocked_claws
+  - rope_threading
+  - lock_picking
+  - hedgehog_in_cage
+  - fiber_bundling
+  - horseshoe_ring
+  - cast_coil
+  - cast_keyhole
+  - buzz_wire_3d
+  - blanket_flatten
+difficulties: [easy, medium, hard]
+modes: [unlimited, limited]
+samples_per_difficulty: 1
+sampling_seed: 20260929
+agent_wall_clock_s: 43200
+concurrency: 1
+instance_selection: oracle_reference
+reference_seeds:
+  interlocked_claws: {easy: 0, medium: 0, hard: 0}
+  rope_threading: {easy: 0, medium: 0, hard: 0}
+  lock_picking: {easy: 0, medium: 0, hard: 0}
+  hedgehog_in_cage: {easy: 0, medium: 0, hard: 0}
+  fiber_bundling: {easy: 0, medium: 0, hard: 0}
+  horseshoe_ring: {easy: 0, medium: 0, hard: 0}
+  cast_coil: {easy: 0, medium: 0, hard: 0}
+  cast_keyhole: {easy: 0, medium: 0, hard: 0}
+  buzz_wire_3d: {easy: 0, medium: 0, hard: 0}
+  blanket_flatten: {easy: 0, medium: 0, hard: 0}
+reference_notes:
+  source: "Named oracle-reference tier defaults, seed 0; same selection as oracle_reference.yaml"
+  scope: "Exclude knot_untying, slotted_post_ring, orbits; easy/medium/hard only"
+  qualification: "New frozen source/config/image requires its own validation; historical success is not inherited"
+native_batch:
+  repetitions: 3
+  agent: codex
+  model: openai/gpt-6-sol
+  effort: xhigh
+  token_budget:
+    input_tokens: 150000000
+    output_tokens: 10000000
+    enforcement: post_run_score

@@ -17,6 +17,24 @@
 
 `hard11` 使用独立冻结源码和新评价实例，预检要求原始物理 S0、机器人、控制目标和资产完全相同；Task／释放证据的版本改变会产生新的状态 SHA，不能冒称原始 v14 任务验收。原 `tasks/` 镜像包和旧结果保留其原判据。96 项相关 CPU 检查通过；两个 hard10 实测静置样本的新释放检查通过，但不替代完整回放。hard10 已主动停止；hard11 已通过原生初态一致性和 10 ticks 预检，新评价 SHA 为 `182eb5736b649784`；[hard11 计划](../../../runs/test_results/knot_oracle_20261003/hard11_native_launcher/launch_plan.json)与[实时状态](../../../runs/test_results/knot_oracle_20261003/background_status.json)记录新运行。下文 hard10 段落是旧版运行记录。
 
+**hard11 原生成功已实测通过，但无穿透资格已被反例否定**：51.7925 s、2,072 actions／20,717 ticks，末动作 7 ticks，连续稳定 0.5 s；终态活动部件间隙下界 38.263 mm、最大绳速 0.8823 mm/s、漂移 0.4516 mm。[原生动作与报告](../../../runs/test_results/knot_oracle_20261003/hard11/report.json)及[独立轨迹／初态核验](../../../runs/test_results/knot_oracle_20261003/hard11/native_evidence_validation.json)保留。首遍正式回放的原生碰撞网格在 6.7325 s 起出现右手指与桌面内部重叠，已查前缀最大深度 0.06535 mm；[复核及主动停止记录](../../../runs/test_results/knot_oracle_20261003/hard11/replay_physical_rejection.json)已保存，未发布成功证明或视频。
+
+`hard12` 在夹紧后将选中的 anchor 先抬高 2 mm，再由另一只手拉绳；参数 `anchor_lift_m` 仍可搜索 0／4／8 mm，不增加命令保护。只读桌面诊断提前发现了首次下降时的左手指浅重叠：1.875–2.025 s 共 5 个控制步末，最大约 0.11704 mm；hard11 的相同时刻也存在该问题。hard12 已主动停止，证据保留。
+
+当前 [hard13](../../../runs/test_results/knot_oracle_20261003/hard13_native_launcher/launch_plan.json) 保留该抬升，并将 hard 的 `pinch_height_m` 设为 +1 mm，放绳时也保持这一高度偏移。30 项 CPU 检查通过，物理／v14 安全／v5 释放及穿透判据不变。每步记录接受的动作和实际 ticks，并保存部分轨迹快照。
+
+**hard13 已原生成功：50.8575 s、2,035 actions／20,343 ticks，末动作 3 ticks**。从原始物理 S0 经两次决策、零回退完成 4→1→0，释放后稳定 0.5 s。终态 `robot_clear=true`，活动间隙下界 38.916 mm、最大速度 0.9054 mm/s、漂移 0.4704 mm。[完整动作及运行身份核验](../../../runs/test_results/knot_oracle_20261003/hard13/native_evidence_validation.json)通过，2,036 个控制步边界桌面检查无 findings。正式回放的早期逐 tick 检查却在 782–784 三个 tick 发现控制步之间的真实桌面浅重叠，最大 3.4375 μm；[独立复核及停止记录](../../../runs/test_results/knot_oracle_20261003/hard13/replay_physical_rejection.json)已保留。因此 hard13 不能取得全过程无穿透资格，未发布成功视频。
+
+hard14 将默认 hard 抓取／放下目标再提高 0.5 mm（总偏移 +1.5 mm），原有物理、释放判据和 2 mm anchor 抬升不变。新运行已启动，在原生执行前 3 s 直接订阅每个物理 tick 做桌面诊断，避免同类步内反例等到正式回放才被发现；这不替代后续完整 FEM／碰撞验收。
+
+该 [0–3 s 实测窗口](../../../runs/test_results/knot_oracle_20261003/hard14/milestones/early_tick_window/validation.json)已完整检查 1,201 个状态，无桌面 findings；手指顶面垂直间隙最低约 0.4654 mm，旧反例时刻约 0.488–0.499 mm。逐 tick 连续性和前 120 个实际动作核对通过；全程解结及正式物理资格仍待验证。
+
+hard14 已在 **29.275 s** 完成首轮抽绳及释放，交叉数 **4→1**、零回退；随后进入两端整理。[首轮动作核验](../../../runs/test_results/knot_oracle_20261003/hard14/milestones/first_withdrawal/validation.json)通过：1,171 个动作／11,710 ticks 与原生台账一致，1,172 个控制边界桌面记录无 findings。当前仍是中间结果，未取得原生成功或完整物理／回放资格。
+
+[hard14 归档检查准备](../../../runs/test_results/knot_oracle_20261003/supporting/archive_helpers/release_v5_hard14/preparation.json)已通过 10 项 CPU 检查，并核对前 17 个实测动作／170 ticks 的独立副本。它按原生分支身份重建最终保留的动作路径；缺少完整成功、正式回放或物理审计时拒绝发布。该准备工作不代表 hard14 已通过真实任务验证，当前尚未发布成功归档或视频。
+
+hard13 首轮抽绳和双手释放的独立节点也已保留：**29.25 s、1,170 actions／11,700 ticks，交叉 4→1**。[首轮检查点核验](../../../runs/test_results/knot_oracle_20261003/hard13/milestones/decision_1/validation.json)保存动作、台账和检查点的独立副本；1,171 个控制步边界桌面检查无 findings。该节点记录只证明对应前缀，完整原生结果见上文。
+
 ## 执行和回放
 
 下列命令需要有兼容 Genesis 1.2.1、Nyx 和 CUDA IPC 的 Python；正式 IPC 存档还核对

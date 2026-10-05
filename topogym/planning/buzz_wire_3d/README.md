@@ -1,5 +1,32 @@
 # Buzz Wire 3D policy 与实际验收
 
+2026-10-04 Harbor 默认三档入口已改为显式选择完整参考：easy 使用
+`buzz_staged_easy_20260929_01` 的 11 段反馈 selection；medium / hard 使用下表两次
+已审计执行的全部 29,544 / 43,568 个普通关节动作，包含末端转正、释放和停稳。
+实现见 [reference_policy.py](reference_policy.py)，数据位于私有
+`harbor_bridge/reference_data/buzz_wire_3d/<tier>/`，默认 `public_session` 不再进入
+通用在线搜索分支。历史 medium traverse guide 仅保留给显式开发配方。
+
+每档 `recipe.json` 记录源报告／审计 SHA-256、输入 SHA-256、布局与初始机器人姿态。
+运行前检查 fresh Session、seed 0、Panda/Robotiq、JOINT_ABS、辅助抓持、布局与 25 ms
+控制周期。Harbor 的物理步长、降采样、后端和精度保持冻结值；例如 2.5 ms × 10
+可以执行同一 25 ms 动作序列，但不继承历史 CPU64／40 子步的成功资格。
+报告写入 `reference_report.json`，必须以当前 Task success 判断执行是否完成；
+最终成绩仍由 Harbor verifier 给出。
+
+本机 NVIDIA 驱动不可用，未执行本次完整 GPU grading。提交代码及新增参考文件后，
+lab 从新 checkout 和新输出目录执行（沿用其 `TOPOGYM_PYTHON` / `TOPOGYM_HARBOR`）：
+
+```bash
+"$TOPOGYM_PYTHON" ci_checks/check-oracle-portability.py --families buzz_wire_3d --check-git
+bash bash_scripts/run_harbor_oracle_grades.sh \
+  --output runs/test_results/harbor_buzz_complete_reference_01 \
+  --families buzz_wire_3d --tiers easy,medium,hard --gpu 6
+```
+
+使用新的候选任务与镜像源码身份；旧 `solution/` 或 `--resume` 不会自动切换策略。
+very_easy / easier 不在该三档 sweep 中，继续使用各自的简化策略入口。
+
 2026-10-03：原 medium / hard 均已从默认 home 连续完成原生 Task，并通过独立审计。
 Medium 使用用户批准的 `F2_terminal_xy40_20_deck_rest_v1` 布局，hard 布局保持原值。
 两档完整接触记录中工具和机器人触线均为 0，正式运行通过导入拦截确保没有加载 calibration tools。

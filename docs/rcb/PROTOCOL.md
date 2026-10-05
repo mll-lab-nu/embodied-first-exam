@@ -344,6 +344,15 @@ Harbor 0.23 has no token cap, so the budget is applied after the run to the coun
 results metadata. That check is not implemented yet (§7 Open 3). The optional usage gateway (`scripts/usage_gateway/`,
 D11) records each trial's tokens per request while it runs; it does not enforce the budget.
 
+TopoGym native helper extension (2026-10-04): published assignments may pin an explicit
+`token_budget`; `agent_batch_contract.py` now applies that budget to each trial during
+sealing and offline acceptance. Missing usage blocks complete acceptance; over-budget
+trials receive adjusted score 0 while raw verifier records remain unchanged. The current
+10-task helper preset uses 150M input / 10M output and a 12-hour agent timeout, per the
+maintainer's decision. Report this budget separately from the historical protocol group.
+This is post-run scoring, not a live API-spend cutoff. Legacy batches without a pinned
+token budget are not silently regraded under the new preset.
+
 ## 6. Versioning and extensions
 | Item | Level | Basis |
 |---|---|---|

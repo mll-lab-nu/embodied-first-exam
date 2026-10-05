@@ -25,6 +25,7 @@ import time
 import sample_difficulty_instances as sampling
 import difficulty_hf_auth as hf_auth
 import helper_assignment as helper
+import helper_runtime
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_KEY = object()
@@ -427,11 +428,11 @@ class DifficultyEvaluation:
 
     def execute_evaluation(self):
         self.run.mkdir(parents=True, exist_ok=True)
-        with lock(self.run / ".lock", "another invocation owns this run-id"):
+        with lock(self.run / ".lock", "another invocation owns this run-id"), helper_runtime.record(self):
             stage("plan")
             progress(f"Run: {self.args.run_id} | requested phase: {self.args.phase} | CUDA: {self.args.cuda_flavor}")
             progress("Validating frozen manifest/source" if self.manifest_path.exists() else "Sampling instances and freezing source")
-            options = {name: getattr(self.args, name) for name in ("setting", "tasks", "sampling_seed", "samples_per_difficulty",
+            options = {name: getattr(self.args, name) for name in ("setting", "tasks", "difficulties", "sampling_seed", "samples_per_difficulty",
                        "agent_wall_clock_s", "concurrency", "resume")}
             new_manifest = not self.manifest_path.exists()
             if self.helper_assignment:
@@ -491,7 +492,8 @@ class DifficultyEvaluation:
                     self.gpu_device = self.delivery.gpu_uuid
                     self.gpu_ready()
                     self.image = self.delivery.ensure_images(self.source)
-                    self.delivery.environment_check(self.source)
+                    environment_record = self.delivery.environment_check(self.source)
+                    sampling.atomic_json(self.run / "environment-check.json", environment_record)
                     self.commands.env.update(TOPOGYM_TOOL_IMAGE=self.image)
                     if self.auth_env:
                         for key, value in self.commands.env.items():
@@ -581,6 +583,10 @@ class DifficultyEvaluation:
             return  # fail closed on incomplete ownership evidence
 
     def redact_outputs(self):
+        # Helper evidence is immutable. Its trusted exporter scans and redacts
+        # the staging copy, including records owned by root in agent containers.
+        if self.helper_assignment:
+            return
         if self.auth_env is None:
             return
         args = ["--process-env", "--var", "OPENAI_API_KEY", "--var", "OPENROUTER_API_KEY", "--redact"]
@@ -596,8 +602,9 @@ class DifficultyEvaluation:
             auth_args = ["--codex-auth", str(auth)] if auth else []
             for path in targets:
                 self.commands.run_command([self.python, self.source / "scripts/scan_secrets.py", path, *args, *auth_args], env=self.auth_env, check=True)
-        for path in backups:
-            path.unlink()
+        if not self.helper_assignment:
+            for path in backups:
+                path.unlink()
 
     def gpu_ready(self):
         deadline = time.monotonic() + self.args.gpu_wait_s
@@ -697,8 +704,9 @@ class DifficultyEvaluation:
             attempt = build / f"blanket-attempt-{number:03d}"
             # The preparation CLI owns creation of this directory. A failed CLI
             # is still counted, even if it exited before creating its output.
+            variant_args = ["--seeded"] if row["variation_id"] == "seeded" else ["--tier", row["difficulty"]]
             code, _ = self.commands.run_command(self.docker_sim("python", self.source / "scripts/prepare_blanket_initial_states.py",
-                "--seeded", "--seed", row["scene_seed"], "--acceptance", "scene_layout", "--output", attempt),
+                *variant_args, "--seed", row["scene_seed"], "--acceptance", "scene_layout", "--output", attempt),
                 log=build / f"blanket-attempt-{number:03d}.log", monitor=True)
             attempt.mkdir(exist_ok=True)
             state = attempt / "state/manifest.json"
@@ -747,7 +755,7 @@ class DifficultyEvaluation:
                               initial_state_sha256=sampling.file_hash(state))
             sampling.atomic_json(build / "parameters.json", params)
             sampling.atomic_json(build / "overrides.json", row["simulator_overrides"])
-            selection = ["--variation", "seeded", "--scene-seed", row["scene_seed"],
+            selection = ["--variation", row["variation_id"], "--scene-seed", row["scene_seed"],
                          "--task-parameters", build / "parameters.json", "--simulator-overrides", build / "overrides.json"]
             task = self.task_dir(row)
             from topogym_versions import require_task
@@ -801,7 +809,7 @@ class DifficultyEvaluation:
 
     @staticmethod
     def check_selection(row, instance):
-        if (instance.get("task"), instance.get("variation_id"), instance.get("seed")) != (row["task_id"], "seeded", row["scene_seed"]):
+        if (instance.get("task"), instance.get("variation_id"), instance.get("seed")) != (row["task_id"], row["variation_id"], row["scene_seed"]):
             raise EvaluationError("frozen instance selection mismatch; use a new run-id")
 
     def freeze_package(self, row):
@@ -966,6 +974,8 @@ class DifficultyEvaluation:
         if self.delivery:
             sampling.atomic_json(self.run / "active-job.json", dict(owner=self.delivery.owner, job=job, started_at=time.time()))
             if self.args.auth == "subscription":
+                if self.helper_assignment:
+                    sampling.atomic_json(self.run / "scan-auth-location.json", dict(path=str(self.args.auth_json)))
                 backup = self.args.auth_json.parent / f".scan-auth-{time.time_ns()}.json"
                 backup.write_bytes(self.args.auth_json.read_bytes())
         cmd = [self.harbor, "run", "-p", task, "-a", self.args.agent, "-m", self.args.model, "-n", "1", "-k", "1",
@@ -977,7 +987,12 @@ class DifficultyEvaluation:
         (self.jobs / job).mkdir()  # reserve before launch; interruption never reuses the attempt
         progress(f"Harbor job: {job} | log: {self.run / (job + '.log')}")
         try:
-            code, _ = self.commands.run_command(cmd, log=self.run / f"{job}.log", env=self.auth_env, monitor=True)
+            with helper_runtime.mirror(self):
+                try:
+                    code, _ = self.commands.run_command(cmd, log=self.run / f"{job}.log", env=self.auth_env, monitor=True)
+                finally:
+                    # Stop owned writers before the mirror's final synchronization.
+                    self.cleanup_containers()
             with (self.run / "exit_codes.tsv").open("a") as stream:
                 stream.write(f"{job}\t{code}\n")
         finally:

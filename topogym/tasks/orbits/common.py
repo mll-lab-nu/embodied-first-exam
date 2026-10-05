@@ -16,6 +16,22 @@ from topogym.assets.scene_visuals import surface, visual_collision_urdf
 from topogym.evaluation.task_metrics import placement_candidate, rigid_asset_vertices, ipc_integrity
 
 
+# Shared with development planners; these are the existing local task values,
+# in metres after linear_scale. Imported oracle geometry does not replace them.
+CORD_PROFILES = {
+    "compact_external_handle_v1": dict(handle_x_m=.41, cord_length_m=.80),
+}
+
+
+def profile_value(profile, key, ring_count):
+    value = profile[key]
+    return float(value[ring_count] if isinstance(value, dict) else value)
+
+
+def profile_cord_length(profile, ring_count):
+    return profile_value(profile, "cord_length_m", ring_count)
+
+
 class OrbitsTask(PlacementGoalMixin, TaskDefinition):
     task_id = "orbits"
     placement_description = 'the entire cord and wooden handle'
@@ -47,16 +63,18 @@ class OrbitsTask(PlacementGoalMixin, TaskDefinition):
             # clearance cover and adequate FEM tube sampling.
             initial_cord = resample(initial_cord, spacing=.001)
             layout = replace(layout, handle_x_m=.60)
-        elif self.config["cord_profile"] == "compact_external_handle_v1":
+        elif self.config["cord_profile"] in CORD_PROFILES:
             from dataclasses import replace
             from topogym.assets.geometry.orbits_initial import natural_working_state, resample
-            # Same explicit length and handle placement for all three ring counts.
+            # Read the same profile as the development planner.
             # Both legs stop at the near-side eyes;
             # the handle's centre lies beyond the entire open bight, never inside it.
-            initial_cord, _ = natural_working_state(layout, handle_x_m=.41,
-                cord_length_m=.80, spacing=.002)
+            profile = CORD_PROFILES[self.config["cord_profile"]]
+            handle_x_m = profile_value(profile, "handle_x_m", layout.ring_count)
+            initial_cord, _ = natural_working_state(layout, handle_x_m=handle_x_m,
+                cord_length_m=profile_cord_length(profile, layout.ring_count), spacing=.002)
             initial_cord = resample(initial_cord, spacing=.001)
-            layout = replace(layout, handle_x_m=.41)
+            layout = replace(layout, handle_x_m=handle_x_m)
         elif self.config["cord_profile"] != "reference":
             raise ValueError("Unknown Orbits cord_profile")
         self.layout, report = generate_assets(

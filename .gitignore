@@ -60,3 +60,6 @@ topogym_weekly_report/
 /jobs/
 /exps/
 /topogym-work/
+/.venv-agent-batch/
+/.tools/agent-batch/
+/.native-publish.lock

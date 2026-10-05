@@ -131,6 +131,41 @@
       "sha256": "0d0872b02596d75e17ff2b4243ad5ddc1e3cc0f157391bafcaf45a36e91745c3",
       "bytes": 141017,
       "source": "solvability_proof/interlocked_claws/2026-10-03/evidence/hard/run/submitted_witness.json"
+    },
+    "buzz_wire_3d/medium/medium_traverse_guide.json": {
+      "sha256": "4511df68f53ded79077a12998ddfe76f1cbf65f6ac552b412fbdefa4bf16cd0f",
+      "bytes": 284534,
+      "source": "runs/test_results/buzz_staged_inputs_20260929/medium_traverse_guide.json"
+    },
+    "buzz_wire_3d/easy/selection.json": {
+      "sha256": "1054130e25537a5483152694a4cb2387f79f0d889f47289b0c8fe4ca508ddc6d",
+      "bytes": 4227,
+      "source": "runs/test_results/buzz_staged_easy_20260929_01/qualification/selection.json"
+    },
+    "buzz_wire_3d/easy/recipe.json": {
+      "sha256": "8f43394923052c6c1c6c768ce30ba66d5b4b576dc63311eaa282b75e490683a1",
+      "bytes": 1601612,
+      "source": "Derived from runs/test_results/buzz_staged_easy_20260929_01: report, audit, source geometry and complete policy input"
+    },
+    "buzz_wire_3d/medium/policy_actions.json": {
+      "sha256": "3a8d182fcadb84575bbc5659313213016fb7369b821a87cb7dd6253468b0b60d",
+      "bytes": 8421310,
+      "source": "runs/demo_metadata/buzz_wire_3d/2026-10-03_medium_v12_continuous/execution/policy_actions.json"
+    },
+    "buzz_wire_3d/medium/recipe.json": {
+      "sha256": "c6a18c913ed265c21fca9d29e5f0969f6ddc311c45bfe76d2f9521de20cfc51f",
+      "bytes": 4838610,
+      "source": "Derived from runs/demo_metadata/buzz_wire_3d/2026-10-03_medium_v12_continuous/execution: report, audit, source geometry and complete policy input"
+    },
+    "buzz_wire_3d/hard/policy_actions.json": {
+      "sha256": "74c193e9688c63fdba59eb2074e1a6f9182fa028cc15a9597999b9e07825a0d4",
+      "bytes": 12618206,
+      "source": "runs/demo_metadata/buzz_wire_3d/2026-10-03_hard_v12_continuous/execution/policy_actions.json"
+    },
+    "buzz_wire_3d/hard/recipe.json": {
+      "sha256": "6afedfe69ba472fc118a9742a01c0fccfd4c7bbcf55ecaffb3f784eb2912e99a",
+      "bytes": 4057388,
+      "source": "Derived from runs/demo_metadata/buzz_wire_3d/2026-10-03_hard_v12_continuous/execution: report, audit, source geometry and complete policy input"
     }
   }
 }

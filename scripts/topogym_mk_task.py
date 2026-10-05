@@ -12,7 +12,7 @@ usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded 
 Default output: runs/task_candidates/v15/. Use topogym_candidate_pipeline.py for fixed-suite generation and activation.
 Shared files are copied from one tooling generation. New packages record its version;
 historical frozen generations keep their pinned bytes (ci_checks/check-tooling-identity.sh).
-Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600, at most 36000).
+Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600, at most 43200).
 [task].name = "robot-coding-bench/<slug>-privileged" and [metadata].difficulty = the variation record's tier
 (docs/rcb/TAXONOMY.md). The last step is scripts/task_conventions.py's normalize (protocol v1.0 fields and README layout)."""
 import argparse, json, os, pathlib, shutil, subprocess, sys
@@ -33,7 +33,7 @@ SHARED = ["environment/Dockerfile", "environment/docker-compose.yaml", "tests/Do
 IMAGE = image_tag(root)
 TOOL_RUNTIME_IMAGE = None
 BUDGET_S = 21600                      # TopoGym's explicit six-hour protocol exception.
-MAX_BUDGET_S = 36000
+MAX_BUDGET_S = 43200  # User 2026-10-04: helper trials may use twelve hours.
 
 
 def require_current_destination(dst):

@@ -25,6 +25,7 @@ test = ["pytest>=8", "psutil"]
 video = ["imageio", "imageio-ffmpeg"]
 fem = ["pyuipc==0.0.25", "tetgen==0.8.2"]
 dataset = ["h5py"]
+orbits-oracle = ["mujoco>=3.14,<4", "matplotlib"]
 
 [tool.setuptools.packages.find]
 where = ["."]

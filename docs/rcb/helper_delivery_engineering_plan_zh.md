@@ -1,6 +1,8 @@
 # TopoGym helper 执行与结果交付工程计划
 
-2026-10-04。状态：待实施。本轮仅制定计划，未修改运行代码、启动真实模型评测或上传结果。
+2026-10-04 方向更新：用户要求对齐原 helper 说明的 `run_agent_batch.sh`、`jobs/agents` 与标准 tar/网站流程。后续实施以[标准 helper 流程核对与修复计划](standard_helper_pipeline_engineering_plan_zh.md)为准。本文保留上一版 difficulty/helper-bundle 设计和已实现记录，不能据此认为标准命令已全部接通。
+
+2026-10-04。状态：仓库内 W1–W6 的单队列能力已实现，W7 的 CPU 合同测试和中英文操作手册已补齐；W0 实际评测网站探针、W7 独立 GPU 主机交付演练及真实目标 HF 上传尚未验收。本轮没有启动真实模型评测或向外部上传结果。操作见 [Helper 手册](helper_quickstart_zh.md)、[异机验收手册](helper_import_zh.md)。下文保留原设计与正式放行门槛。
 
 目标：维护方提供固定任务单和发行版本，helper 在自己的 GPU 主机上执行，交回经过脱敏和校验的完整记录包；维护方在不同机器、不同目录下，仅凭交付包和对应的读取工具即可重建汇总与审查材料。helper 不需要访问评测网站或维护方机器。
 
@@ -238,3 +240,27 @@ bash bash_scripts/run_difficulty_trials.sh helper import \
 多 lane、原文 task-base 直接执行适配、公开镜像发布以及异机物理重评分分别作为后续能力验收。W8 尤其需要同时处理同 work-dir 的全局 GPU 锁和订阅 token 串行锁；只把 `concurrency` 改大，无法满足文档中“一条命令增加一个 lane”的承诺。
 
 本计划的完成标志是一份可从维护方任务单追溯到 helper 原始记录、再追溯到接收端页面的实际交付证据，包含明确的完成状态、异常记录和文件校验。
+
+
+## 12 实施结果与验收边界（2026-10-04）
+
+- 实现六个 helper 子命令，保留原 difficulty runner；schema 2 显式 trial 列表贯穿执行、收集和旧 HF 读取器。派单与源摘要在首次运行和恢复时均检查。
+- 镜像功能通过 `helper_log_mirror.py` 适配固定上游 `log_mirror.py`，不破坏 vendor 字节一致性。模型 job 写入者停止后才最终同步；每次记录由独立容器收集。mirror 是轮询备份，不保证捕获轮询间每次变化。
+- 完整 bundle 与旧 HF 指标格式独立。接收端具备纯标准库验包、相对任务映射、汇总重算、Markdown 文件审查入口、幂等导入、终态证据不可覆盖检查。`site-input.json` 是 adapter 输入协议，不代表外部网站已接通。
+- 凭据扫描覆盖原文及 ZIP/NPZ/gzip，保留文本脱敏审计；未知密钥及嵌套压缩不能据此得到全覆盖保证。staging 失败不发布成品；需保留私有目录供诊断。
+- 自动测试合并到 `ci_checks/test-helper-delivery.py`，扩展现有 eval/delivery/HF 回归，使用 synthetic Harbor/Hub/daemon 文件与真实 CPU 抽样；未把这些结果计为物理解题成功。
+- 仍未具备外部网站仓库入口、独立 GPU host 和正式私有 HF 目标/凭据，故正式放行门槛未全部满足。helper 可以使用已实现流程，但首次实际交付应作为演练验收，不能宣称跨主机模型/网站全链路已通过。
+
+
+本轮验证记录：
+
+| 范围 | 结果 | 证据 |
+|---|---|---|
+| helper 扫描/派单/队列/封包/导入/模拟上传 | 25/25 | `runs/test_results/helper_delivery_20261004_112218/` |
+| 现有 difficulty eval | 27/27 | `runs/test_results/helper_delivery_20261004_111917/` |
+| 现有 Docker delivery | 10/10 | 同上 |
+| 现有 HF 与新增 helper launcher 边界 | 24/24 | 同上；Unix socket 用本机假 daemon |
+| 真实 Docker、root 私有原始文件、mirror、脱敏封包、Python 3.10 标准库异路径导入 | 通过，synthetic records，无 GPU/模型/网络 | `runs/test_results/helper_docker_smoke_20261004_111827/` |
+| 源码发行包解压、真实 CPU 抽样派单、plan/恢复、部分封包、异路径导入及 complete 门槛 | 通过，无物理/模型执行 | `runs/test_results/helper_release_smoke_20261004_111912/` |
+
+共 86 项 CPU 合同回归通过。资源监控的上述成功运行峰值 CPU 为 61.2%、内存为 16.9%，未触发内存 90% 停止阈值。总索引与最终工具文件摘要：[验收记录](../../runs/test_results/helper_delivery_acceptance_20261004/summary.json)。源码发行演练保存当时的独立源码包与 source SHA；其他会话继续修改的工作区不等同于该快照。测试中的 solved 是合成 fixture 状态，不能当成真实模型解题成功。

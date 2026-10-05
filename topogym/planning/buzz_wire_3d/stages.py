@@ -8,12 +8,12 @@ run still needs native success and independent audit (the historical audit tool
 is archived under legacy/research_tools_20260929/scripts/).
 """
 import json
-from pathlib import Path
 
 import numpy as np
 from scipy.spatial.transform import Rotation
 
 from topogym.config.registry import variation_registration
+from topogym.planning.harbor_bridge.callbacks import data_path
 from topogym.planning.solvability import Stage, Step
 from topogym.utils.io import sha256_file, write_json_atomic
 from . import recipes
@@ -74,6 +74,14 @@ def solved(tick):
 # Entry, exit and whether holding is checked on every tick, per stage kind.
 KIND_CHECKS = dict(grasp=(unbound, acquired, False), interaction=(holding, holding, True),
                    release=(holding, released_supported, False), settle=(holding, solved, False))
+
+
+def load_traverse_guide(parameters):
+    """Read a bundled private guide, independent of the checkout and working directory."""
+    guide_file = data_path(parameters["guide_file"])
+    if sha256_file(guide_file) != parameters["guide_sha256"]:
+        raise ValueError(f"Traverse guide changed: {guide_file}")
+    return json.loads(guide_file.read_text())
 
 
 def stages(env, context):
@@ -224,12 +232,7 @@ def stages(env, context):
         tp, tr = kin.tcp_pose(kin.seed)
         offset_p, offset_r = r.inv().apply(tp-p), r.inv()*tr
         cursor = tick["task"]["result"]["metrics"]["route_cursor_m"]
-        # Relative to the working directory: runs execute a frozen source copy
-        # from the repository root, and guides are run inputs, not source.
-        guide_file = Path(parameters["guide_file"])
-        if sha256_file(guide_file) != parameters["guide_sha256"]:
-            raise ValueError(f"Traverse guide changed: {guide_file}")
-        document = json.loads(guide_file.read_text())
+        document = load_traverse_guide(parameters)
         rows = [row for row in document["guide"] if row["route_cursor_m"] > cursor+parameters["guide_skip_m"]]
         anchors = set(parameters.get("anchor_labels") or document.get("offline_anchor_labels", ()))
         start = dict(label="measured_start", position_m=p.tolist(), quaternion_wxyz=list(body["quaternion_wxyz"]))
@@ -276,7 +279,7 @@ def stages(env, context):
         # The progress gate measures lag behind the time-indexed reference, not
         # distance from the path: at 0.5 mm the reference advanced at ~0.3x
         # real time while the off-path error stayed below 0.27 mm (run _01).
-        guide = dict(guide_file="runs/test_results/buzz_staged_inputs_20260929/medium_traverse_guide.json",
+        guide = dict(guide_file="buzz_wire_3d/medium/medium_traverse_guide.json",
                      guide_sha256="4511df68f53ded79077a12998ddfe76f1cbf65f6ac552b412fbdefa4bf16cd0f",
                      guide_skip_m=.002, minimum_clearance_m=.0007, tracking_m=[.0015, .0008])
         yield Step("traverse", (dict(guide, speeds=[.25, .012, .35]), dict(guide, speeds=[.12, .006, .2])),

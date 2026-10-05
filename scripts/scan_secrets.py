@@ -8,6 +8,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import zipfile
 from secret_scan import load_env, load_secrets, scan_tree
 
 def main(argv=None):
@@ -21,15 +22,36 @@ def main(argv=None):
     parser.add_argument('--report', type=Path)
     args = parser.parse_args(argv)
     try:
+        native=[]; target=Path(args.dir).resolve()
+        if target.name=='agents':
+            from agent_batch_contract import read, validate
+            from agent_batch_delivery import verify_tree
+            for path in sorted(target.glob('*-plan.json')):
+                value=read(path)
+                if value.get('format')!='topogym-native-batch-v1': continue
+                plan=validate(value)
+                # Refuse changing logs under active writers or silently repairing
+                # evidence that changed after sealing.
+                verify_tree(target.parent,plan); native.append(plan)
         secrets = load_secrets(env_files=args.env_file, variables=args.var,
                                auth_files=args.codex_auth, process_env=args.process_env)
         first = scan_tree(args.dir, secrets, redact=args.redact)
         result = scan_tree(args.dir, secrets) if args.redact else first
         result['redactions'] = first['redactions']
+        if native:
+            mirror=target.with_name('agents_mirror')
+            if mirror.exists():
+                before=scan_tree(mirror,secrets,redact=args.redact)
+                after=scan_tree(mirror,secrets)
+                result['mirror']=after; result['mirror']['redactions']=before['redactions']
+                result['clean']=result['clean'] and after['clean']
+            if args.redact and result['clean']:
+                from agent_batch_delivery import seal
+                for plan in native: seal(target,plan,secrets)
         if args.report: args.report.write_text(json.dumps(result, indent=2)+'\n')
         print(json.dumps(result, sort_keys=True))
         return 0 if result['clean'] else 1
-    except (OSError, ValueError, EOFError):
+    except (OSError, ValueError, EOFError, zipfile.BadZipFile):
         print('ERROR: credential scan incomplete; delivery blocked', file=sys.stderr)
         return 2
 

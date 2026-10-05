@@ -83,12 +83,9 @@ def classify_trial(job, row, mode):
     return ("solved" if reward["success"] == 1 else "unsolved"), result, reward, trial
 
 
-def collect_manifest(manifest_path, jobs):
-    import csv
-    from sample_difficulty_instances import atomic_json
-    manifest_path, jobs = pathlib.Path(manifest_path).resolve(), pathlib.Path(jobs).resolve()
-    run = manifest_path.parent
-    manifest = json.loads(manifest_path.read_text())
+def manifest_rows(manifest, jobs, run, *, copy_artifacts=False):
+    """Read classifications without rewriting the received evidence."""
+    from helper_assignment import atomic_json
     rows = []
     for sample, mode in planned_trials(manifest):
         stem = f"d{sample['task_number']:02d}-{sample['difficulty']}-{sample['sample_id']}-{mode}"
@@ -110,7 +107,7 @@ def collect_manifest(manifest_path, jobs):
                        cost_usd_api_price=agent.get("cost_usd"), exception=(result.get("exception_info") or {}).get("exception_type"),
                        job=str(job), harbor_trial=str(trial) if trial else None)
             rows.append(row)
-            if trial:
+            if trial and copy_artifacts:
                 target = run / "results" / sample["task_id"] / sample["difficulty"] / sample["sample_id"] / mode / "trial_01" / f"attempt_{row['attempt']:03d}"
                 target.mkdir(parents=True, exist_ok=True)
                 for name in result_artifacts(mode):
@@ -120,6 +117,15 @@ def collect_manifest(manifest_path, jobs):
                         if not dest.exists() or src.stat().st_size != dest.stat().st_size or src.stat().st_mtime > dest.stat().st_mtime:
                             shutil.copy2(src, dest)
                 atomic_json(target / "agent_summary.json", row)
+    return rows
+
+
+def collect_manifest(manifest_path, jobs, *, copy_artifacts=True):
+    import csv
+    manifest_path, jobs = pathlib.Path(manifest_path).resolve(), pathlib.Path(jobs).resolve()
+    run = manifest_path.parent
+    manifest = json.loads(manifest_path.read_text())
+    rows = manifest_rows(manifest, jobs, run, copy_artifacts=copy_artifacts)
     temp = run / "trials.jsonl.tmp"
     temp.write_text("".join(json.dumps(row, sort_keys=True) + "\n" for row in rows))
     temp.replace(run / "trials.jsonl")

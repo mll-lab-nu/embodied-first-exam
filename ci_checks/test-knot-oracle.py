@@ -53,6 +53,7 @@ class KnotContracts(unittest.TestCase):
             with self.subTest(key=key, value=value), self.assertRaises(ValueError):
                 arguments("/tmp/knot-unused", "hard", "--"+key, value)
         for candidate in ({"close": -1}, {"full_pull": "false"}, {"unknown": 3},
+                          {"anchor_lift_m": -0.001}, {"anchor_lift_m": float("nan")},
                           {"direction": "x"}, {"lift": float("nan")}, {"straighten": 0}, []):
             with self.subTest(candidate=candidate), self.assertRaises(ValueError):
                 validate_candidate(candidate)
@@ -359,7 +360,7 @@ class KnotContracts(unittest.TestCase):
             for candidate in rows:
                 validate_candidate(candidate)
         validate_candidate(dict(lift=.2, straighten=1.1, close=0., span_ratio=None))
-        for key in ('end_choice', 'arm_order', 'grasp_tilt_deg', 'grasp_yaw_deg', 'pull_pitch_deg', 'path_arch_m'):
+        for key in ('end_choice', 'arm_order', 'grasp_tilt_deg', 'grasp_yaw_deg', 'pull_pitch_deg', 'path_arch_m', 'anchor_lift_m'):
             self.assertTrue(any(key in c for c in CANDIDATES['withdraw']), key)
 
     def test_zero_crossing_clearance_failure_prioritizes_rope_translation(self):
@@ -429,6 +430,43 @@ class KnotContracts(unittest.TestCase):
         self.assertEqual(r.release.call_count, 2)
         self.assertTrue(record['terminal_waited'])
         self.assertEqual(record['commanded_translation_m'], [0., -.02, 0.])
+
+    def test_withdraw_lifts_selected_anchor_before_pull_and_keeps_it_raised_for_release(self):
+        for arms in (('left', 'right'), ('right', 'left')):
+            for lift in (0., .002):
+                with self.subTest(arms=arms, lift=lift):
+                    r, positions, commands = self.translation_runner()
+                    before = {side: value.copy() for side, value in positions.items()}
+                    r.log = []; r.args.max_pull = 0.
+                    r.arms_for = lambda _: arms
+                    record = r.withdraw(1, dict(s_anchor=.2, s_pull=.8, direction=[1., 0.]),
+                                        dict(lift=.03, anchor_lift_m=lift))
+                    anchor, pull = arms
+                    np.testing.assert_allclose(positions[anchor]-before[anchor], [0., 0., lift])
+                    np.testing.assert_allclose(positions[pull]-before[pull], [0., 0., .03])
+                    if lift:
+                        np.testing.assert_allclose(commands[2][anchor]-before[anchor], [0., 0., lift])
+                        np.testing.assert_allclose(commands[2][pull], before[pull])
+                    self.assertEqual(record['arms'], dict(anchor=anchor, pull=pull))
+                    self.assertEqual(r.release.call_args_list[-1].args, (anchor, 0., 'd1:release'))
+
+    def test_lowering_retains_selected_pinch_height_until_gripper_opens(self):
+        from scipy.spatial.transform import Rotation
+        from topogym.planning.knot_untying.kinematics import CONTACT_IN_TCP_M
+        for height in (0., .001):
+            with self.subTest(height=height):
+                r, positions, commands = self.translation_runner()
+                r.release = Runner.release.__get__(r)
+                r.task = SimpleNamespace(table_height_m=.9, layout=SimpleNamespace(rope_radius_m=.005))
+                r.motion_options = dict(pinch_height_m=height)
+                turn = Rotation.from_euler('y', 90., degrees=True)
+                r.grasps['left'] = dict(turn=turn, open=.038)
+                r.g = {'left': .005}
+                expected = .905-turn.apply(CONTACT_IN_TCP_M)[2]+height
+                r.release('left', .2, 'release')
+                self.assertAlmostEqual(min(row['left'][2] for row in commands), expected)
+                self.assertAlmostEqual(positions['left'][2], expected+.05)
+                self.assertAlmostEqual(r.g['left'], .038)
 
     def test_translation_ik_failure_does_not_execute_one_arm_alone(self):
         r, positions, commands = self.translation_runner()

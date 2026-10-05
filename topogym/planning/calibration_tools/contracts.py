@@ -76,5 +76,5 @@ METHODS = frozenset({
     "start_tracking", "tracking_report", "stop_tracking",
     "cache_plan", "check_cached_plan", "prepare_plan",
     "grasp_status", "run_grasp_trial", "grasp_trial_report",
-    "task_summary", "contact_details", "gripper_geometry", "drive_object",
+    "task_summary", "contact_details", "gripper_geometry", "drive_object", "drive_object_groups",
 })

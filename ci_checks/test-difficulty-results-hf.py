@@ -550,6 +550,35 @@ elif args[0] == 'create':
                 else:
                     self.assertEqual(data["token_hash"], hashlib.sha256(self.secret.encode()).hexdigest())
                     self.assertIn("/run/topogym-launch/hf-token", data["inner_args"])
+            archive=self.work/'sealed.tar.gz'; archive.write_text('launcher fixture; verifier is tested separately')
+            Path(str(archive)+'.sha256').write_text('fixture'); (self.work/'MANIFEST.md').write_text('fixture')
+            spec=self.work/'assignment.json'; spec.write_text('{}')
+            for command,options in (
+                ('assign',['--spec',str(spec)]),
+                ('verify',['--archive',str(archive),'--assignment',str(spec)]),
+                ('import',['--archive',str(archive)]),
+                ('export',['--run-id','test-run']),
+                ('upload',['--archive',str(archive),'--hf-token-env','TEST_HF'])):
+                base=['bash',str(ROOT/'bash_scripts/run_difficulty_trials.sh'),'helper',command,
+                      '--controller-image','sha256:'+'a'*64,'--work-dir',str(self.work)]
+                result=subprocess.run(base+options,env=env,capture_output=True,text=True,timeout=20)
+                self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+                data=hf.json_file(report)
+                self.assertNotIn('--gpus',data['argv'])
+                self.assertEqual(data['inner_args'][:2],['helper',command])
+                self.assertNotIn('--release-lock',data['inner_args'])
+                self.assertEqual(data['argv'][data['argv'].index('--user')+1],
+                                 '0:0' if command=='export' else f'{os.getuid()}:{os.getgid()}')
+                if command!='export':
+                    self.assertFalse(any('dst=/var/lib/topogym/codex' in v or 'dst=/var/run/docker.sock' in v for v in data['argv']))
+                if '--archive' in options:
+                    mounts=[v for v in data['argv'] if 'dst=/run/topogym-archive/' in v]
+                    self.assertEqual(len(mounts),3)
+                    self.assertTrue(all(v.endswith(',readonly') for v in mounts))
+                self.assertFalse(Path(data['launch']).exists())
+                if command=='upload':
+                    self.assertFalse(data['hf_env_leaked'])
+                    self.assertEqual(data['token_hash'],hashlib.sha256(self.secret.encode()).hexdigest())
         finally:
             sock.close()
 

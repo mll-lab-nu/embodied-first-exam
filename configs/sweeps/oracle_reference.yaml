@@ -1,0 +1,42 @@
+# Fixed named oracle-reference scenes. Agent repetitions are set by the published batch K=3.
+# Seed choice does not transfer historical oracle qualification to a new source/image.
+schema_version: 1
+task_ids:
+  - interlocked_claws
+  - rope_threading
+  - lock_picking
+  - hedgehog_in_cage
+  - fiber_bundling
+  - horseshoe_ring
+  - knot_untying
+  - cast_coil
+  - cast_keyhole
+  - buzz_wire_3d
+  - blanket_flatten
+  - slotted_post_ring
+  - orbits
+difficulties: [easy, medium, hard]
+modes: [unlimited, limited]
+samples_per_difficulty: 1
+sampling_seed: 20260929
+agent_wall_clock_s: 21600
+concurrency: 1
+instance_selection: oracle_reference
+reference_seeds:
+  interlocked_claws: {easy: 0, medium: 0, hard: 0}
+  rope_threading: {easy: 0, medium: 0, hard: 0}
+  lock_picking: {easy: 0, medium: 0, hard: 0}
+  hedgehog_in_cage: {easy: 0, medium: 0, hard: 0}
+  fiber_bundling: {easy: 0, medium: 0, hard: 0}
+  horseshoe_ring: {easy: 0, medium: 0, hard: 0}
+  knot_untying: {easy: 0, medium: 0, hard: 0}
+  cast_coil: {easy: 0, medium: 0, hard: 0}
+  cast_keyhole: {easy: 0, medium: 0, hard: 0}
+  buzz_wire_3d: {easy: 0, medium: 0, hard: 0}
+  blanket_flatten: {easy: 0, medium: 0, hard: 0}
+  slotted_post_ring: {easy: 0, medium: 0, hard: 0}
+  orbits: {easy: 0, medium: 0, hard: 0}
+reference_notes:
+  source: "docs/progress/current_zh.md; named task defaults and oracle entrypoints; seed 0"
+  scope: "easy/medium/hard only; very_easy/easier excluded"
+  unqualified: "orbits/slotted_post_ring lack full current robot oracle; other qualifications depend on frozen config/version"

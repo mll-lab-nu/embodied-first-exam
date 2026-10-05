@@ -10,6 +10,7 @@
 
 | 脚本 | 职责 |
 | --- | --- |
+| `run_slotted_post_ring_oracle.py` | 迁入的 12 阶段候选，经本地 v15 Session 执行；保留本地环境，平放端盘抓取待适配，当前仅首阶段开发入口；[差异与未验证边界](../../topogym/planning/slotted_post_ring/README.md) |
 | `harbor_oracle.py` | 跨任务的冻结实例检查、私有 oracle 候选打包和 Harbor oracle/nop 批量执行；[接入说明](../../topogym/planning/harbor_bridge/README.md) |
 | `run_lock_picking_policy.py` | 两档双片 simplified、原三档 reindex 及历史 medium 策略；标准 Env 执行，可录制逐动作 IK/FK |
 | `run_cast_coil_policy.py` | Coil 原三档策略，以及 very_easy 大齿直插、easier 挡板加横移装配策略 |

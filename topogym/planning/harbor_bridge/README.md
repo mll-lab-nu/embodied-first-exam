@@ -194,6 +194,7 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
 | --- | --- |
 | Fiber、Claws、Horseshoe | 默认参考曾指向被 Git 忽略的证明 evidence；现将必需文件复制到私有 `reference_data/` 并校验原始哈希 |
 | Hedgehog easy/hard | 同样缺 pickup 文件，且打包遗漏 `reference_routes.json`；两项均补齐，medium 不需要 pickup 文件 |
+| Buzz medium 分阶段入口 | `stages.py` 曾读取被 Git 忽略的 `runs/.../medium_traverse_guide.json`，且未登记在默认依赖中；现将原字节、SHA-256 和阶段模块一并纳入私有资源打包及搬迁读取回归 |
 | Keyhole、Buzz、Lock | Session worker 曾无条件导入镜像裁剪的 SegmentRunner／记录哈希模块；现在仅独立本地 runner 加载 SegmentRunner，记录哈希算法保持一致 |
 | Fiber、Horseshoe 共享 stages | `planning/solvability.py` 的记录哈希也依赖裁剪模块，隔离容器复现后已替换为同一私有哈希函数 |
 | Rope | 补齐 `hard_plans.json`；机器人资产按安装目录解析，保留原文档文件哈希，不再查找 `/solution/assets/` |
@@ -201,6 +202,20 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
 | 新机器入口 | 首次评分实际执行镜像构建；生成命令沿用调用者 Python；提交检查检测遗漏文件及尚未暂存的私有依赖修改 |
 | Orbits、Slotted Post Ring | 尚无完整机器人 oracle，不在默认 33 项队列中 |
 | very_easy/easier、旧无分档包与 Cube 示例 | 未迁入当前三档 v15 oracle 流程；当前目录中的历史版本不能绕过活动版本身份检查 |
+
+Buzz medium 的补充检查执行了搬迁后的 `solution/` 中实际阶段参数的引导读取，
+并验证删除／篡改文件会报错；原检查仅遍历已登记依赖，无法发现未登记的运行时文件。
+引导原文件为 284,534 字节，SHA-256 为
+`4511df68f53ded79077a12998ddfe76f1cbf65f6ac552b412fbdefa4bf16cd0f`。
+后续核对 lab 调用栈确认实际失败来自默认通用 planner，而非缺文件异常。
+默认 `public_session` 现已改选完整 oracle：easy 使用 11 段反馈 selection；medium/hard
+使用已审计的完整动作序列（29,544／43,568 行），含终点转正与释放。
+缺少输入或 seed／布局／初始姿态／控制周期不匹配时，在动作前失败，不回退到通用 planner。
+对方若显式走历史 medium 分阶段入口，旧 selection 路径仍须按 [参考输入说明](reference_data/README.md) 更新。
+提交 Python、资源和 manifest 后，接收方须重新打包，并用新的输出目录重试；
+旧候选 `solution/` 和 `--resume` 队列不会自动获得新文件。
+这是资源交付和策略选择修复；本机 NVIDIA 驱动不可用，没有运行完整 GPU grading，也不代表 Horseshoe 动作、Rope 稳定阈值
+或 Blanket 末态抖动已解决。
 
 已完成的检查：
 
@@ -349,7 +364,7 @@ runner 文件存在不代表已有完整成功证据。任何物理/几何版本
 | Lock Picking | 原三档 reindex 求解流程已接 Session 和原生目标；待实机核对 Task success |
 | Cast Coil | easy 双模式 3 步接线与 grading 实测通过；三档完整 grade 1 待验证 |
 | Fiber Bundling | 包初始化、既有 stages 和三档 selection 已接入；候选显式保留 sheath assistance；待实机验证 |
-| Buzz Wire | 既有反馈算法已接入；编译策略使用 control_decimation 核对 tick；历史编译证明不自动继承 |
+| Buzz Wire | 默认选择 easy 完整 11 段反馈配方及 medium/hard 完整编译动作；保留冻结物理，完整 GPU grading 待 lab 验证 |
 | Hedgehog | 反馈回调及 easy/hard 已选 pickup 数据已接入；待核验当前模型与实机执行 |
 | Interlocked Claws | 既有机器人策略、witness 和只读几何审计已接入，保留预抓持 birth；待实机验证 |
 | Horseshoe | stages、配方及五份输入已打包并核对哈希；当前模型检查保留；待实机验证 |
@@ -391,7 +406,7 @@ Blanket 的 birth UV 及只读材质绑定已进入公共 task/PBD 代码，原 
 | Coil | `topogym.planning.cast_coil.public_session:run_feedback_policy` | 从绑定 Session 读取 variation、seed 和任务参数；EE_ABS 经转换器提交 |
 | Keyhole | `topogym.planning.cast_keyhole.harbor_session:run_feedback_policy` | F1/F2/F3 私有参考 |
 | Lock | `topogym.planning.lock_picking.public_session:run_feedback_policy` | 原 reindex 算法 |
-| Buzz | `topogym.planning.buzz_wire_3d.public_session:run_feedback_policy` | 原反馈算法；不继承旧 compiled 运行资格 |
+| Buzz | `topogym.planning.buzz_wire_3d.public_session:run_feedback_policy` | 三档 recipe；easy selection；medium/hard 全部 compiled actions；不继承历史成绩 |
 | Fiber | `topogym.planning.fiber_bundling.public_session:run_feedback_policy` | 三档 selection |
 | Horseshoe | `topogym.planning.horseshoe_ring.public_session:run_feedback_policy` | recipe + 哈希绑定的五份数据 |
 | Hedgehog | `topogym.planning.hedgehog_in_cage.public_session:run_feedback_policy` | easy/hard pickup；medium 原内置配方 |

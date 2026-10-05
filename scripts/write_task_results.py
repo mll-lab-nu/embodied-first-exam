@@ -28,7 +28,7 @@ n = 0
 for trial in sorted((jobs / job).glob("*__*")):
     if not (trial / "result.json").exists(): continue
     r = json.load(open(trial / "result.json")); task = r["task_name"].split("/")[-1]
-    from regrade_trials import original_task
+    from trial_task_paths import original_task
     tdir = original_task(trial)
     if tasks_root and (tasks_root / task).resolve() != tdir.resolve():
         raise ValueError(f"Report task root differs from this trial's recorded package: {trial}")
@@ -38,7 +38,8 @@ for trial in sorted((jobs / job).glob("*__*")):
     release_record = json.loads(release_path.read_text())["release"] if release_path.exists() else {"name": "historical_unrecorded"}
     rw = json.load(open(trial / "verifier/reward.json")) if (trial / "verifier/reward.json").exists() else {}
     ar = r.get("agent_result") or {}; limited = task.endswith(("-limited", "-standard")); fam = re.sub(r"-(limited|standard|privileged)$", "", task.removeprefix("topogym-"))
-    out = base / task / slug; out.mkdir(parents=True, exist_ok=True)
+    group = base / task / slug
+    out = group / trial.name; out.mkdir(parents=True, exist_ok=True)
     for f in ("replay.mp4", "replay.last.png"):
         if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)
     ok = rw.get("success") == 1
@@ -63,4 +64,6 @@ for trial in sorted((jobs / job).glob("*__*")):
     if msgs:
         lines += ["## Agent's last messages\n"] + [f"- {m[:600]}" for m in msgs] + [""]
     (out / "README.md").write_text("\n".join(lines)); n += 1
+    pages=sorted(p for p in group.iterdir() if p.is_dir() and (p/'README.md').exists())
+    (group/'README.md').write_text(f'# {label} — {task}\n\n'+ '\n'.join(f'- [{p.name}]({p.name}/README.md)' for p in pages)+'\n')
 print(f"{job}: wrote {n} result folders for {slug} under {base}")

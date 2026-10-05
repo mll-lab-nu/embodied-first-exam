@@ -110,7 +110,7 @@ def validate_assignment(data):
     if data['cuda_flavor'] not in ('cu128','cu130') or data['mirror'] not in ('required','optional'):
         raise ValueError('invalid runtime policy')
     budget=manifest['settings']['agent_wall_clock_s']
-    if type(budget) is not int or not 1 <= budget <= 21600 or manifest['settings']['concurrency'] != 1:
+    if type(budget) is not int or not 1 <= budget <= 43200 or manifest['settings']['concurrency'] != 1:
         raise ValueError('invalid helper budget/concurrency')
     target=data['upload']
     if target['type'] == 'hf':
@@ -144,7 +144,9 @@ def create_assignment(spec, root):
     manifest['manifest_sha256']=digest(manifest)
     if files!=source_files(root): raise ValueError('source changed while assigning; retry from frozen release')
     def git(*args):
-        p=subprocess.run(['git',*args],cwd=root,capture_output=True,text=True)
+        if not (root/'.git').exists(): return None
+        try: p=subprocess.run(['git',*args],cwd=root,capture_output=True,text=True)
+        except FileNotFoundError: return None
         return p.stdout.strip() if p.returncode==0 else None
     result=dict(schema_version=1,format='topogym-helper-assignment',batch=spec['batch'],helper=spec['helper'],created_at=utc(),
                 source=dict(repository=spec.get('repository','TopoGym'),branch=git('branch','--show-current'),commit=git('rev-parse','HEAD')),
