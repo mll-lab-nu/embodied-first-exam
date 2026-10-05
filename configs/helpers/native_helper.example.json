@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "assignment": "/path/to/robot_coding_bench/configs/helper_batches/helper01-oracle-v15-k3.json",
+  "assignment": "/path/to/helper-release/configs/helper_batches/helper01-oracle-v15-k3.json",
   "jobs_dir": "/data/helper-work/jobs/agents",
   "auth": {"method": "subscription", "auth_file": "~/.codex/auth.json"},
   "lanes": [{"gpu": "0"}],

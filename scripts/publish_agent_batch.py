@@ -43,6 +43,7 @@ def publish(run, repository, batch, helper, **options):
 
 def _publish(run, repository, batch, helper, *, repetitions=None, model=None, effort=None, agent=None, upload=None, task_bases=None):
     run=Path(run).resolve(); repository=Path(repository).resolve(); component(batch); component(helper)
+    if helper!=helper.lower(): raise ValueError('helper ID must be lowercase')
     dispatch=repository/'configs/helper_batches'/(batch+'.json')
     if dispatch.exists(): raise ValueError('batch dispatch already exists; preserve it')
     manifest=validate_manifest(read(run/'manifest.lock.json')); verify_source(run)
@@ -108,7 +109,8 @@ def _publish(run, repository, batch, helper, *, repetitions=None, model=None, ef
         runner_names=['scripts/'+name for name in ('run_agent_batch.sh','agent_batch_runtime.py','agent_batch_contract.py','agent_batch_delivery.py',
             'agent_batch_mirror_copy.py','helper_log_mirror.py','log_mirror.py','secret_scan.py','scan_secrets.py','account_failure_check.py','topogym_versions.py',
             'helper_batch.py','setup_agent_batch.sh','finish_agent_batch.py','check_agent_batch_auth.py','check_agent_batch_hf.py',
-            'difficulty_hf_auth.py','difficulty_results_hf.py','helper_bundle.py')]
+            'difficulty_hf_auth.py','difficulty_results_hf.py','helper_bundle.py','export_native_helper_release.py',
+            'import_helper_results.py','collect_batch_results.py','helper_assignment.py')]
         runner_names+=['bash_scripts/run_helper_batch.sh']
         runner_names+=['harbor_agents/persistent_auth.py','images/difficulty-eval/patch_harbor.py','requirements/difficulty-eval-controller.lock','topogym/utils/process_limits.py']
         plan['runner_files']={name:sha(repository/name) for name in runner_names}

@@ -122,9 +122,10 @@ class Workflow(unittest.TestCase):
                 if action=='commit':
                     obj.commits+=1
                     obj.remote={rel:dict(size=Path(path).stat().st_size,sha256=c.sha(path)) for rel,path in kw['files']}
-                    return 'rev'+str(obj.commits)
+                    from difficulty_hf_auth import HFError
+                    raise HFError('network_error',retryable=True)  # remote committed, response was lost
         hub=Hub()
-        with patch.object(h,'hf_access',return_value=hub):
+        with patch.object(h,'hf_access',return_value=hub),patch.object(h.time,'sleep'):
             self.assertTrue(h.upload(cfg,self.plan,state)['remote_verified'])
             self.assertTrue(h.upload(cfg,self.plan,state)['remote_verified'])
             self.assertEqual(hub.commits,1); self.assertEqual(len(hub.remote),3)
@@ -181,6 +182,15 @@ class Workflow(unittest.TestCase):
         self.assertFalse(any(n.startswith('scripts/oracle_runners/') for n in names))
         self.assertFalse(any(n.startswith('topogym/planning/cast_coil/') for n in names))
         self.assertFalse(any(n.startswith(('runs/','.codex/','.git/')) for n in names))
+    def test_release_accepts_external_assignment_only_with_matching_packages(self):
+        import export_native_helper_release as release
+        self.plan['release']={'example':'runtime'}; self.repin()
+        c.save(self.root/'helper-release.json',dict(schema_version=1,kind='native-helper-release',
+            runtime_only=False,release=self.plan['release'],files={},assignments={}))
+        with patch.object(release,'identity',return_value=self.plan['release']):
+            self.assertTrue(release.verify_release(self.root,self.plan)['verified'])
+            path=self.root/'tasks'/self.plan['tasks'][0]['name']/'task.toml'; path.write_text('changed')
+            with self.assertRaises(ValueError): release.verify_release(self.root,self.plan)
     def test_background_config_and_inherited_credentials(self):
         cfg=h.load_config(self.config)
         with patch.dict(os.environ,{'HF_TOKEN':'never-pass','MODEL':'wrong','CODEX_AUTH_JSON_PATH':'wrong','OPENAI_API_KEY':'wrong'}):

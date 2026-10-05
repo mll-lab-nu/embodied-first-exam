@@ -4,6 +4,8 @@
 
 最新交付安排：上游指定 `SHARING_RUNS.md` 为静态 helper 手册，本页作为工程操作说明；取得官方原文后将 TopoGym 入口补入其 §3b。第三方 helper 使用另行发布的可访问 release，不克隆私有 `robot_coding_bench`。下一阶段开发和实测见 [独立 release 与 HF 小测试计划](helper_release_and_hf_smoke_plan_zh.md)。
 
+当前自助小批次和接收 CLI 见 [helper_native_cli_zh.md](helper_native_cli_zh.md)。已新增 `--init-config`、HF `--check-access`、`export_native_helper_release.py` 和独立 `import_helper_results.sh`；本机工具安装/实例规划已通过，GPU prepare 尚被显存保护拦住，尚无真实 HF 上传结果。
+
 ## 1. 实验口径和目前可以声称的完成范围
 
 用户 2026-10-04 最新指定：排除 Knot、Slotted Post Ring、Orbits，每个任务、每档使用 oracle 测验的固定 seed，同一实例重复三次，`K=3`。当前配置是 [helper_oracle_reference.yaml](../../configs/sweeps/helper_oracle_reference.yaml)：10 个任务 × easy/medium/hard × privileged/standard × 3 = **180 trials**，分为 **30 个实例、60 个任务包和 60 个 jobs**。Very-easy/easier 不在本次三档口径中；旧 [oracle_reference.yaml](../../configs/sweeps/oracle_reference.yaml) 保留为 13 任务的历史预设。
@@ -50,7 +52,7 @@ bash bash_scripts/run_difficulty_trials.sh \
 
 ### 2.2 发布到标准 tasks/ 和 configs/helper_batches/
 
-维护方和 helper 的 native runner 工具安装相同。需要 Linux、Python 3.12、Node.js 22 或更新版本、Docker/Compose 和 NVIDIA Container Toolkit；模型/依赖安装需要网络。脚本固定 Harbor 0.23.0、Codex 0.157.0，安装已有哈希锁和认证刷新补丁。
+维护方和 helper 的 native runner 工具安装相同。需要 Linux、Python 3.12、npm、Docker/Compose 和 NVIDIA Container Toolkit；模型/依赖安装需要网络。脚本固定 Harbor 0.23.0、Codex 0.157.0 和私有 Node 22.14.0，安装已有哈希锁和认证刷新补丁，不改宿主 Node。Python 3.12 若由 uv 管理，脚本可找到已安装的解释器。
 
 ```bash
 bash scripts/setup_agent_batch.sh

@@ -2,6 +2,8 @@
 
 2026-10-04。根据用户转述的最新上游安排制定。本页是下一阶段开发计划，**不表示已发布 helper 仓库、已使用真实凭据测试 HF，或已启动模型实验**。现有功能和历史验证见 [native helper 操作说明](standard_helper_operations_zh.md)；更早的修复背景见 [标准流程工程计划](standard_helper_pipeline_engineering_plan_zh.md)。
 
+实施更新：已增加 native release 导出/验证、仅 HF 权限检查、私有凭据隐藏输入、helper 配置生成、独立 HF 下载/验收与上传重试。最新用户要求小测试直接走正规流程，因此下文 B 的“合成包真实上传”方案不执行；只做权限检查，真实数据由正式 Coil easy 双模式 K=1 产生。执行步骤及当前阻塞见 [正式入口 CLI](helper_native_cli_zh.md)。已有回归夹具只验证代码，不上传为实验结果。官方手册原文尚未取得，独立完整 release 仍需它；工具导出已实测，正式 prepare 被现有 GPU 显存门槛拦住。
+
 ## 1. 新信息确定了什么
 
 | 项目 | 本轮采用的约定 |

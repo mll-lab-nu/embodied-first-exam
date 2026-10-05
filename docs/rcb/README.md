@@ -1,10 +1,12 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
-标准 helper 交付请使用 [固定 oracle 实例 K=3 操作手册](standard_helper_operations_zh.md)。统一入口 `bash_scripts/run_helper_batch.sh --config <本机配置>` 涵盖准备、运行、打包和 HF 交付，内部调用原 `scripts/run_agent_batch.sh`；接收/网站导入独立。当前预设排除 Knot/Slotted Post Ring/Orbits：10 任务、三档、双模式、K=3，共 60 包/180 trials；Sol xhigh，每 trial 12 小时、150M input/10M output（token 超预算运行后判失败）。正式任务包与真实实验仍待准备和放行。下述全局 active 选择器和历史流程继续保留。
+面向 helper 的正式交付说明统一以 [`SHARING_RUNS.md`](SHARING_RUNS.md) 为入口；本地固定 oracle 实例 K=3 的维护方操作记录见 [标准 helper 操作说明](standard_helper_operations_zh.md)。统一入口 `bash_scripts/run_helper_batch.sh --config <本机配置>` 涵盖准备、运行、打包和 HF 交付，内部调用原 `scripts/run_agent_batch.sh`；接收/网站导入独立。当前预设排除 Knot/Slotted Post Ring/Orbits：10 任务、三档、双模式、K=3，共 60 包/180 trials；Sol xhigh，每 trial 12 小时、150M input/10M output（token 超预算运行后判失败）。正式任务包与真实实验仍待准备和放行。下述全局 active 选择器和历史流程继续保留。
 
 上游已确认私有 HF 接收库建好；第三方 helper 需要独立、可访问的固定 release。官方 `SHARING_RUNS.md` 同步、§3b、release 导出和真实上传/下载小测试见 [下一阶段工程计划](helper_release_and_hf_smoke_plan_zh.md)。
 
-当前唯一新实验目标是 tooling **v15** / `0.2.13-dev-cu128`。根目录 `tasks/` 是历史任务包。
+可复制的当前 CLI 见 [把建文作为 helper 的正式流程小批次](helper_native_cli_zh.md)：只筛选 Coil easy、双模式、K=1，不增加 smoke 专用执行脚本。独立 release 导出、HF 权限检查、配置生成及独立 HF 下载验收入口已加入；真实 prepare 当前因 GPU 空闲显存低于 12 GB 被拦住，尚无本次真实 HF 结果。
+
+当前唯一新实验目标是 tooling **v16** / `0.2.14-dev-cu128`（merged-v16：v15 候选流程与环境参数，加上评分回放和物理有效性规则，见 [版本说明](benchmarks/topogym.md)；v15 候选的工具哈希已冻结）。根目录 `tasks/` 是历史任务包。
 先按根 README 的候选构建流程完成 `topogym_candidate_pipeline.py --phase all`，再设置：
 
 ```bash
@@ -12,8 +14,8 @@ export TASKS_ROOT="$(.venv-gs121-nyx/bin/python scripts/topogym_versions.py task
 .venv-gs121-nyx/bin/python scripts/topogym_versions.py list --inspect-docker
 ```
 
-选择器在 v15 尚未具备完整验收证据时明确报错。新批量实验和随机难度实验使用同一份 v15 环境参数；
-随机实验仍保留随机 seed 和场景扰动。下方历史验收记录保留发生时的版本，不作为 v15 成功证据。
+选择器在活动版本尚未具备完整验收证据时明确报错。新批量实验和随机难度实验使用同一份活动版本环境参数；
+随机实验仍保留随机 seed 和场景扰动。下方历史验收记录保留发生时的版本，不作为当前版本的成功证据。
 重评分只读取原任务路径，并把结果写入新的 `regrades/` 目录，不覆盖原始 verdict。
 
 
@@ -413,11 +415,11 @@ scripts/make_two_mode_report_zh.py jobs/agents <unlimited 作业> <limited 作�
 - **limited：`tests/grade.py`（21 行）**：只读 sim 写的 `/data/final.json`。`success = 现场成功 且 sim 的重放也成功`（17 行）。没有 `final.json` 时写 `missing_log=1`。
 - **`test.sh`**：第一件事是清空 `/logs/verifier`。Harbor 把这个目录也挂进了 agent 的容器，清空后，agent 预先放进去的假分数文件不可能被当成成绩。
 
-**regrade（重判）是什么意思**：不是换一种评分，而是“用同一个评分器，在新容器里把同一条轨迹再判一次解开没有”。参考仓库有这个脚本（`scripts/regrade_trials.sh`），是因为评分容器偶尔会因为基础设施问题出错，比如和其他作业抢 GPU 导致 CUDA 显存不足。这时 `grader_error=1`，或者没有录出视频。重判不需要 agent 重新跑一遍，v15 重评写入独立输出目录，原来的 `reward.json` 保持不变。
+**regrade（重判）是什么意思**：不是换一种评分，而是“用同一个评分器，在新容器里把同一条轨迹再判一次解开没有”。参考仓库有这个脚本（`scripts/regrade_trials.sh`），是因为评分容器偶尔会因为基础设施问题出错，比如和其他作业抢 GPU 导致 CUDA 显存不足。这时 `grader_error=1`，或者没有录出视频。重判不需要 agent 重新跑一遍，重评写入独立输出目录，原来的 `reward.json` 保持不变。
 
 ### 2.4 两个生成器：`scripts/topogym_mk_task.py`、`scripts/topogym_mk_limited.py`（对应参考仓库的 `robowits_mk_task.py`、`robowits_mk_limited.py`）
 
-- **`topogym_mk_task.py <家族>`** 默认生成候选目录 `runs/task_candidates/v15/topogym-<家族>-i00-privileged/`，固定套件由 candidate pipeline 指定独立目录：
+- **`topogym_mk_task.py <家族>`** 默认生成候选目录 `runs/task_candidates/v<活动 tooling>/topogym-<家族>-i00-privileged/`，固定套件由 candidate pipeline 指定独立目录：
   1. 从 cube 模板复制共享文件（`SHARED`，19 行）：工具、Dockerfile、compose、`grade.py`；
   2. 调用 `rcb_topogym.py make-instance` 冻结实例（需要 GPU，把场景建一次）；
   3. 调用 `describe` 读出相机、机器人、判据源码和实测每步耗时，缓存到 `runs/task_build/<任务>/describe.json`；
@@ -679,6 +681,7 @@ Harbor 的 `rcb_topogym.py` 和 limited 的 `server.py` 不用 `SegmentRunner`�
 合并后 B04–B13 的修复顺序、接口合同及验收安排见 [Run trials 合并后问题修复工程计划](run_trials_post_merge_repair_plan_zh.md)；该文是待实施计划，实际问题状态以链接的审查与验收记录为准。
 
 外部 helper 后续按 [标准 helper 流程核对与修复计划](standard_helper_pipeline_engineering_plan_zh.md) 对齐 `run_agent_batch.sh`、`jobs/agents` 和原文交付命令；该标准链路尚未全部接通。此前 difficulty/helper-bundle 的实现记录见 [上一版工程计划](helper_delivery_engineering_plan_zh.md)，其独立格式操作见 [Helper 手册](helper_quickstart_zh.md) 与 [异机验收手册](helper_import_zh.md)。现有 HF 指标上传不等于完整原始记录交付。独立 GPU 主机与异机离线验收待完成；网站接通按用户决定暂缓。
+面向 helper 的操作手册只有一份：本目录的 [`SHARING_RUNS.md`](SHARING_RUNS.md)（英文，所有基准共用，含 TopoGym 的版本选择、blanket 硬件约束和上传目标 `eai-v2-internal/helper-uploads`；与 robot_coding_bench `dev/qineng` 的 `docs/SHARING_RUNS.md` 逐字相同，两处一起改）。上述计划实现其中 TopoGym 随机难度试验的部分，验收后把命令写入该手册（§3b），不另建手册。
 
 主逻辑在 [`scripts/difficulty_eval.py`](../../scripts/difficulty_eval.py)，[`bash_scripts/run_difficulty_trials.sh`](../../bash_scripts/run_difficulty_trials.sh) 默认负责 Docker 镜像准备与控制器启动，实验阶段由 Python 调度器执行。配置在
 [`configs/sweeps/difficulty_eval.yaml`](../../configs/sweeps/difficulty_eval.yaml)。默认全部 **13 tasks × 3 难度 × 1 sample × 2 模式 = 78 trials**，每次 agent 最长 **21600 秒**。
@@ -742,7 +745,7 @@ OpenRouter 使用 `--provider openrouter --model openrouter/<provider>/<model>`�
 
 每个 run 的实际源码和机器人资源复制到 `runs/difficulty_trials/<run-id>/source/`，按哈希构建独立镜像。
 真实建场、describe、preflight、正式双模式使用这份镜像。Blanket 会先为抽中 seed 生成数值初态，并将依赖打包到实例中；失败不换 seed。
-`tasks/` 根目录中的历史实例不被这次评测覆盖；它们的共享工具副本按历史版本冻结，不随 v15 模板更新。
+`tasks/` 根目录中的历史实例不被这次评测覆盖；它们的共享工具副本按历史版本冻结，不随当前模板更新。
 
 Docker 模式下，以下目录都位于 `topogym-work/`（可用 `--work-dir` 覆盖）；本地后端仍位于仓库根目录。`runs/difficulty_trials/<run-id>/` 保存 `manifest.lock.json`、源码/镜像身份、任务包、逐实例检查、`trials.jsonl`、`summary.csv` / `summary.md`；原始 Harbor job 在 `jobs/difficulty_trials/<run-id>/`。
 汇总保留所有 attempt，按每个计划 trial 的最后一次 attempt 判断批次完成。缺轨迹为 `invalid_submission`，基础设施错误为 `infra_failed`，判据未完成为 `not_evaluable`，三者均不进入已有效评分场景的 solved/unsolved 比率。

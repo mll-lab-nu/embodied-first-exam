@@ -10,6 +10,8 @@
 
 HF 最新沟通更新（用户提供的上游回复）：私有 `eai-v2-internal/helper-uploads` 已创建，上游已实测上传和下载，目录为 `helpers/<helper>/<batch>/`。每位 helper 使用独立的库级 fine-grained 写 token，接收方用自己的组织账号读取；我们尚未认证实测。官方静态手册为 `SHARING_RUNS.md`，TopoGym 命令补入 §3b。私有开发仓库不可要求第三方克隆，需另行提供固定 helper release。公开的 `agent-runs` 不接收原始归档。后续依赖审查、独立 release、下载入口和真实小测试见 [下一阶段计划](helper_release_and_hf_smoke_plan_zh.md)。
 
+该下一阶段的工具导出、配置生成、HF 权限与独立下载验收入口现已加入；同一正式 pipeline 的小样步骤见 [CLI 手册](helper_native_cli_zh.md)。真实 rollout/HF 交付尚未完成，不以安装和离线回归代替真实验收。
+
 ## 先看结论
 
 | 问题 | 核对结论 |

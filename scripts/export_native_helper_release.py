@@ -14,6 +14,7 @@ import tomllib
 from agent_batch_contract import read, save, validate, sha, inventory, package, relative, digest
 from secret_scan import scan_tree
 from topogym_versions import identity, require_task
+from helper_bundle import guard
 
 ROOT=Path(__file__).resolve().parents[1]
 OMIT={'agents','planning','data','deferred','legacy','redundants','rollout_simulation','__pycache__'}
@@ -81,8 +82,15 @@ def verify_release(root,plan=None):
         if sha(regular(root,name))!=want: raise ValueError('helper release file changed: '+name)
     if identity(root)!=manifest['release']: raise ValueError('helper release runtime identity changed')
     if plan is not None:
-        if manifest['runtime_only'] or manifest['assignments'].get(plan['batch'])!=plan['plan_sha256']:
-            raise ValueError('assignment is not included in this helper release')
+        validate(plan)
+        if manifest['runtime_only'] or plan.get('release')!=manifest['release']:
+            raise ValueError('assignment needs matching frozen tasks and runtime')
+        pinned=manifest['assignments'].get(plan['batch'])
+        if pinned and pinned!=plan['plan_sha256']: raise ValueError('bundled assignment was changed')
+        # A separately issued batch/rerun may reuse these exact packages and tools.
+        for task in plan['tasks']: package(root,task)
+        for name,want in plan.get('runner_files',{}).items():
+            if manifest['files'].get(name)!=want: raise ValueError('assignment runner differs from release')
     return dict(verified=True,runtime_only=manifest['runtime_only'],files=len(manifest['files']),
                 assignments=manifest['assignments'])
 
@@ -113,6 +121,7 @@ def export(root,output,assignments=(),*,manual=None,runtime_only=False):
     with tempfile.TemporaryDirectory(prefix='.helper-release-',dir=output.parent) as td:
         stage=Path(td)/'release'; stage.mkdir()
         for name,want in input_hashes.items():
+            guard()
             dest=stage/name; dest.parent.mkdir(parents=True,exist_ok=True)
             shutil.copy2(regular(root,name),dest)
             if sha(dest)!=want: raise ValueError('source changed during export: '+name)
@@ -123,7 +132,8 @@ def export(root,output,assignments=(),*,manual=None,runtime_only=False):
             dest=stage/'docs/SHARING_RUNS.md'; dest.parent.mkdir(parents=True,exist_ok=True)
             shutil.copyfile(manual,dest)
             if sha(dest)!=manual_hash: raise ValueError('manual changed during export')
-        for name in ('helper_native_cli_zh.md','SHARING_RUNS_3b.md'):
+        # The maintainer's machine-specific smoke guide is not a helper manual.
+        for name in ('SHARING_RUNS_3b.md',):
             source=root/'docs/rcb'/name
             if source.is_file():
                 dest=stage/'docs'/name; dest.parent.mkdir(parents=True,exist_ok=True); shutil.copyfile(source,dest)
@@ -131,7 +141,7 @@ def export(root,output,assignments=(),*,manual=None,runtime_only=False):
             # A selected dataset contains exactly the packages distributed here.
             catalog=tomllib.loads((root/'tasks/dataset.toml').read_text())
             entries={t['name'].split('/')[-1]:t for t in catalog['tasks']}
-            lines=['[dataset]','name = '+json.dumps(catalog['dataset']['name'])]
+            lines=['[dataset]']+[key+' = '+json.dumps(value) for key,value in catalog['dataset'].items()]
             for name in sorted(task_names):
                 row=entries[name]
                 wanted=next(t['harbor_checksum'] for p in plans for t in p['tasks'] if t['name']==name)
@@ -147,17 +157,19 @@ def export(root,output,assignments=(),*,manual=None,runtime_only=False):
         head=result.stdout.strip() if result.returncode==0 else None
         (stage/'README.md').write_text('# TopoGym native helper release\n\n'+
             ('Runtime tools only; no experimental assignment or tasks included.\n\n' if runtime_only else '')+
-            'See docs/SHARING_RUNS.md and docs/SHARING_RUNS_3b.md.\n'+
+            ('See docs/SHARING_RUNS.md and docs/SHARING_RUNS_3b.md.\n' if manual_hash else
+             'See docs/SHARING_RUNS_3b.md; an experimental release additionally requires the official manual.\n')+
             'Run: bash bash_scripts/run_helper_batch.sh --config /private/helper.local.json\n'+
             'Receive separately: bash bash_scripts/import_helper_results.sh --help\n')
         (stage/'.gitignore').write_text('.venv*/\n.tools/\n.secrets/\n.env*\n**/__pycache__/\n*.pyc\njobs/\nruns/\n')
-        if not scan_tree(stage,{},allow_empty_secrets=True)['clean']:
+        if not scan_tree(stage,{},allow_empty_secrets=True,guard=guard)['clean']:
             raise ValueError('release credential-pattern scan failed; no export produced')
         manifest=dict(schema_version=1,kind='native-helper-release',runtime_only=runtime_only,release=expected,
                       source_git_head=head,source_files_sha256=digest(input_hashes),official_manual_sha256=manual_hash,
                       assignments={p['batch']:p['plan_sha256'] for p in plans},
                       scan_scope='credential patterns; no assertion about unknown credentials',
-                      images={p['batch']:p.get('images',{}) for p in plans},files=inventory(stage))
+                      images={p['batch']:dict(roles=p.get('images',{}),bindings={
+                          t['name']:t['runtime_binding'] for t in p['tasks']}) for p in plans},files=inventory(stage))
         save(stage/'helper-release.json',manifest)
         # Detect source edits during the copy/validation, including concurrent sessions.
         if any(sha(regular(root,name))!=want for name,want in input_hashes.items()):
