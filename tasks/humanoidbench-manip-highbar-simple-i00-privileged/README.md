@@ -9,7 +9,7 @@
 | Family / instance | `highbar_simple` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and no published RL result covers it (neither upstream's curves (which cover only highbar_hard) nor FastTD3 (h1hand only) report this family); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 HumanoidBench highbar_simple: produce one replayable trajectory that swings the Unitree H1 up on a high bar, frozen scene instance 00.

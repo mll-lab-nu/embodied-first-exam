@@ -9,7 +9,7 @@
 | Family / instance | `putting_shoes_on_rack` / seed 301 |
 | Oracle | `partial` — solution/ streams the privileged oracle's joint targets (oracle_qpos.npy, 6283 rows) through the client. Recorded Harbor oracle run (laptop, a pre-v1.0 version): 2026-09-25 behavior-putting-shoes-on-rack-i__XB2NUoX (job behavior-putting-shoes-on-rack-i00-limited-oracle-0925-015349) scored 1 with live_matches_replay 1 (6283 control steps), 1 of 1. The sim service, collect hook, grader and oracle client changed since (crash recovery); not re-run on this version (static validation only). |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
 ## Task
 Standard-mode twin of `behavior-putting-shoes-on-rack-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put both pairs of shoes on the hall tree in the corridor.

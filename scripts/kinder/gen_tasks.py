@@ -39,7 +39,7 @@ TASKS_DIR = ROOT / "tasks"
 sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
 STANDARD = SHARED / "standard"                 # the standard-mode sidecar, client and verifier (eai-standard/2.1)
-IMAGE = "ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:" + (ROOT / "images/kinder/VERSION").read_text().strip()
+IMAGE = "ghcr.io/mll-lab-nu/eai-kinder:" + (ROOT / "images/kinder/VERSION").read_text().strip()
 # The agent container and the verifier of every standard-mode task: Python and the client only, pinned by digest.
 CLIENT_IMAGE = ("docker.io/library/python:3.12.14-slim"
                 "@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f")

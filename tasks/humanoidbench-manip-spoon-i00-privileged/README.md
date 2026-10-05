@@ -9,7 +9,7 @@
 | Family / instance | `spoon` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and published RL reaches 57% of the bar (paper 322, FastTD3 369, bar 650); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 HumanoidBench spoon: produce one replayable trajectory that stirs a cup with a spoon held by the Unitree H1, frozen scene instance 00.

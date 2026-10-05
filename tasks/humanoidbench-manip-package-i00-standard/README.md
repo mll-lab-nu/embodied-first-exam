@@ -9,7 +9,7 @@
 | Family / instance | `package` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and published RL stays below zero (paper -6912, FastTD3 -7487, bar 1500); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-package-i00-privileged`: the

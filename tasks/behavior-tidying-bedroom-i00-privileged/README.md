@@ -9,7 +9,7 @@
 | Family / instance | `tidying_bedroom` / seed 301 |
 | Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-tidying-bedroom-i00__VcXRVyJ (behavior-lunaxh-t8-0927, privileged) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 2d486a91; grader verdict and frozen instance unchanged since); agent log https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/tidying_bedroom/unlimited/, verifier replay https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/tidying_bedroom/unlimited/replay.mp4; not re-run on this version (static validation only). Human review per family (protocol §2.7). |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
 ## Task
 Tidy the bedroom. The two sandals lie on the bedroom floor and the book lies on the bed. Put one sandal next to the bed and the other sandal next to the first one, and put the book on top of a table in the bedroom.
@@ -37,7 +37,7 @@ No oracle: the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull r
 | | |
 |---|---|
 | Instance | 2026 BEHAVIOR Challenge public_test instance 301 (scene `house_single_floor`), state hash in `environment/instance.json` |
-| Image | `ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1` = `stanfordvl/behavior:3.9.2` + ffmpeg; BUILD_ONLY, built on every host (`images/behavior/`) |
+| Image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` = `stanfordvl/behavior:3.9.2` + ffmpeg; BUILD_ONLY, built on every host (`images/behavior/`) |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition), never baked in |
 | GPU | an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`) |
 | Budget | 14400 s: every Python process pays ~3 min of Isaac Sim + scene load; ~7-11 control steps/s (docs/benchmarks/behavior.md) |

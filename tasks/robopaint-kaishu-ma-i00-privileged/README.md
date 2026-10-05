@@ -9,7 +9,7 @@
 | Family / instance | `robopaint_kaishu_ma` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: kaishu-u-oracle-final0928, kaishu-u-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (aaffb039: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on tiandaochouqin and yong), tooling snapshot 23 (ccb213d0: the scorer; re-scores bit-identical), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only. Not re-run on this version (static validation only). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robopaint:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task
 Copy the exemplar character 馬 in regular script shown in `environment/target.png` onto the 227 mm main sheet in at most 10 strokes, with ink from an ink stone and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).

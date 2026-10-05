@@ -72,13 +72,11 @@ can render them once each has a valid positive and a written success criterion. 
 
 ## Image
 - `images/robowits/`: RoboWits @ 9cc30ae, Genesis 0.4.7 and RoboWits' locked stack, RoboWits' Apache-2.0 asset bundle.
-  `ghcr.io/embodied-agent-interface-v2-internal/eai-robowits:<images/robowits/VERSION>`, public. 0.1.1 is the image
+  `ghcr.io/mll-lab-nu/eai-robowits:<images/robowits/VERSION>`, public; a copy of the image
   published on 2026-09-20 as `rcb-robowits:0.1.1`, unchanged (digest sha256:62688073fee9...); the Dockerfile pins the uv,
   huggingface_hub, imageio and asset-bundle versions that image contains. The GPU renders the three cameras; physics runs
   on the CPU.
-- Until the migration (PROTOCOL §7) `scripts/build_images.sh` / `push_images.sh` name images `rcb-<sim>`; this one is
-  built and tagged as docs/RUNNING.md ("Base images until the migration") describes. 0.1.1 was pushed on 2026-10-01 as a
-  retag of `rcb-robowits:0.1.1` (the same manifest).
+- `scripts/build_images.sh` builds it as `eai-robowits` (docs/RUNNING.md, "Base images").
 - Standard agent containers and verifiers use the shared client base, pinned by digest, and the shared pip pins
   (`scripts/eai_standard/client.env`, `client-requirements.txt`, copied into `environment/`; `check-standard-client.sh`).
 - 12 of the 15 families load BlenderKit models, which may not be redistributed (`images/robowits/NOTICE`). Each user

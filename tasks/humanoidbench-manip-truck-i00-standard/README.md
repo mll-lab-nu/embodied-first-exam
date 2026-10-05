@@ -9,7 +9,7 @@
 | Family / instance | `truck` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and published RL reaches 56% of the bar (paper 1363, FastTD3 1686, bar 3000); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-truck-i00-privileged`: the same

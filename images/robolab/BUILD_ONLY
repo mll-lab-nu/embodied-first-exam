@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:<images/robolab/VERSION> is never pushed to a
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION> is never pushed to a
 registry (docs/PROTOCOL.md §2.4, D5). Every evaluation host builds it locally; the RoboLab tasks reference that tag and
 Harbor finds it in the local Docker image store.
 
@@ -25,7 +25,7 @@ Host
   about 45-60 min. Run: one Isaac simulator per 32 GB of host RAM (the standard sidecar and its replays run one at a time).
 
 Build (from the repository root)
-  docker build -f images/robolab/Dockerfile -t ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:$(cat images/robolab/VERSION) .
+  docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .
   (scripts/build_images.sh builds every images/<sim>/ with its own naming; until it names images eai-<sim>, use the
   command above.) The build context is the repository root: the Dockerfile copies images/robolab/uv.lock, which pins
   every Python package (torch 2.7.0+cu128, numpy 1.26.0, isaacsim 5.1.0.0, isaaclab 2.3.2.post1).
@@ -34,7 +34,7 @@ Check a build
   The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of a reference trajectory
   must end in its recorded hash. With a task directory at hand:
     docker run --rm --gpus all --shm-size 8g -v $PWD/tasks/robolab-banana-in-bowl-i00-privileged:/t \
-      ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:$(cat images/robolab/VERSION) bash -c \
+      ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) bash -c \
       "cd /tmp && python /t/environment/rcb_robolab.py run-oracle --task banana_in_bowl --instance /t/environment/instance.json \
          --code /t/solution/oracle_banana_in_bowl.py --out /tmp/t.npz && \
        python /t/environment/rcb_robolab.py replay --task banana_in_bowl --instance /t/environment/instance.json --traj /tmp/t.npz"

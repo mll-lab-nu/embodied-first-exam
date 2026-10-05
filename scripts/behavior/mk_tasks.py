@@ -33,7 +33,7 @@ A new family: its BDDL problem into bddl/, an entry in families.json, then freez
 (dataset mounted read-only), e.g.
   docker run --rm --gpus all --shm-size 8g -v $RCB_BEHAVIOR_DATA:/data:ro \
     -v $PWD/tasks/behavior-picking-up-trash-i00-privileged:/t:ro -v $PWD/scripts/behavior/instances:/o \
-    ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1 bash -c \
+    ghcr.io/mll-lab-nu/eai-behavior:0.1.1 bash -c \
     "cd /tmp && python /t/environment/rcb_behavior.py make-instance --task <family> --instance-id 301 \
      --robot-config /t/environment/r1pro_primitives_eval.yaml --out /o/<family>.json"
 (the family must be registered in the tooling's TASKS, environment/rcb_behavior.py of the template, which every task
@@ -63,7 +63,7 @@ LAYER = {"environment/sim/rcb_limited.py": "rcb_limited.py", "environment/sim/rc
          "environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py",
          "environment/client-requirements.txt": "client-requirements.txt"}           # the client's pip pins (client.env)
 TOOLING = ("rcb_behavior.py", "r1pro_primitives_eval.yaml")     # the privileged environment/ copies are the source
-IMAGE = "ghcr.io/embodied-agent-interface-v2-internal/eai-behavior:0.1.1"
+IMAGE = "ghcr.io/mll-lab-nu/eai-behavior:0.1.1"
 NO_ORACLE = ("No oracle: the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull request that adds it, on a positive "
              "example and a `nop` run per mode.")
 PARTIAL = ("Oracle `partial`: the reference solution scored 1 on earlier versions of this task (`task.toml` `oracle_evidence`) "
