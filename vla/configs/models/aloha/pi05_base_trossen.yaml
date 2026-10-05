@@ -1,0 +1,12 @@
+# pi0.5 base checkpoint with the Trossen ALOHA norm stats.
+_base_: base.yaml
+class_path: vla.models.pi05.model.Pi05
+checkpoint: gs://openpi-assets/checkpoints/pi05_base   # cached under ~/.cache/openpi
+spec:
+  name: pi05_base_trossen
+  action_space: joint_abs
+  control_hz: 50
+  chunk_size: 50
+  execute_steps: 25                 # examples/aloha_real/main.py action_horizon
+model:
+  train_config: pi05_aloha          # openpi's default ALOHA config for pi05_base (scripts/serve_policy.py)

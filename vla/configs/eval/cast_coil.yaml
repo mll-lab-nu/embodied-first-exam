@@ -1,0 +1,4 @@
+# ALOHA task: models in configs/models/aloha/.
+_base_: base.yaml
+task:
+  id: cast_coil

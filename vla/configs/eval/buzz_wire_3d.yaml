@@ -1,0 +1,4 @@
+# Panda task: models in configs/models/panda_robotiq/.
+_base_: base.yaml
+task:
+  id: buzz_wire_3d

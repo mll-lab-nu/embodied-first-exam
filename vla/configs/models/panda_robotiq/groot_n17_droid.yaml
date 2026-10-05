@@ -1,0 +1,13 @@
+# GR00T N1.7 DROID checkpoint. eef_9d comes from Franka forward kinematics of the joints (models/groot/franka.py).
+_base_: base.yaml
+class_path: vla.models.groot.model.Groot
+checkpoint: nvidia/GR00T-N1.7-DROID    # cached under ~/.cache/huggingface; backbone Cosmos-Reason2-2B is gated
+spec:
+  name: groot_n17_droid
+  chunk_size: 40
+  execute_steps: 8                  # validated RoboLab sim run (the real-robot DROID client uses 15)
+model:
+  revision: 05e7cc97e40dbd33b0890c35cc0214fcb0547ab5
+  embodiment_tag: OXE_DROID_RELATIVE_EEF_RELATIVE_JOINT
+  image_hw: [180, 320]              # DROID training frames; the official clients resize to this size
+  image_interpolation: area         # cv2.INTER_AREA, as the RoboLab sim client

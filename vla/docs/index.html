@@ -1,0 +1,514 @@
+<title>TopoGym VLA 接入</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+:root {
+  --paper: #f4f6f5; --surface: #ffffff; --ink: #17212a; --muted: #56636e; --rule: #d6dcda;
+  --accent: #2a5c8a; --accent-soft: #e2ebf4; --code: #eaefed;
+  --ok: #2c7650; --ok-soft: #e0f0e6; --warn: #9a620f; --warn-soft: #f6ecd8; --bad: #a3362a; --bad-soft: #f5e1dd;
+  --sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --serif: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #11161a; --surface: #182026; --ink: #e2e8eb; --muted: #9aa7b0; --rule: #2a343b;
+    --accent: #8ab8e3; --accent-soft: #1d2e3f; --code: #1f282e;
+    --ok: #7fc89d; --ok-soft: #1a3325; --warn: #e2b15f; --warn-soft: #382c15; --bad: #eb9183; --bad-soft: #3b221f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #11161a; --surface: #182026; --ink: #e2e8eb; --muted: #9aa7b0; --rule: #2a343b;
+  --accent: #8ab8e3; --accent-soft: #1d2e3f; --code: #1f282e;
+  --ok: #7fc89d; --ok-soft: #1a3325; --warn: #e2b15f; --warn-soft: #382c15; --bad: #eb9183; --bad-soft: #3b221f;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.75 var(--sans); padding-inline: 20px; padding-block: 32px 64px; }
+main { max-width: 1040px; margin: 0 auto; display: grid; gap: 44px; }
+h1, h2 { font-family: var(--serif); text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+h1 { font-size: clamp(28px, 4.2vw, 40px); line-height: 1.25; }
+h2 { font-size: 23px; line-height: 1.35; }
+h3 { font-size: 16px; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+section { display: grid; gap: 16px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.lede { color: var(--muted); font-size: 16px; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+code { background: var(--code); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+pre { margin: 0; background: var(--code); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font: 13px/1.6 var(--mono); }
+pre code { background: none; padding: 0; font-size: inherit; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 13px; background: var(--surface); border: 1px solid var(--rule); }
+.status { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.s-ok { background: var(--ok-soft); color: var(--ok); }
+.s-warn { background: var(--warn-soft); color: var(--warn); }
+.s-bad { background: var(--bad-soft); color: var(--bad); }
+.s-info { background: var(--accent-soft); color: var(--accent); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 500; color: var(--muted); font-size: 12.5px; letter-spacing: 0.02em; background: var(--paper); white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+.card .sub { color: var(--muted); font-size: 13px; }
+.diagram { overflow-x: auto; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px; }
+.diagram svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.diagram .box { fill: var(--paper); stroke: var(--rule); stroke-width: 1.5; }
+.diagram .node { fill: var(--surface); stroke: var(--accent); stroke-width: 1.2; }
+.diagram .label { fill: var(--ink); font: 13px var(--sans); }
+.diagram .small { fill: var(--muted); font: 11.5px var(--mono); }
+.diagram .title { fill: var(--accent); font: 500 12px var(--mono); letter-spacing: 0.06em; }
+.diagram .wire { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+.diagram .link { stroke: var(--ok); stroke-width: 2.2; fill: none; }
+.note { color: var(--muted); font-size: 13.5px; }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--rule); padding-top: 16px; }
+@media (max-width: 560px) { body { font-size: 14.5px; } th, td { padding: 8px 9px; } }
+.tag { display: inline-block; padding: 0 7px; border-radius: 4px; font-size: 12.5px; line-height: 1.6; border: 1px solid currentColor; white-space: nowrap; }
+.t-done { color: var(--ok); } .t-todo { color: var(--warn); } .t-topo { color: var(--accent); } .t-no { color: var(--bad); }
+tr.grp td { background: var(--accent-soft); color: var(--accent); font-weight: 500; font-size: 13px; padding-block: 6px; }
+td .sub { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.legend { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.legend .card h3 { color: var(--accent); }
+.diagram .tick { stroke: var(--muted); stroke-width: 1.5; }
+.diagram .mark { fill: var(--accent); }
+.diagram .palm-ok { fill: var(--ok-soft); stroke: var(--ok); stroke-width: 2; }
+.diagram .finger-ok { fill: var(--ok); }
+.diagram .palm-bad { fill: var(--bad-soft); stroke: var(--bad); stroke-width: 2; }
+.diagram .finger-bad { fill: var(--bad); }
+.diagram .arc-bad { stroke: var(--bad); stroke-width: 1.6; fill: none; }
+.diagram .arc-accent { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+.diagram .t-bad { fill: var(--bad); font: 500 12.5px var(--sans); }
+.diagram .t-ok { fill: var(--ok); font: 500 12.5px var(--sans); }
+.diagram .t-accent { fill: var(--accent); font: 500 12.5px var(--sans); }
+.diagram .title-zh { fill: var(--accent); font: 500 13px var(--sans); }
+.diagram .cap { fill: var(--muted); font: 12px var(--sans); }
+.diff td:first-child { min-width: 8.5em; }
+.formula { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 12px 16px; font-size: 14px; }
+.formula b { font-weight: 500; color: var(--accent); }
+</style>
+
+<main>
+<header style="display:grid; gap:14px">
+  <div class="eyebrow">vla/ · dev/pingyue · 2026-09-30</div>
+  <h1>TopoGym VLA 接入</h1>
+  <p class="lede"><code>vla/</code> 在不修改 TopoGym 的前提下，把 5 个 VLA checkpoint 接到 TopoGym 上做零样本评测，链路已在 GPU 上跑通。本文供 TopoGym 评估两件事：选哪些 VLA；TopoGym 自身要不要改。正式评测等 TopoGym 按第 3 节改完后再跑，第 5 节的结果只用于检查链路。</p>
+  <div class="meta">
+    <span class="chip">分支 <span class="mono">dev/pingyue</span>（b8e728d … d87c1f8）</span>
+    <span class="chip"><span class="status s-ok">通过</span> <span class="mono">pytest vla/tests -q</span> 105 项</span>
+    <span class="chip">只改 <span class="mono">vla/</span></span>
+  </div>
+</header>
+
+<section>
+  <div class="eyebrow">概要</div>
+  <h2>请 TopoGym 评估的事项</h2>
+  <div class="table-wrap"><table>
+    <tr><th>事项</th><th>现状</th><th>建议</th></tr>
+    <tr><td>VLA 选择 · Panda</td><td>π0.5 DROID、GR00T N1.7、MolmoAct2 的训练机器人与 TopoGym 相同（Panda + Robotiq），调用方式与官方一致</td><td>三个都保留。GR00T 第一次评测的大量截断来自官方 eef_9d 读法，改用法兰旋转后同一 episode 从 366 行降到 2 行（第 1 节）</td></tr>
+    <tr><td>VLA 选择 · ALOHA</td><td>没有开放模型能零样本体现真实水平：π0.5 ALOHA 的零样本动作有系统偏差，在真实 ALOHA 数据上也一样；X-VLA 训练用的是另一种机械臂和两臂布局</td><td>π0.5 ALOHA 和 X-VLA 都不建议零样本使用；Gemini Robotics On-Device 与 TopoGym 的 ALOHA 2 最匹配，已申请；测真实水平需要用 TopoGym 演示微调，演示可由 <code>topogym/planning/</code> 的参考解在评测配置下重新执行并渲染得到（第 4 节）</td></tr>
+    <tr><td>TopoGym 改动</td><td>本分支没有改 TopoGym。有 6 项差别只能或最好在 TopoGym 里解决</td><td>优先做"起始关节角按模型设置"和"Panda 新增 DROID 式外部相机"（第 3 节）</td></tr>
+    <tr><td>任务指令</td><td>13 个任务的指令是草稿（<code>vla/gym/instructions.py</code>）</td><td>请熟悉任务的人逐条确认</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <div class="eyebrow">1 · 结论</div>
+  <h2>每个模型能否在 TopoGym 上发挥真实水平</h2>
+  <p>调用方式都已对照官方代码核对。下表是在 <code>vla/</code> 内适配之后仍存在的差距；来源和适配方式见第 2 节。所有模型还有两项零样本下无法消除的差距：画面是仿真渲染，任务不在训练数据中。</p>
+  <div class="table-wrap"><table>
+    <tr><th>模型</th><th>与训练机器人的对应</th><th>适配后仍存在的差距</th><th>结论</th></tr>
+    <tr><td>π0.5 DROID</td><td>同一种机器人（Panda + Robotiq，DROID 数据）</td><td>起始姿态、外部相机位置（TopoGym 可改，第 3 节第 1、2 项）</td><td><span class="status s-ok">保留</span></td></tr>
+    <tr><td>GR00T N1.7</td><td>同上</td><td>同上。官方 eef_9d 读法下每个 episode 有 37–53% 的动作行被关节限位截断；改用法兰旋转后，同一 episode 从 366 行降到 2 行（剩下的是关节 7 的 45° 行程余量）</td><td><span class="status s-ok">保留</span></td></tr>
+    <tr><td>MolmoAct2</td><td>同上</td><td>同上（它的三路相机中两路外部相机都受相机位置影响）</td><td><span class="status s-ok">保留</span></td></tr>
+    <tr><td>π0.5 ALOHA</td><td>同一种机器人（vx300s），但 checkpoint 是没有任务微调的 base 模型</td><td>零样本动作有系统偏差：真实 ALOHA 数据上首个目标平均偏离当前状态 0.18 rad（真人记录 0.015 rad）；在 TopoGym 闭环中逐块累积，把肩、肘、腕俯仰推到关节限位（高）</td><td><span class="status s-bad">高风险</span> 不建议零样本使用</td></tr>
+    <tr><td>X-VLA RoboTwin2</td><td>另一种机械臂和两臂布局（RoboTwin 中的 AgileX 臂，两臂并排）</td><td>机械臂型号与两臂布局（高；要 TopoGym 新增机器人和布局才能消除）</td><td><span class="status s-bad">高风险</span> 建议不用</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <div class="eyebrow">2 · 差异与适配</div>
+  <h2>TopoGym 与训练配置的差别，以及能否适配</h2>
+  <div class="legend">
+    <div class="card"><h3>机器人层面</h3><div>TopoGym 的机器人与这种机器人的常用配置不同（Panda 参照 DROID，ALOHA 参照标准 ALOHA）。同一机器人上的所有模型都受影响；适配写一次，所有模型共用。</div><div class="sub">例：Panda 的夹爪安装角</div></div>
+    <div class="card"><h3>模型层面</h3><div>只与某个模型的训练机器人或输入约定有关，只影响这个模型；适配写在该模型的包装层或配置里。</div><div class="sub">例：GR00T 的 eef_9d 读法、X-VLA 的两臂布局</div></div>
+  </div>
+  <p class="note">每行两个影响：<b>直接用</b> 是不做适配时的影响，<b>适配后</b> 是按表中方式适配后剩余的影响；已适配的项依据核对或实验，其余为预估。处理方式：<span class="tag t-done">已适配</span>（<code>vla/</code> 内已做）<span class="tag t-todo">vla/ 可做</span> <span class="tag t-topo">TopoGym 可改</span>（本分支不改）<span class="tag t-no">无法适配</span>。仿真画面与真实照片的外观差别所有模型都有，不列入表中。</p>
+
+  <h3>Panda + Robotiq · 参照 DROID（π0.5 DROID、GR00T、MolmoAct2）</h3>
+  <div class="diagram" role="img" aria-label="起始姿态侧视图，按比例：DROID 复位时法兰在底座前 0.36 米、高 0.49 米；TopoGym 起始时法兰在前 0.62 米、高 0.27 米；两者夹爪都竖直朝下">
+    <svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg">
+      <text class="title-zh" x="16" y="22">起始姿态 · 侧视图（按比例；关节 1、3、5 都为 0，整条手臂在一个竖直平面内）</text>
+
+      <rect x="82" y="300" width="484" height="7" style="fill: var(--paper); stroke: var(--rule); stroke-width: 1.2"/>
+      <text class="cap" x="560" y="294" text-anchor="end">TopoGym 桌面</text>
+      <rect class="node" x="134" y="290" width="32" height="10" rx="2"/>
+      <text class="cap" x="126" y="298" text-anchor="end">底座</text>
+
+      <path d="M 150 300 L 150 166.8" style="stroke: var(--muted); stroke-width: 10; stroke-linecap: round; fill: none; opacity: 0.55"/>
+      <path d="M 150 166.8 L 75.7 64.6 L 102.4 45.2 L 258.7 61.2 L 293.9 61.2 L 293.9 104" style="stroke: var(--ok); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.8"/>
+      <path d="M 150 166.8 L 198.4 50 L 228.8 62.6 L 360.8 147.9 L 396 147.9 L 396 190.7" style="stroke: var(--bad); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.8"/>
+      <circle cx="150" cy="166.8" r="5" style="fill: var(--surface); stroke: var(--muted); stroke-width: 2"/>
+      <circle cx="102.4" cy="45.2" r="5" style="fill: var(--surface); stroke: var(--ok); stroke-width: 2"/>
+      <circle cx="258.7" cy="61.2" r="5" style="fill: var(--surface); stroke: var(--ok); stroke-width: 2"/>
+      <circle cx="228.8" cy="62.6" r="5" style="fill: var(--surface); stroke: var(--bad); stroke-width: 2"/>
+      <circle cx="360.8" cy="147.9" r="5" style="fill: var(--surface); stroke: var(--bad); stroke-width: 2"/>
+
+      <rect class="palm-ok" x="281.9" y="104" width="24" height="22" rx="3"/>
+      <rect class="finger-ok" x="281.9" y="126" width="6" height="36" rx="2"/>
+      <rect class="finger-ok" x="299.9" y="126" width="6" height="36" rx="2"/>
+      <rect class="palm-bad" x="384" y="190.7" width="24" height="22" rx="3"/>
+      <rect class="finger-bad" x="384" y="212.7" width="6" height="36" rx="2"/>
+      <rect class="finger-bad" x="402" y="212.7" width="6" height="36" rx="2"/>
+
+      <path d="M 262 104 L 274 104 M 268 104 L 268 300 M 262 300 L 274 300" style="stroke: var(--ok); stroke-width: 1.4; fill: none"/>
+      <text class="t-ok" x="260" y="210" text-anchor="end">0.49 m</text>
+      <path d="M 418 190.7 L 430 190.7 M 424 190.7 L 424 300 M 418 300 L 430 300" style="stroke: var(--bad); stroke-width: 1.4; fill: none"/>
+      <text class="t-bad" x="434" y="252">0.27 m</text>
+
+      <path d="M 150 310 L 150 358 M 293.9 166 L 293.9 328 M 396 252 L 396 358" style="stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; fill: none"/>
+      <path d="M 150 316 L 150 328 M 150 322 L 293.9 322 M 293.9 316 L 293.9 328" style="stroke: var(--ok); stroke-width: 1.4; fill: none"/>
+      <text class="t-ok" x="222" y="340" text-anchor="middle">0.36 m</text>
+      <path d="M 150 346 L 150 358 M 150 352 L 396 352 M 396 346 L 396 358" style="stroke: var(--bad); stroke-width: 1.4; fill: none"/>
+      <text class="t-bad" x="273" y="372" text-anchor="middle">0.62 m</text>
+
+      <line x1="480" y1="52" x2="510" y2="52" style="stroke: var(--ok); stroke-width: 8; stroke-linecap: round; opacity: 0.8"/>
+      <text class="label" x="522" y="57">DROID 复位</text>
+      <text class="cap" x="522" y="76">法兰在底座前 0.36 m、高 0.49 m；腕部 0°</text>
+      <line x1="480" y1="104" x2="510" y2="104" style="stroke: var(--bad); stroke-width: 8; stroke-linecap: round; opacity: 0.8"/>
+      <text class="label" x="522" y="109">TopoGym 起始</text>
+      <text class="cap" x="522" y="128">法兰在底座前 0.62 m、高 0.27 m</text>
+      <text class="cap" x="522" y="146">腕部 −90°（按 DROID 读数，见下图）</text>
+      <text class="label" x="480" y="186">TopoGym 比 DROID：前 0.26 m，低 0.22 m</text>
+      <text class="cap" x="480" y="206">两者夹爪都竖直朝下；DROID 的桌子</text>
+      <text class="cap" x="480" y="224">高度每个场景不同，桌面按 TopoGym 画</text>
+    </svg>
+  </div>
+  <div class="diagram" role="img" aria-label="关节 7 约定：DROID 的夹爪与法兰同向安装；TopoGym 的夹爪相对法兰转了 45 度，所以同样的关节 7 读数下两者夹爪朝向差 45 度；TopoGym 关节 7 为 45 度时夹爪朝向与 DROID 读数 0 度时相同">
+    <svg viewBox="0 0 760 290" xmlns="http://www.w3.org/2000/svg">
+      <text class="title-zh" x="16" y="20">图 2 · 关节 7 约定 · 从手腕看向夹爪</text>
+
+      <text class="label" x="130" y="46" text-anchor="middle">(a) DROID，关节 7 = 0°</text>
+      <line class="tick" x1="130" y1="60" x2="130" y2="74"/>
+      <text class="small" x="136" y="70">0°</text>
+      <circle cx="130" cy="136" r="56" class="box"/>
+      <path class="mark" d="M 123 82 L 137 82 L 130 70 Z"/>
+      <rect class="palm-ok" x="120" y="92" width="20" height="88" rx="5"/>
+      <rect class="finger-ok" x="115" y="86" width="30" height="11" rx="3"/>
+      <rect class="finger-ok" x="115" y="175" width="30" height="11" rx="3"/>
+      <text class="label" x="130" y="220" text-anchor="middle">夹爪与法兰标记同向</text>
+      <text class="cap" x="130" y="238" text-anchor="middle">安装角 0°</text>
+
+      <text class="label" x="380" y="46" text-anchor="middle">(b) TopoGym，关节 7 = 0°</text>
+      <line class="tick" x1="380" y1="60" x2="380" y2="74"/>
+      <text class="small" x="386" y="70">0°</text>
+      <circle cx="380" cy="136" r="56" class="box"/>
+      <path class="mark" d="M 373 82 L 387 82 L 380 70 Z"/>
+      <g transform="rotate(-45 380 136)">
+        <rect class="palm-bad" x="370" y="92" width="20" height="88" rx="5"/>
+        <rect class="finger-bad" x="365" y="86" width="30" height="11" rx="3"/>
+        <rect class="finger-bad" x="365" y="175" width="30" height="11" rx="3"/>
+      </g>
+      <path class="arc-bad" d="M 380 62 A 74 74 0 0 0 327.7 83.7"/>
+      <text class="t-bad" x="318" y="72">45°</text>
+      <text class="label" x="380" y="220" text-anchor="middle">读数相同，夹爪偏了 45°</text>
+      <text class="cap" x="380" y="238" text-anchor="middle">安装角 −45°</text>
+
+      <text class="label" x="630" y="46" text-anchor="middle">(c) TopoGym，关节 7 = 45°</text>
+      <line class="tick" x1="630" y1="60" x2="630" y2="74"/>
+      <text class="small" x="610" y="70">0°</text>
+      <circle cx="630" cy="136" r="56" class="box"/>
+      <g transform="rotate(45 630 136)"><path class="mark" d="M 623 82 L 637 82 L 630 70 Z"/></g>
+      <rect class="palm-ok" x="620" y="92" width="20" height="88" rx="5"/>
+      <rect class="finger-ok" x="615" y="86" width="30" height="11" rx="3"/>
+      <rect class="finger-ok" x="615" y="175" width="30" height="11" rx="3"/>
+      <path class="arc-accent" d="M 630 62 A 74 74 0 0 1 682.3 83.7"/>
+      <text class="t-accent" x="668" y="62">45°</text>
+      <text class="label" x="630" y="220" text-anchor="middle">夹爪朝向与 (a) 相同</text>
+      <text class="cap" x="630" y="238" text-anchor="middle">DROID 读数 = 45° − 45° = 0°</text>
+
+      <path class="mark" d="M 40 276 L 52 276 L 46 266 Z"/>
+      <text class="cap" x="58" y="276">法兰标记（随关节 7 转动）</text>
+      <line class="tick" x1="250" y1="265" x2="250" y2="278"/>
+      <text class="cap" x="258" y="276">关节 7 的 0° 方向</text>
+      <rect class="palm-ok" x="388" y="266" width="30" height="11" rx="3"/>
+      <text class="cap" x="426" y="276">夹爪（两指沿长边方向合拢）</text>
+    </svg>
+  </div>
+  <div class="formula">
+    <b>约定</b><span>关节 7 转动时，夹爪绕手腕轴线转动。DROID 把 Robotiq 直接装在法兰上；TopoGym 装在 Franka hand 坐标系上，相对法兰转了 −45°。夹爪朝向相同时，q7<sub>DROID</sub> = q7<sub>TopoGym</sub> − 45°。</span>
+    <b>换算</b><span>发给模型的状态减 45°，模型输出的动作加 45°。写在 <code>vla/models/droid.py</code>，三个 DROID 模型共用。</span>
+    <b>例</b><span>TopoGym 起始 q7 = −45°，模型看到 −90°；DROID 复位为 0°，所以起始时腕部差 90°（见起始姿态一行）。</span>
+  </div>
+  <div class="table-wrap"><table class="diff">
+    <tr><th>差别</th><th>TopoGym</th><th>DROID</th><th>直接用</th><th>处理</th><th>适配后</th></tr>
+    <tr class="grp"><td colspan="6">机器人层面 · 3 个 DROID 模型都受影响，适配共用</td></tr>
+    <tr><td>夹爪安装角<span class="sub">关节 7 约定，见图 2</span></td><td>相对法兰 −45°</td><td>0°</td><td><span class="status s-bad">高</span></td><td><span class="tag t-done">已适配</span><span class="sub">状态 −45°，动作 +45°（<code>models/droid.py</code>）</span></td><td><span class="status s-info">低</span><span class="sub">π0.5、GR00T 的 DROID 统计中略多于 1% 的状态 q7 &gt; 2.11 rad（99% 分位 2.20 rad），这部分在 TopoGym 超出关节限位</span></td></tr>
+    <tr><td>起始姿态<span class="sub">见图 1</span></td><td>法兰在底座前 0.62 m、高 0.27 m；腕部 −1.57 rad（DROID 读数），在 π0.5、GR00T 的 DROID 统计范围内（1%–99%：−2.05…2.20 rad），超出 MolmoAct2 的（−0.51…0.70 rad）</td><td>复位姿态：前 0.36 m、高 0.49 m；腕部 0°</td><td><span class="status s-warn">中–高</span></td><td><span class="tag t-topo">TopoGym 可改</span> <span class="tag t-todo">vla/ 可做</span><span class="sub">TopoGym：起始关节角按模型设置，reset 时直接放好；vla/：开场先用关节目标移过去，多约 2 s，路径需验证</span></td><td><span class="status s-ok">无</span><span class="sub">起始状态与 DROID 复位相同</span></td></tr>
+    <tr><td>外部相机</td><td>agentview、front_oblique：都在机械臂对面，朝向机械臂</td><td>两台 ZED 在机械臂左右两侧，位置每个场景不同</td><td><span class="status s-warn">中–高</span></td><td><span class="tag t-topo">TopoGym 可改</span><span class="sub">按 DROID 的放法新增外部相机；<code>topogym.make</code> 没有相机参数，vla/ 内改不了</span></td><td><span class="status s-info">低–中</span><span class="sub">DROID 的相机位置本身分散</span></td></tr>
+    <tr><td>分辨率与画幅</td><td>848×480（16:9）</td><td>320×180（16:9）</td><td><span class="status s-info">低</span></td><td><span class="tag t-done">已适配</span><span class="sub">GR00T、MolmoAct2 按官方客户端缩到 320×180；π0.5 由自身流程缩到 224×224</span></td><td><span class="status s-ok">无</span></td></tr>
+    <tr><td>控制频率</td><td>14.8 Hz（27 个 2.5 ms 物理步）</td><td>15 Hz</td><td><span class="status s-info">低</span></td><td>无需<span class="sub">改物理步长可精确到 15 Hz，但会改变物理标定</span></td><td><span class="status s-info">低</span></td></tr>
+    <tr><td>底座与桌子</td><td>底座固定在桌子后部</td><td>可移动底座，桌子位置和高度每个场景不同</td><td><span class="status s-info">低</span></td><td>无需</td><td><span class="status s-info">低</span></td></tr>
+    <tr class="grp"><td colspan="6">模型层面 · 只影响单个模型</td></tr>
+    <tr><td>GR00T · eef_9d</td><td colspan="2">9 维夹爪位姿中的旋转。官方代码的欧拉角读法与训练数据不一致，两种读法在 TopoGym 起始姿态处相差 180°</td><td><span class="status s-bad">高</span></td><td><span class="tag t-done">已适配</span><span class="sub">直接用法兰旋转矩阵（<code>models/groot/franka.py</code>）</span></td><td><span class="status s-info">低</span><span class="sub">DROID 真实数据开环对比：执行的 8 步误差中位数低 20%（p = 0.004）；仿真 seed 0：截断行 366 → 2，跟踪误差 0.059 → 0.022 rad</span></td></tr>
+    <tr><td>MolmoAct2 · 平滑</td><td colspan="2">官方真机客户端对动作做指数平滑（α = 0.7）并限幅 ±0.15 rad；官方仿真客户端不做</td><td><span class="status s-info">低</span></td><td>无需<span class="sub">与官方仿真客户端一致</span></td><td><span class="status s-info">低</span></td></tr>
+    <tr><td>π0.5 DROID</td><td colspan="2">没有模型层面的差别：调用与 PI 官方 DROID 仿真评测一致</td><td>—</td><td>—</td><td>—</td></tr>
+  </table></div>
+  <p class="note">空夹爪合上时 TopoGym 的 Robotiq 读 0.90（停在 0.72 rad，满量程 0.8 rad）；DROID 的对应读数未能核实，影响低。</p>
+
+  <h3>ALOHA · 参照标准 ALOHA（π0.5 ALOHA；候选 RDT-1B、π0 base）</h3>
+  <div class="diagram" role="img" aria-label="两臂布局俯视图，按比例：TopoGym 与标准 ALOHA 两臂面对面，底座相距 0.94 米，起始时两夹爪相距 0.37 米；RoboTwin 两臂并排朝前，相距 0.60 米">
+    <svg viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg">
+      <text class="title-zh" x="16" y="22">图 3 · 两臂布局 · 俯视（按比例，两图比例相同）</text>
+      <text class="label" x="181" y="48" text-anchor="middle">TopoGym（与标准 ALOHA 相同）</text>
+      <text class="label" x="551" y="48" text-anchor="middle">RoboTwin（X-VLA 训练）</text>
+
+      <rect x="16" y="60" width="330" height="308" rx="4" style="fill: var(--paper); stroke: var(--rule); stroke-width: 1.2"/>
+      <text class="cap" x="340" y="362" text-anchor="end">TopoGym 桌面 1.5 × 1.4 m</text>
+      <path d="M 31.2 218.2 L 111.2 218.2 M 330.8 218.2 L 250.8 218.2" style="stroke: var(--bad); stroke-width: 10; stroke-linecap: round; fill: none; opacity: 0.8"/>
+      <rect class="palm-bad" x="111.2" y="209.2" width="10" height="18" rx="2"/>
+      <rect class="finger-bad" x="121.2" y="214.2" width="18.5" height="4" rx="1"/>
+      <rect class="finger-bad" x="121.2" y="218.2" width="18.5" height="4" rx="1"/>
+      <rect class="palm-bad" x="240.8" y="209.2" width="10" height="18" rx="2"/>
+      <rect class="finger-bad" x="222.3" y="214.2" width="18.5" height="4" rx="1"/>
+      <rect class="finger-bad" x="222.3" y="218.2" width="18.5" height="4" rx="1"/>
+      <rect class="node" x="65.8" y="206.2" width="24" height="24" rx="3"/>
+      <rect class="node" x="272.2" y="206.2" width="24" height="24" rx="3"/>
+      <text class="cap" x="77.8" y="252" text-anchor="middle">左臂底座</text>
+      <text class="cap" x="284.2" y="252" text-anchor="middle">右臂底座</text>
+      <path d="M 139.7 174 L 139.7 186 M 139.7 180 L 222.3 180 M 222.3 174 L 222.3 186" style="stroke: var(--bad); stroke-width: 1.4; fill: none"/>
+      <text class="t-bad" x="181" y="168" text-anchor="middle">夹爪相距 0.37 m</text>
+      <path d="M 77.8 284 L 77.8 296 M 77.8 290 L 284.2 290 M 284.2 284 L 284.2 296" style="stroke: var(--bad); stroke-width: 1.4; fill: none"/>
+      <text class="t-bad" x="181" y="310" text-anchor="middle">底座相距 0.94 m</text>
+
+      <path d="M 484.6 264.8 L 484.6 184.8 M 617.4 264.8 L 617.4 184.8" style="stroke: var(--ok); stroke-width: 10; stroke-linecap: round; fill: none; opacity: 0.8"/>
+      <rect class="palm-ok" x="475.6" y="174.8" width="18" height="10" rx="2"/>
+      <rect class="finger-ok" x="480.6" y="156.3" width="4" height="18.5" rx="1"/>
+      <rect class="finger-ok" x="484.6" y="156.3" width="4" height="18.5" rx="1"/>
+      <rect class="palm-ok" x="608.4" y="174.8" width="18" height="10" rx="2"/>
+      <rect class="finger-ok" x="613.4" y="156.3" width="4" height="18.5" rx="1"/>
+      <rect class="finger-ok" x="617.4" y="156.3" width="4" height="18.5" rx="1"/>
+      <rect class="node" x="472.6" y="206.2" width="24" height="24" rx="3"/>
+      <rect class="node" x="605.4" y="206.2" width="24" height="24" rx="3"/>
+      <text class="cap" x="484.6" y="290" text-anchor="middle">左臂底座</text>
+      <text class="cap" x="617.4" y="290" text-anchor="middle">右臂底座</text>
+      <path d="M 484.6 134 L 484.6 146 M 484.6 140 L 617.4 140 M 617.4 134 L 617.4 146" style="stroke: var(--ok); stroke-width: 1.4; fill: none"/>
+      <text class="t-ok" x="551" y="128" text-anchor="middle">夹爪相距 0.60 m</text>
+      <path d="M 484.6 314 L 484.6 326 M 484.6 320 L 617.4 320 M 617.4 314 L 617.4 326" style="stroke: var(--ok); stroke-width: 1.4; fill: none"/>
+      <text class="t-ok" x="551" y="340" text-anchor="middle">底座相距 0.60 m</text>
+      <text class="cap" x="551" y="84" text-anchor="middle">两臂都朝前；底座高出桌面 4.2 cm（已按桌面对齐）</text>
+      <text class="cap" x="551" y="102" text-anchor="middle">RoboTwin 的桌子未画</text>
+
+      <line x1="30" y1="392" x2="58" y2="392" style="stroke: var(--bad); stroke-width: 8; stroke-linecap: round; opacity: 0.8"/>
+      <text class="cap" x="68" y="396">TopoGym 起始姿态（ACT 姿态），夹爪合上</text>
+      <line x1="390" y1="392" x2="418" y2="392" style="stroke: var(--ok); stroke-width: 8; stroke-linecap: round; opacity: 0.8"/>
+      <text class="cap" x="428" y="396">X-VLA 看到的同一姿态：每臂按自己的底座换算</text>
+      <text class="cap" x="30" y="414">每个夹爪相对自己底座的位置不变，两个夹爪之间的相对位置从"面对面 0.37 m"变成"并排 0.60 m"。</text>
+    </svg>
+  </div>
+
+  <div class="diagram" role="img" aria-label="π0.5 ALOHA 起始姿态左臂侧视图，按比例：openpi 官方复位时夹爪在底座前 0.20 米、离桌面 0.22 米并张开；TopoGym 起始时在前 0.28 米、离桌面 0.33 米并合上">
+    <svg viewBox="0 0 760 350" xmlns="http://www.w3.org/2000/svg">
+      <text class="title-zh" x="16" y="22">图 4 · π0.5 ALOHA 的起始姿态 · 左臂侧视（按比例；右臂与之镜像）</text>
+
+      <rect x="60" y="262" width="440" height="7" style="fill: var(--paper); stroke: var(--rule); stroke-width: 1.2"/>
+      <text class="cap" x="496" y="256" text-anchor="end">桌面</text>
+      <rect class="node" x="282" y="252" width="36" height="10" rx="2"/>
+      <text class="cap" x="274" y="260" text-anchor="end">底座</text>
+
+      <path d="M 300 251.6 L 300 185.6" style="stroke: var(--muted); stroke-width: 10; stroke-linecap: round; fill: none; opacity: 0.55"/>
+      <path d="M 300 185.6 L 146.6 143.6 L 302.6 143.6 L 338.8 143.6" style="stroke: var(--ok); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.8"/>
+      <path d="M 300 185.6 L 190 70.7 L 342.8 101.7 L 378.9 98" style="stroke: var(--bad); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; fill: none; opacity: 0.8"/>
+      <circle cx="300" cy="185.6" r="5" style="fill: var(--surface); stroke: var(--muted); stroke-width: 2"/>
+      <circle cx="146.6" cy="143.6" r="5" style="fill: var(--surface); stroke: var(--ok); stroke-width: 2"/>
+      <circle cx="302.6" cy="143.6" r="5" style="fill: var(--surface); stroke: var(--ok); stroke-width: 2"/>
+      <circle cx="190" cy="70.7" r="5" style="fill: var(--surface); stroke: var(--bad); stroke-width: 2"/>
+      <circle cx="342.8" cy="101.7" r="5" style="fill: var(--surface); stroke: var(--bad); stroke-width: 2"/>
+
+      <rect class="palm-ok" x="338.8" y="134.6" width="14" height="18" rx="2"/>
+      <rect class="finger-ok" x="352.8" y="134.6" width="53.6" height="5" rx="1.5"/>
+      <rect class="finger-ok" x="352.8" y="147.6" width="53.6" height="5" rx="1.5"/>
+      <text class="t-ok" x="380" y="128" text-anchor="middle">张开</text>
+      <g transform="rotate(-5.7 378.9 98)">
+        <rect class="palm-bad" x="378.9" y="89" width="14" height="18" rx="2"/>
+        <rect class="finger-bad" x="392.9" y="93" width="54" height="5" rx="1.5"/>
+        <rect class="finger-bad" x="392.9" y="98" width="54" height="5" rx="1.5"/>
+      </g>
+      <text class="t-bad" x="420" y="80" text-anchor="middle">合上</text>
+
+      <path d="M 414 145.2 L 426 145.2 M 420 145.2 L 420 262 M 414 262 L 426 262" style="stroke: var(--ok); stroke-width: 1.4; fill: none"/>
+      <text class="t-ok" x="400" y="214" text-anchor="end">0.22 m</text>
+      <path d="M 456 92.9 L 468 92.9 M 462 92.9 L 462 262 M 456 262 L 468 262" style="stroke: var(--bad); stroke-width: 1.4; fill: none"/>
+      <text class="t-bad" x="470" y="186">0.33 m</text>
+      <path d="M 300 272 L 300 324 M 406.4 160 L 406.4 296 M 446.4 106 L 446.4 324" style="stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; fill: none"/>
+      <path d="M 300 284 L 300 296 M 300 290 L 406.4 290 M 406.4 284 L 406.4 296" style="stroke: var(--ok); stroke-width: 1.4; fill: none"/>
+      <text class="t-ok" x="353" y="306" text-anchor="middle">0.20 m</text>
+      <path d="M 300 312 L 300 324 M 300 318 L 446.4 318 M 446.4 312 L 446.4 324" style="stroke: var(--bad); stroke-width: 1.4; fill: none"/>
+      <text class="t-bad" x="373" y="340" text-anchor="middle">0.28 m</text>
+
+      <line x1="530" y1="60" x2="558" y2="60" style="stroke: var(--ok); stroke-width: 8; stroke-linecap: round; opacity: 0.8"/>
+      <text class="label" x="568" y="65">openpi 官方复位</text>
+      <text class="cap" x="568" y="84">[0, −1.5, 1.5, 0, 0, 0]，夹爪张开</text>
+      <text class="cap" x="568" y="102">π0.5 的 ALOHA 数据从这里开始</text>
+      <line x1="530" y1="132" x2="558" y2="132" style="stroke: var(--bad); stroke-width: 8; stroke-linecap: round; opacity: 0.8"/>
+      <text class="label" x="568" y="137">TopoGym 起始</text>
+      <text class="cap" x="568" y="156">[0, −0.96, 1.16, 0, −0.3, 0]，夹爪合上</text>
+      <text class="cap" x="568" y="174">即标准 ALOHA（ACT）的起始姿态</text>
+      <text class="label" x="530" y="212">TopoGym 夹爪：前 0.08 m，高 0.10 m</text>
+      <text class="cap" x="530" y="232">高度为夹爪中心点到桌面；尺寸取自</text>
+      <text class="cap" x="530" y="250">menagerie aloha.xml</text>
+    </svg>
+  </div>
+  <div class="table-wrap"><table class="diff">
+    <tr><th>差别</th><th>TopoGym</th><th>标准 ALOHA</th><th>直接用</th><th>处理</th><th>适配后</th></tr>
+    <tr class="grp"><td colspan="6">机器人层面 · 所有用真实 ALOHA 数据训练的模型都受影响，适配共用</td></tr>
+    <tr><td>机械臂、两臂布局、起始姿态、频率</td><td>vx300s；面对面，底座相距 0.94 m；ACT 起始姿态；50 Hz</td><td>相同</td><td><span class="status s-ok">无</span></td><td>无需</td><td><span class="status s-ok">无</span></td></tr>
+    <tr><td>夹爪合拢位置</td><td>两指在 8.2 mm 处碰到</td><td>标定为两指碰到时读 0</td><td><span class="status s-warn">中</span></td><td><span class="tag t-done">已适配</span><span class="sub">8.2 mm 读作闭合；部分张开时读数与命令按同一比例换算，完全闭合的命令到 2 mm 并夹紧（<code>gym/adapter.py</code>）</span></td><td><span class="status s-ok">无</span></td></tr>
+    <tr><td>画幅</td><td>16:9（848×480）</td><td>4:3（640×480）</td><td><span class="status s-warn">中</span></td><td><span class="tag t-done">已适配</span><span class="sub">居中裁成 640×480 再按官方方式缩放（<code>model.image_aspect</code>）；视野左右各少 104 像素。RoboTwin 画面也是 4:3，X-VLA 同样适用</span></td><td><span class="status s-ok">无</span></td></tr>
+    <tr><td>顶部相机</td><td>距桌面 0.76 m，视线偏离竖直 31°</td><td>各场景不同；menagerie ALOHA 2 场景为 1.03 m、25°</td><td><span class="status s-warn">中</span></td><td><span class="tag t-topo">TopoGym 可改</span><span class="sub">按真实 ALOHA 2 的高度和俯角调整</span></td><td><span class="status s-info">低–中</span></td></tr>
+    <tr class="grp"><td colspan="6">模型层面 · π0.5 ALOHA</td></tr>
+    <tr><td>没有任务微调</td><td colspan="2">checkpoint 是 π0.5 base；openpi 称 ALOHA 零样本 "very experimental"。真实 ALOHA 数据开环：首个目标平均偏离当前状态 0.18 rad，真人记录 0.015 rad</td><td><span class="status s-bad">高</span></td><td><span class="tag t-no">无法适配</span><span class="sub">只能用 ALOHA 演示微调</span></td><td><span class="status s-bad">高</span></td></tr>
+    <tr><td>夹爪按电机角度</td><td colspan="2">模型输出 Interbotix 连杆的电机角；按官方换算，"全闭"只合到每指 21 mm</td><td><span class="status s-bad">高</span></td><td><span class="tag t-done">已适配</span><span class="sub">按连杆模型换算（<code>models/pi05/gripper.py</code>）</span></td><td><span class="status s-ok">无</span></td></tr>
+    <tr><td>起始姿态与夹爪初值<span class="sub">见图 4</span></td><td colspan="2">官方客户端开场移到 [0, −1.5, 1.5, 0, 0, 0] 并张开夹爪（pi 的 ALOHA 数据都从张开开始）；TopoGym 从 ACT 姿态开始，夹爪合上</td><td><span class="status s-warn">中</span></td><td><span class="tag t-topo">TopoGym 可改</span> <span class="tag t-todo">vla/ 可做</span><span class="sub">TopoGym：与 Panda 同一个起始关节角参数，加夹爪开度；vla/：开场按官方客户端的方式移动</span></td><td><span class="status s-ok">无</span><span class="sub">起始状态与官方客户端相同；对照实验中截断没有减少</span></td></tr>
+    <tr class="grp"><td colspan="6">模型层面 · X-VLA（训练用 RoboTwin 2.0，与标准 ALOHA 不同）</td></tr>
+    <tr><td>机械臂</td><td colspan="2">RoboTwin 中的 AgileX 臂，臂长和关节限位与 vx300s 不同</td><td><span class="status s-bad">高</span></td><td><span class="tag t-topo">TopoGym 可改</span><span class="sub">要新增 AgileX 机器人，代价很大</span></td><td><span class="status s-bad">高</span><span class="sub">新增该机器人后为低</span></td></tr>
+    <tr><td>两臂布局<span class="sub">见图 3</span></td><td colspan="2">并排朝前，相距 0.60 m</td><td><span class="status s-bad">高</span></td><td><span class="tag t-done">部分适配</span> <span class="tag t-topo">TopoGym 可改</span><span class="sub">vla/：每臂按自身底座换算目标（已做）；TopoGym：新增并排布局，任务要重新验证</span></td><td><span class="status s-bad">高</span><span class="sub">只做每臂换算时两夹爪的相对位置仍不同；新增布局后为低</span></td></tr>
+    <tr><td>底座高度</td><td colspan="2">RoboTwin 底座比桌面高 4.2 cm</td><td><span class="status s-warn">中</span></td><td><span class="tag t-done">已适配</span><span class="sub">高度按桌面对齐</span></td><td><span class="status s-ok">无</span></td></tr>
+    <tr><td>执行方式</td><td colspan="2">RoboTwin 的评测把每个目标执行到位再换下一个</td><td><span class="status s-warn">中</span></td><td><span class="tag t-done">已适配</span><span class="sub">误差 ≤ 5 mm 再换，最多多等 10 步（0.6 s）</span></td><td><span class="status s-info">低</span></td></tr>
+    <tr><td>到不了的目标</td><td colspan="2">RoboTwin 的静止位在 vx300s 上达不到 IK 容差；RoboTwin 的评测跳过该臂</td><td><span class="status s-warn">中</span></td><td><span class="tag t-done">已适配</span><span class="sub">该臂保持当前位姿，计入 <code>skipped_actions</code></span></td><td><span class="status s-info">低</span></td></tr>
+    <tr><td>proprio</td><td colspan="2">官方客户端从第二块起把上一步的目标当作当前位姿；这里用实测位姿</td><td><span class="status s-info">低</span></td><td><span class="tag t-done">已适配</span><span class="sub">用实测位姿；目标到位时两者相差不超过 5 mm</span></td><td><span class="status s-info">低</span></td></tr>
+    <tr><td>相机</td><td colspan="2">RoboTwin 头部相机，320×240</td><td><span class="status s-warn">中</span></td><td><span class="tag t-topo">TopoGym 可改</span><span class="sub">新增 RoboTwin 式头部相机</span></td><td><span class="status s-info">低</span></td></tr>
+    <tr><td>指令格式</td><td colspan="2">训练时用的指令格式无法核对</td><td><span class="status s-warn">中</span></td><td><span class="tag t-no">无法核对</span></td><td><span class="status s-warn">中</span></td></tr>
+  </table></div>
+  <p class="note">少数实验配置（interlocked_claws_physics、rope_threading_preview）把 ALOHA 底座垫高约 2 cm；X-VLA 的高度按桌面对齐，不受影响。模型层面的适配按"模型 × 机器人"固定在配置和包装层里，不随任务变化；任务的起始姿态、桌面、物体和相机都来自 TopoGym。</p>
+</section>
+
+<section>
+  <div class="eyebrow">3 · TopoGym 可改进项</div>
+  <h2>只能或最好在 TopoGym 里解决的差别</h2>
+  <p>本分支没有改 TopoGym。下表列出所有能由 TopoGym 改动解决的差别，供评估；优先级是按"受益模型数 × 影响大小 ÷ 代价"给的建议。</p>
+  <div class="table-wrap"><table>
+    <tr><th>#</th><th>TopoGym 改动</th><th>解决的差别</th><th>受益模型</th><th>vla/ 内的替代</th><th>代价</th><th>建议优先级</th></tr>
+    <tr><td>1</td><td>起始关节角和夹爪开度可按模型设置（<code>make</code> 参数，构建时生效）</td><td>Panda 起始姿态（图 1）；π0.5 ALOHA 起始姿态与夹爪初值（图 4）</td><td>3 个 DROID 模型；π0.5 ALOHA 的起始状态也能对齐，但对照实验中它的截断没有减少</td><td>开场先移动过去：多约 2 s，移动路径需验证</td><td>各任务的物体按现在的 home 摆放，新姿态要逐任务检查碰撞</td><td><span class="status s-bad">高</span></td></tr>
+    <tr><td>2</td><td>Panda 按 DROID 的放法新增外部相机（机械臂两侧、朝工作区，视场角按 DROID 相机）</td><td>外部相机位置</td><td>3 个 DROID 模型</td><td>无</td><td>渲染时间增加；新增相机不影响已有结果</td><td><span class="status s-bad">高</span></td></tr>
+    <tr><td>3</td><td>ALOHA 顶部相机按真实 ALOHA 2 的高度和俯角</td><td>顶部相机</td><td>π0.5 ALOHA 等 ALOHA 模型</td><td>无</td><td>需要真实 ALOHA 2 的相机位姿；画面构图改变</td><td><span class="status s-warn">中</span></td></tr>
+    <tr><td>4</td><td>新增 RoboTwin 式头部相机</td><td>X-VLA 相机</td><td>X-VLA</td><td>无</td><td>X-VLA 仍有机械臂和布局差别，只改相机收益有限</td><td><span class="status s-info">低</span></td></tr>
+    <tr><td>5</td><td>新增 RoboTwin 式并排布局或 AgileX 机器人</td><td>X-VLA 两臂布局、机械臂（图 3）</td><td>X-VLA</td><td>每臂换算（已做，部分弥补）</td><td>相当于新增一种机器人，任务要重新设计和验证</td><td><span class="status s-info">低</span></td></tr>
+    <tr><td>6</td><td>Robotiq 按 DROID 的 0° 安装</td><td>关节 7 约定（图 2）</td><td>3 个 DROID 模型</td><td>已换算，只剩约 1% 的行程</td><td>要同时改 home 的 q7；影响现有 Panda 任务</td><td><span class="status s-info">低</span></td></tr>
+  </table></div>
+  <div class="diagram" role="img" aria-label="起始姿态的两种做法：TopoGym 里改时，reset 后机器人直接处在模型的起始姿态，模型从 0 秒控制到 60 秒；vla 开场过渡时，前 2 秒由 vla 插值移动到起始姿态，模型从 2 秒控制到 62 秒">
+    <svg viewBox="0 0 760 210" xmlns="http://www.w3.org/2000/svg">
+      <text class="title-zh" x="16" y="22">图 6 · 起始姿态的两种做法（时间轴；过渡段放大显示）</text>
+      <text class="label" x="16" y="70">TopoGym 里改（推荐）</text>
+      <rect class="node" x="200" y="52" width="56" height="28" rx="4"/>
+      <text class="cap" x="228" y="71" text-anchor="middle">reset</text>
+      <rect x="256" y="52" width="484" height="28" rx="4" style="fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.4"/>
+      <text class="cap" x="498" y="71" text-anchor="middle">模型控制 0–60 s：第一帧就是模型训练时的起始姿态</text>
+      <text class="label" x="16" y="140">vla/ 开场过渡</text>
+      <rect class="node" x="200" y="122" width="56" height="28" rx="4"/>
+      <text class="cap" x="228" y="141" text-anchor="middle">reset</text>
+      <rect x="256" y="122" width="120" height="28" rx="4" style="fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.4"/>
+      <text class="cap" x="316" y="141" text-anchor="middle">过渡 0–2 s</text>
+      <rect x="376" y="122" width="364" height="28" rx="4" style="fill: var(--ok-soft); stroke: var(--ok); stroke-width: 1.4"/>
+      <text class="cap" x="558" y="141" text-anchor="middle">模型控制 2–62 s</text>
+      <text class="cap" x="200" y="174">过渡：vla/ 每步发 home + (起始姿态 − home) × k/N（N 为 2 s 内的控制步数），不调用模型；TopoGym 照常执行</text>
+      <text class="cap" x="200" y="194">代价：多 2 s；手臂在摆好物体的场景里移动，要逐任务检查不碰物体；任务判定已在运行</text>
+    </svg>
+  </div>
+  <p class="note">第 1 项也可以先在 <code>vla/</code> 内用"开场过渡"替代（图 6 下行），但手臂要在摆好物体的场景里移动、要多占 2 s，所以建议在 TopoGym 里改。ALOHA 画幅（16:9 → 4:3）已在 <code>vla/</code> 内用居中裁剪解决，与把相机输出改成 640×480、竖直视场不变的结果相同，不需要改 TopoGym。</p>
+</section>
+
+<section>
+  <div class="eyebrow">4 · VLA 选择</div>
+  <h2>接入了哪些模型，为什么</h2>
+  <p>选择标准：开源权重、较新、第三方评测成绩高、每个系列一个；只评测阶段优先选有与 TopoGym 机器人匹配的官方 checkpoint 的模型。每个模型用它自己的官方推理代码（固定 commit）。热度与成绩于 2026-09-29 核对。</p>
+  <div class="table-wrap"><table>
+    <tr><th>模型</th><th>checkpoint</th><th>机器人</th><th>选择理由</th><th>主要风险</th></tr>
+    <tr><td>π0.5</td><td class="mono">pi05_droid_jointpos</td><td>Panda</td><td>第三方评测中成绩最高的开源 VLA（RoboTwin 2.0 平均 58.4、RoboDojo 6.9%）；与 DROID 同款硬件</td><td>起始姿态、相机位置</td></tr>
+    <tr><td>GR00T N1.7</td><td class="mono">GR00T-N1.7-DROID</td><td>Panda</td><td>开源 VLA 中 Hugging Face 月下载最高；有 DROID checkpoint</td><td>第三方 RoboDojo 1.3%</td></tr>
+    <tr><td>MolmoAct2</td><td class="mono">MolmoAct2-DROID</td><td>Panda</td><td>全开源（Apache-2.0）；原生绝对关节；用三路相机</td><td>第三方 RoboDojo 0.38%</td></tr>
+    <tr><td>π0.5</td><td class="mono">pi05_base（trossen 统计量）</td><td>ALOHA</td><td>唯一在 vx300s ALOHA 上训练过的开放通用模型</td><td>没有任务微调；零样本动作有系统偏差，真实数据上也一样</td></tr>
+    <tr><td>X-VLA</td><td class="mono">X-VLA-RoboTwin2</td><td>ALOHA</td><td>第三方评测次于 π0.5（RoboTwin 44.5、RoboDojo 6.5%）；末端位姿接口</td><td>训练用 AgileX 臂和并排布局</td></tr>
+  </table></div>
+  <div class="table-wrap"><table>
+    <tr><th>未接入的候选</th><th>原因</th></tr>
+    <tr><td>Gemini Robotics On-Device</td><td>在 ALOHA 2 上训练，仿真接口（4 路 480×848 相机、14 维关节 50 Hz）与 TopoGym 相同，是 ALOHA 任务最匹配的候选；只对受信测试者开放，已申请</td></tr>
+    <tr><td>RDT-1B、π0 base</td><td>训练数据含真实 vx300s ALOHA，但量少（RDT-1B 约 1800 条，占预训练约 10%；π0 base 与 π0.5 base 同源），也没有针对新任务的后训练，零样本预期与 π0.5 base 相同。适合作为以后微调的基线</td></tr>
+    <tr><td>CrossFormer</td><td>ALOHA 只在训练任务上测过；语言编码器弱</td></tr>
+    <tr><td>DM0.5、G0.5</td><td>DM0.5 的 ALOHA checkpoint 基于 AgileX 臂；G0.5 禁止商用，权重需申请</td></tr>
+    <tr><td>π0.7、π*0.6、Gemini Robotics 2 / On-Device 2、GR00T N2</td><td>未开放权重</td></tr>
+  </table></div>
+  <p class="note">参考：2026 年的研究（Garg et al.，arXiv 2608.19490）在真实 ALOHA 上零样本运行 π0.5，约 70% 的时间伸向正确物体，抓取与放置成功率为 0%。要在 ALOHA 任务上测出模型的真实水平，需要用 TopoGym 的演示微调；演示的来源与导出方式见 <code>vla/docs/IMPL_PLAN.md</code> 第 10 节。</p>
+</section>
+
+<section>
+  <div class="eyebrow">5 · 结果</div>
+  <h2>零样本评测（链路检查）：目前都是 0/3</h2>
+  <p>第二批评测包含全部修正，计划每个模型 3 个 seed、每个 episode 仿真 60 s。为了等 TopoGym 改完再正式评测，这批在 X-VLA 跑完 2 个 seed 时停止。数值为每个 episode 的平均，只用于检查链路，不作为模型水平的结论。</p>
+  <div class="table-wrap"><table>
+    <tr><th>模型</th><th>任务</th><th class="num">成功率</th><th>结果</th><th class="num">控制步</th><th class="num">推理</th><th class="num">跟踪误差</th><th class="num">截断行</th><th class="num">墙钟</th></tr>
+    <tr><td>GR00T N1.7<span class="sub">官方 eef_9d 读法</span></td><td class="mono">buzz_wire_3d</td><td class="num">0/3</td><td><span class="status s-info">time_limit × 1</span> <span class="status s-info">unevaluated × 2</span></td><td class="num">889</td><td class="num">112</td><td class="num">0.0366 rad</td><td class="num">391</td><td class="num">36 min</td></tr>
+    <tr><td>π0.5 DROID</td><td class="mono">buzz_wire_3d</td><td class="num">0/3</td><td><span class="status s-info">time_limit × 1</span> <span class="status s-info">unevaluated × 2</span></td><td class="num">889</td><td class="num">112</td><td class="num">0.0576 rad</td><td class="num">0</td><td class="num">35 min</td></tr>
+    <tr><td>MolmoAct2</td><td class="mono">buzz_wire_3d</td><td class="num">0/3</td><td><span class="status s-info">time_limit × 1</span> <span class="status s-info">unevaluated × 2</span></td><td class="num">889</td><td class="num">60</td><td class="num">0.0173 rad</td><td class="num">0</td><td class="num">29 min</td></tr>
+    <tr><td>X-VLA</td><td class="mono">cast_coil</td><td class="num">0/2</td><td><span class="status s-info">time_limit × 2</span> <span class="status s-warn">2/3 个 seed</span></td><td class="num">1000</td><td class="num">18</td><td class="num">6.85 mm</td><td class="num">0</td><td class="num">29 min</td></tr>
+    <tr><td>π0.5 ALOHA</td><td class="mono">cast_coil</td><td colspan="7" class="note">未跑，正式评测等 TopoGym 改完</td></tr>
+    <tr><td>GR00T N1.7<span class="sub">法兰旋转 eef_9d</span></td><td class="mono">buzz_wire_3d</td><td class="num">0/1</td><td><span class="status s-info">time_limit × 1</span> <span class="status s-warn">1/3 个 seed</span></td><td class="num">889</td><td class="num">112</td><td class="num">0.0221 rad</td><td class="num">2</td><td class="num">47 min</td></tr>
+  </table></div>
+  <ul class="note" style="margin:0; padding-left:18px; display:grid; gap:4px">
+    <li><code>unevaluated</code>：超时时任务判据不可用，由场景 seed 决定（buzz_wire_3d 的 seed 1、2）。</li>
+    <li>截断行：目标超出关节限位或开度超出 [0, 1] 的动作行。上表 GR00T 行用的是官方 eef_9d 读法；改用法兰旋转后逐步记录了 seed 0：截断从 366 行降到 2 行，都是关节 7 超出 0.036 rad（<span class="mono">runs/test_results/20260930_vla_groot_clipping_seed0</span>）。</li>
+    <li>π0.5 ALOHA（cast_coil，seed 0，10 s，逐步记录）：500 行中 475 行越限；先移到 openpi 复位姿态再跑，500 行全部越限；在真实 ALOHA 数据上开环，首个目标平均偏离 0.18 rad（真人 0.015 rad）。原因在模型的零样本输出，与 TopoGym 和适配无关（<span class="mono">runs/test_results/20260930_vla_pi05_aloha_clipping/README.md</span>）。</li>
+    <li>X-VLA 的两个 seed 包含 4:3 裁剪（commit 707ecd5）和夹爪比例修正（commit 7c00ed5）。"GR00T N1.7 · 法兰旋转 eef_9d"一行是逐步记录截断的 seed 0 诊断运行。</li>
+    <li>首批（修正前，每个 episode 30 s）四个模型也都是 0/3。每个运行实际使用的代码版本见 <span class="mono">runs/test_results/20260930_vla_round2_gpu_checks/code_versions.md</span>。</li>
+    <li>视频：每个 episode 每路相机一个 MP4，在评测机器的 <span class="mono">runs/test_results/20260930_vla_p5_&lt;模型&gt;/</span>（<span class="mono">runs/</span> 不进 git）。</li>
+  </ul>
+</section>
+
+<section>
+  <div class="eyebrow">6 · 工作方式</div>
+  <h2>两个进程，一条 TCP 连接</h2>
+  <p>评测进程在 TopoGym 的 conda 环境里驱动 reset、step、录像和判定；每个模型在自己的 conda 环境里起服务，只回答"观测 → 动作块"。两侧只共享 <code>vla/protocol.py</code>（标准库 + numpy），传输用 <code>multiprocessing.connection</code>，JSON 头加数组原始字节，不用 pickle。</p>
+  <div class="diagram" role="img" aria-label="评测进程与模型进程之间通过一条 TCP 连接通信">
+    <svg viewBox="0 0 980 276" xmlns="http://www.w3.org/2000/svg">
+      <text class="title-zh" x="16" y="20">图 5 · 两个进程，一条 TCP 连接</text>
+      <rect class="box" x="10" y="36" width="560" height="228" rx="12"/>
+      <text class="title-zh" x="28" y="62">评测进程 · conda 环境 topogym</text>
+      <rect class="node" x="28" y="80" width="92" height="44" rx="7"/><text class="label" x="74" y="107" text-anchor="middle">run_eval</text>
+      <rect class="node" x="140" y="80" width="72" height="44" rx="7"/><text class="label" x="176" y="107" text-anchor="middle">Env</text>
+      <rect class="node" x="232" y="80" width="96" height="44" rx="7"/><text class="label" x="280" y="107" text-anchor="middle">VLAAgent</text>
+      <rect class="node" x="348" y="80" width="88" height="44" rx="7"/><text class="label" x="392" y="107" text-anchor="middle">Adapter</text>
+      <rect class="node" x="456" y="80" width="100" height="44" rx="7"/><text class="label" x="506" y="107" text-anchor="middle">RemoteClient</text>
+      <path class="wire" d="M120 102 H140 M212 102 H232 M328 102 H348 M436 102 H456"/>
+      <text class="cap" x="28" y="158">run_eval：reset、seed、step、录像、判定结果</text>
+      <text class="cap" x="28" y="180">VLAAgent：每执行 execute_steps 个目标推理一次；X-VLA 的目标到位再换</text>
+      <text class="cap" x="28" y="202">Adapter：TopoGym 观测和动作 ↔ 标准向量（关节或末端位姿 + 开度）</text>
+      <text class="cap" x="28" y="224">输出：results.jsonl、summary.json、report.md、每路相机一个 MP4</text>
+      <rect class="box" x="650" y="36" width="320" height="228" rx="12"/>
+      <text class="title-zh" x="668" y="62">模型进程 · conda 环境 vla-&lt;模型&gt;</text>
+      <rect class="node" x="668" y="80" width="80" height="44" rx="7"/><text class="label" x="708" y="107" text-anchor="middle">serve</text>
+      <rect class="node" x="768" y="80" width="184" height="44" rx="7"/><text class="label" x="860" y="107" text-anchor="middle">BaseVLA 子类</text>
+      <path class="wire" d="M748 102 H768"/>
+      <text class="cap" x="668" y="158">官方推理代码（固定 commit）</text>
+      <text class="cap" x="668" y="180">一次服务一个连接；推理出错回 error</text>
+      <text class="cap" x="668" y="202">约定换算、图像裁剪与缩放都在子类里</text>
+      <text class="cap" x="668" y="224">不依赖 TopoGym</text>
+      <path class="link" d="M556 102 C 600 102, 620 102, 668 102"/>
+      <text class="small" x="612" y="92" text-anchor="middle">TCP</text>
+      <text class="small" x="612" y="146" text-anchor="middle">spec·reset·infer</text>
+    </svg>
+  </div>
+<pre><code>conda activate vla-pi05
+python -m vla.models.serve --config vla/configs/models/panda_robotiq/pi05_droid_jointpos.yaml
+
+conda activate topogym
+python -m vla.gym.run_eval --config vla/configs/eval/buzz_wire_3d.yaml task.seeds=[0] task.sim_seconds=10</code></pre>
+  <p class="note">环境：<code>bash vla/setup.sh &lt;topogym|pi05|groot|molmoact2|xvla&gt;</code>。配置按机器人分目录，用 <code>_base_</code> 继承，命令行 <code>key=value</code> 覆盖；端口在运行时指定（默认 8000）。使用说明见 <code>vla/README.md</code>，设计与变更记录见 <code>vla/docs/IMPL_PLAN.md</code>。</p>
+</section>
+
+<footer>
+  证据在评测机器的 <span class="mono">runs/test_results/20260930_vla_*</span>（不进 git）：第二批评测 <span class="mono">20260930_vla_p5_*</span>，调用核对 <span class="mono">20260930_vla_round2_audit</span>，eef_9d 实验 <span class="mono">20260930_vla_groot_eef9d</span>，夹爪实测 <span class="mono">20260930_vla_round3_gripper</span>，到位步数 <span class="mono">20260930_vla_round2_reach</span>。本页源文件：<span class="mono">vla/docs/index.html</span>。
+</footer>
+</main>

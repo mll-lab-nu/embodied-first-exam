@@ -1,0 +1,10 @@
+# pi0.5 DROID joint-position checkpoint.
+_base_: base.yaml
+class_path: vla.models.pi05.model.Pi05
+checkpoint: gs://openpi-assets/checkpoints/pi05_droid_jointpos   # cached under ~/.cache/openpi
+spec:
+  name: pi05_droid_jointpos
+  chunk_size: 15
+  execute_steps: 8                  # examples/droid/main.py open_loop_horizon
+model:
+  train_config: pi05_droid_jointpos_polaris   # openpi config paired with this checkpoint (same norm stats)

@@ -1,0 +1,26 @@
+# X-VLA-0.9B RoboTwin2 checkpoint (AgileX/ARX arms in RoboTwin 2.0) on the TopoGym ALOHA, end-effector space.
+_base_: base.yaml                     # cameras -> head, left wrist, right wrist views
+class_path: vla.models.xvla.model.XVLA
+checkpoint: 2toINF/X-VLA-RoboTwin2    # cached under ~/.cache/huggingface
+spec:
+  name: xvla_robotwin2
+  action_space: ee_abs
+  control_hz: 16.667                # one action per saved RoboTwin frame: 15 steps of 1/250 s; "30 Hz" is a label
+  chunk_size: 30
+  execute_steps: 30                 # the official RoboTwin client executes the whole chunk
+  reach_tolerance_m: 0.005          # RoboTwin executes each target to completion; TopoGym's ALOHA TCP settles within
+                                    # 1.6-4.5 mm of a held target (runs/test_results/20260930_vla_round2_reach)
+model:
+  revision: a157c580cfe6f9f445614490f3bec1b2f9ef9f18
+  domain_id: 6                      # robotwin2 (datasets/domain_config.py)
+  # Per-arm frames [x, y, z, yaw_deg] (x forward, z up): x, y, yaw of the arm base and z of the table top, so each
+  # TCP keeps its pose relative to its own base horizontally and its height above the table. TopoGym: left/right
+  # base_link poses measured in the simulator; the bases stand on the table top (0.9196429). RoboTwin: aloha-agilex
+  # fl/fr_base_link, which stand 4.2 cm above the table top (0.74; bases at 0.782 / 0.781).
+  topogym_bases:
+    left: [-0.6046786, -0.019, 0.9196429, 0.0]
+    right: [0.3333214, -0.019, 0.9196429, 180.0]
+  robotwin_bases:
+    left: [-0.2970, -0.4195, 0.74, 91.146]
+    right: [0.3063, -0.4185, 0.74, 90.573]
+  tcp_offset_m: 0.12                # RoboTwin TCP = link6 origin + 0.12 m along link6 x (gripper_bias)

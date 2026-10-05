@@ -1,0 +1,7 @@
+# TopoGym Panda + Robotiq, the DROID robot. Shared by the DROID checkpoints: joint state in, absolute joint targets
+# out, at the DROID recording rate; exterior camera and wrist camera.
+spec:
+  embodiment: panda_robotiq
+  cameras: [agentview, wrist]       # -> exterior_image_1_left, wrist_image_left
+  action_space: joint_abs
+  control_hz: 15
