@@ -62,7 +62,7 @@ strokes**.
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (waits while the service builds the scene, under a minute)
+r = Robot()                                   # connects (the service is ready before your time starts)
 spec = r.spec()                               # action types, dims, joint limits, cameras, budgets, static facts (sheets, ink well, pen)
 
 obs = r.get_obs()                             # current frames of spec["default_cameras"] (all but practice_cam): obs.last[cam] -> uint8 (H,W,3)

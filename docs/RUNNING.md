@@ -23,6 +23,21 @@ reasoning summaries, tool calls, images and token use with the robot service's l
   `agent_sessions/` with an `index.json` of all of them (`agent_traces`, `agent_trace_steps`, `agent_trace_videos`
   in reward.json). Self-reported: an agent that teleports objects through `exec_code` will not replay faithfully.
 
+## Start-up and the agent's clock (PROTOCOL §2.9)
+The agent's time budget starts once the simulator is ready. Harbor runs each task's `[environment.healthcheck]` in the
+agent's container after the containers are up and before it installs the agent: a standard task waits there until its
+sim service answers the client (`Robot()` connects), a privileged task runs its warm-up (one launch of the simulator with
+the frozen instance through the task's tooling). Reading a trial:
+- `result.json`: `environment_setup.finished_at` (containers up), then the check, then `agent_setup.started_at`, then
+  `agent_execution.started_at` (the agent's clock); `trial.log` has `Running healthcheck` and `Healthcheck passed`.
+- When the simulator was ready: standard, the service's `start` event in `episode.jsonl` (a sim artifact); privileged,
+  the warm-up's start and end lines in `artifacts/logs/artifacts/rcb_warmup.log`.
+- `HealthcheckError` (no verdict): the simulator never became ready (standard: within `start_period_sec`, 3600 s;
+  privileged: the warm-up failed twice). It is an infrastructure failure, not the agent's: re-run the trial
+  (`harbor run --max-retries N` retries it).
+- A trial's wall time grows by the agent's setup, which no longer overlaps the simulator's start; the live board shows
+  the trial as `setup` until the agent starts.
+
 ## Running a two-mode batch (privileged + standard)
 ```bash
 harbor run -p tasks -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
