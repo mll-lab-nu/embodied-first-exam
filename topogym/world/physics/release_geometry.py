@@ -62,8 +62,28 @@ class ReleaseGeometry:
                     count += 1
             self.complete &= count > 0
 
+    def _batches(self):
+        """The entries as arrays, built once (entries are fixed at construction): local centers / half extents, row
+        indices per name, and the robot entries grouped by their plane count (one stacked matmul per group)."""
+        cached = getattr(self, "_batch", None)
+        if cached is not None and cached["entries"] is self.entries and cached["count"] == len(self.entries):
+            return cached
+        names = [e[0] for e in self.entries]
+        robot = [i for i, name in enumerate(names) if name == "robot"]
+        groups = {}
+        for i in robot:
+            groups.setdefault(len(self.entries[i][4]), []).append(i)
+        self._batch = dict(
+            entries=self.entries, count=len(self.entries), robot=robot,
+            centers=np.array([np.asarray(e[2], dtype=float) for e in self.entries]).reshape(-1, 3),
+            halves=np.array([np.asarray(e[3], dtype=float) for e in self.entries]).reshape(-1, 3),
+            rows={name: [i for i, n in enumerate(names) if n == name] for name in (*self.targets, "robot")},
+            groups=[(np.asarray(rows), np.array([self.entries[i][4] for i in rows], dtype=float).reshape(len(rows), k, 4))
+                    for k, rows in groups.items()])
+        return self._batch
+
     def read(self):
-        boxes = {name: [] for name in (*self.targets, "robot")}
+        boxes = {name: np.empty((0, 2, 3)) for name in (*self.targets, "robot")}
         robot_planes, robot_poses = [], []
         if self.entries:
             indices = [e[1] for e in self.entries]
@@ -71,14 +91,23 @@ class ReleaseGeometry:
             p = to_numpy(solver.get_geoms_pos(indices, relative=False)).reshape(-1, 3)
             q = to_numpy(solver.get_geoms_quat(indices, relative=False)).reshape(-1, 4)
             r = Rotation.from_quat(q[:, [1, 2, 3, 0]]).as_matrix()
-            for (name, _, local_center, local_half, planes), position, turn in zip(self.entries, p, r, strict=True):
-                center, half = position+turn@local_center, np.abs(turn)@local_half
-                boxes[name].append([center-half, center+half])
-                if name == "robot":
-                    normals = planes[:, :3] @ turn.T
-                    robot_planes.append(np.c_[normals, planes[:, 3]-normals@position])
-                    if self.exact_robot_contact:
-                        robot_poses.append(dict(position_m=position.copy(), rotation=turn.copy()))
+            # Every entry's numbers as before (position + turn @ center, abs(turn) @ half; per robot entry planes @
+            # turn.T and normals @ position), as stacked matmuls over equal shapes: numpy evaluates each stacked product
+            # with the kernel of the single product, bit for bit (scripts/check_release_geometry_batched.py).
+            batch = self._batches()
+            centers = p + (r @ batch["centers"][:, :, None])[:, :, 0]
+            halves = (np.abs(r) @ batch["halves"][:, :, None])[:, :, 0]
+            bounds = np.stack([centers-halves, centers+halves], axis=1)
+            boxes = {name: bounds[rows] for name, rows in batch["rows"].items()}
+            planes = {}
+            for rows, local in batch["groups"]:
+                normals = local[:, :, :3] @ np.swapaxes(r[rows], 1, 2)
+                offsets = local[:, :, 3]-(normals @ p[rows][:, :, None])[:, :, 0]
+                for j, i in enumerate(rows):
+                    planes[int(i)] = np.concatenate([normals[j], offsets[j][:, None]], axis=1)
+            robot_planes = [planes[i] for i in batch["robot"]]
+            if self.exact_robot_contact:
+                robot_poses = [dict(position_m=p[i].copy(), rotation=r[i].copy()) for i in batch["robot"]]
         result = dict(schema_version=3 if self.exact_robot_contact else 2, physics_step=self.world.physics_step,
             complete=bool(self.complete), robot_present=self.robot_present,
             robot_bounds_m=np.asarray(boxes["robot"]).reshape(-1, 2, 3),
