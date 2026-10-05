@@ -279,7 +279,10 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
                 hold=float(values.get('hold_s',8.))
                 if not np.isfinite(hold) or not 0<hold<=30:raise ValueError('Gravity hold must be within 30 seconds')
                 duration=float(values.get('sample_duration_s',.25))
-                if not np.isfinite(duration) or not .05<=duration<=1.:raise ValueError('Tilt sample duration must be within 0.05 to 1 seconds')
+                # oraclefix2: down to 0.02 s per 0.5 deg sample (25 deg/s). Hard under Harbor's 2.5 ms x 10 physics: at 0.05 s
+                # the ring slides 43 mm along the lower band during the tilt and wedges between the right fingers; a fast
+                # tilt with a 1 s hold leaves it free (lab oraclefix2/exp/X3e). Joints stay far below the standard step limit.
+                if not np.isfinite(duration) or not .02<=duration<=1.:raise ValueError('Tilt sample duration must be within 0.02 to 1 seconds')
                 bias_limit=float(values.get('position_bias_limit_m',.03))
                 if not np.isfinite(bias_limit) or not .001<=bias_limit<=.10:
                     raise ValueError('Tilt position feedback bias must be between 1 and 100 mm')

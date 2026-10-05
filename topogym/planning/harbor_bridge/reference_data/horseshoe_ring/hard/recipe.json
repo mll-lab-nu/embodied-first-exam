@@ -116,8 +116,8 @@
           0.0
         ],
         "yaw_deg": 0.0,
-        "hold_s": 8.0,
-        "sample_duration_s": 0.05,
+        "hold_s": 1.0,
+        "sample_duration_s": 0.02,
         "restore": false,
         "position_bias_limit_m": 0.05
       }
@@ -158,5 +158,6 @@
     "instance_id": "678bf8305fae599a7c0042a8be01ad4e87c1f32666d1ac4a8ddb9749e36ea4c4",
     "audit": "evidence/runs/hard_from_home_22/independent_audit.json",
     "audit_sha256": "2275d2b9e5760ee84e081f0e0c106c2f7447888ff39fa7ae76a7d1b62a4e92ab"
-  }
+  },
+  "oraclefix2": "2026-10-05: orient_for_handoff tilts at 0.02 s per 0.5 deg sample and holds 1 s (was 0.05 s and 8 s). Under the Harbor instance's 2.5 ms x 10 physics the slower tilt lets the ring slide 43 mm along the lower band into the right gripper, where it wedges between the fingers and the active pickup lifts the remainder with it (lab oraclefix2/exp/X1h, X4); after the fast tilt the released ring hangs free of the puzzle (separating gap +36 mm, X3e), the left hand grasps it, the right hand withdraws out of it and the ring is placed (native success at 297.2 s sim, X10, with the query-budgeted free-arm transits)."
 }

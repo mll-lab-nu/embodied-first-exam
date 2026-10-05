@@ -78,9 +78,9 @@
       "source": "solvability_proof/horseshoe_ring/2026-10-03_medium/evidence/runs/medium_from_home_08/oracle_inputs/approach.json"
     },
     "horseshoe_ring/hard/recipe.json": {
-      "sha256": "51a2c3646508b2b543961389b919def0d1082e2892d045db11de62af03255d2a",
-      "bytes": 4769,
-      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/recipe.json"
+      "sha256": "ff1e8288e32d7d9f26f7c32d2d66b327a4e65a162ccf59527169eefd72caea4e",
+      "bytes": 5398,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/recipe.json + oraclefix2 fast handoff tilt (2026-10-05)"
     },
     "horseshoe_ring/hard/grasps.json": {
       "sha256": "c24d875289e57ac278e7de3bd3e018b9f922d6c09efaa29bf44257012381337f",
