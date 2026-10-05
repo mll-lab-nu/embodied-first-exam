@@ -338,6 +338,18 @@ for _name, _ticks in (("rope_threading", 300), ("slotted_post_ring", 800), ("kno
     TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "solver_substeps": 1, "reset_physics_steps": _ticks,
                                  "ipc_options": {"newton_tolerance": 1e-3, "linear_system_tolerance": 1e-5,
                                                  "collision_detection_method": "linear_bvh"}}
+# Tooling v18 (knot K2, 2026-10-05; lab topogym_v1/topospeed/NOTES.md): knot_untying's IPC frame is 5 ms (5 ticks per
+# 25 ms control step, the control period unchanged) and its Newton solve semi-implicit with at least 3 iterations per frame
+# (libuipc newton_semi_implicit_enable + newton_min_iterations). Its full Newton solve to 1e-3 at 2.5 ms spent 13-16
+# iterations per frame. Rejected on the way (closed-loop oracles and open-loop screens, tet volume ratio per phase against
+# the full solve): one semi-implicit iteration (crushes the rope under the fingers: medium and hard fail), a looser
+# tolerance (5e-2 at 5 ms: inverted tets in the grasp squeeze). K2's oracles untie hard and medium with the rope geometry
+# inside the full solve's envelope (no inverted tet; centerline distance, table gap, stretch alike). The settle keeps its
+# 1.5 s (300 ticks of 5 ms). Rules windows and stable durations are time-based, so they keep their meaning.
+TASKS["knot_untying"]["simulator"] = {
+    **TASKS["knot_untying"]["simulator"], "physics_dt_s": 0.005, "control_decimation": 5, "reset_physics_steps": 300,
+    "ipc_options": {**TASKS["knot_untying"]["simulator"]["ipc_options"], "newton_semi_implicit_enable": True,
+                    "newton_min_iterations": 3}}
 
 
 def simulator_config(task: str, eval_index: int | None = None, *, variation_id: str | None = None,

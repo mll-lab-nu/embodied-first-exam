@@ -22,8 +22,10 @@ HISTORY_STORAGES = {"segment", "memory", "disk"}
 # instead of per-island solves; on the CPU backend 1.3x faster (2026-10-02 study).
 RIGID_OPTION_OVERRIDES = {"use_contact_island": bool}
 # IPCCouplerOptions fields an instance may override (2026-10-02 study: Newton 1e-3 / PCG 1e-5 with one solver substep;
-# libuipc's linear_bvh broad phase instead of its default info_stackless_bvh: the same contacts, ~10 % faster).
-IPC_OPTION_OVERRIDES = {"newton_tolerance": float, "linear_system_tolerance": float, "collision_detection_method": str}
+# libuipc's linear_bvh broad phase instead of its default info_stackless_bvh: the same contacts, ~10 % faster; tooling
+# v18 knot K2: a semi-implicit Newton solve with a minimum number of iterations per frame).
+IPC_OPTION_OVERRIDES = {"newton_tolerance": float, "linear_system_tolerance": float, "collision_detection_method": str,
+                        "newton_semi_implicit_enable": bool, "newton_min_iterations": int}
 IPC_BROAD_PHASES = ("linear_bvh",)
 
 
@@ -121,9 +123,9 @@ class SimulatorConfig:
         object.__setattr__(self, "rigid_options", freeze(options))
         options = dict(self.ipc_options)
         unknown = set(options) - set(IPC_OPTION_OVERRIDES)
+        valid = dict(collision_detection_method=lambda v: v in IPC_BROAD_PHASES, newton_semi_implicit_enable=lambda v: True)
         if unknown or any(type(v) is not IPC_OPTION_OVERRIDES[k]
-                          or (v not in IPC_BROAD_PHASES if k == "collision_detection_method" else not (math.isfinite(v) and v > 0))
-                          for k, v in options.items()):
+                          or not valid.get(k, lambda v: math.isfinite(v) and v > 0)(v) for k, v in options.items()):
             raise ValueError(f"ipc_options must use qualified overrides {IPC_OPTION_OVERRIDES}; got {options}")
         object.__setattr__(self, "ipc_options", freeze(options))
         if self.ipc_settled_state is not None and (not isinstance(self.ipc_settled_state, str) or self.reset_physics_steps
