@@ -43,7 +43,7 @@ Your whole interface to the robot. Its docstring is the full reference
 
 | call | endpoint | what it does |
 |---|---|---|
-| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
+| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`); the scene is ready before your time starts |
 | `r.spec()` | `GET /spec` | the robot's facts: the actuators' order and ranges, `control_dt` (0.02 s), `max_control_steps` (500), the cameras, `proprio_layout`, `budget` |
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s` |
 | `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or hold the last targets and watch for `seconds` (at most 30) |
