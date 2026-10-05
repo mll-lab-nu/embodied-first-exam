@@ -114,6 +114,15 @@ FAMILIES: dict[str, dict] = {
     "cabinet_pickup": {"eval_config": "configs/eval/cabinet_pickup_joint.yaml", "grasping_mode": "sticky", "max_steps": 5700},
     "lid_transport": {"eval_config": "configs/eval/lid_transport_food_joint.yaml", "grasping_mode": "sticky", "max_steps": 1900},
     "dusty_transfer": {"eval_config": "configs/eval/dusty_transfer_joint.yaml", "grasping_mode": "sticky", "max_steps": 5100},
+    "clutter_pickup": {"eval_config": "configs/eval/clutter_pickup_joint.yaml", "grasping_mode": "assisted", "max_steps": 1100},
+}
+# Eval configs the image does not hold (images/maniguard/maniguard-keep.txt has the five families of its first build): the
+# values of the pinned upstream file (NU-IDEAS-Lab/ManiGuard@a1b6444b3, configs/eval/clutter_pickup_joint.yaml, git blob
+# d09ea018, sha256 dfa74cc8...; Apache-2.0) as yaml.safe_load reads them, without the keys that only name upstream's dataset
+# directory, output directory and policy server (unused here: the scene comes from the frozen instance). Used only when
+# MANIGUARD_ROOT has no such file.
+EMBEDDED_EVAL_CONFIGS: dict[str, dict] = {
+    "configs/eval/clutter_pickup_joint.yaml": {'state_mode': 'joint', 'external_cam': 'left', 'action_dim': 8, 'execute_horizon': 8, 'gripper_binarize': True, 'controller_preset': 'joint_position_raw', 'ik_eef_to_joint': False, 'grasping_mode': 'assisted', 'max_steps': 1100, 'success_hold_steps': 10, 'camera_resolution': 256, 'save_video': True, 'longfinger': True},
 }
 EVAL_EXPECT = {"action_frequency": 20, "rendering_frequency": 20, "physics_frequency": 120, "action_dim": 8,
                "controller_preset": "joint_position_raw", "ik_eef_to_joint": False, "gripper_binarize": True,
@@ -393,7 +402,12 @@ class Session:
         from maniguard.eval.scene_discovery import discover_scenes
         from maniguard.data.datagen.primitives.scene import task_needs_gpu_dynamics
         self.th, self.B = th, B
-        cfg = load_eval_config(MANIGUARD_ROOT / F["eval_config"])
+        cfg_file = MANIGUARD_ROOT / F["eval_config"]
+        if cfg_file.is_file() or F["eval_config"] not in EMBEDDED_EVAL_CONFIGS:
+            cfg = load_eval_config(cfg_file)
+        else:                                               # load_eval_config's own construction, from the embedded values
+            from maniguard.eval.eval_config import EvalConfig
+            cfg = EvalConfig(**{k: v for k, v in EMBEDDED_EVAL_CONFIGS[F["eval_config"]].items() if k in EvalConfig.__dataclass_fields__})
         cfg.headless = True
         bad = {k: (getattr(cfg, k), v) for k, v in EVAL_EXPECT.items() if getattr(cfg, k) != v}
         if cfg.grasping_mode != F["grasping_mode"]:
