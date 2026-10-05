@@ -20,6 +20,10 @@ class CompiledJointPolicy:
             raise ValueError("Compiled action timing differs")
         self.index = 0
         self.physics_steps_per_action = int(context["timing_spec"]["control_decimation"])
+        # oraclefix 13: joint targets stay 1 urad inside the public limits (a target exactly at a limit rounds outward
+        # in the adapter's float32 check and the bridge refuses the row as clipped)
+        self.joint_limits = {name: [(float(lo)+1e-6, float(hi)-1e-6) for lo, hi in group["joint_limits_rad"]]
+                             for name, group in context["action_spec"]["groups"].items()}
 
     def act(self, observation):
         state = observation["state"]
@@ -41,4 +45,12 @@ class CompiledJointPolicy:
         self.tracking = {"action_index": self.index, "action_count": len(self.actions)}
         action = self.actions[self.index]
         self.index += 1
+        limits = getattr(self, "joint_limits", {})
+        if any(isinstance(command, dict) and "joint_position_rad" in command and name in limits
+               for name, command in action.items()):
+            action = {name: (dict(command, joint_position_rad=[min(max(float(v), lo), hi) for v, (lo, hi) in
+                                                                zip(command["joint_position_rad"], limits[name])])
+                             if isinstance(command, dict) and "joint_position_rad" in command and name in limits
+                             else command)
+                      for name, command in action.items()}
         return action
