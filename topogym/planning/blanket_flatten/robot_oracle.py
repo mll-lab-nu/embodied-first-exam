@@ -120,8 +120,10 @@ class Contact:
     over its patch, so a patch that sags or slides is followed rather than
     approached at a stale pose. Admitted hands keep their command.
     """
-    def __init__(self, arms, commands, q, grip, *, hover, centers, uv, patch, step_m=.001, max_steps=25, dwell=10):
+    def __init__(self, arms, commands, q, grip, *, hover, centers, uv, patch, step_m=.001, max_steps=25, dwell=10,
+                 sides=SIDES):
         self.arms, self.commands, self.q, self.grip = arms, commands, q, grip
+        self.sides = tuple(sides)     # oraclefix 11: a one-hand stage lowers only its own hand
         self.hover, self.centers, self.uv, self.patch = hover, centers, uv, patch
         self.step_m, self.max_steps, self.dwell = step_m, max_steps, dwell
         self.depth = dict.fromkeys(SIDES, 0.)
@@ -129,7 +131,7 @@ class Contact:
 
     def act(self, obs):
         state = held(obs)
-        if all(state.values()):
+        if all(state[s] for s in self.sides):
             return None
         if self.tick % self.dwell == 0:
             if self.steps == self.max_steps:
@@ -139,7 +141,7 @@ class Contact:
             x = np.asarray(world["particles"]["blanket"]["position_m"])
             self.log.append(dict(step=self.steps, held=state, admission=world.get("grasp", {}).get("admission", {}),
                                  commands={s: c.tolist() for s, c in self.commands.items()}))
-            for side in SIDES:
+            for side in self.sides:
                 if not state[side]:
                     self.depth[side] += self.step_m
                     center = self.centers[side]
@@ -156,12 +158,150 @@ def cartesian(arms, q, starts, goals, duration_s, dt, grip):
     count = max(1, int(round(duration_s/dt)))
     for i in range(count):
         u = smoothstep((i+1)/count)
-        for side in SIDES:
+        for side in goals:            # oraclefix 11: both hands, or the one hand of a one-hand stage
             q = arms.solve(side, starts[side]+u*(goals[side]-starts[side]), q)
             worst = min(worst, arms.margin(side, q))
         actions.append(arms.action(q, grip))
     return actions, q, worst
 
+
+class Quiet:
+    """oraclefix 11: a Sequence stop that ends a wait once every cloth particle has stayed at or below the Task's own
+    speed limit for its stable window (sampled per control step); the wait's length stays the cap."""
+    def __init__(self, limit_m_s, window_s, dt):
+        self.limit, self.need, self.count, self.done = float(limit_m_s), max(1, int(round(window_s/dt))), 0, False
+
+    def __call__(self, obs):
+        v = np.asarray(obs["privileged"]["world"]["particles"]["blanket"]["velocity_m_s"], float)
+        self.count = self.count+1 if float(np.linalg.norm(v, axis=1).max()) <= self.limit else 0
+        self.done = self.count >= self.need
+        return self.done
+
+def fold_stage(x, uv, table, layout, fold, tcp):
+    """oraclefix 11: one stage that lays out the largest folded corner of the measured sheet; (stage or None, diagnosis).
+
+    Flat reference: the rigid 2-D fit (rotation and translation; a face-down sheet fits mirrored) of the rest
+    coordinates onto the single-layer core of the sheet. Particles farther than `deviation_m` from that fit are folded;
+    the corner with the most folded particles within `corner_radius_m` (material) is laid out if it has at least
+    `min_particles`. Over (the flap lies on top of the sheet): grasp the flap's tip and turn it back like a page onto its
+    flat position, as route stage A turns the ends. Under (tucked): grasp the raised crest next to the flap, drag it
+    outward past the flat position at 10 cm so the flap hangs below the hand, then lower while moving back 3 cm, as the
+    medium route lays out its tucked strip. One hand: the one nearer the grasp point. Release 3 cm above the table.
+    """
+    from scipy.spatial import cKDTree
+    x, uv = np.asarray(x, float), np.asarray(uv, float)
+    size = float(layout.particle_size_m)
+    half = np.array([layout.length_m, layout.width_m])/2
+    h = x[:, 2]-table
+    core = (np.abs(uv[:, 0]) < .6*half[0]) & (np.abs(uv[:, 1]) < .6*half[1]) & (h < 1.5*size)
+    diagnosis = dict(core_particles=int(core.sum()))
+    if core.sum() < 50:
+        return None, dict(diagnosis, reason="no single-layer core")
+    a, b = uv[core], x[core, :2]
+    ca, cb = a.mean(0), b.mean(0)
+    left, _, right = np.linalg.svd((a-ca).T @ (b-cb))
+    rotation = (left @ right).T         # rest (u, v) -> world (x, y); determinant -1: the sheet lies mirrored
+    flat = (uv-ca) @ rotation.T+cb
+    deviation = np.linalg.norm(x[:, :2]-flat, axis=1)
+    folded = deviation > fold["deviation_m"]
+    diagnosis.update(fit_rms_m=float(np.sqrt(np.mean(deviation[core]**2))), folded_particles=int(folded.sum()),
+                     mirrored=bool(np.linalg.det(rotation) < 0))
+    best = None
+    for corner in ((-half[0], -half[1]), (-half[0], half[1]), (half[0], -half[1]), (half[0], half[1])):
+        near = np.linalg.norm(uv-np.asarray(corner), axis=1) < fold["corner_radius_m"]
+        count = int((folded & near).sum())
+        if best is None or count > best[1]:
+            best = (np.asarray(corner, float), count, near)
+    corner, count, near = best
+    diagnosis.update(corner_uv=corner.tolist(), corner_folded_particles=count)
+    if count < fold["min_particles"]:
+        return None, dict(diagnosis, reason="no folded corner")
+    flap, base = np.flatnonzero(folded & near), np.flatnonzero(~folded)
+    base_tree = cKDTree(x[base, :2])
+    distance, nearest = base_tree.query(x[flap, :2])
+    overlap = distance < size
+    votes = h[flap][overlap]-h[base[nearest[overlap]]]
+    over = bool(votes.size and np.median(votes) > 0)
+    tip = int(flap[np.argmin(np.linalg.norm(uv[flap]-corner, axis=1))])
+    target = flat[tip]
+    outward = (target-cb)/max(float(np.linalg.norm(target-cb)), 1e-9)
+    diagnosis.update(over=over, overlap_votes=int(votes.size),
+                     median_height_difference_m=float(np.median(votes)) if votes.size else None,
+                     tip=tip, tip_xy=x[tip, :2].tolist(), tip_flat_xy=target.tolist())
+    if over:
+        grasp, p = tip, x[tip, :2]
+        mid = (p+target)/2
+        path = (("lift", 1.5, (*p, .054)), ("over", 3.5, (*mid, .09)), ("down", 3.5, (*(target+.01*outward), .03)))
+    else:
+        flap_distance, _ = cKDTree(x[flap, :2]).query(x[base, :2])
+        border = base[flap_distance < 2*size]
+        raised = border[h[border] > 1.2*size]
+        crest_set = raised if len(raised) else border
+        if not len(crest_set):
+            return None, dict(diagnosis, reason="no crest next to the tucked flap")
+        grasp = int(crest_set[np.argmin(np.linalg.norm(uv[crest_set]-corner, axis=1))])
+        p = x[grasp, :2]
+        reach = float(np.linalg.norm(target-p))
+        drag = (target-p)/max(reach, 1e-9)
+        path = (("lift", 1.5, (*p, .10)), ("drag", 6., (*(p+(reach+.03)*drag), .10)),
+                ("lower", 3., (*(p+reach*drag), .03)))
+    side = min(SIDES, key=lambda s: float(np.linalg.norm(np.asarray(tcp[s])[:2]-x[grasp, :2])))
+    diagnosis.update(grasp=grasp, grasp_uv=uv[grasp].tolist(), side=side,
+                     path=[dict(name=n, duration_s=d, to=[float(v) for v in g]) for n, d, g in path])
+    stage = dict(grasp_uv={side: tuple(float(v) for v in uv[grasp])},
+                 segments=tuple(dict(name=n, duration_s=d, to={side: tuple(float(v) for v in g)}) for n, d, g in path))
+    return stage, diagnosis
+
+
+def base_clearance_stage(x, uv, state, task, cfg):
+    """oraclefix 11b: one stage that slides the sheet away from an arm base it is too close to; (stage or None, diagnosis).
+
+    The Task's final settling needs every robot collision cover >= clearance_m from the cloth's box padded by the particle
+    radius (evaluation/terminal/settling.py). The arm bases are fixed at the table's x ends and their conservative covers
+    reach x = 0.231 / -0.502 on lab, a window only ~5 cm wider per side than the sheet: a sheet left that far to one
+    side can never pass, whatever the arms do (v17det blanket hard: the laid-out right corner put the sheet's box 1 cm into
+    the right base's cover, every cloth gate true, 3600 settle steps without success). Measured on the current state:
+    the covers that face the cloth box across x (overlapping it in y and z); if one is closer than clearance_m +
+    margin_m, the hand on the far side grasps a complete patch 2.5-5 cm inside its own edge at the sheet's mid-width,
+    lifts it lift_m and slides the sheet away by the shortfall + extra_m (bounded by the room on that side), then the
+    usual release 3 cm above the table and retreat follow."""
+    spec = task.final_settling_spec()
+    pad, need = float(spec.particle_radius_m), float(spec.clearance_m)+float(cfg["margin_m"])
+    x, uv = np.asarray(x, float), np.asarray(uv, float)
+    lo, hi = x.min(0)-pad, x.max(0)+pad
+    boxes = np.asarray((state.get("release_geometry") or {}).get("robot_bounds_m", []), float).reshape(-1, 2, 3)
+    diagnosis = dict(cloth_box=[lo.tolist(), hi.tolist()], need_m=need, covers=len(boxes))
+    facing = boxes[(boxes[:, 0, 1] < hi[1]+need) & (boxes[:, 1, 1] > lo[1]-need)
+                   & (boxes[:, 0, 2] < hi[2]+need) & (boxes[:, 1, 2] > lo[2]-need)]
+    middle = (lo[0]+hi[0])/2
+    right = facing[(facing[:, 0, 0]+facing[:, 1, 0])/2 > middle]
+    left = facing[(facing[:, 0, 0]+facing[:, 1, 0])/2 <= middle]
+    gap_right = float(right[:, 0, 0].min()-hi[0]) if len(right) else float("inf")
+    gap_left = float(lo[0]-left[:, 1, 0].max()) if len(left) else float("inf")
+    diagnosis.update(gap_right_m=gap_right, gap_left_m=gap_left)
+    if gap_right >= need and gap_left >= need:
+        return None, dict(diagnosis, reason="clear")
+    if gap_right < need and gap_left < need:
+        return None, dict(diagnosis, reason="no room on either side")
+    toward_left = gap_right < need
+    shift = need-(gap_right if toward_left else gap_left)
+    room = (gap_left if toward_left else gap_right)-need
+    pull = min(shift+float(cfg["extra_m"]), room)
+    diagnosis.update(shift_m=shift, room_m=room, pull_m=pull)
+    if pull < shift:
+        return None, dict(diagnosis, reason="not enough room on the far side")
+    side = "left" if toward_left else "right"
+    depth = (x[:, 0]-lo[0]-pad) if toward_left else (hi[0]-pad-x[:, 0])
+    band = np.flatnonzero((depth >= cfg["edge_band_m"][0]) & (depth <= cfg["edge_band_m"][1]))
+    if not len(band):
+        return None, dict(diagnosis, reason="no grasp band")
+    grasp = int(band[np.argmin(np.abs(x[band, 1]-(lo[1]+hi[1])/2))])
+    h, d = float(cfg["lift_m"]), (-pull if toward_left else pull)
+    stage = dict(grasp_uv={side: tuple(float(v) for v in uv[grasp])},
+                 segments=(dict(name="lift", duration_s=1., by={side: (0., 0., h)}),
+                           dict(name="slide", duration_s=max(1.5, pull/float(cfg["speed_m_s"])), by={side: (d, 0., h)})))
+    diagnosis.update(side=side, grasp=grasp, grasp_xy=x[grasp, :2].tolist(), grasp_uv=uv[grasp].tolist())
+    return stage, diagnosis
 
 def run_route_oracle(env, runner, output, *, variation="easy"):
     output = Path(output)
@@ -226,17 +366,20 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
         extension = {s: arms.fingertip_extension(s) for s in SIDES}
         report.update(fingertip_extension_m=extension, stages=[])
         q = arms.qpos()
-        for index, stage in enumerate(route["stages"]):
+        # oraclefix 11: a route may append one measured fold-layout stage after its last stage (see fold_stage).
+        stages, fold_checked, nudges = list(route["stages"]), False, 0
+        for index, stage in enumerate(stages):
+            active = tuple(s for s in SIDES if s in stage["grasp_uv"])
             # Stage 0 keeps the single-stage phase names; later stages are suffixed.
             name = (lambda base: base) if index == 0 else (lambda base, i=index: f"{base}_{i+1}")
             log = dict(stage=index)
             report["stages"].append(log)
             # Grasp sites: material points named by the route, located on the live cloth.
             x = cloth()
-            centers = {s: int(np.argmin(np.sum((uv-np.asarray(stage["grasp_uv"][s]))**2, axis=1))) for s in SIDES}
+            centers = {s: int(np.argmin(np.sum((uv-np.asarray(stage["grasp_uv"][s]))**2, axis=1))) for s in active}
             # Top-down orientation per arm: the half-turn with the larger joint margin along the stage.
             choice = {}
-            for side in SIDES:
+            for side in active:
                 best = None
                 for yaw in (0., 180.):
                     rotation = Rotation.from_euler("z", yaw, degrees=True)*DOWN
@@ -253,17 +396,22 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
                     if best is None or worst > best[1]:
                         best = (yaw, worst)
                 if best is None:
+                    if index >= len(route["stages"]):     # oraclefix 11: an unreachable fold layout is skipped
+                        report.setdefault("fold_layout", {})["skipped"] = f"no top-down IK for {side}"
+                        break
                     raise RuntimeError(f"No top-down IK along stage {index} for {side}")
                 choice[side] = best
                 arms.rotation[side] = Rotation.from_euler("z", best[0], degrees=True)*DOWN
+            if len(choice) < len(active):    # oraclefix 11: the fold layout was unreachable; go to the final settle
+                break
             log.update(yaw_deg={s: c[0] for s, c in choice.items()},
                        planned_route_joint_margin_rad={s: c[1] for s, c in choice.items()})
-            grip = {s: PRESHAPE_M for s in SIDES}
+            grip = {s: PRESHAPE_M if s in active else OPEN_M for s in SIDES}
 
             # 1. Current pose (home, or 8 cm above the last release) -> 10 cm above the sites,
             #    joint-space, jaws pre-shaped narrow.
             goal = q.copy()
-            for side in SIDES:
+            for side in active:
                 goal = arms.solve(side, x[centers[side]]+[0., 0., .10], goal)
             count = int(round(3./dt))
             actions = [arms.action(q+smoothstep((i+1)/count)*(goal-q), grip) for i in range(count)]
@@ -272,7 +420,7 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
             # 2. Descend so fingertips stop 1.5 mm above the live patch top.
             x, q = cloth(), arms.qpos()
             commands = {}
-            for side in SIDES:
+            for side in active:
                 patch = material_patch(x, uv, centers[side], **PATCH)
                 top = float(x[patch, 2].max())+task.layout.particle_size_m/2
                 commands[side] = np.array([*x[centers[side]][:2], top+FINGERTIP_GAP_M+extension[side]])
@@ -281,39 +429,69 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
             actions += hold(.3, q, grip)
             run(name("descend"), Sequence(actions), actions)
             # 3. Close the jaws in the air, then lower until both assists admit.
-            grip = {s: PINCH_M for s in SIDES}
+            grip = {s: PINCH_M if s in active else OPEN_M for s in SIDES}
             actions = hold(.6, q, grip)
-            run(name("close"), Sequence(actions, stop=lambda obs: all(held(obs).values())), actions)
-            hover = {s: task.layout.particle_size_m/2+FINGERTIP_GAP_M+extension[s] for s in SIDES}
-            contact = Contact(arms, commands, q, grip, hover=hover, centers=centers, uv=uv, patch=PATCH)
+            run(name("close"), Sequence(actions, stop=lambda obs: all(held(obs)[s] for s in active)), actions)
+            hover = {s: task.layout.particle_size_m/2+FINGERTIP_GAP_M+extension[s] for s in active}
+            contact = Contact(arms, commands, q, grip, hover=hover, centers=centers, uv=uv, patch=PATCH, sides=active)
             phase = run(name("contact"), contact)
             log["contact_log"] = contact.log
-            if not all(phase["held"].values()):
+            if not all(phase["held"][s] for s in active):
                 raise RuntimeError(f"Assist did not admit both hands: {phase['held']}")
             # 4. Route segments: the held patches follow the witness route. Commands continue from the
             #    admitted contact command, keeping the arm's steady tracking offset out of the route.
             x, q = cloth(), contact.q
-            origin = {s: x[centers[s]].copy() for s in SIDES}
-            offset = {s: contact.commands[s]-origin[s] for s in SIDES}
+            origin = {s: x[centers[s]].copy() for s in active}
+            offset = {s: contact.commands[s]-origin[s] for s in active}
             log["command_minus_patch_center_m"] = {s: o.tolist() for s, o in offset.items()}
             starts = dict(contact.commands)
             for segment in stage["segments"]:
                 goals = {s: (segment_goal(segment, s, origin[s], None, table)+offset[s]
-                             if "to" in segment or "by" in segment else starts[s]) for s in SIDES}
+                             if "to" in segment or "by" in segment else starts[s]) for s in active}
                 actions, q, worst = cartesian(arms, q, starts, goals, segment["duration_s"], dt, grip)
                 log.setdefault("route_joint_margin_rad", {})[segment["name"]] = worst
-                phase = run(name(segment["name"]), Sequence(actions, stop=lambda obs: not all(held(obs).values())),
+                phase = run(name(segment["name"]), Sequence(actions, stop=lambda obs: not all(held(obs)[s] for s in active)),
                             actions)
-                if not all(phase["held"].values()) and not task.result.task_success:
+                if not all(phase["held"][s] for s in active) and not task.result.task_success:
                     raise RuntimeError(f"{segment['name']}: assisted grasp lost {phase['held']} {phase['health']}")
                 starts = goals
             # 5. Open and lift the hands 8 cm.
             grip = {s: OPEN_M for s in SIDES}
             actions = hold(.5, q, grip)
             run(name("release"), Sequence(actions), actions)
-            up = {s: starts[s]+[0., 0., .08] for s in SIDES}
+            up = {s: starts[s]+[0., 0., .08] for s in active}
             actions, q, _ = cartesian(arms, q, starts, up, 1.5, dt, grip)
             run(name("retreat"), Sequence(actions), actions)
+            # oraclefix 11: after the route's last stage, let the sheet relax, then lay out a folded corner if one is
+            # measured (one extra stage at most). A fold left on the table keeps jittering under PBD self-contact.
+            fold = route.get("fold_layout")
+            if fold and not fold_checked and index == len(stages)-1 and not task.result.task_success:
+                fold_checked = True
+                # Adaptive: stop once every particle has stayed within the Task's speed limit for its window (cap settle_s)
+                actions = hold(fold["settle_s"], q, grip)
+                quiet = Quiet(task.config["maximum_speed_m_s"], task.config["stable_duration_s"], dt)
+                run("fold_settle", Sequence(actions, stop=quiet), actions)
+                log["fold_settle_ended_quiet"] = quiet.done
+                if not task.result.task_success:
+                    extra, diagnosis = fold_stage(cloth(), uv, table, task.layout, fold, arms.tcp())
+                    report["fold_layout"] = diagnosis
+                    write_json_atomic(output/"oracle_report.json", to_jsonable(report))
+                    if extra is not None:
+                        stages.append(extra)
+            # oraclefix 11b: once the sheet is quiet, slide it off an arm base it is too close to (base_clearance_stage)
+            nudge = route.get("base_clearance")
+            if (nudge and nudges < nudge["max_stages"] and index == len(stages)-1
+                    and not task.result.task_success):
+                nudges += 1
+                actions = hold(nudge["settle_s"], q, grip)
+                quiet = Quiet(task.config["maximum_speed_m_s"], task.config["stable_duration_s"], dt)
+                run(f"clearance_settle_{nudges}", Sequence(actions, stop=quiet), actions)
+                if not task.result.task_success:
+                    extra, diagnosis = base_clearance_stage(cloth(), uv, world.read_state(), task, nudge)
+                    report.setdefault("base_clearance", []).append(diagnosis)
+                    write_json_atomic(output/"oracle_report.json", to_jsonable(report))
+                    if extra is not None:
+                        stages.append(extra)
         # 6. Wait for the Task's own settled predicate.
         if not task.result.task_success:
             actions = hold(route.get("settle_s", 10.), q, grip)

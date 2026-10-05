@@ -11,6 +11,29 @@ def body_points(body, vertices):
     return Rotation.from_quat(q[[1, 2, 3, 0]]).apply(points3(vertices))+p
 
 
+def body_points_batch(bodies, vertices):
+    """[body_points(body, vertices) for body in bodies] as one (bodies, vertices, 3) array, bit for bit.
+
+    One batched Rotation when every vertex has at most one nonzero coordinate (link origins, points on a link axis): each
+    rotated coordinate is then a single product plus exact zeros, so the batched and the per-body rotations round alike
+    (scipy's batched apply sums general vertices in another order). Any other vertex, and any pose that is not a finite (3,)
+    position with a nonzero (4,) quaternion, goes through body_points per body, which also raises its error on the first
+    invalid pose. scripts/check_fiber_fast_paths.py compares both on random poses."""
+    v = points3(vertices)
+    p = q = None
+    if np.all(np.count_nonzero(v, axis=1) <= 1):
+        try:
+            p = np.array([np.asarray(body["position_m"], float) for body in bodies])
+            q = np.array([np.asarray(body["quaternion_wxyz"], float) for body in bodies])
+        except (TypeError, ValueError):
+            p = q = None
+    if (p is None or p.shape != (len(bodies), 3) or q.shape != (len(bodies), 4) or not np.isfinite(p).all()
+            or not np.isfinite(q).all() or not (np.linalg.norm(q, axis=1) >= 1e-12).all()):
+        return np.array([body_points(body, v) for body in bodies]).reshape(len(bodies), len(v), 3)
+    rotation = Rotation.from_quat(q[:, [1, 2, 3, 0]])
+    return np.stack([rotation.apply(np.tile(x, (len(p), 1)))+p for x in v], axis=1)
+
+
 def quiet_body(body, linear_limit=.001, angular_limit=.02):
     if not np.isfinite([linear_limit, angular_limit]).all() or min(linear_limit, angular_limit) < 0:
         raise ValueError("Invalid velocity thresholds")

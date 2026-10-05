@@ -90,7 +90,11 @@ class ManipulationPlanner:
             return max((float(c.penetration_depth) for c in data.result.contacts),default=0.)
         self.checker.check(seed,body_poses=bodies)
         initial_depth=depth() if allow_release_contact else 0.
-        release_limit=max(.00001,initial_depth)+.000001
+        # A fingertip sliding on the released shoe changes the sampled FCL depth by microns at once (lab, 2026-10-04:
+        # +1.1 um to +2.2 mm at the first 1.3 mm sample of all 29 candidates), so +1 um admitted no retreat. Allow
+        # 0.2 mm beyond the resting contact: inside the ordinary planning allowance (0.8 mm) and the task rule R1
+        # (1 mm for 0.25 s, 3 mm at once).
+        release_limit=max(.00001,initial_depth)+.0002
         for delta in deltas:
             target=(start[0]+delta,start[1]);q=seed.copy();rows=[];cleared=False;peak=initial_depth
             try:
@@ -182,22 +186,25 @@ class ManipulationPlanner:
         from topogym.planning.buzz_wire_3d.kinematics import distance
         other='right' if side=='left' else 'left'
         indices=self.robot._q_indices[side][:6];attempts=[]
-        for waist in (None,-1.,1.,-1.5,1.5):
+        # oraclefix 05d: as withdraw_left does, prefer a checked direct transit for every endpoint, then the same
+        # planner's bidirectional RRT (same native contact checks at <= 0.015 rad). Easy with the active ring pickup:
+        # all five direct retreats of the released right hand failed after the support release (lab, 2026-10-04).
+        for direct_only,waist in [(d,w) for d in (True,False) for w in (None,-1.,1.,-1.5,1.5)]:
             goal=seed.copy();goal[indices]=self.robot.groups[side].home[:6]
             if waist is not None:goal[indices[0]]=waist
             checked=self.checker.check(goal,body_poses=bodies)
             clearance=min([distance(self.checker.by_arm[side],m) for _,m in self.checker.bodies.values()]+
                           [distance(self.checker.by_arm[side],self.checker.by_arm[other])])
             if not checked['passed'] or clearance<.05:
-                attempts.append(dict(waist_rad=waist,endpoint_check=checked,clearance_m=clearance));continue
-            try:transit=plan_transit(self,seed,goal,bodies,side=side,direct_only=True)
+                attempts.append(dict(waist_rad=waist,direct_only=direct_only,endpoint_check=checked,clearance_m=clearance));continue
+            try:transit=plan_transit(self,seed,goal,bodies,side=side,direct_only=direct_only)
             except ValueError as error:
-                attempts.append(dict(waist_rad=waist,error=str(error)));continue
+                attempts.append(dict(waist_rad=waist,direct_only=direct_only,error=str(error)));continue
             transit['endpoint_minimum_clearance_m']=clearance
             result=dict(passed=True,joint_retreat=True,free_transit=transit,attempts=attempts,
                 observed_bodies={n:pose_dict(v) for n,v in bodies.items()},
                 release_penetration_limit_m=self.checker.ordinary_limit_m,
-                scope='direct joint retreat sampled at <= 0.015 rad under native contacts; physical validation required')
+                scope='joint retreat (direct, else RRT) sampled at <= 0.015 rad under native contacts; physical validation required')
             write_json_atomic(self.directory/'free_hand_plan.json',result)
             return result
         write_json_atomic(self.directory/'free_hand_plan.json',dict(passed=False,joint_retreat=True,attempts=attempts))

@@ -48,8 +48,11 @@ def load_reference(variation):
 def validate_session(session, variation, recipe):
     env, cfg = session.env, session.env.config
     state = env.tick_record()["state"]
+    # oraclefix (lab, 2026-10-04): a Harbor Session restores its frozen birth on a new branch (branch_id 1, state_id 0)
+    # before any action, so its first tick is on branch 1, not 0. The birth is state 0 at physics step 0 on the branch
+    # the owner restored (the BUG 5 rule of solvability.py, also used by compiled.py); a fresh Session has no steps or resets.
     if (session.task != "buzz_wire_3d" or session.n_steps or session._resets
-            or state["physics_step"] != 0 or state["branch_id"] != 0):
+            or state["physics_step"] != 0 or state["state_id"] != 0):
         raise ValueError("Buzz reference requires a fresh, unrewound Buzz Session")
     if (cfg.seed != recipe["seed"] or cfg.robot_id != "panda_robotiq"
             or cfg.control_mode != "JOINT_ABS"
@@ -86,7 +89,10 @@ def run_reference_policy(session, output, *, variation):
         report["status"] = "running"
         write_json_atomic(output / "reference_report.json", report)
         if recipe["kind"] == "staged_feedback":
-            result = run_stages(session, output, stages, selection=document)
+            # oraclefix2 (with fix 15 of the first oracle pass): every recorded row within the standard service's
+            # per-step joint limit, so the privileged reference is standard-executable as recorded.
+            from topogym.planning.standard_rate import rate_limited_runner
+            result = run_stages(session, output, stages, selection=document, runner=rate_limited_runner(session))
         else:
             policy = CompiledJointPolicy(document)
             result = SessionPolicyRunner(session).run_policy(

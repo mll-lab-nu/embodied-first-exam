@@ -78,9 +78,9 @@
       "source": "solvability_proof/horseshoe_ring/2026-10-03_medium/evidence/runs/medium_from_home_08/oracle_inputs/approach.json"
     },
     "horseshoe_ring/hard/recipe.json": {
-      "sha256": "51a2c3646508b2b543961389b919def0d1082e2892d045db11de62af03255d2a",
-      "bytes": 4769,
-      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/recipe.json"
+      "sha256": "ff1e8288e32d7d9f26f7c32d2d66b327a4e65a162ccf59527169eefd72caea4e",
+      "bytes": 5398,
+      "source": "solvability_proof/horseshoe_ring/2026-10-03_hard/recipe.json + oraclefix2 fast handoff tilt (2026-10-05)"
     },
     "horseshoe_ring/hard/grasps.json": {
       "sha256": "c24d875289e57ac278e7de3bd3e018b9f922d6c09efaa29bf44257012381337f",
@@ -138,14 +138,14 @@
       "source": "runs/test_results/buzz_staged_inputs_20260929/medium_traverse_guide.json"
     },
     "buzz_wire_3d/easy/selection.json": {
-      "sha256": "1054130e25537a5483152694a4cb2387f79f0d889f47289b0c8fe4ca508ddc6d",
-      "bytes": 4227,
-      "source": "runs/test_results/buzz_staged_easy_20260929_01/qualification/selection.json"
+      "sha256": "429c1a8a88bb555f18ff9ca4db2062f93df54a108c43ee29ca76c0b646bde107",
+      "bytes": 6115,
+      "source": "runs/test_results/buzz_staged_easy_20260929_01/qualification/selection.json + oraclefix 10: turn_2 candidates widened (2026-10-04) + oraclefix2 lowered release (2026-10-05)"
     },
     "buzz_wire_3d/easy/recipe.json": {
-      "sha256": "8f43394923052c6c1c6c768ce30ba66d5b4b576dc63311eaa282b75e490683a1",
-      "bytes": 1601612,
-      "source": "Derived from runs/test_results/buzz_staged_easy_20260929_01: report, audit, source geometry and complete policy input"
+      "sha256": "a38455b2fd67ade0f9a7dbc35769a50f5a424a541547b192891603c09f7bdd72",
+      "bytes": 1602089,
+      "source": "Derived from runs/test_results/buzz_staged_easy_20260929_01: report, audit, source geometry and complete policy input + oraclefix 10: selection.json re-pinned (2026-10-04) + oraclefix2 re-pinned selection (2026-10-05)"
     },
     "buzz_wire_3d/medium/policy_actions.json": {
       "sha256": "3a8d182fcadb84575bbc5659313213016fb7369b821a87cb7dd6253468b0b60d",

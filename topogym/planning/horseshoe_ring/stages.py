@@ -9,6 +9,7 @@ from itertools import combinations
 import json
 import os
 from pathlib import Path
+import sys
 
 import numpy as np
 from scipy.spatial.transform import Rotation
@@ -117,6 +118,14 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
 
     initial_linkages=loop_linkages(env.tick_record()['world'])
 
+    # The task tooling's rule R1 (rcb_topogym.CONTACT_RULE, rules 2026-10-03) replaced TopoGym's any-tick 1 mm task
+    # contact limit: a non-held task contact fails above 3 mm at once, or once it stays above 1 mm for 0.25 s (held
+    # fingers 4 mm / 2 mm). The stage gate keeps its own limits with the same persistence over consecutive ticks.
+    rule=getattr(sys.modules.get('rcb_topogym'),'CONTACT_RULE',None) or dict(
+        deep_m=.003,sustained_m=.001,held_deep_m=.004,held_sustained_m=.002,window_s=.25)
+    window=max(1,int(np.ceil(rule['window_s']/env.config.physics_dt_s-1e-12)))
+    persisted=dict(step=None,over=0,held_over=0)
+
     def common(row, limit=.001):
         world=row['world'];task_links={i for name in env._task.placement_vertices
                                        for i in world['bodies'][name]['link_indices']}
@@ -128,10 +137,17 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
         depth=float(penetration[involved & ~held].max(initial=0.))
         held_depth=float(penetration[involved & held].max(initial=0.))
         held_limit=float(identity['terminal']['contact_penetration']['held_finger_contacts_m'])
+        step=row['state']['physics_step']
+        if step!=persisted['step']:  # the same tick checked again (next stage's entry) keeps its counts
+            follows=persisted['step'] is not None and step==persisted['step']+1
+            persisted.update(step=step,
+                over=(persisted['over'] if follows else 0)+1 if depth>limit else 0,
+                held_over=(persisted['held_over'] if follows else 0)+1 if held_depth>held_limit else 0)
         result=row['task']['result']
         return dict(task_not_failed=not (result['terminated'] and not result['task_success']),
-                    task_contact_within_stage_limit=depth<=limit,
-                    held_finger_contact_within_task_limit=held_depth<=held_limit,
+                    task_contact_within_stage_limit=depth<=rule['deep_m'] and persisted['over']<window,
+                    held_finger_contact_within_task_limit=(held_depth<=rule['held_deep_m'] and
+                                                           persisted['held_over']<window),
                     all_closed_loop_linkages_preserved=loop_linkages(world)==initial_linkages)
 
     def holding(row):
@@ -263,7 +279,10 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
                 hold=float(values.get('hold_s',8.))
                 if not np.isfinite(hold) or not 0<hold<=30:raise ValueError('Gravity hold must be within 30 seconds')
                 duration=float(values.get('sample_duration_s',.25))
-                if not np.isfinite(duration) or not .05<=duration<=1.:raise ValueError('Tilt sample duration must be within 0.05 to 1 seconds')
+                # oraclefix2: down to 0.02 s per 0.5 deg sample (25 deg/s). Hard under Harbor's 2.5 ms x 10 physics: at 0.05 s
+                # the ring slides 43 mm along the lower band during the tilt and wedges between the right fingers; a fast
+                # tilt with a 1 s hold leaves it free (lab oraclefix2/exp/X3e). Joints stay far below the standard step limit.
+                if not np.isfinite(duration) or not .02<=duration<=1.:raise ValueError('Tilt sample duration must be within 0.02 to 1 seconds')
                 bias_limit=float(values.get('position_bias_limit_m',.03))
                 if not np.isfinite(bias_limit) or not .001<=bias_limit<=.10:
                     raise ValueError('Tilt position feedback bias must be between 1 and 100 mm')

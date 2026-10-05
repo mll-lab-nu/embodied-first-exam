@@ -109,8 +109,11 @@ def worker(args, output, *, session=None):
                     timed(env._world, name)
                 timed(env._sensors, "sample")
             write_json_atomic(output/"run_report.json", report)
+            # Harbor: every recorded row keeps the standard service's joint-speed limit, so this privileged
+            # trajectory is also the standard reference without slowed rows (topogym/planning/standard_rate.py).
+            from topogym.planning.standard_rate import rate_limited_runner
             with (SegmentRunner(env, output, prepared_output=True) if session is None else
-                  nullcontext(SessionPolicyRunner(session, control_mode="EE_ABS"))) as runner:
+                  nullcontext(rate_limited_runner(session, control_mode="EE_ABS"))) as runner:
                 last_phase = [None]
                 record_regrasp = [False]
                 regrasp_history = []
@@ -207,9 +210,12 @@ def worker(args, output, *, session=None):
                         policy = CastKeyholePolicy(variation=args.variation, body_origins=origins,
                             goal_region=report["terminal"]["goal_region"], mount_position=mount,
                             canonical_vertices=vertices, part="solve", speed=args.speed, plan=plan)
+                        policy.gold_drop_m = goal_plan["gold_drop_m"]   # oraclefix: the preflight-checked transfer
                         result = runner.run_policy(request_id="keyhole-"+args.variation+"-solve", policy=policy,
                             submission_hash=fingerprint(plan), mode="unlimited", state_fields=("world",))
                         report["segments"].append(to_jsonable(result))
+                    if session is not None:
+                        report["standard_rate"] = runner.rate_limiter.report()
                     report.update(last_phase=policy.phase,
                         task_result=to_jsonable(env._task.result), final_world=to_jsonable(env._world.read_state()),
                         final_robot=to_jsonable(env._robot.observe()),

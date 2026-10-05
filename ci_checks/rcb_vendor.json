@@ -16,7 +16,6 @@
   "harbor_templates/topogym/limited/tests/Dockerfile": "tasks/robowits-stack-cubes-i00-standard/tests/Dockerfile",
   "harbor_templates/topogym/limited/solution/solve.sh": "tasks/robowits-stack-cubes-i00-standard/solution/solve.sh",
   "scripts/log_mirror.py": "scripts/log_mirror.py",
-  "scripts/account_failure_check.py": "scripts/account_failure_check.py",
   "scripts/set_agent_egress.py": "scripts/set_agent_egress.py",
   "ci_checks/check-dockerfile.sh": "ci_checks/check-dockerfile.sh",
   "ci_checks/check-instruction.sh": "ci_checks/check-instruction.sh",
@@ -28,7 +27,6 @@
   ".github/workflows/static-checks.yml": ".github/workflows/static-checks.yml",
   ".github/pull_request_template.md": ".github/pull_request_template.md",
   ".env.example": ".env.example",
-  "docs/rcb/PROTOCOL.md": "docs/PROTOCOL.md",
   "docs/rcb/TAXONOMY.md": "docs/TAXONOMY.md",
   "docs/rcb/LIMITED_MODE_PROTOCOL.md": "docs/LIMITED_MODE_PROTOCOL.md",
   "docs/rcb/STANDARD_MODE_2_2.md": "docs/STANDARD_MODE_2_2.md",
@@ -58,7 +56,9 @@
   "scripts/eai_standard/selftest.py": "scripts/eai_standard/selftest.py",
   "ci_checks/run_all.sh": "ci_checks/run_all.sh",
   "scripts/run_agent_batch.sh": "scripts/run_agent_batch.sh",
-  ".github/workflows/validate-task.yml": ".github/workflows/validate-task.yml"
+  ".github/workflows/validate-task.yml": ".github/workflows/validate-task.yml",
+  "scripts/account_failure_check.py": "scripts/account_failure_check.py",
+  "docs/rcb/PROTOCOL.md": "docs/PROTOCOL.md"
  },
  "blobs": {
   "scripts/eai_standard/rcb_limited.py": "1ce117178770929994c35602cf78dbe8f8028a40",
@@ -164,6 +164,16 @@
    "reason": "retain the local calibration isolation CI check in addition to the upstream task/protocol checks"
   },
   "scripts/run_agent_batch.sh": "v15 active-release task selection, immutable batch identities, and supervision restricted to the owned Harbor process",
-  ".github/workflows/validate-task.yml": "v15 active catalog selection and bound deterministic verifier evidence"
+  ".github/workflows/validate-task.yml": "v15 active catalog selection and bound deterministic verifier evidence",
+  "scripts/account_failure_check.py": {
+   "upstream_path": "scripts/account_failure_check.py",
+   "upstream_blob": "30f655eb8d7da5b63876c8b60596695ff7ab14ff",
+   "reason": "Native helper account diagnostics distinguish quota, rate limits, authentication and configuration failures; quota-window telemetry alone does not stop a lane or invalidate completed trials."
+  },
+  "docs/rcb/PROTOCOL.md": {
+   "upstream_path": "docs/PROTOCOL.md",
+   "upstream_blob": "cd92615ca0ef74e47c46787eb9069a9bc3c0a9cf",
+   "reason": "Document the TopoGym native helper extension for assignment-pinned post-run token budgets, missing-usage rejection and unchanged raw verifier records."
+  }
  }
 }

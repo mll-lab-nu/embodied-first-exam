@@ -318,10 +318,11 @@ class Graders(unittest.TestCase):
         self.assertEqual(verdict["evidence"]["strict_goal"], {"replay": 2, "row": 4})
         self.assertEqual(reward["replay_hold_steps"], 3)
 
-    def test_privileged_tolerant_passes_alone_fail(self):
+    def test_privileged_tolerant_passes_alone_pass(self):
+        # R-hold (the user's decision, 2026-10-05): tolerant confirmations alone pass; the strict goal is only reported
         reward, verdict, _ = self.privileged([replay_status(True, strict=False, hold=3), replay_status(True, strict=False, hold=7)])
-        self.assertEqual((reward["success"], reward["all_success"], reward["strict_goal_reached"], reward["strict_goal_row"]),
-                         (0, 1, 0, 0))
+        self.assertEqual((reward["success"], reward["all_success"], reward["strict_goal_reached"], reward["strict_goal_row"],
+                          reward["strict_replay_required"]), (1, 1, 0, 0, 0))
         self.assertIsNone(verdict["evidence"]["strict_goal"])
 
     def test_privileged_a_failed_replay_still_fails(self):

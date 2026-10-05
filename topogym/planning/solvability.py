@@ -152,7 +152,9 @@ class QualificationWorkflow:
         self.output = Path(output)
         self.output.mkdir(parents=True, exist_ok=False)
         initial = runner.env.tick_record()
-        if mode == "proof" and (initial["state"]["physics_step"] != 0 or initial["state"]["branch_id"] != 0):
+        # The episode birth is state 0 at physics step 0. A Harbor Session restores its frozen birth on a new branch
+        # (branch_id 1, state_id 0) before any action; the proof is still continuous from that birth.
+        if mode == "proof" and (initial["state"]["physics_step"] != 0 or initial["state"]["state_id"] != 0):
             raise ValueError("A proof execution must start at the fresh episode birth")
         if mode == "session":
             # Harbor restores its bound initial checkpoint before the oracle,
@@ -348,7 +350,7 @@ class QualificationWorkflow:
         birth = self.report["birth"]
         continuous = (complete and not self.report["rewinds"]
                       and all(row["passed"] or not row["checked_physics_ticks"] for row in self.report["stages"])
-                      and birth["physics_step"] == 0 and birth["branch_id"] == 0
+                      and birth["physics_step"] == 0 and birth["state_id"] == 0
                       and stages[0]["start"] == birth
                       and all(b["start"] == a["end"] for a, b in zip(stages, stages[1:])))
         solved = bool(self.runner.env.is_solved())

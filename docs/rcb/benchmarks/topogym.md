@@ -11,9 +11,19 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-04)
-Active: **merged-v16** (tooling v16, `eai-standard/2.3`, image `rcb-topogym:0.2.14-dev-cu128`), a source candidate until
+Active: **merged-v17** (tooling v17, `eai-standard/2.3`, image `rcb-topogym:0.2.15-dev-cu128`), a source candidate until
 its 78 packages are built and qualified. Published: v14 (the 78 dirs under `tasks/`, `rcb-topogym:0.2.12-cu128`).
 Jianwen's simpler variants (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v17 (2026-10-05) = merged-v16 + the R-hold grading (privileged replays may confirm within the same tolerant hold as
+  standard) + fiber_bundling on the CPU (image 0.2.15-dev: Genesis tree patch, exact fast paths; below) + deterministic
+  GPU physics (tooling; below).
+  Release and environment profile are separate names: the release is merged-v17 (tooling 17, image 0.2.15-dev), while
+  its environment profile, `topogym/tasks/release_profile.py` `PROFILE = "merged-v16"`, is merged-v16's, unchanged. The
+  profile label names the environment choices (geometry, materials, contact, grasp assistance, timing, terminal), not the
+  tooling or the image; it is part of the image's public source, of the slotted oracle's submission fingerprints and of
+  the blanket re-key records, so it changes only when the environment does.
+  The built merged-v16 packages (7293af9d6's templates) keep their tooling hashes as frozen "v16"
+  (`ci_checks/topogym_tooling_versions.json`); v16 trials are graded with their own packages, not mixed with v17 results.
 - v16 (2026-10-04) = Jianwen's merged-v15 source candidate (4aac2a4e6: release selection, runtime bindings, the candidate
   pipeline and the environment profile `topogym/tasks/release_profile.py`; ba01d029c: oracle portability, knot_untying
   terminal v5) + our grading rules, developed as the local "tooling v15" below and never published (live-strict,
@@ -249,6 +259,98 @@ outcome of replayed agent trajectories, deviation against the baseline's own 1e-
   instance: a threshold); frames indistinguishable. Rejected: AL-IPC (crashes), MAS (slower). Settled instances are not
   hash-exact in fresh builds (GPU nondeterminism over the settle ticks; positions agree to 0.03-0.26 um), so `instance_exact`
   is 0 and `instance_matches` decides.
+
+### fiber_bundling on the CPU: the articulated bundle (image 0.2.15-dev, 2026-10-05)
+Target (the user, 2026-10-04): one full reference execution within about 20 % of the 6 h agent budget, the budget being
+for the agent's reasoning; fiber hard may run longer (the user, 2026-10-05). Dual validation as above (metrics and frames;
+lab journal topospeed/NOTES.md).
+- **Cause.** The bundle is one articulated tree (slack lead, trunk, 8 / 16 strands of 10 links; ball joints): 318 DOFs
+  (medium) / 558 (hard). Genesis' CPU branch factors each tree's mass matrix densely (O(n^3) per substep: 94 / 98 % of
+  `kernel_step_1`, which was 67 / 80 % of a control step), and its skyline order keeps an entity's DOFs root-first, so every
+  strand row of the constraint Hessian's envelope reached the slack lead's root (dense Cholesky again).
+- **Engine patch** (`images/topogym/genesis-1.2.1-cpu-tree.patch`, applied by the Dockerfile with sha256 checks):
+  1. tree-sparse mass matrix (CPU, no hibernation): structural entries only, and an LDL^T that walks each pivot's
+     ancestor DOFs, i.e. the dense loop's nonzero updates in the same order. The physical state is bit-identical; only
+     structurally-zero entries of the factor keep their initial +0.0 where the dense loop wrote x - a*0.0 (signed zeros).
+     A state with inf / NaN in the mass factor (already broken) could spread differently.
+  2. children-first skyline order inside entities with more than 64 DOFs (fill-free for a tree): round-off level. Robots
+     (15-16 DOFs) and free bodies (6) keep the previous permutation, so every scene without such an entity is unchanged
+     (the skyline envelope exists only on the CPU backend; GPU families are untouched by construction).
+- **Exact fast paths** (task code): `body_points_batch` (one batched rotation for all fiber links, link-axis points only,
+  so bit-identical) for `_strand_points`, and `advance_passage` skips its per-station loop when no station crossed a
+  boundary plane in the tick. `scripts/check_fiber_fast_paths.py`: 0 differences in 3000 random pose sets, 300 strand
+  sets, 3000 passage histories (1273 with crossings); task update 0.072 -> 0.020 s per control step on hard.
+
+Bit-exactness of patch 1 per CPU family (one oracle trajectory each, v16 instances; SHA-256 of the rigid solver's arrays
+after every control step, patched vs unpatched Genesis; with patch 2 added, every array of these runs is also identical
+to patch 1 alone at every step):
+
+| family (trajectory) | rows | physical state identical every step | final state_sha | outcome |
+|---|---|---|---|---|
+| interlocked_claws medium | 1364 | yes | equal | success / success |
+| cast_keyhole easy | 2779 | yes | equal | - / - |
+| hedgehog_in_cage medium | 2261 | yes | equal | success / success |
+| buzz_wire_3d easy | 5141 | yes | equal | wire_touched / wire_touched |
+| horseshoe_ring easy | 7181 | yes | equal | - / - |
+| cast_coil easy | 6502 | yes | equal | success / success |
+| fiber_bundling medium / hard (patch 1 only) | 200 / 200 | yes (every link pose and joint) | equal | - |
+
+Fiber, per control step on lab (2 cores, hard rows 0-199): 2.10 s unpatched -> 0.64 (patch 1) -> 0.354 (+ patch 2 + fast
+paths), solver substeps unchanged (4). Patch 2 against patch 1 on the medium oracle trajectory (13,770 rows + hold, open
+loop): bit-identical until the bundle's first constraint solves (row ~550), then round-off grows in the chaotic bundle: the
+floppy slack lead drifts by up to 2.2 mm (first > 1 mm at row 5975), the strand tips stay within 0.14 mm, the outcome is
+the same (success); per-substep contact depth per role pair unchanged (max: sheath-gripper 0.086 mm both, sheath-ring
+0.014 vs 0.014, strand-ring 0.012 vs 0.011, strand-strand 0.002 vs 0.002); rendered frames of both at 12 rows show the
+same bundle, strands and ring passage (sheets in the lab journal). The children-first order applied to every
+entity (robots included) gave 12 mm on the slack lead with the same tips, hence the 64-DOF threshold.
+The built image (labv17 0.2.15-dev) reproduces the tested code: interlocked_claws medium's 1364 rows bit-identical to
+unpatched v16 (physical state) and to the tested patch at every step; fiber medium rows 0-399 bit-identical to the tested
+patch + fast paths.
+
+| tier | oracle, closed loop (lab, 2 cores) | fresh-process replay of its trajectory | before |
+|---|---|---|---|
+| medium | success, 13,770 steps, 69.0 min (19.2 % of 6 h) | success, the same final state_sha (bit-exact), 51.5 min | 125.5 min |
+| hard | success, 25,554 steps, 205 min (57 % of 6 h; the user accepts a longer fiber hard) | success, the same final state_sha (bit-exact), 152 min | ~15.6 h (2.2 s/step); tree factor alone 5.6 h |
+
+Fiber hard's fresh replay keeps the contact depths of medium (max: sheath-gripper 0.086 mm, sheath-ring 0.021,
+strand-ring 0.020, strand-strand 0.006).
+Rejected: solver substeps 2 / 1 (the closed-loop hard oracle stalls on its 1 mm sheath-tracking gate: s1 at step 1249,
+s2 over comb_01's stage time budget at step 2588, while s4 with every other change passes; open-loop medium replays
+still succeed, so only the closed loop separates them), a coarser slack lead (an instance change, not needed), the GPU
+backend (fp32: 2.11 s per control step for the 558-DOF tree), more CPU threads (1.5-2.1x slower).
+
+### Deterministic GPU physics (tooling v17, 2026-10-05)
+Grading replays re-run an agent's actions in fresh processes; on the GPU families they did not reproduce the live run. Two
+fresh replays of one blanket_flatten easy agent trajectory (EtWpiBp, v16) differed by 1.6e-13 m after the first control
+step, 1.7 mm by step 99, 37 mm at most, and in the outcome (one success, one not). Stage isolation (each sub-stage of a
+tick run three times from identical engine buffers) located the causes, all scheduling-order arithmetic, none in the
+model. `harbor_templates/topogym/common/rcb_topogym.py` (`_deterministic_gpu_physics`, installed by every Session right
+after genesis.init; no Genesis file, image, frozen state or instance sha changes) removes them:
+- **Rigid constraint-solve arm pinned** (every GPU scene): Genesis 1.2.1's `func_solve_body` is a `qd.perf_dispatch`
+  wall-clock autotuner that alternates a "monolith" and a "decomposed" arm and re-times them every 5 s, so the arm that
+  integrates a substep depended on host load. Pinned to the monolith. Changes the rounding of blanket_flatten,
+  lock_picking and of the robots / rigid bodies of the IPC scenes (knot_untying, rope_threading, slotted_post_ring,
+  orbits). CPU scenes (interlocked_claws included) are unchanged: the CPU backend only has the monolith arm.
+- **IPC families: not yet reproducible.** Their robot (rigid) solve is now deterministic, the libuipc FEM / ABD solve is
+  not: float atomics in its PCG dot products, SpMV, gradient and MAS-preconditioner assembly and its contact candidate
+  order, plus a stale robot mass matrix read by the first IPC step after a settled-state restore. Both are being fixed
+  for the next release (a deterministic libuipc build and a forward-dynamics recompute after the restore); until then the
+  tolerant grading replays (R-hold, as in v16) decide for these families.
+- **Fixed-point sums** (blanket_flatten, the only PBD scene): the PBD stretch / bending scatter, the particle-collision
+  gather (spatial-hash order) and the PBD-rigid coupling forces / torques on robot links (`_bound_pbd_rigid_contacts`)
+  are int64 sums of contributions rounded once to 2^-48 m / 2^-32 N (N m); a non-finite or out-of-range contribution
+  (16 m, 2^16 N, 2^17 N m) makes the result NaN, so the instability guard ends the episode as before. The constraint
+  math, iterations and apply loops are Genesis' expressions. Largest contributions over the whole replay: 1.57 mm
+  (collision), 0.96 mm (stretch + bending), 1.9 N, 0.42 N m.
+- **Evidence** (lab RTX PRO 6000, image 0.2.14-dev; lab journal topogym_v1/determinism/NOTES.md): five fresh-process
+  replays of EtWpiBp (1443 rows + 80-step hold) bit-identical at every control step on every digest (particle positions
+  and velocities, rigid links / joints, contacts in canonical order, the grasp-assist record, state_sha; final
+  e33f375dac5296de); in-process whole-tick repeats identical; unpatched v16 differs from row 0. The trajectory was
+  recorded under v16's nondeterministic physics, so its patched replays agree with each other, not with v16's live run.
+- **Speed** (solo, lab GPU 7, image 0.2.14-dev): blanket_flatten easy (EtWpiBp rows 0-199) 0.373 s per control step
+  (median 0.356) vs v16's 0.360 (0.342), about +4 %; lock_picking easy (rows 0-299) monolith 0.0770 / 0.0770 vs autotuned
+  0.0768 / 0.0782 (no cost; the decomposed arm alone 0.0819), and the two autotuned passes from one state end in different
+  digests while the monolith passes are identical. (Measurements on a GPU shared with IPC sims were 4-6x inflated.)
 
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from

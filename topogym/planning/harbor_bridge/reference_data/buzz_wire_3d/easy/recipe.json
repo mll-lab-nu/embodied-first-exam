@@ -5,7 +5,7 @@
   "kind": "staged_feedback",
   "input": {
     "file": "selection.json",
-    "sha256": "1054130e25537a5483152694a4cb2387f79f0d889f47289b0c8fe4ca508ddc6d"
+    "sha256": "429c1a8a88bb555f18ff9ca4db2062f93df54a108c43ee29ca76c0b646bde107"
   },
   "geometry_sha256": "292b277de0e9ffcf7080e4a02930ab8250665777d928badf60f2353ea3892bb3",
   "geometry": {
@@ -64381,5 +64381,6 @@
     "acquire_2",
     "turn_2",
     "final_release"
-  ]
+  ],
+  "oraclefix2": "2026-10-05: release_onto_deck first lowers the held tool 1 cm in 2 s. With every row within the standard per-step joint limit (rate-limited staged run) the tool reaches the flatten pose in a slightly different state, and the recorded release from there (open while retracting 10 cm in 0.2 s) touches the wire 0.12-0.17 s after opening; from 1 cm lower the same release leaves the tool supported and quiet with the traversal complete (lab oraclefix2/exp/Z5)."
 }

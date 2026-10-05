@@ -12,9 +12,10 @@ diagnostics and replay videos. The original release contained **28 Harbor tasks:
 example, each in two modes**. See the [protocol](docs/rcb/PROTOCOL.md),
 [task manifest](tasks/dataset.toml) and [中文 CLI 手册与验收记录](docs/rcb/README.md).
 
-**Active development release: tooling v16 / image 0.2.14-dev-cu128** (merged-v16: the v15 candidate pipeline and
-environment profile plus the grading-replay and physical-validity rules of
-[docs/rcb/benchmarks/topogym.md](docs/rcb/benchmarks/topogym.md); the v15 candidate's tooling stays frozen).
+**Active development release: tooling v17 / image 0.2.15-dev-cu128** (merged-v17: merged-v16, i.e. the v15 candidate
+pipeline and environment profile plus the grading-replay and physical-validity rules, with the R-hold grading, the
+fiber_bundling CPU speed-up and deterministic GPU physics of [docs/rcb/benchmarks/topogym.md](docs/rcb/benchmarks/topogym.md);
+the v15 and v16 candidates' tooling stays frozen).
 The release selector is `ci_checks/topogym_active_release.json`. It remains a source candidate
 until its 39 instances / 78 packages pass exact restoration and Harbor qualification.
 Historical packages under `tasks/` retain their original identities and are not the default for new runs.
@@ -36,9 +37,9 @@ uv pip install --python .venv-harbor/bin/python 'harbor==0.23.0'
 source .venv-harbor/bin/activate
 
 # Prepare one frozen source + task-definition candidate; choose a new output name.
-.venv-gs121-nyx/bin/python scripts/topogym_merge_candidate.py --output runs/releases/v16-candidate
-bash runs/releases/v16-candidate/build_image.sh
-.venv-gs121-nyx/bin/python scripts/topogym_candidate_pipeline.py --candidate runs/releases/v16-candidate --phase all
+.venv-gs121-nyx/bin/python scripts/topogym_merge_candidate.py --output runs/releases/v17-candidate
+bash runs/releases/v17-candidate/build_image.sh
+.venv-gs121-nyx/bin/python scripts/topogym_candidate_pipeline.py --candidate runs/releases/v17-candidate --phase all
 # Activation requires all exact restores and both-mode Harbor nop checks to pass.
 export TASKS_ROOT="$(python scripts/topogym_versions.py tasks-root)"
 python scripts/topogym_versions.py list --inspect-docker

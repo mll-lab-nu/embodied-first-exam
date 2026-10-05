@@ -197,8 +197,12 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
             write_json_atomic(output/"kinematic_preflight.json", preflight)
             if not preflight["passed"]:
                 raise RuntimeError(f"Read-only pickup preflight failed: {preflight['phase']}: {preflight['error']}")
+            # oraclefix 08 (as keyhole 01): every recorded row keeps the standard service's joint-step limit, so this
+            # privileged trajectory is also the standard reference (lock hard baseline: one row stepped 0.0417 rad and
+            # the standard bridge refused the clipped reference).
+            from topogym.planning.standard_rate import rate_limited_runner
             with (SegmentRunner(env, output, prepared_output=True) if session is None else
-                  nullcontext(SessionPolicyRunner(session, control_mode="EE_ABS"))) as runner:
+                  nullcontext(rate_limited_runner(session, control_mode="EE_ABS"))) as runner:
                 monitor = (output/"private/lock_monitor.jsonl").open("x", buffering=1)
                 if audit_ik:
                     ik_stream = (output/"private/robot_ik.jsonl").open("x", buffering=1)
@@ -249,6 +253,8 @@ def worker(output, *, setting, part, grasp_roll_deg, grasp_style, physics_dt, so
                     return policy, fingerprint(dict(source=source, parameters=kwargs))
                 run_segments(runner, part=part, policy_factory=policy_factory, report=report,
                              save_report=lambda: write_json_atomic(output/"run_report.json", report))
+                if session is not None:
+                    report["standard_rate"] = runner.rate_limiter.report()
                 finish_run(env._task, env._world.read_state(), part=part, report=report)
     except BaseException:
         report.update(status="failed", error=traceback.format_exc())

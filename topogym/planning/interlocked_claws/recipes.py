@@ -83,13 +83,14 @@ def run_claws_oracle(env, runner, output, witness, *, joint_speed_rad_s=.2, acqu
             previous, previous_relative = q, relative
         return actions, relatives
 
-    def run(name, actions, *, guard=True, relatives=None, servo=False):
+    def run(name, actions, *, guard=True, relatives=None, servo=False, initial_offset=None):
         print(f"{name}: {len(actions)} control steps", flush=True)
         write_json_atomic(output/f"{name}_actions.json", actions)
         from topogym.planning.base import ActionSequencePolicy
         policy = (ClawsGuardedSequence(actions, pieces=(target, other), hands=hands, piece_force_n=piece_force_n, integral_gain=integral_gain,
                                        relative_targets=relatives if servo else None, kin=executor_kin if servo else None,
-                                       servo_side=ownership[other] if servo else None, wrist_load=wrist_load if wrist_feedforward else None) if guard else ActionSequencePolicy(actions))
+                                       servo_side=ownership[other] if servo else None, wrist_load=wrist_load if wrist_feedforward else None,
+                                       initial_offset=initial_offset) if guard else ActionSequencePolicy(actions))
         result = runner.run_policy(request_id=name, policy=policy,
             submission_hash=hashlib.sha256(source+json.dumps(actions, sort_keys=True).encode()).hexdigest(),
             mode="unlimited", state_fields=("world",))
@@ -152,7 +153,12 @@ def run_claws_oracle(env, runner, output, witness, *, joint_speed_rad_s=.2, acqu
             if not rows:
                 continue
             actions, relatives = joint_actions(rows, current, current_relative)
-            run(name, actions+hold(.5), relatives=relatives+[None]*len(hold(.5)), servo=servo)
+            # Start the integral correction at the measured droop under the held load, so the first command
+            # keeps the acquisition hold target (continuous) instead of stepping onto the sagged posture.
+            observed = env._robot.observe()
+            droop = {side: np.asarray(observed[side]["joint_position_target_rad"], float)
+                     - np.asarray(observed[side]["joint_position_rad"], float) for side in hands}
+            run(name, actions+hold(.5), relatives=relatives+[None]*len(hold(.5)), servo=servo, initial_offset=droop)
             current = np.asarray(rows[-1]["qpos"], float)
             current_relative = relatives[-1]
             if task.result.task_success:

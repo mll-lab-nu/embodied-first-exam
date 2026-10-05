@@ -46,7 +46,10 @@ class Portability(unittest.TestCase):
     def test_bundled_data_preserve_original_provenance_hashes(self):
         base = self.root / "topogym/planning/harbor_bridge/reference_data"
         manifest = json.loads((base / "manifest.json").read_text())
-        self.assertEqual(len(manifest["files"]), 33)
+        # The original 33 inputs plus the local Fiber below-easy selections.
+        self.assertEqual(len(manifest["files"]), 35)
+        for tier in ("very_easy", "easier"):
+            self.assertIn(f"fiber_bundling/{tier}/selection.json", manifest["files"])
         for name, record in manifest["files"].items():
             self.assertEqual(digest(base / name), record["sha256"], name)
             self.assertEqual((base / name).stat().st_size, record["bytes"], name)

@@ -110,9 +110,11 @@ class SessionPolicyRunner:
         observation = None
         initialize = getattr(policy, "initialize", None)
         if initialize is not None:
-            from topogym.utils.io import to_jsonable
+            from dataclasses import asdict
             spec = action_spec(env._robot.description, self.control_mode)
-            spec["grasp_assist"] = to_jsonable(env.config.grasp_assist)
+            assist = getattr(getattr(env, "config", None), "grasp_assist", None)
+            if assist is not None:
+                spec["grasp_assist"] = asdict(assist)
             initialize(dict(schema_version=2, mode=mode, action_spec=spec,
                             timing_spec=env.timing_spec, rgb_available=False,
                             observation_spec=dict(privileged_fields=list(state_fields))))

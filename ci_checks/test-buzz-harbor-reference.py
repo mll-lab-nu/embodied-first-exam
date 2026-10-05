@@ -27,12 +27,15 @@ def fake_session(tier, recipe):
         physics_dt_s=.0025, control_decimation=10, solver_substeps=4,
         grasp_assist=recipe["provenance"]["source_config"]["grasp_assist"])
     initial = copy.deepcopy(recipe["initial_robot"])
-    state = dict(physics_step=0, branch_id=0)
+    # A Harbor Session restores its frozen birth once at construction: its first tick is branch 1, state 0, physics step 0.
+    state = dict(physics_step=0, branch_id=1, state_id=0)
     env = SimpleNamespace(config=config, _task=task_definition("buzz_wire_3d", tier)(seed=0),
         tick_record=lambda: {"state": state}, timing_spec=dict(control_dt_s=.025, control_decimation=10),
         _robot=SimpleNamespace(observe=lambda: {"arm": initial}), _world=SimpleNamespace(physics_step=0))
+    # The public action layout (7 arm joints, then the native gripper) that the standard-rate limiter reads.
     session = SimpleNamespace(task="buzz_wire_3d", n_steps=0, _resets=0, env=env,
-        runtime_binding={"test": "synthetic"}, instance_sha="synthetic", successful=False)
+        runtime_binding={"test": "synthetic"}, instance_sha="synthetic", successful=False,
+        robot=SimpleNamespace(grip_index={"arm": 7}), action_layout=[f"joint{i}" for i in range(1, 8)] + ["arm_native_gripper"])
     session.success = lambda: session.successful
     return session
 
@@ -55,8 +58,10 @@ class ReferenceDispatch(unittest.TestCase):
         recipe, selected = reference_policy.load_reference("easy")
         session = fake_session("easy", recipe)
         before = to_jsonable(session.env.config)
-        def run(session_arg, output, factory, *, selection):
+        def run(session_arg, output, factory, *, selection, runner=None):
             self.assertIs(session_arg, session)
+            # oraclefix2 O2-2: the staged easy proof records only rows within the standard per-step joint limit.
+            self.assertIsNotNone(getattr(runner, "rate_limiter", None))
             steps = list(factory(session.env, SimpleNamespace(output=output)))
             self.assertEqual([s.name for s in steps], [s["step"] for s in selected])
             self.assertEqual(len(steps), 11)
@@ -80,7 +85,7 @@ class ReferenceDispatch(unittest.TestCase):
                 policy = kwargs["policy"]
                 policy.initialize(dict(action_spec={"mode": "JOINT_ABS"}, timing_spec=session.env.timing_spec))
                 for index, action in enumerate(expected["actions"]):
-                    observation = dict(state={"physics_step": index * 10, "branch_id": 0},
+                    observation = dict(state={"physics_step": index * 10, "branch_id": 1, "state_id": index * 10},
                         privileged={"world": {"contact_events": {"events": []}}})
                     self.assertEqual(policy.act(observation), action)
                 observation["state"]["physics_step"] = count * 10
@@ -120,7 +125,7 @@ class ReferenceDispatch(unittest.TestCase):
         def seed(s): s.env.config = replace(s.env.config, seed=1)
         def robot(s): s.env.config = replace(s.env.config, robot_id="aloha")
         def advanced(s): s.n_steps = 1
-        def rewind(s): s.env.tick_record()["state"]["branch_id"] = 1
+        def rewind(s): s.env.tick_record()["state"].update(branch_id=2, state_id=7)   # restored onto a later state
         def assistance(s): s.env.config = replace(s.env.config, grasp_assist={"model": "none"})
         for change in (timing, home, layout, seed, robot, advanced, rewind, assistance):
             with self.subTest(change=change.__name__):

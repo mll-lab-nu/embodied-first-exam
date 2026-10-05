@@ -12,7 +12,7 @@ from topogym.assets.geometry.fiber_bundling import (
 from topogym.assets.geometry.fiber_bundling import RingMount
 from ..base import TaskDefinition, EntitySpec, TaskSpec
 from ..scene_presets import defaults, record_preset
-from topogym.evaluation.task_metrics import body_points
+from topogym.evaluation.task_metrics import body_points, body_points_batch
 from topogym.utils.geometry.passage import passage_initial, advance_passage
 
 
@@ -150,13 +150,17 @@ class FiberBundlingTask(TaskDefinition):
 
     def _strand_points(self, state):
         links = state["articulations"]["fiber_bundle"]["links"]
-        length = self.layout.fiber_length_m/self.layout.fiber_segments
+        count, segments = self.layout.fiber_count, self.layout.fiber_segments
+        length = self.layout.fiber_length_m/segments
+        # All fiber links in one batched rotation (per-link body_points was most of the task update at every tick); the
+        # same points bit for bit (scripts/check_fiber_fast_paths.py).
+        points = body_points_batch([links[f"fiber_{strand:02d}_{segment:02d}"] for strand in range(count)
+                                    for segment in range(segments)], [[0,0,0], [length,0,0]])
         paths = []
-        for strand in range(self.layout.fiber_count):
-            segments = [body_points(links[f"fiber_{strand:02d}_{segment:02d}"], [[0,0,0], [length,0,0]])
-                        for segment in range(self.layout.fiber_segments)]
+        for strand in range(count):
+            s = points[strand*segments:(strand+1)*segments]
             # Link origins are capsule roots; include the final tip explicitly.
-            paths.append(np.vstack([s[0] for s in segments]+[segments[-1][1]])[::-1].copy())
+            paths.append(np.vstack([s[:, 0], s[-1:, 1]])[::-1].copy())
         return paths
 
     def initial_task_state(self, world_state):

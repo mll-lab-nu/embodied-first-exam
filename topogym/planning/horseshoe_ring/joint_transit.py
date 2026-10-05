@@ -1,7 +1,12 @@
 """Sampled collision-checked free-arm transit with the other arm fixed."""
-import time
-
 import numpy as np
+
+# oraclefix2: the search budget counts collision queries instead of wall-clock seconds, so a plan (and the live oracle
+# that depends on it) no longer changes with the host's load; the seeded search is then fully reproducible. `seconds`
+# keeps its meaning as the budget of an idle host: one ContactHorseshoeIK query costs 10.8 ms of CPU on a lab core
+# (92 queries/s at load 37, lab oraclefix2/exp/C1; 60 queries/s were reached under the night's heavier load, when
+# ring_grasp's 20 s transits failed and the hard oracle's ring grasp with them, oraclefix2/exp/X7).
+QUERIES_PER_SECOND = 100.
 
 
 def plan_transit(planner, start, goal, bodies, *, side='left', seconds=30., seed=931, direct_only=False):
@@ -14,7 +19,7 @@ def plan_transit(planner, start, goal, bodies, *, side='left', seconds=30., seed
     fixed=np.ones(len(start),dtype=bool);fixed[indices]=False
     if not np.allclose(start[fixed],goal[fixed],atol=1e-12,rtol=0):
         raise ValueError('Free-arm transit must keep all other joints fixed')
-    queries=0;deadline=time.monotonic()+seconds
+    queries=0;budget=int(round(float(seconds)*QUERIES_PER_SECOND))
 
     def valid(q):
         nonlocal queries
@@ -47,7 +52,7 @@ def plan_transit(planner, start, goal, bodies, *, side='left', seconds=30., seed
         return result[::-1]
 
     for iteration in range(5000):
-        if time.monotonic()>deadline:break
+        if queries>=budget:break
         active=iteration%2;first,second=trees[active],trees[1-active]
         target=start.copy()
         if rng.random()<.25:target=second[0][rng.integers(len(second[0]))].copy()
@@ -70,5 +75,5 @@ def plan_transit(planner, start, goal, bodies, *, side='left', seconds=30., seed
                 return dict(waypoints=[q.tolist() for q in simplified],queries=queries,
                     method='bidirectional_rrt',iterations=iteration+1,
                     scope='joint samples at at most 0.015 rad; physical execution and audit required')
-            if time.monotonic()>deadline:break
+            if queries>=budget:break
     raise ValueError(f'No free-arm transit within budget; queries={queries}')

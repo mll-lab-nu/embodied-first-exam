@@ -34,11 +34,13 @@ def run_feedback_policy(session, output, *, variation="easy"):
                              orientation_tolerance_rad=1e-3),
         speed_m_s=.12, free_speed_m_s=.25, control_dt_s=1. / session.control_hz,
         material_feedback=True, settle_s=30., max_feedback_m=.08,
-        keeper_planner=MeasuredKeeperPlanner(output / "keeper", metadata, normalize=True), measured_regrasps=True)
+        keeper_planner=MeasuredKeeperPlanner(output / "keeper", metadata, normalize=True), measured_regrasps=True,
+        required_crossings=env._task.layout.required_crossings(),
+        quiet_limit_m_s=float(env._task.config["terminal"]["maximum_speed_m_s"]))
     report = dict(status="running", profile=profile["name"], harbor_qualified=False)
     try:
         result = SessionPolicyRunner(session).run_policy(request_id="rope-relay-" + variation, policy=policy,
-            submission_hash=session.instance_sha, state_fields=("world",))
+            submission_hash=session.instance_sha, state_fields=("world", "task"))
         report.update(result=result, task_success=bool(session.success()), status="finished")
     finally:
         report.update(last_phase=policy.phase, tracking=to_jsonable(policy.tracking))

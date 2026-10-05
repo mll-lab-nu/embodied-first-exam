@@ -34,7 +34,7 @@ def rotation(q):
     return Rotation.from_quat(np.asarray(q)[[1, 2, 3, 0]])
 
 
-def placement_targets(bodies, grasp_offsets, vertices, region, *, variation):
+def placement_targets(bodies, grasp_offsets, vertices, region, *, variation, gold_drop_m=0.):
     """Object-space goals shared by native preflight and passive execution."""
     targets, current = [], dict(bodies)
     normal = np.asarray(region["separator_normal_xy"])
@@ -46,6 +46,7 @@ def placement_targets(bodies, grasp_offsets, vertices, region, *, variation):
         # In F1's checked final arm posture the left camera occupies the
         # silver transfer sweep. Move the entire held gold/tool outward first.
         delta += [-.08, 0., 0.]
+    delta[2] -= gold_drop_m   # oraclefix: lowered system-side move chosen by plan_goal_transfer (default 0)
     if np.linalg.norm(delta) > 1e-12:
         current = dict(current, left=(gold_p+delta, gold_r))
         targets.append(("gold_to_system_side", 3., current))
@@ -458,7 +459,7 @@ class CastKeyholePolicy:
     def place_target(self):
         initial = self.bodies()
         for stage, duration, target in placement_targets(initial, self.grasp_offsets, self.vertices,
-                self.region, variation=self.reference["variation_id"]):
+                self.region, variation=self.reference["variation_id"], gold_drop_m=getattr(self, "gold_drop_m", 0.)):
             turns = {s: Slerp([0, 1], Rotation.from_quat([initial[s][1].as_quat(), target[s][1].as_quat()]))
                      for s in PARTS}
             yield from self.follow_bodies(lambda u: {s: (initial[s][0]+u*(target[s][0]-initial[s][0]),

@@ -45,11 +45,36 @@ class LiveArmIK:
         return q
 
 
+# Zero-margin gate (oraclefix). The Session ends the episode on its first success tick, so the recorded trajectory stops
+# there and a fresh replay (GPU IPC is not bit-identical) must reach success by that very tick. In the original relay
+# the last required crossing appears while the hand still pulls at relay speed; success then waits for the free tail's
+# swing to decay through the Task's quiet limit after the motion (rope hard: 10 mm/s; measured on lab, oraclefix E2:
+# 15 -> 4 mm/s around 74.0-74.2 s), so the graded runs succeeded on rows 1862-1871 and a fresh replay is a coin flip.
+# Finish gate: the moment the measured crossing sequence is one crossing short of the required one, the hand holds
+# still until every rope node has stayed below half the limit for FINISH_QUIET_S, then completes the remaining relay
+# motion at FINISH_SPEED_FRACTION of the limit (TCP, rotation and joint rates scaled alike). The last crossing then
+# appears during a slow, quiet motion: the window starts on a robot-paced event, on the same row in every replay.
+FINISH_QUIET_S = 1.
+FINISH_WAIT_S = 20.
+FINISH_SPEED_FRACTION = .5
+# Quiet gate (04e). The finish gate alone still left the success tick to noise (rope hard: one replay succeeded 5 rows
+# before the live run, the other not within its 2922 rows): the last crossing appears during the slow completion at a
+# noise-dependent row. Once the relay is complete, the holding hand keeps the rope near it moving at twice the quiet
+# limit (a small vertical triangle wave, so the 0.5 s quiet window cannot open) until the threading has been complete
+# (required sequence, unambiguous, thickness clear) and every rope node QUIET_GATE_FAR_M away from the hand has stayed
+# under half the limit for QUIET_GATE_HOLD_S; the hand then stops at its final pose, so the window opens on that row.
+QUIET_GATE_SPEED_FRACTION = 2.
+QUIET_GATE_STROKE_S = .25
+QUIET_GATE_HOLD_S = 1.
+QUIET_GATE_WAIT_S = 20.
+QUIET_GATE_FAR_M = .06
+
+
 class RopeRelayPolicy:
     def __init__(self, samples, *, kinematics, speed_m_s=.04, control_dt_s=.025, pinch_opening_m=.0123, free_opening_m=.03,
                  acquire_wait_s=3., release_wait_s=1.5, settle_s=5., feedback_decay_m=.10, max_feedback_m=.08,
                  angular_speed_rad_s=.8, joint_speed_rad_s=1., free_speed_m_s=None, material_feedback=False,
-                 keeper_planner=None, measured_regrasps=False):
+                 keeper_planner=None, measured_regrasps=False, required_crossings=None, quiet_limit_m_s=None):
         free_speed_m_s = speed_m_s if free_speed_m_s is None else free_speed_m_s
         if not samples or not all(np.isfinite(v) and v > 0 for v in
                 (speed_m_s, control_dt_s, acquire_wait_s, release_wait_s, settle_s, feedback_decay_m,
@@ -87,6 +112,18 @@ class RopeRelayPolicy:
         self.keeper_planner = keeper_planner
         self.keeper_sides = set()
         self.repair = None
+        # Finish gate (oraclefix); off unless the required crossings and the quiet limit are given.
+        self.required = None if required_crossings is None else [[str(r), int(sg)] for r, sg in required_crossings]
+        self.quiet_limit = None if quiet_limit_m_s is None else float(quiet_limit_m_s)
+        self.finish = None          # None: not triggered; dict: waiting; "slow": slow completion of the relay
+        self.quiet_gate = None      # None: not started; dict: closed (hand moving); "open"
+        # Armed only in the final relay group: the trailing samples that share the last sample's hold phase.
+        last = str(self.samples[-1]["phase"])
+        self.final_start = len(self.samples)
+        if last.startswith("hold:"):
+            self.final_start -= 1
+            while self.final_start > 0 and str(self.samples[self.final_start-1]["phase"]) == last:
+                self.final_start -= 1
 
     def initialize(self, context):
         if context["action_spec"]["mode"] != "JOINT_ABS":
@@ -237,6 +274,103 @@ class RopeRelayPolicy:
         self.rotation_offset[side] = np.zeros(3)
         return self._repair_action()
 
+    # ----- finish gate (oraclefix) -----------------------------------------
+    def _finish_gate(self, obs):
+        """None to continue; an action to hold still while the rope settles before the last crossing."""
+        if (self.required is None or self.quiet_limit is None or self.finish == "slow"
+                or self.index < self.final_start or self.index >= len(self.samples)):
+            return None
+        rope = obs["privileged"]["world"]["fem"]["rope"]
+        speed = float(np.linalg.norm(np.asarray(rope["velocity_m_s"], float).reshape(-1, 3), axis=1).max())
+        if self.finish is None:
+            task = obs["privileged"].get("task") or {}
+            sequence = [[str(r), int(sg)] for r, sg in (task.get("metrics") or {}).get("crossing_sequence") or []]
+            if len(self.required) < 1 or sequence != self.required[:-1]:
+                return None
+            self.finish = dict(index=self.index, sub=self.sub, phase=self.phase, steps=0, quiet=0, speeds=[])
+        f = self.finish
+        f["steps"] += 1
+        f["speeds"].append(speed)
+        f["quiet"] = f["quiet"]+1 if speed <= .5*self.quiet_limit else 0
+        if f["quiet"]*self.dt < FINISH_QUIET_S-1e-9 and f["steps"]*self.dt < FINISH_WAIT_S-1e-9:
+            self.phase = "finish_gate:hold"
+            return self._action()
+        self.tracking["finish_gate"] = dict(index=f["index"], sub=f["sub"], phase=f["phase"], final_start=self.final_start,
+            samples=len(self.samples), wait_s=f["steps"]*self.dt,
+            quiet_with_margin=f["quiet"]*self.dt >= FINISH_QUIET_S-1e-9, quiet_limit_m_s=self.quiet_limit,
+            max_speed_last_s_mm_s=round(max(f["speeds"][-int(round(FINISH_QUIET_S/self.dt)):])*1000, 4),
+            slow_fraction=FINISH_SPEED_FRACTION)
+        self.finish = "slow"
+        self.phase = f["phase"]
+        # Re-plan the interrupted relay segment from where the hand stopped, now at the slow rates.
+        if self.sub:
+            self.sub = 0
+        return None
+
+    def _threaded(self, obs):
+        metrics = (obs["privileged"].get("task") or {}).get("metrics") or {}
+        sequence = [[str(r), int(sg)] for r, sg in metrics.get("crossing_sequence") or []]
+        return (self.required is not None and sequence == self.required and not metrics.get("ambiguous", False)
+                and bool(metrics.get("thickness_clear", True)))
+
+    def _quiet_gate(self, obs):
+        """None once open; otherwise the next action of the closed gate (see QUIET_GATE_*)."""
+        if self.required is None or self.quiet_limit is None or self.quiet_gate == "open":
+            return None
+        if self.quiet_gate is None:
+            holders = sorted(self.expected_holders)
+            if not holders:
+                self.quiet_gate = "open"
+                return None
+            side = holders[0]
+            q, p, r, opening = self.targets[side]
+            self.quiet_gate = dict(side=side, base=(np.array(q, float), np.array(p, float), r, opening),
+                                   speed=QUIET_GATE_SPEED_FRACTION*self.quiet_limit,
+                                   stroke=max(1, int(round(QUIET_GATE_STROKE_S/self.dt))), step=0, threaded=0, calm=0,
+                                   far_speeds=[])
+        g = self.quiet_gate
+        g["threaded"] = g["threaded"]+1 if self._threaded(obs) else 0
+        rope = obs["privileged"]["world"]["fem"]["rope"]
+        points = np.asarray(rope["position_m"], float).reshape(-1, 3)
+        speeds = np.linalg.norm(np.asarray(rope["velocity_m_s"], float).reshape(-1, 3), axis=1)
+        hand = np.asarray(obs["robot"][g["side"]]["tcp_position_world_m"], float)
+        far = np.linalg.norm(points-hand, axis=1) > QUIET_GATE_FAR_M
+        far_speed = float(speeds[far].max(initial=0.))
+        g["far_speeds"].append(far_speed)
+        g["calm"] = g["calm"]+1 if far_speed <= .5*self.quiet_limit else 0
+        hold = int(round(QUIET_GATE_HOLD_S/self.dt))
+        ready = g["threaded"] >= hold and g["calm"] >= hold
+        timeout = g["step"]*self.dt >= QUIET_GATE_WAIT_S
+        q0, p0, r0, opening = g["base"]
+        if g["step"] > 0 and g["step"] % (2*g["stroke"]) == 0 and (ready or timeout):
+            self.targets[g["side"]] = (q0, p0, r0, opening)       # back at the final pose: stop here
+            self.tracking["quiet_gate"] = dict(side=g["side"], steps=g["step"], waited_s=g["step"]*self.dt, ready=ready,
+                threaded_s=g["threaded"]*self.dt, calm_s=g["calm"]*self.dt, hand_speed_mm_s=g["speed"]*1000,
+                max_far_speed_last_s_mm_s=round(max(g["far_speeds"][-hold:])*1000, 4))
+            self.quiet_gate = "open"
+            self.phase = "quiet_gate:open"
+            # 04f: the threading is complete; hold still from here (the rest of the relay is its final hold)
+            self.index, self.sub, self.settle_left = len(self.samples), 0, self.settle
+            return self._action()
+        j = (g["step"]+1) % (2*g["stroke"])
+        z = g["speed"]*self.dt*(j if j <= g["stroke"] else 2*g["stroke"]-j)
+        from topogym.utils.arrays import to_numpy
+        full = to_numpy(self.kin.robot.entity.get_qpos()).reshape(-1).astype(float)
+        full[self.kin.robot._q_indices[g["side"]][:6]] = q0
+        target = p0+np.array([0., 0., z])
+        self.targets[g["side"]] = (self.kin.solve(g["side"], target, r0, full), target, r0, opening)
+        g["step"] += 1
+        self.phase = "quiet_gate:closed"
+        return self._action()
+
+    def _rates(self, speed):
+        """(TCP, rotation, joint) rates; scaled down while the finish gate completes the relay slowly."""
+        if self.finish != "slow" or self.quiet_limit is None:
+            return speed, self.angular_speed, self.joint_speed
+        slow = FINISH_SPEED_FRACTION*self.quiet_limit
+        factor = min(1., slow/max(speed, 1e-9))
+        return slow if speed > slow else speed, self.angular_speed*factor, self.joint_speed*factor
+
     # ----- main -----------------------------------------------------------
     def act(self, obs):
         if self.done:
@@ -276,7 +410,20 @@ class RopeRelayPolicy:
                 return self._action()
         if self.repair is not None:
             return self._repair_action()
+        held = self._finish_gate(obs)
+        if held is not None:
+            return held
+        # 04f: close the quiet gate the moment the threading is complete in the final relay group (rope medium: the
+        # window otherwise completed during the slow completion / final hold, before the relay reached its end)
+        if (self.required is not None and self.quiet_limit is not None and self.index >= self.final_start
+                and (isinstance(self.quiet_gate, dict) or (self.quiet_gate is None and self._threaded(obs)))):
+            gated = self._quiet_gate(obs)
+            if gated is not None:
+                return gated
         if self.index >= len(self.samples):
+            gated = self._quiet_gate(obs)
+            if gated is not None:
+                return gated
             self.settle_left = self.settle
             return self._action()
         sample = self.samples[self.index]
@@ -296,6 +443,9 @@ class RopeRelayPolicy:
         if (kind == "retreat" and self.index > 0 and self.expected_holders
                 and str(self.samples[self.index-1]["phase"]).startswith("hold:")
                 and not any(str(s["phase"]).startswith("hold:") for s in self.samples[self.index:])):
+            gated = self._quiet_gate(obs)
+            if gated is not None:
+                return gated
             self.phase, self.settle_left = "settle:held", self.settle
             self.active_index = self.index-1
             return self._action()
@@ -357,9 +507,10 @@ class RopeRelayPolicy:
             angle = 0. if not side else float((r*self.segment_start[2].inv()).magnitude())
             joint_span = 0. if not side else float(np.max(np.abs(self.segment_end[0]-self.segment_start[0])))
             speed = self.free_speed if kind in {"transit", "retreat", "park"} else self.speed
+            speed, angular_speed, joint_speed = self._rates(speed)
             self.substeps = max(1, int(np.ceil(distance/(speed*self.dt))),
-                               int(np.ceil(angle/(self.angular_speed*self.dt))),
-                               int(np.ceil(joint_span/(self.joint_speed*self.dt))))
+                               int(np.ceil(angle/(angular_speed*self.dt))),
+                               int(np.ceil(joint_span/(joint_speed*self.dt))))
         if side:
             q, p, r = self.segment_end
             start_q, start_p, start_r, _ = self.segment_start

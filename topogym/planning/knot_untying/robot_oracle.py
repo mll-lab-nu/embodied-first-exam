@@ -34,11 +34,44 @@ class Solved(Exception):
     """The episode ended in task success: later steps would not change the scene or the recording."""
 
 
+class CrushAlarm(Exception):
+    """A rope element stayed inverted for CRUSH_ALARM_S while the arms pulled on the held rope (an oracle-side early
+    warning read from Session.safety(); the Session's own R2 rule ends the episode only after 0.25 s and is unchanged)."""
+
+
+CRUSH_ALARM_S = .03         # continuous inversion that stops a pull/spread (hard's tolerated transients: <= 12.5 ms)
+RELAXED_CLOSE_M = .007      # jaw width that stops squeezing the 8 mm rope after an alarm (the pull uses args.close)
+# Zero-margin gate (oraclefix). The Session ends the episode on the first success tick, so a recorded trajectory always
+# stops there and a fresh replay (GPU IPC is not bit-identical) must reach success by that very tick. A rope released
+# onto the table keeps creeping at 0.96-1.1 mm/s, with stick-slip bursts to ~7 mm/s at its tails, for ~8 s, and only
+# then calms to 0.83-0.88 mm/s (measured on lab, oraclefix E1, knot easy: the IPC friction smoothing velocity equals the
+# 1 mm/s quiet limit), so a success decided by the creep first staying under the limit for 0.5 s lands on a
+# noise-dependent tick in every replay. The gate keeps the success window closed WITHOUT touching the rope: closed
+# fingertips hover inside the Task's 1 mm active-clearance rule and outside the 0.2 mm IPC contact distance while the
+# released rope settles; once the rope has been calm (every sampled step <= QUIET_MARGIN_M_S, no burst) for QUIET_HOLD_S,
+# a constant-speed lift opens the gate, so the window starts on a robot motion, on the same row in every replay, with a
+# 10 % speed margin.
+HOVER_GAP_M = (.0004, .0007)   # 03e: lower band; knot easy 03d succeeded during the wait at 1.0005 mm (gap drifted up)
+GATE_JAW_M = .001           # closed jaws (opening width) for the hovering fingertips
+QUIET_MARGIN_M_S = .0009    # 10 % under the Task's maximum_speed_m_s
+QUIET_HOLD_S = 1.
+GATE_WAIT_S = 25.
+GATE_LIFT_M = .03
+GATE_LIFT_SPEED_M_S = .04
+
+
 def task_dir(variation):
     return ROOT/"tasks"/f"topogym-knot-untying-{variation.removeprefix('knot_untying_')}-i00-privileged"
 
 
 class Runner:
+    # oraclefix 03 state at class level, so a Runner built without __init__ (as ci_checks/test-knot-oracle.py does) keeps
+    # the plain behaviour: no rate limiter (plain Session.step), no crush guard, no hover gate. __init__ enables them.
+    limiter = None
+    crush_guard = False
+    gate = None
+    hover_gate = False
+
     def __init__(self, args, *, session=None):
         from .artifacts import load_tooling, instance_identity
         from topogym.planning.knot_untying.kinematics import KnotIK
@@ -80,6 +113,12 @@ class Runner:
             if limit is None or not np.isfinite(limit) or limit <= 0:
                 raise ValueError('Below-easy knot oracle needs the installed joint step limit')
             self.joint_step_limit = float(limit)
+        # Every recorded row keeps the standard service's joint-speed limit (topogym/planning/standard_rate.py), so
+        # the privileged trajectory is also the standard reference without slowed rows.
+        from topogym.planning.standard_rate import RateLimiter
+        self.limiter = RateLimiter(s, limit_rad=self.joint_step_limit)
+        self.crush_guard, self.crush_events = False, []
+        self.gate, self.gates, self.hover_gate = None, [], True
         if self.owns_session:
             s.record_start()
 
@@ -105,9 +144,8 @@ class Runner:
         return callable(getattr(getattr(self.session, 'table_guard', None), 'apply', None))
 
     def step(self, phase):
-        if getattr(self, 'joint_step_limit', None) is not None:
-            from .simplified_policy import step_with_joint_limit
-            return step_with_joint_limit(self, phase, self.joint_step_limit)
+        # The shared limiter handles every tier inside _step_once. Do not
+        # wrap below-easy rows in a second interpolation loop.
         return self._step_once(phase)
 
     def _step_once(self, phase):
@@ -116,12 +154,19 @@ class Runner:
             raise Solved()
         if s.episode_end is not None or s.episode_done:
             raise RuntimeError(f"episode already ended: {s.episode_end or 'step_limit'}")
+        if self.gate is not None and self.gate.get('servo_every_step'):
+            # 03e: the hover is servoed on every control step while engaged, including the holder's release (the
+            # released rope moves) and the wait; otherwise the gap drifts above the band and the window can open early.
+            self.servo_gap(self.gate)
         row = s.hold_action()
         for side in self.q:
             row[s.robot.arm_slice[side]] = self.q[side]
             row[s.robot.grip_index[side]] = self.g[side]
         self.validate_command(row)
-        ended = s.step(row)
+        ended = s.step(row) if self.limiter is None else self.limiter.step(row)
+        safety = s.safety() if callable(getattr(s, "safety", None)) else {}
+        volume = safety.get("soft_volume_ratio") or {}
+        inverted_s = float(volume.get("longest_at_or_below_s", 0.))
         if self.native_command_guard:
             # Session records the targets after native R4 clipping. Use those
             # accepted targets for the next IK seed instead of the rejected ask.
@@ -155,11 +200,16 @@ class Runner:
                             for side, v in row["grasped"].items())
             print(f"t={row['t']:7.2f}s {phase:22s} crossings={row['crossings']} stable={row['stable_time_s']:.2f}s "
                   f"wall={time.time()-self.started:6.0f}s {held}", flush=True)
+        row["min_volume_ratio"] = (volume.get("min") or {}).get("rope")
         self.log.append(row)
         if ended:
             if s.episode_end == "success":
                 raise Solved()
             raise RuntimeError(f"episode ended: {s.episode_end}")
+        if self.crush_guard and inverted_s >= CRUSH_ALARM_S-1e-9:
+            self.crush_events.append(dict(t=row["t"], phase=phase, min_volume_ratio=row["min_volume_ratio"],
+                                          inverted_s=inverted_s))
+            raise CrushAlarm(phase)
 
     def command_positions(self, row):
         """Exact accepted joint/finger targets, including width conversion and clipping."""
@@ -414,6 +464,164 @@ class Runner:
             self.step(phase+":open")
         self.cartesian(side, self.smooth(tcp, tcp+[0, 0, PRE], .1), g["turn"], phase+":retreat")
 
+    # ---------- zero-margin gate (oraclefix) ----------
+    def active_clearance(self, side=None):
+        """The Task's own terminal-v5 measure, native active-link clearance to the rope (m); with `side`, only that
+        arm's colliders (the other arm may still hold the rope)."""
+        from topogym.evaluation.terminal.robot_contact import evaluate_robot_contact
+        state = self.world.read_state()
+        geometry = state['release_geometry']
+        if geometry.get('schema_version') != 3 or not geometry['complete'] or geometry['physics_step'] != state['physics_step']:
+            raise ValueError('No exact native release geometry')
+        if side is not None:
+            keep = [i for i, e in enumerate(geometry['robot_solids']) if str(e['link']).split('/')[0] == side]
+            if not keep:
+                raise ValueError(f'No release colliders for the {side} arm')
+            geometry = dict(geometry, robot_bounds_m=np.asarray(geometry['robot_bounds_m'])[keep],
+                            robot_convex_planes_m=[geometry['robot_convex_planes_m'][i] for i in keep],
+                            robot_solids=[geometry['robot_solids'][i] for i in keep],
+                            robot_solid_poses=[geometry['robot_solid_poses'][i] for i in keep])
+        points = np.asarray(state['fem']['rope']['position_m'])
+        _, metrics = evaluate_robot_contact({'rope': points}, {'rope': geometry['fem_elements']['rope']}, geometry,
+                                            self.task.final_settling_spec().clearance_m)
+        value = metrics['active_clearance_lower_bound_m']
+        return float('inf') if value is None else float(value)
+
+    def hover_station(self, side, avoid=()):
+        """An isolated single-strand station `side` can reach: >= 2 cm from other strands, away from `avoid`."""
+        line = self.line()
+        best = None
+        for s in np.linspace(.06, self.length-.06, 25):
+            if any(abs(s-a) < .12 for a in avoid):
+                continue
+            gap = self.clearance(line, s)
+            if gap < .02:
+                continue
+            try:
+                plan = self.pose(side, float(s))
+            except (RuntimeError, ValueError):
+                continue
+            if best is None or gap > best[0]:
+                best = (gap, float(s), plan)
+        if best is None:
+            raise ValueError(f'no reachable isolated hover station for {side}')
+        return best[1], best[2]
+
+    def engage_gate(self, side, avoid, phase):
+        """Close the success window without contact: `side`'s closed fingertips hover HOVER_GAP_M above the rope."""
+        s, plan = self.hover_station(side, avoid)
+        tcp, turn, flip, joints = plan
+        record = dict(side=side, station_s_m=s, flip=flip)
+        start, g0 = self.q[side].copy(), self.g[side]
+        n = max(1, int(np.ceil(1./self.dt)))
+        for u in np.linspace(0, 1, n+1)[1:]:
+            self.q[side] = start+(joints-start)*(10*u**3-15*u**4+6*u**5)
+            self.g[side] = g0+(GATE_JAW_M-g0)*min(1., 2*u)
+            self.step(phase+':gate_approach')
+        record['pregrasp_tracking'] = self.wait_for_pregrasp((side,), {side: plan}, phase+':gate')
+        self.gate = gate = dict(side=side, xy=np.asarray(tcp[:2], float), z=float(tcp[2]+PRE), turn=turn, trace=[])
+        lo, hi = HOVER_GAP_M
+        settled = 0
+        for _ in range(int(10./self.dt)):
+            clear = self.servo_gap(gate)
+            settled = settled+1 if lo <= clear <= hi else 0
+            if settled >= 12:
+                break
+            self.step(phase+':gate_descend')
+        else:
+            raise ValueError(f'hover did not settle in the gap band: last clearances {gate["trace"][-10:]} mm')
+        record.update(clearance_mm=gate['trace'][-15:], tcp_command_z_m=gate['z'], descend_steps=len(gate['trace']))
+        gate['servo_every_step'] = True
+        return record
+
+    def servo_gap(self, gate):
+        """Command the hovering arm from the measured clearance (every control step): far away descend at <= 0.5 mm
+        per step, near the band move proportionally (raise faster than lower). The PD-tracked arm sags and lags its
+        command by millimetres, so only the measured gap is trusted, never the commanded height."""
+        lo, hi = HOVER_GAP_M
+        clear = self.active_clearance(gate['side'])
+        if clear > 3*hi:
+            dz = -float(np.clip(.08*(clear-(lo+hi)/2), .0002, .0005))
+        else:
+            dz = float(np.clip(.5*((lo+hi)/2-clear), -.0002, .0003))
+        gate['z'] += dz
+        gate['trace'].append(round(clear*1000, 3))
+        gate['min_mm'] = min(gate.get('min_mm', 1e9), clear*1000)
+        self.q[gate['side']] = self.solve(gate['side'], np.r_[gate['xy'], gate['z']], gate['turn'])
+        return clear
+
+    def hold_gate(self, phase):
+        """With the gate closed (hover servoed every step), wait for the released rope to stay calm, then lift."""
+        gate = self.gate
+        side, turn = gate['side'], gate['turn']
+        start = self.session.sim_time_s
+        mark = len(gate['trace'])
+        quiet_since, speeds, opened_in_band = None, [], False
+        lo, hi = HOVER_GAP_M
+        while self.session.sim_time_s-start < GATE_WAIT_S+1.:
+            self.step(phase+':gate_wait')            # servoes the hover first (servo_every_step)
+            clear = gate['trace'][-1]/1000.
+            m = self.task.result.metrics
+            speed = float(m.get('maximum_speed_m_s', 1.))
+            speeds.append(speed)
+            ok = speed <= QUIET_MARGIN_M_S and bool(m.get('planar_clear')) and bool(m.get('on_table'))
+            quiet_since = (self.session.sim_time_s if quiet_since is None else quiet_since) if ok else None
+            calm = quiet_since is not None and self.session.sim_time_s-quiet_since >= QUIET_HOLD_S-1e-9
+            in_band = lo <= clear <= hi
+            if (calm or self.session.sim_time_s-start >= GATE_WAIT_S) and in_band:
+                opened_in_band = True
+                break
+        record = dict(waited_s=self.session.sim_time_s-start, quiet_with_margin=quiet_since is not None,
+                      opened_in_band=opened_in_band, last_max_speed_mm_s=round(speeds[-1]*1000, 4) if speeds else None,
+                      max_speed_last_s_mm_s=round(max(speeds[-int(1./self.dt):], default=0.)*1000, 4),
+                      min_hover_clearance_mm=round(min(gate['trace'][mark:], default=float('nan')), 3),
+                      last_clearances_mm=gate['trace'][-8:])
+        # Constant-speed lift from the COMMANDED hover pose (the measured TCP sags below it; starting from the measured
+        # one would first push the fingertips down): the 1 mm clearance is crossed at speed, on the same control step
+        # in every replay.
+        gate['servo_every_step'] = False
+        count = int(np.ceil(GATE_LIFT_M/(GATE_LIFT_SPEED_M_S*self.dt)))
+        self.cartesian(side, [np.r_[gate['xy'], gate['z']+GATE_LIFT_M*(i/count)] for i in range(1, count+1)], turn,
+                       phase+':gate_open')
+        record['opened_at_s'] = self.session.sim_time_s
+        self.gate = None
+        return record
+
+    def gated_release(self, holder, gate_side, avoid, phase, lower=0.):
+        """Engage the gate with the free arm while `holder` still holds the rope (the window stays closed by its
+        contact), then release the holder, wait and open. Without a hover station it is the plain release."""
+        record = dict(holder=holder, gate_side=gate_side)
+        steps = self.session.n_steps
+        try:
+            record['engage'] = self.engage_gate(gate_side, avoid, phase)
+        except ValueError as error:
+            record['skipped'] = str(error)[:300]
+            gate, self.gate = self.gate, None
+            if gate is not None:             # the arm hovered: lift from its commanded pose before the plain release
+                gate['servo_every_step'] = False
+                self.cartesian(gate_side, [np.r_[gate['xy'], gate['z']+GATE_LIFT_M*(i/20)] for i in range(1, 21)],
+                               gate['turn'], phase+':gate_abort', allow_partial=True)
+            elif self.session.n_steps != steps:   # moved but never hovered: take it clear the usual way
+                tcp = self.tcp(gate_side)
+                from scipy.spatial.transform import Rotation
+                turn = Rotation.from_quat(np.asarray(self.robot.observe()[gate_side]['tcp_orientation_wxyz'])[[1, 2, 3, 0]])
+                self.cartesian(gate_side, self.smooth(tcp, tcp+[0, 0, GATE_LIFT_M], .05), turn, phase+':gate_abort',
+                               allow_partial=True)
+            self.release(holder, lower, phase+':release')
+            return record
+        self.release(holder, lower, phase+':release')
+        record['hold'] = self.hold_gate(phase)
+        return record
+
+    def relax(self, sides, phase):
+        """After a crush alarm: stop pulling, open the jaws to RELAXED_CLOSE_M so the pads stop crushing the rope,
+        and hold still while it recovers. The usual release follows."""
+        self.crush_guard = False
+        for side in sides:
+            self.g[side] = max(self.g[side], RELAXED_CLOSE_M)
+        for _ in range(int(round(.25/self.dt))):
+            self.step(phase+":relax")
+
     def contact_point(self, side):
         from topogym.planning.knot_untying.kinematics import CONTACT_IN_TCP_M
         return self.tcp(side)+self.grasps[side]["turn"].apply(CONTACT_IN_TCP_M)
@@ -451,6 +659,7 @@ class Runner:
         origin = raised.copy()
         lateral = np.array([-direction[1], direction[0], 0.])
         lateral /= max(np.linalg.norm(lateral), 1e-12)
+        self.crush_guard = True
         while pulled < self.args.max_pull-1e-9:
             tcp = self.tcp(pull_side)
             increment = min(.05, self.args.max_pull-pulled)
@@ -458,7 +667,12 @@ class Runner:
             target = origin+(pulled+increment)*direction
             target += np.sin(np.pi*fraction)*(cfg.get('path_lateral_m', 0.)*lateral
                                               +np.array([0., 0., cfg.get('path_arch_m', 0.)]))
-            reached = self.cartesian(pull_side, self.smooth(tcp, target, self.args.speed), turn, f"d{k}:pull", allow_partial=True)
+            try:
+                reached = self.cartesian(pull_side, self.smooth(tcp, target, self.args.speed), turn, f"d{k}:pull", allow_partial=True)
+            except CrushAlarm:
+                record["stopped"] = "crush guard: the rope stayed inverted under a pad; pull stopped and jaws relaxed"
+                self.relax((anchor_side, pull_side), f"d{k}")
+                break
             pulled += increment
             count = len(self.crossings())
             span = float(np.linalg.norm(self.contact_point(pull_side)-self.contact_point(anchor_side)))
@@ -472,8 +686,13 @@ class Runner:
                     self.grasps[pull_side]["s"]-self.grasps[anchor_side]["s"]):
                 record["stopped"] = "optional configured grasp-span budget reached"
                 break
+        self.crush_guard = False
         self.release(pull_side, cfg["lift"], f"d{k}:release")
-        self.release(anchor_side, 0., f"d{k}:release")
+        if len(self.crossings()) == 0 and self.hover_gate:
+            record["gate"] = self.gated_release(anchor_side, pull_side, (action["s_anchor"],), f"d{k}")
+            self.gates.append(record["gate"])
+        else:
+            self.release(anchor_side, 0., f"d{k}:release")
         record["crossings_after"] = len(self.crossings())
         return record
 
@@ -490,6 +709,7 @@ class Runner:
             heights[side] = float(raised[2])
             self.cartesian(side, self.smooth(tcp, raised, .03), self.grasps[side]["turn"], f"d{k}:lift")
         extra = 0
+        self.crush_guard = True
         for _ in range(60):
             pa, pb = self.contact_point(side_a), self.contact_point(side_b)
             span = float(np.linalg.norm((pb-pa)[:2]))
@@ -509,7 +729,7 @@ class Runner:
             heights[side_b] += .025*axis[2]
             target_a[2], target_b[2] = heights[side_a], heights[side_b]
             path_a, path_b = self.smooth(ta, target_a, self.args.speed), self.smooth(tb, target_b, self.args.speed)
-            ok = True
+            ok, crushed = True, False
             for index in range(max(len(path_a), len(path_b))):
                 qa, qb = path_a[min(index, len(path_a)-1)], path_b[min(index, len(path_b)-1)]
                 try:
@@ -518,12 +738,25 @@ class Runner:
                 except ValueError:
                     ok = False
                     break
-                self.step(f"d{k}:spread")
+                try:
+                    self.step(f"d{k}:spread")
+                except CrushAlarm:
+                    crushed = True
+                    break
+            if crushed:
+                record["stopped"] = "crush guard: the rope stayed inverted under a pad; spread stopped and jaws relaxed"
+                self.relax((side_a, side_b), f"d{k}")
+                break
             if not ok:
                 record["stopped"] = "reach limit"
                 break
-        for side in (side_a, side_b):
-            self.release(side, cfg.get('spread_lift', .015), f"d{k}:release")
+        self.crush_guard = False
+        self.release(side_a, cfg.get('spread_lift', .015), f"d{k}:release")
+        if len(self.crossings()) == 0 and self.hover_gate:
+            record["gate"] = self.gated_release(side_b, side_a, (b,), f"d{k}", lower=cfg.get('spread_lift', .015))
+            self.gates.append(record["gate"])
+        else:
+            self.release(side_b, cfg.get('spread_lift', .015), f"d{k}:release")
         record["crossings_after"] = len(self.crossings())
         return record
 
@@ -697,7 +930,12 @@ class Runner:
         self.cartesian(side, self.smooth(tcp, tcp+[0, 0, cfg["lift"]], .03), turn, "d1:lift")
         tcp = self.tcp(side)
         self.cartesian(side, self.smooth(tcp, tcp+[cfg["delta"][0], cfg["delta"][1], 0], self.args.speed), turn, "d1:carry")
-        self.release(side, cfg["lift"], "d1:release")
+        if len(self.crossings()) == 0 and self.hover_gate:
+            other = "left" if side == "right" else "right"
+            record["gate"] = self.gated_release(side, other, (cfg["s"],), "d1", lower=cfg["lift"])
+            self.gates.append(record["gate"])
+        else:
+            self.release(side, cfg["lift"], "d1:release")
         record["crossings_after"] = len(self.crossings())
         return record
 
@@ -771,7 +1009,12 @@ class Runner:
                       simulated_s=float(self.session.sim_time_s), partial=partial, decisions=self.decisions,
                       terminal_predicate_met=bool(metrics.get("stable_time_s", 0.) >= self.task.config["stable_duration_s"]),
                       env_task_success=bool(result.task_success), goal_complete_flag=bool(self.task.goal_complete),
-                      final_metrics=metrics, terminal_metrics=dict(result.metrics))
+                      final_metrics=metrics, terminal_metrics=dict(result.metrics),
+                      crush_events=getattr(self, "crush_events", []), gates=getattr(self, "gates", []),
+                      gate_in_progress=(None if getattr(self, "gate", None) is None else
+                                        {k: (np.asarray(v).tolist() if k == "xy" else v)
+                                         for k, v in self.gate.items() if k != "turn"}),
+                      standard_rate=self.limiter.report() if self.limiter is not None else None)
         out = self.args.output if output is None else output
         from topogym.utils.io import write_json_atomic
         write_json_atomic(out/"report.json", report)
