@@ -352,6 +352,60 @@ after genesis.init; no Genesis file, image, frozen state or instance sha changes
   0.0768 / 0.0782 (no cost; the decomposed arm alone 0.0819), and the two autotuned passes from one state end in different
   digests while the monolith passes are identical. (Measurements on a GPU shared with IPC sims were 4-6x inflated.)
 
+### Exact speed-ups (tooling v18, 2026-10-05)
+Target as above (one full reference execution within about 20 % of the 6 h agent budget). Every change below leaves
+results identical; each has a check script and a lab replay with both versions compared (lab journal
+topogym_v1/topospeed/NOTES.md).
+- **blanket_flatten.** Two costs dominated the hard reference: the coverage union in the settle phases, and the PBD grasp
+  assist while a closed hand had no hold yet. In those grasp windows `SoftGraspBackend.candidates()` cost 0.5 s per hand
+  per tick: trimesh distances of ~450 particles to both finger surfaces, and one 8181-particle `material_patch` per center.
+  - The coverage union is skipped inside a control step when an upper bound is 1e-3 below the threshold. The decisions
+    are identical at every tick on all three tiers.
+  - Finger-surface distances are computed only where they can decide the contact test or the nearest point. A rigorous
+    lower bound selects them: the box and the hull planes, less 1 um.
+  - A patch is built from its center's cached material neighbourhood.
+  - `exposed_patch` scans only the patch's horizontal reach.
+  - Checks:
+    - `scripts/check_grasp_candidates_exact.py`: 8400 cloth and rope cases identical to the previous code;
+    - live calls recorded on lab: 1757 blanket and 13 rope `candidates()` calls identical; 0.51 -> 0.011 s and 0.35 -> 0.022
+      s per call.
+  - Measured (shipped hard oracle, 4 cores, rgb on, lab GPU 7 next to light CPU sims): **29.1 min** (8 % of 6 h). The run
+    is byte-identical to the v17 run without the changes: the same 4075-step trajectory, task result and final state_sha
+    c105e712e2af818b. Its close / contact windows now cost 0.5-1.0 s per control step; they were 3.7-5.4 s with the
+    previous oracle.
+  - Rope acquires within a tick or two, so its episodes gain only seconds.
+- **Families with a final release** (buzz_wire_3d, cast_coil, ...). `World.read_state` runs every tick and read the
+  release boxes and robot cover planes in a Python loop: 1.1-1.5 ms per read. It also re-read the solver's welds to verify
+  the rigid grasp bindings: 0.77 ms.
+  - `ReleaseGeometry.read` now evaluates the same products as stacked matmuls over equal shapes.
+  - The per-tick binding check (`verify_current_bindings`) reuses the cached weld read; acquire, release and restore
+    still refresh it.
+  - Shadow replays of the graded easy trajectories were identical at every read: 51,403 (buzz) and 65,019 (coil).
+  - Per control step (2 cores, rendering off): buzz 92 -> ~74 ms, coil 65 -> ~53 ms.
+  - The rest of buzz's extra cost over coil / keyhole is collision detection over its 1298 wire geoms (22 ms, of which
+    broadphase 13). An engine patch would need pair-order identity, so it stays a later option.
+- **fiber_bundling** (v17 tree factor + fast paths; 2 cores, rendering off), ms per control step:
+
+  | term | medium | hard |
+  |---|---|---|
+  | total | 227 | 413 |
+  | kernel_step_1 | 71 | 145 |
+  | resolve | 54 | 137 |
+  | detection | 11 | 16 |
+  | task | 15 | 24 |
+  | read_state | 15 | 19 |
+  | grasp health | 5 | 5 |
+  | oracle's per-tick record | 30 | 37 |
+
+  The oracle's references run 69 / 205 min. A fresh-process replay of the same trajectories, which is what an agent
+  following the same motion pays, runs 51.5 / 152 min. The difference is the oracle workflow's own work.
+  - About 30-37 ms per step is the state record that `QualificationWorkflow` freezes at every physics tick for its
+    invariant monitor.
+  - That monitor must observe every tick: a tick-level violation latches and fails the stage, and `run()` raises on a
+    missing tick. Freezing less often is therefore not equivalent.
+  - An exact option, for Jianwen: give that owner monitor an unfrozen or lazily frozen record. The values and decisions
+    stay the same, but `Env.tick_record`'s sink contract changes. Estimated medium ~62 min, hard ~189 min. Not done in v18.
+
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from
   `tests/instance.json` twice in a fresh process and renders `replay.mp4` **during the second replay**. Success: both
