@@ -32,8 +32,10 @@ def fake_session(tier, recipe):
     env = SimpleNamespace(config=config, _task=task_definition("buzz_wire_3d", tier)(seed=0),
         tick_record=lambda: {"state": state}, timing_spec=dict(control_dt_s=.025, control_decimation=10),
         _robot=SimpleNamespace(observe=lambda: {"arm": initial}), _world=SimpleNamespace(physics_step=0))
+    # The public action layout (7 arm joints, then the native gripper) that the standard-rate limiter reads.
     session = SimpleNamespace(task="buzz_wire_3d", n_steps=0, _resets=0, env=env,
-        runtime_binding={"test": "synthetic"}, instance_sha="synthetic", successful=False)
+        runtime_binding={"test": "synthetic"}, instance_sha="synthetic", successful=False,
+        robot=SimpleNamespace(grip_index={"arm": 7}), action_layout=[f"joint{i}" for i in range(1, 8)] + ["arm_native_gripper"])
     session.success = lambda: session.successful
     return session
 
@@ -56,8 +58,10 @@ class ReferenceDispatch(unittest.TestCase):
         recipe, selected = reference_policy.load_reference("easy")
         session = fake_session("easy", recipe)
         before = to_jsonable(session.env.config)
-        def run(session_arg, output, factory, *, selection):
+        def run(session_arg, output, factory, *, selection, runner=None):
             self.assertIs(session_arg, session)
+            # oraclefix2 O2-2: the staged easy proof records only rows within the standard per-step joint limit.
+            self.assertIsNotNone(getattr(runner, "rate_limiter", None))
             steps = list(factory(session.env, SimpleNamespace(output=output)))
             self.assertEqual([s.name for s in steps], [s["step"] for s in selected])
             self.assertEqual(len(steps), 11)

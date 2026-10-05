@@ -54,6 +54,16 @@
     "parameters": {
       "instructions": [
         {
+          "operation": "body",
+          "translation_m": [
+            0.0,
+            0.0,
+            -0.01
+          ],
+          "seconds": 2.0,
+          "phase": "lower_before_release"
+        },
+        {
           "operation": "tcp",
           "local_translation_m": [
             0.0,
@@ -72,7 +82,7 @@
         }
       ]
     },
-    "parameters_sha256": "66eb0e3bca46594a6d7d19d51a6581903fa1a195111fa625ad00a7aa384c4934"
+    "parameters_sha256": "7c837b9b5b0bcd8200e28b03f08d008eca2943bfd1902fe5353e77418b89dd7f"
   },
   {
     "step": "acquire_1",

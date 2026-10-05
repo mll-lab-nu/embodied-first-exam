@@ -89,7 +89,10 @@ def run_reference_policy(session, output, *, variation):
         report["status"] = "running"
         write_json_atomic(output / "reference_report.json", report)
         if recipe["kind"] == "staged_feedback":
-            result = run_stages(session, output, stages, selection=document)
+            # oraclefix2 (with fix 15 of the first oracle pass): every recorded row within the standard service's
+            # per-step joint limit, so the privileged reference is standard-executable as recorded.
+            from topogym.planning.standard_rate import rate_limited_runner
+            result = run_stages(session, output, stages, selection=document, runner=rate_limited_runner(session))
         else:
             policy = CompiledJointPolicy(document)
             result = SessionPolicyRunner(session).run_policy(

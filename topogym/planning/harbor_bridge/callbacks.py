@@ -27,10 +27,10 @@ def prepare_output(session, output, module_file):
     return output
 
 
-def run_stages(session, output, factory, *, selection=None):
+def run_stages(session, output, factory, *, selection=None, runner=None):
     from topogym.planning.solvability import QualificationWorkflow, PathCache, identity_for
     output = prepare_output(session, output, __file__)
-    runner = SessionPolicyRunner(session)
+    runner = SessionPolicyRunner(session) if runner is None else runner   # e.g. standard_rate.rate_limited_runner
     runner.root = output
     identity = identity_for(runner)
     flow = QualificationWorkflow(runner, output / "qualification", identity, mode="proof")
