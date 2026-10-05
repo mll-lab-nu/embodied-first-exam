@@ -207,3 +207,31 @@ v2 支持固定/参数模式、尺寸、位置、朝向、木质外观与保存/
 ## 2026-09-27 Scripted policy 首轮实施
 
 新 medium 的反馈执行器与几何搜索已接入，但完整机器人路线尚未建立。六窗对照、8,192 个候选及 12,000 次 SE(3) 搜索扩展未在声明范围内找到完整出笼通路；这不是全局无解证明。当前目标仍要求全部尖刺进入固定区域并低速保持 2 s，正式终态资格未开启。见[实施与证据](../../../runs/test_results/hedgehog_claws_policy_20260927/README.md)及[开发计划实际进展](hedgehog_claws_scripted_policy_plan_20260927_zh.md#11-首轮实施已接入与未通过项)。
+
+## 2026-10-02 below-easy 设定：very_easy / easier
+
+依据 [两档计划](../../tasks_simplifications/two_levels_below_easy_plan_20261001_zh.md)。说明页与图片见 [below_easy_variants_zh.html](../../tasks_simplifications/below_easy_variants_zh.html)。
+
+笼子改为三个等宽窗，笼条均匀立在 0°、120°、240°，其中一个窗正对机器人（180°）。笼内径从 CLASSIC 的 117 mm 加大到 150 mm：直接平移出笼需要约 102 mm 以上的出口，在 117 mm 内径上三根均匀笼条只能留出 101 mm 的窗。上下环箍由 30 mm 降到 18 mm。刺球与 easy 完全相同。两档的刺球、初始位姿和笼子尺寸都相同，只差三个窗共同的宽度：very_easy 118 mm（笼条 16°），easier 108 mm（笼条 28°）。
+
+初始位姿：刺球中心偏向机器人 28 mm，一根 60 mm 长刺朝向机器人、伸出笼壁 29.5 mm，夹爪在笼外夹住它；easier 的转动是绕这根刺的轴转手腕。位姿是在 108 mm 笼中用 Genesis（CPU、25 ms tick、40 子步）落稳 5 s 的结果，再沿 z 抬离接触 0.2 mm；从该位姿在两种笼中再落稳 3 s，刺球都只移动 0.30 mm；在 TopoGym 镜像里用 GPU 建场景、机器人不动 1 s，结果相同，任务未结束。静态搜索得到的候选中，有一半在落稳时滑回笼中间（移动约 25 mm、转 27°），刺不再伸出笼外，所以每个候选都在落稳后重新分类。
+
+之前的版本（117 mm 内径，只加宽朝向机器人的窗）已替换：very_easy 的 116 mm 窗与左右两个窗连成一片，开口共 273°，只剩背面 2 根笼条。
+
+| 入口 | 别名 | 设计意图 | 物体层面检查（只算刺球） | 加 2F-85 夹住该刺（`exit_check.py --spike 9`） |
+| --- | --- | --- | --- | --- |
+| `hedgehog_in_cage_very_easy` | `very_easy` | 窗宽 118 mm；保持初始朝向即可平移出笼 | 2 mm 平移网格可达笼外；认证路径：抬起 5 mm，朝 198° 直拉 | 直拉出口 2/160（约 ±6°；手指竖向或侧向开合，抬起 0 或 5 mm） |
+| `hedgehog_in_cage_easier` | `easier` | 窗宽 108 mm；平移出不去，绕所夹刺的轴转一下再拉出 | 平移网格不可达笼外；认证路径：抬起 25 mm，绕刺轴转 80°，朝 174° 直拉 | 直拉 0/160；抬起 25 mm 后绕接近轴转 −75° 出现 2/160 |
+
+夹爪一列由提交 5d5a67b 中的 `scripts/design_viewer/exit_check.py` 算出；该脚本已在 7808209 移除，复现时用 `git show 5d5a67b:scripts/design_viewer/exit_check.py` 取回。very_easy 的直拉方向较窄：沿拉出方向（198°）看，刺球轮廓宽 109 mm，118 mm 的窗投影到这个方向是 112 mm，只差约 3 mm。把窗加到 120、124 mm，直拉方向只增加到 3/160、4/160；对 49 个候选位姿用夹爪筛选，最多 5/160，而其中落稳后检查过的两个在 108 mm 下都找不到“转一次即出”的认证路径。
+
+认证路径的表面余量下界为 1 mm。初始位姿加 ±1 mm、±2° 扰动的 20 个样本中，very_easy 全部仍可平移出笼；easier 有 10 个仍出不去，另 10 个在零余量下能从背面 60° 的窗平移出去（远离机器人，夹着朝机器人的刺时用不上）。easier 的窗改为 104 mm 时 20 个全部出不去，但绕刺转一次也出不去了，所以保留 108 mm。
+
+代码：[below_easy.py](../../../topogym/tasks/hedgehog_in_cage/below_easy.py)（共享构造，难度旋钮为 `cage(窗宽 mm)`，`ball_pose` 两档共用）、[hedgehog_in_cage_very_easy.py](../../../topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_very_easy.py)、[hedgehog_in_cage_easier.py](../../../topogym/tasks/hedgehog_in_cage/hedgehog_in_cage_easier.py)；检查：[below_easy_witness.py](../../../topogym/planning/hedgehog_in_cage/below_easy_witness.py)、[test-hedgehog-below-easy.py](../../../ci_checks/test-hedgehog-below-easy.py)。登记在 `variation_records.py`，`pool='below_easy'`，seeded 仍只抽 easy/medium/hard。
+
+```bash
+python -m topogym.planning.hedgehog_in_cage.below_easy_witness --variant easier --output runs/below_easy/easier --settle-seconds 3
+python ci_checks/test-hedgehog-below-easy.py
+```
+
+边界：物体层面检查只含刺球与笼、底座、桌面的几何；夹爪检查只含 2F-85，不含 Panda 手腕、IK 与动力学；“平移不可达”以 2 mm 网格为准，不是不可能性证明。机器人完整执行与 Harbor 任务包尚未做。

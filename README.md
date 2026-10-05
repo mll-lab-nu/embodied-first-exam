@@ -191,7 +191,10 @@ The 13 manipulation families are `blanket-flatten`, `buzz-wire-3d`, `cast-coil`,
 `fiber-bundling`, `hedgehog-in-cage`, `horseshoe-ring`, `interlocked-claws`, `knot-untying`,
 `lock-picking`, `orbits`, `rope-threading` and `slotted-post-ring`. Each task README specifies its
 robot, variation, seed, grasping mode and success predicate. A Harbor task fixes one instance;
-the simulator's broader variation catalog is separate.
+the simulator's broader variation catalog is separate. `hedgehog_in_cage`, `horseshoe_ring` and
+`slotted_post_ring` also have two settings below easy, `very_easy` and `easier`, selected with
+`variation_id` like the three tiers and not yet packaged as Harbor tasks:
+[docs/tasks_simplifications/README.md](docs/tasks_simplifications/README.md).
 
 Tooling records one row of joint targets and gripper widths per control step: `(T, 8)` for Panda/Robotiq,
 `(T, 14)` for ALOHA. Instances are frozen in `instance.json`; current packages are listed in the selected release dataset and bound runtime catalog.

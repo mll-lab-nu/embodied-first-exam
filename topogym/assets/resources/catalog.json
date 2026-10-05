@@ -334,6 +334,18 @@
       "sha256": "716b3b9d96cc9e598f95d269e60bcfdb42696584acb090b423dc78615a0ccada",
       "source": "assets/tasks/hedgehog_in_cage/seed_families_v1/staggered_gates/prototype.json"
     },
+    "variations/horseshoe_ring/below_easy_easier_settled_poses.json": {
+      "license": null,
+      "path": "variations/horseshoe_ring/below_easy_easier_settled_poses.json",
+      "sha256": "a4031241364fba3a7143e03ca1541d12aaaeb19723b74f35e06d899619fae53c",
+      "source": "runs/below_easy/horseshoe_design/ea_assembled/settled_poses.json (topogym/planning/horseshoe_ring/below_easy_witness.py checks it)"
+    },
+    "variations/horseshoe_ring/below_easy_very_easy_settled_poses.json": {
+      "license": null,
+      "path": "variations/horseshoe_ring/below_easy_very_easy_settled_poses.json",
+      "sha256": "002c156d3f9a0c6a909926bbbcd1022725bc25061f189cc107d712bf55c41e5e",
+      "source": "runs/below_easy/horseshoe_design/ve_assembled/settled_poses.json (topogym/planning/horseshoe_ring/below_easy_witness.py checks it)"
+    },
     "variations/horseshoe_ring/chain_compact.json": {
       "license": null,
       "path": "variations/horseshoe_ring/chain_compact.json",

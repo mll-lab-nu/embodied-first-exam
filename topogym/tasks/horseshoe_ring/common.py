@@ -15,12 +15,10 @@ from ..scene_presets import defaults, record_preset
 def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
     """Both shoes and the ring remain graspable throughout a trials episode."""
     from topogym.assets.geometry.horseshoe_ring import HorseshoeAssembly
-    from topogym.assets.variation_resources import read_json
     from topogym.config.registry import task_definition
     from topogym.utils.grasp import GraspAssistConfig, rigid_grasp_region
     task = task_definition("horseshoe_ring", variation_id, seed)(task_parameters, seed=seed)
-    template = read_json(task.template_resource) if task.template_resource else None
-    assembly = HorseshoeAssembly(template=template, scale=float(task.config["scale"]))
+    assembly = HorseshoeAssembly(template=task.template(), scale=float(task.config["scale"]))
     names = {"horseshoe_left", "horseshoe_right", "target_ring"}
     targets = tuple(rigid_grasp_region(body.name, body.name,
         body.visual.vertices-body.visual.center_mass) for body in assembly.bodies if body.name in names)
@@ -42,13 +40,21 @@ class HorseshoeRingTask(PlacementGoalMixin, RigidTaskDefinition):
     template_resource = None
     layout_resource = None
 
+    def template(self):
+        """The assembly template; None selects the packaged default."""
+        from topogym.assets.variation_resources import read_json
+        return read_json(self.template_resource) if self.template_resource else None
+
+    def rest_poses(self):
+        """Settled body poses in the layout frame; None spawns the template assembly."""
+        from topogym.assets.variation_resources import read_json
+        return read_json(self.layout_resource)["poses"] if self.layout_resource else None
+
     def declare(self, asset_dir, table_height_m):
         self.table_height_m = float(table_height_m)
         cfg, folder = self.config, Path(asset_dir)
         preset = record_preset(self, folder)
-        from topogym.assets.variation_resources import read_json
-        template = read_json(self.template_resource) if self.template_resource else None
-        assembly, report = generate_assets(folder, scale=float(cfg["scale"]), template=template)
+        assembly, report = generate_assets(folder, scale=float(cfg["scale"]), template=self.template())
         ring_finish = finish_generated_urdf(
             folder / "target_ring" / "target_ring.urdf", cfg["target_ring_finish"]
         )
@@ -70,10 +76,10 @@ class HorseshoeRingTask(PlacementGoalMixin, RigidTaskDefinition):
                 material={"friction": .3, "gravity_compensation": 0.},
                 morph_options={"align": False, "convexify": True, "decimate": False,
                                "merge_fixed_links": False}))
-        if self.layout_resource:
+        rest = self.rest_poses()
+        if rest is not None:
             # Physically settled rest poses: the template assembly spawned on the
             # table drops ~66 mm and its ring slides off 1.5-2.5 s later.
-            rest = read_json(self.layout_resource)["poses"]
             anchor = np.r_[xy, self.table_height_m]
             entities = [replace(e, position_m=tuple(anchor+rotation.apply(rest[e.name]["position_m"])),
                                 quaternion_wxyz=tuple((rotation*Rotation.from_quat(np.roll(

@@ -1,0 +1,585 @@
+<meta charset="utf-8">
+<title>Below-Easy 变体图解</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="TopoGym 刺球、马蹄环、长孔立柱在 easy 之下新增的 very_easy / easier：用法、代码结构、每档的设计、真实图片与验证结果。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+:root {
+  --bg: #f2f4f1;
+  --surface: #ffffff;
+  --sunken: #e8ebe7;
+  --ink: #1b211e;
+  --muted: #5c6661;
+  --line: #d6dbd5;
+  --accent: #c4561d;
+  --accent-soft: #f6e3d6;
+  --path: #1d766e;
+  --path-soft: #dcefec;
+  --block: #b23b3b;
+  --block-soft: #f5dede;
+  --wall: #c5ccc6;
+  --steel: #8d98a3;
+  --steel-dark: #66727d;
+  --serif: "Noto Serif SC", "Songti SC", "STSong", serif;
+  --sans: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #131715;
+    --surface: #1b201d;
+    --sunken: #232a26;
+    --ink: #e6ebe7;
+    --muted: #9aa49f;
+    --line: #2f3632;
+    --accent: #f08a4f;
+    --accent-soft: #3a2619;
+    --path: #5cc0b4;
+    --path-soft: #1d3330;
+    --block: #ec8585;
+    --block-soft: #3a2223;
+    --wall: #3b443f;
+    --steel: #9aa6b1;
+    --steel-dark: #7d8a96;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #131715;
+  --surface: #1b201d;
+  --sunken: #232a26;
+  --ink: #e6ebe7;
+  --muted: #9aa49f;
+  --line: #2f3632;
+  --accent: #f08a4f;
+  --accent-soft: #3a2619;
+  --path: #5cc0b4;
+  --path-soft: #1d3330;
+  --block: #ec8585;
+  --block-soft: #3a2223;
+  --wall: #3b443f;
+  --steel: #9aa6b1;
+  --steel-dark: #7d8a96;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.8 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 96px; }
+.prose { max-width: 46em; }
+a { color: var(--path); text-underline-offset: 3px; }
+a:focus-visible, summary:focus-visible { outline: 2px solid var(--path); outline-offset: 2px; border-radius: 3px; }
+code, .mono { font-family: var(--mono); font-size: .86em; }
+p code, li code, td code { background: var(--sunken); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+h1 { font: 700 clamp(30px, 4.4vw, 44px)/1.25 var(--serif); letter-spacing: .01em; }
+h2 { font: 600 26px/1.35 var(--serif); }
+h3 { font: 600 17px/1.5 var(--sans); }
+p { margin: 0; }
+ul, ol { margin: 0; padding-left: 1.3em; }
+li + li { margin-top: .35em; }
+
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lead { font-size: 17px; line-height: 1.85; }
+.target { color: var(--accent); font-weight: 600; }
+.ok { color: var(--path); font-weight: 600; }
+.no { color: var(--block); font-weight: 600; }
+
+header.top { display: grid; gap: 18px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 500; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; padding-block: 18px 6px; }
+nav.toc a { font-size: 13px; color: var(--ink); text-decoration: none; padding: 4px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+nav.toc a:hover { border-color: var(--path); color: var(--path); }
+
+section { display: grid; gap: 18px; padding-block: 44px 8px; }
+section > .head { display: grid; gap: 6px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 500; color: var(--muted); font-size: 13px; background: var(--sunken); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td code { overflow-wrap: normal; white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+td.c, th.c { text-align: center; }
+.new th.newcol, .new td.newcol { background: var(--accent-soft); }
+.dot { font-size: 16px; line-height: 1; }
+.dot.full { color: var(--ink); }
+.dot.part { color: var(--accent); }
+.dot.none { color: var(--muted); }
+
+figure { margin: 0; display: grid; gap: 10px; }
+figcaption { font-size: 13px; line-height: 1.7; color: var(--muted); max-width: 60em; }
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 640px; height: auto; font-family: var(--sans); }
+
+.tiers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.tiers.with-photo { grid-template-columns: 1.05fr repeat(3, minmax(0, 1fr)); }
+.card { display: grid; gap: 8px; align-content: start; }
+.card img { width: 100%; height: auto; display: block; border-radius: 6px; border: 1px solid var(--line); background: var(--sunken); }
+.card .label { font: 600 12px/1.4 var(--mono); color: var(--ink); }
+.card .label i { font-style: normal; color: var(--muted); font-weight: 400; }
+.card p { font-size: 13px; line-height: 1.65; color: var(--muted); }
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.strip .card p { font-size: 12.5px; }
+.step-t { font: 500 11px var(--mono); color: var(--muted); }
+
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+.box h3 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.box h3 code { font-size: 13px; font-weight: 500; color: var(--accent); background: none; padding: 0; }
+.box.suggest { background: transparent; border-style: dashed; }
+.tag { font: 500 11px/1 var(--mono); padding: 4px 7px; border-radius: 4px; background: var(--sunken); color: var(--muted); white-space: nowrap; }
+.tag.plan { background: var(--path-soft); color: var(--path); }
+.tag.repo { background: var(--sunken); color: var(--ink); }
+.tag.mine { background: var(--accent-soft); color: var(--accent); }
+.tag.user { background: var(--path); color: var(--surface); }
+.box.decided { border-color: var(--path); border-width: 1.5px; }
+.box.decided ul { font-size: 14.5px; }
+h2 .tag, h3 .tag { vertical-align: middle; margin-left: 6px; font-size: 11px; }
+.sources { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 13px; color: var(--muted); }
+blockquote { margin: 0; padding: 12px 16px; border-left: 3px solid var(--path); background: var(--surface); border-radius: 0 8px 8px 0; display: grid; gap: 6px; }
+blockquote p { font-size: 14.5px; }
+.note { font-size: 13.5px; color: var(--muted); border-left: 2px solid var(--line); padding-left: 12px; }
+
+.flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; counter-reset: step; }
+.flow .stage { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 12px 14px; display: grid; gap: 6px; align-content: start; }
+.flow .stage::before { counter-increment: step; content: counter(step); font: 600 12px var(--mono); color: var(--path); }
+.flow .stage:not(:last-child)::after { content: "→"; position: absolute; right: -10px; top: 12px; transform: translateX(50%); color: var(--muted); font-size: 14px; }
+.flow .stage b { font-size: 14px; font-weight: 600; }
+.flow .stage code { font-size: 11.5px; line-height: 1.55; background: none; padding: 0; color: var(--muted); display: block; overflow-wrap: anywhere; }
+pre { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font: 12.5px/1.65 var(--mono); }
+pre .cm { color: var(--muted); }
+pre .hl { color: var(--accent); }
+
+.pill { display: inline-block; font: 500 12px/1 var(--sans); padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.todo { background: var(--sunken); color: var(--muted); }
+.pill.doing { background: var(--accent-soft); color: var(--accent); }
+.pill.done { background: var(--path-soft); color: var(--path); }
+.pill.fail { background: var(--block-soft); color: var(--block); }
+
+footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: grid; gap: 10px; }
+footer ul { padding-left: 1.2em; }
+
+/* SVG roles */
+.f-wall { fill: var(--wall); }
+.f-gap { fill: var(--surface); }
+.f-goal { fill: var(--accent); fill-opacity: .13; }
+.f-axis { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+.f-path { stroke: var(--path); stroke-width: 3; fill: none; stroke-linejoin: round; }
+.f-path-fill { fill: var(--path); }
+.f-block { stroke: var(--block); stroke-width: 2.5; stroke-dasharray: 6 4; fill: none; }
+.f-x { stroke: var(--block); stroke-width: 3; stroke-linecap: round; }
+.f-block-fill { fill: var(--block); }
+.f-target { fill: var(--accent); }
+.f-target-line { stroke: var(--accent); fill: none; }
+.f-ghost { stroke: var(--muted); stroke-width: 1.4; stroke-dasharray: 4 3; fill: none; }
+.f-steel { stroke: var(--steel); fill: none; }
+.f-steel-dark { stroke: var(--steel-dark); fill: none; }
+.f-ink { fill: var(--ink); }
+.f-dot { fill: var(--ink); }
+.t { fill: var(--ink); font-size: 13px; }
+.t-s { fill: var(--muted); font-size: 12px; }
+.t-title { fill: var(--ink); font-size: 14px; font-weight: 600; font-family: var(--mono); }
+.t-acc { fill: var(--accent); font-size: 13px; font-weight: 600; }
+.t-path { fill: var(--path); font-size: 12.5px; font-weight: 500; }
+.t-block { fill: var(--block); font-size: 12.5px; font-weight: 500; }
+.f-bar { stroke: var(--ink); fill: none; }
+.f-bar-acc { stroke: var(--path); fill: none; }
+.f-core { fill: var(--accent); fill-opacity: .28; }
+.f-slot { fill: var(--surface); stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.f-cord { stroke: var(--steel-dark); stroke-width: 3; fill: none; stroke-linecap: round; }
+.f-cord-hidden { stroke: var(--steel-dark); stroke-width: 2; stroke-dasharray: 3 3; fill: none; }
+.f-ring { stroke: var(--accent); stroke-width: 5; fill: none; }
+.f-bead { fill: var(--wall); stroke: var(--steel-dark); stroke-width: 1.5; }
+.f-disc { fill: var(--steel); }
+/* knob diagrams */
+.f-hog-ok line { stroke: var(--path); stroke-opacity: .55; }
+.f-hog-ok circle { fill: var(--path); fill-opacity: .55; }
+.f-hog-block line { stroke: var(--block); stroke-opacity: .5; }
+.f-hog-block circle { fill: var(--block); fill-opacity: .5; }
+.f-sil-ghost { fill: none; stroke: var(--block); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.f-turn { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+.f-turn-head { fill: var(--accent); }
+.f-shoe { fill: var(--steel); }
+.f-shoe-ghost { fill: none; stroke: var(--steel-dark); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.f-bore { fill: none; stroke: var(--accent); stroke-width: 6; }
+.f-bore-ghost { fill: none; stroke: var(--block); stroke-width: 2; stroke-dasharray: 6 5; }
+/* end knob diagrams */
+.diagram svg.tall { min-width: 0; max-width: 430px; margin-inline: auto; }
+
+@media (max-width: 860px) {
+  .tiers.with-photo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow { grid-template-columns: 1fr; }
+  .flow .stage:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -12px; transform: translate(50%, 50%); }
+}
+@media (max-width: 640px) {
+  .tiers, .two { grid-template-columns: 1fr; }
+  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body { font-size: 14.5px; }
+  .lead { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+
+
+
+
+
+
+<div class="wrap">
+
+<header class="top">
+  <div class="eyebrow">TopoGym · Below-Easy 难度 · 交接说明</div>
+  <h1>在 easy 之下再加两档</h1>
+  <p class="lead prose">刺球出笼、马蹄环、长孔立柱解环三个任务，在 easy / medium / hard 之下各加了 <b>very_easy</b> 和 <b>easier</b>。新档和现有三档同属一个任务，部件、评分、目标区都共用；切换只换 <code>variation_id</code>。</p>
+  <div class="meta">
+    <span>分支：<b>dev/pingyue-topo</b>（robot_coding_bench，基于 dev/jianwen <code>cef2797</code>）</span>
+    <span>入口说明：<code>docs/tasks_simplifications/README.md</code></span>
+    <span>更新：<b>2026-10-03</b></span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="目录">
+  <a href="#use">用法</a>
+  <a href="#structure">代码结构</a>
+  <a href="#hedgehog">刺球</a>
+  <a href="#horseshoe">马蹄环</a>
+  <a href="#slotted">长孔立柱</a>
+  <a href="#checks">检查命令</a>
+  <a href="#status">现状与待办</a>
+</nav>
+
+<section id="use">
+  <div class="head">
+    <div class="eyebrow">Usage</div>
+    <h2>用法：五档，一个参数</h2>
+  </div>
+<pre>import topogym
+
+env = topogym.make("hedgehog_in_cage", variation_id="very_easy")   <span class="cm"># very_easy / easier / easy / medium / hard</span>
+env.reset()</pre>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>任务</th><th>very_easy</th><th>easier</th><th>难度旋钮</th></tr></thead>
+      <tbody>
+        <tr><td><code>hedgehog_in_cage</code></td><td>夹住朝机器人的那根刺，直接平移拉出笼</td><td>先绕所夹的刺转约 80°，再拉出</td><td>三个等宽窗的宽度：118 / 108 mm</td></tr>
+        <tr><td><code>horseshoe_ring</code></td><td>提起马蹄，环沿链直接滑过另一只马蹄</td><td>先绕链转环，让长轴横跨马蹄，再沿链拉出</td><td>环孔：144 mm 圆 / 146 × 120 mm 椭圆</td></tr>
+        <tr><td><code>slotted_post_ring</code></td><td>绳从环下方穿过，环沿立柱直接提起越过柱顶</td><td>另一侧带珠 2 的绳圈搭在环上，先把绳圈穿下去再提环</td><td>绳的走向：<code>under_ring</code> / <code>loop_over_ring</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="prose">
+    <li>也可以写全名，如 <code>hedgehog_in_cage_very_easy</code>。<code>variation_id="seeded"</code> 的随机抽样仍只抽 easy / medium / hard。</li>
+    <li>两档的设计依据计划原文：very_easy 主要考察接近、抓取、取出和搬运，尽量不需要解谜操作；easier 在抓住后需要调整一次角度或方向。</li>
+  </ul>
+</section>
+
+<section id="structure">
+  <div class="head">
+    <div class="eyebrow">Structure</div>
+    <h2>代码结构：继承 easy，只加一个旋钮</h2>
+  </div>
+<pre>&lt;任务&gt;Task               <span class="cm"># common.py：场景声明、评分、目标区，所有档共用</span>
+ ├─ Easy / Medium / Hard  <span class="cm"># 现有三档</span>
+ └─ Easy
+     └─ BelowEasy         <span class="cm"># below_easy.py：加一个旋钮，覆盖一个几何钩子</span>
+         ├─ VeryEasy      <span class="cm"># &lt;任务&gt;_very_easy.py：一行，旋钮取值</span>
+         └─ Easier        <span class="cm"># &lt;任务&gt;_easier.py：一行，旋钮取值</span></pre>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>任务</th><th>旋钮</th><th>覆盖的几何钩子</th><th>very_easy</th><th>easier</th></tr></thead>
+      <tbody>
+        <tr><td>刺球</td><td><code>cage(窗宽 mm)</code></td><td><code>build_assets()</code></td><td><code>cage(118.)</code></td><td><code>cage(108.)</code></td></tr>
+        <tr><td>马蹄环</td><td><code>ring(长轴, 短轴)</code></td><td><code>template()</code>、<code>rest_poses()</code></td><td><code>ring(144., 144.)</code> + 落稳布局</td><td><code>ring(146., 120.)</code> + 落稳布局</td></tr>
+        <tr><td>长孔立柱</td><td><code>cord_route</code></td><td><code>make_layout()</code></td><td><code>"under_ring"</code></td><td><code>"loop_over_ring"</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="prose">
+    <li><b>登记</b>：<code>topogym/config/variation_records.py</code> 每档一条，<code>pool='below_easy'</code>，别名 very_easy / easier。</li>
+    <li><b>检查</b>：<code>topogym/planning/&lt;任务&gt;/below_easy_witness.py</code>，都有 <code>check_variant</code>（物体层面）和 <code>settle_check</code>（物理落稳），命令行参数相同。</li>
+    <li><b>测试</b>：<code>ci_checks/test-&lt;任务&gt;-below-easy.py</code>，分两组：登记（别名、参数锁定、公开目标与 easy 相同）和设计意图。</li>
+    <li><b>对共用代码的改动只有钩子</b>。现有三档行为不变：回归测试全部通过；长孔立柱三档的网格、绳和几何报告修改前后逐字节一致。</li>
+  </ul>
+</section>
+
+<section id="hedgehog">
+  <div class="head">
+    <div class="eyebrow">hedgehog_in_cage · Panda + Robotiq 2F-85 · 刚体</div>
+    <h2>刺球：窗比刺球宽还是窄</h2>
+  </div>
+  <p class="prose"><b>怎么设置。</b>刺球和它的初始位姿两档完全相同，只换笼子的窗宽。夹爪在笼外夹住一根朝向机器人、伸出笼壁 29.5 mm 的刺。沿拉出方向看：窗比刺球轮廓宽，就直接拉出（very_easy）；窗比轮廓窄，要先绕所夹的刺转一下，让轮廓变窄再拉出（easier）。笼子内径 150 mm，三个等宽窗，笼条均匀分布，一个窗正对机器人。</p>
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 900 270" role="img" aria-label="沿拉出方向看刺球与出口窗：easy 的窗只有 55 到 60 毫米，比刺球最窄处 97 毫米还窄；very_easy 刺球轮廓 109 毫米小于窗的 112 毫米，直接拉出；easier 轮廓 127 毫米大于窗的 107 毫米，绕所夹的刺转 80 度后变成 103 毫米，再拉出。">
+<g>
+      <text x="10" y="22" class="t-title">easy / medium / hard</text>
+      <rect x="85.7" y="46" width="26" height="166" class="f-wall"/><rect x="178.3" y="46" width="26" height="166" class="f-wall"/>
+      <g class="f-hog-block"><line x1="131.6" y1="103.2" x2="106.8" y2="76.5" stroke-width="12.4"/><line x1="171.2" y1="145.3" x2="203.1" y2="179.4" stroke-width="12.4"/><line x1="162.4" y1="116.6" x2="176.3" y2="107.2" stroke-width="12.4"/><line x1="140.3" y1="131.8" x2="118.6" y2="146.7" stroke-width="12.4"/><line x1="169.6" y1="105.8" x2="194.5" y2="80.4" stroke-width="12.4"/><line x1="133.2" y1="142.6" x2="97.4" y2="179.0" stroke-width="12.4"/><line x1="170.0" y1="108.5" x2="198.0" y2="84.9" stroke-width="12.4"/><line x1="132.8" y1="140.0" x2="87.1" y2="178.5" stroke-width="12.4"/><line x1="150.9" y1="121.6" x2="150.1" y2="117.6" stroke-width="12.4"/><line x1="151.8" y1="126.9" x2="153.1" y2="133.4" stroke-width="12.4"/><circle cx="151.4" cy="124.2" r="31.0"/></g>
+      <text x="145" y="240" class="t-block" text-anchor="middle">窗 55–60 mm，刺球最窄处 97 mm</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">边转边让刺依次穿出，要换抓</text>
+    </g>
+<g transform="translate(305 0)">
+      <text x="10" y="22" class="t-title">very_easy</text>
+      <rect x="54.5" y="46" width="26" height="166" class="f-wall"/><rect x="209.5" y="46" width="26" height="166" class="f-wall"/>
+      <g class="f-hog-ok"><line x1="131.6" y1="103.2" x2="106.8" y2="76.5" stroke-width="12.4"/><line x1="171.2" y1="145.3" x2="203.1" y2="179.4" stroke-width="12.4"/><line x1="162.4" y1="116.6" x2="176.3" y2="107.2" stroke-width="12.4"/><line x1="140.3" y1="131.8" x2="118.6" y2="146.7" stroke-width="12.4"/><line x1="169.6" y1="105.8" x2="194.5" y2="80.4" stroke-width="12.4"/><line x1="133.2" y1="142.6" x2="97.4" y2="179.0" stroke-width="12.4"/><line x1="170.0" y1="108.5" x2="198.0" y2="84.9" stroke-width="12.4"/><line x1="132.8" y1="140.0" x2="87.1" y2="178.5" stroke-width="12.4"/><line x1="150.9" y1="121.6" x2="150.1" y2="117.6" stroke-width="12.4"/><line x1="151.8" y1="126.9" x2="153.1" y2="133.4" stroke-width="12.4"/><circle cx="151.4" cy="124.2" r="31.0"/></g>
+      <text x="145" y="240" class="t-path" text-anchor="middle">轮廓 109 mm &lt; 窗 112 mm</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">不用转，直接拉出（窗宽 118 mm）</text>
+    </g>
+<g transform="translate(610 0)">
+      <text x="10" y="22" class="t-title">easier</text>
+      <rect x="57.2" y="46" width="26" height="166" class="f-wall"/><rect x="206.8" y="46" width="26" height="166" class="f-wall"/>
+      <polygon points="124.5,183.7 78.8,183.7 78.4,183.7 78.0,183.5 77.4,183.0 76.7,182.5 76.0,181.8 75.3,180.8 74.6,179.9 73.9,178.9 73.2,177.9 72.8,176.9 72.3,175.9 72.0,175.1 71.9,174.4 71.7,173.8 71.9,173.5 112.7,79.0 113.0,78.1 113.6,77.3 114.3,76.5 115.1,75.7 116.0,74.9 117.1,74.1 118.0,73.5 118.9,73.0 119.8,72.6 120.6,72.4 121.3,72.3 181.1,75.7 182.3,75.8 211.4,79.8 211.8,79.9 212.3,80.1 212.8,80.6 213.5,81.3 214.2,82.1 214.9,83.0 215.7,83.9 216.3,84.9 217.0,86.0 217.4,86.9 217.8,87.8 218.1,88.6 218.3,89.3 218.3,89.8 205.9,176.5 205.7,177.2 205.4,177.9 204.8,178.7 204.1,179.6 203.3,180.4 202.4,181.2 201.5,181.9 200.4,182.6 199.5,183.0 198.6,183.5 197.8,183.7 197.1,183.7 124.5,183.7" class="f-sil-ghost"/>
+      <g class="f-hog-ok"><line x1="118.3" y1="136.1" x2="89.8" y2="155.9" stroke-width="12.4"/><line x1="163.6" y1="104.6" x2="200.3" y2="79.2" stroke-width="12.4"/><line x1="144.9" y1="110.6" x2="149.7" y2="98.2" stroke-width="12.4"/><line x1="137.0" y1="130.1" x2="129.5" y2="149.6" stroke-width="12.4"/><line x1="123.2" y1="98.0" x2="98.9" y2="67.3" stroke-width="12.4"/><line x1="158.7" y1="142.7" x2="193.6" y2="186.7" stroke-width="12.4"/><line x1="135.4" y1="100.7" x2="127.2" y2="71.2" stroke-width="12.4"/><line x1="146.5" y1="140.0" x2="159.9" y2="188.1" stroke-width="12.4"/><line x1="128.8" y1="117.7" x2="110.5" y2="113.7" stroke-width="12.4"/><line x1="153.1" y1="123.0" x2="183.0" y2="129.5" stroke-width="12.4"/><circle cx="141.0" cy="120.3" r="31.0"/></g>
+      <path d="M175 62A70 70 0 0 1 211 100" class="f-turn"/>
+      <path d="M205 94L212 106L217 92Z" class="f-turn-head"/>
+      <text x="145" y="240" class="t-acc" text-anchor="middle">轮廓 127 mm &gt; 窗 107 mm</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">绕所夹的刺转 80° 后 103 mm，再拉出</text>
+    </g>
+</svg>
+    </div>
+    <figcaption>沿拉出方向看（从机器人一侧），按真实尺寸画出球核和每根刺。灰色是窗两侧的笼条，窗宽按拉出方向投影。绿色能过，红色过不去；easier 的虚线框是转动前的轮廓。easy 那栏用同一个刺球示意：CLASSIC 笼的窗比刺球任何朝向的宽度（最窄 97 mm）都窄。</figcaption>
+  </figure>
+  <div class="two">
+    <figure class="card"><img src="figures/sim_hedgehog_in_cage_very_easy.jpg" alt="very_easy 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>very_easy</b>，窗 118 mm。仿真相机渲染的开局。</figcaption></figure>
+    <figure class="card"><img src="figures/sim_hedgehog_in_cage_easier.jpg" alt="easier 仿真开局" loading="lazy" width="848" height="480"><figcaption><b>easier</b>，窗 108 mm。仿真相机渲染的开局。</figcaption></figure>
+  </div>
+  <figure>
+    <div class="strip">
+      <div class="card"><img src="figures/hedgehog_very_easy_step1.jpg" alt="very_easy 初态" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/hedgehog_very_easy_step2.jpg" alt="very_easy 抬起" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/hedgehog_very_easy_step3.jpg" alt="very_easy 拉出途中" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/hedgehog_very_easy_step4.jpg" alt="very_easy 出笼" loading="lazy" width="720" height="540"></div>
+    </div>
+    <div class="strip">
+      <div class="card"><img src="figures/hedgehog_easier_step1.jpg" alt="easier 初态" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/hedgehog_easier_step2.jpg" alt="easier 抬起并绕刺转动" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/hedgehog_easier_step3.jpg" alt="easier 拉出途中" loading="lazy" width="720" height="540"></div>
+      <div class="card"><img src="figures/hedgehog_easier_step4.jpg" alt="easier 出笼" loading="lazy" width="720" height="540"></div>
+    </div>
+    <figcaption>证明过的取出路径（只算刺球；青绿色是夹爪要夹的那段刺）。上排 very_easy：抬 5 mm 后直拉。下排 easier：抬 25 mm，绕所夹的刺转 80°，再直拉。</figcaption>
+  </figure>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>检查</th><th>very_easy</th><th>easier</th></tr></thead>
+      <tbody>
+        <tr><td>保持初始朝向能否平移出笼（2 mm 网格搜索）</td><td class="ok">能</td><td class="no">不能</td></tr>
+        <tr><td>证明过的路径，表面余量 ≥ 1 mm</td><td>抬 5 mm → 直拉</td><td>抬 25 mm → 绕刺转 80° → 直拉</td></tr>
+        <tr><td>加 2F-85 夹爪夹住那根刺</td><td>160 个方向中 2 个能直拉（约 ±6°）</td><td>直拉 0/160；绕接近轴转 −75° 后 2/160</td></tr>
+        <tr><td>仿真里机器人不动、静置 1 s</td><td>刺球移动 0.30 mm</td><td>刺球移动 0.30 mm</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note prose">已知限制：very_easy 夹爪下能直拉的方向较窄，因为轮廓只比窗小约 3 mm。easier 的初始位姿加 ±1 mm、±2° 扰动时，20 个样本中有 10 个能从背面 60° 的窗平移出去；这个方向远离机器人，夹着前面那根刺时用不上。</p>
+</section>
+
+<section id="horseshoe">
+  <div class="head">
+    <div class="eyebrow">horseshoe_ring · ALOHA 双臂 · 刚体</div>
+    <h2>马蹄环：环孔比马蹄大还是小</h2>
+  </div>
+  <p class="prose"><b>怎么设置。</b>部件和 easy 相同，环仍同时套着两条链，只改环孔。一只手提起一只马蹄，链竖直；另一只手拿着环沿链往下滑过下面那只马蹄，环就脱出。沿链方向看，马蹄是一根 138 × 25 mm 的长条：圆环孔比它大，任何角度都能套过（very_easy）；椭圆环孔只有长轴比它大，要先转到长轴横跨马蹄（easier）。</p>
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 900 270" role="img" aria-label="提起马蹄后沿链方向看马蹄截面与环孔：easy 的环孔比 138 毫米长的马蹄截面短，要折合两只马蹄；very_easy 是 144 毫米圆环，任何角度都能套过；easier 是 146 乘 120 毫米椭圆环，转到长轴横跨马蹄才能套过。">
+<g>
+      <text x="10" y="22" class="t-title">easy / medium / hard</text>
+      <ellipse cx="145" cy="128" rx="77.4" ry="73.5" class="f-bore"/>
+      <rect x="65.8" y="113.7" width="158.5" height="28.5" rx="14.3" class="f-shoe"/>
+      <path d="M59.8 106l12 12m0 -12l-12 12M218.2 106l12 12m0 -12l-12 12" class="f-x"/>
+      <text x="145" y="240" class="t-block" text-anchor="middle">环孔 135 × 128 mm，马蹄 138 mm 长</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">怎么转都套不过，要折合两只马蹄</text>
+    </g>
+<g transform="translate(305 0)">
+      <text x="10" y="22" class="t-title">very_easy</text>
+      <ellipse cx="145" cy="128" rx="82.8" ry="82.8" class="f-bore"/>
+      <rect x="65.8" y="113.7" width="158.5" height="28.5" rx="14.3" class="f-shoe-ghost" transform="rotate(60 145 128)"/>
+      <rect x="65.8" y="113.7" width="158.5" height="28.5" rx="14.3" class="f-shoe"/>
+      <text x="145" y="240" class="t-path" text-anchor="middle">环孔 144 mm 圆</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">任何角度都能套过，直接沿链拉出</text>
+    </g>
+<g transform="translate(610 0)">
+      <text x="10" y="22" class="t-title">easier</text>
+      <ellipse cx="145" cy="128" rx="83.9" ry="69.0" class="f-bore-ghost" transform="rotate(90 145 128)"/>
+      <ellipse cx="145" cy="128" rx="83.9" ry="69.0" class="f-bore"/>
+      <rect x="65.8" y="113.7" width="158.5" height="28.5" rx="14.3" class="f-shoe"/>
+      <path d="M195 50A90 90 0 0 1 229 84" class="f-turn"/>
+      <path d="M223 78L231 90L235 76Z" class="f-turn-head"/>
+      <text x="145" y="240" class="t-acc" text-anchor="middle">环孔 146 × 120 mm 椭圆</text>
+      <text x="145" y="258" class="t-s" text-anchor="middle">先绕链转到长轴横跨马蹄，再拉出</text>
+    </g>
+</svg>
+    </div>
+    <figcaption>提起马蹄、链竖直后沿链方向看，按真实尺寸画。灰色长条是马蹄截面（含端部小环），橙色是环孔；虚线是转动前的位置。</figcaption>
+  </figure>
+  <div class="two">
+    <figure class="card"><img src="figures/sim_horseshoe_ring_very_easy.jpg" alt="very_easy 仿真开局" loading="lazy" width="424" height="240"><figcaption><b>very_easy</b>：落稳后环平躺，两条链从环中穿过。仿真相机渲染。</figcaption></figure>
+    <figure class="card"><img src="figures/sim_horseshoe_ring_easier.jpg" alt="easier 仿真开局" loading="lazy" width="424" height="240"><figcaption><b>easier</b>：椭圆环平躺在马蹄上方，两条链从环中穿过。仿真相机渲染。</figcaption></figure>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>检查</th><th>very_easy</th><th>easier</th></tr></thead>
+      <tbody>
+        <tr><td>能套过马蹄的环相位（绕链转的角度，每 2° 一档）</td><td>全部</td><td>64°–116°</td></tr>
+        <tr><td>沿链直拉（马蹄与链固定在装配姿态），表面余量 ≥ 1 mm</td><td>抽查 6 个相位都有证明路径</td><td>90° 有证明路径；0° 会碰撞</td></tr>
+        <tr><td>开局时环仍套着两条链；环不能单独平移取下</td><td class="ok">是</td><td class="ok">是</td></tr>
+        <tr><td>仿真里机器人不动、静置 1 s</td><td>环移动 0.02 mm</td><td>环移动 0.18 mm</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note prose">每档的开局布局来自一次 5 s 的 CPU 落稳，存为资源文件 <code>variations/horseshoe_ring/below_easy_{very_easy,easier}_settled_poses.json</code>。</p>
+</section>
+
+<section id="slotted">
+  <div class="head">
+    <div class="eyebrow">slotted_post_ring · ALOHA 双臂 · FEM 绳</div>
+    <h2>长孔立柱：绳在环的上面还是下面</h2>
+  </div>
+  <div class="prose" style="display:grid;gap:10px">
+    <p><b>怎么设置。</b>部件尺寸沿用 easy，环开局套在立柱根部，只改绳的走向。环只会被从环上方跨过的那段绳困住，因为端盘（直径 110 mm）穿不过环（内径 108 mm）。绳全部在环下面，环直接提起越过柱顶（very_easy）；只有另一侧带珠 2 的绳圈搭在环上，先把绳圈穿下去再提环（easier）。</p>
+  </div>
+  <figure>
+    <div class="diagram">
+      <svg viewBox="0 0 900 270" role="img" aria-label="侧视示意图：现有三档的绳从环上方跨过，环被困住；very_easy 的绳从环下方穿过，环可以直接提起；easier 近侧的绳在环下方，另一侧带着珠 2 的绳圈搭在环上方，要先把绳圈穿下去。">
+        <g>
+          <text x="10" y="22" class="t-title">easy / medium / hard</text>
+          <line x1="0" y1="210" x2="290" y2="210" class="f-axis"/>
+          <rect x="70" y="198" width="150" height="12" class="f-wall"/>
+          <path d="M83 190A62 8 0 0 1 207 190" class="f-ring"/>
+          <rect x="135" y="40" width="20" height="158" class="f-wall"/>
+          <rect x="135" y="95" width="20" height="30" class="f-slot"/>
+          <path d="M207 190A62 8 0 0 1 83 190" class="f-ring"/>
+          <path d="M135 110C110 115 88 150 80 184C76 198 62 202 46 205" class="f-cord"/>
+          <path d="M155 110C180 115 202 150 210 184C214 198 228 202 244 205" class="f-cord"/>
+          <circle cx="66" cy="200" r="7" class="f-bead"/>
+          <circle cx="224" cy="200" r="7" class="f-bead"/>
+          <rect x="14" y="203" width="34" height="7" class="f-disc"/>
+          <rect x="242" y="203" width="34" height="7" class="f-disc"/>
+          <text x="145" y="240" class="t-block" text-anchor="middle">绳从环上方跨过：被困住</text>
+          <text x="145" y="258" class="t-s" text-anchor="middle">要走完整的 5 步定式</text>
+        </g>
+        <g transform="translate(305 0)">
+          <text x="10" y="22" class="t-title">very_easy</text>
+          <line x1="0" y1="210" x2="290" y2="210" class="f-axis"/>
+          <rect x="70" y="198" width="150" height="12" class="f-wall"/>
+          <path d="M83 190A62 8 0 0 1 207 190" class="f-ring"/>
+          <rect x="135" y="40" width="20" height="158" class="f-wall"/>
+          <rect x="135" y="95" width="20" height="30" class="f-slot"/>
+          <path d="M135 110C118 125 108 165 106 196L72 198C62 200 54 203 46 205" class="f-cord"/>
+          <path d="M155 110C172 125 182 165 184 196L218 198C228 200 236 203 244 205" class="f-cord"/>
+          <path d="M207 190A62 8 0 0 1 83 190" class="f-ring"/>
+          <circle cx="62" cy="201" r="7" class="f-bead"/>
+          <circle cx="228" cy="201" r="7" class="f-bead"/>
+          <rect x="14" y="203" width="34" height="7" class="f-disc"/>
+          <rect x="242" y="203" width="34" height="7" class="f-disc"/>
+          <path d="M228 150V70" class="f-path"/>
+          <path d="M222 80L228 68L234 80Z" class="f-path-fill"/>
+          <text x="145" y="240" class="t-path" text-anchor="middle">绳从环下方穿过：直接提起</text>
+          <text x="145" y="258" class="t-s" text-anchor="middle">环沿立柱上提，越过柱顶</text>
+        </g>
+        <g transform="translate(610 0)">
+          <text x="10" y="22" class="t-title">easier</text>
+          <line x1="0" y1="210" x2="290" y2="210" class="f-axis"/>
+          <rect x="70" y="198" width="150" height="12" class="f-wall"/>
+          <path d="M83 190A62 8 0 0 1 207 190" class="f-ring"/>
+          <rect x="135" y="40" width="20" height="158" class="f-wall"/>
+          <rect x="135" y="95" width="20" height="30" class="f-slot"/>
+          <path d="M135 104C118 118 108 160 106 196L60 199C46 201 36 203 30 205" class="f-cord"/>
+          <path d="M135 118C122 132 114 168 112 197L100 200C90 202 84 203 78 205" class="f-cord"/>
+          <path d="M207 190A62 8 0 0 1 83 190" class="f-ring"/>
+          <path d="M155 104C185 108 205 150 213 182C218 196 232 198 248 198" class="f-cord"/>
+          <path d="M155 118C178 122 197 158 205 186C210 202 232 206 248 204" class="f-cord"/>
+          <circle cx="255" cy="201" r="7" class="f-bead"/>
+          <rect x="4" y="203" width="30" height="7" class="f-disc"/>
+          <rect x="62" y="203" width="30" height="7" class="f-disc"/>
+          <text x="262" y="186" class="t-s" text-anchor="middle">珠 2</text>
+          <text x="145" y="240" class="t-acc" text-anchor="middle">另一侧的绳圈搭在环上</text>
+          <text x="145" y="258" class="t-s" text-anchor="middle">先把绳圈和珠 2 穿下去，再提起</text>
+        </g>
+      </svg>
+    </div>
+    <figcaption>侧视示意图，只表示绳在环的上面还是下面。立柱中间的虚线框是长孔，橙色是套在立柱根部的环。easier 的绳像标准解法第一步之后那样两次穿过长孔，两个端盘都在近侧。</figcaption>
+  </figure>
+  <div class="tiers">
+    <figure class="card"><img src="figures/slotted_very_easy_start.jpg" alt="very_easy 开局" loading="lazy" width="848" height="480"><div class="label">very_easy <i>绳从环下方穿出</i></div></figure>
+    <figure class="card"><img src="figures/slotted_easier_start_near.jpg" alt="easier 开局，近侧" loading="lazy" width="720" height="540"><div class="label">easier <i>近侧：两股绳在环下方</i></div></figure>
+    <figure class="card"><img src="figures/slotted_easier_start.jpg" alt="easier 开局，另一侧" loading="lazy" width="720" height="540"><div class="label">easier <i>另一侧：带珠 2 的绳圈搭在环上</i></div></figure>
+  </div>
+  <p class="note prose">生成器网格的开局，在 CPU 上渲染。仿真相机渲染排在共享 GPU 上，尚未完成。</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>检查</th><th>very_easy</th><th>easier</th></tr></thead>
+      <tbody>
+        <tr><td>绳经过环的位置</td><td>两侧都在环下方</td><td>近侧在下方；另一侧两处在上方，都属于两次穿孔之间的绳圈</td></tr>
+        <tr><td>直接提环（绳冻结）</td><td>提起 289 mm 越过柱顶，有证明路径</td><td>会碰到绳圈</td></tr>
+        <tr><td>珠 2 能否穿过环与立柱之间</td><td>—</td><td>最大空隙 66 mm，珠 2 直径 39 mm</td></tr>
+        <tr><td>仿真落稳（GPU，FEM 绳）</td><td colspan="2">very_easy：落稳 2 s 后，环所在高度范围内没有绳顶点在环上方（下方 1414 个），IPC 有效；环移动 15.9 mm、倾斜 4°（从悬在绳上落到一侧贴底座）。easier：尚未完成，在共享 GPU 上一次显存溢出、一次进程段错误，原因未确定。</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note prose">绳比 easy 长：very_easy 0.92 m，easier 1.24 m（easy 0.79 m）；环抬高到压在绳上。easier 的“把绳圈穿下去”是软绳操作，没有路径证明，只检查了尺寸关系。另一个 session 用 3D 查看器的 MuJoCo 近似猛拉环 35 cm：very_easy 的环直接越过柱顶；easy 和 easier 的环会拖动端盘。这只作为直观参考，不是仿真证据。</p>
+</section>
+
+<section id="checks">
+  <div class="head">
+    <div class="eyebrow">Commands</div>
+    <h2>检查命令</h2>
+  </div>
+<pre><span class="cm"># 在仓库根目录、装好 TopoGym 的环境里运行</span>
+python ci_checks/test-hedgehog-below-easy.py      <span class="cm"># 7 项，约 40 s</span>
+python ci_checks/test-horseshoe-below-easy.py     <span class="cm"># 8 项，约 2 s</span>
+python ci_checks/test-slotted-below-easy.py       <span class="cm"># 8 项，约 5 s</span>
+
+<span class="cm"># 单档报告写到 --output/below_easy_check.json；--settle-seconds 再做一次物理落稳</span>
+python -m topogym.planning.hedgehog_in_cage.below_easy_witness  --variant easier --output runs/below_easy/hedgehog_easier --settle-seconds 3
+python -m topogym.planning.horseshoe_ring.below_easy_witness    --variant easier --output runs/below_easy/horseshoe_easier --settle-seconds 3
+python -m topogym.planning.slotted_post_ring.below_easy_witness --variant easier --output runs/below_easy/slotted_easier
+
+<span class="cm"># 3D 查看器：浏览器里用鼠标拖动零件（MuJoCo 近似，见 design_viewer/README.md）</span>
+python -m design_viewer.view --scene slotted_post_ring_easier --port 18080</pre>
+  <p class="note prose">刺球和马蹄环的落稳在 CPU 上运行。长孔立柱的落稳需要 GPU 和 IPC 后端，要在 TopoGym 镜像里运行。</p>
+</section>
+
+<section id="status">
+  <div class="head">
+    <div class="eyebrow">Status</div>
+    <h2>现状与待办</h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>项目</th><th>刺球</th><th>马蹄环</th><th>长孔立柱</th></tr></thead>
+      <tbody>
+        <tr><td>场景、登记、测试</td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td></tr>
+        <tr><td>物体层面的设计检查</td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td></tr>
+        <tr><td>仿真落稳</td><td><span class="pill done">完成</span></td><td><span class="pill done">完成</span></td><td><span class="pill done">very_easy 完成</span> <span class="pill doing">easier 未完成</span></td></tr>
+        <tr><td>机器人从 home 出发的完整执行</td><td><span class="pill todo">未做</span></td><td><span class="pill todo">未做</span></td><td><span class="pill todo">未做</span></td></tr>
+        <tr><td>Harbor 任务包</td><td colspan="3"><span class="pill todo">未做</span> 用现有的 <code>scripts/topogym_mk_task.py &lt;任务&gt; --variation very_easy --scene-seed 0</code> 生成，需要 GPU 和包含新代码的镜像</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note prose">文件：入口说明 <code>docs/tasks_simplifications/README.md</code>；任务来源 <code>docs/tasks_simplifications/two_levels_below_easy_plan_20261001_zh.md</code>；各任务设计记录见 <code>docs/develop/tasks/&lt;任务&gt;_zh.md</code> 的 “below-easy 设定” 一节；3D 查看器 <code>design_viewer/README.md</code>。</p>
+  <div class="tiers">
+    <figure class="card"><img src="figures/hedgehog_in_cage_easy.jpg" alt="刺球 easy" loading="lazy" width="720" height="540"><div class="label">刺球 easy <i>对照：现有档</i></div></figure>
+    <figure class="card"><img src="figures/horseshoe_ring_easy.jpg" alt="马蹄环 easy" loading="lazy" width="720" height="540"><div class="label">马蹄环 easy <i>对照：现有档</i></div></figure>
+    <figure class="card"><img src="figures/slotted_post_ring_easy.jpg" alt="长孔立柱 easy" loading="lazy" width="720" height="540"><div class="label">长孔立柱 easy <i>对照：现有档</i></div></figure>
+  </div>
+</section>
+
+<footer>
+  <div>本页由生成器网格的 CPU 渲染、仿真相机渲染和检查报告整理而成。检查报告在本地 <code>runs/below_easy/</code>（git 忽略），可用上面的命令重新生成。</div>
+</footer>
+
+</div>

@@ -364,3 +364,28 @@ easy 的正式策略 [`gravity_release_table_pickup_stages`](../../../topogym/pl
 PYTHONPATH=. .venv-gs121-nyx/bin/python -m topogym.tasks.horseshoe_ring.variant_generator \
   --seed 42 --family F2 --output runs/variant_checks/horseshoe_seed42.json
 ```
+
+## 2026-10-02 below-easy 设定：very_easy / easier
+
+> 2026-10-05 合并注：下表的 easy 尺寸和零通过相位描述的是开发时的旧版本。当前 easy 保留 `ring_clearance_candidate_v3` 扩环几何，截面检查为 53/90 相位通过（38°–142°，间隔 2°）。新增两档的设计检查通过，但与当前 easy 的相对难度尚未重新验证；截面通过不等于完整机器人执行成功。
+
+依据 [两档计划](../../tasks_simplifications/two_levels_below_easy_plan_20261001_zh.md)。说明页与图片见 [below_easy_variants_zh.html](../../tasks_simplifications/below_easy_variants_zh.html)。
+
+任务定义不变：部件沿用 easy（`waist_mild` 的马蹄与链），环仍同时套着两条链，只改环孔。一只手提起一只马蹄，链竖直，环沿链滑过下面那只马蹄即脱出。沿链方向看，马蹄是 137.8 × 24.8 mm 的长条（含端部小环），环孔要能把它套进去。难度旋钮是环孔的长短轴 `ring(长轴 mm, 短轴 mm)`，线径不变。
+
+| 入口 | 别名 | 环孔 | 能套过马蹄的环相位（每 2° 一个，共 90 个） | 物体层面检查 |
+| --- | --- | --- | --- | --- |
+| `horseshoe_ring_easy` | `easy` | 134.6 × 127.9 mm | 0 | 需要折合两只马蹄 |
+| `horseshoe_ring_very_easy` | `very_easy` | 144 mm 圆 | 90 | 6 个抽样相位沿链直拉均有认证路径（余量 1 mm） |
+| `horseshoe_ring_easier` | `easier` | 146 × 120 mm 椭圆 | 27（64°–116°） | 最佳相位有认证路径；0° 相位直拉碰撞，要先绕链转环 |
+
+开局布局：把模板装配体放在桌面上方 1 mm，用 Genesis（CPU、2.5 ms、4 子步）落稳 5 s，存为 `variations/horseshoe_ring/below_easy_{very_easy,easier}_settled_poses.json`。落稳后环平躺：very_easy 在左侧马蹄上方，easier 在右侧马蹄上方。开局检查两项都通过：沿马蹄带、端部小环和链环钢丝追踪每条链，穿过环面的次数为奇数（两条链都被环套住）；其他部件固定时，环沿 73 个方向单独平移都取不下来。从存储的布局再落稳 3 s，环移动 0.06 mm（very_easy）和 0.33 mm（easier），仍套着两条链。现有三档的落稳布局用同一检查也判为套住。在 TopoGym 镜像里用 GPU 建场景、机器人不动 1 s，环移动 0.02 mm（very_easy）和 0.18 mm（easier），任务未结束。
+
+代码：[below_easy.py](../../../topogym/tasks/horseshoe_ring/below_easy.py)（共享构造，旋钮 `ring`）、[horseshoe_ring_very_easy.py](../../../topogym/tasks/horseshoe_ring/horseshoe_ring_very_easy.py)、[horseshoe_ring_easier.py](../../../topogym/tasks/horseshoe_ring/horseshoe_ring_easier.py)；`common.py` 新增 `template()` 与 `rest_poses()` 两个钩子；检查：[below_easy_witness.py](../../../topogym/planning/horseshoe_ring/below_easy_witness.py)、[test-horseshoe-below-easy.py](../../../ci_checks/test-horseshoe-below-easy.py)。登记在 `variation_records.py`，`pool='below_easy'`，seeded 仍只抽 easy/medium/hard。
+
+```bash
+python -m topogym.planning.horseshoe_ring.below_easy_witness --variant easier --output runs/below_easy/horseshoe_easier --settle-seconds 3
+python ci_checks/test-horseshoe-below-easy.py
+```
+
+边界：截面与直拉检查在装配姿态（两只马蹄共面、链拉直）下进行，不含机器人、IK 与动力学；机器人如何从平躺开局把马蹄提起、链如何下垂未验证。机器人完整执行与 Harbor 任务包尚未做。

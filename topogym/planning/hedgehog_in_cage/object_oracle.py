@@ -22,7 +22,10 @@ def frozen_problem(output, *, seed=0, variation="medium"):
     variation = variation.removeprefix("hedgehog_in_cage_")
     task, spec, scene, meshes, report = freeze_scene(
         "hedgehog_in_cage", variation, seed, Path(output)/"assets")
-    revisions = {"easy": "simulator_v1", "medium": "waisted4_dark_wood_v1", "hard": "fixed_v3_s5_post"}
+    revisions = {
+        "easy": "simulator_v1", "medium": "waisted4_dark_wood_v1", "hard": "fixed_v3_s5_post",
+        "very_easy": "below_easy_v2", "easier": "below_easy_v2",
+    }
     if variation not in revisions or task.model_revision != revisions[variation]:
         raise ValueError("Unrecognized Hedgehog variant/model revision")
     poses = {name: body_pose(p) for name, p in report["initial_poses"].items()}
