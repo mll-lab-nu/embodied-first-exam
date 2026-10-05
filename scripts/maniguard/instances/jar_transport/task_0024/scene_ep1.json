@@ -1,0 +1,574 @@
+{
+    "versions": {
+        "omnigibson": {
+            "version": "3.7.2",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "bddl": {
+            "version": "3.7.0",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "behavior-1k-assets": {
+            "version": "3.7.2rc1"
+        },
+        "omnigibson-robot-assets": {
+            "version": null,
+            "git_hash": null
+        }
+    },
+    "metadata": {},
+    "state": {
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ori": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "registry": {
+            "system_registry": {},
+            "object_registry": {
+                "coffee_table_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            0.0,
+                            0.0,
+                            0.13459999859333038
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "target_hinged_jar_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.009834070689976215,
+                            -0.0040848045609891415,
+                            0.33641114830970764
+                        ],
+                        "ori": [
+                            0.028865953907370567,
+                            -0.056933946907520294,
+                            -0.002743474906310439,
+                            0.9979568719863892
+                        ],
+                        "lin_vel": [
+                            -0.028370650485157967,
+                            -0.028007695451378822,
+                            0.013860601000487804
+                        ],
+                        "ang_vel": [
+                            0.3406636118888855,
+                            -0.3606460392475128,
+                            -0.030867435038089752
+                        ]
+                    },
+                    "joint_pos": [
+                        2.7925260066986084
+                    ],
+                    "joint_vel": [
+                        0.0022398983128368855
+                    ],
+                    "non_kin": {}
+                },
+                "food_spirit_lamp_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.006336886901408434,
+                            0.007955229841172695,
+                            0.28372815251350403
+                        ],
+                        "ori": [
+                            0.06302747875452042,
+                            0.021651510149240494,
+                            -0.8353608846664429,
+                            0.5456472635269165
+                        ],
+                        "lin_vel": [
+                            -0.008093570359051228,
+                            -0.00933865550905466,
+                            0.018790043890476227
+                        ],
+                        "ang_vel": [
+                            0.3264898359775543,
+                            -0.3565923869609833,
+                            -0.03127891570329666
+                        ]
+                    },
+                    "non_kin": {
+                        "ToggledOn": {
+                            "value": false,
+                            "hand_in_marker_steps": 0
+                        }
+                    }
+                },
+                "goal_region__target_hinged_jar_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.06803953647613525,
+                            -0.3706014156341553,
+                            0.4477946162223816
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    "non_kin": {},
+                    "radius": 0.06729358434677124,
+                    "height": -1,
+                    "size": -1
+                },
+                "agent_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            0.2578958570957184,
+                            -3.259629011154175e-09,
+                            0.27339625358581543
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            1.000000238418579,
+                            0.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "joint_vel": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "controllers": {
+                        "arm_0": {
+                            "goal_is_valid": false,
+                            "goal": null
+                        },
+                        "gripper_0": {
+                            "goal_is_valid": false,
+                            "goal": null,
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": false
+                            }
+                        }
+                    },
+                    "non_kin": {},
+                    "ag_obj_constraint_params": {
+                        "0": {}
+                    }
+                }
+            }
+        }
+    },
+    "init_info": {
+        "class_module": "omnigibson.scenes.scene_base",
+        "class_name": "Scene",
+        "args": {
+            "scene_file": {
+                "versions": {
+                    "omnigibson": {
+                        "version": "3.7.2",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "bddl": {
+                        "version": "3.7.0",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "behavior-1k-assets": {
+                        "version": "3.7.2rc1"
+                    },
+                    "omnigibson-robot-assets": {
+                        "version": null,
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    }
+                },
+                "metadata": {},
+                "state": {
+                    "pos": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "ori": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "registry": {
+                        "system_registry": {},
+                        "object_registry": {
+                            "coffee_table_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        0.0,
+                                        0.0,
+                                        0.13459999859333038
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "target_hinged_jar_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        -0.007429369725286961,
+                                        -0.0019028320675715804,
+                                        0.33522167801856995
+                                    ],
+                                    "ori": [
+                                        0.015639912337064743,
+                                        -0.04236473888158798,
+                                        -0.0022799638099968433,
+                                        0.9989771842956543
+                                    ],
+                                    "lin_vel": [
+                                        -0.06825325638055801,
+                                        -0.034883394837379456,
+                                        0.02411537989974022
+                                    ],
+                                    "ang_vel": [
+                                        0.44907146692276,
+                                        -0.8600510358810425,
+                                        0.02375466749072075
+                                    ]
+                                },
+                                "joint_pos": [
+                                    2.7925260066986084
+                                ],
+                                "joint_vel": [
+                                    2.1080143142171437e-07
+                                ],
+                                "non_kin": {}
+                            },
+                            "food_spirit_lamp_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        -0.005482213571667671,
+                                        0.008742380887269974,
+                                        0.28215935826301575
+                                    ],
+                                    "ori": [
+                                        0.04363599792122841,
+                                        0.018627025187015533,
+                                        -0.8363134860992432,
+                                        0.5461947917938232
+                                    ],
+                                    "lin_vel": [
+                                        -0.021902605891227722,
+                                        -0.01045747846364975,
+                                        0.029200479388237
+                                    ],
+                                    "ang_vel": [
+                                        0.44086340069770813,
+                                        -0.8565239906311035,
+                                        0.021077198907732964
+                                    ]
+                                },
+                                "non_kin": {
+                                    "ToggledOn": {
+                                        "value": false,
+                                        "hand_in_marker_steps": 0
+                                    }
+                                }
+                            },
+                            "goal_region__target_hinged_jar_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        -0.06803953647613525,
+                                        -0.3706014156341553,
+                                        0.4477946162223816
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                },
+                                "non_kin": {},
+                                "radius": 0.06729358434677124,
+                                "height": -1,
+                                "size": -1
+                            }
+                        }
+                    }
+                },
+                "init_info": {
+                    "class_module": "omnigibson.scenes.scene_base",
+                    "class_name": "Scene",
+                    "args": {
+                        "scene_file": null
+                    }
+                },
+                "objects_info": {
+                    "init_info": {
+                        "coffee_table_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "coffee_table_ep1_1",
+                                "category": "coffee_table",
+                                "model": "rlsebe",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "2dc62df0c25abe292f0ab6183cc80009"
+                            }
+                        },
+                        "target_hinged_jar_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "target_hinged_jar_ep1_1",
+                                "category": "hinged_jar",
+                                "model": "jnjtrl",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "abilities": {},
+                                "expected_file_hash": "40e599e8c69c19722231ea2ace173490"
+                            }
+                        },
+                        "food_spirit_lamp_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "food_spirit_lamp_ep1_1",
+                                "category": "spirit_lamp",
+                                "model": "dnyzym",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "6ba1b433b71f3cf1c7c292fdafc2a07e"
+                            }
+                        },
+                        "goal_region__target_hinged_jar_ep1_1": {
+                            "class_module": "omnigibson.objects.primitive_object",
+                            "class_name": "PrimitiveObject",
+                            "args": {
+                                "name": "goal_region__target_hinged_jar_ep1_1",
+                                "primitive_type": "Sphere",
+                                "relative_prim_path": "/goal_region__target_hinged_jar_ep1_1",
+                                "category": "goal_region_marker",
+                                "fixed_base": true,
+                                "visual_only": true,
+                                "rgba": [
+                                    0.1,
+                                    0.8,
+                                    0.2,
+                                    1.0
+                                ],
+                                "radius": 0.06729358620941639
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "objects_info": {
+        "init_info": {
+            "coffee_table_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "coffee_table_ep1_1",
+                    "category": "coffee_table",
+                    "model": "rlsebe",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "2dc62df0c25abe292f0ab6183cc80009"
+                }
+            },
+            "target_hinged_jar_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "target_hinged_jar_ep1_1",
+                    "category": "hinged_jar",
+                    "model": "jnjtrl",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "abilities": {},
+                    "expected_file_hash": "40e599e8c69c19722231ea2ace173490"
+                }
+            },
+            "food_spirit_lamp_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "food_spirit_lamp_ep1_1",
+                    "category": "spirit_lamp",
+                    "model": "dnyzym",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "6ba1b433b71f3cf1c7c292fdafc2a07e"
+                }
+            },
+            "goal_region__target_hinged_jar_ep1_1": {
+                "class_module": "omnigibson.objects.primitive_object",
+                "class_name": "PrimitiveObject",
+                "args": {
+                    "name": "goal_region__target_hinged_jar_ep1_1",
+                    "primitive_type": "Sphere",
+                    "relative_prim_path": "/goal_region__target_hinged_jar_ep1_1",
+                    "category": "goal_region_marker",
+                    "fixed_base": true,
+                    "visual_only": true,
+                    "rgba": [
+                        0.1,
+                        0.8,
+                        0.2,
+                        1.0
+                    ],
+                    "radius": 0.06729358620941639
+                }
+            },
+            "agent_0": {
+                "class_module": "omnigibson.robots.franka",
+                "class_name": "FrankaPanda",
+                "args": {
+                    "name": "agent_0",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self_collisions": true,
+                    "fixed_base": true,
+                    "controller_config": {
+                        "arm_0": {
+                            "name": "JointController",
+                            "motor_type": "position",
+                            "command_input_limits": null,
+                            "command_output_limits": null,
+                            "use_delta_commands": false,
+                            "use_impedances": false
+                        },
+                        "gripper_0": {
+                            "name": "MultiFingerGripperController",
+                            "command_input_limits": null,
+                            "mode": "binary"
+                        }
+                    },
+                    "action_type": "continuous",
+                    "action_normalize": false,
+                    "reset_joint_pos": [
+                        4.4199461513017013e-07,
+                        -1.2999999523162842,
+                        1.1083433264502673e-06,
+                        -2.869999885559082,
+                        8.254447720901226e-07,
+                        2.0,
+                        0.7500017881393433,
+                        0.03999996557831764,
+                        0.03999995067715645
+                    ],
+                    "obs_modalities": [
+                        "rgb"
+                    ],
+                    "include_sensor_names": null,
+                    "exclude_sensor_names": null,
+                    "grasping_mode": "assisted",
+                    "expected_file_hash": "9ddd461281d1c875d2ae552f61751c3f"
+                }
+            }
+        }
+    }
+}
