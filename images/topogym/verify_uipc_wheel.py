@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build-only CMake fix, CUDA wheel audit and hash-checked runtime install."""
+"""Build-only CMake fix, the hash-checked determinism source patches, CUDA wheel audit and hash-checked runtime install."""
 import argparse
 import email
 import hashlib
@@ -23,6 +23,23 @@ def materials(source, config):
             raise ValueError(f'original material implementation changed: {name}')
 
 
+def patched(source, config):
+    for name, expected in config.get('patched_sha256', {}).items():
+        if not (source / name).is_file() or sha(source / name) != expected:
+            raise ValueError(f'patched IPC source differs: {name}')
+
+
+def apply_patches(source, config):
+    # TopoGym determinism series (uipc-build.json source_patches): fixed-order sums instead of float atomics in the
+    # linear solve, assembly, candidate lists and segmented reductions; physics and materials unchanged.
+    for item in config.get('source_patches', []):
+        patch = Path('/recipe') / item['path']
+        if sha(patch) != item['sha256']:
+            raise ValueError(f'IPC source patch hash mismatch: {item["path"]}')
+        subprocess.run(['git', '-C', str(source), 'apply', '--whitespace=nowarn', str(patch)], check=True)
+    patched(source, config)
+
+
 def prepare(source, config):
     materials(source, config)
     path = source / 'src/backends/cuda/CMakeLists.txt'
@@ -32,8 +49,10 @@ def prepare(source, config):
     text = path.read_text()
     if text.count(old) != 1:
         raise ValueError('expected exactly one CUDA target property')
-    # A list must remain one property value: no solver/material source patch.
+    # A list must remain one property value. Materials stay original; the only solver source changes are the hash-checked
+    # determinism patches (summation order).
     path.write_text(text.replace(old, '    CUDA_ARCHITECTURES "${UIPC_CUDA_ARCHITECTURES}"\n'))
+    apply_patches(source, config)
 
 
 def audit(folder, config, source):
@@ -42,8 +61,12 @@ def audit(folder, config, source):
     if head != config['source_commit']:
         raise ValueError('IPC source commit changed')
     changed = subprocess.check_output(['git', '-C', str(source), 'diff', '--name-only'], text=True).splitlines()
-    if changed != ['src/backends/cuda/CMakeLists.txt']:
+    tracked = set(subprocess.check_output(['git', '-C', str(source), 'ls-files'], text=True).splitlines())
+    patched_files = config.get('patched_sha256', {})
+    expected = sorted(['src/backends/cuda/CMakeLists.txt', *(f for f in patched_files if f in tracked)])
+    if sorted(changed) != expected:
         raise ValueError(f'unexpected upstream source changes: {changed}')
+    patched(source, config)
     wheels = list(folder.glob('*.whl'))
     if len(wheels) != 1:
         raise ValueError('expected one repaired CPython 3.11 wheel')
@@ -72,7 +95,8 @@ def audit(folder, config, source):
                       cuda_compiler=subprocess.check_output(['nvcc', '--version'], text=True),
                       submodules=subprocess.check_output(['git', '-C', str(source), 'submodule', 'status', '--recursive'], text=True),
                       cmake_after_sha256=sha(source/'src/backends/cuda/CMakeLists.txt'),
-                      source_changes=changed, materials_unchanged=True)
+                      source_changes=changed, source_added=sorted(f for f in patched_files if f not in tracked),
+                      materials_unchanged=True)
     (folder / 'uipc-build.json').write_text(json.dumps(record, indent=2) + '\n')
 
 

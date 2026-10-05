@@ -1,4 +1,5 @@
-# rcb-topogym: Genesis 1.2.1 / Nyx with cu128 torch and original pyuipc 0.0.25 materials.
+# rcb-topogym: Genesis 1.2.1 / Nyx with cu128 torch and original pyuipc 0.0.25 materials (libuipc 292c98c3 plus the
+# determinism patches in images/topogym/uipc-patches: summation order fixed, physics unchanged).
 # Infrastructure only, no benchmark code (docs/rcb/PROTOCOL.md §1): the task tooling (rcb_topogym.py) comes with each task,
 # and prune.py removes everything that could hold a reference solution. Tag = images/topogym/VERSION + CUDA profile; build: scripts/build_images.sh
 # topogym (from the repository root, which is the build context; .dockerignore keeps it small).
@@ -11,6 +12,8 @@ RUN yum --disablerepo='cuda*' install -y git curl zip unzip tar gzip
 COPY requirements/uipc-build.lock /recipe/uipc-build.lock
 RUN python -m pip install --require-hashes -r /recipe/uipc-build.lock
 COPY images/topogym/build_uipc.sh images/topogym/verify_uipc_wheel.py /recipe/
+# Determinism source patches for libuipc (applied and hash-checked by verify_uipc_wheel.py prepare; listed in the config).
+COPY images/topogym/uipc-patches/ /recipe/uipc-patches/
 ARG UIPC_CONFIG=uipc-build.json
 COPY images/topogym/${UIPC_CONFIG} /recipe/uipc-build.json
 RUN bash /recipe/build_uipc.sh prepare
