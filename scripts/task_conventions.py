@@ -9,9 +9,7 @@ pre-v1.0 task (old field names, protocol spelling, README layout); renaming dire
 
 What it does:
 - `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard`), no `tier`, `protocol = "eai-standard/2.1"`
-  for standard tasks, `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files, and
-  `[environment.healthcheck]` (docs/PROTOCOL.md §2.9: the agent's clock starts once the simulator is ready): the client's
-  readiness test in standard mode, the benchmark's warm-up (`WARMUP`) in privileged mode.
+  for standard tasks, `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - protocol spelling `rcb-limited/2.x` -> `eai-standard/2.x` and "limited mode" -> "standard mode" in the task's text and
   services; the client accepts both spellings.
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
@@ -57,73 +55,6 @@ HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / insta
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
              "task type / mode"}
 CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
-
-# Simulator start-up is not part of the agent's budget (docs/PROTOCOL.md §2.9). Harbor runs a task's
-# [environment.healthcheck] in the agent's container once the containers are up, before it sets up the agent; the agent
-# (and its clock, [agent].timeout_sec) starts only after the check passes. Standard mode: the client's own readiness test
-# (the service answers /spec only once the scene is built and the episode has begun, §4.1). Privileged mode, where the
-# agent starts the simulator in its own processes: a warm-up, one launch of the simulator with the frozen instance through
-# the task's own tooling, so the trial's one-time start-up (shader and kernel caches, helper services the tooling keeps,
-# the instance check) is paid before the clock starts.
-READY_COMMAND = "python3 -c 'from rcb_client import Robot; Robot(timeout=10)'"
-STANDARD_HEALTHCHECK = f"""[environment.healthcheck]
-# The agent's clock starts once the simulator is ready (docs/PROTOCOL.md §2.9): Harbor runs this in the agent's container
-# before it sets up the agent, until the sim service answers the client (Robot() connects once the scene is built and the
-# episode has begun). The service's start-up, a crash and restart while starting included, is outside [agent].timeout_sec.
-command = "{READY_COMMAND}"
-start_period_sec = 3600.0
-start_interval_sec = 5.0
-interval_sec = 5.0
-timeout_sec = 60.0
-retries = 3
-"""
-WARMUP_HEALTHCHECK = """[environment.healthcheck]
-# The agent's clock starts once the simulator is ready (docs/PROTOCOL.md §2.9). The agent starts the simulator in its own
-# processes, so before Harbor sets up the agent it runs this warm-up in the agent's container: one launch of the simulator
-# with the frozen instance through the task's own tooling, which pays the trial's one-time start-up (shader and kernel
-# caches, the instance check) outside [agent].timeout_sec. It writes no session log, trace or output; its log, with the
-# start and end times, is /logs/artifacts/rcb_warmup.log (a trial artifact).
-command = '''
-exec >> /logs/artifacts/rcb_warmup.log 2>&1
-date -u +"%FT%T.%3NZ warm-up start"
-RCB_SESSION_LOG= RCB_SESSION_LOG_KEEP= RCB_AGENT_TRACE_DIR= timeout -k 30 3300 python - <<'PY' || exit 1
-@BODY@
-PY
-date -u +"%FT%T.%3NZ warm-up done"
-'''
-timeout_sec = 3600.0
-retries = 2
-"""
-_JSON_SESSION = ['import json', 'from @MOD@ import Session', 'I = json.load(open("/app/instance.json"))',
-                 's = Session(I["task"], instance="/app/instance.json")', 's.close()']
-WARMUP = [  # (directory prefix, the warm-up's Python body: the tooling's Session on the frozen instance, as the instruction opens it)
-    ("behavior-", [ln.replace("@MOD@", "rcb_behavior") for ln in _JSON_SESSION]),
-    ("robolab-", [ln.replace("@MOD@", "rcb_robolab") for ln in _JSON_SESSION]),
-    ("robowits-", [ln.replace("@MOD@", "rcb_robowits") for ln in _JSON_SESSION]),
-    ("maniguard-", ['import json', 'from rcb_maniguard import Session', 'I = json.load(open("/app/instance/instance.json"))',
-                    's = Session(I["task"], instance="/app/instance")', 's.close()']),
-    ("robopaint-", ['import os, time, urllib.request as u', 'from rcb_brush import SCORER_URLS, Session',
-                    's = Session(instance="/app/instance.json")', 's.close()',
-                    '# the scoring service (compose `scorer`) builds its own copy of the scene: wait until it answers',
-                    'o = u.build_opener(u.ProxyHandler({}))',
-                    'urls = [x for x in [os.environ.get("RCB_SCORER_URL")] + list(SCORER_URLS) if x]',
-                    'def up(x):', '    try:', '        return o.open(x + "/health", timeout=5).status == 200',
-                    '    except OSError:', '        return False', 't = time.time()',
-                    'while not any(up(x) for x in urls):', '    if time.time() - t > 900:',
-                    '        raise SystemExit("the scoring service did not come up")', '    time.sleep(2)']),
-    ("robotwin_2_0_", [ln.replace("@MOD@", "rcb_traj") for ln in _JSON_SESSION]),
-    ("robosuite-", ['import numpy as np', 'from rcb_traj import Session', 'I = np.load("/app/instance.npz")',
-                    '# no close(): the IK server this Session started keeps running, and the agent\'s Session uses it',
-                    's = Session(str(I["task"]), instance="/app/instance.npz")']),
-    ("dextoolbench_", ['from @TOOL@ import Session', 's = Session("/app/instance.json")']),
-    ("mujoco_playground_", ['from @TOOL@ import Session', 's = Session("/app/instance.json")']),
-    ("kinder-", ['from @TOOL@ import Session', 's = Session("/app/instance.json")']),
-    ("humanoidbench-", ['from @TOOL@ import Session', 's = Session(instance="/app/instance.npz")', 's.close()']),
-    ("metaworldplus-", ['from @TOOL@ import Session', 's = Session("/app/instance.npz")', 's.close()']),
-    ("vlabench-", ['from @TOOL@ import Session', 's = Session("/app/instance.json")', 's.close()']),
-    ("robocasa-", ['from @TOOL@ import Session', 's = Session("/app/instance.npz")', 's.close()']),   # RoboCasa, RoboCasa-GR1
-    ("robocasa365-", ['from @TOOL@ import Session', 's = Session("/app/instance.npz")', 's.close()']),
-]
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -211,43 +142,6 @@ def normalize_toml(task: Path) -> None:
     s = replace_words(s)
     s = s.replace('"limited-mode"', '"standard-mode"').replace('"unlimited"', '"privileged"')
     write_if_changed(p, s)
-
-
-def healthcheck_block(task: Path) -> str | None:
-    """The [environment.healthcheck] table of a task (docs/PROTOCOL.md §2.9), or None for a benchmark not listed yet."""
-    body = next((b for prefix, b in WARMUP if task.name.startswith(prefix)), None)
-    if body is None:
-        return None
-    if mode_of(task) == "standard":
-        return STANDARD_HEALTHCHECK
-    body = "\n".join(body)
-    if "@TOOL@" in body:   # the task's tooling module (environment/rcb_*.py or *_tool.py; MuJoCo Playground has two)
-        tools = sorted({f.stem for f in (task / "environment").glob("*.py") if f.stem.startswith("rcb_") or f.stem.endswith("_tool")})
-        if len(tools) != 1:
-            raise RuntimeError(f"{task}: expected one tooling module in environment/, found {tools}")
-        body = body.replace("@TOOL@", tools[0])
-    return WARMUP_HEALTHCHECK.replace("@BODY@", body)
-
-
-def normalize_healthcheck(task: Path) -> None:
-    """Write the task's [environment.healthcheck] right after the [environment] table, replacing an older one."""
-    block = healthcheck_block(task)
-    if block is None:
-        return
-    p = task / "task.toml"
-    s = p.read_text()
-    s = re.sub(r"(?ms)^\[environment\.healthcheck\]\n.*?(?=^\[|\Z)", "", s)
-    lines = s.splitlines(keepends=True)
-    try:
-        i = next(k for k, ln in enumerate(lines) if ln.rstrip("\n") == "[environment]")
-    except StopIteration:
-        raise RuntimeError(f"{p}: no [environment] table") from None
-    j = next((k for k in range(i + 1, len(lines)) if lines[k].startswith("[")), len(lines))
-    last = max((k for k in range(i + 1, j) if lines[k].strip() and not lines[k].lstrip().startswith("#")), default=i)
-    head, tail = "".join(lines[: last + 1]).rstrip("\n") + "\n", "".join(lines[last + 1:]).lstrip("\n")
-    out = head + "\n" + block + ("\n" + tail if tail else "")
-    tomllib.loads(out)
-    write_if_changed(p, out)
 
 
 def _shared_sources() -> set[bytes]:
@@ -455,7 +349,6 @@ def normalize(task: Path) -> None:
     if (task / "results").exists():
         shutil.rmtree(task / "results")
     normalize_toml(task)
-    normalize_healthcheck(task)
     normalize_text_files(task)
     normalize_test_sh(task)
     write_if_changed(task / "README.md", render_readme(task))

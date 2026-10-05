@@ -50,14 +50,3 @@ timeout_sec = 3600.0
 build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 16384
-
-[environment.healthcheck]
-# The agent's clock starts once the simulator is ready (docs/PROTOCOL.md §2.9): Harbor runs this in the agent's container
-# before it sets up the agent, until the sim service answers the client (Robot() connects once the scene is built and the
-# episode has begun). The service's start-up, a crash and restart while starting included, is outside [agent].timeout_sec.
-command = "python3 -c 'from rcb_client import Robot; Robot(timeout=10)'"
-start_period_sec = 3600.0
-start_interval_sec = 5.0
-interval_sec = 5.0
-timeout_sec = 60.0
-retries = 3
