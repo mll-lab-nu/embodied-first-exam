@@ -1,0 +1,33 @@
+# SAPIEN needs a Vulkan device (the NVIDIA GPU) to build the scene and render the cameras; physics and the brush model run on
+# the CPU. Harbor's local docker sandbox rejects [environment].gpus, but merging this onto the services passes the device through.
+# `scorer` = the scoring service behind Session.score() (environment/scorer/: the graders' copy of the instance); the agent reaches
+# it only over HTTP (scorer:8001, or localhost:8001 when Harbor's egress control puts the services in one network namespace).
+services:
+  main:
+    depends_on: [scorer]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+  scorer:
+    image: ghcr.io/mll-lab-nu/eai-robopaint:0.2.0
+    volumes:
+      - ./scorer:/srv:ro
+    working_dir: /tmp
+    command: sh /srv/run.sh
+    environment:
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TOOL_MODULE: rcb_brush_strict   # the scores with the process rules (rcb_brush_strict.py)
+      RCB_SCORER_PORT: "8001"
+      PYTHONPATH: /srv
+      RCB_SESSION_LOG: ""
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
