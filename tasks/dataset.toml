@@ -3957,3 +3957,99 @@ digest = "sha256:45d403607a02e499d950b725d5a384af6a1a998db173ad4edc4388bf6634382
 name = "robot-coding-bench/behavior-unloading-the-car-i00-standard"
 digest = "sha256:1ebeb6d08bfaab657a537d0e178f05b1d7159d75a128dafab823f9a7d2eaf27d"
 
+[[tasks]]
+name = "robot-coding-bench/behavior-assembling-gift-baskets-i00-privileged"
+digest = "sha256:c7addc40d53245eab4b9e940988b6d566e76a303713f570fae802d30f81c1105"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-assembling-gift-baskets-i00-standard"
+digest = "sha256:a961dfb43e33f5ac62e9e81dbb695ee45000d67399c7e02f9b7e6637fbaa0da3"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-boxing-books-up-for-storage-i00-privileged"
+digest = "sha256:e1d1cc76a646a03b1148723433477815139de399f6e15acc361bbbfc3f5d4857"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-boxing-books-up-for-storage-i00-standard"
+digest = "sha256:fcc570bfaa87ac5da74cd82c984ab371d8df9ac1062df429e1218832bae2a698"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-canning-food-i00-privileged"
+digest = "sha256:f56f498405a8f2412bd7e20f1582eb96e8d4b4608b39eb8161ad81a8fd8c3de5"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-canning-food-i00-standard"
+digest = "sha256:56e87b2ce3b652f0c4e1cab6f2cdbb4956b066041ae70519f6be1e61d701cadd"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-clean-up-your-desk-i00-privileged"
+digest = "sha256:9b41e39d3b8c5237e046d0137661df19f8ed513f3f4f31a0b1d30a33563a4681"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-clean-up-your-desk-i00-standard"
+digest = "sha256:3eaaac06540dc48decdeadf388feac08ebc8df93caf6e63a35f23583bf6b3fc6"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-collecting-childrens-toys-i00-privileged"
+digest = "sha256:966a6366690ff64090212c8d8f30810ac61c0caa47b4ee179ea66e2f0f993ed2"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-collecting-childrens-toys-i00-standard"
+digest = "sha256:792b1f8330e928bd1bc4d7405fe2688bc0b7bfbce3f0601b9a4fea2e65e6c8a4"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-cook-brussels-sprouts-i00-privileged"
+digest = "sha256:0f4b3b58d0ad224d5954ef83a8dd77d9d60ecba9796573c6301525e514c53bfe"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-cook-brussels-sprouts-i00-standard"
+digest = "sha256:46bb3009f73bd07d0360855d10054176545998763098085048587f9072dbe230"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-getting-organized-for-work-i00-privileged"
+digest = "sha256:88c3e4b02c1971ecc1854b0df692215bddd259261bb6cfc41a1b36a2922a01cf"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-getting-organized-for-work-i00-standard"
+digest = "sha256:76f20ee590b048eed4e055397643a6521c52ca7f3374418fdf4d1e3cb63bb267"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-loading-the-car-i00-privileged"
+digest = "sha256:8658d83e85c753778e0ce051804fd4d5068e07639a7bc3a2a859f669b3193c2d"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-loading-the-car-i00-standard"
+digest = "sha256:ee6a339a49616ae67efa268eb17f9277f2cf754c5b974368defa30aa59ec29ee"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-make-pizza-i00-privileged"
+digest = "sha256:a1a8aa60882f59c22d5ae3fc76fff810c930e336a5d5187e7fcc5e2c3e361e2d"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-make-pizza-i00-standard"
+digest = "sha256:cdf1d2debfacd767ef27031465b7466df8fcaba16389d6e32d26e4c3ac632ba0"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-picking-up-toys-i00-privileged"
+digest = "sha256:35a8f52602702344be59c46b0c664045c5f24eb56cb6e006862f15eaffbea5b1"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-picking-up-toys-i00-standard"
+digest = "sha256:8dbcd92fd173bceac68f6579ad81815fdb9f36ec26c72afe433d0717b103161f"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-sorting-household-items-i00-privileged"
+digest = "sha256:290b81ebcd54c5ae90f67fe801c86b57b119de1d0d136906e179d356ca4eddb2"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-sorting-household-items-i00-standard"
+digest = "sha256:ea5d4ff482ca37b06985bb2486489e8f8a2cfc19313badb301a188aa4f081c73"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-storing-food-i00-privileged"
+digest = "sha256:e80f666a219681e24ee0a85d652c4b630c7fb4fc4188c9d0731c6d9113a9da28"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-storing-food-i00-standard"
+digest = "sha256:79724bb9f3c19a427f09cea965bdb3e6dcec41a81e290f032a1dafd01cafa6b2"
+

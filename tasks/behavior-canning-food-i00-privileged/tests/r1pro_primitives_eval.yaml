@@ -1,0 +1,122 @@
+# Robot config for the rcb BEHAVIOR tasks = OmniGibson 3.9.2 eval/r1pro.yaml (2026 challenge default) with the controller block
+# swapped for the primitives-compatible one below. Loaded by rcb_behavior.Session; the verifier uses its own copy under tests/.
+model: r1pro
+name: robot_r1
+eval:
+  camera_sensor_names:
+    left_wrist: robot_r1:left_realsense_link:Camera:0
+    right_wrist: robot_r1:right_realsense_link:Camera:0
+    head: robot_r1:zed_link:Camera:0
+action_normalize: false
+self_collisions: true
+obs_modalities:
+  - proprio
+  - rgb
+proprio_obs:
+  - base_qvel
+  - arm_left_qpos
+  - arm_left_qvel
+  - eef_left_pos
+  - eef_left_quat
+  - gripper_left_qpos
+  - gripper_left_qvel
+  - arm_right_qpos
+  - arm_right_qvel
+  - eef_right_pos
+  - eef_right_quat
+  - gripper_right_qpos
+  - gripper_right_qvel
+  - trunk_qpos
+  - trunk_qvel
+grasping_mode: assisted
+sensor_config:
+  VisionSensor:
+    sensor_kwargs:
+      image_height: 1080
+      image_width: 1080
+controller_config:
+  # Primitives-compatible controllers (configs/r1pro_primitives.yaml): robot.q_to_action() requires every controller to be a
+  # position-mode JointController with absolute commands, which the challenge's default (velocity base + MultiFingerGripper)
+  # is not. The 2026 challenge explicitly allows custom controller configs; action_dim becomes 25 (base 3, trunk 4, arms 7+7,
+  # grippers 2+2).
+  base:
+    name: HolonomicBaseJointController
+    motor_type: position
+    command_input_limits: null
+    use_impedances: false
+  trunk:
+    name: JointController
+    motor_type: position
+    command_input_limits: null
+    use_delta_commands: false
+    use_impedances: false
+  arm_left:
+    name: JointController
+    motor_type: position
+    command_input_limits: null
+    use_delta_commands: false
+    use_impedances: false
+  arm_right:
+    name: JointController
+    motor_type: position
+    command_input_limits: null
+    use_delta_commands: false
+    use_impedances: false
+  gripper_left:
+    name: JointController
+    motor_type: position
+    command_input_limits: null
+    use_delta_commands: false
+    use_impedances: false
+  gripper_right:
+    name: JointController
+    motor_type: position
+    command_input_limits: null
+    use_delta_commands: false
+    use_impedances: false
+  camera:
+    name: NullJointController
+reset_joint_pos:
+  # Joint order follows the R1Pro low-level joint vector:
+  #   6 virtual/mobile base joints,
+  #   4 torso/trunk joints,
+  #   7 left arm joints,
+  #   7 right arm joints,
+  #   2 left gripper finger joints,
+  #   2 right gripper finger joints.
+  # Base virtual joints.
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  # Torso/trunk joints. These come from JoyLo's default trunk pose:
+  # DEFAULT_TRUNK_TRANSLATE = 0.5, interpolated halfway between
+  # torso_upright [0.45, -0.4, 0.0, 0.0] and
+  # torso_downward [1.6, -2.5, -0.94, 0.0].
+  - 1.025
+  - -1.45
+  - -0.47
+  - 0.0
+  # Left arm joints.
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  # Right arm joints.
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  # Gripper finger joints start open.
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
