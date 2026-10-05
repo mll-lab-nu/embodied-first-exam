@@ -89,9 +89,15 @@ MEDIUM = dict(
 # left page turn lands short of the mirrored position (y -0.04, not -0.12):
 # carrying the flipped end further pulls it taut over the hinge and drove the
 # edge ratio at that pinch to ~1.48.
+# oraclefix 11 (lab, 2026-10-04): on lab's runs stage B leaves the far-left corner folded; its crest jitters under PBD
+# self-contact (E24: spikes up to 0.22 m/s in 5.6 % of 2.5 ms ticks 20 s after the last action, all on that crest), so
+# the settled window never completes and the coverage stays at 0.942. After stage B and a `fold_layout` settle, the
+# robot measures the sheet and lays out the largest folded corner with one hand (robot_oracle.fold_stage); the relay
+# before the measurement ends as soon as the sheet is quiet (cap fold_layout.settle_s), the final settle at success.
 HARD = dict(
     max_strain_ratio=1.5,
     settle_s=60.,
+    fold_layout=dict(settle_s=25., deviation_m=.03, corner_radius_m=.15, min_particles=25),
     stages=(
         dict(
             grasp_uv=dict(left=(-.29, -.20), right=(.28, .20)),
