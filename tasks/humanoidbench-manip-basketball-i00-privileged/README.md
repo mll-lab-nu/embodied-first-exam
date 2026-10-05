@@ -9,7 +9,7 @@
 | Family / instance | `basketball` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and published RL reaches 44% of the bar (paper 122, FastTD3 529, bar 1200); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 HumanoidBench basketball: produce one replayable trajectory that catches a thrown ball and puts it through the hoop with the Unitree H1, frozen scene instance 00.

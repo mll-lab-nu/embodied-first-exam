@@ -9,7 +9,7 @@
 | Family / instance | `cube_stack` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robosuite:0.1.1` |
 
 ## Task
 robosuite cube_stack: produce one replayable trajectory for frozen scene instance 00.

@@ -66,7 +66,8 @@ both modes (jobs `<family>-{u,l}-{oracle,nop}-final0928`):
 
 ## Image and host
 - `images/robopaint/` holds ManiSkill 3.0.1, SAPIEN 3.0.3, a patched libmypaint 1.6.1 and Spline-FRIDA.
-  - The image is `ghcr.io/embodied-agent-interface-v2-internal/eai-robopaint:<images/robopaint/VERSION>` (0.2.0), public.
+  - The image is `ghcr.io/mll-lab-nu/eai-robopaint:<images/robopaint/VERSION>` (0.2.0), public: a copy of
+    the image first published as `rcb-robopaint:0.2.0`.
   - It is built from the repository root: `docker build -f images/robopaint/Dockerfile .`.
 - Every simulator container needs an NVIDIA GPU: SAPIEN needs a Vulkan device to build the scene and to render. Physics
   and the brush models run on the CPU.

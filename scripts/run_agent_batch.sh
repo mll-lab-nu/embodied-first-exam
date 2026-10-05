@@ -2,10 +2,14 @@
 # Run one Harbor-native agent over tasks in both modes (<base>-privileged and <base>-standard), unattended; meant to be
 # started in the background (inside `sg docker -c` if docker needs the group):
 #   scripts/run_agent_batch.sh <batch-name> <base> [<base> ...]      # <base> = a task name without its -privileged / -standard
-# Official runs use Harbor's native agents only (PROTOCOL D11): no gateway, no adapter. Env (defaults):
+# Official runs use Harbor's native agents only (PROTOCOL D11): no adapter; the transparent usage gateway below only
+# records and is off by default. Env (defaults):
 #   AGENT        codex | claude-code (codex)        MODEL   the -m model (openai/gpt-6-luna)
 #   EFFORT       reasoning effort, --ak reasoning_effort=<EFFORT> (xhigh); `default` passes none
-#   AK           more agent options, e.g. "--ak web_search=disabled --ak reasoning_summary=detailed"
+#   AK           more agent options, e.g. "--ak reasoning_summary=detailed"
+#   WEB_SEARCH   disabled (default) = the harness offers the model no web search: Codex --ak web_search=disabled,
+#                Claude Code --ak disallowed_tools=WebSearch,WebFetch (PROTOCOL §5; the search runs at the model
+#                provider, past any egress allowlist); "allowed" = leave the harness default (not for official runs)
 #   AGENT_CONFIG a native config file, --ak config=<file>: Codex's config.toml (an Azure provider; retries with
 #                request_max_retries / stream_max_retries) or Claude Code's settings
 #   ENV_FILE     a .env file Harbor loads (--env-file); without it the credentials come from this environment
@@ -30,20 +34,35 @@
 #                for the results site there, <RESULTS>/<batch>/<task>/<RUN_ID>/ (PROTOCOL D3: no results in the repository);
 #                default <repo>/../rcb_results; "" = skip
 #   LOG_MIRROR / MEM_GUARD   1 (default) = start the agent-record mirror / the memory guard below if none runs; 0 = not
+#   GATEWAY      0 (default) = the agent calls its API directly, as Harbor runs it; 1 = route the agent's model API
+#                calls through scripts/usage_gateway/gateway.py, which forwards
+#                them unchanged (the agent keeps its own credentials) and records each trial's tokens per request in
+#                <trial>/gateway/ (usage.jsonl, totals.json)
+#   GATEWAY_RAW  1 (default, takes effect with GATEWAY=1) = the gateway also keeps every request and response body
+#                (<trial>/gateway/raw.jsonl.xz, deduplicated, see scripts/usage_gateway/rawlog.py; private: it holds the
+#                whole conversation); 0 = token usage only
+#   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
+#   GATEWAY_EXTRA_HOSTS  more model API host patterns the gateway forwards to, space-separated (e.g. "*.services.ai.azure.com")
+#   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (100000000 / 10000000, PROTOCOL
+#                §5): past it every further model request is refused and the trial counts as failed; 0 = no limit
 # Runner-side tools (not task code): while trials run, the container rcb-log-mirror copies every trial's agent/ directory
 # append-only into ${JOBS}_mirror/ (scripts/log_mirror.py; root-owned: neither the agent nor the host user can delete it),
 # and scripts/mem_guard.py keeps 2 GiB of host memory available. After each job: a key scan with redaction
 # (scripts/scan_secrets.py), the task results, the summary table $JOBS/<batch>.summary.md, and a lane stop on structured
-# model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log.
+# model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log; in a browser, every trial's
+# state (pending / running / done) with scripts/live_board.py --jobs $JOBS.
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 [ $# -ge 2 ] || { sed -n 2,40p "$0"; exit 2; }
 batch="$1"; shift; tasks=("$@")
 AGENT="${AGENT:-codex}"; MODEL="${MODEL:-openai/gpt-6-luna}"; EFFORT="${EFFORT:-xhigh}"; AK="${AK:-}"
+WEB_SEARCH="${WEB_SEARCH:-disabled}"
 AGENT_CONFIG="${AGENT_CONFIG:-}"; ENV_FILE="${ENV_FILE:-}"
 MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${N_S:-2}"; K="${K:-1}"; WAIT_FOR="${WAIT_FOR:-}"
 JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"; LABEL="${LABEL:-$AGENT + $MODEL ($EFFORT)}"
 LOG_MIRROR="${LOG_MIRROR:-1}"; MEM_GUARD="${MEM_GUARD:-1}"
+GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-1}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"
+TOKEN_BUDGET_IN="${TOKEN_BUDGET_IN:-100000000}"; TOKEN_BUDGET_OUT="${TOKEN_BUDGET_OUT:-10000000}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
 # (gpt-6-luna -> gpt6_luna), a leading claude- dropped (claude-fable-5-1 -> fable_5_1), every other
@@ -60,6 +79,13 @@ AGENT_ARGS=(-a "$AGENT" -m "$MODEL")
 [ -n "$AGENT_CONFIG" ] && AGENT_ARGS+=(--ak "config=$AGENT_CONFIG")
 # shellcheck disable=SC2206
 AGENT_ARGS+=($AK)
+# no harness web search unless asked for (PROTOCOL §5): it runs at the model provider, so no egress allowlist stops it
+case "$WEB_SEARCH" in
+  disabled) if [ "$AGENT" = codex ]; then AGENT_ARGS+=(--ak web_search=disabled)
+            else AGENT_ARGS+=(--ak disallowed_tools=WebSearch,WebFetch); fi ;;
+  allowed) ;;
+  *) echo "WEB_SEARCH must be disabled or allowed" >&2; exit 2 ;;
+esac
 SCAN=(); [ -n "$ENV_FILE" ] && SCAN+=(--env-file "$ENV_FILE")
 case "${CODEX_FORCE_AUTH_JSON:-}" in 1|true|TRUE|yes) SCAN+=(--codex-auth "${CODEX_AUTH_JSON_PATH:-$HOME/.codex/auth.json}") ;; esac
 # Append, so a harbor already on PATH wins (a shared account's ~/.local/bin may hold another user's older harbor);
@@ -69,7 +95,19 @@ mkdir -p "$JOBS"
 LOG="$JOBS/$batch.log"
 log() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
 if [ -n "$ENV_FILE" ] && [ ! -f "$ENV_FILE" ]; then log "no env file $ENV_FILE"; exit 2; fi
-log "runner $$: $AGENT $MODEL effort $EFFORT, run id $RUN_ID, modes $MODES"
+log "runner $$: $AGENT $MODEL effort $EFFORT, run id $RUN_ID, modes $MODES, web search $WEB_SEARCH"
+# the batch's plan, for scripts/live_board.py: every job this command runs, "pending" there until it starts
+mkdir -p "$JOBS/.plan"
+python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
+import json, os, pathlib, sys
+repo, out, batch, run_id, seq, modes, *tasks = sys.argv[1:]
+name = lambda m, t: f"{t}-standard" if m in ("standard", "limited") else f"{t}-privileged"
+jobs = [{"job": f"{batch}-{m}-{t}" if seq == "1" else f"{batch}-{m}", "task": name(m, t), "mode": m}
+        for t in tasks for m in modes.split() if (pathlib.Path(repo) / "tasks" / name(m, t)).is_dir()]
+tmp = pathlib.Path(f"{out}.{os.getpid()}")
+tmp.write_text(json.dumps({"batch": batch, "run_id": run_id, "jobs": jobs}, indent=1))
+tmp.replace(out)
+PY
 
 # append-only mirror of every trial's agent/ directory, out of every trial container's reach
 if [ "$LOG_MIRROR" = 1 ] && ! docker ps --format '{{.Names}}' | grep -qx rcb-log-mirror; then
@@ -86,6 +124,45 @@ if [ "$MEM_GUARD" = 1 ] && ! grep -qs mem_guard.py "/proc/${pid:-0}/cmdline"; th
   log "started mem_guard (2 GiB red line; log jobs/journal/mem_guard.log)"
 fi
 
+# transparent usage gateway (one per runner, stopped with it): the agent's base URL points at it, it forwards unchanged
+if [ "$GATEWAY" = 1 ]; then
+  mkdir -p "$JOBS/.gateway"; ready="$JOBS/.gateway/port.$$"; rm -f "$ready"
+  gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
+  setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
+  gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
+  for _ in $(seq 50); do [ -s "$ready" ] && break; sleep 0.2; done
+  [ -s "$ready" ] || { log "usage gateway did not start (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
+  GW="http://$GATEWAY_BIND:$(cat "$ready")"
+  # the upstream each base URL would have used: this environment, else the env file, else the API's default
+  upstream() {  # <VAR> <default>
+    local v="${!1:-}"
+    [ -z "$v" ] && [ -n "$ENV_FILE" ] && v=$(sed -n "s/^[[:space:]]*\(export[[:space:]]\+\)\?$1=//p" "$ENV_FILE" | tail -1 | tr -d "\"'")
+    printf '%s' "${v:-$2}"
+  }
+  via_gw() { sed -E "s#^https://([^/]+)#$GW/u/\1#" <<< "$1"; }   # https://host/path -> $GW/u/host/path
+  if [ "$AGENT" = claude-code ]; then
+    AGENT_ARGS+=(--ae "ANTHROPIC_BASE_URL=$(via_gw "$(upstream ANTHROPIC_BASE_URL https://api.anthropic.com)")")
+  else
+    case "${CODEX_FORCE_AUTH_JSON:-}" in
+      1|true|TRUE|yes) AGENT_ARGS+=(--ae "OPENAI_BASE_URL=$(via_gw https://chatgpt.com/backend-api/codex)") ;;
+      *) AGENT_ARGS+=(--ae "OPENAI_BASE_URL=$(via_gw "$(upstream OPENAI_BASE_URL https://api.openai.com/v1)")") ;;
+    esac
+  fi
+  # a native config with its own provider URLs (Codex config.toml, Claude Code settings): a copy that points at the gateway
+  if [ -n "$AGENT_CONFIG" ]; then
+    cfg="$JOBS/.gateway/$(basename "$AGENT_CONFIG").$$"
+    sed -E -e "s#^([[:space:]]*base_url[[:space:]]*=[[:space:]]*\")https://([^/\"]+)#\1$GW/u/\2#" \
+           -e "s#(\"(ANTHROPIC|OPENAI)_BASE_URL\"[[:space:]]*:[[:space:]]*\")https://([^/\"]+)#\1$GW/u/\3#" "$AGENT_CONFIG" > "$cfg"
+    # Codex reaches a provider by WebSocket first; the gateway speaks HTTPS only
+    grep -q '^[[:space:]]*base_url[[:space:]]*=' "$cfg" && ! grep -q supports_websockets "$cfg" \
+      && sed -i -E "s#^([[:space:]]*)(base_url[[:space:]]*=.*)#\1\2\n\1supports_websockets = false#" "$cfg"
+    for i in "${!AGENT_ARGS[@]}"; do [ "${AGENT_ARGS[$i]}" = "config=$AGENT_CONFIG" ] && AGENT_ARGS[$i]="config=$cfg"; done
+  fi
+  # an egress allowlist must let the agent reach the gateway (ignored where egress is public)
+  AGENT_ARGS+=(--allow-agent-host "$GATEWAY_BIND")
+  log "usage gateway $GW (pid $gw_pid, raw bodies: $GATEWAY_RAW, token budget $TOKEN_BUDGET_IN in / $TOKEN_BUDGET_OUT out); per-trial records in <trial>/gateway/"
+fi
+
 wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
   local w
   for w in $WAIT_FOR; do
@@ -96,8 +173,9 @@ wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
   done
 }
 
-finish_job() {  # <job>: no key in any saved file (+redact); the task results (D3)
+finish_job() {  # <job>: the raw logs compacted; no key in any saved file (+redact); the task results (D3)
   [ -d "$JOBS/$1" ] || return 0
+  [ "$GATEWAY" = 1 ] && [ "$GATEWAY_RAW" = 1 ] && python3 "$R/scripts/usage_gateway/rawlog.py" compact "$JOBS/$1" 2>&1 | sed "s/^/[$1] /" | tee -a "$LOG"
   python3 "$R/scripts/scan_secrets.py" "$JOBS/$1" "${SCAN[@]}" --redact 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
   [ -n "$RESULTS" ] && python3 "$R/scripts/write_task_results.py" "$JOBS" "$1" "$RUN_ID" "$LABEL" --out "$RESULTS/$batch" 2>&1 | tail -3 | sed "s/^/[$1] /" | tee -a "$LOG"
 }
@@ -106,8 +184,8 @@ summary() {  # one table over every job of this batch, rewritten after each job 
   python3 - "$JOBS" "$batch" > "$JOBS/$batch.summary.md.$$" <<'PY'
 import json, pathlib, sys, datetime as dt
 jobs, batch = pathlib.Path(sys.argv[1]), sys.argv[2]
-print(f"# {batch}\n\n| task | mode | success | reward fields | actions | agent wall s | input tok | cached | output tok | cost $ | exception |")
-print("|---|---|---|---|---|---|---|---|---|---|---|")
+print(f"# {batch}\n\n| task | mode | success | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |")
+print("|---|---|---|---|---|---|---|---|---|---|---|---|")
 f = lambda s: dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
 rows = []
 for trial in jobs.glob(f"{batch}-*/*__*"):
@@ -117,6 +195,8 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     rw = json.loads((trial / "verifier/reward.json").read_text()) if (trial / "verifier/reward.json").exists() else {}
     ar = r.get("agent_result") or {}; ex = (r.get("exception_info") or {}).get("exception_type") or ""
     ae = r.get("agent_execution") or {}
+    gw = json.loads((trial / "gateway/totals.json").read_text()) if (trial / "gateway/totals.json").exists() else {}
+    gw_cell = (f"{gw['input']} / {gw['output']}" + (" OVER BUDGET" if gw.get("over_token_budget") else "")) if gw else "-"
     try:
         wall = round((f(ae["finished_at"]) - f(ae["started_at"])).total_seconds())
     except Exception:
@@ -127,7 +207,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
                                "infra_error", "resumes") if k in rw}
     rows.append((r.get("started_at") or "~", f"| {task} | {mode} | {rw.get('success', '-')} | {json.dumps(keys)} | "
                  f"{rw.get('n_actions', '-')} | {wall} | {ar.get('n_input_tokens', '-')} | {ar.get('n_cache_tokens', '-')} | "
-                 f"{ar.get('n_output_tokens', '-')} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |"))
+                 f"{ar.get('n_output_tokens', '-')} | {gw_cell} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |"))
 for _, row in sorted(rows):
     print(row)
 PY

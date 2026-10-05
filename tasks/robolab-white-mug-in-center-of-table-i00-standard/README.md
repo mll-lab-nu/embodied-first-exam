@@ -9,7 +9,7 @@
 | Family / instance | `white_mug_in_center_of_table` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-white-mug-in-center-of-t__Jf6tksp (robolab-white-mug-in-center-of-table-i00-standard, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/white_mug_in_center_of_table/limited/). Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robolab:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.1` |
 
 ## Task
 Standard-mode twin of `robolab-white-mug-in-center-of-table-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):

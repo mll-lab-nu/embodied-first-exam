@@ -9,7 +9,7 @@
 | Family / instance | `scan_object` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 scan_object (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Pick up the scanner with one arm and the tea box with the other, hold the tea box up in front of the robot, and point the scanner's head at the box from 0 to 7 cm away so it can be scanned. Keep both grippers closed at the end (nothing is put down). Frozen scene instance (RoboTwin seed 60417).

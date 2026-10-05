@@ -9,7 +9,7 @@
 | Family / instance | `place_bread_skillet` / seed 28831 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/jameskrw/rcb-robotwin:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` |
 
 ## Task
 RoboTwin 2.0 place_bread_skillet (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. If there is one bread on the table, use one arm to grab the bread and put it into the skillet. Frozen scene instance (RoboTwin seed 28831).
