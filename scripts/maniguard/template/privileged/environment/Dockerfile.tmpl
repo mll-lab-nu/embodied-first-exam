@@ -1,0 +1,9 @@
+# Base image = ManiGuard on its pinned stack (images/maniguard/: BEHAVIOR-1K v3.7.2 + Isaac Sim 4.5; BUILD_ONLY, every host
+# builds it). Everything task-specific is copied here. The licensed BEHAVIOR dataset is NOT in any image:
+# environment/docker-compose.yaml mounts the host's copy ($RCB_MANIGUARD_DATA, docs/benchmarks/maniguard.md).
+FROM @@IMAGE@@
+COPY instance /app/instance
+COPY rcb_maniguard.py /opt/tools/rcb_maniguard.py
+ENV PYTHONPATH=/opt/tools
+RUN mkdir -p /app/output
+WORKDIR /app
