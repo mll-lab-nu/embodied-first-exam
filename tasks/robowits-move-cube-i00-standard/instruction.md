@@ -46,7 +46,7 @@ not give: keeping clear of the table's edges satisfies it).
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (the service is ready before your time starts)
+r = Robot()                                   # connects (waits while the service builds the scene, ~1 min)
 spec = r.spec()                               # actions, cameras (intrinsics, mounting), robot_spec, world, kinematics, budget
 
 obs = r.get_obs()                             # current frames from 3 cameras: obs.last[cam] -> uint8 (480,848,3)

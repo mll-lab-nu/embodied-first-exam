@@ -225,7 +225,7 @@ client and one episode.
 ## Client (`/opt/tools/rcb_client.py`, protocol `rcb-limited/2.1`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (the service is ready before your time starts)
+r = Robot()                                   # connects (waits while the service starts)
 spec = r.spec()                               # control_dt, action layout + limits, cameras, proprio layout, budget
 cams = list(spec["cameras"])                  # camera names
 obs = r.get_obs(cameras=cams, include_depth=True)   # obs.last[cam] -> uint8 (240, 320, 3); obs.depth[cam] -> float16 metres

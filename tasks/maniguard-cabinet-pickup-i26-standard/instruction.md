@@ -36,7 +36,7 @@ These rules forbid only tipping and dropping: pushing the head cabbage or the ca
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (the service is ready before your time starts)
+r = Robot()                                   # connects (waits while Isaac Sim starts and loads the task, a few minutes)
 spec = r.spec()                               # actions, cameras, robot_spec, world, kinematics, budget, static facts
 
 obs = r.get_obs()                             # current frames: obs.last[cam] -> uint8 (256,256,3) for spec["default_cameras"]

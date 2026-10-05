@@ -69,8 +69,7 @@ region; the instructions state the rule in both modes.
 ## Time budget (D8)
 5400 s for every task of both modes, longer than the default 3600 s: every Python process pays about 2 minutes of Isaac
 launch and scene build, so an agent's iterations cost more than in the other simulators; with 3600 s most failures in
-our first sweep were agents running out of time mid-attempt (raised 2026-09-26, uniform since). The trial's first
-launch, which fills the trial's Kit cache, is the warm-up before the agent's clock starts (PROTOCOL §2.9).
+our first sweep were agents running out of time mid-attempt (raised 2026-09-26, uniform since).
 
 ## Grading and determinism
 - PhysX on the CPU: on one host a fresh process reproduces the live run bit for bit, but a second replay inside one

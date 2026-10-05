@@ -39,38 +39,5 @@ build_timeout_sec = 1800.0
 cpus = 8
 memory_mb = 16384
 
-[environment.healthcheck]
-# The agent's clock starts once the simulator is ready (docs/PROTOCOL.md §2.9). The agent starts the simulator in its own
-# processes, so before Harbor sets up the agent it runs this warm-up in the agent's container: one launch of the simulator
-# with the frozen instance through the task's own tooling, which pays the trial's one-time start-up (shader and kernel
-# caches, the instance check) outside [agent].timeout_sec. It writes no session log, trace or output; its log, with the
-# start and end times, is /logs/artifacts/rcb_warmup.log (a trial artifact).
-command = '''
-exec >> /logs/artifacts/rcb_warmup.log 2>&1
-date -u +"%FT%T.%3NZ warm-up start"
-RCB_SESSION_LOG= RCB_SESSION_LOG_KEEP= RCB_AGENT_TRACE_DIR= timeout -k 30 3300 python - <<'PY' || exit 1
-import os, time, urllib.request as u
-from rcb_brush import SCORER_URLS, Session
-s = Session(instance="/app/instance.json")
-s.close()
-# the scoring service (compose `scorer`) builds its own copy of the scene: wait until it answers
-o = u.build_opener(u.ProxyHandler({}))
-urls = [x for x in [os.environ.get("RCB_SCORER_URL")] + list(SCORER_URLS) if x]
-def up(x):
-    try:
-        return o.open(x + "/health", timeout=5).status == 200
-    except OSError:
-        return False
-t = time.time()
-while not any(up(x) for x in urls):
-    if time.time() - t > 900:
-        raise SystemExit("the scoring service did not come up")
-    time.sleep(2)
-PY
-date -u +"%FT%T.%3NZ warm-up done"
-'''
-timeout_sec = 3600.0
-retries = 2
-
 [verifier.environment]
 build_timeout_sec = 1800.0

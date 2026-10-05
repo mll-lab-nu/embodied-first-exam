@@ -56,9 +56,8 @@ eggs on the lawn next to one tree and out of the basket (nothing is hidden). Of 
 
 ## Time budget (D8)
 14400 s (the protocol maximum) for every task of both modes, the same in the whole benchmark:
-- every Python process pays an Isaac launch and scene load: about 2-3 minutes with a warm Kit cache; the trial's first
-  launch, which also compiles the shaders into the trial's own cache (about 4 more minutes, below), is the warm-up that
-  runs before the agent's clock starts (PROTOCOL §2.9);
+- every Python process pays an Isaac launch and scene load: about 2-3 minutes with a warm Kit cache, and the first launch
+  of a trial adds about 4 minutes to compile shaders into the trial's own cache (below);
 - the simulator runs 7-18 control steps/s depending on the host (30 Hz control), and these tasks take thousands of
   steps: the 9 positives are 1,374-7,200 control steps long, the challenge's teleoperators averaged 531 s (15,939 steps)
   for stacking_wood alone;
@@ -72,8 +71,8 @@ Isaac keeps shaders and generated Python in its Kit cache (`/cache`). Every comp
 fixed `name:` (`rcb_behavior_cache` for the agent, `rcb_behavior_cache_trusted` for the verifier and the standard
 sidecar): compose prefixes it with the trial's project name, side-by-side trials never share it, and Harbor's teardown
 (`compose down --volumes`) deletes it. Measured on ws: a scene load takes 359 s on a cold cache and 110 s on a warm one,
-so each container pays about 4 minutes once (the warm-up before the agent starts, PROTOCOL §2.9; the sidecar's start;
-the verifier's first replay, the second reuses the cache). None of it is on the agent's budget, and it removes a global volume that
+so each container pays about 4 minutes once (the agent's first `Session`, the sidecar's start, the verifier's first
+replay; the second replay reuses the cache). That is under 2 % of the agent budget, and it removes a global volume that
 agents of different trials could write and that a concurrent trial's teardown could delete. A read-only shared cache
 was the alternative: Kit writes to its cache at run time, so it would need a host-prepared cache plus a writable copy per
 container, outside Harbor's lifecycle. A cache can reach ~10 GB (one probe volume: 9.8 GB); it lives as long as the trial.

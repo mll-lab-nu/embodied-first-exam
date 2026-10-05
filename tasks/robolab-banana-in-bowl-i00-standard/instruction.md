@@ -25,7 +25,7 @@ let go of it.
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (the service is ready before your time starts)
+r = Robot()                                   # connects (waits while Isaac Sim starts and builds the scene, ~2 min)
 spec = r.spec()                               # action types, dims, joint limits, cameras, budget, robot spec
 
 obs = r.get_obs()                             # current frames from 3 cameras: obs.last[cam] -> uint8 (H,W,3)

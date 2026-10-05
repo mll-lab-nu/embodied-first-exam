@@ -211,8 +211,7 @@ primitives. Every one scores 0, for the reason given.
 ## Time budget (D8)
 7200 s for every task of both modes (user decision 2026-10-03): every Python process pays an Isaac Sim 4.5 launch and the
 scene load (measured: 23 s with a warm cache, 239 s with a cold one, which every trial's first process has: Kit's shaders
-and OmniGibson's `torch.compile` kernels, paid by the warm-up before the agent's clock starts, PROTOCOL §2.9; then
-roughly 20 control steps per wall second), and the shortlisted tasks are long
+and OmniGibson's `torch.compile` kernels; then roughly 20 control steps per wall second), and the shortlisted tasks are long
 multi-phase manipulations. ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A Harbor
 oracle trial takes 6 min for jar 14 (747 rows; the verifier's two replays 331 s) and 9 min for cabinet 19 (2291 rows; 492 s).
 
