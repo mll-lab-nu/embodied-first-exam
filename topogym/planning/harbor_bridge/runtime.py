@@ -167,8 +167,17 @@ def run_privileged(solution, recipe, output, *, instance_path=Path("/app/instanc
         session.close()
 
 
+# oraclefix 14 (2026-10-05, a deliberate deviation from "no implicit holds" for the twin method only): the privileged
+# reference ends on its own live success tick, so a standard twin that streams exactly those rows has zero margin on its
+# live side, although the service keeps an episode open until success, failure, the wall clock or the client stops. An
+# agent can keep holding and polling `done` in exactly this way, so after the last reference row the twin keeps sending
+# that row for up to STANDARD_HOLD_S and stops as soon as the service reports done. Service and grader are unchanged.
+STANDARD_HOLD_S = 2.
+
+
 def stream_standard(robot, recipe, rows, *, connection_errors=(), episode_errors=()):
-    """Public HTTP only; never append settling actions or change the reference rate."""
+    """Public HTTP only; the reference rate is unchanged. After the reference rows only the last row is held (oraclefix
+    14, at most STANDARD_HOLD_S, until the service reports done)."""
     instance = recipe["binding"]["instance"]
     spec = robot.spec()
     if recipe.get("runtime_binding") is not None:
@@ -240,12 +249,26 @@ def stream_standard(robot, recipe, rows, *, connection_errors=(), episode_errors
             break
     else:
         status = robot.status()
+    held, limit = 0, int(round(STANDARD_HOLD_S / dt))
+    while not status["done"] and held < limit:
+        n = min(count, limit - held)
+        result = robot.submit("joint_position", np.repeat(rows[-1:], n, axis=0), dt=dt, interpolate="hold",
+                              cameras=cameras[:1], video="none", note=f"oracle hold {held}:{held + n} after the reference")
+        meta = result.meta
+        executed = meta["executed_rows"]
+        if meta["n_clipped"] or type(executed) is not int or not 0 < executed <= n:
+            raise BridgeError("Standard service clipped or rejected the held reference row")
+        if meta["control_steps_chunk"] != executed:
+            raise BridgeError("Standard service changed reference control timing")
+        held += executed
+        cursor += executed
+        status = robot.status()
     if type(status["control_steps"]) is not int or status["control_steps"] != cursor:
         raise BridgeError("Standard service final ledger differs from acknowledged reference rows")
     if not status["done"] or status["reason"] != "success":
-        raise BridgeError("Standard reference ended without native Task success; no implicit holds added")
+        raise BridgeError("Standard reference ended without native Task success after its hold")
     return dict(status="native_success_pending_harbor_verifier", harbor_qualified=False,
-                executed_rows=status["control_steps"], reference_rows=len(rows), restarts=restarts,
+                executed_rows=status["control_steps"], reference_rows=len(rows), hold_rows=held, restarts=restarts,
                 identity_scope="frozen task package; HTTP verifies layout, rate and limits")
 
 
