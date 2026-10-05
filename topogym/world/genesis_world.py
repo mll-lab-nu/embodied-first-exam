@@ -433,7 +433,8 @@ class GenesisWorld:
                     assist_active=False, assist_model="none")
         if self._grasp_manager is not None:
             if self._release_geometry is not None:
-                self._grasp_manager.backend.verify_bindings([
+                backend = self._grasp_manager.backend
+                getattr(backend, "verify_current_bindings", backend.verify_bindings)([
                     s["binding"] for s in self._grasp_manager.hands.values() if s["binding"] is not None])
             grasp = self._grasp_manager.read()
             result.update(assist_active=grasp["active"], assist_model=self._grasp_manager.config.model,
