@@ -3781,3 +3781,659 @@ digest = "sha256:3f0c4893faab500495e9df801dbd6c5062926c2a7403fea9c3c73910557d9a7
 name = "robot-coding-bench/maniguard-lid-transport-i07-standard"
 digest = "sha256:b90922636b5a6455e40ac24c1b10a31ded3d674b42437dfe8becf7279964645d"
 
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-applesoranges-i00-privileged"
+digest = "sha256:ac421ad302f091a544a9fdf98eb9fd2fc8b11b97f5641fd7bc48cd6d3cefb9cf"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-applesoranges-i00-standard"
+digest = "sha256:99824b0cd502d752d53d9f8011e2ea22569128952a174a0b4e1288a8f0ccc865"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-bedroom-i00-privileged"
+digest = "sha256:618afbc53d42fab3c3940fef816e57442b97e3901b3729e333623972ca0e47f0"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-bedroom-i00-standard"
+digest = "sha256:3970d5c03a1bced0b8e669ad21f518557e6e0bce29b87a3119f335d73e582a71"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-bluehorses-i00-privileged"
+digest = "sha256:e38ec0f8425ed5ce725d8436859ddbbdb8ce6eaa7034bef74a7beeff080f80f2"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-bluehorses-i00-standard"
+digest = "sha256:84f5555ca85152f5387d67dbb99b6dc6e97600e0a146ee6381c989d5640bf9fe"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-greatwave-i00-privileged"
+digest = "sha256:ed7826e6ba0e36bf5dfa2a142f39a49e3719e1a83bb339e02cb6ecdac0633a74"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-greatwave-i00-standard"
+digest = "sha256:f19f970cd29e9d44962d1a69f37ad144f36e5bb73f402035b016863a78dc5545"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-kajikazawa-i00-privileged"
+digest = "sha256:8e64919fd4cd4a094a45635f4faf63f802d258a93f89f0098cd7d0bf5202bb1d"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-kajikazawa-i00-standard"
+digest = "sha256:83c20fe36e9c83d2a4229f942120ba689cf324e6e56a27f86c388cb29475bee4"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-plumpark-i00-privileged"
+digest = "sha256:0306e60d28397425baf251a9afbcf1861615a449b9ffcec25ecbb0d16f707e5e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-plumpark-i00-standard"
+digest = "sha256:fa717dcf1b3dce2875420cc98689a98aea8525f0eaf809c5e5a43f7d5910ed3c"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-redfuji-i00-privileged"
+digest = "sha256:6262a02f6741973b06793ed591e4075ac82e2dd3b32cd59ac727e407e060cfba"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-redfuji-i00-standard"
+digest = "sha256:58f28ae2532f768e8f6b547e27fdb1aaff43287eac87ad5d161fa58290179800"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-suddenshower-i00-privileged"
+digest = "sha256:4613b22f518417a90fb8ca7ed7c45d94ed270b150469531aeb44b0d75b5a2776"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-suddenshower-i00-standard"
+digest = "sha256:af6023d3e4b61da0fab62622b62050f26f071d5df24bce52b4bd5555e0604ddf"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-sunflowers-i00-privileged"
+digest = "sha256:b66c1d5c015c35954fc13c8f833c58f01015cd7fd701f5807c309b3ae1d27177"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-sunflowers-i00-standard"
+digest = "sha256:5d1a35b69d3a1b0d3f7329314b783f7f03b1fd63d0ce18b3c5c8001fb4c03f37"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-vision-i00-privileged"
+digest = "sha256:95d1e41249c06df0858973df29d5328acf754ba55ad1195622c37b36756fca13"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-acrylic-vision-i00-standard"
+digest = "sha256:a21ae6d105f90398e673363cd02ab1cf7b93b888273ad034bbe3fdb2a2df9b10"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ai-i00-privileged"
+digest = "sha256:ed2a9843f958a5e4eb92e570223f3aa9102d5ff1d93f770053f6ea893f30d0ea"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ai-i00-standard"
+digest = "sha256:166a7a820f8371e3bf9aac06295aef86ec6ed320e78424e844cad7019e2bd331"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-chun-i00-privileged"
+digest = "sha256:3928c5b07f92e19f44feeda4b41eb15f7f6559b9e7e84db7acf18e782f16f80b"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-chun-i00-standard"
+digest = "sha256:3cca439fb05901191f17fc5815d693a39f2dab0b1fbfe0aead839a2c8c610ff1"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-da-i00-privileged"
+digest = "sha256:ce5c09777c429d5d1794eeb199d5f9a802ec0b59fe9e4259f746cfa86b455681"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-da-i00-standard"
+digest = "sha256:5b294423d0a323ce6b5208b27a77ff897388cd8f0d9e13e979fa646ac0533d7f"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-dao-i00-privileged"
+digest = "sha256:33902a62efcc8799f0315a5a2aba8f53e29b3cf6842b3e604d691c0633b0c212"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-dao-i00-standard"
+digest = "sha256:0ffb2cb04166b8f8e95412de48b69fcf65ebc3a323e7ff3d895767ec20eca677"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-de-i00-privileged"
+digest = "sha256:2febd373476b080c9287f7d40e9c32ef4a1db8788ab715d957fc7a349a307b11"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-de-i00-standard"
+digest = "sha256:e173b1f43ba772dfb4df12cf7e611db44756b57c75c0dd5b6a7fcc36ae82aac0"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-feng-i00-privileged"
+digest = "sha256:8814b12200648c738ca96f3dde6cb4da4f902955c7c6d8dae96231d444d8bd27"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-feng-i00-standard"
+digest = "sha256:236a149e0810d03b63b0cb32e6f89d7740eba32b4051a0c3412ebfc535683b24"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-fu-i00-privileged"
+digest = "sha256:dfc554856cecb58cb44c8e84c0dd942d04663e43676e2aa359eeffb3b7bb85fe"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-fu-i00-standard"
+digest = "sha256:49cea8489af357c453cc4829517c4cb475f17cb745f8a25e2512cb5a78877e5b"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-guo-i00-privileged"
+digest = "sha256:1897984bd5f67217f121e8c8a2c8ce80d236205b45c8751dba57ba3e1cfa0bf0"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-guo-i00-standard"
+digest = "sha256:3cebd112f71724f2038fd101d9c08d9d24c12c56589fce86ecc850246e886e6e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-he-i00-privileged"
+digest = "sha256:464031551186e0c9fb17298239b27c256e08b644eb411967a165b28c784f5a20"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-he-i00-standard"
+digest = "sha256:f2bf929b366bdd59fb423178e4765aecdf31b415fb6f0e4cf71d42b9c02642de"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-houdezaiwu-i00-privileged"
+digest = "sha256:5e4248af8b83fe8b4a59c4d159c13d4b9ac115c7bb4f15f807772ce3cf1aa341"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-houdezaiwu-i00-standard"
+digest = "sha256:211638af1ae3065b2678ae6cf4ef2b0515ebe3b8cf95bbe1c62c82b1ef39064e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-hua-i00-privileged"
+digest = "sha256:c3f252bcbb4f99095920bc804350a0dbf35b7700b6999b22135c8196bb39f1d0"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-hua-i00-standard"
+digest = "sha256:629a2d7f50810cca7c6e4b5cce784807a7f4184309966a2109b0196f81770c3d"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-jia-i00-privileged"
+digest = "sha256:3d75dd27ef3f6a97b74ce6ea04de678713dfa359462b6f97a627bfa329610479"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-jia-i00-standard"
+digest = "sha256:79086cc94d53571f76019ddefdfa31bdf0b039a39b16fff98f7d7dc3c52fa64d"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-jiang-i00-privileged"
+digest = "sha256:7026a2ec8da94fe6fa697de208c953023b1074659da8447a3001379f05b5a745"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-jiang-i00-standard"
+digest = "sha256:38f5d52c555c2c5a1e4a25999d8e69ae8f69f869af0a4673e72ea1d994f89c08"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-jing-i00-privileged"
+digest = "sha256:fcaa8d9749e37037ac9c02d37463d2eee2656243f7a30632b7b157db51874760"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-jing-i00-standard"
+digest = "sha256:7e9bb950655af60ece3b12c88a018b9880887dd7420f9c5fae3525e2a88a9718"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-kou-i00-privileged"
+digest = "sha256:1b497c277bdee0b9d04583de460ca0f5498456b46b4a21ce07c3b888e5a7a5bc"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-kou-i00-standard"
+digest = "sha256:1af1786300c90c5b12beceb69c16678907e4ee0abe10a40263a9c70f397de6ed"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-le-i00-privileged"
+digest = "sha256:a6ae9e4f2c1f72de6bb85d29ebba54630d07da89d3f29ee066e09017e2eb0901"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-le-i00-standard"
+digest = "sha256:93ee01755e19d97c019f88102941783ff5149f6cfd4a86d69d133403ecee316e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-lin-i00-privileged"
+digest = "sha256:65216284fcf5e40363344e701fe868b4d1c3072f95ccf3e951bf58a1e9be47c2"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-lin-i00-standard"
+digest = "sha256:d012fb5b70b7e028e846a17a238f3adbcae84b7cc4f177cee804943d902d7da5"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-long-i00-privileged"
+digest = "sha256:52f4848a9b894794c27b91f8ee6b6639934d2f30aab39e99702c62b5cd1097eb"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-long-i00-standard"
+digest = "sha256:fe49af75fef17ef018cf3f251485ac714c05f4003b8675daae73bab99404ea0f"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ma-i00-privileged"
+digest = "sha256:a7f48f9dabc066fd668820544db73b9e0a06c6d27a454d62741fbbcf98fe0795"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ma-i00-standard"
+digest = "sha256:2c3cd3ffc64f06c0531531b0ce683b601e78a0f6619b6d8f686b4e5b5135e667"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ming-i00-privileged"
+digest = "sha256:7521e1da50038d8f76be5d916e13edf60bfeac920c3d792a28025645b585d84e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ming-i00-standard"
+digest = "sha256:c074958a96dbed8b284d3f29877fe4c06c2e1886ee034eee50ac26e324af723f"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ningjingzhiyuan-i00-privileged"
+digest = "sha256:c8da661685d1f79abe89c3bfc4a26e28b78b7090b46d0148b31ca6a33e0c7962"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ningjingzhiyuan-i00-standard"
+digest = "sha256:5ea86524d256dc66df36625332c6e468902f672460facf1fba84397e5d39ce02"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-qing-i00-privileged"
+digest = "sha256:e050eaea33fa237e63dd549d2e601a5e4a77bb5c5a341693752f43074a5d6d19"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-qing-i00-standard"
+digest = "sha256:9cedbda31fca6fa964bf56b304b1e214898093ed3ceedb00cf27a88d7e7a401c"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ran-i00-privileged"
+digest = "sha256:d3f749240b9533a8f966077f5c3260b2537f9ffc7d69395b186e31ebfce5e938"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ran-i00-standard"
+digest = "sha256:bae3d8438d40775ecfed3324cb163bcdc1743af6e8f30166093b2f37d656dbbb"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ren-i00-privileged"
+digest = "sha256:774a725e661fc8ef0eb3087c54d26d2e5274aa957e7c52847eeea0559cf8dcba"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-ren-i00-standard"
+digest = "sha256:c5fc2825406bcbad3a8b52516d2cadaa20e928c1181b4678d7bfd89fc3f76670"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-shan-i00-privileged"
+digest = "sha256:334abdc18442cc4e0c009c7f164f9246a634105d31f07eeeaba5ca57bd3c0e22"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-shan-i00-standard"
+digest = "sha256:ca937dd841ffdfa42ed9edcb162d79495be482b1d3e705110c6fc4a9068b2eca"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-shu-i00-privileged"
+digest = "sha256:58152caf0f53b5facf0185f9b905edb9435b85637ac62941d0126c6be654db9b"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-shu-i00-standard"
+digest = "sha256:d00b40eb6f1d7bb3fb97151d49bd2b6200ae5ad0f72f66ad4eb673f184f38dea"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-shui-i00-privileged"
+digest = "sha256:3aa9689561e477f045e4c2629476244622ec4a9c274fd1e508d5d7000aa47ff6"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-shui-i00-standard"
+digest = "sha256:30c7276ea9074f70fcc4953aedaaa1e7fbb989fbd4705796fab954909d7f1d6f"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-tian-i00-privileged"
+digest = "sha256:b6d763ceef7358cd70c2e069d3a8086215d2c3ec779bdf26ec0261b640f65079"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-tian-i00-standard"
+digest = "sha256:7598b9c96948b14046d0ba7b8ed3705e18fe6f12cbc7708ce49a03a470a85fb3"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-tiandaochouqin-i00-privileged"
+digest = "sha256:d63d533cbdc0e85c1e8239bd5f46651134aba95157758cc94df6d5f117a2fa42"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-tiandaochouqin-i00-standard"
+digest = "sha256:45d25bf1fd0aae22077220bc4b6daab09d572016773600766ddb172cef83547a"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-xin-i00-privileged"
+digest = "sha256:21ef78f02867ba7ffee89943c3ab7d6db534fde60580f9b34c7d532475ddebf9"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-xin-i00-standard"
+digest = "sha256:c56a21c6366a07b64529892d62f803a297cf8028836c802894900d352bf55026"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-yong-i00-privileged"
+digest = "sha256:9de92015256d14859425f3b63867f39e83a6a2e1fad9c3d2159064dc19a36e0d"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-yong-i00-standard"
+digest = "sha256:0eb39222294882bb56065be311b8ea7de82a718c15d0650ab84b2108f50ecd2d"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-yongzibafa-i00-privileged"
+digest = "sha256:5daffd438b40eb2dc70cc3268370789be690d65f962958500fb517c19f0d9119"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-yongzibafa-i00-standard"
+digest = "sha256:6f7b148e8529bbc97e16a9672038fb4b97f0c92673711c579e29a210110c2a27"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-yue-i00-privileged"
+digest = "sha256:fcd8e600552e82541fc2ffeecd45cf9e69e6cbc46182dba1692d8248c690a7a5"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-yue-i00-standard"
+digest = "sha256:5538533ca9db736b544b21bbe01b96c591e41106a5aff4c6dab1719f2cff6f10"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-zhong-i00-privileged"
+digest = "sha256:94eea18c91ef9a31adef8146f7041dc2ba40ce8703eb49fe8354bc57c3fc20ef"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-zhong-i00-standard"
+digest = "sha256:a0e78cb6ccd1f32f09f59e6cd20f309bc45885ceebed1c07199c8275d3e0d20d"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-zi-i00-privileged"
+digest = "sha256:268ded1f2c7360544ff32e1f761f5699f2cc877e7cc8abc1a8d2f2297ab16cf3"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-kaishu-zi-i00-standard"
+digest = "sha256:6f72a4044566ec030b92afddf6047e7aa4ebfb95b0f0eb7144b4e318b3272ec0"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-donum-i00-privileged"
+digest = "sha256:766093d74ef0b18001a91bba52beb9bc8bc5392124bb5bc3b6a38dbbb776bb24"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-donum-i00-standard"
+digest = "sha256:9ca4aee1c707b62f6fbae74aec63fddc8bed6145de88ffc187e0b9d82710737c"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-inunum-i00-privileged"
+digest = "sha256:2c6f55847bcc17b227a1a17c542b39e138c25a6d02da0b7238307fa55c280238"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-inunum-i00-standard"
+digest = "sha256:7a08f0962dd8fa5eead799c0f0486f23392e9551e79413319c1a6aeb1abe2e6e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-minim-i00-privileged"
+digest = "sha256:2c460e3891c33c652b569cfc1739882dce6aafb37c52f75806a0935b1500489a"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-minim-i00-standard"
+digest = "sha256:073e092b6eb1b58973a1b11982686d18f636c63adae84a89eed05d7c79d62a48"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-minimum-i00-privileged"
+digest = "sha256:da62da5e431838ca2eed9fdc66cba66d1da8770fb6408aa59c8c3bb27b4cdaf8"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-minimum-i00-standard"
+digest = "sha256:ff6b32517a9418eab727337c25176b6a5a90a9f2242a2ee1132030320abcb9d1"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-minium-i00-privileged"
+digest = "sha256:1962fd498c4f89521f393016cec9d6d90d32fcab765afd78bda94725be51c4f5"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-minium-i00-standard"
+digest = "sha256:5e5b0ea38a972fd8d99eb12cce56582ed377eccb544d4b3305da7cb8f6118250"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-moon-i00-privileged"
+digest = "sha256:cba17ad5d9f6cdeff634e6d04b22147795739e0fea699293e7791425bf4d8415"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-moon-i00-standard"
+digest = "sha256:4506cbfba02b4715d4f844da99499669c083100329bb0d44a5de8cd6a6255063"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-nimium-i00-privileged"
+digest = "sha256:647075af4b0e9100d481e4d5328b93e7198f4aaadcbbb549bf5aacaa9409ba9f"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-nimium-i00-standard"
+digest = "sha256:40f2a7e44970d59f3225eea4a29b19f285a25770acad4c705c2a5fcf45ab7929"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-nun-i00-privileged"
+digest = "sha256:5a09650ee1cf2912bdd8280fff3a2a8f27c84661d2c481dc6c2ff6b622f5b2ce"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-nun-i00-standard"
+digest = "sha256:46c05d556b8a5086c4cdac4770dc7c2318bfc2c177bb2f319a82f29e7c93e9ca"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-omnium-i00-privileged"
+digest = "sha256:8d0bad64bdb6458f903dbeba4d691ff45de96041598f38e16dd1029a0e817e86"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-omnium-i00-standard"
+digest = "sha256:a910c4a199691f2822696bb9b2c0f32360cf42683559999279f1a0ad625ee435"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-unpin-i00-privileged"
+digest = "sha256:32a32cd032728319088f986b276ead3fb09136b9d76fafbfc701e6d201844075"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-lettering-unpin-i00-standard"
+digest = "sha256:1a25995e54bc13def391b1e2bfd1ed1d13d1e6c18b60bb7446bf0e9929d5f768"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-bathers-i00-privileged"
+digest = "sha256:caf054bb5733458e5001a819a84b99158689adc0ff823ee9c07075c2f781eeaf"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-bathers-i00-standard"
+digest = "sha256:01a59e179d827ded1ffc10f9d3068653658664ab2f518e2fd7ee7b49d0f79bae"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-cafeterrace-i00-privileged"
+digest = "sha256:568e6e46cf8bda1509b4831c0cabe0f5747d3149da0701e7872911b79abeeba2"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-cafeterrace-i00-standard"
+digest = "sha256:e3f5e9569fd180c00b12185774bcb376535c3da88dada10f348f0b4d7fd6ece4"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-cypresses-i00-privileged"
+digest = "sha256:a871232d1df1f493952bc97be5006ef12e451c6ec61eb87f2a196e4e72df34b1"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-cypresses-i00-standard"
+digest = "sha256:4e475f76e361e6d311ab8d102791f76507f6b565924b62f29e834d087e01c1ad"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-irises-i00-privileged"
+digest = "sha256:d069e753f8c15ea08296b84945331f98031aa4c8ded4411a2fdede1e715cb591"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-irises-i00-standard"
+digest = "sha256:4c9bb232a9864e9401c46b30f02690bc8eedce8bb2f910d384d1e806026cd950"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-milkmaid-i00-privileged"
+digest = "sha256:d4c41b5cfb6caa4015e69dffeb118bd055aba8358d7a5d1552a5800b87bb32f1"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-milkmaid-i00-standard"
+digest = "sha256:d9829e99a0d6c3cee3e37892a41998baf08ac486fff6d5a9c127016d29e26e8e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-monalisa-i00-privileged"
+digest = "sha256:a7f32321f5470be48dfc8f4b939177204ad611fce795e626058aed4d8c8485df"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-monalisa-i00-standard"
+digest = "sha256:d17aed36ede8a5097a346d8cefd165ff4a871e77122a7fe8c924b32862e5ec69"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-pearlearring-i00-privileged"
+digest = "sha256:d287aa95a91d5daad8e12a09e29f75bd2d698bfa93301577f705f2baf4513a27"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-pearlearring-i00-standard"
+digest = "sha256:8e558d4caf255142c56546e1931a9a3a9d3a6802e35bce4635b1cadca7b971cf"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-saintevictoire-i00-privileged"
+digest = "sha256:a0dc4c6dfef9d0e223ebccb546f291b564db364f504ebae7f5f72101bcd10695"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-saintevictoire-i00-standard"
+digest = "sha256:feb2c0827beb84f784aada6a28c99af5d5b7020e4027bf44e0b4dddedfafd89b"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-starrynight-i00-privileged"
+digest = "sha256:8f9b9e0ba5922641ea903c1ce71c2f4b6f7626151420e65468b78aa2c2272401"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-starrynight-i00-standard"
+digest = "sha256:67fa31a7c66d462ea2e27aa085cedc0133e536dd79db6ff574c271f2f7baa52f"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-temeraire-i00-privileged"
+digest = "sha256:7e9083bf220818df27fd3a2602998961c651a23fab1d72fe5662298e16210e01"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-temeraire-i00-standard"
+digest = "sha256:fd3796f353acd6e4ea44bcc6cccd89e0f8f5ff7929bafdbaf4e2c405c9a927e6"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-wanderer-i00-privileged"
+digest = "sha256:da4b0f4b79da03281662bafa876b971d419525b31a29ff31d0766b96153613ff"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-oil-wanderer-i00-standard"
+digest = "sha256:7cdff2696785d2ef99a0832618d9d608f5de630cbb4077071de3591faf0e181e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-chun-i00-privileged"
+digest = "sha256:802324f1928df5d3e149256d65770c2fae6d6b6185fcd87f6fb525d1ea0c94da"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-chun-i00-standard"
+digest = "sha256:43a9fa2afd588f43dcde5508f330ab7d01dc70e90b5f4c6cab1a836d329c25c1"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-feng-i00-privileged"
+digest = "sha256:feeea4c5bf3cf0f5606cd4e9cc8ea62e47be6d8cb31319b77cbb2df0b72cc735"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-feng-i00-standard"
+digest = "sha256:53bc074a895863888e190b3f0f1537fd5450386a0b9c4defe62f882ec8b35203"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-he-i00-privileged"
+digest = "sha256:8e64b5b4762e6f2387b7b67ac651c87d3e2c1d555697b28e5fa2530e7083f403"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-he-i00-standard"
+digest = "sha256:1fc4658c1ebc40bb560b7e87eb3c16b884fb31dcf38bbef46e52944cf5e3e31a"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-huifenghechang-i00-privileged"
+digest = "sha256:7d534d3fb66b2e1a879519ef15eaa85d1a74e9e6014593717231bedf95bfa49d"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-huifenghechang-i00-standard"
+digest = "sha256:b2932b79b3f92462038786413c10ba524b43ae4651e1d038f2baf3090a266adc"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-jian-i00-privileged"
+digest = "sha256:365bc2a133ee775922a1c9fc4c5b27f49f849ea585f07a5abe8bc0cc84d0a5f9"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-jian-i00-standard"
+digest = "sha256:8716fe2fb667e750853db26f837039674301b5c42d4ee665c882609bcb1b93ae"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-maolinxiuzhu-i00-privileged"
+digest = "sha256:b0e53df6435d25ddbda9c8d4da356c1af1cf054fd993cd85e1c5ae36e2ed3d5c"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-maolinxiuzhu-i00-standard"
+digest = "sha256:f9c63ebf225c71cd3b72d14ceee73b97231d01fed0e3fe6cfd7e70f91e846dbd"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-nian-i00-privileged"
+digest = "sha256:3c02328c0681c97517e9c5e8c97a9c0c5c5a9d25a30d447e8d1fa6e20c9b3552"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-nian-i00-standard"
+digest = "sha256:079457eee976894cf95e68c405a89c8eb432ba56029dcf7dc3594961f74a8b01"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-ren-i00-privileged"
+digest = "sha256:505e266d71c152704facd15383e8d3e94d7c0a3f6c0c77571145f8784f309ff7"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-ren-i00-standard"
+digest = "sha256:6f373a7fa5eafef556450521ce36ea0eece55e47c4d446df590e99b42565fd0e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-shan-i00-privileged"
+digest = "sha256:fdf3d9beda2d213682b9ceed3cd2d4033455710e776d437e577ada22ba5c30bb"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-shan-i00-standard"
+digest = "sha256:00487b6b33991ff452b0e5e60bad7490a3f66ff1d19423fa1d4ea1a786f78c8e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-tianlangqiqing-i00-privileged"
+digest = "sha256:b8e6c2f56d3942349ca1acdb19a855e26c0652c973acc7e19d95d366b2da56e3"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-tianlangqiqing-i00-standard"
+digest = "sha256:bcec45ba007037491fd7d628232f2db789c19300c6d320777acbebf93cfacf72"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-tong-i00-privileged"
+digest = "sha256:b687fe3ec2bfd6ba0e6949bacd7472bfaefddf40760d11d895adea9fb6703e82"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-tong-i00-standard"
+digest = "sha256:0a4e497975b1f950c5902a5e3500d2155470deee87dea4cc60dbe37d385c1ebd"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-xian-i00-privileged"
+digest = "sha256:8e7332826f040d2b6b153c2b8e572301012fe84e1443334c4881fc964adbd178"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-xian-i00-standard"
+digest = "sha256:6b744a56bd3b6b9f30e29f1ee388faee25735f8f7ed15bfb2df1da2b78aa9a4e"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-xin-i00-privileged"
+digest = "sha256:a444e10aa70709af04d85a91ce77ac2d480c34a9cf28fceb353b5bec346d0419"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-xin-i00-standard"
+digest = "sha256:a11a61bb07b58f825bc49d9a925e7e1babbf72a084b5a9325d6f1e1c62457aaf"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-yong-i00-privileged"
+digest = "sha256:f885bbda76ed99cc03f838c87c3b8807d06fb167f7f2dde28de9ed952995f885"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-yong-i00-standard"
+digest = "sha256:a1b8950e99b8c13be94983fab460659cd93cc165cc027bfa410a75891f9908ee"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-yu-i00-privileged"
+digest = "sha256:58c7e947bbc92c5326e5e1bdb9fb3ddee5b967a6b0c5a3ab2f944d68b9357d11"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-yu-i00-standard"
+digest = "sha256:d0c98212624f117f60d1ed35ab5567374f022a4cc39391f9decac2c4c49c9366"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-zhi-i00-privileged"
+digest = "sha256:d4af3c20e4f36748b0321053a62f6341cabdb36c96946bcca26f7b66431568a8"
+
+[[tasks]]
+name = "robot-coding-bench/robopaint-strict-xingshu-zhi-i00-standard"
+digest = "sha256:51e6d987e4eef826c9c5e8a4111d7ddff5d1492931e67349c90b6efd7d19d646"
+
