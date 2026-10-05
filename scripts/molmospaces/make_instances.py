@@ -6,6 +6,7 @@ of the rule's candidates.
 
     python scripts/molmospaces/make_instances.py --bench <molmospaces-bench-v2/20260415 dir> [family ...]
     python scripts/molmospaces/make_instances.py --bench <dir> --refresh [family ...]   # recompute facts / t = 0 only
+    python scripts/molmospaces/make_instances.py --bench <dir> --candidates <dir> family  # also write all three
 
 Needs the simulator (molmo-spaces 0.2.9, MuJoCo 3.5.0, MLSPACES_ASSETS_DIR / MLSPACES_CACHE_DIR set, and
 MLSPACES_PINNED_ASSETS_FILE=images/molmospaces/pinned_assets.json, the Objaverse version the benchmark was made with)
@@ -108,6 +109,9 @@ def checked(family: str, hit: str, ep: M.Episode) -> str | None:
     gone = missing_objects(ep)
     if gone:
         return "objects missing: " + ", ".join(gone)
+    restricted = noncommercial_objects(ep)
+    if restricted:
+        return "non-commercial assets: " + ", ".join(restricted)
     if ep.success():
         return "already successful at t = 0"
     kind = joint_kind(ep) if family in ("open", "close") else None
@@ -218,6 +222,23 @@ def candidate(family: str, fam: dict, idx: int, episode: dict) -> dict:
     }
 
 
+def noncommercial_objects(ep: M.Episode) -> list[str]:
+    """The episode's Objaverse objects whose licence forbids commercial use (CC BY-NC / BY-NC-SA in upstream's own
+    per-object record): the image redistributes every asset an episode loads, and stays publishable without them. Every
+    Objaverse object the episode loads names its asset id in its MuJoCo body or mesh name."""
+    from molmo_spaces.utils.object_metadata import ObjectMeta
+
+    m = ep.env.current_model
+    names = [m.body(b).name for b in range(m.nbody)] + [m.mesh(i).name for i in range(m.nmesh)]
+    out = []
+    for uid in sorted({u for n in names for u in re.findall(r"[0-9a-f]{32}", n)}):
+        meta = ObjectMeta.annotation(uid) or {}
+        lic = (meta.get("license_info") or {}).get("license", "")
+        if meta.get("isObjaverse") and "nc" in lic.split("-"):
+            out.append(f"{meta.get('category')} {uid} ({lic})")
+    return out
+
+
 def missing_objects(ep: M.Episode) -> list[str]:
     import mujoco
 
@@ -259,7 +280,7 @@ def refresh(path: Path) -> None:
         ep.close()
 
 
-def select(family: str, fam: dict, bench: Path, excluded: set[int], out_dir: Path) -> None:
+def select(family: str, fam: dict, bench: Path, excluded: set[int], out_dir: Path, cand_dir: Path | None) -> None:
     episodes = json.loads((bench / fam["package"] / "benchmark.json").read_text())
     kept = []  # (variant, instance, its record) of the episodes that pass, in package order
     for idx, episode in enumerate(episodes):
@@ -300,8 +321,15 @@ def select(family: str, fam: dict, bench: Path, excluded: set[int], out_dir: Pat
     rest = next(k for k in range(len(kept)) if k not in first.values())
     candidates = [kept[k] for k in (*first.values(), rest)]
     print(f"{family}: candidates {[inst['upstream']['episode_index'] for _, inst, _ in candidates]}", flush=True)
+    if cand_dir:  # the runs that choose `keep` need all three
+        cand_dir.mkdir(parents=True, exist_ok=True)
+        for hit, inst, rec in candidates:
+            idx = inst["upstream"]["episode_index"]
+            write(inst | {"instance": "i00", "variant": fam["variants"][hit]} | rec, cand_dir / f"{family}-{idx}.json")
     chosen = [c for c in candidates if c[1]["upstream"]["episode_index"] == fam["keep"]]
     if not chosen:
+        if cand_dir:  # choosing `keep` from the candidates just written
+            return
         raise SystemExit(f"{family}: the kept episode {fam['keep']} is not one of the candidates")
     hit, inst, rec = chosen[0]
     inst = inst | {"instance": "i00", "variant": fam["variants"][hit]} | rec
@@ -316,6 +344,7 @@ def main() -> int:
     ap.add_argument(
         "--refresh", action="store_true", help="rewrite the facts and t = 0 record of the existing instances"
     )
+    ap.add_argument("--candidates", type=Path, help="also write the three candidates to this directory")
     ap.add_argument("families", nargs="*")
     a = ap.parse_args()
     fams = json.loads((HERE / "families.json").read_text())["families"]
@@ -328,7 +357,7 @@ def main() -> int:
     excluded = public_trajectory_houses()
     a.out.mkdir(parents=True, exist_ok=True)
     for family in a.families or fams:
-        select(family, fams[family], a.bench, excluded, a.out)
+        select(family, fams[family], a.bench, excluded, a.out, a.candidates)
     return 0
 
 

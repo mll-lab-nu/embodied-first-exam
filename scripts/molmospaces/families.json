@@ -10,7 +10,7 @@
         "a": "an AI2-THOR object",
         "b": "an Objaverse object"
       },
-      "keep": 12,
+      "keep": 118,
       "success": "the object touches the robot and nothing else, and it is at least {lift_cm:g} cm higher than where it started",
       "difficulty": "Grasp and lift one named object in an unseen, cluttered house (ProcTHOR layout with Objaverse objects); the object must touch the robot and nothing else at the end, so a grasp that drops it, or still rests it on a surface, fails. The object starts with at least three other objects within 30 cm of it. 303 control steps (20 s)."
     },

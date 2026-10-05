@@ -6,7 +6,8 @@
 # container of it, and stages them in images/molmospaces/build/), then scripts/build_images.sh, or in this directory:
 #   docker build -t ghcr.io/mll-lab-nu/eai-molmospaces:$(cat VERSION) .
 # Not included (PROTOCOL §2.7): upstream's scripted experts (molmo_spaces/policy/solvers: stubs only) and every grasp file.
-# Licences: code Apache-2.0; assets CC BY 4.0 / ODC-BY 1.0, a few Objaverse objects CC BY-NC (non-commercial use).
+# Licences: code Apache-2.0; scenes and AI2-THOR objects CC BY 4.0; Objaverse objects ODC-BY 1.0 and each its creator's
+# CC BY / BY-SA / CC0 (scripts/molmospaces/make_instances.py selects no episode with a non-commercial one).
 FROM docker.io/library/python:3.11.13-slim-bookworm@sha256:86adf8dbadc3d6e82ee5dd2c74bec2e1c2467cdad47886280501df722372d2e1 AS base
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \
     MUJOCO_GL=egl PYOPENGL_PLATFORM=egl NVIDIA_DRIVER_CAPABILITIES=all \
@@ -41,10 +42,13 @@ WORKDIR /app
 FROM base
 # The assets of the frozen instances as prepare_assets.sh left them (install_assets.py install: downloaded with upstream's
 # resource manager, traced, pruned), checked here without network (so nothing is fetched at run time): every instance
-# rebuilds to its recorded t = 0 state hash. No GPU during the build: OSMesa.
+# rebuilds to its recorded t = 0 state hash. No GPU during the build: OSMesa. /opt/molmospaces/ATTRIBUTION.md: the licence
+# of every shipped asset (the build fails on a non-commercial one).
 COPY build/assets /opt/molmospaces/assets
 COPY build/cache /opt/molmospaces/cache
 COPY build/check /tmp/check
 RUN --network=none cd /tmp/check && MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa PYTHONPATH=/tmp/check RCB_SESSION_LOG= \
       python install_assets.py verify instances && \
+    MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa PYTHONPATH=/tmp/check RCB_SESSION_LOG= \
+      python install_assets.py attribution instances /opt/molmospaces/ATTRIBUTION.md && \
     rm -rf /tmp/check /root/.cache /tmp/rcb_molmospaces && chmod -R a+rX /opt/molmospaces
