@@ -1241,5 +1241,352 @@
   "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 522 s on average (15,671 control steps at 30 Hz) and drove 47.34 m; the scene loads 3 rooms, and the goal uses `ontop`, `nextto`, `under`.",
   "std_goal": "Organize the bedroom desk for work. The monitor and the mouse stand on the desk, the keyboard lies on a notebook on the desk, the computer stands under the desk, and a folder with a pen on it lies on the swivel chair. Leave the computer under the desk and the monitor on it; put the keyboard on the desk next to the monitor and the mouse on the desk next to the keyboard; put the folder next to the mouse, the notebook on the folder and the pen on the notebook; and put the swivel chair next to the desk. Success means all of the following hold at the same time: (1) the monitor is on top of the desk and the computer is under the desk; (2) the keyboard is on top of the desk and next to the monitor; (3) the mouse is on top of the desk and next to the keyboard; (4) the folder is next to the mouse, the notebook is on top of the folder and the pen on top of the notebook; (5) the swivel chair is next to the desk. How the simulator judges them: ontop(A, B): A touches B and B is directly below A (and not above it). nextto(A, B): the gap between A's and B's axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions, and nothing lies between them along a horizontal axis. under(A, B): B is directly above A (and not below it). The service checks the goal and the episode ends the moment it holds.",
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 522 s on average (15,671 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "slicing_vegetables": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114061183",
+   "duration_s": 495,
+   "episodes": 200,
+   "mean_s": 495,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Dice the vegetables in the kitchen. Two bell peppers, two beets and a zucchini are inside the refrigerator; a paring knife and two chopping boards lie on the countertop. Dice all five vegetables, so that none of them is left whole, and leave the refrigerator closed.",
+  "success": [
+   "diced bell pepper (`diced__bell_pepper.n.01_1`), diced beet (`diced__beet.n.01_1`) and diced zucchini (`diced__zucchini.n.01_1`) exist",
+   "no whole bell pepper (`bell_pepper.n.02_1`, `_2`), beet (`beet.n.02_1`, `_2`) or zucchini (`zucchini.n.02_1`) is left (every one has been cut)",
+   "the refrigerator (`electric_refrigerator.n.01_1`) is closed"
+  ],
+  "difficulty": "First-pass rating on the task-list site: extreme. The 2026 challenge's 200 teleoperated demonstrations took 495 s on average (14,845 control steps at 30 Hz) and drove 40.63 m; the scene loads 7 rooms, and the goal uses `open`, `real`.",
+  "std_goal": "Dice the vegetables in the kitchen. Two bell peppers, two beets and a zucchini are inside the refrigerator; a paring knife and two chopping boards lie on the countertop. Dice all five vegetables, so that none of them is left whole, and leave the refrigerator closed. Success means all of the following hold at the same time: (1) diced bell pepper, diced beet and diced zucchini exist; (2) no whole bell pepper, beet or zucchini is left (every one has been cut); (3) the refrigerator is closed. How the simulator judges them: open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 495 s on average (14,845 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "clean_your_rusty_garden_tools": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/tHiesuHDgkc",
+   "duration_s": 484,
+   "episodes": 200,
+   "mean_s": 505,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Clean the rusty garden tools. A rusty trowel and a rusty scraper lie on the driveway in the garden, next to a toolbox with steel wool inside; remove all the rust from both tools, put them inside the toolbox and close it.",
+  "success": [
+   "no rust (`rust.n.01_1`) is left on the trowel (`trowel.n.01_1`) or on the scraper (`scraper.n.01_1`)",
+   "both tools are inside the toolbox (`toolbox.n.01_1`)",
+   "the toolbox is closed"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 505 s on average (15,158 control steps at 30 Hz) and drove 68.58 m; the scene loads 5 rooms, and the goal uses `inside`, `open`, `covered`.",
+  "std_goal": "Clean the rusty garden tools. A rusty trowel and a rusty scraper lie on the driveway in the garden, next to a toolbox with steel wool inside; remove all the rust from both tools, put them inside the toolbox and close it. Success means all of the following hold at the same time: (1) no rust is left on the trowel or on the scraper; (2) both tools are inside the toolbox; (3) the toolbox is closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 505 s on average (15,158 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "moving_boxes_to_storage": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114058315",
+   "duration_s": 487,
+   "episodes": 200,
+   "mean_s": 487,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Move the two storage containers, which stand on the living-room floor, to the garage: put one on the garage floor and stack the other on top of it (either order).",
+  "success": [
+   "one storage container (`storage_container.n.01_1` or `_2`) is on top of the garage floor (`floor.n.01_2`) and the other one is on top of it"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 487 s on average (14,596 control steps at 30 Hz) and drove 36.81 m; the scene loads 5 rooms, and the goal uses `ontop`.",
+  "std_goal": "Move the two storage containers, which stand on the living-room floor, to the garage: put one on the garage floor and stack the other on top of it (either order). Success means all of the following hold at the same time: (1) one storage container is on top of the garage floor and the other one is on top of it. How the simulator judges them: ontop(A, B): A touches B and B is directly below A (and not above it). The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 487 s on average (14,596 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "cook_cabbage": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060935",
+   "duration_s": 471,
+   "episodes": 200,
+   "mean_s": 471,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Cook diced cabbage with chili. The head cabbage and the chili are inside the kitchen refrigerator; a frying pan, a plate, a chopping board and a carving knife lie on the countertop, and there is a stove in the kitchen. Dice the cabbage and the chili and cook them in the frying pan, so that the pan holds cooked diced cabbage and cooked diced chili.",
+  "success": [
+   "cooked diced cabbage (`cooked__diced__head_cabbage.n.01_1`) and cooked diced chili (`cooked__diced__chili.n.01_1`) exist",
+   "the frying pan (`frying_pan.n.01_1`) contains both"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 471 s on average (14,145 control steps at 30 Hz) and drove 39.31 m; the scene loads 7 rooms, and the goal uses `contains`, `real`.",
+  "std_goal": "Cook diced cabbage with chili. The head cabbage and the chili are inside the kitchen refrigerator; a frying pan, a plate, a chopping board and a carving knife lie on the countertop, and there is a stove in the kitchen. Dice the cabbage and the chili and cook them in the frying pan, so that the pan holds cooked diced cabbage and cooked diced chili. Success means all of the following hold at the same time: (1) cooked diced cabbage and cooked diced chili exist; (2) the frying pan contains both. How the simulator judges them: contains(A, S): at least one particle of the substance S lies inside A's container volume. real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 471 s on average (14,145 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "putting_away_Halloween_decorations": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114054409",
+   "duration_s": 460,
+   "episodes": 200,
+   "mean_s": 460,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Put the Halloween decorations away. Two pumpkins, three candles and a cauldron stand on the living-room floor. Put the pumpkins and the candles inside the living-room cabinets (any of them), close every living-room cabinet, and leave the cauldron next to a living-room table.",
+  "success": [
+   "both pumpkins (`pumpkin.n.02_1`, `_2`) and all three candles (`candle.n.01_1` to `_3`) are inside living-room cabinets (`cabinet.n.01_*`: any of them)",
+   "the cauldron (`caldron.n.01_1`) is next to a living-room table (`table.n.02_*`: any of them)",
+   "every living-room cabinet is closed"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 460 s on average (13,788 control steps at 30 Hz) and drove 47.14 m; the scene loads 4 rooms, and the goal uses `inside`, `nextto`, `open`.",
+  "std_goal": "Put the Halloween decorations away. Two pumpkins, three candles and a cauldron stand on the living-room floor. Put the pumpkins and the candles inside the living-room cabinets (any of them), close every living-room cabinet, and leave the cauldron next to a living-room table. Success means all of the following hold at the same time: (1) both pumpkins and all three candles are inside living-room cabinets; (2) the cauldron is next to a living-room table; (3) every living-room cabinet is closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. nextto(A, B): the gap between A's and B's axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions, and nothing lies between them along a horizontal axis. open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 460 s on average (13,788 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "cleaning_up_plates_and_food": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114054554",
+   "duration_s": 457,
+   "episodes": 200,
+   "mean_s": 457,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Clean up after the meal in the kitchen. On the breakfast table stand two plates, each with a pizza on it, and two bowls. Put both pizzas, each still on its own plate, into the same refrigerator, put both bowls into the same sink, and leave every kitchen refrigerator closed.",
+  "success": [
+   "each pizza (`pizza.n.01_1`, `_2`) is on top of a different plate (`plate.n.04_1`, `_2`)",
+   "both pizzas are inside the same refrigerator (`electric_refrigerator.n.01_*`: any kitchen refrigerator)",
+   "both bowls (`bowl.n.01_1`, `_2`) are inside the same sink (`sink.n.01_*`: any kitchen sink)",
+   "every kitchen refrigerator is closed"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 457 s on average (13,696 control steps at 30 Hz) and drove 35.97 m; the scene loads 4 rooms, and the goal uses `inside`, `ontop`, `open`.",
+  "std_goal": "Clean up after the meal in the kitchen. On the breakfast table stand two plates, each with a pizza on it, and two bowls. Put both pizzas, each still on its own plate, into the same refrigerator, put both bowls into the same sink, and leave every kitchen refrigerator closed. Success means all of the following hold at the same time: (1) each pizza is on top of a different plate; (2) both pizzas are inside the same refrigerator; (3) both bowls are inside the same sink; (4) every kitchen refrigerator is closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. ontop(A, B): A touches B and B is directly below A (and not above it). open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 457 s on average (13,696 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "organizing_school_stuff": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/GO2Bw-0OY7M",
+   "duration_s": 426,
+   "episodes": 200,
+   "mean_s": 486,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Pack the school things in the bedroom. A pencil, a book and a folder lie on the bed; a pen, a calculator and the carryall are on the floor. Put all five things into the carryall and put the carryall on the bed.",
+  "success": [
+   "the folder (`folder.n.02_1`), the book (`book.n.02_1`), the pencil (`pencil.n.01_1`), the pen (`pen.n.01_1`) and the calculator (`calculator.n.02_1`) are inside the carryall (`carryall.n.01_1`)",
+   "the carryall is on top of the bed (`bed.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 486 s on average (14,592 control steps at 30 Hz) and drove 26.16 m; the scene loads 6 rooms, and the goal uses `inside`, `ontop`.",
+  "std_goal": "Pack the school things in the bedroom. A pencil, a book and a folder lie on the bed; a pen, a calculator and the carryall are on the floor. Put all five things into the carryall and put the carryall on the bed. Success means all of the following hold at the same time: (1) the folder, the book, the pencil, the pen and the calculator are inside the carryall; (2) the carryall is on top of the bed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. ontop(A, B): A touches B and B is directly below A (and not above it). The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 486 s on average (14,592 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "bringing_in_wood": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114058068",
+   "duration_s": 451,
+   "episodes": 200,
+   "mean_s": 451,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Bring the wood in. Three sheets of plywood lie on the ground in the garden; put all three on the corridor floor.",
+  "success": [
+   "every plywood sheet (`plywood.n.01_1` to `_3`) is on top of the corridor floor (`floor.n.01_2`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 451 s on average (13,536 control steps at 30 Hz) and drove 36.38 m; the scene loads 5 rooms, and the goal uses `ontop`.",
+  "std_goal": "Bring the wood in. Three sheets of plywood lie on the ground in the garden; put all three on the corridor floor. Success means all of the following hold at the same time: (1) every plywood sheet is on top of the corridor floor. How the simulator judges them: ontop(A, B): A touches B and B is directly below A (and not above it). The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 451 s on average (13,536 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "putting_away_toys": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/StbSZCTn7D4",
+   "duration_s": 438,
+   "episodes": 200,
+   "mean_s": 377,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Put the toys away. Eight toy figures lie on the floor, four in the living room and four in the dining room; one toy box stands on the living-room floor and another on the dining-room table. Put every toy figure inside a toy box (either box).",
+  "success": [
+   "every toy figure (`toy_figure.n.01_1` to `_8`) is inside a toy box (`toy_box.n.01_1` or `_2`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 377 s on average (11,297 control steps at 30 Hz) and drove 35.15 m; the scene loads 7 rooms, and the goal uses `inside`.",
+  "std_goal": "Put the toys away. Eight toy figures lie on the floor, four in the living room and four in the dining room; one toy box stands on the living-room floor and another on the dining-room table. Put every toy figure inside a toy box (either box). Success means all of the following hold at the same time: (1) every toy figure is inside a toy box. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 377 s on average (11,297 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "freeze_pies": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114061625",
+   "duration_s": 415,
+   "episodes": 200,
+   "mean_s": 415,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Freeze the pies. Two apple pies lie on two plates on the kitchen countertop, and two tupperwares are inside a kitchen cabinet. Put each pie into its own tupperware, put both tupperwares into the refrigerator, close it, and wait until both pies are frozen.",
+  "success": [
+   "each apple pie (`apple_pie.n.01_1`, `_2`) is inside a different tupperware (`tupperware.n.01_1`, `_2`)",
+   "both tupperwares are inside the refrigerator (`electric_refrigerator.n.01_1`)",
+   "both pies are frozen",
+   "the refrigerator is closed"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 415 s on average (12,455 control steps at 30 Hz) and drove 35.44 m; the scene loads 7 rooms, and the goal uses `inside`, `open`, `frozen`.",
+  "std_goal": "Freeze the pies. Two apple pies lie on two plates on the kitchen countertop, and two tupperwares are inside a kitchen cabinet. Put each pie into its own tupperware, put both tupperwares into the refrigerator, close it, and wait until both pies are frozen. Success means all of the following hold at the same time: (1) each apple pie is inside a different tupperware; (2) both tupperwares are inside the refrigerator; (3) both pies are frozen; (4) the refrigerator is closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. frozen(A): A's current temperature is at or below its freezing temperature (0 °C by default). Objects drift back towards the 23 °C room temperature, so A stops being frozen once it has warmed above 0 °C. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 415 s on average (12,455 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "clean_a_patio": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060492",
+   "duration_s": 402,
+   "episodes": 200,
+   "mean_s": 402,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Clean the patio. The garden floor is covered with mud and a broom lies on it; remove every bit of mud from the floor.",
+  "success": [
+   "no mud (`mud.n.03_1`) is left on the garden floor (`floor.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 402 s on average (12,071 control steps at 30 Hz) and drove 37.21 m; the scene loads 4 rooms, and the goal uses `covered`.",
+  "std_goal": "Clean the patio. The garden floor is covered with mud and a broom lies on it; remove every bit of mud from the floor. Success means all of the following hold at the same time: (1) no mud is left on the garden floor. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 402 s on average (12,071 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "sorting_vegetables": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114058741",
+   "duration_s": 397,
+   "episodes": 200,
+   "mean_s": 397,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "loose_goal": "the BDDL goal does not require the three groups to be in three different bowls (one `exists` per group)",
+  "scene": "house_single_floor",
+  "goal": "Sort the vegetables in the kitchen. Two wicker baskets stand on the kitchen floor, one with three bok choy and three ears of sweet corn, the other with two broccoli, two leeks and three Vidalia onions; three mixing bowls stand on the countertop. Put the bok choy and the onions together into one mixing bowl, the leeks and the broccoli together into a second one, and the sweet corn into a third.",
+  "success": [
+   "one mixing bowl (`mixing_bowl.n.01_1` to `_3`) holds all three bok choy (`bok_choy.n.02_1` to `_3`) and all three Vidalia onions (`vidalia_onion.n.01_1` to `_3`)",
+   "one mixing bowl holds both leeks (`leek.n.02_1`, `_2`) and both broccoli (`broccoli.n.02_1`, `_2`)",
+   "one mixing bowl holds all three ears of sweet corn (`sweet_corn.n.02_1` to `_3`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 397 s on average (11,904 control steps at 30 Hz) and drove 33.95 m; the scene loads 7 rooms, and the goal uses `inside`.",
+  "note": "The BDDL goal does not require the three groups to be in three different bowls (one `exists` per group).",
+  "std_goal": "Sort the vegetables in the kitchen. Two wicker baskets stand on the kitchen floor, one with three bok choy and three ears of sweet corn, the other with two broccoli, two leeks and three Vidalia onions; three mixing bowls stand on the countertop. Put the bok choy and the onions together into one mixing bowl, the leeks and the broccoli together into a second one, and the sweet corn into a third. Success means all of the following hold at the same time: (1) one mixing bowl holds all three bok choy and all three Vidalia onions; (2) one mixing bowl holds both leeks and both broccoli; (3) one mixing bowl holds all three ears of sweet corn. The three groups need not end up in three different bowls; the check asks for one bowl per group. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 397 s on average (11,904 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "freeze_fruit": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/6nM9_B5OoRY",
+   "duration_s": 339,
+   "episodes": 200,
+   "mean_s": 421,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "loose_goal": "despite the task's name, the goal does not require the fruit to be frozen",
+  "scene": "house_single_floor",
+  "goal": "Put the fruit into the refrigerator. Two apples lie in a bowl and two strawberries on a tray on the kitchen countertop, and two tupperwares are inside a kitchen cabinet. Put one apple and one strawberry into each tupperware, put both tupperwares into the refrigerator, and close it.",
+  "success": [
+   "each apple (`apple.n.01_1`, `_2`) is inside a different tupperware (`tupperware.n.01_1`, `_2`)",
+   "each strawberry (`strawberry.n.01_1`, `_2`) is inside a different tupperware",
+   "both tupperwares are inside the refrigerator (`electric_refrigerator.n.01_1`)",
+   "the refrigerator is closed"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 421 s on average (12,619 control steps at 30 Hz) and drove 25.4 m; the scene loads 7 rooms, and the goal uses `inside`, `open`.",
+  "note": "Despite the task's name, the BDDL goal does not require the fruit to be frozen.",
+  "std_goal": "Put the fruit into the refrigerator. Two apples lie in a bowl and two strawberries on a tray on the kitchen countertop, and two tupperwares are inside a kitchen cabinet. Put one apple and one strawberry into each tupperware, put both tupperwares into the refrigerator, and close it. Success means all of the following hold at the same time: (1) each apple is inside a different tupperware; (2) each strawberry is inside a different tupperware; (3) both tupperwares are inside the refrigerator; (4) the refrigerator is closed. The fruit does not need to be frozen. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 421 s on average (12,619 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "wash_dog_toys": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060219",
+   "duration_s": 374,
+   "episodes": 200,
+   "mean_s": 374,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Wash the dog toys. Two teddy bears, a tennis ball and a softball are inside the cabinet in the utility room: one teddy is dirty and the other dusty, the tennis ball is covered with debris and the softball with dirt. Clean all four; a washing machine stands in the utility room.",
+  "success": [
+   "neither teddy bear (`teddy.n.01_1`, `_2`) has any dirt (`dirt.n.02_1`) or dust (`dust.n.01_1`) on it",
+   "the tennis ball (`tennis_ball.n.01_1`) has no debris (`debris.n.01_1`) on it",
+   "the softball (`softball.n.01_1`) has no dirt on it"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 374 s on average (11,223 control steps at 30 Hz) and drove 46.58 m; the scene loads 5 rooms, and the goal uses `covered`.",
+  "std_goal": "Wash the dog toys. Two teddy bears, a tennis ball and a softball are inside the cabinet in the utility room: one teddy is dirty and the other dusty, the tennis ball is covered with debris and the softball with dirt. Clean all four; a washing machine stands in the utility room. Success means all of the following hold at the same time: (1) neither teddy bear has any dirt or dust on it; (2) the tennis ball has no debris on it; (3) the softball has no dirt on it. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 374 s on average (11,223 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "polishing_shoes": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/bSCbEvVJykI",
+   "duration_s": 363,
+   "episodes": 200,
+   "mean_s": 358,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "hotel_suite_large",
+  "goal": "Polish the shoes in the bedroom. Two dusty shoes lie on the bedroom floor and a scrub brush lies on the stand; there are two footstools in the room. Brush all the dust off both shoes, set them next to each other and next to the same footstool, and leave the scrub brush on the stand.",
+  "success": [
+   "no dust (`dust.n.01_1`) is left on either shoe (`shoe.n.01_1`, `_2`)",
+   "the two shoes are next to each other, and both are next to the same footstool (`footstool.n.01_1` or `_2`)",
+   "the scrub brush (`scrub_brush.n.01_1`) is on top of the stand (`stand.n.04_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 358 s on average (10,738 control steps at 30 Hz) and drove 17.16 m; the scene loads 2 rooms, and the goal uses `ontop`, `nextto`, `covered`.",
+  "std_goal": "Polish the shoes in the bedroom. Two dusty shoes lie on the bedroom floor and a scrub brush lies on the stand; there are two footstools in the room. Brush all the dust off both shoes, set them next to each other and next to the same footstool, and leave the scrub brush on the stand. Success means all of the following hold at the same time: (1) no dust is left on either shoe; (2) the two shoes are next to each other, and both are next to the same footstool; (3) the scrub brush is on top of the stand. How the simulator judges them: ontop(A, B): A touches B and B is directly below A (and not above it). nextto(A, B): the gap between A's and B's axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions, and nothing lies between them along a horizontal axis. covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 358 s on average (10,738 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "chopping_wood": {
+  "include": true,
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114061262",
+   "duration_s": 358,
+   "episodes": 200,
+   "mean_s": 358,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Chop the firewood. Four logs, an axe and a chopping block lie on the driveway in the garden; split all four logs in half.",
+  "success": [
+   "all eight half logs (`half__log.n.01_1` to `_8`) exist (each of the four logs `log.n.01_1` to `_4` has been split in two)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 358 s on average (10,752 control steps at 30 Hz) and drove 37.83 m; the scene loads 5 rooms, and the goal uses `real`.",
+  "std_goal": "Chop the firewood. Four logs, an axe and a chopping block lie on the driveway in the garden; split all four logs in half. Success means all of the following hold at the same time: (1) all eight half logs exist. How the simulator judges them: real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 358 s on average (10,752 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  }
 }
