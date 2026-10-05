@@ -98,6 +98,9 @@ HARD = dict(
     max_strain_ratio=1.5,
     settle_s=60.,
     fold_layout=dict(settle_s=25., deviation_m=.03, corner_radius_m=.15, min_particles=25),
+    # oraclefix 11b: the laid-out sheet must stay clear of the arm bases' covers (robot_oracle.base_clearance_stage)
+    base_clearance=dict(max_stages=2, settle_s=10., margin_m=.01, extra_m=.01, edge_band_m=(.025, .05), lift_m=.03,
+                        speed_m_s=.02),
     stages=(
         dict(
             grasp_uv=dict(left=(-.29, -.20), right=(.28, .20)),

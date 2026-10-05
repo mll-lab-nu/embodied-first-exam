@@ -253,6 +253,56 @@ def fold_stage(x, uv, table, layout, fold, tcp):
     return stage, diagnosis
 
 
+def base_clearance_stage(x, uv, state, task, cfg):
+    """oraclefix 11b: one stage that slides the sheet away from an arm base it is too close to; (stage or None, diagnosis).
+
+    The Task's final settling needs every robot collision cover >= clearance_m from the cloth's box padded by the particle
+    radius (evaluation/terminal/settling.py). The arm bases are fixed at the table's x ends and their conservative covers
+    reach x = 0.231 / -0.502 on lab, a window only ~5 cm wider per side than the sheet: a sheet left that far to one
+    side can never pass, whatever the arms do (v17det blanket hard: the laid-out right corner put the sheet's box 1 cm into
+    the right base's cover, every cloth gate true, 3600 settle steps without success). Measured on the current state:
+    the covers that face the cloth box across x (overlapping it in y and z); if one is closer than clearance_m +
+    margin_m, the hand on the far side grasps a complete patch 2.5-5 cm inside its own edge at the sheet's mid-width,
+    lifts it lift_m and slides the sheet away by the shortfall + extra_m (bounded by the room on that side), then the
+    usual release 3 cm above the table and retreat follow."""
+    spec = task.final_settling_spec()
+    pad, need = float(spec.particle_radius_m), float(spec.clearance_m)+float(cfg["margin_m"])
+    x, uv = np.asarray(x, float), np.asarray(uv, float)
+    lo, hi = x.min(0)-pad, x.max(0)+pad
+    boxes = np.asarray((state.get("release_geometry") or {}).get("robot_bounds_m", []), float).reshape(-1, 2, 3)
+    diagnosis = dict(cloth_box=[lo.tolist(), hi.tolist()], need_m=need, covers=len(boxes))
+    facing = boxes[(boxes[:, 0, 1] < hi[1]+need) & (boxes[:, 1, 1] > lo[1]-need)
+                   & (boxes[:, 0, 2] < hi[2]+need) & (boxes[:, 1, 2] > lo[2]-need)]
+    middle = (lo[0]+hi[0])/2
+    right = facing[(facing[:, 0, 0]+facing[:, 1, 0])/2 > middle]
+    left = facing[(facing[:, 0, 0]+facing[:, 1, 0])/2 <= middle]
+    gap_right = float(right[:, 0, 0].min()-hi[0]) if len(right) else float("inf")
+    gap_left = float(lo[0]-left[:, 1, 0].max()) if len(left) else float("inf")
+    diagnosis.update(gap_right_m=gap_right, gap_left_m=gap_left)
+    if gap_right >= need and gap_left >= need:
+        return None, dict(diagnosis, reason="clear")
+    if gap_right < need and gap_left < need:
+        return None, dict(diagnosis, reason="no room on either side")
+    toward_left = gap_right < need
+    shift = need-(gap_right if toward_left else gap_left)
+    room = (gap_left if toward_left else gap_right)-need
+    pull = min(shift+float(cfg["extra_m"]), room)
+    diagnosis.update(shift_m=shift, room_m=room, pull_m=pull)
+    if pull < shift:
+        return None, dict(diagnosis, reason="not enough room on the far side")
+    side = "left" if toward_left else "right"
+    depth = (x[:, 0]-lo[0]-pad) if toward_left else (hi[0]-pad-x[:, 0])
+    band = np.flatnonzero((depth >= cfg["edge_band_m"][0]) & (depth <= cfg["edge_band_m"][1]))
+    if not len(band):
+        return None, dict(diagnosis, reason="no grasp band")
+    grasp = int(band[np.argmin(np.abs(x[band, 1]-(lo[1]+hi[1])/2))])
+    h, d = float(cfg["lift_m"]), (-pull if toward_left else pull)
+    stage = dict(grasp_uv={side: tuple(float(v) for v in uv[grasp])},
+                 segments=(dict(name="lift", duration_s=1., by={side: (0., 0., h)}),
+                           dict(name="slide", duration_s=max(1.5, pull/float(cfg["speed_m_s"])), by={side: (d, 0., h)})))
+    diagnosis.update(side=side, grasp=grasp, grasp_xy=x[grasp, :2].tolist(), grasp_uv=uv[grasp].tolist())
+    return stage, diagnosis
+
 def run_route_oracle(env, runner, output, *, variation="easy"):
     output = Path(output)
     if env._world.physics_step != 0:
@@ -317,7 +367,7 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
         report.update(fingertip_extension_m=extension, stages=[])
         q = arms.qpos()
         # oraclefix 11: a route may append one measured fold-layout stage after its last stage (see fold_stage).
-        stages, fold_checked = list(route["stages"]), False
+        stages, fold_checked, nudges = list(route["stages"]), False, 0
         for index, stage in enumerate(stages):
             active = tuple(s for s in SIDES if s in stage["grasp_uv"])
             # Stage 0 keeps the single-stage phase names; later stages are suffixed.
@@ -425,6 +475,20 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
                 if not task.result.task_success:
                     extra, diagnosis = fold_stage(cloth(), uv, table, task.layout, fold, arms.tcp())
                     report["fold_layout"] = diagnosis
+                    write_json_atomic(output/"oracle_report.json", to_jsonable(report))
+                    if extra is not None:
+                        stages.append(extra)
+            # oraclefix 11b: once the sheet is quiet, slide it off an arm base it is too close to (base_clearance_stage)
+            nudge = route.get("base_clearance")
+            if (nudge and nudges < nudge["max_stages"] and index == len(stages)-1
+                    and not task.result.task_success):
+                nudges += 1
+                actions = hold(nudge["settle_s"], q, grip)
+                quiet = Quiet(task.config["maximum_speed_m_s"], task.config["stable_duration_s"], dt)
+                run(f"clearance_settle_{nudges}", Sequence(actions, stop=quiet), actions)
+                if not task.result.task_success:
+                    extra, diagnosis = base_clearance_stage(cloth(), uv, world.read_state(), task, nudge)
+                    report.setdefault("base_clearance", []).append(diagnosis)
                     write_json_atomic(output/"oracle_report.json", to_jsonable(report))
                     if extra is not None:
                         stages.append(extra)
