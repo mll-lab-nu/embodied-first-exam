@@ -29,9 +29,10 @@ CLIENT = dict(
 )
 SITE_RUNS = "https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter"
 # Per family, GPT-6 Luna's privileged trial on the kept episode that the separate verifier graded 1 (batch
-# molmospaces-luna-1003; open-door: the earlier round's batch molmospaces-luna-rby1-r2c, same scene and success rule).
+# molmospaces-luna-1003; pick: molmospaces-luna-1004-pick, the run that chose its episode under the licence filter;
+# open-door: the earlier round's batch molmospaces-luna-rby1-r2c, same scene and success rule).
 POSITIVE = {
-    "pick": "molmospaces-pick-i02-privileged__wN67cFo",
+    "pick": "molmospaces-pick-c118-privileged__FtaBN4B",
     "pick-and-place": "molmospaces-pick-and-place-i01-p__ywMYWxy",
     "pick-and-place-next-to": "molmospaces-pick-and-place-next__3W4hmcz",
     "pick-and-place-color": "molmospaces-pick-and-place-color__hMCxv9C",
@@ -40,6 +41,7 @@ POSITIVE = {
     "navigate-to": "molmospaces-navigate-to-i01-priv__Nxshh8t",
     "open-door": "molmospaces-open-door-i01-privil__7zEbSdU",
 }
+BATCH = {"pick": "molmospaces-luna-1004-pick"}
 REVIEW_PR = 47  # the pull request whose human review covers these tasks (PROTOCOL §2.7)
 
 
@@ -48,7 +50,8 @@ def oracle_evidence(family: str) -> str:
         "run codex-gpt6_luna-medium, batch molmospaces-luna-rby1-r2c of 2026-10-03: an earlier round on the same "
         "episode, kept with the run's records, not on the results site"
         if family == "open-door"
-        else f"run codex-gpt6_luna-medium, batch molmospaces-luna-1003; {SITE_RUNS}/{family.replace('-', '_')}/unlimited/"
+        else f"run codex-gpt6_luna-medium, batch {BATCH.get(family, 'molmospaces-luna-1003')}; "
+        f"{SITE_RUNS}/{family.replace('-', '_')}/unlimited/"
     )
     return (
         f"no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by "

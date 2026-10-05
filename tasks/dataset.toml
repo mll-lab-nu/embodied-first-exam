@@ -3727,9 +3727,9 @@ digest = "sha256:b5ffc69c950f01cdd435851132fcac8b09880362b52ba436b297289c2f3d785
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-i00-privileged"
-digest = "sha256:0c0a1cd9a2b682f08bd1665ea8b1835e30845a97614cdf8f89764693ce1d9033"
+digest = "sha256:14dff9b7d1e4f3b5df6eb49cc298a3859b593fc15ea3f024f73c7806f031fb56"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-i00-standard"
-digest = "sha256:5838450e594fad59d9e95265fc7fa157b11d3a4977d6c1c86cab4a9890e07b0a"
+digest = "sha256:970cf5f645c7867b0f78739894a88f5d6af41e064270811b8ee7d5e982dbef51"
 
