@@ -9,7 +9,7 @@
 | Family / instance | `lid_transport` / seed 7 |
 | Oracle | `full` |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-maniguard:0.1.0` |
 
 ## Task
 Standard-mode twin of `maniguard-lid-transport-i07-privileged` (the same frozen ManiGuard-Bench task `lid_transport/task_0007/base`): the agent gets only the

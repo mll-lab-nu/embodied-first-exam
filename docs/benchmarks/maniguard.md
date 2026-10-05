@@ -35,7 +35,7 @@ cannot hold under the handle arch; replaced by `lid_transport/task_0007`). The o
 | `maniguard-lid-transport-i07` | `lid_transport/task_0007` | `d7a82682cd27834f` | 1881 |
 
 ## Prerequisites (every ManiGuard run)
-- **The image** `ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:<images/maniguard/VERSION>`, built on the host
+- **The image** `ghcr.io/mll-lab-nu/eai-maniguard:<images/maniguard/VERSION>`, built on the host
   (BUILD_ONLY: NVIDIA Isaac Sim 4.5 inside). `images/maniguard/` has the recipe: BEHAVIOR-1K v3.7.2 installed the way its
   own `setup.sh --new-env --omnigibson --bddl` does (Python 3.10, torch 2.6.0+cu124, the 26 Isaac Sim 4.5.0.0 wheels,
   sha256-checked), Spot 2.16 from conda-forge, PyAV from PyPI (conda-forge's ffmpeg brings a Vulkan loader and libglvnd

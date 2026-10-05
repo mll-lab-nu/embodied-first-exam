@@ -31,7 +31,7 @@ import argparse, ast, json, os, pathlib, re, sys, tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/maniguard"
 LAYER = ROOT / "scripts/eai_standard"
-REGISTRY = "ghcr.io/embodied-agent-interface-v2-internal"
+REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 REVIEW_PR = ""                              # the pull request with the per-task review (PROTOCOL §2.7), once there is one
 # agent egress: model APIs only, by default in both modes (user decision 2026-10-03); the host list of set_agent_egress.py
