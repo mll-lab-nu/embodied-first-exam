@@ -65,9 +65,9 @@ challenge's teleoperators needed 274-869 s on average, a median of about 450 s),
 `codex-gpt6_luna-xhigh` sweep (pre-v1.0 versions, 2026-09-25..29) solved in privileged mode: 22 of them were in that sweep
 (no success in either mode), 28 never ran. Skills, by the task-list site's labels: articulated objects 25 (refrigerators,
 cabinets, an oven, a car, a toolbox, a laptop), tool use 9 (knives, an axe, a broom, a scrub brush, steel wool, a lighter),
-heat 6 (cooking, freezing, fire), cutting and dicing 5, surface cleaning 4 (rust, mud, dirt, dust), filling containers with
-particles 2, operating devices 6 (an oven, a stove, a microwave, a washing machine), two-handed carrying of large objects 3,
-outdoor scenes 7, several rooms 13. Their predicates go beyond the first release's: `real` (objects that the simulator's
+heat 6 (cooking, baking, freezing, thawing, fire), cutting and dicing 5, surface cleaning 4 (rust, mud, dirt, dust), filling
+containers with particles 2, operating devices 6 (an oven, a stove, a microwave, a washing machine, a lighter), two-handed
+carrying of large objects 3, outdoor scenes 7, several rooms 13. Their predicates go beyond the first release's: `real` (objects that the simulator's
 transition rules create during the episode: halves, diced pieces, cooked food, a pizza), `filled` and `contains`
 (particles in a container); `goal.py` words them. No reference solution was written: `oracle = "none"`, with the official
 demonstrations as the solvability evidence, and the families are reviewed per family like the others (PROTOCOL §2.7).
