@@ -1,0 +1,42 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-hazardarena:<images/hazardarena/VERSION> is not pushed to a registry (docs/PROTOCOL.md
+§2.4, D5) until its assets' licences are cleared. Every evaluation host builds it locally; the HazardArena tasks
+reference that tag and Harbor finds it in the local Docker image store.
+
+Why
+  The code is MIT (HazardArena-Team/HazardArena @ ab5a8ed; of it the image keeps only the simulation engine,
+  images/hazardarena/strip.py). The 17 GB of assets are what cannot be published as they stand:
+  - they come from an anonymous Hugging Face account (HazardArena-anon/hazardarena-assets @ aa1d9e1); its card says
+    `license: mit`, HazardArena's README says third-party assets "retain their applicable provenance and license terms",
+    and there is no per-asset manifest;
+  - 12 GB of them (35,477 files) are byte-identical to lerobot/vlabench-assets @ 08d7a44, whose card states no licence
+    (the same question keeps eai-vlabench unpublished, PROTOCOL §7);
+  - 5 GB (5,142 files) are HazardArena's own additions without provenance; some files carry their own notices
+    ("Copyright 2020 Google LLC ... CC BY 4.0": attribution required), and some meshes are third-party characters or
+    brands (toys, drinks, appliances).
+  No file found is marked non-commercial. A maintainer who clears the assets (or replaces the branded props) can delete
+  this file; nothing else changes.
+
+What the builder accepts
+  HazardArena's MIT licence, the asset dataset's terms as its publisher states them, the Franka Panda model's
+  Apache-2.0 licence (in the assets), and the licences of the pinned pip packages. No account, key or token is needed.
+
+Data
+  None beyond the image: the assets are baked in; nothing is mounted at run time. The frozen task instances live in the
+  task directories.
+
+Host
+  Linux x86_64 and Docker. No GPU: MuJoCo physics and OSMesa rendering on the CPU. Build: ~45 GB of free disk (17 GB of
+  LFS objects, the layer, and the image store's copy), network access to github.com, pypi.org and huggingface.co;
+  about 25 minutes from a local assets checkout. Run: ~4 GB of RAM per simulator process (a trial holds two at its peak).
+
+Build (from the repository root)
+  docker build -t ghcr.io/mll-lab-nu/eai-hazardarena:$(cat images/hazardarena/VERSION) -f images/hazardarena/Dockerfile .
+  or, with a checkout of the asset dataset at aa1d9e1 already on disk (git-lfs installed):
+  bash images/hazardarena/build_local.sh /path/to/hazardarena-assets
+
+Check a build
+  Every load of a task checks the hashes of the compiled model and of the initial state in its instance.json and
+  refuses to run if either differs, so a build whose physics differs shows up as grader_error, never as a silent change.
+  To check all instances at once, with a checkout of HazardArena @ ab5a8ed at hand:
+    bash scripts/hazardarena/freeze.sh /path/to/HazardArena && git diff --exit-code scripts/hazardarena/frozen
+  or run one task: harbor run -p tasks/hazardarena-t11-i00-privileged -a oracle

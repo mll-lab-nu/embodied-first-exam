@@ -5313,3 +5313,291 @@ digest = "sha256:ce0ffbbac335105e6ee0929b4cca074de772b380df32e28c03067f0ed11898f
 name = "robot-coding-bench/robotangle-rope-threading-medium-i00-standard"
 digest = "sha256:61a76e1dc4a129237492c8d6009b20e35c4f2c0848b581a265445b531dab291e"
 
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t01-i00-privileged"
+digest = "sha256:e6292abd42e8217afb087ea19147482d3308d07974ee0a68ed662df511d081a2"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t01-i00-standard"
+digest = "sha256:94793219dd73e26ab7011b597bb0eae441c27ff114e6af40ad05cdae276c11bb"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t01-i01-privileged"
+digest = "sha256:c01641839cf3d9a4c4b5bdb2878d454ce76f8e4fddffc13ea94ceba75feeb28f"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t01-i01-standard"
+digest = "sha256:84fd49052a16a507fec2e9c8e554273ed10a5b0d18633cff61bfbbfe0d081caa"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t01-i02-privileged"
+digest = "sha256:a9c47c391ff5b6ea97bf92b673109c729771574ac49cf01377ce77d60e819aa9"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t01-i02-standard"
+digest = "sha256:7b4e951448225f4fb77d785cefa59c6dee385d19709cbc2bf91d854e404feeb8"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t03-i00-privileged"
+digest = "sha256:121794ebd7cb4638b8fa597a9c9e6da95a15f37af1582595da4ca2998c8174b3"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t03-i00-standard"
+digest = "sha256:9acfde21e5b531ca63e1e92eba2e2d0273b3304e75c66de57d2e0c8ecacfda06"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t03-i01-privileged"
+digest = "sha256:21349fa72eae8559a19c667a240f641ef6227cce76539665c9c70da99e5ed9d1"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t03-i01-standard"
+digest = "sha256:4262e1d75b692a599d664219d432904a1c59f93ab4da03b5b4e2ff295cd111b6"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t03-i02-privileged"
+digest = "sha256:a7f33e91791aba2e0b44111c905c6004e25d1726199f3af090232b7bd117b1ce"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t03-i02-standard"
+digest = "sha256:48dac120a037025a2d465f452033f83b7366daafbfbe8075f4b5fedd2682b2df"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t04-i00-privileged"
+digest = "sha256:0e28c74f7d1739e035253efd2e1eb16424cbd65987afc6e040b54e67994010dc"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t04-i00-standard"
+digest = "sha256:0a797ffe7c8a518e7663d8c66887aae6c7b8acf561a307d92969d7a464168f62"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t04-i01-privileged"
+digest = "sha256:5971f1c2a5db4a297f8580c9050a4e4d5338bc8d23bbb080b9a51f6278653345"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t04-i01-standard"
+digest = "sha256:5d95d3e28b660dfa53f6f24c06858cf05353c9396692323ade7857c4e3c0c90a"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t04-i02-privileged"
+digest = "sha256:5b12057040e094d542fd581d14ed30d4b3df7dc6cd0bb52c9bf32457962e5996"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t04-i02-standard"
+digest = "sha256:184dddb58aa5663c60e460639b9f3e7958d62ed254d1f3fdda17765c406734a7"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t05-i00-privileged"
+digest = "sha256:78a850f48ef75832ee6f4beafe7e140cf8909be2afc53733ac10848685303500"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t05-i00-standard"
+digest = "sha256:5f06bffa645cc4e859fac4cc9b4cd06734c32bcc06f96e492be113bb5f5b6017"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t05-i01-privileged"
+digest = "sha256:14e9d4f105a2e4bbbf6bed77945427de90644b590bb57b263a4d4e03c99f449e"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t05-i01-standard"
+digest = "sha256:ec95913b0b03a5df4c1d6538cc1a6273977dbc8bc75eea6f172cbe9c8d341035"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t05-i02-privileged"
+digest = "sha256:8460f17027b520ea0bf58f655ee7769c1b4dfcba4f4f3fc41a43775bd8c3ab03"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t05-i02-standard"
+digest = "sha256:85861dd6c720ed2ca2e28a38a08081671026a9739a8d824a7008a062418f4cad"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t08-i00-privileged"
+digest = "sha256:caefff46682b16240baef83102533f3a2796ae83985d2f45eb753d45c31bca60"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t08-i00-standard"
+digest = "sha256:6d48cca16451cf142d1615b0afa77cd6166e35beb7441f406ae216d4da0b5946"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t08-i01-privileged"
+digest = "sha256:fc8c93eaec5fe88318e6a658d552f0992bf604cdd58de8bf13dc3715874182e8"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t08-i01-standard"
+digest = "sha256:27bd48f45a28cf074ad02ead49a7998e7376e2e6ddaacaeb1c809f2cc73f2a7f"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t08-i02-privileged"
+digest = "sha256:951c3d65b7928ee04b207b8aee90273e7d26d4448149a06afa370388d3e5a74b"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t08-i02-standard"
+digest = "sha256:d2e11741fa72bde694422f13d3f518de67b5c89840be3920b2a7515ddfbfc0aa"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t09-i00-privileged"
+digest = "sha256:8daf177ebcc3d0a52b8971c706589261ccc83029d84ed9ad70ce0d2840360aeb"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t09-i00-standard"
+digest = "sha256:4cf4fd8971b8d9fd0ac1ec6a2bc7fe20c73499296eb8d81c37a09bd0015820af"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t09-i01-privileged"
+digest = "sha256:b16ab3940b37dcad953cae2c6d9f071e1f1ff6f208ff4b01e4311e405f5725df"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t09-i01-standard"
+digest = "sha256:c2c7c5d20fec82a9b4cacbc183f196a51f102fefcf9bc4b16f4df0626bdeebf4"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t09-i02-privileged"
+digest = "sha256:4e6749524980faa444fd53c4d556c8c94e4749e8d120895907265b2b0a849940"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t09-i02-standard"
+digest = "sha256:91c8a03de81f698ec53eb0aa531cc3c6f68c83deb43cdc91bca828bb7e4610e3"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t11-i00-privileged"
+digest = "sha256:9fa7e5a0c825356c1393cb868f3d6284eb646d8c139c884cdd4ccdd1e3384cd4"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t11-i00-standard"
+digest = "sha256:ee07be75afa97b727863be135c14fa796539c0de050fe2de9bdb2c5232fbf9a5"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t11-i01-privileged"
+digest = "sha256:0487ff999289c771f6b29680d3d005612b4dd4e42add85ae8a33edfe7cc58f1c"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t11-i01-standard"
+digest = "sha256:4b37ea24aa0061688b3a1262d6acdb2d24caa6816bf0fd1aca79f791dd00fb93"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t11-i02-privileged"
+digest = "sha256:b2f7e1feb00e1e6897a4dd4c005b9d7003bed82e5d089a1334b02336359a0f68"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t11-i02-standard"
+digest = "sha256:fc6df0105a3cb8ccedfdfcd28eb874c9cb683e87a1b6023444963b166768001e"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t12-i00-privileged"
+digest = "sha256:37f9ed30cd1a8e3a797c4fd192ede5d42a15fc301c8e9ffde96cded1ec185f14"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t12-i00-standard"
+digest = "sha256:186bdc7f31fcadb4d9eaaf326ce001c564716d1a5bdcaa7999d048c6dbff9eea"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t12-i01-privileged"
+digest = "sha256:ca8ec8269225f57ef6fbad4fa02185eeabe582f483b54784c6ebcbcd689dc34d"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t12-i01-standard"
+digest = "sha256:829fc6061be27d0076afcb45565d9ec4879359c9b52f4b55fdbedc6f621339fb"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t12-i02-privileged"
+digest = "sha256:b9f8827917f3328e3efcc04e7545ed787ddf37b8dd372e2d205683a5a18b9f61"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t12-i02-standard"
+digest = "sha256:8b8df4b1c23c0fcc5763fe0f5208e1387d97c082a87ee0b2c7e88f483af63fa9"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t13-i00-privileged"
+digest = "sha256:25a6651a1410e1d87e9bd8436eda8da21064877511b5ff795164e587480abbe6"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t13-i00-standard"
+digest = "sha256:996d99530636e387179e6769c6fcdb9f8b26b635a08987e3a1fe339024a1c14a"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t13-i01-privileged"
+digest = "sha256:bbdf912723ea3084b7bcca339725991050a3121941cda0061272a50c5e9b8b0a"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t13-i01-standard"
+digest = "sha256:deb90cefd9b2b866adb5ee1caa922fdc9b3cfd14a492d0343ce50c85bf7a93bf"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t13-i02-privileged"
+digest = "sha256:1e46db774ff7b39de189035096e4544a412f45d2bf018aae9f2f2f8f5e89b87b"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t13-i02-standard"
+digest = "sha256:d6155398fd25c83548ef95202b885fa2fe6b91694c5313e68f9034238077db72"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t14-i00-privileged"
+digest = "sha256:846127ef6ca1fc44298e489b1cf07917283a5c86dd127d1183402114a49b062f"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t14-i00-standard"
+digest = "sha256:7ecef91cd67e04faa3297341c04aca5b1eec443f5986d07d4fd2a9f79bdcb8f8"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t14-i01-privileged"
+digest = "sha256:69bc5d54c6bc4ddd126139212d9ba6f285425f84e8a93215c1c2cdfdf3e30a3a"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t14-i01-standard"
+digest = "sha256:ff867a2e0584e419bf0c698a6b1ab444c779890519146f093241dea5929f4f44"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t14-i02-privileged"
+digest = "sha256:dbcd7e74b2ee23c541b101b1a95ebd67362cc0db4320499aadfc3673f7b936aa"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t14-i02-standard"
+digest = "sha256:48eae69898625be2ebe87a1bebc90e02625bba73a5dacce7dfb5e82abb375fcc"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t15-i00-privileged"
+digest = "sha256:f518eb916c791583075b7b23a30e34745f99fe0f19b62ea136d195e156907529"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t15-i00-standard"
+digest = "sha256:f26ee8ff430000a769fa85a01ffdd9434f6030f226e06d2bdb27e12fa4295012"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t15-i01-privileged"
+digest = "sha256:e2a2243756dae046b42c8c83f5224ba279bf175351ad3d1be1588ddfdbe0641e"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t15-i01-standard"
+digest = "sha256:714ee327051294133e1427126d9903eaa8db991cfa5ff6b3cb77e9d77e69ce32"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t15-i02-privileged"
+digest = "sha256:979c5c9d6a908a559f6660acf18f2eaa851152ac50724591b979132a1c43b8db"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t15-i02-standard"
+digest = "sha256:64800af2de027221ca4b2fe93384c9a88c5b5562947c41df68585429d54668fd"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t16-i00-privileged"
+digest = "sha256:85f4dc875c4bb0fca07c2aa066b394ef4e795a0bfa224e37a9dd08021146d00e"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t16-i00-standard"
+digest = "sha256:d8ebab0297627d615e5ffabe8e553e277463fcc0d62ed3affa40fe6eb362e131"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t16-i01-privileged"
+digest = "sha256:9a43a387cb68d8727b85558b4991324dab74bacf23933561ff90d37408016824"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t16-i01-standard"
+digest = "sha256:4128b1acf8f85d8b615c7d88f4fc0da87cc2ac537a8c0c2df02a0e414250c752"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t16-i02-privileged"
+digest = "sha256:857eff3f7a33edc3ad8acee45215c1c7d1ce3f05e53e1b016fd20edb08808737"
+
+[[tasks]]
+name = "robot-coding-bench/hazardarena-t16-i02-standard"
+digest = "sha256:ce1082af74a8c2629724b5ab1064df68249b03a8946bb86dd3c0550f2b475874"
+
