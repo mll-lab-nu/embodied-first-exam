@@ -63,6 +63,13 @@ def task_dir(variation):
 
 
 class Runner:
+    # oraclefix 03 state at class level, so a Runner built without __init__ (as ci_checks/test-knot-oracle.py does) keeps
+    # the plain behaviour: no rate limiter (plain Session.step), no crush guard, no hover gate. __init__ enables them.
+    limiter = None
+    crush_guard = False
+    gate = None
+    hover_gate = False
+
     def __init__(self, args, *, session=None):
         from .artifacts import load_tooling, instance_identity
         from topogym.planning.knot_untying.kinematics import KnotIK
@@ -99,7 +106,7 @@ class Runner:
         from topogym.planning.standard_rate import RateLimiter
         self.limiter = RateLimiter(s)
         self.crush_guard, self.crush_events = False, []
-        self.gate, self.gates = None, []
+        self.gate, self.gates, self.hover_gate = None, [], True
         if self.owns_session:
             s.record_start()
 
@@ -139,7 +146,7 @@ class Runner:
             row[s.robot.arm_slice[side]] = self.q[side]
             row[s.robot.grip_index[side]] = self.g[side]
         self.validate_command(row)
-        ended = self.limiter.step(row)
+        ended = s.step(row) if self.limiter is None else self.limiter.step(row)
         safety = s.safety() if callable(getattr(s, "safety", None)) else {}
         volume = safety.get("soft_volume_ratio") or {}
         inverted_s = float(volume.get("longest_at_or_below_s", 0.))
@@ -661,7 +668,7 @@ class Runner:
                 break
         self.crush_guard = False
         self.release(pull_side, cfg["lift"], f"d{k}:release")
-        if len(self.crossings()) == 0:
+        if len(self.crossings()) == 0 and self.hover_gate:
             record["gate"] = self.gated_release(anchor_side, pull_side, (action["s_anchor"],), f"d{k}")
             self.gates.append(record["gate"])
         else:
@@ -725,7 +732,7 @@ class Runner:
                 break
         self.crush_guard = False
         self.release(side_a, cfg.get('spread_lift', .015), f"d{k}:release")
-        if len(self.crossings()) == 0:
+        if len(self.crossings()) == 0 and self.hover_gate:
             record["gate"] = self.gated_release(side_b, side_a, (b,), f"d{k}", lower=cfg.get('spread_lift', .015))
             self.gates.append(record["gate"])
         else:
@@ -903,7 +910,7 @@ class Runner:
         self.cartesian(side, self.smooth(tcp, tcp+[0, 0, cfg["lift"]], .03), turn, "d1:lift")
         tcp = self.tcp(side)
         self.cartesian(side, self.smooth(tcp, tcp+[cfg["delta"][0], cfg["delta"][1], 0], self.args.speed), turn, "d1:carry")
-        if len(self.crossings()) == 0:
+        if len(self.crossings()) == 0 and self.hover_gate:
             other = "left" if side == "right" else "right"
             record["gate"] = self.gated_release(side, other, (cfg["s"],), "d1", lower=cfg["lift"])
             self.gates.append(record["gate"])
@@ -984,7 +991,7 @@ class Runner:
                       gate_in_progress=(None if getattr(self, "gate", None) is None else
                                         {k: (np.asarray(v).tolist() if k == "xy" else v)
                                          for k, v in self.gate.items() if k != "turn"}),
-                      standard_rate=self.limiter.report() if hasattr(self, "limiter") else None)
+                      standard_rate=self.limiter.report() if self.limiter is not None else None)
         out = self.args.output if output is None else output
         from topogym.utils.io import write_json_atomic
         write_json_atomic(out/"report.json", report)

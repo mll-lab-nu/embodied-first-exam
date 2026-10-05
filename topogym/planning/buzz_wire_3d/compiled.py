@@ -23,7 +23,7 @@ class CompiledJointPolicy:
         # oraclefix 13: joint targets stay 1 urad inside the public limits (a target exactly at a limit rounds outward
         # in the adapter's float32 check and the bridge refuses the row as clipped)
         self.joint_limits = {name: [(float(lo)+1e-6, float(hi)-1e-6) for lo, hi in group["joint_limits_rad"]]
-                             for name, group in context["action_spec"]["groups"].items()}
+                             for name, group in context["action_spec"].get("groups", {}).items()}
 
     def act(self, observation):
         state = observation["state"]

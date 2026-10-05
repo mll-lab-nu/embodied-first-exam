@@ -112,7 +112,9 @@ class SessionPolicyRunner:
         if initialize is not None:
             from dataclasses import asdict
             spec = action_spec(env._robot.description, self.control_mode)
-            spec["grasp_assist"] = asdict(env.config.grasp_assist)   # as Env.action_spec / SegmentRunner give it
+            assist = getattr(getattr(env, "config", None), "grasp_assist", None)
+            if assist is not None:
+                spec["grasp_assist"] = asdict(assist)   # as Env.action_spec / SegmentRunner give it
             initialize(dict(action_spec=spec, timing_spec=env.timing_spec,
                             mode=mode, observation_spec=dict(privileged_fields=list(state_fields))))
         def observe():

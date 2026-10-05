@@ -634,7 +634,7 @@ class Standard(unittest.TestCase):
         self.assertEqual(report["executed_rows"], 4)
         self.assertEqual(len(calls), 2)
 
-    def test_restart_cannot_skip_rows_and_exhaustion_cannot_add_holds(self):
+    def test_restart_cannot_skip_rows_and_exhaustion_holds_only_the_last_row(self):
         class ConnectionLost(Exception): pass
         original = self.robot.submit.side_effect
         self.robot.submit.side_effect = ConnectionLost()
@@ -642,12 +642,25 @@ class Standard(unittest.TestCase):
             self.robot.wait_ready = lambda **kw: dict(control_steps=completed, done=False)
             with self.subTest(completed=completed), self.assertRaisesRegex(BridgeError, "Restart ledger"):
                 stream_standard(self.robot, self.recipe, self.rows, connection_errors=(ConnectionLost,))
+        # oraclefix 14 (2026-10-05, a deliberate deviation for the twin method): after the reference rows the twin holds
+        # only their last row, at most STANDARD_HOLD_S, until the service reports done, as an agent can hold and poll.
         self.robot.submit.reset_mock(side_effect=True)
         self.robot.submit.side_effect = original
-        with self.assertRaisesRegex(BridgeError, "no implicit holds"):
+        report = stream_standard(self.robot, self.recipe, self.rows[:2])
+        self.assertEqual((report["executed_rows"], report["reference_rows"], report["hold_rows"]), (4, 2, 2))
+        self.assertEqual(self.robot.submit.call_count, 2)
+        np.testing.assert_array_equal(self.robot.submit.call_args_list[1].args[1], np.repeat(self.rows[1:2], 2, axis=0))
+        # a hold that never reaches success stops after STANDARD_HOLD_S (80 rows at 40 Hz) with an error, never longer
+        self.status.update(control_steps=0, done=False, reason=None)
+        def never_done(kind, rows, **kwargs):
+            self.status["control_steps"] += len(rows)
+            return SimpleNamespace(meta=dict(executed_rows=len(rows), control_steps_chunk=len(rows), n_clipped=0,
+                                             done=False))
+        self.robot.submit.reset_mock(side_effect=True)
+        self.robot.submit.side_effect = never_done
+        with self.assertRaisesRegex(BridgeError, "without native Task success after its hold"):
             stream_standard(self.robot, self.recipe, self.rows[:2])
-        self.assertEqual(self.robot.submit.call_count, 1)
-        self.assertEqual(self.status["control_steps"], 2)
+        self.assertEqual(self.status["control_steps"], 2 + 80)
 
 
 class Scores(unittest.TestCase):
