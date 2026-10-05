@@ -275,18 +275,25 @@ NVIDIA proprietary, hence BUILD_ONLY. Spot: GPL-3.0-or-later (in the never-distr
 ## Other hosts (lab, RTX PRO 6000 Blackwell, 2026-10-04)
 Measured while validating the first 14 tasks on a 256-core host with RTX PRO 6000 Blackwell Max-Q GPUs (driver 580.178.04),
 image built from this recipe with the same locks:
-- **Frozen loads.** jar 14, jar 2, cabinets 19 and 20, lids 12 and 16 load to their recorded hashes exactly; dusty 3 and 24 and
-  stacks 10 and 21 load within the tolerance (`instance_ok`, not `instance_exact`). For dusty 3 the structured state dump
-  differs from the laptop's in two leaves only: the desk's y position by 5.7e-6 m and the tupperware's orientation by about
-  7e-9. Every replay on that host is deterministic (fresh replays agree with each other and with the live run), but the
-  laptop-made open-loop oracle of dusty 3 (wipe, then pour) misses its strict goal from that start (reward 0 in both modes);
-  the other oracles reach their goals at the laptop's steps (dusty 24: step 969 instead of 972).
+- **Frozen loads and oracles** (Harbor runs of all 14 privileged oracles and `nop`s and of the standard twins validated so
+  far). Cabinets 19, 20 and 22, jars 2, 13 and 14 and lids 7, 12 and 16 load to their recorded hashes exactly; dusty 3 and 24
+  and stacks 8, 10 and 21 load within the tolerance (`instance_ok`, not `instance_exact`). Every replay on that host is
+  deterministic (fresh replays agree with each other and with the live run). 13 of the 14 oracles score 1 and reach their
+  strict goals at the laptop's control steps (dusty 24: step 969 instead of 972); every `nop` scores 0. The exception is
+  dusty 3: its structured state dump differs from the laptop's in two leaves only (the desk's y position by 5.7e-6 m, the
+  tupperware's orientation by about 7e-9), and from that start the laptop-made open-loop oracle (wipe, then pour) misses
+  its strict goal (reward 0 in both modes). The 16 tasks of 2026-10-04 were frozen on that host; `nop` spot checks (cabinet
+  26, clutter 28 and lid 15 privileged; clutter 28 and stack 13 standard) score 0.
 - **torch.** torch 2.6.0+cu124 has no sm_120 kernels; the dry tasks never use torch on the GPU (no CUDA error anywhere), so
   the tooling, the oracles and the replays run unchanged. GPU-dynamics (liquid) tasks would need a cu128 build.
 - **Rendering.** Isaac Sim 4.5's real-time RTX mode renders heavy per-pixel noise there (mean |Laplacian| of a static camera
   about 40-50 against 5-8 on the laptop, for the same state; no renderer error is logged); TAA, FXAA, DLSS quality, DLAA and
   turning off sampled lighting, indirect diffuse, ambient occlusion, reflections and shadows do not remove it. The path
-  tracer with the OptiX denoiser renders clean images on that GPU (about 4-6). Standard-mode agents see only cameras, so
+  tracer with the OptiX denoiser renders clean images on that GPU (about 4-6). Isaac Sim's `SimulationApp` sets the renderer
+  from its own launch config (`renderer`, default `RaytracedLighting`, which OmniGibson does not pass) after reading the
+  experience file, so a `.kit` setting does not switch it; starting it with `renderer = PathTracing` (16 samples per pixel,
+  OptiX denoiser) gave clean replay frames (4.5-5.4) and the identical final state, labels and checkpoints, at 0.46 s per
+  replayed control step on a GPU 98 % busy with other work (real-time: 0.08). Standard-mode agents see only cameras, so
   their images there are not those of the laptop.
 - **CPU.** Without a CPU quota an Isaac process sizes its thread pools to the host: about 930 threads, a mean of 97 cores and
   0.20 s per replayed control step; with an 8-CPU quota (the agent container's) about 420 threads, 4 cores and 0.09 s per
