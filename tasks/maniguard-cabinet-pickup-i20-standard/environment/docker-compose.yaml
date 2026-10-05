@@ -11,7 +11,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:0.1.0
+    image: ghcr.io/mll-lab-nu/eai-maniguard:0.1.0
     volumes:
       - ./sim:/srv:ro
       - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by scripts/maniguard/prep_data.py (docs/benchmarks/maniguard.md)}:/data:ro
