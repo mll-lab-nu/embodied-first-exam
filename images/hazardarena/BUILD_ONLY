@@ -27,7 +27,8 @@ Data
 Host
   Linux x86_64 and Docker. No GPU: MuJoCo physics and OSMesa rendering on the CPU. Build: ~45 GB of free disk (17 GB of
   LFS objects, the layer, and the image store's copy), network access to github.com, pypi.org and huggingface.co;
-  about 25 minutes from a local assets checkout. Run: ~4 GB of RAM per simulator process (a trial holds two at its peak).
+  about 25 minutes either way (from the Dockerfile alone, on a fast link: 5 minutes to fetch and check the assets,
+  14 to copy and export their layer). Run: ~4 GB of RAM per simulator process (a trial holds two at its peak).
 
 Build (from the repository root)
   docker build -t ghcr.io/mll-lab-nu/eai-hazardarena:$(cat images/hazardarena/VERSION) -f images/hazardarena/Dockerfile .
