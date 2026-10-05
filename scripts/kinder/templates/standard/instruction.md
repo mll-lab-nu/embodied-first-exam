@@ -33,7 +33,7 @@ help(rcb_client)"`); the calls and the endpoints they use:
 
 | call | endpoint | what it does |
 |---|---|---|
-| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`); the scene is ready before your time starts |
+| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
 | `r.spec()` | `GET /spec` | the robot's facts: the action's layout and bounds, `control_dt` (0.1 s), `max_control_steps` ({{max_steps}}), the cameras, `proprio_layout`, `budget` |
 | `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s` |
 | `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or hold the last command and watch for `seconds` (at most 30) |

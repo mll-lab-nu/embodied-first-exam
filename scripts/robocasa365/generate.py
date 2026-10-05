@@ -232,7 +232,7 @@ want graded and stop submitting.
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (the service is ready before your time starts)
+r = Robot()                                   # connects (waits while the service starts: about a minute)
 spec = r.spec()                               # control_dt, action layout + limits + kinds, cameras, proprio layout, budget
 cams = list(spec["cameras"])                  # {cams}
 obs = r.get_obs(cameras=cams, include_depth=True)   # obs.last[cam] -> uint8 (240, 320, 3); obs.depth[cam] -> metres

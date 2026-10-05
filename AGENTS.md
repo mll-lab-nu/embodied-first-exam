@@ -1,14 +1,12 @@
 # AGENTS.md — map for coding agents working in this repo
 
-Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.0.2) and `CONTRIBUTING.md` first.
+Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.0.1) and `CONTRIBUTING.md` first.
 
 - Terminology (protocol v1.0): **privileged** mode (formerly unlimited) and **standard** mode (formerly limited,
   wire protocol `eai-standard/2.x`, formerly `rcb-limited/2.x`). Task directories end in `-privileged` or `-standard`;
   base images are `ghcr.io/mll-lab-nu/eai-<name>`, one image per benchmark (PROTOCOL D5; formerly `rcb-<sim>`). No `results/` in task dirs.
 - Generators under `scripts/` end with `scripts/task_conventions.py` (`normalize`): fields, protocol spelling, test.sh, graders,
-  README layout, no `results/`, and `[environment.healthcheck]` (PROTOCOL §2.9: the agent's clock starts once the simulator
-  is ready; standard: the client's readiness test, privileged: the benchmark's warm-up, `WARMUP`).
-  `python3 scripts/task_conventions.py --check tasks/<task>` reports a task it would change.
+  README layout, no `results/`. `python3 scripts/task_conventions.py --check tasks/<task>` reports a task it would change.
 - Tasks are self-contained Harbor task dirs under `tasks/`. Nothing at run time imports repository code outside the task
   directory; shared sources are copied in by generators. Reference tasks: `tasks/robotwin_2_0_stack_blocks_two-privileged/` and its
   standard-mode twin `tasks/robotwin_2_0_stack_blocks_two-standard/`; `tasks/robosuite-cube-stack-i00-privileged/` (privileged only, CPU).

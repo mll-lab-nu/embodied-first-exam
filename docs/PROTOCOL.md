@@ -1,7 +1,7 @@
-# Robot Coding Bench — Task Protocol v1.0.2
+# Robot Coding Bench — Task Protocol v1.0.1
 
 Status: **final** (2026-09-30; v1.0.1 2026-10-01: both modes carry a suffix, no results in the repository, standard
-task README; v1.0.2 2026-10-04: simulator start-up is outside the agent's time budget, §2.9). The tasks in the repository follow it except for the open items in §7. The wire format of standard mode is specified in
+task README). The tasks in the repository follow it except for the open items in §7. The wire format of standard mode is specified in
 [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`); its 2.2 extension in
 [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md).
 
@@ -48,7 +48,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. robosuite, RoboCasa, RoboCasa365), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
-| D8 | Agent time budget | 3600 s by default; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. The budget starts when the simulator is ready: its start-up is not part of it (§2.9). |
+| D8 | Agent time budget | 3600 s by default; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. A transparent usage gateway that forwards requests unchanged and only records token usage (`scripts/usage_gateway/`) is allowed. |
@@ -73,7 +73,6 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 14. `README.md` in the standard layout (§2.1). [CI] (sections and key rows; `scripts/task_conventions.py --check` for the rest)
 15. Runs with Harbor's native agents; no custom runner or adapter, and no gateway beyond the recording-only usage gateway (D11). [new]
 16. Standard-mode tasks also satisfy every MUST in §4.
-17. `[environment.healthcheck]` declared, so that the agent's clock starts once the simulator is ready (§2.9). [CI]
 
 ## 2. Task contract
 
@@ -202,22 +201,6 @@ example → nop result → predicate summary*. The reviewer checks:
 | A published task's `environment/` and `tests/` inputs are immutable; a change is a new task | MUST | [current] |
 | Fixes to existing tasks add a Change Log entry to the task README with before/after runs | SHOULD | [new] |
 
-### 2.9 Start-up and the agent's clock
-The agent's time budget (`[agent].timeout_sec`) covers the agent's work, not the simulator's start-up. Harbor runs a
-task's `[environment.healthcheck]` in the agent's container once the containers are up and before it sets up the agent;
-the agent, and its clock, start only after the check passes (Harbor: environment start, healthcheck, agent setup, agent
-run with `timeout_sec`). `scripts/task_conventions.py` writes the table (`normalize`, which every generator ends with), so
-it is the same for every task of a mode and benchmark.
-
-| Item | Level | Basis |
-|---|---|---|
-| Every task declares `[environment.healthcheck]` | MUST | [CI] (`check-start-gate.sh`; `task_conventions.py --check` compares the whole table) |
-| Standard mode: the check is the client's own readiness test, run in the agent's container: `python3 -c 'from rcb_client import Robot; Robot(timeout=10)'` (`/spec` answers once the scene is built and the episode has begun, §4.1), retried every 5 s for up to `start_period_sec = 3600`; a crash and restart while starting only lengthens the wait | MUST | [new] |
-| Privileged mode (the agent starts the simulator in its own processes): the check is the task's warm-up, one launch of its simulator with the frozen instance through the task's own tooling in the agent's container, as the instruction opens a `Session`. It pays the trial's one-time start-up (shader and kernel caches in the trial's own volumes, helper services the tooling keeps running, the instance check) and logs its start and end times to `/logs/artifacts/rcb_warmup.log` | MUST | [new] |
-| The warm-up writes no session log, trace or output, leaves no process except the tooling's own helpers that a `Session` reuses, and gives the agent nothing its own first `Session` would not produce | MUST | [new] |
-| A `Session` the agent opens (one per Python process) is the agent's own work and stays on its clock | — | [new] |
-| A simulator that never becomes ready ends the trial before the agent starts (`HealthcheckError`, no verdict): an infrastructure failure, re-run (Harbor's `--max-retries` retries it) | — | Harbor |
-
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 
 | Item | Level | Basis |
@@ -262,7 +245,7 @@ resumes the same episode; success is decided on a replay.
 | GPU reservation on `sim` only | MUST (if a GPU is needed) | [current] |
 | `ports:` / `expose:` on the sidecar | MUST NOT | [current] |
 | Service on `0.0.0.0:8000`; the client tries `http://sim:8000`, then `http://localhost:8000` | MUST | [current] |
-| The socket opens only when the scene is ready (the episode has begun); the client retries | MUST | [current] (every service does it; the readiness check of §2.9 relies on it) |
+| The socket opens only when the scene is ready; the client retries | SHOULD | [current] |
 | `restart: on-failure:N`, N ≥ 3 | MUST | [current] |
 | The agent image ships `rcb_client.py` (`Robot.spec / status / submit / get_obs`) and `rcb1.py` | MUST | [current] |
 | The instruction documents client usage, action types and rules | MUST | [current] |
@@ -405,13 +388,6 @@ Done (2026-10-01):
    Results tooling writes outside the repository (`write_task_results.py --out`).
 
 These edits change task digests but not scenes, instances or success rules; no separate re-run was made for them.
-
-Done (2026-10-04): simulator start-up outside the agent's budget (§2.9). `scripts/task_conventions.py` writes
-`[environment.healthcheck]` into every task (standard: the client's readiness test; privileged: the benchmark's
-warm-up), and `ci_checks/check-start-gate.sh` requires it. It changes `task.toml` and the standard instructions' line on
-`Robot()` (it no longer waits for the service to start), not scenes, instances, graders or success rules. Validated
-with a `nop` per benchmark and mode: the agent starts after the service is ready, after the warm-up in privileged mode
-(RoboCasa365 and VLABench not run: their images are private).
 
 Open:
 1. ~~Images~~ done 2026-10-02: every base image is `ghcr.io/mll-lab-nu/eai-<name>`; public unless `BUILD_ONLY`
