@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from topogym.config.registry import task_definition
-from topogym.planning.buzz_wire_3d import public_session, reference_policy
+from topogym.planning.buzz_wire_3d import public_session, reference_policy, retimed
 from topogym.planning.harbor_bridge import suite
 from topogym.planning.harbor_bridge.references import reference_data
 from topogym.simulator.config import SimulatorConfig
@@ -81,6 +81,23 @@ class ReferenceDispatch(unittest.TestCase):
             recipe, expected = reference_policy.load_reference(tier)
             session = fake_session(tier, recipe)
             before = to_jsonable(session.env.config)
+            if recipe.get("retime") is not None:
+                # oraclefix2: a tier with a "retime" entry replays its archived rows through retimed.run_retimed
+                def replay(session_arg, document, retime, *, request_id, submission_hash):
+                    self.assertIs(session_arg, session)
+                    self.assertEqual(len(document["actions"]), count)
+                    self.assertEqual(document["actions"][-1], expected["actions"][-1])
+                    self.assertEqual(retime, recipe["retime"])
+                    session.successful = True
+                    return {"reason": "env_terminal", "synthetic": True}
+                with tempfile.TemporaryDirectory() as out, \
+                     patch.object(retimed, "run_retimed", side_effect=replay), \
+                     patch.object(reference_policy, "SessionPolicyRunner",
+                                  side_effect=AssertionError("Unretimed replay selected")):
+                    report = public_session.run_feedback_policy(session, out, variation=tier)
+                self.assertTrue(report["task_success"])
+                self.assertEqual(report["policy_kind"], "compiled_joint_actions")
+                continue
             def execute(**kwargs):
                 policy = kwargs["policy"]
                 policy.initialize(dict(action_spec={"mode": "JOINT_ABS"}, timing_spec=session.env.timing_spec))
@@ -105,10 +122,34 @@ class ReferenceDispatch(unittest.TestCase):
             self.assertEqual(report["policy_kind"], "compiled_joint_actions")
             self.assertEqual(to_jsonable(session.env.config), before)
 
+    def test_retimed_policy_keeps_rows_outside_segments_and_slows_near_the_wire(self):
+        actions = [{"arm": {"joint_position_rad": [0.] * 7, "gripper_position_rad": .8}}]
+        actions += [{"arm": {"joint_position_rad": [i * .001] * 7}} if i % 3 else {} for i in range(1, 40)]
+        document = {"schema": "buzz_compiled_joint_policy_v1", "actions": actions, "control_dt_s": .025}
+        gaps = iter([.005] * 8 + [.0008] * 3 + [.0003] * 3 + [.003] * 100)
+        policy = retimed.RetimedJointPolicy(document, segments=[(5, 30, 3.)], clearance=lambda observation: next(gaps))
+        observation = {"privileged": {"world": {"contact_events": {"events": []}}}}
+        emitted = []
+        while (action := policy.act(observation)) is not None:
+            emitted.append(action)
+        sources = [row[0] for row in policy.log]
+        # 1x before the segment, 3x inside it, 1x below 1 mm, hold below 0.5 mm, 3x again above 2 mm, 1x after it
+        self.assertEqual(sources, [0, 1, 2, 3, 4, 5, 8, 11, 12, 13, 14, 14, 14, 14, 17, 20, 23, 26, 29, 32, 33, 34, 35,
+                                   36, 37, 38, 39])
+        self.assertEqual(policy.events, dict(slowed=1, holds=1, held_rows=3))
+        for action, source, step in zip(emitted, sources, [row[1] for row in policy.log]):
+            if step == 1. and source == int(source):
+                self.assertEqual(action, actions[int(source)])     # consecutive source rows: archived row as is
+        touch = {"privileged": {"world": {"contact_events": {"events": [
+            {"touching": True, "role_a": "robot", "role_b": "wire_metal"}]}}}}
+        with self.assertRaisesRegex(RuntimeError, "Robot touched the wire"):
+            retimed.RetimedJointPolicy(document).act(touch)
+
     def test_reference_completion_without_native_success_is_failure(self):
         recipe, _ = reference_policy.load_reference("medium")
         session = fake_session("medium", recipe)
-        with tempfile.TemporaryDirectory() as out, patch.object(reference_policy, "SessionPolicyRunner") as runner:
+        with tempfile.TemporaryDirectory() as out, patch.object(reference_policy, "SessionPolicyRunner") as runner, \
+             patch.object(retimed, "run_retimed", return_value={"reason": "policy_done"}):
             runner.return_value.run_policy.return_value = {"reason": "policy_done"}
             with self.assertRaisesRegex(RuntimeError, "without current Task success"):
                 public_session.run_feedback_policy(session, out, variation="medium")

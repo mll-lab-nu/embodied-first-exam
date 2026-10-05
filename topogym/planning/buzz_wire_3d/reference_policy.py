@@ -93,6 +93,12 @@ def run_reference_policy(session, output, *, variation):
             # per-step joint limit, so the privileged reference is standard-executable as recorded.
             from topogym.planning.standard_rate import rate_limited_runner
             result = run_stages(session, output, stages, selection=document, runner=rate_limited_runner(session))
+        elif recipe.get("retime") is not None:
+            # oraclefix2: the compiled rows re-timed to fewer rows under a measured wand-wire clearance guard, every
+            # row within the standard per-step joint limit (retimed.py; parameters in recipe.json "retime")
+            from .retimed import run_retimed
+            result = run_retimed(session, document, recipe["retime"], request_id="buzz-reference-" + variation,
+                                 submission_hash=recipe["input"]["sha256"])
         else:
             policy = CompiledJointPolicy(document)
             result = SessionPolicyRunner(session).run_policy(

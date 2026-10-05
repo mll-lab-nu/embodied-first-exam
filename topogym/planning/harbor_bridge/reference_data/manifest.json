@@ -153,9 +153,9 @@
       "source": "runs/demo_metadata/buzz_wire_3d/2026-10-03_medium_v12_continuous/execution/policy_actions.json"
     },
     "buzz_wire_3d/medium/recipe.json": {
-      "sha256": "c6a18c913ed265c21fca9d29e5f0969f6ddc311c45bfe76d2f9521de20cfc51f",
-      "bytes": 4838610,
-      "source": "Derived from runs/demo_metadata/buzz_wire_3d/2026-10-03_medium_v12_continuous/execution: report, audit, source geometry and complete policy input"
+      "sha256": "21a35ae59136820b54fb58f81a6db1ebd9de1bca2970ded98699a0a34183792e",
+      "bytes": 4840065,
+      "source": "Derived from runs/demo_metadata/buzz_wire_3d/2026-10-03_medium_v12_continuous/execution: report, audit, source geometry and complete policy input + oraclefix2 re-timed replay and lowered release (2026-10-05)"
     },
     "buzz_wire_3d/hard/policy_actions.json": {
       "sha256": "74c193e9688c63fdba59eb2074e1a6f9182fa028cc15a9597999b9e07825a0d4",
