@@ -97,7 +97,8 @@ def assess_trial(job, task, mode, lock, *, agent="oracle", returncode=0):
             if (not isinstance(live, bool) or final.get("replay_success") != replay_ok
                     or reward.get("live_success") != int(live)
                     or reward.get("replay_success") != int(replay_ok)
-                    or reward["success"] != int(live and replay_ok)):
+                    or reward["success"] != int(live and replay_ok and not reward.get("success_pending_review", 0))):
+                # tooling v16 (oraclefix 12): a success with a deep task contact is held for review, not credited
                 raise BridgeError("Live/replay evidence disagrees with the grade")
             result.update(live_success=live, replay_success=[replay_ok],
                           trajectory=str(verifier / "trajectory.npz"))
@@ -117,7 +118,15 @@ def assess_trial(job, task, mode, lock, *, agent="oracle", returncode=0):
                 if any(not isinstance(row.get("success"), bool) or row.get("episode_end") == "simulator_instability" for row in rows):
                     raise BridgeError("Replay verdict is missing or numerically unstable")
                 successes = [row["success"] for row in rows]
-                if reward.get("all_success") != int(all(successes)) or reward["success"] != int(all(successes)):
+                # tooling v16 (oraclefix 12): tolerant replays only confirm, so a privileged success also needs one replay
+                # that met the strict goal within the rows (strict_goal_reached), and a deep task contact holds it for
+                # review (success_pending_review). Without this, a grade 0 with all replays successful only in the hold
+                # was reported as an evidence failure and stopped the queue.
+                expected = all(successes)
+                if "strict_goal_reached" in reward:
+                    expected = (expected and bool(reward["strict_goal_reached"])
+                                and not reward.get("success_pending_review", 0))
+                if reward.get("all_success") != int(all(successes)) or reward["success"] != int(expected):
                     raise BridgeError("Independent replay successes disagree with the grade")
                 trajectory = trial / "artifacts/app/output/trajectory.npz"
                 if evidence.get("trajectory_sha256") != digest(trajectory):
