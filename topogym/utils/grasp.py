@@ -263,9 +263,17 @@ def material_components(indices, coordinates, radius):
 def exposed_patch(positions, material, indices, *, radius, clearance):
     """Reject a patch under a materially distant layer (gravity-up convention)."""
     x, uv, indices = np.asarray(positions), np.asarray(material), np.asarray(indices)
+    if not len(indices):
+        return True
+    # Only particles within `radius` (horizontally) of a patch particle can cover it, all inside the patch's horizontal
+    # box grown by the radius (and 1 nm, far above rounding): the same per-particle test, on those particles only.
+    low = x[indices, :2].min(axis=0)-radius-1e-9
+    high = x[indices, :2].max(axis=0)+radius+1e-9
+    near = np.flatnonzero(np.all((x[:, :2] >= low) & (x[:, :2] <= high), axis=1))
+    x_near, uv_near = x[near], uv[near]
     for i in indices:
-        local = np.linalg.norm(x[:, :2]-x[i, :2], axis=1) <= radius
-        remote = np.linalg.norm(uv-uv[i], axis=1) > 2*radius
-        if np.any(local & remote & (x[:, 2] > x[i, 2]+clearance)):
+        local = np.linalg.norm(x_near[:, :2]-x[i, :2], axis=1) <= radius
+        remote = np.linalg.norm(uv_near-uv[i], axis=1) > 2*radius
+        if np.any(local & remote & (x_near[:, 2] > x[i, 2]+clearance)):
             return False
     return True
