@@ -53,6 +53,7 @@ class BuildContracts(unittest.TestCase):
                        required_sass=['sm_89', 'sm_120'])
             def output(cmd, **kwargs):
                 if 'rev-parse' in cmd: return 'original\n'
+                if 'ls-files' in cmd: return 'src/backends/cuda/CMakeLists.txt\n'
                 if 'diff' in cmd: return 'src/backends/cuda/CMakeLists.txt\n'
                 if '--list-elf' in cmd: return 'sm_89\n'
                 if '--list-ptx' in cmd: return 'sm_120\n'
