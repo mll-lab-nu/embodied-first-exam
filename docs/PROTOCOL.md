@@ -73,7 +73,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 14. `README.md` in the standard layout (§2.1). [CI] (sections and key rows; `scripts/task_conventions.py --check` for the rest)
 15. Runs with Harbor's native agents; no custom runner or adapter, and no gateway beyond the recording-only usage gateway (D11). [new]
 16. Standard-mode tasks also satisfy every MUST in §4.
-17. `[environment.healthcheck]` declared, so that the agent's clock starts once the simulator is ready (§2.9). [new]
+17. `[environment.healthcheck]` declared, so that the agent's clock starts once the simulator is ready (§2.9). [CI]
 
 ## 2. Task contract
 
@@ -211,7 +211,7 @@ it is the same for every task of a mode and benchmark.
 
 | Item | Level | Basis |
 |---|---|---|
-| Every task declares `[environment.healthcheck]` | MUST | [new] |
+| Every task declares `[environment.healthcheck]` | MUST | [CI] (`check-start-gate.sh`; `task_conventions.py --check` compares the whole table) |
 | Standard mode: the check is the client's own readiness test, run in the agent's container: `python3 -c 'from rcb_client import Robot; Robot(timeout=10)'` (`/spec` answers once the scene is built and the episode has begun, §4.1), retried every 5 s for up to `start_period_sec = 3600`; a crash and restart while starting only lengthens the wait | MUST | [new] |
 | Privileged mode (the agent starts the simulator in its own processes): the check is the task's warm-up, one launch of its simulator with the frozen instance through the task's own tooling in the agent's container, as the instruction opens a `Session`. It pays the trial's one-time start-up (shader and kernel caches in the trial's own volumes, helper services the tooling keeps running, the instance check) and logs its start and end times to `/logs/artifacts/rcb_warmup.log` | MUST | [new] |
 | The warm-up writes no session log, trace or output, leaves no process except the tooling's own helpers that a `Session` reuses, and gives the agent nothing its own first `Session` would not produce | MUST | [new] |
@@ -407,10 +407,11 @@ Done (2026-10-01):
 These edits change task digests but not scenes, instances or success rules; no separate re-run was made for them.
 
 Done (2026-10-04): simulator start-up outside the agent's budget (§2.9). `scripts/task_conventions.py` writes
-`[environment.healthcheck]` into every task of BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint and ManiGuard (standard: the
-client's readiness test; privileged: the benchmark's warm-up). It changes `task.toml` and the standard instructions' line
-on `Robot()` (it no longer waits for the service to start), not scenes, instances, graders or success rules. Validated
-with a `nop` per benchmark and mode: the agent starts after the service is ready, after the warm-up in privileged mode.
+`[environment.healthcheck]` into every task (standard: the client's readiness test; privileged: the benchmark's
+warm-up), and `ci_checks/check-start-gate.sh` requires it. It changes `task.toml` and the standard instructions' line on
+`Robot()` (it no longer waits for the service to start), not scenes, instances, graders or success rules. Validated
+with a `nop` per benchmark and mode: the agent starts after the service is ready, after the warm-up in privileged mode
+(RoboCasa365 and VLABench not run: their images are private).
 
 Open:
 1. ~~Images~~ done 2026-10-02: every base image is `ghcr.io/mll-lab-nu/eai-<name>`; public unless `BUILD_ONLY`
@@ -424,8 +425,6 @@ Open:
 5. Agent egress (owner, 2026-10-02: kept as it is): the per-benchmark settings stay; the harness's web search is off (§5).
    Findings: agents installed nothing and cloned nothing in 423 recorded trials; the one observed leak was the
    harness's web search (now off, §5); PyPI is not neutral (the `metaworld` wheel ships every task's scripted expert).
-6. Start gate (§2.9) on the other benchmarks' tasks (RoboTwin, DexToolBench, MuJoCo Playground, the robosuite example,
-   RoboCasa, RoboCasa365, RoboCasa-GR1, VLABench, MetaWorld+, HumanoidBench, KinDER), with its CI check.
 
 Decided (owner, 2026-10-02):
 1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,
