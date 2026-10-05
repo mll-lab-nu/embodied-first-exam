@@ -232,6 +232,23 @@ def preflight_simplified_goal(robot, entities, body_origins, geometry, policy, t
 
 def plan_goal_transfer(robot, entities, body_origins, route_plan, grasp_offsets, policy, table_height):
     """Preflight the same goal transfer used by the passive EE policy."""
+    # oraclefix: the held gold piece's straight move to the system side can graze the silver piece just above it,
+    # depending on small differences of the separated end state (lab, 2026-10-04, easy: frames 55-57 of 60). Try the
+    # original move first, then the same move lowered by 2 / 4 cm (about 12 cm of table clearance there). The policy
+    # executes the drop that passed (CastKeyholePolicy.gold_drop_m).
+    attempts = []
+    for drop in (0., .02, .04):
+        result = _plan_goal_transfer(robot, entities, body_origins, route_plan, grasp_offsets, policy, table_height,
+                                     gold_drop_m=drop)
+        attempts.append(dict(gold_drop_m=drop, passed=result["passed"], failure=result["failure"],
+                             collision_issues=(result["collision_audit"] or {}).get("issues")))
+        if result["passed"]:
+            break
+    return dict(result, gold_drop_m=drop, drop_attempts=attempts)
+
+
+def _plan_goal_transfer(robot, entities, body_origins, route_plan, grasp_offsets, policy, table_height, *,
+                        gold_drop_m=0.):
     from topogym.solvers.genesis_kinematics import GenesisIKSolver
     from .policy import placement_targets
     ik = GenesisIKSolver(robot.entity)
@@ -243,7 +260,7 @@ def plan_goal_transfer(robot, entities, body_origins, route_plan, grasp_offsets,
     frames, failure, minimum_margin = [], None, float("inf")
     try:
         for stage, duration, target in placement_targets(bodies, grasp_offsets, policy.vertices,
-                policy.region, variation=policy.reference["variation_id"]):
+                policy.region, variation=policy.reference["variation_id"], gold_drop_m=gold_drop_m):
             turns = {s: Slerp([0, 1], Rotation.from_quat([bodies[s][1].as_quat(), target[s][1].as_quat()])) for s in PARTS}
             for fraction in np.linspace(0., 1., 61)[1:]:
                 poses = {s: (bodies[s][0]+fraction*(target[s][0]-bodies[s][0]), turns[s](fraction)) for s in PARTS}
