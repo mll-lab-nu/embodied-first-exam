@@ -246,6 +246,8 @@ def stream_standard(robot, recipe, rows, *, connection_errors=(), episode_errors
         raise BridgeError("Standard reference ended without native Task success; no implicit holds added")
     return dict(status="native_success_pending_harbor_verifier", harbor_qualified=False,
                 executed_rows=status["control_steps"], reference_rows=len(rows), restarts=restarts,
+                reference_timing=recipe.get("execution", {}).get("standard_timing", "exact"),
+                timing_conversion=recipe.get("execution", {}).get("timing_conversion"),
                 identity_scope="frozen task package; HTTP verifies layout, rate and limits")
 
 

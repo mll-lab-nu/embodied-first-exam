@@ -11,14 +11,14 @@ import sys
 import tempfile
 import tomllib
 
-from agent_batch_contract import read, save, validate, sha, inventory, package, relative, digest
+from agent_batch_contract import read, save, validate, sha, inventory, package, relative, digest, match_assignment
 from secret_scan import scan_tree
 from topogym_versions import identity, require_task
 from helper_bundle import guard
 
 ROOT=Path(__file__).resolve().parents[1]
 OMIT={'agents','planning','data','deferred','legacy','redundants','rollout_simulation','__pycache__'}
-SCRIPTS=('run_agent_batch.sh','agent_batch_runtime.py','agent_batch_contract.py','agent_batch_delivery.py',
+SCRIPTS=('run_agent_batch.sh','agent_batch_bootstrap.py','agent_batch_images.py','agent_batch_image_build.py','agent_batch_image_probe.py','agent_batch_image_os.py','agent_batch_runtime.py','agent_batch_contract.py','agent_batch_delivery.py',
          'agent_batch_mirror_copy.py','helper_batch.py','setup_agent_batch.sh','finish_agent_batch.py',
          'check_agent_batch.py','check_agent_batch_auth.py','check_agent_batch_hf.py','import_helper_results.py',
          'difficulty_hf_auth.py','helper_log_mirror.py','log_mirror.py','scan_secrets.py','topogym_versions.py',
@@ -86,7 +86,10 @@ def verify_release(root,plan=None):
         if manifest['runtime_only'] or plan.get('release')!=manifest['release']:
             raise ValueError('assignment needs matching frozen tasks and runtime')
         pinned=manifest['assignments'].get(plan['batch'])
-        if pinned and pinned!=plan['plan_sha256']: raise ValueError('bundled assignment was changed')
+        if pinned and pinned!=plan['plan_sha256']:
+            original=read(root/'configs/helper_batches'/(plan['batch']+'.json'))
+            if original['plan_sha256']!=pinned: raise ValueError('bundled assignment was changed')
+            match_assignment(original,plan)
         # A separately issued batch/rerun may reuse these exact packages and tools.
         for task in plan['tasks']: package(root,task)
         for name,want in plan.get('runner_files',{}).items():
@@ -106,6 +109,12 @@ def export(root,output,assignments=(),*,manual=None,runtime_only=False):
     names=code_files(root); task_names=set()
     for plan in plans:
         if plan['release']!=expected: raise ValueError('assignment differs from source release')
+        for source in plan.get('image_sources',{}).values():
+            if 'build' not in source: continue
+            from agent_batch_image_build import materials
+            manifest,context=materials(root,source['build'])
+            names.add(source['build']['manifest'])
+            names.update((context.relative_to(root)/name).as_posix() for name in manifest['files'])
         for name,want in plan.get('runner_files',{}).items():
             if name not in names: raise ValueError('unreviewed runner dependency: '+name)
             if sha(regular(root,name))!=want: raise ValueError('runner changed since assignment: '+name)
@@ -157,10 +166,10 @@ def export(root,output,assignments=(),*,manual=None,runtime_only=False):
         head=result.stdout.strip() if result.returncode==0 else None
         (stage/'README.md').write_text('# TopoGym native helper release\n\n'+
             ('Runtime tools only; no experimental assignment or tasks included.\n\n' if runtime_only else '')+
-            ('See docs/SHARING_RUNS.md and docs/SHARING_RUNS_3b.md.\n' if manual_hash else
+            ('See docs/SHARING_RUNS.md for the helper workflow.\n' if manual_hash else
              'See docs/SHARING_RUNS_3b.md; an experimental release additionally requires the official manual.\n')+
-            'Run: bash bash_scripts/run_helper_batch.sh --config /private/helper.local.json\n'+
-            'Receive separately: bash bash_scripts/import_helper_results.sh --help\n')
+            'The documented scripts/run_agent_batch.sh entrypoint installs its tools and prepares assigned images automatically.\n'+
+            'Locally built images may have no RepoDigest; record their Docker image Id.\n')
         (stage/'.gitignore').write_text('.venv*/\n.tools/\n.secrets/\n.env*\n**/__pycache__/\n*.pyc\njobs/\nruns/\n')
         if not scan_tree(stage,{},allow_empty_secrets=True,guard=guard)['clean']:
             raise ValueError('release credential-pattern scan failed; no export produced')
@@ -169,7 +178,11 @@ def export(root,output,assignments=(),*,manual=None,runtime_only=False):
                       assignments={p['batch']:p['plan_sha256'] for p in plans},
                       scan_scope='credential patterns; no assertion about unknown credentials',
                       images={p['batch']:dict(roles=p.get('images',{}),bindings={
-                          t['name']:t['runtime_binding'] for t in p['tasks']}) for p in plans},files=inventory(stage))
+                          t['name']:t['runtime_binding'] for t in p['tasks']}) for p in plans},
+                      # Validation imports can generate bytecode in the staging tree.
+                      # Git ignores those caches; they are not release dependencies.
+                      files={name:value for name,value in inventory(stage).items()
+                             if '__pycache__' not in Path(name).parts and Path(name).suffix not in ('.pyc','.pyo')})
         save(stage/'helper-release.json',manifest)
         # Detect source edits during the copy/validation, including concurrent sessions.
         if any(sha(regular(root,name))!=want for name,want in input_hashes.items()):

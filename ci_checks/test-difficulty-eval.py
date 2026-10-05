@@ -16,7 +16,7 @@ import tempfile
 import unittest
 import time
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "scripts"), str(ROOT / "harbor_templates/topogym/common"), str(ROOT)]
@@ -378,7 +378,156 @@ class ResultTests(unittest.TestCase):
                     self.assertEqual(p.returncode,0,p.stdout+p.stderr)
 
 
+class LimitedPreflightTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        root = Path(self.temp.name)
+        self.task, self.folder = root / 'task', root / 'limited'
+        (self.task / 'environment/sim').mkdir(parents=True)
+        (self.task / 'tests').mkdir()
+        self.folder.mkdir()
+        self.instance = self.task / 'environment/sim/instance.json'
+        self.instance.write_text(json.dumps({'simulator': {'compute_backend': 'cuda'}}))
+        lock = dict(schema_version=1, instance_sha256='a' * 64, tooling_sha256='b' * 64,
+                    asset_files={}, creation_source={},
+                    runtime={'source': {'sha256': 'c' * 64, 'files': 1}},
+                    image={'reference': 'synthetic:test', 'id': 'sha256:' + 'd' * 64})
+        (self.task / 'tests/runtime_binding.json').write_text(json.dumps(lock))
+        from topogym.simulator.frozen_binding import binding_id
+        self.binding = dict(instance_exact=True, runtime_binding={'binding_id': binding_id(lock)})
+        for name in ('startup_binding.json', 'replay.verdict.json'):
+            (self.folder / name).write_text(json.dumps(self.binding))
+        for name in ('trajectory.npz', 'replay.mp4'):
+            (self.folder / name).write_bytes(b'synthetic fixture; not physical evidence')
+        self.data = dict(finalized=True, deterministic=False, live_matches_replay=False,
+                         instance_exact=True, instance_matches=True, replay_success=False,
+                         video=True, infra_error=0, reason='timeout')
+
+    def check(self, **overrides):
+        return evaluation.limited_preflight_check(self.task, self.folder, 0, dict(self.data, **overrides))
+
+    def test_cuda_hash_difference_does_not_block_protocol_smoke(self):
+        report = self.check()
+        self.assertTrue(report['passed'])
+        self.assertFalse(report['determinism_required'])
+        self.assertIs(report['deterministic'], False)
+        self.assertIs(report['live_matches_replay'], False)
+        self.assertIs(self.data['replay_success'], False)  # No claim that the task was solved.
+
+    def test_cpu_hash_difference_is_also_diagnostic_like_harbor(self):
+        self.instance.write_text(json.dumps({'simulator': {'compute_backend': 'cpu'}}))
+        report = self.check()
+        self.assertTrue(report['passed'])
+        self.assertFalse(report['determinism_required'])
+        self.assertIs(report['deterministic'], False)
+        self.assertIs(report['live_matches_replay'], False)
+        self.assertTrue(self.check(deterministic=True, live_matches_replay=True)['passed'])
+
+    def test_hash_policy_does_not_hide_incomplete_or_failed_evidence(self):
+        cases = [{'finalized': False}, {'instance_exact': False}, {'instance_matches': False},
+                 {'instance_mismatch': True}, {'replay_success': None}, {'video': False},
+                 {'deterministic': None}, {'reason': 'resume_failed'}]
+        cases += [{key: 1} for key in ('infra_error', 'gpu_lost', 'error', 'grader_error', 'gave_up', 'simulator_instability')]
+        for backend in ('cpu', 'cuda'):
+            self.instance.write_text(json.dumps({'simulator': {'compute_backend': backend}}))
+            for changes in cases:
+                with self.subTest(backend=backend, changes=changes):
+                    self.assertFalse(self.check(**changes)['passed'])
+        self.assertFalse(evaluation.limited_preflight_check(self.task, self.folder, 1, self.data)['passed'])
+
+    def test_both_runtime_bindings_and_media_files_remain_required(self):
+        for name in ('startup_binding.json', 'replay.verdict.json', 'trajectory.npz', 'replay.mp4'):
+            p = self.folder / name
+            content = p.read_bytes()
+            with self.subTest(missing=name):
+                p.unlink()
+                self.assertFalse(self.check()['passed'])
+                p.write_bytes(content)
+            if name.endswith('.json'):
+                with self.subTest(changed_binding=name):
+                    p.write_text(json.dumps(dict(self.binding, runtime_binding={'binding_id': 'other'})))
+                    self.assertFalse(self.check()['passed'])
+                    p.write_bytes(content)
+
+    def test_missing_or_unknown_backend_remains_invalid(self):
+        for backend in (None, 'gpu', 'unknown'):
+            with self.subTest(backend=backend):
+                self.instance.write_text(json.dumps({'simulator': {'compute_backend': backend}}))
+                self.assertFalse(self.check(deterministic=True)['passed'])
+
+
 class CommandTests(unittest.TestCase):
+    def test_simulator_containers_use_invoking_uid_in_both_backends(self):
+        runner = evaluation.DifficultyEvaluation.__new__(evaluation.DifficultyEvaluation)
+        runner.gpu_device, runner.run, runner.image = '0', Path('/run/example'), 'image'
+        runner.resource_labels = lambda: {'topogym.owner': 'test'}
+        for delivery in (None, object()):
+            with self.subTest(delivery=bool(delivery)):
+                runner.delivery = delivery
+                argv = runner.docker_sim('python', 'probe.py')
+                self.assertEqual(argv[argv.index('--user') + 1], f'{os.getuid()}:{os.getgid()}')
+                self.assertIn('HOME=/tmp', argv)
+                self.assertEqual(argv[argv.index('-w') + 1], '/tmp')
+
+    def test_limited_preflight_owns_outputs_and_preserves_service_log(self):
+        for delivery in (None, object()):
+            for log_error in (False, True):
+                with self.subTest(delivery=bool(delivery), log_error=log_error), tempfile.TemporaryDirectory() as tmp:
+                    runner = evaluation.DifficultyEvaluation.__new__(evaluation.DifficultyEvaluation)
+                    runner.delivery, runner.gpu_device = delivery, '0'
+                    runner.source_sha, runner.image = 'source', 'image'
+                    build, task = Path(tmp) / 'build', Path(tmp) / 'task'
+                    runner.build_dir = lambda row: build
+                    runner.task_dir = lambda row, mode: task
+                    runner.resource_labels = lambda: {'topogym.owner': 'test'}
+                    runner.remove_owned_container = Mock()
+                    def command(argv, **kwargs):
+                        if argv[:2] == ['docker', 'logs']:
+                            self.assertEqual(kwargs['log'], build / 'limited-container.log')
+                            self.assertTrue(kwargs['append'])
+                            if log_error:
+                                raise PermissionError('synthetic diagnostic failure')
+                        if argv[:2] == ['docker', 'run']:
+                            self.assertEqual(argv[argv.index('--user') + 1], f'{os.getuid()}:{os.getgid()}')
+                            if '-d' in argv:
+                                (build / 'limited/server.log').write_text('original service evidence')
+                            else:
+                                return 1, ''  # Exercise failed-client cleanup, no real GPU.
+                        return 0, 'image-id'
+                    runner.commands = SimpleNamespace(run_command=Mock(side_effect=command))
+                    with patch.object(evaluation, 'progress'):
+                        self.assertFalse(runner.limited_preflight({'task_id': 'cast_coil', 'slug': 'topogym-test'}))
+                    self.assertEqual((build / 'limited/server.log').read_text(), 'original service evidence')
+                    self.assertEqual(runner.remove_owned_container.call_count, 2)
+                    self.assertEqual([c.args[0] for c in runner.remove_owned_container.call_args_list],
+                                     ['tg-check-test-test-client', 'tg-check-test-test'])
+
+    def test_gpu_accessibility_ignores_legacy_memory_threshold_and_never_waits(self):
+        runner = evaluation.DifficultyEvaluation.__new__(evaluation.DifficultyEvaluation)
+        runner.args = SimpleNamespace(gpu_min_free_mb=12000, gpu_wait_s=600)
+        runner.gpu_device = '0'
+        with patch.object(evaluation.Commands, 'run_command',
+                return_value=(0, 'GPU-test')) as command, patch.object(evaluation.time, 'sleep') as sleep:
+            runner.commands = evaluation.Commands({}, Path('/unused'))
+            runner.gpu_ready()
+            command.assert_called_once()
+            self.assertEqual(command.call_args.args[0], ['nvidia-smi', '-i', '0',
+                             '--query-gpu=uuid', '--format=csv,noheader'])
+            sleep.assert_not_called()
+
+    def test_gpu_query_failure_does_not_retry(self):
+        runner = evaluation.DifficultyEvaluation.__new__(evaluation.DifficultyEvaluation)
+        runner.args = SimpleNamespace(gpu_min_free_mb=12000, gpu_wait_s=600)
+        runner.gpu_device = '0'
+        runner.commands = evaluation.Commands({}, Path('/unused'))
+        with patch.object(runner.commands, 'run_command', return_value=(1, '')) as command, \
+             patch.object(evaluation.time, 'sleep') as sleep:
+            with self.assertRaisesRegex(evaluation.EvaluationError, 'GPU unavailable'):
+                runner.gpu_ready()
+            command.assert_called_once()
+            sleep.assert_not_called()
+
     def test_high_cpu_does_not_stop_work(self):
         with tempfile.TemporaryDirectory() as tmp:
             run = Path(tmp)
@@ -427,7 +576,7 @@ class WorkflowTests(unittest.TestCase):
         for key in ('OPENAI_API_KEY','OPENROUTER_API_KEY','CODEX_FORCE_AUTH_JSON','CODEX_AUTH_JSON_PATH'):
             self.env.pop(key,None)
         self.script=self.root/'bash_scripts/run_difficulty_trials.sh'
-        self.executable('nvidia-smi',"print('24000, 0')")
+        self.executable('nvidia-smi',"import sys; print('24000' if '--query-gpu=memory.free' in sys.argv else '24000, 0')")
         self.executable('docker',"""import json,os,sys
 from pathlib import Path
 if sys.argv[1:3]==['image','inspect']:

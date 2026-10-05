@@ -18,6 +18,7 @@ from topogym.utils.io import sha256_file, write_json_atomic
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--instance", type=Path, required=True)
+    p.add_argument("--tooling", type=Path, help="same rcb_topogym.py used to prepare and execute the candidate")
     p.add_argument("--traj", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--repeat", type=int, default=2)
@@ -28,6 +29,10 @@ def main():
     p.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
     a = p.parse_args()
     a.instance, a.traj, a.output = a.instance.resolve(), a.traj.resolve(), a.output.resolve()
+    if a.tooling is not None:
+        a.tooling = a.tooling.resolve()
+        if not a.tooling.is_file():
+            p.error(f"Missing tooling: {a.tooling}")
     if a.repeat < 1:
         p.error("--repeat must be at least one (two tests repeated replay)")
     if a.physics_evidence_passes is not None and (not a.physics_evidence or not 1 <= a.physics_evidence_passes <= a.repeat):
@@ -41,7 +46,7 @@ def main():
         p.error("use the formal instance.json with RGB enabled for replay grading")
     trajectory = trajectory_identity(a.traj, instance)
     if a.worker:
-        tooling = load_tooling(variation)
+        tooling = load_tooling(variation, a.tooling)
         install_progress(tooling, a.output)
         if a.physics_evidence:
             from topogym.planning.knot_untying.replay_evidence import install_physics_capture
@@ -50,9 +55,11 @@ def main():
                                           repeat=a.repeat, strict=True, video=None, fps=15))
         return 0
     a.output.mkdir(parents=True, exist_ok=False)
-    source = freeze_sources(a.output)
+    source = freeze_sources(a.output, a.tooling)
     command = [sys.executable, str(source/"scripts/audit_knot_oracle.py"), "--worker", "--instance", str(a.instance),
                "--traj", str(a.traj), "--repeat", str(a.repeat), "--output", str(a.output)]
+    if a.tooling is not None:
+        command += ["--tooling", str(source/"oracle_tooling"/a.tooling.name)]
     if a.physics_evidence:
         command.append("--physics-evidence")
     if a.physics_evidence_passes is not None:

@@ -20,6 +20,7 @@ def parser(*, branching=False):
     p = argparse.ArgumentParser(description="Frozen-instance knot oracle; records JOINT_ABS and actual physics ticks.")
     p.add_argument("--variation", choices=sorted(TIERS), required=True)
     p.add_argument("--instance", type=Path, help="frozen instance.json; default: current task directory (historical inputs must be explicit)")
+    p.add_argument("--tooling", type=Path, help="explicit rcb_topogym.py for new candidate instances; snapshotted with the run")
     p.add_argument("--output", type=Path, required=True, help="new evidence directory")
     p.add_argument("--close", type=float, default=.005, help="pinch opening width in metres; native robot limits apply")
     p.add_argument("--end-offset", type=float, default=.035, help="end-spread grasp distance from each tip, m")
@@ -30,6 +31,8 @@ def parser(*, branching=False):
     p.add_argument("--max-decisions", type=int, default=16)
     p.add_argument("--settle", type=float, default=10., help="final settling budget, simulated seconds")
     p.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)
+    if not branching:
+        p.add_argument("--record-video", action="store_true", help="record the continuous execution with shared Nyx recording")
     if branching:
         p.add_argument("--tight-curl-m", type=float, default=.12, help="diagnostic curl span; does not reject a branch")
         p.add_argument("--max-nonprogress-decisions", type=int, default=None,
@@ -42,6 +45,10 @@ def parser(*, branching=False):
 
 
 def normalize(args):
+    if args.tooling is not None:
+        args.tooling = args.tooling.resolve()
+        if not args.tooling.is_file():
+            raise FileNotFoundError(args.tooling)
     args.instance = (args.instance or default_instance(args.variation)).resolve()
     args.output = args.output.resolve()
     hard = args.variation == "knot_untying_hard"
@@ -58,13 +65,19 @@ def normalize(args):
 from .parameters import validate_parameters
 
 
-def freeze_sources(output):
+def freeze_sources(output, tooling=None):
     from scripts.test_policy_cube_transfer import snapshot
     source = snapshot(output)
     manifest = json.loads((output/"source_manifest.json").read_text())
-    for tier in TIERS:
-        path = task_dir(tier)/"environment/rcb_topogym.py"
-        relative = path.relative_to(ROOT)
+    if tooling is not None:
+        tooling = Path(tooling).resolve()
+        files = sorted({tooling, *tooling.parent.glob("rcb_topogym*.py")})
+        paths = [(path, Path("oracle_tooling")/path.name) for path in files]
+    else:
+        files = [task_dir("knot_untying_"+tier)/"environment/rcb_topogym.py"
+                 for tier in ("easy", "medium", "hard")]
+        paths = [(path, path.relative_to(ROOT)) for path in files]
+    for path, relative in paths:
         destination = source/relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(path, destination)
@@ -118,10 +131,12 @@ def main(argv=None, *, branching=False):
     if not args.worker:
         args.output.mkdir(parents=True, exist_ok=False)
         write_json_atomic(args.output/"arguments.json", vars(args))
-        source = freeze_sources(args.output)
+        source = freeze_sources(args.output, args.tooling)
         script = "run_knot_branching.py" if branching else "run_knot_oracle.py"
         command = [sys.executable, str(source/"scripts/oracle_runners"/script), *raw,
                    "--instance", str(args.instance), "--output", str(args.output), "--worker"]
+        if args.tooling is not None:
+            command += ["--tooling", str(source/"oracle_tooling"/args.tooling.name)]
         if getattr(args, "resume", None):
             command += ["--resume", str(args.resume)]
         write_json_atomic(args.output/"command.json", command)
@@ -134,6 +149,25 @@ def main(argv=None, *, branching=False):
         else:
             from .robot_oracle import Runner
             engine = Runner(args)
+        if getattr(args, "record_video", False):
+            from topogym.recording import RecordingSession
+            from topogym.recording.encoding import probe
+            if not engine.env.config.enable_rgb:
+                raise ValueError("--record-video requires the formal RGB instance")
+            with RecordingSession(args.output/"recording", metadata=dict(
+                    scope="continuous native robot execution from frozen home; success reported separately",
+                    instance_identity=engine.identity)) as recording:
+                recording.append(engine.env.sensor_frame())
+                unsubscribe = engine.env.add_frame_sink(recording.append)
+                try:
+                    solved = engine.run()
+                    recording.append_final(engine.env.sensor_frame())
+                    recording.finish(dict(task_success=solved))
+                finally:
+                    unsubscribe()
+            videos = {p.stem: probe(p, decode=True) for p in (args.output/"recording/videos").glob("*.mp4")}
+            write_json_atomic(args.output/"video_validation.json", videos)
+            return 0 if solved else 1
         return 0 if engine.run() else 1
     finally:
         if engine is not None:

@@ -6,8 +6,8 @@ PYTHON="${TOPOGYM_PYTHON:-$ROOT/.venv-gs121-nyx/bin/python}"
 HARBOR="${TOPOGYM_HARBOR:-$ROOT/.venv-harbor/bin/harbor}"
 families="cast_coil,cast_keyhole,lock_picking,buzz_wire_3d,fiber_bundling,horseshoe_ring,hedgehog_in_cage,interlocked_claws,blanket_flatten,rope_threading,knot_untying"
 tiers="easy,medium,hard"
-output= tasks_root= gpu=0 smoke=0 wall=0 resume=0 plan=0
-gpu_wait=600 gpu_free=12000
+output= tasks_root= image= gpu=0 smoke=0 wall=0 resume=0 plan=0
+gpu_wait=0 gpu_free=0
 usage() {
   cat <<'EOF'
 Usage: bash bash_scripts/run_harbor_oracle_grades.sh --output DIR [options]
@@ -16,12 +16,13 @@ Defaults: 11 families (excluding Orbits/Slotted Post Ring), easy/medium/hard,
 serial privileged + standard, full oracle grading, no nop controls.
 
   --families CSV       e.g. cast_coil,cast_keyhole
-  --tiers CSV          easy,medium,hard only
+  --tiers CSV          very_easy,easier,easy,medium,hard (default original three)
   --tasks-root DIR     Use existing current-version bound candidates; skip builds
                       Otherwise prepare/build new candidates in OUTPUT/candidate
   --gpu ID             Candidate generation GPU (default 0; Harbor uses task config)
-  --gpu-wait-seconds N Wait for idle GPU before builds (default 600)
-  --gpu-min-free-mb N  Minimum free GPU memory before builds (default 12000)
+  --image TAG          Dedicated candidate runtime image tag
+  --gpu-wait-seconds N Deprecated compatibility option; no GPU waiting
+  --gpu-min-free-mb N  Deprecated compatibility option; no free-memory threshold
   --smoke-steps N      Grade N real oracle controls instead of the full solution
                       A smoke pass is NOT grade 1 or a solvability proof
   --wall-seconds N     Total Harbor time per family/tier, both modes (default unset)
@@ -43,6 +44,7 @@ while (($#)); do
     --families) families="${2:?--families requires CSV}"; shift 2 ;;
     --tiers) tiers="${2:?--tiers requires CSV}"; shift 2 ;;
     --gpu) gpu="${2:?--gpu requires an ID}"; shift 2 ;;
+    --image) image="${2:?--image requires a tag}"; shift 2 ;;
     --gpu-wait-seconds) gpu_wait="${2:?}"; shift 2 ;;
     --gpu-min-free-mb) gpu_free="${2:?}"; shift 2 ;;
     --smoke-steps) smoke="${2:?}"; shift 2 ;;
@@ -72,7 +74,7 @@ for family in "${family_list[@]}"; do
 done
 seen=()
 for tier in "${tier_list[@]}"; do
-  case "$tier" in easy|medium|hard) ;; *) printf 'Unsupported tier: %s\n' "$tier" >&2; exit 2 ;; esac
+  case "$tier" in very_easy|easier|easy|medium|hard) ;; *) printf 'Unsupported tier: %s\n' "$tier" >&2; exit 2 ;; esac
   [[ -z "${seen[$tier]:-}" ]] || { printf 'Duplicate tier: %s\n' "$tier" >&2; exit 2; }
   seen[$tier]=1
 done
@@ -95,12 +97,14 @@ exec 9>"$output/.queue.lock"
 flock -n 9 || { printf 'Another process owns this queue\n' >&2; exit 2; }
 cd -- "$ROOT"
 "$PYTHON" ci_checks/check-oracle-portability.py --families "${family_list[@]}" --tiers "${tier_list[@]}"
-"$PYTHON" - "$output" "$families" "$tiers" "$tasks_root" "$gpu" "$smoke" "$wall" "$HARBOR" <<'PY'
+"$PYTHON" - "$output" "$families" "$tiers" "$tasks_root" "$gpu" "$smoke" "$wall" "$HARBOR" "$image" <<'PY'
 import json,sys
 from pathlib import Path
-out,families,tiers,task_root,gpu,smoke,wall,harbor=sys.argv[1:]
+out,families,tiers,task_root,gpu,smoke,wall,harbor,image=sys.argv[1:]
 queue=dict(families=families.split(','),tiers=tiers.split(','),tasks_root=task_root,gpu=gpu,
            smoke_steps=int(smoke),wall_seconds=int(wall),harbor=harbor)
+if image:
+    queue['image'] = image
 p=Path(out)/'queue.json'
 if p.exists() and json.loads(p.read_text()) != queue:
     raise SystemExit('Resume options differ from queue.json; use the original options or a new output')
@@ -122,27 +126,33 @@ for tier in queue['tiers']:
             r=tasks.get(mode,{})
             errors=list(r.get('errors',[]))
             for run in r.get('runs',[]): errors.extend(run.get('errors',[]))
-            rows.append(dict(family=family,tier=tier,mode=mode,status=r.get('status','not_run'),
+            solve = (int(r.get('grade') == 1) if not queue['smoke_steps'] and
+                     r.get('status') in ('passed', 'score_failed') else None)
+            rows.append(dict(family=family,tier=tier,mode=mode,status=r.get('status','not_run'),solve=solve,
                              grade=r.get('grade'),errors=errors,results=str(path) if path else None))
 wanted='smoke_passed' if queue['smoke_steps'] else 'passed'
 doc=dict(scope='connectivity smoke' if queue['smoke_steps'] else 'full native oracle grading',
          all_passed=bool(rows) and all(r['status']==wanted for r in rows),tasks=rows)
 for name,data in [('summary.json',json.dumps(doc,indent=2)+'\n'),
-                  ('summary.tsv','family\ttier\tmode\tstatus\tgrade\tresults\n'+''.join(
-                      '\t'.join(str(r[k]) if r[k] is not None else '' for k in ('family','tier','mode','status','grade','results'))+'\n' for r in rows))]:
+                  ('summary.tsv','family\ttier\tmode\tstatus\tgrade\tsolve\tresults\n'+''.join(
+                      '\t'.join(str(r[k]) if r[k] is not None else '' for k in ('family','tier','mode','status','grade','solve','results'))+'\n' for r in rows))]:
     p=root/name; temp=p.with_suffix('.tmp'); temp.write_text(data); temp.replace(p)
 PY
 }
 trap 'summarize; exit 130' INT
 trap 'summarize; exit 143' TERM
 build=0
+execution_root="$ROOT"
 if [[ -z "$tasks_root" ]]; then
   build=1
   tasks_root="$output/candidate/tasks"
   if [[ ! -f "$output/candidate/candidate.json" ]]; then
+    image_args=()
+    if [[ -n "$image" ]]; then image_args=(--image "$image"); fi
     "$PYTHON" scripts/topogym_merge_candidate.py --output "$output/candidate" \
-      --families "${family_list[@]}" --tiers "${tier_list[@]}" --gpu "$gpu"
+      --families "${family_list[@]}" --tiers "${tier_list[@]}" --gpu "$gpu" "${image_args[@]}"
   fi
+  execution_root="$output/candidate/source_snapshot"
 fi
 summarize
 if ((build)) && [[ ! -f "$output/candidate/image.lock.json" ]]; then
@@ -160,9 +170,8 @@ for family in "${family_list[@]}"; do
   if ((build)); then
     log="$output/build-${family}-$(date -u +%Y%m%dT%H%M%S).log"
     printf 'Building %s; %s\n' "$family" "$log"
-    if ! "$PYTHON" scripts/topogym_candidate_pipeline.py --candidate "$output/candidate" \
-        --phase build --families "$family" --gpu "$gpu" --gpu-wait-s "$gpu_wait" \
-        --gpu-min-free-mb "$gpu_free" >"$log" 2>&1; then
+    if ! "$PYTHON" "$execution_root/scripts/topogym_candidate_pipeline.py" --candidate "$output/candidate" \
+        --phase build --families "$family" --gpu "$gpu" >"$log" 2>&1; then
       printf 'Build incomplete for %s; keeping logs and checking any completed pairs\n' "$family" >&2
     fi
   fi
@@ -178,14 +187,14 @@ PY
       printf 'Already completed: %s %s (existing result retained)\n' "$family" "$tier"
       continue
     fi
-    slug="topogym-${family//_/-}-${tier}-i00"
+    slug="topogym-${family//_/-}-${tier//_/-}-i00"
     if [[ ! -f "$tasks_root/$slug-privileged/task_release.json" || ! -f "$tasks_root/$slug-standard/task_release.json" ]]; then
       printf 'Missing bound candidate pair: %s; see build logs\n' "$slug" >&2
       continue
     fi
     mkdir -p -- "$case_root"
     attempt="$case_root/attempt-$(date -u +%Y%m%dT%H%M%S)-$$"
-    command=("$PYTHON" scripts/oracle_runners/test_harbor_oracles.py --output "$attempt"
+    command=("$PYTHON" "$execution_root/scripts/oracle_runners/test_harbor_oracles.py" --output "$attempt"
       --tasks-root "$tasks_root" --candidate --families "$family" --tiers "$tier"
       --modes privileged standard --harbor "$HARBOR" --no-nop --execute)
     if ((smoke)); then command+=(--smoke-steps "$smoke"); fi

@@ -132,7 +132,7 @@ def _original_script(solution):
 
 def package(task, output, *, kind, trajectory=None, source_instance=None,
             entrypoint=None, source_root=None, includes=(), kwargs=None, runtime_lock=None,
-            data_files=None, smoke_steps=None):
+            data_files=None, smoke_steps=None, standard_timing="exact"):
     """Write output/<original-task-name>, atomically; never promote oracle metadata."""
     task, mode, instance, tooling = task_inputs(task)
     binding = instance_binding(instance)
@@ -152,6 +152,10 @@ def package(task, output, *, kind, trajectory=None, source_instance=None,
         raise BridgeError("Unsupported package kind")
     if mode == "standard" and kind != "public_trajectory":
         raise BridgeError("Standard mode accepts only a bound public trajectory")
+    if standard_timing not in {"exact", "rate_limited"}:
+        raise BridgeError("Unknown standard trajectory timing")
+    if standard_timing != "exact" and (mode != "standard" or kind != "public_trajectory"):
+        raise BridgeError("Rate conversion requires a standard public trajectory")
     # Validate the complete source tree before creating anything; no external symlinks.
     original_hashes = file_hashes(task)
     copied, execution = {}, dict(kind=kind)
@@ -164,8 +168,10 @@ def package(task, output, *, kind, trajectory=None, source_instance=None,
             raise BridgeError("Trajectories require an explicit source instance")
         require_same_instance(binding, instance_binding(source_instance))
         load_trajectory(trajectory, binding, native=kind == "native_trajectory")
-        copied["reference.npz"] = Path(trajectory).resolve()
+        copied["source_reference.npz" if standard_timing == "rate_limited" else "reference.npz"] = Path(trajectory).resolve()
         execution["artifact"] = "reference.npz"
+        if mode == "standard":
+            execution["standard_timing"] = standard_timing
     elif kind == "existing":
         solution = task / "solution"
         execution = dict(kind="script", script=_original_script(solution))
@@ -229,6 +235,11 @@ def package(task, output, *, kind, trajectory=None, source_instance=None,
             shutil.copy2(source, target)
             if name in source_hashes and digest(target) != source_hashes[name]:
                 raise BridgeError(f"Reference changed during packaging: {name}")
+        if standard_timing == "rate_limited":
+            from .timing import convert_trajectory
+            conversion = convert_trajectory(solution / "source_reference.npz", solution / "reference.npz", binding, tooling)
+            (solution / "timing_conversion.json").write_text(json.dumps(conversion, indent=2) + "\n")
+            execution["timing_conversion"] = conversion
         (solution / "bridge_main.py").write_text(
             'from pathlib import Path\nfrom _harbor_oracle_bridge.runtime import main\n'
             'raise SystemExit(main(Path(__file__).resolve().parent))\n')

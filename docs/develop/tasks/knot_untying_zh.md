@@ -2,7 +2,47 @@
 
 > **2026-09-27 更新：** 正式 easy 为两次重叠单绳圈；medium 为原 easy 的 overhand_trefoil；hard 为原 medium 的 figure_eight。double_overhand 已移到实验附表。 建模、录像与验证边界见[本轮开发报告](initial_scene_feedback_20260927_zh.md#9-本轮开发与验证2026-09-27)；全部当前入口见[39 项初始化索引](../../../runs/test_results/base_acceptance_final/README.md)。下文历史证据仍保留原版本含义。
 
+## very_easy / easier 已确认场景（2026-10-05）
+
+用户已确认预览形状。两个入口现登记到 `below_easy`，分别具有 `very_easy` / `easier` 难度标识；保留 easy / medium / hard、base 和原 `seeded` 的对应关系：
+
+- `knot_untying_very_easy`：一个宽绳圈，圈口仅一处交叠，两条自由端。
+- `knot_untying_easier`：一个宽绳圈，圈口两处交叠，沿同一侧绳段的上下关系交替，呈麻花状。现有 easy 则为同一侧绳段在两处都位于上方。
+
+两者复用当前任务的 ALOHA home、桌面原点、yaw=0、橙色绳材质、8 mm 绳径、80 mm 圈半径和 FEM/IPC 材料网格及终态判据；形状生成见 [`knot_untying_simplified.py`](../../../topogym/assets/geometry/knot_untying_simplified.py)。资源由源码确定性生成，无新增外部模板或网格依赖。
+
+几何检查覆盖交叉数、上下顺序、自穿透／穿桌、弯曲半径、闭合网格及场景继承；现有四种结型的左右手版本资产哈希全部保持一致。已确认的初态截图与源码快照保留在 [`knot_below_easy_preview_20261005/`](../../../runs/test_results/knot_below_easy_preview_20261005/)，没有修改该版形状。
+
+当前实现及验证产物在 [`knot_below_easy_implementation_20261005/`](../../../runs/test_results/knot_below_easy_implementation_20261005/)。两档均通过当前 v16 公共工具执行 600 ticks 静置并独立重建，保存新的完整 IPC 初态和实例。`check_knot_initial_states.py` 核对全状态 SHA、reset 恢复、短时漂移、交叉结构、初态未成功及只读抓取 IK，使用公共四路 Nyx 录制。参考策略复用现有 ALOHA 纯摩擦抓取：单交叉先尝试两端展开，交替双交叉先按实时绳形选择下穿段，再抽出／展开；已接入具名 CLI 和 Harbor callback。策略存在及初态检查不表示完整求解或 Harbor 评分已通过，难度排序也须另行验证。
+
+初态验收：very_easy 状态 SHA `54061df528743330`，静置 1 s 最大节点漂移 0.242 mm、末速 0.228 mm/s；easier 为 `d2ae0ea7cf69a49c`，静置 1 s 最大漂移 0.828 mm、末速 0.780 mm/s。两档均保持各自交叉结构，初态不成功，独立进程恢复和 reset 全状态一致。easier 的首选 A 端抓点 IK 不可达，现仅在新两档参考策略中按实时交叉依次检查另一端及相邻材料位置，选择了可达的 B 端；同实例二次检查通过，未改变场景。证据见 [very_easy](../../../runs/test_results/knot_below_easy_implementation_20261005/very_easy_initial_check/report.json)、[easier 静置](../../../runs/test_results/knot_below_easy_implementation_20261005/easier_initial_check/report.json)与 [easier 抓点复核](../../../runs/test_results/knot_below_easy_implementation_20261005/easier_initial_check_02/report.json)。
+
+场景实现阶段的 68 项几何、策略、回放合同及入口检查通过。两次本地机器人试跑均从冻结 home 初态开始，very_easy 执行到两端展开，easier 执行到抽出下穿段；尚未完成解绳，已在转入正式 Harbor 验证时主动停止并保留日志、录像及停止记录。原进程身份见 [运行记录](../../../runs/test_results/knot_below_easy_implementation_20261005/active_robot_runs.json)，该记录不代表目前仍在运行或完整成功。
+
+**Harbor oracle 开发（2026-10-05）：** 按用户要求以两档实际 `solved=1` 为目标，使用独立冻结的 v16 镜像及双模式任务包。工作目录与判定范围见 [验证计划](../../../runs/test_results/knot_below_easy_harbor_20261005_01/plan.json)。privileged 要求隔离 verifier 的两遍 grading replay 均成功，至少一遍在提交行内达到严格目标，并通过初态／运行绑定及接触复核规则；standard 要求 live 与独立 replay 均成功。原生策略返回成功不能代替评分。
+
+已有 hard 的真实轨迹中，23 行关节目标变化超过 standard 的 0.04 rad/控制步上限，导致服务额外插入控制步。新两档现从所选 tooling 读取该上限，将较大移动拆成实际执行和记录的连续控制步；没有重定时已有成功轨迹，也没有修改 verifier 或原 easy–hard 策略。新增两项控制合同检查通过，Knot oracle 合同检查共 34 项；冻结私有回调在候选镜像中导入通过。双模式任务包已生成，实际评分进展见下文。
+
+**very_easy 已在 privileged 和 standard 两种模式通过正式 Harbor 评分（均为 `solved=1`）。** 本轮实例状态 SHA 为 `e1d88911f85faea8`，与上述初态验收实例分别记录；初态恢复为 exact。ALOHA 从冻结 home 经纯摩擦双端抓取、展开、落桌释放，在 **20.8525 s** 成功：835 actions／8,341 ticks，末行动 1 tick 后正常终止，连续稳定 0.5 s，最大绳速 0.4920 mm/s。投影无交叉／重叠、落桌、静止与完整终态判据均成立；835 行请求动作与实际接受动作一致，无 guard 改写。见[原生报告](../../../runs/test_results/knot_below_easy_harbor_20261005_01/grading/very_easy_01/jobs/001-oracle/topogym-knot-untying-very-easy-i__ogUUME8/artifacts/app/output/report.json)和[桥接执行证据](../../../runs/test_results/knot_below_easy_harbor_20261005_01/grading/very_easy_01/jobs/001-oracle/topogym-knot-untying-very-easy-i__ogUUME8/artifacts/app/output/bridge_report.json)。
+
+隔离 verifier 的两遍回放均在第 **835 行**达到严格成功，均为 8,341 ticks／20.8525 s；`replay_hold_steps=0`、`replay_tolerance_needed=0`、`review_events=0`。Harbor 成绩、verdict、reward、轨迹及实例哈希、运行绑定和冻结私有源码已逐项核对，见[评分证据复核](../../../runs/test_results/knot_below_easy_harbor_20261005_01/very_easy_privileged_verification.json)。两遍最终状态哈希不同，这是 GPU 诊断项，不影响当前 verifier 对两遍严格成功的判定。[Harbor 第二遍回放视频（合并视角）](../../../runs/test_results/knot_below_easy_harbor_20261005_01/grading/very_easy_01/jobs/001-oracle/topogym-knot-untying-very-easy-i__ogUUME8/verifier/replay.mp4)完整解码通过：314 帧、15 fps、1130×480。
+
+standard 的 live 与新进程独立回放均已成功：835 actions／8,341 ticks／20.8525 s，live 的四次提交分别执行 241、251、245、98 行；单次调用达到时限后从已确认行继续，无重启。完整动作和 tick 台账与同一参考轨迹逐字节一致，四批均零裁剪、零额外控制步。独立回放在第 835 行达到严格目标，额外保持步和容差使用均为零；实际 Harbor reward、运行绑定、初态身份、冻结源码与完整媒体已核对，见[standard 评分证据复核](../../../runs/test_results/knot_below_easy_harbor_20261005_01/very_easy_standard_verification.json)。[standard 独立回放视频](../../../runs/test_results/knot_below_easy_harbor_20261005_01/grading/very_easy_01/jobs/002-oracle/topogym-knot-untying-very-easy-i__TwfG4TY/verifier/replay.mp4)完整解码通过，314 帧、15 fps、1130×480。live 与 replay 最终状态不逐位相同，当前 GPU verifier 接受二者各自严格成功。
+
+easier 已自动进入正式 privileged oracle 执行，仍待原生求解和双模式 Harbor 评分；不能继承 very_easy 的成功标签。
+
+几何回归入口：`.venv-gs121-nyx/bin/python ci_checks/test-knot-simplified-geometry.py`。
+准备、运行和回放命令见 [Knot oracle 用法](../../../topogym/planning/knot_untying/README.md#已确认的-very_easy--easier-变体)。
+
 ## 当前释放规则与 hard11–hard14 的修正验证（2026-10-04）
+
+**最新方向：按用户要求转入现有 Harbor bridge grading。** hard14 的本地原生成功（51.335 s、2,054 actions）及冻结证据保留；本地首遍回放已主动停止，最后完整采集为 9.8425 s／3,938 个状态，机器人／桌面观察器无 findings，但整段回放、FEM 审计和视频资格未完成。停止是验证路线调整，不是原生物理失败，见[停止记录](../../../runs/test_results/knot_oracle_20261003/hard14_replay/harbor_handoff_stop.json)。已用独立冻结的当前 v16 源码和专属镜像生成 hard 双模式候选，实例身份 `66ea1051ee23377c`；Harbor privileged oracle 已通过现有 Knot Session 回调在新实例上取得原生成功：51.0625 s、2,043 actions／20,425 ticks、连续稳定 0.5 s，`instance_exact=true`、终态 `robot_clear=true`／`robot_no_penetration=true`。见[新实例原生报告](../../../runs/test_results/knot_harbor_hard14_20261004_01/grading/jobs/001-oracle/topogym-knot-untying-hard-i00-pr__ysFovdT/artifacts/app/output/bridge_report.json)。现已进入隔离 verifier 的两遍独立核验，第一遍初态加载完成，评分后再由 bridge 提交同实例轨迹给 standard 服务。当前分数尚未产生，见[Harbor 运行状态](../../../runs/test_results/knot_harbor_hard14_20261004_01/status.json)。新实例须独立验收，不继承 hard14 的成功标签。
+
+已启动每 30 秒一次的只读监控：[最新动作与评分状态](../../../runs/test_results/knot_harbor_hard14_20261004_01/monitoring/latest.json)、[监控存活状态](../../../runs/test_results/knot_harbor_hard14_20261004_01/monitoring/watch_status.json)。它绑定本轮调度器 PID／出生时间／命令，记录实际 Harbor 分数，运行结束后封存；不改模拟或 grader。首抓下降阶段的 [10 s 非阻塞采样](../../../runs/test_results/knot_harbor_hard14_20261004_01/diagnostics/early_runtime_sampling/summary.json)中，187/197 个主线程样本位于 IPC 耦合调用，只有 1 个样本位于 IK；该比例不外推为整程或纯 GPU 用时。
+
+版本名称分别记录：`terminal_v5_fixed_contact_active_clearance_1mm` 是 Knot **终态释放判据的本地修订号**；Tooling v16 是本轮 Harbor 候选的工具版本；hard14 是此前本地候选运行编号。下文旧版原生成功和回放记录保留原范围。
+
+**首遍正式回放的 0–3 s 桌面窗口已完成：1,201 个状态，零 findings。** [窗口记录核验](../../../runs/test_results/knot_oracle_20261003/hard14_replay/early_table_window_validation.json)确认连续状态链、原始前缀哈希以及两个同内核观察器的测量前缀一致。手指相对桌面顶面的最小垂直间隙约 0.4654 mm（tick 794）；旧反例 ticks 782–784 现在均有约 0.488–0.499 mm 正间隙。早期观察器已正常结束；整段观察器随后随 Harbor 路线调整停止，最后检查到 9.8425 s；此结论仅覆盖该窗口的原生启用机器人／桌面对，不替代后续完整 FEM／碰撞审计。
 
 按用户授权，Knot 改为 `terminal_v5_fixed_contact_active_clearance_1mm`。这是本地任务判据的新版本，不能将其结果标为原始 v14 任务通过；v14 安全规则、动力学、绳体和碰撞模型保留。
 

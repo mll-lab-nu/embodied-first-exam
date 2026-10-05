@@ -87,6 +87,24 @@ class NativeTests(unittest.TestCase):
     def setUp(self): self.temp=tempfile.TemporaryDirectory(); self.root=Path(self.temp.name); self.jobs,self.plan=fixture(self.root)
     def tearDown(self): self.temp.cleanup()
     def trials(self): return sorted(self.jobs.glob('*/*__*/result.json'))
+    def test_tooling_checks_installed_receipt_and_detects_changed_module(self):
+        from types import SimpleNamespace
+        prefix=self.root/'venv'; prefix.mkdir()
+        names=('images/difficulty-eval/patch_harbor.py','requirements/difficulty-eval-controller.lock')
+        for name in names:
+            path=self.root/name; path.parent.mkdir(parents=True,exist_ok=True); path.write_text('fixture')
+        modules={}
+        for name in ('harbor.agents.installed.codex','harbor.environments.docker.docker'):
+            path=prefix/(name+'.py'); path.write_text('fixture module'); modules[name]=path
+        c.save(prefix/'topogym-runner.json',dict(files={n:c.sha(self.root/n) for n in names},
+                                              modules={n:c.sha(p) for n,p in modules.items()}))
+        with patch.object(r,'ROOT',self.root), patch.object(sys,'prefix',str(prefix)), \
+             patch.object(r.importlib.metadata,'version',return_value='0.23.0'), \
+             patch.object(r.importlib.util,'find_spec',side_effect=lambda n:SimpleNamespace(origin=str(modules[n]))):
+            r.tooling()
+            next(iter(modules.values())).write_text('changed module')
+            with self.assertRaisesRegex(ValueError,'installed Harbor source changed'):
+                r.tooling()
     def mark_pending(self):
         marked=[]
         for task,spec in zip(self.plan['tasks'],self.plan['jobs']):
@@ -206,6 +224,92 @@ class NativeTests(unittest.TestCase):
     def test_account_failure(self):
         path=self.trials()[0].parent/'agent/codex.txt'; path.write_text(json.dumps({'type':'turn.failed','error':{'message':'401 Unauthorized'}})+'\n')
         self.assertEqual(c.check_batch(self.jobs,self.plan)['status_counts']['infra_failed'],1)
+    def test_full_included_quota_does_not_invalidate_completed_trial(self):
+        from account_failure_check import check
+        trial=self.trials()[0].parent
+        rollout=trial/'agent/sessions/rollout-fixture.jsonl'; rollout.parent.mkdir()
+        (trial/'agent/codex.txt').write_text(json.dumps({'type':'turn.completed'})+'\n')
+        for credits in (None, {'has_credits':True,'balance':'100'}, {'has_credits':False,'balance':'0'}):
+            rollout.write_text(json.dumps({'payload':{'rate_limits':{'primary':{'used_percent':100},'credits':credits}}})+'\n')
+            account=check(str(trial))
+            self.assertFalse(account['stop']); self.assertTrue(account['warnings'])
+            self.assertTrue(c.check_batch(self.jobs,self.plan)['evaluation_complete'])
+        (trial/'agent/codex.txt').write_text(json.dumps({'type':'turn.failed','error':{'message':'usage limit reached'}})+'\n')
+        account=check(str(trial))
+        self.assertTrue(account['stop']); self.assertEqual(account['code'],'account_quota_exhausted')
+        self.assertEqual(c.check_batch(self.jobs,self.plan)['status_counts']['infra_failed'],1)
+
+    def test_account_messages_distinguish_quota_auth_and_rate_limits(self):
+        from account_failure_check import check
+        trial=self.trials()[0].parent
+        for message,code in (('429 Too Many Requests','account_rate_limited'),('401 Unauthorized','account_auth_failed'),
+                             ('Missing environment variable','account_config_error'),('insufficient_quota','account_quota_exhausted')):
+            (trial/'agent/codex.txt').write_text(json.dumps({'type':'turn.failed','error':{'message':message}})+'\n')
+            account=check(str(trial)); self.assertEqual(account['code'],code)
+            self.assertIn('预算',account['message'])
+    def test_fixed_manual_scans_with_only_one_auth_method(self):
+        home=self.root/'home'; home.mkdir(); envfile=home/'rcb.env'; auth=home/'.codex/auth.json'
+        envfile.write_text('OPENAI_API_KEY='+SECRET+'\n')
+        target=self.root/'log.txt'; target.write_text(SECRET)
+        argv=[sys.executable,ROOT/'scripts/scan_secrets.py',target,'--env-file',envfile,'--codex-auth',auth]
+        env=dict(os.environ,HOME=str(home))
+        first=subprocess.run([*argv,'--redact'],env=env,capture_output=True,text=True)
+        self.assertEqual(first.returncode,0,first.stderr)
+        self.assertEqual(subprocess.run(argv,env=env,capture_output=True).returncode,0)
+        envfile.unlink(); auth.parent.mkdir(); c.save(auth,{'tokens':{'access_token':SECRET}})
+        target.write_text(SECRET)
+        self.assertEqual(subprocess.run([*argv,'--redact'],env=env,capture_output=True).returncode,0)
+        with patch.dict(os.environ,HOME=str(home)):
+            resolved,path=r.credentials({'ENV_FILE':str(envfile)})
+            self.assertEqual(path,auth); self.assertEqual(resolved['CODEX_FORCE_AUTH_JSON'],'1')
+        auth.unlink()
+        self.assertEqual(subprocess.run(argv,env=env,capture_output=True).returncode,2)
+        envfile.write_text('OPENAI_API_KEY='+SECRET+'\n')
+        argv[-1]=home/'not-the-conventional-auth.json'
+        self.assertEqual(subprocess.run(argv,env=env,capture_output=True).returncode,2)
+    def test_manual_manifest_is_notes_and_cannot_override_scores(self):
+        import import_helper_results as receiver
+        d.seal(self.jobs,self.plan,{'test':SECRET.encode()}); archive=pack(self.root,self.jobs,self.plan)
+        notes=self.root/'MANIFEST.md'
+        notes.write_text('batch: fixture\nhelper: fixture, contact\nhost: synthetic\ntrials: all solved\nunusual events: none\n')
+        report=receiver.verify(archive,self.plan,require_complete=True)
+        self.assertEqual(report['status_counts'],{'unsolved':6})
+        self.assertEqual(report['helper_manifest']['kind'],'helper_notes')
+        notes.write_text('batch: another-batch\nhelper: fixture\n')
+        with self.assertRaisesRegex(ValueError,'MANIFEST'): receiver.verify(archive,self.plan)
+        notes.write_text('batch: fixture\nhelper: fixture\nsecret: hf_'+'a'*30+'\n')
+        with self.assertRaisesRegex(ValueError,'credential'): receiver.verify(archive,self.plan)
+    def test_automatic_image_install_checks_frozen_id_before_tagging(self):
+        import agent_batch_images as images
+        ref=images.references(self.plan).popitem()[0]; wanted='sha256:'+'f'*64
+        pull='ghcr.io/fixture/runtime@sha256:'+'b'*64
+        plan=copy.deepcopy(self.plan); plan['image_sources']={ref:{'pull':pull}}
+        calls=[]; installed={}
+        def execute(argv):
+            calls.append(argv)
+            if argv[1]=='pull': installed[pull]={'Id':wanted}
+            elif argv[1]=='tag': installed[ref]=installed[pull]
+        with patch.object(images,'inspect',side_effect=lambda image:installed.get(image)),patch.object(images,'run',side_effect=execute):
+            images.ensure_images(plan,self.root)
+            images.ensure_images(plan,self.root)
+        self.assertEqual(calls,[['docker','pull',pull],['docker','tag',pull,ref]])
+        with patch.object(images,'inspect',return_value={'Id':'wrong'}),patch.object(images,'run') as run:
+            with self.assertRaisesRegex(ValueError,'differs'): images.ensure_images(plan,self.root)
+            run.assert_not_called()
+        with self.assertRaisesRegex(ValueError,'immutable'): images.validate_sources({ref:{'pull':'ghcr.io/fixture/runtime:latest'}},{ref:wanted})
+        with patch.object(images,'inspect',return_value=None),patch.object(images,'run') as run:
+            local=copy.deepcopy(plan); local['tasks'][0]['runtime_binding']['image']['reference']='topogym-local/missing:fixture'
+            local.pop('image_sources')
+            with self.assertRaisesRegex(ValueError,'maintainer'): images.ensure_images(local,self.root)
+            run.assert_not_called()
+    def test_bootstrap_reuses_verified_tools_and_preserves_unknown_venv(self):
+        import agent_batch_bootstrap as setup
+        root=self.root/'bootstrap'; (root/'.venv-agent-batch').mkdir(parents=True)
+        with self.assertRaisesRegex(ValueError,'unrecognized'): setup.bootstrap(root)
+        (root/'.venv-agent-batch/topogym-runner.json').write_text('{}')
+        codex=root/'.tools/agent-batch/node_modules/.bin/codex'; codex.parent.mkdir(parents=True); codex.touch()
+        with patch.object(setup,'verify') as verify,patch.object(setup,'run') as run:
+            setup.bootstrap(root); verify.assert_called_once_with(root); run.assert_not_called()
     def test_seal_original_scan_tar_receive(self):
         report=d.seal(self.jobs,self.plan,{'test':SECRET.encode()}); self.assertTrue(report['delivery_complete'])
         env=self.root/'rcb.env'; env.write_text('OPENAI_API_KEY='+SECRET+'\n')
@@ -378,6 +482,16 @@ class NativeTests(unittest.TestCase):
             smoke=pub.publish(run,repository,'smoke','fixture',repetitions=1,task_bases=[row['slug']])
             self.assertEqual(c.read(smoke)['trial_count'],2)
             self.assertEqual(dataset,(repository/'tasks/dataset.toml').read_text())
+            context=repository/'images/helper-build/fixture/context'; context.mkdir(parents=True)
+            (context/'Dockerfile').write_text('FROM fixture\n')
+            contents=dict(schema_version=1,runtime=binding['runtime'],packages={'fixture':{}},dpkg=['installed fixture 1'],robots={},visuals={})
+            recipe=context.parent/'manifest.json'
+            c.save(recipe,dict(schema_version=1,platform='linux/amd64',expected=contents,
+                               files=c.inventory(context),reference_image=binding['image']))
+            sources={'fixture':{'build':dict(manifest=str(recipe.relative_to(repository)),sha256=c.sha(recipe),expected=contents)}}
+            online=pub.publish(run,repository,'online','fixture',image_sources=sources)
+            self.assertEqual(c.read(online)['image_sources'],sources)
+            self.assertEqual(c.read(repository/'configs/helper_batches/online.source.json')['source_sha256'],manifest['source_sha256'])
     def test_auth_canary_uses_temporary_profile_and_persists_same_account(self):
         from check_agent_batch_auth import canary
         auth=self.root/'auth.json'; c.save(auth,{'tokens':{'account_id':'fixture','access_token':'old'}})

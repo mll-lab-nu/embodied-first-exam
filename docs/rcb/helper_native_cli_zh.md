@@ -1,180 +1,54 @@
-# 把建文作为 helper：正式入口的双模式小批次操作
+# Helper 原命令与在线构建镜像
 
-本页使用已有正式 pipeline，不另写 smoke 执行脚本，也不上传合成结果。实例是 Cast Coil easy、oracle 参考 seed 0；privileged / standard 双模式，各 K=1，共两个真实 trials。模型 Sol xhigh，每 trial 12 小时、150M input / 10M output，token 仍是运行后判分。小样的作用是验证工程流程，不保证模型解题成功，也不保证几分钟内结束。
+正式 144-trial 批次的 API key 操作单见 [刚体 sweep 完整命令](rigid_sweep_helper_runbook_zh.md)。该文档已展开全部 task base，填写批次、HF 和当前本地 release 信息；远端尚未发布的限制也单独标明。本页保留机制说明和通用命令模板。
 
-先按下方在当前主机完成“维护方准备”，再切换为 helper 运行；接收流程使用另一个目录。同机目录隔离不等于两台机器实测。向第三方派发时再使用第 6 节的独立 release。
+当前交付配置：8 个刚体／关节刚体任务 × easy、medium、hard × privileged、standard × K=3，共 144 个 trial。每档固定 oracle 参考 seed 0；每个 trial 43200 秒、150M input tokens、10M output tokens。token 超限目前在运行后判分，不是实时切断调用。
 
-## 0. 本轮已经执行到哪里
+任务是 interlocked_claws、lock_picking、hedgehog_in_cage、fiber_bundling、horseshoe_ring、cast_coil、cast_keyhole、buzz_wire_3d。维护方提前 prepare/preflight 并发布 48 个冻结任务包。helper 不重新选难度、抽 seed、生成实例或改预算。
 
-- 正式 `setup_agent_batch.sh` 已在本机安装通过：Python 3.12.13、Harbor 0.23.0 及固定补丁、私有 Node 22.14.0 / Codex 0.157.0。
-- 正式 plan 已生成下文 `RUN`：1 个实例、2 个模式，agent 预算 43200 秒。
-- 正式 prepare 已尝试，因 GPU 空闲约 11006 MiB、低于默认 12000 MiB，被显存保护拦住。没有运行物理或模型，没有生成可发布的完整包；已保留计划，可以直接 resume。
-- 尚未使用真实 HF 凭据进行上传、下载，当前 HF 目录不应被描述为“已有本次结果”。
+## Helper 的入口
 
-验证记录见 [summary.json](../../runs/test_results/native_helper_20261004/summary.json)：helper/native/HF/交付共 84 项通过，包含下载固定 revision、只读权限、文件篡改、上传响应丢失后的幂等重试。difficulty 的 29 项中 27 项通过，2 项被既有 `PROTOCOL.md` 与上游固定 blob 不一致拦住；本轮未修改该协议文件。上述回归不代表真实物理、模型或 HF 已通过。
-
-## 1. 一次设置本机变量和凭据
-
-下列代码块在同一个 Bash 终端顺序执行。HF token 使用此前提供的那一份即可，不要写入命令文本；`store` 会隐藏输入。若已有私有 token 文件，直接把 `HF_TOKEN_FILE` 指向它并跳过 store。
+继续按收到的固定版 `SHARING_RUNS.md` 克隆指定仓库并 checkout 指定 commit，使用任务单给的 batch、模型设置及 24 个 task base，执行原来的命令：
 
 ```bash
-set -euo pipefail
-umask 077
-SOURCE_REPO=/home/jianwen/topogym
-MAINT_WORK=/home/jianwen/helper-work/maintainer
-HELPER_WORK=/home/jianwen/helper-work/helper
-ACCEPT_WORK=/home/jianwen/helper-work/acceptance
-CONTROL=/home/jianwen/helper-work/control
-RUN=topogym-solxh-jianwen-smoke-20261004
-B=topogym-solxh-jianwen-smoke-20261004
-HF_TOKEN_FILE="$HOME/.config/eai/helper-hf.token"
-CONFIG="$HOME/.config/eai/$B.json"
-mkdir -p "$MAINT_WORK" "$HELPER_WORK" "$ACCEPT_WORK" "$CONTROL"
-cd "$SOURCE_REPO"
-
-# 此主机已完成安装；新机器首次执行下面这一行。
-# bash scripts/setup_agent_batch.sh
-export PATH="$SOURCE_REPO/.venv-agent-batch/bin:$SOURCE_REPO/.tools/agent-batch/node_modules/.bin:$PATH"
-export TOPOGYM_EVAL_PYTHON="$SOURCE_REPO/.venv-agent-batch/bin/python"
-
-if [ ! -f "$HF_TOKEN_FILE" ]; then
-  python scripts/difficulty_hf_auth.py store --file "$HF_TOKEN_FILE"
-fi
-
-python scripts/check_agent_batch_hf.py --check-access --access write \
-  --repo-id eai-v2-internal/helper-uploads --helper jianwen --batch "$B" \
-  --hf-token-file "$HF_TOKEN_FILE" --receipt "$CONTROL/$B.hf-access.json"
+export JOBS=$PWD/jobs/agents
+B=<任务单中的batch>
+AGENT=codex MODEL=openai/gpt-6-sol EFFORT=xhigh ENV_FILE=$HOME/rcb.env \
+  nohup scripts/run_agent_batch.sh "$B" <task-base> [<task-base> ...] > "run_$B.out" 2>&1 &
 ```
 
-这一步只检查真实私有库及写权限，不启动 GPU 或模型。失败时先解决凭据/权限/网络问题，不创建其他 dataset 作为替代。HF token 不用于模型认证；模型使用你本机的 `~/.codex/auth.json`，或在第 3 节改用 API env 文件。
+尖括号是任务单的占位符，不可原样执行。MODEL/EFFORT 使用派单给出的值；只有 assignment 明确允许选择模型时才能更改。K=3、双模式和预算从 assignment 读取，无须额外环境变量。
 
-## 2. 维护方：准备和发布两个冻结任务包
+首次启动内部按顺序完成：安装固定的 runner 工具；核对冻结构建材料；缺少镜像时联网构建；检查实际安装的源码、Python 包内容、原生库、机器人／视觉资产和系统包版本；验证模型认证；开始 trial。构建发生在 trial 计时之前。相同源码镜像只构建一次，多 lane 共用构建锁。已存在但内容不符的镜像会明确报错并保留，不覆盖它。
 
-先确认 GPU 有至少 12000 MiB 空闲，且利用率低于 10%。不要为腾显存停止其他人的任务，也不要把阈值调低来绕过检查。原 source 快照和计划已保存，重试 prepare 不重新抽 seed。
+使用本机 Codex 登录时，常规 API env 文件可以不存在；使用 API key 时，Codex auth 文件可以不存在。扫描器同样兼容原文同时列出两种认证文件。凭据仍然由 helper 在本机事先准备，不能放入仓库、镜像构建目录或结果归档。
+
+任务结束后的 verdict 检查、两次密钥扫描、tar、sha256sum、MANIFEST 和 HF 上传继续使用收到的手册。自动 wrapper `run_helper_batch.sh` 仍可用，但不再是执行这套手册必须增加的步骤。
+
+## MANIFEST 的一处命令兼容差异
+
+本地构建镜像可能没有 RepoDigest。原文的 `{{index .RepoDigests 0}}` 会因此报错；填写 MANIFEST 时使用下式即可，手册本身允许记录 Id：
 
 ```bash
-cd "$SOURCE_REPO"
-PREP="$MAINT_WORK/runs/difficulty_trials/$RUN"
-nvidia-smi --query-gpu=index,memory.free,memory.total,utilization.gpu --format=csv
-
-# 本机已有计划，跳过；新实验只用同一正式入口筛选任务/难度。
-if [ ! -f "$PREP/manifest.lock.json" ]; then
-  bash bash_scripts/run_difficulty_trials.sh --backend local \
-    --run-id "$RUN" --phase plan --work-dir "$MAINT_WORK" \
-    --setting configs/sweeps/helper_oracle_reference.yaml \
-    --tasks cast_coil --difficulties easy
-fi
-
-bash bash_scripts/run_difficulty_trials.sh --backend local \
-  --run-id "$RUN" --phase prepare --resume --gpu-device 0 --work-dir "$MAINT_WORK"
-
-bash bash_scripts/run_difficulty_trials.sh --backend local \
-  --run-id "$RUN" --phase preflight --resume --gpu-device 0 --work-dir "$MAINT_WORK"
-
-cat > "$CONTROL/$B.upload.json" <<EOF
-{"type":"hf","repo_id":"eai-v2-internal/helper-uploads","prefix":"helpers/jianwen/$B"}
-EOF
-
-python scripts/publish_agent_batch.py --run "$PREP" \
-  --batch "$B" --helper jianwen --repetitions 1 \
-  --task-base topogym-cast-coil-easy-o00 \
-  --upload-spec "$CONTROL/$B.upload.json"
-
-ASSIGNMENT="$SOURCE_REPO/configs/helper_batches/$B.json"
-cp -n "$ASSIGNMENT" "$CONTROL/$B.original-assignment.json"
+docker image inspect --format '{{.Id}}' <image>
 ```
 
-prepare/preflight 可能需要构建镜像并执行真实 GPU 检查。任一步失败就停止，读该 run 下的日志；不补写成功文件。发布器拒绝覆盖已有不同任务包和重复派单。若派单已经成功发布，继续第 3 节，不重复执行发布命令。源码物理身份若已经改变，需要以新 RUN/B 制作新发布，不能修改原计划来消除不一致。
+不伪造 RepoDigest，不要求 helper 为产生 digest 再推送镜像。完整的实际镜像 ID、参考镜像 ID、构建清单哈希和内容检查结果还会自动写进 `agents/<batch>-metadata.json`，随原文 tar 选择一起交付。
 
-这里 K=1 仅写在小样 assignment；正式全量仍由原 YAML 指定 K=3。普通任务失败得 0 也能形成完整交付，基础设施失败或缺少 token 用量不能通过完整验收。
+## 维护方需要冻结的材料
 
-## 3. 你作为 helper：配置一次，然后执行
+`images/helper-build/<release>/manifest.json` 记录完整构建目录的哈希；assignment 的 `image_sources` 固定清单哈希和期望运行内容。构建目录包含冻结源码和资产、基础镜像 digest、Debian 软件源快照和全部包版本、带哈希的 Python 依赖锁、固定安装工具和已审计的 libuipc wheel。
 
-当前同机测试使用已经具备冻结任务和镜像的 `$SOURCE_REPO`。第三方 release 的使用者把路径替换成自己的 release checkout；命令入口和输出结构相同。
+libuipc wheel 是已固定的原生依赖产物，不是 Docker 镜像。复用它是为了让现有任务锁中的原生库字节、构建记录哈希保持一致，也避免每个 helper 重复 CUDA 编译。其余依赖由 helper 在线下载。构建成功不代表模型解题成功。
 
-```bash
-cd "$SOURCE_REPO"
-if [ ! -f "$CONFIG" ]; then
-  bash bash_scripts/run_helper_batch.sh --init-config --config "$CONFIG" \
-    --assignment "$ASSIGNMENT" --jobs-dir "$HELPER_WORK/jobs/agents" \
-    --auth-file "$HOME/.codex/auth.json" --gpu 0 --hf-token-file "$HF_TOKEN_FILE"
-fi
+维护方使用生产工具 `scripts/agent_batch_image_build.py`：`--source` 指向 prepare 的冻结源码；`--image` 是对应参考镜像；`--wheel-image` 是同一源码 Dockerfile 的 `uipc-build` 阶段；`--apt-snapshot` 固定源时间；`--output` 放在发布 checkout 的 `images/helper-build/` 下。`--image-sources-output` 生成发布器要读取的 JSON。原始 prepare 目录和证据不改写。
 
-# 首次认证在前台；通过后统一脚本自动转后台。
-bash bash_scripts/run_helper_batch.sh --config "$CONFIG"
+交付前用同一工具的 `--verify-build <manifest.json> --repository <发布checkout> --tag <新测试标签> --receipt <报告.json>` 实际构建并检查。随后 `publish_agent_batch.py --image-sources <生成的JSON>` 将策略绑定进新 assignment，release exporter 会包含全部构建材料。已有 assignment 不覆盖，需要新的发布产物。
 
-bash bash_scripts/run_helper_batch.sh --config "$CONFIG" --phase status
-tail -f "$HELPER_WORK/jobs/.helper-pipeline/$B/workflow.log"
-```
+这一路只授权镜像 ID 不同而运行内容核对一致的重建；任务包、实例、评分代码和 runtime binding 都保留原字节。没有在线构建策略的旧 assignment 继续要求原镜像 ID。批次开始后也不能中途换镜像。
 
-`tail -f` 的 Ctrl-C 只退出查看日志。统一流程会核对工具/任务/镜像、做一次模型 canary、运行两个 trial、检查完整性与用量、扫描、生成 MANIFEST、打包并上传三文件。配置生成不会覆盖已有文件；需要 API 认证时，在第一次 `--init-config` 中用 `--env-file /private/eai.env` 替换 `--auth-file`。
+## 接收和验证范围
 
-如果只在最后上传阶段失败，修正网络后执行：
+接收方独立下载 HF 的归档，使用原始 assignment 验证任务、全部 K 次 trial、用量和镜像构建记录。构建清单或记录不匹配会拦截验收；人工 MANIFEST 的文字不替代真实 verdict。网站导入仍是接收端的独立后续工作。
 
-```bash
-bash bash_scripts/run_helper_batch.sh --config "$CONFIG" --phase upload
-```
-
-这只重试上传，不重跑模型。若 trial 因基础设施问题中断，保留目录并检查状态，由维护方另发 rerun 派单。不要重新创建同名 job 或手改 verdict。
-
-## 4. 在 HF 上确认结果
-
-helper 工作流成功上传后会打印包含固定 HF commit 的 URL，并写 `hf-receipt.json`。也可以再次验证实际远端三文件：
-
-```bash
-python scripts/check_agent_batch_hf.py --assignment "$ASSIGNMENT" \
-  --folder "$HELPER_WORK/jobs/upload_$B" --verify-uploaded \
-  --hf-token-file "$HF_TOKEN_FILE" --receipt "$CONTROL/$B.hf-verified.json"
-
-cat "$HELPER_WORK/jobs/.helper-pipeline/$B/hf-receipt.json"
-```
-
-浏览器目录：
-
-`https://huggingface.co/datasets/eai-v2-internal/helper-uploads/tree/main/helpers/jianwen/topogym-solxh-jianwen-smoke-20261004`
-
-目录应有 `${B}__jianwen.tar.gz`（即 batch 名后接 `__jianwen.tar.gz`）、同名 `.sha256` 和 `MANIFEST.md`。网页是私有的，需要登录有该 dataset 读权限的 HF 账号。脚本拿到写 token 可以上传，并不等于当前浏览器登录账号已加入组织；没有权限时目录链接可能显示不可访问。
-
-## 5. 我们作为接收方：独立下载与验收
-
-同机小测试可以沿用测试 token 的实际读权限；正式接收请将 `RECEIVER_TOKEN_FILE` 指向我们自己账号的只读凭据。用另一个目录下载，不读取 helper 的 jobs，也不以归档自带 assignment 作为可信任务单。
-
-```bash
-cd "$SOURCE_REPO"
-RECEIVER_TOKEN_FILE="$HF_TOKEN_FILE"
-bash bash_scripts/import_helper_results.sh \
-  --assignment "$CONTROL/$B.original-assignment.json" \
-  --work-dir "$ACCEPT_WORK" --require-complete \
-  --hf-token-file "$RECEIVER_TOKEN_FILE"
-
-cat "$ACCEPT_WORK/accepted/$B/receipt.json"
-cat "$ACCEPT_WORK/accepted/$B/hf-source.json"
-cat "$ACCEPT_WORK/accepted/$B/review/README.md"
-```
-
-第一次下载固定 main 当时的 commit，三文件全部从同一 revision 读取；中途 main 更新不会混入另一版本。重复执行会复核已下载内容和同一版本。之后可以离线验收，不再使用 HF 凭据：
-
-```bash
-bash bash_scripts/import_helper_results.sh --phase import \
-  --assignment "$CONTROL/$B.original-assignment.json" \
-  --work-dir "$ACCEPT_WORK" --require-complete
-```
-
-另一台接收机只需接收工具及 HF SDK，可设置 `TOPOGYM_RECEIVER_PYTHON` 指向安装了 `huggingface-hub==1.33.0` 的独立 Python。离线 import 不要求 SDK、GPU、Harbor 或模型认证。网站接通仍在独立后续阶段，本流程不会向公开网站库转传原始归档。
-
-## 6. 向第三方交付独立 release
-
-本机完整流程通过后，取得官方 `SHARING_RUNS.md` 原文及来源 commit，再导出包含上述 assignment 的 release。当前本机和缓存分支没有这份文件，SSH 更新失败；不能拿 §3b 片段冒充官方原文。导出器遇到缺手册会明确拒绝完整 release；`--runtime-only` 只用于分发/检查工具，不能运行实验派单。
-
-```bash
-cd "$SOURCE_REPO"
-RELEASE_DIR="/home/jianwen/helper-releases/$B"
-OFFICIAL_MANUAL=/path/to/upstream/docs/SHARING_RUNS.md
-python scripts/export_native_helper_release.py \
-  --assignment "$ASSIGNMENT" --manual "$OFFICIAL_MANUAL" --output "$RELEASE_DIR"
-python scripts/export_native_helper_release.py --verify --output "$RELEASE_DIR"
-```
-
-导出器保留官方手册原文及 hash，附带待合入的 `docs/SHARING_RUNS_3b.md`。release 包含所选 tasks、dataset、派单、运行依赖和身份清单，不包含私有仓库 Git 历史或额外 oracle 解题开发代码。默认不 push、不上传镜像。
-
-在我们约定的 helper 仓库中审查、提交这些文件，提供固定 commit；为 helper 分发清单中绑定的全部镜像。helper clone 后先安装工具/导入镜像，再运行第 3 节相同命令。它首次 prepare 还会检查完整 release 文件清单，防止复制漏文件或修改依赖。维护方保留原始 assignment；小样证明通过后再发布全量 60 包、180-trial 派单。
+CPU 回归使用合成试验与模拟 Docker/HF，不能视为物理或模型验收。真实联网镜像重建报告在 `runs/test_results/helper_online_build_20261005/`；只有存在成功的 `build-receipt.json` 才表示该次重建内容核对通过。既有真实 HF 传输小样与本轮 144-trial 正式实验分别记录，不把前者当作后者完成。

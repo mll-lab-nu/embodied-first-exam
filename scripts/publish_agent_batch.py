@@ -41,7 +41,7 @@ def publish(run, repository, batch, helper, **options):
     with locked(Path(repository)/'.native-publish.lock'):
         return _publish(run,repository,batch,helper,**options)
 
-def _publish(run, repository, batch, helper, *, repetitions=None, model=None, effort=None, agent=None, upload=None, task_bases=None):
+def _publish(run, repository, batch, helper, *, repetitions=None, model=None, effort=None, agent=None, upload=None, task_bases=None, helper_selects_model=False, image_sources=None):
     run=Path(run).resolve(); repository=Path(repository).resolve(); component(batch); component(helper)
     if helper!=helper.lower(): raise ValueError('helper ID must be lowercase')
     dispatch=repository/'configs/helper_batches'/(batch+'.json')
@@ -106,7 +106,20 @@ def _publish(run, repository, batch, helper, *, repetitions=None, model=None, ef
                   jobs=[dict(job=batch+'-'+t['mode']+'-'+t['base'],task=t['name'],repetitions=repetitions) for t in records],
                   agent=dict(name=agent,model=model,kwargs=kwargs),mirror_required=True,upload=upload or {'type':'shared-folder'})
         if preset.get('token_budget'): plan['token_budget']=preset['token_budget']
-        runner_names=['scripts/'+name for name in ('run_agent_batch.sh','agent_batch_runtime.py','agent_batch_contract.py','agent_batch_delivery.py',
+        if helper_selects_model: plan['helper_selects_model']=True
+        if image_sources is not None:
+            from agent_batch_images import validate_sources, references
+            plan['image_sources']=validate_sources(image_sources,references(plan))
+            from agent_batch_image_build import materials
+            for reference,source in image_sources.items():
+                if 'build' not in source: continue
+                build_manifest,_=materials(repository,source['build'])
+                if build_manifest['reference_image']!={'reference':reference,'id':references(plan)[reference]}:
+                    raise ValueError('build recipe is for a different prepared image')
+                for task in records:
+                    if task['runtime_binding']['image']['reference']==reference and task['runtime_binding']['runtime']!=source['build']['expected']['runtime']:
+                        raise ValueError('build contents differ from prepared runtime')
+        runner_names=['scripts/'+name for name in ('run_agent_batch.sh','agent_batch_bootstrap.py','agent_batch_images.py','agent_batch_image_build.py','agent_batch_image_probe.py','agent_batch_image_os.py','agent_batch_runtime.py','agent_batch_contract.py','agent_batch_delivery.py',
             'agent_batch_mirror_copy.py','helper_log_mirror.py','log_mirror.py','secret_scan.py','scan_secrets.py','account_failure_check.py','topogym_versions.py',
             'helper_batch.py','setup_agent_batch.sh','finish_agent_batch.py','check_agent_batch_auth.py','check_agent_batch_hf.py',
             'difficulty_hf_auth.py','difficulty_results_hf.py','helper_bundle.py','export_native_helper_release.py',
@@ -145,11 +158,13 @@ def main():
     p.add_argument('--run',type=Path,required=True); p.add_argument('--repository',type=Path,default=ROOT)
     p.add_argument('--batch',required=True); p.add_argument('--helper',required=True); p.add_argument('--repetitions',type=int)
     p.add_argument('--model'); p.add_argument('--effort')
+    p.add_argument('--helper-selects-model',action='store_true',help='delegate MODEL/EFFORT selection to helper; tasks, budgets and AGENT stay fixed')
+    p.add_argument('--image-sources',type=Path,help='maintainer JSON mapping frozen image references to pinned registry/archive downloads')
     p.add_argument('--agent',choices=('codex','claude-code')); p.add_argument('--upload-spec',type=Path)
     p.add_argument('--task-base',action='append',help='publish a selected smoke subset; repeatable, exact manifest slug')
     a=p.parse_args()
     try:
-        print(publish(a.run,a.repository,a.batch,a.helper,repetitions=a.repetitions,model=a.model,effort=a.effort,agent=a.agent,upload=read(a.upload_spec) if a.upload_spec else None,task_bases=a.task_base))
+        print(publish(a.run,a.repository,a.batch,a.helper,repetitions=a.repetitions,model=a.model,effort=a.effort,agent=a.agent,upload=read(a.upload_spec) if a.upload_spec else None,task_bases=a.task_base,helper_selects_model=a.helper_selects_model,image_sources=read(a.image_sources) if a.image_sources else None))
     except (OSError,ValueError,KeyError) as e: p.exit(2,'Publication blocked: '+str(e)+'\n')
 
 if __name__=='__main__': main()

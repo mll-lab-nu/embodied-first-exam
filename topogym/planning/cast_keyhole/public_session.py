@@ -12,21 +12,9 @@ from scipy.spatial.transform import Rotation
 
 
 def public_row(session, native):
-    """Preserve omitted targets and reject a lossy native gripper conversion."""
-    targets = session.env._robot.capture_state().targets
-    row = session.hold_action().astype(np.float64)
-    for side, group in session.env._robot.groups.items():
-        target = dict(targets[side], **native.get(side, {}))
-        row[session.robot.arm_slice[side]] = target['joint_position_rad']
-        close = float(target[group.gripper_field])
-        width = float(np.float32(session.robot.native_to_width(side, close)))
-        if abs(session.robot.width_to_native(side, width)-close) > 1e-6:
-            raise ValueError('Policy gripper target is not representable by public widths')
-        row[session.robot.grip_index[side]] = width
-    row = row.astype(np.float32)
-    if not np.isfinite(row).all() or not np.array_equal(session.robot.clip(row), row):
-        raise ValueError('Policy action would be clipped by the public adapter')
-    return row
+    """Use the shared adapter for either native or width public grippers."""
+    from topogym.planning.harbor_bridge.actions import public_row as convert
+    return convert(session, native)
 
 
 def run_feedback_policy(session, output):

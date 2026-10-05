@@ -13,6 +13,8 @@ import trimesh
 
 
 FAMILY_KNOTS = {
+    'single_overlap_loop': ('open_single_overlap_loop', 'not_a_knot_invariant', 1),
+    'alternating_overlap_loop': ('open_alternating_overlap_loop', 'not_a_knot_invariant', 2),
     'two_overlap_loop': ('open_two_overlap_loop', 'not_a_knot_invariant', 2),
     'overhand_trefoil': ('open_overhand', 'trefoil_3_1', 3),
     'figure_eight': ('open_figure_eight', 'figure_eight_4_1', 4),
@@ -53,6 +55,9 @@ class KnotLayout:
             raise ValueError("Free tails must extend outside the knot")
 
     def centerline(self):
+        if self.family in {'single_overlap_loop', 'alternating_overlap_loop'}:
+            from .knot_untying_simplified import simplified_centerline
+            return simplified_centerline(self)
         if self.family == 'two_overlap_loop':
             return two_overlap_centerline(self)
         a, h = self.planar_scale_m, self.crossing_height_m
@@ -174,6 +179,12 @@ def template_diagram_matches(crossings, family):
     word = [idx for _, idx, _ in visits]
     over = [over for _, _, over in visits]
     alternating = all(a != b for a, b in zip(over, over[1:]))
+    if family == 'single_overlap_loop':
+        return len(crossings) == 1 and word == [0, 0] and over == [True, False]
+    if family == 'alternating_overlap_loop':
+        return (len(crossings) == 2 and word == [0, 1, 1, 0]
+                and over == [False, True, False, True]
+                and abs(sum(hit['sign'] for hit in crossings)) == 2)
     if family == 'two_overlap_loop':
         # A single bight whose two tails cross twice (a removable R-II pair).
         # Both crossings put the same tail above the other; no closed-knot claim.
@@ -220,7 +231,7 @@ def inspect_geometry(points, layout):
                   diagnostic_closure_crossings=len(closed_crossing),
                   trefoil_diagram_verified=is_trefoil,
                   family=layout.family, authored_projection_verified=is_family,
-                  knot_diagram_verified=is_family and layout.family != "two_overlap_loop",
+                  knot_diagram_verified=is_family and FAMILY_KNOTS[layout.family][1] != "not_a_knot_invariant",
                   minimum_nonlocal_centerline_distance_m=distance,
                   minimum_nonlocal_surface_gap_m=distance-2*r,
                   nearest_nonlocal_segments=pair, material_neighbour_exclusion_m=float(np.pi*r),
@@ -285,6 +296,8 @@ def generate_assets(output, layout=None):
                   geometry_verified=True, physics_qualified=False, watertight=True,
                   mesh_vertices=len(vertices), mesh_faces=len(faces),
                   scope="initial_geometry_only", source={
+                      'single_overlap_loop': 'authored_single_bight_one_overlap',
+                      'alternating_overlap_loop': 'authored_single_bight_alternating_overlaps',
                       'two_overlap_loop': 'authored_single_bight_two_overlaps',
                       'overhand_trefoil': 'https://katlas.org/wiki/3_1',
                       'figure_eight': 'https://katlas.org/wiki/4_1',

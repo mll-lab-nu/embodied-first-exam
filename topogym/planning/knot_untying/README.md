@@ -13,6 +13,8 @@
 
 ## 当前释放判据
 
+最新执行转入用户要求的 **Harbor grading**：[运行状态](../../../runs/test_results/knot_harbor_hard14_20261004_01/status.json)。使用独立冻结的 v16 候选和现有 `public_session.run_feedback_policy`，经任务 `Session.step()` 执行及原生隔离 verifier 评分；先 privileged，通过后再 standard。hard14 本地原生成功保留，其旧回放在 9.8425 s 主动停止，完整物理资格未完成；新 Harbor 实例的原生 oracle 已成功（51.0625 s、2,043 actions、20,425 ticks、稳定 0.5 s），隔离 verifier 正在第一遍独立核验，最终 Harbor 分数尚未产生。这里的释放判据 v5、Tooling v16、运行编号 hard14 分开记录，不能互相代替版本或成功资格。
+
 2026-10-04 用户授权启用 `terminal_v5_fixed_contact_active_clearance_1mm`：夹爪／活动连杆间隙为 **1 mm**；世界固定底座可正常接触；所有部件仍拒绝绳体内部相交。保守包络不能确认时，使用共享 `utils/geometry/solid_contact.py` 的原生实体细化；1 nm 数值分辨率不作为允许穿透深度。保持落桌、速度、漂移、0.5 s 连续稳定及全 tick 独立物理审计。
 
 `hard11` 使用独立冻结源码和新评价实例，预检要求原始物理 S0、机器人、控制目标和资产完全相同；Task／释放证据的版本改变会产生新的状态 SHA，不能冒称原始 v14 任务验收。原 `tasks/` 镜像包和旧结果保留其原判据。96 项相关 CPU 检查通过；两个 hard10 实测静置样本的新释放检查通过，但不替代完整回放。hard10 已主动停止；hard11 已通过原生初态一致性和 10 ticks 预检，新评价 SHA 为 `182eb5736b649784`；[hard11 计划](../../../runs/test_results/knot_oracle_20261003/hard11_native_launcher/launch_plan.json)与[实时状态](../../../runs/test_results/knot_oracle_20261003/background_status.json)记录新运行。下文 hard10 段落是旧版运行记录。
@@ -24,6 +26,8 @@
 当前 [hard13](../../../runs/test_results/knot_oracle_20261003/hard13_native_launcher/launch_plan.json) 保留该抬升，并将 hard 的 `pinch_height_m` 设为 +1 mm，放绳时也保持这一高度偏移。30 项 CPU 检查通过，物理／v14 安全／v5 释放及穿透判据不变。每步记录接受的动作和实际 ticks，并保存部分轨迹快照。
 
 **hard13 已原生成功：50.8575 s、2,035 actions／20,343 ticks，末动作 3 ticks**。从原始物理 S0 经两次决策、零回退完成 4→1→0，释放后稳定 0.5 s。终态 `robot_clear=true`，活动间隙下界 38.916 mm、最大速度 0.9054 mm/s、漂移 0.4704 mm。[完整动作及运行身份核验](../../../runs/test_results/knot_oracle_20261003/hard13/native_evidence_validation.json)通过，2,036 个控制步边界桌面检查无 findings。正式回放的早期逐 tick 检查却在 782–784 三个 tick 发现控制步之间的真实桌面浅重叠，最大 3.4375 μm；[独立复核及停止记录](../../../runs/test_results/knot_oracle_20261003/hard13/replay_physical_rejection.json)已保留。因此 hard13 不能取得全过程无穿透资格，未发布成功视频。
+
+[首遍正式回放 0–3 s 窗口](../../../runs/test_results/knot_oracle_20261003/hard14_replay/early_table_window_validation.json)已核对 1,201 个状态：机器人／桌面检查无 findings，最小手指顶面垂直间隙约 0.4654 mm；旧反例时刻均有约 0.488–0.499 mm 正间隙。状态链、原始记录哈希及两个同内核观察器的输出一致；全程及 FEM 资格仍待验。
 
 hard14 将默认 hard 抓取／放下目标再提高 0.5 mm（总偏移 +1.5 mm），原有物理、释放判据和 2 mm anchor 抬升不变。新运行已启动，在原生执行前 3 s 直接订阅每个物理 tick 做桌面诊断，避免同类步内反例等到正式回放才被发现；这不替代后续完整 FEM／碰撞验收。
 
@@ -79,7 +83,8 @@ python scripts/oracle_runners/run_knot_branching.py \
 v14 的 R2 允许短于 0.25 s 的体积异常恢复，R4 的目标高度下限为桌面下 15 mm；
 这些是 benchmark 的判定与命令保护，不构成全程无穿模资格。原生 R2 决定体积异常持续时间的
 任务结论；独立审计记录每 tick 异常，并另行区分接触、实体内部相交和未解决的几何证据。
-Nyx 初始化不等于已录视频；本套工具记录动作与中心线，不另外实现录像流程。
+Nyx 初始化不等于已录视频；默认记录动作与中心线。连续执行可加 `--record-video`，
+通过共享 `RecordingSession` 保存四路实际运行视频；回溯搜索仍单独回放成功路径录制。
 
 运行产物为 `report.json`、`steps.jsonl`、`centerlines.npz`、`trajectory.npz`。
 `native_progress.json` 每 8 控制步及终止时保存完整原生指标；被拒分支在回溯前保存动作前缀、
@@ -192,6 +197,62 @@ python scripts/audit_knot_physics.py \
   子决策耗尽先返回上游，不会因等待新参数而阻止上游回溯。
 
 ## 冻结实例
+
+### 已确认的 very_easy / easier 变体
+
+`very_easy` 为圈口单交叉；`easier` 为上下交替的双交叉。场景已获用户确认，具名入口已接入。
+两档共用原 FEM/IPC、机器人 home 和终态判据；不是旧 easy 实例的别名。旧三档及 seeded 选择不变。
+下列工具保存各自源码快照和工具 SHA；显式指定当前工具以免新变体误用历史任务包。
+
+新两档控制器按所选 tooling 的 `JOINT_STEP_LIMIT_RAD` 限制每步关节目标变化，较大的移动
+通过真实 `Session.step()` 分段执行并记录，保留 standard 的控制时序。Harbor 采用已有
+`public_session.run_feedback_policy(session, output, variation=...)`；私有策略随 `solution/`
+打包，公共镜像和 verifier 不包含 oracle。构建并评分两档的入口为：
+
+```bash
+bash bash_scripts/run_harbor_oracle_grades.sh \
+  --families knot_untying --tiers very_easy,easier --gpu 0 \
+  --image topogym-local/knot-below-easy:new \
+  --output runs/test_results/knot_below_easy_harbor_new
+```
+
+每档先执行 privileged oracle 及两遍隔离评分回放，成功后把同实例轨迹交给 standard
+在线执行和独立回放。以实际 verifier reward 为准；本地原生成功不等于 `solved=1`。
+本轮冻结输入、私有源码和评分进展见[验证计划](../../../runs/test_results/knot_below_easy_harbor_20261005_01/plan.json)。
+
+当前 `very_easy` 已在两种模式获得 `solved=1`，835 actions／8,341 ticks／20.8525 s；
+两遍 privileged 回放和一遍 standard 回放均严格成功，未用额外保持步或回放容差。
+证据见 [privileged](../../../runs/test_results/knot_below_easy_harbor_20261005_01/very_easy_privileged_verification.json)
+和 [standard](../../../runs/test_results/knot_below_easy_harbor_20261005_01/very_easy_standard_verification.json)。
+`easier` 已开始正式运行，评分仍待完成。
+
+```bash
+python scripts/prepare_knot_instances.py --variations very_easy easier --seed 0 \
+  --tooling harbor_templates/topogym/common/rcb_topogym.py \
+  --output runs/test_results/knot_below_easy_instances_new
+
+python scripts/check_knot_initial_states.py \
+  --instance runs/test_results/knot_below_easy_instances_new/very_easy/instance.json \
+  --tooling harbor_templates/topogym/common/rcb_topogym.py \
+  --output runs/test_results/knot_very_easy_initial_new
+
+python scripts/oracle_runners/run_knot_oracle.py --variation knot_untying_very_easy \
+  --instance runs/test_results/knot_below_easy_instances_new/very_easy/instance.json \
+  --tooling harbor_templates/topogym/common/rcb_topogym.py --record-video \
+  --output runs/test_results/knot_very_easy_robot_new
+
+python scripts/audit_knot_oracle.py \
+  --instance runs/test_results/knot_below_easy_instances_new/very_easy/instance.json \
+  --tooling harbor_templates/topogym/common/rcb_topogym.py \
+  --traj runs/test_results/knot_very_easy_robot_new/trajectory.npz --repeat 2 \
+  --output runs/test_results/knot_very_easy_replay_new
+```
+
+替换 `very_easy` 为 `easier` 可检查另一档。`--record-video` 只用于连续无回溯的执行，采用共享
+RecordingSession；回溯搜索仍通过保存成功动作后独立重放来录制。只读 IK 不证明真实夹持，
+短时静置不证明解绳，原生成功与独立回放／物理审计／Harbor 评分分别记录。
+
+以下为原三档的默认准备方式：
 
 仓库旧 `tasks/` knot 存档早于 `contact_eps_velocity=.001` 修正，与当前代码的
 physics_options 不同。已有交接实例可直接用；确需重新生成时：

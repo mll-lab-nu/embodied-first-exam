@@ -33,20 +33,10 @@ def save(path, data):
     temp.replace(path)
 
 
-def gpu_ready(gpu, wait_s, minimum_mb):
-    deadline, notice = time.monotonic() + wait_s, 0
-    while True:
-        p = subprocess.run(["nvidia-smi", "-i", gpu, "--query-gpu=memory.free,utilization.gpu", "--format=csv,noheader,nounits"],
-                           capture_output=True, text=True, timeout=20, check=True)
-        free, utilization = map(int, p.stdout.strip().split(","))
-        if free >= minimum_mb and utilization < 10:
-            return
-        if time.monotonic() >= deadline:
-            raise ValueError(f"GPU busy ({free} MiB free, {utilization}% utilization); candidate is resumable, no other job was stopped")
-        if time.monotonic() >= notice:
-            print(f"Waiting for GPU {gpu}: {free} MiB free, {utilization}% utilization", flush=True)
-            notice = time.monotonic() + 30
-        time.sleep(2)
+def gpu_ready(gpu):
+    """Check GPU accessibility once, without a memory or utilization threshold."""
+    subprocess.run(["nvidia-smi", "-i", gpu, "--query-gpu=uuid", "--format=csv,noheader"],
+                       capture_output=True, text=True, timeout=20, check=True)
 
 
 class Pipeline:
@@ -78,7 +68,7 @@ class Pipeline:
         self.state = read(self.status_path) if self.status_path.exists() else dict(release=self.release, instances={}, harbor_qualified=False)
 
     def ready(self):
-        gpu_ready(self.args.gpu, self.args.gpu_wait_s, self.args.gpu_min_free_mb)
+        gpu_ready(self.args.gpu)
 
     def wait_for_experiments(self):
         """User-selected prerequisites; observe them, never stop or remove them."""
@@ -270,8 +260,10 @@ def main():
     parser.add_argument("--phase", choices=("build", "preflight", "harbor-smoke", "activate", "all"), default="all")
     parser.add_argument("--families", nargs="*")
     parser.add_argument("--gpu", default="0")
-    parser.add_argument("--gpu-wait-s", type=int, default=600)
-    parser.add_argument("--gpu-min-free-mb", type=int, default=12000)
+    parser.add_argument("--gpu-wait-s", type=int, default=0,
+                        help="deprecated compatibility option; GPU checks no longer wait")
+    parser.add_argument("--gpu-min-free-mb", type=int, default=0,
+                        help="deprecated compatibility option; free GPU memory no longer gates execution")
     parser.add_argument("--harbor", default=str(ROOT / ".venv-harbor/bin/harbor"))
     parser.add_argument("--after-containers", nargs="*", default=[])
     parser.add_argument("--wait-timeout-s", type=int, default=86400)

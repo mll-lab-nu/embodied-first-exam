@@ -17,6 +17,21 @@ from topogym.simulator.frozen_binding import binding_id
 
 
 class PipelineContracts(unittest.TestCase):
+    def test_gpu_accessibility_never_queries_memory_or_waits(self):
+        with patch.object(P.subprocess, 'run',
+                return_value=subprocess.CompletedProcess([], 0, 'GPU-test', '')) as command, \
+                patch.object(P.time, 'sleep') as sleep:
+            P.gpu_ready('0')
+            command.assert_called_once()
+            self.assertEqual(command.call_args.args[0], ['nvidia-smi', '-i', '0',
+                             '--query-gpu=uuid', '--format=csv,noheader'])
+            sleep.assert_not_called()
+
+    def test_gpu_query_failure_still_blocks(self):
+        with patch.object(P.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, 'nvidia-smi')):
+            with self.assertRaises(subprocess.CalledProcessError):
+                P.gpu_ready('0')
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.folder = Path(self.temp.name)

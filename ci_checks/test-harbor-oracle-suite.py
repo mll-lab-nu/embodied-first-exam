@@ -100,7 +100,7 @@ class Evidence(unittest.TestCase):
 
     def test_zero_score_is_separate_from_infrastructure_failure(self):
         self.reward = dict(success=0, missing_trajectory=1); self.commit()
-        self.assertEqual(self.assess()["status"], "score_failed")
+        self.assertEqual(self.assess()["status"], "invalid_submission")
         self.assertEqual(self.assess(agent="nop")["status"], "passed")
         self.reward["grader_error"] = 1; self.commit()
         self.assertEqual(self.assess(agent="nop")["status"], "infra_failed")

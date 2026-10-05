@@ -1,6 +1,7 @@
 """Portable native batch plans and verdicts. Offline readers use only stdlib."""
 from __future__ import annotations
 from collections import Counter
+import copy
 from contextlib import contextmanager
 import fcntl
 import hashlib
@@ -90,6 +91,12 @@ def validate(plan):
     if plan.get('format') != FORMAT or plan.get('schema_version') != 1: raise ValueError('unsupported native batch plan')
     if plan.get('plan_sha256') != digest({k: v for k, v in plan.items() if k != 'plan_sha256'}): raise ValueError('batch plan changed')
     component(plan['batch']); component(plan['helper'])
+    if type(plan.get('helper_selects_model',False)) is not bool: raise ValueError('helper_selects_model must be boolean')
+    if plan.get('helper_selects_model') and plan['agent']['name']!='codex':
+        raise ValueError('helper model selection currently requires the Codex runner')
+    if 'assignment_sha256' in plan:
+        if not plan.get('helper_selects_model') or not re.fullmatch('[a-f0-9]{64}',plan['assignment_sha256']):
+            raise ValueError('invalid model selection assignment binding')
     if 'token_budget' in plan: validate_token_budget(plan['token_budget'])
     k = plan['repetitions']
     if type(k) is not int or not 1 <= k <= 10000: raise ValueError('invalid repetition count')
@@ -122,10 +129,47 @@ def validate(plan):
         if not re.fullmatch(r'[A-Za-z0-9_-]+/[A-Za-z0-9_.-]+', target['repo_id']) or '..' in target['repo_id']: raise ValueError('invalid HF target')
         if target['prefix'] != f"helpers/{plan['helper']}/{plan['batch']}": raise ValueError('HF prefix differs from dispatch')
     elif target['type'] != 'shared-folder': raise ValueError('unsupported delivery target')
+    if 'image_sources' in plan:
+        from agent_batch_images import references, validate_sources
+        validate_sources(plan['image_sources'],references(plan))
     return plan
+
+
+def select_agent(assignment, *, model=None, effort=None, agent=None):
+    """Resolve only the model/effort explicitly delegated by the maintainer."""
+    validate(assignment)
+    selected=copy.deepcopy(assignment['agent'])
+    if agent is not None and agent!=selected['name']: raise ValueError('AGENT differs from dispatch')
+    if model is not None: selected['model']=model
+    if effort is not None:
+        if effort=='default': selected['kwargs'].pop('reasoning_effort',None)
+        else: selected['kwargs']['reasoning_effort']=effort
+    if selected==assignment['agent']: return assignment
+    if not assignment.get('helper_selects_model') or 'assignment_sha256' in assignment or assignment.get('rerun'):
+        raise ValueError('model/effort are fixed for this assignment')
+    if not selected['model'].startswith('openai/'):
+        raise ValueError('helper model selection currently supports Codex openai/ models')
+    if selected['kwargs'].get('reasoning_effort','default') not in ('none','minimal','low','medium','high','xhigh','max','default'):
+        raise ValueError('invalid reasoning effort')
+    plan=copy.deepcopy(assignment); plan.pop('plan_sha256')
+    plan.update(agent=selected,assignment_sha256=assignment['plan_sha256'])
+    plan['plan_sha256']=digest(plan)
+    return validate(plan)
+
+
+def match_assignment(expected, actual):
+    """Verify the recorded choice against the trusted assignment, without relaxing task/budget hashes."""
+    validate(expected); validate(actual)
+    if expected==actual: return actual
+    candidate=select_agent(expected,agent=actual['agent']['name'],model=actual['agent']['model'],
+                           effort=actual['agent']['kwargs'].get('reasoning_effort','default'))
+    if candidate!=actual: raise ValueError('received plan differs from maintainer original or authorized model selection')
+    return actual
 
 def linked_rerun(parent,child):
     validate(parent); validate(child)
+    if parent.get('helper_selects_model') and 'assignment_sha256' not in parent:
+        parent=select_agent(parent,model=child['agent']['model'],effort=child['agent']['kwargs'].get('reasoning_effort','default'))
     retry=child.get('rerun') or {}
     if retry.get('batch')!=parent['batch'] or retry.get('plan_sha256')!=parent['plan_sha256'] or parent.get('rerun'):
         raise ValueError('rerun is not bound to this original batch')
@@ -283,9 +327,12 @@ def check_batch(jobs, plan):
             rows.append(row)
     counts = dict(Counter(r['status'] for r in rows))
     complete = not errors and len(rows)==plan['trial_count'] and all(r['status'] in TERMINAL for r in rows)
-    return dict(schema_version=1, batch=plan['batch'], plan_sha256=plan['plan_sha256'], planned_trials=plan['trial_count'],
+    report=dict(schema_version=1, batch=plan['batch'], plan_sha256=plan['plan_sha256'], planned_trials=plan['trial_count'],
                 observed_trials=sum(r['trial'] is not None for r in rows), status_counts=counts, rows=rows, errors=errors,
                 evaluation_complete=complete, delivery_complete=complete and not any(r['missing_artifacts'] for r in rows))
+    if plan.get('helper_selects_model'):
+        report.update(actual_agent=plan['agent'],assignment_sha256=plan.get('assignment_sha256',plan['plan_sha256']))
+    return report
 
 
 def outcome_counts(report):

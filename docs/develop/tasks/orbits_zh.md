@@ -1,4 +1,88 @@
-# 第 13 项：Orbits 四环阶梯解绳
+# 第 13 项：Orbits 阶梯解绳
+
+## 2026-10-05：very_easy / easier 完整场景定义
+
+新增两个具名场景，目标仍为整根绳索与木柄脱离固定器具、进入原有目标区并停稳。
+`orbits_very_easy` 是无固定环的单球头柱，绳弯绕唯一立柱；`orbits_easier` 是单环双柱，
+绳弯在环下绕第二根柱。它们分别面向基础取绳和最小一层环柱解套，名称是设计目标，
+不是已经验证的机器人难度排序。
+
+两档共用 0.85 尺度、306 × 195.5 × 20.4 mm 底座、约 0.80 m 绳和外置木柄。
+球头直径 40.8 mm，最高点距桌面 150.45 mm；easier 的环孔内径 139.4 mm、
+环中心平面距桌面 85 mm、柱距 95.2 mm。very_easy 移除环及其支柱，保留相同球头高度。
+这些尺寸已按建模预览确认；夹爪通行、绳长对完整解法是否足够及最终提取路径仍需实际执行验证。
+
+实现位于 `topogym/tasks/orbits/below_easy.py` 及两个具名 Task；几何生成器支持 0/1 环，
+单柱场景不再索引不存在的环。两档复用正式 FEM 绳体、木柄永久连接、材质及任务判据。
+注册池为 `below_easy`，原 easy / medium / hard 及 seeded 的三档抽样保持原含义。
+两档修订为 `below_easy_v1_fem_soft50_fine_v1`，具名变体锁定尺度、几何及绳路 profile。
+`very_easy` 的公开说明与固定剩余部件列表对应单球头柱，不再要求保留不存在的环。
+
+```python
+import topogym
+
+env = topogym.make("orbits", variation_id="very_easy")  # 或 easier
+env.reset(seed=0)
+```
+
+完成条件沿用整目标放置判据：全绳和完整木柄均在目标体积内、固定器具留在系统侧、
+原生连接和体积有效、全绳与木柄速度合格，并连续满足 0.5 s；只移动木柄不能过关。
+两档分别生成独立实例身份和资产，可使用完整名 `orbits_very_easy` / `orbits_easier`。
+
+`ci_checks/test-orbits-below-easy.py` 的 12 项回归通过，覆盖真实资产、正体积 FEM 初态、
+初始拓扑、同 seed 重建、参数锁定，以及只搬木柄、遗漏绳节点、移动器具、速度超限、
+连接损坏和证据缺失等判据边界。无限球模型的初始球字母数分别为 1 / 2，仅为拓扑诊断。
+共享终止配置 7 项检查通过。公共目标说明套件的 6 处 Claw 失败，在移除本次 Orbits
+说明改动的对照中完全重现；本轮不修改其他任务的冻结说明。
+[代码检查报告](../../../runs/test_results/orbits_below_easy_20261005/checks.json)保留结果与对照日志。
+
+```bash
+.venv-gs121-nyx/bin/python ci_checks/test-orbits-below-easy.py
+```
+
+两档初态的封闭网格、固定连接、绳索间隙、自交与绕柱关系检查通过；原 2/3/4 环生成器的
+网格顶点、面和绳中心线与修改前逐项一致。预览通过 Genesis Env / Nyx / compact_lab
+构建，机器人保持 home，物理推进为 0 tick。这是建模初态截图，不是静置稳定性或完整解题证据。
+本次产物位于 `runs/oracle_dev/orbits_below_easy_20261005_01/`，各预览保留配置、相机、
+资产哈希、源码哈希与实际 tick。
+
+- [very_easy 斜视](../../../runs/oracle_dev/orbits_below_easy_20261005_01/very_easy/oblique.png)
+  / [俯视](../../../runs/oracle_dev/orbits_below_easy_20261005_01/very_easy/top.png)
+- [easier 斜视](../../../runs/oracle_dev/orbits_below_easy_20261005_01/easier/oblique.png)
+  / [俯视](../../../runs/oracle_dev/orbits_below_easy_20261005_01/easier/top.png)
+
+本轮短程物理检查使用冻结源码、Genesis FEM/IPC、CUDA float64、Nyx / compact_lab 和
+已有 Orbits 工具链参数：2.5 ms tick、1 子步、Newton / PCG 容差 `1e-3 / 1e-5`、
+先沉降 800 tick，再从 ALOHA home 静置 80 个控制步（2 s），按控制步记录状态，
+每 10 个控制步核对一次拓扑。该配置区别于裸 `SimulatorConfig` 的 4 子步、0 沉降默认值。
+两档均完成检查：初态未误判完成、原生连接／体积有效、拓扑保持、reset 状态哈希一致。
+静置最大节点漂移分别为 4.587 / 4.220 mm，但绳速未连续降至 1 mm/s，**静稳检查未通过**。
+测试文件的 `failed` 对应这一静稳检查结果，不是初始化崩溃。
+
+| 变体 | 物理报告 | 本轮 2 s 静置录像（未解题） |
+| --- | --- | --- |
+| very_easy | [报告](../../../runs/test_results/orbits_below_easy_20261005/runtime/very_easy/report.json) | [高位](../../../runs/test_results/orbits_below_easy_20261005/runtime/very_easy/recording/videos/cam_high.mp4) / [低位](../../../runs/test_results/orbits_below_easy_20261005/runtime/very_easy/recording/videos/cam_low.mp4) / [左腕](../../../runs/test_results/orbits_below_easy_20261005/runtime/very_easy/recording/videos/cam_left_wrist.mp4) / [右腕](../../../runs/test_results/orbits_below_easy_20261005/runtime/very_easy/recording/videos/cam_right_wrist.mp4) |
+| easier | [报告](../../../runs/test_results/orbits_below_easy_20261005/runtime/easier/report.json) | [高位](../../../runs/test_results/orbits_below_easy_20261005/runtime/easier/recording/videos/cam_high.mp4) / [低位](../../../runs/test_results/orbits_below_easy_20261005/runtime/easier/recording/videos/cam_low.mp4) / [左腕](../../../runs/test_results/orbits_below_easy_20261005/runtime/easier/recording/videos/cam_left_wrist.mp4) / [右腕](../../../runs/test_results/orbits_below_easy_20261005/runtime/easier/recording/videos/cam_right_wrist.mp4) |
+
+随后在新进程加载各自的 800-tick 原生存档，额外观察 10 s 自然沉降，保持同一物理参数与
+home 指令。存档加载成功，加载后的初始速度、连接／体积与拓扑诊断一致；控制步采样中
+始终保持原生完整性和受困关系。精确 reset 哈希检查的范围为同一场景内重置。
+
+| 变体 | 10 s 内最大节点位移，相对加载状态 | 窗口终点最大绳速 | 最长连续速度合格区间 | 静稳验收 |
+| --- | ---: | ---: | ---: | --- |
+| very_easy | 16.615 mm | 0.764 mm/s | 1.000 s | 未满足连续 2 s |
+| easier | 18.471 mm | 14.389 mm/s | 0 s | 仍有绳速波动 |
+
+本轮没有生成合格静稳初态；报告中的 `followup_* = false` 表示未取得合格初态，后续 2 s
+复验未执行。场景与完整判据已接入，初态松弛和机器人可解性仍需后续资格化。
+[汇总报告](../../../runs/test_results/orbits_below_easy_20261005/summary.json)包含实际配置、
+源码核对、静稳门槛和资源峰值；当前 Orbits 源码与测试快照一致。
+
+- very_easy 10 s 沉降：[高位](../../../runs/test_results/orbits_below_easy_20261005/settling/very_easy/recording/videos/cam_high.mp4) / [低位](../../../runs/test_results/orbits_below_easy_20261005/settling/very_easy/recording/videos/cam_low.mp4) / [左腕](../../../runs/test_results/orbits_below_easy_20261005/settling/very_easy/recording/videos/cam_left_wrist.mp4) / [右腕](../../../runs/test_results/orbits_below_easy_20261005/settling/very_easy/recording/videos/cam_right_wrist.mp4)
+- easier 10 s 沉降：[高位](../../../runs/test_results/orbits_below_easy_20261005/settling/easier/recording/videos/cam_high.mp4) / [低位](../../../runs/test_results/orbits_below_easy_20261005/settling/easier/recording/videos/cam_low.mp4) / [左腕](../../../runs/test_results/orbits_below_easy_20261005/settling/easier/recording/videos/cam_left_wrist.mp4) / [右腕](../../../runs/test_results/orbits_below_easy_20261005/settling/easier/recording/videos/cam_right_wrist.mp4)
+
+现有 `topogym/planning/orbits` 机器人规划入口仍只覆盖原 easy / medium / hard；
+场景接入不增加两档原生机器人解法或 Harbor 正向评分资格。
 
 > 2026-09-29 归档提示：本文涉及的独立研究／诊断／测试入口已移入[统一归档](../../../legacy/research_tools_20260929/README.md)；相关旧路径与命令保留为历史说明，不再是当前运行入口。rollout 准备、执行及 Harbor 工具仍在活动目录。
 

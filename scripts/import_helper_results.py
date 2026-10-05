@@ -10,7 +10,7 @@ import tarfile
 import tempfile
 
 from agent_batch_contract import read, save, validate, locked, linked_rerun, outcome_counts
-from agent_batch_delivery import unpack, receive
+from agent_batch_delivery import unpack, receive, external_manifest
 from difficulty_hf_auth import resolve_token, HFError
 from difficulty_results_hf import Hub, file_identity
 from helper_bundle import guard
@@ -76,8 +76,7 @@ def download(plan, folder, hub, *, revision=None, max_bytes=50*1024**3):
 def verify(archive,plan,*,reruns=(),require_complete=False):
     with tempfile.TemporaryDirectory(prefix='helper-received-verify-') as td:
         root=Path(td); report=unpack(archive,root,plan,reruns=reruns)
-        if (archive.parent/'MANIFEST.md').read_bytes()!=(root/'agents'/(plan['batch']+'-MANIFEST.md')).read_bytes():
-            raise ValueError('external MANIFEST differs from archive')
+        report['helper_manifest']=external_manifest(archive.parent/'MANIFEST.md',root/'agents'/(plan['batch']+'-MANIFEST.md'),plan)
     if require_complete and not report['delivery_complete']: raise ValueError('batch incomplete')
     return report
 
@@ -117,8 +116,15 @@ def main():
             destination=work/'accepted'/plan['batch']
             receive(archive,plan,destination,reruns=retries,require_complete=a.require_complete)
             save(destination/'hf-source.json',receipt)
+            # Preserve the helper's separately authored account of host/incidents.
+            # It is checked by the pinned HF file hash, not used as a verdict.
+            shutil.copyfile(folder/'MANIFEST.md',destination/'review/helper-MANIFEST.md')
+            index=destination/'review/README.md'
+            link='\nHelper-supplied host/incident notes: [MANIFEST](helper-MANIFEST.md). These notes do not determine scores.\n'
+            if link not in index.read_text():
+                with index.open('a') as stream: stream.write(link)
             receipt=dict(receipt,accepted=str(destination),review=str(destination/'review/README.md'))
-        receipt.update(delivery_complete=report['delivery_complete'],observed_trials=report['observed_trials'],
+        receipt.update(delivery_complete=report['delivery_complete'],observed_trials=report['observed_trials'],helper_manifest=report['helper_manifest'],
                        **outcome_counts(report))
         print(json.dumps(receipt,indent=2)); return 0
     except (OSError,ValueError,KeyError,TypeError,tarfile.TarError) as error:

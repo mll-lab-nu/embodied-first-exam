@@ -29,8 +29,17 @@ def candidate_inputs(family, tier, instance, instance_path):
     if dependency:
         params["initial_state_path"] = str((Path(instance_path).parent / dependency).resolve())
     from topogym.tasks.release_profile import environment_inputs
-    params, overrides, changes = environment_inputs(family, tier,
-        variation=instance["variation_id"], seed=instance["seed"], parameters=params)
+    if tier in ("very_easy", "easier"):
+        # New simple scenes use their own current Task defaults. Original-tier
+        # geometry/contact overrides must never leak into these variants.
+        overrides, changes = {}, ["current below-easy Task defaults and current Harbor timing/grasp profile"]
+        if family == "rope_threading":
+            from topogym.tasks.rope_threading.simplified import recommended_grasp_assist
+            overrides["grasp_assist"] = to_jsonable(recommended_grasp_assist(instance["variation_id"]))
+            changes.append("declare the simplified oracle's recommended contact-gated IPC grasp assistance")
+    else:
+        params, overrides, changes = environment_inputs(family, tier,
+            variation=instance["variation_id"], seed=instance["seed"], parameters=params)
     cfg = tooling.simulator_config(family, variation_id=instance["variation_id"], seed=instance["seed"],
                                   task_parameters=params, simulator_overrides=overrides)
     # Base timing comes from v14 tooling. Missing historical option dictionaries
@@ -99,6 +108,9 @@ def rekey_goal_parameters(family, tier, instance, instance_path, destination):
 
 
 def prepare(output, families=(), tiers=("easy", "medium", "hard"), *, image=None, gpu="0"):
+    from topogym.planning.harbor_bridge.catalog import TIERS
+    if not tiers or set(tiers) - set(TIERS):
+        raise ValueError("Select known difficulty tiers")
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
     image = image or image_tag(ROOT)
@@ -127,11 +139,29 @@ def prepare(output, families=(), tiers=("easy", "medium", "hard"), *, image=None
                 "-v", f"{output}:{output}", "-w", "/tmp", image,
                 "python", str(tool), *map(str, args)]
 
+    selected = []
     for task in sorted((ROOT / "tasks").glob("topogym-*-privileged")):
         meta = tomllib.loads((task / "task.toml").read_text())["metadata"]
         family, tier = meta.get("family"), meta.get("difficulty")
-        if meta.get("tooling_version") != "14" or tier not in tiers or (families and family not in families):
+        if (meta.get("tooling_version") != "14" or tier not in tiers
+                or tier in ("very_easy", "easier") or (families and family not in families)):
             continue
+        selected.append((task, family, tier))
+    from topogym.config.registry import variation_registration
+    for family in families or tooling.TASKS:
+        for tier in tiers:
+            if tier not in ("very_easy", "easier"):
+                continue
+            variation_registration(family, tier, 0)
+            slug = f"topogym-{family.replace('_', '-')}-{tier.replace('_', '-')}-i00"
+            task = output / "seed_inputs" / (slug + "-privileged")
+            (task / "environment").mkdir(parents=True)
+            # A build selection, not a frozen instance. make-instance in the
+            # pinned image produces the independently bound physical instance.
+            (task / "environment/instance.json").write_text(json.dumps(dict(
+                variation_id=tier, seed=0, simulator={}, qualification="unbuilt selection"), indent=2) + "\n")
+            selected.append((task, family, tier))
+    for task, family, tier in selected:
         source = task / "environment/instance.json"
         inst = json.loads(source.read_text())
         slug = task.name.removesuffix("-privileged")
@@ -174,7 +204,7 @@ def prepare(output, families=(), tiers=("easy", "medium", "hard"), *, image=None
                 + [dict(argv=render, env=env), dict(argv=twin, env=env)],
             physics_qualified=False, harbor_qualified=False))
     if not rows:
-        raise ValueError("No v14 three-tier instances selected")
+        raise ValueError("No instances selected")
     manifest = dict(schema_version=1, tooling_version=TOOLING_VERSION, image=image,
         baseline=dict(tooling_version="14", image="ghcr.io/luigivamper/rcb-topogym:0.2.12-cu128"),
         source_snapshot=str(snapshot), source_manifest_sha256=hashlib.sha256((output / "source_manifest.json").read_bytes()).hexdigest(),
@@ -201,7 +231,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--families", nargs="*", choices=tuple(tooling.TASKS))
-    parser.add_argument("--tiers", nargs="+", choices=("easy", "medium", "hard"), default=("easy", "medium", "hard"))
+    parser.add_argument("--tiers", nargs="+", choices=("very_easy", "easier", "easy", "medium", "hard"), default=("easy", "medium", "hard"))
     parser.add_argument("--image")
     parser.add_argument("--gpu", default="0")
     args = parser.parse_args()

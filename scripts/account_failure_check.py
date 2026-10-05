@@ -6,8 +6,8 @@ run_agent_batch.sh stops the lane on exit 4 (a runner-side tool, not task code).
 Structured evidence only, from what Harbor's native agents write (2026-09-28: a grep of codex.txt once stopped a lane on
 Codex's "Reconnecting... 1/5" notice after a transient server error, whose request ID happened to contain "429", in a trial
 whose model calls had all answered 200 and that ended at its time budget):
-  quota    Codex's own rate_limits (payload.rate_limits in the last session rollout, parsed): rate_limit_reached_type set,
-           or a window at >= 100 % used;
+  quota    Codex's rate_limits are telemetry only: included usage can reach 100 % while purchased credits remain.
+           Do not stop a lane or invalidate a finished trial based on this snapshot alone;
   codex    the LAST root-level Codex event of <trial>/agent/codex.txt (the parsed object's own "type"; a failure Codex
            recovered from is followed by other events) is turn.failed / error and its message names 401 / 402 / 429 /
            usage limit / Too Many Requests / Missing environment variable;
@@ -18,7 +18,20 @@ its lane, 0 otherwise. --selftest checks the rules on synthetic trials (exit 0 =
 import glob, json, os, re, sys, tempfile
 
 PAT = re.compile(r"\b(401|402|429)\b|usage limit|Too Many Requests|Missing environment variable|Payment Required|Unauthorized|"
-                 r"invalid api key|credit balance|please run /login|authentication_error|rate_limit_error", re.I)
+                 r"invalid api key|credit balance|insufficient.quota|insufficient credits|please run /login|authentication_error|rate_limit_error", re.I)
+
+ACCOUNT_MESSAGES = {
+    'account_quota_exhausted': '模型服务明确拒绝：账号额度或 credits 不足；这是账号限制，不是本实验的 input/output token 预算超限。请检查当前登录账号的额度及 credits。',
+    'account_rate_limited': '模型服务明确拒绝：账号请求被限流（429）；不一定是 credits 耗尽，也不是本实验 token 预算超限。',
+    'account_auth_failed': '模型账号认证失败；请检查登录或 API key。这不是实验 token 预算超限。',
+    'account_config_error': '模型认证配置缺失；请检查所需环境变量。这不是实验 token 预算超限。',
+}
+
+def failure_code(message):
+    if re.search(r'Missing environment variable', message, re.I): return 'account_config_error'
+    if re.search(r'\b401\b|Unauthorized|invalid api key|please run /login|authentication_error', message, re.I): return 'account_auth_failed'
+    if re.search(r'usage limit|\b402\b|Payment Required|credit balance|insufficient.quota|insufficient credits', message, re.I): return 'account_quota_exhausted'
+    return 'account_rate_limited'
 
 
 def mask(s: str) -> str:
@@ -26,7 +39,7 @@ def mask(s: str) -> str:
 
 
 def check(t: str) -> dict:
-    why = []
+    why, codes, warnings = [], [], []
     for f in sorted(glob.glob(os.path.join(t, "agent", "sessions", "**", "rollout-*.jsonl"), recursive=True),
                     key=os.path.getmtime)[-1:]:
         last = None
@@ -42,7 +55,7 @@ def check(t: str) -> dict:
         if last:
             used = [float((last.get(w) or {}).get("used_percent") or 0) for w in ("primary", "secondary")]
             if last.get("rate_limit_reached_type") or max(used) >= 100:
-                why.append(f"quota: rate_limit_reached_type={last.get('rate_limit_reached_type')} used_percent={used}")
+                warnings.append('账号包含额度窗口已到上限；该读数不代表 credits 不足，不据此停止实验或否定已完成结果。')
     for f in glob.glob(os.path.join(t, "agent", "codex.txt")):
         last = None
         for line in open(f, errors="replace"):
@@ -55,6 +68,7 @@ def check(t: str) -> dict:
             err = last.get("error")
             msg = str(err.get("message") if isinstance(err, dict) else last.get("message") or "")
             if PAT.search(msg):
+                codes.append(failure_code(msg))
                 why.append(f"codex: {last['type']}: {mask(msg)}")
     for f in glob.glob(os.path.join(t, "agent", "claude-code.txt")):
         last = None
@@ -67,8 +81,11 @@ def check(t: str) -> dict:
         if isinstance(last, dict) and last.get("type") == "result" and last.get("is_error"):
             msg = str(last.get("result") or last.get("subtype") or "")
             if PAT.search(msg):
+                codes.append(failure_code(msg))
                 why.append(f"claude: result: {mask(msg)}")
-    return {"trial": os.path.basename(t.rstrip("/")), "stop": bool(why), "why": why}
+    code = codes[0] if codes else None
+    return {"trial": os.path.basename(t.rstrip("/")), "stop": bool(why), "why": why,
+            "code": code, "message": ACCOUNT_MESSAGES.get(code), "warnings": warnings}
 
 
 def selftest() -> int:
@@ -94,8 +111,12 @@ def selftest() -> int:
            "include the request ID 7c1e0429f3ab in your message.)"}, {"type": "item.completed", "item": {
            "type": "command_execution", "aggregated_output": 'x = 429 ... {"type":"error","code":429} usage limit'}}] + done
     cases = {  # name: (kwargs, expected stop)
-        "rate_limit_reached_type": (dict(rate_limits={**ok_rl, "rate_limit_reached_type": "primary"}, codex=done), True),
-        "window_100_percent": (dict(rate_limits={"primary": {"used_percent": 100.0}}, codex=done), True),
+        "rate_limit_reached_type": (dict(rate_limits={**ok_rl, "rate_limit_reached_type": "primary"}, codex=done), False),
+        "window_100_percent": (dict(rate_limits={"primary": {"used_percent": 100.0}}, codex=done), False),
+        "window_100_with_credits": (dict(rate_limits={"primary": {"used_percent": 100.0},
+            "credits": {"has_credits": True, "balance": "100"}}, codex=done), False),
+        "window_100_credit_snapshot_empty": (dict(rate_limits={"primary": {"used_percent": 100.0},
+            "credits": {"has_credits": False, "balance": "0"}}, codex=done), False),
         "codex_turn_failed_usage_limit": (dict(rate_limits=ok_rl, codex=[{"type": "turn.failed", "error": {
             "message": "You've hit your usage limit. Upgrade to Pro or try again later."}}]), True),
         "codex_error_missing_env": (dict(rate_limits=None, codex=[{"type": "error", "message":

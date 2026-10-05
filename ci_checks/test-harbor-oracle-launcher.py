@@ -101,8 +101,21 @@ os.execv(os.environ['TEST_REAL_PYTHON'],[os.environ['TEST_REAL_PYTHON'],*sys.arg
         self.assertEqual(argv[argv.index("--wall-seconds")+1], "600")
 
     def test_unsupported_tier_is_rejected_before_work(self):
-        self.assertEqual(self.run_queue("--tiers", "very_easy").returncode, 2)
+        self.assertEqual(self.run_queue("--tiers", "very_easiest").returncode, 2)
         self.assertFalse((self.root / "output").exists())
+
+    def test_below_easy_queue_uses_exact_slugs_and_no_original_tiers(self):
+        for tier in ("very-easy", "easier"):
+            for mode in ("privileged", "standard"):
+                task = self.tasks / f"topogym-cast-coil-{tier}-i00-{mode}"
+                task.mkdir()
+                (task / "task_release.json").write_text("{}")
+        result = self.run_queue("--families", "cast_coil", "--tiers", "very_easy,easier")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        rows = json.loads((self.root / "output/summary.json").read_text())["tasks"]
+        self.assertEqual({r["tier"] for r in rows}, {"very_easy", "easier"})
+        self.assertEqual([r["solve"] for r in rows], [0, None, 0, None])
+        self.assertEqual(len((self.root / "dispatch.jsonl").read_text().splitlines()), 2)
 
     def test_fresh_host_builds_image_before_tasks_and_resume_keeps_bound_image(self):
         command = ["bash", str(SCRIPT), "--output", str(self.root / "output"),

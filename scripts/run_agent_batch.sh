@@ -3,7 +3,10 @@
 # started in the background (inside `sg docker -c` if docker needs the group):
 #   scripts/run_agent_batch.sh <batch-name> <base> [<base> ...]      # <base> = a task name without its -privileged / -standard
 # Published helper batches: configs/helper_batches/<batch>.json supplies K, modes, budgets and package identities.
-# Run bash scripts/setup_agent_batch.sh once (Python 3.12 + Node 22 + Docker/NVIDIA).
+# If the assignment delegates model selection, MODEL/EFFORT select it on first start; later lanes must match.
+# Pinned runner dependencies are installed automatically on first use.
+# Published frozen-material recipes build missing images automatically and verify their contents.
+# Construction happens before trials; the task selection and per-trial budgets stay fixed.
 # GPU_DEVICE selects one GPU per lane. Shared subscription auth caches serialize token refresh;
 # use independent logins or API keys for parallel model execution. Never move/delete jobs or claims.
 # Official runs use Harbor's native agents only (PROTOCOL D11): no adapter; the transparent usage gateway below only
@@ -53,6 +56,7 @@ R="$(cd "$(dirname "$0")/.." && pwd)"
 batch="$1"; shift; tasks=("$@")
 dispatch="${BATCH_ASSIGNMENT:-$R/configs/helper_batches/$batch.json}"
 if [ -f "$dispatch" ] || [ -n "${BATCH_ASSIGNMENT:-}" ]; then
+  python3 "$R/scripts/agent_batch_bootstrap.py" || exit $?
   export PATH="$R/.venv-agent-batch/bin:$R/.tools/agent-batch/node_modules/.bin:$PATH"
   export PYTHONDONTWRITEBYTECODE=1
   exec "${TOPOGYM_BATCH_PYTHON:-$R/.venv-agent-batch/bin/python}" "$R/scripts/agent_batch_runtime.py" --assignment "$dispatch" "$batch" "${tasks[@]}"

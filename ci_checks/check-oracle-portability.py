@@ -9,7 +9,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from topogym.planning.harbor_bridge.catalog import SESSION_CALLBACKS
+from topogym.planning.harbor_bridge.catalog import SESSION_CALLBACKS, TIERS, session_callback
 from topogym.planning.harbor_bridge.contracts import digest
 from topogym.planning.harbor_bridge.packaging import collect_helpers
 from topogym.planning.harbor_bridge.references import reference_data
@@ -28,7 +28,10 @@ def check(root=ROOT, *, families=None, tiers=("easy", "medium", "hard"), check_g
             row = dict(family=family, tier=tier, status="passed", files={}, errors=[])
             try:
                 data, includes = reference_data(root, family, tier, 0)
-                files = collect_helpers(root, SESSION_CALLBACKS[family].split(":")[0], includes)
+                callback = session_callback(family, tier)
+                if callback is None:
+                    raise ValueError(f"No robot oracle for {family}/{tier}")
+                files = collect_helpers(root, callback.split(":")[0], includes)
                 files.update({name: Path(path) for name, path in data.items()})
                 if data:
                     name = "topogym/planning/harbor_bridge/reference_data/manifest.json"
@@ -55,7 +58,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=ROOT)
     parser.add_argument("--families", nargs="+", choices=tuple(SESSION_CALLBACKS))
-    parser.add_argument("--tiers", nargs="+", choices=("easy", "medium", "hard"), default=("easy", "medium", "hard"))
+    parser.add_argument("--tiers", nargs="+", choices=TIERS, default=("easy", "medium", "hard"))
     parser.add_argument("--check-git", action="store_true", help="Require every private dependency and its current bytes in the Git index")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()

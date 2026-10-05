@@ -85,8 +85,10 @@ def parse_args(argv=None):
     parser.add_argument("--api-key", nargs="?", const=PROMPT_KEY, action=ApiKeyAction, metavar="VALUE")
     parser.add_argument("--api-key-env", help="fallback variable; default: provider's key variable")
     parser.add_argument("--env-file", type=Path, help="parse the selected key as data, never shell-source")
-    parser.add_argument("--gpu-wait-s", type=int, default=600)
-    parser.add_argument("--gpu-min-free-mb", type=int, default=12000)
+    parser.add_argument("--gpu-wait-s", type=int, default=0,
+                        help="deprecated compatibility option; GPU checks no longer wait")
+    parser.add_argument("--gpu-min-free-mb", type=int, default=0,
+                        help="deprecated compatibility option; free GPU memory no longer gates execution")
     hf_auth.add_arguments(parser)
     args = parser.parse_args(argv)
     if args.list_tasks:
@@ -212,6 +214,43 @@ def lock(path, message):
 
 def read_json(path):
     return json.loads(path.read_text())
+
+
+def limited_preflight_check(task, folder, code, data):
+    """Validate protocol completion, not task success, using Harbor's hash policy.
+
+    Both formal graders report final-state hash equality without requiring it,
+    for CPU as well as CUDA. This does not waive exact initial instance or bound
+    startup/replay identity, finalization, media or infrastructure checks.
+    """
+    from check_topogym_trial import bound_sidecar
+    task, folder = Path(task), Path(folder)
+    instance = read_json(task / "environment/sim/instance.json")
+    backend = instance.get("simulator", {}).get("compute_backend")
+    binding_ok = True
+    try:
+        bound_sidecar(folder, read_json(task / "tests/runtime_binding.json"))
+    except (OSError, ValueError, KeyError, TypeError):
+        binding_ok = False
+    checks = dict(
+        backend_known=backend in ("cpu", "cuda"),
+        finalize_exit_ok=code == 0,
+        finalized=data.get("finalized") is True,
+        deterministic_reported=isinstance(data.get("deterministic"), bool),
+        instance_exact=data.get("instance_exact") is True,
+        instance_matches=not data.get("instance_mismatch") and data.get("instance_matches") is not False,
+        runtime_binding=binding_ok,
+        replay_result=isinstance(data.get("replay_success"), bool),
+        trajectory=(folder / "trajectory.npz").is_file(),
+        video=data.get("video") is True and (folder / "replay.mp4").is_file(),
+        no_errors=not any(data.get(key) for key in
+                          ("infra_error", "gpu_lost", "error", "grader_error", "gave_up", "simulator_instability")),
+        expected_end=data.get("reason") in ("timeout", "success"),
+    )
+    return dict(policy="harbor_hash_diagnostic_v1", compute_backend=backend,
+                determinism_required=False, deterministic=data.get("deterministic"),
+                live_matches_replay=data.get("live_matches_replay"),
+                checks=checks, passed=all(checks.values()))
 
 
 def progress(message, *, error=False):
@@ -609,25 +648,12 @@ class DifficultyEvaluation:
                 path.unlink()
 
     def gpu_ready(self):
-        deadline = time.monotonic() + self.args.gpu_wait_s
-        next_notice = 0
-        while True:
-            code, output = self.commands.run_command(["nvidia-smi", "-i", self.gpu_device, "--query-gpu=memory.free,utilization.gpu",
-                                                      "--format=csv,noheader,nounits"], capture=True, timeout=15)
-            if code:
-                raise EvaluationError("GPU unavailable: nvidia-smi failed")
-            free, utilization = map(int, output.strip().split(","))
-            if free >= self.args.gpu_min_free_mb and utilization < 10:
-                if next_notice:
-                    progress(f"GPU {self.gpu_device} ready; continuing")
-                return
-            if time.monotonic() >= deadline:
-                raise EvaluationError("GPU busy; bounded wait expired, no other process was stopped")
-            if time.monotonic() >= next_notice:
-                progress(f"Waiting for GPU {self.gpu_device}: {free} MiB free, {utilization}% utilization; "
-                         f"up to {max(0, int(deadline - time.monotonic()))}s remaining")
-                next_notice = time.monotonic() + 30
-            time.sleep(2)
+        """Check GPU accessibility once, without a memory or utilization threshold."""
+        code, _ = self.commands.run_command(["nvidia-smi", "-i", self.gpu_device,
+                                                  "--query-gpu=uuid", "--format=csv,noheader"],
+                                                 capture=True, timeout=15)
+        if code:
+            raise EvaluationError("GPU unavailable: nvidia-smi failed")
 
     def image_info(self):
         _, output = self.commands.run_command(["docker", "image", "inspect", self.image], capture=True, check=True, timeout=30)
@@ -663,11 +689,14 @@ class DifficultyEvaluation:
     def docker_sim(self, *args):
         from difficulty_delivery import label_args
         labels = self.resource_labels()
-        user = ["--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"] if self.delivery else []
+        # Both local and delivered runs bind-mount host-owned output directories.
+        user = ["--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
         return ["docker", "run", "--rm", "--runtime", "nvidia", "--gpus", f"device={self.gpu_device}", *label_args(labels),
                 *user, "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "RCB_SESSION_LOG=",
                 "-e", "NVIDIA_VISIBLE_DEVICES=" + self.gpu_device,
-                "-v", f"{self.run}:{self.run}", "-w", self.run, self.image, *args]
+                # Nyx creates a relative cache; keep it container-local instead
+                # of reusing a legacy root-owned cache under the host run root.
+                "-v", f"{self.run}:{self.run}", "-w", "/tmp", self.image, *args]
 
     @staticmethod
     def valid_blanket_state(state):
@@ -897,7 +926,8 @@ class DifficultyEvaluation:
                 continue
             proof = read_json(build / "prepared.json")
             proof.update(passed=True, scope="short_build_action_reset_rgb_and_limited_protocol_deadline", solvability_proven=False,
-                         evidence_identity=self.preflight_identity(row))
+                         evidence_identity=self.preflight_identity(row),
+                         controller_probe_sha256=sampling.file_hash(Path(__file__)))
             sampling.atomic_json(build / "preflight.ok.json", proof)
             progress(f"Preflight passed: {row['slug']}")
 
@@ -920,14 +950,11 @@ class DifficultyEvaluation:
             client_cmd += ["-v", f"{task}/environment/{name}:/check/{name}:ro"]
         from difficulty_delivery import label_args
         client_cmd += label_args(self.resource_labels())
-        if self.delivery:
-            client_cmd += ["--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
+        client_cmd += ["--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
         client_cmd += [client_image, "python", "-"]
         cmd = ["docker", "run", "-d", "--name", container, "--restart", "on-failure:6", "--runtime", "nvidia", "--gpus", f"device={self.gpu_device}", "--network", "none",
-               *label_args(self.resource_labels()), "-w", "/tmp"]
-        if self.delivery:
-            from difficulty_delivery import label_args
-            cmd += [*label_args(self.delivery.labels()), "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
+               *label_args(self.resource_labels()), "-w", "/tmp",
+               "--user", f"{os.getuid()}:{os.getgid()}", "-e", "HOME=/tmp"]
         for value in ("NVIDIA_DRIVER_CAPABILITIES=all", "RCB_TASK=" + row["task_id"], "RCB_INSTANCE=/srv/instance.json",
                       "NVIDIA_VISIBLE_DEVICES=" + self.gpu_device,
                       "RCB_WALL_CLOCK_S=30", "RCB_DATA=/data", "PYTHONPATH=/srv:/check:/opt/topogym"):
@@ -951,26 +978,28 @@ class DifficultyEvaluation:
                         ["docker", "exec", "-e", "RCB_COLLECT_END_TIMEOUT_S=900", container, "sh", "/srv/finalize.sh"],
                         log=build/"preflight.log", append=True, monitor=True, timeout=1800)
                     data = self.collector.load_json(build / "limited/final.json")
-                    from check_topogym_trial import bound_sidecar
-                    try:
-                        bound_sidecar(build / "limited", read_json(task / "tests/runtime_binding.json"))
-                    except (OSError, ValueError, KeyError):
-                        return False
-                    passed = (code == 0 and data.get("finalized") is True
-                              and data.get("deterministic") is True and data.get("instance_exact") is True
-                              and isinstance(data.get("replay_success"), bool)
-                              and data.get("video") is True and (build/"limited/replay.mp4").is_file()
-                              and not any(data.get(key) for key in ("infra_error", "gpu_lost", "error"))
-                              and data.get("reason") in ("timeout", "success"))
+                    report = limited_preflight_check(task, build / "limited", code, data)
+                    sampling.atomic_json(build / "limited/preflight-check.json", report)
+                    passed = report["passed"]
                     with (build / "preflight.log").open("a") as stream:
                         stream.write("limited deadline and finalization " + ("passed\n" if passed else "failed\n"))
+                        stream.write("limited preflight checks: " + json.dumps(report, sort_keys=True) + "\n")
                     return passed
                 time.sleep(2)
             return False
         finally:
-            self.commands.run_command(["docker", "logs", container], log=build / "limited/server.log", timeout=15)
-            self.remove_owned_container(container+"-client")
-            self.remove_owned_container(container)
+            # run.sh owns /data/server.log. Preserve it and keep controller logs
+            # outside /data; diagnostic collection must not skip container cleanup.
+            try:
+                self.commands.run_command(["docker", "logs", container],
+                                          log=build / "limited-container.log", append=True, timeout=15)
+            except (OSError, EvaluationError) as error:
+                progress(f"Could not collect limited container logs: {error}", error=True)
+            finally:
+                try:
+                    self.remove_owned_container(container+"-client")
+                finally:
+                    self.remove_owned_container(container)
 
     def launch_job(self, task, job):
         if self.delivery:

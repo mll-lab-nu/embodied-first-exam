@@ -9,8 +9,31 @@ import tarfile
 import tempfile
 from urllib.parse import quote
 from agent_batch_contract import check_batch, component, files, locked, read, relative, save, sha, validate, write_summary, related_rerun, linked_rerun, TERMINAL
-from agent_batch_contract import outcome_summary
+from agent_batch_contract import outcome_summary, match_assignment
 from secret_scan import scan_tree
+
+
+def external_manifest(path,internal,plan):
+    """Accept the manual's human notes; they never replace sealed trial evidence."""
+    import re
+    path=Path(path)
+    if path.is_symlink() or not path.is_file() or path.stat().st_size>16*1024**2:
+        raise ValueError('missing/unsafe external MANIFEST')
+    if not scan_tree(path,{},allow_empty_secrets=True)['clean']:
+        raise ValueError('credential pattern found in external MANIFEST')
+    if path.read_bytes()==Path(internal).read_bytes():
+        return dict(kind='generated',sha256=sha(path))
+    text=path.read_text()
+    fields={}
+    for line in text.splitlines():
+        match=re.match(r'^\s*(batch|helper)\s*:\s*(\S+)',line,re.I)
+        if match:
+            key=match[1].lower()
+            if key in fields: raise ValueError('duplicate identity in external MANIFEST')
+            fields[key]=match[2].rstrip(',;')
+    if fields!={'batch':plan['batch'],'helper':plan['helper']}:
+        raise ValueError('external MANIFEST must identify the assigned batch and helper')
+    return dict(kind='helper_notes',sha256=sha(path),authority='notes only; scores and completion come from sealed trials')
 
 def selected(jobs,plan):
     jobs=Path(jobs); b=plan['batch']; expected={j['job'] for j in plan['jobs']}
@@ -53,6 +76,7 @@ def report_with_mirror(jobs,plan):
 def manifest(plan,metadata,report):
     h=metadata.get('host',{})
     lines=[f"# Helper manifest: {plan['batch']}",'',f"Helper: {plan['helper']}",f"Plan SHA-256: {plan['plan_sha256']}",
+        f"Assignment SHA-256: {plan.get('assignment_sha256',plan['plan_sha256'])}",
         f"Trials: {report['observed_trials']}/{report['planned_trials']}; evaluation_complete={report['evaluation_complete']}; delivery_complete={report['delivery_complete']}",
         outcome_summary(report),
         f"Selection: {plan.get('instance_selection','unspecified')}; K={plan['repetitions']}",
@@ -70,6 +94,8 @@ def manifest(plan,metadata,report):
 
 def seal(jobs,plan,secrets):
     jobs=Path(jobs); b=plan['batch']; metadata=read(jobs/(b+'-metadata.json'))
+    from agent_batch_images import verify_received_records
+    verify_received_records(plan,metadata.get('images',{}))
     if any(l['status']=='running' for l in metadata['lanes']): raise ValueError('cannot seal while lanes are running')
     # First redact all deliverable bytes. Raw protected mirrors remain outside this set.
     redactions=[]
@@ -95,11 +121,13 @@ def selected_before_summary(jobs,plan):
 
 def verify_tree(root,expected):
     root=Path(root); validate(expected); jobs=root/'agents'; b=expected['batch']
-    if read(jobs/(b+'-plan.json'))!=expected: raise ValueError('received plan differs from maintainer original')
+    expected=match_assignment(expected,read(jobs/(b+'-plan.json')))
     inv=read(jobs/(b+'-inventory.json'))
     if inv.get('schema_version')!=1 or inv.get('plan_sha256')!=expected['plan_sha256']: raise ValueError('inventory identity mismatch')
     if identities(jobs,expected)!=inv['files']: raise ValueError('archive file set/content differs from sealed inventory')
     metadata=read(jobs/(b+'-metadata.json'))
+    from agent_batch_images import verify_received_records
+    verify_received_records(expected,metadata.get('images',{}))
     if metadata.get('plan_sha256')!=expected['plan_sha256'] or any(l['status']=='running' for l in metadata['lanes']):
         raise ValueError('batch metadata identity or lifecycle incomplete')
     report=report_with_mirror(jobs,expected)
@@ -124,7 +152,8 @@ def unpack(archive,dest,expected,*,reruns=(),max_bytes=1024**4,max_files=1000000
             path.parent.mkdir(parents=True,exist_ok=True)
             with tar.extractfile(member) as inp,path.open('xb') as out: shutil.copyfileobj(inp,out,1024*1024)
     # No untracked file can hide outside the B-* selection in the tar.
-    plans=[expected,*[linked_rerun(expected,r) for r in reruns]]; expected_files=set(); reports=[]
+    actual=match_assignment(expected,read(dest/'agents'/(expected['batch']+'-plan.json')))
+    plans=[actual,*[linked_rerun(actual,r) for r in reruns]]; expected_files=set(); reports=[]
     for plan in plans:
         b=plan['batch']; inv=read(dest/'agents'/(b+'-inventory.json'))
         expected_files.update(inv['files']); expected_files.add('agents/'+b+'-inventory.json')
@@ -156,7 +185,8 @@ def combined(reports,plans):
 
 def review(root,plan,report,*,output=None):
     out=output or root/'review'; out.mkdir(parents=True)
-    lines=[f"# {plan['batch']}",'',f"Evaluation complete: {report['evaluation_complete']}; delivery complete: {report['delivery_complete']}",'', outcome_summary(report), '',
+    lines=[f"# {plan['batch']}",'',f"Evaluation complete: {report['evaluation_complete']}; delivery complete: {report['delivery_complete']}",
+           '', 'Actual agent: '+json.dumps(report.get('actual_agent',plan['agent'])), '', outcome_summary(report), '',
            '| Task | Repeat | Status | Evidence |','|---|---:|---|---|']
     for i,row in enumerate(report['rows']):
         page=f'trial-{i+1:04d}.md'; body=[f"# {row['task']} / {row['repetition']}",'',f"Status: {row['status']}",'']

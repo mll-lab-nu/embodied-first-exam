@@ -8,14 +8,14 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from topogym.planning.knot_untying.cli import normalize, parser
+from topogym.planning.knot_untying.cli import normalize, parser, freeze_sources
 from topogym.planning.knot_untying.robot_oracle import Runner, Solved
 from topogym.planning.knot_untying.branching import ARG_KEYS, CANDIDATES, Branching, SESSION_FIELDS, validate_candidate
 from topogym.planning.knot_untying.artifacts import save_recording
@@ -28,6 +28,70 @@ def arguments(output, tier="hard", *extra):
 
 
 class KnotContracts(unittest.TestCase):
+    def test_below_easy_records_rate_limited_execution_for_standard_service(self):
+        from topogym.planning.knot_untying.simplified_policy import step_with_joint_limit
+        initial = np.zeros(14, dtype=np.float32)
+        current = initial.copy()
+        committed = []
+        session = SimpleNamespace(hold_action=lambda: current.copy(),
+            robot=SimpleNamespace(arm_slice={'left': slice(0, 6), 'right': slice(7, 13)}))
+        runner = SimpleNamespace(session=session,
+            q={'left': np.array([.31, -.12, 0., 0., .01, -.27]), 'right': np.ones(6)*-.19},
+            g={'left': .005, 'right': .008})
+        wanted = {side: q.copy() for side, q in runner.q.items()}
+        def commit(phase):
+            for side, joint_slice in session.robot.arm_slice.items():
+                current[joint_slice] = runner.q[side]
+            current[[6, 13]] = [runner.g['left'], runner.g['right']]
+            committed.append(current.copy())
+        runner._step_once = commit
+        step_with_joint_limit(runner, 'approach', .04)
+        rows = np.vstack([initial, committed])
+        changes = np.abs(np.diff(rows[:, [*range(6), *range(7, 13)]], axis=0)).max(axis=1)
+        # The actual standard service uses this ceiling to insert control steps.
+        periods = np.maximum(1, np.ceil(changes/.04-1e-6)).astype(int)
+        self.assertGreater(len(committed), 1)
+        np.testing.assert_array_equal(periods, np.ones(len(committed), dtype=int))
+        for side, joint_slice in session.robot.arm_slice.items():
+            np.testing.assert_allclose(current[joint_slice], wanted[side], atol=1e-7)
+        np.testing.assert_allclose(rows[1:, 6], .005)
+        np.testing.assert_allclose(rows[1:, 13], .008)
+
+    def test_below_easy_rate_limited_motion_stops_at_native_terminal(self):
+        from topogym.planning.knot_untying.simplified_policy import step_with_joint_limit
+        session = SimpleNamespace(hold_action=lambda: np.zeros(7),
+            robot=SimpleNamespace(arm_slice={'left': slice(0, 6)}))
+        runner = SimpleNamespace(session=session, q={'left': np.ones(6)}, g={'left': .005},
+                                 _step_once=Mock(side_effect=Solved()))
+        with self.assertRaises(Solved):
+            step_with_joint_limit(runner, 'spread', .04)
+        self.assertEqual(runner._step_once.call_count, 1)
+
+    def test_below_easy_cli_accepts_explicit_candidate_tooling(self):
+        from topogym.planning.knot_untying.artifacts import task_dir
+        for tier in ("very_easy", "easier"):
+            args = arguments("/tmp/knot-unused", tier, "--tooling",
+                             str(ROOT/"harbor_templates/topogym/common/rcb_topogym.py"))
+            self.assertEqual(args.tooling.name, "rcb_topogym.py")
+            self.assertEqual(task_dir(args.variation).name,
+                             f"topogym-knot-untying-{tier.replace('_', '-')}-i00-privileged")
+
+    def test_explicit_tooling_snapshot_has_no_dependency_on_old_task_packages(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder)/"run"
+            output.mkdir()
+            tooling = Path(folder)/"custom.py"
+            tooling.write_text("# immutable selected tool\n")
+            source = output/"source_snapshot"
+            source.mkdir()
+            (output/"source_manifest.json").write_text("{}")
+            with patch("scripts.test_policy_cube_transfer.snapshot", return_value=source), \
+                    patch("topogym.planning.knot_untying.cli.task_dir", side_effect=AssertionError("old task accessed")):
+                self.assertEqual(freeze_sources(output, tooling), source)
+            frozen = source/"oracle_tooling/custom.py"
+            self.assertEqual(frozen.read_bytes(), tooling.read_bytes())
+            self.assertIn("oracle_tooling/custom.py", json.loads((output/"source_manifest.json").read_text()))
+
     def test_defaults_preserve_grasp_and_hard_full_withdrawal(self):
         for tier in ("easy", "medium", "hard"):
             a = arguments("/tmp/knot-unused", tier)

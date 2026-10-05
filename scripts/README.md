@@ -22,6 +22,7 @@ Helper 一次配置入口：[bash_scripts/run_helper_batch.sh](../bash_scripts/r
 - `prepare_nyx_studio.py`：准备并核验运行时 Nyx HDRI 和纹理；镜像构建也会调用。
 - `prepare_blanket_initial_states.py`、`install_blanket_initial_state.py`：离线准备并安装 Blanket 初态资源。
 - `prepare_knot_instances.py`：按当前物理配置串行重建 knot 的 IPC 冻结实例，保存正式与无 RGB 开发副本，不覆盖 `tasks/`。
+- `check_knot_initial_states.py`：核对 Knot 冻结实例的完整恢复、短时 home 静置、交叉结构和只读抓取 IK，保存共享四路 Nyx 视频；支持已确认的 very_easy / easier，不授予完整求解资格。新两档准备时显式指定当前 `--tooling`，见 [Knot oracle 用法](../topogym/planning/knot_untying/README.md#已确认的-very_easy--easier-变体)。
 - `import_rope_threading_reference.py`：从外部参考数据提取 Rope 几何与初态参数。
 - `compile_buzz_wire_actions.py`：将已选研究轨迹编译为后续 Buzz rollout 可读取的动作文件；编译本身不授予成功资格。
 - `plan_rope_threading_oracle.py`、`plan_rope_threading_ik.py`：Wang 0° 三档的物体路径和双臂接力 IK；执行入口为 `oracle_runners/run_rope_threading_relay.py`，完整命令见 [Rope oracle](../topogym/planning/rope_threading/README.md)。

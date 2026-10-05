@@ -18,10 +18,23 @@ import tempfile
 import time
 from types import SimpleNamespace
 
-from agent_batch_contract import read, save, validate, digest, sha, locked, linked_rerun, package, outcome_counts
+from agent_batch_contract import read, save, validate, digest, sha, locked, linked_rerun, package, outcome_counts, select_agent, match_assignment
 from agent_batch_delivery import selected, verify_tree, unpack
 
 ROOT=Path(__file__).resolve().parents[1]
+
+
+def failure_details(cfg, plan):
+    """Expose safe, specific account diagnostics instead of only ValueError."""
+    from account_failure_check import ACCOUNT_MESSAGES
+    path=Path(cfg['jobs_dir'])/(plan['batch']+'-stop.json')
+    try:
+        code=read(path).get('code')
+    except (OSError,ValueError,AttributeError):
+        code=None
+    if code in ACCOUNT_MESSAGES:
+        return dict(error_code=code,message=ACCOUNT_MESSAGES[code],budget_scope='account')
+    return dict(error_code='workflow_failed',message='批次执行或交付未完成；请检查 workflow.log、lane 日志与 trial 结果。')
 
 
 def location(value, base):
@@ -34,10 +47,14 @@ def location(value, base):
 def load_config(path):
     path=Path(path).resolve(); cfg=read(path)
     allowed={'schema_version','assignment','jobs_dir','auth','lanes','images','hf_token_file',
-             'upload','allow_partial','background','notes_file','rerun_assignments'}
+             'upload','allow_partial','background','notes_file','rerun_assignments','model_selection'}
     if not isinstance(cfg,dict) or set(cfg)-allowed or cfg.get('schema_version')!=1:
         raise ValueError('invalid helper config; model/tasks/budgets belong in the maintainer assignment')
     cfg=dict(cfg)
+    choice=cfg.get('model_selection')
+    if choice is not None and (not isinstance(choice,dict) or set(choice)!={'model','effort'}
+                              or any(not isinstance(v,str) or not v for v in choice.values())):
+        raise ValueError('model_selection needs model and effort')
     for key in ('assignment','jobs_dir'): cfg[key]=str(location(cfg[key],path.parent))
     jobs=Path(cfg['jobs_dir'])
     if jobs.name!='agents': raise ValueError('jobs_dir must end in /agents')
@@ -88,6 +105,8 @@ def lane_environment(cfg,lane):
     auth=lane['auth']
     if auth['method']=='subscription': env.update(CODEX_FORCE_AUTH_JSON='1',CODEX_AUTH_JSON_PATH=auth['auth_file'])
     else: env['ENV_FILE']=auth['env_file']
+    if cfg.get('model_selection'):
+        env.update(MODEL=cfg['model_selection']['model'],EFFORT=cfg['model_selection']['effort'])
     return env
 
 
@@ -123,8 +142,11 @@ def prepare(cfg,plan,state):
         for task in plan['tasks']:
             refs.update(task['runtime_binding'][k]['reference'] for k in ('image','agent_image') if k in task['runtime_binding'])
         for ref in sorted(refs):
+            if 'build' in plan.get('image_sources',{}).get(ref,{}): continue
             if subprocess.run(['docker','image','inspect',ref],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode:
                 run_command(['docker','pull',ref])
+    from agent_batch_images import ensure_images
+    ensure_images(plan,ROOT)
     image_records(plan)
     if cfg['upload'] and plan['upload']['type']=='hf': hf_access(cfg,plan,state)
     seen=set()
@@ -278,22 +300,29 @@ def main():
     try:
         if a.init_config:
             if not a.assignment or not a.jobs_dir: raise ValueError('config creation needs --assignment and --jobs-dir')
-            plan=validate(read(a.assignment)); cfg=dict(schema_version=1,assignment=str(a.assignment.resolve()),
+            plan=select_agent(read(a.assignment),model=os.environ.get('MODEL'),effort=os.environ.get('EFFORT'),agent=os.environ.get('AGENT'))
+            cfg=dict(schema_version=1,assignment=str(a.assignment.resolve()),
                 jobs_dir=str(a.jobs_dir.expanduser().resolve()),lanes=[dict(gpu=a.gpu)],
                 auth=dict(method='api-key',env_file=str(a.env_file.expanduser().resolve())) if a.env_file else
                      dict(method='subscription',auth_file=str((a.auth_file or Path('~/.codex/auth.json')).expanduser().resolve())),
                 images=dict(archives=[],pull_missing=False),upload=plan['upload']['type']=='hf',
                 hf_token_file=str(a.hf_token_file.expanduser().resolve()) if a.hf_token_file else None,
                 allow_partial=False,background=True,notes_file=None,rerun_assignments=[])
+            cfg['model_selection']=dict(model=plan['agent']['model'],effort=plan['agent']['kwargs'].get('reasoning_effort','default'))
             if cfg['upload'] and not cfg['hf_token_file']: raise ValueError('HF assignment requires --hf-token-file path')
             a.config.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
             with a.config.open('x') as stream: json.dump(cfg,stream,indent=2); stream.write('\n')
             load_config(a.config)
-            print('Created '+str(a.config.resolve())); return 0
+            print('Created '+str(a.config.resolve()))
+            print('Model selection: '+json.dumps(cfg['model_selection'])+'; saved for every trial in this batch')
+            return 0
         if any((a.assignment,a.jobs_dir,a.auth_file,a.env_file,a.hf_token_file)) or a.gpu!='0':
             raise ValueError('local settings are provided during --init-config, then read from --config')
         if a.recover and a.phase!='deliver': raise ValueError('--recover requires --phase deliver')
-        cfg=load_config(a.config); plan=validate(read(cfg['assignment']))
+        cfg=load_config(a.config); plan=select_agent(read(cfg['assignment']),**cfg.get('model_selection',{}))
+        recorded=Path(cfg['jobs_dir'])/(plan['batch']+'-plan.json')
+        if recorded.exists() and read(recorded)!=plan:
+            raise ValueError('model or assignment differs from existing batch; preserve records and use a new batch')
         state=Path(cfg['jobs_dir']).parent/'.helper-pipeline'/plan['batch']
         if a.phase=='status':
             print(json.dumps(read(state/'status.json') if (state/'status.json').exists() else {'stage':'not_started'},indent=2)); return 0
@@ -338,7 +367,9 @@ def main():
                         save(state/'delivery.json',receipt); status['delivery']=receipt
                 mark('complete'); print(json.dumps(status,indent=2)); return 0
             except BaseException as error:
-                mark('failed',error=type(error).__name__)
+                details=failure_details(cfg,plan)
+                mark('failed',error=type(error).__name__,**details)
+                print(details['message'],file=sys.stderr)
                 raise
     except (OSError,ValueError,KeyError,TypeError,subprocess.TimeoutExpired,tarfile.TarError) as error:
         print('Helper workflow stopped: '+str(error),file=sys.stderr); return 2

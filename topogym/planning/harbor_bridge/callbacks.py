@@ -33,7 +33,7 @@ def run_stages(session, output, factory, *, selection=None):
     runner = SessionPolicyRunner(session)
     runner.root = output
     identity = identity_for(runner)
-    flow = QualificationWorkflow(runner, output / "qualification", identity, mode="proof")
+    flow = QualificationWorkflow(runner, output / "qualification", identity, mode="session")
     context = SimpleNamespace(output=output, identity=identity, cache=PathCache(output / "path_cache", identity))
     for index, step in enumerate(factory(session.env, context)):
         candidates = None

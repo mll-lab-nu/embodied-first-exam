@@ -20,6 +20,7 @@ from topogym.evaluation.task_metrics import placement_candidate, rigid_asset_ver
 # in metres after linear_scale. Imported oracle geometry does not replace them.
 CORD_PROFILES = {
     "compact_external_handle_v1": dict(handle_x_m=.41, cord_length_m=.80),
+    "below_easy_external_handle_v1": dict(handle_x_m=.32, cord_length_m=.80),
 }
 
 
@@ -178,7 +179,7 @@ class OrbitsTask(PlacementGoalMixin, TaskDefinition):
                     ring_ids=[f"ring_{i+1}" for i in range(self.layout.ring_count)],
                     ring_centers_world_m=(rotation.apply(np.column_stack([
                         self.layout.ring_x, np.zeros(self.layout.ring_count),
-                        self.layout.ring_z])) + self.origin).tolist(),
+                        self.layout.ring_z])) + self.origin).tolist() if self.layout.ring_count else [],
                     trapped_post_id=f"post_{self.layout.ring_count+1}",
                     initial_winding_absolute=[0]*self.layout.ring_count + [1],
                     cord_profile=self.config["cord_profile"],

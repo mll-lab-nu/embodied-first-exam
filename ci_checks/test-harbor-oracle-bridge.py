@@ -25,6 +25,7 @@ from topogym.planning.harbor_bridge.contracts import (
     BridgeError, check_session, digest, file_hashes, instance_binding, load_trajectory, read_json)
 from topogym.planning.harbor_bridge.packaging import check_package, collect_helpers, package
 from topogym.planning.harbor_bridge.runtime import execute, stream_standard, verify_files
+from topogym.planning.harbor_bridge.timing import joint_step_limit, rate_limit_rows
 
 
 def write_json(path, value):
@@ -648,6 +649,94 @@ class Standard(unittest.TestCase):
             stream_standard(self.robot, self.recipe, self.rows[:2])
         self.assertEqual(self.robot.submit.call_count, 1)
         self.assertEqual(self.status["control_steps"], 2)
+
+
+class StandardTiming(unittest.TestCase):
+    def test_real_service_executes_converted_rows_without_extra_steps_or_clipping(self):
+        # Exercise the actual service loop, isolated from its GPU/server startup.
+        import ast
+        import math
+        path = ROOT / "harbor_templates/topogym/limited/environment/sim/server.py"
+        node = next(n for n in ast.parse(path.read_text()).body
+                    if isinstance(n, ast.FunctionDef) and n.name == "run_joint_position")
+        rows = np.array([[0., .015625, 0., .015625], [2.13, 0., -.19, .04],
+                         [2.11, .04, -.31, 0.]], dtype=np.float32)
+        converted, lineage, changed = rate_limit_rows(rows, ["left/j", "left_gripper", "right/j", "right_native_gripper"], .04)
+        commands = []
+        def step(row, *args, **kwargs):
+            commands.append(row.astype(np.float32).copy())
+            return False
+        namespace = dict(np=np, math=math, L=SimpleNamespace(control_periods=lambda dt, hz: 1, Recorder=object),
+            S=SimpleNamespace(hold_action=lambda: commands[-1] if commands else rows[0]),
+            ARMS=["left", "right"], ARM={"left": (None, 1), "right": (None, 3)}, N=4,
+            M=SimpleNamespace(JOINT_STEP_LIMIT_RAD=.04), CTRL_HZ=40, LAYOUT=["a", "g", "b", "h"],
+            clip_joint_row=lambda row, clipped, ri: row, ctrl_step=step)
+        exec(compile(ast.Module(body=[node], type_ignores=[]), str(path), "exec"), namespace)
+        clipped = []
+        # Also check the exact chunk-boundary behavior used by the HTTP bridge.
+        for start in range(0, len(converted), 7):
+            namespace["run_joint_position"](converted[start:start + 7], .025, "hold", None, clipped)
+        np.testing.assert_array_equal(commands, converted)
+        self.assertEqual(clipped, [])
+        self.assertGreater(len(changed), 0)
+        for index, target in enumerate(rows):
+            part = converted[lineage == index]
+            np.testing.assert_array_equal(part[-1], target)
+            np.testing.assert_array_equal(part[:, [1, 3]], np.tile(target[[1, 3]], (len(part), 1)))
+        np.testing.assert_array_equal(converted[0], rows[0])
+
+    def test_already_compatible_rows_are_byte_identical(self):
+        rows = np.array([[2.12, .01], [2.13, .04], [2.13, .04]], dtype=np.float32)
+        result, lineage, changed = rate_limit_rows(rows, ["joint", "arm_gripper"], .04)
+        self.assertEqual(result.tobytes(), rows.tobytes())
+        self.assertEqual(lineage.tolist(), [0, 1, 2])
+        self.assertEqual(changed, [])
+
+    def test_missing_limit_or_unsafe_inputs_fail_closed(self):
+        rows = np.array([[0., 0.], [.3, .02]], dtype=np.float32)
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "tooling.py"
+            for value in ("", "JOINT_STEP_LIMIT_RAD = get_limit()", "JOINT_STEP_LIMIT_RAD = -1",
+                          "JOINT_STEP_LIMIT_RAD = True", "JOINT_STEP_LIMIT_RAD = .04\nJOINT_STEP_LIMIT_RAD = .08"):
+                path.write_text(value)
+                with self.assertRaises(BridgeError): joint_step_limit(path)
+        with patch("topogym.planning.harbor_bridge.timing.MAX_ROWS", 2):
+            with self.assertRaisesRegex(BridgeError, "row budget"):
+                rate_limit_rows(rows, ["joint", "arm_gripper"], .04)
+        with self.assertRaisesRegex(BridgeError, "explicit joint and gripper"):
+            rate_limit_rows(rows, ["a", "b"], .04)
+
+    def test_conversion_is_explicit_bound_and_preserves_source_and_public_package(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            task, instance_path = fixture(root, mode="standard")
+            tooling = instance_path.parent / "rcb_topogym.py"
+            tooling.write_text("BINDING_API = 1\nJOINT_STEP_LIMIT_RAD = .03125\n")
+            instance = read_json(instance_path)
+            trace = root / "source.npz"
+            rows = np.array([[0., .015625] * 2, [.125, 0.] * 2], dtype=np.float32)
+            np.savez(trace, actions=rows, action_layout=instance["action_layout"], task=instance["task"],
+                     instance_sha=instance["state_sha"], scene_seed=0, meta='{"old_success": true}')
+            before, trace_hash = file_hashes(task), digest(trace)
+            exact = package(task, root / "exact", kind="public_trajectory", trajectory=trace, source_instance=instance_path)
+            self.assertEqual(digest(Path(exact["task"]) / "solution/reference.npz"), trace_hash)
+            limited = package(task, root / "limited", kind="public_trajectory", trajectory=trace,
+                              source_instance=instance_path, standard_timing="rate_limited")
+            solution = Path(limited["task"]) / "solution"
+            report = read_json(solution / "timing_conversion.json")
+            self.assertEqual(report["joint_step_limit_rad"], .03125)
+            self.assertEqual(report["output_rows"], 5)
+            self.assertFalse(report["harbor_qualified"])
+            self.assertEqual(digest(solution / "source_reference.npz"), trace_hash)
+            self.assertEqual(file_hashes(task), before)
+            self.assertEqual(digest(trace), trace_hash)
+            self.assertTrue(limited["public_files_unchanged"])
+            check_package(limited["task"])
+            with np.load(solution / "reference.npz") as data:
+                self.assertNotIn("old_success", str(data["meta"].item()))
+            privileged, _ = fixture(root / "privileged")
+            with self.assertRaisesRegex(BridgeError, "requires a standard"):
+                package(privileged, root / "invalid", kind="existing", standard_timing="rate_limited")
 
 
 class Scores(unittest.TestCase):

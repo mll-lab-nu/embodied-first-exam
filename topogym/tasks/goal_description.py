@@ -100,6 +100,7 @@ def describe_goal(task):
         failures.append(_rigid_contact_failure())
     elif name in PLACEMENT:
         target, remainder = PLACEMENT[name]
+        remainder = getattr(task, "placement_remainder_description", remainder)
         summary = f"Separate and place {target} inside the green dashed goal region. Keep {remainder} on the puzzle/system side."
         region = getattr(task, "goal_region", None)
         margin = getattr(region, "boundary_margin_m", .001)

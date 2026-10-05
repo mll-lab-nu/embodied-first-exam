@@ -26,7 +26,7 @@ def reference_for(row, references):
     task = Path(row["task"])
     if task.name in references:
         recipe = dict(references[task.name])
-        allowed = {"kind", "trajectory", "source_instance", "entrypoint", "source_root", "includes", "kwargs", "data_files", "smoke_steps"}
+        allowed = {"kind", "trajectory", "source_instance", "entrypoint", "source_root", "includes", "kwargs", "data_files", "smoke_steps", "standard_timing"}
         if set(recipe) - allowed:
             raise BridgeError("Unknown reference fields: " + str(sorted(set(recipe) - allowed)))
         return recipe
@@ -37,7 +37,7 @@ def reference_for(row, references):
     callback = row.get("session_callback")
     if callback:
         recipe = dict(kind="session", entrypoint=callback, source_root=str(ROOT))
-        if row["family"] != "cast_coil":
+        if row["family"] != "cast_coil" or row["difficulty"] in ("very_easy", "easier"):
             recipe["kwargs"] = dict(variation=row["difficulty"])
         from .references import reference_data
         recipe["data_files"], recipe["includes"] = reference_data(ROOT, row["family"], row["difficulty"], row.get("seed", 0))

@@ -6,6 +6,7 @@ The public entrypoint stays run_agent_batch.sh. No model adapter is used.
 from contextlib import nullcontext
 import argparse
 import importlib.metadata
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -19,7 +20,7 @@ import uuid
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from agent_batch_contract import component, digest, files, locked, package, read, save, sha, validate, write_summary
+from agent_batch_contract import component, digest, files, locked, package, read, save, sha, validate, write_summary, select_agent
 from secret_scan import load_env, load_secrets, scan_tree
 
 def utc():
@@ -39,12 +40,20 @@ def credentials(environment):
     env=dict(environment)
     if env.get('ENV_FILE'):
         # Match Harbor dotenv override semantics, before deciding auth/scan inputs.
-        values=load_env(env['ENV_FILE'])
+        envfile=Path(env['ENV_FILE']).expanduser()
+        # The unchanged manual names both auth alternatives. A subscription-only
+        # helper need not create a dummy API-key file at the conventional path.
+        absent_default=(envfile in (Path.home()/'rcb.env',Path.home()/'eai.env') and not envfile.exists()
+                        and (Path.home()/'.codex/auth.json').is_file())
+        values={} if absent_default else load_env(envfile)
         allowed={'OPENAI_API_KEY','OPENAI_BASE_URL','OPENROUTER_API_KEY','ANTHROPIC_API_KEY','ANTHROPIC_BASE_URL',
                  'CLAUDE_FORCE_OAUTH','CLAUDE_CODE_OAUTH_TOKEN','CODEX_AUTH_JSON_PATH','CODEX_FORCE_AUTH_JSON'}
         if set(values)-allowed: raise ValueError('ENV_FILE must contain only model credentials/provider settings; keep HF_TOKEN separate')
         env.update(values)
     env.pop('HF_TOKEN',None); env.pop('HUGGING_FACE_HUB_TOKEN',None)
+    if (not any(env.get(k) for k in ('OPENAI_API_KEY','ANTHROPIC_API_KEY','CLAUDE_CODE_OAUTH_TOKEN'))
+            and not env.get('CODEX_AUTH_JSON_PATH') and (Path.home()/'.codex/auth.json').is_file()):
+        env.update(CODEX_AUTH_JSON_PATH=str(Path.home()/'.codex/auth.json'),CODEX_FORCE_AUTH_JSON='1')
     auth=None
     if env.get('CODEX_AUTH_JSON_PATH') or env.get('CODEX_FORCE_AUTH_JSON','').lower() in ('1','true','yes'):
         auth=Path(env.get('CODEX_AUTH_JSON_PATH',str(Path.home()/'.codex/auth.json'))).expanduser().resolve()
@@ -82,7 +91,6 @@ def settings(plan,bases,env):
 
 def tooling():
     if importlib.metadata.version('harbor')!='0.23.0': raise ValueError('run setup_agent_batch.sh: Harbor 0.23.0 required')
-    import importlib.util
     marker=Path(sys.prefix)/'topogym-runner.json'
     if not marker.exists(): raise ValueError('fixed bootstrap receipt missing; run setup_agent_batch.sh in this checkout')
     receipt=read(marker)
@@ -95,19 +103,8 @@ def tooling():
         if sha(Path(importlib.util.find_spec(module).origin))!=wanted: raise ValueError('installed Harbor source changed')
 
 def image_records(plan):
-    records={}
-    for task in plan['tasks']:
-        lock=task['runtime_binding']
-        for key in ('image','agent_image'):
-            if key in lock:
-                image=lock[key]; actual=json.loads(command(['docker','image','inspect',image['reference']]))[0]
-                if actual['Id']!=image['id']: raise ValueError('image differs from frozen runtime binding')
-                records[image['reference']]={k:actual.get(k) for k in ('Id','RepoDigests','Architecture','Os')}
-    for image in plan.get('images',{}).values():
-        actual=json.loads(command(['docker','image','inspect',image['image']]))[0]
-        if actual['Id']!=image['id']: raise ValueError('delivery role image differs from dispatch')
-        records[image['image']]={k:actual.get(k) for k in ('Id','RepoDigests','Architecture','Os')}
-    return records
+    from agent_batch_images import verified_records
+    return verified_records(plan,ROOT)
 
 def host_info():
     import psutil
@@ -127,7 +124,8 @@ def batch_log(jobs,b,message):
     with (jobs/(b+'.log')).open('a') as stream: stream.write(f'[{utc()}] {message}\n')
     print(message,flush=True)
 
-def stop(jobs,b,reason): save(jobs/(b+'-stop.json'),dict(reason=reason,at=utc()))
+def stop(jobs,b,reason,*,code=None):
+    save(jobs/(b+'-stop.json'),dict(reason=reason,at=utc(),**({'code':code} if code else {})))
 
 class Mirror:
     def __init__(self,jobs,spec,plan,owner,private,env,*,resume=False):
@@ -178,7 +176,13 @@ def run_job(jobs,plan,spec,env,auth,private):
     from topogym_versions import require_task
     from account_failure_check import check
     task=next(t for t in plan['tasks'] if t['name']==spec['task'])
-    task_dir=package(ROOT,task); require_task(task_dir,ROOT,inspect_docker=True)
+    task_dir=package(ROOT,task)
+    # Keep every package/input/runtime hash check. The host image may be rebuilt
+    # only when the assignment explicitly pins and verifies equivalent contents.
+    require_task(task_dir,ROOT,inspect_docker=False)
+    current_images=image_records(plan)
+    if current_images!=read(jobs/(plan['batch']+'-metadata.json'))['images']:
+        raise ValueError('batch images changed after lane registration')
     # Preserve the native runner's BuildKit cache workaround: same-size task
     # files copied with identical mtimes otherwise collide in shared contexts.
     stamp=time.time_ns()
@@ -217,8 +221,18 @@ def run_job(jobs,plan,spec,env,auth,private):
         save(jobs/(spec['job']+'-mirror.json'),dict(complete=True,owner=owner,finished_at=utc(),returncode=rc))
         save(jobs/(spec['job']+'-execution.json'),dict(owner=owner,status='finished',finished_at=utc(),returncode=rc))
     trials=[p for p in mirror.job.iterdir() if p.is_dir()]
-    if rc or any(check(str(p))['stop'] for p in trials):
-        stop(jobs,plan['batch'],'Harbor/resource/account failure; preserve all jobs and request a separate rerun assignment')
+    accounts=[check(str(p)) for p in trials]
+    save(jobs/(spec['job']+'-account-check.json'),dict(trials=accounts))
+    failure=next((item for item in accounts if item['stop']),None)
+    if failure:
+        stop(jobs,plan['batch'],failure['message'],code=failure['code'])
+        batch_log(jobs,plan['batch'],failure['message'])
+    elif rc:
+        stop(jobs,plan['batch'],'Harbor/resource failure; preserve all jobs and request a separate rerun assignment',
+             code='harbor_or_resource_failure')
+    else:
+        for item in accounts:
+            for warning in item['warnings']: batch_log(jobs,plan['batch'],warning)
     return rc
 
 def finalize(jobs,plan,metadata,env,auth):
@@ -241,7 +255,8 @@ def finalize(jobs,plan,metadata,env,auth):
 
 def run(batch,bases,assignment):
     import psutil
-    plan=validate(read(assignment))
+    os.umask(0o077)
+    plan=select_agent(read(assignment),model=os.environ.get('MODEL'),effort=os.environ.get('EFFORT'),agent=os.environ.get('AGENT'))
     if plan['batch']!=batch: raise ValueError('dispatch batch differs from command')
     settings(plan,bases,os.environ); tooling()
     jobs=Path(os.environ.get('JOBS',str(ROOT/'jobs/agents'))).resolve(); jobs.mkdir(parents=True,exist_ok=True)
@@ -255,6 +270,8 @@ def run(batch,bases,assignment):
     for name,wanted in plan.get('runner_files',{}).items():
         from agent_batch_contract import relative
         if sha(ROOT/relative(name))!=wanted: raise ValueError('published runner changed: '+name)
+    from agent_batch_images import ensure_images
+    ensure_images(plan,ROOT)
     images=image_records(plan)
     private=jobs.parent/'.agent-batch-private'/batch; private.mkdir(parents=True,exist_ok=True,mode=0o700)
     lock=jobs/'.batch-locks'/batch
@@ -271,6 +288,7 @@ def run(batch,bases,assignment):
         metadata=read(mp) if mp.exists() else dict(schema_version=1,batch=batch,started_at=utc(),status='running',plan_sha256=plan['plan_sha256'],
             repository=dict(commit=optional(['git','-C',ROOT,'rev-parse','HEAD']),dirty=bool(optional(['git','-C',ROOT,'status','--porcelain'])),root=str(ROOT)),
             host=host_info(),images=images,lanes=[],notes='Human incidents not supplied; unknown until helper adds them.')
+        if metadata['images']!=images: raise ValueError('existing batch uses different local images; preserve it')
         if any(l['status']=='running' and not live(l) for l in metadata['lanes']): raise ValueError('stale lane; inspect before recovery')
         lane=dict(id=uuid.uuid4().hex,pid=os.getpid(),process_start=psutil.Process().create_time(),started_at=utc(),status='running',
                   gpu_uuid=env['TOPOGYM_GPU_UUID'],auth='subscription' if auth else 'api-key',jobs=[])
@@ -280,6 +298,10 @@ def run(batch,bases,assignment):
     auth_guard=locked(auth.with_name('.agent-batch-auth.lock')) if auth else nullcontext()
     rc=0
     try:
+        # This is a short account/model check, not an experimental trial. It is
+        # internal to the documented entrypoint and completes before any claim.
+        from check_agent_batch_auth import canary
+        save(private/('auth-canary-'+lane['id']+'.json'),canary(plan,env))
         with auth_guard:
             for spec in plan['jobs']:
                 with locked(lock):

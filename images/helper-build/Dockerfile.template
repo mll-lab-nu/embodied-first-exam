@@ -1,0 +1,31 @@
+# Maintainer-generated build contexts substitute the pinned base and CUDA profile.
+FROM @BASE@
+ENV TOPOGYM_CUDA_FLAVOR=@CUDA@ PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TOPOGYM_VISUAL_ASSET_ROOT=/opt/topogym-visuals TOPOGYM_ASSET_ROOT=/opt/topogym-assets \
+    NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=all
+COPY install_os.py os-source.json os-packages.json /opt/build/
+RUN python /opt/build/install_os.py && rm -rf /var/lib/apt/lists/*
+COPY installers/ /opt/installers/
+COPY installer.lock /opt/installer.lock
+RUN pip install --no-cache-dir --require-hashes -r /opt/installer.lock && rm -rf /opt/installers /opt/installer.lock
+COPY runtime.lock /opt/requirements/runtime.lock
+COPY verify_uipc_wheel.py /opt/verify_uipc_wheel.py
+RUN python /opt/verify_uipc_wheel.py dependencies /opt/requirements/runtime.lock
+COPY ipc/ /opt/uipc-wheel/
+COPY check_gpu_stack.py /opt/check_gpu_stack.py
+RUN python /opt/verify_uipc_wheel.py install /opt/uipc-wheel \
+    && cp /opt/uipc-wheel/uipc-build.json /opt/uipc-build.json && rm -rf /opt/uipc-wheel
+RUN python -c 'import site; from pathlib import Path; paths=sorted({str(p) for s in site.getsitepackages() for p in (Path(s)/"nvidia").rglob("lib") if p.is_dir()}); assert paths; Path("/etc/ld.so.conf.d/topogym-cuda.conf").write_text("\n".join(paths)+"\n")' \
+    && ldconfig && python /opt/check_gpu_stack.py --link-only
+COPY assets/robots/ /opt/topogym-assets/robots/
+RUN chmod -R a+rX /opt/topogym-assets
+COPY prepare_nyx_studio.py /opt/prepare_nyx_studio.py
+RUN python /opt/prepare_nyx_studio.py
+COPY topogym/ /opt/topogym/topogym/
+COPY prune.py /opt/prune.py
+RUN python /opt/prune.py /opt/topogym && rm /opt/prune.py && chmod -R a+rX /opt/topogym
+RUN mkdir -p /data && chmod 1777 /data
+ENV XDG_CACHE_HOME=/opt/rcb-cache CUDA_CACHE_PATH=/opt/rcb-cache/nv/ComputeCache
+RUN mkdir -p /opt/rcb-cache && chmod 1777 /opt/rcb-cache
+ENV PYTHONPATH=/opt/topogym TOPOGYM_SOURCE=/opt/topogym/SOURCE.json
+WORKDIR /app

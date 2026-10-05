@@ -17,6 +17,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[3]
 
 TIERS = {  # Route defaults; physical qualification is recorded separately for each run.
+    "knot_untying_very_easy": dict(kind="closed_loop", hold="far", direction="tangent", lift=.015, straighten=.9),
+    "knot_untying_easier": dict(kind="closed_loop", hold="far", direction="tangent", lift=.015, straighten=.9),
     "knot_untying_easy": dict(kind="carry", s=.224, delta=(-.095, 0.), lift=.025),
     "knot_untying_medium": dict(kind="closed_loop", hold="far", direction="tangent", lift=.015, straighten=.9),
     "knot_untying_hard": dict(kind="closed_loop", hold="far", direction="away", lift=.03,
@@ -43,7 +45,7 @@ class Runner:
         self.args, self.started = args, time.time()
         self.identity = instance_identity(args.instance)
         self.owns_session = session is None
-        self.session = s = (load_tooling(args.variation).Session("knot_untying", instance=str(args.instance))
+        self.session = s = (load_tooling(args.variation, getattr(args, "tooling", None)).Session("knot_untying", instance=str(args.instance))
                             if session is None else session)
         if self.owns_session:
             s.reset()
@@ -68,6 +70,16 @@ class Runner:
         # by a per-arm bias learned while holding still before a pinch.
         self.bias = {side: np.zeros(3) for side in ("left", "right")}
         self.motion_options = {}
+        from .simplified_policy import BELOW_EASY
+        self.joint_step_limit = None
+        if args.variation in BELOW_EASY:
+            import sys
+            # Follow the installed standard service's published joint target
+            # rate during execution, so its replay need not insert extra ticks.
+            limit = getattr(sys.modules[type(s).__module__], 'JOINT_STEP_LIMIT_RAD', None)
+            if limit is None or not np.isfinite(limit) or limit <= 0:
+                raise ValueError('Below-easy knot oracle needs the installed joint step limit')
+            self.joint_step_limit = float(limit)
         if self.owns_session:
             s.record_start()
 
@@ -93,6 +105,12 @@ class Runner:
         return callable(getattr(getattr(self.session, 'table_guard', None), 'apply', None))
 
     def step(self, phase):
+        if getattr(self, 'joint_step_limit', None) is not None:
+            from .simplified_policy import step_with_joint_limit
+            return step_with_joint_limit(self, phase, self.joint_step_limit)
+        return self._step_once(phase)
+
+    def _step_once(self, phase):
         s = self.session
         if s.episode_end == "success":
             raise Solved()
@@ -122,6 +140,9 @@ class Runner:
             from topogym.utils.io import write_json_atomic
             write_json_atomic(self.args.output/"native_progress.json", dict(
                 **row, metrics=dict(result.metrics), task_success=bool(result.task_success)))
+            if getattr(self, 'joint_step_limit', None) is not None and s._recording is not None:
+                from .artifacts import save_recording
+                save_recording(s, self.args.output/'trajectory.partial.npz')
         if k % 8 == 0:
             line = self.line()
             self.lines.append((row["t"], line.astype(np.float32)))
@@ -695,7 +716,9 @@ class Runner:
                     if only_local_loops(crossings, self.stations) and not (self.decisions and self.decisions[-1]["kind"] == "straighten"):
                         self.decisions.append(self.straighten(k, cfg))
                     else:
-                        action = choose(line, self.stations, crossings, self.length, cfg["hold"], cfg["direction"])
+                        from .simplified_policy import BELOW_EASY, reachable_withdrawal
+                        action = (reachable_withdrawal(self, cfg) if self.args.variation in BELOW_EASY else
+                                  choose(line, self.stations, crossings, self.length, cfg["hold"], cfg["direction"]))
                         self.decisions.append(dict(self.withdraw(k, action, cfg), crossings_before=len(crossings)))
                         if 0 < self.decisions[-1]["crossings_after"] < len(crossings):
                             self.decisions.append(self.straighten(k, cfg))
@@ -742,6 +765,7 @@ class Runner:
                       close_width_m=self.args.close, build_s=self.build_s, wall_s=time.time()-self.started,
                       command_safety=dict(owner='native_session' if self.native_command_guard else 'legacy_oracle_fallback',
                           native_rules=getattr(self.session, 'rules', None),
+                          standard_joint_step_limit_rad=getattr(self, 'joint_step_limit', None),
                           extra_oracle_table_margin_m=None if self.native_command_guard else COMMAND_TABLE_GAP_M),
                       session_status={k: v for k, v in self.session.status().items()},
                       simulated_s=float(self.session.sim_time_s), partial=partial, decisions=self.decisions,

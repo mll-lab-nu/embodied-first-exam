@@ -1,0 +1,62 @@
+[
+  {
+    "step": "pickup",
+    "parameters": {
+      "tilt_deg": 30.0,
+      "approach_m": 0.1
+    },
+    "parameters_sha256": "d9fbc6c270ae8d3411535f4f2ac95d106f8a5ec3ff460ce1912975d2dffd0331"
+  },
+  {
+    "step": "comb_01",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 1,
+      "roll_deg": 70.0
+    },
+    "parameters_sha256": "c9c5dae7f7fe54e23dda4ce4ce2cd3c2fa05db3847d332777f078f0d804c72b4"
+  },
+  {
+    "step": "comb_02",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 2,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "e6102286e9a0e2316b76f3914414889c56529bc7432320dae51d3e0a80883db0"
+  },
+  {
+    "step": "comb_03",
+    "parameters": {
+      "d_press_m": 0.032,
+      "roll_rank": 0,
+      "approach_margin_m": 0.008,
+      "tip_past_ring_m": 0.004,
+      "strand": 0,
+      "roll_deg": 0.0
+    },
+    "parameters_sha256": "e9c7dac2515bc6db94d9792bd5c2ce98441841e53f73b615cb117887f7c3a8b8"
+  },
+  {
+    "step": "verify_combed",
+    "parameters": {
+      "hold_s": 1.0
+    },
+    "parameters_sha256": "50b0635dbc02ad2df05505cf1cb8000d179235a74382abbbbba9f027223b028b"
+  },
+  {
+    "step": "feed",
+    "parameters": {
+      "front_s_m": 0.03,
+      "maximum_front_offset_m": 0.0003,
+      "hold_s": 1.5
+    },
+    "parameters_sha256": "a222e03c4ed11967dbc73286bc66f4a28e8c68f1aa77e74e84f2a6a8292d76d2"
+  }
+]

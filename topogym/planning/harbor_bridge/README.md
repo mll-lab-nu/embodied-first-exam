@@ -11,9 +11,34 @@ Coil easy 已实测完成 3 步 oracle 前缀的 privileged 两遍回放，以�
 短程接线通过不构成完整可解性证明。
 原任务包、原 oracle runner、既有证据和成功资格均保留。
 
-当前实测范围按用户要求仅为 **easy / medium / hard**，不运行 very_easy / easier。
-盘点与执行都可加 `--tiers easy medium hard`；执行入口会拒绝范围外任务，避免名称后缀误匹配。
-简化档已有产物保留，但不纳入本轮三档验收。
+默认队列保留 **easy / medium / hard**。简单档采用下方独立队列；精确匹配难度，
+`very_easy` 不会误匹配 `easy`。运行器使用冻结源码中的打包器、控制器和任务生成器。
+
+## very_easy / easier 独立 sweep
+
+仅评测已有控制器的 7 类 × 2 档 × privileged/standard，共 28 个评分位置；seed 0，
+完整 oracle，串行执行，无模型调用。Rope 控制器仍是开发候选；本地历史成功不继承为当前 grade。
+Hedgehog、Horseshoe、Slotted 的简单档只有几何检查，缺完整机器人 oracle，另列覆盖缺口。
+
+```bash
+bash bash_scripts/run_harbor_oracle_grades.sh \
+  --output runs/test_results/harbor_below_easy_new \
+  --families cast_coil,cast_keyhole,lock_picking,buzz_wire_3d,fiber_bundling,interlocked_claws,rope_threading \
+  --tiers very_easy,easier --image topogym-below-easy:new --gpu 0
+```
+
+新目录、新镜像 tag 保留其他队列及历史结果。实例从当前 Task 默认参数及当前 Harbor 时序／抓持配置
+重新生成，不复制旧三档的几何覆盖。镜像与私有控制器共享源码快照。`summary.tsv` / `summary.json`
+逐项记录 grade、solve 和状态：仅有效完整评分写 `solve=0/1`；基础设施、打包、构建错误及未执行
+保持空值并记录原因。privileged 未取得 grade 1 时，standard 标记依赖阻塞，不算已实测失败。
+只需预览队列时加 `--plan`；恢复原队列时保留所有参数并加 `--resume`。
+
+接入层向旧策略提供 `mode`、观测字段及实例实际声明的 `grasp_assist`。Fiber 的分阶段执行使用
+冻结 Session 的初始快照检查，允许 Harbor 启动时恢复快照产生的分支号，但仍禁止执行中回退、
+重置、跨实例或跳过物理 tick；本地独立 proof 的出生状态要求不变。
+Rope 两个简单档的新候选明确声明其现有 oracle 所需的 `ipc_soft_band_v1`，并在动作开始前检查
+模型及 rope target。不兼容的旧实例会直接报配置错误，不自动修改运行中的配置。
+这类新实例的评分不能替代旧 `grasp_assist=none` 实例的结果。
 
 ## 支持的输入
 
@@ -58,6 +83,20 @@ Coil easy 已实测完成 3 步 oracle 前缀的 privileged 两遍回放，以�
   HTTP spec 提供不泄露状态的 `instance_binding_id`。agent 核对该 ID，verifier 独立核对服务启动和
   fresh-process replay 两份绑定记录，且两者均必须 `instance_exact=true`。
 
+### 显式转换 standard 轨迹时序
+
+privileged 的关节轨迹可能超过 standard 服务的每控制步关节目标变化限制。
+打包默认 `--standard-timing exact`，仍逐行原速回放；仅在显式选择
+`--standard-timing rate_limited` 时，打包器从该任务绑定的 tooling 读取 `JOINT_STEP_LIMIT_RAD`，
+提前拆分超限行。`--references` 中的 standard recipe 同样可填写 `"standard_timing": "rate_limited"`。
+每个原始关节终点保持不变，夹爪目标从该行的第一个子步切换，兼容行不变。
+第一行保持原样，由真实服务检查它与初始命令的距离；不从轨迹猜测机器人初始姿态。
+
+新包保留原始 `source_reference.npz`、转换后的 `reference.npz` 和带行映射、源码及轨迹哈希的
+`timing_conversion.json`。转换会改变动作时序及可能的物理结果，属于新的待评分轨迹；
+不继承源轨迹的成功标签。服务仍必须逐行恰好执行一步，任何额外限速、位置裁剪或台面保护
+仍使桥接失败。成功继续要求原生 standard live 执行和独立回放均通过；不修改任务、服务或 grader。
+
 公开 NPZ 必须包含 `actions`（可精确表示为 float32 的二维数组）、`action_layout`、
 `task`、`instance_sha`（对应冻结 `state_sha`）和 `scene_seed`，可附带
 `physics_steps_per_action`。原生 NPZ 使用 `targets`、`layout`、可选 `physics_steps`；
@@ -96,7 +135,8 @@ bridge 保留该行为并明确报告，不能把它称为与旧 Env 逐动作�
 入口：[run_harbor_oracle_grades.sh](../../../bash_scripts/run_harbor_oracle_grades.sh)。
 默认范围为 Coil、Keyhole、Lock Picking、Buzz Wire、Fiber、Horseshoe、Hedgehog、Claws、
 Blanket、Rope、Knot 的 easy / medium / hard，共 33 个实例、最多 66 个模式结果。
-排除 Orbits、Slotted Post Ring、very_easy、easier。它执行完整 oracle，不带 nop 负对照，
+该默认范围排除 Orbits、Slotted Post Ring、very_easy、easier；简单档使用本页独立 sweep。
+它执行完整 oracle，不带 nop 负对照，
 不激活发布版本。完整执行可能耗时很长；`--wall-seconds` 是每个实例双模式的总时限，
 不是整个 33 项队列的一小时时限。
 
@@ -201,7 +241,8 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
 | Coil、Blanket、Knot | 默认回调无额外本机 oracle JSON 依赖；仍需对应的冻结实例、完整物理执行与 verifier |
 | 新机器入口 | 首次评分实际执行镜像构建；生成命令沿用调用者 Python；提交检查检测遗漏文件及尚未暂存的私有依赖修改 |
 | Orbits、Slotted Post Ring | 尚无完整机器人 oracle，不在默认 33 项队列中 |
-| very_easy/easier、旧无分档包与 Cube 示例 | 未迁入当前三档 v15 oracle 流程；当前目录中的历史版本不能绕过活动版本身份检查 |
+| very_easy/easier | 7 类控制器已接入独立队列；重新生成当前版本任务包，逐项等待 Harbor 评分 |
+| 旧无分档包与 Cube 示例 | 不在当前分档队列中；历史版本不能绕过活动版本身份检查 |
 
 Buzz medium 的补充检查执行了搬迁后的 `solution/` 中实际阶段参数的引导读取，
 并验证删除／篡改文件会报错；原检查仅遍历已登记依赖，无法发现未登记的运行时文件。

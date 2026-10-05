@@ -10,7 +10,7 @@ import tarfile
 import tempfile
 from urllib.parse import quote
 from agent_batch_contract import read, validate, save, linked_rerun, component, outcome_counts
-from agent_batch_delivery import unpack
+from agent_batch_delivery import unpack, external_manifest
 from difficulty_results_hf import Hub, file_identity
 from helper_bundle import guard
 from difficulty_hf_auth import resolve_token, HFError
@@ -35,7 +35,7 @@ def check(folder,plan,args,hub=None):
     archive=folder/(plan['batch']+'__'+plan['helper']+'.tar.gz')
     with tempfile.TemporaryDirectory(prefix='native-hf-check-') as td:
         report=unpack(archive,Path(td),plan,reruns=retries)
-        if (folder/'MANIFEST.md').read_bytes()!=(Path(td)/'agents'/(plan['batch']+'-MANIFEST.md')).read_bytes(): raise ValueError('external MANIFEST differs from archive')
+        notes=external_manifest(folder/'MANIFEST.md',Path(td)/'agents'/(plan['batch']+'-MANIFEST.md'),plan)
     paths=[archive,archive.with_name(archive.name+'.sha256'),folder/'MANIFEST.md']
     expected={p.name:file_identity(p,guard) for p in paths}
     remote=hub.call('info',paths=[target['prefix']+'/'+p.name for p in paths],revision=head)
@@ -45,7 +45,7 @@ def check(folder,plan,args,hub=None):
         if not actual or actual['size']!=want['size'] or not (actual.get('sha256')==want['sha256'] or
                 (not actual.get('sha256') and actual.get('git_blob_sha1')==want['git_blob_sha1'])):
             raise ValueError('remote missing or different: '+p.name)
-    return dict(result,files=expected,remote_verified=args.verify_uploaded,delivery_complete=report['delivery_complete'],
+    return dict(result,files=expected,remote_verified=args.verify_uploaded,delivery_complete=report['delivery_complete'],helper_manifest=notes,
                 **outcome_counts(report))
 
 def main():

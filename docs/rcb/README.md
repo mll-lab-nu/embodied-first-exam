@@ -4,7 +4,7 @@
 
 上游已确认私有 HF 接收库建好；第三方 helper 需要独立、可访问的固定 release。官方 `SHARING_RUNS.md` 同步、§3b、release 导出和真实上传/下载小测试见 [下一阶段工程计划](helper_release_and_hf_smoke_plan_zh.md)。
 
-可复制的当前 CLI 见 [把建文作为 helper 的正式流程小批次](helper_native_cli_zh.md)：只筛选 Coil easy、双模式、K=1，不增加 smoke 专用执行脚本。独立 release 导出、HF 权限检查、配置生成及独立 HF 下载验收入口已加入；真实 prepare 当前因 GPU 空闲显存低于 12 GB 被拦住，尚无本次真实 HF 结果。
+可复制的当前 CLI 见 [把建文作为 helper 的正式流程小批次](helper_native_cli_zh.md)：只筛选 Coil easy、双模式、K=1，不增加 smoke 专用执行脚本。独立 release 导出、HF 权限检查、配置生成及独立 HF 下载验收入口已加入；历史小批次曾被 12 GB 显存门槛拦住；该门槛已移除，实际执行和 HF 上传状态以批次记录为准。
 
 当前唯一新实验目标是 tooling **v16** / `0.2.14-dev-cu128`（merged-v16：v15 候选流程与环境参数，加上评分回放和物理有效性规则，见 [版本说明](benchmarks/topogym.md)；v15 候选的工具哈希已冻结）。根目录 `tasks/` 是历史任务包。
 先按根 README 的候选构建流程完成 `topogym_candidate_pipeline.py --phase all`，再设置：
@@ -736,9 +736,10 @@ OpenRouter 使用 `--provider openrouter --model openrouter/<provider>/<model>`�
 - `--tasks` 默认全部，支持 `8`、`8-9`、`cast_coil` 和逗号混合；编号见 `--list-tasks`。
 - `--phase plan|prepare|preflight|run|collect|all`：依次抽样、建镜像/任务、短物理检查、模型执行、汇总。独立调用后续阶段使用相同 run-id 加 `--resume`。
 - `--phase all` 在 prepare 和 preflight 各阶段结束时检查全部计划实例；任一实例未通过就返回非零退出码，保留日志和汇总，不进入下一阶段，也不启动模型 canary 或正式 trial。单独 `--phase run` 同样检查全部实例已准备并通过预检，不能绕过此守卫。修复后用同一 run-id 加 `--resume` 继续。
-- 终端实时输出带时间戳的五阶段标题（planning / preparing / preflight / running / collecting）；逐实例/试验显示任务名、进度编号、难度、sample、seed、模式和 attempt。恢复时标注跳过项，等待 GPU 时每 30 秒提示一次；模型运行时显示对应详细日志路径，结束后输出 trial 状态与汇总路径。
+- limited preflight 按当前 Harbor standard / privileged grader 的做法，CPU 和 CUDA 的末态哈希差异均仅记录，不因 `deterministic=false` 或 `live_matches_replay=false` 单独拦截；冻结实例初态与运行时绑定仍须严格一致，轨迹、回放结果、视频、正常收尾和无基础设施错误检查继续保留。preflight 检查协议能否完整执行，不要求短程试动作解出任务，也不替代正式 grade 的任务成功与人工审查判定。逐项判断保存在 `build/<实例>/limited/preflight-check.json`（`harbor_hash_diagnostic_v1`）；新通过记录同时保存实际执行的 controller 脚本哈希。原始诊断字段不改写。
+- 终端实时输出带时间戳的五阶段标题（planning / preparing / preflight / running / collecting）；逐实例/试验显示任务名、进度编号、难度、sample、seed、模式和 attempt。恢复时标注跳过项；模型运行时显示对应详细日志路径，结束后输出 trial 状态与汇总路径。
 - `--agent-wall-clock-s` 默认 21600，上限 21600。unlimited verifier 为 `3B+900`；limited collection 为 `600+2(B+600)`（奇数 B 向上对齐 2 秒轮询）。评分时间独立于 agent，不用外层 6 小时 timeout 杀掉整个 Harbor job。
-- `--concurrency` 首版只接受 1；运行目录及 GPU 调度各有锁。默认等待 GPU 0 最多 600 秒、要求空闲显存至少 12000 MiB 且 GPU 利用率低于 10%；可用 `--gpu-wait-s` / `--gpu-min-free-mb` 调整。
+- `--concurrency` 首版只接受 1；运行目录及 GPU 调度各有锁。每次 GPU 检查仅查询所选设备是否可访问，不设空闲显存或利用率门槛，不等待或重试。原 12000 MiB 默认值没有可追溯的实测依据，已移除；实际 OOM 仍按运行错误记录。旧 `--gpu-wait-s` 和 `--gpu-min-free-mb` 仅为命令兼容保留，不再控制等待或显存门槛。
 - 每次 run 先做独立认证/工具/图像 canary，不计入 78 次正式试验。该检查要求模型查看已记录相机图、通过工具写出确认；不是机器人任务成功证明。canary 或基础设施失败会暂停后续队列。
 - `--resume` 只启动从未开始的 job，不重用中断的 limited episode。显式 `--resume --rerun-incomplete` 才给中断/基础设施错误创建新 attempt，旧 job 保留。
 - SIGINT/SIGTERM 和系统内存 90% 保护（CPU 仅记录）只清理本次拥有的进程组及带本次标签的容器，不终止其他任务。

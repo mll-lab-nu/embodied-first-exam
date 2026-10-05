@@ -69,6 +69,10 @@ def assess_trial(job, task, mode, lock, *, agent="oracle", returncode=0):
         if any(reward.get(key) for key in INFRA_FIELDS):
             result["status"] = "infra_failed"
             raise BridgeError("Verifier infrastructure failure: " + ", ".join(k for k in INFRA_FIELDS if reward.get(k)))
+        if agent == "oracle" and any(reward.get(k) for k in ("missing_trajectory", "bad_trajectory", "wrong_family")):
+            result["status"] = "invalid_submission"
+            raise BridgeError("Oracle did not submit a valid trajectory: " + ", ".join(
+                k for k in ("missing_trajectory", "bad_trajectory", "wrong_family") if reward.get(k)))
         wanted = binding_id(lock)
 
         def bound(record):

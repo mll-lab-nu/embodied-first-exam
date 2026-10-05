@@ -166,6 +166,16 @@
       "sha256": "6afedfe69ba472fc118a9742a01c0fccfd4c7bbcf55ecaffb3f784eb2912e99a",
       "bytes": 4057388,
       "source": "Derived from runs/demo_metadata/buzz_wire_3d/2026-10-03_hard_v12_continuous/execution: report, audit, source geometry and complete policy input"
+    },
+    "fiber_bundling/very_easy/selection.json": {
+      "sha256": "fc408f23eeb2a967695b054adf7f7a195e4ebaea550a728feaa34c4248cdeece",
+      "bytes": 1223,
+      "source": "runs/test_results/fiber_bundling_simplified_development_20261002/very_easy_attempt01_cpu/qualification/selection.json"
+    },
+    "fiber_bundling/easier/selection.json": {
+      "sha256": "942154509964acc0249f1ed411c4b38018a19225a7283e5a0c9c81639f2cfa8a",
+      "bytes": 1530,
+      "source": "runs/test_results/fiber_bundling_simplified_development_20261002/easier_attempt01_cpu/qualification/selection.json"
     }
   }
 }

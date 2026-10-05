@@ -141,8 +141,8 @@ class QualificationWorkflow:
 
     def __init__(self, runner, output, identity, *, mode="diagnostic", abort_file=None):
         validate_identity(identity)
-        if mode not in {"diagnostic", "proof"}:
-            raise ValueError("Mode must be diagnostic or proof")
+        if mode not in {"diagnostic", "proof", "session"}:
+            raise ValueError("Mode must be diagnostic, proof or session")
         if fingerprint(identity) != fingerprint(identity_for(runner, owner_sources=identity.get("owner_sources", {}))):
             raise ValueError("Workflow identity differs from the actual runner or owner sources")
         self.runner, self.mode = runner, mode
@@ -154,6 +154,17 @@ class QualificationWorkflow:
         initial = runner.env.tick_record()
         if mode == "proof" and (initial["state"]["physics_step"] != 0 or initial["state"]["branch_id"] != 0):
             raise ValueError("A proof execution must start at the fresh episode birth")
+        if mode == "session":
+            # Harbor restores its bound initial checkpoint before the oracle,
+            # creating a nonzero branch without taking a robot action. Keep
+            # that identity intact and still forbid progressed/rewound runs.
+            session = getattr(runner, "session", None)
+            if (session is None or session.env is not runner.env or session.n_steps or session._resets
+                    or not session.runtime_binding or not session.instance_exact
+                    or initial["state"]["physics_step"] != 0
+                    or initial["state"]["state_id"] != session.S0["state_id"]
+                    or initial["state"]["episode_id"] != session.S0["episode_id"]):
+                raise ValueError("Session stages require the fresh, exactly bound initial checkpoint")
         self.episode = initial["state"]["episode_id"]
         # chain: indices of passed stages on the current history. Rewind
         # truncates the history after its target, so the chain stays linear.
@@ -226,11 +237,11 @@ class QualificationWorkflow:
         initial = self.runner.env.tick_record()
         if initial["state"]["episode_id"] != self.episode:
             raise ValueError("Workflow episode expired")
-        if self.mode == "proof" and (initial["state"]["branch_id"] != 0
+        if self.mode != "diagnostic" and (initial["state"]["branch_id"] != self.report["birth"]["branch_id"]
                                       or any(not row["passed"] for row in self.report["stages"])):
             raise ValueError("Failed or rewound proof execution cannot be continued as a proof")
         prior = self.report["stages"][-1].get("end") if self.report["stages"] else self.report["birth"]
-        if self.mode == "proof" and to_jsonable(initial["state"]) != prior:
+        if self.mode != "diagnostic" and to_jsonable(initial["state"]) != prior:
             raise ValueError("Unmonitored steps occurred between proof stages")
         index = len(self.report["stages"])
         record = dict(name=stage.name, kind=stage.kind, attempt=len(self.report["rewinds"]),
@@ -342,8 +353,15 @@ class QualificationWorkflow:
                       and all(b["start"] == a["end"] for a, b in zip(stages, stages[1:])))
         solved = bool(self.runner.env.is_solved())
         self.report.update(native_task_success=solved, continuous_from_birth=continuous, accepted_proof=False)
+        session_continuous = (self.mode == "session" and complete and not self.report["rewinds"]
+                              and all(row["passed"] for row in self.report["stages"])
+                              and stages[0]["start"] == birth
+                              and all(b["start"] == a["end"] for a, b in zip(stages, stages[1:])))
+        self.report["continuous_from_frozen_instance"] = session_continuous
         if not complete:
             self.report["status"] = "incomplete"
+        elif session_continuous and solved:
+            self.report["status"] = "native_success_pending_harbor_verifier"
         elif continuous and solved:
             self.report["status"] = "native_success_pending_independent_audit"
         else:

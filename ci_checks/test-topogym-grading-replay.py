@@ -334,6 +334,14 @@ class Graders(unittest.TestCase):
         self.assertEqual((reward["success_pending_review"], reward["review_events"]), (0, 0))
         self.assertIsNone(verdict["evidence"]["review"])
 
+    def test_privileged_hash_difference_is_diagnostic_for_plain_and_grading_replays(self):
+        for strict in (None, True):  # plain CPU replay and GPU grading replay
+            with self.subTest(strict=strict):
+                outs = [dict(replay_status(True, strict=strict), state_sha=sha) for sha in ('a', 'b')]
+                reward, verdict, _ = self.privileged(outs)
+                self.assertEqual((reward['success'], reward['deterministic']), (1, 0))
+                self.assertEqual([o['state_sha'] for o in verdict['evidence']['replays']], ['a', 'b'])
+
     def test_privileged_a_success_with_a_deep_contact_is_held_for_review(self):
         reward, verdict, calls = self.privileged([replay_status(True), replay_status(True, review=REVIEW, forcing=FORCING)])
         self.assertEqual((reward["success"], reward["success_pending_review"], reward["all_success"]), (0, 1, 1))
@@ -386,6 +394,12 @@ class Graders(unittest.TestCase):
         self.assertEqual((reward["success"], reward["replay_hold_steps"], reward["replay_tolerance_needed"]), (1, 12, 1))
         reward = self.standard(dict(base, success=True, replay_success=False, reason="success"))
         self.assertEqual(reward["success"], 0)
+
+    def test_standard_hash_difference_is_diagnostic_without_replay_tolerance(self):
+        reward = self.standard(dict(finalized=True, instance_matches=True, success=True, replay_success=True,
+                                    deterministic=False, live_matches_replay=False, reason='success',
+                                    replay_hold_steps=0, replay_tolerance_needed=False))
+        self.assertEqual((reward['success'], reward['deterministic'], reward['live_matches_replay']), (1, 0, 0))
 
     def test_standard_a_success_with_a_deep_contact_is_held_for_review(self):
         base = dict(finalized=True, deterministic=True, instance_matches=True, success=True, replay_success=True, reason="success")

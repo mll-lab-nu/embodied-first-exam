@@ -4,7 +4,9 @@
 
 最近更新：2026-10-02 23:44 CDT，时区 America/Chicago。检查对象为分支 `dev/jianwen`、HEAD `f0d233115` 加当前未提交改动。依据当前注册表、任务源码、任务说明和实际运行报告进行只读盘点；本轮没有重新运行物理、录像或 Harbor 验收。其他会话仍在开发，下面是检测时的证据快照。首轮盘点为同日 HEAD `ba31fdb4b`。
 
-**当前已有 14/20 个具名变体实现、11/20 个变体有原生机器人完整成功证据、2/20 个变体通过双模式完整正向评分。** 原生成功中 9 个从默认 home 开始，2 个 Claws 变体从任务预抓姿态开始。双模式通过的是 Keyhole 两档；easier 的最新闭环参考已解决此前公开回放失败，两个正式 job 均已结束并得 1 分，较早失败记录保留。
+2026-10-05 Orbits 定向更新：已按用户确认的预览补齐单球头柱 `very_easy` 与单环双柱 `easier` 的场景、注册和完整目标判据；本页更新 Orbits 行，实际物理检查见[任务页](../develop/tasks/orbits_zh.md)。下方汇总数量仍为 10 月 2 日的盘点，不是其他并行任务的最新统计。
+
+**10 月 2 日盘点已有 14/20 个具名变体实现、11/20 个变体有原生机器人完整成功证据、2/20 个变体通过双模式完整正向评分。** 原生成功中 9 个从默认 home 开始，2 个 Claws 变体从任务预抓姿态开始。双模式通过的是 Keyhole 两档；easier 的最新闭环参考已解决此前公开回放失败，两个正式 job 均已结束并得 1 分，较早失败记录保留。
 
 ## 统计口径
 
@@ -31,7 +33,7 @@
 | [Fiber Bundling](../develop/tasks/fiber_bundling_zh.md) | 2 根相对细线，seed 0 从 home 完整成功并独立审计 | 3 根三角细线，seed 0 从 home 完整成功并独立审计 | 两档三视角录像、4 个包已生成；privileged 和 standard 短流程均通过。辅助护套抓持；两档默认时序复验与独立审计通过，难度排序未评测。 |
 | [Rope Threading](../develop/tasks/rope_threading_zh.md) | 下半圆搭绳场景与完整终态判据已接入 | 单环穿越、双手交接历史及终态判据已接入 | 五档统一 0° 摆位与 20.9 mm 底座垫高；合成状态／回溯检查通过，正常 IPC 初始化已修复，完整机器人解法仍待验收。 |
 | [Knot Untying](../develop/tasks/knot_untying_zh.md) | 未见实现 | 未见实现 | 制定两档解结初态与操作要求，进入建模和验证。 |
-| [Orbits](../develop/tasks/orbits_zh.md) | 未见实现 | 未见实现 | 制定两档结构与初态，随后核对软体稳定性和完整执行。 |
+| [Orbits](../develop/tasks/orbits_zh.md) | 单球头柱、无固定环；场景与完整判据已接入 | 单环双柱；场景与完整判据已接入 | `below_easy_v1_fem_soft50_fine_v1`；12 项资产／拓扑／目标回归通过，真实物理检查见任务页。完整机器人解法、Harbor 正分及难度排序待验。 |
 | [Blanket Flatten](../develop/tasks/blanket_flatten_zh.md) | 未见实现 | 未见实现 | 制定两档展平初态；新状态需独立准备、冻结并验证恢复。 |
 
 上表的下一步是待办，不表示本轮已开始实现。当前七组已实现变体的参考动作或场景有区别，但没有找到覆盖新两档与原 easy 的统一难度校准结果；不以运行时长证明难度顺序。
@@ -130,6 +132,6 @@ very_easy 的[首次抓绳尝试](../../runs/test_results/rope_threading_develop
 - 本轮已完成：重新核对 20 个目标变体，确认 14 个入口、11 个变体的原生成功、10 个变体的成功录像，以及 Keyhole 两档四个正式 job 的最终正向评分；保留其他会话已补充的任务进度。
 - 后续每完成方案、建模、注册、参考策略、原生完整运行、录像或双模式验收，更新同一任务行及相应证据，不另建每日重复进度表。
 - 报告 `running`、短流程通过或文档声称完成，都不自动升级为完整任务成功；模型 revision、初态或时序改变后注明证据范围，保留失败和旧版记录。
-- 当前待办：Buzz easier 完整收尾、Rope 两档实际抓绳与完整求解、Claws easier 成功录像，以及尚缺的完整 Harbor 正向评分；Knot、Orbits、Blanket 两档仍待设计和实现。用户调整优先级时更新本表。
+- 10 月 2 日待办：Buzz easier 完整收尾、Rope 两档实际抓绳与完整求解、Claws easier 成功录像，以及尚缺的完整 Harbor 正向评分；Knot、Orbits、Blanket 当时仍待设计和实现。Orbits 已于 10 月 5 日补齐两档场景，后续核验物理初态和完整解法；其余任务状态以各任务页为准。
 
 任务全集及具名入口依据 [registry.py](../../topogym/config/registry.py)、[variation_records.py](../../topogym/config/variation_records.py)；运行与交付口径参照[场景调整注意事项](post_fix_scene_variant_guidelines_zh.md)。原[三个任务计划](two_levels_below_easy_plan_20261001_zh.md)仅覆盖本 session 排除的三项，不将其中的六变体或 90 项矩阵数字套用于本表。

@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -63,6 +64,18 @@ class Workflow(unittest.TestCase):
         self.assertFalse(folder.exists())
         archive,report=h.bundle(self.jobs,self.plan,folder,allow_partial=True)
         self.assertFalse(report['delivery_complete']); self.assertTrue(archive.is_file())
+    def test_failed_status_explains_account_limit_without_exposing_exception(self):
+        def failed_lane(*args):
+            c.save(self.jobs/(self.plan['batch']+'-stop.json'),dict(code='account_quota_exhausted'))
+            return [1]
+        with patch.object(h,'bootstrap'),patch.object(h,'prepare'),patch.object(h,'run_lanes',side_effect=failed_lane), \
+             patch.object(h,'deliver',side_effect=ValueError('batch incomplete')), \
+             patch.object(sys,'argv',['helper_batch.py','--config',str(self.config)]):
+            self.assertEqual(h.main(),2)
+        status=c.read(self.jobs.parent/'.helper-pipeline'/self.plan['batch']/'status.json')
+        self.assertEqual(status['error_code'],'account_quota_exhausted')
+        self.assertEqual(status['budget_scope'],'account')
+        self.assertIn('账号额度',status['message'])
     def test_archive_mutation_is_rejected_on_retry(self):
         d.seal(self.jobs,self.plan,{'test':fixture.SECRET.encode()})
         folder=self.jobs.parent/'upload_fixture'; h.bundle(self.jobs,self.plan,folder)
@@ -103,12 +116,89 @@ class Workflow(unittest.TestCase):
         with patch.object(sampling,'snapshot_source',return_value=source),patch.object(sampling,'sample_instances',return_value=rows),patch('topogym_versions.identity',return_value={}):
             manifest=sampling.prepare_manifest(self.root/'plan',setting=setting)
         self.assertEqual(manifest['settings']['native_batch']['model'],'openai/gpt-6-sol')
+    def test_rigid_dispatch_covers_each_tier_and_mode_three_times(self):
+        import itertools
+        import yaml
+        import sample_difficulty_instances as sampling
+        cfg=yaml.safe_load((ROOT/'configs/sweeps/helper_rigid_oracle_reference.yaml').read_text())
+        rows=sampling.sample_instances(cfg)
+        tasks={'interlocked_claws','lock_picking','hedgehog_in_cage','fiber_bundling',
+               'horseshoe_ring','cast_coil','cast_keyhole','buzz_wire_3d'}
+        self.assertEqual({(r['task_id'],r['difficulty']) for r in rows},
+                         set(itertools.product(tasks,('easy','medium','hard'))))
+        self.assertEqual(len(rows),24)
+        self.assertEqual(set(cfg['modes']),{'limited','unlimited'})
+        self.assertEqual(cfg['native_batch']['repetitions'],3)
+        self.assertEqual(len(rows)*len(cfg['modes'])*cfg['native_batch']['repetitions'],144)
+        self.assertTrue(all(r['scene_seed']==0 and r['variation_id']==r['difficulty'] and not r['draws'] for r in rows))
+        self.assertEqual(cfg['agent_wall_clock_s'],43200)
+        self.assertEqual(cfg['native_batch']['token_budget'],BUDGET)
     def test_rerun_cannot_change_budget(self):
         from create_agent_batch_rerun import create
         self.plan['token_budget']=BUDGET.copy(); self.repin()
         child=create(self.plan,c.check_batch(self.jobs,self.plan))
         child['token_budget']['input_tokens']+=1; child.pop('plan_sha256'); child['plan_sha256']=c.digest(child)
         with self.assertRaisesRegex(ValueError,'settings'): c.linked_rerun(self.plan,child)
+    def test_helper_environment_selects_model_once_in_config(self):
+        self.plan['helper_selects_model']=True; self.repin()
+        target=self.root/'selected.json'
+        argv=['helper_batch.py','--init-config','--config',str(target),'--assignment',str(self.assignment),
+              '--jobs-dir',str(self.jobs),'--env-file',str(self.env)]
+        with patch.dict(os.environ,MODEL='openai/helper-choice',EFFORT='high'),patch.object(sys,'argv',argv):
+            self.assertEqual(h.main(),0)
+        cfg=h.load_config(target)
+        with patch.dict(os.environ,MODEL='openai/different',EFFORT='low'):
+            env=h.lane_environment(cfg,cfg['lanes'][0])
+        self.assertEqual((env['MODEL'],env['EFFORT']),('openai/helper-choice','high'))
+        self.assertEqual(c.read(self.assignment),self.plan)
+        selected=c.select_agent(self.plan,**cfg['model_selection'])
+        self.assertEqual(selected['assignment_sha256'],self.plan['plan_sha256'])
+        self.assertEqual(selected['tasks'],self.plan['tasks'])
+        self.assertEqual(selected['repetitions'],3)
+    def test_model_selection_does_not_authorize_other_changes(self):
+        with self.assertRaisesRegex(ValueError,'fixed'): c.select_agent(self.plan,model='openai/helper-choice')
+        self.plan['helper_selects_model']=True; self.repin()
+        selected=c.select_agent(self.plan,model='openai/helper-choice',effort='default')
+        self.assertNotIn('reasoning_effort',selected['agent']['kwargs'])
+        self.assertEqual(c.match_assignment(self.plan,selected),selected)
+        for key,value in [('token_budget',BUDGET),('mirror_required',False),('instance_selection','changed')]:
+            changed=copy.deepcopy(selected); changed[key]=value
+            changed.pop('plan_sha256'); changed['plan_sha256']=c.digest(changed)
+            with self.subTest(key=key),self.assertRaisesRegex(ValueError,'differs'):
+                c.match_assignment(self.plan,changed)
+        changed=copy.deepcopy(selected); changed['agent']['kwargs']['web_search']='enabled'
+        changed.pop('plan_sha256'); changed['plan_sha256']=c.digest(changed)
+        with self.assertRaisesRegex(ValueError,'differs'): c.match_assignment(self.plan,changed)
+    def test_selected_model_delivery_verified_against_original_assignment(self):
+        self.plan['helper_selects_model']=True; self.repin()
+        selected=c.select_agent(self.plan,model='openai/helper-choice',effort='high')
+        c.save(self.jobs/'fixture-plan.json',selected)
+        metadata=c.read(self.jobs/'fixture-metadata.json'); metadata['plan_sha256']=selected['plan_sha256']
+        c.save(self.jobs/'fixture-metadata.json',metadata)
+        for path in self.jobs.glob('*/*/config.json'):
+            config=c.read(path); config['agent'].update(name=selected['agent']['name'],model_name=selected['agent']['model'],kwargs=selected['agent']['kwargs'])
+            c.save(path,config)
+        d.seal(self.jobs,selected,{'test':fixture.SECRET.encode()})
+        archive,report=h.bundle(self.jobs,selected,self.jobs.parent/'upload_fixture')
+        received=d.receive(archive,self.plan,self.root/'received',require_complete=True)
+        self.assertEqual(received['report']['actual_agent'],selected['agent'])
+        self.assertEqual(received['report']['assignment_sha256'],self.plan['plan_sha256'])
+        self.assertIn('openai/helper-choice',(self.root/'received/review/README.md').read_text())
+        self.cfg['model_selection']={'model':'openai/changed-after-start','effort':'high'}; c.save(self.config,self.cfg)
+        with patch.object(h,'bootstrap') as bootstrap,patch.object(sys,'argv',['helper_batch.py','--config',str(self.config)]):
+            self.assertEqual(h.main(),2); bootstrap.assert_not_called()
+        path=next(self.jobs.glob('*/*/config.json')); cfg=c.read(path); cfg['agent']['model_name']='openai/mixed'
+        c.save(path,cfg)
+        self.assertFalse(c.check_batch(self.jobs,selected)['evaluation_complete'])
+    def test_rerun_preserves_selected_model_and_removes_delegation(self):
+        from create_agent_batch_rerun import create
+        self.plan['helper_selects_model']=True; self.repin()
+        selected=c.select_agent(self.plan,model='openai/helper-choice',effort='high')
+        child=create(selected,c.check_batch(self.jobs,selected))
+        self.assertEqual(child['agent'],selected['agent'])
+        self.assertNotIn('helper_selects_model',child)
+        self.assertEqual(c.linked_rerun(self.plan,child),child)
+        with self.assertRaisesRegex(ValueError,'fixed'): c.select_agent(child,model='openai/another')
     def test_hf_only_uploads_three_files_and_retry_skips_commit(self):
         self.plan['upload']={'type':'hf','repo_id':'test/private','prefix':'helpers/fixture/fixture'}; self.repin()
         for task,spec in zip(self.plan['tasks'],self.plan['jobs']):
@@ -208,6 +298,29 @@ class Workflow(unittest.TestCase):
             self.assertTrue(release.verify_release(self.root,self.plan)['verified'])
             path=self.root/'tasks'/self.plan['tasks'][0]['name']/'task.toml'; path.write_text('changed')
             with self.assertRaises(ValueError): release.verify_release(self.root,self.plan)
+    def test_release_survives_git_clone_without_validation_bytecode(self):
+        import export_native_helper_release as release
+        source=self.root/'export-source'; source.mkdir()
+        (source/'runner.py').write_text('print("fixture")\n')
+        output=self.root/'exported'; checkout=self.root/'cloned'
+        def identity_with_cache(root):
+            cache=Path(root)/'ci_checks/__pycache__/checker.cpython-312.pyc'
+            cache.parent.mkdir(parents=True,exist_ok=True); cache.write_bytes(b'generated cache')
+            return {'fixture':'runtime'}
+        with patch.object(release,'code_files',return_value={'runner.py'}), \
+             patch.object(release,'identity',side_effect=identity_with_cache):
+            release.export(source,output,runtime_only=True)
+            manifest=c.read(output/'helper-release.json')
+            self.assertFalse(any('__pycache__' in n or n.endswith('.pyc') for n in manifest['files']))
+            for args in (['init'], ['add','.'], ['-c','user.name=Fixture','-c','user.email=fixture@example.invalid',
+                                               'commit','-m','fixture']):
+                subprocess.run(['git',*args],cwd=output,check=True,capture_output=True)
+            subprocess.run(['git','clone','--no-local',str(output),str(checkout)],check=True,capture_output=True)
+            self.assertFalse((checkout/'ci_checks/__pycache__').exists())
+            self.assertTrue(release.verify_release(checkout)['verified'])
+            (checkout/'runner.py').write_text('changed')
+            with self.assertRaisesRegex(ValueError,'release file changed'):
+                release.verify_release(checkout)
     def test_background_config_and_inherited_credentials(self):
         cfg=h.load_config(self.config)
         with patch.dict(os.environ,{'HF_TOKEN':'never-pass','MODEL':'wrong','CODEX_AUTH_JSON_PATH':'wrong','OPENAI_API_KEY':'wrong'}):

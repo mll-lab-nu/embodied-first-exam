@@ -11,12 +11,14 @@ import numpy as np
 from topogym.utils.io import canonical_hash, sha256_file
 
 ROOT = Path(__file__).resolve().parents[3]
+KNOT_TIERS = ("very_easy", "easier", "easy", "medium", "hard")
 
 
 def task_dir(variation):
-    if variation not in {f"knot_untying_{tier}" for tier in ("easy", "medium", "hard")}:
+    if variation not in {f"knot_untying_{tier}" for tier in KNOT_TIERS}:
         raise ValueError(f"unknown knot variation: {variation}")
-    return ROOT/"tasks"/f"topogym-knot-untying-{variation.removeprefix('knot_untying_')}-i00-privileged"
+    tier = variation.removeprefix('knot_untying_').replace('_', '-')
+    return ROOT/"tasks"/f"topogym-knot-untying-{tier}-i00-privileged"
 
 
 def default_instance(variation):
@@ -24,10 +26,12 @@ def default_instance(variation):
     return task_dir(variation)/"environment/instance.json"
 
 
-def load_tooling(variation):
+def load_tooling(variation, tooling=None):
     """Load that task's tooling by path, without modifying sys.path or reusing another task's module."""
-    path = task_dir(variation)/"environment/rcb_topogym.py"
-    name = f"_topogym_oracle_rcb_{variation}"
+    path = (Path(tooling) if tooling is not None else task_dir(variation)/"environment/rcb_topogym.py").resolve()
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing knot tooling {path}; supply --tooling for a new candidate")
+    name = f"_topogym_oracle_rcb_{variation}_{canonical_hash(str(path))[:16]}"
     if name not in sys.modules:
         spec = importlib.util.spec_from_file_location(name, path)
         module = importlib.util.module_from_spec(spec)

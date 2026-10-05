@@ -1,4 +1,4 @@
-"""SiamMandalay Orbits: two to four fixed rings and a trapped cord bight.
+"""SiamMandalay Orbits: zero to four fixed rings and a trapped cord bight.
 
 Metres; authored proportions from B-EB9Q-JqXA, not measured CAD. The reference
 is a rendered solution demonstration. This module qualifies initial geometry
@@ -58,7 +58,10 @@ class OrbitsLayout:
 
     @property
     def ball_z(self):
-        return self.ring_z[0]+self.ring_tube_radius_m+self.ball_gap_m+self.ball_radius_m
+        # The single-post teaching fixture retains the one-ring fixture's ball
+        # height. lowest_ring_z_m is a height datum when no ring is present.
+        top_ring_z = self.ring_z[0] if self.ring_count else self.lowest_ring_z_m
+        return top_ring_z+self.ring_tube_radius_m+self.ball_gap_m+self.ball_radius_m
 
     @property
     def eyes(self):
@@ -76,13 +79,13 @@ class OrbitsLayout:
         return OrbitsLayout(**values).validate()
 
     def validate(self):
-        values = np.asarray(list(asdict(self).values()), dtype=float)
+        if type(self.ring_count) is not int or self.ring_count not in (0, 1, 2, 3, 4):
+            raise ValueError("Orbits supports zero to four rings; the video reference has four")
+        values = np.asarray([v for k, v in asdict(self).items() if k != "ring_count"], dtype=float)
         if not np.isfinite(values).all() or (values <= 0).any():
             raise ValueError("Dimensions must be positive and finite")
-        if type(self.ring_count) is not int or self.ring_count not in (2, 3, 4):
-            raise ValueError("Orbits supports two, three or four rings; the video reference has four")
         r, t = self.ring_radius_m, self.ring_tube_radius_m
-        if r <= t+self.ball_radius_m+abs(self.post_spacing_m-r)+self.clearance_m:
+        if self.ring_count and r <= t+self.ball_radius_m+abs(self.post_spacing_m-r)+self.clearance_m:
             raise ValueError("Ring aperture must admit the top ball")
         if self.ring_step_m <= 2*t+2*self.cord_radius_m:
             raise ValueError("Adjacent rings need vertical cord clearance")
@@ -96,8 +99,10 @@ class OrbitsLayout:
             raise ValueError("Bight must surround only the last post")
         if not r+t+self.post_radius_m < 2*self.post_spacing_m-r:
             raise ValueError("Lower ring must clear the earlier taller post")
-        if self.base_length_m/2 <= abs(self.ring_x[0])+r+t:
+        if self.ring_count and self.base_length_m/2 <= abs(self.ring_x[0])+r+t:
             raise ValueError("Base must extend beyond the top ring")
+        if not self.ring_count and self.base_length_m/2 <= self.ball_radius_m:
+            raise ValueError("Base must extend beyond the single-post ball")
         if self.base_width_m/2 <= r+t:
             raise ValueError("Base too narrow for rings")
         if self.handle_x_m-self.handle_length_m/2 <= self.base_length_m/2+.03*self.template_scale:
@@ -258,9 +263,14 @@ def geometry_report(layout, parts, cord):
         cord_clear_of_table=float(cord[:, 2].min()-l.cord_radius_m) > 0,
         cord_no_nonlocal_overlap=self_clear > 0,
         bight_encircles_only_last_post=np.allclose(np.abs(wind), [0]*l.ring_count+[1], atol=1e-6),
-        bight_below_lowest_ring=float(cord[:, 2].max()+l.cord_radius_m) < l.ring_z[-1]-l.ring_tube_radius_m,
+        bight_below_lowest_ring=(float(cord[:, 2].max()+l.cord_radius_m) < l.ring_z[-1]-l.ring_tube_radius_m
+                                if l.ring_count else True),
         endpoints_in_handle_eyes=np.allclose(cord[[0, -1], :2], l.eyes, atol=1e-8),
     )
+    if not l.ring_count:
+        checks.pop("preceding_post_inside_each_ring")
+        checks.pop("bight_below_lowest_ring")
+        checks["bight_below_stopper_ball"] = float(cord[:, 2].max()+l.cord_radius_m) < l.ball_z-l.ball_radius_m
     if l.ring_count == 4:
         # Retain reference-report keys for existing consumers, never label a
         # reduced fixture as having four apertures or five posts.

@@ -3,7 +3,7 @@
 import argparse
 import json
 from pathlib import Path
-from agent_batch_contract import read, check_batch, write_summary
+from agent_batch_contract import read, check_batch, write_summary, match_assignment
 from agent_batch_delivery import report_with_mirror
 
 def main():
@@ -15,7 +15,7 @@ def main():
     try:
         plan=read(a.jobs/(a.batch+'-plan.json'))
         if plan['batch'] != a.batch: raise ValueError('batch identity mismatch')
-        if a.assignment and read(a.assignment)!=plan: raise ValueError('received plan differs from maintainer assignment')
+        if a.assignment: match_assignment(read(a.assignment),plan)
         if a.write_summary:
             if (a.jobs/(a.batch+'-inventory.json')).exists(): raise ValueError('sealed summary is immutable; use finish_agent_batch for explicit resealing')
             write_summary(a.jobs,plan)

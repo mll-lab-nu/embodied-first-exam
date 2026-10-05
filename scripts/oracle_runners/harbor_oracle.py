@@ -44,6 +44,8 @@ def main(argv=None):
     build.add_argument("--include", action="append", default=[], help="Relative private planning dependency/data file")
     build.add_argument("--kwargs", type=Path, help="JSON object of callback arguments")
     build.add_argument("--runtime-lock", type=Path, required=True, help="Manager-generated runtime binding")
+    build.add_argument("--standard-timing", choices=("exact", "rate_limited"), default="exact",
+                       help="Explicitly create a new rate-limited standard reference; independent regrading required")
     check = sub.add_parser("check", help="Verify a candidate's complete bound inputs; no physics")
     check.add_argument("--task", type=Path, required=True)
     run = sub.add_parser("run", help="Plan native Harbor jobs; --execute runs them with memory supervision")
@@ -83,7 +85,7 @@ def main(argv=None):
             result = package(args.task, args.output, kind=args.kind, trajectory=args.trajectory,
                 source_instance=args.source_instance, entrypoint=args.entrypoint, source_root=args.source_root,
                 includes=args.include, kwargs=read_json(args.kwargs) if args.kwargs else None,
-                runtime_lock=read_json(args.runtime_lock))
+                runtime_lock=read_json(args.runtime_lock), standard_timing=args.standard_timing)
         elif args.command == "check":
             result = check_package(args.task)
         else:

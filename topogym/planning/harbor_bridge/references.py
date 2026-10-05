@@ -7,8 +7,22 @@ from .contracts import BridgeError, digest, member
 
 def reference_data(root, family, tier, seed):
     root = Path(root)
-    if tier not in {"easy", "medium", "hard"}:
-        raise BridgeError("These adapters cover only easy / medium / hard")
+    from .catalog import TIERS, BELOW_EASY_FAMILIES
+    if tier not in TIERS:
+        raise BridgeError("Unknown oracle difficulty tier")
+    below_easy = tier in {"very_easy", "easier"}
+    if below_easy:
+        if family not in BELOW_EASY_FAMILIES:
+            raise BridgeError(f"No complete robot oracle adapter for {family}/{tier}")
+        if seed != 0:
+            raise BridgeError("Below-easy reference recipes currently bind seed 0")
+        # The shared dispatcher imports all seven controllers. Include their
+        # authored static routes; no original-tier witness is substituted.
+        includes = ["topogym/planning/interlocked_claws/easier_reference_route.json"]
+        for name in includes:
+            member(root, name)
+        if family != "fiber_bundling":
+            return {}, includes
     files, includes = {}, []
     prefix = "topogym/planning/harbor_bridge/reference_data/"
     base = root / prefix
@@ -26,6 +40,10 @@ def reference_data(root, family, tier, seed):
         files[prefix + relative] = str(source)
         return source
 
+    if below_easy:
+        add("selection.json")
+        includes = ["topogym/planning/interlocked_claws/easier_reference_route.json"]
+        return files, includes
     if family == "cast_keyhole":
         includes = [f"topogym/planning/cast_keyhole/references/F{i}.json" for i in (1, 2, 3)]
     if family in {"buzz_wire_3d", "fiber_bundling", "horseshoe_ring", "hedgehog_in_cage", "interlocked_claws", "rope_threading"} and seed != 0:

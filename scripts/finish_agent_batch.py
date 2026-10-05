@@ -7,7 +7,7 @@ It never reruns jobs, moves claims, or promotes a mirror gap to complete evidenc
 import argparse
 import os
 from pathlib import Path
-from agent_batch_contract import read,save,validate,locked
+from agent_batch_contract import read,save,validate,locked,match_assignment
 from agent_batch_runtime import credentials,auth_secrets,live,command,Mirror,stop,utc
 from agent_batch_delivery import seal,verify_tree
 
@@ -17,7 +17,7 @@ def main():
     p.add_argument('--notes-file',type=Path); a=p.parse_args()
     try:
         jobs=a.jobs.resolve(); plan=validate(read(a.assignment)); b=plan['batch']; env,auth=credentials(os.environ)
-        if read(jobs/(b+'-plan.json'))!=plan: raise ValueError('batch differs from assignment')
+        plan=match_assignment(plan,read(jobs/(b+'-plan.json')))
         with locked(jobs/'.batch-locks'/b):
             metadata=read(jobs/(b+'-metadata.json'))
             for lane in metadata['lanes']:

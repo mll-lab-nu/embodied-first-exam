@@ -24,6 +24,8 @@ RUNNERS = {
 }
 
 TIERS = ("very_easy", "easier", "easy", "medium", "hard")
+BELOW_EASY_FAMILIES = ("cast_coil", "cast_keyhole", "lock_picking", "buzz_wire_3d",
+                       "fiber_bundling", "interlocked_claws", "rope_threading", "knot_untying")
 SESSION_CALLBACKS = {
     "blanket_flatten": "topogym.planning.blanket_flatten.public_session:run_feedback_policy",
     "rope_threading": "topogym.planning.rope_threading.public_session:run_feedback_policy",
@@ -37,6 +39,13 @@ SESSION_CALLBACKS = {
     "interlocked_claws": "topogym.planning.interlocked_claws.public_session:run_feedback_policy",
     "knot_untying": "topogym.planning.knot_untying.public_session:run_feedback_policy",
 }
+
+
+def session_callback(family, tier):
+    if tier in ("very_easy", "easier"):
+        return ("topogym.planning.harbor_bridge.below_easy:run_feedback_policy"
+                if family in BELOW_EASY_FAMILIES else None)
+    return SESSION_CALLBACKS.get(family)
 
 
 def task_difficulty(task, metadata):
@@ -99,7 +108,7 @@ def inventory(root, tasks_root=None, *, tiers=None):
             bridge="blocked_identity" if blockers else "candidate" if bridge.is_file() else "existing_script_packable" if existing else "requires_bound_reference",
             blockers=blockers,
             has_solution=solve.is_file(), runners=[str(Path("scripts/oracle_runners") / name) for name in RUNNERS[family]],
-            session_callback=SESSION_CALLBACKS.get(family),
+            session_callback=session_callback(family, difficulty),
             profile={k: config.get(k) for k in ("compute_backend", "precision", "physics_dt_s", "control_decimation",
                                                 "solver_substeps", "grasp_assist")},
             success_rule=instance.get("success_rule")))

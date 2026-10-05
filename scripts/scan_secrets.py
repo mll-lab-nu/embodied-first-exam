@@ -33,11 +33,23 @@ def main(argv=None):
                 # Refuse changing logs under active writers or silently repairing
                 # evidence that changed after sealing.
                 verify_tree(target.parent,plan); native.append(plan)
-        secrets = load_secrets(env_files=args.env_file, variables=args.var,
-                               auth_files=args.codex_auth, process_env=args.process_env)
+        # The fixed manual passes both conventional alternatives even when only
+        # one authentication method is used. Missing custom paths remain errors;
+        # load_secrets still rejects the case where no credential was loaded.
+        skipped=[]
+        def present(paths,defaults):
+            result=[]
+            for value in paths:
+                path=Path(value).expanduser()
+                if path in defaults and not path.exists(): skipped.append(str(path))
+                else: result.append(value)
+            return result
+        secrets = load_secrets(env_files=present(args.env_file,(Path.home()/'rcb.env',Path.home()/'eai.env')), variables=args.var,
+                               auth_files=present(args.codex_auth,(Path.home()/'.codex/auth.json',)), process_env=args.process_env)
         first = scan_tree(args.dir, secrets, redact=args.redact)
         result = scan_tree(args.dir, secrets) if args.redact else first
         result['redactions'] = first['redactions']
+        if skipped: result['unused_missing_auth_files']=skipped
         if native:
             mirror=target.with_name('agents_mirror')
             if mirror.exists():
