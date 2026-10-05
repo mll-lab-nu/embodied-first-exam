@@ -9,7 +9,7 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
 | tasks | 24 × 2 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged` and `-standard` (`eai-standard/2.1`) |
-| image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` (`images/humanoidbench/`) |
+| image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` (`images/humanoidbench/`) |
 | oracle | `sit_simple` (the fixture): full, both modes; the 23 scored tasks: none, human review (`oracle_evidence` in each task.toml) |
 
 ## Tasks: upstream's 32, ours ✅ (23 scored + the `sit_simple` fixture)
@@ -92,7 +92,7 @@ harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # 
 `codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
 `codex-gpt6_luna-medium`); `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
 reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t
-ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:$(cat images/humanoidbench/VERSION) .` (from the
+ghcr.io/mll-lab-nu/eai-humanoidbench:$(cat images/humanoidbench/VERSION) .` (from the
 repository root).
 
 ## Results

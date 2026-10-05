@@ -9,7 +9,7 @@
 | Family / instance | `push` / seed 0 |
 | Oracle | `none` — GPT-6 Luna's privileged-mode trajectories (997.64 / 700 under protocol v1.0, run `codex-gpt6_luna-medium` on the results site; 997.80 before it), and graded standard-mode episodes with 50 resets by GPT-6 Luna (protocol v1.0), GPT-6 Sol and Claude Opus 5.5, run `codex-gpt6_luna-medium` (standard) and the other models' runs on the results site; today's privileged verifier scores each 1, and so does the standard service when each is sent through the client; human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-push-i00-privileged`: the same

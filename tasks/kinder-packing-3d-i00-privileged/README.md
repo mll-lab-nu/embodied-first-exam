@@ -9,7 +9,7 @@
 | Family / instance | `packing-3d` / seed 0 |
 | Oracle | `none` — GPT-6 Luna's privileged-mode trajectory and graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (both modes) on the results site; today's privileged verifier scores both 1, and so does the standard service when either is sent through the client; human review in PR #8 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-kinder:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
 
 ## Task
 KinDER `kinder/Packing3D-p3-v0` (Kinematic3D, PyBullet), seed 0, privileged mode: the agent has the simulator and its state and

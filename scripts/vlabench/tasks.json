@@ -1,0 +1,260 @@
+{
+ "_comment": "VLABench tasks: the native tasks (VLABench @ cf588fe) with a recorded expert on a frozen instance. candidates: imported from PR #4 (import_pr4.py) and re-verified by freeze.py; a candidate that fails re-verification is listed in frozen/report.json and left out. dropped: candidates that verify but are left out after review, and why. excluded: never candidates, and why. instructions: where VLABench's instruction does not say what its success check requires, the text the task states instead (text, why; the upstream wording stays in the instance); kind overrides the generated description of the instruction. oracle_source: where each reference came from.",
+ "candidates": [
+  "add_condiment",
+  "book_rearrange",
+  "complex_seesaw_use",
+  "find_unseen_object",
+  "friction_qa",
+  "hammer_loose_nail",
+  "hammer_nail_and_hang_picture",
+  "heat_food",
+  "insert_bloom_flower",
+  "insert_flower",
+  "magnetism_qa",
+  "play_math_game",
+  "put_box_on_painting",
+  "reflection_qa",
+  "select_billiards",
+  "select_billiards_common_sense",
+  "select_billiards_spatial",
+  "select_book_semantic",
+  "select_book_spatial",
+  "select_chemistry_tube",
+  "select_chemistry_tube_common_sense",
+  "select_chemistry_tube_semantic",
+  "select_chemistry_tube_spatial",
+  "select_drink",
+  "select_fruit",
+  "select_fruit_common_sense",
+  "select_fruit_semantic",
+  "select_mahjong",
+  "select_mahjong_semantic",
+  "select_mahjong_spatial",
+  "select_nth_largest_poker",
+  "select_painting",
+  "select_poker",
+  "select_poker_semantic",
+  "select_poker_spatial",
+  "select_specific_type_book",
+  "select_toy",
+  "select_unique_type_mahjong",
+  "set_dining_table",
+  "set_study_table",
+  "take_out_cool_drink",
+  "texas_holdem"
+ ],
+ "dropped": {
+  "select_fruit_semantic": "duplicate of select_fruit_common_sense: the same scene (identical model and initial-state hashes), the same reference control steps, the same instruction (\"tell some specifics of pear between [...]\") and the same success check (pear in plate_seen); VLABench's semantic variant has no instruction of its own",
+  "select_book_semantic": "the instruction is VLABench's unfilled template (\"I'm ... Could you recommend a book and take it out for me?\"): the literal \"...\" leaves out what identifies the target book (the_story_of_american_freedom), so the task cannot be inferred",
+  "set_study_table": "the instruction is VLABench's unfilled template (\"Today I want to review the content about ... Please help me to manage the study table before I come.\"): the literal \"...\" leaves out the subject that identifies the target book (the_story_of_american_freedom), so the task cannot be inferred"
+ },
+ "excluded": {
+  "add_condiment_common_sense": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "add_condiment_semantic": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "add_condiment_spatial": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "assemble_hammer": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "cluster_billiards": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "cluster_book": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "cluster_dessert": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "cluster_drink": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "cluster_ingredients": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "cluster_toy": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "cook_dishes": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "cool_drink": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "density_qa": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "find_fruit_to_make_juice": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "get_coffee": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "get_coffee_with_milk": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "get_coffee_with_sugar": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "hang_picture_on_specific_nail": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "insert_flower_common_sense": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "insert_flower_semantic": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "insert_flower_spatial": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "insert_power_cord_to_make_juice": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "make_juice": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "play_mahjong": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "play_snooker": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "plug_cord_and_heat_food": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "put_box_on_painting_semantic": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "rearrange_tube": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "replace_wilted_flower": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "select_billiards_semantic": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "select_book": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_drink_common_sense": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_drink_semantic": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_drink_spatial": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "select_fruit_spatial": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_ingredient": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_ingredient_common_sense": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_ingredient_semantic": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_ingredient_spatial": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_painting_by_style": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "select_toy_common_sense": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_toy_semantic": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "select_toy_spatial": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "set_dining_chopstick": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "set_dining_chopstick_left_hand": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "set_dining_left_hand": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "simple_cuestick_use": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)",
+  "simple_seesaw_use": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "speed_of_sound_qa": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "store_food": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "take_chemistry_experiment": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "texas_holdem_explore": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "thermal_expansion_qa": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
+  "weight_qa": "no frozen instance: the scene could not be built or reset bit-exactly (PR #4 authoring: missing_frozen_instance)"
+ },
+ "instructions": {
+  "add_condiment": {
+   "text": "Add bbq_sauce to the dish: hold the bbq_sauce bottle over pan_seen and tip it past horizontal, so that its top is lower than its bottom (pouring itself is not simulated).",
+   "why": "graded: the bottle is above pan_seen (above) and tipped so that its top site is lower than its bottom site (pour); no liquid is simulated"
+  },
+  "book_rearrange": {
+   "text": "Put the three books from the table into the bookshelf, side by side, in order of publication from left to right as seen from the robot (oldest on the left).",
+   "why": "graded: all three books inside shelf_seen and ordered along +x by century (Don Quixote, Pride and Prejudice, The Metamorphosis), each within 0.1 m of the next in y and z (contain and order); upstream says only \"rearrange\""
+  },
+  "find_unseen_object": {
+   "text": "Find the apple for me and take it out of cabinet_seen.",
+   "why": "graded: the apple, which starts inside cabinet_seen, is no longer inside it (not_contain)"
+  },
+  "friction_qa": {
+   "text": "We are going to test the friction of the different object. Choose the object that slides the slowest on a steel ramp: press the button in front of it.",
+   "why": "graded: VLABench's press_button condition on the button in front of the right object (each object stands 0.1 m behind its own button); the upstream text does not say how to choose"
+  },
+  "magnetism_qa": {
+   "text": "We are conducting an experiment to identify whether the objects made of various kinds of materials are magnetic. Choose the object that is magnetic: press the button in front of it.",
+   "why": "graded: VLABench's press_button condition on the button in front of the right object (each object stands 0.1 m behind its own button); the upstream text does not say how to choose"
+  },
+  "reflection_qa": {
+   "text": "Choose the mirror with the largest reflection ratio: press the button in front of it.",
+   "why": "graded: VLABench's press_button condition on the button in front of the right object (each object stands 0.1 m behind its own button); the upstream text does not say how to choose"
+  },
+  "select_painting": {
+   "text": "Please select the painting of style ukiyo-e: press the button in front of it.",
+   "why": "graded: VLABench's press_button condition on the button in front of the ukiyo-e painting (each painting stands just behind its own button); the upstream text does not say how to select"
+  },
+  "hammer_nail_and_hang_picture": {
+   "text": "Please hang the 本所立川 on the wall safely and steadily: drive the nail into the wall with the hammer (VLABench checks that the nail's joint position is between 0.05 and 0.08) and bring the 本所立川 painting to the nail (its grasp point within 5 cm of the nail's).",
+   "why": "graded (HangPictureTask): the nail's joint in [0.05, 0.08] (joint_in_range) and, at some step, the painting's grasp keypoint within 0.05 m of the nail's; upstream does not mention the nail"
+  },
+  "heat_food": {
+   "text": "Please heat cooked_food from tray_seen: put it into microwave_seen, close the microwave's door and press its start button (heating itself is not simulated).",
+   "why": "graded (HeatFoodTask): cooked_food inside microwave_seen, the door closed and the start button in contact, all at once; no heating is simulated"
+  },
+  "play_math_game": {
+   "text": "Please give the answer of the following question by rearrange the number cube in placemat_seen:A mechanic charges different rates to repair the tires of trucks and cars.  For each truck tire that is repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40.  On Thursday, the mechanic repairs 6 truck tires and 4 car tires.  On Friday, the mechanic repairs 12 car tries and doesn't repair any truck tires.  How much more revenue did the mechanic earn on the day with higher revenue? Put the number cubes that spell the answer on placemat_seen, side by side, read from left to right as seen from the robot.",
+   "why": "graded: the answer's digit cubes inside placemat_seen and ordered along +x (contain and order); the upstream text does not say how the answer is read"
+  },
+  "select_billiards": {
+   "text": "Please put the striped_14 in the middle pocket on the robot's right (+x) side of the table, near x = 0.56, y = 0.02.",
+   "why": "graded: only VLABench's target hole counts (BilliardTable adds the containment keypoints to target_hole alone, default container_mid_1 at table-local (0.56, 0.02); the asset's other keypoint sites are commented out); upstream says \"any hole\""
+  },
+  "select_billiards_common_sense": {
+   "text": "Please put the ball worth 7 score in the middle pocket on the robot's right (+x) side of the table, near x = 0.56, y = 0.02.",
+   "why": "graded: only VLABench's target hole counts (default container_mid_1, as in select_billiards); upstream says \"in hole\""
+  },
+  "select_billiards_spatial": {
+   "text": "Please put the striped_14 in the right bottom pocket (the corner pocket near x = 0.52, y = -0.99).",
+   "why": "graded: only the instance's target_hole container_right_1 counts; VLABench's pocket names are not in the robot's frame, so the pocket's position is added"
+  },
+  "select_book_spatial": {
+   "text": "Please take the second book from the left (as seen from the robot) on the top layer out of the bookshelf.",
+   "why": "graded: that book (the_story_of_american_freedom) is no longer inside shelf_seen (not_contain); upstream does not say from which side to count or that the book must leave the shelf"
+  },
+  "select_fruit_common_sense": {
+   "text": "Put the pear on plate_seen (the fruits on the table are pear, peach, mango and orange).",
+   "why": "graded: the pear inside plate_seen (contain); VLABench's text (\"tell some specifics of pear between ['pear', 'peach', 'mango', 'orange']\") does not mention the plate",
+   "kind": "a direct command"
+  },
+  "select_mahjong": {
+   "text": "Put the mahjong of 6 sou on the placemat.",
+   "why": "graded: the tile inside the placemat (contain); upstream says \"pick up\""
+  },
+  "select_mahjong_semantic": {
+   "text": "You are replacing me to play mahjong, and i think it's time to take out ('9', 'man') now: put that tile on the placemat.",
+   "why": "graded: the 9 man tile inside the placemat (contain); upstream does not say where it goes",
+   "kind": "a request in conversation that names the target tile"
+  },
+  "select_mahjong_spatial": {
+   "text": "Put the 7th mahjong from left to right (as seen from the robot) on the placemat.",
+   "why": "graded: the 7th tile along +x inside the placemat; upstream does not say from which side to count"
+  },
+  "select_nth_largest_poker": {
+   "text": "Please pick up the smallest poker card and hold it up (grasped, lifted to z >= 0.9 m).",
+   "why": "graded: the card is grasped by the hand and its root is at z >= 0.9 m (is_grasped and lift); upstream says only \"pick\""
+  },
+  "select_poker": {
+   "text": "Please pick up the poker ace of hearts and hold it up (grasped, lifted to z >= 0.9 m).",
+   "why": "graded: the card is grasped by the hand and its root is at z >= 0.9 m (is_grasped and lift); upstream says only \"pick\""
+  },
+  "select_poker_semantic": {
+   "text": "Please pick up the poker 6 of spades and hold it up (grasped, lifted to z >= 0.9 m).",
+   "why": "graded: the card is grasped by the hand and its root is at z >= 0.9 m (is_grasped and lift); upstream says only \"pick\"; the upstream \"in the interaction\" is an unfilled conversation template",
+   "kind": "a direct command"
+  },
+  "select_poker_spatial": {
+   "text": "Please pick up the 4th poker card from left to right (as seen from the robot) and hold it up (grasped, lifted to z >= 0.9 m).",
+   "why": "graded: the card is grasped by the hand and its root is at z >= 0.9 m (is_grasped and lift); upstream says only \"pick\"; the cards are counted along +x"
+  },
+  "take_out_cool_drink": {
+   "text": "I am so thirsty after sport, I want to drink something healthy cool: take it out of the small fridge and close the fridge door.",
+   "why": "graded (CoolDrinkTask): the juice that starts inside small_fridge is no longer inside it and the fridge door is closed; upstream does not say either"
+  },
+  "texas_holdem": {
+   "text": "We're playing Texas hold'em! Show me your hand on the placemat: put the 6 of hearts, 7 of diamonds, 8 of clubs, 9 of hearts and 10 of spades on the placemat.",
+   "why": "graded: the cards VLABench's get_largest_combination picks (the first five-card combination of the highest rank in its enumeration order: the 6-to-10 straight with the 9 of hearts; the higher 7-to-jack straight on the table does not count) all inside the placemat (contain)",
+   "kind": "a direct command"
+  },
+  "select_chemistry_tube_common_sense": {
+   "kind": "a direct command: VLABench's common-sense variant names the target directly here"
+  },
+  "select_chemistry_tube_semantic": {
+   "kind": "a direct command: VLABench's semantic variant names the target directly here"
+  }
+ },
+ "oracle_source": {
+  "add_condiment": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "book_rearrange": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "complex_seesaw_use": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "find_unseen_object": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "friction_qa": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "hammer_loose_nail": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "hammer_nail_and_hang_picture": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "heat_food": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "insert_bloom_flower": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "insert_flower": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "magnetism_qa": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "play_math_game": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "put_box_on_painting": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "reflection_qa": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_billiards": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_billiards_common_sense": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_billiards_spatial": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_book_semantic": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_book_spatial": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_chemistry_tube": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_chemistry_tube_common_sense": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_chemistry_tube_semantic": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_chemistry_tube_spatial": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_drink": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_fruit": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_fruit_common_sense": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_fruit_semantic": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_mahjong": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_mahjong_semantic": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_mahjong_spatial": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_nth_largest_poker": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_painting": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_poker": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_poker_semantic": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_poker_spatial": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_specific_type_book": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_toy": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "select_unique_type_mahjong": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "set_dining_table": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "set_study_table": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "take_out_cool_drink": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
+  "texas_holdem": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)"
+ }
+}

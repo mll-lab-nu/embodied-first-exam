@@ -17,7 +17,7 @@ from collections import defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-REGISTRY = "ghcr.io/embodied-agent-interface-v2-internal/eai-"
+REGISTRY = "ghcr.io/mll-lab-nu/eai-"
 PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2"}
 LEGACY_PROTOCOLS = {"rcb-limited/2.1"}
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")
@@ -86,7 +86,7 @@ def check_task(task: Path) -> None:
 
     for ref in image_refs(task):
         if ref.startswith("ghcr.io/") and not ref.startswith(REGISTRY):
-            warn("legacy: base image outside the EAI registry (`eai-<sim>`)", f"{name}: {ref}")
+            warn("base image outside the registry (`ghcr.io/mll-lab-nu/eai-<name>`, PROTOCOL §2.4)", f"{name}: {ref}")
 
     test_sh = task / "tests/test.sh"
     if test_sh.is_file():

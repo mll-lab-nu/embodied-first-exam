@@ -56,6 +56,14 @@ results site with `scripts/write_task_results.py --out` outside the repository (
 next to the checkout, gets `<batch>/<task>/<run id>/`; `RESULTS=` skips it), updates `$JOBS/<batch>.summary.md`, and
 stops its lane when a trial shows a model-account failure.
 
+To watch a batch live: `scripts/live_board.py --jobs <JOBS>` (repeatable; stdlib only) serves a page on 127.0.0.1 that
+refreshes every 5 s. It shows every trial as pending, setup, running (agent time against the task's limit), verifying,
+success or failed, with live tokens when the usage gateway runs, the reward, the videos and the tail of the agent's
+output. Pending trials come from `$JOBS/.plan/<batch>.json`, which the runner writes when it starts. Reach the page from
+another machine with `ssh -N -L 8765:127.0.0.1:<port> <host>`; it shows the agent's output, so keep it off public
+addresses. It has no login (every user of a shared host can open it) and serves a running trial's files before the
+runner's secret scan has redacted them.
+
 Runner-side tools (they run on the host, never in a task): `scripts/log_mirror.py` (in the `rcb-log-mirror` container: an
 append-only copy of every trial's `agent/` record that neither the agent nor the host user can delete),
 `scripts/mem_guard.py` (keeps 2 GiB of host memory available by killing the largest benchmark container first),
@@ -63,15 +71,49 @@ append-only copy of every trial's `agent/` record that neither the agent nor the
 `scripts/account_failure_check.py` (structured evidence only: Codex's rate limits and last event, Claude Code's result
 event). `LOG_MIRROR=0` / `MEM_GUARD=0` skip starting the first two.
 
-## Base images until the migration
-`scripts/build_images.sh` and `scripts/push_images.sh` still name every image `<registry>/rcb-<sim>`; the migration
-(PROTOCOL §7) renames them. A benchmark already on the v1.0 names (`eai-<sim>`, D5) builds and tags its image directly,
-with the version from `images/<sim>/VERSION`:
-```bash
-REG=ghcr.io/embodied-agent-interface-v2-internal
-docker build -f images/<sim>/Dockerfile -t $REG/eai-<sim>:$(cat images/<sim>/VERSION) .   # context: the repository root
-docker tag $REG/rcb-<sim>:<ver> $REG/eai-<sim>:<ver>        # a host that already has the same build under the old name
-docker push $REG/eai-<sim>:$(cat images/<sim>/VERSION)      # public images only
+## Base images
+Every base image is `ghcr.io/mll-lab-nu/eai-<name>:<images/<name>/VERSION>` (PROTOCOL §2.4, D5): `scripts/build_images.sh`
+builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token
+that has `write:packages`). New packages in the org start private; an org admin makes them public in the package
+settings (the API cannot). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
+public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
+a private package for org members. Before 2026-10-02 the images were `rcb-<sim>` (several registries) or `eai-<name>`
+under `embodied-agent-interface-v2-internal`; a host with an old tag can `docker tag` it to the new name.
+
+## Web search (off by default)
+`scripts/run_agent_batch.sh` turns the harness's web search off unless `WEB_SEARCH=allowed`: Codex gets
+`--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (PROTOCOL §5). For a bare
+`harbor run`, pass the same option yourself. Codex with ChatGPT login searches by default; an API key can still request
+search directly, which the usage gateway's raw log shows (docs/LEAKAGE.md).
+
+## Usage gateway (token usage per request, optional)
+Off by default: the agent calls its API directly, as Harbor runs it. With `GATEWAY=1`, `scripts/run_agent_batch.sh` starts `scripts/usage_gateway/gateway.py` on the docker bridge (`GATEWAY_BIND`, 172.17.0.1)
+and points the agent's base URL at it (`--ae ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL`; a copy of `AGENT_CONFIG` with its
+provider `base_url`s rewritten and `supports_websockets = false`). The agent is still Harbor's own `codex` /
+`claude-code` with its own credentials: the gateway forwards every request unchanged to the same API, never stores a key,
+and refuses any host that is not a model API (`scripts/set_agent_egress.py` HOSTS), so it is no way around an egress
+allowlist. Under an allowlist the runner adds `--allow-agent-host 172.17.0.1`.
+
+Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts):
 ```
-An image with `images/<sim>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never pushed: `push_images.sh` skips
-it and prints why, and every host builds it locally (the marker file says how, and what licences and data it needs).
+<trial>/gateway/usage.jsonl     one line per request: time, duration, host, path, status, model, input / cached / output tokens
+<trial>/gateway/totals.json     running totals, rewritten after every request
+<trial>/gateway/raw.jsonl.xz    every request and response body (GATEWAY_RAW=1, the default with the gateway on; headers without credentials)
+```
+Input counts what the model read (Anthropic: input + cache read + cache creation; OpenAI: `input_tokens`, cached
+included); output includes reasoning: the same convention as Harbor's `n_input_tokens` / `n_output_tokens`, which the batch
+summary shows side by side. They agree exactly when the agent ends by itself; when it is stopped at its time limit, the
+gateway is higher by the requests the provider completed (and billed) after Harbor's cut-off or that the agent was killed
+before logging (measured 2026-10-01 on 9 benchmarks: the difference is exactly those requests). Token budget: with the gateway on, a trial that reaches `TOKEN_BUDGET_IN` input or `TOKEN_BUDGET_OUT` output tokens
+(default 100M / 10M; 0 = no limit) gets every further model request refused (HTTP 400, "token budget exceeded"), so
+the agent stops; `totals.json` records `over_token_budget = 1`, the batch summary marks it, and `write_task_results.py`
+counts it as failed (PROTOCOL §5). Tested 2026-10-02: Codex 0.159.2 ends its turn on the first refusal, without retrying.
+The raw log stores each conversation item once and a request as references to the items it resends, like Codex's and
+Claude Code's own session files, and is lossless: `scripts/usage_gateway/rawlog.py cat <trial>/gateway` prints every
+request and response in full. The gateway appends to `raw.jsonl.gz` while the trial runs; after each job the runner
+compacts it to `raw.jsonl.xz` (one 1,994-request trial: 5.9 GB as one gzip file per request, the format before
+2026-10-02, 32 MB now; `rawlog.py pack --delete <dir>` converts such `raw/` directories).
+Switches: `GATEWAY=1` (record usage and, by default, raw bodies), `GATEWAY_RAW=0` (usage only; raw bodies are private: they hold the
+whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
+attempts); Codex request bodies are zstd-compressed and are stored as base64, and so not deduplicated, unless
+`zstandard` is installed on the runner host; OpenAI reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.

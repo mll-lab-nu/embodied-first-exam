@@ -9,7 +9,7 @@
 | Family / instance | `robopaint_xingshu_feng` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: xingshu-l-oracle-final0928, xingshu-l-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (a67040a8: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on tianlangqiqing and zhi), tooling snapshot 23 (ccb213d0: the scorer; re-scores bit-identical), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only; protocol v1.0 gave the standard service, collect hook, grader and oracle client crash recovery. Not re-run on this version (static validation only). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robopaint:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task
 Standard-mode twin of `robopaint-xingshu-feng-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.2` client

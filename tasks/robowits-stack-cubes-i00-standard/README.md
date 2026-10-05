@@ -9,7 +9,7 @@
 | Family / instance | `stack_cubes` / seed 0 |
 | Oracle | `partial` — Reference solution solution/oracle_replay.py, which streams the privileged oracle's recorded joint rows (solution/oracle_qpos.npy) through the client. It scored 1 under Harbor -a oracle on the dev/qineng 9eb18edf version of this task (protocol 2.2, then named rcb-limited): job v22-laptop-oracle-stack-cubes-0413, trial robowits-stack-cubes-i00-limited__Yw2oaio, 2026-09-29 (laptop, Intel; success=1, live 1, replay 1, deterministic 1). Same since then: the frozen instance (state hash 41c4d7e7d7193b0d), the joint rows (equal to that run's recorded trajectory) and the tooling rcb_robowits.py. Changed since then, so the label is partial: the grader (this PR: the crash-recovery fields and infra_error), the sim adapter server.py and the shared layer rcb_limited.py / rcb_client.py (this PR: crash recovery), the collect hook, the client image and pins, and the oracle player (this PR: it recovers from a crash). Not re-run on this version (static validation only, 2026-10-01). |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-robowits:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robowits:0.1.1` |
 
 ## Task
 Build a stable two-layer stack so the red cube's center is above the green colored dot. The same frozen instance as

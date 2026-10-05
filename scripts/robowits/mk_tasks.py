@@ -38,7 +38,7 @@ import task_conventions as TC  # noqa: E402  the protocol's conventions: every g
 TASKS = ROOT / "tasks"
 SHARED = HERE / "shared"
 LAYER = ROOT / "scripts" / "eai_standard"
-IMAGE = f"ghcr.io/embodied-agent-interface-v2-internal/eai-robowits:{(ROOT / 'images/robowits/VERSION').read_text().strip()}"
+IMAGE = f"ghcr.io/mll-lab-nu/eai-robowits:{(ROOT / 'images/robowits/VERSION').read_text().strip()}"
 # the one client base of every standard agent container and verifier, pinned by digest, and its pip pins (PROTOCOL §2.4):
 # scripts/eai_standard/client.env and the file it names (checked by ci_checks/check-standard-client.sh)
 CLIENT_ENV = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
