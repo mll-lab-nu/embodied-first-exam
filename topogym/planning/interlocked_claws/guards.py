@@ -16,7 +16,8 @@ class ClawsGuardedSequence(ActionSequencePolicy):
 
     def __init__(self, actions, *, pieces, hands, forbidden_force_n=.01, piece_force_n=5.,
                  drift_translation_m=.003, drift_rotation_rad=.05, integral_gain=.3, integral_limit_rad=.06,
-                 relative_targets=None, kin=None, servo_side=None, wrist_load=None, servo_gain=.5, servo_step_rad=.01):
+                 relative_targets=None, kin=None, servo_side=None, wrist_load=None, servo_gain=.5, servo_step_rad=.01,
+                 initial_offset=None):
         super().__init__(actions)
         self.servo_gain, self.servo_step_rad = servo_gain, servo_step_rad
         self.servo_last = None
@@ -37,6 +38,11 @@ class ClawsGuardedSequence(ActionSequencePolicy):
         # executed posture, not just the command, follows the checked plan. Only arm joints are corrected.
         self.integral_gain, self.integral_limit_rad = integral_gain, integral_limit_rad
         self.offset, self.last_command = {}, {}
+        # Optional starting value of that correction (side -> arm offset): the droop the held load already
+        # causes (actuator target - measured joints). The first planned row is the measured posture, so a zero
+        # start drops the hold target onto the sagged posture and both arms sag further in one step.
+        for side, offset in (initial_offset or {}).items():
+            self.offset[side] = np.clip(np.asarray(offset, float), -integral_limit_rad, integral_limit_rad)
         self.pieces, self.hands = tuple(pieces), dict(hands)   # hands: side -> (hand link name, piece name)
         self.forbidden_force_n, self.piece_force_n = forbidden_force_n, piece_force_n
         self.drift_translation_m, self.drift_rotation_rad = drift_translation_m, drift_rotation_rad
