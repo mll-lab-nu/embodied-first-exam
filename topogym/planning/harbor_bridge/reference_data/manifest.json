@@ -138,14 +138,14 @@
       "source": "runs/test_results/buzz_staged_inputs_20260929/medium_traverse_guide.json"
     },
     "buzz_wire_3d/easy/selection.json": {
-      "sha256": "1054130e25537a5483152694a4cb2387f79f0d889f47289b0c8fe4ca508ddc6d",
-      "bytes": 4227,
-      "source": "runs/test_results/buzz_staged_easy_20260929_01/qualification/selection.json"
+      "sha256": "f75a6c7376d187e6238b7a3250e1312ee85038721946e8828df1fbec28d73f8c",
+      "bytes": 5901,
+      "source": "runs/test_results/buzz_staged_easy_20260929_01/qualification/selection.json + oraclefix 10: turn_2 candidates widened (2026-10-04)"
     },
     "buzz_wire_3d/easy/recipe.json": {
-      "sha256": "8f43394923052c6c1c6c768ce30ba66d5b4b576dc63311eaa282b75e490683a1",
+      "sha256": "c184d0845479012fac35ebb91c2a9dcae0fb739116b8cb09f2ab86c780d00597",
       "bytes": 1601612,
-      "source": "Derived from runs/test_results/buzz_staged_easy_20260929_01: report, audit, source geometry and complete policy input"
+      "source": "Derived from runs/test_results/buzz_staged_easy_20260929_01: report, audit, source geometry and complete policy input + oraclefix 10: selection.json re-pinned (2026-10-04)"
     },
     "buzz_wire_3d/medium/policy_actions.json": {
       "sha256": "3a8d182fcadb84575bbc5659313213016fb7369b821a87cb7dd6253468b0b60d",
