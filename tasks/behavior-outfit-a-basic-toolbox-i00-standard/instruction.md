@@ -24,7 +24,7 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (waits while Isaac Sim starts and loads the scene, ~3-5 min)
+r = Robot()                                   # connects (the service is ready before your time starts)
 spec = r.spec()                               # actions, cameras, robot_spec, world, kinematics, budget, static facts
 
 obs = r.get_obs()                             # current frames from the robot's 3 cameras: obs.last[cam] -> uint8 (224,224,3)

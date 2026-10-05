@@ -23,7 +23,7 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (waits while Isaac Sim starts and builds the scene, ~2 min)
+r = Robot()                                   # connects (the service is ready before your time starts)
 spec = r.spec()                               # action types, dims, joint limits, cameras, budget, robot spec
 
 obs = r.get_obs()                             # current frames from 3 cameras: obs.last[cam] -> uint8 (H,W,3)
