@@ -15,7 +15,7 @@ objects and navigation, on a fixed-base arm and a mobile manipulator.
 
 | family | upstream package | robot, control period | variants | kept episode (i00) | horizon |
 |---|---|---|---|---|---|
-| pick | `procthor-objaverse/FrankaPickHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #12: a pestle against a wall | 303 steps (20 s) |
+| pick | `procthor-objaverse/FrankaPickHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #118: a miniature castle tower on a cluttered toilet tank | 303 steps (20 s) |
 | pick-and-place | `procthor-objaverse/FrankaPickandPlaceHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #0: a GPS into a wooden bowl | 606 (40 s) |
 | pick-and-place-next-to | `procthor-objaverse/FrankaPickandPlaceNextToHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #5: a flat moth beside bread | 455 (30 s) |
 | pick-and-place-color | `procthor-objaverse/FrankaPickandPlaceColorHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #52: a soap bottle into the light green bowl | 606 (40 s) |
@@ -27,10 +27,12 @@ objects and navigation, on a fixed-base arm and a mobile manipulator.
 ## Instances (`scripts/molmospaces/make_instances.py`)
 Per family, three candidates in the package's order among the episodes that pass the filters (the first showing each
 variant, then the next of either, each in a different house); `keep` in `families.json` ships one as `i00`: the hardest
-and most representative in GPT-6 Luna's runs of all 24 (standard failed on it, privileged completed it). Filters: no
-public MolmoBot trajectory of the house (`allenai/molmobot-data`, val); upstream builds every listed object; not done at
-t = 0; no identical copy of the target or receptacle (the text could not tell them apart); navigation: every candidate
-target has the target's WordNet synset. Difficulty, measurable and the same for every model:
+and most representative in GPT-6 Luna's runs of all 24 (standard failed on it, privileged completed it; pick's three,
+chosen again under the licence filter below, ran on 2026-10-04). Filters: no public MolmoBot trajectory of the house
+(`allenai/molmobot-data`, val); upstream builds every listed object; not done at t = 0; no identical copy of the target
+or receptacle (the text could not tell them apart); no asset whose licence forbids commercial use (upstream's per-object
+record: the image redistributes every asset the episode loads); navigation: every candidate target has the target's
+WordNet synset. Difficulty, measurable and the same for every model:
 
 | families | rule |
 |---|---|
@@ -73,8 +75,9 @@ resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: 3600 s, no st
 - `images/molmospaces/prepare_assets.sh`, then the image build: the measured environment (`requirements.txt`,
   `--no-deps`); upstream's scripted experts replaced by raising stubs in the same layer (`scrub_experts.py`); the assets
   the instances open under `strace` (everything else deleted, no grasp file); every instance's t = 0 hash checked again
-  without network. Upstream's generic A* and grasp-generation library code stay installed. Assets CC BY 4.0 /
-  ODC-BY 1.0, a few Objaverse objects CC BY-NC.
+  without network. Upstream's generic A* and grasp-generation library code stay installed. Licences: scenes and
+  AI2-THOR objects CC BY 4.0; Objaverse objects ODC-BY 1.0 and each its creator's CC BY / BY-SA / CC0, listed with
+  their attributions in the image's `/opt/molmospaces/ATTRIBUTION.md` (the build fails on a non-commercial one).
 - `python3 scripts/molmospaces/mk_tasks.py [--check]` writes all 16 task dirs from `families.json`, `instances/`,
   `template/<mode>/`, `shared/` and `scripts/eai_standard/`; re-running leaves `git diff tasks/` empty.
 
