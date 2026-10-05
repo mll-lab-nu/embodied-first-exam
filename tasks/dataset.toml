@@ -3671,115 +3671,243 @@ digest = "sha256:f8471c97dbee0a2ba501198a62b3893f4c74302f1d795084514de9caa758706
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-jar-transport-i14-privileged"
-digest = "sha256:f93e633ffaa8aa97afadd8cd5d6d619518555809fc098d98189e4625c48a5586"
+digest = "sha256:aa1034d0c93fb5a1d8d418733af1935888cda3e43add4ad5dc52f8ec1ad69bd5"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-jar-transport-i14-standard"
-digest = "sha256:c23b85a7dc43a930fd499edb7d5ddfec1e530d216f799945098f269b0dad6a0e"
+digest = "sha256:a4bdd35da8171b20010b61468c12c75413a560936c22b37c9bb77382c4023dea"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-cabinet-pickup-i19-privileged"
-digest = "sha256:742d3ae2d83a32e0d3cbf70ef25f89c722693cf1b72fb56f7dd73ce6c8d080cd"
+digest = "sha256:4c4aefc0dc7566e5f16ce8e4886d6dad245e999bbfe38662e9bac137576f8f0b"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-cabinet-pickup-i19-standard"
-digest = "sha256:51cd320853157ce9480550e069068be8cd3a49cfd1d4ecf452d695b0d638b6ec"
+digest = "sha256:f12442b49af159dfc61ab30c62e4d24bfdb949f9247bb721386598ff12aa96af"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-dusty-transfer-i03-privileged"
-digest = "sha256:e39de82c6ac29a4e7cf4710b2c941c5cb689feb66d0c15c9ec4612516324d80e"
+digest = "sha256:65828d7f4d2132b4af87d30c2c6c80bc9ef8b897a7195b95cab6ebc6d6b55829"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-dusty-transfer-i03-standard"
-digest = "sha256:e8995e13a900d22bfd347358f0b4baa0053193591b1bf81bd840a9e5e1826501"
+digest = "sha256:5e460d2a14692da424e2ea6b72cfb6e7ea7f07d3afd17f00b9920783f4d0f54d"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-stack-retrieve-i21-privileged"
-digest = "sha256:1dfc85dcf545961b7b1c9cc08cfb6a2a876e712fe0fd419031878f16a5782178"
+digest = "sha256:d30846d89d4d946f9511fefd2fabf3b4dadeaf1235e4f9344f7790f1ea7d2a63"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-stack-retrieve-i21-standard"
-digest = "sha256:3cec7e5796dcd558457582a8403363a698795e4467bb6683589ce39d1a768076"
+digest = "sha256:67d53a1a56626d02efe1442d85997f5f7c6d32562ff767e1f572263739eefda5"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-dusty-transfer-i24-privileged"
-digest = "sha256:6f782299c0457a173092532cd950708c64a639f212c58eb8566de300f893c44c"
+digest = "sha256:ffe4cd901f23225e887eba9db911f40c2a98a0c883993c561b67a8e1a8dc3bb1"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-dusty-transfer-i24-standard"
-digest = "sha256:2acb94a8bdd9d1321127f001b52c109b8779bb3a692d12125c861d9971abc9ed"
+digest = "sha256:55684baf5e615f1656ae52aca8f94d274638a94876de699bf6ccbb6e08331e06"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-stack-retrieve-i10-privileged"
-digest = "sha256:47920d850a59f3669c6603ccf475affe0bdb0ef197b9d4d93e0f7bbf2c90966a"
+digest = "sha256:707381d7bcdecbaa904abf945ea077a4d285a528bd4b1957a470d36dbdbaf4e0"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-stack-retrieve-i10-standard"
-digest = "sha256:8263de4dc5379d5e29efcf89d1673fa7eab5cc86ca137ed4a5f495b0a0c7e86d"
+digest = "sha256:661f7b09e442078ec9becc3476c2d789f41fe688686508f654ce96b7df1cf59f"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-cabinet-pickup-i20-privileged"
-digest = "sha256:bd3998ebd1ca4f9517cd085c2a4e539a8485b97368b8f9480f1c361ed731bd23"
+digest = "sha256:92e9f9c483e1b6d746c15b320add86ce1dd5d46d2dd5acbf2fcbc52281ed5fa5"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-cabinet-pickup-i20-standard"
-digest = "sha256:f4765f1ef73c7da42f6ea601abe68ec9e4cf23a3e736880bc17c5bb0ff46fbc6"
+digest = "sha256:b139018b331fb0ae48d092f850707c0c6fbaab75c0fbb470bba13c8a154aed1a"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-lid-transport-i16-privileged"
-digest = "sha256:c01ed35922bd8fa60a8593ebb9c5cbfcd0faa5f5707813488306c07c8682cd35"
+digest = "sha256:852f1ce5ac807f18f3130e1d492d9fedf1df028563ef05400d40ad97e225f531"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-lid-transport-i16-standard"
-digest = "sha256:5b6df7d7349f169b01f9021118bb4b1756d57b843d17adfa860265e439b2181b"
+digest = "sha256:216def653eda93725f629da66e0b024a49cae8f8e79d25fca87f986f04b91f9b"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-jar-transport-i02-privileged"
-digest = "sha256:1afabef2b99943140475b52f4327455c6d8e97e9fff305f10ef4a08884f41960"
+digest = "sha256:8acf5e497d776447dee32f7663df275f858df9f41dc1ad7161b2ab1c3a92671e"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-jar-transport-i02-standard"
-digest = "sha256:2d77de4ad7a7497bee8fadda2f356b29a7cac1a33455af8adb94cefaee5f1fa5"
+digest = "sha256:6cd2a6e31d2e66e5a9be71fd114b0ad3ac53ff0e1269c2370882d6cde7137792"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-lid-transport-i12-privileged"
-digest = "sha256:4a11616eb7d2634f537130f890a20a80669c75a1774da79b4c0bfe42eb668b3c"
+digest = "sha256:4c2a225d65571b0141c8b3b4f7e095653480ff9c42b3b06e4503367e73441f49"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-lid-transport-i12-standard"
-digest = "sha256:ba4b9d331c93aa03bec4424ac55f91855dcfd9daffdedaa4691348ea3eaff23b"
+digest = "sha256:3b823a38a5d7a7a8f140c1004df8c13c0a261ef4efe96467ce0eec461ed7640d"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-cabinet-pickup-i22-privileged"
-digest = "sha256:0a6d054c8a4b9b33d2671c0be7383c9b800cdf49bf854b1218f99107ee6ef4c7"
+digest = "sha256:a2cfeec3e14e7beba06f4192ecbfe50435a2d9e4bbeba862134eec3d00734e37"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-cabinet-pickup-i22-standard"
-digest = "sha256:282b5481e5864353101baf6f51ff927568a59e545515f1dfad5de565c369ff8f"
+digest = "sha256:c87159556ff24dbfea5dc3aa2c46a6872dfc8e8d8e8079f7f816a9cf777e492f"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-stack-retrieve-i08-privileged"
-digest = "sha256:fc21d54897b4762f4446b49724fddeb6aa7362dd43f61a8a04c66214c474b7a6"
+digest = "sha256:552fab01c4ec41cca24ae5b866e71982808c401556847563286b1dc279eb9320"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-stack-retrieve-i08-standard"
-digest = "sha256:1266cb309c4123d5086e5c3a0d604921072366a7a150138b7cc26b7206514382"
+digest = "sha256:a7a7b07d359e22664f5c59c02f0ccfeb5dadf500853b788c3b842291d9124fb9"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-jar-transport-i13-privileged"
-digest = "sha256:fa2697823434ae8736f0b620abf17f3783340b4638727424ab84946dc45d92d3"
+digest = "sha256:cbe886aebed3148e2bae5d5faddb347e182e79457fa7e3de3fa3db974717ced3"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-jar-transport-i13-standard"
-digest = "sha256:bf40cb9eb2edffc259cc01e3dca5e5244c01fb1ad20000be39bd4d819e056d60"
+digest = "sha256:1dd409c3f3def8e0ca0b40ac74800be5e32045c45231dfe841e89131c3f40f69"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-lid-transport-i07-privileged"
-digest = "sha256:3f0c4893faab500495e9df801dbd6c5062926c2a7403fea9c3c73910557d9a7a"
+digest = "sha256:c86d3d706f0c521d6bf77991869962e3f7cb1b57db589bf00b0ea3de8c7c822a"
 
 [[tasks]]
 name = "robot-coding-bench/maniguard-lid-transport-i07-standard"
-digest = "sha256:b90922636b5a6455e40ac24c1b10a31ded3d674b42437dfe8becf7279964645d"
+digest = "sha256:5ecd452e7b8039e7b141f67e49032feddeada8a3ee4fc6596f6e3d8f409cf042"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-cabinet-pickup-i26-privileged"
+digest = "sha256:58b0cfd407a3ee7bc7f8692129fade1309667b7be416f87bd2d2c387b1f1f884"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-cabinet-pickup-i26-standard"
+digest = "sha256:28cb0b249f7cd9553a6ca3041b682f39407160c53ff915121585768a19456e89"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-cabinet-pickup-i29-privileged"
+digest = "sha256:ce0eed1fde1e9da94821a32415bb4762ad447acb15f066840997732b6dbe9cd0"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-cabinet-pickup-i29-standard"
+digest = "sha256:e6d6b7ff1a25730898e9d1bf18a9322aacdb32027b6c18ca4a7c32bd77818271"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i09-privileged"
+digest = "sha256:289f3adc6f5512b7c26a20c373b540785cdd0175a229662872e7553bfc669a4a"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i09-standard"
+digest = "sha256:4cba496a2b23ebeff0080e5b599642771b601162244b0fae191e4d6996834443"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i15-privileged"
+digest = "sha256:e56aa593bbae304ff8d538b1171195d1ce2b0e9cc63f12f2fc3c84c088117c41"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i15-standard"
+digest = "sha256:58b25b22afaf6e863e05d595357a9e5be84da90ac55af718d0f8d8b85b22e170"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i23-privileged"
+digest = "sha256:6da86c8d7171b4fe70fa0c3315745547efdfc6316c7801be922686e611d85447"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i23-standard"
+digest = "sha256:7bf1d8c30545b987510e985781b32adb688d66c69d81004a115e0451e014532f"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i25-privileged"
+digest = "sha256:09323e8343dfe8b630c4d46ae66b71b462345fc14b3dae1de4df1d451fff2780"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i25-standard"
+digest = "sha256:4aa9534b32e063a97d0870cbbccfb63ab46bde23763db6ed0abd333b0507f691"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i28-privileged"
+digest = "sha256:d4e4a0a87b03f76cc64d5d8edce3b960aa82dffe6ed77569c95e14e31dbeac36"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-clutter-pickup-i28-standard"
+digest = "sha256:1871f70ad4a4ae8d653f76dfe9596b6555b19d18f60e4f051fbfd408672fad11"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-dusty-transfer-i16-privileged"
+digest = "sha256:7554b13b567429d002f491b6e98e032f2d16af0e4fdde950642ff1aedddd3d0a"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-dusty-transfer-i16-standard"
+digest = "sha256:fc742889addce1cc92add7902d2c5ba29cd44b25586ecd61165df36cc76748b6"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-dusty-transfer-i20-privileged"
+digest = "sha256:9e06b1310680d1b4fa7cba93f8e294e9a627f21ae818ea05ecf5a7ee4d21a41f"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-dusty-transfer-i20-standard"
+digest = "sha256:fd77f674945a22807ba90de7280830445b2d872321656b16b8289444ae36b980"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-dusty-transfer-i25-privileged"
+digest = "sha256:bc30927924646cb2edb9bf6f0585c8ae300da12ba25a929c1f9c73aa706468a5"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-dusty-transfer-i25-standard"
+digest = "sha256:9402647f5326e687538483250ceec1e0a3309e3851f900d3695c96038b73db54"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-jar-transport-i09-privileged"
+digest = "sha256:9ff7af6612d18a53c5adc5f8c2ccf5933169b2f0b695c3e20b35641713c9c939"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-jar-transport-i09-standard"
+digest = "sha256:0280b4fa985cf995adf62c9778b2f0f0bd0284986c6f3c14526398ad791fd3d2"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-jar-transport-i25-privileged"
+digest = "sha256:9733f8760fcec175be207b76d7cefe88d4d75c1b0ab553eed7610c648e574c22"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-jar-transport-i25-standard"
+digest = "sha256:e6517708281758d5dee255d48c5252b6033b63920954b83e3278ae37316bf8c5"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-lid-transport-i06-privileged"
+digest = "sha256:56298912573113555f59674b736a834b1a1424397a898d2f2750254a0b65f756"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-lid-transport-i06-standard"
+digest = "sha256:65e5e7fbc9e9f43b1d44392bf254322cfd0b55a1a7989e2c6e4318da2a7d11c3"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-lid-transport-i15-privileged"
+digest = "sha256:b9d02ad44053db3d30f77bab86b3019890c64e0ad55b79bd61f53a2b13924edc"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-lid-transport-i15-standard"
+digest = "sha256:b5e344eacb144887c75ac7caf1b5f6a68050f883d3ad730d19a64ee792e2b956"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-stack-retrieve-i12-privileged"
+digest = "sha256:9bba213a5ccd5031b7cc7f8e7f8c6ab5d1e38c111150ac0a8f17c6302d3d6068"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-stack-retrieve-i12-standard"
+digest = "sha256:da4c45cb2567c730a295a93abd9d7c098192b843b9e3775032dea80e5f954c02"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-stack-retrieve-i13-privileged"
+digest = "sha256:b3634a322d0851421815f3a80806ffb32eaa3a4de22b608443bb4d8f58a7801c"
+
+[[tasks]]
+name = "robot-coding-bench/maniguard-stack-retrieve-i13-standard"
+digest = "sha256:a3b6b9ddedf9ceb86626c113816523c3454b486c106c41d18b504a9a41d6be3e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-bringing-paper-to-recycling-i00-privileged"
