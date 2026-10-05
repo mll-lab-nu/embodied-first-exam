@@ -124,8 +124,8 @@ def assess_trial(job, task, mode, lock, *, agent="oracle", returncode=0):
                 # was reported as an evidence failure and stopped the queue.
                 expected = all(successes)
                 if "strict_goal_reached" in reward:
-                    expected = (expected and bool(reward["strict_goal_reached"])
-                                and not reward.get("success_pending_review", 0))
+                    expected = (expected and not reward.get("success_pending_review", 0)
+                                and (bool(reward["strict_goal_reached"]) or not reward.get("strict_replay_required", 1)))
                 if reward.get("all_success") != int(all(successes)) or reward["success"] != int(expected):
                     raise BridgeError("Independent replay successes disagree with the grade")
                 trajectory = trial / "artifacts/app/output/trajectory.npz"
