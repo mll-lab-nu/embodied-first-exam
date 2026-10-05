@@ -4,14 +4,15 @@
 # lettering, acrylic, oil; line): rcb_brush.py / rcb_brush_score.py (brush families), rcb_paint.py / rcb_paint_score.py (line),
 # rcb_scorer.py, environment/rcb_client.py and the limited sim service environment/sim/server.py. A tooling change is rolled out
 # to every family of the stack at once, each with its own re-validation (new rule features are opt-in per task through the
-# instance's success rule, so an unchanged rule scores exactly as before).
+# instance's success rule, so an unchanged rule scores exactly as before). RoboPaint-strict (tasks/robopaint-strict-*, one
+# "family" here) uses the same files plus its rules module rcb_brush_strict.py.
 # Usage: check-robopaint-tooling.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 - "${1:-$root/tasks}" <<'PY'
 import collections, hashlib, os, sys
 tasks = sys.argv[1]
-NAMES = {"rcb_brush.py", "rcb_brush_score.py", "rcb_scorer.py", "rcb_paint.py", "rcb_paint_score.py", "rcb_client.py"}
+NAMES = {"rcb_brush.py", "rcb_brush_score.py", "rcb_scorer.py", "rcb_paint.py", "rcb_paint_score.py", "rcb_client.py", "rcb_brush_strict.py"}
 seen = collections.defaultdict(lambda: collections.defaultdict(dict))   # family -> role -> {sha: first task}
 for t in sorted(os.listdir(tasks)):
     if not t.startswith("robopaint-") or not os.path.isfile(os.path.join(tasks, t, "task.toml")):
