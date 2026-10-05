@@ -7,7 +7,9 @@ by a Spot-compiled monitor. It runs on BEHAVIOR-1K **v3.7.2** (OmniGibson 3.7.2 
 `simulator = "maniguard"`, `robot = "franka-panda-longfinger"`. Tasks: `maniguard-<family>-i<NN>-privileged` and the
 standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the ManiGuard-Bench task index, base level.
 
-Status (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy
+Status (2026-10-04): 30 tasks, 5 per family in all 6 families (`families.json`): the 14 tasks of the hard shortlist with a `full` oracle (below), and 16 tasks added for variety with `oracle = "none"` (second table). Built and run on two hosts: an RTX 4090 Laptop GPU and lab's RTX PRO 6000 Blackwell (both driver 580.178.04; see "Other hosts").
+
+First 14 (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy
 smoke (`jar_transport/task_0000`) passes in the image. The included tasks below are frozen (the same state hash and
 object poses in fresh containers, also without network) and have a `full` oracle in both modes: a time-resampled public
 demonstration (lid 16, lid 7 and cabinets 20 and 22: with one step redone on the tooling) that Harbor's oracle run
@@ -33,6 +35,31 @@ cannot hold under the handle arch; replaced by `lid_transport/task_0007`). The o
 | `maniguard-stack-retrieve-i08` | `stack_retrieve/task_0008` | `67161e85980b5298` | 1577 |
 | `maniguard-jar-transport-i13` | `jar_transport/task_0013` | `30abf76fe0a831ff` | 552 |
 | `maniguard-lid-transport-i07` | `lid_transport/task_0007` | `d7a82682cd27834f` | 1881 |
+
+Added 2026-10-04 for variety (user decision: 5 tasks per family, the 14 above kept; per family the variants that differ most
+from those, in objects, support, layout and goal, leaning hard; `clutter_pickup` is new). Frozen on lab's RTX PRO 6000 with
+`make-instance`; a second fresh load gave the same hash for every one. `oracle = "none"` in both modes: `oracle_evidence`
+cites ManiGuard's own scripted demonstrations of the task (`datagen-<family>-v1-joint-5cam`, episodes 40·NN to 40·NN+39),
+never copied into the task and not replayed here.
+
+| Task | ManiGuard-Bench | State hash | Why it is here |
+|---|---|---|---|
+| `maniguard-cabinet-pickup-i26` | `cabinet_pickup/task_0026` | `9f0df8b55512a085` | a round, rolling head cabbage (15 cm); conference table |
+| `maniguard-cabinet-pickup-i29` | `cabinet_pickup/task_0029` | `66b0d5f46c15f14f` | a 6.5 cm chocolate cake; a 19 cm glass cruet in the drawer's path; round coffee table |
+| `maniguard-dusty-transfer-i25` | `dusty_transfer/task_0025` | `34f583c2f9bf3d9c` | the family's smallest food, a 2.5 cm garlic clove, into a long-handled saucepan |
+| `maniguard-dusty-transfer-i20` | `dusty_transfer/task_0020` | `ed90dd164ff74206` | potato from a platter into a deep mixing bowl; steel kitchen table; another sponge |
+| `maniguard-dusty-transfer-i16` | `dusty_transfer/task_0016` | `7ea4b07f85b21d28` | potato from a flat chopping board into a deep stockpot at the reach edge |
+| `maniguard-jar-transport-i09` | `jar_transport/task_0009` | `9916236d78d2ff16` | the third jar model, lid open about 160°; the family's longest carry (42 cm) |
+| `maniguard-jar-transport-i25` | `jar_transport/task_0025` | `38c331dc1d5f4f70` | on a tall bar; the sphere 29 cm above the bar top |
+| `maniguard-lid-transport-i06` | `lid_transport/task_0006` | `3463868903df88b2` | tupperware and lemon; the lid 0.6 m away; the family's longest carry (1.03 m) |
+| `maniguard-lid-transport-i15` | `lid_transport/task_0015` | `942a6d9824503c4a` | a storage box with half a Brussels sprout; glass-topped table at the reach edge |
+| `maniguard-stack-retrieve-i13` | `stack_retrieve/task_0013` | `803c1af818aa3c63` | the family's tallest stack: four nested bowls (31 cm), the bottom one out |
+| `maniguard-stack-retrieve-i12` | `stack_retrieve/task_0012` | `aad13a21b20c4d01` | three tippy face-cream bottles on a pop case; a nightstand |
+| `maniguard-clutter-pickup-i28` | `clutter_pickup/task_0028` | `2ef0663763b82cb5` | the family's densest pack (nearest neighbour 8.6 cm); a 2.3 cm sphere; a bar |
+| `maniguard-clutter-pickup-i15` | `clutter_pickup/task_0015` | `be98dc0729e59682` | a tall golden goblet into a raised sphere 0.65 m away |
+| `maniguard-clutter-pickup-i25` | `clutter_pickup/task_0025` | `af2da06ca81fa7eb` | a shallow 17 cm bowl carried 0.73 m, the family's longest carry |
+| `maniguard-clutter-pickup-i09` | `clutter_pickup/task_0009` | `23d5d2418f027373` | a small mug from a dense pack; a 2.6 cm sphere; a low coffee table |
+| `maniguard-clutter-pickup-i23` | `clutter_pickup/task_0023` | `021f30c779dc2819` | a top-heavy cocktail glass among a 25 cm vase and a wineglass; a raised sphere |
 
 ## Prerequisites (every ManiGuard run)
 - **The image** `ghcr.io/mll-lab-nu/eai-maniguard:<images/maniguard/VERSION>`, built on the host
@@ -63,13 +90,18 @@ cannot hold under the handle arch; replaced by `lid_transport/task_0007`). The o
   `template/<mode>/` and `scripts/eai_standard/`. Every text that is in the task files (prompt, goal region and conditions,
   the LTL specification and its thresholds) is rendered from `instances/`, so the instruction states what the verifier
   checks. `--check` only compares; CI runs it.
-- The 20 shortlisted dry tasks (ranked hardest first; ManiGuard contributes at most 15 jobs) are in `families.json`; the
-  included ones are in the status table above. Change of 2026-10-03 (user decision): the first shortlist had
+- The 20 shortlisted dry tasks of 2026-10-03 (ranks 1-20, hardest first) and the 16 variety tasks of 2026-10-04 (ranks
+  21-36) are in `families.json`; the included ones are in the status tables above. Change of 2026-10-03 (user decision): the first shortlist had
   `lid_transport/task_0023` (rank 8) and `task_0021` (rank 19), both `lid_transport_liquid`, which ManiGuard's family runner
   evaluates with GPU dynamics (`EVAL_USE_GPU_DYNAMICS` for every *liquid* pipeline), so they are not dry; they were replaced
   by the hardest dry lid tasks of the same kind, `lid_transport/task_0016` (a cap on a jug, the sphere 0.15 m above the
   table) and `task_0007` (the smallest dry-lid sphere, 4.3 cm, 0.89 m from the jar). The tooling follows the runner for any
   liquid task (`instance.json` `gpu_dynamics`).
+- `clutter_pickup` (added 2026-10-04): the image's `maniguard-keep.txt` copies the eval configs of the first five families
+  only, so the tooling carries the values of the pinned `configs/eval/clutter_pickup_joint.yaml` (a1b6444b3; assisted
+  grasping, upstream horizon 1100 steps) without the keys that name upstream's dataset, output and policy-server paths, and
+  uses them only when the image has no such file: no image rebuild. Its liquid pipeline (26 of 55 tasks) needs GPU dynamics
+  and is out, as for the other families.
 - New task: set `include: true` and write its texts in `families.json`, run `make-instance` in the image to freeze it
   (below), run the generator and `cd tasks && harbor add --scan .`.
 
@@ -239,6 +271,36 @@ into `scripts/maniguard/instances/` and the task dirs, `instances/NOTICE`). The 
 carry the same licence; each `README_oracle.md` names its source. The long-finger robot asset: Apache-2.0.
 BEHAVIOR-1K code: MIT; the BEHAVIOR Data Bundle: no redistribution (mounted, never copied). Isaac Sim 4.5 / Omniverse Kit:
 NVIDIA proprietary, hence BUILD_ONLY. Spot: GPL-3.0-or-later (in the never-distributed image only).
+
+## Other hosts (lab, RTX PRO 6000 Blackwell, 2026-10-04)
+Measured while validating the first 14 tasks on a 256-core host with RTX PRO 6000 Blackwell Max-Q GPUs (driver 580.178.04),
+image built from this recipe with the same locks:
+- **Frozen loads and oracles** (Harbor runs of all 14 privileged oracles and `nop`s and of the standard twins validated so
+  far). Cabinets 19, 20 and 22, jars 2, 13 and 14 and lids 7, 12 and 16 load to their recorded hashes exactly; dusty 3 and 24
+  and stacks 8, 10 and 21 load within the tolerance (`instance_ok`, not `instance_exact`). Every replay on that host is
+  deterministic (fresh replays agree with each other and with the live run). 13 of the 14 oracles score 1 and reach their
+  strict goals at the laptop's control steps (dusty 24: step 969 instead of 972); every `nop` scores 0. The exception is
+  dusty 3: its structured state dump differs from the laptop's in two leaves only (the desk's y position by 5.7e-6 m, the
+  tupperware's orientation by about 7e-9), and from that start the laptop-made open-loop oracle (wipe, then pour) misses
+  its strict goal (reward 0 in both modes). The 16 tasks of 2026-10-04 were frozen on that host; `nop` spot checks (cabinet
+  26, clutter 28 and lid 15 privileged; clutter 28 and stack 13 standard) score 0.
+- **torch.** torch 2.6.0+cu124 has no sm_120 kernels; the dry tasks never use torch on the GPU (no CUDA error anywhere), so
+  the tooling, the oracles and the replays run unchanged. GPU-dynamics (liquid) tasks would need a cu128 build.
+- **Rendering.** Isaac Sim 4.5's real-time RTX mode renders heavy per-pixel noise there (mean |Laplacian| of a static camera
+  about 40-50 against 5-8 on the laptop, for the same state; no renderer error is logged); TAA, FXAA, DLSS quality, DLAA and
+  turning off sampled lighting, indirect diffuse, ambient occlusion, reflections and shadows do not remove it. The path
+  tracer with the OptiX denoiser renders clean images on that GPU (about 4-6). Isaac Sim's `SimulationApp` sets the renderer
+  from its own launch config (`renderer`, default `RaytracedLighting`, which OmniGibson does not pass) after reading the
+  experience file, so a `.kit` setting does not switch it; starting it with `renderer = PathTracing` (16 samples per pixel,
+  OptiX denoiser) gave clean replay frames (4.5-5.4) and the identical final state, labels and checkpoints, at 0.46 s per
+  replayed control step on a GPU 98 % busy with other work (real-time: 0.08). Standard-mode agents see only cameras, so
+  their images there are not those of the laptop.
+- **CPU.** Without a CPU quota an Isaac process sizes its thread pools to the host: about 930 threads, a mean of 97 cores and
+  0.20 s per replayed control step; with an 8-CPU quota (the agent container's) about 420 threads, 4 cores and 0.09 s per
+  step, with the identical final state, labels and checkpoints. The verifier and the standard sidecar have no CPU limit in
+  the task files.
+- **Start-up.** A cold Isaac start took 8-12 minutes on that host under load (the laptop: about 4); the standard client's
+  `Robot()` waits 600 s by default.
 
 ## Open items
 - The other 18 shortlisted tasks: `make-instance`, a resampled demonstration through the verifier, Harbor oracle and `nop`.
