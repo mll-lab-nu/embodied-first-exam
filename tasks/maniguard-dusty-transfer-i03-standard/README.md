@@ -9,7 +9,7 @@
 | Family / instance | `dusty_transfer` / seed 3 |
 | Oracle | `full` |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-maniguard:0.1.0` |
 
 ## Task
 Standard-mode twin of `maniguard-dusty-transfer-i03-privileged` (the same frozen ManiGuard-Bench task `dusty_transfer/task_0003/base`): the agent gets only the

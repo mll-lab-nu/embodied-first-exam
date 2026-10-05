@@ -9,7 +9,7 @@
 | Family / instance | `cabinet_pickup` / seed 20 |
 | Oracle | `full` |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/embodied-agent-interface-v2-internal/eai-maniguard:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-maniguard:0.1.0` |
 
 ## Task
 Standard-mode twin of `maniguard-cabinet-pickup-i20-privileged` (the same frozen ManiGuard-Bench task `cabinet_pickup/task_0020/base`): the agent gets only the
