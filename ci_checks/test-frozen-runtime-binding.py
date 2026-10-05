@@ -215,7 +215,7 @@ else:raise AssertionError('shadow module accepted')
 
 class ReleaseSelection(unittest.TestCase):
     def test_active_unbuilt_release_never_falls_back_to_published(self):
-        self.assertEqual(release(ROOT)['tooling_version'], '15')
+        self.assertEqual(release(ROOT)['tooling_version'], '16')
         self.assertEqual(release(ROOT, 'published')['tooling_version'], '14')
         with self.assertRaisesRegex(ValueError, 'no frozen task tree'):
             task_root(ROOT)

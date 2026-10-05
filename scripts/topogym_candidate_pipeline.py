@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resume a frozen v15 candidate build, exact restore, Harbor nop checks and activation.
+"""Resume a frozen candidate build of the active release, exact restore, Harbor nop checks and activation.
 
 Environment qualification and oracle success are separate. This command never
 inherits success from historical runs or edits their task packages.
@@ -121,7 +121,7 @@ class Pipeline:
         command = [str(value) for value in command]
         container_name = None
         if command[:2] == ["docker", "run"]:
-            container_name = "topogym-v15-build-" + uuid.uuid4().hex
+            container_name = f"topogym-v{self.release['tooling_version']}-build-" + uuid.uuid4().hex
             command[2:2] = ["--name", container_name]
         if "--gpus" in command:
             command[command.index("--gpus") + 1] = "device=" + self.args.gpu
@@ -179,7 +179,8 @@ class Pipeline:
             self.state["instances"].setdefault(slug, {})["built"] = True
             save(self.status_path, self.state)
         paths = [t for row in self.document["instances"] for t in self.tasks(row) if (t / "task_release.json").exists()]
-        content = '[dataset]\nname = "topogym/v15"\nversion = "15"\n'
+        version = self.release["tooling_version"]
+        content = f'[dataset]\nname = "topogym/v{version}"\nversion = "{version}"\n'
         for task in paths:
             content += f'\n[[tasks]]\nname = "topogym/{task.name}"\npath = "{task.name}"\n'
         (self.folder / "tasks/dataset.toml").write_text(content)

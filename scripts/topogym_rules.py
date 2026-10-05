@@ -9,10 +9,13 @@ of it. No positions or poses: conditions, thresholds, names and sizes only (the 
 
 RIGID = {"cast_coil", "cast_keyhole", "interlocked_claws", "hedgehog_in_cage", "horseshoe_ring"}
 SOFT = {"knot_untying", "rope_threading", "orbits", "slotted_post_ring"}
-# The tooling's safety rules (rcb_topogym.py, 2026-10-03; ci_checks/test-topogym-safety-rules.py checks the numbers match):
-# they replace the "at most 1 mm / 2 mm" and the instant volume-failure wording of his text.
-CONTACT_RULE = dict(deep_m=.003, sustained_m=.001, held_deep_m=.004, held_sustained_m=.002, window_s=.25)
+# The tooling's physical-validity policy (rcb_topogym.py, tooling v16; ci_checks/test-topogym-safety-rules.py checks the
+# numbers match): it replaces the "at most 1 mm / 2 mm" and the instant volume-failure wording of his text.
+CONTACT_RULE = dict(deep_m=.003, sustained_m=.001, held_deep_m=.004, held_sustained_m=.002, window_s=.25)   # review events
 SOFT_RULE = dict(window_s=.25, residual_m=.002)
+FORCING = dict(near_cap=.95, contact_n=20., event_s=.5, attribution_s=.25)
+BREAKDOWN_PENETRATION_M = .010
+PARTICLE_SPEED_LIMIT_M_S = 20.0
 TABLE_GUARD_MARGIN_M = -.015
 # How far the gripper's lowest collision vertex reaches beyond the TCP along the approach axis, measured with the robots'
 # own forward kinematics at the home pose (2026-10-03, lab): ALOHA 16.3 mm open or closed; the Robotiq 2F-85's fingertips
@@ -24,9 +27,29 @@ PLACEMENT = {"cast_keyhole", "interlocked_claws", "hedgehog_in_cage", "horseshoe
 # remaining components of the placement families that are free bodies (the rest are fixed), as named in s.objects()
 FREE_REMAINDER = {"cast_keyhole": "the gold piece", "interlocked_claws": "the other claw piece",
                   "horseshoe_ring": "the horseshoes and chain links", "slotted_post_ring": "the cord, beads and end discs"}
+# The grading replays of the GPU families (rcb_topogym.py GRADING_HOLD_S / REPLAY_TOLERANCES, tooling v16; the numbers
+# must match: ci_checks/test-topogym-grading-replay.py). family -> {threshold: (task parameter, passing side, slack)}.
+GRADING_HOLD_S = 2.0
+REPLAY_TOLERANCES = {
+    "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.03),
+                        "particle_speed": ("maximum_speed_m_s", "at_most", .05)},
+    "knot_untying": {"rope_speed": ("terminal.maximum_speed_m_s", "at_most", .00025)},
+    "rope_threading": {},
+    "slotted_post_ring": {},
+    "orbits": {},
+    "lock_picking": {},
+}
+# threshold -> words for (live value, replay value)
+TOLERANCE_WORDS = {
+    "coverage": lambda live, replay: f"a blanket coverage of {replay:.0%} instead of {live:.0%}",
+    "particle_speed": lambda live, replay: (f"cloth speeds up to {replay * 1000:g} mm/s instead of {live * 1000:g} mm/s (the "
+                                            "displacement limit during the confirmation stays)"),
+    "rope_speed": lambda live, replay: f"rope speeds up to {replay * 1000:g} mm/s instead of {live * 1000:g} mm/s",
+}
 # failure strings as `s.status()["episode_end"]` reports them (unlimited); limited mode reports `task_failed`
 FAIL_STRINGS = {
-    "rigid": ['"task_contact_forced: <what>"', '"held_contact_forced: <what>"', '"A task body fell below the table"'],
+    "all": ['"forced_breakdown: <what>"'],
+    "rigid": ['"A task body fell below the table"'],
     "horseshoe_ring": ['"Physical chain/eye connection lost"'],
     "buzz_wire_3d": ['"wire_touched"', '"Wand fell below table"'],
     "lock_picking": ['"rotor_limit_exceeded"', '"Key fell below table"'],
@@ -92,12 +115,14 @@ def grader_details(fam, inst, *, limited):
                        "cross that plane." if free else "The remaining components here are fixed."))
     if fam in RIGID:
         c = CONTACT_RULE
-        out.append(f"Contact limits as this benchmark grades them (they replace the \"at most {_mm(c['sustained_m'], 0)} / "
-                   f"{_mm(c['held_sustained_m'], 0)}\" wording above): brief contacts up to {_mm(c['deep_m'], 0)} are tolerated. A task "
-                   f"contact deeper than {_mm(c['deep_m'], 0)} ends the episode at once, and one deeper than {_mm(c['sustained_m'], 0)} "
-                   f"ends it once it has stayed deeper than {_mm(c['sustained_m'], 0)} for at least {c['window_s']:g} s ({window_ticks} consecutive physics "
-                   f"ticks); for a finger contact with a held piece the limits are {_mm(c['held_deep_m'], 0)} at once and "
-                   f"{_mm(c['held_sustained_m'], 0)} for {c['window_s']:g} s.")
+        out.append(f"Contact penetration as this benchmark grades it (it replaces the \"at most {_mm(c['sustained_m'], 0)} / "
+                   f"{_mm(c['held_sustained_m'], 0)}\" wording above): penetration is recorded, it never ends the episode by "
+                   f"itself. A success with deep interpenetration (a task contact deeper than {_mm(c['deep_m'], 0)}, or deeper "
+                   f"than {_mm(c['sustained_m'], 0)} for at least {c['window_s']:g} s: {window_ticks} consecutive physics ticks; for a "
+                   f"finger contact with a held piece {_mm(c['held_deep_m'], 0)}, or {_mm(c['held_sustained_m'], 0)} for "
+                   f"{c['window_s']:g} s) is not credited automatically but reviewed, with the recorded evidence and frames; a "
+                   f"clean success is credited automatically. A task contact deeper than {_mm(BREAKDOWN_PENETRATION_M, 0)} is a "
+                   "simulator breakdown (below).")
         out.append(f"Contact penetration is read from the contacts at the end of every physics tick ({dt * 1000:g} ms; {decimation} ticks per "
                    "control step). \"Held\" is decided anew at every tick: a zero-force touch counts, and if one finger "
                    "loses contact (with no active assisted grasp), the other finger is back at the non-held limits in the same "
@@ -113,13 +138,27 @@ def grader_details(fam, inst, *, limited):
                       if what == "cord" else "")
                    + f" ends the episode only once it has lasted at least {w:g} s "
                    f"({max(1, math.ceil(w / dt - 1e-12))} consecutive physics ticks; while it lasts, the goal cannot be confirmed); an "
-                   f"invalid soft-body solver state ends it at once. Close to about half the {what}'s diameter and slow down "
-                   "in the last centimetre.")
+                   f"invalid soft-body solver state is a simulator breakdown (below). Close to about half the {what}'s "
+                   "diameter and slow down in the last centimetre.")
     out.append(f"Robot safety (this benchmark's tooling): no gripper target goes lower than {table_guard_words()}; a commanded "
                "target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach "
                + FINGERTIP_WORDS.get(_robot_of(inst), "beyond the tool frame (TCP)")
                + ". Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle "
                "stalls at that torque.")
+    ps = FORCING
+    out.append(f"Forcing is recorded, not judged: an arm drive (not a gripper drive) at {ps['near_cap']:.0%} of its torque cap "
+               f"or more while that arm's gripper, or a part it holds, presses on anything else with {ps['contact_n']:g} N or "
+               f"more in total is forcing; {ps['event_s']:g} s of it on every physics tick is a forcing event in the evidence "
+               + ("(`meta[\"safety\"]`)" if limited else "(`s.safety()`, `s.status()[\"forcing\"]`)")
+               + ", shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the "
+               "grade by itself.")
+    broken = (["a non-finite state", f"a task contact deeper than {_mm(BREAKDOWN_PENETRATION_M, 0)}"] if fam in RIGID else
+              ["an invalid soft-body solver state"] if fam in SOFT else
+              [f"a cloth particle faster than {PARTICLE_SPEED_LIMIT_M_S:g} m/s"] if fam == "blanket_flatten" else [])
+    if broken:
+        out.append(f"Simulator breakdown ({_or(broken)}): the episode ends as an infrastructure error, not your failure, "
+                   f"unless an arm was forcing (even for one tick) within the {ps['attribution_s']:g} s before it: then it is "
+                   "your failure (forced_breakdown: what broke and what forced it).")
     if fam == "horseshoe_ring":
         out.append("The four permanent connections (the upper and lower eye of each horseshoe with its chain link) are "
                    "checked at every tick by the linking number of the two loops.")
@@ -209,8 +248,7 @@ def grader_details(fam, inst, *, limited):
             "The rope is 8 mm thick (radius 4 mm), so its highest point may be at most 11 mm above the tabletop.",
             "\"Nonlocal\" means at least 16 mm apart along the rope: such parts of the rope's centreline must be at least "
             "8 mm apart in the top view. Closer parts are exempt, but an actual crossing always counts.",
-            "The release clearance is measured between axis-aligned bounding boxes of the robot's collision geometries and "
-            "the rope (refined per tetrahedron where they are close).",
+            knot_release_words(tp),
         ]
     if fam == "rope_threading":
         if g.get("ring_shape") == "lower_semicircle":
@@ -235,6 +273,12 @@ def grader_details(fam, inst, *, limited):
                     f"Aperture check: {profile}, compression allowance {_mm(allowance)}. "
                     "This allowance changes the geometric passage test; the collision geometry stays as declared.",
                     "The material start is the rope end that is farther from the rings at the start."]
+        if tp.get("rope_robot_contact") == "fingers":
+            # the environment profile's contact set (topogym/tasks/rope_threading/common.py finalize_spec: IPC
+            # robot_collision_links = the finger links, for all IPC contacts): an environment fact the agent must know
+            out.append("Only the grippers' fingers collide with the rope and the rings: every other robot part (palms, wrists, "
+                       "arm links, bases) passes through them without contact, so only the fingers can push, pinch or hold "
+                       "the rope.")
     if fam == "blanket_flatten":
         L, W = float(tp.get("length_m", .6)), float(tp.get("width_m", .48))
         cov, pad = float(tp.get("minimum_coverage_ratio", .9)), float(tp.get("particle_size_m", .008))
@@ -248,13 +292,76 @@ def grader_details(fam, inst, *, limited):
     g = grasp_regions(fam, inst, limited=limited)
     if g:
         out.append(g)
+    if fam in REPLAY_TOLERANCES:
+        out.append(grading_replay_words(fam, inst, limited=limited))
     if not limited:
-        strings = (FAIL_STRINGS["rigid"] if fam in RIGID else []) + FAIL_STRINGS.get(fam, [])
-        if strings:
-            out.append("A failure is reported in `s.status()[\"episode_end\"]` as " + _or(strings) + " (<what>: the "
-                       "readable reason); `s.safety()` reports the contact depths, volume ratios and table-guard stops "
-                       "against these limits.")
+        strings = (FAIL_STRINGS["rigid"] if fam in RIGID else []) + FAIL_STRINGS.get(fam, []) + FAIL_STRINGS["all"]
+        out.append("A failure is reported in `s.status()[\"episode_end\"]` as " + _or(strings) + " (<what>: the "
+                   "readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops "
+                   "against these limits" + (", and `s.status()[\"review\"]` the deep task contacts that would hold a success "
+                   "for review" if fam in RIGID else "") + ".")
     return out
+
+
+def _parameter(params, path):
+    for key in path.split("."):
+        params = params[key]
+    return params
+
+
+def replay_tolerances(fam, inst):
+    """[(threshold, live value, replay value)] of this instance's grading replays (its frozen task parameters)."""
+    tp = (inst or {}).get("effective_task_parameters") or {}
+    return [(name, float(_parameter(tp, path)), round(float(_parameter(tp, path)) + slack, 12))
+            for name, (path, _, slack) in REPLAY_TOLERANCES.get(fam, {}).items()]
+
+
+def knot_release_words(tp):
+    """knot_untying's release check in words, from the task's own settling spec (terminal v5 since tooling v16: 1 mm from the
+    links that can move, world-fixed bases may touch, no interior overlap with any robot part)."""
+    from types import SimpleNamespace
+    from topogym.tasks.knot_untying.common import KnotUntyingTask
+    terminal = {"maximum_speed_m_s": .001, **(tp.get("terminal") or {})}
+    spec = KnotUntyingTask.final_settling_spec(SimpleNamespace(config=dict(tp, terminal=terminal)))
+    if spec.robot_contact_policy == "fixed_contact_active_clearance_v1":
+        return ("The release check bounds every rope tetrahedron against the robot's collision geometries and decides the "
+                f"close ones with the exact solids: every robot part that can move (grippers, arm links) needs at least "
+                f"{_mm(spec.clearance_m)} of clearance from the rope; a world-fixed base may touch it. An overlap with the "
+                "interior of any robot part means the release is not certified: no success while it lasts, never a failure.")
+    return ("The release clearance is measured between axis-aligned bounding boxes of the robot's collision geometries and "
+            "the rope (refined per tetrahedron where they are close).")
+
+
+def control_hz(inst) -> float:
+    """The instance's control rate (simulator physics_dt_s x control_decimation; 40 Hz by default, 25 Hz for the merged-v16
+    rope_threading profile's 40 ms tick)."""
+    sim = (inst or {}).get("simulator") or {}
+    return 1.0 / (float(sim.get("physics_dt_s", .0025)) * int(sim.get("control_decimation", 10)))
+
+
+def grading_replay_words(fam, inst, *, limited):
+    """The grading-replay rule of a GPU family in plain words (rcb_topogym.py, tooling v16; the instance's control rate)."""
+    steps = int(round(GRADING_HOLD_S * control_hz(inst)))
+    tol = [TOLERANCE_WORDS[name](live, replay) for name, live, replay in replay_tolerances(fam, inst)]
+    hold = (f"runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final "
+            f"targets for up to {GRADING_HOLD_S:g} s ({steps} control steps), stopping at the first success or failure, so a "
+            "confirmation that starts a few physics ticks later than in " + ("the live episode" if limited else "your own run")
+            + " can still complete")
+    during = (f"; during that hold it accepts {' and '.join(tol)}" if tol else
+              "; the hold uses the thresholds above too (no tolerance for this family)")
+    tail = (" Nothing else is relaxed: every other condition, the failure conditions and the confirmation time are the "
+            "same." if tol else " Nothing else changes.")
+    if limited:
+        return ("Grading: success needs the live episode to succeed (with the thresholds above) AND one fresh-process replay of "
+                "its rows to succeed; a live failure is final whatever the replay shows. This family's physics runs on the GPU, "
+                f"which is not bit-deterministic, so that replay can differ slightly from the live episode: it {hold}{during}."
+                + tail)
+    return ("Grading: the verifier replays your trajectory twice in a fresh process. This family's physics runs on the GPU, "
+            f"which is not bit-deterministic, so a replay can differ slightly from your own run: each replay {hold}{during}. "
+            "Success needs both replays to succeed AND at least one of them to reach the goal with the thresholds above "
+            "within your own rows (not only in the hold)." + tail + " A recording stops at your own success, so a replay "
+            "whose confirmation ends a few ticks later needs more rows: you may append copies of the final row (holding "
+            "still) before saving. `s.replay(actions, grading=True)` replays as the verifier does.")
 
 
 # where his declared grasp regions sit, by construction of his recipes (76583213 topogym/tasks/<family>/common.py

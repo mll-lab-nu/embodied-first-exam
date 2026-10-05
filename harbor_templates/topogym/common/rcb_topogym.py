@@ -20,24 +20,30 @@ trajectory : the (T, action_dim) JOINT_ABS actions handed to the simulator, one 
              renders on the GPU in both cases.
 episode end: a task's success predicate, or one of its failure predicates (e.g. touching the buzz wire), ends the
              simulated episode: later steps do not change the execution ledger or scene, and status()["episode_end"] says
-             why. reset() starts again from the frozen state. A numerically unstable simulation (a particle faster than
-             PARTICLE_SPEED_LIMIT_M_S, 20 m/s) ends it with episode_end "simulator_instability" (evidence in
+             why. reset() starts again from the frozen state. A simulator breakdown (a non-finite state, a particle faster
+             than PARTICLE_SPEED_LIMIT_M_S, 20 m/s, an invalid soft-body solver state, a rigid task contact deeper than
+             BREAKDOWN_PENETRATION_M) ends it with episode_end "simulator_instability" (evidence in
              status()["instability"]): a simulator failure that graders report as an infrastructure error, never as
-             success or as the task's failure. PBD cloth-rigid contacts are resolved together per particle with a
-             physically bounded push-out (_bound_pbd_rigid_contacts), which removes the cause of those blow-ups.
+             success or as the task's failure; unless the arm was forcing (the forcing condition, FORCING) within the
+             0.25 s before, then it is the agent's "forced_breakdown: ...". PBD cloth-rigid contacts are resolved
+             together per particle with a physically bounded push-out (_bound_pbd_rigid_contacts), which removes the
+             cause of the cloth blow-ups.
 grasping   : a family may enable TopoGym's passive grasp assistance (instance.json simulator.grasp_assist; the rules are
              in robot_spec()["grippers"][...]["command"]); primitives()["object_in_hand"] says what a gripper holds.
 budget     : there is no step budget: the agent's wall clock is the limit. MAX_STEPS only stops runaway trajectories.
-safety     : the tooling's rules (2026-10-03, _install_rules): rigid task contacts fail when deeper than 3 mm, or deeper than
-             1 mm for 0.25 s (held fingers 4 / 2 mm); a crushed rope volume or a stretched cord attachment fails after
-             0.25 s; arm drive torques are capped; no gripper target goes lower than 15 mm below the tabletop
-             (TABLE_GUARD_MARGIN_M). s.safety() reports them.
+safety     : the tooling's physical-validity policy (tooling v16, _install_rules): arm drive torques are capped and no
+             gripper target goes lower than 15 mm below the tabletop (TABLE_GUARD_MARGIN_M); a crushed rope volume or a
+             stretched cord attachment fails after 0.25 s; forcing (an arm drive at its torque cap while the gripper or a
+             part it holds presses on another body, FORCING) and task-contact penetration are evidence only: a success
+             with a deep task contact (CONTACT_RULE) is held for review instead of being credited automatically.
+             s.safety() reports them.
 
 CLI
 ---
   python rcb_topogym.py make-instance --task cube_pick_place --eval-index 0 --out instance.json
   python rcb_topogym.py run-oracle    --task cube_pick_place --instance instance.json --code oracle.py --out traj.npz
   python rcb_topogym.py replay        --task cube_pick_place --instance instance.json --traj traj.npz [--repeat 2] [--video replay.mp4]
+                                      # as the graders replay (Session.replay grading=True)
   python rcb_topogym.py render        --task cube_pick_place --instance instance.json --traj traj.npz --out replay.mp4 [--every 2]
   python rcb_topogym.py selftest      --task cube_pick_place --eval-index 0 --code oracle.py --out-dir /tmp/selftest   # 3 fresh processes
   python rcb_topogym.py describe      --task cube_pick_place --instance instance.json   # cameras, robot, predicate (task generator)
@@ -51,9 +57,10 @@ Python (what the agent gets)
   s.objects()                        # task objects: name -> position, orientation_wxyz, bounds, size, ...
   s.render_frame(cam)                # RGB (H, W, 3) uint8; s.render_grid(), s.render_video(actions, path); s.VIDEO_CAMERAS
   s.record_start(); ...; actions = s.record_stop()   # (T, action_dim) low-level actions, one row per control step
-  s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}
-  s.safety()                         # contact depths / rope volume / table-guard stops since the last call, against the limits
+  s.status()                         # {'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end', 'review'}
+  s.safety()                         # drive loads, contact depths, rope volume, table-guard stops since the last call, vs the limits
   s.replay(actions)                  # resets, replays open-loop, returns status -> self-check
+  s.replay(actions, grading=True)    # as the graders replay: GPU families hold up to 2 s, then replay tolerances
   s.save_trajectory(actions, "/app/output/trajectory.npz")
 """
 from __future__ import annotations
@@ -589,7 +596,7 @@ def _register_cube() -> None:
 
 # --------------------------------------------------------------------------- the robot: layout, gripper widths, FK / IK
 class _Robot:
-    """Action layout, measured state and stateless kinematics of the TopoGym robot (Genesis FK on a fixed qpos template).
+    """Action layout, measured state and stateless kinematics of the TopoGym robot (_ChainFK on a fixed qpos template).
     Every group ("arm" for the Panda, "left" / "right" for ALOHA) is one arm: its arm joints then its declared gripper target."""
 
     def __init__(self, robot, timing, *, gripper_space="width"):
@@ -793,12 +800,13 @@ class _Robot:
         m = self.robot.observe()[arm]
         return np.asarray(m["tcp_position_world_m"], dtype=np.float64), np.asarray(m["tcp_orientation_wxyz"], dtype=np.float64)
 
-    # -- kinematics (stateless: a fixed qpos template, never the simulator's state)
+    # -- kinematics (stateless: a fixed qpos template, never the simulator's state). Genesis' own FK / IK queries run their
+    # kernels on the live solver and leave links_state / joints_state changed in the last bits, so a live run that queried
+    # kinematics stopped replaying bit for bit (lab BUG 7); _ChainFK is the same model in numpy and never touches the solver.
     def _fk_full(self, q_full) -> dict:
-        from topogym.solvers.genesis_kinematics import GenesisFKSolver
-        res = GenesisFKSolver(self.entity).solve(np.asarray(q_full, dtype=np.float64))
-        P = np.asarray(res["position_world_m"]).reshape(-1, 3); Q = np.asarray(res["orientation_wxyz"]).reshape(-1, 4)
-        out = {l.name: _T(P[l.idx_local], Q[l.idx_local]) for l in self.entity.links}
+        if getattr(self, "_chain", None) is None:
+            self._chain = _ChainFK(self.entity)
+        out = self._chain(np.asarray(q_full, dtype=np.float64))
         for name, g in self.groups.items():
             out[self.tcp_frames[name]] = out[g.hand_link] @ self.hand_T_tcp[name]
         return out
@@ -1031,28 +1039,59 @@ def _speed_up_knot_predicate(task_id: str) -> bool:
     return True
 
 
-# --------------------------------------------------------------------------- safety rules and guards (2026-10-03)
+# --------------------------------------------------------------------------- physical-validity policy (tooling v16)
 # The 2026-10-03 rules audit (robot_coding_bench jobs/journal/2026-10-03/rules_audit/AUDIT.md: every finished v12 failure
 # classified, nine trajectories replayed) found TopoGym's any-tick 1 mm contact limit and its any-tick tet-inversion rule
-# without margin: the sweep's only success peaked at 0.83 mm, noise twins of real trajectories trip 1 mm, Jianwen's
-# validated rope pinch inverts tets for a few ticks, while what the rules exist to catch (one body forced through
-# another, a rope crushed flat) persists. Installed per Session by _install_rules, like the fast paths above: TopoGym's
+# without margin; v14's replacement (R1: a rigid task contact deeper than 3 mm, or deeper than 1 mm for 0.25 s, failed the
+# episode) still ended passive impacts: v14 standard trial QKSrtdL (interlocked_claws hard) had opened both grippers and
+# held every joint target when the released claw landed on the other one, 4.6 mm deep for 3 ticks at 42 N. Penetration
+# depth measures the contact solver, not the agent. The user's general policy (2026-10-03 ~21:30) separates who caused
+# what, with no per-artifact exceptions. Installed per Session by _install_rules, like the fast paths above: TopoGym's
 # files are not edited, and everything is installed after Env.reset recorded the frozen first checkpoint (the t = 0 state
 # and its hash do not change).
-#  R1 rigid task contacts (the five RigidTaskDefinition families): a non-held task contact deeper than 3 mm fails at once,
-#     one deeper than 1 mm fails once it has stayed above 1 mm for 0.25 s; held-finger contacts: 4 mm / 2 mm for 0.25 s.
-#  R2 soft integrity (the four IPC families): a tet inversion (worst volume ratio <= 0) or a cord attachment stretched by
-#     more than 2 mm fails once it has persisted for 0.25 s; while it is shorter the evidence reads as unavailable (no
-#     success credit, no failure). An invalid native IPC state still fails at once.
-#     R1 / R2 keep their consecutive-tick counters in the task's own history (task_state[_RULES_KEY], absent while all
-#     are zero), so reset and rewind restore them with the rest of the task state.
-#  R3 arm drive torque caps (ARM_TORQUE_CAPS_NM: the PD force clamp of the arm joints); the gripper drives are unchanged.
-#  R4 a fingertip-table guard on every control step (_TableGuard); the standard service's joint-speed limit and IK-jump
-#     refusal (JOINT_STEP_LIMIT_RAD, IK_JUMP_LIMIT_RAD, environment/sim/server.py); Session.safety() and the service's
-#     meta["safety"]; readable failure reasons for R1 / R2.
-RULES_REVISION = "rules_2026-10-03"
-CONTACT_RULE = dict(deep_m=.003, sustained_m=.001, held_deep_m=.004, held_sustained_m=.002, window_s=.25)
+#  Layer 0, the environment model, the task owner's (Jianwen's release profile, topogym/tasks/release_profile.py, frozen in
+#     the instance and stated in the texts): materials, solver settings and timing, grasp assistance, which robot links
+#     collide with soft bodies (merged-v16 rope_threading: the fingers only). Live episode and every replay alike; this
+#     policy never changes it.
+#  Layer 1, guards: arm drive torque caps (ARM_TORQUE_CAPS_NM: the PD force clamp of the arm joints; the gripper drives are
+#     unchanged); a fingertip-table guard on every control step (_TableGuard); the standard service's joint-speed limit
+#     and IK-jump refusal (JOINT_STEP_LIMIT_RAD, IK_JUMP_LIMIT_RAD, environment/sim/server.py).
+#  Layer 2, the task's own stated rules, the task owner's: its success predicate, strict live (thresholds, confirmation
+#     windows, release conditions such as knot_untying's terminal v5: 1 mm from every robot part that can move, world-fixed
+#     bases may touch, an overlap with any robot part's interior withholds success and never ends the episode), and the
+#     failures the agent caused, which end the episode (wire / fiber touch, rotor limit, chain link, a body or the cloth
+#     fallen, and this tooling's R2: a soft-body tet inversion, or a cord attachment stretched by more than 2 mm, persisting
+#     for 0.25 s; while shorter the evidence reads as unavailable: no success credit, no failure).
+#  Layer 3, simulator breakdown (ends the episode): a non-finite rigid state, a cloth particle faster than
+#     PARTICLE_SPEED_LIMIT_M_S, an invalid native soft-body solver state, a rigid task contact deeper than
+#     BREAKDOWN_PENETRATION_M -> SIMULATOR_INSTABILITY (an infrastructure error, evidence in Session.instability), unless
+#     the forcing condition (below) held on any tick of the FORCING["attribution_s"] before (or at) it: then the agent's
+#     "forced_breakdown: <what broke> <while which arm forced what>".
+#  Layer 4, evidence only, never an episode end:
+#     - FORCING, every family: an arm drive (not a gripper drive) at FORCING["near_cap"] of its torque cap or more while
+#       that arm, or a movable body it holds (both fingers touching it, or an assisted-grasp binding), presses on anything
+#       else with FORCING["contact_n"] or more in total. A run of it on every physics tick for FORCING["event_s"] is a
+#       forcing event (_SafetyMonitor.forcing: arm, drive, % of cap, what it pressed on, how hard, how long). It does not
+#       hold a success by itself (the user, 2026-10-04 ~01:10: as an episode end it stopped the claws easy standard
+#       success oDonuzB, 2.2 s of forcing; the reference oracle forces for 0.33 s; and the exploit the rules exist for, the
+#       pieces pulled through each other, took 3 ticks: only its depth showed it). Shown with a held success's evidence.
+#     - every tick's deepest non-held and held-finger task contact (Session.safety(), the service's meta["safety"]). A tick
+#       deeper than CONTACT_RULE's deep limits, or a contact above its sustained limits for its window, is a review event
+#       (_SafetyMonitor.review): a success whose episode or replay had one is held for review by the graders (success 0,
+#       success_pending_review 1, the events, the forcing events, and frames around both); a clean success is credited.
+#  The counters (R2, the forcing that attributes a breakdown, the review contacts' persistence) live in the task's own
+#  history (task_state[_RULES_KEY], absent while all are zero), so reset and rewind restore them with the rest of the task
+#  state.
+RULES_REVISION = "rules_2026-10-03b"
+CONTACT_RULE = dict(deep_m=.003, sustained_m=.001, held_deep_m=.004, held_sustained_m=.002, window_s=.25)   # review events
 SOFT_RULE = dict(window_s=.25, residual_m=.002)
+# Measured on lab 2026-10-03 (docs/rcb/benchmarks/topogym.md, "Physical-validity policy"): a drive at its cap reads
+# 0.99-1.00 and a working arm well below (free-air saturation: wrist wraps at 0.99 with 1 N of contact); 20 N excludes
+# light touches and resting parts; event_s 0.5 s: interlocked_claws easy's reference oracle holds the condition for 0.33 s
+# (131 ticks), the scripted sustained forcing for 1.1 s and more. attribution_s: a breakdown within it is the agent's.
+FORCING = dict(near_cap=.95, contact_n=20., event_s=.5, attribution_s=.25)
+BREAKDOWN_PENETRATION_M = .010
+FORCED_BREAKDOWN = "forced_breakdown"
 # N m per arm joint, in arm-joint order; the effective cap is min(this, the model's own force limit: ALOHA 35 / 144 / 59 /
 # 22 / 35 / 35, Panda 87 x 4 / 12 x 3). The audit proposed the real ViperX actuators (12.9 / 25.8 / 25.8 / 12.9 / 12.9 /
 # 4.8: XM540 stall torque, doubled on the dual-servo shoulder and elbow; XM430 on the wrist rotate). On lab (2026-10-03
@@ -1110,14 +1149,74 @@ def soft_rule_tick(counts: dict, ratios: dict, residuals: dict, residual_m: floa
 
 
 def _validate_rules_history(value) -> None:
-    ok = isinstance(value, dict) and not set(value) - {"contact", "soft"}
-    contact, soft = (value.get("contact", {}), value.get("soft", {})) if ok else ({}, {})
+    ok = isinstance(value, dict) and not set(value) - {"contact", "soft", "forced"}
+    contact, soft, forced = (value.get("contact", {}), value.get("soft", {}), value.get("forced", 1)) if ok else ({}, {}, 1)
     ok = (ok and isinstance(contact, dict) and isinstance(soft, dict) and not set(contact) - {"over", "held_over"}
-          and not set(soft) - {"inverted", "stretched"})
+          and not set(soft) - {"inverted", "stretched"} and type(forced) is int and forced >= 1)
     counters = [contact] + [soft.get(k, {}) for k in ("inverted", "stretched")] if ok else []
     if (not ok or not all(isinstance(c, dict) for c in counters)
             or any(type(v) is not int or v < 1 for c in counters for v in c.values())):
         raise ValueError("Invalid rules history")
+
+
+class _ArmLoads:
+    """The forcing condition's contact measure: per arm, the total contact force between its own bodies (its robot links:
+    ALOHA's '<arm>/...' links, every link of a one-arm robot; plus each movable non-robot link it holds at this tick: both
+    of its fingers touching it, or its assisted-grasp binding) and everything else, from the tick's rigid contacts
+    (touching ones: penetration >= 0). A held part pressed on its partner, a gripper rammed into a piece or the table, two
+    arms pulling one part apart (the other arm's fingers press on the part one arm holds) all count; an arm's own grip on
+    the part it holds does not."""
+
+    def __init__(self, session):
+        r, ent = session.robot, session.robot.entity
+        self.arms = list(r.arms)
+        by_name = {link.name: int(link.idx) for link in ent.links}
+        self.own = {arm: set() for arm in self.arms}
+        for link in ent.links:
+            prefix = link.name.split("/")[0] if "/" in link.name else ""
+            arm = prefix if prefix in self.own else (self.arms[0] if len(self.arms) == 1 else None)
+            if arm is not None:
+                self.own[arm].add(int(link.idx))
+        self.fingers = {arm: [by_name[n] for n in g.grasp.finger_links] for arm, g in r.groups.items()
+                        if g.grasp is not None and all(n in by_name for n in g.grasp.finger_links)}
+        robot = set(by_name.values())
+        self.movable = set()
+        for e in session.env._world.entities.values():
+            if getattr(e, "n_dofs", 0) and getattr(e, "links", None):
+                self.movable |= {int(link.idx) for link in e.links} - robot
+
+    def held(self, la, lb, touching, grasp) -> dict:
+        hands, out = (grasp or {}).get("hands", {}) or {}, {}
+        for arm in self.arms:
+            fingers, sel = self.fingers.get(arm, ()), set()
+            if len(fingers) == 2:
+                a, b = ({*lb[touching & (la == f)].tolist(), *la[touching & (lb == f)].tolist()} for f in fingers)
+                sel = a & b & self.movable
+            binding = (hands.get(arm) or {}).get("binding")
+            if binding and len(binding.get("links", ())) == 2 and int(binding["links"][1]) in self.movable:
+                sel.add(int(binding["links"][1]))
+            out[arm] = sel
+        return out
+
+    def __call__(self, contacts, grasp) -> dict:
+        """-> {arm: (total force N, own link, partner link of its largest contact)}; (0., None, None) without contact."""
+        out = {arm: (0., None, None) for arm in self.arms}
+        if not contacts or not len(np.asarray(contacts.get("penetration", ()))):
+            return out
+        la = np.asarray(contacts["link_a"]).reshape(-1).astype(np.int64)
+        lb = np.asarray(contacts["link_b"]).reshape(-1).astype(np.int64)
+        pen = np.asarray(contacts["penetration"], dtype=np.float64).reshape(-1)
+        force = np.linalg.norm(np.asarray(contacts["force"], dtype=np.float64).reshape(-1, 3), axis=1)
+        touching = np.isfinite(pen) & (pen >= 0) & np.isfinite(force)
+        held = self.held(la, lb, touching, grasp)
+        for arm in self.arms:
+            own = np.fromiter(self.own[arm] | held[arm], dtype=np.int64)
+            ia, ib = np.isin(la, own), np.isin(lb, own)
+            m = touching & (ia ^ ib)
+            if m.any():
+                k = int(np.flatnonzero(m)[int(np.argmax(force[m]))])
+                out[arm] = (float(force[m].sum()), int(la[k] if ia[k] else lb[k]), int(lb[k] if ia[k] else la[k]))
+        return out
 
 
 _IPC_INTEGRITY: list = []       # TopoGym's own topogym.evaluation.task_metrics.ipc_integrity (set once)
@@ -1212,8 +1311,13 @@ def _rigid_measurements_rules(self, state):
     return poses, bounds, bool(quiet), None
 
 
+SOFT_FAILURES = ("rope_volume_invalid", "connection_or_volume_invalid")
+
+
 def _install_rules(session) -> dict:
-    """R1-R4 for this Session (see the block comment above). Returns the installed parameters (Session.rules)."""
+    """The physical-validity policy for this Session (see the block comment above): every family gets the forcing
+    evidence and the breakdown attribution; the rigid task families the review contacts and the extreme-penetration bound;
+    the IPC families R2. Returns the installed parameters (Session.rules)."""
     from types import MethodType
     task = session.env._task
     dt = float(session.env.config.physics_dt_s)
@@ -1221,6 +1325,7 @@ def _install_rules(session) -> dict:
     session.monitor = _SafetyMonitor(session)
     session.table_guard = _TableGuard(session)
     session.last_guard = None
+    session.last_forcing = None          # the latest tick of the forcing condition: what a breakdown is blamed on
 
     def on_lifecycle(event):
         if event["kind"] == "rewind":
@@ -1228,16 +1333,22 @@ def _install_rules(session) -> dict:
             # before the caps): apply them again before the next physics step.
             _apply_torque_caps(session)
             session.monitor.reset()
+            session.last_forcing = None
     session.env.add_lifecycle_sink(on_lifecycle)
     contact = hasattr(task, "rigid_measurements")
     soft = getattr(task, "physics_model", "") == "fem_ipc"
+    event = rule_window_ticks(dt, FORCING["event_s"])
+    attribution = rule_window_ticks(dt, FORCING["attribution_s"])
     rules = {"revision": RULES_REVISION, "torque_caps_nm": session.torque_caps,
              "table_guard_margin_m": TABLE_GUARD_MARGIN_M if session.table_guard.limit is not None else None,
+             "forcing": dict(FORCING, event_ticks=event, attribution_ticks=attribution),
+             "breakdown_penetration_m": BREAKDOWN_PENETRATION_M if contact else None,
              "contact": dict(CONTACT_RULE, window_ticks=rule_window_ticks(dt, CONTACT_RULE["window_s"])) if contact else None,
              "soft": dict(SOFT_RULE, window_ticks=rule_window_ticks(dt, SOFT_RULE["window_s"])) if soft else None}
-    if not (contact or soft):
-        return rules
     words = _link_words(session)
+    loads = _ArmLoads(session)
+    caps = {arm: np.asarray(session.robot.drive_force[arm][:len(session.robot.groups[arm].arm_joints)], dtype=np.float64)
+            for arm in loads.arms}
     if contact:
         task._rcb_contact = None
         task.rigid_measurements = MethodType(_rigid_measurements_rules, task)
@@ -1251,6 +1362,23 @@ def _install_rules(session) -> dict:
             _validate_rules_history(state[_RULES_KEY])
             state = {k: v for k, v in state.items() if k != _RULES_KEY}
         return original_validate(state)
+
+    def pressing_at(state) -> dict:
+        """arm -> its load at this tick, for the arms pressing with at least FORCING["contact_n"]; "forcing" = the
+        forcing condition (an arm drive at FORCING["near_cap"] of its cap or more). The drive forces are read only when
+        an arm presses."""
+        tick = loads(state.get("contacts"), state.get("grasp")) if loads.arms else {}
+        pressing = {arm: v for arm, v in tick.items() if v[0] >= FORCING["contact_n"]}
+        if not pressing:
+            return {}
+        effort, out = np.abs(session.robot.efforts()), {}
+        for arm, (force, own_link, partner) in pressing.items():
+            frac = effort[session.robot.arm_slice[arm]] / caps[arm]
+            j = int(np.argmax(frac))
+            out[arm] = dict(joint=session.robot.groups[arm].arm_joints[j], fraction=float(frac[j]), cap_nm=float(caps[arm][j]),
+                            force_n=force, own=own_link, partner=partner, held=own_link not in loads.own[arm],
+                            physics_step=int(state.get("physics_step", -1)), forcing=bool(frac[j] >= FORCING["near_cap"]))
+        return out
 
     def evaluate_transition(self, state, private):
         mine = dict(private.get(_RULES_KEY) or {}) if isinstance(private, dict) else {}
@@ -1271,17 +1399,49 @@ def _install_rules(session) -> dict:
         finally:
             depth[0] -= 1
             _SOFT_CONTEXT.clear()
+        # Layer 4 (evidence): forcing; its condition also attributes a breakdown within the window after it (Layer 3)
+        pressing = pressing_at(state)
+        forcing = {arm: v for arm, v in pressing.items() if v["forcing"]}
+        forced_left = int(mine.get("forced", 0))
+        forced_recent = bool(forcing) or forced_left > 0
+        forced_left = attribution if forcing else max(0, forced_left - 1)
+        if forcing:
+            session.last_forcing = max(forcing.items(), key=lambda kv: kv[1]["force_n"])
+        session.monitor.forcing_tick(pressing, words, event)
+        # Layer 4 (evidence): the tick's deepest task contacts, review events
+        tick = self._rcb_contact if contact else None
         contact_counts = mine.get("contact", {})
-        if contact and self._rcb_contact is not None:
-            tick = self._rcb_contact
+        if tick is not None:
             contact_counts, verdict = contact_rule_tick(contact_counts, tick["nonheld"][0], tick["held"][0],
                                                         rules["contact"]["window_ticks"])
             session.monitor.contact(tick, contact_counts)
-            if verdict and failure is None:
-                reached, failure = False, _contact_reason(session, words, verdict, tick, contact_counts)
-        if soft and failure in ("rope_volume_invalid", "connection_or_volume_invalid"):
+            session.monitor.review_event(verdict, tick, words, int(state.get("physics_step", -1)))
+        # Layer 3: a simulator breakdown is an infrastructure error, unless the arm was forcing
+        breakdown = None
+        if failure == SIMULATOR_INSTABILITY:                     # the particle speed guard (its evidence: Session.instability)
+            breakdown = dict(session.instability or {}, kind="particle_speed")
+        elif contact and failure == "Non-finite physical state":
+            breakdown = dict(kind="non_finite_state")
+        elif soft and failure in SOFT_FAILURES and ipc and not ipc.get("native_valid", True):
+            breakdown = dict(kind="soft_solver_invalid")
+        elif tick is not None and failure is None:
+            key = max(("nonheld", "held"), key=lambda k: tick[k][0])
+            d, pair, force = tick[key]
+            if d > BREAKDOWN_PENETRATION_M:
+                breakdown = dict(kind="extreme_penetration", depth_mm=round(d * 1000, 3), force_n=round(force, 1),
+                                 bodies=[words.get(i, "a task part") for i in (pair or ())], held=key == "held")
+        if breakdown is not None:
+            breakdown.setdefault("physics_step", int(state.get("physics_step", -1)))
+            reached = False
+            if forced_recent:
+                failure = _forced_breakdown_reason(session, words, breakdown)
+            else:
+                failure = SIMULATOR_INSTABILITY
+                if breakdown["kind"] != "particle_speed":
+                    session._on_instability(breakdown)
+        elif soft and failure in SOFT_FAILURES:
             failure = _soft_reason(session, failure, ipc, soft_counts)
-        kept = {k: v for k, v in (("contact", contact_counts), ("soft", soft_counts)) if v}
+        kept = {k: v for k, v in (("contact", contact_counts), ("soft", soft_counts), ("forced", forced_left)) if v}
         if isinstance(private, dict):
             private = {**{k: v for k, v in private.items() if k != _RULES_KEY}, **({_RULES_KEY: kept} if kept else {})}
         return reached, failure, metrics, private
@@ -1336,20 +1496,41 @@ def _drive_context(session) -> str:
     return ""
 
 
-def _contact_reason(session, words, verdict, tick, counts) -> str:
-    held = verdict.startswith("held")
-    depth, pair, force = tick["held" if held else "nonheld"]
-    one, two = (words.get(pair[0], "a task part"), words.get(pair[1], "another body")) if pair else ("a task part", "another body")
-    c = CONTACT_RULE
-    if verdict.endswith("deep"):
-        limit = c["held_deep_m"] if held else c["deep_m"]
-        what = f"{one} and {two} were forced {depth * 1000:.1f} mm into each other (limit {limit * 1000:g} mm at once)"
+def _forcing_words(session, words, arm, d) -> str:
+    """'the left arm's waist drive was at 100 % of its torque cap (12.9 N m) while the claw 0 it holds pressed on the claw 1
+    with 63 N' for one tick of the forcing condition."""
+    side = f"the {arm} arm's" if len(session.robot.arms) > 1 else "the arm's"
+    own = words.get(d["own"], "a part") + (" it holds" if d["held"] else "")
+    return (f"{side} {d['joint'].split('/')[-1]} drive was at {100 * min(d['fraction'], 1.):.0f} % of its torque cap "
+            f"({d['cap_nm']:g} N m) while {own} pressed on {words.get(d['partner'], 'another body')} with {d['force_n']:.0f} N")
+
+
+def breakdown_words(b: dict) -> str:
+    """What broke down in the simulation, in words (Session.instability / the forced-breakdown reason)."""
+    kind = b.get("kind")
+    if kind == "extreme_penetration":
+        one, two = (list(b.get("bodies") or ()) + ["a task part", "another body"])[:2]
+        return (f"{one} and {two} interpenetrated {b['depth_mm']:.1f} mm (contact force {b['force_n']:.0f} N; a rigid "
+                f"contact deeper than {BREAKDOWN_PENETRATION_M * 1000:g} mm is a solver breakdown)")
+    if kind == "particle_speed":
+        speed = "a non-finite speed" if b.get("max_speed_m_s") is None else f"{b['max_speed_m_s']:.3g} m/s"
+        return f"a {b.get('entity', 'cloth')} particle moved at {speed} (limit {PARTICLE_SPEED_LIMIT_M_S:g} m/s)"
+    if kind == "soft_solver_invalid":
+        return "the soft-body solver reported an invalid state"
+    return "the rigid-body state became non-finite"
+
+
+def _forced_breakdown_reason(session, words, b) -> str:
+    last, dt = session.last_forcing, float(session.env.config.physics_dt_s)
+    if last is not None:
+        arm, d = last
+        ago = (int(b["physics_step"]) - int(d["physics_step"])) * dt
+        forcing = _forcing_words(session, words, arm, d) + (f" ({ago:.3g} s before)" if ago > 0 else "")
     else:
-        limit = c["held_sustained_m"] if held else c["sustained_m"]
-        what = (f"{one} and {two} stayed pressed more than {limit * 1000:g} mm into each other for {c['window_s']:g} s "
-                f"(now {depth * 1000:.1f} mm)")
-    return (f"{'held_contact_forced' if held else 'task_contact_forced'}: {what}; contact force {force:.0f} N"
-            f"{_drive_context(session)}. Contacts this deep or this persistent count as forcing bodies through each other.")
+        forcing = f"an arm forced within the {FORCING['attribution_s']:g} s before"
+    return (f"{FORCED_BREAKDOWN}: the simulation broke down ({breakdown_words(b)}) right after forcing: {forcing}. A "
+            f"breakdown within {FORCING['attribution_s']:g} s of forcing is the agent's failure; without forcing it is "
+            "an infrastructure error.")
 
 
 def _soft_reason(session, code, ipc, counts) -> str:
@@ -1483,7 +1664,7 @@ class _ChainFK:
                     elif kind == prismatic:
                         pos = pos + quat_to_mat(quat) @ self.mvel[self.jdof[j]] * angle
                     elif kind != fixed:
-                        raise ValueError(f"table guard kinematics: unsupported joint type {kind}")
+                        raise ValueError(f"kinematics: unsupported joint type {kind}")
                 P[i], Q[i] = pos, quat
             out[self.names[i]] = _T(P[i], Q[i])
         return out
@@ -1592,8 +1773,10 @@ class _TableGuard:
 
 
 class _SafetyMonitor:
-    """What R1 / R2 / R4 measure, for the agent (Session.safety(), the standard service's meta["safety"]): maxima since the
-    previous read and over the episode (since the last reset), against their limits."""
+    """What the physical-validity policy measures, for the agent (Session.safety(), the standard service's meta["safety"]):
+    maxima since the previous read and over the episode (since the last reset), against their limits; and the episode's
+    evidence for the graders (Layer 4): its review events (review()) and forcing events (forcing())."""
+    MAX_EVENTS = 20
 
     def __init__(self, session):
         self.s = session
@@ -1602,10 +1785,13 @@ class _SafetyMonitor:
     @staticmethod
     def _blank() -> dict:
         return dict(contact=0., held=0., over=0, held_over=0, ratio={}, inverted=0, residual=0., stretched=0, guard=0,
-                    guard_events=[], ik=[])
+                    guard_events=[], ik=[], press_force=0., press_fraction=0., forcing=0, forcing_events=[],
+                    forcing_count=0, review=[], review_count=0)
 
     def reset(self) -> None:
         self.last, self.episode = self._blank(), self._blank()
+        self._open = False
+        self._runs, self._open_forcing = {}, {}       # arm -> consecutive forcing ticks; arm -> its open forcing event
 
     def _both(self):
         return (self.last, self.episode)
@@ -1614,6 +1800,71 @@ class _SafetyMonitor:
         for d in self._both():
             d.update(contact=max(d["contact"], tick["nonheld"][0]), held=max(d["held"], tick["held"][0]),
                      over=max(d["over"], counts.get("over", 0)), held_over=max(d["held_over"], counts.get("held_over", 0)))
+
+    def forcing_tick(self, pressing, words, event_ticks) -> None:
+        """One tick of the forcing measures: the arms pressing with at least FORCING["contact_n"] and their drive load.
+        A run of the forcing condition on `event_ticks` consecutive ticks opens a forcing event (when it reached that
+        length: arm, drive, % of cap, what it pressed on, force); later ticks of the run extend it."""
+        forcing = {arm: v for arm, v in pressing.items() if v["forcing"]}
+        self._runs = {arm: self._runs.get(arm, 0) + 1 for arm in forcing}
+        self._open_forcing = {arm: e for arm, e in self._open_forcing.items() if arm in self._runs}
+        longest = max(self._runs.values(), default=0)
+        for d in self._both():
+            d["forcing"] = max(d["forcing"], longest)
+            for v in pressing.values():
+                d.update(press_force=max(d["press_force"], v["force_n"]), press_fraction=max(d["press_fraction"], v["fraction"]))
+        for arm, n in self._runs.items():
+            v, e = forcing[arm], self._open_forcing.get(arm)
+            if e is not None:
+                e.update(ticks=n, max_force_n=max(e["max_force_n"], round(v["force_n"], 1)))
+            elif n == event_ticks:
+                e = dict(arm=arm, joint=v["joint"].split("/")[-1], step=int(self.s.n_steps) + 1, physics_step=v["physics_step"],
+                         ticks=n, fraction=round(v["fraction"], 3), cap_nm=v["cap_nm"], max_force_n=round(v["force_n"], 1),
+                         pressing=words.get(v["own"], "a part") + (" it holds" if v["held"] else ""),
+                         on=words.get(v["partner"], "another body"))
+                self._open_forcing[arm] = e
+                for d in self._both():
+                    d["forcing_count"] += 1
+                    if len(d["forcing_events"]) < self.MAX_EVENTS:
+                        d["forcing_events"].append(e)
+
+    def forcing(self) -> dict | None:
+        """The episode's forcing events (None: none): evidence only, they never end the episode or hold a success."""
+        d = self.episode
+        if not d["forcing_count"]:
+            return None
+        dt = float(self.s.env.config.physics_dt_s)
+        return dict(count=d["forcing_count"], longest_s=round(d["forcing"] * dt, 4), events=[dict(e) for e in d["forcing_events"]])
+
+    def review_event(self, verdict, tick, words, physics_step) -> None:
+        """One tick of contact_rule_tick's verdict: consecutive ticks with a verdict make one review event (its worst
+        depth, the force there, its length in ticks)."""
+        if not verdict:
+            self._open = False
+            return
+        held = verdict.startswith("held")
+        depth, pair, force = tick["held" if held else "nonheld"]
+        for d in self._both():
+            if self._open and d["review"] and d["review_count"] == len(d["review"]):
+                e = d["review"][-1]
+                e["ticks"] += 1
+                if depth * 1000 > e["depth_mm"]:
+                    e.update(depth_mm=round(depth * 1000, 3), force_n=round(force, 1))
+            elif not self._open:
+                d["review_count"] += 1
+                if len(d["review"]) < self.MAX_EVENTS:
+                    d["review"].append(dict(kind=verdict, step=int(self.s.n_steps) + 1, physics_step=int(physics_step), ticks=1,
+                                            bodies=[words.get(i, "a task part") for i in (pair or ())],
+                                            depth_mm=round(depth * 1000, 3), force_n=round(force, 1)))
+        self._open = True
+
+    def review(self) -> dict | None:
+        """The episode's review events (None: none). A success with any is held for review by the graders."""
+        d = self.episode
+        if not d["review_count"]:
+            return None
+        return dict(pending=True, count=d["review_count"], max_depth_mm=max(e["depth_mm"] for e in d["review"]),
+                    events=[dict(e) for e in d["review"]])
 
     def soft(self, ratios, residuals, counts) -> None:
         for d in self._both():
@@ -1637,14 +1888,25 @@ class _SafetyMonitor:
         dt = float(s.env.config.physics_dt_s)
         rules = s.rules
         out = {"rules": RULES_REVISION, "scope": "episode" if episode else "since the previous read"}
+        p = FORCING
+        out["forcing"] = dict(event_after_s=p["event_s"], near_cap_fraction=p["near_cap"], contact_n=p["contact_n"],
+                              max_press_force_n=round(d["press_force"], 1),
+                              max_drive_fraction_while_pressing=round(d["press_fraction"], 3),
+                              longest_forcing_s=round(d["forcing"] * dt, 4), events=d["forcing_count"],
+                              recent=[dict(e) for e in d["forcing_events"][-3:]],
+                              note=f"recorded only: forcing never ends the episode; a simulator breakdown within "
+                                   f"{p['attribution_s']:g} s of it is the agent's failure")
         if rules["contact"]:
             c = CONTACT_RULE
-            out["task_contact_mm"] = dict(max=round(d["contact"] * 1000, 3), fails_above=c["deep_m"] * 1000,
-                                          fails_if_above_for_s=[c["sustained_m"] * 1000, c["window_s"]],
-                                          longest_above_s=round(d["over"] * dt, 4))
-            out["held_finger_contact_mm"] = dict(max=round(d["held"] * 1000, 3), fails_above=c["held_deep_m"] * 1000,
-                                                 fails_if_above_for_s=[c["held_sustained_m"] * 1000, c["window_s"]],
+            out["task_contact_mm"] = dict(max=round(d["contact"] * 1000, 3), review_above=c["deep_m"] * 1000,
+                                          review_if_above_for_s=[c["sustained_m"] * 1000, c["window_s"]],
+                                          longest_above_s=round(d["over"] * dt, 4),
+                                          breakdown_above=BREAKDOWN_PENETRATION_M * 1000)
+            out["held_finger_contact_mm"] = dict(max=round(d["held"] * 1000, 3), review_above=c["held_deep_m"] * 1000,
+                                                 review_if_above_for_s=[c["held_sustained_m"] * 1000, c["window_s"]],
                                                  longest_above_s=round(d["held_over"] * dt, 4))
+            out["review"] = dict(events=d["review_count"], recent=d["review"][-3:],
+                                 note="a success with a review event is held for review instead of credited automatically")
         if rules["soft"]:
             w = SOFT_RULE["window_s"]
             out["soft_volume_ratio"] = dict(min={k: round(v, 4) for k, v in d["ratio"].items()}, fails_at_or_below_for_s=[0., w],
@@ -1890,7 +2152,7 @@ def _guard_particle_speeds(task, on_trip: Callable[[dict], None]) -> bool:
             speed = float(np.sqrt(s2[i])) if finite else float("inf")
             if not finite or speed > PARTICLE_SPEED_LIMIT_M_S:
                 p = np.asarray(fields.get("position_m"), dtype=np.float64).reshape(-1, 3)
-                on_trip(dict(entity=str(name), particle=i, max_speed_m_s=speed if finite else None, finite=finite,
+                on_trip(dict(kind="particle_speed", entity=str(name), particle=i, max_speed_m_s=speed if finite else None, finite=finite,
                              limit_m_s=PARTICLE_SPEED_LIMIT_M_S, physics_step=int(state.get("physics_step", -1)),
                              sim_time_s=float(state.get("sim_time_s", float("nan"))),
                              position_m=[float(x) for x in p[i]] if i < len(p) and np.isfinite(p[i]).all() else None))
@@ -1901,6 +2163,150 @@ def _guard_particle_speeds(task, on_trip: Callable[[dict], None]) -> bool:
 
 
 BINDING_API = 1
+
+
+# --------------------------------------------------------------------------- grading replays (tooling v16, 2026-10-03)
+# The user's decisions (2026-10-03): live-strict, replay-tolerant grading for the families whose physics runs on the GPU,
+# which is not bit-deterministic (PBD cloth, the IPC FEM ropes and cords, lock_picking's GPU float32 rigid bodies), and a
+# tolerant replay may only CONFIRM a strict success, never turn a failure into one. A genuine live success could miss
+# its own fresh replay: blanket medium standard trial ihy7Nru succeeded live at row 3089 and the grader's replay of those
+# rows did not (a speed spike restarted its confirmation at the last row). What the agent sees (the live episode, its own
+# Session) is unchanged. A grading replay (Session.replay(..., grading=True): environment/sim/replay.py after a live
+# success, both replays of the privileged tests/grade.py, the `replay` CLI) of one of these families
+#   1. re-executes the trajectory's rows with the instance's own thresholds: a success within the rows is a STRICT
+#      success (the grading record's strict_success and success_row);
+#   2. if the episode has not ended after the last row, holds the final targets for up to GRADING_HOLD_S of simulated
+#      time, stopping at the first success or failure, so a confirmation window that starts a few ticks later than live
+#      can still complete; during this hold only, the task's predicate uses REPLAY_TOLERANCES: continuous thresholds,
+#      each one of the task's own parameters loosened by a small slack and restored after the replay. A confirmation
+#      window already running at the last row carries on. Binary and topological conditions, failure predicates and the
+#      length of every confirmation window are never changed.
+# The graders combine it: standard = the live success (strict) AND this replay's success (a live failure stays final:
+# finalize.sh then replays plainly); privileged = both replays succeed AND at least one of them is a strict success within
+# the agent's own rows (the trajectory itself reached the goal at least once). The record (_GradingReplay.record) carries
+# the hold used, every relaxed threshold with its live and replay values and, over the confirmation window that ended in
+# success, the worst measured value and whether it stayed within the live threshold (tolerance_needed: the pass needed
+# the slack). The CPU families are not in the table: their grading replays are plain replays (bit-exact, the same
+# verdicts and state hashes); a plain replay's success is a strict success.
+GRADING_REVISION = "replay_tolerance_2026-10-03b"
+GRADING_HOLD_S = 2.0
+# family -> {threshold: (task parameter, the side that passes, slack in the parameter's unit, towards passing)}.
+# blanket_flatten: the user's numbers (2026-10-03 20:50): coverage live 0.95 / hold 0.92; particle speed live 0.03 / hold
+# 0.08 m/s (maximum_speed_m_s: the cheap "settled" gate and the final settling's speed; the 3 mm displacement from the start
+# of confirmation, maximum_drift_m, and the 0.5 s window stay). PBD reports a particle's last-substep velocity: on cloth at
+# rest it spikes to 0.04-0.07 m/s and restarts the confirmation (ihy7Nru's replays). knot's rope speed: 2 x the largest
+# replay-to-replay spread measured in a success's confirmation window (0.12 mm/s, lab 2026-10-03); its release conditions
+# (terminal v5) are geometric and never relaxed. The other families: no measured spread that a small slack would absorb
+# (docs/rcb/benchmarks/topogym.md, "Grading replays"), so the hold only; rope_threading's live thresholds are the release
+# profile's (merged-v16: rope speed 10 mm/s, a 1 mm aperture allowance), never loosened again here.
+REPLAY_TOLERANCES: dict[str, dict[str, tuple[str, str, float]]] = {
+    "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.03),
+                        "particle_speed": ("maximum_speed_m_s", "at_most", .05)},
+    "knot_untying": {"rope_speed": ("terminal.maximum_speed_m_s", "at_most", .00025)},
+    "rope_threading": {},
+    "slotted_post_ring": {},
+    "orbits": {},
+    "lock_picking": {},
+}
+# threshold -> the quantity the task compares with it at a tick, from the tick's world state and the task's metrics
+_GRADING_VALUES: dict[str, Callable] = {
+    "coverage": lambda task, state, metrics: metrics.get("coverage_ratio"),
+    "particle_speed": lambda task, state, metrics: metrics.get("maximum_speed_m_s"),
+    "rope_speed": lambda task, state, metrics: metrics.get("maximum_speed_m_s"),
+}
+
+
+def _parameter(config, path):
+    for key in path.split("."):
+        config = config[key]
+    return config
+
+
+def _set_parameter(config, path, value) -> None:
+    *head, last = path.split(".")
+    for key in head:
+        config = config[key]
+    config[last] = value
+
+
+class _GradingReplay:
+    """The grading-replay policy of one replay (the block comment above): a recorder of the confirmation window on the
+    Session's task from the first row on, the hold after the rows with the replay thresholds, and the grading record;
+    remove() restores the task's own thresholds and update."""
+
+    def __init__(self, session):
+        self.s, self.task = session, session.env._task
+        self.thresholds = {}
+        for name, (path, side, slack) in REPLAY_TOLERANCES[session.task].items():
+            live = float(_parameter(self.task.config, path))
+            self.thresholds[name] = dict(parameter=path, passes=side, live=live, replay=round(live + slack, 12),
+                                         slack=slack)
+        self.hold_limit = int(round(GRADING_HOLD_S * session.control_hz))
+        self.hold_steps, self.relaxed = 0, False
+        self.window: list = []          # (physics step, {threshold: value}) of the current confirmation window
+        self._own_update = self.task.__dict__.get("update")
+        self._update = self.task.update
+        self.task.update = self._recording_update
+
+    def _recording_update(self, state, physics_dt_s):
+        result = self._update(state, physics_dt_s)
+        if self.task._goal_active:      # this tick starts or extends the confirmation window
+            self.window.append((int(state["physics_step"]),
+                                {n: _GRADING_VALUES[n](self.task, state, result.metrics) for n in self.thresholds}))
+        elif self.window:
+            self.window = []
+        return result
+
+    def hold(self) -> None:
+        """After the rows, while the episode has not ended: the replay thresholds, then the final targets until the
+        episode ends or for at most hold_limit control steps."""
+        s = self.s
+        if s.episode_end is not None or s.episode_done:
+            return
+        for t in self.thresholds.values():
+            _set_parameter(self.task.config, t["parameter"], t["replay"])
+        self.relaxed = True
+        while s.episode_end is None and not s.episode_done and self.hold_steps < self.hold_limit:
+            s.step(s.hold_action())
+            self.hold_steps += 1
+
+    def remove(self) -> None:
+        if self.relaxed:
+            for t in self.thresholds.values():
+                _set_parameter(self.task.config, t["parameter"], t["live"])
+        if self._own_update is None:
+            self.task.__dict__.pop("update", None)
+        else:
+            self.task.update = self._own_update
+
+    def record(self, rows: int) -> dict:
+        success = bool(self.s.success())
+        strict = success and self.hold_steps == 0
+        out = dict(revision=GRADING_REVISION, rows=int(rows), strict_success=strict,
+                   success_row=int(rows) if strict else None, hold_steps=self.hold_steps,
+                   hold_limit_steps=self.hold_limit, success_in_hold=success and self.hold_steps > 0, thresholds={},
+                   tolerance_needed=False)
+        window = self.window if success else []
+        for name, t in self.thresholds.items():
+            entry = dict(t)
+            values = [v[name] for _, v in window if v.get(name) is not None]
+            if values:
+                worst = min(values) if t["passes"] == "at_least" else max(values)
+                held = worst >= t["live"] if t["passes"] == "at_least" else worst <= t["live"]
+                entry.update(window_ticks=len(window), window_worst=float(worst), live_held=bool(held))
+                out["tolerance_needed"] = out["tolerance_needed"] or not held
+            out["thresholds"][name] = entry
+        return out
+
+
+def strict_goal(statuses) -> tuple[int, int] | None:
+    """(1-based replay, row) of the first graded replay that met the instance's own (strict) goal within the trajectory's
+    rows, or None. A plain replay (a CPU family: no grading record) uses the instance's thresholds throughout."""
+    for i, st in enumerate(statuses, 1):
+        g = st.get("grading")
+        if st.get("success") and (g is None or g.get("strict_success")):
+            return i, int(g["success_row"]) if g is not None else int(st.get("sim_steps", 0))
+    return None
 
 
 class Session:
@@ -2106,12 +2512,12 @@ class Session:
         self._targets = self.robot.targets()
 
     def _on_instability(self, info: dict) -> None:
-        """The particle speed guard tripped (_guard_particle_speeds): keep the first evidence of this episode."""
+        """A simulator breakdown (the particle speed guard, _guard_particle_speeds; the policy's Layer 3, _install_rules):
+        keep the first evidence of this episode."""
         if self.instability is None:
             self.instability = info
-            speed = "non-finite" if info["max_speed_m_s"] is None else f"{info['max_speed_m_s']:.3g} m/s"
-            _log(f"SIMULATOR INSTABILITY at physics step {info['physics_step']}: {info['entity']} particle {info['particle']} "
-                 f"moves at {speed} (limit {info['limit_m_s']:g} m/s). The episode ends with episode_end "
+            _log(f"SIMULATOR INSTABILITY at physics step {info.get('physics_step')}: {breakdown_words(info)}. Unless an arm "
+                 f"was forcing within {FORCING['attribution_s']:g} s before, the episode ends with episode_end "
                  f"'{SIMULATOR_INSTABILITY}': a simulator failure, graded as an infrastructure error, not as the task's "
                  "failure predicate; reset() starts again from the frozen state")
 
@@ -2172,12 +2578,15 @@ class Session:
         return self._targets.copy()
 
     def safety(self, *, episode: bool = False) -> dict[str, Any]:
-        """What the safety rules measured since the previous safety() call (episode=True: since the last reset), against
-        their limits: the deepest task contact and held-finger contact (mm) and the longest time above the sustained limit
-        (rigid families: > 3 mm at once, or > 1 mm for 0.25 s, ends the episode; held fingers 4 mm / 2 mm), the lowest
+        """What the physical-validity policy measured since the previous safety() call (episode=True: since the last
+        reset), against its limits: forcing (the largest contact force an arm or a part it holds pressed with, the drive
+        load meanwhile, the longest run of the forcing condition, the forcing events: evidence only, but a simulator
+        breakdown within FORCING["attribution_s"] of forcing is the agent's failure), the deepest task contact and
+        held-finger contact (mm; rigid families: evidence only, a success with a review event is held for review; deeper
+        than BREAKDOWN_PENETRATION_M is a solver breakdown), the lowest
         soft-body volume ratio and the longest time at or below 0 (IPC families: 0.25 s ends it), the worst cord
-        attachment stretch, the control steps whose gripper target the table guard stopped (table_guard_words()), and
-        IK solutions far from the current joints (move_ee). Reading it does not touch the simulation."""
+        attachment stretch, the control steps whose gripper target the table guard stopped (table_guard_words()), and IK
+        solutions far from the current joints (move_ee). Reading it does not touch the simulation."""
         return self.monitor.read(episode=episode)
 
     def ik_jump(self, arm: str, q_arm) -> tuple[float, str]:
@@ -2192,11 +2601,14 @@ class Session:
         return bool(self.env.is_solved())
 
     def status(self) -> dict[str, Any]:
+        """The episode so far. "review": its review events (deep task contacts, CONTACT_RULE; None: none): a success with
+        any is held for review by the graders instead of being credited automatically. "forcing": its forcing events
+        (FORCING; None: none): evidence only."""
         return {"success": self.success(), "progress": round(self._reward, 4), "sim_steps": int(self.n_steps),
                 "physics_steps": self.physics_steps, "sim_time_s": self.sim_time_s,
                 "resets": self._resets, "state_sha": self.state_sha(), "episode_end": self.episode_end,
                 "instability": self.instability, "instance_exact": self.instance_exact,
-                "runtime_binding": self.runtime_binding}
+                "runtime_binding": self.runtime_binding, "review": self.monitor.review(), "forcing": self.monitor.forcing()}
 
     # ---- recording / trajectories
     def record_start(self) -> None:
@@ -2221,17 +2633,31 @@ class Session:
                  action_dim=self.action_dim, action_layout=np.array(self.action_layout),
                  gripper_space=self.gripper_space, meta=json.dumps(meta or {}), **extra)
 
-    def replay(self, actions: np.ndarray, *, physics_steps=None) -> dict[str, Any]:
-        """Open-loop replay after reset(): what the verifier does, twice, in its own process."""
+    def replay(self, actions: np.ndarray, *, physics_steps=None, grading: bool = False) -> dict[str, Any]:
+        """Open-loop replay after reset(): what the verifier does, twice, in its own process. grading=True is the
+        graders' replay: for a family of REPLAY_TOLERANCES (physics on the GPU) the rows run with the instance's own
+        thresholds (a success there is strict) and, if the episode has not ended after the last row, the final targets
+        are held for up to GRADING_HOLD_S with the listed continuous thresholds loosened; the status then carries a
+        "grading" record. Every other family replays as without it."""
         self.reset()
         if self._video is not None:
             self._video_begin()
         if physics_steps is not None and len(physics_steps) != len(actions):
             raise ValueError("tick ledger length differs from actions")
-        for i, a in enumerate(np.asarray(actions, dtype=np.float32)):
-            if self.step(a, _physics_steps=None if physics_steps is None else physics_steps[i]):
-                break
+        policy = _GradingReplay(self) if grading and self.task in REPLAY_TOLERANCES else None
+        try:
+            for i, a in enumerate(np.asarray(actions, dtype=np.float32)):
+                if self.step(a, _physics_steps=None if physics_steps is None else physics_steps[i]):
+                    break
+            rows = self.n_steps
+            if policy is not None:
+                policy.hold()
+        finally:
+            if policy is not None:
+                policy.remove()
         st = self.status()
+        if policy is not None:
+            st["grading"] = policy.record(rows)
         _slog("replay", task=self.task, n_actions=int(len(actions)), success=st["success"])
         return st
 
@@ -2256,6 +2682,31 @@ class Session:
         while len(tiles) % cols:
             tiles.append(np.zeros_like(tiles[0]))
         return np.concatenate([np.concatenate(tiles[i:i + cols], axis=1) for i in range(0, len(tiles), cols)], axis=0)
+
+    def render_review_frames(self, actions, events, out_dir, *, physics_steps=None, offsets=(-10, 0, 10),
+                             size=(424, 240)) -> list[str]:
+        """Frames around events (a success held for review: status()["review"]["events"] and its forcing events): replays
+        the rows from the frozen state as replay() does and saves render_grid() at each event's control step + `offsets`
+        (clamped to the first step; control steps past the rows hold the final targets). Returns the files written;
+        rendering does not touch the physics."""
+        from PIL import Image
+        want = sorted({max(1, int(e["step"]) + o) for e in events for o in offsets})
+        if not want:
+            return []
+        os.makedirs(out_dir, exist_ok=True)
+        acts, files = np.asarray(actions, dtype=np.float32), []
+        self.reset()
+        while self.n_steps < want[-1]:
+            k = self.n_steps
+            done = (self.step(acts[k], _physics_steps=None if physics_steps is None else physics_steps[k]) if k < len(acts)
+                    else self.step(self.hold_action()))
+            if self.n_steps in want and self.n_steps > k:
+                path = os.path.join(str(out_dir), f"step_{self.n_steps:05d}.png")
+                Image.fromarray(self.render_grid(size=size)).save(path)
+                files.append(path)
+            if done:
+                break
+        return files
 
     def render_video(self, actions: np.ndarray, path: str | Path, *, every: int = 2, fps: int = 15,
                      cameras=None, cols=3, size=(424, 240), physics_steps=None) -> dict[str, Any]:
@@ -2923,12 +3374,14 @@ def cmd_replay(a) -> None:
     s = Session(a.task, instance=a.instance, strict=a.strict)
     acts, ticks = load_trajectory(a.traj, a.task, s.action_dim, trusted=True, layout=s.action_layout)
     t0 = time.time()
-    outs = [s.replay(acts, physics_steps=ticks) for _ in range(a.repeat)]
+    outs = [s.replay(acts, physics_steps=ticks, grading=True) for _ in range(a.repeat)]   # as the graders replay
     out = {"n_actions": int(len(acts)), "instance_sha": s.instance_sha, "instance_matches": s.instance_matches,
            "instance_exact": s.instance_exact, "replays": outs, "all_success": all(o["success"] for o in outs),
-           "deterministic": len({o["state_sha"] for o in outs}) == 1, "wall_s": round(time.time() - t0, 1)}
+           "deterministic": len({o["state_sha"] for o in outs}) == 1, "strict_goal": strict_goal(outs),
+           "wall_s": round(time.time() - t0, 1)}
     if a.video:
-        s.start_video(a.video, fps=a.fps); s.replay(acts, physics_steps=ticks); s.stop_video(); out["video"] = a.video
+        s.start_video(a.video, fps=a.fps); s.replay(acts, physics_steps=ticks, grading=True); s.stop_video()
+        out["video"] = a.video
     print(json.dumps(out), flush=True)
     s.close()
 

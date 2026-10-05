@@ -29,7 +29,7 @@ hard14 将默认 hard 抓取／放下目标再提高 0.5 mm（总偏移 +1.5 mm�
 
 该 [0–3 s 实测窗口](../../../runs/test_results/knot_oracle_20261003/hard14/milestones/early_tick_window/validation.json)已完整检查 1,201 个状态，无桌面 findings；手指顶面垂直间隙最低约 0.4654 mm，旧反例时刻约 0.488–0.499 mm。逐 tick 连续性和前 120 个实际动作核对通过；全程解结及正式物理资格仍待验证。
 
-hard14 已在 **29.275 s** 完成首轮抽绳及释放，交叉数 **4→1**、零回退；随后进入两端整理。[首轮动作核验](../../../runs/test_results/knot_oracle_20261003/hard14/milestones/first_withdrawal/validation.json)通过：1,171 个动作／11,710 ticks 与原生台账一致，1,172 个控制边界桌面记录无 findings。当前仍是中间结果，未取得原生成功或完整物理／回放资格。
+hard14 已在 **29.275 s** 完成首轮抽绳及释放，交叉数 **4→1**、零回退；随后进入两端整理。[首轮动作核验](../../../runs/test_results/knot_oracle_20261003/hard14/milestones/first_withdrawal/validation.json)通过：1,171 个动作／11,710 ticks 与原生台账一致，1,172 个控制边界桌面记录无 findings。约 42 s 已观测到零交叉和 `planar_clear=true`；仍在完成整理，落桌与稳定条件尚未满足。当前仍是中间结果，未取得原生成功或完整物理／回放资格。
 
 [hard14 归档检查准备](../../../runs/test_results/knot_oracle_20261003/supporting/archive_helpers/release_v5_hard14/preparation.json)已通过 10 项 CPU 检查，并核对前 17 个实测动作／170 ticks 的独立副本。它按原生分支身份重建最终保留的动作路径；缺少完整成功、正式回放或物理审计时拒绝发布。该准备工作不代表 hard14 已通过真实任务验证，当前尚未发布成功归档或视频。
 

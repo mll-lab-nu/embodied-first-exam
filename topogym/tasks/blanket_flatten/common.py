@@ -59,6 +59,15 @@ class BlanketFlattenTask(TaskDefinition):
         return SettlingSpec(particle_targets=("blanket",), particle_radius_m=self.config["particle_size_m"],
             maximum_speed_m_s=self.config["maximum_speed_m_s"], maximum_drift_m=self.config["maximum_drift_m"])
 
+    def identity_config(self):
+        # The prepared state is pinned by initial_state_sha256 (checked in frozen_initial_state); its location differs per
+        # process (a build directory, /app, /tests, /srv), so the path must not change the instance identity and with it the
+        # state hash that an exact restore compares (lab oracle sweep 2026-10-04, BUG 2: every blanket candidate build
+        # stopped at describe with an instance-state mismatch while the physics state was identical).
+        config = super().identity_config()
+        config.pop("initial_state_path", None)
+        return config
+
     def frozen_initial_state(self):
         from topogym.assets.library import resource_path
         from topogym.utils.io import sha256_file

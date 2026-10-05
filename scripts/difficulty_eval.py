@@ -26,12 +26,13 @@ import sample_difficulty_instances as sampling
 import difficulty_hf_auth as hf_auth
 import helper_assignment as helper
 import helper_runtime
+from topogym_versions import bound_release
 
 ROOT = Path(__file__).resolve().parents[1]
 PROMPT_KEY = object()
 AUTH_VARIABLES = ("OPENAI_API_KEY", "OPENROUTER_API_KEY", "OPENAI_BASE_URL", "OPENAI_API_BASE",
                   "OPENROUTER_BASE_URL", "CODEX_FORCE_AUTH_JSON", "CODEX_AUTH_JSON_PATH")
-COMPLETE = {"solved", "unsolved", "not_evaluable", "invalid_submission"}
+COMPLETE = {"solved", "unsolved", "pending_review", "not_evaluable", "invalid_submission"}
 RETRYABLE = {"interrupted", "infra_failed", "invalid_job"}
 
 
@@ -447,8 +448,9 @@ class DifficultyEvaluation:
             from topogym_versions import identity as release_identity
             selected_release = release_identity(self.source)
             if (self.args.phase not in ("collect", "upload") and
-                    (self.manifest.get("release") != selected_release or selected_release["tooling_version"] != "15")):
-                raise EvaluationError("New evaluation execution requires a frozen v15 run; use a new run-id for migration")
+                    (self.manifest.get("release") != selected_release or not bound_release(selected_release["tooling_version"]))):
+                raise EvaluationError("New evaluation execution requires a run frozen on a bound release (tooling v15 or "
+                                      "later); use a new run-id for migration")
             if new_manifest and self.args.results_to_hf:
                 from difficulty_results_hf import utc
                 sampling.atomic_json(self.run / "run-created.json", dict(created_at=utc()))

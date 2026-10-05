@@ -54,7 +54,7 @@ hard14 的[原生初态预检](../../../runs/test_results/knot_oracle_20261003/h
 
 **hard14 原生前 3 s 的桌面诊断窗口已完整结束：1,201 个连续状态，0 findings。** [窗口与动作身份核验](../../../runs/test_results/knot_oracle_20261003/hard14/milestones/early_tick_window/validation.json)确认每个 tick 的时间、分支、父状态以及前 120 个实际接受动作一致，并保存独立副本。该窗口中手指相对桌面顶面的最小垂直间隙约 **0.4654 mm**（1.985 s）；旧反例对应的三个 tick 现在约为 **0.488–0.499 mm** 正间隙。观察器已按计划退订，原生执行继续抬绳。这些是初始分支的桌面诊断及记录一致性结果，不是后续路径、FEM 或正式回放的无穿透资格。
 
-**hard14 首次抽绳及释放已在 29.275 s 完成，交叉数 4→1，零回退。** [实际动作前缀核验](../../../runs/test_results/knot_oracle_20261003/hard14/milestones/first_withdrawal/validation.json)确认 1,171 个动作／11,710 ticks 与原生接受台账逐项一致，1,172 个控制边界桌面记录无 findings，并保留报告、中心线、原始部分轨迹和提取前缀的独立副本。第二次决策已开始两端整理。这是当前搜索路径的中间结果，仍可能被后续搜索修订，不代表原生成功或完整逐 tick／FEM／回放资格。
+**hard14 首次抽绳及释放已在 29.275 s 完成，交叉数 4→1，零回退。** [实际动作前缀核验](../../../runs/test_results/knot_oracle_20261003/hard14/milestones/first_withdrawal/validation.json)确认 1,171 个动作／11,710 ticks 与原生接受台账逐项一致，1,172 个控制边界桌面记录无 findings，并保留报告、中心线、原始部分轨迹和提取前缀的独立副本。第二次决策继续两端整理，约 42 s 已观测到零交叉及 `planar_clear=true`，并[保留实际指标快照](../../../runs/test_results/knot_oracle_20261003/hard14/milestones/planar_clear_observation/observation.json)；仍需放绳、撤手及停稳。这是当前搜索路径的中间结果，仍可能被后续搜索修订，不代表原生成功或完整逐 tick／FEM／回放资格。
 
 [hard14 归档／发布准备](../../../runs/test_results/knot_oracle_20261003/supporting/archive_helpers/release_v5_hard14/preparation.json)已适配本轮身份，10 项动作台账 CPU 检查及前 17 个真实动作／170 ticks 的独立副本核对通过。缺少两遍成功回放或完整物理资格时，两个发布入口均拒绝执行；未创建成功归档或视频。还为正式首遍回放挂接了相同源码的只读 CPU 观察器，等待采集后核对前 3 s 的逐 tick 桌面几何，不额外运行模拟。
 

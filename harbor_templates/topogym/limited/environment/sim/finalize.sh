@@ -6,9 +6,11 @@
 #      service process, resends every 30 s, and exits 2 when final.json already holds the verdict (the service gave up after
 #      crashes): that verdict stays, nothing is replayed.
 #   2. ONE fresh-process replay of the live rows from the frozen instance (replay.py), rendering replay.mp4 during that
-#      replay: two passes in all, the live episode and this replay. It runs on the sidecar's GPU after the live service has
-#      exited, so it takes the place of the live simulator there (Nyx renders only in a container that sees one GPU: a
-#      second GPU in the sidecar segfaults it, 2026-10-01).
+#      replay: two passes in all, the live episode and this replay. After a live success it is a grading replay (tooling
+#      v16): for the GPU families, if the episode has not ended after the last row, the final targets are held for up to
+#      2 s with the replay tolerances; after a live failure it is plain (a live failure is final). It runs on the
+#      sidecar's GPU after the live service has exited, so it takes the place of the live simulator there (Nyx renders
+#      only in a container that sees one GPU: a second GPU in the sidecar segfaults it, 2026-10-01).
 #   3. merge everything into final.json, the only thing the verifier sandbox grades. TopoGym's GPU physics is not
 #      bit-deterministic: `deterministic` (= live_matches_replay) is reported, not required.
 set -u
@@ -76,15 +78,24 @@ if isinstance(a, dict):                  # a replay result (None: the replay pro
     out["replay_sha"] = a.get("state_sha"); out["replay_episode_end"] = a.get("episode_end")
     out["deterministic"] = out["live_matches_replay"] = bool(a.get("state_sha")) and a.get("state_sha") == out.get("live_sha")
     out["replay_wall_s"] = r.get("wall_s"); out["instance_exact"] = r.get("instance_exact"); out["instance_matches"] = r.get("instance_matches")
+    g = a.get("grading") or {}             # the grading replay's hold and replay tolerances (GPU families, tooling v16)
+    out["replay_grading"] = g or None; out["replay_grading_policy"] = bool(r.get("grading_replay"))
+    out["replay_hold_steps"] = int(g.get("hold_steps", 0)); out["replay_tolerance_needed"] = bool(g.get("tolerance_needed"))
+    out["replay_review"] = a.get("review")   # the replay's review events (deep task contacts; the live ones: "review")
+    out["replay_forcing"] = a.get("forcing")  # the replay's forcing events (evidence only; the live ones: "forcing")
+    out["review_frames"] = r.get("review_frames") or []
 elif r.get("error"):
     out["error"] = f"replay: {r['error']}"
 if isinstance(a, dict) and a.get("episode_end") == "simulator_instability":
     out["replay_instability"] = a.get("instability")
-# A numerically unstable simulation (rcb_topogym.SIMULATOR_INSTABILITY), in the live episode or in this replay (GPU physics:
-# either may meet it without the other), is an infrastructure failure: never the agent's success, never the task's failure.
+# A simulator breakdown without forcing (rcb_topogym.SIMULATOR_INSTABILITY), in the live episode or in this replay (GPU
+# physics: either may meet it without the other), is an infrastructure failure: never the agent's success, never the task's
+# failure. A breakdown right after forcing ends the episode as the agent's "forced_breakdown: ..." instead.
 if out.get("reason") == "simulator_instability" or out.get("replay_episode_end") == "simulator_instability":
     out["simulator_instability"] = True; out["infra_error"] = 1
-    out.setdefault("error", "simulator_instability: a cloth particle exceeded the simulator's plausibility speed limit")
+    from rcb_topogym import breakdown_words
+    ev = out.get("instability") if out.get("reason") == "simulator_instability" else out.get("replay_instability")
+    out.setdefault("error", "simulator_instability: " + (breakdown_words(ev) if isinstance(ev, dict) else "a simulator breakdown"))
 out["video"] = bool(r.get("video")) and os.path.exists(os.path.join(d, "replay.mp4"))
 if r.get("gpu_lost"):
     out["gpu_lost"] = True; out["infra_error"] = 1

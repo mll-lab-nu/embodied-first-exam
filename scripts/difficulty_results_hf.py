@@ -29,7 +29,7 @@ from collect_batch_results import ARTIFACT_CONTRACT_VERSION, OPTIONAL_DIAGNOSTIC
 from helper_assignment import planned_trials
 
 SCHEMA = 1
-COMPLETE = {"solved", "unsolved", "not_evaluable", "invalid_submission"}
+COMPLETE = {"solved", "unsolved", "pending_review", "not_evaluable", "invalid_submission"}
 STATUSES = COMPLETE | {"pending", "blocked_preflight", "interrupted", "infra_failed", "invalid_job", "identity_mismatch"}
 ROW_FIELDS = ("task_id", "difficulty", "sample_id", "scene_seed", "mode", "trial", "attempt", "status", "success",
               "evaluable_for_task_success", "tokens_in", "tokens_out", "cost_usd_api_price", "exception")

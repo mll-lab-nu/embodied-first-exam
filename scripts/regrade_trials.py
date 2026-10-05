@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Re-run a v15 trial's bound privileged verifier into a new evidence directory."""
+"""Re-run the bound privileged verifier of a trial of the active release into a new evidence directory."""
 import argparse
 import json
 import os
@@ -25,7 +25,7 @@ def plan(trial, output, gpu):
     if not (trajectory / "trajectory.npz").is_file():
         raise ValueError("No submitted trajectory")
     instance = json.loads((task / "tests/instance.json").read_text())
-    command = ["docker", "run", "--rm", "--name", "topogym-v15-regrade-" + uuid.uuid4().hex,
+    command = ["docker", "run", "--rm", "--name", "topogym-regrade-" + uuid.uuid4().hex,
         "--network", "none", "--gpus", "device=" + gpu,
         "--user", f"{os.getuid()}:{os.getgid()}", "--shm-size", "2g", "-e", "HOME=/tmp",
         "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "PYTHONPATH=/tests:/opt/topogym",

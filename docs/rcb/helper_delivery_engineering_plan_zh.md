@@ -4,6 +4,8 @@
 
 2026-10-04。状态：仓库内 W1–W6 的单队列能力已实现，W7 的 CPU 合同测试和中英文操作手册已补齐；W0 实际评测网站探针、W7 独立 GPU 主机交付演练及真实目标 HF 上传尚未验收。本轮没有启动真实模型评测或向外部上传结果。操作见 [Helper 手册](helper_quickstart_zh.md)、[异机验收手册](helper_import_zh.md)。下文保留原设计与正式放行门槛。
 
+> 2026-10-04 对齐：helper 手册只保留一份，即本目录的 [`SHARING_RUNS.md`](SHARING_RUNS.md)（英文，所有基准共用；与 robot_coding_bench `dev/qineng` 的 `docs/SHARING_RUNS.md` 逐字相同，两处一起改）。本计划的派单、结果包和导入实现后，W7 把已验收的命令写入该手册（§3b），不再新增 `helper_quickstart_zh.md` / `helper_import_zh.md`。
+
 目标：维护方提供固定任务单和发行版本，helper 在自己的 GPU 主机上执行，交回经过脱敏和校验的完整记录包；维护方在不同机器、不同目录下，仅凭交付包和对应的读取工具即可重建汇总与审查材料。helper 不需要访问评测网站或维护方机器。
 
 推荐继续使用 `bash_scripts/run_difficulty_trials.sh` 作为唯一评测入口，复用现有 Docker、认证、预检、执行和恢复能力。首版完成单 lane 的全流程，随后增加多 lane。原始 job 名称和内部目录保持原样，新增版本化交付格式及接收端适配。现有 HF 指标导出继续使用自己的格式。

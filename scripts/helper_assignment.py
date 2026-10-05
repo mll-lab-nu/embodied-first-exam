@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 
 MODES = ('unlimited', 'limited')
-COMPLETE = {'solved', 'unsolved', 'not_evaluable', 'invalid_submission'}
+COMPLETE = {'solved', 'unsolved', 'pending_review', 'not_evaluable', 'invalid_submission'}
 
 def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()

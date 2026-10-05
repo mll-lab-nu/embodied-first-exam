@@ -222,6 +222,24 @@ class MergeTests(unittest.TestCase):
                     other = 'limited' if mode == 'unlimited' else 'unlimited'
                     self.assertEqual(classify_trial(job, row, other)[0], 'identity_mismatch')
 
+    def test_a_success_held_for_review_is_neither_solved_nor_unsolved(self):
+        """The physical-validity policy (tooling v16): success 0 with success_pending_review 1 is a held success."""
+        with tempfile.TemporaryDirectory() as folder:
+            job = Path(folder); trial = job/'trial'; (trial/'verifier').mkdir(parents=True)
+            row = dict(slug='topogym-test-i00', evaluable_for_task_success=True)
+            for mode, suffix in (('unlimited', '-privileged'), ('limited', '-standard')):
+                reward = dict(success=0, success_pending_review=1, review_events=1, finalized=1)
+                (trial/'verifier/reward.json').write_text(json.dumps(reward))
+                (trial/'result.json').write_text(json.dumps(dict(task_name=row['slug']+suffix,
+                    finished_at='fixture', verifier_result=dict(rewards=reward))))
+                self.assertEqual(classify_trial(job, row, mode)[0], 'pending_review')
+                reward.update(success_pending_review=0)
+                (trial/'verifier/reward.json').write_text(json.dumps(reward))
+                self.assertEqual(classify_trial(job, row, mode)[0], 'unsolved')
+        import difficulty_eval, difficulty_results_hf, helper_assignment
+        for complete in (difficulty_eval.COMPLETE, difficulty_results_hf.COMPLETE, helper_assignment.COMPLETE):
+            self.assertIn('pending_review', complete)
+
     def test_standard_infrastructure_failure_is_not_an_unsolved_task(self):
         with tempfile.TemporaryDirectory() as folder:
             job = Path(folder); trial = job/'trial'; (trial/'verifier').mkdir(parents=True)

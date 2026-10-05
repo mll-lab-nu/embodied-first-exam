@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tasks:
-        description: "space-separated task names from the active v15 catalog (default: all)"
+        description: "space-separated task names from the active release catalog (default: all)"
         required: false
         default: ""
 permissions:
@@ -24,7 +24,7 @@ jobs:
       - name: Resolve task list
         run: |
           set -eu
-          # A frozen v15 task tree/catalog and its images must be present on this runner.
+          # The active release's frozen task tree/catalog and its images must be present on this runner.
           # No fallback to the historical root tasks/ when the candidate is absent.
           uv run --python 3.12 --with numpy --with scipy python scripts/topogym_versions.py list --inspect-docker $TASKS > /tmp/topogym-ci-tasks-${GITHUB_RUN_ID}.txt
           echo "TASK_LIST=$(paste -sd ' ' /tmp/topogym-ci-tasks-${GITHUB_RUN_ID}.txt)" >> "$GITHUB_ENV"

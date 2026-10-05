@@ -16,7 +16,7 @@ import numpy as np
 sys.dont_write_bytecode = True        # importing the task's tooling must not leave __pycache__ in a task directory
 from topogym_mk_task import (layout_words, MAX_BUDGET_S, TOOLING_VERSION, startup_instruction, goal_words,
                              validate_goal_instance, oracle_evidence, require_current_destination)
-from topogym_rules import details_section, limited_timing, step_seconds, step_time_words, table_guard_words
+from topogym_rules import REPLAY_TOLERANCES, details_section, limited_timing, step_seconds, step_time_words, table_guard_words
 from topogym.utils.io import make_asset_tree_readable
 
 root = pathlib.Path(__file__).resolve().parents[1]
@@ -188,14 +188,18 @@ the PD gains and the tool frames; `spec["world"]` the frame conventions.
   another IK branch, which would swing the arm): split long moves into rows a few cm and degrees apart.
 - Both action types: no gripper target goes lower than {table_guard_words()}; a target that would bring any part of
   a gripper lower is stopped there and listed in `meta["clipped"]`. Every response's `meta["safety"]` reports, since the
-  previous call, the deepest task contact and the longest time above its sustained limit (rigid families), the lowest
-  rope / cord volume ratio (soft families) and the table-guard stops, against the limits above.
+  previous call, forcing (the arms' pressing loads and forcing events), the deepest task contact, the longest time above
+  its sustained limit and the review events (rigid families), the lowest rope / cord volume ratio (soft families) and the
+  table-guard stops, against the limits above.
 
 Grasping: {d['grasp_rules']}.
 
 {objects}
 """
     (dst / "instruction.md").write_text(ins)
+    grading = (f"; after a live success it is a grading replay (tooling v{TOOLING_VERSION}): if this GPU family's episode has not ended after the "
+               "last live row, the final targets are held for up to 2 s with the replay tolerances of the grader details; a live "
+               "failure is final" if fam in REPLAY_TOLERANCES else "")
     ref = ("`solution/`: streams the privileged oracle's joint targets (one row per control step, `hold`) as `joint_position` chunks"
            if oracle else "none yet (`oracle = \"none\"`, no `solution/`)")
     (dst / "README.md").write_text(f"""# {slug}-standard
@@ -218,7 +222,7 @@ the privileged task to measure the cost of losing resets, privileged state and t
 | mode | standard (RGB, optional depth, proprioception, calibrated cameras, no reset) |
 | action space | `eai-standard/2.3`: `submit` chunks of `joint_position` ({dim}, streamed at the {d['control_hz']:g} Hz control rate with the agent's `dt`) or `ee_pose` ({8 * len(arms)}, IK per row); `observe` frames or a watch window; binary RCB1 responses |
 | oracle | {ref} |
-| verification | `success` = live success ∧ replay success: the live episode, then one fresh-process replay in the sidecar's collect hook, after the live service has exited; the state hashes are reported, not required (GPU physics is not bit-deterministic; the CPU rigid families' is, on one host); `/logs/verifier/replay.mp4` is rendered during that replay |
+| verification | `success` = live success ∧ replay success: the live episode, then one fresh-process replay in the sidecar's collect hook, after the live service has exited; the state hashes are reported, not required (GPU physics is not bit-deterministic; the CPU rigid families' is, on one host); `/logs/verifier/replay.mp4` is rendered during that replay{grading} |
 | crash recovery | `eai-standard/2.3` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
 """)
     unl_toml = (unl / "task.toml").read_text()

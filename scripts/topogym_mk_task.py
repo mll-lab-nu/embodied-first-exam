@@ -9,7 +9,8 @@ usage: scripts/topogym_mk_task.py <family> [--eval-index 0 | --variation seeded 
                 Without it solve.sh says there is none and the oracle agent scores 0
   --instance    an existing frozen instance to copy; otherwise one is made with `rcb_topogym.py make-instance` (needs the GPU)
   --python      the interpreter that has topogym + a GPU (default .venv-gs121-nyx/bin/python), for make-instance / describe
-Default output: runs/task_candidates/v15/. Use topogym_candidate_pipeline.py for fixed-suite generation and activation.
+Default output: runs/task_candidates/v<active tooling>/. Use topogym_candidate_pipeline.py for fixed-suite generation and
+activation.
 Shared files are copied from one tooling generation. New packages record its version;
 historical frozen generations keep their pinned bytes (ci_checks/check-tooling-identity.sh).
 Private sweeps use --tasks-root, --build-root, --slug, --image and --agent-wall-clock-s (default 21600, at most 43200).
@@ -21,7 +22,7 @@ sys.dont_write_bytecode = True        # importing the task's tooling must not le
 root = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root))
 from topogym.tasks.goal_description import TASK_IDS as GOAL_TASKS, render_goal
-from topogym_rules import details_section, step_time_words
+from topogym_rules import REPLAY_TOLERANCES, details_section, step_time_words
 from topogym.utils.io import make_asset_tree_readable
 from cuda_profiles import image_tag
 TEMPLATE = root / "harbor_templates/topogym/unlimited"
@@ -263,8 +264,8 @@ s.object_pose(name); s.object_bounds(name); s.state_sha()          # one object'
 p["object_in_hand"]("{arm}"); p["set_joint_targets"](row, steps=1); p["gripper_quat"](yaw, approach)   # help(p[...])
 s.step(action)                     # one low-level action ({len(d['action_layout'])} entries, below) = one control step (1/{d['control_hz']:g} s)
 s.record_start(); ...; actions = s.record_stop()   # (T, {len(d['action_layout'])}) actions, one row per control step
-s.status()                         # {{'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end'}}
-s.safety()                         # since the last call: deepest contacts / rope volume ratio / table-guard stops vs the limits
+s.status()                         # {{'success', 'progress', 'sim_steps', 'resets', 'state_sha', 'episode_end', 'review', 'forcing'}}
+s.safety()                         # since the last call: forcing / deepest contacts / rope volume / table-guard stops vs the limits
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state and writes a tiled camera video
@@ -290,6 +291,10 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
     determinism = ("The physics runs on the CPU and is bit-deterministic on one host; the final-state hashes\n"
                    "(`deterministic`) are still diagnostic, as for the GPU families" if cpu_physics(inst) else
                    "The physics runs on the GPU, which is not bit-deterministic: the\nfinal-state hashes (`deterministic`) are diagnostic")
+    grading = (f"\nThe replays are grading replays (tooling v{TOOLING_VERSION}): if this GPU family's episode has not ended after the last row, the\n"
+               "final targets are held for up to 2 s with the replay tolerances of the grader details; at least one replay must\n"
+               "reach the goal with the instance's own thresholds within the trajectory's rows."
+               if fam in REPLAY_TOLERANCES else "")
     ref = (f"`solution/oracle_{fam}.py`, written for this instance with the tooling's primitives; `solution/solve.sh` records it into a\n"
            f"trajectory." if oracle else
            "None yet (`oracle = \"none\"`, no `solution/`). A reference solution must be written for this instance (assisted\n"
@@ -321,7 +326,7 @@ def readme(slug: str, fam: str, text: str, d: dict, ei: int, variation: str, see
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
 replay (two passes, no separate video replay). {determinism}; the rebuilt frozen scene must match (`instance_ok`)
-(robot_coding_bench's GPU-backend rule).
+(robot_coding_bench's GPU-backend rule).{grading}
 """
 
 

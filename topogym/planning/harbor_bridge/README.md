@@ -104,7 +104,7 @@ Blanket、Rope、Knot 的 easy / medium / hard，共 33 个实例、最多 66 �
 及可用 CUDA/Nyx GPU。三档 Harbor 回调的参考输入随 `topogym/planning/` 交付，
 无需复制原机器的 `runs/` 或 `solvability_proof/*/*/evidence/`。
 首次执行从独立源码快照构建候选镜像，再生成双模式任务；默认镜像标签为
-`ghcr.io/luigivamper/rcb-topogym:0.2.13-dev-cu128`，本地构建不会 push 镜像。
+`ghcr.io/luigivamper/rcb-topogym:<images/topogym/VERSION>-cu128`（v16：`0.2.14-dev-cu128`），本地构建不会 push 镜像。
 恢复已绑定队列时不重新构建镜像，镜像 ID 和源码身份仍须匹配。
 不要在队列运行时修改其源码、镜像标签或任务包；其他运行若使用同一开发镜像标签，
 应先协调构建时间，或显式准备独立镜像与候选任务后传 `--tasks-root`。
@@ -129,12 +129,12 @@ export TOPOGYM_HARBOR="$PWD/.venv-harbor/bin/harbor"
 Blanket 的冻结初态还有硬件约束：当前三档 `tasks/.../instance_assets/initial_state/manifest.json`
 绑定 `cuda_sm120_mp188_87407517a32a`，来源为 RTX PRO 6000 Blackwell Max-Q，
 Genesis 1.2.1、torch 2.11.0+cu128、numpy 2.3.5、quadrants 1.0.2。
-v15 候选准备会保留这些初态字节；4090（sm89/mp128）不能直接恢复它们。
+候选准备会保留这些初态字节（v16 只为覆盖率阈值 0.95 改写副本的身份记录，arrays 字节不变）；4090（sm89/mp128）不能直接恢复它们。
 接收机器须匹配完整兼容性清单；使用其他硬件时，经 `scripts/prepare_blanket_initial_states.py`
 准备对应 profile 的初态，再生成并验收新的冻结实例。更换初态属于新实例，不能继承旧分数或改写兼容性哈希。
 
-当前 active 为 v15，`tasks_root=null`；仓库 `tasks/` 中的 78 个原三档包仍为 v14。
-因此新机器使用下面的构建入口生成候选，或显式传入同源码生成的 v15 `--tasks-root`。
+当前 active 为 v16，`tasks_root=null`；仓库 `tasks/` 中的 78 个原三档包仍为 v14。
+因此新机器使用下面的构建入口生成候选，或显式传入同源码生成的活动版本 `--tasks-root`。
 直接运行默认 `test_harbor_oracles.py` 会因活动任务树未冻结而 blocked，这是版本保护。
 
 先查看队列（不启动 Docker）：
@@ -297,7 +297,7 @@ IDE 中的 `oracle_v12_replay_20261003_easy_retry01` 则是 Knot 的 CUDA 内存
 .venv-gs121-nyx/bin/python scripts/oracle_runners/test_harbor_oracles.py \
   --output runs/test_results/harbor_oracle_regression_new --execute
 
-# 单实例候选冒烟：使用当前 v15 的真实生成包，不要求先激活全量 78 包。
+# 单实例候选冒烟：使用当前活动版本的真实生成包，不要求先激活全量 78 包。
 .venv-gs121-nyx/bin/python scripts/oracle_runners/test_harbor_oracles.py \
   --tasks-root <候选目录>/tasks --candidate --families cast_coil --tiers easy \
   --output runs/test_results/harbor_oracle_coil_new --execute
@@ -384,12 +384,12 @@ runner 文件存在不代表已有完整成功证据。任何物理/几何版本
 
 已发布的 v14 / `0.2.12-cu128` 工具哈希与镜像引用冻结在
 `ci_checks/topogym_tooling_versions.json`，现有 78 个三档任务目录和 dataset 保留。
-活动模板暂用 **tooling 15 / image 0.2.13-dev**，这是待验收候选编号。
+活动模板为 **tooling 16 / image 0.2.14-dev**（merged-v16），这是待验收候选编号；v15 候选（0.2.13-dev）的工具哈希已冻结。
 唯一开发目标由 `ci_checks/topogym_active_release.json` 的 `active` 指定，`published` 保留正式基线。
 当前 active 的 `tasks_root=null`，明确表示新镜像/任务树尚未完成，不能把 `tasks/` 下的旧版本当成候选。
 两种生成器拒绝覆盖其他 tooling 版本的目录，standard twin 必须来自同版本 privileged 包。
 
-合并保留 v14 的 R1–R5、PBD 多接触修复和 simulator-instability 分类。
+合并保留 v14 的 R2–R5、PBD 多接触修复和 simulator-instability 分类；v16 用物理有效性策略取代 R1：穿透深度只作证据（深穿透的成功挂起待审，不结束 episode），施力（forcing）只记录，仿真崩溃是基础设施错误，除非崩溃前 0.25 s 内机械臂正在施力。详见 `docs/rcb/benchmarks/topogym.md`。
 本地 Horseshoe 几何、Hedgehog hard 模型进入候选；Rope 的 `contact_relaxed_v16`、
 Blanket 的 patch assistance、Fiber 的 sheath assistance 作为显式候选配置，三方使用同一冻结值。
 旧刚体 oracle 的时间积分参数、开发时材质 monkeypatch 不自动提升为任务规则。

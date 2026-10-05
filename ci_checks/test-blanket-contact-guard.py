@@ -95,10 +95,16 @@ class InfrastructureReporting(unittest.TestCase):
         tree = ast.parse((SIM / 'server.py').read_text())
         nodes = [n for n in tree.body if (isinstance(n, ast.Assign) and any(getattr(t, 'id', '') == 'INFRA_REASONS' for t in n.targets))
                  or (isinstance(n, ast.FunctionDef) and n.name == 'instability_fields')]
-        ns = {'E': {'reason': 'simulator_instability'}, 'S': type('S', (), {'instability': {'max_speed_m_s': 21.4}})()}
+        review, forcing = {'pending': True, 'count': 1}, {'count': 2}
+        monitor = type('Monitor', (), {'review': lambda self: review, 'forcing': lambda self: forcing})()
+        ns = {'E': {'reason': 'simulator_instability'},
+              'S': type('S', (), {'instability': {'max_speed_m_s': 21.4}, 'monitor': monitor})()}
         exec(compile(ast.Module(body=nodes, type_ignores=[]), 'server.py', 'exec'), ns)
         self.assertIn('simulator_instability', ns['INFRA_REASONS'])
-        self.assertEqual(ns['instability_fields'](), {'simulator_instability': True, 'instability': {'max_speed_m_s': 21.4}})
+        self.assertEqual(ns['instability_fields'](), {'simulator_instability': True, 'instability': {'max_speed_m_s': 21.4},
+                                                      'review': None, 'forcing': None})   # before the scene is ready
+        ns['E']['ready'] = True                                              # the live episode's evidence goes along
+        self.assertEqual((ns['instability_fields']()['review'], ns['instability_fields']()['forcing']), (review, forcing))
 
 
 if __name__ == '__main__':

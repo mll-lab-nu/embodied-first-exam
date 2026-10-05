@@ -78,7 +78,11 @@ INFRA_REASONS = ("error", "simulator_instability")
 
 
 def instability_fields() -> dict:
-    return {"simulator_instability": E["reason"] == "simulator_instability", "instability": getattr(S, "instability", None)}
+    """The breakdown evidence and the live episode's evidence: its review events (deep task contacts: a success with any
+    is held for review by the grader, rcb_topogym.CONTACT_RULE) and its forcing events (rcb_topogym.FORCING: evidence only)."""
+    ready = E.get("ready")
+    return {"simulator_instability": E["reason"] == "simulator_instability", "instability": getattr(S, "instability", None),
+            "review": S.monitor.review() if ready else None, "forcing": S.monitor.forcing() if ready else None}
 
 
 def write_final() -> None:
@@ -212,9 +216,15 @@ SPEC = {
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
                 "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, or on a "
-                "simulator error; a numerically unstable simulation (any cloth particle faster than "
-                f"{M.PARTICLE_SPEED_LIMIT_M_S:g} m/s) ends it with reason {M.SIMULATOR_INSTABILITY}, graded as an infrastructure "
-                "error, not as the task's failure; the recorded trajectory is then replayed once in a fresh process and graded"),
+                "simulator error; a simulator "
+                f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
+                f"soft-body solver state, a rigid task contact deeper than {M.BREAKDOWN_PENETRATION_M * 1000:g} mm) ends it with "
+                f"reason {M.SIMULATOR_INSTABILITY}, graded as an infrastructure error, not as the task's failure, unless an arm was "
+                f"forcing (an arm drive at {M.FORCING['near_cap']:.0%} of its torque cap or more while the gripper, or a part it "
+                f"holds, presses on something with {M.FORCING['contact_n']:g} N or more) within the {M.FORCING['attribution_s']:g} s "
+                f"before (reason {M.FORCED_BREAKDOWN}: the agent's failure); forcing itself and task-contact penetration do not end "
+                "it (meta safety records them), but a success with a deep task contact (meta safety review) is held for review "
+                "instead of credited automatically; the recorded trajectory is then replayed once in a fresh process and graded"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
