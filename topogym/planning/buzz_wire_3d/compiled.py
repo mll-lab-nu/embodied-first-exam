@@ -23,7 +23,15 @@ class CompiledJointPolicy:
 
     def act(self, observation):
         state = observation["state"]
-        if state["physics_step"] != self.index * self.physics_steps_per_action or state["branch_id"] != 0:
+        if self.index == 0:
+            # oraclefix (lab, 2026-10-04): a Harbor Session restores its frozen birth on a new branch (branch_id 1,
+            # state_id 0) before any action. The birth is state 0 at physics step 0 on the branch the owner restored
+            # (the BUG 5 rule of solvability.py); every later tick must stay on that branch.
+            if state["state_id"] != 0:
+                raise ValueError("Compiled policy requires consecutive ticks from episode birth")
+            self.birth_branch_id = state["branch_id"]
+        if (state["physics_step"] != self.index * self.physics_steps_per_action
+                or state["branch_id"] != self.birth_branch_id):
             raise ValueError("Compiled policy requires consecutive ticks from episode birth")
         events = observation["privileged"]["world"]["contact_events"]["events"]
         if any(e["touching"] and {e["role_a"], e["role_b"]} == {"robot", "wire_metal"} for e in events):
