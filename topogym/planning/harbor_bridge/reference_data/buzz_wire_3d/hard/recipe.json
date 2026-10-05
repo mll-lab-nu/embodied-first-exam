@@ -163893,5 +163893,51 @@
     },
     "scope": "Historical seed-0 evidence; not current Harbor qualification"
   },
-  "action_count": 43568
+  "action_count": 43568,
+  "retime": {
+    "segments": [
+      [
+        2750,
+        19674,
+        3.0
+      ]
+    ],
+    "guard": {
+      "fast_m": 0.002,
+      "slow_m": 0.001,
+      "hold_m": 0.0005,
+      "max_hold_rows": 40
+    },
+    "insert": {
+      "at": 43489,
+      "instructions": [
+        {
+          "operation": "grip",
+          "value": 0.0,
+          "seconds": 1.0,
+          "phase": "open_in_place"
+        },
+        {
+          "operation": "hold",
+          "seconds": 1.0
+        },
+        {
+          "operation": "tcp",
+          "local_translation_m": [
+            0,
+            0,
+            -0.04
+          ],
+          "seconds": 2.0,
+          "phase": "retreat"
+        },
+        {
+          "operation": "hold",
+          "seconds": 3.0
+        }
+      ]
+    },
+    "stop": 43489
+  },
+  "oraclefix2": "2026-10-05 (oraclefix2): retime replays the compiled rows faster and ends with an earlier release. Traverse rows 2750-19674 (after the regrasp holds the wand at row 2687) advance 3 source rows per control step under the wand-wire clearance guard (as for medium); the terminal regrasps run as recorded (compressing them breaks them, and a 4x traverse already changes their outcome: 8.7 mm from the finish). The replay stops after source row 43488: from the last held placement (row 43434: 4.72 mm / 11.5 deg from the finish) the recorded retreat drags the wand to 5.023 mm / 8.0 deg, opening in place leaves 4.59 mm / 11.5 deg, and stopping the recorded retreat after 55 rows, then opening fully and retreating 4 cm along the approach axis, finishes at 4.88 mm / 8.8 deg on this path (margins 0.12 mm and 1.2 deg; 1x path 4.85 mm / 8.9 deg, 2x path 4.45 mm / 9.3 deg; lab oraclefix2/exp/Y7s, R3h3, R3h2)."
 }
