@@ -66,6 +66,13 @@ class CheckedJointPolicy:
                         self.policy.diagnostics.setdefault('ik_compensation_fraction',{})[side]=fraction
                         break
                 out['joint_position_rad']=q[self.robot._q_indices[side][:6]].tolist()
+            if 'joint_position_rad' in out:
+                # oraclefix: keep targets strictly inside the joint limits. IK can return a joint exactly at its limit
+                # (left/forearm_roll = 3.14158 in place_ring, hard); float32 rounds that outward (3.141580104827881),
+                # and the public adapter would clip it, which the oracle bridge refuses. 1 urad inside is exact in float32.
+                limits=np.asarray(self.robot.groups[side].arm_limits_rad,float)
+                out['joint_position_rad']=np.clip(np.asarray(out['joint_position_rad'],float),
+                                                  limits[:,0]+1e-6,limits[:,1]-1e-6).tolist()
             result[side]=out
         return result
 
