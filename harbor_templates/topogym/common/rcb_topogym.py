@@ -1954,6 +1954,328 @@ def _settle_only_when_reached(task) -> bool:
     return True
 
 
+
+# ---- deterministic GPU physics (tooling v17, 2026-10-05; jobs/journal/2026-10-05/determinism)
+# Scope (every Session, installed before the first scene is built):
+#   - every scene on the GPU: the rigid constraint solve is pinned to Genesis' monolith arm. This changes the rounding
+#     of blanket_flatten, lock_picking and of the robots / rigid bodies of the IPC scenes (knot_untying, rope_threading,
+#     slotted_post_ring, orbits); their libuipc FEM/ABD solve itself is unchanged (still not reproducible). CPU scenes:
+#     unchanged (the CPU backend only has the monolith arm).
+#   - blanket_flatten only (the only PBD scene): PBD stretch / bending / particle collision and the PBD-rigid link
+#     forces summed in fixed point.
+#   - instance shas: unchanged (every instance restores its frozen / settled state without a physics step).
+# Grading replays re-run an agent's actions in fresh processes. On the GPU families they did not reproduce the live run:
+# two fresh replays of one blanket trajectory already differed by 1.6e-13 m after the first control step, by millimetres
+# after 100 and in the outcome after ~1400 (one succeeded, one did not). In-process stage isolation (the same engine
+# buffers in, each kernel run three times) found the causes, all in scheduling-order arithmetic, none in the physics:
+#   1. Genesis' rigid constraint solve (func_solve_body) is a qd.perf_dispatch autotuner: with cooperative kernels on
+#      (GPU, n_dofs >= 16) it alternates the "monolith" and "decomposed" arms and re-times them every 5 s of wall clock,
+#      so the arm that integrates a substep depends on the host's load. The monolith arm, pinned, is reproducible (stage
+#      isolation and fresh-process replays); the switching is not. Pinned here for the whole process (both arms solve
+#      the same Newton problem; the CPU backend only ever runs the monolith, so the CPU families are unchanged).
+#   2. PBD constraint projection (stretch, bending) scatters `dpos += ...` from parallel loops over constraints: float
+#      atomics in GPU scheduler order.
+#   3. PBD particle collision sums neighbour contributions in the spatial hash's cell order, which an atomic counting
+#      sort assigns differently every substep (the reordered layout itself is scratch: rebuilt each substep before use).
+#   4. The PBD-rigid contact (_bound_pbd_rigid_contacts) applies coupling forces to robot links with float atomics.
+# 2-4 become integer sums: each contribution is rounded once to a fixed-point quantum and added with an int64 atomic;
+# integer addition is associative, so the total does not depend on the order; it is converted back to float once per
+# particle / link and accumulation. Quanta: particle corrections 2^-48 m (3.6e-15 m), link forces 2^-32 N (2.3e-10 N)
+# and torques 2^-32 N m. A contribution above PBD_FX_LIMIT_M (16 m) / 2^16 N / 2^17 N m, or not finite, makes that
+# particle's correction (link's force) NaN, so the instability guard ends the episode as before (16 m / 2^-48 = 2^52
+# quanta per contribution: 2^11 contributions per particle and accumulation fit in int64; forces 2^48 / 2^49 quanta, 2^14
+# contributions per link and substep; an 8181-particle cloth on one link is 2^13). The constraint math, its iteration
+# structure, which contributions exist and the apply loops are Genesis' expressions, unchanged. Genesis' files are not
+# edited (kernels replaced at runtime like _bound_pbd_rigid_contacts), so the frozen blanket states' backend identity,
+# which hashes them, still matches; the integer scratch lives outside the engine-buffer graph that checkpoints and frozen
+# states inventory (it holds zeros between kernels).
+# Measured (lab RTX PRO 6000, image 0.2.14-dev): see docs/rcb/benchmarks/topogym.md "Deterministic GPU physics".
+# The IPC families' libuipc solver keeps its own float atomics (not covered here).
+DETERMINISTIC_GPU_PHYSICS = "fixed_point_pbd_pinned_solve_arm_2026-10-05"
+RIGID_SOLVE_ARM = "func_solve_body_monolith"
+PBD_FX_SCALE_M, PBD_FX_QUANTUM_M, PBD_FX_LIMIT_M = 2.0 ** 48, 2.0 ** -48, 16.0
+COUPLING_FX_SCALE, COUPLING_FX_QUANTUM = 2.0 ** 32, 2.0 ** -32
+COUPLING_FORCE_LIMIT_N, COUPLING_TORQUE_LIMIT_NM = 65536.0, 131072.0
+
+
+def _deterministic_gpu_physics() -> dict:
+    """Install the deterministic replacements (the block comment above) right after genesis.init (Genesis' solver
+    modules cannot be imported before it), before the first scene is built. Idempotent; returns what is installed."""
+    import genesis as gs
+    if getattr(gs, "_initialized", False):
+        return _install_deterministic_gpu_physics()
+    if not getattr(gs.init, "_topogym_deterministic", False):
+        original = gs.init
+
+        def init(*args, **kwargs):
+            result = original(*args, **kwargs)
+            _install_deterministic_gpu_physics()
+            return result
+        init._topogym_deterministic = True
+        gs.init = init
+    return dict(version=DETERMINISTIC_GPU_PHYSICS, installed="at genesis.init")
+
+
+def _install_deterministic_gpu_physics() -> dict:
+    import quadrants as qd
+    import genesis as gs
+    from genesis.engine.solvers.pbd_solver import PBDSolver
+    from genesis.engine.solvers.rigid.constraint import solver as constraint_solver
+    from genesis.engine.solvers.rigid.constraint import solver_breakdown  # noqa: F401  (registers the decomposed arm)
+
+    info = dict(version=DETERMINISTIC_GPU_PHYSICS, rigid_solve_arm=RIGID_SOLVE_ARM)
+    if getattr(PBDSolver, "_topogym_deterministic", False):
+        return info
+
+    # 1. the rigid constraint-solve arm, pinned
+    dispatcher = constraint_solver.func_solve_body
+    arms = {impl.get_implementation2().__name__: impl for impl in dispatcher._dispatch_impls}
+    chosen = arms[RIGID_SOLVE_ARM]
+    autotuned = type(dispatcher).__call__
+
+    class _PinnedArm(type(dispatcher)):
+        def __call__(self, *args, **kwargs):
+            if chosen.is_compatible is None or chosen.is_compatible(*args, **kwargs):
+                return chosen(*args, **kwargs)
+            return autotuned(self, *args, **kwargs)   # not reached in TopoGym scenes (prefer_decomposed_solver != 1)
+    dispatcher.__class__ = _PinnedArm
+
+    # 2-3. PBD constraint projection and particle collision with order-independent sums
+    @qd.data_oriented
+    class _Scratch:
+        """Integer accumulators of one solver / coupler (not traversed by checkpoints; zeros between kernels)."""
+        def __init__(self, n, batch, k):
+            self.acc = qd.field(qd.i64, shape=(max(int(n), 1), int(batch), int(k)))
+            self.bad = qd.field(qd.i32, shape=(max(int(n), 1), int(batch)))
+
+    @qd.func
+    def _bad(x, limit):
+        # non-finite (all-ones exponent, read from the bits: fast-math cannot fold the test) or out of range
+        b = False
+        if qd.static(gs.qd_float == qd.f64):
+            b = ((qd.bit_cast(x, qd.i64) >> 52) & 0x7FF) == 0x7FF
+        else:
+            b = ((qd.bit_cast(x, qd.i32) >> 23) & 0xFF) == 0xFF
+        return b or qd.abs(x) > limit
+
+    @qd.func
+    def _fx(x, scale):
+        return qd.cast(qd.floor(x * scale + 0.5), qd.i64)
+
+    @qd.func
+    def _nan():
+        r = gs.qd_float(0.0)
+        if qd.static(gs.qd_float == qd.f64):
+            r = qd.bit_cast(qd.i64(0x7FF8000000000000), qd.f64)
+        else:
+            r = qd.bit_cast(qd.i32(0x7FC00000), qd.f32)
+        return r
+
+    def _scatter(det, i, i_b, c):
+        for k in qd.static(range(3)):
+            if _bad(c[k], PBD_FX_LIMIT_M):
+                det.bad[i, i_b] = 1
+            else:
+                qd.atomic_add(det.acc[i, i_b, k], _fx(c[k], PBD_FX_SCALE_M))
+    _scatter.__annotations__ = dict(det=qd.template())
+    _scatter = qd.func(_scatter)
+
+    def _take(det, i, i_b):
+        d = qd.Vector.zero(gs.qd_float, 3)
+        for k in qd.static(range(3)):
+            d[k] = qd.cast(det.acc[i, i_b, k], gs.qd_float) * PBD_FX_QUANTUM_M
+            det.acc[i, i_b, k] = 0
+        if det.bad[i, i_b] != 0:
+            det.bad[i, i_b] = 0
+            d = qd.Vector([_nan(), _nan(), _nan()], dt=gs.qd_float)
+        return d
+    _take.__annotations__ = dict(det=qd.template())
+    _take = qd.func(_take)
+
+    @qd.func
+    def _add3(acc, bad, c):
+        for k in qd.static(range(3)):
+            if _bad(c[k], PBD_FX_LIMIT_M):
+                bad = 1
+            else:
+                acc[k] += _fx(c[k], PBD_FX_SCALE_M)
+        return acc, bad
+
+    @qd.data_oriented
+    class _DeterministicPBD:
+        # Genesis 1.2.1 pbd_solver.py:411-430 (_kernel_solve_stretch), the scatter order-independent
+        def _kernel_solve_stretch(self, f):
+            for _ in qd.static(range(self._max_stretch_solver_iterations)):
+                for i_e, i_b in qd.ndrange(self._n_edges, self._B):
+                    v1 = self.edges_info[i_e].v1
+                    v2 = self.edges_info[i_e].v2
+
+                    w1 = self.particles[v1, i_b].free / self.particles_info[v1].mass
+                    w2 = self.particles[v2, i_b].free / self.particles_info[v2].mass
+                    n = self.particles[v1, i_b].pos - self.particles[v2, i_b].pos
+                    C = n.norm() - self.edges_info[i_e].len_rest
+                    alpha = self.edges_info[i_e].stretch_compliance / (self._substep_dt**2)
+                    dp = -C / (w1 + w2 + alpha) * n / n.norm(gs.EPS) * self.edges_info[i_e].stretch_relaxation
+                    _scatter(self._det, v1, i_b, dp * w1)
+                    _scatter(self._det, v2, i_b, -(dp * w2))
+
+                for i_p, i_b in qd.ndrange(self._n_particles, self._B):
+                    total = self.particles[i_p, i_b].dpos + _take(self._det, i_p, i_b)
+                    if self.particles[i_p, i_b].free and self.particles_info[i_p].material_type != self.MATERIAL.PARTICLE:
+                        self.particles[i_p, i_b].pos = self.particles[i_p, i_b].pos + total
+                        self.particles[i_p, i_b].dpos.fill(0)
+                    else:
+                        self.particles[i_p, i_b].dpos = total
+        _kernel_solve_stretch.__annotations__ = dict(f=qd.i32)
+        _kernel_solve_stretch = qd.kernel(_kernel_solve_stretch)
+
+        # Genesis 1.2.1 pbd_solver.py:432-483 (_kernel_solve_bending)
+        def _kernel_solve_bending(self, f):
+            for _ in qd.static(range(self._max_bending_solver_iterations)):
+                for i_ie, i_b in qd.ndrange(self._n_inner_edges, self._B):
+                    v1 = self.inner_edges_info[i_ie].v1
+                    v2 = self.inner_edges_info[i_ie].v2
+                    v3 = self.inner_edges_info[i_ie].v3
+                    v4 = self.inner_edges_info[i_ie].v4
+
+                    w1 = self.particles[v1, i_b].free / self.particles_info[v1].mass
+                    w2 = self.particles[v2, i_b].free / self.particles_info[v2].mass
+                    w3 = self.particles[v3, i_b].free / self.particles_info[v3].mass
+                    w4 = self.particles[v4, i_b].free / self.particles_info[v4].mass
+
+                    if w1 + w2 + w3 + w4 > 0.0:
+                        p2 = self.particles[v2, i_b].pos - self.particles[v1, i_b].pos
+                        p3 = self.particles[v3, i_b].pos - self.particles[v1, i_b].pos
+                        p4 = self.particles[v4, i_b].pos - self.particles[v1, i_b].pos
+                        l23 = p2.cross(p3).norm()
+                        l24 = p2.cross(p4).norm()
+                        n1 = p2.cross(p3) / l23
+                        n2 = p2.cross(p4) / l24
+                        d = qd.math.clamp(n1.dot(n2), -1.0, 1.0)
+
+                        q3 = (p2.cross(n2) + n1.cross(p2) * d) / l23
+                        q4 = (p2.cross(n1) + n2.cross(p2) * d) / l24
+                        q2 = -(p3.cross(n2) + n1.cross(p3) * d) / l23 - (p4.cross(n1) + n2.cross(p4) * d) / l24
+                        q1 = -q2 - q3 - q4
+                        sum_wq = w1 * q1.norm_sqr() + w2 * q2.norm_sqr() + w3 * q3.norm_sqr() + w4 * q4.norm_sqr()
+                        constraint = qd.acos(d) - qd.acos(-1.0)
+
+                        alpha = self.inner_edges_info[i_ie].bending_compliance / (self._substep_dt**2)
+                        constraint = (
+                            -qd.sqrt(1 - d**2)
+                            * constraint
+                            / (sum_wq + alpha)
+                            * self.inner_edges_info[i_ie].bending_relaxation
+                        )
+
+                        _scatter(self._det, v1, i_b, w1 * constraint * q1)
+                        _scatter(self._det, v2, i_b, w2 * constraint * q2)
+                        _scatter(self._det, v3, i_b, w3 * constraint * q3)
+                        _scatter(self._det, v4, i_b, w4 * constraint * q4)
+
+                for i_p, i_b in qd.ndrange(self._n_particles, self._B):
+                    total = self.particles[i_p, i_b].dpos + _take(self._det, i_p, i_b)
+                    if self.particles[i_p, i_b].free and self.particles_info[i_p].material_type != self.MATERIAL.PARTICLE:
+                        self.particles[i_p, i_b].pos = self.particles[i_p, i_b].pos + total
+                        self.particles[i_p, i_b].dpos.fill(0)
+                    else:
+                        self.particles[i_p, i_b].dpos = total
+        _kernel_solve_bending.__annotations__ = dict(f=qd.i32)
+        _kernel_solve_bending = qd.kernel(_kernel_solve_bending)
+
+        # Genesis 1.2.1 pbd_solver.py:525-558 (_func_solve_collision): neighbour j's two contributions to particle i
+        @qd.func
+        def _det_collision_terms(self, i, j, i_b):
+            c1 = qd.Vector.zero(gs.qd_float, 3)
+            c2 = qd.Vector.zero(gs.qd_float, 3)
+            cur_dist = (self.particles_reordered[i, i_b].pos - self.particles_reordered[j, i_b].pos).norm(gs.EPS)
+            rest_dist = (
+                self.particles_info_reordered[i, i_b].pos_rest - self.particles_info_reordered[j, i_b].pos_rest
+            ).norm(gs.EPS)
+            target_dist = self._particle_size
+            if cur_dist < target_dist and rest_dist > target_dist:
+                wi = self.particles_reordered[i, i_b].free / self.particles_info_reordered[i, i_b].mass
+                wj = self.particles_reordered[j, i_b].free / self.particles_info_reordered[j, i_b].mass
+                n = (self.particles_reordered[i, i_b].pos - self.particles_reordered[j, i_b].pos) / cur_dist
+                c1 = wi / (wi + wj) * (target_dist - cur_dist) * n
+                dv = (self.particles_reordered[i, i_b].pos - self.particles_reordered[i, i_b].ipos) - (
+                    self.particles_reordered[j, i_b].pos - self.particles_reordered[j, i_b].ipos
+                )
+                dpos = -(dv - n * n.dot(dv))
+                d = target_dist - cur_dist
+                mu_s = qd.max(self.particles_info_reordered[i, i_b].mu_s, self.particles_info_reordered[j, i_b].mu_s)
+                mu_k = qd.max(self.particles_info_reordered[i, i_b].mu_k, self.particles_info_reordered[j, i_b].mu_k)
+                if dpos.norm() < mu_s * d:
+                    c2 = wi / (wi + wj) * dpos
+                else:
+                    c2 = wi / (wi + wj) * dpos * qd.min(1.0, mu_k * d / dpos.norm(gs.EPS))
+            return c1, c2
+
+        # Genesis 1.2.1 pbd_solver.py:560-589 (_kernel_solve_collision): the per-particle gather, its sum order-independent
+        def _kernel_solve_collision(self, f):
+            for i_p, i_b in qd.ndrange(self._n_particles, self._B):
+                if self.particles_info_reordered[i_p, i_b].material_type != self.MATERIAL.PARTICLE:
+                    acc = qd.Vector([0, 0, 0], dt=qd.i64)
+                    bad = 0
+                    base = self.sh.pos_to_grid(self.particles_reordered[i_p, i_b].pos)
+                    for offset in qd.grouped(qd.ndrange((-1, 2), (-1, 2), (-1, 2))):
+                        slot_idx = self.sh.grid_to_slot(base + offset)
+                        for j in range(
+                            self.sh.slot_start[slot_idx, i_b],
+                            self.sh.slot_size[slot_idx, i_b] + self.sh.slot_start[slot_idx, i_b],
+                        ):
+                            if (
+                                i_p != j
+                                and (self.particles_reordered[i_p, i_b].free or self.particles_reordered[j, i_b].free)
+                                and not (
+                                    self.particles_info_reordered[i_p, i_b].material_type == self.MATERIAL.LIQUID
+                                    and self.particles_info_reordered[j, i_b].material_type == self.MATERIAL.LIQUID
+                                )
+                            ):
+                                c1, c2 = self._det_collision_terms(i_p, j, i_b)
+                                acc, bad = _add3(acc, bad, c1)
+                                acc, bad = _add3(acc, bad, c2)
+                    d = qd.Vector.zero(gs.qd_float, 3)
+                    for k in qd.static(range(3)):
+                        d[k] = qd.cast(acc[k], gs.qd_float) * PBD_FX_QUANTUM_M
+                    if bad != 0:
+                        d = qd.Vector([_nan(), _nan(), _nan()], dt=gs.qd_float)
+                    self.particles_reordered[i_p, i_b].dpos = self.particles_reordered[i_p, i_b].dpos + d
+
+            for i_p, i_b in qd.ndrange(self._n_particles, self._B):
+                if (
+                    self.particles_reordered[i_p, i_b].free
+                    and self.particles_info_reordered[i_p, i_b].material_type != self.MATERIAL.PARTICLE
+                ):
+                    self.particles_reordered[i_p, i_b].pos = (
+                        self.particles_reordered[i_p, i_b].pos + self.particles_reordered[i_p, i_b].dpos
+                    )
+                    self.particles_reordered[i_p, i_b].dpos.fill(0)
+        _kernel_solve_collision.__annotations__ = dict(f=qd.i32)
+        _kernel_solve_collision = qd.kernel(_kernel_solve_collision)
+
+    from genesis.engine.couplers import legacy_coupler
+    coupler_build = legacy_coupler.LegacyCoupler.build
+
+    def build_coupler(self):
+        coupler_build(self)
+        if self._rigid_pbd:
+            self._det = _Scratch(self.rigid_solver.n_links, self.pbd_solver._B, 6)
+    legacy_coupler.LegacyCoupler.build = build_coupler
+
+    pbd_build = PBDSolver.build
+
+    def build(self):
+        pbd_build(self)
+        if self.is_active:
+            self._det = _Scratch(self._n_particles, self._B, 3)
+    PBDSolver.build = build
+    for name in ("_kernel_solve_stretch", "_kernel_solve_bending", "_kernel_solve_collision", "_det_collision_terms"):
+        setattr(PBDSolver, name, _DeterministicPBD.__dict__[name])
+    PBDSolver._topogym_deterministic = True
+    return info
+
+
 # ---- PBD cloth contact (the blanket blow-up of 2026-10-03: trials mCa9CZt / r42VtjE, jobs/journal/2026-10-03/blanket_debug)
 SIMULATOR_INSTABILITY = "simulator_instability"     # the episode end of a numerically unstable simulation
 # Guard (a backstop; _bound_pbd_rigid_contacts removes the cause). PBD reports a particle's velocity over its last
@@ -2005,7 +2327,9 @@ def _bound_pbd_rigid_contacts() -> float:
          constraints see the corrected positions (they start the next substep's solve), and because the correction now
          has the size of the physical motion they propagate it as ordinary motion;
       4. each geom's link receives Genesis' reaction to its own full penetration, m p_g / dt^2 (the PBD constraint force
-         of that contact), so squeezed cloth still resists the gripper as before (the grip of a closing gripper).
+         of that contact), so squeezed cloth still resists the gripper as before (the grip of a closing gripper). The
+         reactions are summed per link in fixed point and applied once per link and substep (deterministic GPU physics,
+         tooling v17: Genesis' func_apply_coupling_force adds them with float atomics in scheduler order).
     When one contact is active and its push-out is within the bound (cloth resting on the table, cloth pushed by a moving
     body, a falling particle stopped by the table: every contact of an unsqueezed cloth), the particle runs Genesis' own
     expressions, bit for bit. Returns the margin."""
@@ -2014,10 +2338,32 @@ def _bound_pbd_rigid_contacts() -> float:
     import genesis.utils.sdf as sdf
     from genesis.engine.couplers import legacy_coupler
     from genesis.utils import array_class
+    _deterministic_gpu_physics()   # allocates the coupler's fixed-point scratch at build (after genesis.init)
     installed = getattr(legacy_coupler.LegacyCoupler.kernel_pbd_rigid_collide, "_topogym_depenetration_margin_m_s", None)
     if installed is not None:
         return installed
     margin = float(PBD_DEPENETRATION_MARGIN_M_S)
+
+    def _coupling_force(det, links_state, pos, force, link_idx, i_b):
+        # genesis/engine/solvers/rigid/abd/misc.py:796-799 (func_apply_coupling_force), summed in fixed point
+        torque = (pos - links_state.root_COM[link_idx, i_b]).cross(force)
+        for k in qd.static(range(3)):
+            fb = False
+            tb = False
+            if qd.static(gs.qd_float == qd.f64):   # non-finite: all-ones exponent, read from the bits (fast-math safe)
+                fb = ((qd.bit_cast(force[k], qd.i64) >> 52) & 0x7FF) == 0x7FF
+                tb = ((qd.bit_cast(torque[k], qd.i64) >> 52) & 0x7FF) == 0x7FF
+            else:
+                fb = ((qd.bit_cast(force[k], qd.i32) >> 23) & 0xFF) == 0xFF
+                tb = ((qd.bit_cast(torque[k], qd.i32) >> 23) & 0xFF) == 0xFF
+            if fb or tb or qd.abs(force[k]) > COUPLING_FORCE_LIMIT_N or qd.abs(torque[k]) > COUPLING_TORQUE_LIMIT_NM:
+                det.bad[link_idx, i_b] = 1
+            else:
+                qd.atomic_add(det.acc[link_idx, i_b, k], qd.cast(qd.floor(force[k] * COUPLING_FX_SCALE + 0.5), qd.i64))
+                qd.atomic_add(det.acc[link_idx, i_b, 3 + k],
+                              qd.cast(qd.floor(torque[k] * COUPLING_FX_SCALE + 0.5), qd.i64))
+    _coupling_force.__annotations__ = dict(det=qd.template(), links_state=array_class.LinksState)
+    _coupling_force = qd.func(_coupling_force)
 
     @qd.data_oriented
     class _BoundedPBDRigidContact:
@@ -2094,8 +2440,7 @@ def _bound_pbd_rigid_contacts() -> float:
                             new_vel = (new_pos - x0) / self.pbd_solver._substep_dt
                             delta_mv = mass * (new_vel - v)
                             force = (-delta_mv / self.rigid_solver._substep_dt) * (1 - energy_loss)
-                            self.rigid_solver._func_apply_coupling_force(
-                                x, force, geoms_info.link_idx[g_first], i_b, links_state)
+                            _coupling_force(self._det, links_state, x, force, geoms_info.link_idx[g_first], i_b)
                         else:
                             # 3. the bounded simultaneous push-out; the velocity from the displacement
                             new_pos = x + scale * push
@@ -2114,10 +2459,29 @@ def _bound_pbd_rigid_contacts() -> float:
                                             pos_world=x, geom_idx=i_g, batch_idx=i_b)
                                         force = -mass * contact_normal * (r - signed_dist) / (
                                             dt * self.rigid_solver._substep_dt)
-                                        self.rigid_solver._func_apply_coupling_force(
-                                            x, force, geoms_info.link_idx[i_g], i_b, links_state)
+                                        _coupling_force(self._det, links_state, x, force, geoms_info.link_idx[i_g], i_b)
                         self.pbd_solver.particles_reordered[i_p, i_b].pos = new_pos
                         self.pbd_solver.particles_reordered[i_p, i_b].vel = new_vel
+            # each link once: Genesis' `cfrc_coupling -= torque / force` with the order-independent totals
+            for i_l, i_b in qd.ndrange(self.rigid_solver.n_links, self.pbd_solver._B):
+                frc = qd.Vector.zero(gs.qd_float, 3)
+                trq = qd.Vector.zero(gs.qd_float, 3)
+                for k in qd.static(range(3)):
+                    frc[k] = qd.cast(self._det.acc[i_l, i_b, k], gs.qd_float) * COUPLING_FX_QUANTUM
+                    trq[k] = qd.cast(self._det.acc[i_l, i_b, 3 + k], gs.qd_float) * COUPLING_FX_QUANTUM
+                    self._det.acc[i_l, i_b, k] = 0
+                    self._det.acc[i_l, i_b, 3 + k] = 0
+                if self._det.bad[i_l, i_b] != 0:
+                    self._det.bad[i_l, i_b] = 0
+                    nan = gs.qd_float(0.0)
+                    if qd.static(gs.qd_float == qd.f64):
+                        nan = qd.bit_cast(qd.i64(0x7FF8000000000000), qd.f64)
+                    else:
+                        nan = qd.bit_cast(qd.i32(0x7FC00000), qd.f32)
+                    frc = qd.Vector([nan, nan, nan], dt=gs.qd_float)
+                    trq = frc
+                links_state.cfrc_coupling_ang[i_l, i_b] = links_state.cfrc_coupling_ang[i_l, i_b] - trq
+                links_state.cfrc_coupling_vel[i_l, i_b] = links_state.cfrc_coupling_vel[i_l, i_b] - frc
         # Real annotation objects (this module uses postponed annotations; Quadrants needs the types themselves)
         kernel_pbd_rigid_collide.__annotations__ = dict(
             geoms_state=array_class.GeomsState, geoms_info=array_class.GeomsInfo, links_state=array_class.LinksState,
@@ -2365,6 +2729,7 @@ class Session:
             # under a container's CPU quota. The results are the same at any count (2026-10-02 study).
             import torch
             torch.set_num_threads(4)
+        self.deterministic_physics = _deterministic_gpu_physics()   # before genesis.init / the first scene build
         margin = _bound_pbd_rigid_contacts()   # before the scene's first physics step (kernels compile on first use)
         self.env = Env(SimulatorConfig(**cfg))
         # Tooling v7: frames come only from env.sensor_frame() (render_frame / render_grid / render_depth / videos), so the

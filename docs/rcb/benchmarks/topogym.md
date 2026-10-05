@@ -310,6 +310,39 @@ s2 over comb_01's stage time budget at step 2588, while s4 with every other chan
 still succeed, so only the closed loop separates them), a coarser slack lead (an instance change, not needed), the GPU
 backend (fp32: 2.11 s per control step for the 558-DOF tree), more CPU threads (1.5-2.1x slower).
 
+### Deterministic GPU physics (tooling, 2026-10-05)
+Grading replays re-run an agent's actions in fresh processes; on the GPU families they did not reproduce the live run. Two
+fresh replays of one blanket_flatten easy agent trajectory (EtWpiBp, v16) differed by 1.6e-13 m after the first control
+step, 1.7 mm by step 99, 37 mm at most, and in the outcome (one success, one not). Stage isolation (each sub-stage of a
+tick run three times from identical engine buffers) located the causes, all scheduling-order arithmetic, none in the
+model. `harbor_templates/topogym/common/rcb_topogym.py` (`_deterministic_gpu_physics`, installed by every Session right
+after genesis.init; no Genesis file, image, frozen state or instance sha changes) removes them:
+- **Rigid constraint-solve arm pinned** (every GPU scene): Genesis 1.2.1's `func_solve_body` is a `qd.perf_dispatch`
+  wall-clock autotuner that alternates a "monolith" and a "decomposed" arm and re-times them every 5 s, so the arm that
+  integrates a substep depended on host load. Pinned to the monolith. Changes the rounding of blanket_flatten,
+  lock_picking and of the robots / rigid bodies of the IPC scenes (knot_untying, rope_threading, slotted_post_ring,
+  orbits). CPU scenes (interlocked_claws included) are unchanged: the CPU backend only has the monolith arm.
+- **IPC families: not yet reproducible.** Their robot (rigid) solve is now deterministic, the libuipc FEM / ABD solve is
+  not: float atomics in its PCG dot products, SpMV, gradient and MAS-preconditioner assembly and its contact candidate
+  order, plus a stale robot mass matrix read by the first IPC step after a settled-state restore. Both are being fixed
+  for the next release (a deterministic libuipc build and a forward-dynamics recompute after the restore); until then the
+  tolerant grading replays (R-hold, as in v16) decide for these families.
+- **Fixed-point sums** (blanket_flatten, the only PBD scene): the PBD stretch / bending scatter, the particle-collision
+  gather (spatial-hash order) and the PBD-rigid coupling forces / torques on robot links (`_bound_pbd_rigid_contacts`)
+  are int64 sums of contributions rounded once to 2^-48 m / 2^-32 N (N m); a non-finite or out-of-range contribution
+  (16 m, 2^16 N, 2^17 N m) makes the result NaN, so the instability guard ends the episode as before. The constraint
+  math, iterations and apply loops are Genesis' expressions. Largest contributions over the whole replay: 1.57 mm
+  (collision), 0.96 mm (stretch + bending), 1.9 N, 0.42 N m.
+- **Evidence** (lab RTX PRO 6000, image 0.2.14-dev; lab journal topogym_v1/determinism/NOTES.md): five fresh-process
+  replays of EtWpiBp (1443 rows + 80-step hold) bit-identical at every control step on every digest (particle positions
+  and velocities, rigid links / joints, contacts in canonical order, the grasp-assist record, state_sha; final
+  e33f375dac5296de); in-process whole-tick repeats identical; unpatched v16 differs from row 0. The trajectory was
+  recorded under v16's nondeterministic physics, so its patched replays agree with each other, not with v16's live run.
+- **Speed** (solo, lab GPU 7, image 0.2.14-dev): blanket_flatten easy (EtWpiBp rows 0-199) 0.373 s per control step
+  (median 0.356) vs v16's 0.360 (0.342), about +4 %; lock_picking easy (rows 0-299) monolith 0.0770 / 0.0770 vs autotuned
+  0.0768 / 0.0782 (no cost; the decomposed arm alone 0.0819), and the two autotuned passes from one state end in different
+  digests while the monolith passes are identical. (Measurements on a GPU shared with IPC sims were 4-6x inflated.)
+
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from
   `tests/instance.json` twice in a fresh process and renders `replay.mp4` **during the second replay**. Success: both
