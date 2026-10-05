@@ -161,6 +161,12 @@ def restore_settled_state(world, manifest_path, *, scene_identity):
         coupler.rigid_solver.set_qpos(qpos, qs_idx=slice(entity.q_start, entity.q_start + 7), skip_forward=False)
         coupler.rigid_solver.set_dofs_velocity(velocity=None, dofs_idx=slice(entity.dof_start, entity.dof_start + 6),
                                                skip_forward=False)
+    # The robot's forward dynamics (its mass matrix included) still holds Scene.build's warm-up advance, taken from the
+    # pre-restore configuration. IPCCoupler hands rigid_solver.mass_mat to libuipc's external articulation before the
+    # next rigid substep recomputes it, so the first advance after a restore would use that stale matrix: recompute it
+    # for the restored configuration (2026-10-05 determinism study: with the stock libuipc the warm-up advance was not
+    # reproducible, and this matrix was the first difference between fresh processes).
+    coupler.rigid_solver._func_forward_dynamics()
     restored = _fem_positions(world)
     error = max((float(np.max(np.abs(restored[name] - value))) for name, value in payload["fem"].items()), default=0.0)
     if set(restored) != set(payload["fem"]) or error > 0.0:
