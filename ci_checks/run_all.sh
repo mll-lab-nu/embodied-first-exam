@@ -6,7 +6,7 @@ tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=("$root"/tasks/*/)
 for t in "${tasks[@]}"; do
   t="${t%/}"; [ -f "$t/task.toml" ] || continue
   for c in check-task-structure check-task-fields check-dockerfile check-instruction check-verifier-isolation \
-           check-instance-copies check-standard-agent-image; do
+           check-instance-copies check-standard-agent-image check-start-gate; do
     bash "$root/ci_checks/$c.sh" "$t" || rc=1
   done
   bash "$root/ci_checks/check-robopaint-leak.sh" "$t" || rc=1     # RoboPaint tasks only (the script skips others)

@@ -111,6 +111,18 @@ WARMUP = [  # (directory prefix, the warm-up's Python body: the tooling's Sessio
                     '    except OSError:', '        return False', 't = time.time()',
                     'while not any(up(x) for x in urls):', '    if time.time() - t > 900:',
                     '        raise SystemExit("the scoring service did not come up")', '    time.sleep(2)']),
+    ("robotwin_2_0_", [ln.replace("@MOD@", "rcb_traj") for ln in _JSON_SESSION]),
+    ("robosuite-", ['import numpy as np', 'from rcb_traj import Session', 'I = np.load("/app/instance.npz")',
+                    '# no close(): the IK server this Session started keeps running, and the agent\'s Session uses it',
+                    's = Session(str(I["task"]), instance="/app/instance.npz")']),
+    ("dextoolbench_", ['from @TOOL@ import Session', 's = Session("/app/instance.json")']),
+    ("mujoco_playground_", ['from @TOOL@ import Session', 's = Session("/app/instance.json")']),
+    ("kinder-", ['from @TOOL@ import Session', 's = Session("/app/instance.json")']),
+    ("humanoidbench-", ['from @TOOL@ import Session', 's = Session(instance="/app/instance.npz")', 's.close()']),
+    ("metaworldplus-", ['from @TOOL@ import Session', 's = Session("/app/instance.npz")', 's.close()']),
+    ("vlabench-", ['from @TOOL@ import Session', 's = Session("/app/instance.json")', 's.close()']),
+    ("robocasa-", ['from @TOOL@ import Session', 's = Session("/app/instance.npz")', 's.close()']),   # RoboCasa, RoboCasa-GR1
+    ("robocasa365-", ['from @TOOL@ import Session', 's = Session("/app/instance.npz")', 's.close()']),
 ]
 
 

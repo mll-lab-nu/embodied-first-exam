@@ -18,7 +18,7 @@ cannot open. You get one client and one episode. **Task:** Pick up the phone and
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (waits while the service warms up, ~1 min)
+r = Robot()                                   # connects (the service is ready before your time starts)
 spec = r.spec()                               # action types, dims, joint limits, cameras, budgets
 
 obs = r.get_obs()                             # current frames from 4 cameras: obs.last[cam] -> uint8 (240,320,3)
