@@ -6,7 +6,7 @@ In each task, an agent works in a container with a robot simulator and a Python 
 that a verifier checks in a separate sandbox, by replaying it in a fresh process. A program decides pass or fail (no
 learned judge) and reports numeric diagnostics (for example DexToolBench's goal progress).
 
-The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (v1.0.1). Contributions follow
+The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (v1.0.2). Contributions follow
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Evaluation modes

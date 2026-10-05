@@ -309,9 +309,9 @@ def priv_instruction(fam: str, f: dict) -> str:
 
 def std_instruction(fam: str, f: dict) -> str:
     rt = f.get("robot_timeout")
-    robot = (f"r = Robot(timeout={rt})                      # connects (waits while the service builds the scene, {f['build_note'].split(' (')[0]})"
+    robot = (f"r = Robot(timeout={rt})                      # connects (the service is ready before your time starts)"
              if rt else
-             f"r = Robot()                                   # connects (waits while the service builds the scene, {(f.get('build_note') or '~1 min').split(' (')[0]})")
+             f"r = Robot()                                   # connects (the service is ready before your time starts)")
     intro = ("You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**: "
              f"the simulator runs in a service you cannot open. You get one client and one episode. **Task:** {f.get('std_goal') or f_text(fam)}")
     subs = {"@FAM@": fam, "@INTRO@": wrap(intro), "@NOTE@": (f["std_note"] + "\n\n") if f.get("std_note") else "",
