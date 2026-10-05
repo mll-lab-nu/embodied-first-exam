@@ -203,8 +203,8 @@ GPU 架构不在已验证矩阵时标记未验证，按显式后端探针判断�
 
 | 配置 | torch / torchvision | IPC 包身份 | 目标内核 | 当前用途 |
 | --- | --- | --- | --- | --- |
-| `cu128`，默认 | 2.11.0+cu128 / 0.26.0+cu128 | 0.0.25+topogym.cuda128 | sm_89、sm_120、compute_120 PTX | 保留现有 4090 驱动环境的候选；也覆盖 Blackwell 编译目标 |
-| `cu130` | 2.11.0+cu130 / 0.26.0+cu130 | 0.0.25+topogym.cuda130 | sm_89、sm_120、compute_120 PTX | R580+ 宿主驱动的新机器候选；Blackwell 实机待验收 |
+| `cu128`，默认 | 2.11.0+cu128 / 0.26.0+cu128 | 0.0.25+topogym.det1.cuda128（tooling v18 起：确定性求解补丁；之前为 0.0.25+topogym.cuda128） | sm_89、sm_120、compute_120 PTX | 保留现有 4090 驱动环境的候选；也覆盖 Blackwell 编译目标 |
+| `cu130` | 2.11.0+cu130 / 0.26.0+cu130 | 0.0.25+topogym.det1.cuda130（tooling v18 起；之前为 0.0.25+topogym.cuda130） | sm_89、sm_120、compute_120 PTX | R580+ 宿主驱动的新机器候选；Blackwell 实机待验收 |
 
 ### 10.1 改动与身份隔离
 

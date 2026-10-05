@@ -11,9 +11,33 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-04)
-Active: **merged-v17** (tooling v17, `eai-standard/2.3`, image `rcb-topogym:0.2.15-dev-cu128`), a source candidate until
+Active: **merged-v18** (tooling v18, `eai-standard/2.3`, image `rcb-topogym:0.2.16-dev-cu128`), a source candidate until
 its 78 packages are built and qualified. Published: v14 (the 78 dirs under `tasks/`, `rcb-topogym:0.2.12-cu128`).
 Jianwen's simpler variants (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v18 (2026-10-05) = merged-v17 + the deterministic IPC solver (libuipc 292c98c3 with three determinism patches,
+  `images/topogym/uipc-patches/`, pyuipc 0.0.25+topogym.det1; knot K2 solo +2 % per control step against the stock build;
+  and the robot forward-dynamics recompute after a settled-state restore; the instances with a settled IPC state, knot_untying,
+  orbits and slotted_post_ring, are re-made from the deterministic solver, while rope_threading has none, so its instances
+  keep their state hashes and only its runtime physics changes) + knot_untying's K2 solve (5 ms IPC frames, a
+  semi-implicit Newton solve of at least 3 iterations; `harbor_templates/topogym/common/rcb_topogym.py`) + the exact
+  speed-ups below (blanket hard reference 29.1 min) + the agent interaction log restored: `images/topogym/warm_cache.sh`
+  had committed an empty `RCB_SESSION_LOG` into the warmed images 0.2.14 / 0.2.15, so their trial Sessions wrote no
+  log (agent_sessions / resets / sim_steps 0); it now reaches only the warm-up sessions, and the script fails if a tag
+  carries it.
+  Environment profile `merged-v18` (`topogym/tasks/release_profile.py`): K2 changes knot's timing and solver and the IPC
+  instances are re-settled, so the environment changed. For Jianwen: the label also enters the slotted oracle's
+  submission fingerprints (computed at run time) and the blanket re-key records. The three blanket records differ from
+  v17's only in `metadata.identity_rekey.by`, and their state arrays are byte-identical; the record hash (the task
+  parameter `initial_state_sha256`) enters `task.instance_id` and with it the task state that `Session.state_sha` hashes,
+  so the blanket instances get new state hashes for the same restored physics. The frozen "v17" tooling hashes are those
+  of the built merged-v17 packages (`ci_checks/topogym_tooling_versions.json`, BOUND_FROZEN 15-17).
+  Below-easy tiers (Jianwen's knot_untying very_easy / easier and orbits below_easy, made with `--tooling` the current
+  `rcb_topogym.py`): knot inherits K2 from `TASKS["knot_untying"]`, and both families need the v18 image for their
+  settled IPC states (the settled-state identity includes the pyuipc version, now 0.0.25+topogym.det1). Their simplified
+  oracles were developed under v17's 2.5 ms full Newton solve, so they should be re-validated under K2 when built.
+  Proposal for Jianwen (his instruction texts): the step time the task description states comes from steps before the
+  first contact; on fiber_bundling the contact phases cost more (lab sweep: medium ~0.23 s per control step against the
+  stated 0.16, hard ~0.40 against 0.31). Measuring it over a contact phase would state what an agent pays.
 - v17 (2026-10-05) = merged-v16 + the R-hold grading (privileged replays may confirm within the same tolerant hold as
   standard) + fiber_bundling on the CPU (image 0.2.15-dev: Genesis tree patch, exact fast paths; below) + deterministic
   GPU physics (tooling; below).
