@@ -9,7 +9,7 @@ import shutil
 import tarfile
 import tempfile
 
-from agent_batch_contract import read, save, validate, locked, linked_rerun
+from agent_batch_contract import read, save, validate, locked, linked_rerun, outcome_counts
 from agent_batch_delivery import unpack, receive
 from difficulty_hf_auth import resolve_token, HFError
 from difficulty_results_hf import Hub, file_identity
@@ -118,7 +118,8 @@ def main():
             receive(archive,plan,destination,reruns=retries,require_complete=a.require_complete)
             save(destination/'hf-source.json',receipt)
             receipt=dict(receipt,accepted=str(destination),review=str(destination/'review/README.md'))
-        receipt.update(delivery_complete=report['delivery_complete'],observed_trials=report['observed_trials'])
+        receipt.update(delivery_complete=report['delivery_complete'],observed_trials=report['observed_trials'],
+                       **outcome_counts(report))
         print(json.dumps(receipt,indent=2)); return 0
     except (OSError,ValueError,KeyError,TypeError,tarfile.TarError) as error:
         p.exit(2,'Helper receipt rejected: '+str(error)+'\n')

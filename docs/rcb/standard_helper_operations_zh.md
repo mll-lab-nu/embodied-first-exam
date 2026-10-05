@@ -18,6 +18,10 @@
 
 预算均为**每个 trial**：agent 43200 秒（12 小时）、input 150000000 tokens（含缓存）、output 10000000 tokens（含 reasoning）。Harbor 对 agent 时间执行超时；镜像构建、环境准备和 verifier 收尾另有时间，不保证整个 job 在 12 小时内结束。token 采用仓库协议的运行后判分：超过任一上限标为 `over_token_budget`，调整后得分为 0，保留原始 verifier 得分；用量缺失标为 `usage_missing`，不能通过完整验收。**token 阈值不是实时 API 消耗硬上限**，不会在达到阈值的一瞬间终止模型。原始 result/reward 不改写，网站以后须读取验收后的分数与预算。
 
+v16 的 `success=0, success_pending_review=1` 在 native helper 中记为 **`pending_review`**，表示运行结束、成功资格待人工复核。它不计入 solved/unsolved 分母，汇总中的 `success` 为 null，`raw_success=0` 保留评分器原值；不会被自动选入 rerun。身份、runtime binding、预算和交付完整性检查继续生效：用量缺失仍为 `usage_missing`，超预算仍为 `over_token_budget`，同时保留原始待审标志。
+
+待审结果可按现有完整性规则封包、上传和接收；`evaluation_complete` / `delivery_complete` 不表示人工审批通过。summary、MANIFEST、接收审查页和 HF 回执单列待审数量；有授权补跑时，统计采用补跑后的有效结果，原始记录和页面继续保留。`verifier/verdict.json` 的 `evidence.review`（privileged）、`verifier/review.json`（standard）和已有 `review_frames/` 随原始归档保留，渲染失败记录也不改写。本次不新增自动审批或历史评分重写；旧封包若把待审记为 unsolved，新接收器会因派生报告与原始记录不一致而拒绝，需维护方保留旧包并用更新后的工具另行交付修正包。
+
 代码已提供：固定实例选择、预检后发布任务包和 batch dispatch、标准 runner 分流、认证解析与刷新保护、逐 K verdict、共享停止、mirror 最终同步和脱敏、MANIFEST/inventory、标准 tar 接收和逐 trial 审查页、显式 rerun 派单、HF 私有目标及远端文件哈希检查。
 
 **尚未放行 180 次真实实验。** 本轮没有生成并发布全部 60 个 v15 包、运行真实模型/GPU canary、向 HF 上传或在独立接收主机实测。没有把当前工作区提交/推送成 helper 可 checkout 的发布 commit。网站按用户决定暂缓。CPU 合同和真实 Docker mirror 的验证记录见本页末尾。

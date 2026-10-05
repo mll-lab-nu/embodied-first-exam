@@ -57,6 +57,24 @@ def trial(jobs,spec,task,plan,i,score=0):
     (path/'agent').mkdir(); (path/'agent/codex.txt').write_text('clean unsolved test\n')
     return path
 
+def pending_review(path,task):
+    """Synthetic v16 verifier evidence in the same two layouts as the graders."""
+    reward=c.read(path/'verifier/reward.json')
+    reward.update(success=0,success_pending_review=1,review_events=1,review_max_depth_mm=3.4)
+    c.save(path/'verifier/reward.json',reward)
+    result=c.read(path/'result.json'); result['verifier_result']['rewards']=reward; c.save(path/'result.json',result)
+    review=dict(pending=True,frames=['review_frames/step_00003.png'])
+    events=dict(count=1,events=[dict(step=3,depth_mm=3.4)])
+    if task['mode']=='privileged':
+        review['replays']=[None,events]
+        proof=c.read(path/'verifier/verdict.json'); proof.update(reward=reward,success=False)
+        proof['evidence']['review']=review; c.save(path/'verifier/verdict.json',proof)
+    else:
+        review.update(live=events,replay=None); c.save(path/'verifier/review.json',review)
+    frame=path/'verifier/review_frames/step_00003.png'; frame.parent.mkdir()
+    frame.write_bytes(b'synthetic review frame; not physics evidence')
+
+
 def pack(root,jobs,plan):
     b=plan['batch']; archive=root/(b+'__fixture.tar.gz')
     # Execute the original tar selection, including all B-* sidecars.
@@ -69,6 +87,90 @@ class NativeTests(unittest.TestCase):
     def setUp(self): self.temp=tempfile.TemporaryDirectory(); self.root=Path(self.temp.name); self.jobs,self.plan=fixture(self.root)
     def tearDown(self): self.temp.cleanup()
     def trials(self): return sorted(self.jobs.glob('*/*__*/result.json'))
+    def mark_pending(self):
+        marked=[]
+        for task,spec in zip(self.plan['tasks'],self.plan['jobs']):
+            path=sorted((self.jobs/spec['job']).iterdir())[0]
+            pending_review(path,task); marked.append(path)
+        return marked
+    def test_pending_review_is_complete_but_unscored_in_both_modes(self):
+        paths=self.mark_pending(); before={p:c.inventory(p) for p in paths}
+        report=c.write_summary(self.jobs,self.plan)
+        self.assertEqual(report['status_counts'],{'pending_review':2,'unsolved':4})
+        self.assertTrue(report['evaluation_complete']); self.assertTrue(report['delivery_complete'])
+        self.assertEqual(c.outcome_counts(report),dict(solved_trials=0,unsolved_trials=4,scored_trials=4,pending_review_trials=2))
+        for row in report['rows']:
+            if row['status']=='pending_review':
+                self.assertIsNone(row['success']); self.assertEqual(row['raw_success'],0)
+                self.assertTrue(row['success_pending_review'])
+        text=(self.jobs/'fixture.summary.md').read_text()
+        self.assertIn('0/4 solved; pending review: 2',text)
+        self.assertIn('| pending_review | — |',text)
+        self.assertEqual(before,{p:c.inventory(p) for p in paths})
+    def test_pending_review_does_not_bypass_validation(self):
+        self.mark_pending()
+        for task,spec in zip(self.plan['tasks'],self.plan['jobs']):
+            path=sorted((self.jobs/spec['job']).iterdir())[0]
+            reward=c.read(path/'verifier/reward.json'); result=c.read(path/'result.json')
+            for changes,expected in (({'infra_error':1},'infra_failed'),({'runtime_binding_ok':0},'not_evaluable'),
+                                     ({'instance_mismatch':1},'not_evaluable'),({'success':1},'invalid_verdict')):
+                with self.subTest(mode=task['mode'],changes=changes):
+                    changed=dict(reward,**changes); c.save(path/'verifier/reward.json',changed)
+                    updated=copy.deepcopy(result); updated['verifier_result']['rewards']=changed; c.save(path/'result.json',updated)
+                    self.assertEqual(c.trial_verdict(path,task,self.plan['agent'])[0],expected)
+            c.save(path/'verifier/reward.json',reward); c.save(path/'result.json',result)
+            result['verifier_result']['rewards']['success_pending_review']=0; c.save(path/'result.json',result)
+            self.assertEqual(c.trial_verdict(path,task,self.plan['agent'])[0],'verdict_mismatch')
+    def test_pending_review_is_not_selected_for_rerun(self):
+        from create_agent_batch_rerun import create
+        paths=self.mark_pending()
+        with self.assertRaisesRegex(ValueError,'no incomplete'):
+            create(self.plan,c.check_batch(self.jobs,self.plan))
+        missing=next(p for p in self.trials() if p.parent not in paths); missing.unlink()
+        child=create(self.plan,c.check_batch(self.jobs,self.plan))
+        self.assertEqual(child['trial_count'],1)
+        self.assertEqual(child['rerun']['trials'][0]['repetition'],2)
+    def test_pending_review_keeps_budget_checks_and_raw_score(self):
+        self.mark_pending()
+        self.plan['token_budget']=dict(input_tokens=100,output_tokens=10,enforcement='post_run_score')
+        self.plan.pop('plan_sha256'); self.plan['plan_sha256']=c.digest(self.plan)
+        for path in self.trials():
+            result=c.read(path); result['agent_result']=dict(n_input_tokens=100,n_output_tokens=10); c.save(path,result)
+        path=self.trials()[0]; original=c.read(path)
+        for usage,expected in ((dict(n_input_tokens=100,n_output_tokens=10),'pending_review'),
+                               (dict(n_input_tokens=101,n_output_tokens=10),'over_token_budget'),
+                               (dict(n_input_tokens=100,n_output_tokens=11),'over_token_budget'),
+                               (dict(n_input_tokens=None,n_output_tokens=10),'usage_missing')):
+            with self.subTest(usage=usage):
+                data=copy.deepcopy(original); data['agent_result']=usage; c.save(path,data)
+                row=c.check_batch(self.jobs,self.plan)['rows'][0]
+                self.assertEqual(row['status'],expected); self.assertEqual(row['raw_success'],0)
+                self.assertTrue(row['success_pending_review'])
+                self.assertEqual(row['success'],0 if expected=='over_token_budget' else None)
+                self.assertEqual(c.read(path.parent/'verifier/reward.json')['success_pending_review'],1)
+    def test_pending_review_round_trip_preserves_evidence_and_counts(self):
+        paths=self.mark_pending(); before={p.relative_to(self.jobs):c.inventory(p) for p in paths}
+        d.seal(self.jobs,self.plan,{'test':SECRET.encode()}); archive=pack(self.root,self.jobs,self.plan)
+        self.assertIn('pending review: 2',(self.jobs/'fixture-MANIFEST.md').read_text())
+        destination=self.root/'received'; receipt=d.receive(archive,self.plan,destination,require_complete=True)
+        self.assertEqual(receipt['report']['status_counts'],{'pending_review':2,'unsolved':4})
+        self.assertEqual(before,{p:c.inventory(destination/'agents'/p) for p in before})
+        self.assertIn('0/4 solved; pending review: 2',(destination/'review/README.md').read_text())
+        pages=[p.read_text() for p in (destination/'review').glob('trial-*.md')]
+        self.assertEqual(sum('held for human review' in p for p in pages),2)
+        self.assertEqual(sum('review_frames/step_00003.png' in p for p in pages),2)
+    def test_authorized_rerun_pending_review_is_counted_without_overwriting_original(self):
+        from create_agent_batch_rerun import create
+        self.mark_pending(); missing=self.trials()[1]; missing.unlink()
+        original=d.report_with_mirror(self.jobs,self.plan); child=create(self.plan,original)
+        spec=child['jobs'][0]; task=child['tasks'][0]; path=trial(self.jobs,spec,task,child,0)
+        pending_review(path,task)
+        rerun=c.check_batch(self.jobs,child); rerun['delivery_errors']=[]
+        report=d.combined([original,rerun],[self.plan,child])
+        self.assertEqual(c.outcome_counts(report)['pending_review_trials'],3)
+        self.assertEqual(c.outcome_counts(report)['scored_trials'],3)
+        self.assertTrue(report['delivery_complete']); self.assertTrue(report['evaluation_complete'])
+        self.assertEqual(report['rows'],original['rows']); self.assertFalse(missing.exists())
     def test_all_k_and_missing_job(self):
         self.assertTrue(c.check_batch(self.jobs,self.plan)['evaluation_complete'])
         self.trials()[0].unlink()

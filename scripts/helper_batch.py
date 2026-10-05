@@ -18,7 +18,7 @@ import tempfile
 import time
 from types import SimpleNamespace
 
-from agent_batch_contract import read, save, validate, digest, sha, locked, linked_rerun, package
+from agent_batch_contract import read, save, validate, digest, sha, locked, linked_rerun, package, outcome_counts
 from agent_batch_delivery import selected, verify_tree, unpack
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -229,7 +229,8 @@ def deliver(cfg,plan,state,*,recover=False):
                 run_command(argv,env=lane_environment(cfg,lane))
     archive,report=bundle(jobs,plan,folder,reruns=retries,allow_partial=cfg['allow_partial'])
     receipt=dict(batch=plan['batch'],plan_sha256=plan['plan_sha256'],archive=str(archive),sha256=sha(archive),
-                 delivery_complete=report['delivery_complete'],upload='pending' if plan['upload']['type']=='hf' else 'shared-folder')
+                 delivery_complete=report['delivery_complete'],upload='pending' if plan['upload']['type']=='hf' else 'shared-folder',
+                 **outcome_counts(report))
     save(state/'delivery.json',receipt)
     return receipt
 

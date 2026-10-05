@@ -111,6 +111,8 @@ class Workflow(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'settings'): c.linked_rerun(self.plan,child)
     def test_hf_only_uploads_three_files_and_retry_skips_commit(self):
         self.plan['upload']={'type':'hf','repo_id':'test/private','prefix':'helpers/fixture/fixture'}; self.repin()
+        for task,spec in zip(self.plan['tasks'],self.plan['jobs']):
+            fixture.pending_review(sorted((self.jobs/spec['job']).iterdir())[0],task)
         d.seal(self.jobs,self.plan,{'test':fixture.SECRET.encode()}); folder=self.jobs.parent/'upload_fixture'; h.bundle(self.jobs,self.plan,folder)
         cfg=h.load_config(self.config); state=self.root/'state'; state.mkdir()
         class Hub:
@@ -127,14 +129,19 @@ class Workflow(unittest.TestCase):
         hub=Hub()
         with patch.object(h,'hf_access',return_value=hub),patch.object(h.time,'sleep'):
             self.assertTrue(h.upload(cfg,self.plan,state)['remote_verified'])
+            receipt=c.read(state/'hf-receipt.json')
+            self.assertEqual(receipt['pending_review_trials'],2); self.assertEqual(receipt['scored_trials'],4)
             self.assertTrue(h.upload(cfg,self.plan,state)['remote_verified'])
             self.assertEqual(hub.commits,1); self.assertEqual(len(hub.remote),3)
             next(iter(hub.remote.values()))['sha256']='bad'
             with self.assertRaisesRegex(ValueError,'different'): h.upload(cfg,self.plan,state)
     def test_hf_receiver_pins_revision_and_requires_only_read_access(self):
+        import io
         import import_helper_results as receiver
         from difficulty_results_hf import file_identity
         self.plan['upload']={'type':'hf','repo_id':'test/private','prefix':'helpers/fixture/fixture'}; self.repin()
+        for task,spec in zip(self.plan['tasks'],self.plan['jobs']):
+            fixture.pending_review(sorted((self.jobs/spec['job']).iterdir())[0],task)
         d.seal(self.jobs,self.plan,{'test':fixture.SECRET.encode()})
         folder=self.jobs.parent/'upload_fixture'; h.bundle(self.jobs,self.plan,folder)
         prefix=self.plan['upload']['prefix']; remote={prefix+'/'+p.name:p for p in folder.iterdir()}
@@ -147,10 +154,20 @@ class Workflow(unittest.TestCase):
                 if action=='head': return obj.head
                 if action=='info': return {p:file_identity(remote[p]) for p in kw['paths'] if p in remote}
                 if action=='download': shutil.copyfile(remote[kw['path']],kw['destination'])
-        hub=Hub(); out=self.root/'download'
+        hub=Hub(); work=self.root/'receiver'; out=work/'downloads'/self.plan['batch']
         archive,receipt=receiver.download(self.plan,out,hub)
         self.assertEqual(receipt['revision'],'a'*40)
-        self.assertTrue(receiver.verify(archive,self.plan,require_complete=True)['delivery_complete'])
+        verified=receiver.verify(archive,self.plan,require_complete=True)
+        self.assertTrue(verified['delivery_complete']); self.assertEqual(verified['status_counts']['pending_review'],2)
+        argv=['import_helper_results.py','--assignment',str(self.assignment),'--work-dir',str(work),
+              '--phase','import','--require-complete']
+        with patch.object(sys,'argv',argv),patch.object(sys,'stdout',io.StringIO()) as output:
+            self.assertEqual(receiver.main(),0)
+        imported=json.loads(output.getvalue())
+        self.assertEqual(imported['pending_review_trials'],2); self.assertEqual(imported['scored_trials'],4)
+        accepted=c.read(work/'accepted/fixture/receipt.json')
+        self.assertEqual(accepted['report']['status_counts']['pending_review'],2)
+        self.assertIn('pending review: 2',(work/'accepted/fixture/review/README.md').read_text())
         self.assertTrue(all(kw['write'] is False for action,kw in calls if action=='auth'))
         self.assertEqual(sum(action=='download' for action,_ in calls),3)
         hub.head='b'*40

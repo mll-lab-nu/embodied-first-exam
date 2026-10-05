@@ -1,5 +1,6 @@
 """Standard agents/ + agents_mirror/ archives; no GPU, Harbor or credentials required to receive."""
 import argparse
+from collections import Counter
 import json
 from pathlib import Path
 import os
@@ -8,6 +9,7 @@ import tarfile
 import tempfile
 from urllib.parse import quote
 from agent_batch_contract import check_batch, component, files, locked, read, relative, save, sha, validate, write_summary, related_rerun, linked_rerun, TERMINAL
+from agent_batch_contract import outcome_summary
 from secret_scan import scan_tree
 
 def selected(jobs,plan):
@@ -52,6 +54,7 @@ def manifest(plan,metadata,report):
     h=metadata.get('host',{})
     lines=[f"# Helper manifest: {plan['batch']}",'',f"Helper: {plan['helper']}",f"Plan SHA-256: {plan['plan_sha256']}",
         f"Trials: {report['observed_trials']}/{report['planned_trials']}; evaluation_complete={report['evaluation_complete']}; delivery_complete={report['delivery_complete']}",
+        outcome_summary(report),
         f"Selection: {plan.get('instance_selection','unspecified')}; K={plan['repetitions']}",
         f"Per-trial agent seconds: {sorted(set(t['agent_timeout_sec'] for t in plan['tasks']))}; token budget: {json.dumps(plan.get('token_budget'))}",
         f"Repository: {json.dumps(metadata.get('repository',{}),ensure_ascii=False)}",f"Agent: {json.dumps(plan['agent'])}",
@@ -139,11 +142,13 @@ def combined(reports,plans):
             original=[r for r in child['rerun']['trials'] if r['task']==spec['task']]
             rows=[r for r in result['rows'] if r['job']==spec['job']]
             for before,after in zip(original,rows): replacements[(before['job'],before['repetition'])]=after
-    covered=[]
+    covered=[]; effective=[]
     for row in report['rows']:
         after=row if row['status'] in TERMINAL else replacements.get((row['job'],row['repetition']),row)
+        effective.append(after)
         covered.append(after['status'] in TERMINAL and not after['missing_artifacts'])
     report['rerun_reports']=reports[1:]
+    report['effective_status_counts']=dict(Counter(row['status'] for row in effective))
     report['delivery_complete']=all(covered) and not any(r['errors'] or r['delivery_errors'] for r in reports)
     report['original_evaluation_complete']=report['evaluation_complete']
     report['evaluation_complete']=not any(r['errors'] for r in reports) and all((row if row['status'] in TERMINAL else replacements.get((row['job'],row['repetition']),row))['status'] in TERMINAL for row in report['rows'])
@@ -151,10 +156,13 @@ def combined(reports,plans):
 
 def review(root,plan,report,*,output=None):
     out=output or root/'review'; out.mkdir(parents=True)
-    lines=[f"# {plan['batch']}",'',f"Evaluation complete: {report['evaluation_complete']}; delivery complete: {report['delivery_complete']}",'',
+    lines=[f"# {plan['batch']}",'',f"Evaluation complete: {report['evaluation_complete']}; delivery complete: {report['delivery_complete']}",'', outcome_summary(report), '',
            '| Task | Repeat | Status | Evidence |','|---|---:|---|---|']
     for i,row in enumerate(report['rows']):
         page=f'trial-{i+1:04d}.md'; body=[f"# {row['task']} / {row['repetition']}",'',f"Status: {row['status']}",'']
+        if row.get('success_pending_review'):
+            body += ['Verifier success is held for human review; its raw score of 0 is not an unsolved result.',
+                     'See verifier/verdict.json (evidence.review) or verifier/review.json and review_frames/ below.', '']
         if 'token_usage' in row:
             body += [f"Score: {row.get('success')}; raw verifier score: {row.get('raw_success')}",
                      f"Tokens: {json.dumps(row['token_usage'])}; over_token_budget: {row.get('over_token_budget')}",'']

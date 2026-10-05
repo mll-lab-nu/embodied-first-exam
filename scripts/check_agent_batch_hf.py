@@ -9,7 +9,7 @@ from pathlib import Path
 import tarfile
 import tempfile
 from urllib.parse import quote
-from agent_batch_contract import read, validate, save, linked_rerun, component
+from agent_batch_contract import read, validate, save, linked_rerun, component, outcome_counts
 from agent_batch_delivery import unpack
 from difficulty_results_hf import Hub, file_identity
 from helper_bundle import guard
@@ -45,7 +45,8 @@ def check(folder,plan,args,hub=None):
         if not actual or actual['size']!=want['size'] or not (actual.get('sha256')==want['sha256'] or
                 (not actual.get('sha256') and actual.get('git_blob_sha1')==want['git_blob_sha1'])):
             raise ValueError('remote missing or different: '+p.name)
-    return dict(result,files=expected,remote_verified=args.verify_uploaded,delivery_complete=report['delivery_complete'])
+    return dict(result,files=expected,remote_verified=args.verify_uploaded,delivery_complete=report['delivery_complete'],
+                **outcome_counts(report))
 
 def main():
     p=argparse.ArgumentParser(description=__doc__); p.add_argument('--assignment',type=Path)

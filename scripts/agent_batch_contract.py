@@ -13,7 +13,8 @@ import struct
 import zlib
 
 FORMAT = 'topogym-native-batch-v1'
-TERMINAL = {'solved', 'unsolved', 'invalid_submission', 'over_token_budget'}
+# Terminal execution may still need a human verdict; it must not trigger a rerun.
+TERMINAL = {'solved', 'unsolved', 'pending_review', 'invalid_submission', 'over_token_budget'}
 
 
 def validate_token_budget(budget):
@@ -203,6 +204,8 @@ def trial_verdict(trial, task, agent=None):
     if exc and exc not in ('AgentTimeout', 'AgentTimeoutError'): return 'infra_failed', {}, []
     reward = read(trial/'verifier/reward.json')
     if type(reward.get('success')) not in (int, float) or reward['success'] not in (0, 1): return 'invalid_verdict', reward, []
+    pending_review = reward.get('success_pending_review') == 1
+    if pending_review and reward['success'] != 0: return 'invalid_verdict', reward, []
     recorded = (result.get('verifier_result') or {}).get('rewards') or {}
     # Harbor records reward.txt as `reward`; some versions retain numeric JSON fields.
     score = recorded.get('success', recorded.get('reward'))
@@ -239,7 +242,8 @@ def trial_verdict(trial, task, agent=None):
     if reward['success'] == 1:
         missing = [rel for rel in task.get('success_artifacts', ['verifier/replay.mp4']) if not (trial/rel).is_file() or not (trial/rel).stat().st_size]
         missing += [rel+' (invalid media container)' for rel in task.get('success_artifacts',[]) if rel not in missing and not media_container_valid(trial/rel)]
-    return ('solved' if reward['success']==1 else 'unsolved'), reward, missing
+    status = 'pending_review' if pending_review else ('solved' if reward['success']==1 else 'unsolved')
+    return status, reward, missing
 
 
 def check_batch(jobs, plan):
@@ -262,10 +266,12 @@ def check_batch(jobs, plan):
                 try:
                     status, reward, missing = trial_verdict(trial, tasks[spec['task']], plan['agent'])
                     row.update(status=status, success=reward.get('success'), missing_artifacts=missing)
+                    if status == 'pending_review':
+                        row.update(success=None, raw_success=reward['success'], success_pending_review=True)
                     if status in TERMINAL and 'token_budget' in plan:
                         usage=read(trial/'result.json').get('agent_result') or {}
                         counts={key:usage.get('n_'+key) for key in ('input_tokens','output_tokens')}
-                        row.update(raw_success=row['success'], token_usage=counts, over_token_budget=None)
+                        row.update(raw_success=reward.get('success'), token_usage=counts, over_token_budget=None)
                         if any(type(n) is not int or n<0 for n in counts.values()):
                             row.update(status='usage_missing',success=None)
                         else:
@@ -282,13 +288,29 @@ def check_batch(jobs, plan):
                 evaluation_complete=complete, delivery_complete=complete and not any(r['missing_artifacts'] for r in rows))
 
 
+def outcome_counts(report):
+    """Count final scored outcomes separately from completed trials awaiting review."""
+    counts = report.get('effective_status_counts', report['status_counts'])
+    solved, unsolved = counts.get('solved', 0), counts.get('unsolved', 0)
+    return dict(solved_trials=solved, unsolved_trials=unsolved, scored_trials=solved+unsolved,
+                pending_review_trials=counts.get('pending_review', 0))
+
+
+def outcome_summary(report):
+    counts = outcome_counts(report)
+    return (f"Scored trials (solved/unsolved only): {counts['solved_trials']}/{counts['scored_trials']} solved; "
+            f"pending review: {counts['pending_review_trials']}. "
+            "Completion describes execution/delivery, not human approval; pending review is excluded from scores.")
+
+
 def write_summary(jobs, plan):
     report = check_batch(jobs, plan); jobs = Path(jobs); b = plan['batch']
     save(jobs/(b+'-verdicts.json'), report)
     lines = [f'# {b}', '', f"Planned: {report['planned_trials']}; observed: {report['observed_trials']}; evaluation complete: {report['evaluation_complete']}; delivery complete: {report['delivery_complete']}", '',
-             '| Task | Repetition | Status | Score | Raw trial |', '|---|---:|---|---:|---|']
+             outcome_summary(report), '', '| Task | Repetition | Status | Score | Raw trial |', '|---|---:|---|---:|---|']
     for row in report['rows']:
-        lines.append(f"| {row['task']} | {row['repetition']} | {row['status']} | {row.get('success','')} | {row['trial'] or 'not started'} |")
+        score = row.get('success')
+        lines.append(f"| {row['task']} | {row['repetition']} | {row['status']} | {score if score is not None else '—'} | {row['trial'] or 'not started'} |")
     lines += ['', *report['errors']]
     (jobs/(b+'.summary.md')).write_text('\n'.join(lines)+'\n')
     return report
