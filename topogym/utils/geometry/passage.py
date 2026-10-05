@@ -66,7 +66,11 @@ def advance_passage(points, history, center, normal, radius, half_thickness):
     n = n/np.linalg.norm(n)
     before, after = (old-c)@n, (p-c)@n
     events = []
-    for station in range(len(p)):
+    # The per-station loop below only records crossings; most ticks have none, which the same comparisons on whole
+    # arrays show at once (identical results: scripts/check_fiber_fast_paths.py).
+    crossed = any(np.any(((before-plane) <= 0) & (0 < (after-plane))) or np.any(((after-plane) <= 0) & (0 < (before-plane)))
+                  for plane in (-half_thickness, half_thickness))
+    for station in range(len(p) if crossed else 0):
         for boundary, plane in enumerate((-half_thickness, half_thickness)):
             a, b = before[station]-plane, after[station]-plane
             direction = 1 if a <= 0 < b else -1 if b <= 0 < a else 0

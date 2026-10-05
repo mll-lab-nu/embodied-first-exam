@@ -11,7 +11,8 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-04)
-Active: **merged-v16** (tooling v16, `eai-standard/2.3`, image `rcb-topogym:0.2.14-dev-cu128`), a source candidate until
+Active: **merged-v16** (tooling v16, `eai-standard/2.3`, image `rcb-topogym:0.2.15-dev-cu128`: 0.2.14-dev plus the fiber
+CPU speed-up below), a source candidate until
 its 78 packages are built and qualified. Published: v14 (the 78 dirs under `tasks/`, `rcb-topogym:0.2.12-cu128`).
 Jianwen's simpler variants (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
 - v16 (2026-10-04) = Jianwen's merged-v15 source candidate (4aac2a4e6: release selection, runtime bindings, the candidate
@@ -249,6 +250,65 @@ outcome of replayed agent trajectories, deviation against the baseline's own 1e-
   instance: a threshold); frames indistinguishable. Rejected: AL-IPC (crashes), MAS (slower). Settled instances are not
   hash-exact in fresh builds (GPU nondeterminism over the settle ticks; positions agree to 0.03-0.26 um), so `instance_exact`
   is 0 and `instance_matches` decides.
+
+### fiber_bundling on the CPU: the articulated bundle (image 0.2.15-dev, 2026-10-05)
+Target (the user, 2026-10-04): one full reference execution within about 20 % of the 6 h agent budget, the budget being
+for the agent's reasoning; fiber hard may run longer (the user, 2026-10-05). Dual validation as above (metrics and frames;
+lab journal topospeed/NOTES.md).
+- **Cause.** The bundle is one articulated tree (slack lead, trunk, 8 / 16 strands of 10 links; ball joints): 318 DOFs
+  (medium) / 558 (hard). Genesis' CPU branch factors each tree's mass matrix densely (O(n^3) per substep: 94 / 98 % of
+  `kernel_step_1`, which was 67 / 80 % of a control step), and its skyline order keeps an entity's DOFs root-first, so every
+  strand row of the constraint Hessian's envelope reached the slack lead's root (dense Cholesky again).
+- **Engine patch** (`images/topogym/genesis-1.2.1-cpu-tree.patch`, applied by the Dockerfile with sha256 checks):
+  1. tree-sparse mass matrix (CPU, no hibernation): structural entries only, and an LDL^T that walks each pivot's
+     ancestor DOFs, i.e. the dense loop's nonzero updates in the same order. The physical state is bit-identical; only
+     structurally-zero entries of the factor keep their initial +0.0 where the dense loop wrote x - a*0.0 (signed zeros).
+     A state with inf / NaN in the mass factor (already broken) could spread differently.
+  2. children-first skyline order inside entities with more than 64 DOFs (fill-free for a tree): round-off level. Robots
+     (15-16 DOFs) and free bodies (6) keep the previous permutation, so every scene without such an entity is unchanged
+     (the skyline envelope exists only on the CPU backend; GPU families are untouched by construction).
+- **Exact fast paths** (task code): `body_points_batch` (one batched rotation for all fiber links, link-axis points only,
+  so bit-identical) for `_strand_points`, and `advance_passage` skips its per-station loop when no station crossed a
+  boundary plane in the tick. `scripts/check_fiber_fast_paths.py`: 0 differences in 3000 random pose sets, 300 strand
+  sets, 3000 passage histories (1273 with crossings); task update 0.072 -> 0.020 s per control step on hard.
+
+Bit-exactness of patch 1 per CPU family (one oracle trajectory each, v16 instances; SHA-256 of the rigid solver's arrays
+after every control step, patched vs unpatched Genesis; with patch 2 added, every array of these runs is also identical
+to patch 1 alone at every step):
+
+| family (trajectory) | rows | physical state identical every step | final state_sha | outcome |
+|---|---|---|---|---|
+| interlocked_claws medium | 1364 | yes | equal | success / success |
+| cast_keyhole easy | 2779 | yes | equal | - / - |
+| hedgehog_in_cage medium | 2261 | yes | equal | success / success |
+| buzz_wire_3d easy | 5141 | yes | equal | wire_touched / wire_touched |
+| horseshoe_ring easy | 7181 | yes | equal | - / - |
+| cast_coil easy | 6502 | yes | equal | success / success |
+| fiber_bundling medium / hard (patch 1 only) | 200 / 200 | yes (every link pose and joint) | equal | - |
+
+Fiber, per control step on lab (2 cores, hard rows 0-199): 2.10 s unpatched -> 0.64 (patch 1) -> 0.354 (+ patch 2 + fast
+paths), solver substeps unchanged (4). Patch 2 against patch 1 on the medium oracle trajectory (13,770 rows + hold, open
+loop): bit-identical until the bundle's first constraint solves (row ~550), then round-off grows in the chaotic bundle: the
+floppy slack lead drifts by up to 2.2 mm (first > 1 mm at row 5975), the strand tips stay within 0.14 mm, the outcome is
+the same (success); per-substep contact depth per role pair unchanged (max: sheath-gripper 0.086 mm both, sheath-ring
+0.014 vs 0.014, strand-ring 0.012 vs 0.011, strand-strand 0.002 vs 0.002); rendered frames of both at 12 rows show the
+same bundle, strands and ring passage (sheets in the lab journal). The children-first order applied to every
+entity (robots included) gave 12 mm on the slack lead with the same tips, hence the 64-DOF threshold.
+The built image (labv17 0.2.15-dev) reproduces the tested code: interlocked_claws medium's 1364 rows bit-identical to
+unpatched v16 (physical state) and to the tested patch at every step; fiber medium rows 0-399 bit-identical to the tested
+patch + fast paths.
+
+| tier | oracle, closed loop (lab, 2 cores) | fresh-process replay of its trajectory | before |
+|---|---|---|---|
+| medium | success, 13,770 steps, 69.0 min (19.2 % of 6 h) | success, the same final state_sha (bit-exact), 51.5 min | 125.5 min |
+| hard | success, 25,554 steps, 205 min (57 % of 6 h; the user accepts a longer fiber hard) | success, the same final state_sha (bit-exact), 152 min | ~15.6 h (2.2 s/step); tree factor alone 5.6 h |
+
+Fiber hard's fresh replay keeps the contact depths of medium (max: sheath-gripper 0.086 mm, sheath-ring 0.021,
+strand-ring 0.020, strand-strand 0.006).
+Rejected: solver substeps 2 / 1 (the closed-loop hard oracle stalls on its 1 mm sheath-tracking gate: s1 at step 1249,
+s2 over comb_01's stage time budget at step 2588, while s4 with every other change passes; open-loop medium replays
+still succeed, so only the closed loop separates them), a coarser slack lead (an instance change, not needed), the GPU
+backend (fp32: 2.11 s per control step for the 558-DOF tree), more CPU threads (1.5-2.1x slower).
 
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from

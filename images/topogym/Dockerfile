@@ -60,6 +60,18 @@ COPY assets/robots/ /opt/topogym-assets/robots/
 RUN chmod -R a+rX /opt/topogym-assets
 COPY scripts/prepare_nyx_studio.py /opt/prepare_nyx_studio.py
 RUN python /opt/prepare_nyx_studio.py
+# Genesis CPU rigid-solver patch for fiber_bundling's articulated bundle (genesis-1.2.1-cpu-tree.patch: tree-sparse mass
+# matrix factor, bit-exact; children-first skyline order inside entities above 64 DOFs). Both files are checked before and
+# after, so another Genesis wheel fails the build instead of being patched blindly.
+COPY images/topogym/genesis-1.2.1-cpu-tree.patch /opt/genesis-cpu-tree.patch
+RUN cd "$(python -c 'import importlib.util, pathlib; print(pathlib.Path(importlib.util.find_spec("genesis").origin).parent)')" \
+    && printf '%s  %s\n' 5529eee0c837eb08285e8bf08c2843f3b64c7e2760d2e5cdfb181196089a8f5e engine/solvers/rigid/abd/forward_dynamics.py \
+        46ad0a691de50b65ecdc2248430b5df320dd396f6d0a8a2d68c04451063c7103 engine/solvers/rigid/constraint/solver.py | sha256sum -c - \
+    && patch -p1 --no-backup-if-mismatch < /opt/genesis-cpu-tree.patch \
+    && printf '%s  %s\n' 97aaa3a68a855b18cc888a5b525355e2f4cd340bd46822990a52e4a1dd663f06 engine/solvers/rigid/abd/forward_dynamics.py \
+        f23f3eece37f9b9a58f8acfb4a058c2c853059c6290d39922d68c6f7c12cdfd9 engine/solvers/rigid/constraint/solver.py | sha256sum -c - \
+    && python -m compileall -q engine/solvers/rigid/abd/forward_dynamics.py engine/solvers/rigid/constraint/solver.py \
+    && rm /opt/genesis-cpu-tree.patch
 COPY topogym/ /opt/topogym/topogym/
 COPY images/topogym/prune.py /opt/prune.py
 RUN python /opt/prune.py /opt/topogym && rm /opt/prune.py && chmod -R a+rX /opt/topogym

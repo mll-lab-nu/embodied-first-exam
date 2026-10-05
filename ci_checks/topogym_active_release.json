@@ -3,7 +3,7 @@
   "active": {
     "name": "merged-v16",
     "tooling_version": "16",
-    "image_version": "0.2.14-dev",
+    "image_version": "0.2.15-dev",
     "status": "source_candidate",
     "tasks_root": null,
     "runtime_catalog": null

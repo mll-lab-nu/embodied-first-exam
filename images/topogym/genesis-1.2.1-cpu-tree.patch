@@ -1,0 +1,310 @@
+Genesis 1.2.1 (genesis-world wheel) CPU rigid-solver patch for TopoGym's articulated fiber bundle; applied by
+images/topogym/Dockerfile with sha256 checks of both files before and after (patch -p1 in the genesis package dir).
+1. abd/forward_dynamics.py: on the CPU backend without hibernation the mass matrix is assembled on its structural entries
+   (same-link pairs and ancestor links, mirrored) and factored by a tree-sparse LDL^T that walks each pivot's ancestor
+   DOFs only (func_factor_mass_tree): the same updates in the same order as the dense CPU branch, so the physical state is
+   bit-identical (entries outside the ancestor pattern stay exact zeros instead of being rewritten as x - a*0.0, which
+   only flips signs of zeros); other backends / options fall back to func_factor_mass.
+2. constraint/solver.py: the skyline DOF permutation keeps Genesis' order except inside entities with more than 64 DOFs,
+   whose DOFs are eliminated children-first (fill-free for a tree); robots (15-16 DOFs) and free bodies keep exactly the
+   previous permutation, so only the fiber bundle (318 / 558 DOFs) sees a round-off-level change.
+Validation: docs/rcb/benchmarks/topogym.md (fiber_bundling CPU speed, 2026-10-05).
+
+--- a/engine/solvers/rigid/abd/forward_dynamics.py
++++ b/engine/solvers/rigid/abd/forward_dynamics.py
+@@ -118,9 +118,10 @@
+         is_backward=False,
+     )
+     if decompose:
+-        func_factor_mass(
++        func_factor_mass_tree(
+             implicit_damping=False,
+             entities_info=entities_info,
++            links_info=links_info,
+             dofs_state=dofs_state,
+             dofs_info=dofs_info,
+             rigid_global_info=rigid_global_info,
+@@ -157,9 +158,10 @@
+         static_rigid_sim_config=static_rigid_sim_config,
+         is_backward=is_backward,
+     )
+-    func_factor_mass(
++    func_factor_mass_tree(
+         implicit_damping=False,
+         entities_info=entities_info,
++        links_info=links_info,
+         dofs_state=dofs_state,
+         dofs_info=dofs_info,
+         rigid_global_info=rigid_global_info,
+@@ -449,18 +451,45 @@
+                         else i_0
+                     )
+ 
+-                    for i_d in range(entities_info.dof_start[i_e], entities_info.dof_end[i_e]):
+-                        for j_d in range(
+-                            rigid_global_info.dofs_mass_block_start[i_d], rigid_global_info.dofs_mass_block_end[i_d]
+-                        ):
+-                            rigid_global_info.mass_mat[i_d, j_d, i_b] = (
+-                                dofs_state.f_ang[i_d, i_b].dot(dofs_state.cdof_ang[j_d, i_b])
+-                                + dofs_state.f_vel[i_d, i_b].dot(dofs_state.cdof_vel[j_d, i_b])
+-                            ) * rigid_global_info.mass_parent_mask[i_d, j_d]
+-
+-                    for i_d in range(entities_info.dof_start[i_e], entities_info.dof_end[i_e]):
+-                        for j_d in range(i_d + 1, rigid_global_info.dofs_mass_block_end[i_d]):
+-                            rigid_global_info.mass_mat[i_d, j_d, i_b] = rigid_global_info.mass_mat[j_d, i_d, i_b]
++                    if qd.static(
++                        static_rigid_sim_config.backend == gs.cpu and not static_rigid_sim_config.use_hibernation
++                    ):
++                        # TopoGym CPU patch: structural entries only (same-link pairs and ancestor links), then mirrored.
++                        for i_l in range(entities_info.link_start[i_e], entities_info.link_end[i_e]):
++                            I_l = [i_l, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else i_l
++                            for i_d in range(links_info.dof_start[I_l], links_info.dof_end[I_l]):
++                                # same link: lower entries incl. the diagonal, mirrored like the dense mirror pass
++                                for j_d in range(links_info.dof_start[I_l], i_d + 1):
++                                    val = (
++                                        dofs_state.f_ang[i_d, i_b].dot(dofs_state.cdof_ang[j_d, i_b])
++                                        + dofs_state.f_vel[i_d, i_b].dot(dofs_state.cdof_vel[j_d, i_b])
++                                    ) * rigid_global_info.mass_parent_mask[i_d, j_d]
++                                    rigid_global_info.mass_mat[i_d, j_d, i_b] = val
++                                    if j_d != i_d:
++                                        rigid_global_info.mass_mat[j_d, i_d, i_b] = val
++                                m = links_info.parent_idx[I_l]
++                                while m != -1:
++                                    I_m = [m, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else m
++                                    for j_d in range(links_info.dof_start[I_m], links_info.dof_end[I_m]):
++                                        val = (
++                                            dofs_state.f_ang[i_d, i_b].dot(dofs_state.cdof_ang[j_d, i_b])
++                                            + dofs_state.f_vel[i_d, i_b].dot(dofs_state.cdof_vel[j_d, i_b])
++                                        ) * rigid_global_info.mass_parent_mask[i_d, j_d]
++                                        rigid_global_info.mass_mat[i_d, j_d, i_b] = val
++                                        rigid_global_info.mass_mat[j_d, i_d, i_b] = val
++                                    m = links_info.parent_idx[I_m]
++                    else:
++                        for i_d in range(entities_info.dof_start[i_e], entities_info.dof_end[i_e]):
++                            for j_d in range(
++                                rigid_global_info.dofs_mass_block_start[i_d], rigid_global_info.dofs_mass_block_end[i_d]
++                            ):
++                                rigid_global_info.mass_mat[i_d, j_d, i_b] = (
++                                    dofs_state.f_ang[i_d, i_b].dot(dofs_state.cdof_ang[j_d, i_b])
++                                    + dofs_state.f_vel[i_d, i_b].dot(dofs_state.cdof_vel[j_d, i_b])
++                                ) * rigid_global_info.mass_parent_mask[i_d, j_d]
++                        for i_d in range(entities_info.dof_start[i_e], entities_info.dof_end[i_e]):
++                            for j_d in range(i_d + 1, rigid_global_info.dofs_mass_block_end[i_d]):
++                                rigid_global_info.mass_mat[i_d, j_d, i_b] = rigid_global_info.mass_mat[j_d, i_d, i_b]
+ 
+     # Take into account motor armature
+     qd.loop_config(name="armature", serialize=static_rigid_sim_config.para_level < gs.PARA_LEVEL.PARTIAL)
+@@ -984,6 +1013,161 @@
+ 
+ 
+ @qd.func
++def func_factor_mass_tree(
++    implicit_damping: qd.template(),
++    entities_info: array_class.EntitiesInfo,
++    links_info: array_class.LinksInfo,
++    dofs_state: array_class.DofsState,
++    dofs_info: array_class.DofsInfo,
++    rigid_global_info: array_class.RigidGlobalInfo,
++    static_rigid_sim_config: qd.template(),
++    is_backward: qd.template(),
++):
++    """TopoGym CPU patch: tree-sparse LDL^T on the CPU (same updates, same order as func_factor_mass's CPU branch)."""
++    if qd.static(
++        is_backward
++        or static_rigid_sim_config.backend != gs.cpu
++        or static_rigid_sim_config.use_hibernation
++        or static_rigid_sim_config.enable_register_tiled_mass
++        or (static_rigid_sim_config.enable_tiled_cholesky_mass_matrix and not static_rigid_sim_config.mass_matrix_fits_shared)
++    ):
++        func_factor_mass(
++            implicit_damping=implicit_damping,
++            entities_info=entities_info,
++            dofs_state=dofs_state,
++            dofs_info=dofs_info,
++            rigid_global_info=rigid_global_info,
++            static_rigid_sim_config=static_rigid_sim_config,
++            is_backward=is_backward,
++        )
++    else:
++        n_entities = entities_info.n_links.shape[0]
++        _B = dofs_state.ctrl_mode.shape[1]
++        qd.loop_config(name="factor_mass", serialize=static_rigid_sim_config.para_level < gs.PARA_LEVEL.PARTIAL)
++        for i_e, i_b in qd.ndrange(n_entities, _B):
++            if rigid_global_info.mass_mat_mask[i_e, i_b]:
++                entity_dof_start = entities_info.dof_start[i_e]
++                entity_dof_end = entities_info.dof_end[i_e]
++                link_start = entities_info.link_start[i_e]
++                link_end = entities_info.link_end[i_e]
++                anc = qd.Vector.zero(gs.qd_int, 384)
++
++                # Copy the structural lower entries of M (diagonal + factor ancestors) into L.
++                for i_l in range(link_start, link_end):
++                    I_l = [i_l, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else i_l
++                    for i_d in range(links_info.dof_start[I_l], links_info.dof_end[I_l]):
++                        n_anc = 0
++                        overflow = False
++                        j_d = i_d - 1
++                        while j_d >= links_info.dof_start[I_l]:
++                            anc[n_anc] = j_d
++                            n_anc = n_anc + 1
++                            j_d = j_d - 1
++                        m = links_info.parent_idx[I_l]
++                        while m != -1 and not overflow:
++                            I_m = [m, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else m
++                            if n_anc + links_info.dof_end[I_m] - links_info.dof_start[I_m] > 384:
++                                overflow = True
++                            else:
++                                for jj in range(links_info.dof_end[I_m] - links_info.dof_start[I_m]):
++                                    anc[n_anc] = links_info.dof_end[I_m] - 1 - jj
++                                    n_anc = n_anc + 1
++                                m = links_info.parent_idx[I_m]
++                        if overflow:
++                            block_start = rigid_global_info.dofs_mass_block_start[i_d]
++                            for k_d in range(block_start, i_d):
++                                rigid_global_info.mass_mat_L[i_d, k_d, i_b] = rigid_global_info.mass_mat[i_d, k_d, i_b]
++                        else:
++                            for q in range(n_anc):
++                                k_d = anc[q]
++                                rigid_global_info.mass_mat_L[i_d, k_d, i_b] = rigid_global_info.mass_mat[i_d, k_d, i_b]
++                        rigid_global_info.mass_mat_L[i_d, i_d, i_b] = rigid_global_info.mass_mat[i_d, i_d, i_b]
++
++                        if qd.static(implicit_damping):
++                            I_d = [i_d, i_b] if qd.static(static_rigid_sim_config.batch_dofs_info) else i_d
++                            rigid_global_info.mass_mat_L[i_d, i_d, i_b] = (
++                                rigid_global_info.mass_mat_L[i_d, i_d, i_b]
++                                + dofs_info.damping[I_d] * rigid_global_info.substep_dt[None]
++                            )
++                            if qd.static(static_rigid_sim_config.integrator == gs.integrator.implicitfast):
++                                if dofs_state.ctrl_mode[i_d, i_b] <= gs.CTRL_MODE.VELOCITY:
++                                    rigid_global_info.mass_mat_L[i_d, i_d, i_b] = (
++                                        rigid_global_info.mass_mat_L[i_d, i_d, i_b]
++                                        - dofs_info.act_bias[I_d][2] * rigid_global_info.substep_dt[None]
++                                    )
++
++                # Pivots last to first (descending DOF index, via descending links).
++                for i_l_ in range(link_end - link_start):
++                    i_l = link_end - 1 - i_l_
++                    I_l = [i_l, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else i_l
++                    l_start = links_info.dof_start[I_l]
++                    l_end = links_info.dof_end[I_l]
++                    for i_d_ in range(l_end - l_start):
++                        i_d = l_end - 1 - i_d_
++                        D_inv = 1.0 / rigid_global_info.mass_mat_L[i_d, i_d, i_b]
++                        rigid_global_info.mass_mat_D_inv[i_d, i_b] = D_inv
++
++                        n_anc = 0
++                        overflow = False
++                        j_d = i_d - 1
++                        while j_d >= l_start:
++                            anc[n_anc] = j_d
++                            n_anc = n_anc + 1
++                            j_d = j_d - 1
++                        m = links_info.parent_idx[I_l]
++                        while m != -1 and not overflow:
++                            I_m = [m, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else m
++                            if n_anc + links_info.dof_end[I_m] - links_info.dof_start[I_m] > 384:
++                                overflow = True
++                            else:
++                                for jj in range(links_info.dof_end[I_m] - links_info.dof_start[I_m]):
++                                    anc[n_anc] = links_info.dof_end[I_m] - 1 - jj
++                                    n_anc = n_anc + 1
++                                m = links_info.parent_idx[I_m]
++
++                        if not overflow:
++                            for p in range(n_anc):
++                                j_d = anc[p]
++                                a = rigid_global_info.mass_mat_L[i_d, j_d, i_b] * D_inv
++                                for q in range(p, n_anc):
++                                    k_d = anc[q]
++                                    rigid_global_info.mass_mat_L[j_d, k_d, i_b] -= (
++                                        a * rigid_global_info.mass_mat_L[i_d, k_d, i_b]
++                                    )
++                                rigid_global_info.mass_mat_L[i_d, j_d, i_b] = a
++                        else:
++                            # v1 walk (no length limit)
++                            m = i_l
++                            j_hi = i_d
++                            while m != -1:
++                                I_m = [m, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else m
++                                m_start = links_info.dof_start[I_m]
++                                j_d = j_hi - 1
++                                while j_d >= m_start:
++                                    a = rigid_global_info.mass_mat_L[i_d, j_d, i_b] * D_inv
++                                    q = m
++                                    k_hi = j_d + 1
++                                    while q != -1:
++                                        I_q = [q, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else q
++                                        for k_d in range(links_info.dof_start[I_q], k_hi):
++                                            rigid_global_info.mass_mat_L[j_d, k_d, i_b] -= (
++                                                a * rigid_global_info.mass_mat_L[i_d, k_d, i_b]
++                                            )
++                                        q = links_info.parent_idx[I_q]
++                                        if q != -1:
++                                            I_q2 = [q, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else q
++                                            k_hi = links_info.dof_end[I_q2]
++                                    rigid_global_info.mass_mat_L[i_d, j_d, i_b] = a
++                                    j_d = j_d - 1
++                                m = links_info.parent_idx[I_m]
++                                if m != -1:
++                                    I_m2 = [m, i_b] if qd.static(static_rigid_sim_config.batch_links_info) else m
++                                    j_hi = links_info.dof_end[I_m2]
++
++                        rigid_global_info.mass_mat_L[i_d, i_d, i_b] = 1.0
++
++
++@qd.func
+ def func_solve_mass_entity(
+     i_e: qd.int32,
+     i_b: qd.int32,
+@@ -1726,9 +1910,10 @@
+         static_rigid_sim_config=static_rigid_sim_config,
+         is_backward=is_backward,
+     )
+-    func_factor_mass(
++    func_factor_mass_tree(
+         implicit_damping=False,
+         entities_info=entities_info,
++        links_info=links_info,
+         dofs_state=dofs_state,
+         dofs_info=dofs_info,
+         rigid_global_info=rigid_global_info,
+--- a/engine/solvers/rigid/constraint/solver.py
++++ b/engine/solvers/rigid/constraint/solver.py
+@@ -1792,6 +1792,9 @@
+ # ====================================== Hessian Matrix & Cholesky Factorization ======================================
+ 
+ 
++CHILDREN_FIRST_MIN_DOFS = 64
++
++
+ @qd.kernel
+ def func_compute_dof_perm(
+     dofs_info: array_class.DofsInfo,
+@@ -1829,14 +1832,26 @@
+                 constraint_state.dof_sort_key[i_b, i_d] = com[2] * 1.0e6 + com[1] * 1.0e3 + com[0]
+ 
+             # Insertion sort dof_perm ascending by (key, original index); same-entity DOFs (equal key) keep order.
++            # TopoGym CPU patch: tie-break on a secondary index that reverses the DOF order inside entities with more than
++            # CHILDREN_FIRST_MIN_DOFS DOFs (children-first: fill-free for a tree); identity elsewhere.
+             for a in range(1, n_dofs):
+                 d = constraint_state.dof_perm[i_b, a]
+                 ka = constraint_state.dof_sort_key[i_b, d]
++                I_a = [d, i_b] if qd.static(static_rigid_sim_config.batch_dofs_info) else d
++                e_a = dofs_info.entity_idx[I_a]
++                sa = d
++                if entities_info.n_dofs[e_a] > CHILDREN_FIRST_MIN_DOFS:
++                    sa = entities_info.dof_start[e_a] + entities_info.dof_end[e_a] - 1 - d
+                 j = a - 1
+                 while j >= 0:
+                     dj = constraint_state.dof_perm[i_b, j]
+                     kj = constraint_state.dof_sort_key[i_b, dj]
+-                    if kj < ka or (kj == ka and dj < d):
++                    I_j = [dj, i_b] if qd.static(static_rigid_sim_config.batch_dofs_info) else dj
++                    e_j = dofs_info.entity_idx[I_j]
++                    sj = dj
++                    if entities_info.n_dofs[e_j] > CHILDREN_FIRST_MIN_DOFS:
++                        sj = entities_info.dof_start[e_j] + entities_info.dof_end[e_j] - 1 - dj
++                    if kj < ka or (kj == ka and sj < sa):
+                         break
+                     constraint_state.dof_perm[i_b, j + 1] = dj
+                     j = j - 1
