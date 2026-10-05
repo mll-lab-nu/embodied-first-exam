@@ -126,8 +126,15 @@ def audit_object_path(witness, output):
     """Rebuild the geometry and replay every certified layer of a submitted witness."""
     task, meshes, poses, table, frozen = frozen_problem(output, variation=witness["variation_id"], seed=witness["seed"])
     keys = ("task_id", "variation_id", "model_revision", "terminal_revision", "instance_id",
-            "initial_poses", "goal_region", "asset_sha256")
-    if any(to_jsonable(witness.get(k)) != to_jsonable(frozen[k]) for k in keys):
+            "initial_poses", "goal_region")
+
+    def physical(assets):
+        # Visual glTF exports (*.glb: URDF visual meshes, assembly / inspection scenes) are serialized by the installed
+        # exporter (trimesh) and differ between environments; collision meshes, URDFs and reports must match exactly.
+        return {name: "visual" if name.endswith(".glb") else digest for name, digest in (assets or {}).items()}
+
+    if (any(to_jsonable(witness.get(k)) != to_jsonable(frozen[k]) for k in keys)
+            or physical(witness.get("asset_sha256")) != physical(frozen["asset_sha256"])):
         raise ValueError("Witness identity differs from the rebuilt task/geometry")
     target, other = frozen["target"], frozen["other"]
     route = witness["route"]
