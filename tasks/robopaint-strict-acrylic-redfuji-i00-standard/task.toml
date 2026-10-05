@@ -1,0 +1,68 @@
+schema_version = "1.3"
+artifacts = [
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/episode.json", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/canvas.png", service = "sim" },            # the replayed main sheet that was scored
+  { source = "/data/canvas_practice.png", service = "sim" },   # the replayed practice sheet (never scored)
+  { source = "/data/canvas_live.png", service = "sim" },       # the live episode's main sheet
+  { source = "/data/canvas_live_practice.png", service = "sim" },
+  { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
+  { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
+  { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
+  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
+  { source = "/data/replay2.log", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "robot-coding-bench/robopaint-strict-acrylic-redfuji-i00-standard"
+description = "RoboPaint-strict acrylic stroke copy, STANDARD MODE (robot as a service, eai-standard/2.2): embodied robotic acrylic painting (ManiSkill 3.0.1 Franka Panda with a round acrylic brush; libmypaint 1.6.1 paints) on the same frozen instance as the privileged task: copy the painting shown in the picture target.png (a small acrylic painting after Katsushika Hokusai's woodblock print Fine Wind, Clear Morning (Red Fuji), c. 1830-32) onto the main sheet in at most 407 strokes, with 10 premixed paints and a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no brush model, no score; the sim service records the episode, which is replayed twice and scored at a 1 mm scale against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff mean CIELAB ΔE <= 2.0, p90 ΔE <= 6.0, SSIM of L* >= 0.92, edge correlation >= 0.8, paint IoU >= 0.95 and at most 407 strokes). Process rules (RoboPaint-strict): paint with brush strokes the way a person paints; colouring in or filling areas with a thin line, zigzag, serpentine or contour-offset fills fail; the brush tip's path pressed on the main sheet with paint is at most 51700 mm in total, and at most 10 % of it in strokes longer than 2.5 x the diagonal of their bounding box."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "robopaint", "robopaint-strict", "maniskill", "sapien", "painting", "acrylic-painting", "mypaint", "brush", "stroke-copy", "franka", "standard-mode", "trajectory", "robopaint_strict_acrylic_redfuji"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"
+simulator = "maniskill"
+robot = "franka-panda"
+family = "robopaint_strict_acrylic_redfuji"
+mode = "standard"                  # camera RGB + proprioception only; no sheet readout, no score, no reset, no brush model
+protocol = "eai-standard/2.2"
+oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
+oracle_evidence = "The RoboPaint pair's reference solution, unchanged (solution/ streams the privileged reference's joint targets; its RoboPaint record: the oracle_evidence of robopaint-acrylic-redfuji-i00-standard). The same trajectory scores 1 under the process rules in the strict verifier, whose replay CLI the collect hook runs (ws3, 2026-10-05): path_mm 17225 of the 51700 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint-strict.md (Validation)."
+instance_seed = 0
+expert_time_estimate_hours = 6.0
+difficulty = "hard"             # RoboPaint tiers: acrylic stroke copy hard, oil paint-from-reference extreme
+medium = "mypaint"
+stroke_count = 313                # difficulty axes: the exemplar program's strokes (hidden), the stroke budget, paints, brush sizes, layers
+stroke_budget = 407
+palette_size = 10
+brush_sizes_mm = [16.2, 9.4, 5.2, 3.0]
+layers = 4
+colour_regions = 55                # the exemplar's palette-colour areas >= 30 mm² (graders' regions)
+source_image = "File:Fine Wind, Clear Morning by Hokusai (Shimane Art Museum).jpg"
+source_license = "Public domain"
+
+[verifier]
+timeout_sec = 1200.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+[[verifier.collect]]
+service = "sim"
+command = "sh /srv/finalize.sh"   # dump + exit the service, replay twice in fresh processes (+ video), score, write final.json
+timeout_sec = 3600
+
+[agent]
+timeout_sec = 7200.0              # 2 h of wall clock, same as the privileged twin
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 8
+memory_mb = 16384

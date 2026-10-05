@@ -1,0 +1,113 @@
+{
+ "task": "chopping_wood",
+ "challenge_task": "chopping_wood",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Chop the firewood. Four logs, an axe and a chopping block lie on the driveway in the garden; split all four logs in half.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "50307284a02bf4b9",
+ "action_dim": 25,
+ "challenge_max_steps": 16127,
+ "objects": {
+  "driveway.n.01_1": {
+   "category": "driveway",
+   "position": [
+    -12.6999,
+    5.7072,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "log.n.01_1": {
+   "category": "log",
+   "position": [
+    -11.5303,
+    2.8542,
+    0.0465
+   ],
+   "orientation_xyzw": [
+    0.0466,
+    0.0131,
+    0.276,
+    0.9599
+   ]
+  },
+  "ax.n.01_1": {
+   "category": "axe",
+   "position": [
+    -13.6596,
+    5.3072,
+    0.0166
+   ],
+   "orientation_xyzw": [
+    0.0003,
+    0.0009,
+    0.7744,
+    0.6327
+   ]
+  },
+  "log.n.01_3": {
+   "category": "log",
+   "position": [
+    -14.509,
+    3.2977,
+    0.0465
+   ],
+   "orientation_xyzw": [
+    0.0424,
+    0.0233,
+    0.4858,
+    0.8727
+   ]
+  },
+  "chopping_block.n.01_1": {
+   "category": "chopping_block",
+   "position": [
+    -10.4972,
+    3.3555,
+    0.05
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0001,
+    0.8622,
+    0.5065
+   ]
+  },
+  "log.n.01_2": {
+   "category": "log",
+   "position": [
+    -10.0963,
+    2.2275,
+    0.0465
+   ],
+   "orientation_xyzw": [
+    0.0358,
+    -0.0326,
+    -0.6688,
+    0.7419
+   ]
+  },
+  "log.n.01_4": {
+   "category": "log",
+   "position": [
+    -15.0133,
+    6.2291,
+    0.0465
+   ],
+   "orientation_xyzw": [
+    0.0204,
+    0.0439,
+    0.9076,
+    0.4171
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

@@ -9,7 +9,8 @@ set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
 for gen in "kinder/gen_tasks.py check" "humanoidbench/gen_tasks.py check" "behavior/mk_tasks.py --check" \
            "robolab/mk_tasks.py --check" "robowits/mk_tasks.py --check" "vlabench/generate.py --check" \
-           "robocasa/generate.py --check" "robocasa365/generate.py --check" "robocasa-gr1/generate.py --check"; do
+           "robocasa/generate.py --check" "robocasa365/generate.py --check" "robocasa-gr1/generate.py --check" \
+           "maniguard/mk_tasks.py --check" "robopaint_strict/mk_tasks.py --check"; do
   read -r script mode <<<"$gen"
   if out=$(python3 "$root/scripts/$script" "$mode" 2>&1); then
     echo "ok scripts/$script: ${out##*$'\n'}"

@@ -1,0 +1,11 @@
+# PhysX and the FRIDA stroke model run on the CPU, but SAPIEN needs a Vulkan device to build the scene at all (its visual shapes
+# create render materials even with rendering off), and the replay video renders the camera views: the verifier gets the GPU.
+services:
+  main:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
