@@ -4869,3 +4869,83 @@ digest = "sha256:1af0d531d872be6c89834b700826a0d12d4f2e8edb5a62a6558fc9c03f5ad1e
 name = "robot-coding-bench/molmospaces-pick-i00-standard"
 digest = "sha256:0c2218737c8b625437eaea105971ca3016c15fe754485394185452c71e7e578f"
 
+[[tasks]]
+name = "robot-coding-bench/myosuite-arm-reach-i00-privileged"
+digest = "sha256:9f249dded788a166b17f30f6769012e8586945a277974d0d67c4199d7bb190e1"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-arm-reach-i00-standard"
+digest = "sha256:c4f8c77734bef898262e8c8529fcb6801e46296a807ef6667286e277ddfdbef8"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-baoding-i00-privileged"
+digest = "sha256:1c50d2ff94c24299634b07fc6983fd6be70b8d4f7a1b3bcae2f0d569b0325d53"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-baoding-i00-standard"
+digest = "sha256:19c0677375a1ad87e54d2be1ce692342210a3ea327b62134fe0240e995fb694a"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-die-reorient-i00-privileged"
+digest = "sha256:3a3eaee924657b46171dd21967113fc5d292def7fa319f8ccae630715498063c"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-die-reorient-i00-standard"
+digest = "sha256:8d43d292565e2669e8f27c7e963ec653d81c44076e867ace29aed2684628693c"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-hand-pose-i00-privileged"
+digest = "sha256:d3a729ceab6c8c2f362761aac74ea42330928e15c30d189d1ea91bb19dd34519"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-hand-pose-i00-standard"
+digest = "sha256:8a3020aec3c1c01fd00e0aadfe9aab9fee2295351d0c4f5eff13acfbf6ae2567"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-hand-reach-i00-privileged"
+digest = "sha256:e81e46b794f686a32f19d800d6c7c9c564c7b19f8a9cbf14e15ef8bbc6a62237"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-hand-reach-i00-standard"
+digest = "sha256:dfbe859a399e552497014b33e241eb529b8bfc1202b2c000b9136acbc4f70c83"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-key-turn-i00-privileged"
+digest = "sha256:d2ec455c8efdaccd7b098f8b8bc1af962ba8d70c9c99cd879f7afb822127f64c"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-key-turn-i00-standard"
+digest = "sha256:15fcadace3363bd692462062c774e028a3a9d223db85d3d49ab637fd07e2b5dc"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-obj-hold-i00-privileged"
+digest = "sha256:15161c6584e985904b501c41ac4587cae50b6de57c1074a56f7fc0cf8e2309e1"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-obj-hold-i00-standard"
+digest = "sha256:058326e5396310208fd85eb40da808b9334a59ec2ee259a1156a6ad3584f0a26"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-obj-reorient-i00-privileged"
+digest = "sha256:c90aa694edc6b7b4ca2af26d6088a876fcadb19476030612386061e8a1a8901e"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-obj-reorient-i00-standard"
+digest = "sha256:1fac4255ba2d3081537d35bf2e40a27a0e3d6bf7f978c55eaf085a964d8aad96"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-pen-twirl-i00-privileged"
+digest = "sha256:aea81fe3edc4fbec05157b3e536458da3f693e861542e2fbd325a438ba178b3f"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-pen-twirl-i00-standard"
+digest = "sha256:66b69d8ce75e0c0794e53bb36f1f67071dab78aac93432abff6c14f1be5c3a9c"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-relocate-i00-privileged"
+digest = "sha256:198e16e46e9b62ee210bb2b65dd90b86f4832bf07fdb2ac1af598643cc3bbce0"
+
+[[tasks]]
+name = "robot-coding-bench/myosuite-relocate-i00-standard"
+digest = "sha256:7da6d87c9d0f5bd833ad3ad3fd359788f59d8ffb0149d1efcbd928e8737505f5"
+
