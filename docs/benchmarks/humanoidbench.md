@@ -8,50 +8,53 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | simulator | MuJoCo 3.1.6 + dm_control, CPU |
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
-| tasks | 24 × 2 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged` and `-standard` (`eai-standard/2.1`) |
+| tasks | 10 × 2 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged` and `-standard` (`eai-standard/2.1`) |
 | image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` (`images/humanoidbench/`) |
-| oracle | `sit_simple` (the fixture): full, both modes; the 23 scored tasks: none, human review (`oracle_evidence` in each task.toml) |
+| oracle | `sit_simple` (the fixture): full, both modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml) |
 
-## Tasks: upstream's 32, ours ✅ (23 scored + the `sit_simple` fixture)
+## Tasks: upstream's 32, ours ✅ (9 scored + the `sit_simple` fixture)
 
 | class | task | robot | ours | note |
 |---|---|---|---|---|
-| C1 flat gait | walk | h1 | ✅ | |
+| C1 flat gait | walk | h1 | ✅ | the class's only candidate |
 | | run | h1 | ⬜ | walk's reward at running speed |
 | | stand | h1 | ⬜ | walk's reward at speed 0 |
 | | crawl | h1 | ⬜ | holding still earns 42% of the bar |
-| C2 constrained gait | hurdle | h1 | ✅ | |
-| | stair | h1 | ✅ | |
+| C2 constrained gait | hurdle | h1 | ✅ | runs (5 m/s) |
+| | stair | h1 | ⬜ | walks (1 m/s) |
 | | slide | h1 | ⬜ | stair's reward, byte for byte, easier |
 | | pole | h1 | ⬜ | holding still earns 71% of the bar |
-| C3 stabilisation | balance_simple | h1 | ✅ | |
-| | balance_hard | h1 | ✅ | same reward on a rolling cylinder: far harder |
+| C3 stabilisation | balance_simple | h1 | ⬜ | balance_hard is upstream's hard version |
+| | balance_hard | h1 | ✅ | same reward on a rolling cylinder |
 | | sit_simple | h1 | ✅ | fixture, the pipeline check: holding still earns 62% |
-| C4 navigation | door | h1 | ✅ | |
-| | maze | h1 | ✅ | |
-| C5 whole-body power | powerlift | h1hand | ✅ | |
-| | highbar_simple | h1 | ✅ | |
+| C4 navigation | door | h1 | ✅ | moves 1 object (the door) |
+| | maze | h1 | ⬜ | moves no object |
+| C5 whole-body power | powerlift | h1hand | ✅ | moves 1 object, dexterous hands |
+| | highbar_simple | h1 | ⬜ | moves no object |
 | | highbar_hard | h1strong | ⬜ | highbar's reward on a stronger robot |
-| | basketball | h1 | ✅ | |
-| C6 bimanual manip. | push | h1 | ✅ | |
-| | window | h1hand | ✅ | |
-| | spoon | h1hand | ✅ | holding still earns 58%: kept, noted |
-| C7 in-hand precision | cube | h1hand | ✅ | |
-| | insert_normal | h1hand | ✅ | |
+| | basketball | h1 | ⬜ | moves 1 object, no hands |
+| C6 bimanual manip. | push | h1 | ⬜ | moves 1 object, no hands |
+| | window | h1hand | ✅ | moves 1 object (a wiping tool), dexterous hands |
+| | spoon | h1hand | ⬜ | holding still earns 58% of the bar |
+| C7 in-hand precision | cube | h1hand | ✅ | the class's only candidate left |
+| | insert_normal | h1hand | ⬜ | the bar needs no insertion |
 | | insert_small | h1hand | ⬜ | insert_normal's reward, thinner peg |
-| C8 mobile manip. | package | h1 | ✅ | |
-| | reach | h1 | ✅ | |
-| | sit_hard | h1 | ✅ | |
-| | room | h1hand | ✅ | |
-| C9 long-horizon | bookshelf_simple | h1hand | ✅ | |
+| C8 mobile manip. | package | h1 | ⬜ | moves 1 object |
+| | reach | h1 | ⬜ | moves no object |
+| | sit_hard | h1 | ⬜ | moves no object |
+| | room | h1hand | ✅ | moves 6 objects |
+| C9 long-horizon | bookshelf_simple | h1hand | ✅ | moves 5 objects, dexterous hands |
 | | bookshelf_hard | h1hand | ⬜ | bookshelf_simple's reward, random placement |
-| | truck | h1 | ✅ | |
-| | cabinet | h1hand | ✅ | |
-| | kitchen | h1hand | ✅ | |
+| | truck | h1 | ⬜ | moves 5 objects, no hands |
+| | cabinet | h1hand | ⬜ | the bar cannot be reached |
+| | kitchen | h1hand | ⬜ | moves 4 objects |
 
-Why: one task per reward function, and holding still must earn under 40% of the bar, so passing takes control, not
-a pose; the 23 cover 9 capability classes. Source, with the reasoning per task: `scripts/humanoidbench/subset.toml`
-(the generator's input).
+Why these (no model's results enter the choice):
+- **Valid (20):** the bar measures the task and can be reached, and holding still earns under 40% of it: `main`'s 23
+  minus spoon, insert_normal and cabinet.
+- **One per capability class (9):** within a class, upstream's hard version first, then the task that moves more
+  objects, then the dexterous hands (`h1hand`), then the higher speed target.
+- Per-task reasons: the table above and `scripts/humanoidbench/subset.toml`.
 
 ## Modes
 
@@ -68,7 +71,7 @@ no object or target pose; the room camera's pose is given in the robot's startin
 | the task text: goal, what ends an episode, pass mark, the reward's terms in words (no formula) | the reward and the return |
 | two head cameras, RGB 256×256 (cube 512); `room_camera`; depth (`RCB_OBS_DEPTH=1`, off) | the robot's position in the room |
 | joint angles and velocities; pelvis IMU: gyro, gravity direction | any object's or target's pose |
-| `spec()`: servo ranges, joint axes and positions, link masses and centres of mass, feet boxes, IMU and camera frames, 50 Hz, the episode length (1000 control steps; 500 for basketball, cube, insert_normal, kitchen, push), budget | contact forces, the simulator itself |
+| `spec()`: servo ranges, joint axes and positions, link masses and centres of mass, feet boxes, IMU and camera frames, 50 Hz, the episode length (1000 control steps; 500 for cube), budget | contact forces, the simulator itself |
 
 ## Answer-key leakage
 
@@ -86,7 +89,7 @@ its model-API key in its container, so it could call a search-enabled model thro
 ## Run
 
 ```bash
-harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-walk-i00-standard
+harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-hurdle-i00-standard
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
 ```
 `codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
