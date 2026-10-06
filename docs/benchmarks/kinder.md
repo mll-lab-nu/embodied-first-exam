@@ -23,12 +23,14 @@ multi-object manipulation, geometric and dynamic constraints.
 | constrained-cupboard | geometric | six identical rods, each into the compartment it is owed | Luna, privileged only |
 | sweep-simple | nonprehensile, tool | ten cubes into a box marked on the floor, with a wiper | Luna, privileged only (2026-10-04); Luna, standard (50 resets): both |
 
-Why these: the hardest of the eleven families this benchmark had until 2026-10-04 (six Dynamic3D tasks where physics
-decides the outcome and a camera can see the goal or a sentence can name it, and five that a screening of every other
-family left unsolved in standard mode): the four whose privileged run took GPT-6 Luna its whole hour (it failed three;
-constrained-cupboard passed in the last minute), also the four GPT-6.1 Sol took longest on. Dropped: tossing,
-balance-beam, shelf, sort-blocks, and the two PyBullet tasks obstruction-3d and packing-3d. Per-task reasoning:
-`scripts/kinder/subset.toml`. Positive examples are runs published on the results
+Why these (no model's results enter the choice):
+- **Valid:** KinDER's 3D families whose goal a camera can see or a sentence can name (the 2D ones move an abstract
+  planar robot with no real counterpart; LimbRepositioning3D's IKFast module cannot be built in our image).
+- **Most task objects (upstream's `oN`):** scoop-pour 30, sweep-simple 10, constrained-cupboard 6, sweep-into-drawer 5;
+  every other 3D family has at most 4.
+- Per-task reasons: `scripts/kinder/subset.toml`.
+
+Positive examples are runs published on the results
 site; each scores 1 under today's privileged verifier, and "both" means it also passes when sent through the
 standard client. "privileged only": the trajectory moves the base diagonally by up to 0.14 m a step, which standard
 mode clips to a 0.1 m disc (the largest move that stays in upstream's per-axis bound after the odometry rotation).

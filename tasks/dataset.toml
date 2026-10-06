@@ -463,7 +463,7 @@ digest = "sha256:ae6fca49c4636bca5356cd8618bf43c560bbc8e7909ecd644dbd3bd0b82c069
 
 [[tasks]]
 name = "robot-coding-bench/kinder-constrained-cupboard-i00-standard"
-digest = "sha256:5f36c8b3bcb703258a90bf9780cbc63b18a1cfe4f8356235a8836e0f381e5400"
+digest = "sha256:51cee8f22a571107d207fc63bba8893aeaf1c40800cfb1dc6af83ce4d59e620e"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-dynamo-i00-privileged"
@@ -471,7 +471,7 @@ digest = "sha256:64e4899c39ff4b53756d38628aa2af8bbba58c5c0a462b17e30b20fe0b1e06d
 
 [[tasks]]
 name = "robot-coding-bench/kinder-dynamo-i00-standard"
-digest = "sha256:ea83fa179fcdd2602c7c1e58841b2e29b05f4431ec7872b9d6e91555eafd4f45"
+digest = "sha256:251e3d741029685940de91f80e38d47f98249f32506f09d17297cc611d1395b6"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-scoop-pour-i00-privileged"
@@ -479,7 +479,7 @@ digest = "sha256:194befed80e9a3dda78963896a6b56b6d66d07ddeb7a29befd808e539980765
 
 [[tasks]]
 name = "robot-coding-bench/kinder-scoop-pour-i00-standard"
-digest = "sha256:955fc8377b349a4106cd24f7e11e1f37a2bd2e690129660dddd7f67a1961da8b"
+digest = "sha256:1965e748fd78bd8923b014d2560fc0b66bb2b17686f37f741587c387a9de4bc8"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-into-drawer-i00-privileged"
@@ -487,7 +487,7 @@ digest = "sha256:71109548fd5d3f20754f09220c3642bd55e5092188787f02d522186bc25be58
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-into-drawer-i00-standard"
-digest = "sha256:ee373d59e62c1a550abf1a10976384a3267a0df23b8e94d5922810cc31c45b6e"
+digest = "sha256:835ccac3cc1300c6ee7b4d8c0a0b2463e3cf2b416057abfc0e7e54e4b01078d5"
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-simple-i00-privileged"
@@ -495,7 +495,7 @@ digest = "sha256:c9693589a1a2f9510e81520b779bd5ae1e1a3a03ab725a6758153ee9776fa8e
 
 [[tasks]]
 name = "robot-coding-bench/kinder-sweep-simple-i00-standard"
-digest = "sha256:01789635596cdb8d065b80715b5224655fedc88348a9d347c008560ce36d5582"
+digest = "sha256:5cebc4b0ba78e871d2c5d252651646cd398084833010474bea37ded3ee04b664"
 
 [[tasks]]
 name = "robot-coding-bench/metaworldplus-assembly-i00-privileged"

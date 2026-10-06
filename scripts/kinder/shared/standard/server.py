@@ -232,8 +232,9 @@ class TidyBot(_Robot):
             "proprio": {"base_x, base_y, base_yaw": "m, m, rad, odometry frame",
                         "base_vx, base_vy, base_yaw_rate": "m/s, m/s, rad/s, odometry frame",
                         "arm_i, arm_i_vel": "joint angles (rad) and velocities (rad/s), arm joint order",
-                        "gripper": "the fingers' position: 0 open, 1 at their closed limit (short of 1 when they close "
-                                   "on an object)", "gripper_vel": "gripper per second"},
+                        "gripper": "the fingers' position: 0 open, 1 at their joint's closed limit; closing on nothing "
+                                   "they stop at about 0.98, where the pads meet, and on an object short of that",
+                        "gripper_vel": "gripper per second"},
             "odometry": ODOMETRY, "arm": self._facts["arm"],
             "depth": depth_spec() if self.depth_cameras else None, "gl_backend": GL_BACKEND,
         }
