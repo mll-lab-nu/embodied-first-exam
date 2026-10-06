@@ -7,7 +7,7 @@
 | Twin | `myosuite-chase-tag-i00-standard` |
 | Simulator / robot | `myosuite` / `myolegs` |
 | Family / instance | `chase_tag` / seed 0 |
-| Oracle | `none` — no positive example yet (not attempted); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #TBD |
+| Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-chase-tag-i00-privilege__6GUXvYA` (329 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
@@ -19,7 +19,7 @@ A musculoskeletal body with two legs stands in a square arena; an opponent moves
 First-pass rating: hard. The action is muscle-level (80 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event; nothing short of it counts, and the challenge's failure conditions and time limit apply.
 
 ## Reference solution
-None. Solvability evidence: no positive example yet (not attempted); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #TBD.
+None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-chase-tag-i00-privilege__6GUXvYA` (329 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD.
 
 ## Verification
 `tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success (the challenge's own success event) in the same state (`deterministic`). No oracle; human review in PR #TBD. `nop`: no trajectory, reward 0.

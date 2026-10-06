@@ -7,7 +7,7 @@
 | Twin | `myosuite-sarc-key-turn-i00-standard` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `sarc_key_turn` / seed 0 |
-| Oracle | `none` — no positive example yet (not attempted); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #TBD |
+| Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-sarc-key-turn-i00-privi__iVBaqTS` (230 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
@@ -19,7 +19,7 @@ As key_turn: the key sits in a lock in front of the palm, its head between the t
 First-pass rating: hard. The action is muscle-level (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
 
 ## Reference solution
-None. Solvability evidence: no positive example yet (not attempted); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #TBD.
+None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-sarc-key-turn-i00-privi__iVBaqTS` (230 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD.
 
 ## Verification
 `tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success (the goal held 50 control steps) in the same state (`deterministic`). No oracle; human review in PR #TBD. `nop`: no trajectory, reward 0.
