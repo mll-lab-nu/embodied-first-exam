@@ -90,7 +90,7 @@ class NativeTests(unittest.TestCase):
     def test_tooling_checks_installed_receipt_and_detects_changed_module(self):
         from types import SimpleNamespace
         prefix=self.root/'venv'; prefix.mkdir()
-        names=('images/difficulty-eval/patch_harbor.py','requirements/difficulty-eval-controller.lock')
+        names=('images/difficulty-eval/patch_harbor.py','requirements/difficulty-eval-controller.lock','scripts/patch_agent_batch_providers.py')
         for name in names:
             path=self.root/name; path.parent.mkdir(parents=True,exist_ok=True); path.write_text('fixture')
         modules={}
@@ -305,11 +305,12 @@ class NativeTests(unittest.TestCase):
     def test_bootstrap_reuses_verified_tools_and_preserves_unknown_venv(self):
         import agent_batch_bootstrap as setup
         root=self.root/'bootstrap'; (root/'.venv-agent-batch').mkdir(parents=True)
-        with self.assertRaisesRegex(ValueError,'unrecognized'): setup.bootstrap(root)
+        with patch('agent_batch_host.require_docker'),self.assertRaisesRegex(ValueError,'unrecognized'): setup.bootstrap(root)
         (root/'.venv-agent-batch/topogym-runner.json').write_text('{}')
         codex=root/'.tools/agent-batch/node_modules/.bin/codex'; codex.parent.mkdir(parents=True); codex.touch()
-        with patch.object(setup,'verify') as verify,patch.object(setup,'run') as run:
-            setup.bootstrap(root); verify.assert_called_once_with(root); run.assert_not_called()
+        with patch('agent_batch_host.require_docker'),patch.object(setup,'verify') as verify,patch.object(setup,'run') as run:
+            setup.bootstrap(root); verify.assert_called_once_with(root)
+            run.assert_called_once_with([root/'.venv-agent-batch/bin/python',root/'scripts/patch_agent_batch_providers.py',root])
     def test_seal_original_scan_tar_receive(self):
         report=d.seal(self.jobs,self.plan,{'test':SECRET.encode()}); self.assertTrue(report['delivery_complete'])
         env=self.root/'rcb.env'; env.write_text('OPENAI_API_KEY='+SECRET+'\n')
@@ -438,7 +439,7 @@ class NativeTests(unittest.TestCase):
         import publish_agent_batch as pub
         repository=self.root/'publisher'; repository.mkdir(); (repository/'tasks').mkdir()
         (repository/'tasks/dataset.toml').write_text('[dataset]\nname="fixture"\nversion="1"\n')
-        for folder in ('scripts','bash_scripts','requirements','images/difficulty-eval','harbor_agents','topogym/utils'):
+        for folder in ('scripts','bash_scripts','requirements','images/difficulty-eval','harbor_agents','harbor_agents/muse_transport','topogym/utils'):
             dst=repository/folder; dst.mkdir(parents=True,exist_ok=True)
             for p in (ROOT/folder).iterdir():
                 if p.is_file(): shutil.copyfile(p,dst/p.name)

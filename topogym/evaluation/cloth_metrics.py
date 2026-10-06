@@ -75,6 +75,23 @@ def footprint_area_slabs(positions, faces, *, slabs=8, threads=4):
         return _union_area(polygons)
 
 
+def footprint_area_upper_bound(positions, faces):
+    """A cheap upper bound of footprint_area: the smaller of the projected triangles' summed area (the union never
+    exceeds the sum) and the area of the projected particles' convex hull (the union lies inside it). On recorded
+    blanket states it is 0.2-1.4 % of the material area above the union and ~90x cheaper
+    (scripts/check_blanket_coverage_bound.py)."""
+    from scipy.spatial import ConvexHull
+    triangles = positions[faces, :2]
+    cross = ((triangles[:, 1, 0]-triangles[:, 0, 0])*(triangles[:, 2, 1]-triangles[:, 0, 1])
+             -(triangles[:, 1, 1]-triangles[:, 0, 1])*(triangles[:, 2, 0]-triangles[:, 0, 0]))
+    bound = float(np.abs(cross).sum()/2)
+    try:
+        bound = min(bound, float(ConvexHull(positions[:, :2]).volume))
+    except Exception:       # a degenerate point set (no 2D hull): the sum alone bounds the union
+        pass
+    return bound
+
+
 def measure(positions, velocities, faces, edges, rest_lengths, *, table_z, table_bounds,
             material_area, visual_positions=None, visual_edges=None, visual_rest_lengths=None):
     positions, velocities = np.asarray(positions), np.asarray(velocities)

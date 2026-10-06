@@ -326,6 +326,13 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
     # Inputs of the independent audit: rest material map, gates and frozen start identity.
     np.savez_compressed(output/"material_map.npz", uv=uv)
     declaration = task.frozen_initial_state()
+    from .audit import archive_particles
+    initial_particles = world.read_state()["particles"]["blanket"]
+    for saved_field, live_field in (("pos", "position_m"), ("vel", "velocity_m_s")):
+        if not np.array_equal(archive_particles(declaration.manifest_path, field=saved_field),
+                              np.asarray(initial_particles[live_field])):
+            raise ValueError(f"Oracle initial particle {saved_field} differs from its frozen archive")
+    report["initial_particle_position_and_velocity_exact"] = True
     report.update(task_config={k: task.config[k] for k in ("minimum_coverage_ratio", "maximum_height_m",
                                "maximum_stretch_ratio", "maximum_speed_m_s", "stable_duration_s")},
                   layout=dict(length_m=task.layout.length_m, width_m=task.layout.width_m,
@@ -356,6 +363,8 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
                                                       for s in SIDES}, health=grasp.get("health"))
         report["phases"].append(phase)
         write_json_atomic(output/"oracle_report.json", to_jsonable(report))
+        if not result["evidence_complete"]:
+            raise RuntimeError(f"{name}: incomplete execution evidence ({result.get('reason')})")
         return phase
 
     def hold(seconds, q, grip):
@@ -369,10 +378,12 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
         # oraclefix 11: a route may append one measured fold-layout stage after its last stage (see fold_stage).
         stages, fold_checked, nudges = list(route["stages"]), False, 0
         for index, stage in enumerate(stages):
+            if task.result.terminated:
+                break
             active = tuple(s for s in SIDES if s in stage["grasp_uv"])
             # Stage 0 keeps the single-stage phase names; later stages are suffixed.
             name = (lambda base: base) if index == 0 else (lambda base, i=index: f"{base}_{i+1}")
-            log = dict(stage=index)
+            log = dict(stage=index, grasp_uv=stage["grasp_uv"])
             report["stages"].append(log)
             # Grasp sites: material points named by the route, located on the live cloth.
             x = cloth()
@@ -388,6 +399,10 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
                         points = [x[centers[side]]+[0., 0., .10]]+[
                             segment_goal(seg, side, x[centers[side]], None, table)+[0., 0., .02]
                             for seg in stage["segments"] if "to" in seg or "by" in seg]
+                        if route.get("check_contact_ik"):
+                            # Include the low grasp pose before choosing an
+                            # orientation or moving away from home.
+                            points.insert(1, x[centers[side]]+[0., 0., .005])
                         for point in points:
                             probe = arms.solve(side, point, probe, rotation)
                             worst = min(worst, arms.margin(side, probe))

@@ -1,17 +1,51 @@
 # 杂乱被子展平（blanket_flatten）
 
-**2026-10-05 very_easy / easier 场景设计预览：** 新增[折角资产生成器](../../../topogym/assets/geometry/blanket_corner_folds.py)和[模拟器截图入口](../../../topogym/tasks/blanket_flatten/below_easy_preview.py)。`very_easy` 是平铺布的右前角向内翻折，折角两边各 28 cm；`easier` 先沿 60 cm 方向对折为约 30 × 48 cm 的双层长方形，再将自由边的右前角连同两层一起翻折，折角两边各 22 cm。两档沿用现有 easy–hard 的 60 × 48 cm 布料、12 mm 网格、8 mm 粒径、材质／纹理、桌面摩擦和中心 XY=(-0.1356786, 0.15) m，机器人仍为共享 ALOHA home，背景和截图使用共享 compact_lab / Nyx 四相机。
+**2026-10-05 用户追加验收要求：** 两档变体完成后开发对应 oracle，后续正式验收使用 tooling **v18 或更新版本**的 Harbor grading，分别检查 `very_easy`、`easier` 的 `solved=1`。直接 Env 的 Task success、独立审计与打包检查各自保留范围，不能代替该评分结果。镜像、实例和私有策略必须来自明确冻结的同一版本；不重写旧运行身份。
 
-当前仅供确认折法：先在平面材料上建立原有 PBD 静长和视觉绑定，再按实际粒子材料坐标写入一次设计姿态，在 tick 0 截图；没有推进物理，没有隐形支撑，也没有修改静长或视觉支撑。层间设计间距为 16 mm，折痕为有限半径弯曲；双层采用同心弯折，内外层因弧长不同在自由角处自然错开。预览显式启用双面显示，并用已有织物纹理生成器在前侧两个材料角添加 35 mm 黄色角标，帮助辨认翻入布面的角；其余仍是原蓝色方格纹理。**这不是已静置验收的冻结初态或机器人成功记录，两档尚未登记为正式 Env 入口。** 场景确认后仍需准备完整数值初态并验证稳定性、抓取和展开。
+**2026-10-05 very_easy / easier 折角变体：** 新增具名变体入口 `blanket_flatten_very_easy` / `blanket_flatten_easier`，也可使用 `variation_id="very_easy"` / `"easier"`。`very_easy` 是平铺布的右前角向内翻折，折角两边各 28 cm；`easier` 先沿 60 cm 方向对折为约 30 × 48 cm 的双层长方形，再将自由边的右前角连同两层一起翻折，折角两边各 22 cm。两档沿用 easy–hard 的 60 × 48 cm 布料、12 mm 网格、8 mm 粒径、材料、蓝色方格纹理、桌面摩擦和中心 XY=(-0.1356786, 0.15) m，使用共享 ALOHA home、compact_lab / Nyx 四相机。核对旧三档没有黄色抓点，已按用户要求去除设计预览里的黄色角标；正式任务不添加抓点提示。
 
-已完成 CUDA float64 / Nyx 四相机截图：[very_easy 高位](../../../runs/test_results/blanket_corner_preview_20261005/very_easy_attempt_04/initial/cam_high.png)、[easier 高位](../../../runs/test_results/blanket_corner_preview_20261005/easier_attempt_03/initial/cam_high.png)。[预览清单](../../../runs/test_results/blanket_corner_preview_20261005/preview_manifest.json)记录最终报告和图片哈希，同目录保留代码快照及迭代记录。两档实际 PBD 均为 8181 粒子，视觉绑定审计通过，设计姿态写入回读误差为零；投影覆盖率约 85.72% / 39.25%，初态均未满足展平目标。非邻近材料粒子的采样最小间距约 16.25 / 16.00 mm；这项检查不等于连续曲面的碰撞或物理静置验收。
+[折角生成器](../../../topogym/assets/geometry/blanket_corner_folds.py)提供连续构形目标；[任务定义](../../../topogym/tasks/blanket_flatten/corner_folds.py)和[准备控制器](../../../topogym/tasks/blanket_flatten/corner_preparation.py)复用旧三档的平坦材料出生、速度控制、落桌、撤控及冻结恢复。准备不写粒子位置，不改材料静长或视觉绑定，不添加固定粒子。设计层间距 16 mm，双层折角使用同心弯曲并允许自由边自然错开；落桌后的实际间距由物理自接触决定。冻结状态是完整 `rigid_pbd_numeric_v2` 数值包，独立资源版本为 `corner_folds_archive_v1`，按运行栈／GPU profile、档位及 seed 登记到包内 catalog，不依赖开发 runs 目录。
+
+原生 Task 默认要求投影覆盖率 ≥90%、最高点 ≤30 mm、材料边长比 ≤1.15、最大速度 ≤30 mm/s，并满足释放撤手与 0.5 s 静稳窗口。v18 Harbor 候选与原三档使用同一 release profile，将覆盖率设为 **95%**，其他门槛不放宽；准备资源通过公共重键工具生成副本，数值数组保持原字节。准备阶段的非展平覆盖率上限为 89%，适应单角折叠约 86% 的初态，区别于旧聚褶初态的 82% 准备上限。`base` 和原三档 seeded 采样保持原含义，新两档暂作为独立具名入口。
+
+复现准备和验收（每次使用新输出目录，easier 替换档位；缺失的 seed / 运行栈须重新准备，不能借用其他初态）：
 
 ```bash
-PYOPENGL_PLATFORM=egl OPENBLAS_NUM_THREADS=1 .venv-gs121-nyx/bin/python \
-  -m topogym.tasks.blanket_flatten.below_easy_preview --variation very_easy \
-  --output runs/test_results/blanket_corner_preview/very_easy
-# easier 使用 --variation easier 和另一个不存在的输出目录。
+export TOPOGYM_VISUAL_ASSET_ROOT="$PWD/.external/nyx-assets"
+export PYOPENGL_PLATFORM=egl OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+.venv-gs121-nyx/bin/python scripts/prepare_blanket_initial_states.py \
+  --tier very_easy --seed 0 --acceptance scene_layout --output <候选目录>
+.venv-gs121-nyx/bin/python scripts/install_blanket_initial_state.py --candidate <候选目录>
+.venv-gs121-nyx/bin/python scripts/check_blanket_corner_initial_states.py \
+  --variation very_easy --candidate <候选目录> --output <恢复验收目录>
+.venv-gs121-nyx/bin/python scripts/check_blanket_corner_initial_states.py \
+  --variation very_easy --compare <恢复验收目录>/particle_checks.npz --output <独立进程验收目录>
+.venv-gs121-nyx/bin/python scripts/oracle_runners/run_blanket_oracle.py \
+  --variation very_easy --record --output <机器人尝试目录>
 ```
+
+截至初态验收，seed 0 的实测结果如下：
+
+| 检查 | very_easy | easier |
+| --- | --- | --- |
+| 撤控初态覆盖率 | 86.03% | 41.12% |
+| 材料／视觉完整、桌内、落桌、自接触粒子间距 | 通过 | 通过 |
+| 准备撤控后静稳资格 | 通过 | 未通过，按 `scene_layout` 保存 |
+| 从准备资源恢复全部粒子位置／速度 | 逐值一致 | 逐值一致 |
+| 再次 reset 到冻结初态 | 逐值一致 | 逐值一致 |
+| home 静置 2.5 s 最大粒子位移 | 0.0203 mm | 2.7191 mm |
+| home 静置末态最大速度 | 0.00558 m/s | 0.17818 m/s |
+| 回退后 5 个控制步精确重放 | 未通过，最大位置差 0.00344 mm | 未通过，最大位置差 1.46754 mm |
+
+短时静置中两档均未触发成功或失败。回退起点恢复精确，随后动力学重放产生差异；报告保留逐步位置／速度误差，状态为 `replay_mismatch`，不授予精确重放或 Harbor 评分资格。未修改共享求解器或放宽比较容差。安装包构建已核对两档任务模块、四个资源文件和 catalog 哈希；这只证明资源被打包。
+
+准备与验收证据位于 [本轮运行目录](../../../runs/test_results/blanket_below_easy_20261005/)。各子目录保留实际源码快照、配置、资源使用日志、报告及共享录像。初态准备、短时静置与机器人完整解题分别报告，不能互相替代。Harbor 双模式任务包需要在包含新源码和资源的对应运行镜像内重新冻结，旧包不会自动获得新变体。
+
+历史设计截图保留在 [预览清单](../../../runs/test_results/blanket_corner_preview_20261005/preview_manifest.json)，其中黄色角标已被本轮要求撤销；该静态预览曾一次性写入设计位置，只用于确认折法，不能作为正式冻结状态。`below_easy_preview` 仍是独立设计工具，正式 Env 不调用它。
+
+**本地参考动作实测：** `very_easy_oracle_03` 从 ALOHA home 连续运行 **15.905 s / 6362 ticks**，原生 Task success；覆盖率 **97.728%**、最高点 **27.049 mm**、最大速度 **0.0285 mm/s**、最大材料边长比 **1.0771**，已释放撤手并连续稳定 0.5 s。沿用 `pbd_local_patch_v1` 局部辅助抓持。见[运行报告](../../../runs/test_results/blanket_below_easy_20261005/very_easy_oracle_03/oracle_report.json)和四路连续录像：[全景](../../../runs/test_results/blanket_below_easy_20261005/very_easy_oracle_03/recording/videos/cam_high.mp4) · [低位](../../../runs/test_results/blanket_below_easy_20261005/very_easy_oracle_03/recording/videos/cam_low.mp4) · [左腕](../../../runs/test_results/blanket_below_easy_20261005/very_easy_oracle_03/recording/videos/cam_left_wrist.mp4) · [右腕](../../../runs/test_results/blanket_below_easy_20261005/very_easy_oracle_03/recording/videos/cam_right_wrist.mp4)。[独立审计](../../../runs/test_results/blanket_below_easy_20261005/very_easy_oracle_03_audit/execution_audit.json)逐 tick 核对 6,363 个状态，通过且在同一 tick 确认成功；持抓峰值边长比 1.2441，未丢失抓持，关节越限和机器人／桌面接触力均为零。审计不涵盖所有子步或机器人／布料穿透。此前两次尝试分别因拉伸保护、稳定褶皱高于 30 mm 而未通过；第二次静置被主动中断，末尾证据不完整，保留 `.part.mp4` 和中断记录，不算完整执行。
+
+`easier` 首次从四层角抓取时，抬升触发未抓持下层的拉伸保护；第二次从普通双层区接近后，下降 IK 检查拒绝远端位姿。当前候选将左手材料抓点移到 UV=(-0.17, 0.06)，先打开对折，再展开右前角和整理远边；完整成功尚未验证。后续 oracle 进入 v18+ Harbor Session 运行与独立 grading，本地成功不会直接登记为 `solved=1`。新版本准备记录见 [v18 工作目录](../../../runs/test_results/blanket_below_easy_20261005/harbor_v18/plan.json)。
 
 **2026-10-03 三档 oracle 交接集成：** 已将交接最终源码接入
 [planning/blanket_flatten/](../../../topogym/planning/blanket_flatten/routes.py)，包括共享路线、

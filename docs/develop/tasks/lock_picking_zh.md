@@ -1,5 +1,10 @@
 # 开锁
 
+2026-10-05 后续结果：实际限速生成的冻结 v17 补测已完成，`very_easy`、`easier` 的
+privileged／standard 四项均为 **grade=1**，见[结果汇总](../../../runs/test_results/harbor_below_easy_20261005_05/summary.json)。
+按用户要求，现已纳入[独立 v18 简单档回归](../../../runs/test_results/harbor_below_easy_v18_20261005_01.supervision/state.json)，
+使用新镜像、实例与轨迹；v18 尚无本轮成绩，不覆盖上述 v17 证据。
+
 2026-10-05 Harbor 简单档补测：冻结的 merged-v16 修复批中，`very_easy`／`easier` 的 privileged 均取得
 `solve=1`，两次评分均为 `deterministic=0`，且未使用 replay hold 或容差放宽。standard 两档均为 0：
 源轨迹从零编号的第 171～180 行关节目标变化为 0.04021～0.04166 rad，超过服务每步 0.04 rad，
@@ -17,7 +22,7 @@
 新增回归用原失败幅度约 0.041656 rad 验证 EE 编译后的限速输出经过真实 standard 服务循环时
 逐行恰好执行一步、没有 clipping，同时检查 Session 终止时不继续提交尾部动作。
 oracle merge 5 项、简化 Lock 4 项、bridge 40 项、grading replay 28 项 CPU 检查通过；不计为物理成功。
-已启动[新的 v17 两档补测](../../../runs/test_results/harbor_below_easy_20261005_05.supervision/state.json)：
+已完成[新的 v17 两档补测](../../../runs/test_results/harbor_below_easy_20261005_05.supervision/state.json)：
 冻结源码，重建两个实例，在实际限速执行中重新生成 privileged 轨迹，再将该轨迹交给 standard，
 共四个评分项。只覆盖 very_easy／easier，不重测 easy／medium／hard。
 版本和私有代码哈希见[准备记录](../../../runs/test_results/harbor_below_easy_20261005_05.supervision/preparation.json)。

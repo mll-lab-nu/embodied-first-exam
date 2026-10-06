@@ -20,7 +20,8 @@ Helper 一次配置入口：[bash_scripts/run_helper_batch.sh](../bash_scripts/r
 ## Rollout 准备
 
 - `prepare_nyx_studio.py`：准备并核验运行时 Nyx HDRI 和纹理；镜像构建也会调用。
-- `prepare_blanket_initial_states.py`、`install_blanket_initial_state.py`：离线准备并安装 Blanket 初态资源。
+- `prepare_blanket_initial_states.py`、`install_blanket_initial_state.py`：离线准备并安装 Blanket 五档初态资源；very_easy / easier 使用独立折角资源版本。
+- `check_blanket_corner_initial_states.py`：新两档的零推进恢复、完整粒子位置／速度回溯、home 静置及 Nyx 四路录像；第二次运行可用 `--compare <前次目录>/particle_checks.npz` 验证独立进程重建。不是完整机器人求解证明。
 - `prepare_knot_instances.py`：按当前物理配置串行重建 knot 的 IPC 冻结实例，保存正式与无 RGB 开发副本，不覆盖 `tasks/`。
 - `check_knot_initial_states.py`：核对 Knot 冻结实例的完整恢复、短时 home 静置、交叉结构和只读抓取 IK，保存共享四路 Nyx 视频；支持已确认的 very_easy / easier，不授予完整求解资格。新两档准备时显式指定当前 `--tooling`，见 [Knot oracle 用法](../topogym/planning/knot_untying/README.md#已确认的-very_easy--easier-变体)。
 - `import_rope_threading_reference.py`：从外部参考数据提取 Rope 几何与初态参数。

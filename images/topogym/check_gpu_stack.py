@@ -49,7 +49,7 @@ def check_ipc():
     assert record['materials_unchanged'] is True
     assert {'sm_89', 'sm_120'} <= set(record['sass'])
     package = metadata.distribution('pyuipc')
-    assert package.version == '0.0.25+topogym.cuda' + flavor[2:] == record['version']
+    assert package.version == '0.0.25+topogym.det1.cuda' + flavor[2:] == record['version']
     backend = Path(package.locate_file(record['backend_path']))
     with backend.open('rb') as stream:
         assert hashlib.file_digest(stream, 'sha256').hexdigest() == record['backend_sha256']

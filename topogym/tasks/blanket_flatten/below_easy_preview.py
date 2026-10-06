@@ -47,10 +47,6 @@ def preview(variation, output, *, backend="cuda", seed=0):
     parameters.pop("gathered_profile")
     parameters.pop("initial_state_acceptance")
     parameters["initialization_mode"] = "flat_for_preparation"
-    # Existing fabric corner marks make the turned material tip legible against
-    # the matching grid underneath. They change only the preview texture.
-    parameters["texture"] = dict(corner_colors=[
-        [[.96, .63, .16], [.96, .63, .16]], [None, None]], corner_size_m=.035)
     config = SimulatorConfig(task_id="blanket_flatten", variation_id="easy",
         compute_backend=backend, task_parameters=parameters, seed=seed)
     cfg = load_scene_config(config)

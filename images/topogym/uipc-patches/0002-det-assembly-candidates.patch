@@ -1,0 +1,600 @@
+From 4e5008e32aab59ca738228fba007899c646900d1 Mon Sep 17 00:00:00 2001
+From: qineng-det <det@topogym.local>
+Date: Mon, 5 Oct 2026 14:00:38 -0500
+Subject: [PATCH 2/4] cuda: reproducible assembly and contact candidate order
+ (TopoGym determinism series 2/4)
+
+Gradient / diagonal-Hessian assembly and contact candidate lists no longer
+depend on the scheduler. Physics unchanged; only orders are fixed.
+
+Atomics replaced:
+- finite_element/fem_linear_subsystem.cu: gradient doublets atomic_add'ed
+  into the global gradient (kinetic, reporters, dytopo effects) ->
+  det::SegmentedAdder (det_scatter.h): stable radix sort of the doublet
+  keys, run-length encode, one thread per (vertex, component) sums its run
+  in production order; fixed vertices skipped as before.
+- affine_body/abd_linear_subsystem.cu: reporter and dytopo gradients
+  atomic_add'ed per body -> SegmentedAdder (12 per body); the diag_hessian
+  atomic adds of reporter and dytopo 12x12 diagonal blocks ->
+  SegmentedAdder (144 per body).
+- collision_detection AtomicCountingLBVH::detect / query (linear_bvh broad
+  phase): candidate pairs appended through an atomic counter, so their
+  order (hence contact doublet / triplet order) followed the scheduler ->
+  canonical_sort(): pairs sorted by (i, j) with cub radix sort after every
+  detect / query.
+- collision_detection/filters/easy_vertex_half_plane_trajectory_filter.cu:
+  vertex / half-plane candidates appended through an atomic counter ->
+  sorted canonically before use.
+---
+ .../cuda/affine_body/abd_linear_subsystem.cu  |  94 ++++++++------
+ .../atomic_counting_lbvh.cu                   |  40 ++++++
+ .../atomic_counting_lbvh.h                    |   8 ++
+ .../details/atomic_counting_lbvh.inl          |   2 +
+ ...asy_vertex_half_plane_trajectory_filter.cu |  34 +++++
+ .../finite_element/fem_linear_subsystem.cu    |  64 ++++------
+ src/backends/cuda/linear_system/det_scatter.h | 118 ++++++++++++++++++
+ 7 files changed, 280 insertions(+), 80 deletions(-)
+ create mode 100644 src/backends/cuda/linear_system/det_scatter.h
+
+diff --git a/src/backends/cuda/affine_body/abd_linear_subsystem.cu b/src/backends/cuda/affine_body/abd_linear_subsystem.cu
+index b4f4e4e..220d4aa 100644
+--- a/src/backends/cuda/affine_body/abd_linear_subsystem.cu
++++ b/src/backends/cuda/affine_body/abd_linear_subsystem.cu
+@@ -10,6 +10,7 @@
+ #include <affine_body/affine_body_kinetic.h>
+ #include <affine_body/affine_body_constitution.h>
+ #include <utils/report_extent_check.h>
++#include <linear_system/det_scatter.h>
+ 
+ namespace uipc::backend::cuda
+ {
+@@ -319,26 +320,12 @@ void ABDLinearSubsystem::Impl::_assemble_reporters(IndexT& offset,
+     }
+ 
+     if(reporter_gradients.doublet_count())
+-    {
+-        ParallelFor()
+-            .file_line(__FILE__, __LINE__)
+-            .apply(reporter_gradients.doublet_count(),
+-                   [dst = info.gradients().viewer().name("dst_gradient"),
+-                    src = reporter_gradients.cviewer().name("src_gradient"),
+-                    is_fixed = abd().body_id_to_is_fixed.cviewer().name(
+-                        "is_fixed")] __device__(int I) mutable
+-                   {
+-                       auto&& [body_i, G12] = src(I);
+-
+-                       if(is_fixed(body_i))
+-                       {
+-                           // Do nothing
+-                       }
+-                       else
+-                       {
+-                           dst.segment<12>(body_i * 12).atomic_add(G12);
+-                       }
+-                   });
++    {   // TopoGym determinism series, patch 0002: per-body sums in doublet order (was: atomic_add per doublet)
++        static det::SegmentedAdder adder;
++        auto                       src = reporter_gradients.view();
++        adder.add(src.doublet_count(), src.indices().data(), src.subvector_offset(),
++                  reinterpret_cast<const Float*>(src.values().data()), 12, info.gradients().data(),
++                  abd().body_id_to_is_fixed.data());
+     }
+ 
+     if(!info.gradient_only() && reporter_hessians.triplet_count())
+@@ -346,12 +333,21 @@ void ABDLinearSubsystem::Impl::_assemble_reporters(IndexT& offset,
+         // get rest
+         auto H3x3s = info.hessians().subview(offset);
+ 
++        // TopoGym determinism series, patch 0002: diagonal contributions collected per triplet, summed per body in
++        // triplet order after the kernel (was: atomic_add into diag_hessian)
++        static muda::DeviceBuffer<int>         det_keys;
++        static muda::DeviceBuffer<Matrix12x12> det_vals;
++        static det::SegmentedAdder             det_adder;
++        det_keys.resize(reporter_hessians.triplet_count());
++        det_vals.resize(reporter_hessians.triplet_count());
++
+         ParallelFor()
+             .file_line(__FILE__, __LINE__)
+             .apply(reporter_hessians.triplet_count(),
+                    [dst = H3x3s.viewer().name("dst_hessian"),
+                     src = reporter_hessians.cviewer().name("src_hessian"),
+-                    diag_hessian = this->diag_hessian.viewer().name("diag_hessian"),
++                    det_keys = det_keys.viewer().name("det_keys"),
++                    det_vals = det_vals.viewer().name("det_vals"),
+                     is_fixed = abd().body_id_to_is_fixed.cviewer().name(
+                         "is_fixed")] __device__(int I) mutable
+                    {
+@@ -362,11 +358,9 @@ void ABDLinearSubsystem::Impl::_assemble_reporters(IndexT& offset,
+ 
+                        bool has_fixed = (is_fixed(body_i) || is_fixed(body_j));
+ 
+-                       // Fill diagonal hessian for diag-inv preconditioner
+-                       if(body_i == body_j && !has_fixed)
+-                       {
+-                           eigen::atomic_add(diag_hessian(body_i), H12x12);
+-                       }
++                       // Fill diagonal hessian for diag-inv preconditioner (summed per body after the kernel)
++                       det_keys(I) = (body_i == body_j && !has_fixed) ? body_i : -1;
++                       det_vals(I) = H12x12;
+ 
+                        if(has_fixed)
+                        {
+@@ -393,6 +387,10 @@ void ABDLinearSubsystem::Impl::_assemble_reporters(IndexT& offset,
+                                   H12x12);
+                    });
+ 
++        det_adder.add(reporter_hessians.triplet_count(), det_keys.data(), 0,
++                      reinterpret_cast<const Float*>(det_vals.data()), 144,
++                      reinterpret_cast<Float*>(diag_hessian.data()), nullptr);
++
+         offset += reporter_hessians.triplet_count() * (4 * 4);
+     }
+ }
+@@ -411,18 +409,24 @@ void ABDLinearSubsystem::Impl::_assemble_dytopo_effect(IndexT& offset,
+     }
+ 
+     if(dytopo_effect_gradient_count)
+-    {
++    {   // TopoGym determinism series, patch 0002: per-contribution G12 = J^T G3, summed per body in doublet order
++        // (was: atomic_add per contribution)
++        static muda::DeviceBuffer<int>      det_keys;
++        static muda::DeviceBuffer<Vector12> det_vals;
++        static det::SegmentedAdder          det_adder;
++        det_keys.resize(dytopo_effect_gradient_count);
++        det_vals.resize(dytopo_effect_gradient_count);
+         ParallelFor()
+             .file_line(__FILE__, __LINE__)
+             .apply(dytopo_effect_gradient_count,
+                    [dytopo_effect_gradient =
+                         dytopo_effect_receiver->gradients().cviewer().name("dytopo_effect_gradient"),
+-                    gradients = info.gradients().viewer().name("gradients"),
++                    det_keys = det_keys.viewer().name("det_keys"),
++                    det_vals = det_vals.viewer().name("det_vals"),
+                     v2b = abd().vertex_id_to_body_id.cviewer().name("v2b"),
+                     Js  = abd().vertex_id_to_J.cviewer().name("Js"),
+                     is_fixed = abd().body_id_to_is_fixed.cviewer().name("is_fixed"),
+-                    vertex_offset = vertex_offset,
+-                    cout = KernelCout::viewer()] __device__(int I) mutable
++                    vertex_offset = vertex_offset] __device__(int I) mutable
+                    {
+                        const auto& [g_i, G3] = dytopo_effect_gradient(I);
+ 
+@@ -432,16 +436,17 @@ void ABDLinearSubsystem::Impl::_assemble_dytopo_effect(IndexT& offset,
+ 
+                        if(is_fixed(body_i))
+                        {
+-                           // Do nothing
++                           det_keys(I) = -1;
++                           det_vals(I).setZero();
+                        }
+                        else
+                        {
+-                           Vector12 G12 = J_i.T() * G3;
+-                           gradients.segment<12>(body_i * 12).atomic_add(G12);
+-
+-                           // cout << "DG(" << I << "): " << G12.transpose().eval() << "\n";
++                           det_keys(I) = body_i;
++                           det_vals(I) = J_i.T() * G3;
+                        }
+                    });
++        det_adder.add(dytopo_effect_gradient_count, det_keys.data(), 0,
++                      reinterpret_cast<const Float*>(det_vals.data()), 12, info.gradients().data(), nullptr);
+     }
+ 
+     if(info.gradient_only())
+@@ -454,8 +459,15 @@ void ABDLinearSubsystem::Impl::_assemble_dytopo_effect(IndexT& offset,
+     auto H3x3_count         = dytopo_effect_hessian_count * (4 * 4);
+     auto dytopo_effect_H3x3 = info.hessians().subview(offset, H3x3_count);
+ 
++    // TopoGym determinism series, patch 0002: diagonal contributions collected per triplet, summed per body after
++    // the kernel (was: atomic_add into diag_hessian)
++    static muda::DeviceBuffer<int>         det_hkeys;
++    static muda::DeviceBuffer<Matrix12x12> det_hvals;
++    static det::SegmentedAdder             det_hadder;
+     if(dytopo_effect_hessian_count)
+     {
++        det_hkeys.resize(dytopo_effect_hessian_count);
++        det_hvals.resize(dytopo_effect_hessian_count);
+         // Half Contact Hessian
+         // ref: https://github.com/spiriMirror/libuipc/issues/272
+         ParallelFor()
+@@ -467,10 +479,12 @@ void ABDLinearSubsystem::Impl::_assemble_dytopo_effect(IndexT& offset,
+                     v2b = abd().vertex_id_to_body_id.cviewer().name("v2b"),
+                     Js  = abd().vertex_id_to_J.cviewer().name("Js"),
+                     is_fixed = abd().body_id_to_is_fixed.cviewer().name("is_fixed"),
+-                    diag_hessian = this->diag_hessian.viewer().name("diag_hessian"),
++                    det_hkeys = det_hkeys.viewer().name("det_hkeys"),
++                    det_hvals = det_hvals.viewer().name("det_hvals"),
+                     vertex_offset = vertex_offset] __device__(int I) mutable
+                    {
+                        const auto& [g_i, g_j, H3x3] = dytopo_effect_hessian(I);
++                       det_hkeys(I) = -1;
+ 
+                        auto i = g_i - vertex_offset;
+                        auto j = g_j - vertex_offset;
+@@ -521,8 +535,9 @@ void ABDLinearSubsystem::Impl::_assemble_dytopo_effect(IndexT& offset,
+                                    H12x12 = ABDJacobi::JT_H_J(J_i.T(), H3x3, J_j);
+                                }
+ 
+-                               // Fill diagonal hessian for diag-inv preconditioner
+-                               eigen::atomic_add(diag_hessian(body_i), H12x12);
++                               // Fill diagonal hessian for diag-inv preconditioner (summed per body below)
++                               det_hkeys(I) = body_i;
++                               det_hvals(I) = H12x12;
+ 
+                                // Since body_i == body_j, we only fill the upper triangle part
+                                zero_out_lower(H12x12);
+@@ -535,6 +550,9 @@ void ABDLinearSubsystem::Impl::_assemble_dytopo_effect(IndexT& offset,
+                                   R * 4,          // begin col
+                                   H12x12);
+                    });
++        det_hadder.add(dytopo_effect_hessian_count, det_hkeys.data(), 0,
++                       reinterpret_cast<const Float*>(det_hvals.data()), 144,
++                       reinterpret_cast<Float*>(diag_hessian.data()), nullptr);
+     }
+ 
+     offset += H3x3_count;
+diff --git a/src/backends/cuda/collision_detection/atomic_counting_lbvh.cu b/src/backends/cuda/collision_detection/atomic_counting_lbvh.cu
+index 4d875b2..81b2d22 100644
+--- a/src/backends/cuda/collision_detection/atomic_counting_lbvh.cu
++++ b/src/backends/cuda/collision_detection/atomic_counting_lbvh.cu
+@@ -1,3 +1,4 @@
++#include <cub/device/device_radix_sort.cuh>
+ #include <collision_detection/atomic_counting_lbvh.h>
+ #include "stackless_bvh.h"
+ 
+@@ -13,4 +14,43 @@ void AtomicCountingLBVH::build(muda::CBufferView<LinearBVHAABB> aabbs)
+     m_aabbs = aabbs;
+     m_lbvh.build(aabbs);
+ }
++
++// TopoGym determinism series, patch 0002: every (i, id) pair occurs once per query, so sorting by the packed key gives
++// one canonical candidate order; everything downstream (contact energies, gradients, Hessian triplets, compaction by
++// cub::DeviceSelect) follows the candidate index.
++void AtomicCountingLBVH::canonical_sort(QueryBuffer& qbuffer)
++{
++    using namespace muda;
++    int n = static_cast<int>(qbuffer.m_size);
++    if(n <= 1)
++        return;
++    cudaStream_t s = m_stream;
++    m_sort_keys_in.resize(n);
++    m_sort_keys_out.resize(n);
++    ParallelFor(0, s)
++        .file_line(__FILE__, __LINE__)
++        .apply(n,
++               [pairs = qbuffer.m_pairs.viewer().name("pairs"),
++                keys  = m_sort_keys_in.viewer().name("keys")] __device__(int k) mutable
++               {
++                   const Vector2i& p = pairs(k);
++                   keys(k) = (static_cast<unsigned long long>(static_cast<unsigned int>(p(0))) << 32)
++                             | static_cast<unsigned int>(p(1));
++               });
++    size_t bytes = 0;
++    cub::DeviceRadixSort::SortKeys(nullptr, bytes, m_sort_keys_in.data(), m_sort_keys_out.data(), n, 0, 64, s);
++    if(m_sort_temp.size() < bytes)
++        m_sort_temp.resize(bytes);
++    cub::DeviceRadixSort::SortKeys((void*)m_sort_temp.data(), bytes, m_sort_keys_in.data(), m_sort_keys_out.data(), n,
++                                   0, 64, s);
++    ParallelFor(0, s)
++        .file_line(__FILE__, __LINE__)
++        .apply(n,
++               [pairs = qbuffer.m_pairs.viewer().name("pairs"),
++                keys  = m_sort_keys_out.viewer().name("keys")] __device__(int k) mutable
++               {
++                   unsigned long long v = keys(k);
++                   pairs(k) = Vector2i(static_cast<int>(v >> 32), static_cast<int>(v & 0xffffffffull));
++               });
++}
+ }  // namespace uipc::backend::cuda
+diff --git a/src/backends/cuda/collision_detection/atomic_counting_lbvh.h b/src/backends/cuda/collision_detection/atomic_counting_lbvh.h
+index f97d7d7..fcf69db 100644
+--- a/src/backends/cuda/collision_detection/atomic_counting_lbvh.h
++++ b/src/backends/cuda/collision_detection/atomic_counting_lbvh.h
+@@ -33,7 +33,15 @@ class AtomicCountingLBVH
+     template <typename Pred>
+     void query(muda::CBufferView<LinearBVHAABB> query_aabbs, Pred p, QueryBuffer& out_pairs);
+ 
++    // TopoGym determinism series, patch 0002: query results sorted by (i, id) (their atomic-counter order varies);
++    // public because it launches extended device lambdas
++    void canonical_sort(QueryBuffer& qbuffer);
++
+   private:
++    muda::DeviceBuffer<unsigned long long> m_sort_keys_in;
++    muda::DeviceBuffer<unsigned long long> m_sort_keys_out;
++    muda::DeviceBuffer<std::byte>          m_sort_temp;
++
+     muda::CBufferView<LinearBVHAABB> m_aabbs;
+     muda::DeviceVar<IndexT>          m_cp_num;
+     LinearBVH                        m_lbvh;
+diff --git a/src/backends/cuda/collision_detection/details/atomic_counting_lbvh.inl b/src/backends/cuda/collision_detection/details/atomic_counting_lbvh.inl
+index 7331659..8b35e07 100644
+--- a/src/backends/cuda/collision_detection/details/atomic_counting_lbvh.inl
++++ b/src/backends/cuda/collision_detection/details/atomic_counting_lbvh.inl
+@@ -53,6 +53,7 @@ void AtomicCountingLBVH::detect(Pred p, QueryBuffer& qbuffer)
+     }
+ 
+     qbuffer.m_size = h_cp_num;
++    canonical_sort(qbuffer);  // TopoGym determinism series, patch 0002
+ }
+ 
+ template <typename Pred>
+@@ -109,5 +110,6 @@ void AtomicCountingLBVH::query(muda::CBufferView<LinearBVHAABB> query_aabbs, Pre
+     }
+ 
+     qbuffer.m_size = h_cp_num;
++    canonical_sort(qbuffer);  // TopoGym determinism series, patch 0002
+ }
+ }  // namespace uipc::backend::cuda
+diff --git a/src/backends/cuda/collision_detection/filters/easy_vertex_half_plane_trajectory_filter.cu b/src/backends/cuda/collision_detection/filters/easy_vertex_half_plane_trajectory_filter.cu
+index 4d6bf12..989b82e 100644
+--- a/src/backends/cuda/collision_detection/filters/easy_vertex_half_plane_trajectory_filter.cu
++++ b/src/backends/cuda/collision_detection/filters/easy_vertex_half_plane_trajectory_filter.cu
+@@ -1,3 +1,4 @@
++#include <cub/device/device_radix_sort.cuh>
+ #include <collision_detection/filters/easy_vertex_half_plane_trajectory_filter.h>
+ #include <muda/cub/device/device_reduce.h>
+ #include <kernel_cout.h>
+@@ -124,6 +125,39 @@ void EasyVertexHalfPlaneTrajectoryFilter::Impl::filter_active(FilterActiveInfo&
+         query();
+     }
+ 
++    {   // TopoGym determinism series, patch 0002: candidates in canonical (vertex, plane) order (their atomic-counter
++        // order varies)
++        static muda::DeviceBuffer<unsigned long long> keys_in, keys_out;
++        static muda::DeviceBuffer<std::byte>          temp;
++        int n = static_cast<int>(h_num_collisions);
++        if(n > 1)
++        {
++            keys_in.resize(n);
++            keys_out.resize(n);
++            ParallelFor()
++                .file_line(__FILE__, __LINE__)
++                .apply(n,
++                       [PHs = PHs.viewer().name("PHs"), keys = keys_in.viewer().name("keys")] __device__(int k) mutable
++                       {
++                           const Vector2i& p = PHs(k);
++                           keys(k) = (static_cast<unsigned long long>(static_cast<unsigned int>(p(0))) << 32)
++                                     | static_cast<unsigned int>(p(1));
++                       });
++            size_t bytes = 0;
++            cub::DeviceRadixSort::SortKeys(nullptr, bytes, keys_in.data(), keys_out.data(), n);
++            if(temp.size() < bytes)
++                temp.resize(bytes);
++            cub::DeviceRadixSort::SortKeys((void*)temp.data(), bytes, keys_in.data(), keys_out.data(), n);
++            ParallelFor()
++                .file_line(__FILE__, __LINE__)
++                .apply(n,
++                       [PHs = PHs.viewer().name("PHs"), keys = keys_out.viewer().name("keys")] __device__(int k) mutable
++                       {
++                           unsigned long long v = keys(k);
++                           PHs(k) = Vector2i(static_cast<int>(v >> 32), static_cast<int>(v & 0xffffffffull));
++                       });
++        }
++    }
+     info.PHs(PHs.view(0, h_num_collisions));
+ 
+     if constexpr(PrintDebugInfo)
+diff --git a/src/backends/cuda/finite_element/fem_linear_subsystem.cu b/src/backends/cuda/finite_element/fem_linear_subsystem.cu
+index c95e2ee..0b7919b 100644
+--- a/src/backends/cuda/finite_element/fem_linear_subsystem.cu
++++ b/src/backends/cuda/finite_element/fem_linear_subsystem.cu
+@@ -12,6 +12,7 @@
+ #include <uipc/builtin/attribute_name.h>
+ #include <uipc/common/flag.h>
+ #include <utils/report_extent_check.h>
++#include <linear_system/det_scatter.h>
+ 
+ namespace uipc::backend::cuda
+ {
+@@ -247,18 +248,13 @@ void FEMLinearSubsystem::Impl::_assemble_kinetic(IndexT& hess_offset,
+         info.gradient_only(), gradient_view, hessian_view, dt_attr->view()[0]};
+     kinetic->compute_gradient_hessian(kinetic_info);
+ 
+-    ParallelFor()
+-        .file_line(__FILE__, __LINE__)
+-        .apply(kinetic_gradients.doublet_count(),
+-               [dst = info.gradients().viewer().name("dst_gradient"),
+-                src = kinetic_gradients.cviewer().name("src_gradient"),
+-                is_fixed = fem().is_fixed.cviewer().name("is_fixed")] __device__(int I) mutable
+-               {
+-                   auto&& [i, G3] = src(I);
+-                   if(is_fixed(i))
+-                       return;
+-                   dst.segment<3>(i * 3).atomic_add(G3);
+-               });
++    {  // TopoGym determinism series, patch 0002: per-vertex sums in doublet order (was: atomic_add per doublet)
++        static det::SegmentedAdder adder;
++        auto                       src = kinetic_gradients.view();
++        adder.add(src.doublet_count(), src.indices().data(), src.subvector_offset(),
++                  reinterpret_cast<const Float*>(src.values().data()), 3, info.gradients().data(),
++                  fem().is_fixed.data());
++    }
+ 
+     hess_offset += hess_count;
+ }
+@@ -280,18 +276,13 @@ void FEMLinearSubsystem::Impl::_assemble_reporters(IndexT& hess_offset,
+         R->assemble(assemble_info);
+     }
+ 
+-    ParallelFor()
+-        .file_line(__FILE__, __LINE__)
+-        .apply(reporter_gradients.doublet_count(),
+-               [dst = info.gradients().viewer().name("dst_gradient"),
+-                src = reporter_gradients.cviewer().name("src_gradient"),
+-                is_fixed = fem().is_fixed.cviewer().name("is_fixed")] __device__(int I) mutable
+-               {
+-                   auto&& [i, G3] = src(I);
+-                   if(is_fixed(i))
+-                       return;
+-                   dst.segment<3>(i * 3).atomic_add(G3);
+-               });
++    {  // TopoGym determinism series, patch 0002: per-vertex sums in doublet order (was: atomic_add per doublet)
++        static det::SegmentedAdder adder;
++        auto                       src = reporter_gradients.view();
++        adder.add(src.doublet_count(), src.indices().data(), src.subvector_offset(),
++                  reinterpret_cast<const Float*>(src.values().data()), 3, info.gradients().data(),
++                  fem().is_fixed.data());
++    }
+ 
+     // offset update
+     hess_offset += hess_count;
+@@ -307,24 +298,13 @@ void FEMLinearSubsystem::Impl::_assemble_dytopo_effect(IndexT& hess_offset,
+ 
+     // 1) Assemble DyTopoEffect Gradient to Gradient
+     if(grad_count)
+-    {
+-        ParallelFor()
+-            .file_line(__FILE__, __LINE__)
+-            .apply(grad_count,
+-                   [dytopo_effect_gradient =
+-                        dytopo_effect_receiver->gradients().cviewer().name("dytopo_effect_gradient"),
+-                    gradients = info.gradients().viewer().name("gradients"),
+-                    vertex_offset = finite_element_vertex_reporter->vertex_offset(),
+-                    is_fixed = fem().is_fixed.cviewer().name("is_fixed")] __device__(int I) mutable
+-                   {
+-                       const auto& [g_i, G3] = dytopo_effect_gradient(I);
+-                       auto i = g_i - vertex_offset;  // from global to local
+-
+-                       if(is_fixed(i))
+-                           return;
+-
+-                       gradients.segment<3>(i * 3).atomic_add(G3);
+-                   });
++    {   // TopoGym determinism series, patch 0002: per-vertex sums in doublet order (was: atomic_add per doublet)
++        static det::SegmentedAdder adder;
++        auto src = dytopo_effect_receiver->gradients();
++        adder.add(src.doublet_count(), src.indices().data(),
++                  src.subvector_offset() + static_cast<int>(finite_element_vertex_reporter->vertex_offset()),
++                  reinterpret_cast<const Float*>(src.values().data()), 3, info.gradients().data(),
++                  fem().is_fixed.data());
+     }
+ 
+     if(info.gradient_only())
+diff --git a/src/backends/cuda/linear_system/det_scatter.h b/src/backends/cuda/linear_system/det_scatter.h
+new file mode 100644
+index 0000000..886ab9f
+--- /dev/null
++++ b/src/backends/cuda/linear_system/det_scatter.h
+@@ -0,0 +1,118 @@
++#pragma once
++// Deterministic keyed accumulation (TopoGym determinism series, patch 0002).
++//
++// Replaces scatter loops of the form `for each contribution e: atomic_add(dst[key(e)], value(e))` (gradient doublets,
++// affine-body diagonal Hessians), whose summation order follows the scheduler. SegmentedAdder sorts the contributions by
++// key with a stable radix sort (so equal keys keep the order in which they were produced), finds the runs of equal keys,
++// and lets one thread per (key, scalar component) sum its run in that order and add the sum to dst once. All index
++// arithmetic is integer; the only float operations are the per-run sums, in a fixed order.
++#include <type_define.h>
++#include <muda/buffer/device_buffer.h>
++#include <cub/device/device_radix_sort.cuh>
++#include <cub/device/device_run_length_encode.cuh>
++#include <cub/device/device_scan.cuh>
++
++namespace uipc::backend::cuda::det
++{
++namespace scatter_detail
++{
++    template <int Unused = 0>
++    __global__ void prepare_keys(int n, const int* keys, int key_shift, int* out_keys, int* out_pos)
++    {
++        int e = blockIdx.x * blockDim.x + threadIdx.x;
++        if(e < n)
++        {
++            out_keys[e] = keys[e] - key_shift;
++            out_pos[e]  = e;
++        }
++    }
++
++    // thread = (run, component): dst[key * dim + c] += sum over the run, in order, of values[pos * dim + c]
++    template <int Unused = 0>
++    __global__ void sum_runs(int          runs,
++                                    int          dim,
++                                    const int*   unique_keys,
++                                    const int*   run_offsets,
++                                    const int*   run_counts,
++                                    const int*   sorted_pos,
++                                    const Float* values,
++                                    Float*       dst,
++                                    const IndexT* skip)
++    {
++        int t = blockIdx.x * blockDim.x + threadIdx.x;
++        if(t >= runs * dim)
++            return;
++        int r   = t / dim;
++        int c   = t - r * dim;
++        int key = unique_keys[r];
++        if(key < 0 || (skip && skip[key]))
++            return;
++        Float acc   = 0;
++        int   begin = run_offsets[r];
++        int   end   = begin + run_counts[r];
++        for(int e = begin; e < end; ++e)
++            acc += values[static_cast<size_t>(sorted_pos[e]) * dim + c];
++        dst[static_cast<size_t>(key) * dim + c] += acc;
++    }
++}  // namespace scatter_detail
++
++class SegmentedAdder
++{
++  public:
++    // For every distinct k = keys[e] - key_shift >= 0 among e < n (skip[k] != 0 drops k):
++    //   dst[k*dim .. k*dim+dim) += sum, in e order, of values[e*dim .. e*dim+dim).
++    // `keys`, `values`, `dst`, `skip` are device pointers; default stream.
++    void add(int n, const int* keys, int key_shift, const Float* values, int dim, Float* dst, const IndexT* skip = nullptr)
++    {
++        using namespace scatter_detail;
++        if(n <= 0)
++            return;
++        constexpr int bd = 256;
++        m_keys.resize(n);
++        m_keys_sorted.resize(n);
++        m_pos.resize(n);
++        m_pos_sorted.resize(n);
++        m_unique.resize(n);
++        m_counts.resize(n);
++        m_offsets.resize(n);
++        m_num_runs.resize(1);
++        prepare_keys<<<(n + bd - 1) / bd, bd>>>(n, keys, key_shift, m_keys.data(), m_pos.data());
++
++        size_t bytes = 0;
++        cub::DeviceRadixSort::SortPairs(nullptr, bytes, m_keys.data(), m_keys_sorted.data(), m_pos.data(),
++                                        m_pos_sorted.data(), n);
++        reserve_temp(bytes);
++        cub::DeviceRadixSort::SortPairs((void*)m_temp.data(), bytes, m_keys.data(), m_keys_sorted.data(), m_pos.data(),
++                                        m_pos_sorted.data(), n);
++
++        bytes = 0;
++        cub::DeviceRunLengthEncode::Encode(nullptr, bytes, m_keys_sorted.data(), m_unique.data(), m_counts.data(),
++                                           m_num_runs.data(), n);
++        reserve_temp(bytes);
++        cub::DeviceRunLengthEncode::Encode((void*)m_temp.data(), bytes, m_keys_sorted.data(), m_unique.data(),
++                                           m_counts.data(), m_num_runs.data(), n);
++        int runs = 0;
++        cudaMemcpy(&runs, m_num_runs.data(), sizeof(int), cudaMemcpyDeviceToHost);
++
++        bytes = 0;
++        cub::DeviceScan::ExclusiveSum(nullptr, bytes, m_counts.data(), m_offsets.data(), runs);
++        reserve_temp(bytes);
++        cub::DeviceScan::ExclusiveSum((void*)m_temp.data(), bytes, m_counts.data(), m_offsets.data(), runs);
++
++        int threads = runs * dim;
++        if(threads > 0)
++            sum_runs<<<(threads + bd - 1) / bd, bd>>>(runs, dim, m_unique.data(), m_offsets.data(), m_counts.data(),
++                                                      m_pos_sorted.data(), values, dst, skip);
++    }
++
++  private:
++    void reserve_temp(size_t bytes)
++    {
++        if(m_temp.size() < bytes)
++            m_temp.resize(bytes);
++    }
++
++    muda::DeviceBuffer<int>       m_keys, m_keys_sorted, m_pos, m_pos_sorted, m_unique, m_counts, m_offsets, m_num_runs;
++    muda::DeviceBuffer<std::byte> m_temp;
++};
++}  // namespace uipc::backend::cuda::det
+-- 
+2.34.1
+

@@ -92,8 +92,8 @@ def validate(plan):
     if plan.get('plan_sha256') != digest({k: v for k, v in plan.items() if k != 'plan_sha256'}): raise ValueError('batch plan changed')
     component(plan['batch']); component(plan['helper'])
     if type(plan.get('helper_selects_model',False)) is not bool: raise ValueError('helper_selects_model must be boolean')
-    if plan.get('helper_selects_model') and plan['agent']['name']!='codex':
-        raise ValueError('helper model selection currently requires the Codex runner')
+    if plan.get('helper_selects_model') and plan['agent']['name'] not in ('codex','muse-openrouter'):
+        raise ValueError('helper model selection requires a supported published runner')
     if 'assignment_sha256' in plan:
         if not plan.get('helper_selects_model') or not re.fullmatch('[a-f0-9]{64}',plan['assignment_sha256']):
             raise ValueError('invalid model selection assignment binding')
@@ -120,7 +120,14 @@ def validate(plan):
         if plan['batch']!=component(retry['batch'])+'-rerun' or not re.fullmatch('[a-f0-9]{64}',retry['plan_sha256']): raise ValueError('invalid rerun parent')
         ids=[(row['job'],row['repetition']) for row in retry['trials']]
         if len(ids)!=len(set(ids)) or set(counts)!=names or any(type(n) is not int or n<1 for _,n in ids): raise ValueError('invalid rerun mapping')
-    if plan['agent']['name'] not in ('codex', 'claude-code'): raise ValueError('native Harbor agents required')
+    if plan['agent']['name'] not in ('codex', 'claude-code', 'muse-openrouter'): raise ValueError('unsupported Harbor agent')
+    if plan['agent']['name']=='muse-openrouter':
+        from harbor_agents.muse_transport.launch import VERSION
+        if (plan.get('harness_protocol')!='muse-openrouter-adapted-v1'
+                or not plan['agent']['model'].startswith('openrouter/meta/muse')
+                or plan['agent']['kwargs'].get('version')!=VERSION
+                or set(plan['agent']['kwargs'])-{'version','reasoning_effort'}):
+            raise ValueError('Muse adapter requires explicit protocol, fixed version and OpenRouter Muse model')
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_./:-]+', plan['agent']['model']): raise ValueError('invalid model')
     if any(not re.fullmatch(r'[a-z_]+', k) or not re.fullmatch(r'[A-Za-z0-9_.,-]+', str(v)) for k,v in plan['agent']['kwargs'].items()):
         raise ValueError('invalid agent options')
@@ -147,9 +154,11 @@ def select_agent(assignment, *, model=None, effort=None, agent=None):
     if selected==assignment['agent']: return assignment
     if not assignment.get('helper_selects_model') or 'assignment_sha256' in assignment or assignment.get('rerun'):
         raise ValueError('model/effort are fixed for this assignment')
-    if not selected['model'].startswith('openai/'):
-        raise ValueError('helper model selection currently supports Codex openai/ models')
-    if selected['kwargs'].get('reasoning_effort','default') not in ('none','minimal','low','medium','high','xhigh','max','default'):
+    from agent_batch_provider import canonical_model
+    selected['model']=canonical_model(selected['model'])
+    efforts=('none','minimal','low','medium','high','xhigh','max','default')
+    if selected['name']=='muse-openrouter': efforts+=('ultra',)
+    if selected['kwargs'].get('reasoning_effort','default') not in efforts:
         raise ValueError('invalid reasoning effort')
     plan=copy.deepcopy(assignment); plan.pop('plan_sha256')
     plan.update(agent=selected,assignment_sha256=assignment['plan_sha256'])
@@ -265,9 +274,18 @@ def trial_verdict(trial, task, agent=None):
     if Path(config_task.get('path', '')).name != task['name']: return 'identity_mismatch', reward, []
     if agent:
         acfg = cfg.get('agent') or {}
-        if acfg.get('name') != agent['name'] or acfg.get('model_name') != agent['model']: return 'identity_mismatch', reward, []
+        if agent['name']=='muse-openrouter':
+            from harbor_agents.muse_transport.launch import IMPORT_PATH
+            if (acfg.get('name'),acfg.get('import_path')) not in ((IMPORT_PATH,None),(None,IMPORT_PATH)):
+                return 'identity_mismatch', reward, []
+        elif acfg.get('name') != agent['name'] or acfg.get('import_path'):
+            return 'identity_mismatch', reward, []
+        if acfg.get('model_name') != agent['model']: return 'identity_mismatch', reward, []
         kwargs = acfg.get('kwargs') or {}
         if any(str(kwargs.get(k)) != str(v) for k,v in agent['kwargs'].items()): return 'identity_mismatch', reward, []
+        if agent['name']=='codex' and agent['model'].startswith('openrouter/'):
+            from agent_batch_provider import codex_config
+            if kwargs.get('config') != codex_config(agent['model']): return 'identity_mismatch', reward, []
         if acfg.get('override_timeout_sec') not in (None, task['agent_timeout_sec']): return 'identity_mismatch', reward, []
         if acfg.get('max_timeout_sec') is not None: return 'identity_mismatch', reward, []
     invalid = any(reward.get(k) for k in ('missing_trajectory','bad_trajectory','wrong_family'))

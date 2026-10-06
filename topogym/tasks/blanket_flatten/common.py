@@ -236,7 +236,7 @@ class BlanketFlattenTask(TaskDefinition):
             raise ValueError("Degenerate material-coordinate triangulation")
 
     def evaluate_state(self, state):
-        from topogym.evaluation.cloth_metrics import footprint_area, footprint_area_slabs
+        from topogym.evaluation.cloth_metrics import footprint_area, footprint_area_slabs, footprint_area_upper_bound
 
         particle_state = state["particles"]["blanket"]
         positions = np.asarray(particle_state["position_m"])
@@ -266,9 +266,16 @@ class BlanketFlattenTask(TaskDefinition):
         # gate holds, so it is computed then, and on each control step's last tick (complete_metrics, set by Env.step) so the
         # metrics a step reports stay complete; on the other ticks the goal is false either way (identical predicate).
         coverage = None
-        if all(cheap.values()) or getattr(self, "complete_metrics", True):
+        complete = getattr(self, "complete_metrics", True)
+        if all(cheap.values()) or complete:
             area = self.layout.length_m * self.layout.width_m
-            coverage = footprint_area_slabs(positions, self.particle_faces) / area
+            # On a tick inside the control step only the goal decision is used. When even an upper bound of the union
+            # stays 1e-3 below the threshold, the goal is false whatever the union (identical decision, as for a failed
+            # cheap gate), so the union is not computed; the threshold is read at this tick (a grading replay's relaxed
+            # threshold included). Ticks of a confirmation window always compute it (the goal holds there).
+            if complete or footprint_area_upper_bound(positions, self.particle_faces) / area >= cfg["minimum_coverage_ratio"] - 1e-3:
+                coverage = footprint_area_slabs(positions, self.particle_faces) / area
+        if coverage is not None:
             # The slab sum equals the union to ~1e-15 on cloth states; on extreme synthetic folds GEOS' one-shot union
             # itself drifts by up to ~3e-4 (the slab sum then agrees with a 10 nm grid union). Within 1e-3 of the
             # threshold the shipped union decides, so the gate is identical (scripts/check_blanket_coverage_slabs.py).

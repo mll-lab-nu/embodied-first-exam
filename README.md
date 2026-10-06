@@ -12,10 +12,10 @@ diagnostics and replay videos. The original release contained **28 Harbor tasks:
 example, each in two modes**. See the [protocol](docs/rcb/PROTOCOL.md),
 [task manifest](tasks/dataset.toml) and [中文 CLI 手册与验收记录](docs/rcb/README.md).
 
-**Active development release: tooling v17 / image 0.2.15-dev-cu128** (merged-v17: merged-v16, i.e. the v15 candidate
-pipeline and environment profile plus the grading-replay and physical-validity rules, with the R-hold grading, the
-fiber_bundling CPU speed-up and deterministic GPU physics of [docs/rcb/benchmarks/topogym.md](docs/rcb/benchmarks/topogym.md);
-the v15 and v16 candidates' tooling stays frozen).
+**Active development release: tooling v18 / image 0.2.16-dev-cu128** (merged-v18: merged-v17 with the deterministic IPC
+solver, knot_untying's K2 solve, the exact v18 speed-ups and the restored agent interaction log of
+[docs/rcb/benchmarks/topogym.md](docs/rcb/benchmarks/topogym.md); environment profile merged-v18; the v15, v16 and v17
+candidates' tooling stays frozen).
 The release selector is `ci_checks/topogym_active_release.json`. It remains a source candidate
 until its 39 instances / 78 packages pass exact restoration and Harbor qualification.
 Historical packages under `tasks/` retain their original identities and are not the default for new runs.

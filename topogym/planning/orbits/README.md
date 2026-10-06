@@ -1,5 +1,15 @@
 # Orbits oracle
 
+新增的 `native_session.py` 是 very_easy / easier 的 v18 原生候选控制器，接收 Harbor
+提供的冻结 Session，只有 JOINT_ABS 动作；没有 reset、辅助抓持、物体驱动或另一套物理。
+入口为 `topogym.planning.orbits.native_session:run_feedback_policy`，kwargs 使用
+`{"variation": "very_easy"}` 或 `{"variation": "easier"}`。默认执行完整候选路径；
+`stage="grasp"`、`"peel"`、`"clear"` 只用于局部诊断，不是完整 oracle 成功。
+当前只有控制边界回归与 CPU 运动学预筛选结果，原生物理及 Harbor `solved=1` 尚未通过。
+状态和 v18 构建证据见 [Orbits 任务页](../../../docs/develop/tasks/orbits_zh.md)。
+
+下文描述原三档的旧规划工具，其验证边界保持独立。
+
 移植用户提供的 2026-10-04 Orbits 源码，保留本项目 v15 环境规则。本次仅修改代码，未运行测试、搜索、审计、预览或仿真；来源中的机器人 pass、物体级进度和检查点不属于本项目的验证结果。
 
 本地 easy／medium／hard 的任务参数保持原值：缩放 0.85、模板环半径 0.066 m、柱距 0.082 m、层距 0.068 m、最低环高 0.126 m；compact 绳长 0.80 m、木柄位置 0.41 m。`common.CORD_PROFILES` 仅提取这些现有数值供任务和规划器共用。变体的 `model_revision`、registry、FEM 材料、网格、永久连接、目标区选择及 terminal 均未改为来源版本。

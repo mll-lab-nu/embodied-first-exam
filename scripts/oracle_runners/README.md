@@ -107,6 +107,8 @@ Rope Threading 的显式开发参考可用
 
 ## Blanket easy / medium / hard 双手展平路线
 
+入口也支持 `--variation very_easy` 和 `--variation easier` 的折角路线；新路线独立验证，不能继承原三档成功资格。增加 `--record` 会通过共享 RecordingSession 保存从默认 home 开始的连续四路录像和首末帧，包括失败时实际执行的前缀。新两档的初态准备、资源及验收见 [Blanket 任务说明](../../docs/develop/tasks/blanket_flatten_zh.md)。
+
 从仓库根目录执行，输出目录必须尚不存在。Nyx 资源先按 `scripts/prepare_nyx_studio.py` 准备；
 下面的资源路径沿用交接环境，已有资源放在别处时设置为对应目录。
 

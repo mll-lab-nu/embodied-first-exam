@@ -114,6 +114,10 @@ def _publish(run, repository, batch, helper, *, repetitions=None, model=None, ef
                 binding_id=binding_id(lock),runtime_binding=lock,agent_timeout_sec=cfg['agent']['timeout_sec'],
                 preflight=proof,success_artifacts=['verifier/replay.mp4','verifier/replay.last.png']))
         kwargs={'reasoning_effort':effort,'web_search':'disabled'} if agent=='codex' else {'reasoning_effort':effort,'disallowed_tools':'WebSearch,WebFetch'}
+        if agent=='muse-openrouter':
+            from harbor_agents.muse_transport.launch import VERSION
+            kwargs={'version':VERSION,'reasoning_effort':effort}
+        if effort=='default': kwargs.pop('reasoning_effort',None)
         if agent=='codex': kwargs['version']='0.157.0'
         plan=dict(format=FORMAT,schema_version=1,batch=batch,helper=helper,release=manifest['release'],repetitions=repetitions,
                   instance_selection=manifest['settings'].get('instance_selection','sampled'),images=read(run/'image.json').get('images',{}),
@@ -121,6 +125,7 @@ def _publish(run, repository, batch, helper, *, repetitions=None, model=None, ef
                   jobs=[dict(job=batch+'-'+t['mode']+'-'+t['base'],task=t['name'],repetitions=repetitions) for t in records],
                   agent=dict(name=agent,model=model,kwargs=kwargs),mirror_required=True,upload=upload or {'type':'shared-folder'})
         if preset.get('token_budget'): plan['token_budget']=preset['token_budget']
+        if agent=='muse-openrouter': plan['harness_protocol']='muse-openrouter-adapted-v1'
         if skip_preflight_reason is not None:
             plan['preflight_policy']=dict(required=False,reason=skip_preflight_reason,
                 passed_task_bases=sorted({t['base'] for t in records if t['preflight']['passed']}),
@@ -144,7 +149,11 @@ def _publish(run, repository, batch, helper, *, repetitions=None, model=None, ef
             'difficulty_hf_auth.py','difficulty_results_hf.py','helper_bundle.py','export_native_helper_release.py',
             'import_helper_results.py','collect_batch_results.py','helper_assignment.py')]
         runner_names+=['bash_scripts/run_helper_batch.sh']
+        runner_names+=['scripts/agent_batch_provider.py','scripts/patch_agent_batch_providers.py','scripts/configure_agent_batch.py','scripts/agent_batch_host.py']
         runner_names+=['harbor_agents/persistent_auth.py','images/difficulty-eval/patch_harbor.py','requirements/difficulty-eval-controller.lock','topogym/utils/process_limits.py']
+        runner_names+=['harbor_agents/muse_openrouter.py']
+        runner_names += [p.relative_to(repository).as_posix() for p in (repository/'harbor_agents/muse_transport').iterdir()
+                         if p.is_file() and p.suffix!='.pyc']
         plan['runner_files']={name:sha(repository/name) for name in runner_names}
         plan['plan_sha256']=digest(plan); validate(plan)
         dataset=repository/'tasks/dataset.toml'
@@ -179,7 +188,7 @@ def main():
     p.add_argument('--model'); p.add_argument('--effort')
     p.add_argument('--helper-selects-model',action='store_true',help='delegate MODEL/EFFORT selection to helper; tasks, budgets and AGENT stay fixed')
     p.add_argument('--image-sources',type=Path,help='maintainer JSON mapping frozen image references to pinned registry/archive downloads')
-    p.add_argument('--agent',choices=('codex','claude-code')); p.add_argument('--upload-spec',type=Path)
+    p.add_argument('--agent',choices=('codex','claude-code','muse-openrouter')); p.add_argument('--upload-spec',type=Path)
     p.add_argument('--task-base',action='append',help='publish a selected smoke subset; repeatable, exact manifest slug')
     p.add_argument('--skip-preflight-reason',help='maintainer-only: publish prepared packages without full preflight; record the reason and retain existing passes')
     a=p.parse_args()

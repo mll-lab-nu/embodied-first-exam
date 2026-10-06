@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Prepare private API/HF credentials in the foreground, before nohup.
 
-Uses only the Python standard library and existing credential readers. Does not
+Always asks for a fresh model key unless --check or --api-key-env is explicitly
+selected. An existing HF token can be reused. Uses only the Python standard
+library and existing credential readers. Does not
 install tools, contact a provider, start trials, or change an assignment.
 """
 import argparse
@@ -17,6 +19,7 @@ import warnings
 
 from difficulty_hf_auth import read_token, token_text
 from secret_scan import load_env
+from agent_batch_provider import OPENROUTER_URL, OPENROUTER_KEYS, openrouter_credentials
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BASE_URL = 'https://api.openai.com/v1'
@@ -66,7 +69,7 @@ def base_url(value):
 
 def hidden_input(prompt):
     if not sys.stdin.isatty():
-        raise SetupError('Credentials are missing. Run configure_agent_batch.py in a foreground terminal before nohup.')
+        raise SetupError('Fresh model credentials require hidden input. Run configure_agent_batch.py in a foreground terminal before nohup.')
     with warnings.catch_warnings():
         warnings.simplefilter('error', getpass.GetPassWarning)
         try:
@@ -75,7 +78,7 @@ def hidden_input(prompt):
             raise SetupError('Hidden terminal input is unavailable; no credential was saved.') from None
 
 
-def create_private_file(path, contents):
+def create_private_file(path, contents, *, replace=False):
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     fd, temporary = tempfile.mkstemp(prefix='.helper-auth-', dir=path.parent)
     try:
@@ -84,46 +87,78 @@ def create_private_file(path, contents):
             stream.write(contents)
             stream.flush()
             os.fsync(stream.fileno())
-        # Publish complete bytes atomically and never overwrite an existing file.
-        os.link(temporary, path)
+        # Only an explicitly refreshed model credential may replace an owned
+        # regular file. HF credentials always retain create-only semantics.
+        if replace:
+            check_private_file(path)
+            os.replace(temporary, path)
+        else:
+            os.link(temporary, path)
     except FileExistsError:
         raise SetupError('A credential file appeared during setup; preserved it. Run setup again to validate it.') from None
     finally:
-        os.unlink(temporary)
+        if os.path.exists(temporary):
+            os.unlink(temporary)
 
 
-def configure(env_file, hf_token_file, *, api_base_url=None, check_only=False):
+def configure(env_file, hf_token_file, *, api_base_url=None, check_only=False, provider=None, api_key_env=None):
     env_file, hf_token_file = private_path(env_file), private_path(hf_token_file)
     if env_file == hf_token_file:
         raise SetupError('Model credentials and the HF token need separate files.')
     requested_base = base_url(api_base_url) if api_base_url is not None else None
-    pending = []
-    if env_file.exists():
+    if provider not in (None, 'openai', 'openrouter'):
+        raise SetupError('Provider must be openai or openrouter.')
+    if provider == 'openrouter':
+        if requested_base and requested_base.rstrip('/') != OPENROUTER_URL:
+            raise SetupError('OpenRouter uses https://openrouter.ai/api/v1.')
+        requested_base = OPENROUTER_URL
+    if api_key_env and (not re.fullmatch(r'[A-Z][A-Z0-9_]*', api_key_env) or api_key_env.startswith('HF_')):
+        raise SetupError('--api-key-env must name a model credential environment variable.')
+    existing_model = env_file.exists()
+    if existing_model:
         check_private_file(env_file)
         values = load_env(env_file)
-        if set(values) - {'OPENAI_API_KEY', 'OPENAI_BASE_URL'}:
-            raise SetupError('This API-key setup accepts only OPENAI_API_KEY and OPENAI_BASE_URL in ENV_FILE; keep HF/subscription credentials separate.')
-        api_key(values.get('OPENAI_API_KEY'))
-        actual_base = base_url(values.get('OPENAI_BASE_URL', DEFAULT_BASE_URL))
-        if requested_base is not None and actual_base != requested_base:
-            raise SetupError('Existing API endpoint differs from --api-base-url; existing credentials were preserved.')
+        if set(values) - {'OPENAI_API_KEY', 'OPENAI_BASE_URL', 'PROVIDER', *OPENROUTER_KEYS}:
+            raise SetupError('This API-key setup accepts only model credentials/provider settings in ENV_FILE; keep HF/subscription credentials separate.')
     elif check_only:
         raise SetupError('Model credential file is missing; run configure_agent_batch.py in the foreground.')
-    else:
-        key = api_key(hidden_input('Model API key (hidden; not the HF token): '))
-        pending.append((env_file, 'OPENAI_API_KEY=' + key + '\nOPENAI_BASE_URL=' + (requested_base or DEFAULT_BASE_URL) + '\n'))
-    if hf_token_file.exists():
+    existing_hf = hf_token_file.exists()
+    if existing_hf:
         check_private_file(hf_token_file)
         read_token(hf_token_file)
     elif check_only:
         raise SetupError('HF token file is missing; run configure_agent_batch.py in the foreground.')
+    if check_only:
+        try:
+            normalized = openrouter_credentials(values)
+        except ValueError as error:
+            raise SetupError(str(error)) from None
+        api_key(normalized.get('OPENAI_API_KEY'))
+        actual_base = base_url(normalized.get('OPENAI_BASE_URL', DEFAULT_BASE_URL))
+        if provider == 'openai' and normalized.get('PROVIDER') == 'openrouter':
+            raise SetupError('Existing provider differs; use a separate ENV_FILE. Existing credentials were preserved.')
+        if requested_base is not None and actual_base != requested_base:
+            raise SetupError('Existing API endpoint differs from --api-base-url; existing credentials were preserved.')
+        return env_file, hf_token_file
+    # Provider selection comes from this invocation, never a previous model key
+    # or endpoint in the file. Do not silently reuse a saved key, even on retry.
+    router = provider == 'openrouter' or requested_base == OPENROUTER_URL
+    if api_key_env:
+        key = api_key(os.environ.get(api_key_env))
     else:
+        label = 'OpenRouter' if router else 'OpenAI-compatible'
+        key = api_key(hidden_input(label + ' model API key (hidden; required each setup, not the HF token): '))
+    name = 'OPENROUTER_API_KEY' if router else 'OPENAI_API_KEY'
+    text = name + '=' + key + '\nOPENAI_BASE_URL=' + (requested_base or DEFAULT_BASE_URL) + '\n'
+    if router: text += 'PROVIDER=openrouter\n'
+    # Finish all prompts before changing either credential. Cancelling or an
+    # invalid key must not fall back to the previous file or start the runner.
+    if not existing_hf:
         token = token_text(hidden_input('HF upload token (hidden): '))
-        pending.append((hf_token_file, token + '\n'))
-    for path, contents in pending:
-        create_private_file(path, contents)
+        create_private_file(hf_token_file, token + '\n')
+    create_private_file(env_file, text, replace=existing_model)
     # Verify using the same dotenv/token readers used by the actual pipeline.
-    api_key(load_env(env_file).get('OPENAI_API_KEY'))
+    api_key(openrouter_credentials(load_env(env_file)).get('OPENAI_API_KEY'))
     read_token(hf_token_file)
     return env_file, hf_token_file
 
@@ -132,12 +167,15 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--env-file', type=Path, default=Path.home() / 'rcb.env')
     parser.add_argument('--hf-token-file', type=Path, default=Path.home() / '.config/eai/helper-hf.token')
-    parser.add_argument('--api-base-url', help='provider endpoint; default https://api.openai.com/v1 for a new file')
+    parser.add_argument('--api-base-url', help='provider endpoint for this setup; default https://api.openai.com/v1')
+    parser.add_argument('--provider', choices=('openai','openrouter'), help='provider for this setup; default openai; OpenRouter selects its endpoint automatically')
+    parser.add_argument('--api-key-env', help='read the key from this environment variable instead of prompting; never the key itself')
     parser.add_argument('--check', action='store_true', help='check existing credentials without prompting')
     args = parser.parse_args(argv)
     try:
         env_file, hf_token_file = configure(args.env_file, args.hf_token_file,
-                                           api_base_url=args.api_base_url, check_only=args.check)
+                                           api_base_url=args.api_base_url, check_only=args.check,
+                                           provider=args.provider, api_key_env=args.api_key_env)
     except SetupError as error:
         print('Credential setup blocked: ' + str(error), file=sys.stderr)
         return 2
@@ -147,7 +185,8 @@ def main(argv=None):
     except KeyboardInterrupt:
         print('\nCredential setup cancelled; no experiment was started.', file=sys.stderr)
         return 130
-    print('Credential files ready (contents not displayed).')
+    print('Existing credentials checked; no key was requested or changed.' if args.check else
+          'Model API key refreshed for this setup (contents not displayed).')
     print('Model credentials: ' + str(env_file))
     print('HF upload token: ' + str(hf_token_file))
     print('This checks local configuration only; the runner checks model access before claiming trials.')

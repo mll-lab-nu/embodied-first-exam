@@ -19,13 +19,14 @@ from topogym.utils.io import write_json_atomic, sha256_file, to_jsonable
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--tier", choices=("easy", "medium", "hard"),
-                        help="Use the shared fixed gathered scene recipe; geometric/material CLI overrides are not allowed")
+    parser.add_argument("--tier", choices=("very_easy", "easier", "easy", "medium", "hard"),
+                        help="Use a fixed scene recipe; geometric/material CLI overrides are not allowed")
     parser.add_argument("--acceptance", choices=("released_stable", "scene_layout"), default="released_stable",
                         help="Scene layout defers particle-motion qualification, keeping material and placement checks")
     parser.add_argument("--twist-angle", type=float, default=0.)
     parser.add_argument("--placement-roll", type=float, default=0.)
-    parser.add_argument("--gather-seconds", type=float, default=3.)
+    parser.add_argument("--gather-seconds", type=float, default=3.,
+                        help="Gathered profiles only; corner folds use their fixed continuous fold schedule")
     parser.add_argument("--table-friction", action="store_true", help="Enable the same contact model during preparation and runtime")
     parser.add_argument("--air-resistance", type=float, default=.001,
                         help="Explicit persistent PBD damping parameter")
@@ -93,13 +94,15 @@ def main():
         panel_fractions=(.5, .5) if args.panels == 2 else GatheredProfile().panel_fractions), PreparationConfig(gather_seconds=args.gather_seconds,
             maximum_settle_seconds=args.maximum_settle_seconds)
     task_class = BlanketFlattenTask
+    controller_class = ClothPreparation
     scene_variation = None
     if args.tier:
-        from importlib import import_module
         from dataclasses import replace
+        from topogym.config.registry import task_definition
         from topogym.tasks.blanket_flatten.gathered import scene_parameters
-        module = import_module(f"topogym.tasks.blanket_flatten.blanket_flatten_{args.tier}")
-        task_class = getattr(module, f"BlanketFlatten{args.tier.title()}Task")
+        if args.tier in ("very_easy", "easier"):
+            from topogym.tasks.blanket_flatten.corner_folds import scene_parameters
+        task_class = task_definition("blanket_flatten", args.tier)
         parameters = scene_parameters(args.tier)
         if args.seeded:
             from topogym.tasks.base import merge_parameters
@@ -109,7 +112,18 @@ def main():
             parameters = merge_parameters(parameters, draws)
         parameters["initialization_mode"] = "flat_for_preparation"
         config = replace(config, variation_id=args.tier, task_parameters=parameters)
-        profile = GatheredProfile(**parameters["gathered_profile"])
+        if args.tier in ("very_easy", "easier"):
+            from topogym.assets.geometry.blanket_corner_folds import CornerFoldProfile
+            from topogym.tasks.blanket_flatten.corner_preparation import CornerFoldPreparation
+            profile = CornerFoldProfile(**parameters["corner_fold_profile"])
+            controller_class = CornerFoldPreparation
+            # A single corner intentionally retains more area than gathered
+            # folds. Keep birth strictly below the unchanged 90% task goal.
+            preparation = replace(preparation, maximum_coverage_ratio=.89)
+        else:
+            profile = GatheredProfile(**parameters["gathered_profile"])
+    if args.particle_diagnostics and args.tier in ("very_easy", "easier"):
+        parser.error("--particle-diagnostics currently requires a gathered profile")
     report = dict(status="in_progress", robot_manipulation=False, kind="offline_initial_state_preparation",
         config=to_jsonable(config), profile=asdict(profile), preparation=asdict(preparation),
         acceptance=args.acceptance, scene_variation=scene_variation,
@@ -181,7 +195,7 @@ def main():
             if media is not None and world.sim_time_s+1e-10 >= next_frame:
                 media.append(frame())
                 next_frame += 1/30
-        controller = ClothPreparation(world, task, profile, table_bounds=(table_xy-half, table_xy+half),
+        controller = controller_class(world, task, profile, table_bounds=(table_xy-half, table_xy+half),
             config=preparation, on_tick=on_tick)
         on_tick("flat_birth", *controller.state())
         controller.run(acceptance=args.acceptance)

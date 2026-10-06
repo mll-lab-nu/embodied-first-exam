@@ -19,6 +19,7 @@ from helper_bundle import guard
 ROOT=Path(__file__).resolve().parents[1]
 OMIT={'agents','planning','data','deferred','legacy','redundants','rollout_simulation','__pycache__'}
 SCRIPTS=('run_agent_batch.sh','agent_batch_bootstrap.py','agent_batch_images.py','agent_batch_image_build.py','agent_batch_image_probe.py','agent_batch_image_os.py','agent_batch_runtime.py','agent_batch_contract.py','agent_batch_delivery.py',
+         'agent_batch_provider.py','patch_agent_batch_providers.py','agent_batch_host.py',
          'agent_batch_mirror_copy.py','helper_batch.py','setup_agent_batch.sh','finish_agent_batch.py',
          'check_agent_batch.py','check_agent_batch_auth.py','check_agent_batch_hf.py','configure_agent_batch.py','import_helper_results.py',
          'difficulty_hf_auth.py','helper_log_mirror.py','log_mirror.py','scan_secrets.py','topogym_versions.py',
@@ -44,6 +45,9 @@ def code_files(root):
                   'images/difficulty-eval/patch_harbor.py','harbor_agents/__init__.py','harbor_agents/persistent_auth.py',
                   'bash_scripts/run_helper_batch.sh','bash_scripts/import_helper_results.sh',
                   'configs/helpers/native_helper.example.json'))
+    names.add('harbor_agents/muse_openrouter.py')
+    names.update(p.relative_to(root).as_posix() for p in (root/'harbor_agents/muse_transport').iterdir()
+                 if p.is_file() and p.suffix!='.pyc')
     # Discover imports of local script modules; do not copy scripts/ wholesale.
     queue=list(names); seen=set()
     while queue:

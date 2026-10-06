@@ -1,5 +1,7 @@
 # 当前开发进度（2026-09-21）
 
+> 2026-10-05 Blanket：very_easy（一角翻折）和 easier（对折后再翻一角）的代码、包内冻结资源和标准场景已接入，移除黄色抓点，沿用原三档布料尺寸、材料与 ALOHA home。very_easy 本地连续动作在 15.905 s 原生成功，覆盖率 97.728%；easier 完整 oracle 尚未通过。按用户最新要求，后续最终验收使用 **v18+ Harbor grading 的 `solved=1`**；独立 v18 准备正在进行，本地结果不替代评分。见[任务页](../develop/tasks/blanket_flatten_zh.md)。
+
 > 2026-10-04 Knot：**按用户要求，hard 的验收转到现有 Harbor bridge grading**。独立冻结的 v16 hard 双模式候选已生成（实例 `66ea1051ee23377c`），Harbor privileged oracle 已在新实例上原生成功（51.0625 s、2,043 actions、稳定 0.5 s），现进入隔离 verifier 的两遍核验；第一遍初态已加载，通过后再由 bridge 提交同实例轨迹给 standard。Harbor 分数尚未产生。此前 hard14 在本地终态释放判据第 5 版下原生成功（51.335 s、2,054 actions、4→1→0、零回退），证据保留；旧本地回放主动停止于 9.8425 s，3,938 个已采集状态的桌面诊断无 findings，整段物理及视频资格未完成。新候选不继承旧运行的成功标签。见[Harbor 状态](../../runs/test_results/knot_harbor_hard14_20261004_01/status.json)和[任务页](../develop/tasks/knot_untying_zh.md)。
 
 > **旧失败证据保留**：hard11 原生成功，但正式采集发现手指／桌面浅重叠；hard12 复现首次下降问题。hard13 完成 4→1→0 后，正式回放在 782–784 ticks 检出最大 3.4375 μm 的步内桌面穿透，已停止。hard14 保留 2 mm anchor 抬升，将抓取／放下偏移提高至 +1.5 mm；原生和首遍正式回放前 3 s 均无桌面 findings，后者最小手指顶面垂直间隙约 0.4654 mm。全程物理资格仍待验。easy 既有正式回放通过；medium 本机首遍完整回放未成功。
@@ -20,7 +22,7 @@
 
 > 2026-09-29 Slotted Post Ring：Easy / Medium / Hard 三档场景已接入（环内径 108 / 105 / 102 mm，均为 28 mm 槽），几何、资产复现与相关回归通过。当前 Genesis FEM/IPC 的 10 s 静置及半步长验收被 CUDA OOM / InvalidDevice 阻塞，未标通过；Easy/Medium 仅有失败尝试的短程 Nyx 诊断片段。详见[当前任务页](../develop/tasks/slotted_post_ring_zh.md)与[证据](../../runs/test_results/slotted_post_tiers_20260929_review/README.md)。
 
-> 2026-10-05 Orbits 更新：在原两／三／四环之外，按用户确认的预览补齐 very_easy 单球头柱与 easier 单环双柱，保留 0.85 比例、0.8 m 绳与整目标放置判据。取消额外的“初态连续低速 2 s”交付门槛，正式评分仍为 1 mm/s、0.5 s；新两档 v2 采用 Knot 的低速摩擦平滑参数。very_easy v2 的七项基础物理检查及末尾半秒速度诊断通过，进程显存峰值 10.27 GiB；easier v2 在原生初始化时遇到 `cudaErrorInvalidDevice`，尚未取得复验结论。完整机器人解法和难度排序未验证。见 [Orbits 当前状态](../develop/tasks/orbits_zh.md)。
+> 2026-10-06 Orbits 更新：very_easy 单球头柱与 easier 单环双柱已补原生 Session oracle 候选，沿用 0.85 比例、0.8 m 绳、整目标放置及 1 mm/s／0.5 s 判据；两档采用 1 mm/s 摩擦平滑参数。旧 IPC 下 very_easy 的七项基础检查和末尾半秒速度诊断通过，显存峰值 10.27 GiB，easier 尚未复验通过。独立 v18 确定性 IPC 镜像已构建，两次新初态构建遇到共享 GPU 显存不足，现排队等资源。控制边界回归和部分运动学检查已通过，尚无 v18 完整物理、确定性回放或 Harbor `solved=1` 结论。见 [Orbits 当前状态](../develop/tasks/orbits_zh.md)。
 
 > 2026-09-28 证明归档：已建立统一 [solvability_proof/](../../solvability_proof/README.md)，收录 Cast Keyhole 与 Cast Coil 各三档、共 6 个实际 Task success 且独立复核通过的实例。完整复制配置、冻结源码、逐 tick 状态/action 与必要前置证据，逐文件哈希核对通过；原运行保留。每个实例的时序、辅助抓持与有限参数范围见目录说明。
 

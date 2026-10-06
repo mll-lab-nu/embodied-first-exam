@@ -10,7 +10,8 @@ from .callbacks import prepare_output, run_stages
 def run_feedback_policy(session, output, *, variation):
     family = session.task
     if family not in ("cast_coil", "cast_keyhole", "lock_picking", "buzz_wire_3d",
-                       "fiber_bundling", "interlocked_claws", "rope_threading", "knot_untying") or variation not in ("very_easy", "easier"):
+                       "fiber_bundling", "interlocked_claws", "rope_threading", "knot_untying",
+                       "blanket_flatten") or variation not in ("very_easy", "easier"):
         raise ValueError("Expected a supported below-easy oracle")
     if session.n_steps or session._resets:
         raise ValueError("Below-easy oracle requires a fresh frozen Session")
@@ -25,6 +26,9 @@ def run_feedback_policy(session, output, *, variation):
                              "rebuild a matching instance before execution")
     output = prepare_output(session, output, __file__)
     cfg = session.env.config
+    if family == "blanket_flatten":
+        from topogym.planning.blanket_flatten.public_session import run_feedback_policy as run
+        return run(session, output, variation=variation)
     if family == "knot_untying":
         from topogym.planning.knot_untying.public_session import run_feedback_policy as run
         return run(session, output, variation=variation)

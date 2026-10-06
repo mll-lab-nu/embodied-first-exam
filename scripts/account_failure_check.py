@@ -40,6 +40,15 @@ def mask(s: str) -> str:
 
 def check(t: str) -> dict:
     why, codes, warnings = [], [], []
+    for f in glob.glob(os.path.join(t,'agent','openrouter-usage.json')):
+        try:
+            with open(f) as stream: report=json.load(stream)
+            errors=report.get('errors',[])
+        except (OSError,ValueError,AttributeError): continue
+        for status in ('401','402','429'):
+            if 'http_'+status in errors:
+                codes.append(failure_code(status))
+                why.append('muse-openrouter: provider HTTP '+status)
     for f in sorted(glob.glob(os.path.join(t, "agent", "sessions", "**", "rollout-*.jsonl"), recursive=True),
                     key=os.path.getmtime)[-1:]:
         last = None

@@ -10,8 +10,31 @@ import numpy as np
 from scipy.spatial import cKDTree, ConvexHull
 from topogym.robot.grasp_geometry import read_grasp_geometry
 from topogym.utils.arrays import to_numpy
-from topogym.utils.grasp import (closed_fraction, rotation, material_patch,
-                                material_components, surface_distances, exposed_patch)
+from topogym.utils.grasp import (closed_fraction, rotation, material_components,
+                                surface_distances, exposed_patch)
+
+
+def _needed_surface_distances(points, vertices, faces, signed, threshold):
+    """surface_distances(points, vertices, faces) for each point that may lie within `threshold` of the surface or be its
+    nearest; +inf for the others, each provably farther than both. A point's distance is surface_distances' own value
+    (computed point by point against every triangle), so a contact test at `threshold`, the minimum and the minimum over
+    any set holding a point within `threshold` are those of the full evaluation. The bound below is the larger of the
+    distances to the vertices' box and to the convex hull's supporting planes (`signed`, from the same vertices), less
+    1 um (far above the rounding of either)."""
+    box = np.maximum(np.maximum(vertices.min(axis=0)-points, points-vertices.max(axis=0)), 0.)
+    bound = np.maximum(np.linalg.norm(box, axis=1), signed)-1e-6
+    bound[np.isnan(bound)] = -np.inf
+    result = np.full(len(points), np.inf)
+    order = np.argsort(bound, kind='stable')
+    count = int(np.searchsorted(bound[order], threshold, side='right'))
+    if count:
+        result[order[:count]] = surface_distances(points[order[:count]], vertices, faces)
+    best, rest = (result[order[:count]].min() if count else np.inf), order[count:]
+    while len(rest) and bound[rest[0]] <= best:
+        take = int(np.searchsorted(bound[rest], best, side='right')) if np.isfinite(best) else min(8, len(rest))
+        result[rest[:take]] = surface_distances(points[rest[:take]], vertices, faces)
+        best, rest = min(best, result[rest[:take]].min()), rest[take:]
+    return result
 
 
 class SoftGraspBackend:
@@ -70,7 +93,8 @@ class SoftGraspBackend:
         results = []
         for name, spec in self.specs.items():
             x, uv = self.positions(name), self.material[name]
-            near = self.candidate_mask(name) & (np.linalg.norm(x-tcp, axis=1) <= self.config.max_tcp_distance_m)
+            mask, from_tcp = self.candidate_mask(name), np.linalg.norm(x-tcp, axis=1)
+            near = mask & (from_tcp <= self.config.max_tcp_distance_m)
             indices = np.flatnonzero(near)
             strain = self.strain_ratio(name, x)
             self._admission[hand] = dict(entity=name, nearby_vertices=len(indices), qualified_region_centers=0,
@@ -88,23 +112,29 @@ class SoftGraspBackend:
             # two fingers normally touch different vertices on that region.
             # Requiring a single vertex to be close to both incorrectly rejects
             # valid cloth patches and thicker rope cross-sections.
-            nearby = np.flatnonzero(np.linalg.norm(x-tcp, axis=1) <=
-                                    self.config.max_tcp_distance_m+spec.spatial_radius_m)
+            nearby = np.flatnonzero(from_tcp <= self.config.max_tcp_distance_m+spec.spatial_radius_m)
             distances = np.full((2, len(x)), np.inf)
             inside_finger = np.zeros(len(x), dtype=bool)
             for side, (vertices, faces) in enumerate(geometry['surfaces']):
-                distances[side, nearby] = surface_distances(x[nearby], vertices, faces)
                 hull = ConvexHull(vertices)
                 signed = (x[nearby] @ hull.equations[:, :3].T + hull.equations[:, 3]).max(axis=1)
                 inside_finger[nearby] |= signed < -self.config.max_penetration_m
-            contact = (distances <= spec.contact_distance_m) & self.candidate_mask(name)[None, :]
+                # Only the contact test, the minima and a qualified patch's minimum read these distances.
+                distances[side, nearby] = _needed_surface_distances(x[nearby], vertices, faces, signed,
+                                                                    spec.contact_distance_m)
+            contact = (distances <= spec.contact_distance_m) & mask[None, :]
             self._admission[hand]['minimum_finger_distances_m'] = distances.min(axis=1).tolist()
             patches = {}
-            for center in indices:
+            # A patch needs contact with both fingers; it lies within its center's material neighbourhood
+            # (material_patch = that neighbourhood within the spatial radius), so without contact there it fails.
+            allowed = self.allowed(name) if contact.any(axis=1).all() else None
+            for center in indices if allowed is not None else ():
                 center = int(center)
-                patch = material_patch(x, uv, center, spatial_radius_m=spec.spatial_radius_m,
-                                       material_radius_m=spec.material_radius_m)
-                if (not len(patch) or not np.all(self.allowed(name)[patch]) or inside_finger[patch].any()
+                material = self._material_neighbours(name, center, spec.material_radius_m)
+                if not contact[:, material].any(axis=1).all():
+                    continue
+                patch = material[np.linalg.norm(x[material]-x[center], axis=1) <= spec.spatial_radius_m]
+                if (not len(patch) or not np.all(allowed[patch]) or inside_finger[patch].any()
                         or not np.all(contact[:, patch].any(axis=1))):
                     continue
                 patches[center] = patch
@@ -131,6 +161,21 @@ class SoftGraspBackend:
                     results.append(key)
                     break
         return sorted(results)
+
+    def _material_neighbours(self, name, center, radius):
+        """material_patch's material condition: the particles within `radius` of `center` in material coordinates,
+        np.flatnonzero(norm(uv-uv[center], axis=1) <= radius) as there. The coordinates are set once per entity
+        (initialize_material), so each center's set is computed once."""
+        uv = self.material[name]
+        cache = self.__dict__.setdefault('_neighbour_cache', {})
+        source, table = cache.get((name, radius), (None, None))
+        if source is not uv:
+            table = {}
+            cache[name, radius] = (uv, table)
+        found = table.get(center)
+        if found is None:
+            found = table[center] = np.flatnonzero(np.linalg.norm(uv-uv[center], axis=1) <= radius)
+        return found
 
     def conflicts(self, first, second):
         first, second = tuple(first), tuple(second)

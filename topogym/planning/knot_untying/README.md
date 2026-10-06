@@ -220,7 +220,7 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
 在线执行和独立回放。以实际 verifier reward 为准；本地原生成功不等于 `solved=1`。
 本轮冻结输入、私有源码和评分进展见[验证计划](../../../runs/test_results/knot_below_easy_harbor_20261005_01/plan.json)。
 
-当前 `very_easy` 已在两种模式获得 `solved=1`，835 actions／8,341 ticks／20.8525 s；
+v16 的 `very_easy` 已在两种模式获得 `solved=1`，835 actions／8,341 ticks／20.8525 s；
 两遍 privileged 回放和一遍 standard 回放均严格成功，未用额外保持步或回放容差。
 证据见 [privileged](../../../runs/test_results/knot_below_easy_harbor_20261005_01/very_easy_privileged_verification.json)
 和 [standard](../../../runs/test_results/knot_below_easy_harbor_20261005_01/very_easy_standard_verification.json)。
@@ -228,9 +228,16 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
 已保存完整失败轨迹，并停止其后续 verifier 回放。两轮都没有完整 Harbor 成绩。
 第三轮通过 [`BelowEasyRunner`](below_easy_runner.py) 改为按剩余交叠再做一次抽绳，
 保留闭爪前实测对准及抬升后的绳段跟随检查，复用同一公共候选执行。
-[修订与检查记录](../../../runs/test_results/knot_below_easy_harbor_20261005_01/retry03_plan.json)；正式评分仍待完成。
+[修订与检查记录](../../../runs/test_results/knot_below_easy_harbor_20261005_01/retry03_plan.json)。第三轮已在 v16 原生完成：
+1,065 actions／10,645 ticks／26.6125 s，含松爪、落桌及 0.5 s 停稳；
+见[动作与原生目标复核](../../../runs/test_results/knot_below_easy_harbor_20261005_01/easier_native_execution_check.json)。
+用户要求切换 v18 后，已停止尚未完成的 v16 评分；该轮没有 easier 正式成绩。
 上述成绩仅对应本轮 [`oracle_source_01`](../../../runs/test_results/knot_below_easy_harbor_20261005_01/oracle_source_01/)
 冻结快照；工作区后续共享策略修改须独立验证，不能继承该成绩。
+
+当前已启动 [v18 独立复验](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/plan.json)：
+重新生成 K2／det1 冻结初态，分别重跑原 source01／source03 的冻结策略，再由双模式 verifier 评分。
+旧实例与旧成绩保留，新版成绩尚未产生；[实时状态](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/status.json)。
 
 ```bash
 python scripts/prepare_knot_instances.py --variations very_easy easier --seed 0 \

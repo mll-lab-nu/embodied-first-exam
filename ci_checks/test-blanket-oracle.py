@@ -2,8 +2,9 @@
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 
@@ -74,6 +75,26 @@ class BlanketAuditReleaseTests(unittest.TestCase):
 
 
 class BlanketRunnerTests(unittest.TestCase):
+    def test_faulted_recording_preserves_prefix_and_original_error(self):
+        env = SimpleNamespace(_faulted=False, sensor_frame=Mock(), add_frame_sink=Mock(),
+            _task=SimpleNamespace(result=SimpleNamespace(task_success=False, terminated=False)))
+        with tempfile.TemporaryDirectory() as folder, \
+                patch("topogym.recording.RecordingSession") as recorder, \
+                patch("topogym.recording.segment.save_rgb"):
+            with self.assertRaisesRegex(RuntimeError, "physics interrupted"):
+                with run_blanket_oracle.record_episode(env, Path(folder)):
+                    env._faulted = True
+                    raise RuntimeError("physics interrupted")
+            env.sensor_frame.assert_called_once_with()
+            env.add_frame_sink.return_value.assert_called_once_with()
+            session = recorder.return_value
+            session.append_final.assert_not_called()
+            result = session.finish.call_args.args[0]
+            self.assertTrue(result["environment_faulted"])
+            self.assertFalse(result["task_success"])
+            self.assertFalse(result["final_frame_available"])
+            session.close.assert_called_once_with(commit=True)
+
     def run_worker(self, output, variation, *, success=True, extra=()):
         argv = ["run_blanket_oracle.py", "--worker", "--variation", variation,
                 "--seed", "0", "--output", str(output), *extra]
@@ -97,7 +118,8 @@ class BlanketRunnerTests(unittest.TestCase):
     def test_worker_preserves_frozen_scene_and_route_contracts(self):
         # The hard witness needs 33687 ticks, beyond the other tiers' budget.
         with tempfile.TemporaryDirectory() as folder:
-            for tier, budget, guard in (("easy", 28000, 1.3), ("medium", 28000, 1.5),
+            for tier, budget, guard in (("very_easy", 20000, 1.3), ("easier", 48000, 1.3),
+                                        ("easy", 28000, 1.3), ("medium", 28000, 1.5),
                                         ("hard", 40000, 1.5)):
                 with self.subTest(variation=tier):
                     code, config = self.run_worker(Path(folder), tier)

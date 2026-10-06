@@ -195412,5 +195412,37 @@
     },
     "scope": "Historical seed-0 evidence; not current Harbor qualification"
   },
-  "action_count": 29544
+  "action_count": 29544,
+  "retime": {
+    "segments": [
+      [
+        2600,
+        18960,
+        4.0
+      ]
+    ],
+    "guard": {
+      "fast_m": 0.002,
+      "slow_m": 0.001,
+      "hold_m": 0.0005,
+      "max_hold_rows": 40
+    },
+    "insert": {
+      "at": 19388,
+      "instructions": [
+        {
+          "operation": "body",
+          "translation_m": [
+            0.0,
+            0.0,
+            -0.0025
+          ],
+          "seconds": 1.0,
+          "phase": "lower_before_release",
+          "stop_when_supported": true
+        }
+      ]
+    }
+  },
+  "oraclefix2": "2026-10-05 (oraclefix2): retime replays the compiled rows faster and lowers the held wand before the release. Traverse rows 2600-18960 (after the regrasp holds the wand at row 2572) advance 4 source rows per control step under a measured wand-wire clearance guard (below 1 mm: 1 row per step until 2 mm again; below 0.5 mm: hold up to 40 steps); every row through the standard-rate limiter. At source row 19388 (the end of the post descent: the held wand is 16.9 mm above the finish, not supported) the wand is lowered 2.5 mm before the recorded release. Unlowered, the release lets the wand touch the wire 0.6 s later; from 0.1-3 mm lower it lands supported, released and quiet; from about 3.4 mm lower the hand touches the wire. On the 4x path the recorded regrasps then finish the task from 2.5 and 3 mm, not from 2 mm (lab oraclefix2/exp/Y6a-c, Y6s, R2m4e1, R2m4e1d20, R2m4e1d25, Z7m)."
 }

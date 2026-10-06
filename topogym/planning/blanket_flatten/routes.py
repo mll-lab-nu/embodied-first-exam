@@ -1,9 +1,9 @@
-"""Two-hand material routes for the frozen gathered Blanket representatives.
+"""Material routes for the frozen Blanket representatives.
 
-A route is a sequence of stages. Each stage names two material grasp points
+A route is a sequence of stages. Each stage names one or two material grasp points
 (rest UV, metres) and piecewise-linear patch targets; a segment without `to`
 holds the hands still. Targets are world XY and height above the table top of
-the held patch centre. Both hands release at the end of every stage; the next
+the held patch centre. The hands release at the end of every stage; the next
 stage regrasps on the live cloth. The virtual-hand witness and the robot oracle
 read the same route; the robot adds its TCP offset above the pinched patch.
 
@@ -122,3 +122,6 @@ HARD = dict(
 )
 
 ROUTES = dict(easy=EASY, medium=MEDIUM, hard=HARD)
+
+from .below_easy_routes import VERY_EASY, EASIER
+ROUTES.update(very_easy=VERY_EASY, easier=EASIER)

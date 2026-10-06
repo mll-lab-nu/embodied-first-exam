@@ -171,6 +171,11 @@ class RigidGraspBackend:
 
     def verify_bindings(self, bindings):
         self._pairs = None
+        self.verify_current_bindings(bindings)
+
+    def verify_current_bindings(self, bindings):
+        """verify_bindings without a new solver read: the welds change only in acquire / release and in a world restore,
+        and those three drop the cached read (a restore through verify_bindings). World.read_state checks every tick."""
         expected = sorted(tuple(b["links"]) for b in bindings)
         hands = {h.idx for h, _ in self.hands.values()}
         actual = sorted(pair for pair in self.pairs() if pair[0] in hands or pair[1] in hands)

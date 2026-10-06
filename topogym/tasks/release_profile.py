@@ -1,11 +1,11 @@
-"""Public environment choices of the active release (merged-v16), shared by fixed and sampled task builders.
+"""Public environment choices of the active release (merged-v18), shared by fixed and sampled task builders.
 
 This module contains environment parameters only, never oracle routes. Scene
 draws keep their seed and placement; explicit release leaves override defaults.
 """
 from copy import deepcopy
 
-PROFILE = "merged-v16"
+PROFILE = "merged-v18"
 IPC_FAMILIES = frozenset({"knot_untying", "rope_threading", "orbits", "slotted_post_ring"})
 
 
@@ -17,7 +17,8 @@ def merge(base, changes):
 
 
 def environment_inputs(family, tier, *, variation=None, seed=0, parameters=None):
-    if tier not in ("easy", "medium", "hard"):
+    if tier not in ("easy", "medium", "hard") and not (
+            family == "blanket_flatten" and tier in ("very_easy", "easier")):
         raise ValueError(f"No {PROFILE} profile for tier {tier!r}")
     params, overrides, changes = deepcopy(parameters or {}), {}, []
     if family == "rope_threading":
@@ -42,7 +43,7 @@ def environment_inputs(family, tier, *, variation=None, seed=0, parameters=None)
         params = merge(params, dict(minimum_coverage_ratio=.95))
         overrides["grasp_assist"] = dict(model="pbd_local_patch_v1", stable_time_s=.03,
             targets=[dict(entity="blanket", spatial_radius_m=.018, material_radius_m=.018,
-                          max_strain_ratio=1.3 if tier == "easy" else 1.5)])
+                          max_strain_ratio=1.3 if tier in ("very_easy", "easier", "easy") else 1.5)])
         changes.append("public birth UV support and explicit two-hand patch assistance; live coverage 0.95")
     elif family == "horseshoe_ring":
         changes.append("local default ring-clearance geometry and matching recommended grasp")

@@ -2,6 +2,15 @@
 
 本表用于本 session 持续维护：为当前任务各新增 `very_easy`、`easier`，目标为 `very_easy < easier < easy`，保留原三档。按用户要求排除 `hedgehog_in_cage`、`slotted_post_ring`、`horseshoe_ring`，它们由其他成员负责。本表覆盖 **10 个任务、20 个新变体**。
 
+2026-10-05 v18 回归已启动：[运行状态](../../runs/test_results/harbor_below_easy_v18_20261005_01.supervision/state.json)、
+[队列结果](../../runs/test_results/harbor_below_easy_v18_20261005_01/summary.json)。本轮覆盖当前有完整 Harbor 入口的
+Lock、Coil、Keyhole、Buzz、Fiber、Claws、Rope、Knot，共 8 类 × 2 档 × 2 模式，32 个评分位置，seed 0。
+冻结源码 1,194 文件，tooling 18 / image 0.2.16-dev；构建 det1 IPC wheel 后自动准备新状态、实例及实际轨迹。
+已通过档在新环境回归一次，不新增 easy／medium／hard、多 seed 或重复稳定性运行。
+未接入完整简单档 Harbor callback 的 Blanket、Orbits 等不混入已测分母。
+新批次仍在镜像构建阶段，不能计为已评分；冻结源码的 117 项相关 CPU 检查已通过。
+Lock 的独立 v17 限速批已完成，两档 privileged／standard 均为 1；所有旧成绩按原版本保留。
+
 最近更新：2026-10-02 23:44 CDT，时区 America/Chicago。检查对象为分支 `dev/jianwen`、HEAD `f0d233115` 加当前未提交改动。依据当前注册表、任务源码、任务说明和实际运行报告进行只读盘点；本轮没有重新运行物理、录像或 Harbor 验收。其他会话仍在开发，下面是检测时的证据快照。首轮盘点为同日 HEAD `ba31fdb4b`。
 
 2026-10-05 Orbits 定向更新：已按用户确认的预览补齐单球头柱 `very_easy` 与单环双柱 `easier` 的场景、注册和完整目标判据；本页更新 Orbits 行，实际物理检查见[任务页](../develop/tasks/orbits_zh.md)。下方汇总数量仍为 10 月 2 日的盘点，不是其他并行任务的最新统计。
@@ -30,7 +39,7 @@
 | [Cast Coil](cast_coil_very_easy_easier_engineering_plan_zh.md) | 已实现；从 home 完整成功，46.30 s；录像通过 | 已实现；从 home 完整成功，48.55 s；录像通过 | 四包及镜像内短回放已通过；补双模式完整评分和正式交付。 |
 | [Cast Keyhole](devs/cast_keyhole_very_easy_easier_oracle_plan_zh.md) | 从 home 成功，有录像；双模式完整评分通过 | 正式冻结 Session 闭环成功，155.605 s；双模式完整评分通过 | 两档均完成正向验收；候选包仍标 oracle=none，待整理资格元数据与正式交付。GPU 回放不保证逐位相同。 |
 | [Interlocked Claws](../develop/tasks/interlocked_claws_zh.md) | 已实现；从预抓姿态完整成功，108.775 s；录像已有校验记录 | 已实现；从预抓姿态完整成功，517.675 s；成功运行无录像 | 补 easier 成功录像及双模式完整评分。四包已登记，privileged 短 verifier 通过。 |
-| [Lock Picking](../develop/tasks/lock_picking_zh.md) | 两片直槽；从 home 成功，35.6325 s；审计及录像通过 | 第一片偏转 20°；从 home 接触转片后成功，48.2575 s；审计及录像通过 | 默认时序原生执行和新进程关节目标回放均成功；四包及双模式短测通过，完整 Harbor 正向评分待验。 |
+| [Lock Picking](../develop/tasks/lock_picking_zh.md) | 两片直槽；从 home 成功，35.6325 s；审计及录像通过 | 第一片偏转 20°；从 home 接触转片后成功，48.2575 s；审计及录像通过 | 冻结 v17 实际限速生成批，两档 privileged／standard 均 grade=1；v18 新环境回归已启动，尚无成绩。 |
 | [Buzz Wire 3D](../develop/tasks/buzz_wire_3d_zh.md) | 直道布局及双模式包已接入；planning oracle 从 home 无回溯成功，262.8 s，审计及三路 Nyx 视频通过 | 横弯接下凹弯；planning oracle 从 home 无回溯成功，290.875 s，审计及三路 Nyx 视频通过 | 两档 seed 0、CPU64、25 ms / 1 倍 / 40 子步、接触辅助抓持已验证。默认任务包负例评分通过；默认时序完整正分及难度排序未资格化。 |
 | [Fiber Bundling](../develop/tasks/fiber_bundling_zh.md) | 2 根相对细线，seed 0 从 home 完整成功并独立审计 | 3 根三角细线，seed 0 从 home 完整成功并独立审计 | 两档三视角录像、4 个包已生成；privileged 和 standard 短流程均通过。辅助护套抓持；两档默认时序复验与独立审计通过，难度排序未评测。 |
 | [Rope Threading](../develop/tasks/rope_threading_zh.md) | 下半圆搭绳场景与完整终态判据已接入 | 单环穿越、双手交接历史及终态判据已接入 | 五档统一 0° 摆位与 20.9 mm 底座垫高；合成状态／回溯检查通过，正常 IPC 初始化已修复，完整机器人解法仍待验收。 |

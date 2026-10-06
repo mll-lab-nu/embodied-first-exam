@@ -1,0 +1,1 @@
+{"repository":"https://github.com/xhluca/muse-code-openrouter","commit":"aebf86f94c911ee22eee83a95e10d79cd15e5f90","license":"MIT","vendored_files":["rewrite.py"],"notes":"Tool-name mapping retained verbatim; catalog and SSE normalization informed by this project. No model switching or encrypted-history retry is enabled."}

@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--variation", choices=("easy", "medium", "hard"), default="easy")
+    parser.add_argument("--variation", choices=("very_easy", "easier", "easy", "medium", "hard"), default="easy")
     parser.add_argument("--settle-s", type=float, default=4.)
     parser.add_argument("--pause-s", type=float, default=8., help="Rest between stages (the robot's regrasp time)")
     parser.add_argument("--worker", action="store_true", help=argparse.SUPPRESS)

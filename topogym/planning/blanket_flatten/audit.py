@@ -18,8 +18,10 @@ HOME = np.array([0., -.96, 1.16, 0., -.3, 0.])
 SIDES = ("left", "right")
 
 
-def archive_particles(manifest_path):
-    """Particle positions stored by the frozen initial-state archive (entity order)."""
+def archive_particles(manifest_path, *, field="pos"):
+    """Particle positions or velocities in the frozen archive (entity order)."""
+    if field not in {"pos", "vel"}:
+        raise ValueError("Expected particle pos or vel")
     manifest_path = Path(manifest_path)
     manifest = json.loads(manifest_path.read_text())
 
@@ -33,7 +35,7 @@ def archive_particles(manifest_path):
         elif isinstance(node, list):
             for i, value in enumerate(node):
                 yield from find(value, f"{path}[{i}]")
-    keys = [k for p, k in find(manifest["tree"]) if p.endswith("PBDSolver/particles/items/value/items/pos")]
+    keys = [k for p, k in find(manifest["tree"]) if p.endswith("PBDSolver/particles/items/value/items/"+field)]
     if len(keys) != 1:
         raise ValueError("Archive particle positions not found uniquely")
     with np.load(manifest_path.with_name("arrays.npz")) as arrays:
@@ -232,12 +234,18 @@ def audit_execution(run, output, *, require_native_success=False):
         raise ValueError("Recorded tick count differs from the sealed segment ledger")
     ok, gates, metrics = predicate(np.asarray(array(last[1]["world"]["particles"]["blanket"]["position_m"])),
                                    np.asarray(array(last[1]["world"]["particles"]["blanket"]["velocity_m_s"])))
-    stages = len(oracle["route"]["stages"]) if "stages" in oracle["route"] else 1
-    if acquired != {"left": stages, "right": stages}:
+    # A corner stage may use only one hand. New reports declare the actual
+    # stages, including measured fold/clearance corrections; old reports keep
+    # their original two-hand route interpretation.
+    declared = oracle["route"].get("stages", [dict(grasp_uv=dict.fromkeys(SIDES))])
+    executed = oracle.get("stages", [])
+    stages = executed if executed and all("grasp_uv" in s for s in executed) else declared
+    expected = {side: sum(side in stage["grasp_uv"] for stage in stages) for side in SIDES}
+    if acquired != expected:
         fail("expected_one_acquisition_per_hand_per_stage", count-1)
     if lost:
         fail("assisted_grasp_lost", lost[0]["tick"])
-    if released != {"left": stages, "right": stages}:
+    if released != expected:
         fail("expected_one_release_per_hand_per_stage", count-1)
     if max_held_ratio > guard:
         fail("held_material_edge_ratio_above_assist_guard", count-1)

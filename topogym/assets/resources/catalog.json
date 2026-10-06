@@ -495,6 +495,30 @@
       "path": "variations/lock_picking/families.json",
       "sha256": "4704ab8900a56abda7f5015f366fd0400b9ab56dc2de98dc47e94a24d4e1bfcb",
       "source": "assets/tasks/lock_picking/seed_families_v1/catalog.json"
+    },
+    "blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_9c8a7a85bfba/very_easy/seed_0/manifest.json": {
+      "path": "variations/blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_9c8a7a85bfba/very_easy/seed_0/manifest.json",
+      "sha256": "1e18d3fbc1e6213a3815d95c68e4b5548b7b4eab3da62bed566cb2e0ed061050",
+      "source": "prepared corner_folds_v1 very_easy, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_9c8a7a85bfba/very_easy/seed_0/arrays.npz": {
+      "path": "variations/blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_9c8a7a85bfba/very_easy/seed_0/arrays.npz",
+      "sha256": "a3bdc38e79e847e9016ab13105b44e9905cd55acfde4b3880049c49ebc5a3237",
+      "source": "prepared corner_folds_v1 very_easy, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_9c8a7a85bfba/easier/seed_0/manifest.json": {
+      "path": "variations/blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_9c8a7a85bfba/easier/seed_0/manifest.json",
+      "sha256": "0daba3c7210abe944401f0050af46aaa0c0333b1016ff9836d4f7959e443c87f",
+      "source": "prepared corner_folds_v1 easier, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_9c8a7a85bfba/easier/seed_0/arrays.npz": {
+      "path": "variations/blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_9c8a7a85bfba/easier/seed_0/arrays.npz",
+      "sha256": "6db50522af1cf79660617e253da082118330fb674d1bbd675605934b30a1d1f2",
+      "source": "prepared corner_folds_v1 easier, seed 0; scope=scene_layout",
+      "license": null
     }
   },
   "schema_version": 1

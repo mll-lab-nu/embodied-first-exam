@@ -16,6 +16,10 @@ def reference_data(root, family, tier, seed):
             raise BridgeError(f"No complete robot oracle adapter for {family}/{tier}")
         if seed != 0:
             raise BridgeError("Below-easy reference recipes currently bind seed 0")
+        if family == "orbits":
+            # Direct native callback; it carries no recorded route or another
+            # family's dispatcher dependencies.
+            return {}, []
         # The shared dispatcher imports all seven controllers. Include their
         # authored static routes; no original-tier witness is substituted.
         includes = ["topogym/planning/interlocked_claws/easier_reference_route.json"]

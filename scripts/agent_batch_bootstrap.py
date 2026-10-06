@@ -111,11 +111,14 @@ def verify(root):
 
 
 def bootstrap(root=ROOT):
+    from agent_batch_host import require_docker
+    require_docker()
     root=Path(root).resolve(); tools=root/'.tools/agent-batch'; tools.mkdir(parents=True,exist_ok=True)
     with (tools/'setup.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX)
         venv=root/'.venv-agent-batch'; receipt=venv/'topogym-runner.json'
         if receipt.exists() and (tools/'node_modules/.bin/codex').exists():
+            run([venv/'bin/python',root/'scripts/patch_agent_batch_providers.py',root])
             verify(root); return
         owner=tools/'setup-in-progress.json'
         if venv.exists() and not owner.exists() and not receipt.exists():
@@ -136,6 +139,7 @@ modules={name:hashlib.sha256(pathlib.Path(importlib.util.find_spec(name).origin)
 (pathlib.Path(sys.prefix)/'topogym-runner.json').write_text(json.dumps(dict(files=files,modules=modules),indent=2)+'\\n')
 '''
             run([venv/'bin/python','-c',code,root])
+        run([venv/'bin/python',root/'scripts/patch_agent_batch_providers.py',root])
         node_tools(root,python)
         verify(root); owner.unlink()
         print('Pinned runner tools ready.',flush=True)

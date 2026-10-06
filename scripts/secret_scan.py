@@ -10,7 +10,7 @@ import stat
 import tempfile
 import zipfile
 
-DEFAULT_VARS = ('OPENAI_API_KEY', 'OPENROUTER_API_KEY', 'ANTHROPIC_API_KEY', 'HF_TOKEN', 'TOPOGYM_LAUNCH_KEY')
+DEFAULT_VARS = ('OPENAI_API_KEY', 'OPENROUTER_API_KEY', 'OPENROUTER_API_KEY_FOR_SMOKE', 'ANTHROPIC_API_KEY', 'HF_TOKEN', 'TOPOGYM_LAUNCH_KEY')
 PATTERNS = (('API_TOKEN', re.compile(rb'(?<![A-Za-z0-9_-])(?:sk-[A-Za-z0-9_-]{16,}|hf_[A-Za-z0-9]{20,})')),
             ('JWT', re.compile(rb'eyJ[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}\.[A-Za-z0-9_-]{15,}')))
 BINARY = {'.npz', '.npy', '.mp4', '.png', '.jpg', '.jpeg', '.stl', '.glb', '.blend', '.gz', '.zip'}

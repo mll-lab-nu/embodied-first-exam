@@ -37,6 +37,9 @@ def candidate_inputs(family, tier, instance, instance_path):
             from topogym.tasks.rope_threading.simplified import recommended_grasp_assist
             overrides["grasp_assist"] = to_jsonable(recommended_grasp_assist(instance["variation_id"]))
             changes.append("declare the simplified oracle's recommended contact-gated IPC grasp assistance")
+        elif family == "blanket_flatten":
+            params, overrides, changes = environment_inputs(family, tier,
+                variation=instance["variation_id"], seed=instance["seed"], parameters=params)
     else:
         params, overrides, changes = environment_inputs(family, tier,
             variation=instance["variation_id"], seed=instance["seed"], parameters=params)
@@ -107,10 +110,14 @@ def rekey_goal_parameters(family, tier, instance, instance_path, destination):
     return rekeyed, dict(record, manifest_sha256=digest(destination / "manifest.json"), identity_sha256=metadata["identity_sha256"])
 
 
-def prepare(output, families=(), tiers=("easy", "medium", "hard"), *, image=None, gpu="0"):
+def prepare(output, families=(), tiers=("easy", "medium", "hard"), *, image=None, gpu="0",
+            blanket_initial_states=None):
     from topogym.planning.harbor_bridge.catalog import TIERS
     if not tiers or set(tiers) - set(TIERS):
         raise ValueError("Select known difficulty tiers")
+    blanket_initial_states = dict(blanket_initial_states or {})
+    if set(blanket_initial_states) - (set(tiers) & {"very_easy", "easier"}):
+        raise ValueError("Blanket initial-state inputs must name selected below-easy tiers")
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
     image = image or image_tag(ROOT)
@@ -156,10 +163,28 @@ def prepare(output, families=(), tiers=("easy", "medium", "hard"), *, image=None
             slug = f"topogym-{family.replace('_', '-')}-{tier.replace('_', '-')}-i00"
             task = output / "seed_inputs" / (slug + "-privileged")
             (task / "environment").mkdir(parents=True)
+            simulator = {}
+            if family == "blanket_flatten" and tier in blanket_initial_states:
+                from topogym.world.initial_state import load_numeric_archive, validate_initial_state_qualification
+                from topogym.tasks.blanket_flatten.corner_folds import scene_parameters
+                manifest = Path(blanket_initial_states[tier]).resolve()
+                _, metadata = load_numeric_archive(manifest)
+                validate_initial_state_qualification(metadata["qualification"], "scene_layout")
+                identity = metadata["identity"]
+                if (metadata["backend"]["codec"] != "rigid_pbd_numeric_v2"
+                        or identity["task_id"] != family or identity["seed"] != 0
+                        or identity["parameters"]["corner_fold_profile"] != scene_parameters(tier)["corner_fold_profile"]):
+                    raise ValueError(f"Blanket initial state differs from {tier}/seed 0")
+                asset = task / "environment/instance_assets/initial_state"
+                asset.mkdir(parents=True)
+                for name in ("manifest.json", "arrays.npz"):
+                    shutil.copy2(manifest.with_name(name), asset / name)
+                simulator["task_parameters"] = dict(initial_state_path="instance_assets/initial_state/manifest.json",
+                    initial_state_sha256=hashlib.sha256((asset / "manifest.json").read_bytes()).hexdigest())
             # A build selection, not a frozen instance. make-instance in the
             # pinned image produces the independently bound physical instance.
             (task / "environment/instance.json").write_text(json.dumps(dict(
-                variation_id=tier, seed=0, simulator={}, qualification="unbuilt selection"), indent=2) + "\n")
+                variation_id=tier, seed=0, simulator=simulator, qualification="unbuilt selection"), indent=2) + "\n")
             selected.append((task, family, tier))
     for task, family, tier in selected:
         source = task / "environment/instance.json"
@@ -234,6 +259,15 @@ if __name__ == "__main__":
     parser.add_argument("--tiers", nargs="+", choices=("very_easy", "easier", "easy", "medium", "hard"), default=("easy", "medium", "hard"))
     parser.add_argument("--image")
     parser.add_argument("--gpu", default="0")
+    parser.add_argument("--blanket-initial-state", action="append", default=[], metavar="TIER=MANIFEST",
+                        help="Prepared below-easy Blanket state for the candidate image's GPU/software profile; repeat per tier")
     args = parser.parse_args()
-    result = prepare(args.output, args.families, args.tiers, image=args.image, gpu=args.gpu)
+    initial_states = {}
+    for value in args.blanket_initial_state:
+        tier, separator, path = value.partition("=")
+        if not separator or not path or tier in initial_states:
+            parser.error("Use one --blanket-initial-state TIER=MANIFEST per tier")
+        initial_states[tier] = path
+    result = prepare(args.output, args.families, args.tiers, image=args.image, gpu=args.gpu,
+                     blanket_initial_states=initial_states)
     print(json.dumps(dict(output=str(args.output.resolve()), instances=len(result["instances"]), status=result["status"])))

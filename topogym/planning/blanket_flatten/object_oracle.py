@@ -107,7 +107,7 @@ def run_witness(output, *, variation="easy", seed=0, settle_s=4., pause_s=4., wo
                 patch = material_patch(x, uv, center, **PATCH)
                 hands[side] = dict(center=center, indices=patch, offsets=x[patch]-x[center], target=x[center].copy(),
                                    origin=x[center].copy())
-            if np.intersect1d(hands["left"]["indices"], hands["right"]["indices"]).size:
+            if len(hands) == 2 and np.intersect1d(hands["left"]["indices"], hands["right"]["indices"]).size:
                 raise ValueError("Route patches overlap")
             exposed = {side: bool(exposed_patch(x, uv, h["indices"], radius=PATCH["spatial_radius_m"],
                                                 clearance=CONTACT_DISTANCE)) for side, h in hands.items()}

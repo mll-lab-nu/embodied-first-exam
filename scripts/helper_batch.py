@@ -93,7 +93,7 @@ def load_config(path):
 
 def lane_environment(cfg,lane):
     env=dict(os.environ)
-    for key in ('ENV_FILE','OPENAI_API_KEY','OPENAI_BASE_URL','OPENROUTER_API_KEY','ANTHROPIC_API_KEY',
+    for key in ('ENV_FILE','OPENAI_API_KEY','OPENAI_BASE_URL','OPENROUTER_API_KEY','OPENROUTER_API_KEY_FOR_SMOKE','PROVIDER','ANTHROPIC_API_KEY',
                 'ANTHROPIC_BASE_URL','CLAUDE_FORCE_OAUTH','CLAUDE_CODE_OAUTH_TOKEN','CODEX_FORCE_AUTH_JSON',
                 'CODEX_AUTH_JSON_PATH','HF_TOKEN','HUGGING_FACE_HUB_TOKEN','HF_TOKEN_PATH','HF_HOME','HF_ENDPOINT',
                 'TOPOGYM_BATCH_PYTHON','AGENT','MODEL','EFFORT','AK','K','MODES','AGENT_CONFIG','WAIT_FOR',
@@ -117,7 +117,10 @@ def run_command(argv,*,env=None,output=None):
 
 def bootstrap():
     python=ROOT/'.venv-agent-batch/bin/python'
-    if not (ROOT/'.venv-agent-batch').exists(): run_command(['bash',ROOT/'scripts/setup_agent_batch.sh'])
+    receipt=ROOT/'.venv-agent-batch/topogym-runner.json'
+    if (not (ROOT/'.venv-agent-batch').exists() or
+            (receipt.is_file() and 'scripts/patch_agent_batch_providers.py' not in read(receipt).get('files',{}))):
+        run_command(['bash',ROOT/'scripts/setup_agent_batch.sh'])
     if not python.is_file(): raise ValueError('incomplete runner installation; preserve it and repair setup before retrying')
     # Re-exec after first install; HF subprocesses need the pinned interpreter too.
     if Path(sys.prefix).resolve()!=(ROOT/'.venv-agent-batch').resolve():

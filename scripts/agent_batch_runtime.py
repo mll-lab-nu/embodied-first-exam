@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Published native batches: immutable dispatch, claims, owned mirror and sealing.
 
-The public entrypoint stays run_agent_batch.sh. No model adapter is used.
+The public entrypoint stays run_agent_batch.sh. Adapted Muse runs have an explicit,
+separately recorded harness identity; native-agent assignments are unchanged.
 """
 from contextlib import nullcontext
 import argparse
@@ -22,6 +23,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from agent_batch_contract import component, digest, files, locked, package, read, save, sha, validate, write_summary, select_agent
 from secret_scan import load_env, load_secrets, scan_tree
+from agent_batch_provider import OPENROUTER_KEYS, canonical_model, codex_config, openrouter_credentials
 
 def utc():
     import datetime
@@ -46,11 +48,12 @@ def credentials(environment):
         absent_default=(envfile in (Path.home()/'rcb.env',Path.home()/'eai.env') and not envfile.exists()
                         and (Path.home()/'.codex/auth.json').is_file())
         values={} if absent_default else load_env(envfile)
-        allowed={'OPENAI_API_KEY','OPENAI_BASE_URL','OPENROUTER_API_KEY','ANTHROPIC_API_KEY','ANTHROPIC_BASE_URL',
+        allowed={'OPENAI_API_KEY','OPENAI_BASE_URL','OPENROUTER_API_KEY','OPENROUTER_API_KEY_FOR_SMOKE','PROVIDER','ANTHROPIC_API_KEY','ANTHROPIC_BASE_URL',
                  'CLAUDE_FORCE_OAUTH','CLAUDE_CODE_OAUTH_TOKEN','CODEX_AUTH_JSON_PATH','CODEX_FORCE_AUTH_JSON'}
         if set(values)-allowed: raise ValueError('ENV_FILE must contain only model credentials/provider settings; keep HF_TOKEN separate')
         env.update(values)
     env.pop('HF_TOKEN',None); env.pop('HUGGING_FACE_HUB_TOKEN',None)
+    env=openrouter_credentials(env)
     if (not any(env.get(k) for k in ('OPENAI_API_KEY','ANTHROPIC_API_KEY','CLAUDE_CODE_OAUTH_TOKEN'))
             and not env.get('CODEX_AUTH_JSON_PATH') and (Path.home()/'.codex/auth.json').is_file()):
         env.update(CODEX_AUTH_JSON_PATH=str(Path.home()/'.codex/auth.json'),CODEX_FORCE_AUTH_JSON='1')
@@ -67,7 +70,7 @@ def credentials(environment):
 
 def auth_secrets(env,auth,history=None):
     # Do not mutate os.environ or pass secrets through process arguments.
-    secrets={k:env[k].encode() for k in ('OPENAI_API_KEY','OPENROUTER_API_KEY','ANTHROPIC_API_KEY','CLAUDE_CODE_OAUTH_TOKEN') if env.get(k)}
+    secrets={k:env[k].encode() for k in ('OPENAI_API_KEY',*OPENROUTER_KEYS,'ANTHROPIC_API_KEY','CLAUDE_CODE_OAUTH_TOKEN') if env.get(k)}
     for i,path in enumerate([p for p in (auth,history) if p and p.exists()]):
         for k,v in load_secrets(auth_files=[path]).items(): secrets[f'{i}_{k}']=v
     if not secrets: raise ValueError('no scan credentials loaded')
@@ -94,7 +97,7 @@ def tooling():
     marker=Path(sys.prefix)/'topogym-runner.json'
     if not marker.exists(): raise ValueError('fixed bootstrap receipt missing; run setup_agent_batch.sh in this checkout')
     receipt=read(marker)
-    if (set(receipt.get('files',{}))!={'images/difficulty-eval/patch_harbor.py','requirements/difficulty-eval-controller.lock'}
+    if (set(receipt.get('files',{}))!={'images/difficulty-eval/patch_harbor.py','requirements/difficulty-eval-controller.lock','scripts/patch_agent_batch_providers.py'}
             or set(receipt.get('modules',{}))!={'harbor.agents.installed.codex','harbor.environments.docker.docker'}):
         raise ValueError('invalid fixed bootstrap receipt')
     for path,wanted in receipt['files'].items():
@@ -196,9 +199,15 @@ def run_job(jobs,plan,spec,env,auth,private):
     save(jobs/(spec['job']+'-execution.json'),dict(owner=owner,status='starting',started_at=utc()))
     mirror=Mirror(jobs,spec,plan,owner,private,env); mirror.start()
     supervision=private/('supervision-'+owner); supervision.mkdir()
-    argv=['harbor','run','-p',str(ROOT/'tasks'),'-i',spec['task'],'-a',plan['agent']['name'],'-m',plan['agent']['model'],
+    agent_name=plan['agent']['name']
+    if agent_name=='muse-openrouter':
+        from harbor_agents.muse_transport.launch import IMPORT_PATH
+        agent_name=IMPORT_PATH
+    argv=['harbor','run','-p',str(ROOT/'tasks'),'-i',spec['task'],'-a',agent_name,'-m',plan['agent']['model'],
           '-n','1','-k',str(spec['repetitions']),'-y','-o',str(jobs),'--job-name',spec['job']]
     for k,v in plan['agent']['kwargs'].items(): argv+=['--ak',f'{k}={v}']
+    if plan['agent']['name']=='codex' and plan['agent']['model'].startswith('openrouter/'):
+        argv+=['--ak','config='+json.dumps(codex_config(plan['agent']['model']),separators=(',',':'))]
     # Dotenv has already been parsed as data. Do not let Harbor overwrite forced auth
     # with a second load, or save a credential-file path in trial configuration.
     rc=2
@@ -256,12 +265,15 @@ def finalize(jobs,plan,metadata,env,auth):
 def run(batch,bases,assignment):
     import psutil
     os.umask(0o077)
-    plan=select_agent(read(assignment),model=os.environ.get('MODEL'),effort=os.environ.get('EFFORT'),agent=os.environ.get('AGENT'))
+    original=read(assignment)
+    env,auth=credentials(dict(os.environ,MODEL=os.environ.get('MODEL',original['agent']['model'])))
+    model=canonical_model(env['MODEL'],env.get('PROVIDER'))
+    plan=select_agent(original,model=model,effort=env.get('EFFORT'),agent=env.get('AGENT'))
     if plan['batch']!=batch: raise ValueError('dispatch batch differs from command')
-    settings(plan,bases,os.environ); tooling()
+    env['MODEL']=model
+    settings(plan,bases,env); tooling()
     jobs=Path(os.environ.get('JOBS',str(ROOT/'jobs/agents'))).resolve(); jobs.mkdir(parents=True,exist_ok=True)
     if jobs.name!='agents': raise ValueError('standard delivery requires JOBS ending in /agents')
-    env,auth=credentials(os.environ)
     env.update(PYTHONPATH=str(ROOT),PYTHONDONTWRITEBYTECODE='1')
     gpu=env.get('GPU_DEVICE','0')
     env['TOPOGYM_GPU_UUID']=command(['nvidia-smi','-i',gpu,'--query-gpu=uuid','--format=csv,noheader'])

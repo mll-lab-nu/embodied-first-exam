@@ -183,13 +183,8 @@ class ClothPreparation:
         self.report["stages"].append(dict(name=name, start_tick=start, end_tick=self.world.physics_step,
             target_rms_error_m=float(np.sqrt(np.mean(np.sum((p-final)**2, axis=1)))), metrics=self.metrics(p, v)))
 
-    def run(self, *, acceptance="released_stable"):
-        if acceptance not in {"released_stable", "scene_layout"}:
-            raise ValueError("Unknown preparation acceptance")
-        self.report["acceptance"] = acceptance
-        gravity = self.cloth.solver._gravity.to_numpy().copy()
-        binding_hash = self.task.binding.sha256
-        origin = np.r_[self.task.config["center_xy_m"], self.task.table_height_m+self.task.layout.drop_clearance_m]
+    def form(self, origin):
+        """Drive the family-specific folds before the common lowering/release."""
         def target(gather, twist):
             points = preparation_target(self.task.material_uv, self.task.layout.length_m,
                 self.task.layout.width_m, gather, twist, self.profile)
@@ -197,11 +192,20 @@ class ClothPreparation:
             # the pleated bundle. Lowering is a separate controlled stage.
             points[:, 2] -= points[:, 2].min()
             return points+origin
+        self.drive("gather", lambda t: target(t, 0.), self.cfg.gather_seconds)
+        if self.profile.twist_angle_deg:
+            self.drive("twist", lambda t: target(1., t), self.cfg.twist_seconds)
+
+    def run(self, *, acceptance="released_stable"):
+        if acceptance not in {"released_stable", "scene_layout"}:
+            raise ValueError("Unknown preparation acceptance")
+        self.report["acceptance"] = acceptance
+        gravity = self.cloth.solver._gravity.to_numpy().copy()
+        binding_hash = self.task.binding.sha256
+        origin = np.r_[self.task.config["center_xy_m"], self.task.table_height_m+self.task.layout.drop_clearance_m]
         try:
             self.cloth.solver._gravity.from_numpy(np.zeros_like(gravity))
-            self.drive("gather", lambda t: target(t, 0.), self.cfg.gather_seconds)
-            if self.profile.twist_angle_deg:
-                self.drive("twist", lambda t: target(1., t), self.cfg.twist_seconds)
+            self.form(origin)
             p, _ = self.state()
             shift = np.array([0., 0., self.task.table_height_m+self.task.layout.particle_size_m/2-p[:, 2].min()])
             self.drive("lower_to_table", lambda t: p+t*shift, self.cfg.lower_seconds)

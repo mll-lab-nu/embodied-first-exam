@@ -12,9 +12,10 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from topogym_versions import release
 CURRENT_VERSION = release(ROOT)["tooling_version"]
 # Superseded candidates of the release mechanism (tooling v15 = Jianwen's merged-v15 source candidate, 4aac2a4e6 /
-# ba01d029c; tooling v16 = merged-v16, the packages built from 7293af9d6's templates): their packages keep their tooling
-# hashes (topogym_tooling_versions.json) and their own runtime binding.
-BOUND_FROZEN = ("15", "16")
+# ba01d029c; tooling v16 = merged-v16, the packages built from 7293af9d6's templates; tooling v17 = merged-v17, the
+# packages built from 4d6f6d74d = a3604ea7e's templates): their packages keep their tooling hashes
+# (topogym_tooling_versions.json) and their own runtime binding.
+BOUND_FROZEN = ("15", "16", "17")
 SHARED = ("environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py",
           "environment/sim/finalize.sh", "environment/sim/run.sh", "environment/sim/rcb1.py",
           "environment/sim/rcb_limited.py", "environment/sim/replay.py", "tests/grade.py")

@@ -11,9 +11,33 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-04)
-Active: **merged-v17** (tooling v17, `eai-standard/2.3`, image `rcb-topogym:0.2.15-dev-cu128`), a source candidate until
+Active: **merged-v18** (tooling v18, `eai-standard/2.3`, image `rcb-topogym:0.2.16-dev-cu128`), a source candidate until
 its 78 packages are built and qualified. Published: v14 (the 78 dirs under `tasks/`, `rcb-topogym:0.2.12-cu128`).
 Jianwen's simpler variants (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v18 (2026-10-05) = merged-v17 + the deterministic IPC solver (libuipc 292c98c3 with three determinism patches,
+  `images/topogym/uipc-patches/`, pyuipc 0.0.25+topogym.det1; knot K2 solo +2 % per control step against the stock build;
+  and the robot forward-dynamics recompute after a settled-state restore; the instances with a settled IPC state, knot_untying,
+  orbits and slotted_post_ring, are re-made from the deterministic solver, while rope_threading has none, so its instances
+  keep their state hashes and only its runtime physics changes) + knot_untying's K2 solve (5 ms IPC frames, a
+  semi-implicit Newton solve of at least 3 iterations; `harbor_templates/topogym/common/rcb_topogym.py`) + the exact
+  speed-ups below (blanket hard reference 29.1 min) + the agent interaction log restored: `images/topogym/warm_cache.sh`
+  had committed an empty `RCB_SESSION_LOG` into the warmed images 0.2.14 / 0.2.15, so their trial Sessions wrote no
+  log (agent_sessions / resets / sim_steps 0); it now reaches only the warm-up sessions, and the script fails if a tag
+  carries it.
+  Environment profile `merged-v18` (`topogym/tasks/release_profile.py`): K2 changes knot's timing and solver and the IPC
+  instances are re-settled, so the environment changed. For Jianwen: the label also enters the slotted oracle's
+  submission fingerprints (computed at run time) and the blanket re-key records. The three blanket records differ from
+  v17's only in `metadata.identity_rekey.by`, and their state arrays are byte-identical; the record hash (the task
+  parameter `initial_state_sha256`) enters `task.instance_id` and with it the task state that `Session.state_sha` hashes,
+  so the blanket instances get new state hashes for the same restored physics. The frozen "v17" tooling hashes are those
+  of the built merged-v17 packages (`ci_checks/topogym_tooling_versions.json`, BOUND_FROZEN 15-17).
+  Below-easy tiers (Jianwen's knot_untying very_easy / easier and orbits below_easy, made with `--tooling` the current
+  `rcb_topogym.py`): knot inherits K2 from `TASKS["knot_untying"]`, and both families need the v18 image for their
+  settled IPC states (the settled-state identity includes the pyuipc version, now 0.0.25+topogym.det1). Their simplified
+  oracles were developed under v17's 2.5 ms full Newton solve, so they should be re-validated under K2 when built.
+  Proposal for Jianwen (his instruction texts): the step time the task description states comes from steps before the
+  first contact; on fiber_bundling the contact phases cost more (lab sweep: medium ~0.23 s per control step against the
+  stated 0.16, hard ~0.40 against 0.31). Measuring it over a contact phase would state what an agent pays.
 - v17 (2026-10-05) = merged-v16 + the R-hold grading (privileged replays may confirm within the same tolerant hold as
   standard) + fiber_bundling on the CPU (image 0.2.15-dev: Genesis tree patch, exact fast paths; below) + deterministic
   GPU physics (tooling; below).
@@ -351,6 +375,60 @@ after genesis.init; no Genesis file, image, frozen state or instance sha changes
   (median 0.356) vs v16's 0.360 (0.342), about +4 %; lock_picking easy (rows 0-299) monolith 0.0770 / 0.0770 vs autotuned
   0.0768 / 0.0782 (no cost; the decomposed arm alone 0.0819), and the two autotuned passes from one state end in different
   digests while the monolith passes are identical. (Measurements on a GPU shared with IPC sims were 4-6x inflated.)
+
+### Exact speed-ups (tooling v18, 2026-10-05)
+Target as above (one full reference execution within about 20 % of the 6 h agent budget). Every change below leaves
+results identical; each has a check script and a lab replay with both versions compared (lab journal
+topogym_v1/topospeed/NOTES.md).
+- **blanket_flatten.** Two costs dominated the hard reference: the coverage union in the settle phases, and the PBD grasp
+  assist while a closed hand had no hold yet. In those grasp windows `SoftGraspBackend.candidates()` cost 0.5 s per hand
+  per tick: trimesh distances of ~450 particles to both finger surfaces, and one 8181-particle `material_patch` per center.
+  - The coverage union is skipped inside a control step when an upper bound is 1e-3 below the threshold. The decisions
+    are identical at every tick on all three tiers.
+  - Finger-surface distances are computed only where they can decide the contact test or the nearest point. A rigorous
+    lower bound selects them: the box and the hull planes, less 1 um.
+  - A patch is built from its center's cached material neighbourhood.
+  - `exposed_patch` scans only the patch's horizontal reach.
+  - Checks:
+    - `scripts/check_grasp_candidates_exact.py`: 8400 cloth and rope cases identical to the previous code;
+    - live calls recorded on lab: 1757 blanket and 13 rope `candidates()` calls identical; 0.51 -> 0.011 s and 0.35 -> 0.022
+      s per call.
+  - Measured (shipped hard oracle, 4 cores, rgb on, lab GPU 7 next to light CPU sims): **29.1 min** (8 % of 6 h). The run
+    is byte-identical to the v17 run without the changes: the same 4075-step trajectory, task result and final state_sha
+    c105e712e2af818b. Its close / contact windows now cost 0.5-1.0 s per control step; they were 3.7-5.4 s with the
+    previous oracle.
+  - Rope acquires within a tick or two, so its episodes gain only seconds.
+- **Families with a final release** (buzz_wire_3d, cast_coil, ...). `World.read_state` runs every tick and read the
+  release boxes and robot cover planes in a Python loop: 1.1-1.5 ms per read. It also re-read the solver's welds to verify
+  the rigid grasp bindings: 0.77 ms.
+  - `ReleaseGeometry.read` now evaluates the same products as stacked matmuls over equal shapes.
+  - The per-tick binding check (`verify_current_bindings`) reuses the cached weld read; acquire, release and restore
+    still refresh it.
+  - Shadow replays of the graded easy trajectories were identical at every read: 51,403 (buzz) and 65,019 (coil).
+  - Per control step (2 cores, rendering off): buzz 92 -> ~74 ms, coil 65 -> ~53 ms.
+  - The rest of buzz's extra cost over coil / keyhole is collision detection over its 1298 wire geoms (22 ms, of which
+    broadphase 13). An engine patch would need pair-order identity, so it stays a later option.
+- **fiber_bundling** (v17 tree factor + fast paths; 2 cores, rendering off), ms per control step:
+
+  | term | medium | hard |
+  |---|---|---|
+  | total | 227 | 413 |
+  | kernel_step_1 | 71 | 145 |
+  | resolve | 54 | 137 |
+  | detection | 11 | 16 |
+  | task | 15 | 24 |
+  | read_state | 15 | 19 |
+  | grasp health | 5 | 5 |
+  | oracle's per-tick record | 30 | 37 |
+
+  The oracle's references run 69 / 205 min. A fresh-process replay of the same trajectories, which is what an agent
+  following the same motion pays, runs 51.5 / 152 min. The difference is the oracle workflow's own work.
+  - About 30-37 ms per step is the state record that `QualificationWorkflow` freezes at every physics tick for its
+    invariant monitor.
+  - That monitor must observe every tick: a tick-level violation latches and fails the stage, and `run()` raises on a
+    missing tick. Freezing less often is therefore not equivalent.
+  - An exact option, for Jianwen: give that owner monitor an unfrozen or lazily frozen record. The values and decisions
+    stay the same, but `Env.tick_record`'s sink contract changes. Estimated medium ~62 min, hard ~189 min. Not done in v18.
 
 ## Grading: two passes
 - **Privileged.** The verifier (separate sandbox, GPU, no network) replays `/app/output/trajectory.npz` from

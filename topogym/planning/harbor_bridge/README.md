@@ -16,7 +16,7 @@ Coil easy 已实测完成 3 步 oracle 前缀的 privileged 两遍回放，以�
 
 ## very_easy / easier 独立 sweep
 
-仅评测已有控制器的 7 类 × 2 档 × privileged/standard，共 28 个评分位置；seed 0，
+现已接入 9 类 × 2 档 × privileged/standard，共 36 个可选择评分位置；seed 0，
 完整 oracle，串行执行，无模型调用。Rope 控制器仍是开发候选；本地历史成功不继承为当前 grade。
 Hedgehog、Horseshoe、Slotted 的简单档只有几何检查，缺完整机器人 oracle，另列覆盖缺口。
 
@@ -32,6 +32,25 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
 逐项记录 grade、solve 和状态：仅有效完整评分写 `solve=0/1`；基础设施、打包、构建错误及未执行
 保持空值并记录原因。privileged 未取得 grade 1 时，standard 标记依赖阻塞，不算已实测失败。
 只需预览队列时加 `--plan`；恢复原队列时保留所有参数并加 `--resume`。
+
+Blanket 的 very_easy / easier 按用户要求使用 **tooling v18+** grading。它们复用 Blanket
+现有的 `SessionPolicyRunner` 和生成时关节限速，候选使用 95% 覆盖率及 1.3 抓持拉伸保护。
+必须先在目标镜像／GPU profile 上准备两份初态，再显式传给候选构建器；构建器复制完整数值包，
+只为 release 的覆盖率参数生成重键副本。不能把本地 Env 成功或旧版本轨迹算作 `solved=1`。
+
+```bash
+.venv-harbor/bin/python scripts/topogym_merge_candidate.py \
+  --output <新候选目录> --families blanket_flatten --tiers very_easy easier \
+  --image <独立的v18或更新镜像tag> \
+  --blanket-initial-state very_easy=<同运行栈准备目录>/very_easy/state/manifest.json \
+  --blanket-initial-state easier=<同运行栈准备目录>/easier/state/manifest.json
+bash <新候选目录>/build_image.sh
+.venv-harbor/bin/python <新候选目录>/source_snapshot/scripts/topogym_candidate_pipeline.py \
+  --candidate <新候选目录> --phase build --families blanket_flatten
+bash bash_scripts/run_harbor_oracle_grades.sh \
+  --output <新评分目录> --tasks-root <新候选目录>/tasks \
+  --families blanket_flatten --tiers very_easy,easier
+```
 
 接入层向旧策略提供 `mode`、观测字段及实例实际声明的 `grasp_assist`。Fiber 的分阶段执行使用
 冻结 Session 的初始快照检查，允许 Harbor 启动时恢复快照产生的分支号，但仍禁止执行中回退、
@@ -207,6 +226,29 @@ Fiber 的语义阶段匹配和只读候选回退、Lock 的几何误差预算；
 Coil/Claws 保留已有效的间隙与反馈设计，补统一执行保障和固定数组回放验证。
 所有影响时序、抓取或路线的改动都形成新候选，不修改正在评分的冻结源码，不继承旧轨迹成绩。
 
+### v18 补丁对简单档的适用范围（2026-10-05）
+
+在上述 v17 review 后，工作区新增了 merged-v18 / tooling 18 / image 0.2.16-dev 补丁；
+当前 release 仍为 `source_candidate`，`tasks_root=null`。以下是源码及 CPU 检查结论，不是新版本
+的简单档物理成绩。[检查记录与源码哈希](../../../runs/test_results/v18_patch_review_20261005_210448/report.json)、
+[两档配置与依赖核对](../../../runs/test_results/v18_patch_review_20261005_210448/compatibility.json)。
+
+| 补丁 | 简单档适用方式及边界 |
+| --- | --- |
+| libuipc 三个确定性补丁 | 公共 CUDA 求解、装配／接触候选排序、分段归约的修复，适用于使用 IPC 的 Rope、Knot、Orbits、Slotted，不按难度过滤。需构建并安装 `0.0.25+topogym.det1.cuda128` 或 `cuda130` wheel；只更新 Python 文件或复用旧 wheel 不生效。补丁附带的确定性证据限定同 GPU 型号，不等于跨型号 oracle 成功保证。 |
+| settled-state 恢复后重算 forward dynamics | 修复恢复后第一次推进仍使用旧机器人质量矩阵的错误；公共恢复入口生效。旧 IPC 状态含旧 pyuipc 身份，需在新环境重新准备，不能只改 manifest 哈希。原三档 Rope 发布配置不使用该资产；当前简单档候选构建也为 Rope 导出 IPC 状态，因此应与 Knot 一起重新准备。 |
+| Knot K2 | 当前 tooling 的两个简单档配置均继承 `physics_dt_s=0.005`、`control_decimation=5`、半隐式 Newton 且至少 3 次迭代。控制周期仍为 25 ms，但此前 2.5 ms 完整 Newton 的物理积分过程已改变；不能继承 v17 简单档轨迹资格，需在 v18 新实例上生成并独立回放验收。 |
+| 抓持／释放／Blanket coverage 加速 | 公共物理与判据实现中的等价优化，调用这些入口的简单档自动受益；不会给 oracle 增加重规划或更宽成功条件。本机 300 例抓持、300 例释放几何对照均无差异；完整简单档回放仍未在本轮执行。 |
+| warm-cache 日志修复 | 避免把空 `RCB_SESSION_LOG` 固化到镜像，所有使用该预热流程的新镜像受益。修复的是交互日志和统计，不是路径或成功判据。 |
+| Buzz retiming、Blanket 限速 | 属于 oracle 入口改动。Buzz 当前 medium recipe 接入按实测间隙减速／保持的重定时器；两个简单档仍走独立 `below_easy` 策略，没有自动继承。Blanket 修改现有原三档 route 的 runner，不能据此认为新增简单档已有完整 oracle。 |
+
+本地核对时 `.venv-gs121-nyx` 的 pyuipc 为 `0.0.25`，Lock `harbor_below_easy_20261005_05`
+仍绑定 v17 冻结包。接入 v18 应使用独立源码快照、新镜像和新任务包；不热替换正在运行的队列。
+两种 CUDA 构建配置的三个补丁哈希均匹配。CPU 单元检查 103 项通过、1 项报错：
+`test_resume_cannot_switch_cuda_profile` mock 未建立冻结源码目录，读取 release 文件时失败；
+HEAD 原版测试在当前 pipeline 上同样复现，不能归为 IPC 求解失败。其余 tooling 检查通过
+（126 个历史／活动包），无本轮新增 GPU 成功或跨机确定性结论。
+
 公开 NPZ 必须包含 `actions`（可精确表示为 float32 的二维数组）、`action_layout`、
 `task`、`instance_sha`（对应冻结 `state_sha`）和 `scene_seed`，可附带
 `physics_steps_per_action`。原生 NPZ 使用 `targets`、`layout`、可选 `physics_steps`；
@@ -254,7 +296,7 @@ Blanket、Rope、Knot 的 easy / medium / hard，共 33 个实例、最多 66 �
 及可用 CUDA/Nyx GPU。三档 Harbor 回调的参考输入随 `topogym/planning/` 交付，
 无需复制原机器的 `runs/` 或 `solvability_proof/*/*/evidence/`。
 首次执行从独立源码快照构建候选镜像，再生成双模式任务；默认镜像标签为
-`ghcr.io/luigivamper/rcb-topogym:<images/topogym/VERSION>-cu128`（v17：`0.2.15-dev-cu128`），本地构建不会 push 镜像。
+`ghcr.io/luigivamper/rcb-topogym:<images/topogym/VERSION>-cu128`（v18：`0.2.16-dev-cu128`），本地构建不会 push 镜像。
 恢复已绑定队列时不重新构建镜像，镜像 ID 和源码身份仍须匹配。
 不要在队列运行时修改其源码、镜像标签或任务包；其他运行若使用同一开发镜像标签，
 应先协调构建时间，或显式准备独立镜像与候选任务后传 `--tasks-root`。
@@ -283,7 +325,7 @@ Genesis 1.2.1、torch 2.11.0+cu128、numpy 2.3.5、quadrants 1.0.2。
 接收机器须匹配完整兼容性清单；使用其他硬件时，经 `scripts/prepare_blanket_initial_states.py`
 准备对应 profile 的初态，再生成并验收新的冻结实例。更换初态属于新实例，不能继承旧分数或改写兼容性哈希。
 
-当前 active 为 v17，`tasks_root=null`；仓库 `tasks/` 中的 78 个原三档包仍为 v14。
+当前 active 为 v18，`tasks_root=null`；仓库 `tasks/` 中的 78 个原三档包仍为 v14。
 因此新机器使用下面的构建入口生成候选，或显式传入同源码生成的活动版本 `--tasks-root`。
 直接运行默认 `test_harbor_oracles.py` 会因活动任务树未冻结而 blocked，这是版本保护。
 
@@ -535,7 +577,7 @@ runner 文件存在不代表已有完整成功证据。任何物理/几何版本
 
 已发布的 v14 / `0.2.12-cu128` 工具哈希与镜像引用冻结在
 `ci_checks/topogym_tooling_versions.json`，现有 78 个三档任务目录和 dataset 保留。
-活动模板为 **tooling 17 / image 0.2.15-dev**（merged-v17），这是待验收候选编号；v15 候选（0.2.13-dev）与 v16 候选（0.2.14-dev）的工具哈希已冻结。
+活动模板为 **tooling 18 / image 0.2.16-dev**（merged-v18），这是待验收候选编号；v15 候选（0.2.13-dev）、v16 候选（0.2.14-dev）与 v17（0.2.15-dev）的工具哈希已冻结。
 唯一开发目标由 `ci_checks/topogym_active_release.json` 的 `active` 指定，`published` 保留正式基线。
 当前 active 的 `tasks_root=null`，明确表示新镜像/任务树尚未完成，不能把 `tasks/` 下的旧版本当成候选。
 两种生成器拒绝覆盖其他 tooling 版本的目录，standard twin 必须来自同版本 privileged 包。

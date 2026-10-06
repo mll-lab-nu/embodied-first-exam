@@ -9,9 +9,11 @@
 # Construction happens before trials; the task selection and per-trial budgets stay fixed.
 # GPU_DEVICE selects one GPU per lane. Shared subscription auth caches serialize token refresh;
 # use independent logins or API keys for parallel model execution. Never move/delete jobs or claims.
-# Official runs use Harbor's native agents only (PROTOCOL D11): no adapter; the transparent usage gateway below only
+# Native runs follow PROTOCOL D11. Explicit muse-openrouter assignments authorize an adapted protocol,
+# recorded separately from native Muse/Claude/Gemini/Codex results. The transparent usage gateway below only
 # records and is off by default. Env (defaults):
-#   AGENT        codex | claude-code (codex)        MODEL   the -m model (openai/gpt-6-luna)
+#   AGENT        codex | claude-code; published muse-openrouter batches use the explicit adapter
+#                MODEL   the -m model (openai/gpt-6-luna)
 #   EFFORT       reasoning effort, --ak reasoning_effort=<EFFORT> (xhigh); `default` passes none
 #   AK           more agent options, e.g. "--ak web_search=disabled --ak reasoning_summary=detailed"
 #   AGENT_CONFIG a native config file, --ak config=<file>: Codex's config.toml (an Azure provider; retries with
@@ -55,6 +57,10 @@ R="$(cd "$(dirname "$0")/.." && pwd)"
 [ $# -ge 2 ] || { sed -n 2,40p "$0"; exit 2; }
 batch="$1"; shift; tasks=("$@")
 dispatch="${BATCH_ASSIGNMENT:-$R/configs/helper_batches/$batch.json}"
+if [ -f "$R/helper-release.json" ] && [ ! -f "$dispatch" ]; then
+  echo "Batch blocked: no assignment for this batch in this helper release. Use the supplied batch name and matching release tag." >&2
+  exit 2
+fi
 if [ -f "$dispatch" ] || [ -n "${BATCH_ASSIGNMENT:-}" ]; then
   python3 "$R/scripts/agent_batch_bootstrap.py" || exit $?
   export PATH="$R/.venv-agent-batch/bin:$R/.tools/agent-batch/node_modules/.bin:$PATH"
