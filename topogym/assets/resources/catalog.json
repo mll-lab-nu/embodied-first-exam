@@ -337,8 +337,8 @@
     "variations/horseshoe_ring/below_easy_easier_settled_poses.json": {
       "license": null,
       "path": "variations/horseshoe_ring/below_easy_easier_settled_poses.json",
-      "sha256": "a4031241364fba3a7143e03ca1541d12aaaeb19723b74f35e06d899619fae53c",
-      "source": "runs/below_easy/horseshoe_design/ea_assembled/settled_poses.json (topogym/planning/horseshoe_ring/below_easy_witness.py checks it)"
+      "sha256": "284b007a437d940fab6343dd3db04833bbef2a074d85e4889a240e25c76b1e9a",
+      "source": "oraclefix2 2026-10-06: 146 x 136 mm ring, template assembly settled 8 s on CPU (2.5 ms x 4) in the v18 image (topogym/planning/horseshoe_ring/below_easy_witness.py checks it)"
     },
     "variations/horseshoe_ring/below_easy_very_easy_settled_poses.json": {
       "license": null,

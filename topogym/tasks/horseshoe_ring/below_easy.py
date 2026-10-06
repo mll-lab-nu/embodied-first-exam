@@ -3,10 +3,11 @@
 With one shoe held up, the chains hang along one axis. Seen along that axis a shoe is a bar of
 about 138 x 25 mm, and the ring comes off by sliding along the chains over the lower shoe once
 its bore holds that bar. The bore sets the difficulty: a round 144 mm bore (very_easy) holds the
-bar at every phase about the chain axis; a 146 x 120 mm ellipse (easier) only after it is turned
-so that its long axis lies across the shoe. The original easy ring (135 x 128 mm) held it at
-no phase; the current easy tier has an enlarged ring and passes the section check at some
-phases. Relative difficulty against that newer baseline needs revalidation.
+bar at every phase about the chain axis; a 146 x 136 mm ellipse (easier) at 61 of the 90 phases
+(2 deg apart) with up to 4.0 mm to spare, so the ring passes at most phases and needs a turn at
+the others. The current easy tier's enlarged ring (142.6 x 135.9 mm) passes at 53 phases with up
+to 2.3 mm, the original easy ring (135 x 128 mm) at none: very_easy < easier < easy. (The first
+easier draft, 146 x 120 mm, passed at only 27 phases: harder than the enlarged easy ring.)
 Knob: ``ring``. Each setting starts from its own
 gravity-settled layout. See topogym/planning/horseshoe_ring/below_easy_witness.py. These are
 design targets, not robot qualifications.
