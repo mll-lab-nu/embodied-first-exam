@@ -49,7 +49,7 @@ class BelowEasy(unittest.TestCase):
                 helpers = collect_helpers(ROOT, session_callback(family, tier).split(":")[0], includes)
                 self.assertTrue(helpers)
                 self.assertTrue(all(f"/{tier}/" in name for name in files))
-        self.assertIsNone(session_callback("horseshoe_ring", "very_easy"))
+        self.assertIsNone(session_callback("blanket_flatten", "very_easy"))
         self.assertEqual(session_callback("hedgehog_in_cage", "easier"),
                          "topogym.planning.harbor_bridge.below_easy:run_feedback_policy")
         with self.assertRaises(ValueError):

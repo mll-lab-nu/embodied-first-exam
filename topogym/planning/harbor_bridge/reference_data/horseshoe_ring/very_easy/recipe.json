@@ -1,0 +1,166 @@
+{
+  "variant": "very_easy",
+  "seed": 0,
+  "instance_id": "983f2d08f51a663e6ba256dbfba3599465b8379ceca4d5f7e374b93d7d9251fd",
+  "model_revision": "below_easy_v1",
+  "terminal_revision": "placement_region_v3_grasp_contact_2mm",
+  "resource_sha256": {
+    "variations/horseshoe_ring/waist_mild.json": "c018a2addd3136cdf446a8e48befe238447d36479d2fdfd0a2f51090963e19f1",
+    "variations/horseshoe_ring/below_easy_very_easy_settled_poses.json": "002c156d3f9a0c6a909926bbbcd1022725bc25061f189cc107d712bf55c41e5e"
+  },
+  "config": {
+    "task_id": "horseshoe_ring",
+    "robot_id": "aloha",
+    "variation_id": "very_easy",
+    "task_parameters": {},
+    "compute_backend": "cpu",
+    "precision": "64",
+    "physics_dt_s": 0.025,
+    "solver_substeps": 40,
+    "terminal_contract_version": 1,
+    "control_decimation": 1,
+    "max_physics_steps": 80000,
+    "history_storage": "segment",
+    "reset_physics_steps": 0,
+    "rigid_options": {
+      "use_contact_island": false
+    },
+    "ipc_options": {},
+    "ipc_settled_state": null,
+    "enable_rgb": false,
+    "enable_depth": false,
+    "observation_mode": "JOINT",
+    "control_mode": "JOINT_ABS",
+    "enable_privileged": true,
+    "seed": null,
+    "render_backend": "nyx",
+    "asset_root": null,
+    "work_dir": "/home/jianwen/topogym/runs/test_results/horseshoe_approved_20261003/from_home_09/scene",
+    "grasp_assist": {
+      "model": "contact_weld_v1",
+      "targets": [
+        {
+          "entity": "horseshoe_left",
+          "link": "horseshoe_left",
+          "center_m": [
+            0.012781859274390302,
+            -2.7755575615628914e-17,
+            0.0
+          ],
+          "radius_m": 0.09055211523025057
+        },
+        {
+          "entity": "horseshoe_right",
+          "link": "horseshoe_right",
+          "center_m": [
+            -0.01278185927439026,
+            2.7755575615628914e-17,
+            0.0
+          ],
+          "radius_m": 0.09055211523025057
+        },
+        {
+          "entity": "target_ring",
+          "link": "target_ring",
+          "center_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "radius_m": 0.07790120932666852
+        }
+      ],
+      "stable_time_s": 0.02,
+      "max_tcp_distance_m": 0.12055211523025057,
+      "max_penetration_m": 0.002,
+      "max_translation_error_m": 0.01,
+      "max_rotation_error_rad": 0.15,
+      "max_finger_opening_fraction": 0.15,
+      "intent_deadband": 0.002,
+      "initial_intent": "open"
+    }
+  },
+  "selection": [
+    {
+      "step": "prefix",
+      "parameters": {
+        "grasps": {
+          "path": "planned on the frozen very_easy instance (hs_be_plan.py)",
+          "sha256": "5cc86febe12f8ef4d8196cec1b5c6574474173c44d07c86eaf3e999015a810ae"
+        },
+        "reference": {
+          "path": "derived from horseshoe_ring/easy/reference.json",
+          "sha256": "246dce0aaaf96b741fbc2a2cbd41775a8ea3db26b77695733b6aef3541429b27"
+        },
+        "fold": {
+          "path": "derived from horseshoe_ring/easy/fold.json",
+          "sha256": "7895545a0f9d914cb2d919f248e6b89f8563049d99157d925a7751c52fb0f524"
+        },
+        "support": {
+          "path": "derived from horseshoe_ring/easy/support.json",
+          "sha256": "21f5e8375cf247f9b8a27d35ec5ecf8f2bcbd5bb3c24a3f37c9e68e4ee04a7fb"
+        },
+        "approach": {
+          "path": "planned on the frozen very_easy instance (hs_be_plan.py)",
+          "sha256": "2ae5318d6ec206f05d6eeb20b72f2b403d30e5f2cacaf86f656d68849e4ee274"
+        }
+      },
+      "parameters_sha256": "dd8f97fe69a6f714217e94b28647948b429a0130b7e804efeb9dc8867d189897"
+    },
+    {
+      "step": "orient_for_handoff",
+      "parameters": {
+        "angle_deg": 90.0,
+        "yaw_deg": 0.0,
+        "translation_m": [
+          0.0,
+          0.1,
+          -0.04
+        ],
+        "hold_s": 8.0,
+        "sample_duration_s": 0.1,
+        "restore": false
+      },
+      "parameters_sha256": "2cbcedb971a320a0a7264dd72a477e61843b88e9429111c10e1998cbfc8696d2"
+    },
+    {
+      "step": "support_release",
+      "parameters": {
+        "suspended_upper": true
+      },
+      "parameters_sha256": "dea67672845674f9813ef447324b2ddcc6dd7b7381be3bb514432efc78097526"
+    },
+    {
+      "step": "clear_remainder_for_table_pickup",
+      "parameters": {},
+      "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "step": "grasp_ring",
+      "parameters": {
+        "choice": {
+          "tcp_backoff_m": 0.01531
+        }
+      },
+      "parameters_sha256": "6dccbdad58b3581a297460e62aa664d227c91796c0ec7e51c17614e8af579b1f"
+    },
+    {
+      "step": "place_ring",
+      "parameters": {
+        "tracking_m": 0.004
+      },
+      "parameters_sha256": "d063df16e41f5b909aa15bb0a6c3a2891c67427db7eb779c97c63c488fda161e"
+    },
+    {
+      "step": "verify_goal",
+      "parameters": {},
+      "parameters_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    }
+  ],
+  "qualification": {
+    "accepted_proof": false,
+    "derived_from": "horseshoe_ring/easy/recipe.json (oraclefix2, 2026-10-06)",
+    "scope": "no historical proof; the Harbor grade of the frozen below-easy instance decides"
+  },
+  "oraclefix2": "2026-10-06: the easy tier's oracle inputs for very_easy (grasps and approach planned on the frozen very_easy instance); place_ring tracks the held ring with a 4 mm gate (default 2 mm): the larger ring is carried 2-3 mm off the placement route and the 2 mm / 3 mm gates stall the route clock (lab hsbe/exp/X2_very_easy, X3a, X3b)"
+}

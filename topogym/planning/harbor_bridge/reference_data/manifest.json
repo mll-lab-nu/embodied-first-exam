@@ -47,6 +47,66 @@
       "bytes": 95577,
       "source": "solvability_proof/horseshoe_ring/2026-10-03_easy/evidence/runs/from_home_09/oracle_inputs/approach.json"
     },
+    "horseshoe_ring/very_easy/recipe.json": {
+      "sha256": "432dbeab2ca72d64a49f57b2124abcaef5386c962d7fb9ade0ebf3cd6bc46d54",
+      "bytes": 5557,
+      "source": "oraclefix2 2026-10-06: horseshoe_ring/easy/recipe.json bound to this tier's model, terminal and resources"
+    },
+    "horseshoe_ring/very_easy/grasps.json": {
+      "sha256": "5cc86febe12f8ef4d8196cec1b5c6574474173c44d07c86eaf3e999015a810ae",
+      "bytes": 4158,
+      "source": "oraclefix2 2026-10-06: the easy grasp poses, screened on the frozen very_easy instance (left hand fully open on its descent)"
+    },
+    "horseshoe_ring/very_easy/reference.json": {
+      "sha256": "246dce0aaaf96b741fbc2a2cbd41775a8ea3db26b77695733b6aef3541429b27",
+      "bytes": 4006169,
+      "source": "oraclefix2 2026-10-06: horseshoe_ring/easy/reference.json with this tier's assembly template (only the ring differs)"
+    },
+    "horseshoe_ring/very_easy/fold.json": {
+      "sha256": "7895545a0f9d914cb2d919f248e6b89f8563049d99157d925a7751c52fb0f524",
+      "bytes": 7038369,
+      "source": "oraclefix2 2026-10-06: copy of horseshoe_ring/easy/fold.json"
+    },
+    "horseshoe_ring/very_easy/support.json": {
+      "sha256": "21f5e8375cf247f9b8a27d35ec5ecf8f2bcbd5bb3c24a3f37c9e68e4ee04a7fb",
+      "bytes": 4682,
+      "source": "oraclefix2 2026-10-06: copy of horseshoe_ring/easy/support.json"
+    },
+    "horseshoe_ring/very_easy/approach.json": {
+      "sha256": "2ae5318d6ec206f05d6eeb20b72f2b403d30e5f2cacaf86f656d68849e4ee274",
+      "bytes": 138360,
+      "source": "oraclefix2 2026-10-06: joint approach planned and checked on the frozen very_easy instance"
+    },
+    "horseshoe_ring/easier/recipe.json": {
+      "sha256": "791cddb713e22769a4f9b20bbe12c31902f63d63fd93586f39a166422ab33f65",
+      "bytes": 5159,
+      "source": "oraclefix2 2026-10-06: horseshoe_ring/easy/recipe.json bound to this tier's model, terminal and resources"
+    },
+    "horseshoe_ring/easier/grasps.json": {
+      "sha256": "f1dce03b05f3827bce6f226b82ee74cb73cd169e8755b777ab12b79c05d4feee",
+      "bytes": 4189,
+      "source": "oraclefix2 2026-10-06: the easy grasp poses, screened on the frozen easier instance (left hand fully open on its descent)"
+    },
+    "horseshoe_ring/easier/reference.json": {
+      "sha256": "a121a759542a5dab4307f2f2586131b08e7298dd4f34234621e8a83e5edcd4bd",
+      "bytes": 4006169,
+      "source": "oraclefix2 2026-10-06: horseshoe_ring/easy/reference.json with this tier's assembly template (only the ring differs)"
+    },
+    "horseshoe_ring/easier/fold.json": {
+      "sha256": "7895545a0f9d914cb2d919f248e6b89f8563049d99157d925a7751c52fb0f524",
+      "bytes": 7038369,
+      "source": "oraclefix2 2026-10-06: copy of horseshoe_ring/easy/fold.json"
+    },
+    "horseshoe_ring/easier/support.json": {
+      "sha256": "21f5e8375cf247f9b8a27d35ec5ecf8f2bcbd5bb3c24a3f37c9e68e4ee04a7fb",
+      "bytes": 4682,
+      "source": "oraclefix2 2026-10-06: copy of horseshoe_ring/easy/support.json"
+    },
+    "horseshoe_ring/easier/approach.json": {
+      "sha256": "48cb0442ea0df5cc5ec7eada40e74e00011b61f314a96dd1afbe4743c0b4b36a",
+      "bytes": 138399,
+      "source": "oraclefix2 2026-10-06: joint approach planned and checked on the frozen easier instance"
+    },
     "horseshoe_ring/medium/recipe.json": {
       "sha256": "8b82c375fb4b68cd840293796c654cc5d4387d9bfecfd48b4c7c4b34e8ae4064",
       "bytes": 4675,

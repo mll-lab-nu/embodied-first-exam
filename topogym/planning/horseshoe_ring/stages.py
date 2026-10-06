@@ -355,6 +355,15 @@ def stages(env, context, *, folded_settling=False, suspended_handoff=False, dire
                     raise ValueError('Reposition integral gain must be within 0 and 4 per second')
                 if not np.isfinite(policy.reposition_velocity_gain_s) or not 0<=policy.reposition_velocity_gain_s<=1.:
                     raise ValueError('Reposition velocity feedback must be within 0 and 1 second')
+            elif operation=='place_ring':
+                # oraclefix2 (below-easy): the held ring's material tracking gate of the placement route, default 2 mm.
+                # very_easy's larger ring is carried 2.0-2.1 mm off the route after 20 % of it and the gate then stalls
+                # the clock (lab hsbe/exp/X2_very_easy).
+                tracking=values.pop('tracking_m',.002)
+                if isinstance(tracking,bool) or not np.isfinite(float(tracking)) or not .0005<=float(tracking)<=.005:
+                    raise ValueError('Placement tracking tolerance must be between 0.5 and 5 mm')
+                policy.place_tracking_m=float(tracking)
+                if values:raise ValueError('Unexpected placement parameters')
             elif operation!='withdraw_one' and values:raise ValueError('Unexpected placement parameters')
             holder[0]=policy
             free_ring_operations=('support_release','clear_remainder_for_table_pickup','grasp_ring')

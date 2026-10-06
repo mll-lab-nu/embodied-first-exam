@@ -46,11 +46,14 @@ class Portability(unittest.TestCase):
     def test_bundled_data_preserve_original_provenance_hashes(self):
         base = self.root / "topogym/planning/harbor_bridge/reference_data"
         manifest = json.loads((base / "manifest.json").read_text())
-        # The original 33 inputs plus the local Fiber below-easy selections and Hedgehog below-easy pickups.
-        self.assertEqual(len(manifest["files"]), 37)
+        # The original 33 inputs plus the local Fiber below-easy selections, Hedgehog below-easy pickups and the six
+        # Horseshoe below-easy inputs of each tier.
+        self.assertEqual(len(manifest["files"]), 49)
         for tier in ("very_easy", "easier"):
             self.assertIn(f"fiber_bundling/{tier}/selection.json", manifest["files"])
             self.assertIn(f"hedgehog_in_cage/{tier}/pickup.json", manifest["files"])
+            for name in ("recipe", "grasps", "reference", "fold", "support", "approach"):
+                self.assertIn(f"horseshoe_ring/{tier}/{name}.json", manifest["files"])
         for name, record in manifest["files"].items():
             self.assertEqual(digest(base / name), record["sha256"], name)
             self.assertEqual((base / name).stat().st_size, record["bytes"], name)

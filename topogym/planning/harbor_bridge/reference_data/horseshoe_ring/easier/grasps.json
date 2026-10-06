@@ -1,0 +1,199 @@
+{
+ "left": {
+  "candidates": [
+   {
+    "side": "left",
+    "angle_deg": 180,
+    "flip": 1,
+    "point_local_m": [
+     -0.061351595370172915,
+     -3.4465633693851506e-17,
+     2.3520898044869518e-20
+    ],
+    "tcp_position_m": [
+     -0.3047182056931435,
+     0.05053679115635549,
+     0.9398277050133776
+    ],
+    "tcp_quaternion_wxyz": [
+     0.5000216327766338,
+     -0.4999783662873715,
+     0.5000216327766338,
+     0.4999783662873715
+    ],
+    "pre_qpos": [
+     0.23726645224496812,
+     -0.06974846389982854,
+     0.5199417646701324,
+     -4.499463737497335e-08,
+     1.120603009531934,
+     -1.3334432780855572,
+     0.027,
+     0.027,
+     0.0,
+     -0.96,
+     1.16,
+     0.0,
+     -0.3,
+     0.0,
+     0.0084,
+     0.0084
+    ],
+    "grasp_qpos": [
+     0.23726610923602529,
+     0.08790924787699442,
+     0.6451095585334111,
+     1.178642042234518e-14,
+     0.8377774252240257,
+     -1.3334436845803426,
+     0.027,
+     0.027,
+     0.0,
+     -0.96,
+     1.16,
+     0.0,
+     -0.3,
+     0.0,
+     0.0084,
+     0.0084
+    ],
+    "checks": [
+     {
+      "passed": true,
+      "issues": [],
+      "table_clearance_m": 0.08403758523623506,
+      "inter_arm_pairs": [],
+      "self_collisions": [],
+      "contact_violations": [],
+      "ordinary_depth_m": 0.0,
+      "held_finger_depth_m": 0.0,
+      "contact_policy": {
+       "ordinary_m": 0.001,
+       "qualified_fingers_m": 0.002
+      },
+      "scope": "sampled FCL contacts; native physical contacts require execution"
+     },
+     {
+      "passed": true,
+      "issues": [],
+      "table_clearance_m": 0.004037181883405627,
+      "inter_arm_pairs": [],
+      "self_collisions": [],
+      "contact_violations": [],
+      "ordinary_depth_m": 0.0,
+      "held_finger_depth_m": 0.0,
+      "contact_policy": {
+       "ordinary_m": 0.001,
+       "qualified_fingers_m": 0.002
+      },
+      "scope": "sampled FCL contacts; native physical contacts require execution"
+     }
+    ],
+    "open_position_m": 0.027,
+    "joint_distance": 2.248420227196411
+   }
+  ],
+  "rejected": {
+   "Unreachable EE pose": 1,
+   "[[], ['robot_task_contact_depth']]": 17
+  }
+ },
+ "right": {
+  "candidates": [
+   {
+    "side": "right",
+    "angle_deg": 180,
+    "flip": 1,
+    "point_local_m": [
+     0.06135159537017296,
+     2.6157476218411046e-17,
+     0.0
+    ],
+    "tcp_position_m": [
+     0.03335978816432959,
+     0.04944742982437929,
+     0.9398278558624604
+    ],
+    "tcp_quaternion_wxyz": [
+     0.5000323116150552,
+     0.49996768629672883,
+     0.5000323116150552,
+     -0.49996768629672883
+    ],
+    "pre_qpos": [
+     0.0,
+     -0.96,
+     1.16,
+     0.0,
+     -0.3,
+     0.0,
+     0.0084,
+     0.0084,
+     -0.21481942840973908,
+     -0.07468515306230829,
+     0.5255680490624781,
+     -2.3310736191534728e-08,
+     1.1199134174024548,
+     -1.78574497050664,
+     0.018,
+     0.018
+    ],
+    "grasp_qpos": [
+     0.0,
+     -0.96,
+     1.16,
+     0.0,
+     -0.3,
+     0.0,
+     0.0084,
+     0.0084,
+     -0.21481967927117876,
+     0.08362139245026293,
+     0.6510333041403038,
+     7.602535429587464e-15,
+     0.8361415339518184,
+     -1.7857452567028322,
+     0.018,
+     0.018
+    ],
+    "checks": [
+     {
+      "passed": true,
+      "issues": [],
+      "table_clearance_m": 0.08403769785178528,
+      "inter_arm_pairs": [],
+      "self_collisions": [],
+      "contact_violations": [],
+      "ordinary_depth_m": 0.0,
+      "held_finger_depth_m": 0.0,
+      "contact_policy": {
+       "ordinary_m": 0.001,
+       "qualified_fingers_m": 0.002
+      },
+      "scope": "sampled FCL contacts; native physical contacts require execution"
+     },
+     {
+      "passed": true,
+      "issues": [],
+      "table_clearance_m": 0.004037321285540796,
+      "inter_arm_pairs": [],
+      "self_collisions": [],
+      "contact_violations": [],
+      "ordinary_depth_m": 0.0,
+      "held_finger_depth_m": 0.0,
+      "contact_policy": {
+       "ordinary_m": 0.001,
+       "qualified_fingers_m": 0.002
+      },
+      "scope": "sampled FCL contacts; native physical contacts require execution"
+     }
+    ],
+    "open_position_m": 0.018,
+    "joint_distance": 2.5372538694443376
+   }
+  ],
+  "rejected": {
+   "Unreachable EE pose": 1
+  }
+ }
+}
