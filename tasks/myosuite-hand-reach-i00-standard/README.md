@@ -9,14 +9,14 @@
 | Family / instance | `hand_reach` / seed 0 |
 | Oracle | `none` — the privileged twin's positive example (Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-hand-reach-i00__w2ryUU7`, 70 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoHandReachFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-hand-reach-i00-privileged`: Move all five fingertips onto their targets: the norm of the stacked fingertip-to-target errors (5 tips x 3 coordinates) below 0.0625 m, for 50 consecutive control steps (1.0 s). Failure (the episode ends, from the third control step on): that norm above 0.220 m.
-The hand hangs relaxed; five small spheres mark where the thumb, index, middle, ring and little fingertips must go. Standard mode (eai-standard/2.2): the agent drives the limb through a client in one episode, with only the limb's own proprioception and four cameras (two on the forearm).
+The hand hangs relaxed; five small spheres mark where the thumb, index, middle, ring and little fingertips must go. Standard mode (eai-standard/2.2): the agent drives the body through a client in one episode, with only its own proprioception and the scene's cameras.
 
 ## Difficulty
-Same instance and success rule as `myosuite-hand-reach-i00-privileged` (first-pass rating: easy). In standard mode the agent loses resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in muscle-command chunks, and gets one episode, so it has to close the loop on what it sees and recover from its own mistakes without starting over.
+Same instance and success rule as `myosuite-hand-reach-i00-privileged` (first-pass rating: easy). In standard mode the agent loses resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets one episode, so it has to close the loop on what it sees and recover from its own mistakes without starting over.
 
 ## Reference solution
 None. Solvability evidence: the privileged twin's positive example (Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-hand-reach-i00__w2ryUU7`, 70 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD.
@@ -28,7 +28,7 @@ The sim service judges the episode live and records every executed control step;
 | | |
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); cameras `hand_top`, `hand_side_inter` (on the forearm), `front_view`, `side_view` (static), 640 x 480; fingertip kinematics in the world frame |
+| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 
 ### Provenance

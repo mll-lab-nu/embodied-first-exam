@@ -9,6 +9,13 @@
  "hold_s": 1.0,
  "instance_sha": "57206cc383accb2a",
  "goal": "Rotate the pen in the hand until its axis points along the target orientation: the cosine between the pen's axis (bottom to top) and the target's axis above 0.95, with the pen within 0.075 m of its desired position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the pen more than 0.075 m from its desired position (dropped).",
+ "rule": "hold",
+ "set3": false,
+ "actuators": [],
+ "n_muscles": 39,
+ "free_root": false,
+ "track_steps": null,
+ "reference": null,
  "scene": "A pen lies across the fingers of the upturned hand; a translucent target pen shows the goal orientation.",
  "difficulty": "hard",
  "hours": 3.0,
@@ -34,6 +41,6 @@
   "hand_side_exter",
   "plam_lookat"
  ],
- "steps_per_s": 2600,
+ "steps_per_s": 2400,
  "rest_reason": "failure: pen dropped"
 }

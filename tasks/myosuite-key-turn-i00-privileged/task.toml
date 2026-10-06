@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/myosuite-key-turn-i00-privileged"
-description = "MyoSuite key_turn (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of muscle commands. Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Frozen scene instance (myoHandKeyTurnFixed-v0, reset seed 0); graded by two fresh-process replays."
+description = "MyoSuite key_turn (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Frozen scene instance (myoHandKeyTurnFixed-v0, reset seed 0); graded by two fresh-process replays."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "key_turn", "privileged"]
 

@@ -41,12 +41,68 @@ HOSTS = [
 BODY = {
     "hand": ("MyoHand", "myohand", "a musculoskeletal model of a human forearm and hand"),
     "arm": ("MyoArm", "myoarm", "a musculoskeletal model of a human shoulder, arm and hand"),
+    "body": ("MyoArm with torso", "myoarm-torso",
+             "a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor"),
+    "bimanual": ("MyoArm + MPL", "myoarm-mpl",
+                 "a musculoskeletal right arm and hand next to a motorized prosthetic left arm (the Modular Prosthetic Limb)"),
+    "legs": ("MyoLegs", "myolegs", "a free-standing musculoskeletal model of a human torso and both legs"),
+    "osl": ("MyoLeg + OSL", "myoleg-osl",
+            "a free-standing musculoskeletal model of a human whose left leg is an Open-Source Leg knee-ankle prosthesis"),
+}
+DEFAULT_CAMERA = {"table_tennis": "default", "bimanual": "front_view", "soccer": "agent_view", "chase_tag": "topview",
+                  "osl_run": "side_view", **{f"dex_{k}": "center_cam" for k in ("apple_lift", "cylinder_pass", "bunny_inspect",
+                  "hammer_use", "cup_pour", "airplane_fly")}}  # fmt: skip
+RULE_DIFF = {
+    "hold": "MyoSuite's goal has to hold for {hold_s} s, so passing through the goal does not count.",
+    "event": "Success is the challenge's own event; nothing short of it counts, and the challenge's failure conditions "
+             "and time limit apply.",
+    "track": "The whole recorded motion has to be followed with the object in hand, within a few centimetres, for "
+             "{track_steps} control steps.",
 }
 CAMERAS_STD = (
     "`hand_top` and `hand_side_inter` are close-ups of the hand, **mounted on the forearm** (the radius): they "
-    "move with it (pronation turns them), so use the pose returned with each frame; `front_view` and `side_view` "
-    "are static and show the whole body, where the hand is small"
+    "move with it (pronation turns them), so use the pose returned with each frame"
 )
+
+
+def default_camera(fam: str, f: dict) -> str:
+    return DEFAULT_CAMERA.get(fam, "hand_top" if "hand_top" in f["cameras"] else f["cameras"][0])
+
+
+def cameras_text(fam: str, f: dict) -> str:
+    cams = ", ".join(f"`{c}`" for c in f["cameras"])
+    hand = CAMERAS_STD + "; " if "hand_top" in f["cameras"] else ""
+    return (f"{cams} (640x480; default `{default_camera(fam, f)}`). {hand}`spec[\"cameras\"]` gives each camera's "
+            "mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one) and intrinsics, and every "
+            "response carries each frame's pose")
+
+
+def actuation(f: dict) -> str:
+    """The action, in words: muscles plus the non-muscle actuators some families have."""
+    n_mus = f["n_muscles"]
+    text = (f"{f['nu']} real numbers per control step, one per actuator in order: {n_mus} muscles"
+            + (f" and {len(f['actuators'])} non-muscle actuators" if f["actuators"] else "") + ". A muscle's command a "
+            "maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, "
+            "a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); "
+            "muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity.")
+    if f["actuators"]:
+        text += " The non-muscle actuators: " + "; ".join(f"`{a['name']}` (index {a['index']}): {a['command']}"
+                                                           for a in f["actuators"]) + "."
+    return text
+
+
+def rule_text(f: dict) -> str:
+    if f["rule"] == "hold":
+        return (f"Robot Coding Bench counts the goal only when `solved` holds for {f['hold_steps']} consecutive control "
+                f"steps ({f['hold_s']} s); `done` ends the episode as a failure. MyoSuite's step budget is lifted.")
+    if f["rule"] == "event":
+        return ("`solved` is the challenge's own success event: the episode ends in success at the first control step "
+                "where it holds; `done` without it (its failure conditions, its own time limit) ends it as a failure. "
+                "The gym step budget (`max_episode_steps`) is lifted; the challenge's own time limit is not.")
+    return (f"MyoDex's `solved` is always 0, so Robot Coding Bench judges the tracking itself: the episode lasts "
+            f"{f['track_steps']} control steps (the reference) and succeeds as stated above; `done` (MyoDex's "
+            "termination) ends it early as a failure. `s.status()['info']` reports the current errors "
+            "(`track_pos_err`, `track_rot_err`) and the count of on-track steps (`track_ok`).")
 # Solvability evidence for the families without a reference solution (PROTOCOL §2.7): a successful model trial on the
 # privileged task (the same frozen instance), re-graded by today's verifiers: docs/benchmarks/myosuite.md, Evidence.
 # Run ids as in TAXONOMY; trials are Harbor trial names. `standard`: the same rows sent through the client.
@@ -61,6 +117,8 @@ EVIDENCE = {
     "obj_reorient": (LUNA, "myosuite-obj-reorient-i00__5dLP3ah", 305, True),
     "relocate": (LUNA, "myosuite-relocate-i00__PjqTvZ2", 231, True),
 }
+# set 3: families whose model attempts all failed (PROTOCOL §2.7: listed, never faked); filled from the runs
+NO_POSITIVE: dict[str, str] = {}
 REFERENCE = (
     "MyoSuite's own NPG baseline policy for `{env}` (`myosuite/agents/baslines_NPG/`, shipped in the MyoSuite "
     "wheel and removed from the image), rolled out from the frozen instance and cut at the first success"
@@ -153,6 +211,9 @@ def oracle_meta(fam: str, f: dict, std: bool) -> tuple[str, str]:
     """(oracle, oracle_evidence) for task.toml."""
     if "reference_rows" in f:
         return "full", ""
+    if fam not in EVIDENCE:
+        return "none", (f"no positive example yet ({NO_POSITIVE.get(fam, 'not attempted')}); the task is reported "
+                        f"separately until one exists (PROTOCOL §7, Open 4); human review in PR #{REVIEW_PR}")
     who, trial, rows, through_client = EVIDENCE[fam]
     if not std:
         ev = (
@@ -176,11 +237,16 @@ def oracle_meta(fam: str, f: dict, std: bool) -> tuple[str, str]:
 
 def priv_instruction(fam: str, f: dict) -> str:
     b = BODY[f["body"]]
-    ms = round(f["dt"] * 1000)
+    ms = round(f["dt"] * 1000, 1)
+    ms = int(ms) if ms == int(ms) else ms
+    cam = default_camera(fam, f)
+    ref = ("\n\nThe reference motion (the goal) is MyoDex's `s.base.ref` and, per control step, the observation's "
+           "`targ_obj_com` / `targ_obj_rot`; `curr_obj_com` / `curr_obj_rot` are the object's." if f["rule"] == "track" else "")
     return f"""# MyoSuite · {fam} — frozen instance
 
-You control the **{b[0]}**, {b[2]} (MyoSuite 2.12.2 on MuJoCo), via Python, by **exciting its {f["nu"]} muscles**: there
-is no joint-level command. **Task:** {f["goal"]}
+You control the **{b[0]}**, {b[2]} (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — {f["n_muscles"]}
+muscles{f" and {len(f['actuators'])} non-muscle actuators" if f["actuators"] else ""}: there is no joint-level controller.
+**Task:** {f["goal"]}
 
 {f["scene"]} `s.state()` gives the task's observation dict (privileged): {", ".join(f"`{k}`" for k in f["obs_keys"])}.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/{f["reward_path"]}`; `solved` is the goal test,
@@ -188,11 +254,10 @@ MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/{f["reward
 ```python
 {f["reward_src"]}
 ```
-Robot Coding Bench counts the goal only when `solved` holds for {f["hold_steps"]} consecutive control steps ({f["hold_s"]} s);
-`done` ends the episode as a failure. MyoSuite's step budget is lifted.
+{rule_text(f)}{ref}
 
-This is a *fixed scene instance*: the limb's start pose, the object and the goal never change between resets. You may
-reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
+retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
@@ -205,34 +270,31 @@ time remains, and do not stop early.
 ## Tooling (already installed; run `python` from any directory)
 ```python
 from rcb_myosuite import Session
-s = Session("{fam}", instance="/app/instance.npz")   # ~1 s
+s = Session("{fam}", instance="/app/instance.npz")   # a few seconds
 s.reset()                          # back to the frozen initial state (unlimited; an exact snapshot restore)
 s.state()                          # the task's observation dict (privileged; see above)
-s.muscles(); s.joints()            # {f["nu"]} muscles (index, name, ctrl range); hinge joints (name, qpos/dof address, range, qpos)
-s.moment_arms()                    # ({f["nu"]}, nv) muscle moment arms at the current pose
+s.actuators(); s.muscles(); s.joints()   # {f["nu"]} actuators (kind, command); muscles; hinge/slide joints (qpos/dof address, range)
+s.moment_arms()                    # ({f["nu"]}, nv) actuator moment arms at the current pose
 s.model, s.data                    # MuJoCo model / data: read them freely; only the actions you record are replayed
-s.excitation(a); s.command_for(u)  # command a -> excitation u = 1/(1+exp(-5(a-0.5))) and its inverse
-s.step(a)                          # one control step ({ms} ms): {f["nu"]} muscle commands; False once the episode is over
-s.rest_action()                    # every muscle relaxed (a = -1)
-s.status()                         # {{'success', 'done', 'reason', 'steps', 'resets', 'solved_run', 'hold_steps', 'state_sha', 'info'}}
+s.excitation(a); s.command_for(u)  # muscle command a -> excitation u = 1/(1+exp(-5(a-0.5))) and its inverse
+s.step(a)                          # one control step ({ms} ms): {f["nu"]} commands; False once the episode is over
+s.rest_action()                    # every command at -1 (muscles relaxed)
+s.status()                         # {{'success', 'done', 'reason', 'steps', 'resets', 'solved_run', 'rule', 'state_sha', 'info', ...}}
 s.record_start(); ...; actions = s.record_stop()   # (T, {f["nu"]}) commands, one row per control step
 s.replay(actions)                  # resets, replays open-loop until the episode ends, returns status -> self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
-s.render_frame("hand_top")         # RGB uint8 (480, 640, 3); cameras: {", ".join(f["cameras"])} (hand_top / hand_side_inter: hand close-ups)
-s.render_video(actions, "/app/output/check.mp4")
+s.render_frame("{cam}")            # RGB uint8 (480, 640, 3); cameras: {", ".join(f["cameras"])}
+s.render_video(actions, "/app/output/check.mp4", cameras=["{cam}"])
 ```
-There are no motion primitives: moving a finger, grasping and every other skill are yours to build from muscle commands.
+There are no motion primitives: every skill is yours to build from actuator commands.
 
 CLI equivalent of the grader:
 `python /opt/tools/rcb_myosuite.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz --repeat 2`
 
 ## Conventions
-- Action: {f["nu"]} real numbers, one per muscle in `s.muscles()` order. MyoSuite maps each to an excitation
-  u = 1 / (1 + exp(-5 (a - 0.5))) and does not clip a (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994).
-  Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can
-  cross several joints; its force also depends on its length and velocity (MuJoCo muscle model).
+- Action: {actuation(f)}
 - Control step {ms} ms ({f["frame_skip"]} physics substeps). There is no step budget: your wall-clock time is the limit
-  (~{f["steps_per_s"]} control steps/s here). An episode ends at success or at a task failure; `s.step` then refuses further
+  (~{f["steps_per_s"]} control steps/s here). An episode ends at success or failure; `s.step` then refuses further
   actions until `s.reset()`.
 """
 
@@ -240,20 +302,33 @@ CLI equivalent of the grader:
 def std_instruction(fam: str, f: dict) -> str:
     b = BODY[f["body"]]
     hz = round(1 / f["dt"])
+    atype = "muscle" if not f["actuators"] else "actuators"
+    end = {"hold": f"on success (the goal held {f['hold_steps']} control steps, {f['hold_s']} s), on the task's failure",
+           "event": "on success (the challenge's own success event), on its failure conditions or its own time limit",
+           "track": f"after {f['track_steps']} control steps (the reference motion; then it is judged), early at MyoDex's "
+                    "termination"}[f["rule"]]
+    root = (" and the pose and velocity of your free-standing root (the pelvis: `root_pose`, `root_vel`)"
+            if f["free_root"] else "")
+    kin = ("`/kinematics` gives the fingertip sites and the camera mounts for any joint positions."
+           if any(c.startswith("hand_") for c in f["cameras"]) else "`/kinematics` gives the camera mounts for any joint positions.")
+    refline = ("\n- The goal is a reference motion: `spec[\"reference_motion\"]` gives, per control step, the object's "
+               "centre of mass relative to where it starts and its orientation." if f["rule"] == "track" else "")
     return f"""# MyoSuite · {fam} — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-You control the **{b[0]}**, {b[2]}, **as if it were a real limb**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a
-service you cannot open. You get one client and one episode, and you act only by exciting its {f["nu"]} muscles.
+You control the **{b[0]}**, {b[2]}, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
+you cannot open. You get one client and one episode, and you act only through its actuators ({f["n_muscles"]} muscles{
+f" and {len(f['actuators'])} other actuators" if f["actuators"] else ""}).
 **Task:** {f["goal"]}
 
 {f["scene"]}
 
 ## Rules
-- **No reset.** The episode starts when the service comes up and ends on success (the goal held {f["hold_steps"]} control
-  steps, {f["hold_s"]} s), on the task's failure (see the task), when your time is up, or on a simulator error.
+- **No reset.** The episode starts when the service comes up and ends {end}, when your time is up, or on a simulator
+  error.
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) and
-  the limb's own proprioception: joint angles, velocities and muscle torques, muscle activations and lengths. No object
-  or goal poses, no success check: `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
+  the body's own proprioception: joint positions, velocities and actuator torques, muscle activations and lengths{root}.
+  No object, ball, opponent or goal poses, no success check: `meta["done"]` / `meta["reason"]` tell you when the episode
+  is over and why.{refline}
 - Your wall-clock budget is {AGENT_TIMEOUT} s from your start (`meta["time_left_s"]`); steps are unlimited. Simulated time
   only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
@@ -265,27 +340,24 @@ service you cannot open. You get one client and one episode, and you act only by
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)
-spec = r.spec()                                # muscles, joints, cameras (+ intrinsics, mounting), proprio layout, kinematics, budget
-obs = r.get_obs()                              # obs.last[cam] -> uint8 (480, 640, 3) (default camera: hand_top)
-obs = r.get_obs(cameras=["hand_top", "front_view"], depth=True)   # + obs.last_depth[cam] -> float32 (480, 640), metres
-obs.meta["proprio"]                            # {{"layout": [...], "now": [...]}}: q_*, qd_*, act_*, len_*, effort_*
+spec = r.spec()                                # actuators, joints, cameras (+ intrinsics, mounting), proprio layout, kinematics, budget
+obs = r.get_obs()                              # obs.last[cam] -> uint8 (480, 640, 3) (default camera: {default_camera(fam, f)})
+obs = r.get_obs(cameras=["{f["cameras"][0]}"], depth=True)   # + obs.last_depth[cam] -> float32 (480, 640), metres
+obs.meta["proprio"]                            # {{"layout": [...], "now": [...]}}: q_*, qd_*, act_*, len_*, effort_*{", root_*" if f["free_root"] else ""}
 obs.meta["cameras"]                            # per camera intrinsic_cv / extrinsic_cv / cam2world_gl at the last frame
-res = r.submit("muscle", rows, dt={f["dt"]:g})          # rows: (T, {f["nu"]}) muscle commands, one row per control step
+res = r.submit("{atype}", rows, dt={f["dt"]:g})          # rows: (T, {f["nu"]}) commands, one row per control step
 res.meta["done"], res.meta["reason"], res.meta["control_steps_chunk"]; res.video[cam]; res.last[cam]; res.proprio
 obs = r.get_obs(seconds=1.0, video="mp4")      # hold the last command and watch for 1 s (max 30)
-r.fk(q); r.ik({{"IFtip": [x, y, z, 1, 0, 0, 0]}}, seed=q)   # fingertips <-> joint angles, world frame (no physics)
+r.fk(q)                                        # forward kinematics of the listed links (no physics)
 r.status()                                     # calls, control steps, done, reason, elapsed time
 ```
-Cameras (640x480): {CAMERAS_STD}. Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a
-chunk fastest. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`, rad), `joint_vel` (`qd_<joint>`),
-`muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m), `joint_effort` (`effort_<joint>`, the muscles'
-generalized force on each joint, N m). `/kinematics` gives the fingertip sites and the camera mounts for any joint angles.
+Cameras: {cameras_text(fam, f)}. Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a
+chunk fastest. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel` (`qd_<joint>`),
+`muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m), `joint_effort` (`effort_<joint>`, the
+actuators' generalized force on each joint){", `root_pose`, `root_vel`" if f["free_root"] else ""}. {kin}
 
-### Action type `muscle` ({f["nu"]})
-One real number a per muscle, in `spec["action_types"]["muscle"]["layout"]` order. The excitation is
-u = 1 / (1 + exp(-5 (a - 0.5))) and a is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994).
-Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross
-several joints; its force depends on its length and velocity. Rows are `dt` apart (a whole multiple of the
+### Action type `{atype}` ({f["nu"]})
+{actuation(f)} Columns in `spec["action_types"]["{atype}"]["layout"]` order. Rows are `dt` apart (a whole multiple of the
 {1000 / hz:g} ms control period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the
 previous command) or `"hold"`; the client sends them as float32. The control rate is {hz} Hz ({f["frame_skip"]} physics
 substeps); there is no step budget.
@@ -322,16 +394,16 @@ def task_toml(fam: str, f: dict, std: bool) -> str:
   "/app/output/",
 ]"""
         desc = (
-            f"STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite {fam} ({b[0]}, {f['nu']} muscles) on the "
+            f"STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite {fam} ({b[0]}, {f['n_muscles']} muscles) on the "
             f"same frozen instance as myosuite-{dash(fam)}-i00-privileged: {first}. The agent only gets a client: "
-            "cameras (RGB, optional depth, calibration), the limb's joints and muscles, muscle command chunks, "
+            "cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, "
             "fingertip kinematics; one episode, no reset, no object state; the sim service records the episode, "
             "replays it in fresh processes and grades it."
         )
     else:
         head = 'artifacts = ["/app/output/"]'
         desc = (
-            f"MyoSuite {fam} ({b[0]}, {f['nu']} muscles, MuJoCo): produce one replayable trajectory of muscle commands. "
+            f"MyoSuite {fam} ({b[0]}, {f['n_muscles']} muscles, MuJoCo): produce one replayable trajectory of actuator commands. "
             f"{first}. Frozen scene instance ({f['env_id']}, reset seed 0); graded by two fresh-process replays."
         )
     meta_extra = 'protocol = "eai-standard/2.2"\n' if std else ""
@@ -401,14 +473,14 @@ def readme(fam: str, f: dict, std: bool) -> str:
     oracle, ev = oracle_meta(fam, f, std)
     if std:
         task = (
-            f"MyoSuite `{f['env_id']}` ({b[0]}, {f['nu']} muscles) on the same frozen instance as `{twin}`: {f['goal']}\n"
-            f"{f['scene']} Standard mode (eai-standard/2.2): the agent drives the limb through a client in one episode, "
-            "with only the limb's own proprioception and four cameras (two on the forearm)."
+            f"MyoSuite `{f['env_id']}` ({b[0]}, {f['n_muscles']} muscles) on the same frozen instance as `{twin}`: "
+            f"{f['goal']}\n{f['scene']} Standard mode (eai-standard/2.2): the agent drives the body through a client in "
+            "one episode, with only its own proprioception and the scene's cameras."
         )
         diff = (
             f"Same instance and success rule as `{twin}` (first-pass rating: {f['difficulty']}). In standard mode the "
             "agent loses resets, the simulator and the object state: it sees camera images and the limb's "
-            "proprioception, acts in muscle-command chunks, and gets one episode, so it has to close the loop on what "
+            "proprioception, acts in actuator-command chunks, and gets one episode, so it has to close the loop on what "
             "it sees and recover from its own mistakes without starting over."
         )
         if oracle == "full":
@@ -435,22 +507,22 @@ def readme(fam: str, f: dict, std: bool) -> str:
             (
                 "Service",
                 "`environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` "
-                "(`scripts/eai_standard/`); cameras `hand_top`, `hand_side_inter` (on the forearm), `front_view`, "
-                "`side_view` (static), 640 x 480; fingertip kinematics in the world frame",
+                "(`scripts/eai_standard/`); cameras " + ", ".join(f"`{c}`" for c in f["cameras"]) + " (640 x 480); "
+                "forward kinematics of the body's links",
             ),
             ("Resources", "4 CPUs, no GPU (CPU physics, OSMesa rendering)"),
         ]
     else:
         task = (
-            f"MyoSuite `{f['env_id']}` ({b[0]}, {b[2]}, {f['nu']} muscles): {f['goal']}\n{f['scene']} The deliverable "
-            f"is one replayable trajectory of muscle commands (`/app/output/trajectory.npz`, `(T, {f['nu']})`, one row "
-            f"per {round(f['dt'] * 1000)} ms control step)."
+            f"MyoSuite `{f['env_id']}` ({b[0]}, {b[2]}, {f['n_muscles']} muscles"
+            + (f" and {len(f['actuators'])} other actuators" if f["actuators"] else "") + f"): {f['goal']}\n{f['scene']} "
+            f"The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, "
+            f"`(T, {f['nu']})`, one row per {round(f['dt'] * 1000, 1):g} ms control step)."
         )
         diff = (
-            f"First-pass rating: {f['difficulty']}. The action is muscle-level only ({f['nu']} muscles, each only "
+            f"First-pass rating: {f['difficulty']}. The action is muscle-level ({f['n_muscles']} muscles, each only "
             "pulling, several crossing more than one joint, with activation delays): the agent has to build its own "
-            "joint or fingertip control from muscle excitations, and MyoSuite's goal has to hold for "
-            f"{f['hold_s']} s, so passing through the goal does not count."
+            "joint control from muscle excitations. " + RULE_DIFF[f["rule"]].format(**f)
         )
         if oracle == "full":
             ref = (
@@ -465,8 +537,10 @@ def readme(fam: str, f: dict, std: bool) -> str:
         ver = (
             "`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in "
             "a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state "
-            "is checked against its recorded hash); pass iff both episodes end in success (the goal held "
-            f"{f['hold_steps']} control steps) in the same state (`deterministic`). "
+            "is checked against its recorded hash); pass iff both episodes end in success ("
+            + {"hold": f"the goal held {f['hold_steps']} control steps", "event": "the challenge's own success event",
+               "track": f"on track over the {f['track_steps']}-step reference"}[f["rule"]]
+            + ") in the same state (`deterministic`). "
             + (
                 "`nop`: no trajectory, reward 0."
                 if oracle == "full"
@@ -481,8 +555,8 @@ def readme(fam: str, f: dict, std: bool) -> str:
             ),
             (
                 "Actions",
-                f"{f['nu']} muscle commands per control step ({round(f['dt'] * 1000)} ms, "
-                f"{f['frame_skip']} physics substeps); success = MyoSuite's `solved` held {f['hold_steps']} steps",
+                f"{f['nu']} actuator commands per control step ({round(f['dt'] * 1000, 1):g} ms, "
+                f"{f['frame_skip']} physics substeps); success rule `{f['rule']}` (docs/benchmarks/myosuite.md)",
             ),
             ("Resources", "4 CPUs, no GPU (CPU physics, OSMesa rendering)"),
         ]
@@ -557,7 +631,8 @@ def make(fam: str, out: Path) -> tuple[Path, Path]:
     put(s / "environment/sim/finalize.sh", src=SHARED / "standard/finalize.sh", mode=0o755)
     put(s / "environment/sim/rcb_myosuite.py", src=SHARED / "rcb_myosuite.py")
     put(s / "environment/sim/instance.npz", src=inst)
-    put(s / "environment/sim/task_text.txt", f["goal"] + "\n")
+    put(s / "environment/sim/task.json", json.dumps({"task_text": f["goal"], "default_cameras": [default_camera(fam, f)],
+                                                       "reference": f.get("reference")}, indent=1) + "\n")
     put(s / "tests/Dockerfile", STD_TESTS_DOCKERFILE)
     put(s / "tests/test.sh", src=SHARED / "standard/test.sh", mode=0o755)
     put(s / "tests/grade.py", src=SHARED / "standard/grade.py")

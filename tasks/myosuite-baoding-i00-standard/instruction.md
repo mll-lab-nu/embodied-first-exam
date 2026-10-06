@@ -1,17 +1,18 @@
 # MyoSuite · baoding — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-You control the **MyoHand**, a musculoskeletal model of a human forearm and hand, **as if it were a real limb**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a
-service you cannot open. You get one client and one episode, and you act only by exciting its 39 muscles.
+You control the **MyoHand**, a musculoskeletal model of a human forearm and hand, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
+you cannot open. You get one client and one episode, and you act only through its actuators (39 muscles).
 **Task:** Baoding balls: rotate the two balls around each other in the palm so that each follows its moving target (the targets circle the palm once every 5 s). Success: both balls within 0.015 m of their targets for 200 consecutive control steps (5.0 s: one full orbit of the targets). Failure (the episode ends): a ball's height (world z) drops below 1.25 m, i.e. it falls out of the palm.
 
 Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now.
 
 ## Rules
-- **No reset.** The episode starts when the service comes up and ends on success (the goal held 200 control
-  steps, 5.0 s), on the task's failure (see the task), when your time is up, or on a simulator error.
+- **No reset.** The episode starts when the service comes up and ends on success (the goal held 200 control steps, 5.0 s), on the task's failure, when your time is up, or on a simulator
+  error.
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) and
-  the limb's own proprioception: joint angles, velocities and muscle torques, muscle activations and lengths. No object
-  or goal poses, no success check: `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
+  the body's own proprioception: joint positions, velocities and actuator torques, muscle activations and lengths.
+  No object, ball, opponent or goal poses, no success check: `meta["done"]` / `meta["reason"]` tell you when the episode
+  is over and why.
 - Your wall-clock budget is 5400 s from your start (`meta["time_left_s"]`); steps are unlimited. Simulated time
   only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
@@ -23,27 +24,24 @@ Two balls rest in the palm of the upturned hand; two small markers show where ea
 ```python
 from rcb_client import Robot
 r = Robot()                                    # connects (waits while the service starts)
-spec = r.spec()                                # muscles, joints, cameras (+ intrinsics, mounting), proprio layout, kinematics, budget
+spec = r.spec()                                # actuators, joints, cameras (+ intrinsics, mounting), proprio layout, kinematics, budget
 obs = r.get_obs()                              # obs.last[cam] -> uint8 (480, 640, 3) (default camera: hand_top)
-obs = r.get_obs(cameras=["hand_top", "front_view"], depth=True)   # + obs.last_depth[cam] -> float32 (480, 640), metres
+obs = r.get_obs(cameras=["side_view"], depth=True)   # + obs.last_depth[cam] -> float32 (480, 640), metres
 obs.meta["proprio"]                            # {"layout": [...], "now": [...]}: q_*, qd_*, act_*, len_*, effort_*
 obs.meta["cameras"]                            # per camera intrinsic_cv / extrinsic_cv / cam2world_gl at the last frame
-res = r.submit("muscle", rows, dt=0.025)          # rows: (T, 39) muscle commands, one row per control step
+res = r.submit("muscle", rows, dt=0.025)          # rows: (T, 39) commands, one row per control step
 res.meta["done"], res.meta["reason"], res.meta["control_steps_chunk"]; res.video[cam]; res.last[cam]; res.proprio
 obs = r.get_obs(seconds=1.0, video="mp4")      # hold the last command and watch for 1 s (max 30)
-r.fk(q); r.ik({"IFtip": [x, y, z, 1, 0, 0, 0]}, seed=q)   # fingertips <-> joint angles, world frame (no physics)
+r.fk(q)                                        # forward kinematics of the listed links (no physics)
 r.status()                                     # calls, control steps, done, reason, elapsed time
 ```
-Cameras (640x480): `hand_top` and `hand_side_inter` are close-ups of the hand, **mounted on the forearm** (the radius): they move with it (pronation turns them), so use the pose returned with each frame; `front_view` and `side_view` are static and show the whole body, where the hand is small. Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a
-chunk fastest. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`, rad), `joint_vel` (`qd_<joint>`),
-`muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m), `joint_effort` (`effort_<joint>`, the muscles'
-generalized force on each joint, N m). `/kinematics` gives the fingertip sites and the camera mounts for any joint angles.
+Cameras: `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640x480; default `hand_top`). `hand_top` and `hand_side_inter` are close-ups of the hand, **mounted on the forearm** (the radius): they move with it (pronation turns them), so use the pose returned with each frame; `spec["cameras"]` gives each camera's mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one) and intrinsics, and every response carries each frame's pose. Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a
+chunk fastest. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel` (`qd_<joint>`),
+`muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m), `joint_effort` (`effort_<joint>`, the
+actuators' generalized force on each joint). `/kinematics` gives the fingertip sites and the camera mounts for any joint positions.
 
 ### Action type `muscle` (39)
-One real number a per muscle, in `spec["action_types"]["muscle"]["layout"]` order. The excitation is
-u = 1 / (1 + exp(-5 (a - 0.5))) and a is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994).
-Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross
-several joints; its force depends on its length and velocity. Rows are `dt` apart (a whole multiple of the
+39 real numbers per control step, one per actuator in order: 39 muscles. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. Columns in `spec["action_types"]["muscle"]["layout"]` order. Rows are `dt` apart (a whole multiple of the
 25 ms control period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the
 previous command) or `"hold"`; the client sends them as float32. The control rate is 40 Hz (10 physics
 substeps); there is no step budget.

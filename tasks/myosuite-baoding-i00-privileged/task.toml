@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/myosuite-baoding-i00-privileged"
-description = "MyoSuite baoding (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of muscle commands. Baoding balls: rotate the two balls around each other in the palm so that each follows its moving target (the targets circle the palm once every 5 s). Frozen scene instance (myoChallengeBaodingP1-v1, reset seed 0); graded by two fresh-process replays."
+description = "MyoSuite baoding (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Baoding balls: rotate the two balls around each other in the palm so that each follows its moving target (the targets circle the palm once every 5 s). Frozen scene instance (myoChallengeBaodingP1-v1, reset seed 0); graded by two fresh-process replays."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "baoding", "privileged"]
 

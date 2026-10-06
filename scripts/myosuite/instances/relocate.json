@@ -9,6 +9,13 @@
  "hold_s": 1.0,
  "instance_sha": "2edad198591899f9",
  "goal": "Pick up the object from the table and put it in the target receptacle: the object's position within 0.1 m of the target (rotation is ignored) for 100 consecutive control steps (1.0 s). Failure (the episode ends): the palm more than 0.5 m from the object.",
+ "rule": "hold",
+ "set3": false,
+ "actuators": [],
+ "n_muscles": 63,
+ "free_root": false,
+ "track_steps": null,
+ "reference": null,
  "scene": "An object stands on the table in front of the arm; a receptacle marks the target position.",
  "difficulty": "hard",
  "hours": 3.0,
@@ -37,6 +44,6 @@
   "hand_side_exter",
   "plam_lookat"
  ],
- "steps_per_s": 1600,
+ "steps_per_s": 1400,
  "rest_reason": null
 }

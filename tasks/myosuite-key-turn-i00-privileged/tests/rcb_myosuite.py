@@ -71,8 +71,45 @@ TASKS = {
     "obj_reorient": "myoHandReorient8-v0",      # MyoDex / SAR: reorient one of 8 objects (one frozen draw)
     "arm_reach": "myoArmReachFixed-v0",         # MyoArm (34 muscles): index fingertip to a target in space
     "relocate": "myoChallengeRelocateP1-v0",    # MyoChallenge 2023: MyoArm (63 muscles) moves an object into a box
+    # set 3 (2026-10-06)
+    "sarc_key_turn": "myoSarcHandKeyTurnFixed-v0",          # key_turn with sarcopenic (weaker) muscles
+    "table_tennis": "myoChallengeTableTennisP1-v0",         # MyoChallenge 2025: return a served ball with a paddle
+    "bimanual": "myoChallengeBimanual-v0",                  # MyoChallenge 2024: MyoArm hands an object to a robotic arm
+    "soccer": "myoChallengeSoccerP1-v0",                    # MyoChallenge 2025: MyoLegs kick the ball into the goal
+    "chase_tag": "myoChallengeChaseTagP1-v0",               # MyoChallenge 2023: MyoLegs catch a moving opponent
+    "osl_run": "myoChallengeOslRunFixed-v0",                # MyoChallenge 2024: MyoLeg + a prosthetic leg run a track
+    "dex_apple_lift": "MyoHandAppleLift-v0",                # MyoDex: track a recorded object motion (GRAB / TCDM)
+    "dex_cylinder_pass": "MyoHandCylindersmallPass-v0",
+    "dex_bunny_inspect": "MyoHandStanfordbunnyInspect-v0",
+    "dex_hammer_use": "MyoHandHammerUse-v0",
+    "dex_cup_pour": "MyoHandCupPour-v0",
+    "dex_airplane_fly": "MyoHandAirplaneFly-v0",
 }
 BODY = {t: "arm" if t in ("arm_reach", "relocate") else "hand" for t in TASKS}
+BODY.update(table_tennis="body", bimanual="bimanual", soccer="legs", chase_tag="legs", osl_run="osl")
+# How an episode is judged (set 3 adds two rules; the first ten families keep "hold"):
+#   hold  : MyoSuite's `solved` held HOLD_S seconds in a row; its `done` is a failure.
+#   event : a MyoChallenge's own `solved` is its success event and ends the episode (the challenge's official
+#           definition: goal scored, opponent tagged, ball returned, object placed, track finished); `done` without it
+#           (a fall, out of bounds, the challenge's own time limit) is a failure.
+#   track : MyoDex gives no binary success (its `solved` is always 0). The episode is the whole recorded motion; it
+#           succeeds iff MyoDex's termination never fires and the object's centre of mass is within TRACK_POS_M of the
+#           reference (and, where orientation matters, its orientation within TRACK_ROT_RAD) at >= TRACK_FRAC of the
+#           control steps and at the last one.
+RULE = {t: "hold" for t in TASKS}
+RULE.update({t: "event" for t in ("table_tennis", "bimanual", "soccer", "chase_tag", "osl_run")})
+RULE.update({t: "track" for t in TASKS if t.startswith("dex_")})
+HOLD_S["sarc_key_turn"] = 1.0
+TRACK_POS_M, TRACK_ROT_RAD, TRACK_FRAC = 0.03, 0.5, 0.9
+TRACK_ROT = {"dex_apple_lift": False, "dex_cylinder_pass": False, "dex_bunny_inspect": True, "dex_hammer_use": True,
+             "dex_cup_pour": True, "dex_airplane_fly": True}
+# Set 3 families restore every piece of episode state on reset: the env's random generator (opponents, goalkeepers and
+# terrains draw from it during reset or the episode) and its Python-side objects (OSL controller, reference cursor,
+# opponent policy, ...), deep-copied once after the instance is loaded. The first ten keep their original reset.
+STATE_SET3 = {t for t in TASKS if t not in ("key_turn", "obj_hold", "pen_twirl", "die_reorient", "baoding", "hand_reach",
+                                             "hand_pose", "obj_reorient", "arm_reach", "relocate")}
+_NO_COPY = ("mj_", "obsd_", "robot", "action_space", "observation_space", "spec", "mj_renderer", "_np_random", "np_random",
+            "sim", "sim_obsd", "viewer", "renderer")
 _SIMPLE = (bool, int, float, str, type(None), np.integer, np.floating, np.bool_, np.ndarray)
 _MODEL_SKIP = ("mesh_", "tex_", "hfield_", "skin_", "name_", "names", "paths", "text_", "flex_", "bvh_", "oct_")
 
@@ -223,11 +260,14 @@ class Session:
         self.env = mgym.make(self.env_id)
         self.base = self.env.unwrapped                     # no TimeLimit wrapper: MyoSuite's step budget is lifted
         self.base.seed(0)            # the challenge envs sample goal / mass / size in reset() before reset(seed=) reseeds
+        self._set3 = task in STATE_SET3
+        self.rule = RULE[task]
+        self._rng0 = copy.deepcopy(self._rng().bit_generator.state) if self._set3 else None
         self.base.reset(seed=0)
         self.model, self.data = self.base.mj_model, self.base.mj_data
         self.nu = int(self.model.nu)
         self.dt = float(self.base.dt)
-        self.hold_steps = max(1, int(round(HOLD_S[task] / self.dt)))
+        self.hold_steps = max(1, int(round(HOLD_S[task] / self.dt))) if task in HOLD_S else 1
         self._renderer = None
         self._image_size = image_size
         self._rec: list[np.ndarray] | None = None
@@ -237,6 +277,9 @@ class Session:
             self.load_instance(instance)
         else:
             self._snapshot = self.snapshot()
+        self._extras = self._copy_extras() if self._set3 else {}
+        self._rng_after = copy.deepcopy(self._rng().bit_generator.state) if self._set3 else None
+        self.track_steps = self._track_steps() if self.rule == "track" else None
         self._episode_reset()
         self._total_steps = 0
         _slog("session_start", task=task)
@@ -253,10 +296,40 @@ class Session:
         s = np.empty(sz); mj.mj_getState(self.model, self.base.robot.mj_data, s, mj.mjtState.mjSTATE_INTEGRATION)
         return s
 
+    def _rng(self):
+        g = self.base.np_random
+        return getattr(g, "_np_random", g)          # MyoSuite wraps the generator (NPRandomVersionWrapper)
+
+    def _copy_extras(self) -> dict[str, Any]:
+        """Set 3: deep copies of the env's Python-side episode state (controllers, opponent policies, the reference
+        cursor), taken once after the instance is loaded and put back on every reset. Objects that cannot be copied
+        (they hold MuJoCo views) are rebuilt by the env's own reset from the restored random generator."""
+        out = {}
+        for k, v in vars(self.base).items():
+            if k.startswith("__") or _plain(v) or k.startswith(_NO_COPY) or k in ("mujoco_render_frames",):
+                continue
+            try:
+                out[k] = copy.deepcopy(v)
+            except Exception:  # noqa: BLE001
+                pass
+        return out
+
+    def _track_steps(self) -> int:
+        t = np.asarray(self.base.ref.reference["time"], dtype=np.float64).reshape(-1)
+        return max(1, int(round((t[-1] - t[0]) / self.dt)))
+
     def snapshot(self) -> dict[str, Any]:
         attrs = {k: copy.deepcopy(v) for k, v in vars(self.base).items()
                  if not k.startswith("__") and _plain(v) and k not in ("mujoco_render_frames",)}
-        return {"physics": self._phys(), "attrs": attrs, "model": {k: v.copy() for k, v in _model_arrays(self.model).items()}}
+        snap = {"physics": self._phys(), "attrs": attrs, "model": {k: v.copy() for k, v in _model_arrays(self.model).items()}}
+        if self._set3 and self.model.nmocap:
+            snap["mocap"] = self._mocap()
+        return snap
+
+    def _mocap(self) -> np.ndarray:
+        # set 3: opponents, goalkeepers and the like are mocap bodies that MyoSuite moves in base.mj_data (the robot's own
+        # data keeps them at the origin): part of the state the observations and the success test read
+        return np.concatenate([self.data.mocap_pos.ravel(), self.data.mocap_quat.ravel()]).copy()
 
     def restore(self, snap: dict[str, Any]) -> None:
         mj = self._mj
@@ -269,6 +342,13 @@ class Session:
         for d in datas:
             mj.mj_setState(self.model, d, phys, mj.mjtState.mjSTATE_INTEGRATION)
             mj.mj_forward(self.model, d)
+        if "mocap" in snap:
+            m = np.asarray(snap["mocap"], dtype=np.float64)
+            n = self.model.nmocap
+            for d in datas[1:]:
+                d.mocap_pos[:] = m[: 3 * n].reshape(n, 3)
+                d.mocap_quat[:] = m[3 * n:].reshape(n, 4)
+                mj.mj_forward(self.model, d)
         for k, v in snap["attrs"].items():
             setattr(self.base, k, copy.deepcopy(v))
         self.base.robot._sensor_cache.clear()               # readings of the abandoned branch
@@ -278,6 +358,10 @@ class Session:
         h = hashlib.sha1(self._phys().tobytes())
         for k, v in sorted(_model_arrays(self.model).items()):
             h.update(k.encode()); h.update(np.ascontiguousarray(v).tobytes())
+        if self._set3 and self.model.nmocap:
+            h.update(self._mocap().tobytes())
+        if self._set3 and self.model.nhfielddata:          # terrains are drawn at reset: part of the instance
+            h.update(np.ascontiguousarray(self.model.hfield_data).tobytes())
         return h.hexdigest()[:16]
 
     def save_instance(self, path: str | Path, meta: dict | None = None) -> None:
@@ -285,7 +369,8 @@ class Session:
         np.savez_compressed(path, task=self.task, env_id=self.env_id, physics=snap["physics"],
                             **{"model__" + k: v for k, v in snap["model"].items()},
                             attrs=json.dumps(_to_json(snap["attrs"])), attr_types=json.dumps(_types(snap["attrs"])),
-                            sha=self.state_sha(), meta=json.dumps(meta or {}))
+                            sha=self.state_sha(), meta=json.dumps(meta or {}),
+                            **({"mocap": snap["mocap"]} if "mocap" in snap else {}))
 
     def load_instance(self, path: str | Path) -> None:
         d = np.load(path, allow_pickle=False)
@@ -293,6 +378,8 @@ class Session:
             raise ValueError(f"instance is for task {str(d['task'])!r}, not {self.task!r}")
         self._snapshot = {"physics": d["physics"], "attrs": _from_json(json.loads(str(d["attrs"])), json.loads(str(d["attr_types"]))),
                           "model": {k[len("model__"):]: d[k] for k in d.files if k.startswith("model__")}}
+        if "mocap" in d.files:
+            self._snapshot["mocap"] = d["mocap"]
         self.instance_meta = json.loads(str(d["meta"]))
         self.restore(self._snapshot)
         self.instance_sha = str(d["sha"])
@@ -304,8 +391,16 @@ class Session:
     def _episode_reset(self) -> None:
         # a full env reset first: MyoSuite's robot wrapper caches sensor readings outside mjData (not in the snapshot),
         # so restoring the snapshot alone left the previous episode's key angle / object pose in the observations
+        if self._set3:                      # the same draws as the instance's own reset, every episode
+            self._rng().bit_generator.state = copy.deepcopy(self._rng0)
         self.base.reset(seed=0)
         self.restore(self._snapshot)
+        if self._set3:
+            for k, v in self._extras.items():
+                setattr(self.base, k, copy.deepcopy(v))
+            self._rng().bit_generator.state = copy.deepcopy(self._rng_after)
+            self.base.forward()
+        self.track_ok = 0
         self.steps = 0
         self.done = False
         self.success = False
@@ -339,11 +434,41 @@ class Session:
         self.solved_run = self.solved_run + 1 if solved else 0
         self.last_info = {k: _jsonable(v) for k, v in dict(info).items() if k in ("solved", "done", "rwd_sparse", "rwd_dense")}
         self.last_info["solved_run"] = self.solved_run
-        if self.solved_run >= self.hold_steps:
+        failed = bool(np.asarray(info.get("done", False)).any())
+        if self.rule == "track":
+            pos, rot = self.track_errors()
+            ok = pos <= TRACK_POS_M and (not TRACK_ROT[self.task] or rot <= TRACK_ROT_RAD)
+            self.track_ok += int(ok)
+            self.last_info.update(track_pos_err=round(pos, 5), track_rot_err=round(rot, 4), track_ok=self.track_ok)
+            if failed:
+                self.done, self.reason = True, "failure: " + _FAILURE.get(self.task, "task terminated")
+            elif self.steps >= self.track_steps:
+                self.done = True
+                self.success = ok and self.track_ok >= TRACK_FRAC * self.track_steps
+                self.reason = "success" if self.success else (
+                    f"failure: on track at {self.track_ok} of {self.track_steps} steps"
+                    + ("" if ok else ", off track at the end"))
+        elif self.solved_run >= self.hold_steps and self.task == "bimanual" and not self._bimanual_contacts_ok():
+            self.done, self.reason = True, "failure: placed without a clean hand-over (MyoChallenge's contact check)"
+        elif self.solved_run >= self.hold_steps:
             self.done, self.success, self.reason = True, True, "success"
-        elif bool(np.asarray(info.get("done", False)).any()):
+        elif failed:
             self.done, self.reason = True, "failure: " + _FAILURE.get(self.task, "task terminated")
         return not self.done
+
+    def _bimanual_contacts_ok(self) -> bool:
+        """MyoChallenge 2024's own evaluation of the object's contact history: the MyoHand held it, then the prosthesis,
+        then only the goal pillar, and it never touched the table or the floor (bimanual_v0.evaluate_contact_trajectory)."""
+        from myosuite.envs.myo.myochallenge.bimanual_v0 import evaluate_contact_trajectory
+        return evaluate_contact_trajectory(self.base.touch_history) is None
+
+    def track_errors(self) -> tuple[float, float]:
+        """MyoDex families: the object's centre-of-mass distance (m) and rotation angle (rad) to the reference now."""
+        od = self.base.obs_dict
+        pos = float(np.linalg.norm(np.asarray(od["obj_com_err"]).reshape(-1)))
+        rot = float(self.base.rotation_distance(np.asarray(od["curr_obj_rot"]).reshape(-1),
+                                                np.asarray(od["targ_obj_rot"]).reshape(-1), False))
+        return pos, rot
 
     def rest_action(self) -> np.ndarray:
         """All muscles relaxed (a = -1: excitation ~0.0006)."""
@@ -362,6 +487,7 @@ class Session:
 
     def status(self) -> dict[str, Any]:
         return {"success": bool(self.success), "done": bool(self.done), "reason": self.reason, "steps": int(self.steps),
+                "rule": self.rule, "track_steps": self.track_steps, "track_ok": int(getattr(self, "track_ok", 0)),
                 "resets": int(self.resets), "solved_run": int(self.solved_run), "hold_steps": int(self.hold_steps),
                 "state_sha": self.state_sha(), "info": self.last_info}
 
@@ -404,6 +530,31 @@ class Session:
         mj, m = self._mj, self.model
         return [{"index": i, "name": mj.mj_id2name(m, mj.mjtObj.mjOBJ_ACTUATOR, i),
                  "ctrlrange": m.actuator_ctrlrange[i].round(3).tolist()} for i in range(m.nu)]
+
+    def actuators(self) -> list[dict]:
+        """Every actuator in action order: muscles (`kind` "muscle": the command a maps to the excitation
+        1/(1+exp(-5(a-0.5)))) and the few non-muscle ones of some families (`kind` "position" servo or "motor"): their
+        command is the raw MuJoCo control in `ctrlrange` (MuJoCo clips it), except where `command` says otherwise."""
+        mj, m = self._mj, self.model
+        out = []
+        for i in range(m.nu):
+            name = mj.mj_id2name(m, mj.mjtObj.mjOBJ_ACTUATOR, i)
+            if m.actuator_dyntype[i] == mj.mjtDyn.mjDYN_MUSCLE:
+                out.append({"index": i, "name": name, "kind": "muscle", "command": "excitation 1/(1+exp(-5(a-0.5)))"})
+                continue
+            kp, b1 = float(m.actuator_gainprm[i, 0]), float(m.actuator_biasprm[i, 1])
+            kind = "position" if b1 != 0 and abs(b1 + kp) < 1e-9 else "motor"
+            trn = int(m.actuator_trnid[i, 0])
+            target = mj.mj_id2name(m, mj.mjtObj.mjOBJ_JOINT, trn) if m.actuator_trntype[i] == mj.mjtTrn.mjTRN_JOINT else None
+            lo, hi = (float(x) for x in m.actuator_ctrlrange[i])
+            cmd = (f"position target of joint {target} in [{lo:g}, {hi:g}]" if kind == "position" else
+                   f"control in [{lo:g}, {hi:g}] (force or torque = {float(m.actuator_gear[i, 0]):g} x control)")
+            if self.task == "bimanual":            # BimanualEnvV1.step maps [-1, 1] onto the control range
+                cmd = f"normalized: a in [-1, 1] maps linearly onto [{lo:g}, {hi:g}] ({kind} of joint {target})"
+            if self.task == "osl_run":             # RunTrack.step overwrites them with the prosthesis's own controller
+                cmd = "ignored: the prosthesis's own impedance controller (MyoSuite's OSL state machine) sets it"
+            out.append({"index": i, "name": name, "kind": kind, "joint": target, "ctrlrange": [lo, hi], "command": cmd})
+        return out
 
     def joints(self) -> list[dict]:
         mj, m = self._mj, self.model
@@ -469,7 +620,12 @@ class Session:
 _FAILURE = {"key_turn": "fingertips too far from the key", "obj_hold": "object dropped", "pen_twirl": "pen dropped",
             "die_reorient": "die dropped", "baoding": "a ball dropped or left its target", "pose": "task terminated", "hand_reach": "fingertips too far from their targets", "hand_pose": "hand pose too far from the target",
             "obj_reorient": "object dropped", "arm_reach": "fingertip too far from the target",
-            "relocate": "object dropped (palm more than 0.5 m from it)"}
+            "relocate": "object dropped (palm more than 0.5 m from it)",
+            "sarc_key_turn": "fingertips too far from the key", "table_tennis": "the rally ended without a return",
+            "bimanual": "object dropped or the time limit passed", "soccer": "fallen, or the time limit passed without a goal",
+            "chase_tag": "the opponent was not tagged in time, out of bounds or fallen",
+            "osl_run": "fallen, off the track or out of time",
+            **{t: "object more than 0.25 m from the reference (or from the wrist)" for t in TASKS if t.startswith("dex_")}}
 
 
 def _load_traj(path: str) -> np.ndarray:

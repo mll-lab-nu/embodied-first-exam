@@ -13,6 +13,7 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
 and replays the trajectory in two fresh processes."""
 
+import json
 import math
 import os
 import sys
@@ -65,29 +66,53 @@ BODY = M.BODY[TASK]
 ROBOT = {
     "hand": ("MyoHand", "a musculoskeletal model of a human forearm and hand (MyoSuite)"),
     "arm": ("MyoArm", "a musculoskeletal model of a human shoulder, arm and hand (MyoSuite)"),
+    "body": ("MyoArm with torso", "a musculoskeletal model of a human torso, right arm and hand on a pelvis that slides on the floor (MyoSuite)"),
+    "bimanual": ("MyoArm + MPL", "a musculoskeletal right arm and hand (MyoSuite's MyoArm) next to a motorized prosthetic left arm (the Modular Prosthetic Limb)"),
+    "legs": ("MyoLegs", "a free-standing musculoskeletal model of a human torso and both legs (MyoSuite)"),
+    "osl": ("MyoLeg + OSL", "a free-standing musculoskeletal model of a human with the right leg's muscles and an Open-Source Leg knee-ankle prosthesis on the left (MyoSuite)"),
 }[BODY]
-CAMS = [c for c in ("hand_top", "hand_side_inter", "front_view", "side_view") if c in S.cameras()]
-DEFAULT_CAMS = ["hand_top"]
-MUSCLES = [m["name"] for m in S.muscles()]
-# the limb's own joints only: the key's hinge and the OBJ* joints of pen, die and objects are object state, never sent
+TASK_INFO = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "task.json")))
+CAMS = list(S.cameras())
+DEFAULT_CAMS = list(TASK_INFO["default_cameras"])
+ACTS = S.actuators()
+ACT_NAMES = [a["name"] for a in ACTS]
+MUS_IDX = [a["index"] for a in ACTS if a["kind"] == "muscle"]
+MUSCLES = [ACTS[i]["name"] for i in MUS_IDX]
+OTHER = [a for a in ACTS if a["kind"] != "muscle"]
+ATYPE = "muscle" if not OTHER else "actuators"
+ACT_ADR = np.array([int(MD.actuator_actadr[i]) for i in MUS_IDX], dtype=int)
+# the body's own joints only: the key's hinge and the OBJ* joints of pen, die and objects are object state, never sent
+# (free joints, of the balls, objects and paddles, are left out by S.joints(); a free-standing body's root is reported
+# on its own, in root_pose / root_vel)
 LIMB = [j for j in S.joints() if j["name"] != "keyjoint" and not j["name"].startswith("OBJ")]
 J_NAMES = [j["name"] for j in LIMB]
 J_Q = np.array([j["qpos_adr"] for j in LIMB])
 J_V = np.array([j["dof_adr"] for j in LIMB])
 J_ID = [MD.joint(n).id for n in J_NAMES]
+J_SLIDE = [int(MD.jnt_type[j]) == 2 for j in J_ID]
+ROOT = MD.joint("root").id if mujoco.mj_name2id(MD, mujoco.mjtObj.mjOBJ_JOINT, "root") >= 0 else None
+if ROOT is not None and int(MD.jnt_type[ROOT]) != 0:
+    ROOT = None
 GROUPS = [
-    ("joint_pos", [f"q_{n}" for n in J_NAMES], "joint angles of the limb (rad)"),
-    ("joint_vel", [f"qd_{n}" for n in J_NAMES], "joint velocities (rad/s)"),
+    ("joint_pos", [f"q_{n}" for n in J_NAMES], "joint positions of the body (rad; m for sliding joints)"),
+    ("joint_vel", [f"qd_{n}" for n in J_NAMES], "joint velocities (rad/s; m/s)"),
     (
         "muscle_activation",
         [f"act_{n}" for n in MUSCLES],
-        "muscle activations in [0, 1] (they follow the excitations " "with a first-order delay)",
+        "muscle activations in [0, 1] (they follow the excitations with a first-order delay)",
     ),
     ("muscle_length", [f"len_{n}" for n in MUSCLES], "muscle-tendon lengths (m)"),
-    ("joint_effort", [f"effort_{n}" for n in J_NAMES], "generalized force of all muscles on each joint (N m)"),
+    ("joint_effort", [f"effort_{n}" for n in J_NAMES], "generalized force of all actuators on each joint (N m; N)"),
     ("gripper_opening", [], "none (a hand, not a gripper)"),
     ("tcp_pose", [], "none (a hand, not a gripper); fingertip poses: /kinematics fk"),
 ]
+if ROOT is not None:
+    GROUPS += [
+        ("root_pose", ["root_x", "root_y", "root_z", "root_qw", "root_qx", "root_qy", "root_qz"],
+         "the pelvis (the free-floating root) in the world frame: position (m) and wxyz quaternion"),
+        ("root_vel", ["root_vx", "root_vy", "root_vz", "root_wx", "root_wy", "root_wz"],
+         "the root's linear (m/s, world axes) and angular velocity (rad/s, its own axes), as MuJoCo's free joint reports them"),
+    ]
 PROPRIO_LAYOUT = [n for _, names, _ in GROUPS for n in names]
 PROPRIO_GROUPS, _i = {}, 0
 for _g, _names, _meaning in GROUPS:
@@ -125,9 +150,17 @@ def camera_info(cam: str) -> dict:
     }
 
 
+CAM_MODES = {0: "fixed", 1: "track", 2: "trackcom", 3: "targetbody", 4: "targetbodycom"}
+
+
 def _mount(cam: str) -> dict:
     i = MD.camera(cam).id
     body = MD.body(int(MD.cam_bodyid[i])).name
+    mode = int(MD.cam_mode[i])
+    if mode != 0:       # MuJoCo tracking cameras follow a body (or the model's centre of mass) at a fixed offset
+        return {"type": "link", "parent_link": body, "tracking": CAM_MODES.get(mode, str(mode)),
+                "note": "a MuJoCo tracking camera: it follows its body's position (or the centre of mass of its "
+                "subtree) without turning with it; its pose is in every response (extrinsic_cv per frame)"}
     if body == "world":
         info = camera_info(cam)
         return {"type": "static", "extrinsic_cv": info["extrinsic_cv"], "cam2world_gl": info["cam2world_gl"]}
@@ -139,17 +172,24 @@ def _mount(cam: str) -> dict:
     return {"type": "link", "parent_link": body, "link_T_cam_cv": link_T_cam_cv.tolist()}
 
 
-MOUNTED = {
-    "front_view": "static: the whole body from the front (the hand is small in it)",
-    "side_view": "static: the whole body from the side (the hand is small in it)",
-    "hand_top": "on the forearm (radius): a close-up of the hand from above; it moves with the forearm (pronation)",
-    "hand_side_inter": "on the forearm (radius): a close-up of the hand from the thumb side; it moves with the forearm",
-}
+def _mounted(cam: str) -> str:
+    m = _mount(cam)
+    if m["type"] == "static":
+        return "static"
+    if "tracking" in m:
+        return f"tracking ({m['tracking']}) the body {m['parent_link']}"
+    return f"fixed to the body {m['parent_link']}: it moves with it"
+
+
+MOUNTED = {c: _mounted(c) for c in CAMS}
 
 
 # ------------------------------------------------------------------------------------------------- kinematics
 KD = mujoco.MjData(MD)  # kinematics only: a copy of the start state, never stepped
 KD.qpos[:] = S.data.qpos
+if ROOT is not None:  # a free-standing body answers in its root's frame (base_pose puts the root somewhere)
+    KD.qpos[MD.jnt_qposadr[ROOT]:MD.jnt_qposadr[ROOT] + 7] = [0, 0, 0, 1, 0, 0, 0]
+KIN_FRAME = "base" if ROOT is not None else "world"
 TIPS = [
     n for n in ("THtip", "IFtip", "MFtip", "RFtip", "LFtip") if mujoco.mj_name2id(MD, mujoco.mjtObj.mjOBJ_SITE, n) >= 0
 ]
@@ -164,7 +204,10 @@ LO = np.array([MD.jnt_range[j, 0] if MD.jnt_limited[j] else -np.inf for j in J_I
 HI = np.array([MD.jnt_range[j, 1] if MD.jnt_limited[j] else np.inf for j in J_ID])
 
 
-def _fk_kd(q) -> None:
+def _fk_kd(q, base_pose=None) -> None:
+    if ROOT is not None:
+        a = MD.jnt_qposadr[ROOT]
+        KD.qpos[a:a + 7] = base_pose if base_pose is not None else [0, 0, 0, 1, 0, 0, 0]
     KD.qpos[J_Q] = q
     mujoco.mj_kinematics(MD, KD)
     mujoco.mj_comPos(MD, KD)  # the Jacobians (mj_jacSite) need it
@@ -185,8 +228,8 @@ def do_kinematics(req: dict) -> dict:
     `joint_pos` order). IK solves fingertip positions only (Levenberg-Marquardt over all limb joints within their
     ranges); a fingertip's orientation is ignored."""
     if req["op"] == "fk":
-        _fk_kd(np.asarray(req["q"]))
-        return L.fk_response({n: _pose(n) for n in req["links"]}, "world")
+        _fk_kd(np.asarray(req["q"]), req.get("base_pose"))
+        return L.fk_response({n: _pose(n) for n in req["links"]}, KIN_FRAME)
     q = np.array(req["seed"] if req["seed"] is not None else S.data.qpos[J_Q], dtype=np.float64)
     tg = {k: np.asarray(v[:3]) for k, v in req["targets"].items()}
     jac = np.zeros((3, MD.nv))
@@ -219,21 +262,41 @@ def do_kinematics(req: dict) -> dict:
     errors = {k: (float(np.linalg.norm(t - KD.site_xpos[MD.site(k).id])), 0.0) for k, t in tg.items()}
     ok = all(v[0] <= req["tol_pos_m"] for v in errors.values())
     return L.ik_response(
-        q, ok, errors, "world", note="fingertips: position only (orientation ignored); no collision check"
+        q, ok, errors, KIN_FRAME, note="fingertips: position only (orientation ignored); no collision check"
     )
 
 
 # ------------------------------------------------------------------------------------------------- spec
-TASK_TEXT = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "task_text.txt")).read().strip()
-EPISODE = (
-    f"one episode, no reset: it ends the moment the task's goal has held for {S.hold_steps} control steps in a row "
-    f"({round(S.hold_steps * DT, 3)} s; success), at the task's failure (see task_text), or when your time is over"
+TASK_TEXT = TASK_INFO["task_text"]
+EPISODE = {
+    "hold": f"one episode, no reset: it ends the moment the task's goal has held for {S.hold_steps} control steps in a row "
+    f"({round(S.hold_steps * DT, 3)} s; success), at the task's failure (see task_text), or when your time is over",
+    "event": "one episode, no reset: it ends at the challenge's success event (success), at its failure conditions or "
+    "its own time limit (see task_text), or when your time is over",
+    "track": f"one episode, no reset: it lasts {S.track_steps} control steps (the reference motion; then it is judged), "
+    "ends early at MyoDex's termination (failure), or when your time is over",
+}[S.rule]
+MUSCLE_TEXT = (
+    "muscles: one real number a per muscle; excitation u = 1 / (1 + exp(-5 (a - 0.5))), a not clipped (a = -1: u ~ "
+    "0.0006, 0.5: 0.5, 1: 0.92, 2: 0.9994); activations follow excitations with a first-order delay (~10 ms up, ~40 ms "
+    "down); muscles only pull, one can cross several joints, and its force depends on its length and velocity"
 )
+ACTION = {
+    "dim": NU,
+    "layout": ACT_NAMES,
+    "limits": None,
+    "units": MUSCLE_TEXT if not OTHER else MUSCLE_TEXT + "; the other actuators: see `actuators`",
+    "semantics": "one row per control step, every actuator in `layout` order. Rows are `dt` apart (a whole multiple of "
+    "the control period, at most 0.5 s), `linear` (default: from the previous command) or `hold` between rows; "
+    "nothing is clipped by the service (MuJoCo clips the non-muscle controls to their ranges)",
+}
+if OTHER:
+    ACTION["actuators"] = [{"index": a["index"], "name": a["name"], "kind": a["kind"], "command": a["command"]} for a in OTHER]
 SPEC = {
     "protocol": L.PROTOCOL,
     "protocol_compat": list(L.COMPAT),
     "simulator": "MyoSuite 2.12.2 on MuJoCo 3.6.0 (CPU)",
-    "robot": f"{ROBOT[0]}: {ROBOT[1]}, {NU} muscles",
+    "robot": f"{ROBOT[0]}: {ROBOT[1]}, {len(MUSCLES)} muscles" + (f" and {len(OTHER)} other actuators" if OTHER else ""),
     "task_text": TASK_TEXT,
     "control_hz": CTRL_HZ,
     "physics_substeps": SUBSTEPS,
@@ -251,26 +314,15 @@ SPEC = {
         for c in CAMS
     },
     "default_cameras": DEFAULT_CAMS,
-    "action_types": {
-        "muscle": {
-            "dim": NU,
-            "layout": MUSCLES,
-            "limits": None,
-            "units": "one real number a per muscle; excitation u = 1 / (1 + exp(-5 (a - 0.5))); a is not clipped "
-            "(a = -1: u ~ 0.0006, 0.5: 0.5, 1: 0.92, 2: 0.9994)",
-            "semantics": "muscle excitations, one row per control step; activations follow them with a first-order delay "
-            "(~10 ms up, ~40 ms down); muscles only pull, one muscle can cross several joints, and its force "
-            "depends on its length and velocity. Rows are `dt` apart (a whole multiple of the control period, "
-            "at most 0.5 s), `linear` (default: from the previous command) or `hold` between rows; every real "
-            "value is a valid command, so nothing is clipped",
-        },
-        "not_yet": ["joint_position", "joint_torque", "joint_delta"],
-    },
+    "action_types": {ATYPE: ACTION, "not_yet": ["joint_position", "joint_torque", "joint_delta"]},
     "proprio_layout": PROPRIO_LAYOUT,
     "proprio_groups": PROPRIO_GROUPS,
     "static": {"muscles": MUSCLES},
     "world": {
-        "frame": "MyoSuite's world frame, z up; the limb's root is fixed in it (no positions of the scene are given)",
+        "frame": "MyoSuite's world frame, z up"
+        + ("; the body stands free in it (its root pose is proprioception)" if ROOT is not None
+           else "; the body's root is fixed in it")
+        + " (no positions of the scene are given)",
         "up": "+z",
         "units": {"length": "m", "angle": "rad", "time": "s"},
         "quaternion_order": "wxyz",
@@ -280,18 +332,20 @@ SPEC = {
     "episode": EPISODE,
     "robot_spec": {
         "name": ROBOT[0],
-        "description": f"{ROBOT[1]}: {NU} muscle actuators, {len(J_NAMES)} joints",
-        "base": {
-            "type": "fixed",
-            "link": ROOT_BODY,
-            "pose": ROOT_POSE,
-            "note": "the limb's root body is fixed in the world (pose: x y z + wxyz quaternion)",
-        },
+        "description": f"{ROBOT[1]}: {len(MUSCLES)} muscle actuators"
+        + (f", {len(OTHER)} other actuators" if OTHER else "") + f", {len(J_NAMES)} joints",
+        "base": (
+            {"type": "mobile", "link": ROOT_BODY, "pose_proprio": "root_pose", "velocity_proprio": "root_vel",
+             "note": "a free-standing body: nothing holds its root (the pelvis); it moves only through contacts"}
+            if ROOT is not None else
+            {"type": "fixed", "link": ROOT_BODY, "pose": ROOT_POSE,
+             "note": "the body's root is fixed in the world (pose: x y z + wxyz quaternion)"}
+        ),
         "joints": [
             {
                 "name": n,
-                "type": "revolute" if np.isfinite(LO[k]) else "continuous",
-                "unit": "rad",
+                "type": ("prismatic" if J_SLIDE[k] else "revolute") if np.isfinite(LO[k]) else "continuous",
+                "unit": "m" if J_SLIDE[k] else "rad",
                 "position_limits": [float(LO[k]), float(HI[k])] if np.isfinite(LO[k]) else None,
                 "velocity_limit": None,
                 "effort_limit": None,
@@ -301,27 +355,29 @@ SPEC = {
         ],
         "grippers": {},
         "controller": {
-            "type": "muscle actuators (MuJoCo muscle model); no joint-level controller",
+            "type": "muscle actuators (MuJoCo muscle model); no joint-level controller"
+            + ("; plus the non-muscle actuators in action_types" if OTHER else ""),
             "control_hz": CTRL_HZ,
             "physics_hz": CTRL_HZ * SUBSTEPS,
             "gains": {},
-            "note": "the command is each muscle's excitation (the muscles: static.muscles, the action's layout); "
-            "the joints move only through muscle forces",
+            "note": "the command is each muscle's excitation (the muscles: static.muscles); the joints move only "
+            "through actuator forces",
         },
         "tcp": {},
     },
     "kinematics": {
         "endpoint": "/kinematics",
         "joint_names": GROUPS[0][1],
-        "frame": "world",
+        "frame": KIN_FRAME,
         "quaternion_order": "wxyz",
         "links": LINKS,
         "tcp_frames": [],
         "ee_frames": TIPS,
         "ik_targets": TIPS,
         "ik": {"tol_pos_m": 0.002, "tol_rot_rad": 3.2, "max_iters": 500},
-        "note": "fingertip sites and the camera mounts in the world frame for joint angles q (`joint_pos` order); "
-        "ik: fingertip positions only, over all limb joints",
+        "note": "fingertip sites and the camera mounts for joint positions q (`joint_pos` order), in the "
+        + ("root's frame (or the world's, given base_pose)" if ROOT is not None else "world frame")
+        + "; ik: fingertip positions only, over all body joints",
     },
     "depth": {
         "modes": list(L.DEPTH_MODES),
@@ -334,6 +390,13 @@ SPEC = {
         "noise": L.DEPTH_NOISE,
     },
 }
+if TASK_INFO.get("reference"):  # MyoDex: the reference motion is the goal (relative to the object's start pose)
+    SPEC["reference_motion"] = {
+        "columns": ["t_s", "dx_m", "dy_m", "dz_m", "qw", "qx", "qy", "qz"],
+        "rows": TASK_INFO["reference"],
+        "meaning": "the reference pose of the manipulated item per control step: its centre of mass relative to where "
+        "it starts (world axes) and its orientation (world frame, wxyz)",
+    }
 L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
 EP.scene_built()
 
@@ -344,7 +407,10 @@ def ctrl_steps() -> int:
 
 def proprio_row() -> np.ndarray:
     d = S.data
-    return np.concatenate([d.qpos[J_Q], d.qvel[J_V], d.act[:NU], d.actuator_length[:NU], d.qfrc_actuator[J_V]]).astype(
+    parts = [d.qpos[J_Q], d.qvel[J_V], d.act[ACT_ADR], d.actuator_length[MUS_IDX], d.qfrc_actuator[J_V]]
+    if ROOT is not None:
+        parts += [d.qpos[MD.jnt_qposadr[ROOT]:MD.jnt_qposadr[ROOT] + 7], d.qvel[MD.jnt_dofadr[ROOT]:MD.jnt_dofadr[ROOT] + 6]]
+    return np.concatenate(parts).astype(
         np.float32
     )
 
@@ -477,15 +543,15 @@ def last_command() -> np.ndarray:
 
 def do_submit(meta: dict, A: np.ndarray):
     typ = meta.get("type")
-    if typ != "muscle":
-        raise ValueError(f"type must be muscle (not yet: {SPEC['action_types']['not_yet']})")
+    if typ != ATYPE:
+        raise ValueError(f"type must be {ATYPE} (not yet: {SPEC['action_types']['not_yet']})")
     dt = float(meta.get("dt", DT))
     interp = meta.get("interpolate", "linear")
     video = meta.get("video", "mp4")
     cams, fps = cameras_of(meta), video_fps(meta)
     k = dt / DT
     if A.ndim != 2 or A.shape[1] != NU:
-        raise ValueError(f"muscle actions must be (T, {NU}), got {list(A.shape)}")
+        raise ValueError(f"{ATYPE} actions must be (T, {NU}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)):
         raise ValueError("actions contain NaN/inf")
     if not (math.isfinite(dt) and dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
