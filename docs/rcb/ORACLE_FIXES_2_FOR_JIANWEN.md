@@ -397,3 +397,74 @@ layouts) had no oracle and were never built. Lab work: `/DATA2/qineng/rcb/topogy
   - Visual check of the easier replay video: shoes grasped, fold, suspended pair, ring on the table with the remainder
     held up by the right arm, ring carried to the goal; at the end the ring is inside the dashed goal region and the
     remainder is away from it.
+
+## 6. Below-easy orbits, blanket_flatten and knot_untying of your 7571e4194: lab grades and findings (2026-10-06)
+
+Every below-easy oracle that 7571e4194 provides for these three families, graded on lab in both modes with your
+launcher (`run_harbor_oracle_grades.sh --tasks-root <candidate>/tasks`). Lab work: `/DATA2/qineng/rcb/topogym_v1/obe/`
+(`JOURNAL.md`, `bin/`, `exp/`, grades in `tree_g/runs/test_results/harbor_grade_obe_*`). No change to your tasks, rules,
+graders or runtime. Commits on 7571e4194: 01245b248 (your launcher accepts orbits: case list and
+`check-oracle-portability --families` choices, test in `test-harbor-oracle-launcher.py`) and the next one (two orbits
+oracle fixes with unit tests, this section).
+
+- **Setup.** Image `obejw/rcb-topogym:0.2.16-dev-cu128` = your Dockerfile on 7571e4194 with the v18 build args (runtime
+  source fc5ac3e1, tooling a9d09d66), candidates from your merge / pipeline scripts; builds, fresh-process restores and
+  nops pass. Your blanket corner-fold archives are `cuda_sm89_mp128_*` and `require_compatible` refuses them on lab's
+  sm120 GPUs, so both states were prepared again on lab with your `prepare_blanket_initial_states.py` (same tick counts
+  and layouts as yours) and passed with `--blanket-initial-state`; `topogym_merge_candidate.py` then needs torch, so it
+  ran inside the image.
+- **Grades** (every line deterministic 1, grader_error 0, infra_error 0, forcing 0):
+
+  | family / tier | privileged | standard | rows | where it stops |
+  |---|---|---|---|---|
+  | blanket_flatten very_easy | **1** (only inside the replay hold) | 0 (live strict 0) | 1454 | settled gate: one chattering particle, below |
+  | blanket_flatten easier | 0 | blocked | 633 | `lay_half: assisted grasp lost`, edge ratio 1.3014 > 1.3 |
+  | knot_untying very_easy | **1** (strict at row 848) | **1** | 848 | none; live 18-20 min, rope speed 0.973 mm/s at worst (limit 1) |
+  | knot_untying easier | running at commit time (`harbor_grade_obe_knot_untying_very_easy_easier`) | | | |
+  | orbits very_easy | 0 (twice) | blocked | 99 / 238 | row 99: action past a joint limit; row 238: first align (both fixed below) |
+  | orbits easier | 0 | blocked | 195 | first align (fixed below); cut afterwards, below |
+
+  blanket easier: the lab state matches yours (coverage 0.4112, top 30.5 mm); `lay_half` ending at x -0.29 or -0.28
+  instead of -0.305 still loses the grasp (1.3020 / 1.3009), so the peak is not set by the final x. Left for you.
+- **blanket very_easy: one particle never reads settled** (read-only probe `bin/ob_bprobe.py`, `exp/bprobe2`). The sheet
+  is flat (coverage 0.978) but particle 7458 reports 33.04 mm/s from 0.75 s after the release to the end, the same in
+  every run and both Harbor replays. It is not assist state: it is not in the only binding (27 particles centred 7944),
+  it is free (w = 1/m) and unlinked at acquisition, release and end, nothing is non-free or linked after the release, and
+  the v18 cached admission matched the pre-cache reference on all 81 compared `candidates()` calls. It is a PBD 2-cycle:
+  every 0.625 ms substep stretch/bending moves it about 50 um and the self-collision projection (with its position-based
+  friction) puts it on the other of two points 20.65 um apart; Genesis reports the last substep's (pos - ipos) / dt, so
+  33 mm/s at a fixed end-of-tick position. Its partners (1887, 7338, 7579; rest 8.5-18 mm) sit at 7.96-7.99 mm, right at
+  the 8 mm particle-size collision threshold, in a crumpled spot by the laid corner. Privileged passes only through the
+  0.08 m/s replay tolerance and standard fails the strict 0.03 m/s gate. Options (yours / the user's, not changed): a gate
+  speed from end-of-tick displacement (about 0 here), or a `fold_layout` stage for very_easy as easier has.
+- **orbits fixes (this commit, `planning/orbits/native_session.py`):**
+  - `submit`: the IK put the left forearm roll at its model limit, one float32 step past the public range
+    (`Action would be clipped by the public robot adapter`, very_easy row 99); an excess of at most 1e-4 rad is clamped,
+    anything larger still raises.
+  - `grasp_one` align: on a cord resting on the table or the fixture base, the pads stop 1.6-5 mm above the cord centre
+    (still descending after the 0.3 s settle, then held by the support), so `bias += cord - contact` aims below any pose
+    with the 0.5 mm support gap (`No close contact pose above the support surface`, both tiers' first align). Now an
+    update with no support pose keeps only its in-plane part, and from then on the loop converges on the in-plane error.
+    Natively the very_easy left leg grasp then aligns, pinches and lifts (1.2 mm grasp error), and easier's 0.65 grasp
+    too.
+  - Unit tests in `ci_checks/test-orbits-native-oracle.py`; both fail on 7571e4194 with the lab errors.
+- **orbits, where it stops now (not fixed):** very_easy's right-arm approach row fails your own collision check
+  (`inter_arm` gap 0.47 mm < 1 mm) with the left hand at its standoff (y 0.105, z 0.075); runs with a wider or higher
+  standoff were stopped before that point (speed, below). easier is cut: in `fresh_bight_carry` the grasp error grows from
+  14 to 23 mm and the episode ends (`connection_or_volume_invalid`, cord crushed 0.25 s, volume ratio -0.075), so the ring
+  pass needs route work.
+- **orbits speed: a task-level decision for you and the user (nothing changed).** One control step is 10 IPC ticks of
+  2.5 ms (Newton 1e-3, PCG 1e-5). Your native oracle runs at 7.8 s per step on an idle GPU (host load 26), the same as
+  under load; physics alone (grading replays) 3.7-5.2 s per step, and the rest is the oracle's per-row checks. Your
+  very_easy route comes to about 2500-3300 rows: 5-7 h live and 3-4 h per replay, against the 72 min rule and close to
+  the whole 6 h budget, so even a working oracle fails speed acceptance. The likely lever is a profile like rope's
+  regular tiers (`contact_relaxed_v16`: one 40 ms IPC frame per step, Newton 3e-3 / PCG 3e-5, a coarser softer mesh,
+  finger-only robot contact), which brought rope to 0.156 s per step near rest (orbits easy: 2.5 s on the same benchmark)
+  and rope medium to 33 min end to end. Rough bound, not measured: 4-10x on the physics (one solve per step instead of
+  10, each needing more Newton iterations), so 0.5-1 s per step and 25-55 min for the route, plus about 2 h of oracle
+  checks unless they are trimmed. It changes the physics the scenes were settled and checked with (your eps_velocity
+  0.001 calibration, birth states, difficulty), so scenes and oracle would need re-validation.
+- **orbits births** (checked on the v1 instances; your v2 adds only eps_velocity 0.001): the profile equals orbits easy's,
+  the goal is not met at birth and the difficulty words order as very_easy 1 < easier 2 < easy 4 ball letters. With the
+  libuipc default eps_velocity 0.01 a cord at rest creeps 2.0-2.5 mm/s (10 mm in 5 s, above the 1 mm/s goal limit);
+  0.001 gives 0.37-0.54 mm/s and 0.0001 0.06 mm/s. The original orbits tiers still use 0.01 and creep about 2 mm/s.

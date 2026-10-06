@@ -71,6 +71,21 @@ class ActionBoundary(unittest.TestCase):
             oracle.submit(np.ones(14, dtype=np.float32)*.01, 'collision')
         self.assertEqual(oracle.session.calls, [])
 
+    def test_rounding_past_a_joint_limit_is_clamped_and_larger_excess_still_raises(self):
+        from topogym.planning.harbor_bridge.contracts import BridgeError
+        oracle = controller()
+        lo = float(np.float32(-np.pi))
+        oracle.session.robot.clip = lambda row: np.maximum(np.asarray(row, dtype=np.float64), lo)
+        oracle.session.accepted[3] = -3.12
+        row = oracle.session.hold_action().astype(np.float64)
+        row[3] = lo-5e-5  # IK exactly at the model limit (very_easy's left approach)
+        oracle.submit(row, 'limit')
+        self.assertEqual(float(oracle.session.calls[-1][1][3]), lo)
+        row[3] = lo-1e-3
+        with self.assertRaisesRegex(BridgeError, 'clipped'):
+            oracle.submit(row, 'beyond')
+        self.assertEqual(len(oracle.session.calls), 1)
+
     def test_terminal_episode_never_receives_an_extra_action(self):
         oracle = controller()
         oracle.session.episode_end = 'success'
@@ -86,6 +101,43 @@ class ActionBoundary(unittest.TestCase):
             self.assertNotIn('/rope_sim.py', name)
             self.assertNotIn('/aloha_ik.py', name)
             self.assertNotIn('import mujoco', files[name].read_text())
+
+    def test_support_limited_pads_align_in_plane_then_pinch(self):
+        """The cord rests on the support and the pads stop 1.7 mm above its centre: a second height correction has no
+        pose above the support (lab, both tiers' first align); the in-plane error still converges and the jaws close."""
+        from unittest import mock
+        from scipy.spatial.transform import Rotation
+        import topogym.planning.orbits.native_session as module
+        oracle = controller()
+        cord, tracking = np.array([.30, .10, .0229]), np.array([-.002, .001, 0.])
+        lift, phases = [0.], []
+        oracle.robot = SimpleNamespace(_q_indices={'left': list(range(8))})
+        oracle.full_q, oracle.arm_bases = np.zeros(8), {'left': np.array([0., .5, 0.])}
+        oracle.bias, oracle.pinch_turns, oracle.grasps, oracle.close_width = {'left': np.zeros(3)}, {}, {}, .0028
+        oracle.line = lambda: None
+        oracle.at = lambda arc, line=None: cord+[0., 0., lift[0]]
+        oracle.jaws = lambda widths, phase, seconds=.5: phases.append(phase)
+        oracle.solve_contact_pose = lambda side, point, turn, q: q
+        oracle.reach_row = lambda row, phase, **kwargs: phases.append(phase)
+        oracle.hold = lambda seconds, phase: None
+        oracle.move = lambda contacts, turns, phase, speed=.04: lift.__setitem__(0, .012 if phase == 'test_lift' else 0.)
+
+        def contact(side):
+            pad = cord+oracle.bias[side]+tracking
+            pad[2] = cord[2]+.0017+lift[0]
+            return pad, Rotation.identity()
+
+        def solve_contacts(contacts, turns):
+            if oracle.bias['left'][2] < -.003:
+                raise ValueError('No close contact pose above the support surface: left')
+            return np.zeros(14)
+
+        oracle.contact, oracle.solve_contacts = contact, solve_contacts
+        with mock.patch.object(module, 'vertical_pinch', lambda point, tangent, flip: (None, Rotation.identity())):
+            oracle.grasp_one('left', .2)
+        self.assertEqual(phases.count('align'), 2)
+        self.assertIn('pinch', phases)
+        np.testing.assert_allclose(oracle.bias['left'], [.002, -.001, -.0017], atol=1e-9)
 
     def test_catalog_limits_native_callback_to_the_two_new_tiers(self):
         from topogym.planning.harbor_bridge.catalog import session_callback

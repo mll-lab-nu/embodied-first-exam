@@ -157,6 +157,11 @@ class NativeOrbits:
         row = np.asarray(desired, dtype=np.float64).copy()
         for side, sl in s.robot.arm_slice.items():
             row[sl] = previous[sl]+np.clip(row[sl]-previous[sl], -self.joint_step, self.joint_step)
+        # IK may return a joint exactly at its model limit (very_easy's left approach: forearm roll at -pi), one float32
+        # step outside the public adapter's range; clamp only that rounding margin. Larger excursions still raise.
+        clipped = s.robot.clip(row)
+        if np.max(np.abs(clipped-row)) <= 1e-4:
+            row = clipped
         row = public_action(s, row)
         check = self.collision_check(self.command_q(row))
         if not check['passed']:
@@ -297,16 +302,27 @@ class NativeOrbits:
         points = {side: self.at(station) for side, station in arcs.items()}
         self.move(points, turns, 'descend', speed=.025)
         # Correct load-dependent PD error using measured pad contact positions.
+        flat = False
         for _ in range(5):
             self.hold(.3, 'align_settle')
             errors = {s: self.at(arcs[s])-self.contact(s)[0] for s in arcs}
-            if max(np.linalg.norm(e) for e in errors.values()) < .0015:
+            # Once the support has refused a lower target (below), only the in-plane error can still be corrected.
+            if max(np.linalg.norm(e[:2] if flat else e) for e in errors.values()) < .0015:
                 break
             for side, error in errors.items():
                 self.bias[side] += error
                 if np.linalg.norm(self.bias[side]) > .025:
                     raise RuntimeError(f'Excessive contact tracking bias: {side}')
-            self.reach_row(self.solve_contacts({s: self.at(arcs[s]) for s in arcs}, turns), 'align')
+            try:
+                row = self.solve_contacts({s: self.at(arcs[s]) for s in arcs}, turns)
+            except ValueError:
+                # A cord resting on the table lies below the lowest pad height the support allows, and pads still
+                # descending read high: no lower target has a pose above the table / base. Correct in plane only.
+                flat = True
+                for side, error in errors.items():
+                    self.bias[side][2] -= error[2]
+                row = self.solve_contacts({s: self.at(arcs[s]) for s in arcs}, turns)
+            self.reach_row(row, 'align')
         else:
             raise RuntimeError('Pads did not align with the live cord')
         self.jaws(dict.fromkeys(arcs, self.close_width), 'pinch')
