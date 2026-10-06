@@ -26,7 +26,7 @@ predicate on the final state.
   of the per-step reward on the table even when nothing is hit.
 - **The only task in the subset that requires leaving the ground.** Clearing a hurdle needs a ballistic
   phase with the right take-off timing — a qualitatively different motion from the contact-scheduled
-  gaits of `walk` and `stair`, which is why both are kept.
+  gaits of `walk` and `stair`.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero
 trajectory scores **17.90 / 700**. Holding the starting pose instead — the floor a competent agent

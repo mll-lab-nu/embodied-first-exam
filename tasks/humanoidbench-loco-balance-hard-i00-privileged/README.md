@@ -20,9 +20,9 @@ predicate on the final state.
 
 - **Same reward function as `balance_simple`, three times the gap to the bar.** The published best goes
   from 98.6% to 31% with no change to the scoring code — only the support changes, from a board on a
-  fixed pivot to a board on a free-rolling sphere (task DoF 7 → 14). That is the point of keeping
-  both: it isolates how much of a task's difficulty is the reward and how much is the physics, and it
-  is the one place where "same reward function" was not grounds for cutting the second task.
+  fixed pivot to a board on a free-rolling sphere (task DoF 7 → 14): the pair isolates how much of a
+  task's difficulty is the reward and how much is the physics, and of the two this one stays
+  (upstream's hard version).
 - **The support drifts.** A rolling fulcrum integrates the robot's errors instead of merely reflecting
   them, so a correction that works once stops working a second later; there is no fixed operating point
   to stabilise around.
