@@ -1,0 +1,146 @@
+{
+ "task": "robopaint_xingshu_ren",
+ "family": "robopaint_xingshu_ren",
+ "medium": "calligraphy",
+ "sheets": [
+  {
+   "name": "main",
+   "center_xy": [
+    -0.1,
+    0.0
+   ],
+   "rows": 1024,
+   "cols": 1024,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": true
+  },
+  {
+   "name": "practice",
+   "center_xy": [
+    -0.1,
+    -0.1856
+   ],
+   "rows": 1024,
+   "cols": 448,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": false
+  }
+ ],
+ "robot_qpos": [
+  0.0,
+  0.39269908169872414,
+  0.0,
+  -1.9634954084936207,
+  0.0,
+  2.356194490192345,
+  0.7853981633974483
+ ],
+ "robot_base": [
+  -0.615,
+  0.0,
+  0.0
+ ],
+ "control_hz": 20,
+ "sim_hz": 100,
+ "max_steps": 72000,
+ "brush": {
+  "model": "wang2020",
+  "width_cm": [
+   1.187,
+   -0.03
+  ],
+  "drag_cm": [
+   1.075,
+   0.138
+  ],
+  "offset_cm": [
+   -0.967,
+   2.109994,
+   -0.03600172699999993
+  ],
+  "z_max_cm": 1.5,
+  "k_w": 0.02,
+  "k_d": 0.02,
+  "theta_eps_m": 0.0001,
+  "theta_eps_contact_m": 0.001,
+  "bristle_m": 0.03,
+  "bristle_r": 0.0045,
+  "substep_m": 0.00025,
+  "substep_deg": 3.0
+ },
+ "wells": {
+  "plate_center_xy": [
+   -0.1,
+   0.15
+  ],
+  "plate_half_size": [
+   0.1,
+   0.022,
+   0.003
+  ],
+  "plate_top_z": 0.026,
+  "surface_z": 0.028,
+  "wells": [
+   {
+    "name": "ink",
+    "hex": "#131214",
+    "rgb": [
+     0.07451,
+     0.070588,
+     0.078431
+    ],
+    "center_xy": [
+     -0.1,
+     0.15
+    ],
+    "radius_m": 0.02
+   }
+  ],
+  "rule": "a tip inside the ink stone's circle and below the ink surface loads ink and restores the brush (its hairs are gathered back to a point); the brush starts dry"
+ },
+ "target": {
+  "kind": "glyph",
+  "image": "target.png",
+  "success": {
+   "iou": 0.8,
+   "boundary_f": 0.75,
+   "min_stroke_coverage": 0.8,
+   "max_stray_frac": 0.04,
+   "register_mm": 5.0,
+   "max_strokes": 2,
+   "max_path_mm": 500.0,
+   "min_mark_width_mm": 2.54
+  },
+  "truth_sha": "7687b08e8a268079"
+ },
+ "truth": {
+  "character": "人",
+  "box_mm": [
+   38.59225000000001,
+   38.59225000000001,
+   150.0
+  ],
+  "strokes": [
+   "M 437 659 L 433 661 L 422 663 L 406 660 L 386 660 L 378 656 L 365 643 L 361 637 L 351 612 L 352 606 L 360 594 L 360 587 L 358 578 L 342 547 L 327 524 L 312 505 L 303 490 L 294 479 L 283 461 L 273 449 L 264 434 L 219 383 L 202 358 L 194 349 L 184 334 L 161 312 L 137 280 L 114 260 L 105 250 L 101 243 L 101 240 L 106 239 L 116 243 L 139 256 L 153 267 L 169 283 L 190 297 L 212 314 L 224 327 L 258 358 L 269 371 L 283 379 L 288 391 L 307 411 L 322 433 L 339 452 L 348 466 L 364 476 L 370 494 L 390 517 L 411 557 L 435 584 L 452 620 L 455 630 L 454 635 Z",
+   "M 317 363 L 318 357 L 324 350 L 350 336 L 384 312 L 397 304 L 415 289 L 438 279 L 449 272 L 492 250 L 525 238 L 563 222 L 605 199 L 685 162 L 705 158 L 771 137 L 802 125 L 834 122 L 865 116 L 886 120 L 900 117 L 908 117 L 913 120 L 913 124 L 910 128 L 870 148 L 789 201 L 710 243 L 682 255 L 670 262 L 635 273 L 552 303 L 532 308 L 489 323 L 428 338 L 370 360 L 349 365 L 331 367 L 321 366 Z"
+  ],
+  "n_strokes": 2,
+  "source": "Wikimedia Commons File:神龍蘭亭序全.JPG (https://commons.wikimedia.org/wiki/File:%E7%A5%9E%E9%BE%8D%E8%98%AD%E4%BA%AD%E5%BA%8F%E5%85%A8.JPG): the Shenlong hand copy (馮承素, attributed, Tang, c. 627-650) of Wang Xizhi's 蘭亭序",
+  "license": "Public domain ({{PD-Art|PD-old-100-1923|deathyear=672}} on the Commons file page)",
+  "notice": "The exemplar's ink regions were made by robot-coding-bench (RoboPaint) on 2026-09-28 from a public-domain scan (Wikimedia Commons, File:神龍蘭亭序全.JPG, PD-Art): the characters were cropped, binarised, divided into regions and placed on the sheet; the picture (target.png) is a rendering of those regions.",
+  "tol_mm": 1.0,
+  "area_mm2": 1353.2
+ },
+ "instance_sha": "0fca267a8f57b0ee",
+ "versions": {
+  "mani_skill": "3.0.1",
+  "sapien": "3.0.3",
+  "torch": "2.3.1+cpu",
+  "numpy": "1.24.4",
+  "scipy": "1.15.3",
+  "matplotlib": "3.10.5",
+  "svgpathtools": "?"
+ }
+}

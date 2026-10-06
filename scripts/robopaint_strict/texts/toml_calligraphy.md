@@ -1,0 +1,1 @@
+Process rules (RoboPaint-strict): write with brush strokes the way a person writes; colouring in or filling the shapes, zigzag, serpentine or contour-offset fills fail: a brush-tip path on the main sheet longer than {{MAX_PATH_MM}} mm made of marks narrower than {{MIN_MARK_WIDTH_MM}} mm on average is colouring in.
