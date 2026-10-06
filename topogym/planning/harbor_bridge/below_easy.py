@@ -5,8 +5,10 @@ local historical success never qualifies this source/configuration.
 """
 from .actions import SessionPolicyRunner
 from .callbacks import prepare_output, run_stages
+from topogym.planning.oracle_ik import scoped_session_oracle
 
 
+@scoped_session_oracle
 def run_feedback_policy(session, output, *, variation):
     family = session.task
     if family not in ("cast_coil", "cast_keyhole", "lock_picking", "buzz_wire_3d",
@@ -60,9 +62,15 @@ def run_feedback_policy(session, output, *, variation):
         return run_stages(session, output, stages, selection=selection)
     if family == "rope_threading":
         from topogym.planning.rope_threading.policy import ThreadingPolicy
-        return SessionPolicyRunner(session).run_policy(request_id="below-easy-threading",
-            policy=ThreadingPolicy(session.env, part="solve", speed_scale=1.),
-            submission_hash=session.instance_sha, state_fields=("world",))
+        from topogym.utils.io import write_json_atomic
+        policy = ThreadingPolicy(session.env, part="solve", speed_scale=1.)
+        try:
+            return SessionPolicyRunner(session).run_policy(request_id="below-easy-threading",
+                policy=policy, submission_hash=session.instance_sha, state_fields=("world",))
+        finally:
+            write_json_atomic(output / 'threading_planning.json', dict(
+                last_phase=policy.phase, plans=policy.planning, tracking=policy.tracking,
+                scope='candidate and measured tracking evidence; native Task success is separate'))
     if family == "interlocked_claws":
         from topogym.planning.interlocked_claws.simplified_policy import SimplifiedClawsPolicy
         from topogym.planning.interlocked_claws.simplified_preflight import prepare

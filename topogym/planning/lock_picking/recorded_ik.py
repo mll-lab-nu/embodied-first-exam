@@ -2,7 +2,8 @@
 import json
 import numpy as np
 
-from topogym.solvers.genesis_kinematics import GenesisIKSolver, GenesisFKSolver
+from topogym.solvers.genesis_kinematics import GenesisFKSolver
+from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
 from topogym.utils.arrays import to_numpy
 from .lock_picking_medium_planning import rotation
 

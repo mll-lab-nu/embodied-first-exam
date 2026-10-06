@@ -1,5 +1,7 @@
 # 被动策略与参考运动
 
+2026-10-06：完成 13 类 oracle 的[位姿与路径门槛 review 及两档实施](../../docs/rcb/oracle_tolerance_review_zh.md)。仅在 very_easy / easier 的现有 Session 入口启用经过路径检查的近似 IK、耦合候选和实际 FK 持物检查；Rope 增加中间高度/朝向/关节路径候选。阶段到达阈值及原三档门槛保留。CPU 回归和原生 FK/IK 探测通过；未新增完整 v18 物理成功资格。
+
 2026-10-04 Slotted Post Ring：迁入 12 阶段控制器、IK/FK、拓扑探针和只读诊断代码，执行复用本地 v15 Session 规则；环境几何与物理保持原值。本轮不运行测试或仿真。外部直立端盘抓取尚不适配本地平放初态，未开放完整成功路线；差异与开发入口见 [oracle 说明](slotted_post_ring/README.md)。
 
 2026-10-03 Knot：`knot_untying/` 已整合冻结实例执行、实际 tick 动作记录、上游决策回溯、

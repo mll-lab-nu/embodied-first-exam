@@ -27,7 +27,8 @@ RUNNER_BLOB = "a74bf7cc16e35b3b86ae23595c3e0b63d6bff102"   # upstream e768a13a8 
 CONTEXT = (".dockerignore", "images/topogym", "requirements", "assets/robots", "scripts/prepare_nyx_studio.py", "topogym")
 OMIT = {"agents", "planning", "data", "deferred", "legacy", "redundants", "rollout_simulation", "__pycache__"}  # prune.py
 CHECKOUT = ("scripts/run_agent_batch.sh", "scripts/log_mirror.py", "scripts/mem_guard.py", "scripts/scan_secrets.py",
-            "scripts/secret_scan.py", "scripts/write_task_results.py", "scripts/account_failure_check.py",
+            "scripts/secret_scan.py", "scripts/write_task_results.py", "scripts/task_names.py",
+            "scripts/account_failure_check.py",
             "images/topogym/BUILD_ONLY", "docs/rcb/SHARING_RUNS.md", "docs/rcb/RUNNING.md")
 
 

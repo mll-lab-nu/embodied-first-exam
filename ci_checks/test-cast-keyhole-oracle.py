@@ -21,6 +21,7 @@ class PublicFeedbackAdapterTests(unittest.TestCase):
         from types import SimpleNamespace
         self.targets = {'left': dict(joint_position_rad=[.1, .2], gripper_position_m=.024)}
         self.session = SimpleNamespace(
+            action_layout=['left/j0', 'left/j1', 'left/gripper'],
             env=SimpleNamespace(_robot=SimpleNamespace(
                 capture_state=lambda: SimpleNamespace(targets=self.targets),
                 groups={'left': SimpleNamespace(gripper_field='gripper_position_m')})),

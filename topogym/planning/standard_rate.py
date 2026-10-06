@@ -87,8 +87,8 @@ def rate_limited_runner(session, *, control_mode="JOINT_ABS", limit_rad=None, mo
 
     class RateLimitedExecutor(SessionExecutor):
         def step(self, action, *, mode="JOINT_ABS"):
-            from topogym.robot.control import compile_action
-            native = compile_action(self.session.env._robot, action, mode)
+            from topogym.planning.oracle_ik import compile_oracle_action
+            native = compile_oracle_action(self.session.env, action, mode)
             return limiter.step(public_row(self.session, native))
 
         def step_public(self, row):

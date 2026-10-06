@@ -11,7 +11,8 @@ from scipy.spatial.transform import Rotation
 from topogym.planning.buzz_wire_3d.kinematics import mesh_object, manager, distance
 from topogym.planning.rigid_reference.geometry import matrix
 from topogym.planning.rigid_reference.feedback import body_pose
-from topogym.solvers.genesis_kinematics import GenesisFKSolver, GenesisIKSolver
+from topogym.solvers.genesis_kinematics import GenesisFKSolver
+from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
 from topogym.utils.arrays import to_numpy
 
 

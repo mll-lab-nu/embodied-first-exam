@@ -3,7 +3,8 @@ import math
 import numpy as np
 from scipy.spatial.transform import Rotation, Slerp
 
-from topogym.solvers.genesis_kinematics import GenesisFKSolver, GenesisIKSolver
+from topogym.solvers.genesis_kinematics import GenesisFKSolver
+from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
 from topogym.utils.arrays import to_numpy
 from .lock_picking_medium_planning import pickup_waypoints, rotation
 from .object_route import sample_route

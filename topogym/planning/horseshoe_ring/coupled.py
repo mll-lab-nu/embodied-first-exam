@@ -9,6 +9,7 @@ from scipy.spatial.transform import Rotation
 
 from topogym.planning.rigid_reference.feedback import relative_pose
 from topogym.planning.rigid_reference.geometry import pose_dict
+from topogym.planning.oracle_ik import accept_coupled_candidate, active_scope
 
 
 class CoupledHorseshoeIK:
@@ -51,7 +52,11 @@ class CoupledHorseshoeIK:
         result=least_squares(residual,seed,bounds=(lower,upper),max_nfev=120,
                             ftol=1e-10,xtol=1e-10,gtol=1e-10,callback=stop)
         error=residual(result.x)
-        if np.linalg.norm(error[:3])/20>1e-5 or np.linalg.norm(error[3:6])>1e-4 or np.linalg.norm(error[6:9])/10>1e-5:
+        start, goal = self.seed.copy(), self.seed.copy()
+        start[self.indices], goal[self.indices] = previous, result.x
+        if not accept_coupled_candidate(self.checker.robot, start, goal,
+                [np.linalg.norm(error[:3])/20, np.linalg.norm(error[3:6]), np.linalg.norm(error[6:9])/10],
+                [1e-5, 1e-4, 1e-5]):
             raise ValueError(f'Coupled IK residual: {error[:9].tolist()}')
         return result.x,self.poses(result.x)[0]
 
@@ -66,6 +71,10 @@ class CoupledHorseshoeIK:
                 lp,lr=reference['horseshoe_left'];wp,wr=bodies['left']
                 common=wr*lr.inv()
                 world={n:(wp+common.apply(p-lp),common*r) for n,(p,r) in reference.items()}
+                if active_scope(self.checker.robot.entity) is not None:
+                    # Both held shoes come from FK; the right shoe is not an
+                    # exact copy of the relative reference after approximate IK.
+                    world.update({'horseshoe_'+s: pose for s, pose in bodies.items()})
                 full=self.seed.copy();full[self.indices]=q
                 check=self.checker.check(full,contacts={s:'horseshoe_'+s for s in self.offsets},body_poses=world)
                 output.append(dict(reference_index=i,qpos=full.tolist(),bodies={n:pose_dict(p) for n,p in world.items()},**check))

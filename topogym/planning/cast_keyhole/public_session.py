@@ -20,7 +20,7 @@ def public_row(session, native):
 def run_feedback_policy(session, output):
     from topogym.assets.geometry.cast_keyhole import plate_assembly_transforms
     from topogym.assets.variation_resources import read_json
-    from topogym.robot.control import action_spec, compile_action
+    from topogym.robot.control import action_spec
     from topogym.utils.io import to_jsonable, write_json_atomic
     from .policy import PARTS
     from .simplified_policy import SimplifiedKeyholePolicy
@@ -63,7 +63,8 @@ def run_feedback_policy(session, output):
                     robot=robot.observe(), privileged=dict(world=session.env._world.read_state()))
 
     def submit(action):
-        native = compile_action(robot, action, 'EE_ABS')
+        from topogym.planning.oracle_ik import compile_oracle_action
+        native = compile_oracle_action(session.env, action, 'EE_ABS')
         return session.step(public_row(session, native))
 
     report = dict(status='running', public_actions_only=True, from_frozen_home=True,

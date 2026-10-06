@@ -16,6 +16,8 @@
 !images/topogym/verify_uipc_wheel.py
 !images/topogym/uipc-build.json
 !images/topogym/uipc-build-cu130.json
+!images/topogym/uipc-prebuilt/
+!images/topogym/uipc-prebuilt/**
 !images/topogym/uipc-patches/
 !images/topogym/uipc-patches/**
 !images/topogym/check_gpu_stack.py

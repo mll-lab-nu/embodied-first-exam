@@ -24,6 +24,7 @@ from topogym.planning.knot_untying.kinematics import (
 from topogym.utils.geometry.rope import load_centerline_map, sample_material_centerline
 from topogym.utils.io import write_json_atomic
 from .invariant import Fixture
+from topogym.planning.oracle_ik import scoped_session_oracle
 
 
 class EpisodeFinished(RuntimeError):
@@ -464,6 +465,7 @@ class NativeOrbits:
                     phase=self.phase, scope='native development stage; independent verifier required')
 
 
+@scoped_session_oracle
 def run_feedback_policy(session, output, *, variation, stage='place', close_width_m=.0028):
     output = prepare_output(session, output, __file__)
     return NativeOrbits(session, output, variation=variation, close_width_m=close_width_m).run(stage=stage)

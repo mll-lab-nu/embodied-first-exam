@@ -16,6 +16,7 @@ Defaults: 11 families (excluding Orbits/Slotted Post Ring), easy/medium/hard,
 serial privileged + standard, full oracle grading, no nop controls.
 
   --families CSV       e.g. cast_coil,cast_keyhole
+                       Orbits is also supported for very_easy/easier.
   --tiers CSV          very_easy,easier,easy,medium,hard (default original three)
   --tasks-root DIR     Use existing current-version bound candidates; skip builds
                       Otherwise prepare/build new candidates in OUTPUT/candidate
@@ -66,7 +67,7 @@ IFS=',' read -r -a tier_list <<< "$tiers"
 declare -A seen=()
 for family in "${family_list[@]}"; do
   case "$family" in
-    cast_coil|cast_keyhole|lock_picking|buzz_wire_3d|fiber_bundling|horseshoe_ring|hedgehog_in_cage|interlocked_claws|blanket_flatten|rope_threading|knot_untying) ;;
+    cast_coil|cast_keyhole|lock_picking|buzz_wire_3d|fiber_bundling|horseshoe_ring|hedgehog_in_cage|interlocked_claws|blanket_flatten|rope_threading|knot_untying|orbits) ;;
     *) printf 'Unsupported family: %s\n' "$family" >&2; exit 2 ;;
   esac
   [[ -z "${seen[$family]:-}" ]] || { printf 'Duplicate family: %s\n' "$family" >&2; exit 2; }

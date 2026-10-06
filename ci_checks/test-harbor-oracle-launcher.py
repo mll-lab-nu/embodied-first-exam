@@ -129,6 +129,19 @@ os.execv(os.environ['TEST_REAL_PYTHON'],[os.environ['TEST_REAL_PYTHON'],*sys.arg
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(image.stat().st_mtime_ns, before)
 
+    def test_orbits_below_easy_dispatches_both_tiers(self):
+        for tier in ("very-easy", "easier"):
+            for mode in ("privileged", "standard"):
+                task = self.tasks / f"topogym-orbits-{tier}-i00-{mode}"
+                task.mkdir()
+                (task / "task_release.json").write_text("{}")
+        result = self.run_queue("--families", "orbits", "--tiers", "very_easy,easier")
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        rows = json.loads((self.root / "output/summary.json").read_text())["tasks"]
+        self.assertEqual({r["family"] for r in rows}, {"orbits"})
+        self.assertEqual({r["tier"] for r in rows}, {"very_easy", "easier"})
+        self.assertEqual(len((self.root / "dispatch.jsonl").read_text().splitlines()), 2)
+
 
 if __name__ == "__main__":
     unittest.main()

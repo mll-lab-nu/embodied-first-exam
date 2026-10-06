@@ -9,6 +9,8 @@ import json
 from pathlib import Path
 import re
 import threading
+import time
+import uuid
 from urllib.parse import quote, urlsplit
 
 from .rewrite import rewrite_request, restore_response
@@ -30,7 +32,7 @@ def safe_error(value, key='', limit=2000):
     return ' '.join(text.split())[:limit]
 
 
-def provider_message(response, key):
+def provider_message(response, key, evidence=None):
     # Extract an error message only, never a whole request/response or headers.
     raw = response.read(65536)
     try:
@@ -41,6 +43,10 @@ def provider_message(response, key):
         # Extract its error message, not the raw body, request or headers.
         if isinstance(error, dict):
             metadata = error.get('metadata') or {}
+            if evidence is not None and isinstance(metadata, dict):
+                for name in ('provider_name', 'model_slug'):
+                    if isinstance(metadata.get(name), str):
+                        evidence[name] = safe_error(metadata[name], key)
             nested = metadata.get('raw') if isinstance(metadata, dict) else None
             if isinstance(nested, str):
                 try: nested = json.loads(nested)
@@ -63,9 +69,22 @@ class Bridge(ThreadingHTTPServer):
         self.key, self.model, self.upstream = key, model, upstream
         self.logs = Path(logs); self.logs.mkdir(parents=True, exist_ok=True)
         self.lock = threading.Lock(); self.usage = {}; self.started = 0
+        self.diagnostic_lock = threading.Lock()
         self.completed = 0; self.errors = []; self.error_details = []; self.metadata = None
         super().__init__(('127.0.0.1', 0), Handler)
         self.persist()
+
+    def diagnostic(self, event, request_id=None, **fields):
+        """Metadata only: never log prompts, tool arguments, keys or headers wholesale."""
+        def scrub(value):
+            if isinstance(value, str): return safe_error(value, self.key)
+            if isinstance(value, dict): return {k: scrub(v) for k, v in value.items()}
+            if isinstance(value, list): return [scrub(v) for v in value]
+            return value
+        row = scrub(dict(time=time.time(), event=event, request_id=request_id, **fields))
+        with self.diagnostic_lock:
+            with (self.logs/'openrouter-requests.jsonl').open('a') as stream:
+                stream.write(json.dumps(row)+'\n')
 
     def connection(self):
         target = urlsplit(self.upstream)
@@ -85,35 +104,44 @@ class Bridge(ThreadingHTTPServer):
         path = self.logs/'openrouter-usage.json'; temporary = path.with_suffix('.tmp')
         temporary.write_text(json.dumps(data, indent=2)+'\n'); temporary.replace(path)
 
-    def fail(self, code, detail=None):
+    def fail(self, code, detail=None, *, request_id=None, phase=None):
+        self.diagnostic('request_error', request_id, code=code, phase=phase,
+                        message=safe_error(detail, self.key) if detail is not None else None)
         with self.lock:
             self.errors.append(code)
             if detail is not None:
-                self.error_details.append(dict(code=code, message=safe_error(detail, self.key)))
+                self.error_details.append(dict(code=code, message=safe_error(detail, self.key),
+                                               request_id=request_id, phase=phase))
                 self.error_details = self.error_details[-20:]
             self.persist()
 
-    def record(self, payload):
+    def record(self, payload, request_id=None):
         response = payload.get('response', payload)
+        self.diagnostic('upstream_terminal', request_id, response_id=response.get('id'),
+                        response_model=response.get('model'), status=response.get('status'),
+                        event_type=payload.get('type'), usage_present=isinstance(response.get('usage'), dict))
         if payload.get('type') not in (None, 'response.completed', 'response.incomplete'):
             if payload.get('type') in ('error', 'response.failed'):
                 error = response.get('error') or payload.get('error') or payload
                 detail = error.get('message', error.get('code', 'response failed')) if isinstance(error, dict) else error
-                self.fail('provider_response_failed', detail)
+                self.fail('provider_response_failed', detail, request_id=request_id, phase='upstream_terminal')
             return
         usage = response.get('usage'); rid = response.get('id')
         if not rid or not isinstance(usage, dict):
-            self.fail('response_usage_missing'); return
+            self.fail('response_usage_missing', request_id=request_id, phase='upstream_terminal'); return
         counts = {k: usage.get(k) for k in ('input_tokens', 'output_tokens')}
         counts['cached_tokens'] = (usage.get('input_tokens_details') or {}).get('cached_tokens', 0)
         if any(type(n) is not int or n < 0 for n in counts.values()):
-            self.fail('response_usage_invalid'); return
+            self.fail('response_usage_invalid', request_id=request_id, phase='upstream_terminal'); return
         with self.lock:
+            duplicate = rid in self.usage
             if rid in self.usage:
                 if self.usage[rid] != counts: self.errors.append('duplicate_response_usage_mismatch')
             else:
                 self.usage[rid] = counts; self.completed += 1
             self.persist()
+        self.diagnostic('usage_recorded', request_id, response_id=rid, usage=counts,
+                        duplicate=duplicate, included_in_totals=not duplicate)
 
     def catalog(self):
         if self.metadata is None:
@@ -166,52 +194,91 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.rstrip('/') != '/responses':
             self.reply(404, {'error': {'message': 'unsupported adapter endpoint'}}); return
         conn = None; streaming = False
+        request_id = uuid.uuid4().hex; started = time.monotonic()
+        phase = 'read_local_request'; status = None
+        upstream_bytes = downstream_bytes = events = 0
+        terminal = False; forwarded_terminal = False
+        bridge.diagnostic('request_started', request_id, model=bridge.model)
         try:
             length = int(self.headers.get('Content-Length','0'))
             if not 0 < length <= 128*1024*1024: raise ValueError('invalid_request_size')
             payload = json.loads(self.rfile.read(length))
             if payload.get('model') != bridge.model: raise ValueError('model_switch_forbidden')
+            phase = 'model_catalog'
             limit = bridge.catalog()['data'][0]['output_limit']
             if type(payload.get('max_output_tokens')) is int:
                 payload['max_output_tokens'] = min(payload['max_output_tokens'], limit)
+            phase = 'rewrite_request'
             payload, aliases = rewrite_request(payload)
             with bridge.lock:
                 bridge.started += 1; bridge.persist()
+            phase = 'send_upstream_request'
             conn, base = bridge.connection()
             conn.request('POST', base+'/responses', body=json.dumps(payload).encode(), headers=bridge.headers())
+            phase = 'read_upstream_headers'
             response = conn.getresponse()
+            status = response.status
+            bridge.diagnostic('upstream_headers', request_id, http_status=status,
+                              # Allowlisted correlation headers only; no auth/cookies/body.
+                              provider_request_id=response.getheader('x-request-id') or response.getheader('request-id'),
+                              content_type=response.getheader('Content-Type'),
+                              elapsed_s=round(time.monotonic()-started, 3))
             if response.status != 200:
                 code = 'http_'+str(response.status)
-                detail = provider_message(response, bridge.key); bridge.fail(code, detail)
+                phase = 'read_upstream_error'; provider = {}
+                detail = provider_message(response, bridge.key, provider)
+                bridge.diagnostic('provider_rejection', request_id, http_status=status, **provider)
+                bridge.fail(code, detail, request_id=request_id, phase=phase)
+                phase = 'write_downstream_error'
                 self.reply(response.status, {'error': {'message': 'OpenRouter '+code+': '+detail, 'code': response.status}})
                 return
             if 'text/event-stream' not in response.getheader('Content-Type',''):
-                data = json.loads(response.read()); bridge.record(data)
-                self.reply(200, restore_response(data, aliases)); return
+                phase = 'read_upstream_json'
+                raw = response.read(); upstream_bytes += len(raw)
+                data = json.loads(raw); bridge.record(data, request_id); terminal = True
+                phase = 'write_downstream_json'
+                self.reply(200, restore_response(data, aliases)); forwarded_terminal = True
+                return
+            phase = 'write_downstream_headers'
             self.send_response(200); self.send_header('Content-Type','text/event-stream')
             self.send_header('Cache-Control','no-cache'); self.end_headers(); streaming = True
-            sequence = 0; lines = []; terminal = False
+            sequence = 0; lines = []
             def emit(lines):
-                nonlocal sequence, terminal
+                nonlocal sequence, terminal, phase, downstream_bytes, events, forwarded_terminal
+                phase = 'decode_upstream_event'
                 data = '\n'.join(line[5:].lstrip() for line in lines if line.startswith('data:'))
                 if not data or data == '[DONE]': return
                 obj = json.loads(data)
-                if obj.get('type') in ('response.completed','response.incomplete','response.failed','error'):
-                    bridge.record(obj); terminal = True
+                is_terminal = obj.get('type') in ('response.completed','response.incomplete','response.failed','error')
+                if is_terminal:
+                    bridge.record(obj, request_id); terminal = True
                 obj = restore_response(obj, aliases)
                 obj['sequence_number'] = sequence; sequence += 1
                 event = str(obj.get('type','message'))
-                self.wfile.write(('event: '+event+'\ndata: '+json.dumps(obj)+'\n\n').encode()); self.wfile.flush()
+                wire = ('event: '+event+'\ndata: '+json.dumps(obj)+'\n\n').encode()
+                phase = 'write_downstream_event'
+                self.wfile.write(wire); self.wfile.flush()
+                downstream_bytes += len(wire); events += 1
+                if is_terminal: forwarded_terminal = True
+            phase = 'read_upstream_stream'
             for raw in response:
+                upstream_bytes += len(raw)
                 line = raw.decode('utf-8').rstrip('\r\n')
                 if line: lines.append(line)
                 else: emit(lines); lines = []
+                phase = 'read_upstream_stream'
             if lines: emit(lines)
-            if not terminal: bridge.fail('stream_ended_without_terminal_response')
+            if not terminal: bridge.fail('stream_ended_without_terminal_response', request_id=request_id, phase='upstream_eof')
         except Exception as exc:
-            bridge.fail('transport_or_protocol_error', type(exc).__name__+': '+str(exc))
+            bridge.fail('transport_or_protocol_error', type(exc).__name__+': '+str(exc),
+                        request_id=request_id, phase=phase)
             if not streaming:
                 try: self.reply(502, {'error': {'message': 'OpenRouter adapter request failed; see openrouter-usage.json'}})
                 except OSError: pass
         finally:
             if conn: conn.close()
+            bridge.diagnostic('request_finished', request_id, last_phase=phase, http_status=status,
+                              elapsed_s=round(time.monotonic()-started, 3),
+                              upstream_bytes=upstream_bytes, downstream_stream_bytes=downstream_bytes,
+                              forwarded_events=events, upstream_terminal_seen=terminal,
+                              terminal_forwarded=forwarded_terminal)

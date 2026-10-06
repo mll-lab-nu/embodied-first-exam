@@ -3,6 +3,10 @@
 # Infrastructure only, no benchmark code (docs/rcb/PROTOCOL.md §1): the task tooling (rcb_topogym.py) comes with each task,
 # and prune.py removes everything that could hold a reference solution. Tag = images/topogym/VERSION + CUDA profile; build: scripts/build_images.sh
 # topogym (from the repository root, which is the build context; .dockerignore keeps it small).
+# UIPC_WHEEL=build compiles libuipc (stages uipc-compile, uipc-build); UIPC_WHEEL=prebuilt installs the audited wheel and
+# its uipc-build.json from images/topogym/uipc-prebuilt/ instead (helper release trees: nvcc output is not bit-reproducible,
+# and the task packages bind the hash of that uipc-build.json).
+ARG UIPC_WHEEL=build
 ARG UIPC_BUILDER=sameli/manylinux_2_34_x86_64_cuda_12.8@sha256:0b99ea5d0e32f5ad49b02de2663520f17a8dafc8739365cd7463a82ed3f0590a
 FROM ${UIPC_BUILDER} AS uipc-compile
 ENV PATH=/opt/python/cp311-cp311/bin:$PATH
@@ -31,6 +35,11 @@ ARG UIPC_CONFIG=uipc-build.json
 COPY images/topogym/${UIPC_CONFIG} /recipe/uipc-build.json
 RUN bash /recipe/build_uipc.sh audit
 
+FROM scratch AS uipc-prebuilt
+COPY images/topogym/uipc-prebuilt/ /out/wheels/
+
+FROM uipc-${UIPC_WHEEL} AS uipc-wheels
+
 FROM python:3.11.15-slim-bookworm@sha256:d29f48a31a8b408ed19272ca1e7b10ebae13b240a27e862d3d4217c528e2e0c3 AS runtime-deps
 ARG CUDA_FLAVOR=cu128
 ENV TOPOGYM_CUDA_FLAVOR=${CUDA_FLAVOR}
@@ -50,7 +59,7 @@ COPY images/topogym/verify_uipc_wheel.py /opt/verify_uipc_wheel.py
 RUN python /opt/verify_uipc_wheel.py dependencies /opt/requirements/runtime.lock
 
 FROM runtime-deps AS runtime
-COPY --from=uipc-build /out/wheels/ /opt/uipc-wheel/
+COPY --from=uipc-wheels /out/wheels/ /opt/uipc-wheel/
 COPY images/topogym/check_gpu_stack.py /opt/check_gpu_stack.py
 RUN python /opt/verify_uipc_wheel.py install /opt/uipc-wheel \
     && cp /opt/uipc-wheel/uipc-build.json /opt/uipc-build.json \

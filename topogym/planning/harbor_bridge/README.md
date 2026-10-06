@@ -631,6 +631,27 @@ Blanket 的 birth UV 及只读材质绑定已进入公共 task/PBD 代码，原 
 `harbor_qualified = false`，直到严格初态重载、完整原生成功、fresh-process replay、视频与两种模式的
 oracle/nop 独立评分均通过。候选镜像未构建或 GPU 未运行时，CPU 合同通过只代表合并接线检查通过。
 
+## 2026-10-06 两档 IK／路径改动重跑
+
+`harbor_below_easy_v18_20261006_ik01` 使用独立冻结源码、镜像和新生成的实例，重跑
+very_easy／easier；不执行原三档，不继承旧评分。通用 IK、实际 FK 路径检查和共享执行入口
+影响全部 12 类已接入的简单档 oracle，因此旧 sweep 已通过的 18 项也在复验范围内。
+
+首批 10 类、40 项：Buzz、Lock、Coil、Keyhole、Fiber、Claws、Hedgehog、Horseshoe、Knot、
+Orbits，每类两档、privileged／standard 双模式；优先处理 Buzz 和 Lock。Rope／Blanket 共 8 项
+等待用户明确此前「取消柔体辅助」要求与本次最新版配置的关系，未擅自启用后加入队列。
+Slotted 两档仍缺 Session callback，不记为已覆盖。启动器已接通 Orbits 的两档分派。
+
+本次 oracle 改动的 28 个文件与既有 207 项测试的源码记录一致；新增启动器验证 7 项通过，
+12 类 × 两档共 24 个私有依赖闭包检查通过。冻结 1232 个源文件并校验一致。
+这些检查不是物理成功。新队列已启动，实际结果以
+[`state.json`](../../../runs/test_results/harbor_below_easy_v18_20261006_ik01.supervision/state.json)、
+[`summary.json`](../../../runs/test_results/harbor_below_easy_v18_20261006_ik01/summary.json) 为准；
+逐项重跑依据见
+[`retest_decisions.json`](../../../runs/test_results/harbor_below_easy_v18_20261006_ik01.supervision/retest_decisions.json)。
+旧 `harbor_below_easy_v18_20261005_01` 队列已停止，结果保留；未完成 Rope easier 取消的记录见其
+同级 `.supervision/superseded.json`，不能将中断记录解释为新物理评分。
+
 ## 检查范围
 
 `ci_checks/test-harbor-oracle-bridge.py` 检查跨机器人动作、实例错配、私有依赖闭包、

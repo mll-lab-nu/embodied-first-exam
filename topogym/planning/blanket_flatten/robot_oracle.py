@@ -15,7 +15,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from topogym.robot.grasp_geometry import read_grasp_geometry
-from topogym.solvers.genesis_kinematics import GenesisIKSolver
+from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
 from topogym.utils.arrays import to_numpy
 from topogym.utils.grasp import material_patch
 from topogym.utils.io import to_jsonable, write_json_atomic

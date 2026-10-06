@@ -23,6 +23,7 @@ def worker(args):
     from topogym.simulator import Env, SimulatorConfig, SegmentRunner
     from topogym.tasks.rope_threading.simplified import recommended_grasp_assist
     from topogym.planning.rope_threading.policy import ThreadingPolicy
+    from topogym.planning.oracle_ik import below_easy_scope
     from topogym.simulator.rollout_simulation.segment_contract import fingerprint
     from topogym.utils.io import to_jsonable, write_json_atomic
     torch.set_num_threads(1)
@@ -46,7 +47,7 @@ def worker(args):
                           initial_robot=to_jsonable(env._robot.observe()),
                           initial_task=to_jsonable(env._task.result))
             write_json_atomic(args.output/'run_report.json', report)
-            with SegmentRunner(env, args.output, prepared_output=True) as runner:
+            with below_easy_scope(env, args.output), SegmentRunner(env, args.output, prepared_output=True) as runner:
                 policy = ThreadingPolicy(env, part=args.part, speed_scale=args.speed_scale)
                 last = [None, -1.]
                 def tick(row):

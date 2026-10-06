@@ -13,7 +13,8 @@ from topogym.planning.buzz_wire_3d.kinematics import mesh_object, manager, dista
 from topogym.planning.hedgehog_in_cage.kinematics import surface_object
 from topogym.planning.rigid_reference.feedback import body_pose, relative_pose
 from topogym.planning.rigid_reference.geometry import interpolate, pose_dict
-from topogym.solvers.genesis_kinematics import GenesisFKSolver, GenesisIKSolver
+from topogym.solvers.genesis_kinematics import GenesisFKSolver
+from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
 from topogym.utils.arrays import to_numpy
 
 BASE_LINKS = {"base_link", "waist_link", "shoulder_link"}
@@ -250,7 +251,12 @@ class CoupledClawsIK:
         class _R: pass
         result = _R(); result.x = self._solve(residual, previous, converged)
         e = residual(result.x)
-        if np.linalg.norm(e[:3])/20. > 1e-5 or np.linalg.norm(e[3:6]) > 1e-4 or np.linalg.norm(e[6:9])/10. > 1e-5:
+        from topogym.planning.oracle_ik import accept_coupled_candidate
+        start, goal = self.kin.seed.copy(), self.kin.seed.copy()
+        start[self.indices], goal[self.indices] = previous, result.x
+        if not accept_coupled_candidate(self.kin.robot, start, goal,
+                [np.linalg.norm(e[:3])/20., np.linalg.norm(e[3:6]), np.linalg.norm(e[6:9])/10.],
+                [1e-5, 1e-4, 1e-5]):
             raise ValueError(f"Coupled IK residual: position={np.linalg.norm(e[:3])/20.:.3g} m, "
                              f"rotation={np.linalg.norm(e[3:6]):.3g} rad, workspace={np.linalg.norm(e[6:9])/10.:.3g} m")
         return result.x
@@ -275,7 +281,10 @@ class CoupledClawsIK:
         e = residual(result.x)
         position = max(np.linalg.norm(e[k:k+3])/20. for k in range(0, n, 6))
         rotation = max(np.linalg.norm(e[k+3:k+6]) for k in range(0, n, 6))
-        if position > 5e-5 or rotation > 5e-4:
+        from topogym.planning.oracle_ik import accept_coupled_candidate
+        start, goal = self.kin.seed.copy(), self.kin.seed.copy()
+        start[self.indices], goal[self.indices] = previous, result.x
+        if not accept_coupled_candidate(self.kin.robot, start, goal, [position, rotation], [5e-5, 5e-4]):
             raise ValueError(f"World IK residual: position={position:.3g} m, rotation={rotation:.3g} rad")
         return result.x
 
@@ -380,5 +389,4 @@ class CoupledClawsIK:
         return dict(passed=failure is None, rows=rows, failure=failure, branch_retries=retries_used, subdivisions=subdivisions,
                     joint_interpolation=interpolation, avoided_pairs=[list(p) for p in avoid],
                     scope="relative-path-preserving sampled native coupled IK; contact dynamics not established")
-
 

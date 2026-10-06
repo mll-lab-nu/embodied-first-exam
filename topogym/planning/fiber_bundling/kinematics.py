@@ -4,7 +4,8 @@ import fcl
 from scipy.spatial.transform import Rotation
 
 from topogym.planning.buzz_wire_3d.kinematics import BuzzIK, distance, manager, mesh_object
-from topogym.solvers.genesis_kinematics import GenesisFKSolver, GenesisIKSolver
+from topogym.solvers.genesis_kinematics import GenesisFKSolver
+from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
 from topogym.utils.arrays import to_numpy
 from .keyframes import GRASP_LINK, link_pose
 

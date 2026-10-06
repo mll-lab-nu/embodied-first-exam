@@ -3,9 +3,11 @@ import numpy as np
 import fcl
 from scipy.spatial.transform import Rotation, Slerp
 
-from topogym.solvers.genesis_kinematics import GenesisFKSolver, GenesisIKSolver
+from topogym.solvers.genesis_kinematics import GenesisFKSolver
+from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
 from topogym.utils.arrays import to_numpy
 from .policy import rotation
+from topogym.planning.oracle_ik import active_scope, pose_from_grasp
 
 
 class CheckedJointPolicy:
@@ -42,6 +44,8 @@ class CheckedJointPolicy:
             result["joint_position_rad"] = arm["joint_position_rad"]
             return {"arm":result}
         if "position_world_m" in arm:
+            scope = active_scope(self.robot.entity)
+            attempts_before = len(scope.records) if scope is not None else 0
             group = self.robot.groups["arm"]
             seed = to_numpy(self.robot.entity.get_qpos()).reshape(-1).copy()
             planned = getattr(self.policy,"desired_arm_seed",None)
@@ -90,6 +94,9 @@ class CheckedJointPolicy:
                         self.policy.tracking["ik_compensation_fraction"] = fraction
                         break
             result["joint_position_rad"] = q[self.robot._q_indices["arm"][:7]].tolist()
+            if scope is not None and any(record.get('passed') for record in scope.records[attempts_before:]):
+                from topogym.planning.oracle_ik import check_oracle_command
+                check_oracle_command(scope.env, {'arm': result})
         return {"arm":result}
 
 
@@ -162,6 +169,11 @@ class BuzzIK:
             position_world_m=p-r.apply(self.group.tcp_position_in_hand_m),
             orientation_wxyz=r.as_quat()[[3,0,1,2]], joint_dof_indices=self.indices, initial_qpos=seed)
 
+    def carried_pose(self, q, nominal, offset_p, offset_r):
+        if active_scope(self.robot.entity) is None:
+            return nominal
+        return pose_from_grasp(self.tcp_pose(q), offset_p, offset_r)
+
     def clearance(self, q, body=None, *, allow_wand_support=False):
         poses = self.fk.solve(q)
         ps = np.asarray(poses["position_world_m"]).reshape(-1,3)
@@ -203,6 +215,7 @@ class BuzzIK:
             for u in np.linspace(0,1,count+1)[1:]:
                 p,r = pa+u*(pb-pa),turn(u)
                 q = self.solve((p+r.apply(offset_p),r*offset_r),q)
+                p, r = self.carried_pose(q, (p, r), offset_p, offset_r)
                 gap = self.clearance(q,(p,r),allow_wand_support=allow_wand_support)
                 if gap < minimum_clearance:
                     raise ValueError(f"Held waypoint collision at frame {len(frames)}: {gap:.6g} m")
@@ -383,7 +396,7 @@ class BuzzIK:
                         continue
                     if key not in wand_gaps:
                         wand_gaps[key] = self.wand_clearance((p,r))
-                    if wand_gaps[key] < .001:
+                    if wand_gaps[key] < .001 and active_scope(self.robot.entity) is None:
                         rejects["wand"] += 1
                         continue
                     try:
@@ -395,7 +408,9 @@ class BuzzIK:
                     if margin < .005:
                         rejects["joint"] += 1
                         continue
-                    gap = min(wand_gaps[key],self.clearance(q))
+                    actual_body = self.carried_pose(q, (p, r), offset_p, offset_r)
+                    gap = (self.clearance(q, actual_body) if active_scope(self.robot.entity) is not None
+                           else min(wand_gaps[key],self.clearance(q)))
                     if gap < .001:
                         rejects["robot"] += 1
                         continue
@@ -408,7 +423,8 @@ class BuzzIK:
                             angle_delta = angle-parent["angles"]
                             angle_delta[0] = (angle_delta[0]+180)%360-180
                             cost += .00003*float(np.sum(angle_delta**2))
-                    frame = dict(progress=float(u), position_m=p.tolist(), quaternion_wxyz=r.as_quat()[[3,0,1,2]].tolist(),
+                    ap, ar = actual_body
+                    frame = dict(progress=float(u), position_m=ap.tolist(), quaternion_wxyz=ar.as_quat()[[3,0,1,2]].tolist(),
                                  qpos=q.tolist(), local_zyx_deg=angle.tolist(), clearance_m=gap, joint_margin_rad=margin,
                                  use_joint_seed=True)
                     if diagnostic_progress is not None:
@@ -509,6 +525,7 @@ class BuzzIK:
                 if guided:
                     seed = (1-u)*np.asarray(a["qpos"])+u*np.asarray(b["qpos"])
                 seed = self.solve((p+r.apply(offset_p), r*offset_r), seed)
+                p, r = self.carried_pose(seed, (p, r), offset_p, offset_r)
                 gap = self.clearance(seed, (p, r))
                 if gap < .0005:
                     raise ValueError(f"Interpolated collision near {a['progress']:.5f}: {gap:.6g} m")

@@ -17,15 +17,16 @@ Host
   Linux x86_64 (not WSL: Nyx needs the NVIDIA Vulkan driver inside the container), an NVIDIA GPU with driver >= 580,
   Docker with BuildKit and the NVIDIA Container Toolkit. BuildKit must use the default `docker` driver
   (`docker buildx ls`: the current builder's driver is `docker`), otherwise the task images cannot FROM a local image.
-  Build: about 60 GB of free disk (the image is 11.2 GB, plus the libuipc builder stage and BuildKit's cache). libuipc's
-  CUDA compile dominates: UIPC_BUILD_JOBS (default 3) sets its parallelism, more needs more RAM; our 2026-10-05 build with
-  16 jobs and a warm vcpkg cache took 15 minutes, a cold build takes longer (not measured). Network access to docker.io,
-  pypi.org, download.pytorch.org, github.com (libuipc and vcpkg sources) and dl.polyhaven.org (the CC0 studio HDRI).
+  Build: free disk for the 11.2 GB image plus BuildKit's cache. libuipc is not compiled: a release tree ships the audited
+  wheel the packages are bound to in images/topogym/uipc-prebuilt/ (Apache-2.0), because nvcc output is not
+  bit-reproducible and a wheel compiled on your host never matches the binding. A --no-cache build on an RTX 4090 host
+  took 2.5 minutes (2026-10-06). Network access to docker.io, pypi.org, download.pytorch.org and dl.polyhaven.org (the
+  CC0 studio HDRI).
   No account, key or token is needed.
   Running needs no network for the simulator.
 
 Build (from the repository root)
-  docker build --build-arg UIPC_BUILD_JOBS=8 -f images/topogym/Dockerfile -t "$IMG" .
+  docker build --build-arg UIPC_WHEEL=prebuilt -f images/topogym/Dockerfile -t "$IMG" .
 
 Check a build (the line it prints goes into MANIFEST.md, "images:")
   docker run --rm "$IMG" python -c 'import json; from topogym.simulator.frozen_binding import installed_runtime; print(json.dumps(installed_runtime(), sort_keys=True))' > image_runtime.json

@@ -8,6 +8,8 @@ from scipy.spatial.transform import Rotation, Slerp
 from topogym.utils.arrays import to_numpy
 from topogym.utils.geometry.rope import sample_material_centerline
 from .kinematics import ThreadingIK, vertical_pinch, CONTACT_IN_TCP_M
+from topogym.planning.oracle_ik import simplified_tier, active_scope
+from topogym.planning.oracle_path import joint_samples
 
 
 class ThreadingPolicy:
@@ -154,6 +156,64 @@ class ThreadingPolicy:
         self.planning.append(dict(phase='whole_pickup_preflight', candidates=trials))
         raise RuntimeError(f'No collision-free pickup candidate: {trials}')
 
+    def plan_ring_transfer(self, center):
+        """Try complete approach/feed routes without advancing the live scene.
+
+        Intermediate height and yaw are recipe choices. Every candidate keeps
+        the same material contact point and passes the existing fixture, table,
+        self-collision and joint-limit checks along its joint segments.
+        """
+        trials = []
+        p0, r0 = self.tcp('right')
+        from itertools import product
+        for height, yaw, via_raise in product((.10, .06, .03), (0., -10., 10.), (True, False)):
+            trial = dict(height_m=height, yaw_deg=yaw, via_raise=via_raise, accepted=False)
+            route = [('raise_to_ring', (np.r_[p0[:2], center[2]+height], r0), .04, True)] if via_raise else []
+            if self.env._task.difficulty == 'very_easy':
+                route.append(('orient_above_open_cradle',
+                    vertical_pinch(center+[.025, 0., height], [-1., 0.], yaw_deg=yaw), .03, via_raise))
+                route.extend(('lower_onto_cradle',
+                    vertical_pinch(center+[.025, 0., z], [-1., 0.], yaw_deg=yaw), .015, True)
+                    for z in np.linspace(height, -.0638, 25)[1:])
+            else:
+                turn = Rotation.from_euler('z', yaw, degrees=True)*Rotation.from_matrix(
+                    np.column_stack([[-1., 0., 0.], [0., 1., 0.], [0., 0., -1.]]))
+                for phase, x, speed in (('align_ring_entrance', .15, .025), ('feed_through_ring', -.10, .015)):
+                    contact = center+[x, 0., .025]
+                    route.append((phase, (contact-turn.apply(CONTACT_IN_TCP_M), turn), speed,
+                                  via_raise or phase == 'feed_through_ring'))
+            q, previous = self.qpos(), (p0, r0)
+            samples = 0
+            try:
+                for phase, (p, r), _, linear in route:
+                    start_p, start_r = previous
+                    count = max(1, int(np.ceil(max(np.linalg.norm(p-start_p)/.02,
+                        (r*start_r.inv()).magnitude()/.1)))) if linear else 1
+                    turns = Slerp([0., 1.], Rotation.from_quat([start_r.as_quat(), r.as_quat()]))
+                    for u in np.linspace(0., 1., count+1)[1:]:
+                        next_q = self.kin.solve('right', (start_p+u*(p-start_p), turns(u)), q)
+                        for candidate in joint_samples(q, next_q):
+                            for side in ('left', 'right'):
+                                candidate[self.env._robot._q_indices[side][6:]] = self.fingers[side]
+                            scope = active_scope(self.env._robot.entity)
+                            public = scope.check_public_bounds(candidate) if scope is not None else dict(passed=True)
+                            audit = self.kin.check(candidate) if public['passed'] else public
+                            samples += 1
+                            if not audit['passed']:
+                                raise ValueError(f'{phase}: {audit}')
+                        q = next_q
+                    previous = p, r
+                trial.update(accepted=True, samples=samples)
+                trials.append(trial)
+                self.planning.append(dict(phase='whole_ring_transfer_preflight', candidates=trials,
+                    scope='sampled rigid geometry; soft rope and grasp require live feedback'))
+                return route
+            except ValueError as error:
+                trial.update(phase=phase, error=str(error), samples=samples)
+                trials.append(trial)
+        self.planning.append(dict(phase='whole_ring_transfer_preflight', candidates=trials))
+        raise RuntimeError(f'No checked ring-transfer candidate in the current search: {trials}')
+
     def actions(self):
         self.fingers['right'] = .037
         self.phase = 'open_at_home'
@@ -187,10 +247,19 @@ class ThreadingPolicy:
             return
         ring = self.env._task.layout.rings()[0]
         center = np.asarray(ring['center_m'])+[0., 0., self.env._task.table_height_m]
-        self.phase = 'raise_to_ring'
-        p, r = self.tcp('right')
-        yield from self.move('right', (p+[0., 0., center[2]+.10-p[2]], r), speed=.04)
-        if self.env._task.difficulty == 'very_easy':
+        if simplified_tier(self.env) is not None:
+            self.phase = 'plan_complete_ring_transfer'
+            for phase, target, speed, linear in self.plan_ring_transfer(center):
+                self.phase = phase
+                yield from self.move('right', target, speed=speed, linear=linear)
+                self.require_grip('right')
+                if phase == 'lower_onto_cradle' and self.env._task.result.metrics.get('draped'):
+                    break
+        else:
+            self.phase = 'raise_to_ring'
+            p, r = self.tcp('right')
+            yield from self.move('right', (p+[0., 0., center[2]+.10-p[2]], r), speed=.04)
+        if self.env._task.difficulty == 'very_easy' and simplified_tier(self.env) is None:
             self.phase = 'orient_above_open_cradle'
             target = vertical_pinch(center+[.025, 0., .09], [-1., 0.])
             yield from self.move('right', target, speed=.03)
@@ -200,17 +269,18 @@ class ThreadingPolicy:
                 self.require_grip('right')
                 if self.env._task.result.metrics.get('draped'):
                     break
-        else:
+        elif self.env._task.difficulty != 'very_easy':
             # Approach axis points through the aperture, with the free end
             # hanging below the feeding fingers for the opposite hand.
             turn = Rotation.from_matrix(np.column_stack([[-1., 0., 0.], [0., 1., 0.], [0., 0., -1.]]))
             def feed_pose(offset):
                 contact = center+offset
                 return contact-turn.apply(CONTACT_IN_TCP_M), turn
-            self.phase = 'align_ring_entrance'
-            yield from self.move('right', feed_pose([.15, 0., .025]), speed=.025)
-            self.phase = 'feed_through_ring'
-            yield from self.move('right', feed_pose([-.10, 0., .025]), speed=.015)
+            if simplified_tier(self.env) is None:
+                self.phase = 'align_ring_entrance'
+                yield from self.move('right', feed_pose([.15, 0., .025]), speed=.025)
+                self.phase = 'feed_through_ring'
+                yield from self.move('right', feed_pose([-.10, 0., .025]), speed=.015)
             self.require_grip('right')
             self.fingers['left'] = .037
             self.phase = 'open_receiving_hand'

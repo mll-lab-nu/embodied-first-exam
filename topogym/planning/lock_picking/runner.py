@@ -81,7 +81,7 @@ def pickup_preflight(env, geometry, style, roll):
     """Owner read-only IK queries, with scratch/RNG restored by shared solvers."""
     import numpy as np
     from scipy.spatial.transform import Rotation, Slerp
-    from topogym.solvers.genesis_kinematics import GenesisIKSolver
+    from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
     from topogym.utils.arrays import to_numpy
     from topogym.planning.lock_picking.lock_picking_medium_planning import pickup_waypoints, rotation
     robot = env._robot

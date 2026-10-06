@@ -15,7 +15,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from topogym.planning.buzz_wire_3d.kinematics import mesh_object, manager, distance
-from topogym.solvers.genesis_kinematics import GenesisIKSolver
+from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
 from topogym.utils.arrays import to_numpy
 from .chain_fk import StaticChainFK
 

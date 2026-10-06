@@ -10,6 +10,7 @@ from scipy.spatial.transform import Rotation, Slerp
 
 from topogym.solvers.genesis_kinematics import GenesisFKSolver
 from topogym.utils.arrays import to_numpy
+from topogym.planning.oracle_ik import active_scope, carried_bodies
 from .policy import PARTS, ASSEMBLY_ROTATIONS, rotation
 
 
@@ -113,7 +114,7 @@ def preflight_simplified_pickup(robot, entities, body_origins, geometry, policy,
     returned TCP poses are executed by the ordinary EE controller; no joint or
     object state is installed by this function.
     """
-    from topogym.solvers.genesis_kinematics import GenesisIKSolver
+    from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
     from topogym.assets.geometry.cast_keyhole import plate_assembly_transforms
     ik, fk = GenesisIKSolver(robot.entity), GenesisFKSolver(robot.entity)
     q = to_numpy(robot.entity.get_qpos()).reshape(-1).copy()
@@ -183,7 +184,7 @@ def preflight_simplified_pickup(robot, entities, body_origins, geometry, policy,
 
 def preflight_simplified_goal(robot, entities, body_origins, geometry, policy, table_height):
     """Check the post-extraction route with both carried pieces moving with the arms."""
-    from topogym.solvers.genesis_kinematics import GenesisIKSolver
+    from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
     from topogym.assets.geometry.cast_keyhole import plate_assembly_transforms
     ik = GenesisIKSolver(robot.entity)
     q = to_numpy(robot.entity.get_qpos()).reshape(-1).copy()
@@ -212,6 +213,8 @@ def preflight_simplified_goal(robot, entities, body_origins, geometry, policy, t
                     minimum_margin = min(minimum_margin, margin)
                     if margin < .01 or np.max(np.abs(q-previous)) > .35:
                         raise ValueError("Goal route has insufficient joint margin or an IK branch jump")
+                if active_scope(robot.entity) is not None:
+                    bodies = carried_bodies(robot, q, offsets)
                 frames.append(dict(stage=stage, fraction=float(u),
                     bodies={s: dict(position_m=p.tolist(), quaternion_wxyz=r.as_quat()[[3, 0, 1, 2]].tolist())
                             for s, (p, r) in bodies.items()},
@@ -249,7 +252,7 @@ def plan_goal_transfer(robot, entities, body_origins, route_plan, grasp_offsets,
 
 def _plan_goal_transfer(robot, entities, body_origins, route_plan, grasp_offsets, policy, table_height, *,
                         gold_drop_m=0.):
-    from topogym.solvers.genesis_kinematics import GenesisIKSolver
+    from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
     from .policy import placement_targets
     ik = GenesisIKSolver(robot.entity)
     last = route_plan["frames"][-1]
@@ -279,6 +282,8 @@ def _plan_goal_transfer(robot, entities, body_origins, route_plan, grasp_offsets
                     minimum_margin = min(minimum_margin, margin)
                     if margin < .03:
                         raise ValueError("Goal transfer has less than 0.03 rad joint margin")
+                if active_scope(robot.entity) is not None:
+                    poses = carried_bodies(robot, q, grasp_offsets)
                 frames.append(dict(stage=stage, duration_s=duration/60.,
                     bodies={s: dict(position_m=p.tolist(), quaternion_wxyz=r.as_quat()[[3, 0, 1, 2]].tolist())
                             for s, (p, r) in poses.items()},
@@ -337,7 +342,7 @@ def plan_regrasp(robot, entities, body_origins, bodies, side, table_height, *,
     import trimesh
     from itertools import product
     from .policy import REGRASP_POINTS, PAD_TO_TCP, canonical_offsets
-    from topogym.solvers.genesis_kinematics import GenesisIKSolver
+    from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
     from topogym.planning.rigid_reference.geometry import matrix
     ik, fk = GenesisIKSolver(robot.entity), GenesisFKSolver(robot.entity)
     initial_q = (to_numpy(robot.entity.get_qpos()).reshape(-1).copy() if seed_qpos is None
@@ -584,8 +589,12 @@ class CoupledKeyholeIK:
         result = least_squares(residual, seed, bounds=(lower, upper), max_nfev=120,
                                ftol=1e-10, xtol=1e-10, gtol=1e-10, callback=converged)
         errors = residual(result.x)
-        if (np.linalg.norm(errors[:3])/20. > .00001 or np.linalg.norm(errors[3:6]) > .0001
-                or np.linalg.norm(errors[6:9])/10. > .00001):
+        from topogym.planning.oracle_ik import accept_coupled_candidate
+        start, goal = self.seed.copy(), self.seed.copy()
+        start[self.indices], goal[self.indices] = previous, result.x
+        if not accept_coupled_candidate(self.robot, start, goal,
+                [np.linalg.norm(errors[:3])/20., np.linalg.norm(errors[3:6]), np.linalg.norm(errors[6:9])/10.],
+                [1e-5, 1e-4, 1e-5]):
             raise ValueError(f"Coupled IK rejected: position={np.linalg.norm(errors[:3])/20.:.6g}, "
                              f"rotation={np.linalg.norm(errors[3:6]):.6g}, workspace={np.linalg.norm(errors[6:9])/10.:.6g}")
         bodies, _ = self.poses(result.x)

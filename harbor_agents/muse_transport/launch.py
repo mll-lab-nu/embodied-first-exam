@@ -10,9 +10,10 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import urllib.request
 
-from .bridge import Bridge
+from .bridge import Bridge, safe_error
 
 VERSION = '1.4.3-R5018.1'
 BINARY_SHA256 = 'e671790882bc88d65edb4ae0f713becf378ebf91011034ab75abebe3592dde4f'
@@ -41,6 +42,48 @@ def ensure_binary(path):
     return path
 
 
+def write_run_status(logs, key, *, child_returncode, wrapper_returncode, report, reason,
+                     native_exited_at=None):
+    """Keep agent terminal state separate from the existing accounting/exit policy."""
+    terminal = None; parse_errors = 0
+    path = logs/'muse-code.jsonl'
+    if path.exists():
+        with path.open(errors='replace') as stream:
+            for line in stream:
+                try: record = json.loads(line)
+                except ValueError:
+                    parse_errors += 1; continue
+                if not isinstance(record, dict): continue
+                if str(record.get('payload_type','')).startswith('run.terminal.'):
+                    payload = record.get('payload') or {}
+                    if not isinstance(payload, dict): continue
+                    terminal = dict(event=record['payload_type'], terminal=payload.get('terminal'),
+                                    reason=safe_error(payload.get('reason'),key) if payload.get('reason') else None)
+    modes = {}
+    for relative in ('native-data', 'native-data/muse/runtime/muse'):
+        directory = logs/relative
+        if directory.exists():
+            stat = directory.stat()
+            modes[relative] = dict(uid=stat.st_uid, gid=stat.st_gid, mode=oct(stat.st_mode & 0o777))
+    value = dict(schema_version=1, time=time.time(), child_returncode=child_returncode,
+                 native_exited_at=native_exited_at,
+                 wrapper_returncode=wrapper_returncode, wrapper_reason=reason,
+                 native_terminal=terminal, jsonl_parse_errors=parse_errors,
+                 usage_complete=report.get('complete'), recorded_totals=report.get('totals'),
+                 request_errors=report.get('errors'), uid=os.getuid(), gid=os.getgid(),
+                 usage_snapshot='at_wrapper_exit_decision',
+                 session_directory_modes=modes,
+                 note='Diagnostic only; native completion is not a verifier verdict or proof of complete billing.')
+    # This summary includes only selected metadata, never agent final text or prompts.
+    def scrub(value):
+        if isinstance(value, str): return safe_error(value, key)
+        if isinstance(value, dict): return {k: scrub(v) for k, v in value.items()}
+        if isinstance(value, list): return [scrub(v) for v in value]
+        return value
+    target = logs/'muse-run-status.json'
+    target.write_text(json.dumps(scrub(value), indent=2)+'\n')
+
+
 def launch(binary, model, effort, prompt, logs, key, *, max_steps=None, upstream=None, environment=None):
     if checksum(binary) != BINARY_SHA256: raise ValueError('fixed Muse binary checksum mismatch')
     logs = Path(logs); logs.mkdir(parents=True, exist_ok=True)
@@ -60,7 +103,8 @@ def launch(binary, model, effort, prompt, logs, key, *, max_steps=None, upstream
             '--base-url',f'http://127.0.0.1:{bridge.server_port}','--model',model,'--prompt-file',str(prompt)]
     if effort != 'default': argv += ['--reasoning-effort',effort]
     if max_steps: argv += ['--max-model-steps',str(max_steps)]
-    child = None
+    child = None; report = {}; wrapper_rc = None; reason = 'launch_interrupted_or_failed'
+    native_exited_at = None
     def interrupted(signum, frame):
         if child and child.poll() is None: child.terminate()
         raise KeyboardInterrupt
@@ -71,11 +115,16 @@ def launch(binary, model, effort, prompt, logs, key, *, max_steps=None, upstream
         with (logs/'muse-code.jsonl').open('wb') as stdout, (logs/'muse-code.stderr.log').open('wb') as stderr:
             child = subprocess.Popen(argv, env=env, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr)
             rc = child.wait()
+            native_exited_at = time.time()
         report = json.loads((logs/'openrouter-usage.json').read_text())
         if rc or not report['complete']:
-            print('Muse/OpenRouter failed; check agent/openrouter-usage.json and native Muse logs. '
+            wrapper_rc = rc or 2
+            reason = 'native_process_nonzero' if rc else 'accounting_not_complete'
+            print('Muse/OpenRouter failed ('+reason+'); check agent/muse-run-status.json, '
+                  'agent/openrouter-requests.jsonl and agent/openrouter-usage.json. '
                   'HTTP 401 means model credentials; 402 means account credit; 429 means account rate/usage limits.',file=sys.stderr)
-            return rc or 2
+            return wrapper_rc
+        wrapper_rc = 0; reason = 'native_exit_zero_and_accounting_complete'
         return 0
     finally:
         if child and child.poll() is None:
@@ -85,6 +134,9 @@ def launch(binary, model, effort, prompt, logs, key, *, max_steps=None, upstream
         bridge.shutdown(); bridge.server_close(); thread.join(timeout=5)
         for sig, handler in previous.items(): signal.signal(sig,handler)
         shutil.rmtree(private)
+        write_run_status(logs, key, child_returncode=child.returncode if child else None,
+                         wrapper_returncode=wrapper_rc, report=report, reason=reason,
+                         native_exited_at=native_exited_at)
 
 
 def main():

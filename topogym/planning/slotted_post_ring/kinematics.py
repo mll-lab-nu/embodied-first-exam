@@ -33,7 +33,8 @@ SEED_ROLLS = (0., np.pi/2, -np.pi/2)
 class ArmIK:
     def __init__(self, robot, *, joint_margin_rad=.01, position_tolerance_m=2e-4,
                  orientation_tolerance_rad=5e-3, max_branch_step_rad=.25):
-        from topogym.solvers.genesis_kinematics import GenesisIKSolver, GenesisFKSolver
+        from topogym.solvers.genesis_kinematics import GenesisFKSolver
+        from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
         self.robot = robot
         self.ik_solver, self.fk_solver = GenesisIKSolver(robot.entity), GenesisFKSolver(robot.entity)
         self.margin, self.max_step = float(joint_margin_rad), float(max_branch_step_rad)

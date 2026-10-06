@@ -350,6 +350,13 @@ def plan_held_path(env, output, *, random_seed=0, iterations=30000, clearance_m=
             except ValueError as error:
                 report.update(status="held_ik_rejected", reason=str(error), rows=rows)
                 return report
+            from topogym.planning.oracle_ik import active_scope, pose_from_grasp
+            if active_scope(kin.robot.entity) is not None:
+                poses = kin.fk.solve(next_q)
+                index = kin.robot.entity.get_link(kin.group.hand_link).idx_local
+                actual_hand = (np.asarray(poses['position_world_m']).reshape(-1, 3)[index],
+                    Rotation.from_quat(np.asarray(poses['orientation_wxyz']).reshape(-1, 4)[index, [1, 2, 3, 0]]))
+                wp, wr = pose_from_grasp(actual_hand, *hand_in_ball)
             gaps = kin.gaps(next_q, (wp, wr))
             margin = float(np.minimum(next_q[:7]-limits[:, 0], limits[:, 1]-next_q[:7]).min())
             step = float(np.max(np.abs(next_q[:7]-q[:7])))

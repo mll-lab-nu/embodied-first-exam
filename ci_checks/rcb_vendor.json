@@ -3,6 +3,8 @@
  "repo": "git@github.com:JamesKrW/robot_coding_bench.git",
  "commit": "78f1bf65db85ed775b5a625e68c5c114de065773",
  "verbatim": {
+  "scripts/write_task_results.py": "scripts/write_task_results.py",
+  "scripts/task_names.py": "scripts/task_names.py",
   "scripts/run_agent_batch.sh": "scripts/run_agent_batch.sh",
   "scripts/eai_standard/rcb1.py": "scripts/eai_standard/rcb1.py",
   "scripts/eai_standard/run.sh": "scripts/eai_standard/run.sh",
@@ -41,7 +43,6 @@
   "scripts/build_images.sh": "scripts/build_images.sh",
   "scripts/push_images.sh": "scripts/push_images.sh",
   "scripts/mem_guard.py": "scripts/mem_guard.py",
-  "scripts/write_task_results.py": "scripts/write_task_results.py",
   "scripts/regrade_trials.sh": "scripts/regrade_trials.sh",
   "scripts/collect_batch_results.py": "scripts/collect_batch_results.py",
   "scripts/make_two_mode_report_zh.py": "scripts/make_two_mode_report_zh.py",
@@ -115,7 +116,8 @@
   "scripts/make_two_mode_report_zh.py": "9c8807c2d753a3e00471eb106d06d09c3b33fa8e",
   "scripts/scan_secrets.py": "f1d49083596b47938b1144e1cc90bc276dc7ded5",
   "scripts/task_conventions.py": "d17d1f3ed3cf02bf7bc392fca57ce6f1200b69af",
-  "ci_checks/check-task-structure.sh": "fe6ab3da45de14c96dfcb91a442db954a8554eb3"
+  "ci_checks/check-task-structure.sh": "fe6ab3da45de14c96dfcb91a442db954a8554eb3",
+  "scripts/task_names.py": "8405b3eaad4f46955e776f617b6d423fc9d63ea7"
  },
  "local_adaptations": {
   "harbor_templates/topogym/limited/solution/oracle_replay.py": {

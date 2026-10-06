@@ -3,11 +3,13 @@ import numpy as np
 import trimesh
 from scipy.spatial.transform import Rotation
 
-from topogym.solvers.genesis_kinematics import GenesisIKSolver, GenesisFKSolver
+from topogym.solvers.genesis_kinematics import GenesisFKSolver
+from topogym.planning.oracle_ik import OracleIKSolver as GenesisIKSolver
 from topogym.utils.arrays import to_numpy
 from topogym.planning.rigid_reference.geometry import matrix
 from topogym.planning.rigid_reference.feedback import body_pose, tcp_pose
 from .simplified_routes import PARTS, world_route
+from topogym.planning.oracle_ik import active_scope, pose_from_grasp
 
 
 def prepare(env, variant):
@@ -70,6 +72,16 @@ def prepare(env, variant):
             poses=fk.solve(q)
             pp=np.asarray(poses['position_world_m']).reshape(-1,3)
             rr=np.asarray(poses['orientation_wxyz']).reshape(-1,4)
+            if active_scope(robot.entity) is not None:
+                actual_bodies = {}
+                for side in PARTS:
+                    group = robot.groups[side]
+                    index = robot.entity.get_link(group.hand_link).idx_local
+                    hr = turn(rr[index])
+                    tcp = (pp[index] + hr.apply(group.tcp_position_in_hand_m),
+                           hr * turn(group.tcp_orientation_in_hand_wxyz))
+                    actual_bodies[side] = pose_from_grasp(tcp, *offsets[side])
+                bodies = actual_bodies
             gap=float('inf')
             for s,n,link,v,table in geometry:
                 R=turn(rr[link]); managers[s].set_transform(n,matrix(pp[link],R))
