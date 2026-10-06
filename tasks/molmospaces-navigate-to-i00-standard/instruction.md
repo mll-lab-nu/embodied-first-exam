@@ -1,6 +1,6 @@
 # MolmoSpaces · navigate-to — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-**Task:** Navigate to any bed (2 available).
+**Task:** Navigate to any tablelamp (2 available).
 
 You control a Rainbow Robotics RB-Y1 mobile manipulator: holonomic base, 6-joint torso, two 7-joint arms with parallel grippers, head camera — **as if it were real hardware** — in one episode of Ai2's MolmoSpaces benchmark (several objects of the target type (the nearest counts)).
 The simulator (upstream's own code: molmo-spaces 0.2.9, MuJoCo 3.5.0) runs in a service you cannot open. You get one
@@ -14,8 +14,9 @@ client and one episode.
   (`r.submit("done", [])`), or when your time is up.
 - **Success** is upstream's `judge_success()` on the state at that moment: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. The task has to hold at the
   end: met earlier and undone by then does not count, so end the episode with `done` once it holds.
-- Your wall-clock budget is 3600 s from your start (the service's `time_s` and `elapsed_s` count from its own start,
-  a few minutes earlier). Simulated time only advances with your commands (and `get_obs(seconds=...)`).
+- Your wall-clock budget is 3600 s from your start (the service's `time_s`, `elapsed_s` and `time_left_s` count from
+  its own start, a few minutes earlier, so `time_left_s` reaches 0 a little before your budget ends).
+  Simulated time only advances with your commands (and `get_obs(seconds=...)`).
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.

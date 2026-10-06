@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/molmospaces-pick-and-place-next-to-i00-privileged"
-description = "MolmoSpaces pick-and-place-next-to (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Pick up the lepidopteran and place it next to the brown rectangular bread. Frozen episode: upstream benchmark procthor-objaverse/FrankaPickandPlaceNextToHardBench/FrankaPickandPlaceNextToHardBench_20260305_json_benchmark, episode 5."
+description = "MolmoSpaces pick-and-place-next-to (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Pick up the red tdk vhs tape and place it next to the soap bottle. Frozen episode: upstream benchmark procthor-objaverse/FrankaPickandPlaceNextToHardBench/FrankaPickandPlaceNextToHardBench_20260305_json_benchmark, episode 89."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "molmospaces", "mujoco", "franka-robotiq-2f85", "code-as-policy", "trajectory", "pick-and-place-next-to"]
 
@@ -17,7 +17,7 @@ mode = "privileged"
 # scene = environment/instance.json (one upstream benchmark episode + its t = 0 state hash); identity = the dataset.toml digest
 expert_time_estimate_hours = 2.0
 oracle = "none"
-oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-pick-and-place-next__3W4hmcz (run codex-gpt6_luna-medium, batch molmospaces-luna-1003; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/pick_and_place_next_to/unlimited/); human review in PR #47"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-pick-and-place-next__g7CLYbk (run codex-gpt6_luna-medium, batch molmospaces-luna-1006c; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/pick_and_place_next_to/unlimited/); human review in PR #47"
 
 [verifier]
 timeout_sec = 1800.0

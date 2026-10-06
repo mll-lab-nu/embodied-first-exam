@@ -7,9 +7,9 @@
 | Twin | `molmospaces-open-door-i00-standard` |
 | Simulator / robot | `molmospaces` / `rainbow-rby1` |
 | Family / instance | `open-door` |
-| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-door-i01-privil__7zEbSdU (run codex-gpt6_luna-medium, batch molmospaces-luna-rby1-r2c of 2026-10-03: an earlier round on the same episode, kept with the run's records, not on the results site); human review in PR #47 |
+| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-door-i00-privil__iroCZzB (run codex-gpt6_luna-medium, batch molmospaces-luna-1006; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/open_door/unlimited/); human review in PR #47 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.3` |
 
 ## Task
 Pull the door open. One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `procthor-10k/rby1_benchmarks/door_opening_benchmark`, episode 0:

@@ -52,7 +52,12 @@ LIMITS = S.command_limits()
 GROUPS = [
     ("joint_pos", S.joint_names, "measured joint positions of the controlled joints (rad; base x, y in m)"),
     ("joint_vel", [f"{j}_vel" for j in S.joint_names], "measured joint velocities (rad/s, m/s)"),
-    ("joint_effort", [f"{j}_effort" for j in S.joint_names], "actuator forces of those joints (N m, N)"),
+    (
+        "joint_effort",
+        [f"{j}_effort" for j in S.joint_names],
+        "actuator forces of those joints (N m, N): what each drive demands; a joint with an effort_limit in robot_spec "
+        "applies at most that",
+    ),
     ("gripper_opening", [f"{g}_opening_m" for g in S.grippers], "distance between the fingertips (m)"),
     (
         "tcp_pose",

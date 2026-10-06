@@ -10,35 +10,35 @@ objects and navigation, on a fixed-base arm and a mobile manipulator.
 | robots | `franka-robotiq-2f85` (Franka FR3 + Robotiq 2F-85 on a fixed base, the DROID setup); `rainbow-rby1` (RB-Y1: holonomic base, 6-joint torso, two 7-joint arms) |
 | score | upstream's `judge_success()` on the state at the episode's end |
 | tasks | 8 families × 2 modes: `tasks/molmospaces-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
-| image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.0` (`images/molmospaces/`, ~1.9 GB of assets) |
+| image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.3` (`images/molmospaces/`, ~1.8 GB of assets) |
 | oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`), human review in PR #47 |
 
 | family | upstream package | robot, control period | variants | kept episode (i00) | horizon |
 |---|---|---|---|---|---|
-| pick | `procthor-objaverse/FrankaPickHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #118: a miniature castle tower on a cluttered toilet tank | 303 steps (20 s) |
-| pick-and-place | `procthor-objaverse/FrankaPickandPlaceHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #0: a GPS into a wooden bowl | 606 (40 s) |
-| pick-and-place-next-to | `procthor-objaverse/FrankaPickandPlaceNextToHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #5: a flat moth beside bread | 455 (30 s) |
-| pick-and-place-color | `procthor-objaverse/FrankaPickandPlaceColorHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #52: a soap bottle into the light green bowl | 606 (40 s) |
-| open | `ithor/FrankaOpenHardBench` | Franka, 66 ms | drawer / hinged door | #1427: a drawer | 455 (30 s) |
-| close | `ithor/FrankaCloseHardBench` | Franka, 66 ms | drawer / hinged door | #327: a drawer | 455 (30 s) |
+| pick | `procthor-objaverse/FrankaPickHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #387: a white light switch plate | 303 steps (20 s) |
+| pick-and-place | `procthor-objaverse/FrankaPickandPlaceHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #134: a small white bird figurine into a black bowl | 606 (40 s) |
+| pick-and-place-next-to | `procthor-objaverse/FrankaPickandPlaceNextToHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #89: a red VHS tape beside a soap bottle | 455 (30 s) |
+| pick-and-place-color | `procthor-objaverse/FrankaPickandPlaceColorHardBench` | Franka, 66 ms | AI2-THOR / Objaverse object | #26: a stopwatch into the red bowl | 606 (40 s) |
+| open | `ithor/FrankaOpenHardBench` | Franka, 66 ms | drawer / hinged door | #49: a cabinet's hinged door (any cabinet in the room counts) | 455 (30 s) |
+| close | `ithor/FrankaCloseHardBench` | Franka, 66 ms | drawer / hinged door | #51: a cabinet's hinged door | 455 (30 s) |
 | navigate-to | `holodeck-objaverse/NavToObjDataGenConfig` | RB-Y1, 200 ms | one target / several (nearest counts) | #94: a bed two rooms away | 500 (100 s) |
 | open-door | `procthor-10k/rby1_benchmarks/door_opening_benchmark` | RB-Y1 (RBY1M), 100 ms | push / pull | #0: a door to pull | 400 (40 s) |
 
 ## Instances (`scripts/molmospaces/make_instances.py`)
-Per family, three candidates in the package's order among the episodes that pass the filters (the first showing each
-variant, then the next of either, each in a different house); `keep` in `families.json` ships one as `i00`: the hardest
-and most representative in GPT-6 Luna's runs of all 24 (standard failed on it, privileged completed it; pick's three,
-chosen again under the licence filter below, ran on 2026-10-04). Filters: no public MolmoBot trajectory of the house
-(`allenai/molmobot-data`, val); upstream builds every listed object; not done at t = 0; no identical copy of the target
-or receptacle (the text could not tell them apart); no asset whose licence forbids commercial use (upstream's per-object
-record: the image redistributes every asset the episode loads); navigation: every candidate target has the target's
-WordNet synset. Difficulty, measurable and the same for every model:
+Per family, the first episode in the package's order that passes every filter ships as `i00` (no model's results enter
+the choice; `keep` in `families.json` records it, `make_instances.py` checks it):
+- **Valid:** no public MolmoBot trajectory of the house (`allenai/molmobot-data`, val); upstream builds every listed
+  object; not done at t = 0; no asset whose licence forbids commercial use (the image redistributes them).
+- **Named unambiguously:** no identical copy of the target or receptacle, and no other object of a named object's
+  WordNet synset within 1 m of it (colour's second receptacle differs by colour, by design); navigation: every
+  candidate target has the target's synset.
+- **Hard**, measurable and the same for every model:
 
 | families | rule |
 |---|---|
-| pick, pick-and-place(-next-to, -color) | at least 3 other objects within 30 cm of the target |
+| pick, pick-and-place(-next-to, -color) | at least 5 other objects within 30 cm of the target |
 | open, close | upstream's Hard packages: arm start posture randomised (±0.26 rad per joint, wrist ±90°), base up to ±30° off facing the fixture, 5 randomised cameras |
-| navigate-to | the nearest target at least 5 m from the base and out of `head_camera`'s view at t = 0 |
+| navigate-to | the nearest target at least 8 m from the base and out of `head_camera`'s view at t = 0 |
 | open-door | none beyond the package |
 
 The instance is the upstream episode with `source` (its expert trajectory's path) removed; navigation's text is upstream

@@ -4967,65 +4967,65 @@ digest = "sha256:51e6d987e4eef826c9c5e8a4111d7ddff5d1492931e67349c90b6efd7d19d64
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-close-i00-privileged"
-digest = "sha256:0b1ca6f665fce00dc8807d18ef9876666a35d4c63b20d9a0fdf4913a0f3d7f0a"
+digest = "sha256:b615beee9bbf826be296b57a0f6aa657fbc8affaaa889808265ae0b699a94eeb"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-close-i00-standard"
-digest = "sha256:a6a9391c35f687bee7cd8240e3b514c08c65a93a91d0812bf454e4b3583a8ade"
+digest = "sha256:489f8231bd776af17f1b283b17f984c83d5d730c5829aebc83f789287a543205"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-open-i00-privileged"
-digest = "sha256:741486a5211edaff3cafa63b65b4dcc8f562db43dd21943f68a06ddf7befe47f"
+digest = "sha256:4b060d889bbadca6e9f59278a932b636dfcf30fa1d69279ac5ef19dd9972735d"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-open-i00-standard"
-digest = "sha256:9f01b7b7d40b31d24806c40c2a5892ed18b652cd7e8fffac4ab8093b20afcd8f"
+digest = "sha256:a1ea861c9a8b5c804cf3a0bbe311901ca670a6ed0e8ae132032201d2fb8053fb"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-and-place-color-i00-privileged"
-digest = "sha256:f5804c5d5569dd959bb0c7ee0003802f7c94d4ee4b0a2cb5b4f1135bd48bf1ec"
+digest = "sha256:7cf1856c23b79ffc520360c9a56ad811575ae29db50df051e4b0b057bd4750ac"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-and-place-color-i00-standard"
-digest = "sha256:ce1e30b46145212053a5de5d636c76158b817870503b36e326d2528b052b4f2c"
+digest = "sha256:129c60dd992e7c76ec7a0b8f421d7bcff0a23aabd63db7c92b7f78848ac34eee"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-navigate-to-i00-privileged"
-digest = "sha256:e676ede14ab5d085a183af790ab979d7f394c6cfc373dabf5530f28a3b310d1b"
+digest = "sha256:d740b06aed036c17167fc9f97d1889298d5e49d9d0090bfb4a6afb6ddcfd1b66"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-navigate-to-i00-standard"
-digest = "sha256:9fbd7fc9e77cb357301ca54245fa44a948516123987b5daa27cee33571448358"
+digest = "sha256:3467e9de71612a0edcc234edaddb86a82e926b2881281066a73694b08e45460a"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-open-door-i00-privileged"
-digest = "sha256:ed52f3768921eb66fbe732d86b08bcd5e05c45dbe38c23372ccbd42cc4230a41"
+digest = "sha256:0c6a8b052e747635ce26807fdb7de0e3087b1930a290162d06796014458fbd74"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-open-door-i00-standard"
-digest = "sha256:45edabaf5cf5161e767b4ade024830f6aac88e22cc743c8d94f6b6e3d0089833"
+digest = "sha256:123919f9cf6741039ed9a7d15d2d6c119b74176a229bfd3ef0296078235d959f"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-and-place-i00-privileged"
-digest = "sha256:795e35826a4814a8752730461d93fa49151ab4ff719ea3230427e052fde28e66"
+digest = "sha256:6b9cccdebb040ce6618cb9e0faef05ff5b6a6e6d73db6bd649153b1f7ef8f3ec"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-and-place-i00-standard"
-digest = "sha256:fe36226199c1c2f9fa5a5d6ee7393cb7bd7272b947e546a637e85cc62c60e874"
+digest = "sha256:ff27c15411182888369d6ce6ff06b363030bd9e54f3345c9d1a145b9252aee6a"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-and-place-next-to-i00-privileged"
-digest = "sha256:d6160e710151f937079973a615d5f19653167158dee34c14b95e12cd53cf96b1"
+digest = "sha256:8d8473c7e449a95366eabd655e6d96f017008670ce5328c76885f885c0113977"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-and-place-next-to-i00-standard"
-digest = "sha256:b5ffc69c950f01cdd435851132fcac8b09880362b52ba436b297289c2f3d785c"
+digest = "sha256:5cf078cca3587abc75144115d7c74b9206d4a2057d6b3b6734f75d7aac9ea444"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-i00-privileged"
-digest = "sha256:14dff9b7d1e4f3b5df6eb49cc298a3859b593fc15ea3f024f73c7806f031fb56"
+digest = "sha256:1af0d531d872be6c89834b700826a0d12d4f2e8edb5a62a6558fc9c03f5ad1e0"
 
 [[tasks]]
 name = "robot-coding-bench/molmospaces-pick-i00-standard"
-digest = "sha256:970cf5f645c7867b0f78739894a88f5d6af41e064270811b8ee7d5e982dbef51"
+digest = "sha256:0c2218737c8b625437eaea105971ca3016c15fe754485394185452c71e7e578f"
 

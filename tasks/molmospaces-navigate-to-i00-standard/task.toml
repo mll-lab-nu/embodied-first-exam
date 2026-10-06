@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/molmospaces-navigate-to-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MolmoSpaces navigate-to on the same frozen episode as molmospaces-navigate-to-i00-privileged. Navigate to any bed (2 available). The agent only gets a client: camera images (RGB, depth) and proprioception, joint-position chunks, upstream's kinematic model, done. No reset, no object state; the sim service records the episode and grades it with upstream's success check."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MolmoSpaces navigate-to on the same frozen episode as molmospaces-navigate-to-i00-privileged. Navigate to any tablelamp (2 available). The agent only gets a client: camera images (RGB, depth) and proprioception, joint-position chunks, upstream's kinematic model, done. No reset, no object state; the sim service records the episode and grades it with upstream's success check."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "molmospaces", "mujoco", "rainbow-rby1", "standard-mode", "trajectory", "navigate-to"]
 
@@ -29,7 +29,7 @@ mode = "standard"                  # robot as a service: images + proprioception
 protocol = "eai-standard/2.2"
 expert_time_estimate_hours = 3.0
 oracle = "none"
-oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-navigate-to-i01-priv__Nxshh8t (run codex-gpt6_luna-medium, batch molmospaces-luna-1003; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/navigate_to/unlimited/); human review in PR #47"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-navigate-to-i00-priv__mENe7qn (run codex-gpt6_luna-medium, batch molmospaces-luna-1006b; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/navigate_to/unlimited/); human review in PR #47"
 
 [verifier]
 timeout_sec = 600.0
