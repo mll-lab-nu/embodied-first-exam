@@ -12,14 +12,14 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` |
 
 ## Task
-DexJoCo `pick_bucket` with a Franka Panda arm with a 16-DoF Allegro hand: Put the boxed food into the bucket, then lift the bucket. Success: the boxed food's centre is inside the bounding box of the bucket's eight reference corners AND the bucket's bottom is at least 0.15 m above where it started, at the same control step.
+DexJoCo `pick_bucket` (a Franka Panda arm with a 16-DoF Allegro hand): Put the boxed food into the bucket, then lift the bucket. Success: the boxed food's centre is inside the bounding box of the bucket's eight reference corners AND the bucket's bottom is at least 0.15 m above where it started, at the same control step.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 
 ## Difficulty
 First-pass rating: medium. Dexterous manipulation with a 16-DoF hand on a 7-DoF arm (23 action values per control step);
 the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-human teleoperator's demonstration took 580 control steps (11.6 s at 50 Hz).
+reference (the human teleoperator's demonstration) takes 580 control steps (11.6 s at 50 Hz).
 
 ## Reference solution
 `solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's

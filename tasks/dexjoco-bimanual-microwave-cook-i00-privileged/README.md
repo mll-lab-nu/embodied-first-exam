@@ -12,14 +12,14 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` |
 
 ## Task
-DexJoCo `bimanual_microwave_cook` with two Franka Panda arms, each with a 16-DoF Allegro hand: Open the microwave door, put the hot dog inside, close the door and press the start button. Success, at one control step: the hot dog is inside the cavity (1 cm margin), the door hinge is within 0.01 rad of closed, and the start button is in contact with something.
+DexJoCo `bimanual_microwave_cook` (two Franka Panda arms, each with a 16-DoF Allegro hand): Open the microwave door, put the hot dog inside, close the door and press the start button. Success, at one control step: the hot dog is inside the cavity (1 cm margin), the door hinge is within 0.01 rad of closed, and the start button is in contact with something.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 
 ## Difficulty
 First-pass rating: hard. Dexterous manipulation with two 16-DoF hands on two arms (46 action values per control step);
 the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-human teleoperator's demonstration took 815 control steps (16.3 s at 50 Hz).
+reference (the human teleoperator's demonstration) takes 815 control steps (16.3 s at 50 Hz).
 
 ## Reference solution
 `solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's

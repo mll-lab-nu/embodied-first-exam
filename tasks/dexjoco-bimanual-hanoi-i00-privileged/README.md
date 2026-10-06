@@ -12,14 +12,14 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` |
 
 ## Task
-DexJoCo `bimanual_hanoi` with two Franka Panda arms, each with a 16-DoF Allegro hand: Tower of Hanoi with three disks on three vertical posts in a row along y: the small disk is on post A (y > 0, the left arm's side), the medium disk on post B (middle), the large disk on post C (y < 0). Build the full tower on post C: large at the bottom, then medium, then small, posts A and B empty, every disk at rest and seated on the post (horizontally within 4 cm of it, at its stacking height within 1.2 cm), held for 20 consecutive control steps. A larger disk resting on a smaller one, or a disk resting on the table, for 10 consecutive steps ends the episode as a failure.
+DexJoCo `bimanual_hanoi` (two Franka Panda arms, each with a 16-DoF Allegro hand): Tower of Hanoi with three disks on three vertical posts in a row along y: the small disk is on post A (y > 0, the left arm's side), the medium disk on post B (middle), the large disk on post C (y < 0). Build the full tower on post C: large at the bottom, then medium, then small, posts A and B empty, every disk at rest and seated on the post (horizontally within 4 cm of it, at its stacking height within 1.2 cm), held for 20 consecutive control steps. A larger disk resting on a smaller one, or a disk resting on the table, for 10 consecutive steps ends the episode as a failure.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 
 ## Difficulty
 First-pass rating: medium. Dexterous manipulation with two 16-DoF hands on two arms (46 action values per control step);
 the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-human teleoperator's demonstration took 1085 control steps (21.7 s at 50 Hz).
+reference (the human teleoperator's demonstration) takes 1085 control steps (21.7 s at 50 Hz).
 
 ## Reference solution
 `solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's

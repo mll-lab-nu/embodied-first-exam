@@ -12,14 +12,14 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` |
 
 ## Task
-DexJoCo `water_plant` with a Franka Panda arm with a 16-DoF Allegro hand: Pick up the spray bottle, point its nozzle at the potted plant and squeeze the trigger. Success: the trigger is held pulled (trigger joint > 0.34 rad; it counts as released again below 0.25 rad) while the nozzle reference point is within 0.20 m of the plant horizontally and within +-0.20 m of the plant's height AND the spray points at the plant, all three for 30 consecutive control steps (0.6 s). The spray leaves the spray head horizontally forward: perpendicular to the bottle's long axis, on the side the trigger faces (the bottle's local +z; its long axis, bottom to head, is local +y). It points at the plant when that direction is within 45 degrees of the line from the nozzle to the plant, e.g. with the bottle held upright and its trigger side facing the plant. Pulling the trigger while the nozzle is outside the zone ends the episode as a failure.
+DexJoCo `water_plant` (a Franka Panda arm with a 16-DoF Allegro hand): Pick up the spray bottle, point its nozzle at the potted plant and squeeze the trigger. Success: the trigger is held pulled (trigger joint > 0.34 rad; it counts as released again below 0.25 rad) while the nozzle reference point is within 0.20 m of the plant horizontally and within +-0.20 m of the plant's height AND the spray points at the plant, all three for 30 consecutive control steps (0.6 s). The spray leaves the spray head horizontally forward: perpendicular to the bottle's long axis, on the side the trigger faces (the bottle's local +z; its long axis, bottom to head, is local +y). It points at the plant when that direction is within 45 degrees of the line from the nozzle to the plant, e.g. with the bottle held upright and its trigger side facing the plant. Pulling the trigger while the nozzle is outside the zone ends the episode as a failure.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 
 ## Difficulty
 First-pass rating: medium. Dexterous manipulation with a 16-DoF hand on a 7-DoF arm (23 action values per control step);
 the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-human teleoperator's demonstration took 307 control steps (6.1 s at 50 Hz).
+reference (the human teleoperator's demonstration) takes 307 control steps (6.1 s at 50 Hz).
 
 ## Reference solution
 `solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's
