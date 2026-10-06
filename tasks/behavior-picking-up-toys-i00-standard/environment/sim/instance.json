@@ -1,0 +1,155 @@
+{
+ "task": "picking_up_toys",
+ "challenge_task": "picking_up_toys",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Pick up the toys in the child's room. Two board games lie on the bed; the third board game, two jigsaw puzzles, a tennis ball and the toy box are on the table. Put all six toys inside the toy box.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "f25955234083dbcf",
+ "action_dim": 25,
+ "challenge_max_steps": 28335,
+ "objects": {
+  "board_game.n.01_2": {
+   "category": "board_game",
+   "position": [
+    23.3075,
+    17.4656,
+    0.5082
+   ],
+   "orientation_xyzw": [
+    0.0117,
+    -0.0046,
+    0.4365,
+    0.8996
+   ]
+  },
+  "bed.n.01_1": {
+   "category": "bed",
+   "position": [
+    23.1903,
+    17.8321,
+    0.4037
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    1.0,
+    0.0013
+   ]
+  },
+  "tennis_ball.n.01_1": {
+   "category": "tennis_ball",
+   "position": [
+    20.4026,
+    19.0581,
+    0.814
+   ],
+   "orientation_xyzw": [
+    -0.0381,
+    -0.0526,
+    0.4028,
+    0.913
+   ]
+  },
+  "table.n.02_1": {
+   "category": "desk",
+   "position": [
+    20.7471,
+    18.6388,
+    0.4296
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    -0.0,
+    1.0
+   ]
+  },
+  "toy_box.n.01_1": {
+   "category": "toy_box",
+   "position": [
+    20.5669,
+    18.6311,
+    0.8324
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    -0.0,
+    -0.7675,
+    0.641
+   ]
+  },
+  "board_game.n.01_1": {
+   "category": "board_game",
+   "position": [
+    22.5969,
+    18.0502,
+    0.5022
+   ],
+   "orientation_xyzw": [
+    -0.008,
+    -0.0001,
+    1.0,
+    -0.0036
+   ]
+  },
+  "jigsaw_puzzle.n.01_1": {
+   "category": "jigsaw_puzzle",
+   "position": [
+    20.665,
+    18.967,
+    0.7952
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.7626,
+    0.6469
+   ]
+  },
+  "board_game.n.01_3": {
+   "category": "board_game",
+   "position": [
+    21.0097,
+    19.0417,
+    0.7477
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.5377,
+    0.8431
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    22.2156,
+    18.0142,
+    -0.1388
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "jigsaw_puzzle.n.01_2": {
+   "category": "jigsaw_puzzle",
+   "position": [
+    20.4993,
+    18.1989,
+    0.7952
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.9603,
+    -0.279
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

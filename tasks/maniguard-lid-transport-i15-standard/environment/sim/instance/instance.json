@@ -1,0 +1,101 @@
+{
+ "task": "lid_transport/task_0015",
+ "family": "lid_transport",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "f7d9f7071d94952411af8018cab30f6d84c711616fc8ed28eb3ac59feeefdd28",
+ "diagnostics_sha256": "cedc539551a5a5140f467b16800489f4502afed9e44c4544979f131b99355ac1",
+ "pipeline": "lid_transport_food",
+ "gpu_dynamics": false,
+ "state_sha": "942a6d9824503c4a",
+ "objects": {
+  "breakfast_table_iaritq_0": {
+   "category": "breakfast_table",
+   "position": [
+    -2.78999,
+    -1.51169,
+    0.48953
+   ],
+   "orientation_xyzw": [
+    -1e-05,
+    1e-05,
+    1.0,
+    1e-05
+   ]
+  },
+  "target_storage_box_ep1_1": {
+   "category": "storage_box",
+   "position": [
+    -2.9167,
+    -1.51087,
+    0.81265
+   ],
+   "orientation_xyzw": [
+    -1e-05,
+    0.0,
+    0.00012,
+    1.0
+   ]
+  },
+  "lid_lid_ep1_1": {
+   "category": "lid",
+   "position": [
+    -2.65414,
+    -1.51081,
+    0.76874
+   ],
+   "orientation_xyzw": [
+    -1e-05,
+    -1e-05,
+    0.0,
+    1.0
+   ]
+  },
+  "food_half_brussels_sprouts_ep1_1": {
+   "category": "half_brussels_sprouts",
+   "position": [
+    -2.91668,
+    -1.51296,
+    0.77418
+   ],
+   "orientation_xyzw": [
+    -0.00013,
+    -0.0002,
+    -0.0,
+    1.0
+   ]
+  },
+  "goal_region__target_storage_box_ep1_1": {
+   "category": "goal_region_marker",
+   "position": [
+    -3.32909,
+    -1.48697,
+    0.82896
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}

@@ -1,0 +1,197 @@
+{
+ "task": "putting_away_toys",
+ "challenge_task": "putting_away_toys",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Put the toys away. Eight toy figures lie on the floor, four in the living room and four in the dining room; one toy box stands on the living-room floor and another on the dining-room table. Put every toy figure inside a toy box (either box).",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "90da3cdfd6407208",
+ "action_dim": 25,
+ "challenge_max_steps": 16945,
+ "objects": {
+  "toy_figure.n.01_3": {
+   "category": "toy_figure",
+   "position": [
+    9.5832,
+    2.0582,
+    0.02
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0001,
+    -0.345,
+    0.9386
+   ]
+  },
+  "toy_figure.n.01_8": {
+   "category": "toy_figure",
+   "position": [
+    8.6098,
+    1.9982,
+    0.0187
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.9832,
+    -0.1828
+   ]
+  },
+  "table.n.02_1": {
+   "category": "breakfast_table",
+   "position": [
+    7.2949,
+    3.5008,
+    0.7649
+   ],
+   "orientation_xyzw": [
+    -0.0001,
+    0.0001,
+    0.7062,
+    0.708
+   ]
+  },
+  "toy_box.n.01_1": {
+   "category": "toy_box",
+   "position": [
+    16.7515,
+    3.4226,
+    0.1602
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.2634,
+    0.9647
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    13.4949,
+    0.799,
+    -0.1388
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "floor.n.01_2": {
+   "category": "floors",
+   "position": [
+    6.7818,
+    3.261,
+    -0.1389
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "toy_figure.n.01_7": {
+   "category": "toy_figure",
+   "position": [
+    5.191,
+    3.4706,
+    0.0227
+   ],
+   "orientation_xyzw": [
+    -0.0001,
+    -0.0002,
+    0.4955,
+    0.8686
+   ]
+  },
+  "toy_box.n.01_2": {
+   "category": "toy_box",
+   "position": [
+    6.3066,
+    3.2583,
+    0.9259
+   ],
+   "orientation_xyzw": [
+    -0.0002,
+    0.0,
+    0.2082,
+    0.9781
+   ]
+  },
+  "toy_figure.n.01_4": {
+   "category": "toy_figure",
+   "position": [
+    13.2471,
+    1.6224,
+    0.0231
+   ],
+   "orientation_xyzw": [
+    -0.0008,
+    0.0156,
+    0.4287,
+    0.9033
+   ]
+  },
+  "toy_figure.n.01_5": {
+   "category": "toy_figure",
+   "position": [
+    5.124,
+    2.8389,
+    0.019
+   ],
+   "orientation_xyzw": [
+    -0.0006,
+    -0.0007,
+    0.1212,
+    0.9926
+   ]
+  },
+  "toy_figure.n.01_2": {
+   "category": "toy_figure",
+   "position": [
+    17.2915,
+    0.5433,
+    0.035
+   ],
+   "orientation_xyzw": [
+    0.0004,
+    0.0001,
+    -0.1461,
+    0.9893
+   ]
+  },
+  "toy_figure.n.01_1": {
+   "category": "toy_figure",
+   "position": [
+    14.5093,
+    0.914,
+    0.0281
+   ],
+   "orientation_xyzw": [
+    0.0021,
+    -0.0008,
+    -0.5124,
+    0.8588
+   ]
+  },
+  "toy_figure.n.01_6": {
+   "category": "toy_figure",
+   "position": [
+    9.2183,
+    2.5287,
+    0.0173
+   ],
+   "orientation_xyzw": [
+    0.0017,
+    0.0004,
+    -0.831,
+    0.5562
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}
