@@ -1,6 +1,6 @@
 # MolmoSpaces · pick — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-**Task:** Pick up the gray castle tower.
+**Task:** Pick up the white rectangular light switch plate.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) — **as if it were real hardware** — in one episode of Ai2's MolmoSpaces benchmark (an Objaverse object).
 The simulator (upstream's own code: molmo-spaces 0.2.9, MuJoCo 3.5.0) runs in a service you cannot open. You get one
@@ -14,8 +14,9 @@ client and one episode.
   (`r.submit("done", [])`), or when your time is up.
 - **Success** is upstream's `judge_success()` on the state at that moment: the object touches the robot and nothing else, and it is at least 1 cm higher than where it started. The task has to hold at the
   end: met earlier and undone by then does not count, so end the episode with `done` once it holds.
-- Your wall-clock budget is 3600 s from your start (the service's `time_s` and `elapsed_s` count from its own start,
-  a few minutes earlier). Simulated time only advances with your commands (and `get_obs(seconds=...)`).
+- Your wall-clock budget is 3600 s from your start (the service's `time_s`, `elapsed_s` and `time_left_s` count from
+  its own start, a few minutes earlier, so `time_left_s` reaches 0 a little before your budget ends).
+  Simulated time only advances with your commands (and `get_obs(seconds=...)`).
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.

@@ -7,13 +7,13 @@
 | Twin | `molmospaces-close-i00-standard` |
 | Simulator / robot | `molmospaces` / `franka-robotiq-2f85` |
 | Family / instance | `close` |
-| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-close-i00-privileged__U2cQyVE (run codex-gpt6_luna-medium, batch molmospaces-luna-1003; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/close/unlimited/); human review in PR #47 |
+| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-close-i00-privileged__HWWFXrw (run codex-gpt6_luna-medium, batch molmospaces-luna-1006; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/close/unlimited/); human review in PR #47 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.3` |
 
 ## Task
-Close the drawer. One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark`, episode 327:
-a drawer (sliding joint)), with a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup). Privileged mode: full simulator state, unlimited resets; the deliverable is one
+Close the cabinet. One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark`, episode 51:
+a hinged door (revolute joint)), with a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup). Privileged mode: full simulator state, unlimited resets; the deliverable is one
 open-loop trajectory of joint-position targets, one row per control step.
 
 ## Difficulty
@@ -34,6 +34,6 @@ positive example and the `nop` result).
 ## Details
 | | |
 |---|---|
-| Upstream | molmo-spaces 0.2.9 (MuJoCo 3.5.0, CPU physics; EGL rendering on the GPU), benchmark `molmospaces-bench-v2/20260415`, package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark` (FrankaCloseHardBench: upstream's Hard configuration of Close, not in its evaluation docs), episode 327, house ithor val 20 |
+| Upstream | molmo-spaces 0.2.9 (MuJoCo 3.5.0, CPU physics; EGL rendering on the GPU), benchmark `molmospaces-bench-v2/20260415`, package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark` (FrankaCloseHardBench: upstream's Hard configuration of Close, not in its evaluation docs), episode 51, house ithor val 14 |
 | Frozen episode | `environment/instance.json`: the upstream episode unchanged except `source` (its expert trajectory's path) removed, plus the numbers the texts quote (`facts`) and its t = 0 record (`t0`: state hash, action layout) |
 | Generator | `scripts/molmospaces/mk_tasks.py` (`families.json`, `instances/`, `template/`, `shared/`); docs/benchmarks/molmospaces.md |

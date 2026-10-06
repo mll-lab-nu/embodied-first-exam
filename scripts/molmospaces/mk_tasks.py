@@ -32,25 +32,32 @@ SITE_RUNS = "https://embodied-agent-interface-v2-internal.github.io/runs/molmosp
 # molmospaces-luna-1003; pick: molmospaces-luna-1004-pick, the run that chose its episode under the licence filter;
 # open-door: the earlier round's batch molmospaces-luna-rby1-r2c, same scene and success rule).
 POSITIVE = {
-    "pick": "molmospaces-pick-c118-privileged__FtaBN4B",
-    "pick-and-place": "molmospaces-pick-and-place-i01-p__ywMYWxy",
-    "pick-and-place-next-to": "molmospaces-pick-and-place-next__3W4hmcz",
-    "pick-and-place-color": "molmospaces-pick-and-place-color__hMCxv9C",
-    "open": "molmospaces-open-i00-privileged__zxfmJNN",
-    "close": "molmospaces-close-i00-privileged__U2cQyVE",
-    "navigate-to": "molmospaces-navigate-to-i01-priv__Nxshh8t",
-    "open-door": "molmospaces-open-door-i01-privil__7zEbSdU",
+    "pick": "molmospaces-pick-i00-privileged__fL6BhKG",
+    "pick-and-place": "molmospaces-pick-and-place-i00-p__rfd3V6M",
+    "pick-and-place-next-to": "molmospaces-pick-and-place-next__g7CLYbk",
+    "pick-and-place-color": "molmospaces-pick-and-place-color__3KgL4cb",
+    "open": "molmospaces-open-i01-privileged__hkZsZtE",
+    "close": "molmospaces-close-i00-privileged__HWWFXrw",
+    "navigate-to": "molmospaces-navigate-to-i00-priv__mENe7qn",
+    "open-door": "molmospaces-open-door-i00-privil__iroCZzB",
 }
-BATCH = {"pick": "molmospaces-luna-1004-pick"}
+BATCH = {  # the families re-selected on 2026-10-06 after the filters changed, and run again
+    "pick": "molmospaces-luna-1006c",
+    "pick-and-place": "molmospaces-luna-1006b",
+    "pick-and-place-next-to": "molmospaces-luna-1006c",
+    "pick-and-place-color": "molmospaces-luna-1006b",
+    "navigate-to": "molmospaces-luna-1006b",
+}
+OFF_SITE = {"open": "molmospaces-luna-v3"}  # an earlier round on the same episode, not on the site
 REVIEW_PR = 47  # the pull request whose human review covers these tasks (PROTOCOL §2.7)
 
 
 def oracle_evidence(family: str) -> str:
     where = (
-        "run codex-gpt6_luna-medium, batch molmospaces-luna-rby1-r2c of 2026-10-03: an earlier round on the same "
+        f"run codex-gpt6_luna-medium, batch {OFF_SITE[family]} of 2026-10-03: an earlier round on the same "
         "episode, kept with the run's records, not on the results site"
-        if family == "open-door"
-        else f"run codex-gpt6_luna-medium, batch {BATCH.get(family, 'molmospaces-luna-1003')}; "
+        if family in OFF_SITE
+        else f"run codex-gpt6_luna-medium, batch {BATCH.get(family, 'molmospaces-luna-1006')}; "
         f"{SITE_RUNS}/{family.replace('-', '_')}/unlimited/"
     )
     return (

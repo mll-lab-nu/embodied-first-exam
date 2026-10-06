@@ -28,7 +28,7 @@ s = Session("/app/instance.json")    # builds the episode (10-40 s: the Franka s
 s.layout; row = s.hold_row()         # the row layout; the row that keeps every controller at its current target
 s.step(row)                          # one control step = one upstream Task.step; False once the episode is over
 s.done; s.status()                   # upstream's is_done(); {"success", "done", "steps", "horizon", "state_sha", "resets"}
-s.state()                            # every body's world pose (x y z qw qx qy qz) and every joint's position, by name
+s.state()                            # {"bodies": {name: [x y z qw qx qy qz]}, "joints": {name: [qpos]}, "task", "time", "mujoco"}
 s.model, s.data                      # the live MuJoCo model and data (read them; changing them is not part of the replay)
 s.render(cam); s.render_depth(cam)   # uint8 (H, W, 3); float32 (H, W) depth in m. Cameras: s.cameras
 s.camera_info(cam)                   # intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount

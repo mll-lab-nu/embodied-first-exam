@@ -1,8 +1,8 @@
 # MolmoSpaces · close — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-**Task:** Close the drawer.
+**Task:** Close the cabinet.
 
-You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) — **as if it were real hardware** — in one episode of Ai2's MolmoSpaces benchmark (a drawer (sliding joint)).
+You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) — **as if it were real hardware** — in one episode of Ai2's MolmoSpaces benchmark (a hinged door (revolute joint)).
 The simulator (upstream's own code: molmo-spaces 0.2.9, MuJoCo 3.5.0) runs in a service you cannot open. You get one
 client and one episode.
 
@@ -14,8 +14,9 @@ client and one episode.
   (`r.submit("done", [])`), or when your time is up.
 - **Success** is upstream's `judge_success()` on the state at that moment: the target's joint is open at most 15% of its range (it starts 50% open). The task has to hold at the
   end: met earlier and undone by then does not count, so end the episode with `done` once it holds.
-- Your wall-clock budget is 3600 s from your start (the service's `time_s` and `elapsed_s` count from its own start,
-  a few minutes earlier). Simulated time only advances with your commands (and `get_obs(seconds=...)`).
+- Your wall-clock budget is 3600 s from your start (the service's `time_s`, `elapsed_s` and `time_left_s` count from
+  its own start, a few minutes earlier, so `time_left_s` reaches 0 a little before your budget ends).
+  Simulated time only advances with your commands (and `get_obs(seconds=...)`).
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
@@ -37,7 +38,7 @@ r.status()                                     # calls, control steps, done, rea
 Cameras: `wrist_camera_zed_mini`, `droid_shoulder_light_randomization`, `randomized_zed2_analogue_1`, `randomized_zed2_analogue_2`, `randomized_gopro_analogue_1` (`spec["cameras"][cam]`: intrinsics and mount; every response carries each camera's pose).
 
 ### `joint_position` (8)
-`fr3_joint1`, `fr3_joint2`, `fr3_joint3`, `fr3_joint4`, `fr3_joint5`, `fr3_joint6`, `fr3_joint7`, `gripper`: the targets of upstream's joint-position controllers (fr3_joint1..7 in rad; gripper: the Robotiq command, 0 = open .. 255 = closed). At t = 0 the gripper is open and its target is 0. Rows are `dt` apart (a
+`fr3_joint1`, `fr3_joint2`, `fr3_joint3`, `fr3_joint4`, `fr3_joint5`, `fr3_joint6`, `fr3_joint7`, `gripper`: the targets of upstream's joint-position controllers (fr3_joint1..7 in rad; gripper: the Robotiq command, 0 = open .. 255 = closed). At t = 0 the gripper is open, but its controller target is already 255 (closed): holding the current targets closes it; command 0 to keep it open. Rows are `dt` apart (a
 whole multiple of the 0.066 s control period, at most 0.5 s: up to 0.462 s), `interpolate="linear"` (default) or
 `"hold"` between rows; a chunk covers at
 most 10 s; values outside the limits (`spec["action_types"]["joint_position"]["limits"]`) are clipped and listed in
