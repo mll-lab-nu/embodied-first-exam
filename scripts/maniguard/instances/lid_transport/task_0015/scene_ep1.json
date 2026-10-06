@@ -1,0 +1,672 @@
+{
+    "versions": {
+        "omnigibson": {
+            "version": "3.7.2",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "bddl": {
+            "version": "3.7.0",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "behavior-1k-assets": {
+            "version": "3.7.2rc1"
+        },
+        "omnigibson-robot-assets": {
+            "version": null,
+            "git_hash": null
+        }
+    },
+    "metadata": {},
+    "state": {
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ori": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "registry": {
+            "system_registry": {},
+            "object_registry": {
+                "breakfast_table_iaritq_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -2.789985418319702,
+                            -1.5116865634918213,
+                            0.48953428864479065
+                        ],
+                        "ori": [
+                            -1.2779521057382226e-05,
+                            8.028733645915054e-06,
+                            1.0,
+                            5.5301934480667114e-06
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "target_storage_box_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -2.9166951179504395,
+                            -1.510872721672058,
+                            0.8126465082168579
+                        ],
+                        "ori": [
+                            -1.3055148883722723e-05,
+                            6.337650120258331e-07,
+                            0.00011725968943210319,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        },
+                        "AttachedTo": {
+                            "attached_obj_uuid": -1
+                        }
+                    }
+                },
+                "lid_lid_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -2.654143810272217,
+                            -1.5108121633529663,
+                            0.7687385678291321
+                        ],
+                        "ori": [
+                            -7.353932232945226e-06,
+                            -1.2745498679578304e-05,
+                            1.3973378827358829e-06,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "AttachedTo": {
+                            "attached_obj_uuid": -1
+                        }
+                    }
+                },
+                "food_half_brussels_sprouts_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -2.9166836738586426,
+                            -1.5129588842391968,
+                            0.7741842865943909
+                        ],
+                        "ori": [
+                            -0.0001311294035986066,
+                            -0.00019597820937633514,
+                            -2.9936200007796288e-06,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        },
+                        "MaxTemperature": {
+                            "max_temperature": 23.0
+                        }
+                    }
+                },
+                "goal_region__target_storage_box_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -3.329094648361206,
+                            -1.4869664907455444,
+                            0.8289562463760376
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    "non_kin": {},
+                    "radius": 0.061105549335479736,
+                    "height": -1,
+                    "size": -1
+                },
+                "agent_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -2.864182233810425,
+                            -2.1155004501342773,
+                            0.777255654335022
+                        ],
+                        "ori": [
+                            1.4901161193847656e-08,
+                            9.778887033462524e-09,
+                            0.6863422989845276,
+                            0.7272787690162659
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "joint_vel": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "controllers": {
+                        "arm_0": {
+                            "goal_is_valid": false,
+                            "goal": null
+                        },
+                        "gripper_0": {
+                            "goal_is_valid": false,
+                            "goal": null,
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        -0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": false
+                            }
+                        }
+                    },
+                    "non_kin": {},
+                    "ag_obj_constraint_params": {
+                        "0": {}
+                    }
+                }
+            }
+        }
+    },
+    "init_info": {
+        "class_module": "omnigibson.scenes.scene_base",
+        "class_name": "Scene",
+        "args": {
+            "scene_file": {
+                "versions": {
+                    "omnigibson": {
+                        "version": "3.7.2",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "bddl": {
+                        "version": "3.7.0",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "behavior-1k-assets": {
+                        "version": "3.7.2rc1"
+                    },
+                    "omnigibson-robot-assets": {
+                        "version": null,
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    }
+                },
+                "metadata": {},
+                "state": {
+                    "pos": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "ori": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "registry": {
+                        "system_registry": {},
+                        "object_registry": {
+                            "breakfast_table_iaritq_0": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        -2.789985418319702,
+                                        -1.5116865634918213,
+                                        0.48953428864479065
+                                    ],
+                                    "ori": [
+                                        -1.2779521057382226e-05,
+                                        8.028733645915054e-06,
+                                        1.0,
+                                        5.5301934480667114e-06
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "target_storage_box_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -2.9166951179504395,
+                                        -1.510872721672058,
+                                        0.8126465678215027
+                                    ],
+                                    "ori": [
+                                        -1.3137845598976128e-05,
+                                        8.391215260417084e-07,
+                                        0.00011723072384484112,
+                                        1.0
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    },
+                                    "AttachedTo": {
+                                        "attached_obj_uuid": -1
+                                    }
+                                }
+                            },
+                            "lid_lid_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -2.654143810272217,
+                                        -1.5108121633529663,
+                                        0.7687385678291321
+                                    ],
+                                    "ori": [
+                                        -7.681439456064254e-06,
+                                        -1.2895688996650279e-05,
+                                        1.3674689398612827e-06,
+                                        1.0
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "AttachedTo": {
+                                        "attached_obj_uuid": -1
+                                    }
+                                }
+                            },
+                            "food_half_brussels_sprouts_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -2.9166836738586426,
+                                        -1.5129588842391968,
+                                        0.7741842865943909
+                                    ],
+                                    "ori": [
+                                        -0.00013111811131238937,
+                                        -0.00019597820937633514,
+                                        -2.948887413367629e-06,
+                                        1.0
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    },
+                                    "MaxTemperature": {
+                                        "max_temperature": 23.0
+                                    }
+                                }
+                            },
+                            "goal_region__target_storage_box_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        -3.329094648361206,
+                                        -1.4869664907455444,
+                                        0.8289562463760376
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                },
+                                "non_kin": {},
+                                "radius": 0.061105549335479736,
+                                "height": -1,
+                                "size": -1
+                            }
+                        }
+                    }
+                },
+                "init_info": {
+                    "class_module": "omnigibson.scenes.scene_base",
+                    "class_name": "Scene",
+                    "args": {
+                        "scene_file": null
+                    }
+                },
+                "objects_info": {
+                    "init_info": {
+                        "breakfast_table_iaritq_0": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "breakfast_table_iaritq_0",
+                                "category": "breakfast_table",
+                                "model": "iaritq",
+                                "scale": [
+                                    0.9999992251396179,
+                                    1.0000107288360596,
+                                    0.9999988079071045
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "12b9ce6dd65e4df86bfd59ba1ac646af"
+                            }
+                        },
+                        "target_storage_box_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "target_storage_box_ep1_1",
+                                "category": "storage_box",
+                                "model": "aqdbdu",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "8947caf762aa3f8973a69730a01385e1"
+                            }
+                        },
+                        "lid_lid_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "lid_lid_ep1_1",
+                                "category": "lid",
+                                "model": "mdowoz",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "ce93f2bb31e1f0dfac2aaf4ef6f94d43"
+                            }
+                        },
+                        "food_half_brussels_sprouts_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "food_half_brussels_sprouts_ep1_1",
+                                "category": "half_brussels_sprouts",
+                                "model": "txelwc",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "68dba4b7abaf2153205e2aa3e4aed863"
+                            }
+                        },
+                        "goal_region__target_storage_box_ep1_1": {
+                            "class_module": "omnigibson.objects.primitive_object",
+                            "class_name": "PrimitiveObject",
+                            "args": {
+                                "name": "goal_region__target_storage_box_ep1_1",
+                                "primitive_type": "Sphere",
+                                "relative_prim_path": "/goal_region__target_storage_box_ep1_1",
+                                "category": "goal_region_marker",
+                                "fixed_base": true,
+                                "visual_only": true,
+                                "rgba": [
+                                    0.1,
+                                    0.8,
+                                    0.2,
+                                    1.0
+                                ],
+                                "radius": 0.061105549335479736
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "objects_info": {
+        "init_info": {
+            "breakfast_table_iaritq_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "breakfast_table_iaritq_0",
+                    "category": "breakfast_table",
+                    "model": "iaritq",
+                    "scale": [
+                        0.9999992251396179,
+                        1.0000107288360596,
+                        0.9999988079071045
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "12b9ce6dd65e4df86bfd59ba1ac646af"
+                }
+            },
+            "target_storage_box_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "target_storage_box_ep1_1",
+                    "category": "storage_box",
+                    "model": "aqdbdu",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "8947caf762aa3f8973a69730a01385e1"
+                }
+            },
+            "lid_lid_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "lid_lid_ep1_1",
+                    "category": "lid",
+                    "model": "mdowoz",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "ce93f2bb31e1f0dfac2aaf4ef6f94d43"
+                }
+            },
+            "food_half_brussels_sprouts_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "food_half_brussels_sprouts_ep1_1",
+                    "category": "half_brussels_sprouts",
+                    "model": "txelwc",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "68dba4b7abaf2153205e2aa3e4aed863"
+                }
+            },
+            "goal_region__target_storage_box_ep1_1": {
+                "class_module": "omnigibson.objects.primitive_object",
+                "class_name": "PrimitiveObject",
+                "args": {
+                    "name": "goal_region__target_storage_box_ep1_1",
+                    "primitive_type": "Sphere",
+                    "relative_prim_path": "/goal_region__target_storage_box_ep1_1",
+                    "category": "goal_region_marker",
+                    "fixed_base": true,
+                    "visual_only": true,
+                    "rgba": [
+                        0.1,
+                        0.8,
+                        0.2,
+                        1.0
+                    ],
+                    "radius": 0.061105549335479736
+                }
+            },
+            "agent_0": {
+                "class_module": "omnigibson.robots.franka",
+                "class_name": "FrankaPanda",
+                "args": {
+                    "name": "agent_0",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self_collisions": true,
+                    "fixed_base": true,
+                    "controller_config": {
+                        "arm_0": {
+                            "name": "JointController",
+                            "motor_type": "position",
+                            "command_input_limits": null,
+                            "command_output_limits": null,
+                            "use_delta_commands": false,
+                            "use_impedances": false
+                        },
+                        "gripper_0": {
+                            "name": "MultiFingerGripperController",
+                            "command_input_limits": null,
+                            "mode": "binary"
+                        }
+                    },
+                    "action_type": "continuous",
+                    "action_normalize": false,
+                    "reset_joint_pos": [
+                        -5.2614712330978364e-05,
+                        1.8836950403056107e-05,
+                        -2.5675361030153e-05,
+                        -0.06982749700546265,
+                        2.8936150556546636e-05,
+                        0.08141054958105087,
+                        -6.10139177297242e-05,
+                        0.019972767680883408,
+                        0.01968257874250412
+                    ],
+                    "obs_modalities": [
+                        "rgb"
+                    ],
+                    "include_sensor_names": null,
+                    "exclude_sensor_names": null,
+                    "grasping_mode": "assisted",
+                    "expected_file_hash": "9ddd461281d1c875d2ae552f61751c3f"
+                }
+            }
+        }
+    }
+}
