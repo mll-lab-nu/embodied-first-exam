@@ -9,14 +9,14 @@
 | Family / instance | `obj_reorient` / seed 0 |
 | Oracle | `none` — a successful model trial on this frozen instance: Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-obj-reorient-i00__5dLP3ah` (305 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoHandReorient8-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Reorient the object held in the hand to the target orientation: the cosine between the object's orientation vector and the target's above 0.95, with the object within 0.075 m of the target position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the object more than 0.075 m from the target position (dropped).
-An object (one of eight shapes; this instance fixes one) rests on the fingers of the upturned hand; a translucent copy shows the target orientation. The deliverable is one replayable trajectory of muscle commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
+An object (one of eight shapes; this instance fixes one) rests on the fingers of the upturned hand; a translucent copy shows the target orientation. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
 
 ## Difficulty
-First-pass rating: hard. The action is muscle-level only (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint or fingertip control from muscle excitations, and MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
+First-pass rating: hard. The action is muscle-level (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
 
 ## Reference solution
 None. Solvability evidence: a successful model trial on this frozen instance: Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-obj-reorient-i00__5dLP3ah` (305 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD.
@@ -29,7 +29,7 @@ None. Solvability evidence: a successful model trial on this frozen instance: Co
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Instance | `myoHandReorient8-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `6259604c18497ca3`, checked on every load |
-| Actions | 39 muscle commands per control step (10 ms, 5 physics substeps); success = MyoSuite's `solved` held 100 steps |
+| Actions | 39 actuator commands per control step (10 ms, 5 physics substeps); success rule `hold` (docs/benchmarks/myosuite.md) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 
 ### Provenance

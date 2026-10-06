@@ -9,14 +9,14 @@
 | Family / instance | `pen_twirl` / seed 0 |
 | Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-pen-twirl-i00__UtTYzQE` (513 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoHandPenTwirlFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Rotate the pen in the hand until its axis points along the target orientation: the cosine between the pen's axis (bottom to top) and the target's axis above 0.95, with the pen within 0.075 m of its desired position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the pen more than 0.075 m from its desired position (dropped).
-A pen lies across the fingers of the upturned hand; a translucent target pen shows the goal orientation. The deliverable is one replayable trajectory of muscle commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
+A pen lies across the fingers of the upturned hand; a translucent target pen shows the goal orientation. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
 
 ## Difficulty
-First-pass rating: hard. The action is muscle-level only (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint or fingertip control from muscle excitations, and MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
+First-pass rating: hard. The action is muscle-level (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
 
 ## Reference solution
 None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-pen-twirl-i00__UtTYzQE` (513 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD.
@@ -29,7 +29,7 @@ None. Solvability evidence: a successful model trial on this frozen instance: Cl
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Instance | `myoHandPenTwirlFixed-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `57206cc383accb2a`, checked on every load |
-| Actions | 39 muscle commands per control step (10 ms, 5 physics substeps); success = MyoSuite's `solved` held 100 steps |
+| Actions | 39 actuator commands per control step (10 ms, 5 physics substeps); success rule `hold` (docs/benchmarks/myosuite.md) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 
 ### Provenance

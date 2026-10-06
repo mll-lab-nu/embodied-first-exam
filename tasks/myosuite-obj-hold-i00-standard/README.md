@@ -9,14 +9,14 @@
 | Family / instance | `obj_hold` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoHandObjHoldFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-obj-hold-i00-privileged`: Hold the object at the goal: its centre within 0.010 m of the goal site for 50 consecutive control steps (1.0 s). Failure (the episode ends): the object more than 0.30 m from the goal (dropped). The object starts resting in the hand and falls if the hand does not grip it.
-A small object rests in the palm of the upturned hand; the goal site is right above it. Standard mode (eai-standard/2.2): the agent drives the limb through a client in one episode, with only the limb's own proprioception and four cameras (two on the forearm).
+A small object rests in the palm of the upturned hand; the goal site is right above it. Standard mode (eai-standard/2.2): the agent drives the body through a client in one episode, with only its own proprioception and the scene's cameras.
 
 ## Difficulty
-Same instance and success rule as `myosuite-obj-hold-i00-privileged` (first-pass rating: medium). In standard mode the agent loses resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in muscle-command chunks, and gets one episode, so it has to close the loop on what it sees and recover from its own mistakes without starting over.
+Same instance and success rule as `myosuite-obj-hold-i00-privileged` (first-pass rating: medium). In standard mode the agent loses resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets one episode, so it has to close the loop on what it sees and recover from its own mistakes without starting over.
 
 ## Reference solution
 `solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle.npy`, 57 rows, float32-exact) through the client in `hold` chunks; it uses no privileged information at run time. The service's recorded trajectory is then exactly the privileged reference: success after 57 control steps.
@@ -28,7 +28,7 @@ The sim service judges the episode live and records every executed control step;
 | | |
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); cameras `hand_top`, `hand_side_inter` (on the forearm), `front_view`, `side_view` (static), 640 x 480; fingertip kinematics in the world frame |
+| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 
 ### Provenance

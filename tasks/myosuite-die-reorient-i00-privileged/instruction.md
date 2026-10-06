@@ -1,7 +1,8 @@
 # MyoSuite · die_reorient — frozen instance
 
-You control the **MyoHand**, a musculoskeletal model of a human forearm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, by **exciting its 39 muscles**: there
-is no joint-level command. **Task:** Rotate the die in the hand to the target pose: its position within 0.025 m of the target and the norm of its Euler-angle error below 0.262 rad, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the die more than 0.2 m from the target (dropped).
+You control the **MyoHand**, a musculoskeletal model of a human forearm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 39
+muscles: there is no joint-level controller.
+**Task:** Rotate the die in the hand to the target pose: its position within 0.025 m of the target and the norm of its Euler-angle error below 0.262 rad, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the die more than 0.2 m from the target (dropped).
 
 A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. `s.state()` gives the task's observation dict (privileged): `hand_qpos_noMD5`, `hand_qpos`, `hand_qvel`, `obj_pos`, `goal_pos`, `pos_err`, `obj_rot`, `goal_rot`, `rot_err`, `act`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myochallenge/reorient_v0.py`; `solved` is the goal test,
@@ -53,11 +54,10 @@ def get_reward_dict(self, obs_dict):
     )
     return rwd_dict
 ```
-Robot Coding Bench counts the goal only when `solved` holds for 100 consecutive control steps (1.0 s);
-`done` ends the episode as a failure. MyoSuite's step budget is lifted.
+Robot Coding Bench counts the goal only when `solved` holds for 100 consecutive control steps (1.0 s); `done` ends the episode as a failure. MyoSuite's step budget is lifted.
 
-This is a *fixed scene instance*: the limb's start pose, the object and the goal never change between resets. You may
-reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
+retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
@@ -70,32 +70,29 @@ time remains, and do not stop early.
 ## Tooling (already installed; run `python` from any directory)
 ```python
 from rcb_myosuite import Session
-s = Session("die_reorient", instance="/app/instance.npz")   # ~1 s
+s = Session("die_reorient", instance="/app/instance.npz")   # a few seconds
 s.reset()                          # back to the frozen initial state (unlimited; an exact snapshot restore)
 s.state()                          # the task's observation dict (privileged; see above)
-s.muscles(); s.joints()            # 39 muscles (index, name, ctrl range); hinge joints (name, qpos/dof address, range, qpos)
-s.moment_arms()                    # (39, nv) muscle moment arms at the current pose
+s.actuators(); s.muscles(); s.joints()   # 39 actuators (kind, command); muscles; hinge/slide joints (qpos/dof address, range)
+s.moment_arms()                    # (39, nv) actuator moment arms at the current pose
 s.model, s.data                    # MuJoCo model / data: read them freely; only the actions you record are replayed
-s.excitation(a); s.command_for(u)  # command a -> excitation u = 1/(1+exp(-5(a-0.5))) and its inverse
-s.step(a)                          # one control step (10 ms): 39 muscle commands; False once the episode is over
-s.rest_action()                    # every muscle relaxed (a = -1)
-s.status()                         # {'success', 'done', 'reason', 'steps', 'resets', 'solved_run', 'hold_steps', 'state_sha', 'info'}
+s.excitation(a); s.command_for(u)  # muscle command a -> excitation u = 1/(1+exp(-5(a-0.5))) and its inverse
+s.step(a)                          # one control step (10 ms): 39 commands; False once the episode is over
+s.rest_action()                    # every command at -1 (muscles relaxed)
+s.status()                         # {'success', 'done', 'reason', 'steps', 'resets', 'solved_run', 'rule', 'state_sha', 'info', ...}
 s.record_start(); ...; actions = s.record_stop()   # (T, 39) commands, one row per control step
 s.replay(actions)                  # resets, replays open-loop until the episode ends, returns status -> self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
-s.render_frame("hand_top")         # RGB uint8 (480, 640, 3); cameras: side_view, front_view, hand_top, hand_bottom, hand_side_inter, hand_side_exter, plam_lookat (hand_top / hand_side_inter: hand close-ups)
-s.render_video(actions, "/app/output/check.mp4")
+s.render_frame("hand_top")            # RGB uint8 (480, 640, 3); cameras: side_view, front_view, hand_top, hand_bottom, hand_side_inter, hand_side_exter, plam_lookat
+s.render_video(actions, "/app/output/check.mp4", cameras=["hand_top"])
 ```
-There are no motion primitives: moving a finger, grasping and every other skill are yours to build from muscle commands.
+There are no motion primitives: every skill is yours to build from actuator commands.
 
 CLI equivalent of the grader:
 `python /opt/tools/rcb_myosuite.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz --repeat 2`
 
 ## Conventions
-- Action: 39 real numbers, one per muscle in `s.muscles()` order. MyoSuite maps each to an excitation
-  u = 1 / (1 + exp(-5 (a - 0.5))) and does not clip a (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994).
-  Activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can
-  cross several joints; its force also depends on its length and velocity (MuJoCo muscle model).
+- Action: 39 real numbers per control step, one per actuator in order: 39 muscles. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity.
 - Control step 10 ms (5 physics substeps). There is no step budget: your wall-clock time is the limit
-  (~2000 control steps/s here). An episode ends at success or at a task failure; `s.step` then refuses further
+  (~1700 control steps/s here). An episode ends at success or failure; `s.step` then refuses further
   actions until `s.reset()`.

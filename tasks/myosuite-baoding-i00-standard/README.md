@@ -9,14 +9,14 @@
 | Family / instance | `baoding` / seed 0 |
 | Oracle | `none` — no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG`) fails once its rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #TBD |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoChallengeBaodingP1-v1` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-baoding-i00-privileged`: Baoding balls: rotate the two balls around each other in the palm so that each follows its moving target (the targets circle the palm once every 5 s). Success: both balls within 0.015 m of their targets for 200 consecutive control steps (5.0 s: one full orbit of the targets). Failure (the episode ends): a ball's height (world z) drops below 1.25 m, i.e. it falls out of the palm.
-Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now. Standard mode (eai-standard/2.2): the agent drives the limb through a client in one episode, with only the limb's own proprioception and four cameras (two on the forearm).
+Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now. Standard mode (eai-standard/2.2): the agent drives the body through a client in one episode, with only its own proprioception and the scene's cameras.
 
 ## Difficulty
-Same instance and success rule as `myosuite-baoding-i00-privileged` (first-pass rating: hard). In standard mode the agent loses resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in muscle-command chunks, and gets one episode, so it has to close the loop on what it sees and recover from its own mistakes without starting over.
+Same instance and success rule as `myosuite-baoding-i00-privileged` (first-pass rating: hard). In standard mode the agent loses resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets one episode, so it has to close the loop on what it sees and recover from its own mistakes without starting over.
 
 ## Reference solution
 None. Solvability evidence: no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG`) fails once its rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #TBD.
@@ -28,7 +28,7 @@ The sim service judges the episode live and records every executed control step;
 | | |
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
-| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); cameras `hand_top`, `hand_side_inter` (on the forearm), `front_view`, `side_view` (static), 640 x 480; fingertip kinematics in the world frame |
+| Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); cameras `side_view`, `front_view`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 
 ### Provenance
