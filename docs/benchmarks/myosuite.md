@@ -82,9 +82,14 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   first `solved`; we count the first `solved` with the contact check. osl_run's official score is the distance reached
   within its 1000-step horizon (5 s); we require finishing the 29 m track, without a time limit.
 - **Success, MyoDex (`track`)**: MyoDex defines a dense reward only (`solved` is always 0). We count a success when the
-  whole reference motion is followed: the object's centre of mass within 3 cm of the reference (and its orientation within
-  0.5 rad for the four families where orientation is the point of the skill) at >= 90 % of the control steps and at the
-  last one, without MyoDex's termination (object or wrist more than 0.25 m off). The thresholds are ours.
+  whole reference motion is reproduced: the object's displacement since the start within 3 cm of the reference's
+  displacement since its start (and, for the four families where orientation is the point of the skill, its rotation
+  since the start within 0.5 rad of the reference's) at >= 90 % of the control steps and at the last one, the displacement
+  error never above 5 cm, and no MyoDex termination (object or wrist more than 0.25 m off). The thresholds are ours. A
+  first version compared absolute positions; the first Opus 5.5 apple_lift trial passed it **without lifting the apple**:
+  the reference starts 2.9 cm below the resting apple and rises only 6.8 cm, so an apple kept on the table stayed within
+  3 cm at 54 of 57 steps. Relative motion and the 5 cm cap close that (the same trajectory now fails: 48 of 57, 6.6 cm at
+  worst); that trial is not counted as a positive example.
 - **Texts (D7).** The privileged instruction quotes MyoSuite's reward code; the standard instruction states the goal and
   its thresholds in words (distances, angles, hold time), including MyoSuite's own failure thresholds, of which baoding's
   is a height in the world frame ("a ball's height below 1.25 m"). No object or goal position is given in either mode.

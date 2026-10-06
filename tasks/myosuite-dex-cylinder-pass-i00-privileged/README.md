@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
-MyoSuite `MyoHandCylindersmallPass-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles and 6 other actuators): Move the small cylinder along MyoDex's recorded pass (pick it up and present it for a hand-over) motion: a reference of the object's pose over 86 control steps (1.72 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 86 steps. Success: the object's centre of mass within 0.03 m of the reference at at least 90% of the control steps, and at the last one. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.
+MyoSuite `MyoHandCylindersmallPass-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles and 6 other actuators): Move the small cylinder along MyoDex's recorded pass (pick it up and present it for a hand-over) motion: a reference of the object's pose over 86 control steps (1.72 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 86 steps. Success: the object's motion follows the reference's: its centre of mass's displacement since the start within 0.03 m of the reference's displacement since the reference's start, at at least 90% of the control steps and at the last one, with the displacement error never above 0.05 m. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.
 A small cylinder lies on the table; the MyoHand is at its pre-grasp pose. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 45)`, one row per 20 ms control step).
 
 ## Difficulty

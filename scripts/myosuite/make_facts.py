@@ -233,9 +233,11 @@ def goal_text_set3(fam: str, s) -> str:
         rot = M.TRACK_ROT[fam]
         return (f"Move the {f['obj']} along MyoDex's recorded {f['skill']} motion: a reference of the object's pose over "
                 f"{s.track_steps} control steps ({s.track_steps * s.dt:.2f} s), from GRAB motion capture (TCDM / MyoDex). "
-                f"The episode lasts exactly those {s.track_steps} steps. Success: the object's centre of mass within "
-                f"{M.TRACK_POS_M:g} m of the reference" + (f" and its orientation within {M.TRACK_ROT_RAD:g} rad of the "
-                "reference's" if rot else "") + f" at at least {M.TRACK_FRAC:.0%} of the control steps, and at the last one. "
+                f"The episode lasts exactly those {s.track_steps} steps. Success: the object's motion follows the "
+                f"reference's: its centre of mass's displacement since the start within {M.TRACK_POS_M:g} m of the "
+                "reference's displacement since the reference's start" + (f", and its rotation since the start within "
+                f"{M.TRACK_ROT_RAD:g} rad of the reference's" if rot else "") + f", at at least {M.TRACK_FRAC:.0%} of the "
+                f"control steps and at the last one, with the displacement error never above {M.TRACK_MAX_M:g} m. "
                 "Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or "
                 "from the wrist.")
     raise KeyError(fam)
