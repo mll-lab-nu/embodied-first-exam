@@ -221,6 +221,9 @@ the rope's vertex positions within the GPU's run-to-run noise (max 1.2e-7 m vs 9
 step time unchanged.
 
 ## Step time
+The speed-up record from v4 (10-01) to v18 (10-06): one fixed benchmark per family plus end-to-end oracle times, in
+[`../TOPOGYM_SPEEDUP_RECORD.md`](../TOPOGYM_SPEEDUP_RECORD.md). The profiles below are the 10-01 starting point.
+
 A control step is 10 physics ticks; `Env.step` reads the world state after every tick (the task predicate and the history
 need it) and renders every camera once (Nyx). Profiles of one sim alone (2026-10-01, seconds per control step):
 

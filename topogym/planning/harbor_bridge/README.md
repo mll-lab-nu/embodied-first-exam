@@ -18,7 +18,9 @@ Coil easy 已实测完成 3 步 oracle 前缀的 privileged 两遍回放，以�
 
 现已接入 9 类 × 2 档 × privileged/standard，共 36 个可选择评分位置；seed 0，
 完整 oracle，串行执行，无模型调用。Rope 控制器仍是开发候选；本地历史成功不继承为当前 grade。
-Hedgehog、Horseshoe、Slotted 的简单档只有几何检查，缺完整机器人 oracle，另列覆盖缺口。
+Horseshoe、Slotted 的简单档只有几何检查，缺完整机器人 oracle，另列覆盖缺口。Hedgehog 的两档（2026-10-06）经同一分派器
+接入 easy 的实测路径 oracle，每档一个 pickup（`reference_data/hedgehog_in_cage/<tier>/pickup.json`，由
+`hedgehog_in_cage/below_easy_pickup.py` 生成）。
 
 ```bash
 bash bash_scripts/run_harbor_oracle_grades.sh \
@@ -602,7 +604,7 @@ Blanket 的 birth UV 及只读材质绑定已进入公共 task/PBD 代码，原 
 | Buzz | `topogym.planning.buzz_wire_3d.public_session:run_feedback_policy` | 三档 recipe；easy selection；medium/hard 全部 compiled actions；不继承历史成绩 |
 | Fiber | `topogym.planning.fiber_bundling.public_session:run_feedback_policy` | 三档 selection |
 | Horseshoe | `topogym.planning.horseshoe_ring.public_session:run_feedback_policy` | recipe + 哈希绑定的五份数据 |
-| Hedgehog | `topogym.planning.hedgehog_in_cage.public_session:run_feedback_policy` | easy/hard pickup；medium 原内置配方 |
+| Hedgehog | `topogym.planning.hedgehog_in_cage.public_session:run_feedback_policy` | easy/hard 及 very_easy/easier pickup（简单档行速受标准服务步长限制）；medium 原内置配方 |
 | Claws | `topogym.planning.interlocked_claws.public_session:run_feedback_policy` | witness + reference_routes |
 | Knot | `topogym.planning.knot_untying.public_session:run_feedback_policy` | 原决策算法；使用冻结宽度布局 |
 

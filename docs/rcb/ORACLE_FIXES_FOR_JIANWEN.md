@@ -17,6 +17,90 @@ simulator file changed, so the public source identity and the image stay as buil
 - Lane outputs: `oraclefix/tree/runs/test_results/harbor_grade_of_<lane>/`. Diagnostics (never grades):
   `oraclefix/exp/E*`, `oraclefix/evidence/`.
 
+## Final status, 2026-10-06 (v18): every in-scope oracle passes in both modes
+
+All 33 tasks outside orbits and slotted now have an oracle that passes your grading in both modes (the last two
+results, fiber hard standard and the v18 blanket hard standard, landed 10-06 ~03:40). orbits x3 and
+slotted x3 still have no oracle; they are yours. Nothing failed in the final runs.
+The sections below are the history of 10-04 and 10-05. Where they still say "running" or "pending", this
+section supersedes them.
+
+- **Release:** merged-v18 (tooling 18, image 0.2.16-dev) at `8d7d16489`. Oracle-only commits after it: `42e4237ce`
+  (buzz hard, O2-9) and `960092527` (docs).
+- **Final oracle sweep:**
+  - Code: lab tree = exact copy of `8d7d16489`.
+  - Packages: `cand_v18b`, built from `be53c149e`. Its release identity equals the pushed tree. Your `require_task`
+    rejects `cand_v18` under that tree, because your below-easy sources change the source hash.
+  - Instances: all 39 are identical to `cand_v18` (state_sha and sim config).
+  - Grading: your `test_harbor_oracles.py --candidate --no-nop --execute`, both modes.
+- **Live minutes:** the Harbor agent phase, including about 2 min of setup, under the sweep's shared load (up to 10 CPU
+  lanes at once; blanket x3 together on one GPU). Rule: one execution <= ~72 min (20 % of 6 h).
+
+| family | easy (priv / std) | medium (priv / std) | hard (priv / std) | graded on |
+|---|---|---|---|---|
+| cast_coil | 1 / 1 (9 / 7 min) | 1 / 1 (10 / 8) | 1 / 1 (9 / 7) | v18 sweep |
+| cast_keyhole | 1 / 1 (32 / 21) | 1 / 1 (29 / 19) | 1 / 1 (36 / 23) | v18 sweep |
+| hedgehog_in_cage | 1 / 1 (23 / 12) | 1 / 1 (4 / 3) | 1 / 1 (11 / 8) | v18 sweep |
+| interlocked_claws | 1 / 1 (4 / 1) | 1 / 1 (2 / 2) | 1 / 1 (31 / 22) | v18 sweep |
+| horseshoe_ring | 1 / 1 (38 / 19) | 1 / 1 (40 / 20) | 1 / 1 (43 / 19) | v18 sweep |
+| lock_picking | 1 / 1 (13 / 10) | 1 / 1 (23 / 17) | 1 / 1 (27 / 20) | v18 sweep |
+| buzz_wire_3d | 1 / 1 (19 / 13) | 1 / 1 (37 / 33) | 1 / 1 (74 / 73) | v18 sweep; hard: see below |
+| fiber_bundling | 1 / 1 (22 / 17) | 1 / 1 (56 / 44) | 1 / 1 (185 / 152) | v18 sweep; hard: v17 |
+| blanket_flatten | 1 / 1 (10 / 9) | 1 / 1 (23 / 20) | 1 / 1 (60 / 48) | v18 sweep |
+| rope_threading | 1 / 1 (26 / 21) | 1 / 1 (33 / 27) | 1 / 1 (34 / 27) | v18 post-build grades |
+| knot_untying | 1 / 1 (26 / 23) | 1 / 1 (62 / 55) | 1 / 1 (71 / 65) | v18 post-build grades |
+| orbits, slotted_post_ring | no oracle | no oracle | no oracle | - |
+
+- **v18 post-build grades:** `cand_v18` from the v18 stack before its rebase. The rope and knot oracle code behaves
+  the same at `8d7d16489`: your merge only adds the below-easy joint limit, which is `None` for these tiers.
+- **Determinism:** every privileged grade above has its two fresh-process replays bit-identical to each other and to
+  live. Every standard live run reproduces in its recorded replay.
+- **rope medium:** first standard pass. It failed on ba01/v16 at zero margin.
+- **buzz hard (O2-9):** graded in both modes on image 0.2.14 (the d5e71 tree), not on the v18 tree.
+  - The graded trajectory (32344 rows) replays bit-identically on the v18 image: every per-row state hash, the
+    success row and the minimum wand-wire clearance (1.027 mm) are equal.
+  - buzz medium was checked the same way (17536 rows) and then graded on v18.
+  - Details in `ORACLE_FIXES_2_FOR_JIANWEN.md`.
+- **fiber hard:** v17 grade.
+  - Privileged passed (live 185 min), the first fiber hard pass.
+  - Standard passed too (live 152 min), fiber hard's first standard grade.
+  - CPU physics are bit-identical from v17 to v18. Only fiber has an entity above 64 DOFs, and v18 changes no
+    CPU-family dynamics.
+- **blanket hard, final oracle (11 + 11b + 11c):**
+  - 11, `779cc5f43`: lays out the folded corner.
+  - 11b, `c6d5860c3`: slides along the base clearance. The robot_clear violator was the fixed base cover, not the
+    gripper.
+  - With 11 + 11b, v17 privileged passed at row 4075. The standard twin refused row 229: 0.0439 rad, above the
+    0.04 rad step limit, coming from the stage-A contact IK re-solve.
+  - 11c, `bfd06f77f`: sends blanket rows through 01's standard-rate limiter. Easy and medium are unchanged row for
+    row; hard gains one step.
+  - v17 result: both modes pass at 4855 rows. Live minutes 113 / 93, on a shared GPU without v18's speed-ups. The
+    replays are strict at row 4855. The standard stream had n_clipped 0 and hold 0. live_sha is equal across modes.
+  - v18 sweep: both modes pass (live 60 / 48 min; the privileged run shared its GPU with blanket easy/medium at first;
+    about 30 min alone).
+  - v18's blanket speed-ups are byte-identical to v17 (actions, phases, physics steps, task_result, substituted state
+    hashes).
+- **Over 72 min, accepted by the user:**
+  - fiber hard: 185 min.
+  - buzz hard: 74 min graded, 87 min on a busier host. v18 estimate 58-71 min.
+- **hedgehog very_easy and easier (10-06):** both now have an oracle and pass both modes on v18. See section 10.
+
+Open items for you:
+- **Two CI tests fail after your merge `b1ab6b18d`.** They fail with or without v18, and we did not touch them.
+  - `test-harbor-simple-policy-context` (your new test) expects:
+    - a dict grasp_assist, but `actions.py` builds it with `dataclasses.asdict` (FIX 2);
+    - a proof birth on the restored branch 1 to be rejected, but FIX 5 accepts it at state 0 / physics step 0. Your
+      `"session"` mode solves the same problem.
+  - `test-cast-keyhole-oracle` also fails on `a8bbd5c12`: `public_row` reads `session.action_layout`, and the test's
+    fake session has none.
+- **The helper repo is still on v17.** v17 images record agent_sessions / resets / sim_steps as 0, because the
+  warm-up baked `RCB_SESSION_LOG=` into the image. v18 fixes this (`76fbec69a`). Rigid instances are identical
+  between v17 and v18, so moving the helper to v18 keeps results comparable.
+- **Below-easy knot / orbits:** their settled IPC states need v18's deterministic pyuipc. The knot oracles were tuned
+  under 2.5 ms full Newton, so re-validate them under K2.
+- **Verifier time (suggestion only):** the two privileged replays run one after the other. Running them in two fresh
+  processes at once would still meet the protocol's ">= 2 replays", and would halve the CPU families' verifier time.
+
 ## Grading change decided by the user (2026-10-05): R-hold. This is not an oracle fix
 
 - Rule: in privileged mode each grading replay may confirm within the same tolerant hold of at most 2 s that v16
@@ -702,3 +786,71 @@ Status at 22:52 CDT (grades come from your launcher; privileged = oracle + 2 ver
   design point for Jianwen, not something we change.
 - Pending, IPC (they wait for a GPU free of IPC agent trials): rope_threading easy / medium / hard (04f) and
   knot_untying medium (03e). Knot hard: after the new precision settings are validated, it runs once under v16 grading.
+
+## 10. hedgehog_in_cage very_easy and easier: the below-easy oracle (2026-10-06)
+
+The user reversed the earlier decision to leave hedgehog's below-easy settings out, so we made them work end to end.
+
+**Scenes (William's 10-02 drafts): unchanged.**
+- Release: v18, tree `7f0b002cc`.
+- Candidate: lab `hhbe/cand_hh`, built with your pipeline on topospeed's v18 image `labv18be` (`01c12854`).
+  - build, preflight and harbor-smoke all pass.
+  - Exact restore holds for both settings (state_sha very_easy `8fc4502c70aa936e`, easier `ed55f7e11afa2e0b`).
+- Rest state: after 10 s at home the ball has settled 0.30 mm onto three cage contacts, with no rotation. Over
+  each graded episode, the deepest ball contact with the cage, mount or table is below 0.01 mm.
+- Goal: the same goal and instruction as easy (your test checks this).
+- Difficulty order very_easy < easier < easy holds. This is an object-level check at the 12 mm test lift: one turn
+  of the ball about its centre, then a straight pull, with 1 mm clearance.
+  - very_easy (118 mm windows): it leaves by translation alone. Turns of up to -25 deg open pulls across
+    178-198 deg.
+  - easier (108 mm windows): no translation exit. A single-turn exit needs either your 80-85 deg roll about S10
+    or a yaw of exactly -20 deg about the vertical, then a pull at 186-188 deg. A -25 deg yaw is already blocked.
+  - easy (CLASSIC): still needs its two-grasp oracle.
+  - Design note: easier's smallest exit is that 20 deg yaw, not the documented 80 deg roll. The roll is what
+    `below_easy_witness.py` searches; the yaw is a narrower corridor that the witness does not try.
+
+**Oracle:** the easy oracle unchanged (`recipes.run_medium_oracle`, the measured held route), plus one checked
+pickup per setting. Changes:
+- `harbor_bridge/below_easy.py`, `catalog.py`, `references.py`: hedgehog joins the below-easy dispatcher.
+  - Its private input is `reference_data/hedgehog_in_cage/<tier>/pickup.json`, recorded in the manifest.
+  - `hedgehog_in_cage/public_session.py` runs both settings through 01's standard-rate runner.
+- `hedgehog_in_cage/held_oracle.py`: the below-easy settings skip the historical `reference_routes.json` route,
+  because their pickup brings its own object hints.
+- `hedgehog_in_cage/below_easy_pickup.py`: builds and checks the pickups on the frozen instance in the task image.
+  It runs the oracle's own partial close first, then an offline `plan_held_path` from a constructed measured state.
+- Grasp: S10 (the spike that points at the robot), held across the spike near its tip.
+  - Hand parameters: theta 90 deg, phi 300 deg, hand turned 180 deg about its axis.
+  - Spike axis at 90 mm hand depth, 6 mm from the tip.
+  - Why not coaxial: a grasp along the spike, so that easier's roll would be a wrist roll, has no valid IK. The
+    cage is 0.43 m from the base, so every solution folds the arm onto itself (q4 at -3.0, self-collision).
+  - Why not deeper: at 80 mm depth the closing pads passed through the 10.8 mm spike without a weld
+    (`no_bilateral_candidate`). At 86-93 mm, near the fingertips like easy's pickup, the grasp welds every time.
+- Routes after the 12 mm test lift:
+  - very_easy: pull 0.07 and 0.19 m at 198 deg, then to the goal.
+  - easier: yaw -20 deg, pull 0.125 m at 188 deg, then sideways (240 deg) to the goal.
+  - Why easier does not use the roll: with every grasp that passes the approach (theta 60-90 deg), the 80 deg
+    roll, or a long pull toward the base, drives the elbow to its limit (q4 -3.06). Grasps leaning over the cage
+    (theta 105-115 deg) collide at the start. The shorter pull followed by the sideways move keeps q4 at -2.97
+    or above.
+- Speed: the largest joint step of any row is 0.0047 rad, against the 0.039 rad limit, so the limiter never
+  slows a row.
+
+**Grades** (your launcher, `--tasks-root hhbe/cand_hh/tasks`, lab lanes `hh_ve1` and `hh_ea1`):
+
+| setting | privileged | standard | rows | live min (priv / std) | replays |
+|---|---|---|---|---|---|
+| very_easy | 1 | 1 | 1923 | 3.7 / 3.0 | both strict at 1923, sha `0f706cd9bdf7b8f2`, equal across modes |
+| easier | 1 | 1 | 1882 | 3.7 / 2.9 | both strict at 1882, sha `9a2668c6c8beeea3`, equal across modes |
+
+- Penetration, from a fresh-process replay of each graded trajectory:
+  - very_easy: deepest contact 0.008 mm ball-cage/mount/table, 0.010 mm robot-ball, 0 robot-fixture.
+  - easier: 0.005 / 0.010 / 0.
+  - Both episodes: review and forcing 0, review depth 0.0 mm.
+- Visual check (verifier videos): the gripper holds S10, the ball leaves through the window without touching a
+  bar, and it is held still over the green goal area.
+- Trial totals: privileged 10.4 / 10.3 min (verifier 6.4 / 6.3 min for its two replays), standard 7.9 / 7.9 min.
+- CI:
+  - Updated `test-hedgehog-below-easy` (3 new tests on the oracle inputs), `test-harbor-below-easy` and
+    `test-oracle-portability` (the manifest now has 37 files).
+  - The full CPU CI in the v18 image gives the same outcome as on `7f0b002cc` for every test. The 10 tests that
+    fail there fail the same way.

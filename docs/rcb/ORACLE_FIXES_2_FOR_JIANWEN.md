@@ -14,8 +14,18 @@ threshold, grader, instance or agent-facing tooling changed.
   - Commits for you (laptop worktree `tmp/2026-10-05_oraclefix2/wt`):
     - O2-2 `56039a64c`: buzz easy standard-executable (graded 1/1); on origin/dev/jianwen;
     - on top of it, horseshoe hard: O2-4 `4b2ca84d5` (transit budget in queries), O2-5 `5465ecf68` (fast handoff
-      tilt; privileged 1), then this file (`docs/rcb/ORACLE_FIXES_2_FOR_JIANWEN.md`). O2-6 (rate-limited horseshoe
-      stages) was lab-tested and failed; it is not committed (`oraclefix2/patches/unused_O2-6_*.patch`).
+      tilt; privileged 1), then this file (`docs/rcb/ORACLE_FIXES_2_FOR_JIANWEN.md`, `1f47263de`); all on origin.
+    - second round, all on origin: O2-6 `faa9774f1` (horseshoe rows clamped to the standard step limit; hard graded
+      1/1; via your merge b1ab6b18d), O2-8 `66522387e` (buzz medium re-timed replay; graded 1/1), O2-9 `42e4237ce`
+      (buzz hard re-timed replay with an earlier release; graded 1/1; rebased onto v18 8d7d16489), then this file.
+  - Graded tree vs commits (second round): every grade ran on image `oraclefix2/rcb-topogym:0.2.14-dev-cu128`
+    (sha256:824f9b3331bc, the d5e71c6ae image, never rebuilt) with the lab tree above. Its packaged horseshoe and buzz
+    files equal the commits, except for the buzz grades' `harbor_bridge/actions.py`, `harbor_bridge/callbacks.py` and
+    `planning/solvability.py`, which stayed at a3604ea7e: your helper-pipeline versions (b1ab6b18d) add
+    `schema_version=2` / `rgb_available` to the policy initialize context and a `"session"` QualificationWorkflow mode
+    for `run_stages`. The re-timed replay (`retimed.run_retimed`) never calls `run_stages` or the workflow, and its
+    policies read only `action_spec` and `timing_spec` from the context, so those changes do not reach the buzz
+    medium/hard path; the manifest differs only by your below-easy entries.
 - Patches: `oraclefix2/patches/`. Diagnostics (never grades): `oraclefix2/exp/X*`. Notes: this file.
 - Grading: your unchanged `bash_scripts/run_harbor_oracle_grades.sh`, through `oraclefix2/bin/lane2.sh`:
   - it runs your candidate steps (`topogym_merge_candidate.py`, `topogym_candidate_pipeline.py --phase build`) without
@@ -33,10 +43,11 @@ threshold, grader, instance or agent-facing tooling changed.
 |---|---|---|---|---|---|
 | horseshoe_ring | easy | **1** | **1** | none beyond the bundle | `tree/runs/test_results/harbor_grade_of2_hs_easy`: 10153 rows, 253.8 s sim, live oracle 52 min end to end in Harbor; standard stream 10153/10153 rows, 0 resumes |
 | horseshoe_ring | hard | **1** | **0** (one fold row over the step limit) | O2-4 (query-budgeted transits) + O2-5 (fast handoff tilt) | `tree/runs/test_results/harbor_grade_of2_hs_hard`: 11887 rows, 297.2 s sim, live oracle 51 min end to end, 2 CPU replays deterministic, strict goal at row 11887; lab `exp/X10` identical |
-| horseshoe_ring | hard | lab: no success | not graded | + O2-6 (rate-limited stages; not committed) | lab `exp/X11`: the one fast row is gone (largest step 0.0364 rad), but the ring-grasp relocation then fails its contact check (1.07 mm, limit 1 mm) at 165 s sim |
+| horseshoe_ring | hard | **1** | **1** | + O2-6 (rows clamped to the standard step limit, no extra steps) | `tree/runs/test_results/harbor_grade_of2_hs_hard7`: 10763 rows, 269.1 s sim, live oracle 54.7 min end to end, standard 10763/10763 rows; lab `exp/X12` identical (spreading the row instead failed, `exp/X11`, `X13`) |
 | buzz_wire_3d | easy | **1** | **1** | O2-2: rate-limited staged run + 1 cm lowered release | `tree/runs/test_results/harbor_grade_of2_bz_easy`: 8733 rows, 218.3 s sim, live oracle 27 min end to end in Harbor, 2 CPU replays deterministic; release study `exp/Z1`, `Z5`; full lab run `exp/Z6` |
-| buzz_wire_3d | hard | **0** | not run (needs a privileged pass) | O2-3 (not committed): compiled rows to 43434 + measured finish nudge | the nudge's gripper touches the end post (`exp/Y5h`); grade `tree/runs/test_results/harbor_grade_of2_bz_hard`: 43450 rows, 1086.2 s sim, live oracle 116 min |
-| buzz_wire_3d | medium | no grade | - | - | section 2 (facts for you) |
+| buzz_wire_3d | hard | **0** | not run (needs a privileged pass) | O2-3 (not committed; superseded by O2-9 below): compiled rows to 43434 + measured finish nudge | the nudge's gripper touches the end post (`exp/Y5h`); grade `tree/runs/test_results/harbor_grade_of2_bz_hard`: 43450 rows, 1086.2 s sim, live oracle 116 min |
+| buzz_wire_3d | medium | **1** | **1** | O2-8: traverse re-timed 4x under a clearance guard + wand lowered 2.5 mm before your release | graded live oracle 45.4 min end to end in Harbor; lab `exp/Z7m` (Harbor callback): success at 438.4 s sim, 17536 rows (was 29544), 45 min end to end; lowering margins about 0.5 mm to the regrasp failure at 2 mm, 0.9 mm to the hand-wire touch; grade `tree/runs/test_results/harbor_grade_of2_bz_medium2` |
+| buzz_wire_3d | hard | **1** | **1** | O2-9: traverse re-timed 3x + your retreat stopped after row 43488, open, retreat 4 cm | graded live oracle 74 min end to end in Harbor; lab `exp/R3h3`: success at 808.6 s sim, 32344 rows, 87 min end to end on a busier host (over the 72 min rule; accepted by the user, as for fiber hard); finish margins 0.12 mm / 1.2 deg; grade `tree/runs/test_results/harbor_grade_of2_bz_hard2` |
 | slotted_post_ring | easy / medium / hard | no oracle | - | - | section 3 (task-level decision) |
 | orbits | easy / medium / hard | no oracle | - | - | section 3 (task-level decision) |
 
@@ -55,7 +66,7 @@ deterministic: a lab run reproduces the graded run tick for tick (checked: the e
   - Grade (`oraclefix2/tree/runs/test_results/harbor_grade_of2_hs_easy`): privileged **1** (2 CPU replays,
     deterministic), standard **1** (stream 10153/10153 rows, live and replay success, 0 resumes). Live oracle execution
     in Harbor: 52 min end to end incl. the scene build (rule: about 72 min). No code change for easy.
-- **hard: privileged fixed by O2-4 + O2-5; the standard twin stays 0 (open).** Under Harbor's physics the released
+- **hard: fixed by O2-4 + O2-5 (privileged) and O2-6 (standard twin).** Under Harbor's physics the released
   ring ends on the right hand, not on the table; the fix keeps it free and lets the active pickup take it off the
   right wrist.
   - Mechanism (`exp/X1h`, `X3a`): during orient_for_handoff (90 deg in 0.5 deg samples at 0.05 s, 8 s hold) the ring
@@ -104,25 +115,32 @@ deterministic: a lab run reproduces the graded run tick for tick (checked: the e
     asks for more than the 0.04 rad per-step joint limit: row 3397, 0.0408 rad on right/elbow at about 84.9 s sim,
     inside flip_and_fold (your fold; O2-4/O2-5 do not touch it). The service spreads such a row over extra steps and
     the standard bridge refuses a slowed reference row. Easy's largest step is 0.0372 rad.
-  - **O2-6, lab-tested and failed (not committed): the horseshoe stages run rate-limited.**
-    `public_session.run_feedback_policy` passes `runner=standard_rate.rate_limited_runner(session)` to `run_stages`,
-    as buzz easy does (O2-2, fix 15 of the first pass;
-    `oraclefix2/patches/unused_O2-6_horseshoe_rate_limited_stages.patch`). A row within 0.039 rad (the limit with a
-    2.5 % margin for float32 rounding) is submitted bit-identically; a faster row is reached in as many steps as the
-    limit needs, with the same targets. Easy would be unchanged (no row above 0.039 rad); hard's row 3397 becomes 2
-    steps, and everything after it shifts by one control step.
-    - Lab run (`exp/X11`, the Harbor callback, O2-4 + O2-5 + O2-6): the limiter slowed exactly that row (6604 rows
-      requested, 1 slowed, 1 step inserted; largest recorded step 0.0364 rad). The closed-loop stages absorb the shift
-      at first (fold end 117.1 s vs X10's 116.55 s, support_release end 154.5 s vs 153.7 s), but the left ring grasp
-      then takes another path: a direct approach, grasped at 164.1 s (X10: an RRT transit through 3 via points,
-      grasped at 175.1 s). The +22 cm relocation of the held pair that follows (`release_translation_m` [0, 0.22, 0],
-      `settling.plan_held_pair_translation`) fails its plan check at sample 85: left/upper_forearm_link would press
-      1.07 mm into horseshoe_left (limit 1.0 mm). The oracle stops at 165.1 s sim, after 24 min on lab. No grade.
-    - So hard's success depends on the exact state the fold leaves: a 25 ms shift changes the ring grasp, and the
-      relocation is planned only after that grasp has been executed. A standard-executable hard reference needs
-      grasp_ring to pick a ring grasp whose follow-on relocation plans (or to try other relocations, for example a
-      shorter or slightly raised one, when the first fails), then one lab run and one grade (about 4 h). Not done here
-      (time box).
+  - **Spreading the fast row (first try, not committed).** `run_stages(..., runner=standard_rate.rate_limited_runner(
+    session))` as buzz easy does (`oraclefix2/patches/unused_O2-6_horseshoe_rate_limited_stages.patch`): hard's row
+    3397 becomes 2 steps and everything after it shifts by one control step.
+    - Lab run (`exp/X11`): the limiter slowed exactly that row. The closed-loop stages absorb the shift at first (fold
+      end 117.1 s vs X10's 116.55 s), but the left ring grasp then takes another path: a direct approach, grasped at
+      164.1 s (X10: an RRT transit through 3 via points, grasped at 175.1 s). The +22 cm relocation of the held pair
+      that follows (`release_translation_m` [0, 0.22, 0], `settling.plan_held_pair_translation`) fails its plan check
+      at sample 85: left/upper_forearm_link would press 1.07 mm into horseshoe_left (limit 1.0 mm). Oracle stops at
+      165.1 s sim.
+    - A relocation fallback (fixed variants of the translation: +1/+2 cm z, +-1/+-2 cm x, x0.9/0.8/1.1; `exp/X13`, the
+      same spread run) does not rescue it: all 10 fail at about 85 mm with the same forearm/horseshoe_left contact
+      (1.03-1.31 mm). Dropped (`oraclefix2/patches/unused_O2-7_horseshoe_relocation_fallback.patch`).
+  - **O2-6: clamp instead of spread (no shift).** `standard_rate.RateLimiter(mode="clamp")`: one control step per row;
+    an arm joint that asks for more than 0.039 rad (the 0.04 rad limit with a 2.5 % float32 margin) moves by 0.039
+    toward its target, and the remainder carries into the next rows. The default stays "spread" (buzz easy, keyhole,
+    lock and knot unchanged). `public_session` runs the horseshoe stages with `rate_limited_runner(session,
+    mode="clamp")`. Offline check on the graded trajectory: only row 3397 is above 0.039; clamped, it leaves row 3398
+    a step of 0.0035 rad (was 0.0053), so the carry ends there. Easy is unchanged (largest step 0.0372 rad).
+    - Lab run (`exp/X12`, the Harbor callback, O2-4 + O2-5 + O2-6): exactly one row clamped (0.00175 rad carried);
+      the closed-loop fold ends 75 ms later than X10 (116.63 s), but the ring grasp (RRT through 3 via points) and the
+      relocation are X10's; native success at 269.1 s sim, 10763 rows, largest recorded step 0.0390 rad (0 rows above
+      0.04), 44 min end to end on lab.
+    - Grade (`oraclefix2/tree/runs/test_results/harbor_grade_of2_hs_hard7`): privileged **1** (10763 rows, 269.1 s
+      sim, 2 CPU replays deterministic, strict goal, no review or forcing events; live oracle 54.7 min end to end in
+      Harbor, verifier 48.2 min) and standard **1** (live and replay success, 10763/10763 rows streamed, live matches
+      replay, 0 hold steps). The grade reproduced `exp/X12` exactly.
   - Prepared but unused: a measured `disentangle` option of support_release (bounded shakes / tilts of the held lower
     shoe until the 20 mm separating gap; `oraclefix2/patches/unused_hs_hard_disentangle_and_fast_tilt_draft.patch`).
 
@@ -148,7 +166,7 @@ night's load. Your compiled medium/hard actions and the easy staged proof were r
       the lab run had reached row 43434; both reached the nudge at about the same time. The verifier replays were left
       to finish for the record: privileged 0 (43450 rows, 1086.2 s sim, 2 replays deterministic, no strict goal; live
       oracle 116 min in Harbor, verifier 241 min); the standard twin was not run (blocked on the privileged result).
-      Not committed; buzz hard stops here (lead's decision).
+      Not committed; buzz hard stopped here in the first round (solved in the second round, O2-9, section 2b).
   - So under Harbor physics your compiled path ends 5.023 mm / 8.0 deg from the finish, 0.023 mm over the position
     limit, and a closed-loop correction from its last held pose is blocked by the end post. A closed-loop solution needs
     a planned traverse and finish (future work). Such a reference would also break the 72 min rule as compiled (116
@@ -163,7 +181,8 @@ night's load. Your compiled medium/hard actions and the easy staged proof were r
     frame) have no collision-free IK path (`exp/Y3m`, `Y4m`; also from hard's row 21139, `Y3h`, `Y4h`).
   - A regrasp after hard's deck release (row 21420) finds no collision-free free-hand goal for 6 grasp candidates (`exp/Y3h`).
   - A closed-loop medium within 72 min needs a planned fast traverse plus a new regrasp finish: the compiled rows up to
-    the end of the post descent alone take 46 min plus the scene build. No grade.
+    the end of the post descent alone take 46 min plus the scene build. No grade in the first round (solved in the
+    second round, O2-8, section 2b).
 - **easy (staged proof)**: privileged 1 with fixes 09 + 10 (first oracle pass). The standard twin needs rows within
   the 0.04 rad per-step limit; with every row rate-limited (fix 15) your release from the flatten pose touches the wire
   0.12-0.17 s after opening, in every variant that releases at that height (`exp/Z1`, `Z5`: recipe, open-in-place, slow
@@ -183,6 +202,90 @@ night's load. Your compiled medium/hard actions and the easy staged proof were r
     reference_policy.py also carried the (unused for easy) hard finish of O2-3; the easy code path is the committed
     one. Commit O2-2 also updates `ci_checks/test-buzz-harbor-reference.py` (its fake Session publishes the action
     layout the limiter reads; the easy case asserts the rate-limited runner).
+
+### 2b. Second round (2026-10-05 afternoon): re-timed compiled rows (O2-8, O2-9); medium and hard graded 1/1
+
+- **Re-timing (O2-8, `buzz_wire_3d/retimed.py`).** Your compiled traverse creeps (about 2 mrad per row; medium 29544
+  rows, hard 43568). `RetimedJointPolicy` replays the same joint path in fewer rows by path-parameter resampling: inside
+  a segment of source rows the source index advances `factor` rows per control step (fractional positions interpolate
+  the joint targets, the gripper keeps the reached row's value); outside every segment your rows are emitted as
+  recorded. A guard measures the wand's clearance to the wire's metal pieces from privileged state on every row
+  (`BuzzIK.wand_clearance`, the FCL hulls your planner uses): below 1 mm the source advances one row per step (your
+  timing) until 2 mm again; below 0.5 mm the targets hold (at most 40 steps per event). The same thresholds for every
+  tier. Your robot-wire guard stays; every row goes through `standard_rate.rate_limited_runner`. `run_retimed` can
+  insert a BuzzWirePolicy script at a source row and stop the replay there. `reference_policy` uses it when recipe.json
+  has a `retime` entry.
+  - Segments must start after the regrasp holds the wand (medium holds at row 2572, hard at 2687): a hard segment
+    starting at 2600 compressed the regrasp and the wand was never picked up (`exp/R1h4_start2600`).
+  - Traverse alone (rows through traversal complete; `exp/R1m1-4`, `R1h2-4`):
+
+    | tier | factor | rows | touches | min clearance | guard |
+    |---|---|---|---|---|---|
+    | medium | 1x | 18990 | 0 | 0.567 mm | (logged only) |
+    | medium | 2x | 10972 | 0 | 0.567 mm | 3 slow-downs |
+    | medium | 3x | 8292 | 0 | 0.567 mm | 3 slow-downs |
+    | medium | 4x | 6942 | 0 | 0.567 mm | 3 slow-downs |
+    | hard | 2x | 11238 | 0 | 1.023 mm | 0 |
+    | hard | 3x | 8418 | 0 | 1.027 mm | 0 |
+    | hard | 4x | 7015 | 0 | 1.016 mm | 0 |
+
+    The re-timed runs never come closer than your own path (medium's closest approach, 0.567 mm, runs at 1x under the
+    guard). The traverse is not the hard part; your terminal regrasps are.
+  - Your terminal regrasps are open loop and do not survive compression: terminal 2x (and 3x on hard) end with the wand
+    released and quiet but 3-8 mm / 31-64 deg from the finish (`exp/R2m3e2`, `R2m4e2`, `R2h4e2`, `R2h4e3`).
+- **medium: passes, graded 1/1 (O2-8).** Recipe: traverse 2600-18960 at 4x; at source row 19388 (end of the
+  post descent; the held wand is right above the finish, dx 0.15 / dy 0.1 mm, but 16.9 mm high, 52 deg, not supported)
+  the held wand is lowered 2.5 mm (body move, 1 s) before your recorded release; your three terminal regrasps as
+  recorded.
+  - Release study from your 1x post-descent state (`exp/Y6a-c`, server `Y6s`): unlowered, your release lets the wand
+    touch the wire 0.6 s later; lowered 0.1, 0.2, 0.3, 0.5, 1, 1.5, 2, 2.5 or 3 mm it lands supported, released and
+    quiet; lowering 1 cm, or until supported, makes the hand touch the wire at about 3.4 mm. Yaw +5/+10 deg: the hand
+    touches; yaw -5 deg without lowering: the wand touches; yaw -10 deg would clip a joint. Kinematic robot-to-fixed
+    clearance (`BuzzIK.clearance`): 2.1 mm unlowered, 1.3 mm at 1 mm, 0.6 mm at 2 mm, 0 at 3 mm. Waiting 0.5, 1 or 2 s
+    before your release without lowering still touches: the lowering itself, not the delay, avoids the touch.
+  - With your terminal: 1x path, 3 mm, 2 mm and 2 mm + yaw -5 deg finish (`Y6s` f1, f20, f5); 4x path, 2.5 and 3 mm finish, 2 mm
+    does not (no touch, but 7.3 mm / 61 deg at the end) (`exp/R2m4e1d25`, `R2m4e1`, `R2m4e1d20`). So the binding window
+    on the 4x path is about 2.5-3.3 mm: 2.5 mm keeps 0.9 mm to the hand-wire touch (kinematic clearance about 0.3 mm)
+    and up to 0.5 mm to the regrasp failure at 2 mm. Deterministic, but your open-loop terminal is the fragile part.
+  - Full run through the Harbor callback (`exp/Z7m`): native success at 438.4 s sim, 17536 rows (was 29544), largest
+    arm step 0.0252 rad, 0 touches, min clearance 0.567 mm, 45 min end to end on lab incl. a 4.3 min scene build.
+  - Grade (`oraclefix2/tree/runs/test_results/harbor_grade_of2_bz_medium2`): privileged **1** (17536 rows, 438.4 s
+    sim, 2 CPU replays deterministic, strict goal, 0 hold steps; live oracle 45.4 min end to end in Harbor, verifier
+    84.5 min) and standard **1** (live and replay success, 17536/17536 rows streamed, live matches replay, 0 hold
+    steps; agent 41.3 min). The grade reproduced `exp/Z7m` exactly.
+  - v18 check (`exp/H14m`, `H18m`): the graded privileged trajectory replayed in a fresh process on 0.2.14 (graded
+    package) and on v18 (labv18/rcb-topogym:0.2.16-dev-cu128, cand_v18 package): Session.state_sha identical after
+    every one of the 17536 rows, success at row 17536 on both, minimum wand-wire clearance 0.5668 mm at row 3651 on
+    both (the per-row clearance series equal).
+- **hard: passes, graded 1/1 (O2-9); over the 72 min rule, accepted by the user.** From your last held placement (row 43434: 4.72 mm / 11.5 deg) your
+  recorded retreat drags the wand to 5.023 mm / 8.0 deg; opening in place leaves 4.59 mm / 11.5 deg (`exp/Y7s` h1-h4).
+  The drag happens in your first 23 retreat rows (43472-43495). Stopping your rows after 43486 / 43489 / 43492, then
+  opening fully and retreating 4 cm along the approach axis: native success at 4.72 mm / 9.7 deg, 4.85 mm / 8.9 deg,
+  4.97 mm / 8.2 deg; after 43483 the angle stays 10.3 deg. Chosen: 43489, **margins 0.15 mm and 1.1 deg** - thin;
+  deterministic CPU physics reproduces them, but they are not robust to any change of the path or the physics.
+  - Traverse factor with this finish (`exp/R3h2`, `R3h3`, `R3h4`, `R2h4e1`): 2x success at 4.45 mm / 9.3 deg (35163
+    rows), 3x success at 4.88 mm / 8.8 deg (32344 rows), 4x fails: the faster traverse changes the outcome of your
+    open-loop regrasps (the wand ends 8.7 mm / 5.9 deg from the finish with or without the finish). 1x through the
+    Harbor callback (`exp/Z8h`, the same insert/stop code path as the grade): success at 1090.6 s sim, 43626 rows,
+    99 min end to end.
+  - O2-9 recipe: traverse 2750-19674 at 3x, terminal as recorded, stop after source row 43488, then the finish above.
+    Lab run (`exp/R3h3`): native success at 808.6 s sim, 32344 rows, 0 touches, minimum clearance 1.027 mm, 87 min end
+    to end on lab: over the 72 min rule (compressing the terminal breaks it). **The user accepted this 87 min
+    reference execution (2026-10-05), as for fiber hard** (measured on the lab tree with image 0.2.14-dev; the v18
+    estimate is below). Finish margins on this path: 0.12 mm and 1.2 deg.
+  - Time per row (lab `exp/P1h`, the 3x replay's first 3834 rows at load 24): 0.125 s, of which Session.step (physics
+    and recording) 0.113 s, the clearance guard 0.004 s, observation/policy/limiter 0.008 s; scene build 2-5 min. So
+    the 32344-row hard reference takes about 69-72 min at that load and 87 min under the heavier load of `exp/R3h3`
+    (0.151 s/row). With v18's buzz step (92 -> 74 ms, x0.80 on Session.step): about 0.103 s/row, 56 min of rows plus
+    the build, about 58-61 min end to end at load 24 and about 71 min at R3h3's load.
+  - v18 check (`exp/H14h`, `H18h`): the graded privileged trajectory (32344 rows) replayed in a fresh process on 0.2.14
+    and on v18 (labv18/rcb-topogym:0.2.16-dev-cu128, cand_v18 package): Session.state_sha identical after every row,
+    success at row 32344 on both, minimum wand-wire clearance 1.027 mm at row 7834 on both.
+  - Grade (`oraclefix2/tree/runs/test_results/harbor_grade_of2_bz_hard2`): privileged **1** (32344 rows, 808.6 s sim,
+    2 CPU replays deterministic, strict goal, 0 hold steps, no review or forcing events; live oracle 74 min end to end
+    in Harbor incl. the scene build, verifier 152 min) and standard **1** (live and replay success, 32344/32344 rows
+    streamed, live matches replay, 0 hold steps; agent 72.8 min). The grade reproduced `exp/R3h3`'s outcome; the
+    graded live run took 74 min against the lab's 87 min because the lab host was busier then.
 
 ## 3. slotted_post_ring and orbits: no oracle; feasibility and speed need a task-level decision
 

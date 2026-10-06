@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Below-easy Hedgehog settings: registration and object-level design intent; no physics.
+"""Below-easy Hedgehog settings: registration, object-level design intent and the oracle's private inputs; no physics.
 
 The design checks rebuild the frozen task geometry (about one minute in total).
 """
@@ -68,6 +68,52 @@ class DesignIntent(unittest.TestCase):
         self.assertFalse(report["translation_exit_at_rest"])
         self.assertEqual(report["design"], "easier")
         self.assertGreaterEqual(abs(report["roll_deg"]), 30)
+
+
+class Oracle(unittest.TestCase):
+    """The robot oracle holds S10 from outside the cage and follows one checked pickup per setting."""
+
+    def pickups(self):
+        import json
+        from topogym.planning.harbor_bridge.references import reference_data
+        for name in ("very_easy", "easier"):
+            files, _ = reference_data(ROOT, "hedgehog_in_cage", name, 0)
+            self.assertEqual(list(files), [f"topogym/planning/harbor_bridge/reference_data/hedgehog_in_cage/{name}/pickup.json"])
+            yield name, json.loads(Path(next(iter(files.values()))).read_text())
+
+    def test_both_settings_use_the_below_easy_dispatcher(self):
+        from topogym.planning.harbor_bridge.catalog import session_callback
+        for name in ("very_easy", "easier"):
+            self.assertEqual(session_callback("hedgehog_in_cage", name),
+                             "topogym.planning.harbor_bridge.below_easy:run_feedback_policy")
+
+    def test_pickups_hold_the_robot_facing_spike_near_its_tip(self):
+        import numpy as np
+        from topogym.assets.geometry.hedgehog_in_cage import HedgehogLayout
+        from topogym.planning.hedgehog_in_cage.below_easy_pickup import SPIKE
+        for name, pickup in self.pickups():
+            task = task_definition("hedgehog_in_cage", name)()
+            root, tip = HedgehogLayout(task.template(), float(task.config["scale"])).spike_segments()[SPIKE]
+            axis = (tip - root) / np.linalg.norm(tip - root)
+            grip = np.asarray(pickup["grip_point_in_ball"])
+            self.assertEqual(pickup["spike"], SPIKE)
+            self.assertLess(np.linalg.norm(np.cross(grip, axis)), 1e-9)
+            self.assertLess(np.linalg.norm(tip) - grip @ axis, GRIP_LENGTH_M)
+            self.assertEqual(len(pickup["qpos"]), 15)
+
+    def test_only_easier_turns_the_ball(self):
+        """very_easy leaves by translation; easier turns the ball once, 20 deg about the vertical, before its pull."""
+        import numpy as np
+        from scipy.spatial.transform import Rotation
+        for name, pickup in self.pickups():
+            rest = Rotation.from_quat(np.asarray(HedgehogBelowEasyTask.defaults["ball_pose"]["quaternion_wxyz"])[[1, 2, 3, 0]])
+            for hint in pickup["object_path_hints"]:
+                turn = (Rotation.from_quat(np.asarray(hint["quaternion_wxyz"])[[1, 2, 3, 0]]) * rest.inv()).as_rotvec()
+                if name == "very_easy":
+                    self.assertLess(np.degrees(np.linalg.norm(turn)), .5)
+                else:
+                    self.assertAlmostEqual(np.degrees(np.linalg.norm(turn)), 20., delta=.5)
+                    self.assertGreater(-turn[2] / np.linalg.norm(turn), .999)
 
 
 if __name__ == "__main__":
