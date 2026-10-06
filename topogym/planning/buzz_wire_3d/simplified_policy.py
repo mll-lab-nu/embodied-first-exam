@@ -146,6 +146,11 @@ class SimplifiedBuzzOracle:
         if self.variant == "easier":
             turn["final_height"] = .003
             turn["speeds"] = (.05, .003, .1, .0015)
+        else:
+            # The oracle's own planning margin, not a Task rule (the Task fails only on wand-wire contact). Under Harbor's
+            # 2.5 ms x 10 physics every turn from the measured very_easy grasp keeps at most 1.4735 mm (lab 2026-10-06:
+            # TURN_1's candidates, 41 yaws, 210 xy offsets), so the 1.5 mm margin admitted none.
+            turn["minimum_clearance"] = .0014
         yield recipes.checked_turn(self.env, self.output, **turn)
         yield recipes.script(recipes.PARTIAL_RELEASE)
         yield recipes.acquire(self.env, self.output, **recipes.ACQUIRE_2)

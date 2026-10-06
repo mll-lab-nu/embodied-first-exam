@@ -74,9 +74,12 @@ def run_feedback_policy(session, output, *, variation):
             submission_hash=session.instance_sha, state_fields=("world",))
     if family == "buzz_wire_3d":
         from topogym.planning.buzz_wire_3d.simplified_policy import SimplifiedBuzzOracle, make_stage_policy
+        from topogym.planning.standard_rate import rate_limited_runner
         oracle = SimplifiedBuzzOracle(session.env, output, variant=variation, regrasp=True,
                                      finish_mode="low_slide_regrasp", terminal_contact_close=False)
-        runner = SessionPolicyRunner(session)
+        # Every committed row within the standard service's per-step joint limit, so the privileged trajectory is the
+        # standard reference as recorded (as for buzz easy, oraclefix2 O2-2; the regrasp rows asked up to 0.18 rad).
+        runner = rate_limited_runner(session)
         for name, parameters in oracle.stages(start="home", part="solve"):
             result = runner.run_policy(request_id=name, policy=make_stage_policy(session.env, parameters),
                                       submission_hash=session.instance_sha, state_fields=("world",))
