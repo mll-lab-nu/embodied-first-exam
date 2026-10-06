@@ -74,6 +74,12 @@ os.execv(os.environ['TEST_REAL_PYTHON'],[os.environ['TEST_REAL_PYTHON'],*sys.arg
         self.assertNotIn("slotted", result.stdout)
         self.assertFalse((self.root / "output").exists())
 
+    def test_slotted_below_easy_tiers_are_selectable(self):
+        result = self.run_queue("--plan", "--families", "slotted_post_ring", "--tiers", "very_easy,easier")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), [f"slotted_post_ring\t{tier}\tprivileged -> standard"
+                                                      for tier in ("very_easy", "easier")])
+
     def test_failed_task_does_not_skip_next_and_resume_preserves_results(self):
         args = ["--families", "cast_coil,cast_keyhole", "--tiers", "easy"]
         result = self.run_queue(*args)
@@ -116,6 +122,19 @@ os.execv(os.environ['TEST_REAL_PYTHON'],[os.environ['TEST_REAL_PYTHON'],*sys.arg
         self.assertEqual({r["tier"] for r in rows}, {"very_easy", "easier"})
         self.assertEqual([r["solve"] for r in rows], [0, None, 0, None])
         self.assertEqual(len((self.root / "dispatch.jsonl").read_text().splitlines()), 2)
+
+    def test_orbits_below_easy_is_accepted_and_dispatched(self):
+        for mode in ("privileged", "standard"):
+            task = self.tasks / f"topogym-orbits-very-easy-i00-{mode}"
+            task.mkdir()
+            (task / "task_release.json").write_text("{}")
+        plan = self.run_queue("--families", "orbits", "--tiers", "very_easy", "--plan")
+        self.assertEqual(plan.stdout, "orbits\tvery_easy\tprivileged -> standard\n", plan.stderr)
+        result = self.run_queue("--families", "orbits", "--tiers", "very_easy")
+        # The shim grades every family except cast_keyhole 0; dispatch, not the grade, is under test.
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        argv = json.loads((self.root / "dispatch.jsonl").read_text())
+        self.assertEqual((argv[argv.index("--families") + 1], argv[argv.index("--tiers") + 1]), ("orbits", "very_easy"))
 
     def test_fresh_host_builds_image_before_tasks_and_resume_keeps_bound_image(self):
         command = ["bash", str(SCRIPT), "--output", str(self.root / "output"),

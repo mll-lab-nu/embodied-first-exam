@@ -49,6 +49,8 @@ threshold, grader, instance or agent-facing tooling changed.
 | buzz_wire_3d | medium | **1** | **1** | O2-8: traverse re-timed 4x under a clearance guard + wand lowered 2.5 mm before your release | graded live oracle 45.4 min end to end in Harbor; lab `exp/Z7m` (Harbor callback): success at 438.4 s sim, 17536 rows (was 29544), 45 min end to end; lowering margins about 0.5 mm to the regrasp failure at 2 mm, 0.9 mm to the hand-wire touch; grade `tree/runs/test_results/harbor_grade_of2_bz_medium2` |
 | buzz_wire_3d | hard | **1** | **1** | O2-9: traverse re-timed 3x + your retreat stopped after row 43488, open, retreat 4 cm | graded live oracle 74 min end to end in Harbor; lab `exp/R3h3`: success at 808.6 s sim, 32344 rows, 87 min end to end on a busier host (over the 72 min rule; accepted by the user, as for fiber hard); finish margins 0.12 mm / 1.2 deg; grade `tree/runs/test_results/harbor_grade_of2_bz_hard2` |
 | slotted_post_ring | easy / medium / hard | no oracle | - | - | section 3 (task-level decision) |
+| slotted_post_ring | very_easy | **1** | **1** | new below-easy oracle (section 5) | lanes `ve1` and `vefinal` (this commit's code): 325 rows, 8.1 s sim, live oracle about 30 min end to end |
+| slotted_post_ring | easier | no oracle on the built scene | - | scene change decided (bead 2 fixed on the loop) | section 5 |
 | orbits | easy / medium / hard | no oracle | - | - | section 3 (task-level decision) |
 
 ## 1. horseshoe_ring easy and hard
@@ -397,3 +399,159 @@ layouts) had no oracle and were never built. Lab work: `/DATA2/qineng/rcb/topogy
   - Visual check of the easier replay video: shoes grasped, fold, suspended pair, ring on the table with the remainder
     held up by the right arm, ring carried to the goal; at the end the ring is inside the dashed goal region and the
     remainder is away from it.
+
+## 5. slotted_post_ring below-easy (very_easy, easier): scene review, oracle, grades (2026-10-06)
+
+William's 10-03 drafts (`topogym/tasks/slotted_post_ring/below_easy.py`, `slotted_post_ring_{very_easy,easier}.py`) had no
+oracle and were never built. Lab work: `/DATA2/qineng/rcb/topogym_v1/sbe/` (JOURNAL.md, `exp/`, `bin/`).
+
+- **Instances.** Your candidate pipeline on the bd4258d21 tree (`topogym_merge_candidate.py --families slotted_post_ring
+  --tiers very_easy easier`, then `topogym_candidate_pipeline.py` build / preflight / harbor-smoke) in `sbe/cand_sbe`:
+  export-ipc-state (800 ticks of 2.5 ms, 6.4 min per tier, one GPU) and make-instance; exact restore (state_sha very_easy
+  `db90ac12104d6f1a`, easier `5ef94ab271a0d592`); nop smoke 4/4.
+  - Image: bd4258d21 carries the horseshoe easier scene in its public source, so the v18 image (labv18be, source of
+    7f0b002cc) does not match the tree; hsbe2 (`04fa65dbd8aa`) does and was used. It is not warmed for slotted: a Session
+    builds in 220-335 s on lab. The slotted task files are the same at bd4258d21 and at this commit's base 7571e4194.
+- **Scene review (scenes unchanged).**
+  - very_easy: at rest at birth (ring tilted 4.4 deg on the two cord runs and the base, creeping 0.6 mm/s; cord below
+    3 mm/s), no penetration (IPC valid, ring-post 0.8 mm, ring-base 0.1 mm, cord volume ratio min 0.60), no cord over the
+    ring (0 cord vertices over the tube band, 532 / 932 under it near / far), goal not met at birth, remainder on the system
+    side (cord 28 mm inside the separator). `below_easy_witness`: straight lift certified (clearance 1.09 mm).
+  - easier: ring nearly centred on the post (tilt 2.8 deg), the far loop's two strands over the tube, the near strands
+    under it. **The far bight relaxed 18 mm outward during the 2 s birth settle**: settled cord max y 0.274 m against the
+    separator at 0.2615 m (authored maximum + 5 mm), so the cord starts 12.4 mm on the goal side. Not blocking: any
+    solution has to bring that loop into the ring's hole (it is what holds the ring), which pulls the bight back. Kept as
+    built (the user's decision, 10-06); authoring the bight about 2 cm closer would remove it (image rebuild).
+  - Difficulty very_easy < easier < easy: very_easy has no cord over the ring (one straight lift); easier has one loop over
+    it that must first go into the ring's hole; easy needs the Fisherman's Folly sequence (disc through the slot, ring over
+    the top, bead through the ring, ring through the slot, bead back).
+- **Gripper facts behind the oracle (ALOHA, from FK of the collision geometry).**
+  - Native finger q = fingertip face distance from the gripper axis + 8.3 mm: the tips touch at q 0.0084, the 20 mm tube
+    stops them at 0.0183, the widest gap is 57.4 mm at 0.037. Only the fingertips (8-16 mm past the TCP) pinch thin parts;
+    the faces behind them sit 8 mm further out.
+  - The gripper body is 150 mm wide across the fingers, 73-137 mm behind the TCP: a straight-down pinch of the tube puts it
+    13-16 mm into the post at every angle; an approach leaned 30-45 deg along the ring clears it.
+  - Only the right arm reaches the ring's lift top (the left arm reaches none of 24 angles).
+- **Oracle** (`planning/slotted_post_ring/below_easy_oracle.py`, `public_session.py`; `harbor_bridge/below_easy.py` and
+  `catalog.BELOW_EASY_FAMILIES` dispatch both tiers to it; no reference data: every stage plans from the measured
+  privileged state with `policy.SlottedOraclePolicy`'s line / route / fixture-box checks).
+  - very_easy: a fingertip pinch of the tube at the first angle from -40 deg (near right) whose gripper box is clear of
+    the cord and whose leaned approach reaches the pre-grasp and the pinch with the arm and the open fingers 2 mm clear of
+    the post and base boxes; a straight lift until the ring's lowest point is 30 mm over the post top; a level carry until
+    the ring is clear of the post, then a straight line to the goal centre 6 cm above the table; hold until the Task's
+    success. Arm rows move at most 0.03 rad per control step, run through `standard_rate.rate_limited_runner`.
+  - easier: none yet; `public_session` refuses it with a pointer here (the dispatcher and the launcher already admit it).
+    Three attempts on the built scene, each from a frozen privileged Session (lab `exp/repl_ea`; the code is kept in
+    `sbe/easier_attempt/`):
+    1. Slide the ring 13-21 mm away from the post's back face (pinch at 0 deg; the back gap is 38.6 mm for the 39 mm
+       bead), pinch bead 2, hold it 18 cm over the gap, lower it in, let go (`ea_loop3`): the bead is in the gap but
+       the bight and its return strand stay over the ring (11 cord points over the tube). **Bead 2 slides on the cord**
+       ("mobile bead/cord contact"), so it does not drag the loop.
+    2. Pinch the loop's far end on the table instead (fingertips 1 mm above the table, target q 0.0105, `ea_full1`): the
+       tips settled 5 mm apart on the 7 mm cord with about 0.6 N left, a tet inverted (volume ratio -0.35) and R2 ended
+       the episode (connection_or_volume_invalid) at row 351. **The E 50 kPa cord cannot be pinched**; the imported
+       12-stage oracle never holds it either.
+    3. Use bead 2 as a pulley, held 30 cm over the widened gap for 40 steps, then lowered in (`ea_full2`): the cord on
+       the table is not drawn through the bead and the slot; after the release 11 cord points are still over the tube.
+  - Decision (the user, 10-06): give easier a scene with bead 2 fixed on the loop as a permanent cord attachment, like
+    the end stops, which keeps the cord physics of the other slotted tiers. That change, its image and instance, and the
+    three-stage oracle above (slide the ring, lift bead 2 over the gap, lower it in) come as a separate commit series.
+- **Launcher wiring (this commit series).** `bash_scripts/run_harbor_oracle_grades.sh` accepts `slotted_post_ring` next
+  to orbits (01245b248 added orbits and the below-easy families to the `check-oracle-portability --families` choices); the
+  default queue is unchanged (33 cases, no slotted). `test-harbor-below-easy` now expects slotted to be dispatched (it
+  asserted no callback). The ve1 lane ran a lab copy of the launcher with the same two admissions.
+- **Lab run** (the dev Session, `exp/repl_ve`): native success at control step 325 (sim 8.1 s); pinch at -40 deg, approach
+  leaned -45 deg, finger q 0.0175 (the tube holds the tips at 0.0183); lift until the ring's lowest point was 31 mm over
+  the post top (ring tilt 5.0 deg); carry without a turn (94 waypoints); placement metrics all_target_inside,
+  remainder_on_system_side, quiet, connections_intact. The two Harbor lanes below executed bit-identical trajectories
+  (325 rows, same actions and physics ticks). Rate limiter in them: one row asked 0.103 rad (the re-sync to the measured
+  joints at a stage start) and was spread over 3 steps; no row clamped; every recorded row moves at most 0.035 rad.
+- **Grades** (candidate `sbe/cand_sbe`, image hsbe2; your `scripts/oracle_runners/test_harbor_oracles.py --candidate` as the
+  launcher runs it):
+
+  | lane | tree / launcher | mode | grade | rows | live min | verifier min | replays |
+  |---|---|---|---|---|---|---|---|
+  | ve1 | bd4258d21 + the development files; lab copy of the launcher (the two lines above) | privileged | **1** | 325 | 29.7 | 51.8 | 2, deterministic, strict goal at row 325 |
+  | ve1 | same | standard | **1** | 325 | 26.3 | 1.2 | live and replay success, live_matches_replay 1, 0 resumes |
+  | vefinal | bd4258d21 + this commit's oracle, wiring, launcher and CI files (sha256-checked); your launcher as committed here | privileged | **1** | 325 | 25.5 | 47.4 | 2, deterministic, strict goal at row 325 |
+  | vefinal | same | standard | **1** | 325 | 24.5 | 0.4 | live and replay success, live_matches_replay 1, 0 resumes |
+
+  - Both lanes: review_events 0 (max depth 0.0 mm), forcing 0, replay holds 0, instance_exact 1. A live run (privileged,
+    including a 220-335 s cold Session build) takes 25-30 min, under the 72 min rule.
+  - Visual check of the ve1 privileged replay video: the right hand pinches the ring's near-right side, the ring rises
+    along the post, is carried over the top and held inside the dashed goal area; post, cord, beads and discs stay where
+    they started.
+  - Between bd4258d21 and this commit's base 7571e4194 nothing the slotted Session or oracle runs changed: the slotted
+    task, geometry and planning files, `standard_rate.py`, `harbor_bridge/{actions,callbacks,contracts}.py`, the tooling,
+    `topogym/{simulator,robot,evaluation}` and `topogym/world` except the blanket's `cloth_preparation.py`.
+
+## 6. Below-easy orbits, blanket_flatten and knot_untying of your 7571e4194: lab grades and findings (2026-10-06)
+
+Every below-easy oracle that 7571e4194 provides for these three families, graded on lab in both modes with your
+launcher (`run_harbor_oracle_grades.sh --tasks-root <candidate>/tasks`). Lab work: `/DATA2/qineng/rcb/topogym_v1/obe/`
+(`JOURNAL.md`, `bin/`, `exp/`, grades in `tree_g/runs/test_results/harbor_grade_obe_*`). No change to your tasks, rules,
+graders or runtime. Commits on 7571e4194: 01245b248 (your launcher accepts orbits: case list and
+`check-oracle-portability --families` choices, test in `test-harbor-oracle-launcher.py`) and the next one (two orbits
+oracle fixes with unit tests, this section).
+
+- **Setup.** Image `obejw/rcb-topogym:0.2.16-dev-cu128` = your Dockerfile on 7571e4194 with the v18 build args (runtime
+  source fc5ac3e1, tooling a9d09d66), candidates from your merge / pipeline scripts; builds, fresh-process restores and
+  nops pass. Your blanket corner-fold archives are `cuda_sm89_mp128_*` and `require_compatible` refuses them on lab's
+  sm120 GPUs, so both states were prepared again on lab with your `prepare_blanket_initial_states.py` (same tick counts
+  and layouts as yours) and passed with `--blanket-initial-state`; `topogym_merge_candidate.py` then needs torch, so it
+  ran inside the image.
+- **Grades** (every line deterministic 1, grader_error 0, infra_error 0, forcing 0):
+
+  | family / tier | privileged | standard | rows | where it stops |
+  |---|---|---|---|---|
+  | blanket_flatten very_easy | **1** (only inside the replay hold) | 0 (live strict 0) | 1454 | settled gate: one chattering particle, below |
+  | blanket_flatten easier | 0 | blocked | 633 | `lay_half: assisted grasp lost`, edge ratio 1.3014 > 1.3 |
+  | knot_untying very_easy | **1** (strict at row 848) | **1** | 848 | none; live 18-20 min, rope speed 0.973 mm/s at worst (limit 1) |
+  | knot_untying easier | running at commit time (`harbor_grade_obe_knot_untying_very_easy_easier`) | | | |
+  | orbits very_easy | 0 (twice) | blocked | 99 / 238 | row 99: action past a joint limit; row 238: first align (both fixed below) |
+  | orbits easier | 0 | blocked | 195 | first align (fixed below); cut afterwards, below |
+
+  blanket easier: the lab state matches yours (coverage 0.4112, top 30.5 mm); `lay_half` ending at x -0.29 or -0.28
+  instead of -0.305 still loses the grasp (1.3020 / 1.3009), so the peak is not set by the final x. Left for you.
+- **blanket very_easy: one particle never reads settled** (read-only probe `bin/ob_bprobe.py`, `exp/bprobe2`). The sheet
+  is flat (coverage 0.978) but particle 7458 reports 33.04 mm/s from 0.75 s after the release to the end, the same in
+  every run and both Harbor replays. It is not assist state: it is not in the only binding (27 particles centred 7944),
+  it is free (w = 1/m) and unlinked at acquisition, release and end, nothing is non-free or linked after the release, and
+  the v18 cached admission matched the pre-cache reference on all 81 compared `candidates()` calls. It is a PBD 2-cycle:
+  every 0.625 ms substep stretch/bending moves it about 50 um and the self-collision projection (with its position-based
+  friction) puts it on the other of two points 20.65 um apart; Genesis reports the last substep's (pos - ipos) / dt, so
+  33 mm/s at a fixed end-of-tick position. Its partners (1887, 7338, 7579; rest 8.5-18 mm) sit at 7.96-7.99 mm, right at
+  the 8 mm particle-size collision threshold, in a crumpled spot by the laid corner. Privileged passes only through the
+  0.08 m/s replay tolerance and standard fails the strict 0.03 m/s gate. Options (yours / the user's, not changed): a gate
+  speed from end-of-tick displacement (about 0 here), or a `fold_layout` stage for very_easy as easier has.
+- **orbits fixes (this commit, `planning/orbits/native_session.py`):**
+  - `submit`: the IK put the left forearm roll at its model limit, one float32 step past the public range
+    (`Action would be clipped by the public robot adapter`, very_easy row 99); an excess of at most 1e-4 rad is clamped,
+    anything larger still raises.
+  - `grasp_one` align: on a cord resting on the table or the fixture base, the pads stop 1.6-5 mm above the cord centre
+    (still descending after the 0.3 s settle, then held by the support), so `bias += cord - contact` aims below any pose
+    with the 0.5 mm support gap (`No close contact pose above the support surface`, both tiers' first align). Now an
+    update with no support pose keeps only its in-plane part, and from then on the loop converges on the in-plane error.
+    Natively the very_easy left leg grasp then aligns, pinches and lifts (1.2 mm grasp error), and easier's 0.65 grasp
+    too.
+  - Unit tests in `ci_checks/test-orbits-native-oracle.py`; both fail on 7571e4194 with the lab errors.
+- **orbits, where it stops now (not fixed):** very_easy's right-arm approach row fails your own collision check
+  (`inter_arm` gap 0.47 mm < 1 mm) with the left hand at its standoff (y 0.105, z 0.075); runs with a wider or higher
+  standoff were stopped before that point (speed, below). easier is cut: in `fresh_bight_carry` the grasp error grows from
+  14 to 23 mm and the episode ends (`connection_or_volume_invalid`, cord crushed 0.25 s, volume ratio -0.075), so the ring
+  pass needs route work.
+- **orbits speed: a task-level decision for you and the user (nothing changed).** One control step is 10 IPC ticks of
+  2.5 ms (Newton 1e-3, PCG 1e-5). Your native oracle runs at 7.8 s per step on an idle GPU (host load 26), the same as
+  under load; physics alone (grading replays) 3.7-5.2 s per step, and the rest is the oracle's per-row checks. Your
+  very_easy route comes to about 2500-3300 rows: 5-7 h live and 3-4 h per replay, against the 72 min rule and close to
+  the whole 6 h budget, so even a working oracle fails speed acceptance. The likely lever is a profile like rope's
+  regular tiers (`contact_relaxed_v16`: one 40 ms IPC frame per step, Newton 3e-3 / PCG 3e-5, a coarser softer mesh,
+  finger-only robot contact), which brought rope to 0.156 s per step near rest (orbits easy: 2.5 s on the same benchmark)
+  and rope medium to 33 min end to end. Rough bound, not measured: 4-10x on the physics (one solve per step instead of
+  10, each needing more Newton iterations), so 0.5-1 s per step and 25-55 min for the route, plus about 2 h of oracle
+  checks unless they are trimmed. It changes the physics the scenes were settled and checked with (your eps_velocity
+  0.001 calibration, birth states, difficulty), so scenes and oracle would need re-validation.
+- **orbits births** (checked on the v1 instances; your v2 adds only eps_velocity 0.001): the profile equals orbits easy's,
+  the goal is not met at birth and the difficulty words order as very_easy 1 < easier 2 < easy 4 ball letters. With the
+  libuipc default eps_velocity 0.01 a cord at rest creeps 2.0-2.5 mm/s (10 mm in 5 s, above the 1 mm/s goal limit);
+  0.001 gives 0.37-0.54 mm/s and 0.0001 0.06 mm/s. The original orbits tiers still use 0.01 and creep about 2 mm/s.

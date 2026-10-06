@@ -87,3 +87,11 @@
 ## 外部证据边界
 
 附件称 hard/seed 0 两次从检查点开发续跑取得原生成功，其中一次 t≈348 s、最小体积比 0.912；都不是从 home 的完整连续执行。`hard_full01` 在第三阶段 t=37 s 被人工停止，**并非仍在运行**。easy/medium 只生成过几何。运行轨迹、原生检查点和审计产物未随本次代码迁入，这些描述不能授予本地 v15 成功资格。
+
+## below-easy oracle（2026-10-06）
+
+`below_easy_oracle.py` + `public_session.py`，经 `harbor_bridge/below_easy.py` 分派，与上面迁入的 12 阶段路线无关，只复用
+`policy.SlottedOraclePolicy` 的直线、转移与固定件检查。very_easy：右臂指尖径向捏环管（沿环倾斜 30-45° 进手，夹爪本体
+150 mm 宽，竖直进手必碰立柱），直上至环最低点高出柱顶 30 mm，平移离柱后直线放到目标区中心上方 6 cm 并保持至任务成功；
+每行关节步长不超过 0.03 rad，经 `standard_rate.rate_limited_runner`。easier 暂缺 oracle，`public_session` 拒绝；尝试与
+场景决定见 `docs/rcb/ORACLE_FIXES_2_FOR_JIANWEN.md` 第 5 节。

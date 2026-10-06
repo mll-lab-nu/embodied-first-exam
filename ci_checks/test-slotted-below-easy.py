@@ -64,5 +64,44 @@ class DesignIntent(unittest.TestCase):
         self.assertGreater(report["widest_gap_m"], report["bead_diameter_m"])
 
 
+class Oracle(unittest.TestCase):
+    """Wiring and fingertip sizes of the below-easy oracle (below_easy_oracle.py); no physics."""
+
+    def test_both_settings_dispatch_to_the_slotted_session(self):
+        from topogym.planning.harbor_bridge.catalog import BELOW_EASY_FAMILIES, session_callback
+        from topogym.planning.harbor_bridge.references import reference_data
+        self.assertIn("slotted_post_ring", BELOW_EASY_FAMILIES)
+        for tier in ("very_easy", "easier"):
+            self.assertEqual(session_callback("slotted_post_ring", tier),
+                             "topogym.planning.harbor_bridge.below_easy:run_feedback_policy")
+            files, _ = reference_data(ROOT, "slotted_post_ring", tier, 0)
+            self.assertEqual(files, {})   # closed loop from the measured state; no recorded inputs
+        self.assertIsNone(session_callback("slotted_post_ring", "easy"))
+
+    def test_launcher_portability_check_admits_both_settings(self):
+        import subprocess
+        result = subprocess.run([sys.executable, str(ROOT / "ci_checks/check-oracle-portability.py"), "--families",
+                                 "slotted_post_ring", "--tiers", "very_easy", "easier"], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("slotted_post_ring easier: passed", result.stdout)
+
+    def test_public_session_runs_very_easy_only(self):
+        from types import SimpleNamespace
+        from topogym.planning.slotted_post_ring.public_session import run_feedback_policy
+        with self.assertRaisesRegex(ValueError, "No Slotted Post easier oracle"):
+            run_feedback_policy(SimpleNamespace(), Path("unused"), variation="easier")
+        with self.assertRaisesRegex(ValueError, "below-easy settings only"):
+            run_feedback_policy(SimpleNamespace(), Path("unused"), variation="easy")
+
+    def test_fingertip_pinch_fits_the_tube(self):
+        from topogym.planning.slotted_post_ring import below_easy_oracle as O
+        layout = task_definition("slotted_post_ring", "very_easy")().make_layout()
+        gap = lambda q: 2 * (q - O.TIP_OFFSET_M)   # distance between the fingertips at native finger target q
+        tube = 2 * layout.ring_tube_radius_m
+        self.assertGreater(gap(O.PINCH_OPEN_M) - tube, .008)   # at least 4 mm beside the tube on each side
+        self.assertLess(gap(O.PINCH_CLOSED_M), tube)           # the tube stops the closing fingers: they squeeze it
+        self.assertLess(gap(O.PINCH_OPEN_M), 2 * (.037 - O.TIP_OFFSET_M))   # within the gripper's range
+
+
 if __name__ == "__main__":
     unittest.main()
