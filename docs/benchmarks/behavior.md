@@ -1,10 +1,11 @@
 # BEHAVIOR-1K
 
 BEHAVIOR-1K v3.9.2 (OmniGibson 3.9.2 on Isaac Sim 5.1, the stack the 2026 BEHAVIOR Challenge pins): household tasks for
-the R1Pro mobile manipulator. `simulator = "behavior"`, `robot = "r1pro"`. 11 challenge tasks, each as a privileged task
+the R1Pro mobile manipulator. `simulator = "behavior"`, `robot = "r1pro"`. 61 challenge tasks, each as a privileged task
 `behavior-<family>-i00-privileged` and its standard twin `behavior-<family>-i00-standard`, on the 2026 challenge's
-public_test instance 301. The generator knows 38 more challenge tasks; they stay out of the benchmark until one has a reference
-solution or a positive example (below).
+public_test instance 301: the 11 of the first release, which have a reference solution or a positive example, and 50
+supplementary tasks for harder testing (2026-10-04, below), which have neither yet. The generator knows 16 more challenge
+tasks; they stay out of the benchmark.
 
 ## Prerequisites (every BEHAVIOR run)
 - **The image**, built on the host: `ghcr.io/mll-lab-nu/eai-behavior:<images/behavior/VERSION>`
@@ -26,7 +27,8 @@ solution or a positive example (below).
 ## Tasks and generator
 - `scripts/behavior/mk_tasks.py` generates every task from the template twins `tasks/behavior-picking-up-trash-i00-privileged`
   and `-standard` (maintained by hand), `scripts/behavior/families.json` (the texts of each family: goal, success conditions,
-  difficulty, the standard goal in words; the oracle level and the cited positive; `"include"`), the BDDL problems
+  difficulty, the standard goal in words; the oracle level and its evidence: the cited positive, or the challenge's
+  official human demonstrations, `"demo"`; `"include"`), the BDDL problems
   `scripts/behavior/bddl/` (BEHAVIOR-1K's `bddl` package, MIT: `/behavior-src/bddl3/bddl/activity_definitions/<task>/problem0.bddl`
   in the image), the frozen instances `scripts/behavior/instances/` and the reference solutions
   `scripts/behavior/solutions/`, plus the eai-standard/2.2 layer from `scripts/eai_standard/`. A rerun reproduces the
@@ -44,6 +46,7 @@ solution or a positive example (below).
 |---|---|---|
 | picking_up_trash, putting_shoes_on_rack | `partial` | human-written reference solutions on the frozen task-level primitives `solution/rcb_behavior_ref.py`; the standard oracle streams the privileged oracle's joint targets through the client. They scored 1 on earlier versions (`oracle_evidence` cites the runs; picking_up_trash privileged 1 of 3), and the standard twins' service, collect hook, grader and oracle client changed since (crash recovery): not re-run on this version, hence not `full` |
 | clean_up_broken_glass, collecting_aluminum_cans, composting_waste, dispose_of_glass, hiding_Easter_eggs, installing_a_scanner, stacking_wood, tidying_bedroom, turning_on_radio | `none` | a privileged model trial graded 1 by the separate verifier on a pre-v1.0 version (trial id, agent log and replay in `oracle_evidence` and the README); human review per family |
+| the 50 supplementary families (below) | `none` | no positive example yet: the 2026 challenge's official human teleoperation demonstrations of the activity with the R1Pro in the same scene model (the video, its duration, the number of episodes and their mean duration in `oracle_evidence` and the README); human review per family; results reported separately until a positive scores 1 (PROTOCOL §7, open item 4) |
 
 The labels follow one rule: `full` only when a recorded oracle run scored 1 on a byte-identical grader, frozen instance and
 oracle code, with every tooling change since shown to be off the oracle and replay path. This version was validated
@@ -51,8 +54,40 @@ statically (CI, the generator's `--check`), not re-run.
 
 **Loose official goals** (reported, the official judgement is kept): `stacking_wood` only needs every log to touch
 another log (no stack; its positive pushed the logs together with the robot body); `hiding_Easter_eggs` only needs the
-eggs on the lawn next to one tree and out of the basket (nothing is hidden). Of the families kept out,
-`laying_tile_floors` is loose too (tiles on the floor, each `nextto` another).
+eggs on the lawn next to one tree and out of the basket (nothing is hidden); `laying_tile_floors` only needs the tiles on
+the floor, each `nextto` another; `loading_the_car` lists `(not (open ?car.n.01_1))` outside the goal's `(and ...)`, and
+BDDL reads only the first expression of `:goal`, so the car may stay open; `sorting_vegetables` needs one bowl per
+vegetable group, not three different bowls; `freeze_fruit` does not need the fruit frozen. The instructions say so.
+
+## Supplementary tasks (2026-10-04)
+50 more challenge tasks, added for supplementary testing on the user's selection: long official demonstrations (the
+challenge's teleoperators needed 274-869 s on average, a median of about 450 s), a spread of skills, and none that the
+`codex-gpt6_luna-xhigh` sweep (pre-v1.0 versions, 2026-09-25..29) solved in privileged mode: 22 of them were in that sweep
+(no success in either mode), 28 never ran. Skills, by the task-list site's labels: articulated objects 25 (refrigerators,
+cabinets, an oven, a car, a toolbox, a laptop), tool use 9 (knives, an axe, a broom, a scrub brush, steel wool, a lighter),
+heat 6 (cooking, baking, freezing, thawing, fire), cutting and dicing 5, surface cleaning 4 (rust, mud, dirt, dust), filling
+containers with particles 2, operating devices 6 (an oven, a stove, a microwave, a washing machine, a lighter), two-handed
+carrying of large objects 3, outdoor scenes 7, several rooms 13. Their predicates go beyond the first release's: `real` (objects that the simulator's
+transition rules create during the episode: halves, diced pieces, cooked food, a pizza), `filled` and `contains`
+(particles in a container); `goal.py` words them. No reference solution was written: `oracle = "none"`, with the official
+demonstrations as the solvability evidence, and the families are reviewed per family like the others (PROTOCOL §2.7).
+22 of the frozen instances are the ones the sweep ran on (unchanged), 28 were frozen on 2026-10-04 with the same tooling
+and `Evaluator.load_task_instance` recipe. Checked on 2026-10-04/05 on ws (RTX 4090): every new instance was frozen in a
+fresh container and its goal is false at the start; fresh-process reloads of four instances (chopping_wood, polishing_shoes,
+tidying_bathroom: the exact state hash; setting_the_table, frozen on another host: every object pose within tolerance,
+`instance_ok`) and Harbor `nop` runs in both modes on three families (setting_the_table, canning_food,
+assembling_gift_baskets: 0, no infrastructure error) passed; CI and the generator's `--check` pass.
+
+Families: assembling_gift_baskets, boxing_books_up_for_storage, bringing_in_wood, bringing_paper_to_recycling, can_meat,
+canning_food, carrying_in_groceries, carrying_out_garden_furniture, chopping_wood, clean_a_patio, clean_up_your_desk,
+clean_your_rusty_garden_tools, cleaning_up_branches_and_twigs, cleaning_up_plates_and_food, clearing_food_from_table_into_fridge,
+collecting_childrens_toys, cook_brussels_sprouts, cook_cabbage, dispose_of_batteries, freeze_fruit, freeze_pies,
+getting_organized_for_work, laying_tile_floors, loading_the_car, make_pizza, moving_boxes_to_storage, organizing_school_stuff,
+outfit_a_basic_toolbox, picking_up_toys, polishing_shoes, put_together_a_basic_pruning_kit, putting_away_Halloween_decorations,
+putting_away_toys, putting_dirty_dishes_in_sink, putting_dishes_away_after_cleaning, putting_up_Christmas_decorations_inside,
+rearrange_your_room, setting_mousetraps, setting_the_fire, setting_the_table, setup_a_bar_for_a_cocktail_party,
+slicing_vegetables, sorting_household_items, sorting_vegetables, storing_food, thawing_frozen_food, tidying_bathroom,
+tidying_living_room, unloading_the_car, wash_dog_toys.
 
 ## Time budget (D8)
 14400 s (the protocol maximum) for every task of both modes, the same in the whole benchmark:
@@ -143,3 +178,9 @@ never copied); Isaac Sim 5.1 and Omniverse Kit: NVIDIA proprietary (no redistrib
 - The per-call state hash (`og.sim.dump_state`, read-only) is new with crash recovery: the validation re-checks that
   `live_matches_replay` stays 1 on the standard oracles.
 - `turning_on_radio`: the radio shows no visual change when it is on, so a standard-mode agent cannot see its success.
+- Supplementary goals that create objects (`real`: halves, diced pieces, cooked food, a pizza) or clean surfaces (`not
+  covered`) depend on OmniGibson's transition rules and particle states. The challenge's evaluator turns the transition
+  rules on (`gm.ENABLE_TRANSITION_RULES = True`) and runs PhysX on the CPU (`gm.USE_GPU_DYNAMICS = False`); every particle
+  system these tasks use is a macro system (diced food, grated cheese: macro physical; dirt, dust, mud, rust, debris: macro
+  visual), which needs no GPU dynamics. Whether a replay that creates objects stays bit-exact in a fresh process has not been
+  measured yet (no positive example of such a task exists).

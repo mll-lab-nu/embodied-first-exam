@@ -1,0 +1,87 @@
+{
+ "task": "cabinet_pickup/task_0026",
+ "family": "cabinet_pickup",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "de26b364ff7e0fa0d2ac06cd858e554a877fb3746112459564d414f11ac94c00",
+ "diagnostics_sha256": "89995b74298d6494b2f4c2abb51a328a0548965047b40a51d3fa391f6d26d975",
+ "pipeline": "cabinet_pickup",
+ "gpu_dynamics": false,
+ "state_sha": "9f0df8b55512a085",
+ "objects": {
+  "support_surface": {
+   "category": "conference_table",
+   "position": [
+    0.0,
+    0.0,
+    0.36565
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "cabinet_bottom_cabinet_ep1_1": {
+   "category": "bottom_cabinet",
+   "position": [
+    -0.00161,
+    -0.6114,
+    0.70131
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    -0.0,
+    0.70711,
+    0.70711
+   ]
+  },
+  "target_head_cabbage_ep1_1": {
+   "category": "head_cabbage",
+   "position": [
+    -0.12093,
+    -0.18446,
+    0.491
+   ],
+   "orientation_xyzw": [
+    -0.07627,
+    0.03765,
+    -0.00049,
+    0.99638
+   ]
+  },
+  "obstacle_can_of_bay_leaves_ep1_1": {
+   "category": "can_of_bay_leaves",
+   "position": [
+    -0.16641,
+    -0.04918,
+    0.46702
+   ],
+   "orientation_xyzw": [
+    -0.00918,
+    0.02022,
+    -0.00682,
+    0.99973
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}

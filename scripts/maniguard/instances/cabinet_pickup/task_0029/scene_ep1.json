@@ -1,0 +1,1303 @@
+{
+    "versions": {
+        "omnigibson": {
+            "version": "3.7.2",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "bddl": {
+            "version": "3.7.0",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "behavior-1k-assets": {
+            "version": "3.7.2rc1"
+        },
+        "omnigibson-robot-assets": {
+            "version": null,
+            "git_hash": null
+        }
+    },
+    "metadata": {},
+    "state": {
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ori": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "registry": {
+            "system_registry": {},
+            "object_registry": {
+                "support_surface": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            0.0,
+                            0.0,
+                            0.1834000051021576
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "cabinet_bottom_cabinet_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -7.199356332421303e-05,
+                            -0.2432927042245865,
+                            0.6349757313728333
+                        ],
+                        "ori": [
+                            -2.3283064365386963e-09,
+                            -1.0375515557825565e-08,
+                            0.7071070671081543,
+                            0.7071067094802856
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        8.671809473257724e-19,
+                        0.0,
+                        4.333404841721362e-19
+                    ],
+                    "joint_vel": [
+                        -1.084732602053304e-19,
+                        1.1096803941433218e-16,
+                        -5.423668826380202e-20,
+                        5.545691465285395e-17
+                    ],
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        }
+                    }
+                },
+                "target_chocolate_cake_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -7.497472688555717e-05,
+                            0.17338980734348297,
+                            0.38791829347610474
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0000001192092896
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        },
+                        "MaxTemperature": {
+                            "max_temperature": 23.0
+                        }
+                    }
+                },
+                "obstacle_cruet_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -8.819226059131324e-05,
+                            0.27338603138923645,
+                            0.42518851161003113
+                        ],
+                        "ori": [
+                            8.791583240963519e-05,
+                            -0.0002741485368460417,
+                            -9.708873403724283e-05,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "agent_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.711605966091156,
+                            0.19838981330394745,
+                            0.3775652050971985
+                        ],
+                        "ori": [
+                            -4.6566128730773926e-09,
+                            -3.975583240389824e-08,
+                            0.017557084560394287,
+                            0.9998461008071899
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "joint_vel": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "controllers": {
+                        "arm_0": {
+                            "goal_is_valid": false,
+                            "goal": null
+                        },
+                        "gripper_0": {
+                            "goal_is_valid": false,
+                            "goal": null,
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": false
+                            }
+                        }
+                    },
+                    "non_kin": {},
+                    "ag_obj_constraint_params": {
+                        "0": {}
+                    }
+                }
+            }
+        }
+    },
+    "init_info": {
+        "class_module": "omnigibson.scenes.scene_base",
+        "class_name": "Scene",
+        "args": {
+            "scene_file": {
+                "versions": {
+                    "omnigibson": {
+                        "version": "3.7.2",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "bddl": {
+                        "version": "3.7.0",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "behavior-1k-assets": {
+                        "version": "3.7.2rc1"
+                    },
+                    "omnigibson-robot-assets": {
+                        "version": null,
+                        "git_hash": null
+                    }
+                },
+                "metadata": {},
+                "state": {
+                    "pos": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "ori": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "registry": {
+                        "system_registry": {},
+                        "object_registry": {
+                            "support_surface": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        0.0,
+                                        0.0,
+                                        0.1834000051021576
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "cabinet_bottom_cabinet_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -7.199449464678764e-05,
+                                        -0.2432927042245865,
+                                        0.6349756717681885
+                                    ],
+                                    "ori": [
+                                        -4.0745259943797407e-10,
+                                        -7.610649888079024e-09,
+                                        0.7071069478988647,
+                                        0.7071065902709961
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "joint_pos": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "joint_vel": [
+                                    -1.084732602053304e-19,
+                                    -5.423668180145349e-20,
+                                    -2.779625966687672e-17,
+                                    -2.713154994113345e-20
+                                ],
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    }
+                                }
+                            },
+                            "target_chocolate_cake_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -7.497332990169525e-05,
+                                        0.17338980734348297,
+                                        0.38791829347610474
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    },
+                                    "MaxTemperature": {
+                                        "max_temperature": 23.0
+                                    }
+                                }
+                            },
+                            "obstacle_cruet_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -7.495499448850751e-05,
+                                        0.2733898162841797,
+                                        0.4258127510547638
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            }
+                        }
+                    }
+                },
+                "init_info": {
+                    "class_module": "omnigibson.scenes.scene_base",
+                    "class_name": "Scene",
+                    "args": {
+                        "scene_file": {
+                            "versions": {
+                                "omnigibson": {
+                                    "version": "3.7.2",
+                                    "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                },
+                                "bddl": {
+                                    "version": "3.7.0",
+                                    "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                },
+                                "behavior-1k-assets": {
+                                    "version": "3.7.2rc1"
+                                },
+                                "omnigibson-robot-assets": {
+                                    "version": null,
+                                    "git_hash": null
+                                }
+                            },
+                            "metadata": {},
+                            "state": {
+                                "pos": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "ori": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "registry": {
+                                    "system_registry": {},
+                                    "object_registry": {
+                                        "support_surface": {
+                                            "is_asleep": false,
+                                            "root_link": {
+                                                "pos": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.1834000051021576
+                                                ],
+                                                "ori": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    1.0
+                                                ]
+                                            },
+                                            "non_kin": {}
+                                        },
+                                        "cabinet_bottom_cabinet_ep1_1": {
+                                            "is_asleep": true,
+                                            "root_link": {
+                                                "pos": [
+                                                    -7.199542596936226e-05,
+                                                    -0.2432927042245865,
+                                                    0.6349756121635437
+                                                ],
+                                                "ori": [
+                                                    -4.074534043496669e-10,
+                                                    -4.831234967639375e-09,
+                                                    0.7071069478988647,
+                                                    0.7071065902709961
+                                                ],
+                                                "lin_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ],
+                                                "ang_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ]
+                                            },
+                                            "joint_pos": [
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                4.1707823899173044e-23
+                                            ],
+                                            "joint_vel": [
+                                                -2.71183150513326e-20,
+                                                -2.7131511167042237e-20,
+                                                0.0,
+                                                3.471947872851424e-31
+                                            ],
+                                            "non_kin": {
+                                                "Temperature": {
+                                                    "temperature": 23.0
+                                                }
+                                            }
+                                        },
+                                        "target_chocolate_cake_ep1_1": {
+                                            "is_asleep": true,
+                                            "root_link": {
+                                                "pos": [
+                                                    -7.497193291783333e-05,
+                                                    0.17338980734348297,
+                                                    0.38791829347610474
+                                                ],
+                                                "ori": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    1.0
+                                                ],
+                                                "lin_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ],
+                                                "ang_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ]
+                                            },
+                                            "non_kin": {
+                                                "Temperature": {
+                                                    "temperature": 23.0
+                                                },
+                                                "MaxTemperature": {
+                                                    "max_temperature": 23.0
+                                                }
+                                            }
+                                        },
+                                        "obstacle_cruet_ep1_1": {
+                                            "is_asleep": true,
+                                            "root_link": {
+                                                "pos": [
+                                                    -7.495499448850751e-05,
+                                                    0.2733898162841797,
+                                                    0.4264940321445465
+                                                ],
+                                                "ori": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    1.0
+                                                ],
+                                                "lin_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ],
+                                                "ang_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ]
+                                            },
+                                            "non_kin": {}
+                                        }
+                                    }
+                                }
+                            },
+                            "init_info": {
+                                "class_module": "omnigibson.scenes.scene_base",
+                                "class_name": "Scene",
+                                "args": {
+                                    "scene_file": {
+                                        "versions": {
+                                            "omnigibson": {
+                                                "version": "3.7.2",
+                                                "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                            },
+                                            "bddl": {
+                                                "version": "3.7.0",
+                                                "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                            },
+                                            "behavior-1k-assets": {
+                                                "version": "3.7.2rc1"
+                                            },
+                                            "omnigibson-robot-assets": {
+                                                "version": null,
+                                                "git_hash": null
+                                            }
+                                        },
+                                        "metadata": {},
+                                        "state": {
+                                            "pos": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "ori": [
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                1.0
+                                            ],
+                                            "registry": {
+                                                "system_registry": {},
+                                                "object_registry": {
+                                                    "support_surface": {
+                                                        "is_asleep": false,
+                                                        "root_link": {
+                                                            "pos": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.1834000051021576
+                                                            ],
+                                                            "ori": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0,
+                                                                1.0
+                                                            ]
+                                                        },
+                                                        "non_kin": {}
+                                                    },
+                                                    "cabinet_bottom_cabinet_ep1_1": {
+                                                        "is_asleep": true,
+                                                        "root_link": {
+                                                            "pos": [
+                                                                -7.199589163064957e-05,
+                                                                -0.2432927042245865,
+                                                                0.6346755623817444
+                                                            ],
+                                                            "ori": [
+                                                                -4.6566109301870995e-10,
+                                                                -2.0372679099267543e-09,
+                                                                0.70710688829422,
+                                                                0.7071066498756409
+                                                            ],
+                                                            "lin_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "ang_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ]
+                                                        },
+                                                        "joint_pos": [
+                                                            0.0,
+                                                            0.0,
+                                                            0.0,
+                                                            0.0
+                                                        ],
+                                                        "joint_vel": [
+                                                            0.0,
+                                                            0.0,
+                                                            0.0,
+                                                            0.0
+                                                        ],
+                                                        "non_kin": {
+                                                            "Temperature": {
+                                                                "temperature": 23.0
+                                                            }
+                                                        }
+                                                    },
+                                                    "target_chocolate_cake_ep1_1": {
+                                                        "is_asleep": true,
+                                                        "root_link": {
+                                                            "pos": [
+                                                                -7.49705359339714e-05,
+                                                                0.17338980734348297,
+                                                                0.38791829347610474
+                                                            ],
+                                                            "ori": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0,
+                                                                1.0
+                                                            ],
+                                                            "lin_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "ang_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ]
+                                                        },
+                                                        "non_kin": {
+                                                            "Temperature": {
+                                                                "temperature": 23.0
+                                                            },
+                                                            "MaxTemperature": {
+                                                                "max_temperature": 23.0
+                                                            }
+                                                        }
+                                                    },
+                                                    "obstacle_cruet_ep1_1": {
+                                                        "is_asleep": true,
+                                                        "root_link": {
+                                                            "pos": [
+                                                                -7.495499448850751e-05,
+                                                                0.2733898162841797,
+                                                                0.42717528343200684
+                                                            ],
+                                                            "ori": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0,
+                                                                1.0
+                                                            ],
+                                                            "lin_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "ang_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ]
+                                                        },
+                                                        "non_kin": {}
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "init_info": {
+                                            "class_module": "omnigibson.scenes.scene_base",
+                                            "class_name": "Scene",
+                                            "args": {
+                                                "scene_file": {
+                                                    "versions": {
+                                                        "omnigibson": {
+                                                            "version": "3.7.2",
+                                                            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                                        },
+                                                        "bddl": {
+                                                            "version": "3.7.0",
+                                                            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                                        },
+                                                        "behavior-1k-assets": {
+                                                            "version": "3.7.2rc1"
+                                                        },
+                                                        "omnigibson-robot-assets": {
+                                                            "version": null,
+                                                            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                                        }
+                                                    },
+                                                    "metadata": {},
+                                                    "state": {
+                                                        "pos": [
+                                                            0.0,
+                                                            0.0,
+                                                            0.0
+                                                        ],
+                                                        "ori": [
+                                                            0.0,
+                                                            0.0,
+                                                            0.0,
+                                                            1.0
+                                                        ],
+                                                        "registry": {
+                                                            "system_registry": {},
+                                                            "object_registry": {
+                                                                "support_surface": {
+                                                                    "is_asleep": false,
+                                                                    "root_link": {
+                                                                        "pos": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.1834000051021576
+                                                                        ],
+                                                                        "ori": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0,
+                                                                            1.0
+                                                                        ]
+                                                                    },
+                                                                    "non_kin": {}
+                                                                },
+                                                                "cabinet_bottom_cabinet_ep1_1": {
+                                                                    "is_asleep": true,
+                                                                    "root_link": {
+                                                                        "pos": [
+                                                                            -7.199868559837341e-05,
+                                                                            -0.2432927042245865,
+                                                                            0.6346755623817444
+                                                                        ],
+                                                                        "ori": [
+                                                                            1.2223608791828156e-09,
+                                                                            -2.1827871454771497e-10,
+                                                                            0.7071068286895752,
+                                                                            0.7071067094802856
+                                                                        ],
+                                                                        "lin_vel": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0
+                                                                        ],
+                                                                        "ang_vel": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0
+                                                                        ]
+                                                                    },
+                                                                    "joint_pos": [
+                                                                        0.07207122445106506,
+                                                                        6.491361701638221e-12,
+                                                                        1.1932909087936094e-12,
+                                                                        4.3725197648742644e-33
+                                                                    ],
+                                                                    "joint_vel": [
+                                                                        -7.16261978982322e-18,
+                                                                        -8.953275771254792e-19,
+                                                                        2.235722985763055e-34,
+                                                                        7.492273264316251e-31
+                                                                    ],
+                                                                    "non_kin": {
+                                                                        "Temperature": {
+                                                                            "temperature": 23.0
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "target_chocolate_cake_ep1_1": {
+                                                                    "is_asleep": true,
+                                                                    "root_link": {
+                                                                        "pos": [
+                                                                            -7.496913895010948e-05,
+                                                                            0.17338980734348297,
+                                                                            0.38791829347610474
+                                                                        ],
+                                                                        "ori": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0,
+                                                                            1.0
+                                                                        ],
+                                                                        "lin_vel": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0
+                                                                        ],
+                                                                        "ang_vel": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0
+                                                                        ]
+                                                                    },
+                                                                    "non_kin": {
+                                                                        "Temperature": {
+                                                                            "temperature": 23.0
+                                                                        },
+                                                                        "MaxTemperature": {
+                                                                            "max_temperature": 23.0
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "obstacle_cruet_ep1_1": {
+                                                                    "is_asleep": true,
+                                                                    "root_link": {
+                                                                        "pos": [
+                                                                            -7.495499448850751e-05,
+                                                                            0.2733898162841797,
+                                                                            0.4278565049171448
+                                                                        ],
+                                                                        "ori": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0,
+                                                                            1.0
+                                                                        ],
+                                                                        "lin_vel": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0
+                                                                        ],
+                                                                        "ang_vel": [
+                                                                            0.0,
+                                                                            0.0,
+                                                                            0.0
+                                                                        ]
+                                                                    },
+                                                                    "non_kin": {}
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "init_info": {
+                                                        "class_module": "omnigibson.scenes.scene_base",
+                                                        "class_name": "Scene",
+                                                        "args": {
+                                                            "scene_file": null
+                                                        }
+                                                    },
+                                                    "objects_info": {
+                                                        "init_info": {
+                                                            "support_surface": {
+                                                                "class_module": "omnigibson.objects.dataset_object",
+                                                                "class_name": "DatasetObject",
+                                                                "args": {
+                                                                    "name": "support_surface",
+                                                                    "category": "coffee_table",
+                                                                    "model": "semdkc",
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "fixed_base": true,
+                                                                    "expected_file_hash": "74fcafca23650fedcc1b7d3c1dfd2e84"
+                                                                }
+                                                            },
+                                                            "cabinet_bottom_cabinet_ep1_1": {
+                                                                "class_module": "omnigibson.objects.dataset_object",
+                                                                "class_name": "DatasetObject",
+                                                                "args": {
+                                                                    "name": "cabinet_bottom_cabinet_ep1_1",
+                                                                    "category": "bottom_cabinet",
+                                                                    "model": "bamfsz",
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "fixed_base": true,
+                                                                    "expected_file_hash": "02765e90080f1dab38c45516de600b0b"
+                                                                }
+                                                            },
+                                                            "target_chocolate_cake_ep1_1": {
+                                                                "class_module": "omnigibson.objects.dataset_object",
+                                                                "class_name": "DatasetObject",
+                                                                "args": {
+                                                                    "name": "target_chocolate_cake_ep1_1",
+                                                                    "category": "chocolate_cake",
+                                                                    "model": "wpeesw",
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "fixed_base": false,
+                                                                    "expected_file_hash": "1ce8305108adbc0a77f86343b0310801"
+                                                                }
+                                                            },
+                                                            "obstacle_cruet_ep1_1": {
+                                                                "class_module": "omnigibson.objects.dataset_object",
+                                                                "class_name": "DatasetObject",
+                                                                "args": {
+                                                                    "name": "obstacle_cruet_ep1_1",
+                                                                    "category": "cruet",
+                                                                    "model": "njqmqv",
+                                                                    "scale": [
+                                                                        1.0,
+                                                                        1.0,
+                                                                        1.0
+                                                                    ],
+                                                                    "fixed_base": false,
+                                                                    "expected_file_hash": "7f3ed8669d0c3cbe620d15d0b21119ae"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "objects_info": {
+                                            "init_info": {
+                                                "support_surface": {
+                                                    "class_module": "omnigibson.objects.dataset_object",
+                                                    "class_name": "DatasetObject",
+                                                    "args": {
+                                                        "name": "support_surface",
+                                                        "category": "coffee_table",
+                                                        "model": "semdkc",
+                                                        "scale": [
+                                                            1.0,
+                                                            1.0,
+                                                            1.0
+                                                        ],
+                                                        "fixed_base": true,
+                                                        "expected_file_hash": "74fcafca23650fedcc1b7d3c1dfd2e84"
+                                                    }
+                                                },
+                                                "cabinet_bottom_cabinet_ep1_1": {
+                                                    "class_module": "omnigibson.objects.dataset_object",
+                                                    "class_name": "DatasetObject",
+                                                    "args": {
+                                                        "name": "cabinet_bottom_cabinet_ep1_1",
+                                                        "category": "bottom_cabinet",
+                                                        "model": "bamfsz",
+                                                        "scale": [
+                                                            1.0,
+                                                            1.0,
+                                                            1.0
+                                                        ],
+                                                        "fixed_base": true,
+                                                        "expected_file_hash": "02765e90080f1dab38c45516de600b0b"
+                                                    }
+                                                },
+                                                "target_chocolate_cake_ep1_1": {
+                                                    "class_module": "omnigibson.objects.dataset_object",
+                                                    "class_name": "DatasetObject",
+                                                    "args": {
+                                                        "name": "target_chocolate_cake_ep1_1",
+                                                        "category": "chocolate_cake",
+                                                        "model": "wpeesw",
+                                                        "scale": [
+                                                            1.0,
+                                                            1.0,
+                                                            1.0
+                                                        ],
+                                                        "fixed_base": false,
+                                                        "expected_file_hash": "1ce8305108adbc0a77f86343b0310801"
+                                                    }
+                                                },
+                                                "obstacle_cruet_ep1_1": {
+                                                    "class_module": "omnigibson.objects.dataset_object",
+                                                    "class_name": "DatasetObject",
+                                                    "args": {
+                                                        "name": "obstacle_cruet_ep1_1",
+                                                        "category": "cruet",
+                                                        "model": "njqmqv",
+                                                        "scale": [
+                                                            1.0,
+                                                            1.0,
+                                                            1.0
+                                                        ],
+                                                        "fixed_base": false,
+                                                        "expected_file_hash": "7f3ed8669d0c3cbe620d15d0b21119ae"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "objects_info": {
+                                "init_info": {
+                                    "support_surface": {
+                                        "class_module": "omnigibson.objects.dataset_object",
+                                        "class_name": "DatasetObject",
+                                        "args": {
+                                            "name": "support_surface",
+                                            "category": "coffee_table",
+                                            "model": "semdkc",
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "fixed_base": true,
+                                            "expected_file_hash": "74fcafca23650fedcc1b7d3c1dfd2e84"
+                                        }
+                                    },
+                                    "cabinet_bottom_cabinet_ep1_1": {
+                                        "class_module": "omnigibson.objects.dataset_object",
+                                        "class_name": "DatasetObject",
+                                        "args": {
+                                            "name": "cabinet_bottom_cabinet_ep1_1",
+                                            "category": "bottom_cabinet",
+                                            "model": "bamfsz",
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "fixed_base": true,
+                                            "expected_file_hash": "02765e90080f1dab38c45516de600b0b"
+                                        }
+                                    },
+                                    "target_chocolate_cake_ep1_1": {
+                                        "class_module": "omnigibson.objects.dataset_object",
+                                        "class_name": "DatasetObject",
+                                        "args": {
+                                            "name": "target_chocolate_cake_ep1_1",
+                                            "category": "chocolate_cake",
+                                            "model": "wpeesw",
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "fixed_base": false,
+                                            "expected_file_hash": "1ce8305108adbc0a77f86343b0310801"
+                                        }
+                                    },
+                                    "obstacle_cruet_ep1_1": {
+                                        "class_module": "omnigibson.objects.dataset_object",
+                                        "class_name": "DatasetObject",
+                                        "args": {
+                                            "name": "obstacle_cruet_ep1_1",
+                                            "category": "cruet",
+                                            "model": "njqmqv",
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "fixed_base": false,
+                                            "expected_file_hash": "7f3ed8669d0c3cbe620d15d0b21119ae"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "objects_info": {
+                    "init_info": {
+                        "support_surface": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "support_surface",
+                                "category": "coffee_table",
+                                "model": "semdkc",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "74fcafca23650fedcc1b7d3c1dfd2e84"
+                            }
+                        },
+                        "cabinet_bottom_cabinet_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "cabinet_bottom_cabinet_ep1_1",
+                                "category": "bottom_cabinet",
+                                "model": "bamfsz",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "02765e90080f1dab38c45516de600b0b"
+                            }
+                        },
+                        "target_chocolate_cake_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "target_chocolate_cake_ep1_1",
+                                "category": "chocolate_cake",
+                                "model": "wpeesw",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "1ce8305108adbc0a77f86343b0310801"
+                            }
+                        },
+                        "obstacle_cruet_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "obstacle_cruet_ep1_1",
+                                "category": "cruet",
+                                "model": "njqmqv",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "7f3ed8669d0c3cbe620d15d0b21119ae"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "objects_info": {
+        "init_info": {
+            "support_surface": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "support_surface",
+                    "category": "coffee_table",
+                    "model": "semdkc",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "74fcafca23650fedcc1b7d3c1dfd2e84"
+                }
+            },
+            "cabinet_bottom_cabinet_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "cabinet_bottom_cabinet_ep1_1",
+                    "category": "bottom_cabinet",
+                    "model": "bamfsz",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "02765e90080f1dab38c45516de600b0b"
+                }
+            },
+            "target_chocolate_cake_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "target_chocolate_cake_ep1_1",
+                    "category": "chocolate_cake",
+                    "model": "wpeesw",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "1ce8305108adbc0a77f86343b0310801"
+                }
+            },
+            "obstacle_cruet_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "obstacle_cruet_ep1_1",
+                    "category": "cruet",
+                    "model": "njqmqv",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "7f3ed8669d0c3cbe620d15d0b21119ae"
+                }
+            },
+            "agent_0": {
+                "class_module": "omnigibson.robots.franka",
+                "class_name": "FrankaPanda",
+                "args": {
+                    "name": "agent_0",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self_collisions": true,
+                    "fixed_base": true,
+                    "controller_config": {
+                        "arm_0": {
+                            "name": "JointController",
+                            "motor_type": "position",
+                            "command_input_limits": null,
+                            "command_output_limits": null,
+                            "use_delta_commands": false,
+                            "use_impedances": false
+                        },
+                        "gripper_0": {
+                            "name": "MultiFingerGripperController",
+                            "command_input_limits": null,
+                            "mode": "binary"
+                        }
+                    },
+                    "action_type": "continuous",
+                    "action_normalize": false,
+                    "reset_joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "obs_modalities": [
+                        "rgb"
+                    ],
+                    "include_sensor_names": null,
+                    "exclude_sensor_names": null,
+                    "grasping_mode": "assisted",
+                    "expected_file_hash": "9ddd461281d1c875d2ae552f61751c3f"
+                }
+            }
+        }
+    }
+}

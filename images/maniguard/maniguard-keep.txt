@@ -1,0 +1,49 @@
+# ManiGuard files copied into eai-maniguard (NU-IDEAS-Lab/ManiGuard @ a1b6444b3d17b2f9e4118c406824d36af6b24187): the import
+# closure of its evaluator (maniguard/eval/benchmark.py and the modules it imports at any level, with their package
+# __init__ files), the family eval configs and the licence. Nothing else: no data generator (scripted demonstrations,
+# grasp annotations, cuRobo segments), no policy servers, no SFT code, no tools. The build fails if a listed file is
+# missing or the evaluator does not import.
+maniguard/__init__.py
+maniguard/_omnigibson_patches.py
+maniguard/data/__init__.py
+maniguard/data/bench_builder/__init__.py
+maniguard/data/bench_builder/finalize_base.py
+maniguard/data/bench_builder/perturbation.py
+maniguard/data/bench_builder/render.py
+maniguard/data/bench_builder/validate_base.py
+maniguard/data/datagen/__init__.py
+maniguard/data/datagen/data_format.py
+maniguard/data/datagen/primitives/__init__.py
+maniguard/data/datagen/primitives/scene.py
+maniguard/data/datagen/primitives/task_io.py
+maniguard/data/scene/__init__.py
+maniguard/data/scene/hf_benchmark.py
+maniguard/envs/__init__.py
+maniguard/envs/frozen_task_runtime.py
+maniguard/eval/__init__.py
+maniguard/eval/benchmark.py
+maniguard/eval/eval_config.py
+maniguard/eval/goal_checker.py
+maniguard/eval/horizon_override.py
+maniguard/eval/prompt_utils.py
+maniguard/eval/scene_discovery.py
+maniguard/object_states/__init__.py
+maniguard/object_states/dropped.py
+maniguard/object_states/upright.py
+maniguard/task_generation/__init__.py
+maniguard/task_generation/utils/__init__.py
+maniguard/task_generation/utils/video.py
+maniguard/utils/__init__.py
+maniguard/utils/bddl_predicates.py
+maniguard/utils/camera_setup.py
+maniguard/utils/goal_region.py
+maniguard/utils/ltl_utils.py
+maniguard/utils/robot_pose.py
+maniguard/utils/safety_monitor.py
+LICENSE
+pyproject.toml
+configs/eval/cabinet_pickup_joint.yaml
+configs/eval/dusty_transfer_joint.yaml
+configs/eval/jar_transport_joint.yaml
+configs/eval/lid_transport_food_joint.yaml
+configs/eval/stack_retrieve_joint.yaml

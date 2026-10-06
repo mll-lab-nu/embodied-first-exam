@@ -13,8 +13,9 @@ Sources (everything a rerun needs; a rerun reproduces the committed tasks, `git 
   environment/sim/, rcb_client.py, rcb1.py and the client's pip pins client-requirements.txt into environment/ of every
   standard task, byte-identical; the agent's and the verifier's FROM is client.env's CLIENT_IMAGE;
 - scripts/behavior/families.json: per family the goal texts (privileged: goal, success conditions, difficulty, objects,
-  note; standard: the goal in words, the closing paragraph), the scene, the oracle level with its evidence, and the cited
-  positive (trial, batch, version, results-site log, Hugging Face replay);
+  note; standard: the goal in words, the closing paragraph), the scene, the oracle level with its evidence, and either the
+  cited positive (trial, batch, version, results-site log, Hugging Face replay) or, for the supplementary families without
+  one, the 2026 challenge's official human demonstrations (`demo`: video, its duration, episodes, mean duration);
 - scripts/behavior/bddl/<family>.bddl: the task's BDDL problem (its :goal block is quoted in the privileged instruction;
   goal.py words the predicates it uses), as in the image's /behavior-src/bddl3/bddl/activity_definitions/<family>/problem0.bddl;
 - scripts/behavior/instances/<family>.json: the frozen instance (2026 challenge public_test instance 301 and its state
@@ -23,7 +24,8 @@ Sources (everything a rerun needs; a rerun reproduces the committed tasks, `git 
   is in its own solution/); families without one declare oracle = "none" and get no solution/ (PROTOCOL §2.7).
 The oracle level of every task (template twins included) comes from families.json: "full" only when a recorded oracle run
 scored 1 on a byte-identical grader, frozen instance and oracle code, with every tooling change since off the oracle and
-replay path; "partial" with the per-mode "oracle_evidence" otherwise; "none" with the cited positive.
+replay path; "partial" with the per-mode "oracle_evidence" otherwise; "none" with the cited positive, or with the official
+human demonstrations where no positive exists yet (those tasks are reported separately, PROTOCOL §7 open item 4).
 Every task's README is written here in the protocol's layout (title, key table, Task, Difficulty, Reference solution,
 Verification, Details) and every task ends with scripts/task_conventions.py's normalize(), as every generator's does.
 Agent results are not in the repository (PROTOCOL D3): the positives are cited by trial id and links. Families with
@@ -69,12 +71,20 @@ NO_ORACLE = ("No oracle: the family is reviewed by a maintainer (PROTOCOL §2.7)
 PARTIAL = ("Oracle `partial`: the reference solution scored 1 on earlier versions of this task (`task.toml` `oracle_evidence`) "
            "and was not re-run on this one; the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull request that "
            "adds it.")
-REVIEW = {"full": "", "partial": PARTIAL, "none": NO_ORACLE}
+NO_POSITIVE = ("No oracle and no verified positive example: the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull "
+               "request that adds it, on the official human demonstrations and a `nop` run per mode; until a positive example "
+               "scores 1, its results are reported separately from the tasks with a verified solution (PROTOCOL §7, open item 4).")
+REVIEW = {"full": "", "partial": PARTIAL, "none": NO_ORACLE, "none_demo": NO_POSITIVE}
 EVIDENCE = ("No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: "
             "model trial {trial} ({batch}, {where}) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 "
             "version of this task (dev/qineng {ran_at}; grader verdict and frozen instance unchanged since); agent log {log}, "
             "verifier replay {replay}; not re-run on this version (static validation only). Human review per family "
             "(protocol §2.7).")
+EVIDENCE_DEMO = ("No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays "
+                 "on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 "
+                 "BEHAVIOR Challenge publishes {episodes} teleoperated demonstrations of this activity on the R1Pro in this scene "
+                 "model ({mean_s} s on average); demonstration video ({duration_s} s): {video} (challenge task list {page}). "
+                 "Supplementary task (added 2026-10-04); human review per family (protocol §2.7).")
 VERIFY_PRIVILEGED = (
     "Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff the BDDL goal\n"
     "holds after every replay, the final-state hashes agree and the rebuilt frozen instance matches the recorded one\n"
@@ -131,6 +141,8 @@ def goal_block(bddl: str) -> str:
 
 
 def evidence(fam: str, e: dict, mode: str) -> str:
+    if "positive" not in e:                       # no positive yet: the official human demonstrations (both modes)
+        return EVIDENCE_DEMO.format(**e["demo"])
     p = e["positive"]
     where = "privileged" if mode == "privileged" else f"the privileged twin {priv(fam)} on the same frozen instance and BDDL goal"
     return EVIDENCE.format(trial=p["trial"], batch=p["batch"], where=where, ran_at=p["ran_at"], log=p["log"], replay=p["replay"])
@@ -169,6 +181,10 @@ def details(rows: list[tuple[str, str]], sections: list[tuple[str, str]] = ()) -
     return out + "".join(f"\n### {t}\n{b}\n" for t, b in sections)
 
 
+def review_key(e: dict) -> str:
+    return "none_demo" if e["oracle"] == "none" and "positive" not in e else e["oracle"]
+
+
 def readme(name: str, task: str, difficulty: str, reference: str, verification: str, level: str, more: str) -> str:
     review = f"\n\n{REVIEW[level]}" if REVIEW[level] else ""
     return (f"# {name}\n\n## Task\n{task.strip()}\n\n## Difficulty\n{difficulty.strip()}\n\n## Reference solution\n{reference.strip()}\n\n"
@@ -186,6 +202,12 @@ def readme_privileged(fam: str, e: dict) -> str:
         ref = (f"`solution/oracle_{fam}.py` (the challenge ships teleop demos, not scripts; written for this instance). It runs on "
                f"the task-level primitives of the tooling it was written with, frozen in `solution/rcb_behavior_ref.py` (the "
                f"agent's tooling has only thin ones); `solution/solve.sh` records the trajectory with that copy.")
+    elif "positive" not in e:
+        d = e["demo"]
+        ref = (f"None (`oracle = \"none\"`): no reference solution was written (the challenge ships teleop demos, not scripts), "
+               f"and no positive example has been graded by this verifier yet. Evidence that the task is solvable: the 2026 "
+               f"BEHAVIOR Challenge's {d['episodes']} human teleoperation demonstrations of this activity on the R1Pro "
+               f"({d['mean_s']} s on average; video {d['video']}); `task.toml` `oracle_evidence`.")
     else:
         p = e["positive"]
         ref = (f"None (`oracle = \"none\"`): no reference solution was written (the challenge ships teleop demos, not scripts). "
@@ -199,7 +221,7 @@ def readme_privileged(fam: str, e: dict) -> str:
             ("GPU", "an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`)"),
             ("Budget", "14400 s: every Python process pays ~3 min of Isaac Sim + scene load; ~7-11 control steps/s "
                        "(docs/benchmarks/behavior.md)")]
-    return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, e["oracle"], details(rows))
+    return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e), details(rows))
 
 
 def readme_standard(fam: str, e: dict, text: str) -> str:
@@ -212,6 +234,10 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
         ref = ("`solution/`: streams the privileged oracle's joint targets (one row per control step, `hold`) as `joint_position` "
                "chunks through the client; it uses no privileged information at run time, and after a service crash it waits for "
                "the resumed episode and continues from the control step it reached (`on_service_error`).")
+    elif "positive" not in e:
+        ref = ("None (`oracle = \"none\"`): no reference solution was written, and no positive example has been graded by this "
+               "verifier yet. Evidence that the task is solvable: the 2026 BEHAVIOR Challenge's human teleoperation "
+               "demonstrations of this activity on the R1Pro (`task.toml` `oracle_evidence`).")
     else:
         ref = (f"None (`oracle = \"none\"`): no reference solution was written. Evidence that the task is solvable: the privileged "
                f"twin's model trial `{e['positive']['trial']}` on the same frozen instance and BDDL goal (`task.toml` `oracle_evidence`).")
@@ -224,7 +250,7 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
             ("Budget", "14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md)")]
-    return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, e["oracle"], details(rows, [("Sidecar and grading", SIDECAR)]))
+    return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e), details(rows, [("Sidecar and grading", SIDECAR)]))
 
 
 def standard_description(fam: str, seed: int, text: str) -> str:

@@ -8,6 +8,9 @@ words, broad nib and pointed pen), acrylic (10) and oil (11) paintings. Each tar
 `[metadata].family = "robopaint_<family>_<target>"`. The line family (9 line drawings) is excluded from the benchmark and
 not in this repository: its tooling serves only rcb-limited/2.0.
 
+A stricter variant with process rules (the exemplar written or painted with strokes, not coloured in) is a separate benchmark on the
+same tasks: RoboPaint-strict ([robopaint-strict.md](robopaint-strict.md)).
+
 ## Tasks and generator
 - `scripts/robopaint_brush_mk_task.py` writes a task pair.
   - The code comes from the family's template pair: kaishu and xingshu `yong`, lettering `minim`, acrylic `redfuji`, oil
