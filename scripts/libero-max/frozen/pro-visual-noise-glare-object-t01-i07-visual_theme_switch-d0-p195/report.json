@@ -1,0 +1,110 @@
+{
+ "case_id": "pro-visual-noise-glare-object-t01-i07-visual_theme_switch-d0-p195",
+ "event": "visual_theme_switch",
+ "suite": "libero_object",
+ "language": "Pick the cream cheese and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "cream_cheese_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "b53c79455fa3d75a3748699a63580bdcd7fae3a9e084439c83db6e0d8eaf4b22",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "cream_cheese_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "cream_cheese_1:lower",
+  "trace": [
+   "162:pick cream_cheese_1:lower failed goal=[0.008, 0.246, 0.112] eef=[0.01, 0.245, 0.14] obj c=[0.01, 0.245, 0.136] half=[0.041, 0.021, 0.009] top=0.147 fingers=-1.57 contacts=['gripper0_finger1_collision>cream_cheese_1_g1', 'gripper0_finger1_pad_collision>cream_cheese_1_g1', 'gripper0_finger2_collision>cream_cheese_1_g1', 'gripper0_finger2_pad_collision>cream_cheese_1_g1']"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 162,
+  "event_fired": true,
+  "event_step": 10,
+  "steps_left": 118,
+  "state_sha": "a4740eedd406bd92c7d2181a79f509014633577976237f09b406fbd10f723ed5",
+  "initial_state_sha": "b53c79455fa3d75a3748699a63580bdcd7fae3a9e084439c83db6e0d8eaf4b22"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 162,
+   "event_fired": true,
+   "event_step": 10,
+   "steps_left": 118,
+   "state_sha": "a4740eedd406bd92c7d2181a79f509014633577976237f09b406fbd10f723ed5",
+   "initial_state_sha": "b53c79455fa3d75a3748699a63580bdcd7fae3a9e084439c83db6e0d8eaf4b22"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 162,
+   "event_fired": true,
+   "event_step": 10,
+   "steps_left": 118,
+   "state_sha": "a4740eedd406bd92c7d2181a79f509014633577976237f09b406fbd10f723ed5",
+   "initial_state_sha": "b53c79455fa3d75a3748699a63580bdcd7fae3a9e084439c83db6e0d8eaf4b22"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

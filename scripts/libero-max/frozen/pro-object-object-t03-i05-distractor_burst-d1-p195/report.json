@@ -68,7 +68,11 @@
     "red_basket_1_contain_region"
    ]
   ],
-  "phase": "green_bbq_sauce_1:placed"
+  "phase": "green_bbq_sauce_1:placed",
+  "trace": [
+   "142:pick green_bbq_sauce_1:retreat failed goal=[0.008, 0.254, 0.283] eef=[0.008, 0.254, 0.183] obj c=[0.01, 0.254, 0.128] half=[0.023, 0.015, 0.054] top=0.183 fingers=0.00 contacts=[]",
+   "142:green_bbq_sauce_1:placed"
+  ]
  },
  "live": {
   "success": true,

@@ -68,7 +68,11 @@
     "wooden_cabinet_1_top_side"
    ]
   ],
-  "phase": "akita_black_bowl_1:placed"
+  "phase": "akita_black_bowl_1:placed",
+  "trace": [
+   "149:pick akita_black_bowl_1:retreat failed goal=[-0.013, -0.285, 1.309] eef=[-0.013, -0.285, 1.209] obj c=[0.017, -0.26, 1.155] half=[0.054, 0.054, 0.025] top=1.184 fingers=-2.34 contacts=[]",
+   "149:akita_black_bowl_1:placed"
+  ]
  },
  "live": {
   "success": true,

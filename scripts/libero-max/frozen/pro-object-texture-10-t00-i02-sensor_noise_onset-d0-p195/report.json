@@ -1,0 +1,122 @@
+{
+ "case_id": "pro-object-texture-10-t00-i02-sensor_noise_onset-d0-p195",
+ "event": "sensor_noise_onset",
+ "suite": "libero_10",
+ "language": "put both the alphabet soup and the tomato sauce in the basket",
+ "goal": [
+  [
+   "in",
+   "alphabet_soup_1",
+   "basket_1_contain_region"
+  ],
+  [
+   "in",
+   "tomato_sauce_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "f1194c94ab74c284957b53e57dbf21ef15f925c5cd6c158270f0b96f995ed0af",
+ "robot_base": {
+  "pos": [
+   -0.51,
+   0.0,
+   0.42
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "alphabet_soup_1",
+    "basket_1_contain_region"
+   ],
+   [
+    "in",
+    "tomato_sauce_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "tomato_sauce_1:placed",
+  "trace": [
+   "246:pick alphabet_soup_1:lower failed goal=[-0.015, 0.252, 0.584] eef=[-0.009, 0.241, 0.586] obj c=[-0.003, 0.24, 0.577] half=[0.031, 0.038, 0.031] top=0.618 fingers=-3.11 contacts=['gripper0_finger1_pad_collision>alphabet_soup_1_g10', 'gripper0_finger1_pad_collision>alphabet_soup_1_g9', 'gripper0_finger2_pad_collision>alphabet_soup_1_g18', 'gripper0_finger2_pad_collision>alphabet_soup_1_g8']",
+   "372:pick tomato_sauce_1:retreat failed goal=[0.018, 0.151, 0.69] eef=[0.018, 0.151, 0.59] obj c=[0.018, 0.148, 0.565] half=[0.031, 0.038, 0.031] top=0.605 fingers=3.14 contacts=['gripper0_finger1_pad_collision>tomato_sauce_1_g9']",
+   "372:tomato_sauce_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 372,
+  "event_fired": true,
+  "event_step": 5,
+  "steps_left": 148,
+  "state_sha": "9567772eefb8c592854895ab2fe8e4f2612fc9d0db70c4d8e365d4fec5081042",
+  "initial_state_sha": "f1194c94ab74c284957b53e57dbf21ef15f925c5cd6c158270f0b96f995ed0af"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 372,
+   "event_fired": true,
+   "event_step": 5,
+   "steps_left": 148,
+   "state_sha": "9567772eefb8c592854895ab2fe8e4f2612fc9d0db70c4d8e365d4fec5081042",
+   "initial_state_sha": "f1194c94ab74c284957b53e57dbf21ef15f925c5cd6c158270f0b96f995ed0af"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 372,
+   "event_fired": true,
+   "event_step": 5,
+   "steps_left": 148,
+   "state_sha": "9567772eefb8c592854895ab2fe8e4f2612fc9d0db70c4d8e365d4fec5081042",
+   "initial_state_sha": "f1194c94ab74c284957b53e57dbf21ef15f925c5cd6c158270f0b96f995ed0af"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

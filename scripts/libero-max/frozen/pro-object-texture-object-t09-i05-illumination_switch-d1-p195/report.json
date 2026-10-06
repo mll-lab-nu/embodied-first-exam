@@ -68,7 +68,11 @@
     "basket_1_contain_region"
    ]
   ],
-  "phase": "orange_juice_1:placed"
+  "phase": "orange_juice_1:placed",
+  "trace": [
+   "140:pick orange_juice_1:retreat failed goal=[0.002, 0.268, 0.307] eef=[0.002, 0.268, 0.207] obj c=[0.002, 0.268, 0.132] half=[0.027, 0.066, 0.026] top=0.199 fingers=-1.57 contacts=[]",
+   "140:orange_juice_1:placed"
+  ]
  },
  "live": {
   "success": true,

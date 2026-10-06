@@ -68,7 +68,11 @@
     "basket_1_contain_region"
    ]
   ],
-  "phase": "ketchup_1:placed"
+  "phase": "ketchup_1:placed",
+  "trace": [
+   "146:pick ketchup_1:retreat failed goal=[-0.015, 0.265, 0.321] eef=[-0.015, 0.265, 0.221] obj c=[-0.014, 0.265, 0.11] half=[0.028, 0.073, 0.018] top=0.183 fingers=-1.57 contacts=[]",
+   "146:ketchup_1:placed"
+  ]
  },
  "live": {
   "success": true,

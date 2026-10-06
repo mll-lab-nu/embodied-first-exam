@@ -68,7 +68,11 @@
     "yellow_plate_1"
    ]
   ],
-  "phase": "black_bowl_1:placed"
+  "phase": "black_bowl_1:placed",
+  "trace": [
+   "118:pick black_bowl_1:retreat failed goal=[0.023, 0.171, 1.098] eef=[0.023, 0.171, 0.998] obj c=[0.053, 0.197, 0.937] half=[0.054, 0.054, 0.025] top=0.968 fingers=-2.48 contacts=[]",
+   "118:black_bowl_1:placed"
+  ]
  },
  "live": {
   "success": true,

@@ -68,7 +68,11 @@
     "basket_1_contain_region"
    ]
   ],
-  "phase": "salad_dressing_1:placed"
+  "phase": "salad_dressing_1:placed",
+  "trace": [
+   "124:pick salad_dressing_1:retreat failed goal=[0.004, 0.256, 0.319] eef=[0.004, 0.256, 0.219] obj c=[0.005, 0.257, 0.12] half=[0.026, 0.073, 0.018] top=0.193 fingers=-1.57 contacts=[]",
+   "124:salad_dressing_1:placed"
+  ]
  },
  "live": {
   "success": true,

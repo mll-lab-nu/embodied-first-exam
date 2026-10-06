@@ -78,7 +78,11 @@
     "basket_1_contain_region"
    ]
   ],
-  "phase": "cream_cheese_1:lower"
+  "phase": "cream_cheese_1:lower",
+  "trace": [
+   "177:alphabet_soup_1:placed",
+   "321:pick cream_cheese_1:lower failed goal=[0.006, 0.308, 0.553] eef=[0.007, 0.309, 0.579] obj c=[0.009, 0.307, 0.572] half=[0.041, 0.021, 0.009] top=0.584 fingers=1.58 contacts=['gripper0_finger1_collision>cream_cheese_1_g1', 'gripper0_finger1_pad_collision>cream_cheese_1_g1', 'gripper0_finger2_collision>cream_cheese_1_g1', 'gripper0_finger2_pad_collision>cream_cheese_1_g1']"
+  ]
  },
  "live": {
   "success": true,

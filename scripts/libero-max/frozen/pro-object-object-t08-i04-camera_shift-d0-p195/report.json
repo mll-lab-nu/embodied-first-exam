@@ -68,7 +68,10 @@
     "red_basket_1_contain_region"
    ]
   ],
-  "phase": "green_chocolate_pudding_1:lower"
+  "phase": "green_chocolate_pudding_1:lower",
+  "trace": [
+   "139:pick green_chocolate_pudding_1:lower failed goal=[-0.004, 0.263, 0.115] eef=[-0.002, 0.262, 0.139] obj c=[0.0, 0.262, 0.136] half=[0.04, 0.023, 0.014] top=0.150 fingers=-1.57 contacts=['gripper0_finger1_collision>green_chocolate_pudding_1_g1', 'gripper0_finger1_pad_collision>green_chocolate_pudding_1_g1', 'gripper0_finger2_collision>green_chocolate_pudding_1_g1', 'gripper0_finger2_pad_collision>green_chocolate_pudding_1_g1']"
+  ]
  },
  "live": {
   "success": true,

@@ -68,7 +68,10 @@
     "basket_1_contain_region"
    ]
   ],
-  "phase": "chocolate_pudding_1:lower"
+  "phase": "chocolate_pudding_1:lower",
+  "trace": [
+   "165:pick chocolate_pudding_1:lower failed goal=[0.01, 0.261, 0.115] eef=[0.012, 0.26, 0.139] obj c=[0.011, 0.26, 0.137] half=[0.04, 0.023, 0.014] top=0.152 fingers=-1.57 contacts=['gripper0_finger1_collision>chocolate_pudding_1_g1', 'gripper0_finger1_pad_collision>chocolate_pudding_1_g1', 'gripper0_finger2_collision>chocolate_pudding_1_g1', 'gripper0_finger2_pad_collision>chocolate_pudding_1_g1']"
+  ]
  },
  "live": {
   "success": true,

@@ -68,7 +68,11 @@
     "plate_1"
    ]
   ],
-  "phase": "akita_black_bowl_1:placed"
+  "phase": "akita_black_bowl_1:placed",
+  "trace": [
+   "119:pick akita_black_bowl_1:retreat failed goal=[-0.204, 0.244, 1.097] eef=[-0.204, 0.244, 0.997] obj c=[-0.21, 0.206, 0.936] half=[0.054, 0.054, 0.025] top=0.970 fingers=-1.77 contacts=[]",
+   "119:akita_black_bowl_1:placed"
+  ]
  },
  "live": {
   "success": true,

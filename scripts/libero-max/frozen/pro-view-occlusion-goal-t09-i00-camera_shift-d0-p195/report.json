@@ -68,7 +68,11 @@
     "wine_rack_1_top_region"
    ]
   ],
-  "phase": "wine_bottle_1:placed"
+  "phase": "wine_bottle_1:placed",
+  "trace": [
+   "132:pick wine_bottle_1:retreat failed goal=[-0.27, -0.18, 1.387] eef=[-0.27, -0.18, 1.287] obj c=[-0.263, -0.179, 1.228] half=[0.021, 0.022, 0.078] top=1.307 fingers=-0.00 contacts=[]",
+   "132:wine_bottle_1:placed"
+  ]
  },
  "live": {
   "success": true,

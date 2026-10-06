@@ -68,7 +68,11 @@
     "wooden_cabinet_1_top_side"
    ]
   ],
-  "phase": "wine_bottle_1:placed"
+  "phase": "wine_bottle_1:placed",
+  "trace": [
+   "153:pick wine_bottle_1:retreat failed goal=[0.012, -0.252, 1.367] eef=[0.012, -0.252, 1.267] obj c=[0.019, -0.253, 1.207] half=[0.021, 0.022, 0.078] top=1.286 fingers=-0.00 contacts=[]",
+   "153:wine_bottle_1:placed"
+  ]
  },
  "live": {
   "success": true,

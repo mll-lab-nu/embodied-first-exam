@@ -68,7 +68,11 @@
     "basket_1_contain_region"
    ]
   ],
-  "phase": "milk_1:placed"
+  "phase": "milk_1:placed",
+  "trace": [
+   "125:pick milk_1:retreat failed goal=[-0.012, 0.249, 0.305] eef=[-0.012, 0.249, 0.205] obj c=[-0.011, 0.249, 0.132] half=[0.027, 0.066, 0.026] top=0.199 fingers=-1.57 contacts=[]",
+   "125:milk_1:placed"
+  ]
  },
  "live": {
   "success": true,

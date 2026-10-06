@@ -235,10 +235,21 @@ class Session:
             "joint_vel": self.sim.data.qvel[robot._ref_joint_vel_indexes].copy(),
             "objects": objs,
             "fixtures": fixtures,
+            "articulations": self.articulations(),
             "goal": self.goal(),
             "instruction": self.instruction,
             **self.report(),
         }
+
+    def articulations(self) -> dict:
+        """Position of every slide (m) and hinge (rad) joint of the scene that is not the robot's: drawers, doors, knobs."""
+        m = self.sim.model
+        out = {}
+        for j in range(m.njnt):
+            name = m.joint_id2name(j) or ""
+            if m.jnt_type[j] in (2, 3) and not name.startswith(("robot0_", "gripper0_")):
+                out[name] = float(self.sim.data.qpos[m.jnt_qposadr[j]])
+        return out
 
     def goal(self) -> list:
         return [list(g) for g in self.env.parsed_problem["goal_state"]]

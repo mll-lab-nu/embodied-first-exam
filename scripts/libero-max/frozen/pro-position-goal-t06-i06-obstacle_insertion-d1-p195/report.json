@@ -68,7 +68,10 @@
     "akita_black_bowl_1"
    ]
   ],
-  "phase": "cream_cheese_1:lower"
+  "phase": "cream_cheese_1:lower",
+  "trace": [
+   "252:pick cream_cheese_1:lower failed goal=[-0.203, -0.055, 0.98] eef=[-0.201, -0.053, 1.001] obj c=[-0.198, -0.054, 0.998] half=[0.041, 0.021, 0.009] top=1.009 fingers=-1.59 contacts=['gripper0_finger1_collision>cream_cheese_1_g1', 'gripper0_finger1_pad_collision>cream_cheese_1_g1', 'gripper0_finger2_collision>cream_cheese_1_g1', 'gripper0_finger2_pad_collision>cream_cheese_1_g1', 'gripper0_hand_collision>wine_rack_1_g5']"
+  ]
  },
  "live": {
   "success": true,

@@ -68,7 +68,10 @@
     "flat_stove_1_cook_region"
    ]
   ],
-  "phase": "akita_black_bowl_1:lower"
+  "phase": "akita_black_bowl_1:lower",
+  "trace": [
+   "119:pick akita_black_bowl_1:lower failed goal=[-0.277, 0.165, 0.976] eef=[-0.28, 0.164, 0.984] obj c=[-0.26, 0.203, 0.96] half=[0.054, 0.054, 0.025] top=0.998 fingers=-1.95 contacts=['gripper0_finger1_pad_collision>akita_black_bowl_1_g20', 'gripper0_finger1_pad_collision>akita_black_bowl_1_g21', 'gripper0_finger2_collision>akita_black_bowl_1_g20', 'gripper0_finger2_pad_collision>akita_black_bowl_1_g20', 'gripper0_finger2_pad_collision>akita_black_bowl_1_g21']"
+  ]
  },
  "live": {
   "success": true,

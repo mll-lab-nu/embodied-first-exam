@@ -78,7 +78,12 @@
     "basket_1_contain_region"
    ]
   ],
-  "phase": "tomato_sauce_1:placed"
+  "phase": "tomato_sauce_1:placed",
+  "trace": [
+   "172:alphabet_soup_1:placed",
+   "300:pick tomato_sauce_1:retreat failed goal=[0.048, 0.252, 0.689] eef=[0.048, 0.252, 0.589] obj c=[0.048, 0.252, 0.559] half=[0.031, 0.038, 0.031] top=0.597 fingers=3.14 contacts=[]",
+   "300:tomato_sauce_1:placed"
+  ]
  },
  "live": {
   "success": true,

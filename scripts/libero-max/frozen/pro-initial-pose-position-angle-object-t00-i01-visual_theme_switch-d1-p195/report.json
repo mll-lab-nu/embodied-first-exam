@@ -68,7 +68,11 @@
     "basket_1_contain_region"
    ]
   ],
-  "phase": "alphabet_soup_1:placed"
+  "phase": "alphabet_soup_1:placed",
+  "trace": [
+   "163:pick alphabet_soup_1:retreat failed goal=[0.016, 0.257, 0.24] eef=[0.016, 0.257, 0.14] obj c=[0.015, 0.258, 0.116] half=[0.031, 0.038, 0.031] top=0.148 fingers=-2.36 contacts=[]",
+   "163:alphabet_soup_1:placed"
+  ]
  },
  "live": {
   "success": true,

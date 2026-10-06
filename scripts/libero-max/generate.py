@@ -172,12 +172,36 @@ def event_text(change_type: str, ch: dict) -> tuple[str, str]:
     raise ValueError(change_type)
 
 
+ARTICULATED = {  # LIBERO's thresholds (libero/envs/objects/articulated_objects.py), per goal and articulated object
+    ("open", "cabinet"): "its drawer's slide joint is out by more than 0.14 m (it travels 0.16 m)",
+    ("close", "cabinet"): "its drawer's slide joint is all the way in, past its closed position (q > 0); a drawer left "
+    "out by a few millimetres is not closed",
+    ("open", "microwave"): "its door's hinge is open by more than 1.3 rad (74 degrees)",
+    ("close", "microwave"): "its door's hinge is within 0.005 rad of shut",
+    ("turnon", "stove"): "its knob is turned at least 0.5 rad (29 degrees) counter-clockwise, seen from above, from off",
+    ("turnoff", "stove"): "its knob is turned back fully, past its off position (q < 0)",
+}
+STATE_WORD = {"open": "open", "close": "closed", "turnon": "on", "turnoff": "off"}
+PRED_NAME = {"open": "Open", "close": "Close", "turnon": "TurnOn", "turnoff": "TurnOff"}
+
+
+def articulated(pred: str, a: str) -> str:
+    kind = next((k for p, k in ARTICULATED if p == pred and k in a), None)
+    if kind is None:
+        raise ValueError(f"no wording for predicate {pred} of {a}")
+    return ARTICULATED[(pred, kind)]
+
+
 def goal_text(goal: list) -> str:
     """LIBERO's success check, predicate by predicate, with its real thresholds (libero/envs/predicates and
-    object_states: On, In, in_box, under)."""
+    object_states: On, In, in_box, under; Open, Close, TurnOn, TurnOff)."""
     lines = []
     for g in goal:
-        pred, a, b = str(g[0]).lower(), g[1], g[2]
+        pred, a = str(g[0]).lower(), g[1]
+        if pred in STATE_WORD:
+            lines.append(f"- `{a}` is {STATE_WORD[pred]} (LIBERO's {PRED_NAME[pred]}: {articulated(pred, a)})")
+            continue
+        b = g[2]
         if pred == "on" and b.endswith("_region"):
             lines.append(
                 f"- `{a}` is on `{b}` (LIBERO's On for a region: `{a}`'s origin lies inside the region's footprint and "
@@ -233,14 +257,22 @@ def entity_words(name: str) -> str:
 
 
 def names_for(cases: list) -> dict:
-    """case_id -> task base name `libero-max-<suite>-<goal>-<event>-iNN`, the goal as `<objects>-<on|in>-<target>`
-    from the BDDL goal (NN counts repeats of the same base)."""
+    """case_id -> task base name `libero-max-<suite>-<goal>-<event>-iNN`, the goal from the BDDL goal: placements as
+    `<objects>-<on|in>-<target>`, articulated goals as `<object>-<open|closed|on|off>` (just the state when the object is
+    the placement's target), joined by `-and-` (NN counts repeats of the same base)."""
     out, seen = {}, {}
     for c in cases:
         rep = json.loads((FROZEN / c["case_id"] / "report.json").read_text())
         goal = rep["goal"]
-        objs = "-and-".join(entity_words(g[1]) for g in goal)
-        goal_words = f"{objs}-{str(goal[0][0]).lower()}-{entity_words(goal[0][2])}"
+        place = [g for g in goal if str(g[0]).lower() not in STATE_WORD]
+        goal_words, target = "", None
+        if place:
+            objs = "-and-".join(entity_words(g[1]) for g in place)
+            target = entity_words(place[0][2])
+            goal_words = f"{objs}-{str(place[0][0]).lower()}-{target}"
+        for g in (g for g in goal if str(g[0]).lower() in STATE_WORD):
+            state, obj = STATE_WORD[str(g[0]).lower()], entity_words(g[1])
+            goal_words += f"-{state}" if obj == target else f"{'-and-' if goal_words else ''}{obj}-{state}"
         event = c["scenario"]["change_type"].replace("_", "-")
         base = f"libero-max-{SUITE_SHORT[c['task_suite_name']]}-{goal_words}-{event}"
         n = seen.get(base, 0)

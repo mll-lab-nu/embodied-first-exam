@@ -2,7 +2,7 @@
 
 Robot manipulation with a change mid-task: [LIBERO-MAX](https://github.com/liberomax/LIBERO-MAX) cases built on
 [LIBERO-PRO](https://github.com/Zxy-MLlab/LIBERO-PRO) variants of [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
-tasks, each with one online event, in both modes: 48 cases, 96 tasks.
+tasks, each with one online event, in both modes: 64 cases, 128 tasks.
 
 | | |
 |---|---|
@@ -18,11 +18,16 @@ tasks, each with one online event, in both modes: 48 cases, 96 tasks.
   not a deterministic policy, so only the Dynamic case is a task here (no paired Base/Dynamic statistic; a Base twin can
   be added as a separate instance). Only LIBERO-PRO-derived cases (2,400 of 8,000) are used: LIBERO-plus has no licence
   file and ships third-party (TurboSquid) assets. The choice is deterministic and looks at no policy outcome
-  (`select_cases.py`): per event, cases in SHA-256-of-`case_id` order, duplicates (same scene and change) dropped, the
-  first 20 frozen; then the first verified case of each suite, then the next verified ones, up to 6 per event.
-  Result: 160 candidates, 80 verified, 48 chosen (6 per event; object 21, spatial 13, goal 11, libero_10 3).
-  The 112 not chosen are listed in `cases.json` with their reason: 48 whose scripted reference failed, 32 without one
-  (Open / Close / TurnOn goals, plates and mugs wider than the gripper), 32 verified but not needed.
+  (`select_cases.py`): per event and suite, cases in SHA-256-of-`case_id` order, duplicates (same scene and change)
+  dropped, the first 10 frozen (20 for libero_10, whose long tasks the scripted reference solves less often); then per
+  event the suites in turn, each time that suite's next verified case (goals that move an articulated part first), up
+  to 8 per event. Result: 370 candidates, 179 verified, 64 chosen (8 per event; object 19, spatial 16, goal 15,
+  libero_10 14: LIBERO-MAX has no obstacle_insertion case for libero_object and distractor_burst only for libero_object
+  and libero_10). Goals: 57 pick-and-place (On / In), 5 stove knobs (4 TurnOn, 1 TurnOff), 2 a bowl into the bottom
+  drawer that is then closed (In + Close). The 306 not chosen are listed in `cases.json` with their reason: 144 whose
+  scripted reference failed (mostly crowded grasps, a white cabinet's bottom drawer the arm cannot push fully shut,
+  opening the middle drawer: the hand stops above its handle), 47 without one (moka pots, plates, a frying pan and a large soup can
+  wider than the gripper; placing into the microwave, which needs a sideways approach), 115 verified but not needed.
 - **Instance.** `instance.json` holds the LIBERO-MAX case (LIBERO-PRO variant, initial-state index, policy seed, the
   frozen event with its trigger) and the hash of the simulator state the agent starts from (after LIBERO's 10 warm-up
   no-op steps). The scene is rebuilt from the pinned upstream data in the image by LIBERO-MAX's own code, and the
@@ -40,8 +45,9 @@ tasks, each with one online event, in both modes: 48 cases, 96 tasks.
   step (1/20 s): the OSC_POSE controller moves the hand's target by up to 0.05 m and turns it by up to 0.5 rad
   (axis-angle, world frame) per step; grip +1 closes, -1 opens. In standard mode the type is `ee_delta` (action types
   are benchmark-defined, PROTOCOL §4.4 since #31).
-- **Success and episode end.** LIBERO's success check (the BDDL goal: LIBERO's On / In predicates with their real
-  thresholds, stated per task in both instructions). LIBERO ends the episode the moment it holds (`done`), so the graded
+- **Success and episode end.** LIBERO's success check (the BDDL goal: LIBERO's On / In predicates, and Close /
+  TurnOn / TurnOff on a drawer's slide or the stove knob's hinge, with their real thresholds from LIBERO's articulated
+  objects, stated per task in both instructions). LIBERO ends the episode the moment it holds (`done`), so the graded
   state is the trajectory's final state: a privileged trajectory with actions after that is invalid, and the standard
   service ends the episode with `reason = "success"` there.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ the suite's limit (220 / 280 / 300 / 520 control steps, LIBERO's
@@ -70,7 +76,7 @@ third-party TurboSquid assets) is a separate project and stays out of scope.
 ```bash
 docker build -t ghcr.io/mll-lab-nu/eai-libero-max:$(cat images/libero-max/VERSION) -f images/libero-max/Dockerfile .
 python3 scripts/libero-max/select_cases.py candidates <LIBERO-MAX>/benchmark/max8000/libero_max_8000.json candidates.json
-bash scripts/libero-max/freeze.sh candidates.json frozen-candidates 12      # ~2 min per case, one container each
+bash scripts/libero-max/freeze.sh candidates.json frozen-candidates 8       # ~2 min per case, one container each
 python3 scripts/libero-max/select_cases.py pick candidates.json frozen-candidates scripts/libero-max/cases.json
 bash scripts/libero-max/freeze.sh                                          # the chosen cases -> scripts/libero-max/frozen/
 python3 scripts/libero-max/generate.py && python3 scripts/libero-max/generate.py --check
@@ -80,12 +86,12 @@ cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
 ## Evidence
 | check | result |
 |---|---|
-| freeze (`freeze.sh`, eai-libero-max:0.1.0), 48 cases | not solved at the start 48/48; reference succeeds at its last step 48/48 (116–321 steps; the event fires at step 5–36); two fresh-process replays = live hash 48/48 |
-| same cases frozen in the spike image (same pins, sources mounted) | identical initial and final hashes 48/48 |
-| `harbor run -a oracle`, privileged | 48/48 reward 1 (deterministic, event fired, no errors) |
-| `harbor run -a oracle`, standard (one case per event) | 8/8 reward 1 (live = replay, deterministic) |
+| freeze (`freeze.sh`, eai-libero-max:0.1.0), 64 cases | not solved at the start 64/64; reference succeeds at its last step 64/64 (66–409 steps; the event fires 64/64, at step 5–101); two fresh-process replays = live hash and event step 64/64 |
+| same cases frozen twice (the candidate run and the final run, separate containers) | identical initial and final hashes 64/64 |
+| `harbor run -a oracle`, privileged | 64/64 reward 1 (deterministic, event fired, no errors) |
+| `harbor run -a oracle`, standard (one case per event; 5 of the 8 turn a stove knob or close a drawer) | 8/8 reward 1 (live = replay, deterministic) |
 | `harbor run -a nop` | 4/4 privileged and 4/4 standard reward 0 |
-| scripted cheat attempts (patched tooling and success check, forged reward files, `sitecustomize.py`, tampered instance copy; hidden endpoints, wrong action type and `dt`, NaN rows, forged `final.json`) | privileged 0, standard 0; hidden endpoints 404, malformed submits 400 |
+| scripted cheat attempts (patched tooling and success check, forged reward files, `sitecustomize.py`, tampered instance copy; hidden endpoints, wrong action type and `dt`, NaN rows, forged `final.json`), on the first 48-case revision (graders and service unchanged since; the tool only gained `state()["articulations"]`) | privileged 0, standard 0; hidden endpoints 404, malformed submits 400 |
 | `generate.py --check`, `task_conventions.py --check`, `ci_checks/run_all.sh` | clean; no LIBERO-MAX warnings |
 
 Measured on the reference machine (AMD Ryzen 9 7950X): about 20 ms of physics per control step, about 70 ms per

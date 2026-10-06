@@ -24,6 +24,7 @@ The episode ends the moment the check holds, so the trajectory must end there: a
 import numpy as np, lmx_tool
 s = lmx_tool.Session("/app/instance.json")  # builds the frozen scene; ONE Session per Python process
 st = s.state()        # eef {pos, quat_wxyz}, gripper_qpos, joint_pos/vel, objects / fixtures {name: pos, quat_wxyz},
+                      #   articulations {joint: position} (drawer slides in m, door and knob hinges in rad),
                       #   goal, instruction, success, done, event_fired, event_step, control_steps, steps_left
 r = s.step([dx, dy, dz, drx, dry, drz, grip])   # one control step -> {"success", "done", "event_fired", ...}
 s.check()             # LIBERO's success check on the current state
