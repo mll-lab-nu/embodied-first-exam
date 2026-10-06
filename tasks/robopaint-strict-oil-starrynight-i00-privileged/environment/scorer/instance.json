@@ -1,0 +1,345 @@
+{
+ "task": "robopaint_oil_starrynight",
+ "family": "robopaint_oil_starrynight",
+ "medium": "mypaint",
+ "sheets": [
+  {
+   "name": "main",
+   "center_xy": [
+    -0.1,
+    0.0
+   ],
+   "rows": 1024,
+   "cols": 1024,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": true
+  },
+  {
+   "name": "practice",
+   "center_xy": [
+    -0.1,
+    -0.1856
+   ],
+   "rows": 1024,
+   "cols": 448,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": false
+  }
+ ],
+ "robot_qpos": [
+  0.0,
+  0.39269908169872414,
+  0.0,
+  -1.9634954084936207,
+  0.0,
+  2.356194490192345,
+  0.7853981633974483
+ ],
+ "robot_base": [
+  -0.615,
+  0.0,
+  0.0
+ ],
+ "control_hz": 20,
+ "sim_hz": 100,
+ "max_steps": 72000,
+ "brush": {
+  "model": "mypaint",
+  "preset": "tanda/oil-03-paint",
+  "radius_log_offset": 0.6,
+  "full_press_m": 0.015,
+  "bristle_m": 0.015,
+  "bristle_r": 0.004,
+  "libmypaint": "1.6.1 + calloc patch",
+  "mypaint_brushes": "2.0.2",
+  "preset_json": "{\n    \"comment\": \"MyPaint brush file\", \n    \"group\": \"\", \n    \"parent_brush_name\": \"tanda/oil-03-paint\", \n    \"settings\": {\n        \"anti_aliasing\": {\n            \"base_value\": 1.0, \n            \"inputs\": {}\n        }, \n        \"change_color_h\": {\n            \"base_value\": 0.0, \n            \"inputs\": {\n                \"random\": [\n                    [\n                        0.0, \n                        -0.01\n                    ], \n                    [\n                        1.0, \n                        0.01\n                    ]\n                ]\n            }\n        }, \n        \"change_color_hsl_s\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"change_color_hsv_s\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"change_color_l\": {\n            \"base_value\": 0.0, \n            \"inputs\": {\n                \"stroke\": [\n                    [\n                        0.0, \n                        0.0\n                    ], \n                    [\n                        0.92284, \n                        0.01\n                    ], \n                    [\n                        1.0, \n                        0.0\n                    ]\n                ]\n            }\n        }, \n        \"change_color_v\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"color_h\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"color_s\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"color_v\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"colorize\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"custom_input\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"custom_input_slowness\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"dabs_per_actual_radius\": {\n            \"base_value\": 6.0, \n            \"inputs\": {}\n        }, \n        \"dabs_per_basic_radius\": {\n            \"base_value\": 6.0, \n            \"inputs\": {}\n        }, \n        \"dabs_per_second\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"direction_filter\": {\n            \"base_value\": 2.0, \n            \"inputs\": {}\n        }, \n        \"elliptical_dab_angle\": {\n            \"base_value\": 0.0, \n            \"inputs\": {\n                \"direction\": [\n                    [\n                        0.0, \n                        0.0\n                    ], \n                    [\n                        180.0, \n                        180.0\n                    ]\n                ], \n                \"random\": [\n                    [\n                        0.0, \n                        -0.5\n                    ], \n                    [\n                        1.0, \n                        0.5\n                    ]\n                ]\n            }\n        }, \n        \"elliptical_dab_ratio\": {\n            \"base_value\": 7.1, \n            \"inputs\": {\n                \"stroke\": [\n                    [\n                        0.0, \n                        -0.5\n                    ], \n                    [\n                        1.0, \n                        0.5\n                    ]\n                ]\n            }\n        }, \n        \"eraser\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"hardness\": {\n            \"base_value\": 0.8, \n            \"inputs\": {}\n        }, \n        \"lock_alpha\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"offset_by_random\": {\n            \"base_value\": 0.4, \n            \"inputs\": {}\n        }, \n        \"offset_by_speed\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"offset_by_speed_slowness\": {\n            \"base_value\": 1.0, \n            \"inputs\": {}\n        }, \n        \"opaque\": {\n            \"base_value\": 1.0, \n            \"inputs\": {\n                \"pressure\": [\n                    [\n                        0.0, \n                        0.0\n                    ], \n                    [\n                        0.166667, \n                        0.75\n                    ], \n                    [\n                        1.0, \n                        1.0\n                    ]\n                ]\n            }\n        }, \n        \"opaque_linearize\": {\n            \"base_value\": 0.9, \n            \"inputs\": {}\n        }, \n        \"opaque_multiply\": {\n            \"base_value\": 0.0, \n            \"inputs\": {\n                \"pressure\": [\n                    [\n                        0.0, \n                        0.0\n                    ], \n                    [\n                        0.067901, \n                        0.78125\n                    ], \n                    [\n                        0.185185, \n                        1.0\n                    ], \n                    [\n                        1.0, \n                        1.0\n                    ]\n                ]\n            }\n        }, \n        \"radius_by_random\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"radius_logarithmic\": {\n            \"base_value\": 2.3, \n            \"inputs\": {\n                \"pressure\": [\n                    [\n                        0.0, \n                        -2.3\n                    ], \n                    [\n                        0.401235, \n                        0.0\n                    ], \n                    [\n                        1.0, \n                        0.0\n                    ]\n                ]\n            }\n        }, \n        \"restore_color\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"slow_tracking\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"slow_tracking_per_dab\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"smudge\": {\n            \"base_value\": 0.9, \n            \"inputs\": {\n                \"pressure\": [\n                    [\n                        0.0, \n                        -0.0\n                    ], \n                    [\n                        1.0, \n                        -1.0\n                    ]\n                ], \n                \"stroke\": [\n                    [\n                        0.0, \n                        -1.0\n                    ], \n                    [\n                        1.0, \n                        1.0\n                    ]\n                ]\n            }\n        }, \n        \"smudge_length\": {\n            \"base_value\": 0.5, \n            \"inputs\": {\n                \"stroke\": [\n                    [\n                        0.0, \n                        1.0\n                    ], \n                    [\n                        1.0, \n                        -1.0\n                    ]\n                ]\n            }\n        }, \n        \"smudge_radius_log\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"speed1_gamma\": {\n            \"base_value\": 4.0, \n            \"inputs\": {}\n        }, \n        \"speed1_slowness\": {\n            \"base_value\": 0.04, \n            \"inputs\": {}\n        }, \n        \"speed2_gamma\": {\n            \"base_value\": 4.0, \n            \"inputs\": {}\n        }, \n        \"speed2_slowness\": {\n            \"base_value\": 0.8, \n            \"inputs\": {}\n        }, \n        \"stroke_duration_logarithmic\": {\n            \"base_value\": 6.0, \n            \"inputs\": {}\n        }, \n        \"stroke_holdtime\": {\n            \"base_value\": 10.0, \n            \"inputs\": {}\n        }, \n        \"stroke_threshold\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"tracking_noise\": {\n            \"base_value\": 0.2, \n            \"inputs\": {}\n        }\n    }, \n    \"version\": 3\n}"
+ },
+ "wells": {
+  "plate_center_xy": [
+   -0.1,
+   0.16
+  ],
+  "plate_half_size": [
+   0.075,
+   0.035,
+   0.003
+  ],
+  "plate_top_z": 0.026,
+  "surface_z": 0.028,
+  "wells": [
+   {
+    "name": "paint01",
+    "hex": "#b5a43a",
+    "rgb": [
+     0.709804,
+     0.643137,
+     0.227451
+    ],
+    "center_xy": [
+     -0.155,
+     0.138
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint02",
+    "hex": "#a0a773",
+    "rgb": [
+     0.627451,
+     0.654902,
+     0.45098
+    ],
+    "center_xy": [
+     -0.133,
+     0.138
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint03",
+    "hex": "#8f9f91",
+    "rgb": [
+     0.560784,
+     0.623529,
+     0.568627
+    ],
+    "center_xy": [
+     -0.111,
+     0.138
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint04",
+    "hex": "#71878d",
+    "rgb": [
+     0.443137,
+     0.529412,
+     0.552941
+    ],
+    "center_xy": [
+     -0.089,
+     0.138
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint05",
+    "hex": "#69819d",
+    "rgb": [
+     0.411765,
+     0.505882,
+     0.615686
+    ],
+    "center_xy": [
+     -0.067,
+     0.138
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint06",
+    "hex": "#526f98",
+    "rgb": [
+     0.321569,
+     0.435294,
+     0.596078
+    ],
+    "center_xy": [
+     -0.045,
+     0.138
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint07",
+    "hex": "#566e87",
+    "rgb": [
+     0.337255,
+     0.431373,
+     0.529412
+    ],
+    "center_xy": [
+     -0.155,
+     0.16
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint08",
+    "hex": "#425c90",
+    "rgb": [
+     0.258824,
+     0.360784,
+     0.564706
+    ],
+    "center_xy": [
+     -0.133,
+     0.16
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint09",
+    "hex": "#3f5579",
+    "rgb": [
+     0.247059,
+     0.333333,
+     0.47451
+    ],
+    "center_xy": [
+     -0.111,
+     0.16
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint10",
+    "hex": "#3f5061",
+    "rgb": [
+     0.247059,
+     0.313725,
+     0.380392
+    ],
+    "center_xy": [
+     -0.089,
+     0.16
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint11",
+    "hex": "#314283",
+    "rgb": [
+     0.192157,
+     0.258824,
+     0.513725
+    ],
+    "center_xy": [
+     -0.067,
+     0.16
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint12",
+    "hex": "#2f3f6e",
+    "rgb": [
+     0.184314,
+     0.247059,
+     0.431373
+    ],
+    "center_xy": [
+     -0.045,
+     0.16
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint13",
+    "hex": "#3c423f",
+    "rgb": [
+     0.235294,
+     0.258824,
+     0.247059
+    ],
+    "center_xy": [
+     -0.133,
+     0.182
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint14",
+    "hex": "#293450",
+    "rgb": [
+     0.160784,
+     0.203922,
+     0.313725
+    ],
+    "center_xy": [
+     -0.111,
+     0.182
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint15",
+    "hex": "#282f39",
+    "rgb": [
+     0.156863,
+     0.184314,
+     0.223529
+    ],
+    "center_xy": [
+     -0.089,
+     0.182
+    ],
+    "radius_m": 0.009
+   },
+   {
+    "name": "paint16",
+    "hex": "#202320",
+    "rgb": [
+     0.12549,
+     0.137255,
+     0.12549
+    ],
+    "center_xy": [
+     -0.067,
+     0.182
+    ],
+    "radius_m": 0.009
+   }
+  ],
+  "rule": "a tip inside a well's circle and below the paint surface loads that paint on a fresh brush (the previous paint is gone: no mixing on the palette, no depletion); the brush starts dry"
+ },
+ "target": {
+  "kind": "painting",
+  "image": "target.png",
+  "success": {
+   "de_mean": 8.4,
+   "de_p90": 15.5,
+   "ssim_L": 0.56,
+   "edge_corr": 0.28,
+   "paint_iou": 0.96,
+   "blur_mm": 1.0,
+   "register_mm": 5.0,
+   "score_inset_mm": 8.0,
+   "max_strokes": 683,
+   "max_path_mm": 39600.0,
+   "max_scribble": 2.5,
+   "max_scribble_share": 0.1,
+   "scribble_min_mm": 10.0
+  },
+  "truth_sha": "f3ff89363ab04c4a"
+ },
+ "truth": {
+  "name": "starrynight",
+  "alpha": "truth_alpha.npz",
+  "n_strokes": 455,
+  "source": "the reference picture: File:Van Gogh - Starry Night - Google Art Project.jpg (public domain), cropped and downscaled",
+  "license": "Public domain",
+  "reference": {
+   "title": "File:Van Gogh - Starry Night - Google Art Project.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+   "artist": "Vincent van Gogh",
+   "license": "Public domain",
+   "date": "1889date QS:P571,+1889-00-00T00:00:00Z/9",
+   "objname": "The Starry Nighttitle QS:P1476,en:\"The Starry Night\"label QS:Len,\"The Starry Night\"label QS:Les,\"La noche estrellada\"label QS:Lmk,\"Ѕвездена ноќ\"label QS:Lfr,\"La Nuit étoilée\"label QS:Lar,\"ليلة النُجُو"
+  },
+  "area_mm2": 51612.8
+ },
+ "instance_sha": "a9cb368feab13d16",
+ "versions": {
+  "mani_skill": "3.0.1",
+  "sapien": "3.0.3",
+  "torch": "2.3.1+cpu",
+  "numpy": "1.24.4",
+  "scipy": "1.15.3",
+  "matplotlib": "3.10.5",
+  "svgpathtools": "?"
+ }
+}
