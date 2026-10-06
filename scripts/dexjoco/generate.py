@@ -241,14 +241,14 @@ def priv_readme(fam: str, F: dict) -> str:
     return f"""# dexjoco-{dash(fam)}-i00-privileged
 
 ## Task
-DexJoCo `{fam}` with {robot_words(fam)}: {f["goal"]}
+DexJoCo `{fam}` ({robot_words(fam)}): {f["goal"]}
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 
 ## Difficulty
 First-pass rating: {f["difficulty"]}. Dexterous manipulation with {"two 16-DoF hands on two arms (46 action values per control step)" if fam.startswith("bimanual_") else "a 16-DoF hand on a 7-DoF arm (23 action values per control step)"};
 the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-human teleoperator's demonstration took {F["oracle_rows"]} control steps ({F["oracle_rows"] / 50:.1f} s at 50 Hz).
+reference (the human teleoperator's demonstration) takes {F["oracle_rows"]} control steps ({F["oracle_rows"] / 50:.1f} s at 50 Hz).
 
 ## Reference solution
 `solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's

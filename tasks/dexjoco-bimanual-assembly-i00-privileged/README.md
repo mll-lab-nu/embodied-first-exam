@@ -12,14 +12,14 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` |
 
 ## Task
-DexJoCo `bimanual_assembly` with two Franka Panda arms, each with a 16-DoF Allegro hand: Hold the tray with one hand and insert the round peg into its socket with the other. Success: the peg touches the socket's bottom for 30 consecutive control steps.
+DexJoCo `bimanual_assembly` (two Franka Panda arms, each with a 16-DoF Allegro hand): Hold the tray with one hand and insert the round peg into its socket with the other. Success: the peg touches the socket's bottom for 30 consecutive control steps.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 
 ## Difficulty
 First-pass rating: hard. Dexterous manipulation with two 16-DoF hands on two arms (46 action values per control step);
 the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-human teleoperator's demonstration took 586 control steps (11.7 s at 50 Hz).
+reference (the human teleoperator's demonstration) takes 586 control steps (11.7 s at 50 Hz).
 
 ## Reference solution
 `solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's

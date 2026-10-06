@@ -12,14 +12,14 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` |
 
 ## Task
-DexJoCo `hammer_nail` with a Franka Panda arm with a 16-DoF Allegro hand: Pick up the hammer and drive the nail into the wooden block by striking its head. A strike counts only if the hammer face was moving down faster than 0.02 m/s just before it touched the nail; each counted strike drives the nail 8 mm x min(3, speed / 0.02) deeper (at most 7.26 cm). Success: the nail is at least 4 cm deep.
+DexJoCo `hammer_nail` (a Franka Panda arm with a 16-DoF Allegro hand): Pick up the hammer and drive the nail into the wooden block by striking its head. A strike counts only if the hammer face was moving down faster than 0.02 m/s just before it touched the nail; each counted strike drives the nail 8 mm x min(3, speed / 0.02) deeper (at most 7.26 cm). Success: the nail is at least 4 cm deep.
 Privileged mode: the agent works in the simulator's container with live object poses, unlimited resets and thin motion
 primitives, and hands in one trajectory replayed open-loop from the frozen instance.
 
 ## Difficulty
 First-pass rating: hard. Dexterous manipulation with a 16-DoF hand on a 7-DoF arm (23 action values per control step);
 the primitives only move tcp and hand-joint targets, so grasping, pressing and every other skill is the agent's. The
-human teleoperator's demonstration took 202 control steps (4.0 s at 50 Hz).
+reference (the human teleoperator's demonstration) takes 202 control steps (4.0 s at 50 Hz).
 
 ## Reference solution
 `solution/oracle_trajectory.npz` = the human demonstration's own actions, rounded to float32 (the standard client's
