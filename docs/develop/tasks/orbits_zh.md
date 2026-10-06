@@ -1,6 +1,91 @@
 # 第 13 项：Orbits 阶梯解绳
 
+## 2026-10-05：初态检查修正与低速摩擦参数
+
+“初态连续 2 s 低于 1 mm/s”是此前静置实验额外设置的诊断条件，不是统一 rope grading
+规则，也不是 Orbits 正式完成窗口。根据用户允许放宽非通用标准的要求，取消该条件作为
+场景交付前置要求；继续检查完整运行、精确 reset、连接和体积有效、初态未完成且无失败、
+拓扑保持、有限状态，以及 2 s 观察期内节点位移不超过 5 mm。末尾 0.5 s 的速度单独报告，
+不会把仍在运动的初态标为“静稳”。这里的 2 s 是观察时长，不是连续低速时长。
+
+当前代码中的实际评分规则如下；冻结实例以其自己的配置为准。
+
+| 任务 | 低速检查对象及上限 | 连续完成窗口 |
+| --- | --- | --- |
+| Orbits | 全绳节点及木柄线速度 ≤ 1 mm/s；木柄角速度 ≤ 0.02 rad/s | 0.5 s |
+| Knot Untying | 全绳节点 ≤ 1 mm/s；grading 额外 hold 阶段另有 0.25 mm/s 容差 | 0.5 s |
+| Rope Threading | Task 默认 1 mm/s；当前 `merged-v16` 发布配置覆盖为 10 mm/s，旧冻结包可能仍为 1 mm/s | 0.5 s |
+| Slotted Post Ring | 只检查取下的目标环 ≤ 1 mm/s、0.02 rad/s；绳属于剩余器具，无绳速门槛 | 0.5 s |
+
+依据：[共享放置测量](../../../topogym/evaluation/task_metrics.py)、
+[Task 时间窗口](../../../topogym/tasks/base.py)、
+[Knot 判据](../../../topogym/tasks/knot_untying/common.py)、
+[发布配置](../../../topogym/tasks/release_profile.py)、
+[Slotted Post Ring 对象划分](../../../topogym/tasks/slotted_post_ring/common.py)、
+[grading helper](../../../harbor_templates/topogym/common/rcb_topogym.py)。
+Helper 的 `GRADING_HOLD_S = 2.0` 是轨迹回放后最多补充的保持时间，不是要求连续成功 2 s；
+Orbits 的 `REPLAY_TOLERANCES` 为空。
+
+发现的物理参数差异：Genesis/libuipc 默认 `contact_eps_velocity = 0.01 m/s`，
+Knot 已显式采用 `0.001 m/s` 来处理释放后绳子的低速蠕动。两个新 Orbits 变体现在也显式
+采用 `0.001 m/s`，修订为 `below_easy_v2_fem_soft50_friction1mm_v1`。
+该值是摩擦正则化参数；正式评分速度和 0.5 s 窗口保持原值。原三档和 reference85
+继续使用原物理声明。模型身份及物理选项发生变化，v1 原生存档不能当作 v2 初态重新贴标签。
+
+这是依据现有 Knot 实现作出的针对性修正。首次资源检查只有 2641 MiB 可用显存，
+低于既有 12288 MiB 启动门槛，因此立即结束检查；
+[首次运行状态](../../../runs/test_results/orbits_friction_fix_20261005/runtime/run.json)保留当时证据。
+用户随后指出显存已空闲，再查得到占用约 37%、空闲 15006 MiB，因而启动两档串行复验。
+**12 GiB 是保守启动门槛，不是已测得的最低需求。**
+
+复验沿用下节的工具链配置：800 tick 沉降、80 个控制步（2 s）home 保持，以及四路 Nyx
+录像；每约 2 s 墙钟时间采集工作进程及子进程的 GPU 显存。very_easy 完成全部七项基础
+检查和精确 reset，控制步采样下末尾 0.5 s 也满足速度条件。原 v1 / 新 v2 终点绳速分别为
+2.241 / 0.450 mm/s，最大节点位移分别为 4.587 / 0.936 mm；报告内的实际物理协议配置一致。
+这确认了该 seed、该协议下的改善，不代表完整机器人解法或所有默认配置均已验证。
+
+| 变体 | 本次完整复验 | 工作进程显存采样峰值 | 终点最大绳速 | 2 s 最大节点位移 |
+| --- | --- | --- | --- | --- |
+| very_easy | 七项基础检查通过；末尾半秒速度诊断通过 | 10520 MiB（10.27 GiB，含物理和四路 Nyx） | 0.450 mm/s | 0.936 mm |
+| easier | 原生初始化中止，未取得有效初态样本 | 未测得完整峰值；中止前 2931 MiB 仅是部分初始化占用 | 未取得 | 未取得 |
+
+easier 启动检查时仍有 14378 MiB 空闲，随后共享 GPU 占用增长；最后一次工作进程采样时
+空闲降至 2322 MiB。原生错误为 `cudaErrorInvalidDevice`（进程返回 -6），不能仅据此认定
+显存不足是错误根因。未再次排队、未终止其他任务。原始 worker 报告停留在 `building`，
+最终[复验汇总](../../../runs/test_results/orbits_friction_fix_20261005/runtime_vram/summary.json)
+明确标为 `native_initialization_aborted`；easier 的修正效果仍待验。
+
+very_easy 的本次实际静置录像（未解题）：
+[高位](../../../runs/test_results/orbits_friction_fix_20261005/runtime_vram/very_easy/recording/videos/cam_high.mp4) /
+[低位](../../../runs/test_results/orbits_friction_fix_20261005/runtime_vram/very_easy/recording/videos/cam_low.mp4) /
+[左腕](../../../runs/test_results/orbits_friction_fix_20261005/runtime_vram/very_easy/recording/videos/cam_left_wrist.mp4) /
+[右腕](../../../runs/test_results/orbits_friction_fix_20261005/runtime_vram/very_easy/recording/videos/cam_right_wrist.mp4)。
+四路均完整解码通过，848×480、30 fps、61 帧；本轮系统 RAM 峰值为 25.9%。
+
+[检查目录](../../../runs/test_results/orbits_friction_fix_20261005/)保存新源码快照、
+哈希和代码检查日志。14 项专项回归与 7 项共享终止检查通过，新增回归覆盖 Genesis 选项接线、
+模型身份隔离及速度超限后重新计算 0.5 s 完成窗口；它们不证明物理静稳或机器人可解。
+共享检查首次因快照遗漏 release helper 目录而中断，补齐依赖后通过，原失败日志保留。
+[本次汇总](../../../runs/test_results/orbits_friction_fix_20261005/summary.json)记录实际检查范围。
+
+[旧证据复核](../../../runs/test_results/orbits_friction_fix_20261005/historical_bootstrap_review.json)
+显示 v1 两档均通过上述七项基础检查；原静稳失败报告保留。v1 very_easy 在最后 0.5 s
+已满足速度条件，easier 仍未满足。这一复核不是新的物理实验，不赋予 v2 运行资格。
+
+GPU 有足够空闲时可只补跑 easier 的有时限复验；输出目录必须不存在。从新物理配置构建，
+沉降 800 tick 后观察 2 s，保留四视角录像与未资格化的原生检查点，不读取 v1 存档。
+显存不足立即返回；每档执行上限为 600 s 墙钟时间，内存达到 90% 停止本次工作进程。
+
+```bash
+.venv-gs121-nyx/bin/python runs/test_results/orbits_friction_fix_20261005/validate_bootstrap_vram_retry.py \
+  --variants easier \
+  --source runs/test_results/orbits_friction_fix_20261005/source_snapshot \
+  --output runs/test_results/orbits_friction_fix_20261005/runtime_retry
+```
+
 ## 2026-10-05：very_easy / easier 完整场景定义
+
+本节保留 v1 建模与实测记录；当前修订及检查口径见上节。
 
 新增两个具名场景，目标仍为整根绳索与木柄脱离固定器具、进入原有目标区并停稳。
 `orbits_very_easy` 是无固定环的单球头柱，绳弯绕唯一立柱；`orbits_easier` 是单环双柱，
@@ -76,7 +161,7 @@ home 指令。存档加载成功，加载后的初始速度、连接／体积与
 本轮没有生成合格静稳初态；报告中的 `followup_* = false` 表示未取得合格初态，后续 2 s
 复验未执行。场景与完整判据已接入，初态松弛和机器人可解性仍需后续资格化。
 [汇总报告](../../../runs/test_results/orbits_below_easy_20261005/summary.json)包含实际配置、
-源码核对、静稳门槛和资源峰值；当前 Orbits 源码与测试快照一致。
+源码核对、静稳门槛和资源峰值；该轮结束时 Orbits v1 源码与测试快照一致，后续 v2 不继承实测结论。
 
 - very_easy 10 s 沉降：[高位](../../../runs/test_results/orbits_below_easy_20261005/settling/very_easy/recording/videos/cam_high.mp4) / [低位](../../../runs/test_results/orbits_below_easy_20261005/settling/very_easy/recording/videos/cam_low.mp4) / [左腕](../../../runs/test_results/orbits_below_easy_20261005/settling/very_easy/recording/videos/cam_left_wrist.mp4) / [右腕](../../../runs/test_results/orbits_below_easy_20261005/settling/very_easy/recording/videos/cam_right_wrist.mp4)
 - easier 10 s 沉降：[高位](../../../runs/test_results/orbits_below_easy_20261005/settling/easier/recording/videos/cam_high.mp4) / [低位](../../../runs/test_results/orbits_below_easy_20261005/settling/easier/recording/videos/cam_low.mp4) / [左腕](../../../runs/test_results/orbits_below_easy_20261005/settling/easier/recording/videos/cam_left_wrist.mp4) / [右腕](../../../runs/test_results/orbits_below_easy_20261005/settling/easier/recording/videos/cam_right_wrist.mp4)

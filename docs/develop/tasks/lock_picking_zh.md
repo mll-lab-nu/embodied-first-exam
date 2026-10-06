@@ -1,5 +1,34 @@
 # 开锁
 
+2026-10-05 Harbor 简单档补测：冻结的 merged-v16 修复批中，`very_easy`／`easier` 的 privileged 均取得
+`solve=1`，两次评分均为 `deterministic=0`，且未使用 replay hold 或容差放宽。standard 两档均为 0：
+源轨迹从零编号的第 171～180 行关节目标变化为 0.04021～0.04166 rad，超过服务每步 0.04 rad，
+第一批 400 行被执行为 410 个控制步后，严格回放桥接中止。这 10 行都在 pickup 阶段，不能据此认定插锁策略失败。
+见 [正式补测结果](../../../runs/test_results/harbor_below_easy_20261005_02/summary.json)。
+
+两条显式转换时序的 standard 候选曾进入[追加补测](../../../runs/test_results/harbor_below_easy_20261005_04/trial/plan.json)，
+后在尚未执行时由新生成方案替代，原计划和证据保留。主仓库另已合入 [生成时限速](../../../topogym/planning/standard_rate.py)，
+[Harbor runner](../../../topogym/planning/lock_picking/runner.py) 使用它记录实际受限动作。
+这比事后转换更适合作为新参考的生成方式：控制器能在实际受限执行后获得下一次观测。
+本次 CPU 检查用该实现处理两条原始目标序列，最大相邻关节变化均小于 0.03856 rad；不计为物理通过。
+主仓库已迁移至 v17，不能用上述 v16 成绩替代 v17 或新轨迹的真实验证。
+
+补读并核对其他会话交接后，确认限速为已有提交 `5e1bfa54f`，本次沿用，不重复改写。
+新增回归用原失败幅度约 0.041656 rad 验证 EE 编译后的限速输出经过真实 standard 服务循环时
+逐行恰好执行一步、没有 clipping，同时检查 Session 终止时不继续提交尾部动作。
+oracle merge 5 项、简化 Lock 4 项、bridge 40 项、grading replay 28 项 CPU 检查通过；不计为物理成功。
+已启动[新的 v17 两档补测](../../../runs/test_results/harbor_below_easy_20261005_05.supervision/state.json)：
+冻结源码，重建两个实例，在实际限速执行中重新生成 privileged 轨迹，再将该轨迹交给 standard，
+共四个评分项。只覆盖 very_easy／easier，不重测 easy／medium／hard。
+版本和私有代码哈希见[准备记录](../../../runs/test_results/harbor_below_easy_20261005_05.supervision/preparation.json)。
+v17 的 R-hold 和固定 GPU 刚体求解分支已经存在；本次不修改判据或再放宽阈值。
+
+鲁棒性 review：`_move_key` 在精确插入阶段以 0.15 mm／0.0003 rad 为收敛目标，固定最多 10 次修正，
+超过双倍误差即退出；简化策略还以锁片距零角不超过 2° 作为阶段检查。应优先改进按误差进展驱动的
+有界纠偏、基于实际孔轴／槽重叠区的阶段完成检查，以及由孔隙决定的横向／倾角误差预算。
+两档杆孔径向间隙只有 1 mm，因此不能统一放宽精度或绕过碰撞检查。当前证据确认了限速兼容失败；
+尚未把异机失败逐个归因于这些策略检查，也未修改其阈值。
+
 2026-10-02 两档 oracle：已实现 [SimplifiedLockPickingPolicy](../../../topogym/planning/lock_picking/simplified_policy.py)，复用已有 home 出发的抓取动作，通过 [统一 runner](../../../scripts/oracle_runners/run_lock_picking_policy.py) 的 `--route-mode simplified` 执行。`very_easy` 抓起、抬至孔高后直线插入；`easier` 先让前齿进入第一片槽，转动钥匙，以真实接触带动被动锁片对齐，再直线插入。动作不回退、不换抓，终点允许保持抓持。沿用现有 `contact_weld_v1` 自动辅助抓持：两指接触握柄后自动取得绑定；策略仅提交普通机械臂控制，不直接设置钥匙位姿、锁片角度或绑定关系。
 
 | 变体 | 原生 Task 结果 | 从 home 起仿真时间 | 物理 tick | 独立审计 |

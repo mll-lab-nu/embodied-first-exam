@@ -91,6 +91,31 @@ def _copy(source, target):
     guard(); target.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(source, target)
 
 
+def runtime_patch_recipe(source, context):
+    """Carry the reference image's checked Genesis patch into online rebuilds.
+
+    Reuse the source Dockerfile's application and before/after hash checks verbatim.
+    Older frozen sources without this patch retain their original build behavior.
+    """
+    source, context = Path(source), Path(context)
+    recipe = (source / 'images/topogym/Dockerfile').read_text()
+    name = 'genesis-1.2.1-cpu-tree.patch'
+    start = f'COPY images/topogym/{name} /opt/genesis-cpu-tree.patch\n'
+    if start not in recipe:
+        if name in recipe:
+            raise ValueError('unrecognized Genesis patch recipe; cannot freeze an equivalent image')
+        return ''
+    begin = recipe.index(start)
+    end = recipe.find('COPY topogym/', begin)
+    if end < 0:
+        raise ValueError('missing source boundary after Genesis patch recipe')
+    block = recipe[begin:end]
+    if block.count('sha256sum -c -') != 2 or 'patch -p1 --no-backup-if-mismatch' not in block:
+        raise ValueError('Genesis patch recipe needs before/after hash checks')
+    _copy(source / 'images/topogym' / name, context / name)
+    return block.replace(start, f'COPY {name} /opt/genesis-cpu-tree.patch\n', 1)
+
+
 def freeze(source, image, wheel_image, output, *, snapshot):
     source = Path(source).resolve(); output = Path(output).resolve()
     if output.exists():
@@ -152,7 +177,8 @@ def freeze(source, image, wheel_image, output, *, snapshot):
             raise ValueError('expected one pinned uv installer')
         (context / 'installer.lock').write_text('uv @ file:///opt/installers/' + wheels[0].name + ' --hash=sha256:' + sha(wheels[0]) + '\n')
         recipe = (ROOT / 'images/helper-build/Dockerfile.template').read_text()
-        (context / 'Dockerfile').write_text(recipe.replace('@BASE@', BASE).replace('@CUDA@', flavor))
+        (context / 'Dockerfile').write_text(recipe.replace('@BASE@', BASE).replace('@CUDA@', flavor)
+            .replace('@RUNTIME_PATCHES@', runtime_patch_recipe(source, context)))
         (context / '.dockerignore').write_text('**/__pycache__\n**/*.pyc\n.git\n')
         manifest = dict(schema_version=1, platform='linux/amd64', reference_image=dict(reference=image, id=actual['Id']),
                         expected=expected, files=inventory(context), snapshot=snapshot,

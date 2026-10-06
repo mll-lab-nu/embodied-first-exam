@@ -97,6 +97,116 @@ privileged 的关节轨迹可能超过 standard 服务的每控制步关节目�
 不继承源轨迹的成功标签。服务仍必须逐行恰好执行一步，任何额外限速、位置裁剪或台面保护
 仍使桥接失败。成功继续要求原生 standard live 执行和独立回放均通过；不修改任务、服务或 grader。
 
+### 跨设备鲁棒性 review（2026-10-05）
+
+本次 frozen v16 简单档 sweep 与主仓库新合入的 v17 分开判断。Lock 两档 privileged 在
+`deterministic=0` 时仍通过，说明末态字节差异本身没有导致这两项零分；standard 的已知问题是
+动作超限。异机的其他失败需要各自日志，不能一概归为 GPU 数值偏差。
+
+补读其他会话交接并核对实现后的更新：
+
+- [第一批 oracle 修复](../../../docs/rcb/ORACLE_FIXES_FOR_JIANWEN.md)的 `oraclefix 08`
+  已由 `5e1bfa54f` 合入。Lock 的共享 runner 在 Harbor Session 中采用生成时限速，原三档和
+  below-easy 的 `route_mode="simplified"` 都经过该入口。旧 v16 sweep 快照没有这项修复。
+- v17 已合入 R-hold：privileged 不再要求至少一遍在原动作长度内严格成功；具体评分实现以
+  `unlimited/tests/grade.py` 的 `strict_replay_required=0` 为准，不能依据 common tooling 中保留的
+  v16 注释推断现行规则。Lock 仅允许末尾最多 2 s 保持，没有放宽锁孔或槽的几何判据。
+- [确定性物理说明](../../../docs/rcb/benchmarks/topogym.md#deterministic-gpu-physics-tooling-v17-2026-10-05)
+  与实现均确认：v17 固定 GPU 刚体求解分支，PBD 累加改用定点数；IPC 的 libuipc 求解仍未覆盖。
+  现有证据主要是同机重复回放，不代表不同型号 GPU 全程一致。
+- [第二批 oracle 修复](../../../docs/rcb/ORACLE_FIXES_2_FOR_JIANWEN.md)已报告限速改变状态后，
+  Keyhole/Buzz/Horseshoe 的后续抓取或释放可能走向不同结果。因此限速后的轨迹必须重新实际生成和评分，
+  不能只用数组变化上限通过替代物理验证。
+
+- `suite.py` 将成功 privileged 执行的动作数组交给 standard；两个模式的 verifier 都重新执行动作。
+  本地控制器的在线纠偏不会随动作文件一起回放。闭环策略成功率与导出轨迹的回放稳定性应分别统计；
+  只改本地反馈不能保证回放通过。规划应选择有余量的路径／终点，并对同一冻结构建做多次、跨设备回放。
+- `callbacks.run_stages` 按数组位置锁定参考步骤名，Fiber 的 comb 次数却由实测状态决定；微小变化
+  导致多一次或少一次 comb 时，可能触发 recipe mismatch。参考应表达阶段目标和优先候选，允许在当前状态
+  重新规划；候选尚未推进物理时可以尝试下一候选，已执行失败后的恢复必须通过真实连续动作，不能 rewind。
+- Lock 固定次数的精对齐、Buzz/Fiber 的参考跟随停滞门槛、Rope 固定目标姿态的有限 IK 种子都需要
+  区分“仍在收敛”“稳定小偏差”“实际不可达”。使用有界纠偏、几何余量及任务允许的姿态自由度；
+  不把真实碰撞、抓持丢失、材料损坏或原生 Task 失败用容差掩盖。
+- 已用合成观测复现 `BuzzWirePolicy.joint_reference_actions` 的终点等待问题：到达轨迹末端后，
+  若 `arrival_error_m <= error < progress_error_m`，`elapsed` 已不再增长，但 `last_advance` 每次仍刷新。
+  默认容差下固定 0.8 mm 残差在 30 s 后仍等待；2 mm 残差则在 8.025 s 正常报停滞。
+  这是控制流复现，不是物理成功／异机失败证据。需要按真实路径推进或误差改善更新进展，并在
+  几何安全预算内增加有界纠偏／局部重规划；只延长超时或只修成更早失败都不能解决残余偏差。
+- Buzz 的 `checked_turn` 当前丢弃每个候选的 `ValueError`，只保留总失败。需要保留候选、IK 残差、
+  最小间隙与拒绝阶段，才能判定应扩大搜索、重抓，还是路径确实不可行。
+
+固定轨迹的改进应直接针对回放：生成阶段选择孔／槽中央、远离接触临界分支、抓取与后续搬运都有
+余量的路线，在关键接触之前安排足够收敛时间，然后冻结动作数组，在独立运行中检验同一数组。
+生成时的重新对齐、局部重规划只帮助找到候选；grader 不执行这些分支，不能承诺回放自动恢复。
+`Session.step` 在原生首次成功后停止记录，成功后的 hold 不能由 oracle 随意补进原始连续证据；
+当前 standard twin 的有限 hold 与 grader 的 R-hold 已分别实现，二者不是新的闭环策略。
+
+先验证生成时限速的 Lock 新参考，再按失败日志判断是生成失败、接触路径分叉还是仅终点确认延迟。
+同一冻结实例的控制器执行、独立动作回放分别记录成功率及首次失败阶段，不挑选成功重跑替代失败分母。
+受控扰动测试属于单独的鲁棒性实验，不覆盖正式冻结实例。实例／源码身份、记录完整性和评分条件保持严格。
+
+### 全部 very_easy / easier oracle 的逐入口复核
+
+2026-10-05 工作区 review，基于 `b1ab6b18d` 加当时未提交改动；包含正在开发的 Knot
+`BelowEasyRunner`。这里只审查两个简单档，原 easy / medium / hard 没有增加运行。
+[范围、源码哈希与合成复现](../../../runs/test_results/below_easy_oracle_robustness_review_20261005/review.json)
+覆盖 13 类 × 2 档：24 个场景已登记，8 类／16 档有 Harbor 候选机器人 oracle 入口。
+Coil、Keyhole 的两个入口仍在 registry 的 experimental 池，`difficulty=None`，范围按明确的变体 ID
+和桥接入口识别，不能只筛选 difficulty 字段漏掉它们。入口存在不等于解题或稳健性验收完成。
+
+共同原则如下，后续生成和验收均按这些边界记录：
+
+1. **执行接口有余量。** 以实例实际 tooling 的步长限制为准，在生成时限制编译后的关节目标；
+   从 home 的第一行、float32 转换、请求分批和 native guard 后的实际接受目标都要覆盖。
+   不能把末端速度慢或名义路径密集当作公开关节动作必然合法。改变时序后重新生成并评分。
+2. **收敛有时间预算。** 关键接触之前允许实际动作保持与收敛，区分路径推进、误差改善和完全停滞；
+   阶段有总时长上限。到达路径末端不应刷新“仍在前进”的计时。生成时的反馈不随动作数组回放。
+3. **目标与安全边界分开。** 规划尽量进入可行区域内部，分别记录横向、轴向、倾斜、槽角度和接触余量；
+   容差从对应几何与回放偏差确定。候选不能仅以“第一个不碰撞”作为稳健性标准，后续动作也应可行。
+4. **终止及物理约束不被掩盖。** 保留原生碰撞、抓持、材料、拓扑和 Task 失败判据；恢复通过连续动作。
+   现有 standard twin hold 与 GPU 家族 R-hold 分别复用，不能把成功后未执行的动作写成已记录轨迹。
+   v17 的确定性刚体／PBD 修复在共享 Session 生效，IPC 不因此获得跨机确定性保证。
+5. **固定数组单独验收。** 分开记录生成成功、双模式评分与同一动作文件的多次／跨机回放。
+   保存版本、实例、动作哈希、最小几何余量、确认延迟、hold／容差使用、首次偏离阶段和全部失败次数。
+   现有可核对记录没有覆盖全部 16 档的跨机余量验收；下表历史正分不升级为该资格。
+
+| 家族（均审查两档） | 已具备的做法 | 具体缺口或限制 | 可核对的历史评分范围 |
+| --- | --- | --- | --- |
+| Cast Coil | 从 seam 派生 arrival/insertion 误差；区分横向偏离与沿插入轴滞后；抓取保持、阶段总超时、释放静置 | Harbor 用普通 `SessionPolicyRunner`，没有统一生成时关节限速；终点仍会刷新局部进展计时，但有阶段总上限；未校准跨机最小间隙 | v16 两档 P/S 均 1；保存动作最大相邻步长约 0.01182／0.02376 rad |
+| Cast Keyhole | 有受限积分／阻尼、相对位姿推进预算、拾取和搬运预检；拾取尝试 TCP 抬升 0／1／2 mm | 简单档独立 `public_session.submit` 直接 `Session.step`，未使用原三档 runner 的限速；拾取预检允许桌面间隙 0，且取首个通过候选。旧运行预检间隙仅约 0.068／0.040 mm；较宽的路径跟踪门槛还缺跨机余量校准 | v16 两档 P/S 均 1；最大相邻步长约 0.02792／0.03665 rad；上述桌面间隙是采样预检结果，不是 live 最小间隙 |
+| Lock Picking | 两档确实经过共享生成时限速；0.3 s 保持和有界负载纠偏；原生插入成功及稳定窗口 | 固定最多 10 次精对齐、固定 0.15 mm／0.0003 rad 目标，以及 easier 的锁片 ±2° 检查，尚未按剩余几何空间分解；共享 spread limiter 的 guard 边界缺陷见下文 | 旧 v16 两档 P=1、S=0，均因 10 行约 0.04166 rad 超限；新 v17 实际限速生成批正在运行 |
+| Buzz Wire 3D | 从实测抓持规划；有采样间隙、慢速放置、夹爪落稳和终点候选 | 简单档仍用普通 runner，未继承原 easy 的限速；两个末端等待循环存在局部看门狗缺陷；终点候选取首个可行项并丢弃逐候选异常，余量与失败原因不足 | 旧 v16 very_easy 终点规划失败，easier P=1/S=0；easier 有 12 行超限，最大相邻步长 0.18446 rad |
+| Fiber Bundling | 1 mm 路径 clearance，梳丝目标给入环中心误差留量；参考后保持；逐 tick 不变量和阶段总超时；简单档允许 0.5 mm 轴向预检残差而保持原生穿环判据 | 动态 comb 次数与固定 selection 下标不一致时会 recipe mismatch；session 模式只读候选失败也立即退出；未统一限速；继承空手接近循环的局部看门狗缺陷，但 pickup 外层有 90 s 上限 | v16 修复批两档 P/S 均 1，最大相邻步长均约 0.00925 rad。held-reference 的 progress/arrival 明确相等，不能将 Buzz 该处死区直接套用到它 |
+| Interlocked Claws | 实测抓持、积分加阻尼；限制相对目标推进步长；物体路径保留 1.5 mm 余量、机器人预检保留 2 mm 桌面间隙；阶段总超时与目标保持 | 无统一生成时限速；0.4／0.8 mm 跟踪门槛固定，缺各条窄路径的回放误差预算；局部终点计时同样刷新，但总上限兜底。easier 更长的路线应单独量化累计偏差 | v16 修复批两档 P/S 均 1；最大相邻步长约 0.00626／0.01950 rad |
+| Rope Threading | 名义关节速度限制、2 s 到达等待、4 s 渐进抓取；读取当前绳形、检查实际材料被提起，结束保持最多 10 s | 未统一约束实际公开关节步长；完整插值目标仍固定位置和姿态，有限 IK 种子失败后没有合法替代路线；未对路径和交接余量做跨机验收；IPC 噪声未由 v17 全部消除 | 修复抓持配置后的 very_easy live 已发生 IK 失败；easier 无本轮完整正分。不能把有限 IK 失败直接归为微小浮点噪声 |
+| Knot Untying | 简单档专属限速给 5% 余量，并核对 guard 后目标；根据实测交叉选择可达抽绳候选。easier 新增闭爪前对准、实际提绳检查和最多三次连续恢复尝试 | 当前 `BelowEasyRunner` 明确保留原插值并关闭共享实验性 hover/crush 路径，不能声称继承了这些策略；follow-up 抓取修复只覆盖特定分支；新工作区代码尚未获得完整回放资格，IPC 仍有未覆盖的非确定性 | 另一会话冻结 v16 的 very_easy P/S 均 1、无 hold／容差使用；easier 旧尝试抓取失效并中断，无最终分数；新源码不继承旧快照成绩 |
+
+表中动作步长来自[保存数组审计](../../../runs/test_results/below_easy_oracle_robustness_review_20261005/recorded_action_bounds.json)，
+只统计相邻目标，不替代第一行、实测接受动作和新版本物理执行检查。
+Keyhole 的[拾取间隙记录](../../../runs/test_results/below_easy_oracle_robustness_review_20261005/keyhole_pickup_margins.json)
+保留原报告路径与哈希。未超过 0.04 rad 的历史轨迹不能证明该生成器在所有状态都满足限速。
+
+Hedgehog、Horseshoe、Slotted Post Ring、Orbits 的两档场景已有，但未找到对应完整机器人 oracle／Harbor
+callback，因此八档记为“缺少可审查的完整 oracle”，不能套用原 easy 的策略或算作原则通过。
+Blanket 的两个简单档尚未在当前 registry 登记，也未找到相应 oracle。Cube 是测试任务，不混入这 13 类。
+
+**已复现的代码边界问题：**
+
+- `BuzzWirePolicy.joint_reference_actions` 与 `acquire_actions` 在路径进度已到 1、残差仍处于两条阈值
+  之间时持续刷新 `last_advance`。1 s 合成路径、固定 1.2 mm 残差，两个循环到 30 s 都未停止；
+  0.5 mm 正常完成、2 mm 正常触发停滞。Fiber 继承空手接近循环，但外层 Stage 仍会超时。
+  应依据实际推进或误差改善更新时间，并给末端收敛独立预算；不能把更早报错当作鲁棒性修复完成。
+- `standard_rate.RateLimiter` 的 spread 模式预先计算插值步数；若 native guard 拦住中间一步，
+  后续重新锚定后仍按原步数完成，最后直接发送原目标。合成“第一步 arm 不动、第二步接受”的反馈，
+  0.04165614 rad 请求产生了同样大的接受跳变，超过服务 0.04 rad。应每一步（含最后一步）相对实际
+  接受目标限幅，并将受阻后的未完成量交给有界反馈处理。当前简单档中的共享 limiter 使用者是 Lock；
+  Knot 的独立 limiter 已逐步 clip 并检查。该复现不证明正在运行的 Lock 发生了台面 guard，也不是其旧失败原因。
+
+整改顺序：先修已证实的限速／看门狗边界并补 Buzz 简单档限速；随后评估 Keyhole 的正间隙抓取候选、
+Fiber 的语义阶段匹配和只读候选回退、Lock 的几何误差预算；Rope/Knot 的抓取及可达路线按各自失败日志处理。
+Coil/Claws 保留已有效的间隙与反馈设计，补统一执行保障和固定数组回放验证。
+所有影响时序、抓取或路线的改动都形成新候选，不修改正在评分的冻结源码，不继承旧轨迹成绩。
+
 公开 NPZ 必须包含 `actions`（可精确表示为 float32 的二维数组）、`action_layout`、
 `task`、`instance_sha`（对应冻结 `state_sha`）和 `scene_seed`，可附带
 `physics_steps_per_action`。原生 NPZ 使用 `targets`、`layout`、可选 `physics_steps`；

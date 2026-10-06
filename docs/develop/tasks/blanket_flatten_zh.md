@@ -1,5 +1,18 @@
 # 杂乱被子展平（blanket_flatten）
 
+**2026-10-05 very_easy / easier 场景设计预览：** 新增[折角资产生成器](../../../topogym/assets/geometry/blanket_corner_folds.py)和[模拟器截图入口](../../../topogym/tasks/blanket_flatten/below_easy_preview.py)。`very_easy` 是平铺布的右前角向内翻折，折角两边各 28 cm；`easier` 先沿 60 cm 方向对折为约 30 × 48 cm 的双层长方形，再将自由边的右前角连同两层一起翻折，折角两边各 22 cm。两档沿用现有 easy–hard 的 60 × 48 cm 布料、12 mm 网格、8 mm 粒径、材质／纹理、桌面摩擦和中心 XY=(-0.1356786, 0.15) m，机器人仍为共享 ALOHA home，背景和截图使用共享 compact_lab / Nyx 四相机。
+
+当前仅供确认折法：先在平面材料上建立原有 PBD 静长和视觉绑定，再按实际粒子材料坐标写入一次设计姿态，在 tick 0 截图；没有推进物理，没有隐形支撑，也没有修改静长或视觉支撑。层间设计间距为 16 mm，折痕为有限半径弯曲；双层采用同心弯折，内外层因弧长不同在自由角处自然错开。预览显式启用双面显示，并用已有织物纹理生成器在前侧两个材料角添加 35 mm 黄色角标，帮助辨认翻入布面的角；其余仍是原蓝色方格纹理。**这不是已静置验收的冻结初态或机器人成功记录，两档尚未登记为正式 Env 入口。** 场景确认后仍需准备完整数值初态并验证稳定性、抓取和展开。
+
+已完成 CUDA float64 / Nyx 四相机截图：[very_easy 高位](../../../runs/test_results/blanket_corner_preview_20261005/very_easy_attempt_04/initial/cam_high.png)、[easier 高位](../../../runs/test_results/blanket_corner_preview_20261005/easier_attempt_03/initial/cam_high.png)。[预览清单](../../../runs/test_results/blanket_corner_preview_20261005/preview_manifest.json)记录最终报告和图片哈希，同目录保留代码快照及迭代记录。两档实际 PBD 均为 8181 粒子，视觉绑定审计通过，设计姿态写入回读误差为零；投影覆盖率约 85.72% / 39.25%，初态均未满足展平目标。非邻近材料粒子的采样最小间距约 16.25 / 16.00 mm；这项检查不等于连续曲面的碰撞或物理静置验收。
+
+```bash
+PYOPENGL_PLATFORM=egl OPENBLAS_NUM_THREADS=1 .venv-gs121-nyx/bin/python \
+  -m topogym.tasks.blanket_flatten.below_easy_preview --variation very_easy \
+  --output runs/test_results/blanket_corner_preview/very_easy
+# easier 使用 --variation easier 和另一个不存在的输出目录。
+```
+
 **2026-10-03 三档 oracle 交接集成：** 已将交接最终源码接入
 [planning/blanket_flatten/](../../../topogym/planning/blanket_flatten/routes.py)，包括共享路线、
 虚拟手见证、从默认 ALOHA home 执行的 JOINT_ABS 机器人策略及独立逐 tick 审计。

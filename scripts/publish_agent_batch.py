@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Publish preflighted difficulty packages and an immutable native batch dispatch.
+"""Publish prepared difficulty packages and an immutable native batch dispatch.
 
 Writes new task directories only. Does not activate the global 39-instance release,
 commit, upload images, launch a model, or inherit qualification from a different run.
+Preflight is required by default; an explicit maintainer reason may waive missing
+preflight evidence. Existing passes still undergo all provenance checks.
 """
 import argparse
 import json
@@ -41,8 +43,12 @@ def publish(run, repository, batch, helper, **options):
     with locked(Path(repository)/'.native-publish.lock'):
         return _publish(run,repository,batch,helper,**options)
 
-def _publish(run, repository, batch, helper, *, repetitions=None, model=None, effort=None, agent=None, upload=None, task_bases=None, helper_selects_model=False, image_sources=None):
+def _publish(run, repository, batch, helper, *, repetitions=None, model=None, effort=None, agent=None, upload=None, task_bases=None, helper_selects_model=False, image_sources=None, skip_preflight_reason=None):
     run=Path(run).resolve(); repository=Path(repository).resolve(); component(batch); component(helper)
+    if skip_preflight_reason is not None:
+        if not isinstance(skip_preflight_reason,str) or not skip_preflight_reason.strip():
+            raise ValueError('skipping preflight needs a nonempty maintainer reason')
+        skip_preflight_reason=skip_preflight_reason.strip()
     if helper!=helper.lower(): raise ValueError('helper ID must be lowercase')
     dispatch=repository/'configs/helper_batches'/(batch+'.json')
     if dispatch.exists(): raise ValueError('batch dispatch already exists; preserve it')
@@ -59,17 +65,26 @@ def _publish(run, repository, batch, helper, *, repetitions=None, model=None, ef
     # Validate every input before publishing anything.
     for row,mode in planned_trials(manifest):
         if task_bases is not None and row['slug'] not in task_bases: continue
-        proof=read(run/'build'/row['slug']/'preflight.ok.json'); prepared=read(run/'build'/row['slug']/'prepared.json')
+        proof_path=run/'build'/row['slug']/'preflight.ok.json'
+        prepared=read(run/'build'/row['slug']/'prepared.json')
         from agent_batch_contract import sha
-        if proof.get('passed') is not True or proof.get('evidence_identity',{}).get('prepared_sha256')!=sha(run/'build'/row['slug']/'prepared.json'):
-            raise ValueError('missing or stale preflight: '+row['slug'])
-        evidence=proof['evidence_identity']
-        if (proof.get('files')!=prepared['files'] or evidence.get('probe_version')!=5
-                or evidence.get('image')!=read(run/'image.json')
-                or evidence.get('probe_sha256')!=sha(run/'source/scripts/difficulty_eval.py')
-                or evidence.get('tool_sha256')!=sha(run/'tasks'/(row['slug']+'-privileged')/'environment/rcb_topogym.py')
-                or not evidence.get('gpu_profile') or not evidence.get('client_image')):
-            raise ValueError('preflight provenance differs from frozen package/runtime')
+        if proof_path.exists():
+            proof=read(proof_path)
+            if proof.get('passed') is not True or proof.get('evidence_identity',{}).get('prepared_sha256')!=sha(run/'build'/row['slug']/'prepared.json'):
+                raise ValueError('missing or stale preflight: '+row['slug'])
+            evidence=proof['evidence_identity']
+            if (proof.get('files')!=prepared['files'] or evidence.get('probe_version')!=5
+                    or evidence.get('image')!=read(run/'image.json')
+                    or evidence.get('probe_sha256')!=sha(run/'source/scripts/difficulty_eval.py')
+                    or evidence.get('tool_sha256')!=sha(run/'tasks'/(row['slug']+'-privileged')/'environment/rcb_topogym.py')
+                    or not evidence.get('gpu_profile') or not evidence.get('client_image')):
+                raise ValueError('preflight provenance differs from frozen package/runtime')
+        elif skip_preflight_reason is not None:
+            proof=dict(passed=False,status='skipped',reason=skip_preflight_reason,
+                       scope='preflight_incomplete',solvability_proven=False,
+                       attempted=(proof_path.parent/'preflight.log').is_file())
+        else:
+            raise ValueError('missing preflight: '+row['slug'])
         for rel,h in prepared['files'].items():
             from agent_batch_contract import relative
             if sha(run/relative(rel))!=h: raise ValueError('prepared package changed')
@@ -106,6 +121,10 @@ def _publish(run, repository, batch, helper, *, repetitions=None, model=None, ef
                   jobs=[dict(job=batch+'-'+t['mode']+'-'+t['base'],task=t['name'],repetitions=repetitions) for t in records],
                   agent=dict(name=agent,model=model,kwargs=kwargs),mirror_required=True,upload=upload or {'type':'shared-folder'})
         if preset.get('token_budget'): plan['token_budget']=preset['token_budget']
+        if skip_preflight_reason is not None:
+            plan['preflight_policy']=dict(required=False,reason=skip_preflight_reason,
+                passed_task_bases=sorted({t['base'] for t in records if t['preflight']['passed']}),
+                unchecked_task_bases=sorted({t['base'] for t in records if not t['preflight']['passed']}))
         if helper_selects_model: plan['helper_selects_model']=True
         if image_sources is not None:
             from agent_batch_images import validate_sources, references
@@ -162,9 +181,10 @@ def main():
     p.add_argument('--image-sources',type=Path,help='maintainer JSON mapping frozen image references to pinned registry/archive downloads')
     p.add_argument('--agent',choices=('codex','claude-code')); p.add_argument('--upload-spec',type=Path)
     p.add_argument('--task-base',action='append',help='publish a selected smoke subset; repeatable, exact manifest slug')
+    p.add_argument('--skip-preflight-reason',help='maintainer-only: publish prepared packages without full preflight; record the reason and retain existing passes')
     a=p.parse_args()
     try:
-        print(publish(a.run,a.repository,a.batch,a.helper,repetitions=a.repetitions,model=a.model,effort=a.effort,agent=a.agent,upload=read(a.upload_spec) if a.upload_spec else None,task_bases=a.task_base,helper_selects_model=a.helper_selects_model,image_sources=read(a.image_sources) if a.image_sources else None))
+        print(publish(a.run,a.repository,a.batch,a.helper,repetitions=a.repetitions,model=a.model,effort=a.effort,agent=a.agent,upload=read(a.upload_spec) if a.upload_spec else None,task_bases=a.task_base,helper_selects_model=a.helper_selects_model,image_sources=read(a.image_sources) if a.image_sources else None,skip_preflight_reason=a.skip_preflight_reason))
     except (OSError,ValueError,KeyError) as e: p.exit(2,'Publication blocked: '+str(e)+'\n')
 
 if __name__=='__main__': main()

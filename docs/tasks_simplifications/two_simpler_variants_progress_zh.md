@@ -6,6 +6,8 @@
 
 2026-10-05 Orbits 定向更新：已按用户确认的预览补齐单球头柱 `very_easy` 与单环双柱 `easier` 的场景、注册和完整目标判据；本页更新 Orbits 行，实际物理检查见[任务页](../develop/tasks/orbits_zh.md)。下方汇总数量仍为 10 月 2 日的盘点，不是其他并行任务的最新统计。
 
+2026-10-05 全简单档 oracle 鲁棒性 review：新增[统一原则、逐入口矩阵与待修项](../../topogym/planning/harbor_bridge/README.md#全部-very_easy--easier-oracle-的逐入口复核)。本次审查扩展至全部 13 类／26 档，涵盖其他成员负责的三个家族；24 档已登记场景，8 类／16 档有候选机器人 oracle 入口。Coil、Keyhole、Fiber、Claws 两档已有冻结 v16 的双模式正分，Knot very_easy 也已双模式通过；这些成绩不代表当前源码或跨机余量验收。Lock 新 v17 两档补测正在运行。审查确认部分入口未继承原三档限速、Buzz/Fiber 局部终点等待计时失效、Keyhole 历史拾取预检桌面间隙只有约 0.040～0.068 mm，以及共享 limiter 在中间动作被 guard 拦截时的限速边界缺陷。代码事实、合成复现与历史物理证据分别记录，未通过 review 自动提升任何任务资格。
+
 **10 月 2 日盘点已有 14/20 个具名变体实现、11/20 个变体有原生机器人完整成功证据、2/20 个变体通过双模式完整正向评分。** 原生成功中 9 个从默认 home 开始，2 个 Claws 变体从任务预抓姿态开始。双模式通过的是 Keyhole 两档；easier 的最新闭环参考已解决此前公开回放失败，两个正式 job 均已结束并得 1 分，较早失败记录保留。
 
 ## 统计口径
@@ -32,8 +34,8 @@
 | [Buzz Wire 3D](../develop/tasks/buzz_wire_3d_zh.md) | 直道布局及双模式包已接入；planning oracle 从 home 无回溯成功，262.8 s，审计及三路 Nyx 视频通过 | 横弯接下凹弯；planning oracle 从 home 无回溯成功，290.875 s，审计及三路 Nyx 视频通过 | 两档 seed 0、CPU64、25 ms / 1 倍 / 40 子步、接触辅助抓持已验证。默认任务包负例评分通过；默认时序完整正分及难度排序未资格化。 |
 | [Fiber Bundling](../develop/tasks/fiber_bundling_zh.md) | 2 根相对细线，seed 0 从 home 完整成功并独立审计 | 3 根三角细线，seed 0 从 home 完整成功并独立审计 | 两档三视角录像、4 个包已生成；privileged 和 standard 短流程均通过。辅助护套抓持；两档默认时序复验与独立审计通过，难度排序未评测。 |
 | [Rope Threading](../develop/tasks/rope_threading_zh.md) | 下半圆搭绳场景与完整终态判据已接入 | 单环穿越、双手交接历史及终态判据已接入 | 五档统一 0° 摆位与 20.9 mm 底座垫高；合成状态／回溯检查通过，正常 IPC 初始化已修复，完整机器人解法仍待验收。 |
-| [Knot Untying](../develop/tasks/knot_untying_zh.md) | 未见实现 | 未见实现 | 制定两档解结初态与操作要求，进入建模和验证。 |
-| [Orbits](../develop/tasks/orbits_zh.md) | 单球头柱、无固定环；场景与完整判据已接入 | 单环双柱；场景与完整判据已接入 | `below_easy_v1_fem_soft50_fine_v1`；12 项资产／拓扑／目标回归通过，真实物理检查见任务页。完整机器人解法、Harbor 正分及难度排序待验。 |
+| [Knot Untying](../develop/tasks/knot_untying_zh.md) | 单交叠绳圈已实现；冻结 v16 的 privileged／standard 均为 1 | 双交叠绳圈已实现；首次抓取失效尝试已中断，后续抓取修复正在开发 | 简单档专属生成时限速、实测抓取检查及有界恢复已有；当前新源码不继承旧快照分数，easier 完整评分及跨机余量验收待完成。 |
+| [Orbits](../develop/tasks/orbits_zh.md) | 单球头柱、无固定环；场景与完整判据已接入 | 单环双柱；场景与完整判据已接入 | `below_easy_v2_fem_soft50_friction1mm_v1`；采用 Knot 的摩擦平滑参数并取消额外初态连续低速 2 s 门槛，正式评分保持 0.5 s。very_easy v2 基础物理复验及末尾半秒速度诊断通过；easier v2 原生初始化错误，效果待验。完整机器人解法、Harbor 正分及难度排序待验。 |
 | [Blanket Flatten](../develop/tasks/blanket_flatten_zh.md) | 未见实现 | 未见实现 | 制定两档展平初态；新状态需独立准备、冻结并验证恢复。 |
 
 上表的下一步是待办，不表示本轮已开始实现。当前七组已实现变体的参考动作或场景有区别，但没有找到覆盖新两档与原 easy 的统一难度校准结果；不以运行时长证明难度顺序。

@@ -4,7 +4,7 @@
 
 当前交付配置：8 个刚体／关节刚体任务 × easy、medium、hard × privileged、standard × K=3，共 144 个 trial。每档固定 oracle 参考 seed 0；每个 trial 43200 秒、150M input tokens、10M output tokens。token 超限目前在运行后判分，不是实时切断调用。
 
-任务是 interlocked_claws、lock_picking、hedgehog_in_cage、fiber_bundling、horseshoe_ring、cast_coil、cast_keyhole、buzz_wire_3d。维护方提前 prepare/preflight 并发布 48 个冻结任务包。helper 不重新选难度、抽 seed、生成实例或改预算。
+任务是 interlocked_claws、lock_picking、hedgehog_in_cage、fiber_bundling、horseshoe_ring、cast_coil、cast_keyhole、buzz_wire_3d。维护方提前 prepare 并发布 48 个冻结任务包。发布默认要求 preflight；本次用户因时间限制取消剩余预检，维护方可用 `publish_agent_batch.py --skip-preflight-reason "原因"` 显式发布，任务单保留已验证的通过记录并将其余实例标为未检查，仍核验包哈希、实例身份和镜像绑定。helper 不重新选难度、抽 seed、生成实例或改预算，也不补跑维护方取消的预检。
 
 ## Helper 的入口
 

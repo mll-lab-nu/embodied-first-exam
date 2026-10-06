@@ -101,6 +101,25 @@ class BuildTests(unittest.TestCase):
         self.assertFalse(installation_metadata(Path('pyuipc/uv_cache.json')))
         self.assertFalse(installation_metadata(Path('pyuipc/backend.so')))
 
+    def test_reference_genesis_patch_is_included_with_both_hash_checks(self):
+        block = builds.runtime_patch_recipe(ROOT, self.context)
+        source = (ROOT/'images/topogym/Dockerfile').read_text()
+        name = 'genesis-1.2.1-cpu-tree.patch'
+        self.assertEqual((self.context/name).read_bytes(), (ROOT/'images/topogym'/name).read_bytes())
+        self.assertIn(block.replace('COPY '+name, 'COPY images/topogym/'+name), source)
+        self.assertEqual(block.count('sha256sum -c -'), 2)
+        recipe = (ROOT/'images/helper-build/Dockerfile.template').read_text().replace('@RUNTIME_PATCHES@', block)
+        self.assertLess(recipe.index('prepare_nyx_studio.py\nRUN'), recipe.index('patch -p1'))
+        self.assertLess(recipe.index('patch -p1'), recipe.index('COPY topogym/'))
+
+    def test_old_source_without_patch_remains_supported_and_missing_patch_fails(self):
+        source = self.root/'source'; folder = source/'images/topogym'; folder.mkdir(parents=True)
+        (folder/'Dockerfile').write_text('FROM fixture\nCOPY topogym/ /opt/topogym/topogym/\n')
+        self.assertEqual(builds.runtime_patch_recipe(source, self.context), '')
+        (folder/'Dockerfile').write_text((ROOT/'images/topogym/Dockerfile').read_text())
+        with self.assertRaisesRegex(ValueError, 'regular file'):
+            builds.runtime_patch_recipe(source, self.context)
+
     def test_offline_archive_keeps_original_assignment_and_build_receipt(self):
         with patch.object(images,'inspect',return_value=self.actual),patch.object(builds,'inspect_contents',return_value=self.expected):
             records=images.verified_records(self.plan,self.root)

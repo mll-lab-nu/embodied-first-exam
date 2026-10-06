@@ -14,11 +14,72 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from topogym.planning.harbor_bridge.actions import SessionPolicyRunner
 from topogym.planning.knot_untying.robot_oracle import Runner
-from topogym.planning.standard_rate import RateLimiter
+from topogym.planning.standard_rate import RateLimiter, rate_limited_runner
 from topogym.planning.solvability import QualificationWorkflow
 
 
 class OracleMerge(unittest.TestCase):
+    def test_live_limited_lock_rows_replay_one_to_one_through_standard_service(self):
+        # Lock's pickup requested ~0.041656 rad per row against the 0.04 service
+        # limit. Check the real service loop, without starting physics or HTTP.
+        import ast
+        import math
+        initial = np.array([.3, -.2, .04], dtype=np.float32)
+        current = initial.copy()
+        recorded = []
+        def step(row):
+            current[:] = row
+            recorded.append(current.copy())
+            return False
+        session = SimpleNamespace(env=SimpleNamespace(_robot=object()),
+            robot=SimpleNamespace(grip_index={'arm': 2}), action_layout=['q0', 'q1', 'gripper'],
+            hold_action=lambda: current.copy(), step=step)
+        targets = np.array([[.34165614, -.22, 0.], [.351, -.23, .04]], dtype=np.float32)
+        with patch('topogym.robot.control.compile_action', return_value={}) as compile_action, \
+                patch('topogym.planning.harbor_bridge.actions.public_row', side_effect=targets):
+            runner = rate_limited_runner(session, control_mode='EE_ABS')
+            for _ in targets:
+                runner.executor.step({}, mode='EE_ABS')
+            self.assertEqual(compile_action.call_count, 2)
+        self.assertEqual(runner.rate_limiter.inserted, 1)
+        np.testing.assert_array_equal(recorded[1:], targets)
+        self.assertEqual(recorded[0][2], targets[0][2])
+
+        path = ROOT / 'harbor_templates/topogym/limited/environment/sim/server.py'
+        node = next(n for n in ast.parse(path.read_text()).body
+                    if isinstance(n, ast.FunctionDef) and n.name == 'run_joint_position')
+        commands = []
+        def commit(row, *args, **kwargs):
+            commands.append(row.astype(np.float32).copy())
+            return False
+        namespace = dict(np=np, math=math, L=SimpleNamespace(control_periods=lambda dt, hz: 1, Recorder=object),
+            S=SimpleNamespace(hold_action=lambda: commands[-1] if commands else initial),
+            ARMS=['arm'], ARM={'arm': (None, 2)}, N=3, CTRL_HZ=40,
+            M=SimpleNamespace(JOINT_STEP_LIMIT_RAD=.04), LAYOUT=session.action_layout,
+            clip_joint_row=lambda row, clipped, ri: row, ctrl_step=commit)
+        exec(compile(ast.Module(body=[node], type_ignores=[]), str(path), 'exec'), namespace)
+        for rows, expected_clipping in ((targets, True), (np.asarray(recorded), False)):
+            commands.clear()
+            clipped = []
+            for row in rows:  # Include request boundaries, including the first row from home.
+                namespace['run_joint_position'](row[None], .025, 'hold', None, clipped)
+            self.assertEqual(bool(clipped), expected_clipping)
+            if not expected_clipping:
+                np.testing.assert_array_equal(commands, rows)
+
+    def test_live_limiter_stops_at_session_terminal_without_unrecorded_tail(self):
+        rows = []
+        def step(row):
+            rows.append(row.copy())
+            return True
+        session = SimpleNamespace(robot=SimpleNamespace(grip_index={'arm': 1}),
+            action_layout=['q', 'gripper'], hold_action=lambda: np.zeros(2, dtype=np.float32), step=step)
+        limiter = RateLimiter(session, limit_rad=.04)
+        self.assertTrue(limiter.step([.2, .04]))
+        self.assertEqual(len(rows), 1)
+        self.assertLess(abs(rows[0][0]), .04)
+        self.assertEqual(rows[0][1], np.float32(.04))
+
     def test_policy_initialization_keeps_optional_assist_and_local_protocol(self):
         @dataclass
         class Assist:

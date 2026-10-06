@@ -20,7 +20,7 @@ ROOT=Path(__file__).resolve().parents[1]
 OMIT={'agents','planning','data','deferred','legacy','redundants','rollout_simulation','__pycache__'}
 SCRIPTS=('run_agent_batch.sh','agent_batch_bootstrap.py','agent_batch_images.py','agent_batch_image_build.py','agent_batch_image_probe.py','agent_batch_image_os.py','agent_batch_runtime.py','agent_batch_contract.py','agent_batch_delivery.py',
          'agent_batch_mirror_copy.py','helper_batch.py','setup_agent_batch.sh','finish_agent_batch.py',
-         'check_agent_batch.py','check_agent_batch_auth.py','check_agent_batch_hf.py','import_helper_results.py',
+         'check_agent_batch.py','check_agent_batch_auth.py','check_agent_batch_hf.py','configure_agent_batch.py','import_helper_results.py',
          'difficulty_hf_auth.py','helper_log_mirror.py','log_mirror.py','scan_secrets.py','topogym_versions.py',
          'cuda_profiles.py','export_native_helper_release.py')
 BRIDGE=('__init__.py','binding.py','contracts.py','packaging.py')
@@ -166,6 +166,10 @@ def export(root,output,assignments=(),*,manual=None,runtime_only=False):
         head=result.stdout.strip() if result.returncode==0 else None
         (stage/'README.md').write_text('# TopoGym native helper release\n\n'+
             ('Runtime tools only; no experimental assignment or tasks included.\n\n' if runtime_only else '')+
+            ''.join('Batch `'+p['batch']+'`: full preflight was waived by the maintainer; '+
+                    str(len(p['preflight_policy']['passed_task_bases']))+'/'+str(len(p['task_bases']))+
+                    ' instances have verified passes. Remaining instances are marked unchecked in the assignment.\n\n'
+                    for p in plans if p.get('preflight_policy',{}).get('required') is False)+
             ('See docs/SHARING_RUNS.md for the helper workflow.\n' if manual_hash else
              'See docs/SHARING_RUNS_3b.md; an experimental release additionally requires the official manual.\n')+
             'The documented scripts/run_agent_batch.sh entrypoint installs its tools and prepares assigned images automatically.\n'+

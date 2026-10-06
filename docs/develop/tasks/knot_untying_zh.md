@@ -13,7 +13,7 @@
 
 几何检查覆盖交叉数、上下顺序、自穿透／穿桌、弯曲半径、闭合网格及场景继承；现有四种结型的左右手版本资产哈希全部保持一致。已确认的初态截图与源码快照保留在 [`knot_below_easy_preview_20261005/`](../../../runs/test_results/knot_below_easy_preview_20261005/)，没有修改该版形状。
 
-当前实现及验证产物在 [`knot_below_easy_implementation_20261005/`](../../../runs/test_results/knot_below_easy_implementation_20261005/)。两档均通过当前 v16 公共工具执行 600 ticks 静置并独立重建，保存新的完整 IPC 初态和实例。`check_knot_initial_states.py` 核对全状态 SHA、reset 恢复、短时漂移、交叉结构、初态未成功及只读抓取 IK，使用公共四路 Nyx 录制。参考策略复用现有 ALOHA 纯摩擦抓取：单交叉先尝试两端展开，交替双交叉先按实时绳形选择下穿段，再抽出／展开；已接入具名 CLI 和 Harbor callback。策略存在及初态检查不表示完整求解或 Harbor 评分已通过，难度排序也须另行验证。
+当前实现及验证产物在 [`knot_below_easy_implementation_20261005/`](../../../runs/test_results/knot_below_easy_implementation_20261005/)。两档均通过当前 v16 公共工具执行 600 ticks 静置并独立重建，保存新的完整 IPC 初态和实例。`check_knot_initial_states.py` 核对全状态 SHA、reset 恢复、短时漂移、交叉结构、初态未成功及只读抓取 IK，使用公共四路 Nyx 录制。参考策略复用现有 ALOHA 纯摩擦抓取：单交叉先尝试两端展开，交替双交叉按实时绳形选择下穿段并逐处抽出；已接入具名 CLI 和 Harbor callback。策略存在及初态检查不表示完整求解或 Harbor 评分已通过，难度排序也须另行验证。
 
 初态验收：very_easy 状态 SHA `54061df528743330`，静置 1 s 最大节点漂移 0.242 mm、末速 0.228 mm/s；easier 为 `d2ae0ea7cf69a49c`，静置 1 s 最大漂移 0.828 mm、末速 0.780 mm/s。两档均保持各自交叉结构，初态不成功，独立进程恢复和 reset 全状态一致。easier 的首选 A 端抓点 IK 不可达，现仅在新两档参考策略中按实时交叉依次检查另一端及相邻材料位置，选择了可达的 B 端；同实例二次检查通过，未改变场景。证据见 [very_easy](../../../runs/test_results/knot_below_easy_implementation_20261005/very_easy_initial_check/report.json)、[easier 静置](../../../runs/test_results/knot_below_easy_implementation_20261005/easier_initial_check/report.json)与 [easier 抓点复核](../../../runs/test_results/knot_below_easy_implementation_20261005/easier_initial_check_02/report.json)。
 
@@ -29,7 +29,13 @@
 
 standard 的 live 与新进程独立回放均已成功：835 actions／8,341 ticks／20.8525 s，live 的四次提交分别执行 241、251、245、98 行；单次调用达到时限后从已确认行继续，无重启。完整动作和 tick 台账与同一参考轨迹逐字节一致，四批均零裁剪、零额外控制步。独立回放在第 835 行达到严格目标，额外保持步和容差使用均为零；实际 Harbor reward、运行绑定、初态身份、冻结源码与完整媒体已核对，见[standard 评分证据复核](../../../runs/test_results/knot_below_easy_harbor_20261005_01/very_easy_standard_verification.json)。[standard 独立回放视频](../../../runs/test_results/knot_below_easy_harbor_20261005_01/grading/very_easy_01/jobs/002-oracle/topogym-knot-untying-very-easy-i__TwfG4TY/verifier/replay.mp4)完整解码通过，314 帧、15 fps、1130×480。live 与 replay 最终状态不逐位相同，当前 GPU verifier 接受二者各自严格成功。
 
-easier 已自动进入正式 privileged oracle 执行，仍待原生求解和双模式 Harbor 评分；不能继承 very_easy 的成功标签。
+easier 首次正式 privileged 尝试完成了第一轮抽绳，交叉数 2→1，但随后的双端整理抓取失效：闭爪前左臂仍有约 27.8 mm 的 TCP 位置误差，之后目标绳段未随夹爪移动。已主动停止该次尝试，保留 1,513 actions／15,130 ticks 的完整已记录前缀及日志，见[失效抓取诊断](../../../runs/test_results/knot_below_easy_harbor_20261005_01/diagnostics/easier_failed_end_grasp_01/diagnosis.json)。SIGINT 发生在 stepping 中，结束时的 `Env is faulted` 属于中断结果；不能将其当作先前物理失稳原因。该次尝试没有 easier Harbor 分数，standard 未运行；后续修正仅针对私有抓取策略，复用同一公共场景、物理与 verifier。
+
+very_easy 已获成绩与 easier 首次尝试绑定 [`oracle_source_01`](../../../runs/test_results/knot_below_easy_harbor_20261005_01/oracle_source_01/) 和 [`references_01.json`](../../../runs/test_results/knot_below_easy_harbor_20261005_01/references_01.json)，冻结的 18 个私有文件保持不变。工作区共享控制器随后加入了统一限速、crush guard 和 hover gate 等修改；这些修改不在上述执行快照内，不能沿用其成绩，差异见[源码版本核对](../../../runs/test_results/knot_below_easy_harbor_20261005_01/diagnostics/worktree_drift_20261005.json)。
+
+easier 第二轮使用冻结的 [`oracle_source_02`](../../../runs/test_results/knot_below_easy_harbor_20261005_01/oracle_source_02/)，完成第一处交叠的消除，但三次双端抓取的空中对准最终误差分别为 **14.1、6.9、5.9 mm**，均拒绝闭爪。原生策略正常结束并保存 1,271 actions／12,710 ticks／31.775 s 的完整失败轨迹；没有执行空抓后的拉伸。桥接报告原生任务未成功，随后主动停止该失败轨迹的 verifier 回放，未产生完整 Harbor 分数；standard 未运行。见[第二轮失败证据](../../../runs/test_results/knot_below_easy_harbor_20261005_01/diagnostics/easier02_failed_pregrasp.json)。这次没有原生中断或物理失稳，不能与第一轮 SIGINT 后的 fault 混为一谈。
+
+第三轮已启动，使用 [`oracle_source_03`](../../../runs/test_results/knot_below_easy_harbor_20261005_01/oracle_source_03/) 的 19 个私有模块，相对第二轮只改 [`BelowEasyRunner`](../../../topogym/planning/knot_untying/below_easy_runner.py)。它根据实时剩余交叠再选一次下穿段抽绳，优先路线保留已成功的 A 端 15 mm 锚点；保留原有接近容差和首轮成功采用的抓取高度，在闭爪前严格核对实时目标与实测 TCP（2 mm／0.1 rad），并在抬升后验证绳段跟随。第一次成功抽绳的空中误差约 13.6 mm、下降后约 1.6 mm，因而空中接近与闭爪对准分开判断。公共候选、初态、物理和 verifier 不变。7 项抓取回归、34 项原有 oracle 合同、12 项命令安全检查、两档打包与镜像内 19 模块导入通过；这些不代表物理成功。见[第三轮计划](../../../runs/test_results/knot_below_easy_harbor_20261005_01/retry03_plan.json)，实际评分仍待完成。
 
 几何回归入口：`.venv-gs121-nyx/bin/python ci_checks/test-knot-simplified-geometry.py`。
 准备、运行和回放命令见 [Knot oracle 用法](../../../topogym/planning/knot_untying/README.md#已确认的-very_easy--easier-变体)。

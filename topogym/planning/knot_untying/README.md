@@ -224,7 +224,13 @@ bash bash_scripts/run_harbor_oracle_grades.sh \
 两遍 privileged 回放和一遍 standard 回放均严格成功，未用额外保持步或回放容差。
 证据见 [privileged](../../../runs/test_results/knot_below_easy_harbor_20261005_01/very_easy_privileged_verification.json)
 和 [standard](../../../runs/test_results/knot_below_easy_harbor_20261005_01/very_easy_standard_verification.json)。
-`easier` 已开始正式运行，评分仍待完成。
+`easier` 首次尝试在抽绳 2→1 后双端抓取失效；第二轮三次空中对准均超限，
+已保存完整失败轨迹，并停止其后续 verifier 回放。两轮都没有完整 Harbor 成绩。
+第三轮通过 [`BelowEasyRunner`](below_easy_runner.py) 改为按剩余交叠再做一次抽绳，
+保留闭爪前实测对准及抬升后的绳段跟随检查，复用同一公共候选执行。
+[修订与检查记录](../../../runs/test_results/knot_below_easy_harbor_20261005_01/retry03_plan.json)；正式评分仍待完成。
+上述成绩仅对应本轮 [`oracle_source_01`](../../../runs/test_results/knot_below_easy_harbor_20261005_01/oracle_source_01/)
+冻结快照；工作区后续共享策略修改须独立验证，不能继承该成绩。
 
 ```bash
 python scripts/prepare_knot_instances.py --variations very_easy easier --seed 0 \

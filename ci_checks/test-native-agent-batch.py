@@ -492,6 +492,28 @@ class NativeTests(unittest.TestCase):
             online=pub.publish(run,repository,'online','fixture',image_sources=sources)
             self.assertEqual(c.read(online)['image_sources'],sources)
             self.assertEqual(c.read(repository/'configs/helper_batches/online.source.json')['source_sha256'],manifest['source_sha256'])
+            # A waiver records missing preflight honestly, without weakening any
+            # prepared-package or existing-proof integrity checks.
+            waived=pub.publish(run,repository,'waived-pass','fixture',skip_preflight_reason='maintainer time limit')
+            self.assertTrue(all(t['preflight']['passed'] for t in c.read(waived)['tasks']))
+            self.assertEqual(c.read(waived)['preflight_policy']['unchecked_task_bases'],[])
+            (build/'preflight.ok.json').unlink()
+            with self.assertRaisesRegex(ValueError,'missing preflight'):
+                pub.publish(run,repository,'missing','fixture')
+            with self.assertRaisesRegex(ValueError,'nonempty maintainer reason'):
+                pub.publish(run,repository,'empty','fixture',skip_preflight_reason=' ')
+            waived=pub.publish(run,repository,'waived','fixture',skip_preflight_reason='maintainer time limit')
+            plan=c.validate(c.read(waived))
+            self.assertEqual(plan['preflight_policy']['unchecked_task_bases'],[row['slug']])
+            self.assertTrue(all(t['preflight']['passed'] is False and t['preflight']['status']=='skipped' for t in plan['tasks']))
+            self.assertFalse((build/'preflight.ok.json').exists())
+            c.save(build/'preflight.ok.json',{'passed':True,'evidence_identity':{'prepared_sha256':'stale'}})
+            with self.assertRaisesRegex(ValueError,'stale preflight'):
+                pub.publish(run,repository,'stale-waived','fixture',skip_preflight_reason='maintainer time limit')
+            (build/'preflight.ok.json').unlink()
+            (run/'tasks'/(row['slug']+'-privileged')/'task.toml').write_text('[agent]\ntimeout_sec=90\n')
+            with self.assertRaisesRegex(ValueError,'prepared package changed'):
+                pub.publish(run,repository,'tampered-waived','fixture',skip_preflight_reason='maintainer time limit')
     def test_auth_canary_uses_temporary_profile_and_persists_same_account(self):
         from check_agent_batch_auth import canary
         auth=self.root/'auth.json'; c.save(auth,{'tokens':{'account_id':'fixture','access_token':'old'}})

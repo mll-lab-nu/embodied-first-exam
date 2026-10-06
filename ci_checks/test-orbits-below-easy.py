@@ -107,6 +107,37 @@ class OrbitsBelowEasy(unittest.TestCase):
                     points = volume[key][volume['elements']]
                     self.assertTrue(np.all(np.linalg.det(points[:, 1:]-points[:, :1]) > 0), (tier, key))
 
+    def test_friction_option_reaches_genesis_and_old_instances_are_distinct(self):
+        from topogym.world.physics.ipc import scene_options
+        from topogym.tasks.orbits.common import OrbitsTask
+        for tier, (task, spec, _) in self.scenes.items():
+            options = scene_options(spec.physics_options['ipc'])
+            self.assertEqual(options.contact_eps_velocity, .001)
+            self.assertEqual(options.contact_d_hat, .0002)
+            # The old identity must not accept native dumps from the new physics.
+            class PreviousRevision(type(task)):
+                model_revision = 'below_easy_v1_fem_soft50_fine_v1'
+            old = PreviousRevision(seed=0)
+            self.assertNotEqual(old.instance_id, type(task)(seed=0).instance_id)
+        for tier in ('easy', 'medium', 'hard', 'base'):
+            self.assertIs(task_definition('orbits', tier).declare, OrbitsTask.declare)
+
+    def test_half_second_goal_window_resets_after_a_speed_spike(self):
+        for tier, (original, _, _) in self.scenes.items():
+            task = deepcopy(original)
+            self.assertEqual(task.config['stable_duration_s'], .5)
+            state = self.placed_state(tier)
+            state['physics_step'] = 0
+            task.initialize(state)
+            # 0.4 s quiet, a speed spike, then a fresh 0.5 s window.
+            for step in range(1, 14):
+                state['physics_step'] = step
+                state['fem']['cord']['velocity_m_s'][0, 0] = .00101 if step == 6 else .00099
+                result = task.update(state, .1)
+                self.assertEqual(result.task_success, step >= 12, (tier, step))
+                if step == 6:
+                    self.assertEqual(task.stable_time_s, 0.)
+
     def test_initial_topology_has_one_or_two_ball_letters(self):
         for tier, count in (('very_easy', 1), ('easier', 2)):
             task, _, folder = self.scenes[tier]

@@ -20,7 +20,7 @@
 
 > 2026-09-29 Slotted Post Ring：Easy / Medium / Hard 三档场景已接入（环内径 108 / 105 / 102 mm，均为 28 mm 槽），几何、资产复现与相关回归通过。当前 Genesis FEM/IPC 的 10 s 静置及半步长验收被 CUDA OOM / InvalidDevice 阻塞，未标通过；Easy/Medium 仅有失败尝试的短程 Nyx 诊断片段。详见[当前任务页](../develop/tasks/slotted_post_ring_zh.md)与[证据](../../runs/test_results/slotted_post_tiers_20260929_review/README.md)。
 
-> 2026-10-05 Orbits 更新：在原两／三／四环之外，按用户确认的预览补齐 very_easy 单球头柱与 easier 单环双柱，保留 0.85 比例、0.8 m 绳与整目标放置判据。新两档 12 项资产／拓扑／判据回归通过；真实初始化、2 s 静置期间的连接和拓扑检查及精确 reset 通过，但绳速未达到静稳门槛。完整机器人解法和难度排序未验证。见 [Orbits 当前状态](../develop/tasks/orbits_zh.md)。
+> 2026-10-05 Orbits 更新：在原两／三／四环之外，按用户确认的预览补齐 very_easy 单球头柱与 easier 单环双柱，保留 0.85 比例、0.8 m 绳与整目标放置判据。取消额外的“初态连续低速 2 s”交付门槛，正式评分仍为 1 mm/s、0.5 s；新两档 v2 采用 Knot 的低速摩擦平滑参数。very_easy v2 的七项基础物理检查及末尾半秒速度诊断通过，进程显存峰值 10.27 GiB；easier v2 在原生初始化时遇到 `cudaErrorInvalidDevice`，尚未取得复验结论。完整机器人解法和难度排序未验证。见 [Orbits 当前状态](../develop/tasks/orbits_zh.md)。
 
 > 2026-09-28 证明归档：已建立统一 [solvability_proof/](../../solvability_proof/README.md)，收录 Cast Keyhole 与 Cast Coil 各三档、共 6 个实际 Task success 且独立复核通过的实例。完整复制配置、冻结源码、逐 tick 状态/action 与必要前置证据，逐文件哈希核对通过；原运行保留。每个实例的时序、辅助抓持与有限参数范围见目录说明。
 
@@ -48,7 +48,7 @@
 | 10 | [立体电流棒 Buzz Wire 3D](../develop/tasks/buzz_wire_3d_zh.md) | **原三档各自冻结实例连续成功 3/3**。本轮 medium / hard 均从默认 home 完成走线、转正和释放，原生成功及独立审计通过，工具与机器人触线均为 0；medium 使用已批准的末端平移布局。新增 very_easy / easier 另有成功证据 | **Medium / hard 新版各三路 Nyx 已归档**，738.633 / 1089.233 s、30 fps，RTX 4090 按实测完整关节状态重渲染。历史 F1/F2/F3 视频保留各自版本资格 | **Medium / hard 完整 IK 动作均可复跑**，正式 policy 无 calibration-tools 依赖；v12 CPU64 / 25 ms / 40 子步、seed 0、接触辅助抓持。其他 seed、Harbor 默认时序及通用随机实例闭环尚未验收 |
 | 11 | [被子展平 Blanket Flatten](../develop/tasks/blanket_flatten_zh.md) | **简单初态已跑通**。复杂麻花初态独立稳定性通过，双抓点外力版完成解扭、展开、铺放与 10 s 松手静置，末态覆盖率约 100% | **有简单版**。32.55 s 三视角；复杂版 54.38 s 外力流程通过，七次抓放后的外力整理达到 99.988%。此前 19.55 s ALOHA 录像为局部整理。现已从原始麻花落桌状态和默认 home 连续实测 36.865 s，公共 record 四视角记录抓取、抬升及部分解扭，后段材料拉伸超限，未到解折层；第二轮 34.655 s 实测已让全布离桌 76.8 mm，仍在解扭时拉伸超限。两轮均未到解折层、铺平及最终静置，完整机器人展平仍未完成 | **初态 seed 生成已实现**。折线/折角随机化、拒绝重试及多种固定折叠/卷转配置；复杂版目前只验证一个固定实例的理想抓持解法，尚无随机初态逐例完整机器人展平闭环 |
 | 12 | [长孔立柱解环 Slotted Post Ring](../develop/tasks/slotted_post_ring_zh.md) | **已搭建，基础动力学已有验证**。柔绳、自由滑珠、保孔碰撞、端部连接和双步长重力落稳通过 | **机器人未完成；外力版完整**。36 mm 孔候选完成 147 s 连续外力解环；ALOHA 完成过珠、端片穿槽及交接等局部动作。完整外力流程也尚无半步长复验 | **未形成任务级生成器**。原型、36 mm 孔径候选等为人工配置版本，尚无 seed 抽样与可解实例筛选链路 |
-| 13 | [Orbits 阶梯解绳](../develop/tasks/orbits_zh.md) | **五档场景已接入（10 月 5 日）**。Very easy 单球头柱、Easier 单环双柱，原 Easy／Medium／Hard 两／三／四环。新两档资产、同 seed、完整判据回归通过；真实初始化、连接／拓扑检查及精确 reset 通过，静稳检查未通过 | **五档均无当前完整机器人解法资格**。历史 75% 器具、1.69788 m 长绳无臂 v2 仍保留原实例含义，不继承给新模型 | **固定五档已有，任务级生成器未完成**。新两档需继续核验静稳初态、完整可解路线、机器人可达及难度排序 |
+| 13 | [Orbits 阶梯解绳](../develop/tasks/orbits_zh.md) | **五档场景已接入（10 月 5 日）**。Very easy 单球头柱、Easier 单环双柱，原 Easy／Medium／Hard 两／三／四环。额外连续低速 2 s 门槛已取消。very_easy v2 基础物理复验及末尾半秒速度诊断通过；easier v2 原生初始化错误，复验未完成 | **五档均无当前完整机器人解法资格**。历史 75% 器具、1.69788 m 长绳无臂 v2 仍保留原实例含义，不继承给新模型 | **固定五档已有，任务级生成器未完成**。需补 easier v2 复验、完整可解路线、机器人可达及难度排序 |
 
 变体逻辑按能力可以归成四组，避免仅凭 `variants.py` 文件是否存在来判断完成：
 

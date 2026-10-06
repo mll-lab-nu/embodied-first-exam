@@ -21,6 +21,7 @@ COPY assets/robots/ /opt/topogym-assets/robots/
 RUN chmod -R a+rX /opt/topogym-assets
 COPY prepare_nyx_studio.py /opt/prepare_nyx_studio.py
 RUN python /opt/prepare_nyx_studio.py
+@RUNTIME_PATCHES@
 COPY topogym/ /opt/topogym/topogym/
 COPY prune.py /opt/prune.py
 RUN python /opt/prune.py /opt/topogym && rm /opt/prune.py && chmod -R a+rX /opt/topogym

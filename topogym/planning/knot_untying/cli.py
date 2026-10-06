@@ -147,7 +147,11 @@ def main(argv=None, *, branching=False):
             from .branching import Branching
             engine = Branching(args)
         else:
-            from .robot_oracle import Runner
+            from .simplified_policy import BELOW_EASY
+            if args.variation in BELOW_EASY:
+                from .below_easy_runner import BelowEasyRunner as Runner
+            else:
+                from .robot_oracle import Runner
             engine = Runner(args)
         if getattr(args, "record_video", False):
             from topogym.recording import RecordingSession

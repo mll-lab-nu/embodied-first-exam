@@ -10,4 +10,7 @@ def run_feedback_policy(session, output, *, variation):
     args = SimpleNamespace(variation="knot_untying_" + variation, instance=Path("/app/instance.json"),
         output=output, close=.005, end_offset=.035, full_pull=variation == "hard",
         max_pull=.55 if variation == "hard" else .6, speed=.04, max_decisions=16, settle=10.)
+    if variation in {'very_easy', 'easier'}:
+        from .below_easy_runner import BelowEasyRunner
+        return BelowEasyRunner(args, session=session).run()
     return Runner(args, session=session).run()
