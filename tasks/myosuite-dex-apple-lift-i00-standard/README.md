@@ -7,7 +7,7 @@
 | Twin | `myosuite-dex-apple-lift-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `dex_apple_lift` / seed 0 |
-| Oracle | `none` — no positive example yet (not attempted); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #TBD |
+| Oracle | `none` — the privileged twin's positive example (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-dex-apple-lift-i00-priv__j5qaRCZ`, 57 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
@@ -19,7 +19,7 @@ An apple lies on the table; the MyoHand (with a 6-DoF positioned wrist) is at it
 Same instance and success rule as `myosuite-dex-apple-lift-i00-privileged` (first-pass rating: hard). In standard mode the agent loses resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets one episode, so it has to close the loop on what it sees and recover from its own mistakes without starting over.
 
 ## Reference solution
-None. Solvability evidence: no positive example yet (not attempted); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #TBD.
+None. Solvability evidence: the privileged twin's positive example (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-dex-apple-lift-i00-priv__j5qaRCZ`, 57 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD.
 
 ## Verification
 The sim service judges the episode live and records every executed control step; the collect hook (`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, both replays succeed, and they end in the same state. No oracle; human review in PR #TBD. `nop`: the episode times out, reward 0.
