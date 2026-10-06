@@ -6,7 +6,8 @@
 > before (plus parts and keys an old client ignores). Which parts are required is listed in PROTOCOL §4.
 
 **Who serves it.** The standard twins of five benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint and ManiGuard
-([docs/benchmarks/](benchmarks/)). The RoboTwin and MuJoCo standard tasks serve 2.1.
+([docs/benchmarks/](benchmarks/)), and MuJoCo Playground's quadruped tasks. The RoboTwin and the other MuJoCo standard
+tasks (DexToolBench, MuJoCo Playground's manipulation tasks) serve 2.1.
 
 **One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/), the D9 shared source of these four
 benchmarks: the service layer `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash
