@@ -104,7 +104,8 @@ SENSORS = {
                                 "`spec()[\"proprio_layout\"]` order: `base_x`, `base_y`, `base_yaw` (the odometry frame: "
                                 "where the base started, x the way it faced, y left), `base_vx`, `base_vy`, "
                                 "`base_yaw_rate`, `arm_1` ... `arm_7`, `arm_1_vel` ... `arm_7_vel`, `gripper` (the "
-                                "fingers' position: 0 open, 1 at their closed limit) and `gripper_vel`; "
+                                "fingers' position: 0 open, 1 at their joint's closed limit, about 0.98 when they close "
+                                "on nothing) and `gripper_vel`; "
                                 "`spec()[\"proprio\"]` gives the units.", **_BOTH},
     "kinematic3d": {"standard_robot": "a simulated mobile manipulator (KinDER / PyBullet, kinematic) -- a TidyBot++ base, "
                                       "a Kinova Gen3\n7-DoF arm and a Robotiq 2F-85 gripper",
