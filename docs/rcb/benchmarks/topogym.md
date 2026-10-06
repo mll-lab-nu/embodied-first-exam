@@ -11,9 +11,19 @@ their last step is `scripts/task_conventions.py`'s `normalize` (protocol v1.0 fi
 GPU when the instance's `describe.json` is kept (`--reuse-describe`).
 
 ## Versions (2026-10-04)
-Active: **merged-v18** (tooling v18, `eai-standard/2.3`, image `rcb-topogym:0.2.16-dev-cu128`), a source candidate until
-its 78 packages are built and qualified. Published: v14 (the 78 dirs under `tasks/`, `rcb-topogym:0.2.12-cu128`).
+Active: **merged-v19** (tooling v19, `eai-standard/2.3`, image `rcb-topogym:0.2.17-dev-cu128`), a source candidate until
+its packages are built and qualified. Published: v14 (the 78 dirs under `tasks/`, `rcb-topogym:0.2.12-cu128`).
 Jianwen's simpler variants (interlocked_claws easier / very_easy): tooling v10 on 0.2.10.
+- v19 (2026-10-06) = merged-v18 with Jianwen's below-easy tiers and oracle fixes up to 2026-10-06 + the blanket settle
+  speed: a cloth particle's speed is its end-of-tick displacement over the 2.5 ms tick instead of PBD's last-substep
+  velocity, thresholds unchanged (the user's decision, 2026-10-06; Cloth settle speed below). The world's readout
+  (`topogym/world/genesis_world.py`) is public source, so the image changes (0.2.17-dev); the physics, the packaged
+  cloth states and the other families (no particle entities) are unchanged.
+  Environment profile `merged-v19`: the blanket terminal's speed measure changed. As with merged-v18, the blanket re-key
+  records differ only in `metadata.identity_rekey.by` (arrays byte-identical) and their record hash enters
+  `task.instance_id`, so the blanket instances get new state hashes for the same restored physics; the label also enters
+  the slotted oracle's submission fingerprints (computed at run time). The frozen "v18" tooling hashes are those of the
+  built merged-v18 packages (cand_v18b; identical to 8d7d16489's and 7571e4194's templates; BOUND_FROZEN 15-18).
 - v18 (2026-10-05) = merged-v17 + the deterministic IPC solver (libuipc 292c98c3 with three determinism patches,
   `images/topogym/uipc-patches/`, pyuipc 0.0.25+topogym.det1; knot K2 solo +2 % per control step against the stock build;
   and the robot forward-dynamics recompute after a settled-state restore; the instances with a settled IPC state, knot_untying,

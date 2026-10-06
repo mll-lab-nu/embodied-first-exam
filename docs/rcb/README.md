@@ -6,7 +6,7 @@
 
 可复制的当前 CLI 见 [把建文作为 helper 的正式流程小批次](helper_native_cli_zh.md)：只筛选 Coil easy、双模式、K=1，不增加 smoke 专用执行脚本。独立 release 导出、HF 权限检查、配置生成及独立 HF 下载验收入口已加入；历史小批次曾被 12 GB 显存门槛拦住；该门槛已移除，实际执行和 HF 上传状态以批次记录为准。
 
-当前唯一新实验目标是 tooling **v18** / `0.2.16-dev-cu128`（merged-v18：merged-v17 加确定性 IPC 求解、knot_untying K2 求解、v18 精确提速与恢复的 agent 交互日志，环境 profile 为 merged-v18，见 [版本说明](benchmarks/topogym.md)；v15、v16、v17 候选的工具哈希已冻结）。根目录 `tasks/` 是历史任务包。
+当前唯一新实验目标是 tooling **v19** / `0.2.17-dev-cu128`（merged-v19：merged-v18 加布料静止速度的新定义，即粒子速度取每个物理 tick 末的位移除以 tick 时长，环境 profile 为 merged-v19，见 [版本说明](benchmarks/topogym.md)；v15、v16、v17、v18 候选的工具哈希已冻结）。根目录 `tasks/` 是历史任务包。
 先按根 README 的候选构建流程完成 `topogym_candidate_pipeline.py --phase all`，再设置：
 
 ```bash
