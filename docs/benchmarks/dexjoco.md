@@ -8,7 +8,7 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 |---|---|
 | upstream | DexJoCo @ `8d23b0f` (MIT); human demonstrations: Hugging Face dataset `DexJoCo/DexJoCo-Datasets-Raw` (public) |
 | simulator | `dexjoco`: DexJoCo's gymnasium envs on MuJoCo 3.4.0, CPU physics (bit-exact replay in a fresh process), OSMesa rendering; no GPU |
-| robots | `franka-allegro` (7 tasks), `franka-allegro-bimanual` (4 tasks, two arms side by side) |
+| robots | `franka-allegro` (6 tasks), `franka-allegro-bimanual` (5 tasks, two arms side by side) |
 | score | binary: DexJoCo's own success check (its episode ends at the first success or task failure); `water_plant` adds an aiming condition (below) |
 | tasks | 11 families × 2 modes: `tasks/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
 | image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
