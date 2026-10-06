@@ -181,8 +181,10 @@ def plan_held_path(env, output, *, random_seed=0, iterations=30000, clearance_m=
     upper = np.array([.05, .02, .045])
     hints = []
     if variation != "medium":
-        from .variant_oracle import reference_route
-        hints, _ = reference_route(variation)
+        if variation not in ("very_easy", "easier"):
+            # The below-easy tiers have no historical route; their pickup supplies its own object hints.
+            from .variant_oracle import reference_route
+            hints, _ = reference_route(variation)
         lower = np.array([-.08, goal[0][1]-.03, -.08])
         upper = np.array([.24, .12, .25 if variation == "hard" else .14])
     if variation == "easy":

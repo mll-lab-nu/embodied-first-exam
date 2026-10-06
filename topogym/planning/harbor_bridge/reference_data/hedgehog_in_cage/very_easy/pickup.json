@@ -1,0 +1,102 @@
+{
+  "spike": 9,
+  "grasp": {
+    "theta_deg": 90.0,
+    "phi_deg": 300.0,
+    "flip": true,
+    "pad_depth_m": 0.09,
+    "grip_from_tip_m": 0.006,
+    "lift_m": 0.0,
+    "turn": null,
+    "pulls": [
+      [
+        198.0,
+        0.07
+      ],
+      [
+        198.0,
+        0.19
+      ]
+    ]
+  },
+  "hand_in_ball": {
+    "position_m": [
+      -0.020297093244625832,
+      0.11398875799126834,
+      0.035434320332511114
+    ],
+    "quaternion_wxyz": [
+      0.104311673006597,
+      0.6993704847036117,
+      -0.6578284429136055,
+      0.2593486836169816
+    ]
+  },
+  "grip_point_in_ball": [
+    -8.137412643593119e-17,
+    0.07014805770653063,
+    -0.040500000000015454
+  ],
+  "qpos": [
+    0.42173023887086336,
+    0.3653924277825167,
+    -0.8187393990801473,
+    -2.4693530503790955,
+    0.9314838421271974,
+    1.6346346630186241,
+    -0.7082314453187124,
+    0.5996041201346676,
+    -0.5739719161477106,
+    0.060791222146928954,
+    0.8334305949127613,
+    0.5996041213532863,
+    -0.5756861012632782,
+    0.05772943432877165,
+    0.8424212329775883
+  ],
+  "grasp_gaps_m": {
+    "robot_environment_m": 0.00740004708068091,
+    "robot_ball_m": 0.0028983739594092045,
+    "nonadjacent_arm_self_m": 0.07139242112146606
+  },
+  "grasp_joint_margin_rad": 0.6024469496209046,
+  "minimum_approach_clearance_m": 0.0003,
+  "pregrasp_distance_m": 0.045,
+  "object_path_hints": [
+    {
+      "position_m": [
+        -0.09457292094160825,
+        -0.021631176098783317,
+        -0.03825713042504497
+      ],
+      "quaternion_wxyz": [
+        0.4222122742860739,
+        0.4232794298236141,
+        -0.06065680104862603,
+        0.7993072451923132
+      ]
+    },
+    {
+      "position_m": [
+        -0.2086997028970267,
+        -0.05871321542377699,
+        -0.03825713042504497
+      ],
+      "quaternion_wxyz": [
+        0.4222122742860739,
+        0.4232794298236141,
+        -0.06065680104862603,
+        0.7993072451923132
+      ]
+    }
+  ],
+  "preserve_waypoints": true,
+  "held_path_clearance_m": 0.0005,
+  "departure_clearance_m": 5e-05,
+  "scope": "Complete default-home one-grasp attempt (very_easy): S10 held from outside the cage, design route of below_easy_witness.py, then the unchanged Task goal",
+  "source": {
+    "instance_id": "ab71f7bb40585712c7ceba4bf469c5014c4e456fdd3807a4d81a17c0e3db5728",
+    "instance_sha": "8fc4502c70aa936e",
+    "tool": "topogym/planning/hedgehog_in_cage/below_easy_pickup.py"
+  }
+}

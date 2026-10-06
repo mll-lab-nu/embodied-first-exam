@@ -83,6 +83,7 @@ section supersedes them.
 - **Over 72 min, accepted by the user:**
   - fiber hard: 185 min.
   - buzz hard: 74 min graded, 87 min on a busier host. v18 estimate 58-71 min.
+- **hedgehog very_easy and easier (10-06):** both now have an oracle and pass both modes on v18. See section 10.
 
 Open items for you:
 - **Two CI tests fail after your merge `b1ab6b18d`.** They fail with or without v18, and we did not touch them.
@@ -785,3 +786,71 @@ Status at 22:52 CDT (grades come from your launcher; privileged = oracle + 2 ver
   design point for Jianwen, not something we change.
 - Pending, IPC (they wait for a GPU free of IPC agent trials): rope_threading easy / medium / hard (04f) and
   knot_untying medium (03e). Knot hard: after the new precision settings are validated, it runs once under v16 grading.
+
+## 10. hedgehog_in_cage very_easy and easier: the below-easy oracle (2026-10-06)
+
+The user reversed the earlier decision to leave hedgehog's below-easy settings out, so we made them work end to end.
+
+**Scenes (William's 10-02 drafts): unchanged.**
+- Release: v18, tree `7f0b002cc`.
+- Candidate: lab `hhbe/cand_hh`, built with your pipeline on topospeed's v18 image `labv18be` (`01c12854`).
+  - build, preflight and harbor-smoke all pass.
+  - Exact restore holds for both settings (state_sha very_easy `8fc4502c70aa936e`, easier `ed55f7e11afa2e0b`).
+- Rest state: after 10 s at home the ball has settled 0.30 mm onto three cage contacts, with no rotation. Over
+  each graded episode, the deepest ball contact with the cage, mount or table is below 0.01 mm.
+- Goal: the same goal and instruction as easy (your test checks this).
+- Difficulty order very_easy < easier < easy holds. This is an object-level check at the 12 mm test lift: one turn
+  of the ball about its centre, then a straight pull, with 1 mm clearance.
+  - very_easy (118 mm windows): it leaves by translation alone. Turns of up to -25 deg open pulls across
+    178-198 deg.
+  - easier (108 mm windows): no translation exit. A single-turn exit needs either your 80-85 deg roll about S10
+    or a yaw of exactly -20 deg about the vertical, then a pull at 186-188 deg. A -25 deg yaw is already blocked.
+  - easy (CLASSIC): still needs its two-grasp oracle.
+  - Design note: easier's smallest exit is that 20 deg yaw, not the documented 80 deg roll. The roll is what
+    `below_easy_witness.py` searches; the yaw is a narrower corridor that the witness does not try.
+
+**Oracle:** the easy oracle unchanged (`recipes.run_medium_oracle`, the measured held route), plus one checked
+pickup per setting. Changes:
+- `harbor_bridge/below_easy.py`, `catalog.py`, `references.py`: hedgehog joins the below-easy dispatcher.
+  - Its private input is `reference_data/hedgehog_in_cage/<tier>/pickup.json`, recorded in the manifest.
+  - `hedgehog_in_cage/public_session.py` runs both settings through 01's standard-rate runner.
+- `hedgehog_in_cage/held_oracle.py`: the below-easy settings skip the historical `reference_routes.json` route,
+  because their pickup brings its own object hints.
+- `hedgehog_in_cage/below_easy_pickup.py`: builds and checks the pickups on the frozen instance in the task image.
+  It runs the oracle's own partial close first, then an offline `plan_held_path` from a constructed measured state.
+- Grasp: S10 (the spike that points at the robot), held across the spike near its tip.
+  - Hand parameters: theta 90 deg, phi 300 deg, hand turned 180 deg about its axis.
+  - Spike axis at 90 mm hand depth, 6 mm from the tip.
+  - Why not coaxial: a grasp along the spike, so that easier's roll would be a wrist roll, has no valid IK. The
+    cage is 0.43 m from the base, so every solution folds the arm onto itself (q4 at -3.0, self-collision).
+  - Why not deeper: at 80 mm depth the closing pads passed through the 10.8 mm spike without a weld
+    (`no_bilateral_candidate`). At 86-93 mm, near the fingertips like easy's pickup, the grasp welds every time.
+- Routes after the 12 mm test lift:
+  - very_easy: pull 0.07 and 0.19 m at 198 deg, then to the goal.
+  - easier: yaw -20 deg, pull 0.125 m at 188 deg, then sideways (240 deg) to the goal.
+  - Why easier does not use the roll: with every grasp that passes the approach (theta 60-90 deg), the 80 deg
+    roll, or a long pull toward the base, drives the elbow to its limit (q4 -3.06). Grasps leaning over the cage
+    (theta 105-115 deg) collide at the start. The shorter pull followed by the sideways move keeps q4 at -2.97
+    or above.
+- Speed: the largest joint step of any row is 0.0047 rad, against the 0.039 rad limit, so the limiter never
+  slows a row.
+
+**Grades** (your launcher, `--tasks-root hhbe/cand_hh/tasks`, lab lanes `hh_ve1` and `hh_ea1`):
+
+| setting | privileged | standard | rows | live min (priv / std) | replays |
+|---|---|---|---|---|---|
+| very_easy | 1 | 1 | 1923 | 3.7 / 3.0 | both strict at 1923, sha `0f706cd9bdf7b8f2`, equal across modes |
+| easier | 1 | 1 | 1882 | 3.7 / 2.9 | both strict at 1882, sha `9a2668c6c8beeea3`, equal across modes |
+
+- Penetration, from a fresh-process replay of each graded trajectory:
+  - very_easy: deepest contact 0.008 mm ball-cage/mount/table, 0.010 mm robot-ball, 0 robot-fixture.
+  - easier: 0.005 / 0.010 / 0.
+  - Both episodes: review and forcing 0, review depth 0.0 mm.
+- Visual check (verifier videos): the gripper holds S10, the ball leaves through the window without touching a
+  bar, and it is held still over the green goal area.
+- Trial totals: privileged 10.4 / 10.3 min (verifier 6.4 / 6.3 min for its two replays), standard 7.9 / 7.9 min.
+- CI:
+  - Updated `test-hedgehog-below-easy` (3 new tests on the oracle inputs), `test-harbor-below-easy` and
+    `test-oracle-portability` (the manifest now has 37 files).
+  - The full CPU CI in the v18 image gives the same outcome as on `7f0b002cc` for every test. The 10 tests that
+    fail there fail the same way.

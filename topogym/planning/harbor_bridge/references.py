@@ -21,7 +21,7 @@ def reference_data(root, family, tier, seed):
         includes = ["topogym/planning/interlocked_claws/easier_reference_route.json"]
         for name in includes:
             member(root, name)
-        if family != "fiber_bundling":
+        if family not in ("fiber_bundling", "hedgehog_in_cage"):
             return {}, includes
     files, includes = {}, []
     prefix = "topogym/planning/harbor_bridge/reference_data/"
@@ -41,7 +41,7 @@ def reference_data(root, family, tier, seed):
         return source
 
     if below_easy:
-        add("selection.json")
+        add("pickup.json" if family == "hedgehog_in_cage" else "selection.json")
         includes = ["topogym/planning/interlocked_claws/easier_reference_route.json"]
         return files, includes
     if family == "cast_keyhole":
