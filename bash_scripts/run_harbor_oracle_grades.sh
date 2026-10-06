@@ -66,7 +66,7 @@ IFS=',' read -r -a tier_list <<< "$tiers"
 declare -A seen=()
 for family in "${family_list[@]}"; do
   case "$family" in
-    cast_coil|cast_keyhole|lock_picking|buzz_wire_3d|fiber_bundling|horseshoe_ring|hedgehog_in_cage|interlocked_claws|blanket_flatten|rope_threading|knot_untying|orbits) ;;
+    cast_coil|cast_keyhole|lock_picking|buzz_wire_3d|fiber_bundling|horseshoe_ring|hedgehog_in_cage|interlocked_claws|blanket_flatten|rope_threading|knot_untying|orbits|slotted_post_ring) ;;
     *) printf 'Unsupported family: %s\n' "$family" >&2; exit 2 ;;
   esac
   [[ -z "${seen[$family]:-}" ]] || { printf 'Duplicate family: %s\n' "$family" >&2; exit 2; }

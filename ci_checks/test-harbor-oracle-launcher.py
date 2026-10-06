@@ -74,6 +74,12 @@ os.execv(os.environ['TEST_REAL_PYTHON'],[os.environ['TEST_REAL_PYTHON'],*sys.arg
         self.assertNotIn("slotted", result.stdout)
         self.assertFalse((self.root / "output").exists())
 
+    def test_slotted_below_easy_tiers_are_selectable(self):
+        result = self.run_queue("--plan", "--families", "slotted_post_ring", "--tiers", "very_easy,easier")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), [f"slotted_post_ring\t{tier}\tprivileged -> standard"
+                                                      for tier in ("very_easy", "easier")])
+
     def test_failed_task_does_not_skip_next_and_resume_preserves_results(self):
         args = ["--families", "cast_coil,cast_keyhole", "--tiers", "easy"]
         result = self.run_queue(*args)

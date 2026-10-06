@@ -26,7 +26,7 @@ RUNNERS = {
 TIERS = ("very_easy", "easier", "easy", "medium", "hard")
 BELOW_EASY_FAMILIES = ("cast_coil", "cast_keyhole", "lock_picking", "buzz_wire_3d",
                        "fiber_bundling", "interlocked_claws", "rope_threading", "knot_untying",
-                       "blanket_flatten", "orbits", "hedgehog_in_cage", "horseshoe_ring")
+                       "blanket_flatten", "orbits", "hedgehog_in_cage", "horseshoe_ring", "slotted_post_ring")
 SESSION_CALLBACKS = {
     "blanket_flatten": "topogym.planning.blanket_flatten.public_session:run_feedback_policy",
     "rope_threading": "topogym.planning.rope_threading.public_session:run_feedback_policy",
