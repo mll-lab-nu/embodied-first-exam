@@ -5,7 +5,7 @@
 > says otherwise, every 2.2 addition is a MAY capability, and a request written for 2.0 or 2.1 gets the same answer as
 > before (plus parts and keys an old client ignores). Which parts are required is listed in PROTOCOL §4.
 
-**Who serves it.** The standard twins of five benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint and ManiGuard
+**Who serves it.** The standard twins of six benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard and DexJoCo
 ([docs/benchmarks/](benchmarks/)). The RoboTwin and MuJoCo standard tasks serve 2.1.
 
 **One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/), the D9 shared source of these four
