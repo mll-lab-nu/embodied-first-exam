@@ -3,6 +3,7 @@ float32-exact) as `muscle` chunks through the client, the same interface an agen
 run time; the service's recorded trajectory is then exactly the privileged reference. If the service crashes it resumes
 the same episode (spec["on_service_error"]): the oracle waits until it answers again and goes on from the control step
 it reports."""
+
 import os
 import sys
 import time
@@ -21,7 +22,7 @@ per_chunk = max(1, int(spec.get("max_chunk_s", 10) / dt + 1e-9))
 print("spec:", spec["protocol"], "rows:", len(A), flush=True)
 t0, i = time.time(), 0
 while i < len(A):
-    chunk = A[i:i + per_chunk]
+    chunk = A[i : i + per_chunk]
     try:
         res = r.submit("muscle", chunk, dt=dt, interpolate="hold", video="none", note=f"oracle rows {i}+")
     except EpisodeOver as e:

@@ -1,4 +1,5 @@
 """Oracle (privileged): replay the reference rows in the tooling, check them, and save them as the deliverable."""
+
 import json
 import os
 import sys
