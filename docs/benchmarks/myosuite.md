@@ -98,15 +98,20 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 
 ## Modes
 - **Privileged:** `rcb_myosuite.Session` in the agent's container: reset, the task's observation dict, MuJoCo model and
-  data, muscle moment arms, rendering, recording and self-replay. Deliverable `/app/output/trajectory.npz`, `(T, nu)` muscle
-  commands, one row per control step.
+  data, actuator descriptions and moment arms, rendering, recording and self-replay. Deliverable
+  `/app/output/trajectory.npz`, `(T, nu)` actuator commands, one row per control step.
 - **Standard (`eai-standard/2.2`):** the shared layer of `scripts/eai_standard/` and the adapter
-  `shared/standard/server.py`: action type `muscle` (`nu` columns, nothing clipped: every real number is a valid command),
-  cameras `hand_top` and `hand_side_inter` (close-ups **mounted on the forearm**: they move with pronation; `mount.type =
-  "link"`, parent `radius`), `front_view` and `side_view` (static), 640 x 480, depth on request; proprioception = the
-  limb's own joints (`q_`, `qd_`, `effort_`: the muscles' generalized force per joint) and muscles (`act_`, `len_`), never
-  the key, pen, die, balls or objects; `/kinematics` = the fingertip sites and the camera mounts in the world frame (FK) and
-  fingertip-position IK; crash recovery with resume class `exact` (MuJoCo on the CPU is bit-exact in a fresh process).
+  `shared/standard/server.py`, one source for all 22 families:
+  - action type `muscle` (all-muscle bodies) or `actuators` (with the non-muscle ones: MyoDex's 6-DoF wrist positioning,
+    table tennis's pelvis slides, the MPL prosthesis's motors; osl_run's prosthesis columns are ignored, its own
+    controller drives it); nothing is clipped by the service; each non-muscle actuator's command is in `/spec`;
+  - every camera of the scene, 640 x 480, depth on request, with its mount: static, fixed to a body (the hand close-ups
+    `hand_top` / `hand_side_inter` sit on the forearm and turn with pronation), or a MuJoCo tracking camera;
+  - proprioception = the body's own joints (`q_`, `qd_`, `effort_`) and muscles (`act_`, `len_`), plus the pelvis pose and
+    velocity of the free-standing bodies (`root_pose`, `root_vel`); never the key, pen, die, balls, objects, opponent or
+    goalkeeper; MyoDex's reference motion (the goal, relative to the object's start) is in `/spec` `reference_motion`;
+  - `/kinematics` = the fingertip sites and the camera mounts (world frame; the root's frame for free-standing bodies) and
+    fingertip-position IK; crash recovery with resume class `exact` (MuJoCo on the CPU is bit-exact in a fresh process).
   The episode ends at success, at the task's failure or when the time is up; the collect hook replays the recorded
   trajectory in two fresh processes.
 
@@ -115,7 +120,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   the wheel) rolled out from the frozen instance and cut at the first success (72, 57 and 128 rows); rounded to float32
   (the standard client's dtype; the rounded rows still succeed), so both modes execute the same rows. The privileged
   oracle hands them in; the standard oracle streams them through the client.
-- **none (the other seven):** no reference was validated. The wheel has NPG baselines for pen_twirl, hand_pose and
+- **none (the other nineteen):** no reference was validated. The wheel has NPG baselines for pen_twirl, hand_pose and
   hand_reach too, but the pilot found none that succeeds from the frozen instance under the 1 s hold (they predate
   MyoSuite's current models); the MyoChallenge and Reorient8 envs have no NPG baseline. Solvability rests on successful
   model trials (human review, PROTOCOL §2.7, table below).
@@ -138,41 +143,73 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 
 ## Human review (oracle = none): family → positive example → nop → predicate
 Positive examples are successful model trials on the privileged tasks (the same frozen instances): Claude Code + Claude
-Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28) and Codex + GPT-6 Luna (run `codex-gpt6_luna-high`,
-2026-09-29; run through an OpenRouter adapter before protocol v1.0, which does not matter for a positive example). Each
-trajectory was handed in unchanged to today's privileged verifier in **two fresh Harbor trials** (each trial replays it in
-two fresh processes); for the standard twin the same rows, rounded to float32 as the client sends them, were streamed
-through the client in two fresh trials. `nop` was run once per task directory. Results (2026-10-06,
-`eai-myosuite:0.1.0` built locally, Harbor 0.23.0):
+Opus 5.5 (run `claude_code-claude_opus_5_5-default`: 2026-09-28 for the first ten families, 2026-10-06 for set 3) and
+Codex + GPT-6 Luna (run `codex-gpt6_luna-high`; 2026-09-29 through an OpenRouter adapter before protocol v1.0; set 3 with
+Harbor's native codex agent, OpenRouter registered as Codex's provider). Each trajectory was handed in unchanged to
+today's privileged verifier in **two fresh Harbor trials** (each trial replays it in two fresh processes); for the
+standard twin the same rows, rounded to float32 as the client sends them, were streamed through the client in two fresh
+trials (live check, both replays, determinism). Every evidence run used task directories whose `environment/`, `tests/`
+and `task.toml` are those committed (a `solution/` added to a scratch copy). `nop` was run once per task directory.
+Results (2026-10-06, `eai-myosuite:0.1.1` built locally, Harbor 0.23.0):
 
-| family | positive example (model, trial, rows) | privileged: 2 fresh trials | standard: 2 fresh trials (float32 rows via the client) | nop (priv / std) | predicate (MyoSuite's `solved`, held) |
+| family | positive example (model, trial, rows) | privileged: 2 fresh trials | standard: 2 fresh trials (float32 rows via the client) | nop (priv / std) | predicate |
 |---|---|---|---|---|---|
-| `hand_reach` | GPT-6 Luna, `myosuite-hand-reach-i00__w2ryUU7`, 70 | 1, 1; both replays `dc3d08eda6c0bfb8` in both | 1, 1; live = both replays = `43292686d77c9498` in both | 0 / 0 | the norm of the stacked 5 fingertip-to-target errors < 0.0625 m, held 1 s; failure: above 0.22 m |
-| `hand_pose` | GPT-6 Luna, `myosuite-hand-pose-i00__fC7US9G`, 360 | 1, 1; both replays `617ede1f1b1ebdee` in both | 1, 1; live = both replays = `6c892657ff45cf27` in both | 0 / 0 | the norm of the 23 joint-angle errors to the target pose < 0.7 rad, held 1 s; failure above 2π |
-| `pen_twirl` | Opus 5.5, `myosuite-pen-twirl-i00__UtTYzQE`, 513 | 1, 1; both replays `97125d1d96f5b738` in both | 1, 1; live = both replays = `6cdf4f573db401ea` in both | 0 / 0 | pen axis cosine to the target > 0.95 with the pen within 0.075 m of its desired position, held 1 s; failure: dropped |
-| `die_reorient` | Opus 5.5, `myosuite-die-reorient-i00__EtyJ3X7`, 225 | 1, 1; both replays `383ec6bddc2d007f` in both | 1, 1; live = both replays = `4b3ba016b1018c9a` in both | 0 / 0 | die within 0.025 m of the target and Euler-angle error norm < 0.262 rad, held 1 s; failure: more than 0.2 m away |
-| `obj_reorient` | GPT-6 Luna, `myosuite-obj-reorient-i00__5dLP3ah`, 305 | 1, 1; both replays `9226f3b1f277448e` in both | 1, 1; live = both replays = `9bb64f1cb5ab6046` in both | 0 / 0 | orientation cosine to the target > 0.95 with the object within 0.075 m, held 1 s; failure: dropped |
-| `baoding` | Opus 5.5, `myosuite-baoding-i00__J6BJVtG`, 215 | 1, 1; both replays `1a84408eaae929ce` in both | **no positive example** (below) | 0 / 0 | both balls within 0.015 m of their moving targets for 200 steps (one 5 s orbit); failure: a ball below 1.25 m |
-| `relocate` | GPT-6 Luna, `myosuite-relocate-i00__PjqTvZ2`, 231 | 1, 1; both replays `0f680b3b9ccbe677` in both | 1, 1; live = both replays = `0f680b3b9ccbe677` in both | 0 / 0 | object within 0.1 m of the receptacle target, held 1 s; failure: palm more than 0.5 m from the object |
+| `hand_reach` | GPT-6 Luna (09-29), `myosuite-hand-reach-i00__w2ryUU7`, 70 | 1, 1; both replays `dc3d08eda6c0bfb8` in both | 1, 1; live = both replays = `43292686d77c9498` in both | 0 / 0 | norm of the stacked 5 fingertip-to-target errors < 0.0625 m, held 1 s; failure above 0.22 m |
+| `hand_pose` | GPT-6 Luna (09-29), `myosuite-hand-pose-i00__fC7US9G`, 360 | 1, 1; both replays `617ede1f1b1ebdee` in both | 1, 1; live = both replays = `6c892657ff45cf27` in both | 0 / 0 | norm of the 23 joint-angle errors < 0.7 rad, held 1 s; failure above 2π |
+| `pen_twirl` | Opus 5.5 (09-28), `myosuite-pen-twirl-i00__UtTYzQE`, 513 | 1, 1; both replays `97125d1d96f5b738` in both | 1, 1; live = both replays = `6cdf4f573db401ea` in both | 0 / 0 | pen-axis cosine > 0.95, pen within 0.075 m, held 1 s; failure: dropped |
+| `die_reorient` | Opus 5.5 (09-28), `myosuite-die-reorient-i00__EtyJ3X7`, 225 | 1, 1; both replays `383ec6bddc2d007f` in both | 1, 1; live = both replays = `4b3ba016b1018c9a` in both | 0 / 0 | die within 0.025 m and Euler error < 0.262 rad, held 1 s; failure: > 0.2 m away |
+| `obj_reorient` | GPT-6 Luna (09-29), `myosuite-obj-reorient-i00__5dLP3ah`, 305 | 1, 1; both replays `9226f3b1f277448e` in both | 1, 1; live = both replays = `9bb64f1cb5ab6046` in both | 0 / 0 | orientation cosine > 0.95, object within 0.075 m, held 1 s; failure: dropped |
+| `baoding` | Opus 5.5 (09-28), `myosuite-baoding-i00__J6BJVtG`, 215 | 1, 1; both replays `1a84408eaae929ce` in both | **no positive example** (float32 rows drop a ball at step 206) | 0 / 0 | both balls within 0.015 m of their moving targets for one 5 s orbit; failure: a ball below 1.25 m |
+| `relocate` | GPT-6 Luna (09-29), `myosuite-relocate-i00__PjqTvZ2`, 231 | 1, 1; both replays `0f680b3b9ccbe677` in both | 1, 1; live = both replays = `0f680b3b9ccbe677` in both | 0 / 0 | object within 0.1 m of the receptacle target, held 1 s; failure: palm > 0.5 m from it |
+| `sarc_key_turn` | Opus 5.5 (10-06), `myosuite-sarc-key-turn-i00-privi__iVBaqTS`, 230 | 1, 1; both replays `0437c813be6d75b1` in both | 1, 1; live = both replays = `c0157d7c30ea10c6` in both | 0 / 0 | key angle > π, held 1 s, with every muscle at half force; failure: fingertips > 0.1 m from the key |
+| `table_tennis` | Opus 5.5 (10-06), `myosuite-table-tennis-i00-privil__kdQdy89`, 111 | 1, 1; both replays `ac960852646d4d4b` in both | 1, 1; live = both replays = `7c8ca29eaa611612` in both | 0 / 0 | MyoChallenge's contact test: serve bounce, one paddle hit, then the opponent's half; within 3 s |
+| `bimanual` | **none yet** (GPT-6 Luna (full 90 min) and Opus 5.5 (44 min) failed) | — | — | 0 / 0 | object on the pillar after touching only it for 10 steps, with MyoChallenge's contact check (MyoHand >= 100 steps, prosthesis >= 100 steps, never table/floor); within 10 s |
+| `soccer` | Opus 5.5 (10-06), `myosuite-soccer-i00-privileged__DuXNvn4`, 308 | 1, 1; both replays `b03e38d574d1597b` in both | 1, 1; live = both replays = `75947363577b251e` in both | 0 / 0 | ball over the goal line between posts and bar within 10 s; failure: pelvis below 0.2 m |
+| `chase_tag` | Opus 5.5 (10-06), `myosuite-chase-tag-i00-privilege__6GUXvYA`, 329 | 1, 1; both replays `cfad84ac43c8c3fd` in both | **no positive example** (float32 rows no longer reach the opponent) | 0 / 0 | pelvis within 0.5 m of the opponent within 20 s; failure: out of the arena, pelvis below 0.5 m |
+| `osl_run` | Opus 5.5 (10-06), `myosuite-osl-run-i00-privileged__cWgLuKv`, 6714 | 1, 1; both replays `601d16cdfd322a5e` in both | **no positive example** (float32 rows fall at step 629) | 0 / 0 | 29 m down the track (MyoChallenge's win condition), no time limit; failure: fall, > 1 m off the centre line, 2 m backwards |
+| `dex_apple_lift` | Opus 5.5 (10-06), `myosuite-dex-apple-lift-i00-priv__j5qaRCZ`, 57 | 1, 1; both replays `3e208e14be8f3563` in both | 1, 1; live = both replays = `794c8c2bed582d10` in both | 0 / 0 | displacement error <= 3 cm at >= 90 % of 57 steps and the last, never > 5 cm |
+| `dex_cylinder_pass` | **none yet** (GPT-6 Luna and Opus 5.5 failed) | — | — | 0 / 0 | displacement error <= 3 cm at >= 90 % of 86 steps and the last, never > 5 cm |
+| `dex_bunny_inspect` | **none yet** (Opus 5.5 and GPT-6 Luna failed) | — | — | 0 / 0 | as apple_lift over 99 steps, plus rotation since the start within 0.5 rad of the reference's |
+| `dex_hammer_use` | **none yet** (GPT-6 Luna and Opus 5.5 failed) | — | — | 0 / 0 | as bunny_inspect, 99 steps |
+| `dex_cup_pour` | **none yet** (Opus 5.5 and GPT-6 Luna failed) | — | — | 0 / 0 | as bunny_inspect, 81 steps |
+| `dex_airplane_fly` | **none yet** (Opus 5.5 and GPT-6 Luna failed) | — | — | 0 / 0 | as bunny_inspect, 99 steps |
 
-Negative controls besides `nop`: `make_facts.py` checks that the relaxed limb (every muscle at rest for 400 control steps) does not succeed in any family, and the baoding positive example rounded to float32 is a wrong trajectory that scores 0. A standard `nop` episode ends by timeout with the start state (replays reproduce the instance hash).
+Set 3 model runs: at most two attempts per family (a different model the second time), 5400 s each, web search off,
+egress to the model APIs only. Trials ended by the account's rate limit or by a Codex/OpenRouter compaction error were
+re-run and are not counted; the two set-3 trials judged under the first, absolute MyoDex rule (apple_lift's exploit,
+bunny_inspect's unreachable orientation) are not counted either.
 
-**baoding, standard mode: no positive example.** The Opus trajectory succeeds in privileged mode only: rounded to float32
-it drops a ball after 206 control steps (it succeeds at row 215 in float64, with no margin), and none of 400 random
-float32 roundings of its rows, with or without a held tail, succeeds. Until a standard-mode success exists, results should
-report `myosuite-baoding-i00-standard` separately (PROTOCOL §7, Open 4).
+**No positive example (reported separately, PROTOCOL §7 Open 4):** both modes of bimanual, dex_cylinder_pass,
+dex_bunny_inspect, dex_hammer_use, dex_cup_pour and dex_airplane_fly; the standard twins of
+baoding, chase_tag and osl_run (their privileged trajectories are chaotic: rounded to the client's float32 they fail).
+A likely cause for MyoDex: in MyoSuite 2.12.2 the six wrist-positioning actuators are 175 N/m and 150 N m/rad position
+servos that move an 82 kg subtree (the whole body model sits on the slide joints), so the vertical slide rests on its
+lower limit and the reference's lifts must come from rotations; both models reported this. MyoDex's own policies were
+trained on these envs, so the tasks are not known to be impossible, but no trajectory here reaches them yet.
 
-## Verification (2026-10-06, eai-myosuite:0.1.0, Harbor 0.23.0)
-| family | oracle, privileged | oracle, standard | final state (both modes, every replay) | nop, all 20 directories |
+Negative controls besides `nop`: `make_facts.py` checks that the relaxed body (every command at -1 for 400 control
+steps) succeeds in no family; the float32-rounded baoding, chase_tag and osl_run trajectories are wrong trajectories
+that score 0; apple_lift's first (exploit) trajectory scores 0 under the final rule.
+
+## Verification (2026-10-06, eai-myosuite:0.1.1, Harbor 0.23.0)
+| family | oracle, privileged | oracle, standard | final state (both modes, every replay) | nop, all 44 directories |
 |---|---|---|---|---|
 | `key_turn` | 1 (72 rows) | 1 (live, both replays) | `79c522457ad23180` | 0 |
 | `obj_hold` | 1 (57 rows) | 1 | `bd82ac6dff499fd2` | 0 |
 | `arm_reach` | 1 (128 rows) | 1 | `8d7d8bc7109dd7e5` | 0 |
 
-- `bash ci_checks/run_all.sh tasks/myosuite-*`: every check of these tasks passes (`protocol v1.0: 20 task(s) conform`); the only failures are the RoboCasa, RoboCasa365 and RoboCasa-GR1 generator checks, which fail the same way on unchanged `main` in a checkout made with umask 0002 (file modes).
+- `bash ci_checks/run_all.sh tasks/myosuite-*`: every check of these tasks passes (`protocol v1.0: 44 task(s) conform`,
+  `ok shared sources: ... myosuite 44 task dirs, 10 shared files`); the only failures are the RoboCasa, RoboCasa365 and
+  RoboCasa-GR1 generator checks, which fail the same way on unchanged `main` in a checkout made with umask 0002.
 - `python3 scripts/task_conventions.py --check tasks/myosuite-*/` and `python3 scripts/myosuite/generate.py --check`: clean.
-- Crash recovery (STANDARD_MODE_2_2 §13.5): the key_turn service killed (`kill -9`) after the first 30 rows of the oracle stream; the container restarted, the service resumed the same episode (`resumes` 1, exact hash), the client sent the rest, and the collect hook graded it: success, `live_matches_replay` 1, final state `79c522457ad23180`.
-- `ci_checks/check-limited-protocol.py` against a live hand_reach service: every /spec, /status, /observe, 404 and 2.0/2.1 compatibility check passes except `spec.no_unknown_keys` (`episode`, which PROTOCOL §4.7 asks for) and its live part, which assumes a `joint_position` action type (a muscle-driven limb has none). The IK solver (Levenberg-Marquardt on fingertip positions), on random in-range joint targets for two fingertips: 20 of 20 solved to 2 mm on the MyoHand, 19 of 20 on each MyoArm.
+- Crash recovery (STANDARD_MODE_2_2 §13.5): the key_turn service killed (`kill -9`) after the first 30 rows of the
+  oracle stream; the container restarted, the service resumed the same episode (`resumes` 1, exact hash), the client
+  sent the rest, and the collect hook graded it: success, `live_matches_replay` 1, final state `79c522457ad23180`.
+- `ci_checks/check-limited-protocol.py` (with the shared PR's `episode` key) against a live hand_reach service: every
+  /spec, /status, /observe, 404 and 2.0/2.1 check passes; its live part assumes a `joint_position` action type, which a
+  muscle-driven body does not have.
+- Determinism of set 3 before building: three replays in one process and one in a fresh process gave the same final
+  state for random action sequences in every family.
 
 ## Files
 `scripts/myosuite/`: `generate.py`, `make_facts.py`, `instances/`, `oracles/`, `shared/` (README there);
