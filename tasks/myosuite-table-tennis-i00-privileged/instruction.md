@@ -114,7 +114,7 @@ CLI equivalent of the grader:
 `python /opt/tools/rcb_myosuite.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz --repeat 2`
 
 ## Conventions
-- Action: 275 real numbers per control step, one per actuator in order: 273 muscles and 2 non-muscle actuators. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The non-muscle actuators: `pelvis_x` (index 273): position target of joint pelvis_x in [-1, 0.05]; `pelvis_y` (index 274): position target of joint pelvis_y in [-1, 1].
+- Action: 275 real numbers per control step, one per actuator in order: 273 muscles and 2 non-muscle actuators. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity. The non-muscle actuators: `pelvis_x` (index 273): normalized: a in [-1, 1] maps linearly onto [-1, 0.05] (position of joint pelvis_x); `pelvis_y` (index 274): normalized: a in [-1, 1] maps linearly onto [-1, 1] (position of joint pelvis_y).
 - Control step 10 ms (5 physics substeps). There is no step budget: your wall-clock time is the limit
   (~300 control steps/s here). An episode ends at success or failure; `s.step` then refuses further
   actions until `s.reset()`.

@@ -2,7 +2,7 @@
 
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and one episode, and you act only through its actuators (39 muscles and 6 other actuators).
-**Task:** Move the hammer along MyoDex's recorded use (grasp it and swing it) motion: a reference of the object's pose over 99 control steps (1.98 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 99 steps. Success: the object's centre of mass within 0.03 m of the reference and its orientation within 0.5 rad of the reference's at at least 90% of the control steps, and at the last one. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.
+**Task:** Move the hammer along MyoDex's recorded use (grasp it and swing it) motion: a reference of the object's pose over 99 control steps (1.98 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 99 steps. Success: the object's motion follows the reference's: its centre of mass's displacement since the start within 0.03 m of the reference's displacement since the reference's start, and its rotation since the start within 0.5 rad of the reference's, at at least 90% of the control steps and at the last one, with the displacement error never above 0.05 m. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.
 
 A hammer lies on the table; the MyoHand is at its pre-grasp pose.
 

@@ -93,14 +93,18 @@ BODY.update(table_tennis="body", bimanual="bimanual", soccer="legs", chase_tag="
 #           definition: goal scored, opponent tagged, ball returned, object placed, track finished); `done` without it
 #           (a fall, out of bounds, the challenge's own time limit) is a failure.
 #   track : MyoDex gives no binary success (its `solved` is always 0). The episode is the whole recorded motion; it
-#           succeeds iff MyoDex's termination never fires and the object's centre of mass is within TRACK_POS_M of the
-#           reference (and, where orientation matters, its orientation within TRACK_ROT_RAD) at >= TRACK_FRAC of the
-#           control steps and at the last one.
+#           succeeds iff MyoDex's termination never fires, the object's MOTION follows the reference's (its displacement
+#           from where it started within TRACK_POS_M of the reference's displacement from where the reference started,
+#           and, where orientation matters, its rotation since the start within TRACK_ROT_RAD of the reference's) at
+#           >= TRACK_FRAC of the control steps and at the last one, and the displacement error never exceeds
+#           TRACK_MAX_M. Relative, because a reference may start a few centimetres off the resting object (the apple's
+#           starts 2.9 cm below it: with absolute errors, leaving the apple on the table passed); the cap, because a
+#           small motion (the apple is lifted 6.8 cm) could otherwise be skipped within the 10 % allowance.
 RULE = {t: "hold" for t in TASKS}
 RULE.update({t: "event" for t in ("table_tennis", "bimanual", "soccer", "chase_tag", "osl_run")})
 RULE.update({t: "track" for t in TASKS if t.startswith("dex_")})
 HOLD_S["sarc_key_turn"] = 1.0
-TRACK_POS_M, TRACK_ROT_RAD, TRACK_FRAC = 0.03, 0.5, 0.9
+TRACK_POS_M, TRACK_ROT_RAD, TRACK_FRAC, TRACK_MAX_M = 0.03, 0.5, 0.9, 0.05
 TRACK_ROT = {"dex_apple_lift": False, "dex_cylinder_pass": False, "dex_bunny_inspect": True, "dex_hammer_use": True,
              "dex_cup_pour": True, "dex_airplane_fly": True}
 # Set 3 families restore every piece of episode state on reset: the env's random generator (opponents, goalkeepers and
@@ -401,6 +405,11 @@ class Session:
             self._rng().bit_generator.state = copy.deepcopy(self._rng_after)
             self.base.forward()
         self.track_ok = 0
+        self.track_max = 0.0
+        if self.rule == "track":
+            od = self.base.obs_dict
+            self._track0 = {k: np.asarray(od[k], dtype=np.float64).reshape(-1).copy()
+                            for k in ("curr_obj_com", "targ_obj_com", "curr_obj_rot", "targ_obj_rot")}
         self.steps = 0
         self.done = False
         self.success = False
@@ -439,15 +448,17 @@ class Session:
             pos, rot = self.track_errors()
             ok = pos <= TRACK_POS_M and (not TRACK_ROT[self.task] or rot <= TRACK_ROT_RAD)
             self.track_ok += int(ok)
+            self.track_max = max(self.track_max, pos)
             self.last_info.update(track_pos_err=round(pos, 5), track_rot_err=round(rot, 4), track_ok=self.track_ok)
             if failed:
                 self.done, self.reason = True, "failure: " + _FAILURE.get(self.task, "task terminated")
             elif self.steps >= self.track_steps:
                 self.done = True
-                self.success = ok and self.track_ok >= TRACK_FRAC * self.track_steps
+                self.success = ok and self.track_ok >= TRACK_FRAC * self.track_steps and self.track_max <= TRACK_MAX_M
                 self.reason = "success" if self.success else (
                     f"failure: on track at {self.track_ok} of {self.track_steps} steps"
-                    + ("" if ok else ", off track at the end"))
+                    + ("" if ok else ", off track at the end")
+                    + (f", {self.track_max:.3f} m off at worst" if self.track_max > TRACK_MAX_M else ""))
         elif self.solved_run >= self.hold_steps and self.task == "bimanual" and not self._bimanual_contacts_ok():
             self.done, self.reason = True, "failure: placed without a clean hand-over (MyoChallenge's contact check)"
         elif self.solved_run >= self.hold_steps:
@@ -463,11 +474,12 @@ class Session:
         return evaluate_contact_trajectory(self.base.touch_history) is None
 
     def track_errors(self) -> tuple[float, float]:
-        """MyoDex families: the object's centre-of-mass distance (m) and rotation angle (rad) to the reference now."""
-        od = self.base.obs_dict
-        pos = float(np.linalg.norm(np.asarray(od["obj_com_err"]).reshape(-1)))
-        rot = float(self.base.rotation_distance(np.asarray(od["curr_obj_rot"]).reshape(-1),
-                                                np.asarray(od["targ_obj_rot"]).reshape(-1), False))
+        """MyoDex families: how far the object's motion since the episode start is from the reference's: the
+        displacement error (m) of the centre of mass and the angle (rad) between the two rotations since the start."""
+        od, t0 = self.base.obs_dict, self._track0
+        v = lambda k: np.asarray(od[k], dtype=np.float64).reshape(-1)  # noqa: E731
+        pos = float(np.linalg.norm((v("curr_obj_com") - t0["curr_obj_com"]) - (v("targ_obj_com") - t0["targ_obj_com"])))
+        rot = _quat_angle(_qmul(v("curr_obj_rot"), _qconj(t0["curr_obj_rot"])), _qmul(v("targ_obj_rot"), _qconj(t0["targ_obj_rot"])))
         return pos, rot
 
     def rest_action(self) -> np.ndarray:
@@ -549,7 +561,7 @@ class Session:
             lo, hi = (float(x) for x in m.actuator_ctrlrange[i])
             cmd = (f"position target of joint {target} in [{lo:g}, {hi:g}]" if kind == "position" else
                    f"control in [{lo:g}, {hi:g}] (force or torque = {float(m.actuator_gear[i, 0]):g} x control)")
-            if self.task == "bimanual":            # BimanualEnvV1.step maps [-1, 1] onto the control range
+            if self.task in ("bimanual", "table_tennis"):   # their env's step maps [-1, 1] onto the control range
                 cmd = f"normalized: a in [-1, 1] maps linearly onto [{lo:g}, {hi:g}] ({kind} of joint {target})"
             if self.task == "osl_run":             # RunTrack.step overwrites them with the prosthesis's own controller
                 cmd = "ignored: the prosthesis's own impedance controller (MyoSuite's OSL state machine) sets it"
@@ -626,6 +638,24 @@ _FAILURE = {"key_turn": "fingertips too far from the key", "obj_hold": "object d
             "chase_tag": "the opponent was not tagged in time, out of bounds or fallen",
             "osl_run": "fallen, off the track or out of time",
             **{t: "object more than 0.25 m from the reference (or from the wrist)" for t in TASKS if t.startswith("dex_")}}
+
+
+def _qconj(q):
+    q = np.asarray(q, dtype=np.float64)
+    return np.array([q[0], -q[1], -q[2], -q[3]]) / max(np.dot(q, q), 1e-12)
+
+
+def _qmul(a, b):
+    w1, x1, y1, z1 = a
+    w2, x2, y2, z2 = b
+    return np.array([w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2, w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+                     w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2, w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2])
+
+
+def _quat_angle(a, b) -> float:
+    """Angle (rad) of the rotation between two wxyz quaternions."""
+    a = a / np.linalg.norm(a); b = b / np.linalg.norm(b)
+    return float(2.0 * np.arccos(min(1.0, abs(float(np.dot(a, b))))))
 
 
 def _load_traj(path: str) -> np.ndarray:
