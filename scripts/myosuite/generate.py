@@ -11,6 +11,7 @@ all copied byte for byte. Each task directory is written from scratch and finish
 (normalize, PROTOCOL v1.0.1); a MyoSuite task directory this does not write is removed. Only the standard library is
 needed.
 """
+
 import filecmp
 import json
 import shutil
@@ -31,17 +32,21 @@ IMAGE = f"ghcr.io/mll-lab-nu/eai-myosuite:{VERSION}"
 _ENV = dict(ln.split("=", 1) for ln in (LAYER / "client.env").read_text().splitlines() if "=" in ln and ln[0] != "#")
 CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR = "Chi Gui"
-AGENT_TIMEOUT = 5400          # uniform within the benchmark; why not 3600: docs/benchmarks/myosuite.md
-REVIEW_PR = "TBD"             # the number of the pull request that adds the benchmark (human review, PROTOCOL §2.7)
+AGENT_TIMEOUT = 5400  # uniform within the benchmark; why not 3600: docs/benchmarks/myosuite.md
+REVIEW_PR = "TBD"  # the number of the pull request that adds the benchmark (human review, PROTOCOL §2.7)
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
     "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com",
 ]  # fmt: skip
-BODY = {"hand": ("MyoHand", "myohand", "a musculoskeletal model of a human forearm and hand"),
-        "arm": ("MyoArm", "myoarm", "a musculoskeletal model of a human shoulder, arm and hand")}
-CAMERAS_STD = ("`hand_top` and `hand_side_inter` are close-ups of the hand, **mounted on the forearm** (the radius): they "
-               "move with it (pronation turns them), so use the pose returned with each frame; `front_view` and `side_view` "
-               "are static and show the whole body, where the hand is small")
+BODY = {
+    "hand": ("MyoHand", "myohand", "a musculoskeletal model of a human forearm and hand"),
+    "arm": ("MyoArm", "myoarm", "a musculoskeletal model of a human shoulder, arm and hand"),
+}
+CAMERAS_STD = (
+    "`hand_top` and `hand_side_inter` are close-ups of the hand, **mounted on the forearm** (the radius): they "
+    "move with it (pronation turns them), so use the pose returned with each frame; `front_view` and `side_view` "
+    "are static and show the whole body, where the hand is small"
+)
 # Solvability evidence for the families without a reference solution (PROTOCOL §2.7): a successful model trial on the
 # privileged task (the same frozen instance), re-graded by today's verifiers: docs/benchmarks/myosuite.md, Evidence.
 # Run ids as in TAXONOMY; trials are Harbor trial names. `standard`: the same rows sent through the client.
@@ -56,8 +61,10 @@ EVIDENCE = {
     "obj_reorient": (LUNA, "myosuite-obj-reorient-i00__5dLP3ah", 305, True),
     "relocate": (LUNA, "myosuite-relocate-i00__PjqTvZ2", 231, True),
 }
-REFERENCE = ("MyoSuite's own NPG baseline policy for `{env}` (`myosuite/agents/baslines_NPG/`, shipped in the MyoSuite "
-             "wheel and removed from the image), rolled out from the frozen instance and cut at the first success")
+REFERENCE = (
+    "MyoSuite's own NPG baseline policy for `{env}` (`myosuite/agents/baslines_NPG/`, shipped in the MyoSuite "
+    "wheel and removed from the image), rolled out from the frozen instance and cut at the first success"
+)
 
 PRIV_ENV_DOCKERFILE = f"""# MyoSuite task (privileged): MyoSuite 2.12.2 on MuJoCo (images/myosuite/), the task's tooling and its frozen instance.
 # CPU only. The base image has MyoSuite's trained baselines removed (they are this benchmark's reference solutions).
@@ -148,16 +155,22 @@ def oracle_meta(fam: str, f: dict, std: bool) -> tuple[str, str]:
         return "full", ""
     who, trial, rows, through_client = EVIDENCE[fam]
     if not std:
-        ev = (f"a successful model trial on this frozen instance: {who}, trial `{trial}` ({rows} rows); today's verifier "
-              f"scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #{REVIEW_PR}")
+        ev = (
+            f"a successful model trial on this frozen instance: {who}, trial `{trial}` ({rows} rows); today's verifier "
+            f"scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #{REVIEW_PR}"
+        )
     elif through_client:
-        ev = (f"the privileged twin's positive example ({who}, trial `{trial}`, {rows} rows) rounded to float32, as the "
-              f"client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two "
-              f"fresh trials (docs/benchmarks/myosuite.md); human review in PR #{REVIEW_PR}")
+        ev = (
+            f"the privileged twin's positive example ({who}, trial `{trial}`, {rows} rows) rounded to float32, as the "
+            f"client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two "
+            f"fresh trials (docs/benchmarks/myosuite.md); human review in PR #{REVIEW_PR}"
+        )
     else:
-        ev = (f"no positive example in standard mode yet: the privileged twin's ({who}, trial `{trial}`) fails once its "
-              f"rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings "
-              f"of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #{REVIEW_PR}")
+        ev = (
+            f"no positive example in standard mode yet: the privileged twin's ({who}, trial `{trial}`) fails once its "
+            f"rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings "
+            f"of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #{REVIEW_PR}"
+        )
     return "none", ev
 
 
@@ -283,8 +296,17 @@ def task_toml(fam: str, f: dict, std: bool) -> str:
     b = BODY[f["body"]]
     oracle, ev = oracle_meta(fam, f, std)
     first = f["goal"].split(". ")[0]
-    keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", b[1], "code-as-policy", "trajectory", fam,
-                "standard-mode" if std else "privileged"]
+    keywords = [
+        "robotics",
+        "myosuite",
+        "mujoco",
+        "musculoskeletal",
+        b[1],
+        "code-as-policy",
+        "trajectory",
+        fam,
+        "standard-mode" if std else "privileged",
+    ]
     if std:
         head = """artifacts = [
   { source = "/data/final.json", service = "sim" },
@@ -299,18 +321,23 @@ def task_toml(fam: str, f: dict, std: bool) -> str:
   { source = "/data/replay3.log", service = "sim" },           # and its third, which renders replay.mp4
   "/app/output/",
 ]"""
-        desc = (f"STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite {fam} ({b[0]}, {f['nu']} muscles) on the "
-                f"same frozen instance as myosuite-{dash(fam)}-i00-privileged: {first}. The agent only gets a client: "
-                "cameras (RGB, optional depth, calibration), the limb's joints and muscles, muscle command chunks, "
-                "fingertip kinematics; one episode, no reset, no object state; the sim service records the episode, "
-                "replays it in fresh processes and grades it.")
+        desc = (
+            f"STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite {fam} ({b[0]}, {f['nu']} muscles) on the "
+            f"same frozen instance as myosuite-{dash(fam)}-i00-privileged: {first}. The agent only gets a client: "
+            "cameras (RGB, optional depth, calibration), the limb's joints and muscles, muscle command chunks, "
+            "fingertip kinematics; one episode, no reset, no object state; the sim service records the episode, "
+            "replays it in fresh processes and grades it."
+        )
     else:
         head = 'artifacts = ["/app/output/"]'
-        desc = (f"MyoSuite {fam} ({b[0]}, {f['nu']} muscles, MuJoCo): produce one replayable trajectory of muscle commands. "
-                f"{first}. Frozen scene instance ({f['env_id']}, reset seed 0); graded by two fresh-process replays.")
-    meta_extra = ('protocol = "eai-standard/2.2"\n' if std else "")
+        desc = (
+            f"MyoSuite {fam} ({b[0]}, {f['nu']} muscles, MuJoCo): produce one replayable trajectory of muscle commands. "
+            f"{first}. Frozen scene instance ({f['env_id']}, reset seed 0); graded by two fresh-process replays."
+        )
+    meta_extra = 'protocol = "eai-standard/2.2"\n' if std else ""
     oracle_lines = f'oracle = "{oracle}"\n' + (f"oracle_evidence = {toml_str(ev)}\n" if ev else "")
-    verifier = ("""[verifier]
+    verifier = (
+        """[verifier]
 timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
@@ -319,7 +346,9 @@ network_mode = "no-network"
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
 timeout_sec = 1800
-""" if std else """[verifier]
+"""
+        if std
+        else """[verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"
 network_mode = "no-network"
@@ -328,7 +357,8 @@ network_mode = "no-network"
 build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 8192
-""")
+"""
+    )
     return f"""# Generated by scripts/myosuite/generate.py -- edit the generator, the shared sources or the instance facts, not this.
 schema_version = "1.3"
 {head}
@@ -370,56 +400,92 @@ def readme(fam: str, f: dict, std: bool) -> str:
     twin = f"myosuite-{dash(fam)}-i00-{'privileged' if std else 'standard'}"
     oracle, ev = oracle_meta(fam, f, std)
     if std:
-        task = (f"MyoSuite `{f['env_id']}` ({b[0]}, {f['nu']} muscles) on the same frozen instance as `{twin}`: {f['goal']}\n"
-                f"{f['scene']} Standard mode (eai-standard/2.2): the agent drives the limb through a client in one episode, "
-                "with only the limb's own proprioception and four cameras (two on the forearm).")
-        diff = (f"Same instance and success rule as `{twin}` (first-pass rating: {f['difficulty']}). In standard mode the "
-                "agent loses resets, the simulator and the object state: it sees camera images and the limb's "
-                "proprioception, acts in muscle-command chunks, and gets one episode, so it has to close the loop on what "
-                "it sees and recover from its own mistakes without starting over.")
+        task = (
+            f"MyoSuite `{f['env_id']}` ({b[0]}, {f['nu']} muscles) on the same frozen instance as `{twin}`: {f['goal']}\n"
+            f"{f['scene']} Standard mode (eai-standard/2.2): the agent drives the limb through a client in one episode, "
+            "with only the limb's own proprioception and four cameras (two on the forearm)."
+        )
+        diff = (
+            f"Same instance and success rule as `{twin}` (first-pass rating: {f['difficulty']}). In standard mode the "
+            "agent loses resets, the simulator and the object state: it sees camera images and the limb's "
+            "proprioception, acts in muscle-command chunks, and gets one episode, so it has to close the loop on what "
+            "it sees and recover from its own mistakes without starting over."
+        )
         if oracle == "full":
-            ref = (f"`solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle.npy`, "
-                   f"{f['reference_rows']} rows, float32-exact) through the client in `hold` chunks; it uses no privileged "
-                   "information at run time. The service's recorded trajectory is then exactly the privileged reference: "
-                   f"success after {f['reference_steps']} control steps.")
+            ref = (
+                f"`solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle.npy`, "
+                f"{f['reference_rows']} rows, float32-exact) through the client in `hold` chunks; it uses no privileged "
+                "information at run time. The service's recorded trajectory is then exactly the privileged reference: "
+                f"success after {f['reference_steps']} control steps."
+            )
         else:
             ref = f"None. Solvability evidence: {ev}."
-        ver = ("The sim service judges the episode live and records every executed control step; the collect hook "
-               "(`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes "
-               "and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode "
-               "succeeded, both replays succeed, and they end in the same state. "
-               + ("`nop`: the episode times out, reward 0." if oracle == "full" else
-                  f"No oracle; human review in PR #{REVIEW_PR}. `nop`: the episode times out, reward 0."))
-        details = [("Service", "`environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` "
-                    "(`scripts/eai_standard/`); cameras `hand_top`, `hand_side_inter` (on the forearm), `front_view`, "
-                    "`side_view` (static), 640 x 480; fingertip kinematics in the world frame"),
-                   ("Resources", "4 CPUs, no GPU (CPU physics, OSMesa rendering)")]
+        ver = (
+            "The sim service judges the episode live and records every executed control step; the collect hook "
+            "(`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes "
+            "and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode "
+            "succeeded, both replays succeed, and they end in the same state. "
+            + (
+                "`nop`: the episode times out, reward 0."
+                if oracle == "full"
+                else f"No oracle; human review in PR #{REVIEW_PR}. `nop`: the episode times out, reward 0."
+            )
+        )
+        details = [
+            (
+                "Service",
+                "`environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` "
+                "(`scripts/eai_standard/`); cameras `hand_top`, `hand_side_inter` (on the forearm), `front_view`, "
+                "`side_view` (static), 640 x 480; fingertip kinematics in the world frame",
+            ),
+            ("Resources", "4 CPUs, no GPU (CPU physics, OSMesa rendering)"),
+        ]
     else:
-        task = (f"MyoSuite `{f['env_id']}` ({b[0]}, {b[2]}, {f['nu']} muscles): {f['goal']}\n{f['scene']} The deliverable "
-                f"is one replayable trajectory of muscle commands (`/app/output/trajectory.npz`, `(T, {f['nu']})`, one row "
-                f"per {round(f['dt'] * 1000)} ms control step).")
-        diff = (f"First-pass rating: {f['difficulty']}. The action is muscle-level only ({f['nu']} muscles, each only "
-                "pulling, several crossing more than one joint, with activation delays): the agent has to build its own "
-                "joint or fingertip control from muscle excitations, and MyoSuite's goal has to hold for "
-                f"{f['hold_s']} s, so passing through the goal does not count.")
+        task = (
+            f"MyoSuite `{f['env_id']}` ({b[0]}, {b[2]}, {f['nu']} muscles): {f['goal']}\n{f['scene']} The deliverable "
+            f"is one replayable trajectory of muscle commands (`/app/output/trajectory.npz`, `(T, {f['nu']})`, one row "
+            f"per {round(f['dt'] * 1000)} ms control step)."
+        )
+        diff = (
+            f"First-pass rating: {f['difficulty']}. The action is muscle-level only ({f['nu']} muscles, each only "
+            "pulling, several crossing more than one joint, with activation delays): the agent has to build its own "
+            "joint or fingertip control from muscle excitations, and MyoSuite's goal has to hold for "
+            f"{f['hold_s']} s, so passing through the goal does not count."
+        )
         if oracle == "full":
-            ref = (REFERENCE.format(env=f["env_id"]) + f": `solution/oracle.npy`, {f['reference_rows']} rows (float32-exact, "
-                   f"so the standard twin's client executes the same rows), success after {f['reference_steps']} control "
-                   "steps. Replayed and saved by `solution/solve.sh`; re-checked by `scripts/myosuite/make_facts.py "
-                   "--oracles` (two fresh sessions, same final state).")
+            ref = (
+                REFERENCE.format(env=f["env_id"])
+                + f": `solution/oracle.npy`, {f['reference_rows']} rows (float32-exact, "
+                f"so the standard twin's client executes the same rows), success after {f['reference_steps']} control "
+                "steps. Replayed and saved by `solution/solve.sh`; re-checked by `scripts/myosuite/make_facts.py "
+                "--oracles` (two fresh sessions, same final state)."
+            )
         else:
             ref = f"None. Solvability evidence: {ev}."
-        ver = ("`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in "
-               "a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state "
-               "is checked against its recorded hash); pass iff both episodes end in success (the goal held "
-               f"{f['hold_steps']} control steps) in the same state (`deterministic`). "
-               + ("`nop`: no trajectory, reward 0." if oracle == "full" else
-                  f"No oracle; human review in PR #{REVIEW_PR}. `nop`: no trajectory, reward 0."))
-        details = [("Instance", f"`{f['env_id']}` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); "
-                    f"state hash `{f['instance_sha']}`, checked on every load"),
-                   ("Actions", f"{f['nu']} muscle commands per control step ({round(f['dt'] * 1000)} ms, "
-                    f"{f['frame_skip']} physics substeps); success = MyoSuite's `solved` held {f['hold_steps']} steps"),
-                   ("Resources", "4 CPUs, no GPU (CPU physics, OSMesa rendering)")]
+        ver = (
+            "`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in "
+            "a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state "
+            "is checked against its recorded hash); pass iff both episodes end in success (the goal held "
+            f"{f['hold_steps']} control steps) in the same state (`deterministic`). "
+            + (
+                "`nop`: no trajectory, reward 0."
+                if oracle == "full"
+                else f"No oracle; human review in PR #{REVIEW_PR}. `nop`: no trajectory, reward 0."
+            )
+        )
+        details = [
+            (
+                "Instance",
+                f"`{f['env_id']}` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); "
+                f"state hash `{f['instance_sha']}`, checked on every load",
+            ),
+            (
+                "Actions",
+                f"{f['nu']} muscle commands per control step ({round(f['dt'] * 1000)} ms, "
+                f"{f['frame_skip']} physics substeps); success = MyoSuite's `solved` held {f['hold_steps']} steps",
+            ),
+            ("Resources", "4 CPUs, no GPU (CPU physics, OSMesa rendering)"),
+        ]
     details.insert(0, ("Upstream", "MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel"))
     rows = "\n".join(f"| {k} | {v} |" for k, v in details)
     return f"""# {name}
@@ -478,7 +544,10 @@ def make(fam: str, out: Path) -> tuple[Path, Path]:
     put(s / "README.md", readme(fam, f, True))
     put(s / "environment/Dockerfile", STD_ENV_DOCKERFILE)
     put(s / "environment/docker-compose.yaml", STD_COMPOSE)
-    put(s / "environment/client-requirements.txt", src=LAYER / _ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip())
+    put(
+        s / "environment/client-requirements.txt",
+        src=LAYER / _ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip(),
+    )
     put(s / "environment/rcb_client.py", src=LAYER / "rcb_client.py")
     put(s / "environment/rcb1.py", src=LAYER / "rcb1.py")
     for name in ("rcb_limited.py", "rcb1.py"):
@@ -523,7 +592,9 @@ def check() -> int:
             while stack:
                 c = stack.pop()
                 diff = filecmp.cmpfiles(c.left, c.right, c.common_files, shallow=False)[1]
-                modes = [x for x in c.common_files if (Path(c.left) / x).stat().st_mode != (Path(c.right) / x).stat().st_mode]
+                modes = [
+                    x for x in c.common_files if (Path(c.left) / x).stat().st_mode != (Path(c.right) / x).stat().st_mode
+                ]
                 if c.left_only or c.right_only or c.funny_files or diff or modes:
                     bad.append(name)
                     break
