@@ -108,8 +108,16 @@ def rule_text(f: dict) -> str:
 # Run ids as in TAXONOMY; trials are Harbor trial names. `standard`: the same rows sent through the client.
 OPUS = "Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28)"
 LUNA = "Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29)"
+OPUS3 = "Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)"
+F32_BAODING = "a ball drops after 206 control steps; 400 random float32 roundings of its rows fail too"
 EVIDENCE = {
-    "baoding": (OPUS, "myosuite-baoding-i00__J6BJVtG", 215, False),
+    "baoding": (OPUS, "myosuite-baoding-i00__J6BJVtG", 215, F32_BAODING),
+    "sarc_key_turn": (OPUS3, "myosuite-sarc-key-turn-i00-privi__iVBaqTS", 230, True),
+    "table_tennis": (OPUS3, "myosuite-table-tennis-i00-privil__kdQdy89", 111, True),
+    "soccer": (OPUS3, "myosuite-soccer-i00-privileged__DuXNvn4", 308, True),
+    "dex_apple_lift": (OPUS3, "myosuite-dex-apple-lift-i00-priv__j5qaRCZ", 57, True),
+    "chase_tag": (OPUS3, "myosuite-chase-tag-i00-privilege__6GUXvYA", 329, "the walk no longer reaches the opponent within its 329 rows"),
+    "osl_run": (OPUS3, "myosuite-osl-run-i00-privileged__cWgLuKv", 6714, "the runner falls after 629 control steps"),
     "die_reorient": (OPUS, "myosuite-die-reorient-i00__EtyJ3X7", 225, True),
     "pen_twirl": (OPUS, "myosuite-pen-twirl-i00__UtTYzQE", 513, True),
     "hand_pose": (LUNA, "myosuite-hand-pose-i00__fC7US9G", 360, True),
@@ -118,7 +126,11 @@ EVIDENCE = {
     "relocate": (LUNA, "myosuite-relocate-i00__PjqTvZ2", 231, True),
 }
 # set 3: families whose model attempts all failed (PROTOCOL §2.7: listed, never faked); filled from the runs
-NO_POSITIVE: dict[str, str] = {}
+LUNA3 = "Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high`"
+NO_POSITIVE: dict[str, str] = {
+    "bimanual": f"two model attempts failed: {LUNA3} and {OPUS3}",
+    "dex_cylinder_pass": f"two model attempts failed: {LUNA3} and {OPUS3}",
+}
 REFERENCE = (
     "MyoSuite's own NPG baseline policy for `{env}` (`myosuite/agents/baslines_NPG/`, shipped in the MyoSuite "
     "wheel and removed from the image), rolled out from the frozen instance and cut at the first success"
@@ -204,7 +216,7 @@ def put(path: Path, text: str | None = None, src: Path | None = None, mode: int 
 
 
 def toml_str(s: str) -> str:
-    return json.dumps(s)
+    return json.dumps(s, ensure_ascii=False)
 
 
 def oracle_meta(fam: str, f: dict, std: bool) -> tuple[str, str]:
@@ -220,7 +232,7 @@ def oracle_meta(fam: str, f: dict, std: bool) -> tuple[str, str]:
             f"a successful model trial on this frozen instance: {who}, trial `{trial}` ({rows} rows); today's verifier "
             f"scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #{REVIEW_PR}"
         )
-    elif through_client:
+    elif through_client is True:
         ev = (
             f"the privileged twin's positive example ({who}, trial `{trial}`, {rows} rows) rounded to float32, as the "
             f"client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two "
@@ -229,8 +241,8 @@ def oracle_meta(fam: str, f: dict, std: bool) -> tuple[str, str]:
     else:
         ev = (
             f"no positive example in standard mode yet: the privileged twin's ({who}, trial `{trial}`) fails once its "
-            f"rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings "
-            f"of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #{REVIEW_PR}"
+            f"rows are rounded to the client's float32 ({through_client}); the family's solvability rests on the "
+            f"privileged twin; human review in PR #{REVIEW_PR}"
         )
     return "none", ev
 
