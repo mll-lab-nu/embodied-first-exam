@@ -1,5 +1,5 @@
 """Oracle (standard mode): streams the reference rows (solution/oracle.npy, one row of muscle commands per control step,
-float32-exact) as `muscle` chunks through the client, the same interface an agent has. Uses no privileged information at
+float32-exact) as action chunks through the client, the same interface an agent has. Uses no privileged information at
 run time; the service's recorded trajectory is then exactly the privileged reference. If the service crashes it resumes
 the same episode (spec["on_service_error"]): the oracle waits until it answers again and goes on from the control step
 it reports."""
@@ -18,13 +18,14 @@ A = np.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "oracle.npy
 r = Robot()
 spec = r.spec()
 dt = 1.0 / float(spec["control_hz"])
+atype = next(k for k in spec["action_types"] if k != "not_yet")   # "muscle", or "actuators" with non-muscle ones
 per_chunk = max(1, int(spec.get("max_chunk_s", 10) / dt + 1e-9))
 print("spec:", spec["protocol"], "rows:", len(A), flush=True)
 t0, i = time.time(), 0
 while i < len(A):
     chunk = A[i : i + per_chunk]
     try:
-        res = r.submit("muscle", chunk, dt=dt, interpolate="hold", video="none", note=f"oracle rows {i}+")
+        res = r.submit(atype, chunk, dt=dt, interpolate="hold", video="none", note=f"oracle rows {i}+")
     except EpisodeOver as e:
         print("episode over:", e)
         break

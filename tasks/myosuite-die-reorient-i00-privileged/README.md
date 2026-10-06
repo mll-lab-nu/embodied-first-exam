@@ -9,14 +9,14 @@
 | Family / instance | `die_reorient` / seed 0 |
 | Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-die-reorient-i00__EtyJ3X7` (225 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Rotate the die in the hand to the target pose: its position within 0.025 m of the target and the norm of its Euler-angle error below 0.262 rad, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the die more than 0.2 m from the target (dropped).
-A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. The deliverable is one replayable trajectory of muscle commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
+A die rests in the palm of the upturned hand; a translucent target die shows the goal orientation. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 10 ms control step).
 
 ## Difficulty
-First-pass rating: hard. The action is muscle-level only (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint or fingertip control from muscle excitations, and MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
+First-pass rating: hard. The action is muscle-level (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
 
 ## Reference solution
 None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-die-reorient-i00__EtyJ3X7` (225 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD.
@@ -29,7 +29,7 @@ None. Solvability evidence: a successful model trial on this frozen instance: Cl
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Instance | `myoChallengeDieReorientP1-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `7e5922c982779368`, checked on every load |
-| Actions | 39 muscle commands per control step (10 ms, 5 physics substeps); success = MyoSuite's `solved` held 100 steps |
+| Actions | 39 actuator commands per control step (10 ms, 5 physics substeps); success rule `hold` (docs/benchmarks/myosuite.md) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 
 ### Provenance

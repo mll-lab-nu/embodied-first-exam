@@ -9,14 +9,14 @@
 | Family / instance | `obj_hold` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoHandObjHoldFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Hold the object at the goal: its centre within 0.010 m of the goal site for 50 consecutive control steps (1.0 s). Failure (the episode ends): the object more than 0.30 m from the goal (dropped). The object starts resting in the hand and falls if the hand does not grip it.
-A small object rests in the palm of the upturned hand; the goal site is right above it. The deliverable is one replayable trajectory of muscle commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 20 ms control step).
+A small object rests in the palm of the upturned hand; the goal site is right above it. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 20 ms control step).
 
 ## Difficulty
-First-pass rating: medium. The action is muscle-level only (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint or fingertip control from muscle excitations, and MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
+First-pass rating: medium. The action is muscle-level (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
 
 ## Reference solution
 MyoSuite's own NPG baseline policy for `myoHandObjHoldFixed-v0` (`myosuite/agents/baslines_NPG/`, shipped in the MyoSuite wheel and removed from the image), rolled out from the frozen instance and cut at the first success: `solution/oracle.npy`, 57 rows (float32-exact, so the standard twin's client executes the same rows), success after 57 control steps. Replayed and saved by `solution/solve.sh`; re-checked by `scripts/myosuite/make_facts.py --oracles` (two fresh sessions, same final state).
@@ -29,7 +29,7 @@ MyoSuite's own NPG baseline policy for `myoHandObjHoldFixed-v0` (`myosuite/agent
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Instance | `myoHandObjHoldFixed-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `8a1f6bbaffdfea78`, checked on every load |
-| Actions | 39 muscle commands per control step (20 ms, 10 physics substeps); success = MyoSuite's `solved` held 50 steps |
+| Actions | 39 actuator commands per control step (20 ms, 10 physics substeps); success rule `hold` (docs/benchmarks/myosuite.md) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 
 ### Provenance

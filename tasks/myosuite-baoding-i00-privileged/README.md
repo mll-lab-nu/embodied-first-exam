@@ -9,14 +9,14 @@
 | Family / instance | `baoding` / seed 0 |
 | Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG` (215 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoChallengeBaodingP1-v1` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Baoding balls: rotate the two balls around each other in the palm so that each follows its moving target (the targets circle the palm once every 5 s). Success: both balls within 0.015 m of their targets for 200 consecutive control steps (5.0 s: one full orbit of the targets). Failure (the episode ends): a ball's height (world z) drops below 1.25 m, i.e. it falls out of the palm.
-Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now. The deliverable is one replayable trajectory of muscle commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 25 ms control step).
+Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now. The deliverable is one replayable trajectory of actuator commands (`/app/output/trajectory.npz`, `(T, 39)`, one row per 25 ms control step).
 
 ## Difficulty
-First-pass rating: hard. The action is muscle-level only (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint or fingertip control from muscle excitations, and MyoSuite's goal has to hold for 5.0 s, so passing through the goal does not count.
+First-pass rating: hard. The action is muscle-level (39 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. MyoSuite's goal has to hold for 5.0 s, so passing through the goal does not count.
 
 ## Reference solution
 None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG` (215 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD.
@@ -29,7 +29,7 @@ None. Solvability evidence: a successful model trial on this frozen instance: Cl
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Instance | `myoChallengeBaodingP1-v1` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `04882d9bf16a24f6`, checked on every load |
-| Actions | 39 muscle commands per control step (25 ms, 10 physics substeps); success = MyoSuite's `solved` held 200 steps |
+| Actions | 39 actuator commands per control step (25 ms, 10 physics substeps); success rule `hold` (docs/benchmarks/myosuite.md) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 
 ### Provenance

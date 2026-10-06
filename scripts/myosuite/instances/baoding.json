@@ -9,6 +9,13 @@
  "hold_s": 5.0,
  "instance_sha": "04882d9bf16a24f6",
  "goal": "Baoding balls: rotate the two balls around each other in the palm so that each follows its moving target (the targets circle the palm once every 5 s). Success: both balls within 0.015 m of their targets for 200 consecutive control steps (5.0 s: one full orbit of the targets). Failure (the episode ends): a ball's height (world z) drops below 1.25 m, i.e. it falls out of the palm.",
+ "rule": "hold",
+ "set3": false,
+ "actuators": [],
+ "n_muscles": 39,
+ "free_root": false,
+ "track_steps": null,
+ "reference": null,
  "scene": "Two balls rest in the palm of the upturned hand; two small markers show where each ball should be now.",
  "difficulty": "hard",
  "hours": 3.0,
@@ -35,6 +42,6 @@
   "hand_side_exter",
   "plam_lookat"
  ],
- "steps_per_s": 1600,
+ "steps_per_s": 1500,
  "rest_reason": "failure: a ball dropped or left its target"
 }

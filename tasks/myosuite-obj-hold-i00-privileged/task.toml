@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/myosuite-obj-hold-i00-privileged"
-description = "MyoSuite obj_hold (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of muscle commands. Hold the object at the goal: its centre within 0.010 m of the goal site for 50 consecutive control steps (1.0 s). Frozen scene instance (myoHandObjHoldFixed-v0, reset seed 0); graded by two fresh-process replays."
+description = "MyoSuite obj_hold (MyoHand, 39 muscles, MuJoCo): produce one replayable trajectory of actuator commands. Hold the object at the goal: its centre within 0.010 m of the goal site for 50 consecutive control steps (1.0 s). Frozen scene instance (myoHandObjHoldFixed-v0, reset seed 0); graded by two fresh-process replays."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "obj_hold", "privileged"]
 
