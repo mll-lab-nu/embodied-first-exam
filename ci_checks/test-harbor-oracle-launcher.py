@@ -117,6 +117,19 @@ os.execv(os.environ['TEST_REAL_PYTHON'],[os.environ['TEST_REAL_PYTHON'],*sys.arg
         self.assertEqual([r["solve"] for r in rows], [0, None, 0, None])
         self.assertEqual(len((self.root / "dispatch.jsonl").read_text().splitlines()), 2)
 
+    def test_orbits_below_easy_is_accepted_and_dispatched(self):
+        for mode in ("privileged", "standard"):
+            task = self.tasks / f"topogym-orbits-very-easy-i00-{mode}"
+            task.mkdir()
+            (task / "task_release.json").write_text("{}")
+        plan = self.run_queue("--families", "orbits", "--tiers", "very_easy", "--plan")
+        self.assertEqual(plan.stdout, "orbits\tvery_easy\tprivileged -> standard\n", plan.stderr)
+        result = self.run_queue("--families", "orbits", "--tiers", "very_easy")
+        # The shim grades every family except cast_keyhole 0; dispatch, not the grade, is under test.
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        argv = json.loads((self.root / "dispatch.jsonl").read_text())
+        self.assertEqual((argv[argv.index("--families") + 1], argv[argv.index("--tiers") + 1]), ("orbits", "very_easy"))
+
     def test_fresh_host_builds_image_before_tasks_and_resume_keeps_bound_image(self):
         command = ["bash", str(SCRIPT), "--output", str(self.root / "output"),
                    "--families", "cast_keyhole", "--tiers", "easy"]
