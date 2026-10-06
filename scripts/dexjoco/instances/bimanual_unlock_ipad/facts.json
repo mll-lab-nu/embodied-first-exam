@@ -1,0 +1,73 @@
+{
+ "family": "bimanual_unlock_ipad",
+ "demo": "ipad_unlock_demo_10_2026-03-22_13-59-49_595064",
+ "instance_sha": "d38c827ac3bb030e",
+ "objects": [
+  "ipad",
+  "ipad_screen",
+  "stand",
+  "table_top"
+ ],
+ "cameras": [
+  "back",
+  "handcam_rgb_right",
+  "handcam_rgb_left"
+ ],
+ "tcp0": "right [-0.443, -0.4, 1.517] / [0.0, 1.0, 0.0, 0.0], left [-0.443, 0.4, 1.517] / [0.0, 1.0, 0.0, 0.0]",
+ "table_top_z": 0.97,
+ "arm_bases": {
+  "link0_right": [
+   -0.75,
+   -0.4,
+   0.924
+  ],
+  "link0_left": [
+   -0.75,
+   0.4,
+   0.924
+  ]
+ },
+ "hand_lo": [
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  0.26,
+  -0.1,
+  -0.19,
+  -0.16
+ ],
+ "hand_hi": [
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  1.4,
+  1.16,
+  1.64,
+  1.72
+ ],
+ "oracle_rows": 392,
+ "oracle_state_sha": "89ebcd76f8b8a1dd",
+ "steps_per_s": 190,
+ "success_src": "def _compute_success(self):\n    if self._unlock_failed:\n        return False\n\n    if self._screen_unlocked:\n        self._success_trigger_count += 1\n    else:\n        self._success_trigger_count = 0\n\n    return self._success_trigger_count >= self._success_trigger_target\n\n    # if self._screen_geom_id >= 0 and self._mat_screen_unlocked_id >= 0:\n    #     return int(self._model.geom_matid[self._screen_geom_id]) == self._mat_screen_unlocked_id\n    # return False",
+ "success_path": "dexjoco/dexjoco/sim/envs/panda_bimanual_unlock_ipad_env.py",
+ "rcb_src": "",
+ "water_aim_max_deg": 45.0
+}
