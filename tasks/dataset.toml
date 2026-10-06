@@ -4879,35 +4879,35 @@ digest = "sha256:932cb1ec8c629547c89d80b91fd3049b3e23b237afe68900caa42c0e7828dc8
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-baoding-i00-privileged"
-digest = "sha256:daccd8d7b3089d70379943cbf217335f0ab661e6889d12581091437c5e5ae87b"
+digest = "sha256:cf1d3870aea09d4f04750e5d725a5467b37eb2cc4241dc655a259d3d6a54da43"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-baoding-i00-standard"
-digest = "sha256:28a18cfb2e72218887549dcabcddb41bb75a28f7a3eec11301caf62a9c265f6a"
+digest = "sha256:cfffed75408ecf6db599ae352c2f5839856776d1bf80602ad0f7967650f10e51"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-die-reorient-i00-privileged"
-digest = "sha256:43ccd296ee46d232cbc25654ee79f88f556314b6a9e28060b140c6889cb0f15c"
+digest = "sha256:12665d2c7f55ed191b8747684b9671d592bb246802299b18aa5122de2d394baf"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-die-reorient-i00-standard"
-digest = "sha256:d407be44581e92f87bab748f6acde1810940c70132c4917ff7465e1467cb9d8b"
+digest = "sha256:c5117a8e9a9bee4f76d69b4c7297260e177416eeeba4dd5053e288b6fb5d0f41"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-hand-pose-i00-privileged"
-digest = "sha256:646498c2ceaaabca6fd06fd69fe0b312de92fc11d31791335230fdbc3c408331"
+digest = "sha256:e75ee9cf29108b768530c81f1bbc86b39a74957fd8d7c758309a8f5be89495d5"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-hand-pose-i00-standard"
-digest = "sha256:86edd9593b4da2a470657596a29d45641158501d7c92dda98ca7f091172f2f5c"
+digest = "sha256:65763f8670ca8539ab6511605455dfafee08f2bb02eb4b25f847ef65dde31003"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-hand-reach-i00-privileged"
-digest = "sha256:f09b90dc3edfac93bedf5d1228263f9cc478c949ee20fef176a3e23ebf2ebe12"
+digest = "sha256:449a649e8cfa86ce60c087a3df4d7a6a3fc7e7b214a4f1d1c22c44114e95ef01"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-hand-reach-i00-standard"
-digest = "sha256:4bbb603c106e49c479d5b584084c207a2503553b9bfb1afb933f9fa323958228"
+digest = "sha256:b90c922c4b0b4182f62fe2d9bde242b681d6a015acb92e10882a3850f2f4c2c8"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-key-turn-i00-privileged"
@@ -4927,121 +4927,121 @@ digest = "sha256:bed6422e2ca60ae368dcc89f3636af3588fff04c934b3a612efc535823200f5
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-obj-reorient-i00-privileged"
-digest = "sha256:b93075e4c1d02bcda20d4cb75cf7310ac7636b4cfe14157f96e9e45482ebe352"
+digest = "sha256:a5003f45d41085a95d65ceea917da7656383118921ab4b4dfb2233f585345d20"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-obj-reorient-i00-standard"
-digest = "sha256:24d0e0d4412a3285f7a1414ef21418d064bc439fb68fbea378e54d256c2f7c6c"
+digest = "sha256:b9221f9fc16f5dec34454257632c61c9b345e9b011992ec992d34653876dc030"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-pen-twirl-i00-privileged"
-digest = "sha256:db952d658696bc7fb4255405fc21aa5299dba4270b3febd242ca0a25328d03f8"
+digest = "sha256:c1200f95a03fa67f0117a3c17c4645c0bed3959167584b9ed5e9f29bc816d39b"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-pen-twirl-i00-standard"
-digest = "sha256:bb38e271005fb04bc7423923ffe3d1cfbe6b8f2cf3e9e262a02beaa9d149ac6c"
+digest = "sha256:43472c78adde549d7b4fae3227322432bb876e9f274e76928a19b34a6a7b7c91"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-relocate-i00-privileged"
-digest = "sha256:3b165d1c585893c90da10533eee6bc9181539e700e4850776798863113e88d99"
+digest = "sha256:083d36967a42235e43f2fe812f611e604662dea2826d2dd05daa5ef0f5f42819"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-relocate-i00-standard"
-digest = "sha256:50656836f9a50d832eec1b41d20f0807d805735b7316411e117310530f0ac583"
+digest = "sha256:1205590a7967197a325485a12fa96cfa934c9a06e57030404ecb91795e8257c9"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-bimanual-i00-privileged"
-digest = "sha256:c39495a2c13b4f7597b60645ad39bc1fa1df580f88a716b4d51eb4b56063fa95"
+digest = "sha256:faf0348cda7540a6c257c8c0363c0897d42076a6db1fa9b7f27be0135313d746"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-bimanual-i00-standard"
-digest = "sha256:ef21d4dc68f8d93a4116564f9caed75c614adb7a2406bb989e945346755d6c77"
+digest = "sha256:da2ea03eb4b5a799864fcf9e43bf78f6ce3c431342c1351f846f200cee5217a9"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-chase-tag-i00-privileged"
-digest = "sha256:f2ab728721f5570c098c971befea56c15d1de3e17c712ac88f7cdd92d8592b3c"
+digest = "sha256:101d7bf513dac7dd9216994eb8ce7d5e762e7307f85b622cd7f16f49cc44c2d5"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-chase-tag-i00-standard"
-digest = "sha256:7ef47d532624e14e169e63a4180122b726755c5f763bbdef97de9c0aa602592c"
+digest = "sha256:59ce132bb6d3a831aac3216d115b8a1ddec3ee480fa7f6cd40d9f2ae7b4ead6f"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-airplane-fly-i00-privileged"
-digest = "sha256:1647bd678031ccea130dcd76f598eb9faa1ec216d6e50b0231be93a7143ebb52"
+digest = "sha256:aa22c4b7087a3d47e4d9126da8ee022e5e11640196b976f1b463a0a643e1ce8e"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-airplane-fly-i00-standard"
-digest = "sha256:d7ec528670401816bd838912cf5bf33caec94e55e2f6c84304d4948a1275465a"
+digest = "sha256:22a7f90d0deee2be77905f7abec5cc4dcc304602968bfb2f5c062c43ea97fc40"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-apple-lift-i00-privileged"
-digest = "sha256:679d9fc549b5963953c8fea07a21f48aabde1b00c06b8304a1007448f33965ab"
+digest = "sha256:d121e069da4caa5697bf228d64fbf0f61ad5dd3502d4a4a2895d7578be77079b"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-apple-lift-i00-standard"
-digest = "sha256:a1766f6197e5c5a6205279f4ae6bf09256de6f53fad9fa49d99ff171aba9b409"
+digest = "sha256:883f7f3bd31b6b35e8cf006719666c2c32387bdd31442eab4afad3c68e9eb0f3"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-bunny-inspect-i00-privileged"
-digest = "sha256:73d3b6cab12f81e8f7be98752ecf9d8d3240c721f6973a252155d685926fc3dc"
+digest = "sha256:eb16018a826aaba4102aa324ef2595d6b58c96939a744a69c91530c9955ee0a3"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-bunny-inspect-i00-standard"
-digest = "sha256:1b7e21acf692eacdb41690762d533125a177faa9ccf84d18de5449755388dd0f"
+digest = "sha256:865af769800b3699bd258f031ae6a9486b230e29c06220d0ebdf7b3c35ce5d85"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-cup-pour-i00-privileged"
-digest = "sha256:d451ee8f44f5718421ae37cb81f5a387f7ff06350087afd65613145ce64f3e35"
+digest = "sha256:ec4f465f894b62f23f434fb1bfe27ea6f349bd0718e24c42ab52dcd1744c7803"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-cup-pour-i00-standard"
-digest = "sha256:18655c50803b151d73e19bdbfebe6449a4508962385a842a8e254b6aa5e453b4"
+digest = "sha256:05f29a88978ec8df90583b866caed0a1423995e67446e96fa282c6464258bb9e"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-cylinder-pass-i00-privileged"
-digest = "sha256:0b6333c117edaccf6027b49509c5f6ba6495252d3e1716b540b1778fec0a5c35"
+digest = "sha256:8b637107758fc756b495f9fcfa1bce7636c066f0eeaf0484177c84ac8d13824a"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-cylinder-pass-i00-standard"
-digest = "sha256:89a3dfcd80ffbf4cbdb4936019afbb36f369fff38b518a6b3790b2efcaef814d"
+digest = "sha256:99154786181e85a62abc4fd8d9f21ed1833bab2b312a593ca5115d15be63631f"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-hammer-use-i00-privileged"
-digest = "sha256:879826360d6ed3c7cbdfa372ab814b5d2d1002ddf1a7a1a48e56aeafb579181f"
+digest = "sha256:a8273622c836dd42086c176080ac31da9071f37f563207e211333dac7ca229a4"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-dex-hammer-use-i00-standard"
-digest = "sha256:04a241256fc4dd7672ff76092b474d865d0221880938bf1367cd1f2120e4b29e"
+digest = "sha256:18c5400cf32cd9739f3cbc394423906c99595b98e6db729c43de3085bf521360"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-osl-run-i00-privileged"
-digest = "sha256:d7aaa286cb5b3442fcc825e479c97252479f80beb0397f47aa4b5a8d79dba7e2"
+digest = "sha256:2981a8c46f952f78088de8a4c780c734555982b3777d6d2769afcf89c75d3c05"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-osl-run-i00-standard"
-digest = "sha256:6159aae98e2d9ddea090def9b74ef4b023711bfdfa5860d8b08da751361b0a39"
+digest = "sha256:bdccf53944d3224b0d4bd5934f85cdc24c1969d1323dfd56f03d98ac90dc111e"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-sarc-key-turn-i00-privileged"
-digest = "sha256:0f2958ceb40242b28ccbeeffdad009cd02c00cc1674dc2d382011e8649fde5f3"
+digest = "sha256:f711ee41e5e59e8dbafff603e72fad75cd1078d7e160e6f552a6faf04eeb4c93"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-sarc-key-turn-i00-standard"
-digest = "sha256:3a2c0719e4327591e2ff6891714a18968850c38672224f89576cbdb2821e9b4f"
+digest = "sha256:d995247f593fea4d25174aea6b50d94341e3be3beff0cabe05bf89231fb88b08"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-soccer-i00-privileged"
-digest = "sha256:cc07fd3356614a99b99015286da7f33add267ae85f93bcbc1d55e01d0adb2dbe"
+digest = "sha256:cb7af64e59d83d2818cd7844c57c0c05474a50e6018c9e9a53d6e3b8ef7efd60"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-soccer-i00-standard"
-digest = "sha256:194379e68a38a331a311824c9eafbc719697b57f1f3806d5b9ce4b54e2975d7b"
+digest = "sha256:afd5e45912ab28a88fa21b6d2bb6d74c6c76f2517b3a7a7f02603d485e3d800d"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-table-tennis-i00-privileged"
-digest = "sha256:a90136d5f668dd6c97cd35aef772fc3e1c7a07618771f4ad4d458353c7e1a85b"
+digest = "sha256:8e2b62005e21072cebd6c5e323d5ef97ea1f1da2713d8d3bc600031b414e48eb"
 
 [[tasks]]
 name = "robot-coding-bench/myosuite-table-tennis-i00-standard"
-digest = "sha256:27c44de6be6c9334e9f38a4465c62d60ae47132fde0294cb08b4208c28fcedb2"
+digest = "sha256:ab662facb27913488097bd11797981c6e1ac2eb0e340e159203ab1615feeeed1"
 

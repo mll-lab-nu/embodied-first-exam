@@ -7,7 +7,7 @@
 | Twin | `myosuite-bimanual-i00-standard` |
 | Simulator / robot | `myosuite` / `myoarm-mpl` |
 | Family / instance | `bimanual` / seed 0 |
-| Oracle | `none` — no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #TBD |
+| Oracle | `none` — no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #65 |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
@@ -19,10 +19,10 @@ The MyoArm (right, muscles) and a prosthetic MPL arm (left, motors) stand at a t
 First-pass rating: hard. The action is muscle-level (63 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event; nothing short of it counts, and the challenge's failure conditions and time limit apply.
 
 ## Reference solution
-None. Solvability evidence: no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #TBD.
+None. Solvability evidence: no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #65.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success (the challenge's own success event) in the same state (`deterministic`). No oracle; human review in PR #TBD. `nop`: no trajectory, reward 0.
+`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success (the challenge's own success event) in the same state (`deterministic`). No oracle; human review in PR #65. `nop`: no trajectory, reward 0.
 
 ## Details
 | | |

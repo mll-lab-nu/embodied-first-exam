@@ -7,7 +7,7 @@
 | Twin | `myosuite-table-tennis-i00-standard` |
 | Simulator / robot | `myosuite` / `myoarm-torso` |
 | Family / instance | `table_tennis` / seed 0 |
-| Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-table-tennis-i00-privil__kdQdy89` (111 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD |
+| Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-table-tennis-i00-privil__kdQdy89` (111 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
@@ -19,10 +19,10 @@ You stand at a table-tennis table holding a paddle in the right hand; a ball is 
 First-pass rating: hard. The action is muscle-level (273 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. Success is the challenge's own event; nothing short of it counts, and the challenge's failure conditions and time limit apply.
 
 ## Reference solution
-None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-table-tennis-i00-privil__kdQdy89` (111 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #TBD.
+None. Solvability evidence: a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-table-tennis-i00-privil__kdQdy89` (111 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success (the challenge's own success event) in the same state (`deterministic`). No oracle; human review in PR #TBD. `nop`: no trajectory, reward 0.
+`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success (the challenge's own success event) in the same state (`deterministic`). No oracle; human review in PR #65. `nop`: no trajectory, reward 0.
 
 ## Details
 | | |
