@@ -18,7 +18,9 @@ Coil easy 已实测完成 3 步 oracle 前缀的 privileged 两遍回放，以�
 
 现已接入 9 类 × 2 档 × privileged/standard，共 36 个可选择评分位置；seed 0，
 完整 oracle，串行执行，无模型调用。Rope 控制器仍是开发候选；本地历史成功不继承为当前 grade。
-Horseshoe、Slotted 的简单档只有几何检查，缺完整机器人 oracle，另列覆盖缺口。Hedgehog 的两档（2026-10-06）经同一分派器
+Slotted 的 very_easy（2026-10-06）经同一分派器接入 `slotted_post_ring/below_easy_oracle.py`（指尖捏环、直上越柱顶、
+放入目标区），无参考数据；easier 暂缺 oracle，分派后由 `public_session` 拒绝（见 `docs/rcb/ORACLE_FIXES_2_FOR_JIANWEN.md`
+第 5 节）。Hedgehog 的两档（2026-10-06）经同一分派器
 接入 easy 的实测路径 oracle，每档一个 pickup（`reference_data/hedgehog_in_cage/<tier>/pickup.json`，由
 `hedgehog_in_cage/below_easy_pickup.py` 生成）。
 
