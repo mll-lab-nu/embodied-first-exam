@@ -7,7 +7,7 @@
 | Twin | `myosuite-baoding-i00-privileged` |
 | Simulator / robot | `myosuite` / `myohand` |
 | Family / instance | `baoding` / seed 0 |
-| Oracle | `none` — no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG`) fails once its rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #TBD |
+| Oracle | `none` — no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG`) fails once its rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #65 |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
@@ -19,10 +19,10 @@ Two balls rest in the palm of the upturned hand; two small markers show where ea
 Same instance and success rule as `myosuite-baoding-i00-privileged` (first-pass rating: hard). In standard mode the agent loses resets, the simulator and the object state: it sees camera images and the limb's proprioception, acts in actuator-command chunks, and gets one episode, so it has to close the loop on what it sees and recover from its own mistakes without starting over.
 
 ## Reference solution
-None. Solvability evidence: no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG`) fails once its rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #TBD.
+None. Solvability evidence: no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG`) fails once its rows are rounded to the client's float32 (a ball drops after 206 control steps; 400 random float32 roundings of its rows fail too); the family's solvability rests on the privileged twin; human review in PR #65.
 
 ## Verification
-The sim service judges the episode live and records every executed control step; the collect hook (`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, both replays succeed, and they end in the same state. No oracle; human review in PR #TBD. `nop`: the episode times out, reward 0.
+The sim service judges the episode live and records every executed control step; the collect hook (`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, both replays succeed, and they end in the same state. No oracle; human review in PR #65. `nop`: the episode times out, reward 0.
 
 ## Details
 | | |
