@@ -1,0 +1,47 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/robopaint-strict-acrylic-plumpark-i00-privileged"
+description = "RoboPaint-strict acrylic stroke copy: embodied robotic painting (ManiSkill 3.0.1 Franka Panda with a round acrylic brush; the paint is libmypaint 1.6.1 with the mypaint-brushes preset tanda/acrylic-03-paint, an opaque paint whose mark width follows the pressure): produce one replayable trajectory that copies the painting shown in the picture target.png (a small acrylic painting after Utagawa Hiroshige's woodblock print Plum Park in Kameido, 1857) onto the main sheet with 10 premixed paints, in at most 384 strokes. Scored at a 1 mm scale against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff mean CIELAB ΔE <= 2.0, p90 ΔE <= 6.0, SSIM of L* >= 0.92, edge correlation >= 0.8, paint IoU >= 0.95 and at most 384 strokes; 1 - mean ΔE / 20 is the continuous score). s.score() is served by a separate scoring container. Process rules (RoboPaint-strict): paint with brush strokes the way a person paints; colouring in or filling areas with a thin line, zigzag, serpentine or contour-offset fills fail; the brush tip's path pressed on the main sheet with paint is at most 42300 mm in total, and at most 10 % of it in strokes longer than 2.5 x the diagonal of their bounding box."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "robopaint", "robopaint-strict", "maniskill", "sapien", "painting", "acrylic-painting", "mypaint", "brush", "stroke-copy", "franka", "code-as-policy", "trajectory", "robopaint_strict_acrylic_plumpark"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the CPU) + libmypaint 1.6.1 (rcb_brush.py MyPaintPainter, CPU)
+robot = "franka-panda"            # PandaStick with a paint brush: rigid handle + 15 mm collision-free tuft, TCP = the tuft's tip
+family = "robopaint_strict_acrylic_plumpark"
+mode = "privileged"               # privileged (exact sheets, score, brush state) | standard (RGB only: the -standard twin)
+oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
+oracle_evidence = "The RoboPaint pair's reference solution, unchanged (solution/; its RoboPaint record: the oracle_evidence of robopaint-acrylic-plumpark-i00-privileged). Under the process rules the strict verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 14099 of the 42300 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint-strict.md (Validation)."
+instance_seed = 0                 # scene = environment/instance.json (sheets, brush preset, paint wells, start joints, instance_sha; the exemplar is target.png)
+expert_time_estimate_hours = 4.0
+difficulty = "hard"             # RoboPaint tiers: acrylic stroke copy hard, oil paint-from-reference extreme
+medium = "mypaint"                # the brush model: calligraphy (Wang et al. 2020) | broad_nib | mypaint
+stroke_count = 295                # difficulty axes: the exemplar program's strokes (hidden), the stroke budget, paints, brush sizes, layers
+stroke_budget = 384
+palette_size = 10
+brush_sizes_mm = [16.2, 9.4, 5.2, 3.0]
+layers = 4
+colour_regions = 68                # the exemplar's palette-colour areas >= 30 mm² (graders' regions)
+source_image = "File:De pruimenboomgaard te Kameido-Rijksmuseum RP-P-1956-743.jpeg"
+source_license = "Public domain"
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 7200.0              # 2 h of wall clock (a replay of a few thousand control steps takes seconds)
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 8
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0

@@ -1,0 +1,42 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-maniguard:<images/maniguard/VERSION> is never pushed to a
+registry (docs/PROTOCOL.md §2.4, D5). Every evaluation host builds it locally; the ManiGuard tasks reference that tag and
+Harbor finds it in the local Docker image store.
+
+Why
+  The image contains NVIDIA Isaac Sim 4.5.0.0 / Omniverse Kit (NVIDIA's pip wheels from pypi.nvidia.com), licensed for use,
+  not for redistribution, so the built image may not be published. It also contains Spot (GPL-3.0-or-later, conda-forge),
+  which is fine in an image that is never distributed.
+
+What the builder accepts (decided by the user before a first build)
+  - the NVIDIA Isaac Sim / Omniverse license agreement (the image sets OMNI_KIT_ACCEPT_EULA=YES and ACCEPT_EULA=Y, and every
+    container that runs it accepts it again at launch), as BEHAVIOR-1K's setup.sh --accept-nvidia-eula does;
+  - NVIDIA's terms for the Isaac Sim wheels on pypi.nvidia.com;
+  - the licences of BEHAVIOR-1K's code (MIT), ManiGuard's code (Apache-2.0), Spot (GPL-3.0-or-later), PyTorch (BSD) and the
+    pip / conda-forge packages they pull in.
+  No account, key or token is needed for the build: everything is downloaded anonymously. Miniforge uses conda-forge only,
+  so no Anaconda terms of service apply (setup.sh's --accept-conda-tos is not needed).
+
+Data (never in the image): $RCB_MANIGUARD_DATA, a host directory with the BEHAVIOR-1K 3.7.2 data root, mounted read-only at
+/data by every task (scripts/maniguard/prep_data.py builds it, docs/benchmarks/maniguard.md):
+  behavior-1k-assets/        behavior-1k-assets-3.7.2rc1 (BEHAVIOR Data Bundle: the full set, or the members the
+                             selected ManiGuard tasks load; no redistribution)
+  omnigibson-robot-assets/   the robot assets BEHAVIOR-1K 3.7.2 downloads (omnigibson-robot-assets.zip, 2025-09-02), plus
+                             ManiGuard's long-finger Franka at models/franka/franka_panda_longfinger/ (Apache-2.0)
+  omnigibson.key             the BEHAVIOR Data Bundle key (installed after accepting its licence; never copied anywhere)
+
+Host
+  Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU. ManiGuard verified driver
+  580.x and reports repeatable Isaac Sim 4.5 startup segfaults with newer drivers. Blackwell GPUs (RTX 50 / RTX PRO 6000)
+  need torch 2.7.0+cu128 instead of 2.6.0+cu124 (ManiGuard's note): not this image; a separate build, checked separately.
+  Build: plan for about 50 GB of free disk (the image is 26 GB on disk; on a host with Docker's containerd image store the
+  first build of 2026-10-03 took about 40 GB of the disk in all, with the compressed layers and BuildKit's cache), network
+  access to github.com, raw.githubusercontent.com, pypi.org, download.pytorch.org, pypi.nvidia.com, conda.anaconda.org,
+  snapshot.ubuntu.com and d4i3qtqj3r0z5.cloudfront.net (NVIDIA's Kit extension CDN). Running needs no network: the image
+  holds every Kit extension the launch resolves (a standard-mode sidecar runs behind the agent's egress allowlist). Run: one Isaac simulator per 32 GB of host RAM. Tested on an RTX 4090 Laptop GPU (16 GB), driver
+  580.178.04: a replay peaks at about 4 GB of VRAM.
+
+Build (from the repository root)
+  docker build -t ghcr.io/mll-lab-nu/eai-maniguard:$(cat images/maniguard/VERSION) -f images/maniguard/Dockerfile .
+
+Check a build (README.md here): the evaluator imports (the build does it), the locks match (the build does it), and a frozen
+instance loads to its recorded state hash with the long-finger robot.
