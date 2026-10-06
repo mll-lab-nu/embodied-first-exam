@@ -5,7 +5,7 @@
 > says otherwise, every 2.2 addition is a MAY capability, and a request written for 2.0 or 2.1 gets the same answer as
 > before (plus parts and keys an old client ignores). Which parts are required is listed in PROTOCOL §4.
 
-**Who serves it.** The standard twins of four benchmarks: BEHAVIOR-1K, RoboLab, RoboWits and RoboPaint
+**Who serves it.** The standard twins of five benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint and ManiGuard
 ([docs/benchmarks/](benchmarks/)). The RoboTwin and MuJoCo standard tasks serve 2.1.
 
 **One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/), the D9 shared source of these four
@@ -144,7 +144,7 @@ Every 2.2 service has at least the groups `joint_pos`, `joint_vel`, `gripper_ope
 `tcp_pose` (7 columns per `kinematics.tcp_frames` entry) and `joint_effort` (the PD drive-effort estimate, or the
 simulator's measured effort).
 
-## 10. Never provided (the declaration of these four benchmarks, PROTOCOL D7)
+## 10. Never provided (the declaration of these five benchmarks, PROTOCOL D7)
 Through any endpoint, part or `/spec` field, and in the task's texts (instruction, README, task.toml description): where
 things are in the world (object poses and positions, world coordinates of workspace items: table or sheet heights, sheet,
 well or bin centres, a pixel-to-world formula, a camera's distance to the scene); segmentation of any kind; physical
@@ -152,7 +152,7 @@ parameters of the scene (mass, friction, damping, inertia, restitution; the robo
 the success predicate. Provided: a detailed goal, object names and inventories, categories, sizes and colours where the
 task needs them, qualitative relations, the robot and its tool, camera calibration, world conventions (BEHAVIOR's floor at
 z = 0 defines its frame), the budget. `rcb_limited.check_spec` refuses to start a service whose `/spec` names a forbidden
-field or puts a position into `static`; `ci_checks/check-limited-texts.sh` checks the texts of these four benchmarks (other
+field or puts a position into `static`; `ci_checks/check-limited-texts.sh` checks the texts of these five benchmarks (other
 benchmarks decide for themselves, D7); `ci_checks/check-limited-protocol.py` checks every response of a live service.
 Accepted consequence: a calibrated camera aimed at the workspace tells roughly where the workspace is.
 
@@ -202,7 +202,7 @@ The resume check depends on the simulator's determinism class, which the adapter
 | class | rule | benchmarks |
 |---|---|---|
 | `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) | RoboWits on Genesis' CPU backend; RoboLab (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact); RoboPaint (ManiSkill/SAPIEN, CPU PhysX, CPU brush model) |
-| `approx` | the hash is compared and the result recorded; a mismatch does not end the episode: `resume_state_mismatch = 1`, and the robot's deviation from its checkpointed proprio is recorded (max \|Δ\| over `joint_pos`; the largest TCP position error from `tcp_pose`). Only a gross divergence, a TCP more than `RCB_RESUME_MAX_DEV_M` (0.05 m) from where it was, ends the episode as `resume_failed` (`infra_error = 1`) | simulators declared nondeterministic: RoboWits on the GPU backend (the particle families separate_marbles_and_sand and stabilize_bottle, `RCB_ROBOWITS_BACKEND=gpu`); BEHAVIOR-1K (OmniGibson declares rollouts nondeterministic; measured so far: live = fresh replay on every 2.2 run, so it normally resumes exactly) |
+| `approx` | the hash is compared and the result recorded; a mismatch does not end the episode: `resume_state_mismatch = 1`, and the robot's deviation from its checkpointed proprio is recorded (max \|Δ\| over `joint_pos`; the largest TCP position error from `tcp_pose`). Only a gross divergence, a TCP more than `RCB_RESUME_MAX_DEV_M` (0.05 m) from where it was, ends the episode as `resume_failed` (`infra_error = 1`) | simulators declared nondeterministic: RoboWits on the GPU backend (the particle families separate_marbles_and_sand and stabilize_bottle, `RCB_ROBOWITS_BACKEND=gpu`); BEHAVIOR-1K (OmniGibson declares rollouts nondeterministic; measured so far: live = fresh replay on every 2.2 run, so it normally resumes exactly); ManiGuard (OmniGibson 3.7.2; not measured yet) |
 
 This relaxes "the hash checked" of PROTOCOL §4.7 for declared-nondeterministic simulators only. It cannot raise a score:
 the verdict never comes from the live state, it comes from fresh replays of the complete recorded trajectory (the
@@ -274,17 +274,17 @@ Every privileged Session of the four benchmarks offers the same information from
 stays privileged (object state through the tooling).
 
 ## 16. Per-simulator notes (the protocol is the same; the robot and the clock differ)
-| | RoboWits (Genesis 0.4.7) | RoboLab (Isaac Lab 2.3) | BEHAVIOR-1K (OmniGibson 3.9.2, R1Pro) | RoboPaint (ManiSkill 3.0.1 / SAPIEN 3.0.3) |
-|---|---|---|---|---|
-| rows streamed at | 30 Hz control (4 substeps) | 15 Hz control (8 substeps) | 30 Hz control (4 substeps) | 20 Hz control (5 substeps) |
-| `joint_position` | 16: per arm 7 joints + gripper width (m) | 8: 7 joints + binary gripper (switched) | 25: base (per-step targets, robot frame) + trunk + arms + grippers | 7 joints |
-| `ee_pose` | 16 (right first), IK per row, gripper-tip frame | 8, closed-loop differential IK, fingertip-centre frame | 16 (left first, xyzw), cuRobo IK for both end effectors per row | 7, brush-tip targets `dt` apart, IK per control step |
-| cameras | `ego` (static), `wrist_right`, `wrist_left` | `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static), `wrist_cam` | head + two wrist cameras (224×224, moving) | `canvas_cam`, `practice_cam`, `scene_cam`, `side_cam` (static) |
-| depth | Genesis rasterizer | Isaac `distance_to_image_plane` | OmniGibson `depth_linear` | SAPIEN depth buffer (geometry only: ink and paint never show) |
-| `/kinematics` | pinocchio on the URDF (14 arm joints) | numpy model of the USD joints (7) | numpy model of the articulation (trunk + arms), cuRobo fallback | SAPIEN's pinocchio (7) |
-| proprio columns (2.0 → 2.2) | 30 → 80 | 16 → 32 | 49 → 121 | 14 → 28 |
-| grading replays | in-process (exact) | two fresh processes | two fresh processes | two fresh processes |
-| resume class (§13.1) | `exact` (CPU backend), `approx` (GPU backend) | `exact` | `approx` | `exact` |
+| | RoboWits (Genesis 0.4.7) | RoboLab (Isaac Lab 2.3) | BEHAVIOR-1K (OmniGibson 3.9.2, R1Pro) | RoboPaint (ManiSkill 3.0.1 / SAPIEN 3.0.3) | ManiGuard (OmniGibson 3.7.2, Franka long-finger) |
+|---|---|---|---|---|---|
+| rows streamed at | 30 Hz control (4 substeps) | 15 Hz control (8 substeps) | 30 Hz control (4 substeps) | 20 Hz control (5 substeps) | 20 Hz control (6 substeps) |
+| `joint_position` | 16: per arm 7 joints + gripper width (m) | 8: 7 joints + binary gripper (switched) | 25: base (per-step targets, robot frame) + trunk + arms + grippers | 7 joints | 8: 7 joints + binary gripper (+1 / -1, switched) |
+| `ee_pose` | 16 (right first), IK per row, gripper-tip frame | 8, closed-loop differential IK, fingertip-centre frame | 16 (left first, xyzw), cuRobo IK for both end effectors per row | 7, brush-tip targets `dt` apart, IK per control step | 8 (xyzw), numpy IK per row, fingertip-centre frame |
+| cameras | `ego` (static), `wrist_right`, `wrist_left` | `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static), `wrist_cam` | head + two wrist cameras (224×224, moving) | `canvas_cam`, `practice_cam`, `scene_cam`, `side_cam` (static) | `cam_opposite`, `cam_left`, `cam_right`, `cam_left_shoulder` (static), `wrist` |
+| depth | Genesis rasterizer | Isaac `distance_to_image_plane` | OmniGibson `depth_linear` | SAPIEN depth buffer (geometry only: ink and paint never show) | OmniGibson `depth_linear` |
+| `/kinematics` | pinocchio on the URDF (14 arm joints) | numpy model of the USD joints (7) | numpy model of the articulation (trunk + arms), cuRobo fallback | SAPIEN's pinocchio (7) | numpy model of the articulation (7 arm joints), world frame |
+| proprio columns (2.0 → 2.2) | 30 → 80 | 16 → 32 | 49 → 121 | 14 → 28 | — → 43 (no 2.0 version) |
+| grading replays | in-process (exact) | two fresh processes | two fresh processes | two fresh processes | two fresh processes |
+| resume class (§13.1) | `exact` (CPU backend), `approx` (GPU backend) | `exact` | `approx` | `exact` | `approx` (until measured) |
 
 ## 17. Known issues
 - RoboWits: during the in-process grading replay, `/status` and a late `/observe` report the replay's counter and scene;

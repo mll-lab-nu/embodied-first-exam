@@ -1,0 +1,42 @@
+# Standard mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# `/data` is the licensed BEHAVIOR dataset here (read-only; $RCB_BEHAVIOR_DATA is a precondition of every BEHAVIOR run,
+# docs/benchmarks/behavior.md), so the service writes its own record to `/out` (the container's own file system: it
+# survives compose's restarts of the same container). Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits
+# non-zero when the service crashes and compose restarts the container, which resumes the same episode from its journal.
+# The sidecar is TRUSTED: its Kit cache is a trusted volume of this trial only (no fixed name: compose names it after the
+# trial's project, and Harbor's teardown `compose down --volumes` deletes it), never mounted where agent code runs.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/mll-lab-nu/eai-behavior:0.1.1
+    volumes:
+      - ./sim:/srv:ro
+      - ${RCB_BEHAVIOR_DATA:?set RCB_BEHAVIOR_DATA to the directory holding your licensed BEHAVIOR dataset (docs/benchmarks/behavior.md)}:/data:ro
+      - rcb_behavior_cache_trusted:/cache
+    working_dir: /tmp
+    command: sh /srv/run.sh
+    restart: on-failure:6
+    environment:
+      OMP_NUM_THREADS: "8"   # thread pools capped (PyTorch sizes its pool to the host: 128 on a 256-core
+      MKL_NUM_THREADS: "8"   # host, spinning on every small tensor op); user 2026-09-27
+      RCB_TASK: setting_the_fire
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TOOL: /srv/rcb_behavior.py
+      RCB_DATA: /out
+      RCB_WALL_CLOCK_S: "14400"
+      RCB_CAM_SIZE: "224"           # the robot's own cameras at 224x224: what the agent sees
+      RCB_STARTUP_TIMEOUT_S: "1800" # startup watchdog: scene builds measured 130-404 s warm, +~250 s on this trial's cold Kit cache
+      PYTHONPATH: /srv
+      RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+volumes:
+  rcb_behavior_cache_trusted:
