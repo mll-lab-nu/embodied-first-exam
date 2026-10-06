@@ -20,7 +20,7 @@ mode = "privileged"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 oracle = "none"
-oracle_evidence = "none known: GPT-6 Luna failed both modes, and KinDER's paper reports success on this variant only as a rate (at most 0.14, its best method), with no rollout of this instance; human review in PR #8"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet; human review in PR #8"
 
 [verifier]
 timeout_sec = 900.0
