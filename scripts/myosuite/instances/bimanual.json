@@ -246,6 +246,6 @@
   "hand_side_exter",
   "plam_lookat"
  ],
- "steps_per_s": 800,
+ "steps_per_s": 600,
  "rest_reason": null
 }

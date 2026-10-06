@@ -8,7 +8,7 @@
  "hold_steps": 1,
  "hold_s": 0.02,
  "instance_sha": "bd23842e5afc7253",
- "goal": "Move the apple along MyoDex's recorded lift motion: a reference of the object's pose over 57 control steps (1.14 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 57 steps. Success: the object's centre of mass within 0.03 m of the reference at at least 90% of the control steps, and at the last one. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.",
+ "goal": "Move the apple along MyoDex's recorded lift motion: a reference of the object's pose over 57 control steps (1.14 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 57 steps. Success: the object's motion follows the reference's: its centre of mass's displacement since the start within 0.03 m of the reference's displacement since the reference's start, at at least 90% of the control steps and at the last one, with the displacement error never above 0.05 m. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.",
  "rule": "track",
  "set3": true,
  "actuators": [
@@ -698,6 +698,6 @@
   "hand_side_exter",
   "plam_lookat"
  ],
- "steps_per_s": 600,
+ "steps_per_s": 500,
  "rest_reason": "failure: object more than 0.25 m from the reference (or from the wrist)"
 }
