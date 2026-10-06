@@ -2,7 +2,7 @@
 
 For a helper who runs a batch of our tasks on their own GPU host and cannot reach our review site or our machines. You run the batch with our runner, check it for secrets, pack the job directories without changing their layout or names, and upload one archive. Our receiver validates the results and builds a local review report from those files, so the layout is the contract.
 
-> Release status: this frozen release is published in the private repository [LUIGIVAMPER/topogym-sweep-release-v1](https://github.com/LUIGIVAMPER/topogym-sweep-release-v1), at tag `rigid-v17-20261005-muse01-keyprompt01`. The helper needs access to this private repository and GitHub HTTPS authentication to use the clone command below. No SSH key setup is required; the HTTPS URL does not make the repository public. Review-site integration is deferred; section 8 covers the available receiver workflow.
+> Release status: this frozen release is published in the private repository [LUIGIVAMPER/topogym-sweep-release-v1](https://github.com/LUIGIVAMPER/topogym-sweep-release-v1), at tag `rigid-v17-20261006-failfast01`. The helper needs access to this private repository and GitHub HTTPS authentication to use the clone command below. No SSH key setup is required; the HTTPS URL does not make the repository public. Review-site integration is deferred; section 8 covers the available receiver workflow.
 
 > Version scope: this batch freezes `merged-v17` source and grading, including the privileged replay hold rule. At initial publication, all 24 instances were prepared; 6 passed preflight and full preflight was waived by the maintainer for the remaining 18. Additional maintainer preflight checks are separate from this frozen assignment and require no helper action. The online image rebuild and clean local Git clone were verified. These checks do not establish model success or completion of the formal 144-trial experiment.
 
@@ -10,11 +10,11 @@ For a helper who runs a batch of our tasks on their own GPU host and cannot reac
 
 | Item | Example | Why it matters |
 | --- | --- | --- |
-| Repository and release tag | [LUIGIVAMPER/topogym-sweep-release-v1](https://github.com/LUIGIVAMPER/topogym-sweep-release-v1), `rigid-v17-20261005-muse01-keyprompt01` | The tag pins the code, task directories and instructions for this release |
+| Repository and release tag | [LUIGIVAMPER/topogym-sweep-release-v1](https://github.com/LUIGIVAMPER/topogym-sweep-release-v1), `rigid-v17-20261006-failfast01` | The tag pins the code, task directories and instructions for this release |
 | Task list and modes | The 24 task bases below; privileged and standard; K=3 | One Harbor job per task and mode; three trials per job |
-| Batch name | `topogym-rigid-solxh-jianwen-20261005-v17-keyprompt01` | Every job name starts with it; the receiver matches it to our assignment. Use it verbatim |
+| Batch name | `topogym-rigid-solxh-jianwen-20261006-v17-failfast01` | Every job name starts with it; the receiver matches it to our assignment. Use it verbatim |
 | Agent settings | `AGENT=codex MODEL=openai/gpt-6-sol EFFORT=xhigh`; helper-supplied API key | The actual model and effort are recorded and must stay the same across this batch |
-| Upload target | Private dataset `eai-v2-internal/helper-uploads`, folder `helpers/jianwen/topogym-rigid-solxh-jianwen-20261005-v17-keyprompt01/`, write token from us | Where the archive goes |
+| Upload target | Private dataset `eai-v2-internal/helper-uploads`, folder `helpers/jianwen/topogym-rigid-solxh-jianwen-20261006-v17-failfast01/`, write token from us | Where the archive goes |
 
 Do not invent your own batch name, change budgets, edit task directories or modify the runner. If something forces a change, ask us first.
 
@@ -38,10 +38,11 @@ Run these commands in **Bash on the Linux GPU host**, not in Windows PowerShell 
 The command beginning with `AGENT=codex` and ending with `&` starts the actual experiment through `scripts/run_agent_batch.sh`. The backslashes join the lines into one command; the 24 task names are its arguments. It runs both modes and K=3 from the assignment, for 144 trials. `nohup` and the final `&` leave it running in the background, so the terminal prompt returning does not mean the experiment is finished. Cloning the repository and setting variables alone do not start trials.
 
 ```bash
-git clone https://github.com/LUIGIVAMPER/topogym-sweep-release-v1.git && cd topogym-sweep-release-v1 && git checkout rigid-v17-20261005-muse01-keyprompt01
+git clone https://github.com/LUIGIVAMPER/topogym-sweep-release-v1.git && cd topogym-sweep-release-v1 && git checkout rigid-v17-20261006-failfast01
+
 REPO=$PWD
 export JOBS=$PWD/jobs/agents                 # keep the default layout: jobs/agents/<batch>-<mode>-<task>/
-B=topogym-rigid-solxh-jianwen-20261005-v17-keyprompt01
+B=topogym-rigid-solxh-jianwen-20261006-v17-failfast01
 export ENV_FILE="$HOME/rcb.env"
 # Every launch: hidden model API-key prompt; HF-token prompt only if missing.
 # Do not put this configuration command under nohup.
@@ -81,12 +82,14 @@ fi
 
 - Paste the model API key at `Model API key (hidden; not the HF token):`, and the separate upload token at `HF upload token (hidden):`. Characters are intentionally not displayed. If configuration is cancelled or fails, the experiment is not launched. For a different API provider, supply its compatible endpoint with `--api-base-url` to the configuration command before first use; existing endpoint settings are preserved.
 - This release reads the published assignment automatically from the batch name. The 24 task bases above must match that assignment; no extra difficulty, seed, mode or K arguments are needed. Tool installation and image construction run automatically before trials; the helper does not run prepare or preflight.
+- After image setup, the runner automatically checks GPU container startup using the frozen runtime image and the task's Compose GPU settings, then executes a tiny CUDA operation. Identical GPU configurations are checked once per lane. This happens before model requests and trial claims; it is not a full physics/rendering preflight. A failed check retains redacted diagnostics under `jobs/.agent-batch-private/$B/gpu-check/` and leaves the batch unclaimed, so the same batch can be retried after fixing the host. No extra helper command or GPU-memory/utilization threshold is involved.
 - One runner is one lane (one trial at a time). Start the same command again to add a lane; every job is claimed by exactly one runner. The command defaults to GPU 0; coordinate GPU allocation before adding lanes.
 - Progress: `$JOBS/$B.log`; the summary table: `$JOBS/$B.summary.md`. During initial setup, see `run_$B.out`. The summary is refreshed after each job, so it may be absent or out of date while that job runs. Appending to `run_$B.out` preserves earlier output when another lane starts.
 - Never delete or move a job directory, including failed or interrupted ones. They are part of the record.
-- A trial that crashed for an infrastructure reason (host OOM, GPU lost, network outage): leave it in place, note it in the manifest, and rerun it only if we ask. Reruns go into the batch `topogym-rigid-solxh-jianwen-20261005-v17-keyprompt01-rerun`, with a new assignment supplied by us; changing `B` alone is not sufficient.
+- After each Harbor job returns, the runner checks all K=3 trial records, even when Harbor exits with code 0. Infrastructure exceptions, missing verdicts or invalid execution evidence stop further job claims and make the lane exit nonzero. Valid unsuccessful scores, pending human review and scored agent-budget timeouts do not stop the batch. Other lanes stop claiming new jobs; already running jobs finish and retain their evidence. The check is at the job boundary, so up to three repetitions can fail before it stops. The reason is recorded in `$JOBS/$B-stop.json` and each checked job's `-trial-check.json` sidecar; unstarted trials remain pending.
+- A trial that crashed for an infrastructure reason (host OOM, GPU lost, network outage): leave it in place, note it in the manifest, and rerun it only if we ask. Reruns go into the batch `topogym-rigid-solxh-jianwen-20261006-v17-failfast01-rerun`, with a new assignment supplied by us; changing `B` alone is not sufficient.
 
-**Check progress (optional; these commands do not start another lane).** Use the same terminal, with `REPO`, `JOBS` and `B` still set. In a new terminal, first enter your release checkout and set `REPO=$PWD`, `export JOBS=$REPO/jobs/agents` and `B=topogym-rigid-solxh-jianwen-20261005-v17-keyprompt01` again. Keep the batch name used at launch when inspecting an older run; do not substitute this batch name for a different experiment.
+**Check progress (optional; these commands do not start another lane).** Use the same terminal, with `REPO`, `JOBS` and `B` still set. In a new terminal, first enter your release checkout and set `REPO=$PWD`, `export JOBS=$REPO/jobs/agents` and `B=topogym-rigid-solxh-jianwen-20261006-v17-failfast01` again. Keep the batch name used at launch when inspecting an older run; do not substitute this batch name for a different experiment.
 
 Follow setup, image construction and runner output:
 
@@ -132,7 +135,7 @@ The full batch below uses the same 24 task bases, both modes, K=3 and per-trial 
 ```bash
 REPO=$PWD
 export JOBS=$PWD/jobs/agents
-B=topogym-rigid-muse-jianwen-20261005-keyprompt01
+B=topogym-rigid-muse-jianwen-20261006-failfast01
 export ENV_FILE="$HOME/.config/eai/openrouter.env"
 if python3 scripts/configure_agent_batch.py --provider openrouter \
   --env-file "$ENV_FILE" \
@@ -177,7 +180,7 @@ For a one-task smoke test, use the following **instead of** the full-batch launc
 ```bash
 REPO=$PWD
 export JOBS=$PWD/jobs/agents
-B=topogym-claws-muse-jianwen-smoke-20261005-keyprompt01
+B=topogym-claws-muse-jianwen-smoke-20261006-failfast01
 export ENV_FILE="$HOME/.config/eai/openrouter.env"
 if python3 scripts/configure_agent_batch.py --provider openrouter \
   --env-file "$ENV_FILE" --hf-token-file "$HOME/.config/eai/helper-hf.token"; then
@@ -197,7 +200,7 @@ The maintainer tested this adapter offline, including the actual fixed Muse CLI 
 After tool installation and image construction have succeeded, this optional command retries **only the model check**. It can make a short paid model session, but does not build images, claim trials, seal a batch or upload results. Run it from the updated release checkout with the existing OpenRouter credential file:
 
 ```bash
-B=topogym-rigid-muse-jianwen-20261005-keyprompt01
+B=topogym-rigid-muse-jianwen-20261006-failfast01
 export JOBS=$PWD/jobs/agents
 ENV_FILE="$HOME/.config/eai/openrouter.env" \
 CODEX_FORCE_AUTH_JSON=0 CODEX_AUTH_JSON_PATH= \
@@ -236,9 +239,9 @@ sha256sum "${B}__${H}.tar.gz" > "${B}__${H}.tar.gz.sha256"
 ## 6. Write MANIFEST.md
 
 ```text
-batch:            topogym-rigid-solxh-jianwen-20261005-v17-keyprompt01 (+ authorized rerun if any)
+batch:            topogym-rigid-solxh-jianwen-20261006-v17-failfast01 (+ authorized rerun if any)
 helper:           jianwen, contact supplied separately
-repo:             LUIGIVAMPER/topogym-sweep-release-v1, tag rigid-v17-20261005-muse01-keyprompt01, <actual commit>
+repo:             LUIGIVAMPER/topogym-sweep-release-v1, tag rigid-v17-20261006-failfast01, <actual commit>
 host:             <CPU>, <RAM GB>, <GPU model x N>, driver <version>, CUDA <version>
 software:         docker <version>, harbor <version>
 images:           <image> <RepoDigest or Id>        (one line per image used)

@@ -5,10 +5,12 @@ The public entrypoint stays run_agent_batch.sh. Adapted Muse runs have an explic
 separately recorded harness identity; native-agent assignments are unchanged.
 """
 from contextlib import nullcontext
+from collections import Counter
 import argparse
 import importlib.metadata
 import importlib.util
 import json
+import io
 import os
 from pathlib import Path
 import platform
@@ -21,8 +23,8 @@ import uuid
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
-from agent_batch_contract import component, digest, files, locked, package, read, save, sha, validate, write_summary, select_agent
-from secret_scan import load_env, load_secrets, scan_tree
+from agent_batch_contract import component, digest, files, locked, package, read, save, sha, validate, write_summary, select_agent, check_batch, TERMINAL
+from secret_scan import load_env, load_secrets, scan_tree, scan_stream
 from agent_batch_provider import OPENROUTER_KEYS, canonical_model, codex_config, openrouter_credentials
 
 def utc():
@@ -174,6 +176,33 @@ class Mirror:
         if not healthy and not allow_interrupted: raise ValueError('mirror stopped during execution; evidence retained but delivery incomplete')
         return healthy
 
+def check_job_execution(jobs,plan,spec,secrets):
+    """Harbor exit zero is not sufficient: check every repetition's evidence."""
+    rows=[row for row in check_batch(jobs,plan)['rows'] if row['job']==spec['job']]
+    failures=[]
+    for row in rows:
+        if row['status'] in TERMINAL and not row['missing_artifacts']: continue
+        failure=dict(trial=row['trial'],status=row['status'],missing_artifacts=row['missing_artifacts'])
+        if row['trial']:
+            try:
+                exception=read(jobs/row['trial']/'result.json').get('exception_info') or {}
+                failure.update(exception_type=exception.get('exception_type'),message=exception.get('exception_message'))
+            except (OSError,ValueError,TypeError,AttributeError): pass
+        failures.append(failure)
+    # The mirror has already scanned the evidence, but redact again before a
+    # provider/container exception can enter the public stop record or console.
+    buffer=io.BytesIO()
+    scan_stream(io.BytesIO(json.dumps(failures).encode()),secrets,output=buffer)
+    failures=json.loads(buffer.getvalue())
+    for failure in failures:
+        if failure.get('message'): failure['message']=str(failure['message'])[:2000]
+    report=dict(passed=len(rows)==spec['repetitions'] and not failures,expected_trials=spec['repetitions'],
+                observed_trials=sum(row['trial'] is not None for row in rows),
+                status_counts=dict(Counter(row['status'] for row in rows)),failures=failures)
+    save(jobs/(spec['job']+'-trial-check.json'),report)
+    return report
+
+
 def run_job(jobs,plan,spec,env,auth,private):
     from topogym.utils.process_limits import run_guarded
     from topogym_versions import require_task
@@ -210,9 +239,10 @@ def run_job(jobs,plan,spec,env,auth,private):
         argv+=['--ak','config='+json.dumps(codex_config(plan['agent']['model']),separators=(',',':'))]
     # Dotenv has already been parsed as data. Do not let Harbor overwrite forced auth
     # with a second load, or save a credential-file path in trial configuration.
-    rc=2
+    rc=2; harbor_rc=None
     try:
         rc=run_guarded(argv,supervision,cwd=ROOT,env=env)
+        harbor_rc=rc
         if auth_status.exists():
             save(jobs/(spec['job']+'-auth-status.json'),read(auth_status)); rc=2
     finally:
@@ -233,15 +263,29 @@ def run_job(jobs,plan,spec,env,auth,private):
     accounts=[check(str(p)) for p in trials]
     save(jobs/(spec['job']+'-account-check.json'),dict(trials=accounts))
     failure=next((item for item in accounts if item['stop']),None)
+    job_check=check_job_execution(jobs,plan,spec,secrets)
     if failure:
+        rc=2
         stop(jobs,plan['batch'],failure['message'],code=failure['code'])
         batch_log(jobs,plan['batch'],failure['message'])
     elif rc:
         stop(jobs,plan['batch'],'Harbor/resource failure; preserve all jobs and request a separate rerun assignment',
              code='harbor_or_resource_failure')
+    elif not job_check['passed']:
+        rc=2
+        first=next(iter(job_check['failures']),{})
+        reason=('Job '+spec['job']+' has incomplete/invalid trial results despite Harbor exit 0: '+
+                json.dumps(job_check['status_counts'])+'. '+str(first.get('exception_type') or first.get('status') or 'trial count mismatch')+
+                ': '+str(first.get('message') or '')[:1000]+
+                '\nSee '+str(jobs/(spec['job']+'-trial-check.json'))+'; remaining jobs will not be claimed.')
+        stop(jobs,plan['batch'],reason,code='trial_execution_failure')
+        batch_log(jobs,plan['batch'],reason)
     else:
         for item in accounts:
             for warning in item['warnings']: batch_log(jobs,plan['batch'],warning)
+    for suffix in ('-execution.json','-mirror.json'):
+        path=jobs/(spec['job']+suffix); record=read(path)
+        record.update(returncode=rc,harbor_returncode=harbor_rc); save(path,record)
     return rc
 
 def finalize(jobs,plan,metadata,env,auth):
@@ -293,6 +337,20 @@ def run(batch,bases,assignment):
         if (jobs/(batch+'-inventory.json')).exists():
             from agent_batch_delivery import verify_tree
             report=verify_tree(jobs.parent,plan); print(json.dumps(report,indent=2)); return 0 if report['delivery_complete'] else 1
+        if (jobs/(batch+'-stop.json')).exists():
+            raise ValueError('Batch has a recorded stop; preserve it and use a separately issued rerun assignment')
+    # Check before registering a lane, writing a plan or calling a model. A host
+    # failure leaves no claimed trials/sealed batch and can be retried in place.
+    from agent_batch_host import require_gpu_containers
+    require_gpu_containers(plan,ROOT,env,private/'gpu-check',auth_secrets(env,auth))
+    with locked(lock):
+        # Another lane may have stopped or sealed the batch during the check.
+        if (jobs/(batch+'-inventory.json')).exists():
+            from agent_batch_delivery import verify_tree
+            report=verify_tree(jobs.parent,plan); print(json.dumps(report,indent=2)); return 0 if report['delivery_complete'] else 1
+        if (jobs/(batch+'-stop.json')).exists():
+            raise ValueError('Batch stopped during GPU check; no trial claimed by this lane')
+        if pp.exists() and read(pp)!=plan: raise ValueError('batch plan differs; preserve existing records')
         if not pp.exists():
             if list(jobs.glob(batch+'-*')): raise ValueError('unregistered existing batch/prefix collision')
             save(pp,plan)
@@ -323,8 +381,11 @@ def run(batch,bases,assignment):
                     claim.mkdir(); save(claim/'owner.json',dict(lane=lane['id'],at=utc()))
                     metadata=read(mp); next(l for l in metadata['lanes'] if l['id']==lane['id'])['jobs'].append(spec['job']); save(mp,metadata)
                 batch_log(jobs,batch,'start '+spec['job']+f" K={spec['repetitions']}")
-                if run_job(jobs,plan,spec,env,auth,private): rc=1
+                job_rc=run_job(jobs,plan,spec,env,auth,private)
                 with locked(lock): write_summary(jobs,plan)
+                if job_rc:
+                    rc=1
+                    break
     except BaseException as exc:
         rc=2; stop(jobs,batch,'lane failed: '+type(exc).__name__)
         batch_log(jobs,batch,'lane failed; '+type(exc).__name__)
@@ -332,10 +393,18 @@ def run(batch,bases,assignment):
     finally:
         with locked(lock):
             metadata=read(mp); current=next(l for l in metadata['lanes'] if l['id']==lane['id'])
+            if rc==0 and not any(l['status']=='running' and l['id']!=lane['id'] for l in metadata['lanes']):
+                from agent_batch_delivery import report_with_mirror
+                if not report_with_mirror(jobs,plan)['delivery_complete']: rc=1
             current.update(status='returned' if rc==0 else 'failed',finished_at=utc(),returncode=rc); save(mp,metadata)
+            # Write the final status before sealing; never append to an archived
+            # log after its hash has been recorded in the inventory.
             batch_log(jobs,batch,'lane '+lane['id']+' finished rc='+str(rc))
             report=finalize(jobs,plan,metadata,env,auth)
-            if report is not None and not report['delivery_complete']: rc=1
+            if report is not None:
+                if not report['delivery_complete'] and rc==0: rc=1
+                print('Batch delivery complete: '+str(report['delivery_complete'])+'; '+
+                      json.dumps(report['status_counts']),flush=True)
     return rc
 
 def main():
