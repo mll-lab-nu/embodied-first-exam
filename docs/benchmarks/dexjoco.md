@@ -71,7 +71,7 @@ unchanged), resume class `exact`:
   the hand drives' gains, the tcp definition (DexJoCo's `attachment_site`, the flange), the arm bases.
 - **evidence and grading:** the collect hook (`finalize.sh`) ends the service, replays the recorded trajectory in two
   fresh processes and renders `replay.mp4` in a third; success = live ∧ both replays ∧ deterministic.
-- `ci_checks/check-limited-protocol.py --launch` passes on a single-arm and a bimanual task (velocity limits are null:
+- `ci_checks/check-limited-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
   WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
   (`resumes = 2`, exact hash) and the oracle still ends in success with `live_matches_replay`.
 
