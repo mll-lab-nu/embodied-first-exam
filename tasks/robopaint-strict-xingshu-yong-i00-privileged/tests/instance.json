@@ -1,0 +1,153 @@
+{
+ "task": "robopaint_xingshu_yong",
+ "family": "robopaint_xingshu_yong",
+ "medium": "calligraphy",
+ "sheets": [
+  {
+   "name": "main",
+   "center_xy": [
+    -0.1,
+    0.0
+   ],
+   "rows": 1024,
+   "cols": 1024,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": true
+  },
+  {
+   "name": "practice",
+   "center_xy": [
+    -0.1,
+    -0.1856
+   ],
+   "rows": 1024,
+   "cols": 448,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": false
+  }
+ ],
+ "robot_qpos": [
+  0.0,
+  0.39269908169872414,
+  0.0,
+  -1.9634954084936207,
+  0.0,
+  2.356194490192345,
+  0.7853981633974483
+ ],
+ "robot_base": [
+  -0.615,
+  0.0,
+  0.0
+ ],
+ "control_hz": 20,
+ "sim_hz": 100,
+ "max_steps": 72000,
+ "brush": {
+  "model": "wang2020",
+  "width_cm": [
+   1.187,
+   -0.03
+  ],
+  "drag_cm": [
+   1.075,
+   0.138
+  ],
+  "offset_cm": [
+   -0.967,
+   2.109994,
+   -0.03600172699999993
+  ],
+  "z_max_cm": 1.5,
+  "k_w": 0.02,
+  "k_d": 0.02,
+  "theta_eps_m": 0.0001,
+  "theta_eps_contact_m": 0.001,
+  "bristle_m": 0.03,
+  "bristle_r": 0.0045,
+  "substep_m": 0.00025,
+  "substep_deg": 3.0
+ },
+ "wells": {
+  "plate_center_xy": [
+   -0.1,
+   0.15
+  ],
+  "plate_half_size": [
+   0.1,
+   0.022,
+   0.003
+  ],
+  "plate_top_z": 0.026,
+  "surface_z": 0.028,
+  "wells": [
+   {
+    "name": "ink",
+    "hex": "#131214",
+    "rgb": [
+     0.07451,
+     0.070588,
+     0.078431
+    ],
+    "center_xy": [
+     -0.1,
+     0.15
+    ],
+    "radius_m": 0.02
+   }
+  ],
+  "rule": "a tip inside the ink stone's circle and below the ink surface loads ink and restores the brush (its hairs are gathered back to a point); the brush starts dry"
+ },
+ "target": {
+  "kind": "glyph",
+  "image": "target.png",
+  "success": {
+   "iou": 0.8,
+   "boundary_f": 0.75,
+   "min_stroke_coverage": 0.8,
+   "max_stray_frac": 0.04,
+   "register_mm": 5.0,
+   "max_strokes": 6,
+   "max_path_mm": 1450.0,
+   "min_mark_width_mm": 2.25
+  },
+  "truth_sha": "c332c32cfb791c9b"
+ },
+ "truth": {
+  "character": "永",
+  "box_mm": [
+   38.59225000000001,
+   38.59225000000001,
+   150.0
+  ],
+  "strokes": [
+   "M 380 687 L 375 696 L 369 698 L 364 697 L 350 692 L 329 695 L 325 692 L 324 688 L 326 680 L 330 673 L 334 670 L 340 668 L 346 669 L 359 676 L 375 678 L 379 682 Z",
+   "M 379 790 L 377 786 L 378 782 L 388 768 L 398 742 L 400 735 L 399 726 L 402 714 L 412 697 L 418 683 L 425 675 L 435 666 L 448 658 L 457 654 L 466 653 L 476 654 L 502 665 L 508 668 L 513 673 L 517 680 L 518 687 L 501 739 L 498 744 L 472 781 L 459 789 L 446 795 L 438 797 L 403 799 L 386 794 Z",
+   "M 472 590 L 470 592 L 455 597 L 439 594 L 424 594 L 418 592 L 404 584 L 372 569 L 353 564 L 314 563 L 309 559 L 308 554 L 310 550 L 313 547 L 335 537 L 351 524 L 365 516 L 375 509 L 382 506 L 397 504 L 409 498 L 412 498 L 444 530 L 457 540 L 465 559 Z",
+   "M 489 591 L 476 592 L 472 591 L 464 560 L 456 542 L 441 530 L 412 500 L 411 497 L 416 483 L 416 477 L 414 472 L 408 468 L 396 469 L 390 467 L 407 442 L 419 417 L 421 414 L 470 415 L 479 419 L 483 441 L 491 460 L 492 475 L 495 485 L 502 497 L 518 512 L 523 520 L 526 532 L 526 539 L 519 561 L 501 583 Z",
+   "M 738 500 L 733 505 L 722 509 L 712 520 L 692 526 L 669 541 L 656 543 L 639 540 L 634 538 L 631 534 L 632 529 L 636 519 L 637 514 L 634 507 L 630 502 L 611 491 L 600 479 L 548 436 L 489 394 L 482 393 L 479 394 L 478 397 L 477 403 L 480 417 L 479 420 L 468 416 L 424 415 L 422 414 L 422 412 L 440 392 L 454 364 L 467 351 L 471 350 L 476 363 L 481 367 L 489 371 L 522 383 L 536 391 L 551 396 L 567 404 L 597 414 L 617 426 L 656 433 L 675 440 L 694 451 L 713 455 L 719 458 L 732 468 L 738 476 L 740 488 Z",
+   "M 144 356 L 141 346 L 141 333 L 143 325 L 152 309 L 160 300 L 193 281 L 208 274 L 242 266 L 247 268 L 260 280 L 270 293 L 317 341 L 320 345 L 323 354 L 325 356 L 347 357 L 383 346 L 386 347 L 394 355 L 397 356 L 401 354 L 405 348 L 407 339 L 406 308 L 409 204 L 405 146 L 421 123 L 431 100 L 438 97 L 458 93 L 461 94 L 460 127 L 462 146 L 458 205 L 460 229 L 460 252 L 463 264 L 447 288 L 443 298 L 445 302 L 454 311 L 478 330 L 480 333 L 472 349 L 454 368 L 440 395 L 422 415 L 408 443 L 396 461 L 393 465 L 388 467 L 367 469 L 356 465 L 349 460 L 329 439 L 318 431 L 300 413 L 288 403 L 186 332 L 176 330 L 167 333 L 159 340 L 151 356 L 147 358 Z",
+   "M 383 347 L 363 354 L 349 358 L 326 358 L 323 357 L 317 344 L 294 320 L 293 317 L 298 315 L 300 312 L 293 298 L 276 274 L 265 261 L 259 246 L 250 232 L 246 220 L 234 203 L 226 185 L 199 152 L 184 129 L 182 124 L 183 119 L 190 118 L 197 120 L 222 136 L 240 149 L 258 172 L 268 188 L 287 207 L 320 256 L 332 269 L 342 283 L 355 303 L 382 343 L 383 346 Z",
+   "M 443 302 L 443 293 L 451 278 L 462 264 L 463 264 L 471 265 L 479 259 L 493 240 L 502 222 L 528 183 L 574 140 L 596 124 L 619 109 L 644 105 L 666 95 L 682 91 L 697 84 L 706 83 L 726 84 L 746 76 L 760 74 L 780 76 L 788 78 L 823 102 L 843 106 L 858 114 L 873 117 L 877 120 L 877 125 L 872 129 L 858 135 L 824 145 L 811 155 L 782 170 L 761 180 L 754 182 L 744 182 L 735 184 L 720 192 L 678 209 L 661 219 L 644 225 L 624 240 L 595 253 L 552 279 L 535 294 L 514 301 L 482 332 L 478 332 L 467 324 L 453 313 Z",
+   "M 406 143 L 405 142 L 405 134 L 403 130 L 393 119 L 394 116 L 401 105 L 401 100 L 399 96 L 395 94 L 390 96 L 385 101 L 378 114 L 374 116 L 371 116 L 368 111 L 366 97 L 357 79 L 353 74 L 344 70 L 343 65 L 347 58 L 364 46 L 376 32 L 379 26 L 377 17 L 378 14 L 381 14 L 389 17 L 396 14 L 403 6 L 412 -11 L 418 -17 L 426 -19 L 439 -20 L 446 -19 L 452 -16 L 457 -11 L 462 -3 L 464 6 L 464 51 L 463 65 L 464 79 L 463 90 L 460 94 L 441 97 L 432 101 L 417 133 L 411 141 Z"
+  ],
+  "n_strokes": 9,
+  "source": "Wikimedia Commons File:神龍蘭亭序全.JPG (https://commons.wikimedia.org/wiki/File:%E7%A5%9E%E9%BE%8D%E8%98%AD%E4%BA%AD%E5%BA%8F%E5%85%A8.JPG): the Shenlong hand copy (馮承素, attributed, Tang, c. 627-650) of Wang Xizhi's 蘭亭序",
+  "license": "Public domain ({{PD-Art|PD-old-100-1923|deathyear=672}} on the Commons file page)",
+  "notice": "The exemplar's ink regions were made by robot-coding-bench (RoboPaint) on 2026-09-28 from a public-domain scan (Wikimedia Commons, File:神龍蘭亭序全.JPG, PD-Art): the characters were cropped, binarised, divided into regions and placed on the sheet; the picture (target.png) is a rendering of those regions.",
+  "tol_mm": 1.0,
+  "area_mm2": 3332.3
+ },
+ "instance_sha": "9075899d8611d3d0",
+ "versions": {
+  "mani_skill": "3.0.1",
+  "sapien": "3.0.3",
+  "torch": "2.3.1+cpu",
+  "numpy": "1.24.4",
+  "scipy": "1.15.3",
+  "matplotlib": "3.10.5",
+  "svgpathtools": "?"
+ }
+}

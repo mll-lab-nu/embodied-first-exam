@@ -1,0 +1,1 @@
+Process rules (RoboPaint-strict): letter with pen strokes the way a scribe writes; colouring in or filling the letters, zigzag, serpentine or contour-offset fills fail: a pen-tip path on the main sheet longer than {{MAX_PATH_MM}} mm made of marks narrower than {{MIN_MARK_WIDTH_MM}} mm on average is colouring in.

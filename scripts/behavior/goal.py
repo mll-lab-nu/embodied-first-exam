@@ -1,7 +1,9 @@
 """What a BEHAVIOR-1K goal means, in words, for task instructions (used by scripts/behavior/mk_tasks.py).
 
 PREDICATES quotes OmniGibson v3.9.2's object states (omnigibson/object_states/*.py in the image) for every predicate the
-built tasks use, with the thresholds that decide them. A task's instruction lists only the predicates its goal uses.
+built tasks use, with the thresholds that decide them (`real` is decided by omnigibson/utils/bddl_utils.py: the entity
+exists; what creates it are the rules of omnigibson/transition_rules.py). A task's instruction lists only the predicates
+its goal uses.
 BDDL's `forn (N)` holds for exactly N (bddl/condition_evaluation.py NQuantifier: sum == N), and `forpairs` needs a
 one-to-one matching; the task texts say so where it matters."""
 import re
@@ -29,6 +31,15 @@ PREDICATES = {
                 "attachment point is brought within 5 cm and 15° of a compatible one on B.",
     "covered": "`covered(A, S)`: at least one particle of the substance S (e.g. dust) is on A; A is clean of S (`not "
                "covered`) only when every particle of S has been removed from it.",
+    "contains": "`contains(A, S)`: at least one particle of the substance S lies inside A's container volume.",
+    "filled": "`filled(A, S)`: the particles of the substance S inside A's container volume, each counted as a cube of the "
+              "particle's diameter, take up more than 20% of that volume.",
+    "real": "`real(A)`: A exists in the simulation. What the BDDL problem declares `future` (halves, diced pieces, cooked "
+            "food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object "
+            "touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by "
+            "its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced "
+            "pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an "
+            "active heat source, turn into the cooked food or the dish.",
 }
 
 
