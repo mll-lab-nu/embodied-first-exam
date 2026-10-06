@@ -1,16 +1,16 @@
 # MolmoSpaces · open — frozen episode
 
-**Task:** Open the drawer.
+**Task:** Open the cabinet.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) in one episode of Ai2's MolmoSpaces benchmark (upstream package `ithor/FrankaOpenHardBench/FrankaOpenHardBench_20260206_json_benchmark`,
-episode 1427: a drawer (sliding joint)), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
+episode 49: a hinged door (revolute joint)), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
 The episode is frozen: the house, every object and the robot start the same way after every reset, and you may reset as
 often as you like. Your deliverable is **one open-loop trajectory**, not a general policy.
 
 ## Success (upstream's rule, judged by upstream's code)
 The episode ends after the last row of your trajectory, or after **455 control steps** (the benchmark's
 30 s horizon at 15.152 Hz), whichever comes first. Success is upstream's `judge_success()` on the state
-at that moment: some joint of any drawer in the room is open at least 15% of its range (all start closed). The task has to hold at the end: met earlier and undone by then does not count, and ending
+at that moment: some joint of any cabinet in the room is open at least 15% of its range (all start closed). The task has to hold at the end: met earlier and undone by then does not count, and ending
 your trajectory right after the task is met is how you stop there.
 
 ## Deliverable
@@ -28,7 +28,7 @@ s = Session("/app/instance.json")    # builds the episode (10-40 s: the Franka s
 s.layout; row = s.hold_row()         # the row layout; the row that keeps every controller at its current target
 s.step(row)                          # one control step = one upstream Task.step; False once the episode is over
 s.done; s.status()                   # upstream's is_done(); {"success", "done", "steps", "horizon", "state_sha", "resets"}
-s.state()                            # every body's world pose (x y z qw qx qy qz) and every joint's position, by name
+s.state()                            # {"bodies": {name: [x y z qw qx qy qz]}, "joints": {name: [qpos]}, "task", "time", "mujoco"}
 s.model, s.data                      # the live MuJoCo model and data (read them; changing them is not part of the replay)
 s.render(cam); s.render_depth(cam)   # uint8 (H, W, 3); float32 (H, W) depth in m. Cameras: s.cameras
 s.camera_info(cam)                   # intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount

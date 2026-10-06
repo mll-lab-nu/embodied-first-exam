@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""Freeze the MolmoSpaces instances: for every family of families.json, take three candidates from its upstream package
-by the rule in docs/benchmarks/molmospaces.md (Instances) and write the one whose upstream episode index families.json
-`keep`s to scripts/molmospaces/instances/<family>-i00.json. All three are found, so that the kept episode provably is one
-of the rule's candidates.
+"""Freeze the MolmoSpaces instances: for every family of families.json, the first episode of its upstream package, in
+the package's order, that passes the filters in docs/benchmarks/molmospaces.md (Instances) is written to
+scripts/molmospaces/instances/<family>-i00.json; families.json `keep` records its upstream episode index, and a family
+whose rule picks another episode is reported and not written.
 
     python scripts/molmospaces/make_instances.py --bench <molmospaces-bench-v2/20260415 dir> [family ...]
     python scripts/molmospaces/make_instances.py --bench <dir> --refresh [family ...]   # recompute facts / t = 0 only
-    python scripts/molmospaces/make_instances.py --bench <dir> --candidates <dir> family  # also write all three
 
 Needs the simulator (molmo-spaces 0.2.9, MuJoCo 3.5.0, MLSPACES_ASSETS_DIR / MLSPACES_CACHE_DIR set, and
 MLSPACES_PINNED_ASSETS_FILE=images/molmospaces/pinned_assets.json, the Objaverse version the benchmark was made with)
@@ -30,8 +29,9 @@ sys.path.insert(0, str(HERE / "shared"))
 import rcb_molmospaces as M  # noqa: E402
 
 BENCHMARK = "molmospaces-bench-v2/20260415"
-CLUTTER_M, CLUTTER_N = 0.3, 3  # pick families: other objects whose pose lies within 30 cm of the target's
-NAV_MIN_M = 5.0  # navigation: the nearest target's distance from the robot base at t = 0
+CLUTTER_M, CLUTTER_N = 0.3, 5  # pick families: other objects whose pose lies within 30 cm of the target's
+NAV_MIN_M = 8.0  # navigation: the nearest target's distance from the robot base at t = 0
+SAME_KIND_M = 1.0  # pick families: no other object of the named object's WordNet synset this close to it
 MOLMOBOT = "https://huggingface.co/datasets/allenai/molmobot-data"
 MOLMOBOT_CONFIGS = (
     "DoorOpeningDataGenConfig",
@@ -119,6 +119,27 @@ def checked(family: str, hit: str, ep: M.Episode) -> str | None:
         return f"the target joint is a {kind} joint"
     if family == "navigate-to":
         return nav_targets(hit, ep) or nav_far(ep)
+    if family.startswith("pick"):
+        return same_kind(family, ep)
+    return None
+
+
+def same_kind(family: str, ep: M.Episode) -> str | None:
+    """Why the text could not tell a named object from another of its kind (upstream's WordNet synset) within
+    SAME_KIND_M of it at t = 0, or None. The named objects: the target, and the receptacle or reference object;
+    colour's other receptacle is there by design and told apart by its colour."""
+    t, poses = ep.inst["episode"]["task"], ep.inst["episode"]["scene_modifications"]["object_poses"]
+    om = ep.env.object_managers[ep.env.current_batch_index]
+    keys = ["pickup_obj_name"] + ([] if family in ("pick", "pick-and-place-color") else ["place_receptacle_name"])
+    for key in keys:
+        name = t.get(key)
+        kind = om.get_annotation_synset(name) if name in poses else None
+        if kind is None:
+            continue
+        near = [n for n, p in poses.items() if n != name and math.dist(p[:3], poses[name][:3]) < SAME_KIND_M
+                and om.get_annotation_synset(n) == kind]
+        if near:
+            return f"another {kind} within {SAME_KIND_M:g} m of {name}: {', '.join(near)}"
     return None
 
 
@@ -280,19 +301,11 @@ def refresh(path: Path) -> None:
         ep.close()
 
 
-def select(family: str, fam: dict, bench: Path, excluded: set[int], out_dir: Path, cand_dir: Path | None) -> None:
+def select(family: str, fam: dict, bench: Path, excluded: set[int]) -> tuple[int, dict]:
+    """The first episode of the family's package, in package order, that passes every filter: (index, instance)."""
     episodes = json.loads((bench / fam["package"] / "benchmark.json").read_text())
-    kept = []  # (variant, instance, its record) of the episodes that pass, in package order
     for idx, episode in enumerate(episodes):
-        count = {v: sum(1 for h, *_ in kept if h == v) for v in fam["variants"]}
-        if all(count.values()) and len(kept) >= 3:
-            break
-        hit = variant(family, episode)
-        if count[hit] >= 2 or episode["house_index"] in excluded:  # a third of one variant is never used
-            continue
-        if episode["house_index"] in {i["episode"]["house_index"] for _, i, _ in kept}:  # one instance per house
-            continue
-        if ruled_out(family, episode):
+        if episode["house_index"] in excluded or ruled_out(family, episode):
             continue
         inst = candidate(family, fam, idx, episode)
         try:
@@ -302,6 +315,7 @@ def select(family: str, fam: dict, bench: Path, excluded: set[int], out_dir: Pat
             print(f"{family} #{idx}: upstream could not build it ({exc!r:.160})", flush=True)
             continue
         try:
+            hit = variant(family, episode)
             why = checked(family, hit, ep)
             if why:
                 print(f"{family} #{idx}: skipped ({why})", flush=True)
@@ -311,30 +325,10 @@ def select(family: str, fam: dict, bench: Path, excluded: set[int], out_dir: Pat
 
                 inst["episode"]["language"]["task_description"] = NavToObjTask.get_task_description(ep.task)
                 ep.task.get_task_description = lambda: inst["episode"]["language"]["task_description"]
-            kept.append((hit, inst, record(inst, ep)))
-            print(f"{family} #{idx}: passes ({fam['variants'][hit]}): {kept[-1][2]['facts']['goal']}", flush=True)
+            return idx, inst | {"instance": "i00", "variant": fam["variants"][hit]} | record(inst, ep)
         finally:
             ep.close()
-    first = {v: next((k for k, (h, *_) in enumerate(kept) if h == v), None) for v in fam["variants"]}
-    if None in first.values() or len(kept) < 3:
-        raise SystemExit(f"{family}: {len(kept)} episodes pass ({[h for h, *_ in kept]}); need both variants and three")
-    rest = next(k for k in range(len(kept)) if k not in first.values())
-    candidates = [kept[k] for k in (*first.values(), rest)]
-    print(f"{family}: candidates {[inst['upstream']['episode_index'] for _, inst, _ in candidates]}", flush=True)
-    if cand_dir:  # the runs that choose `keep` need all three
-        cand_dir.mkdir(parents=True, exist_ok=True)
-        for hit, inst, rec in candidates:
-            idx = inst["upstream"]["episode_index"]
-            write(inst | {"instance": "i00", "variant": fam["variants"][hit]} | rec, cand_dir / f"{family}-{idx}.json")
-    chosen = [c for c in candidates if c[1]["upstream"]["episode_index"] == fam["keep"]]
-    if not chosen:
-        if cand_dir:  # choosing `keep` from the candidates just written
-            return
-        raise SystemExit(f"{family}: the kept episode {fam['keep']} is not one of the candidates")
-    hit, inst, rec = chosen[0]
-    inst = inst | {"instance": "i00", "variant": fam["variants"][hit]} | rec
-    write(inst, out_dir / f"{family}-i00.json")
-    print(f"{family} #{fam['keep']}: kept ({inst['variant']}) -> {family}-i00.json", flush=True)
+    raise SystemExit(f"{family}: no episode of the package passes")
 
 
 def main() -> int:
@@ -344,7 +338,6 @@ def main() -> int:
     ap.add_argument(
         "--refresh", action="store_true", help="rewrite the facts and t = 0 record of the existing instances"
     )
-    ap.add_argument("--candidates", type=Path, help="also write the three candidates to this directory")
     ap.add_argument("families", nargs="*")
     a = ap.parse_args()
     fams = json.loads((HERE / "families.json").read_text())["families"]
@@ -356,9 +349,17 @@ def main() -> int:
         return 0
     excluded = public_trajectory_houses()
     a.out.mkdir(parents=True, exist_ok=True)
+    differ = []
     for family in a.families or fams:
-        select(family, fams[family], a.bench, excluded, a.out, a.candidates)
-    return 0
+        idx, inst = select(family, fams[family], a.bench, excluded)
+        if idx != fams[family]["keep"]:
+            print(f"{family}: the rule picks #{idx}, families.json keeps #{fams[family]['keep']}: not written",
+                  flush=True)
+            differ.append(family)
+            continue
+        write(inst, a.out / f"{family}-i00.json")
+        print(f"{family} #{idx}: kept ({inst['variant']}) -> {family}-i00.json", flush=True)
+    return 1 if differ else 0
 
 
 if __name__ == "__main__":

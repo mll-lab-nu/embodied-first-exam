@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/molmospaces-pick-and-place-color-i00-privileged"
-description = "MolmoSpaces pick-and-place-color (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Pick up the octagonal translucent soap bottle and place it in or on the light green bowl. Frozen episode: upstream benchmark procthor-objaverse/FrankaPickandPlaceColorHardBench/FrankaPickandPlaceColorHardBench_20260304_json_benchmark, episode 52."
+description = "MolmoSpaces pick-and-place-color (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Pick up the metal stopwatch with buttons and place it in or on the red bowl. Frozen episode: upstream benchmark procthor-objaverse/FrankaPickandPlaceColorHardBench/FrankaPickandPlaceColorHardBench_20260304_json_benchmark, episode 26."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "molmospaces", "mujoco", "franka-robotiq-2f85", "code-as-policy", "trajectory", "pick-and-place-color"]
 
@@ -17,7 +17,7 @@ mode = "privileged"
 # scene = environment/instance.json (one upstream benchmark episode + its t = 0 state hash); identity = the dataset.toml digest
 expert_time_estimate_hours = 2.0
 oracle = "none"
-oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-pick-and-place-color__hMCxv9C (run codex-gpt6_luna-medium, batch molmospaces-luna-1003; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/pick_and_place_color/unlimited/); human review in PR #47"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-pick-and-place-color__3KgL4cb (run codex-gpt6_luna-medium, batch molmospaces-luna-1006b; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/pick_and_place_color/unlimited/); human review in PR #47"
 
 [verifier]
 timeout_sec = 1800.0

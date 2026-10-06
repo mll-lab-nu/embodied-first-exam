@@ -3,7 +3,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/molmospaces-close-i00-privileged"
-description = "MolmoSpaces close (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Close the drawer. Frozen episode: upstream benchmark ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark, episode 327."
+description = "MolmoSpaces close (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Close the cabinet. Frozen episode: upstream benchmark ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark, episode 51."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "molmospaces", "mujoco", "franka-robotiq-2f85", "code-as-policy", "trajectory", "close"]
 
@@ -17,7 +17,7 @@ mode = "privileged"
 # scene = environment/instance.json (one upstream benchmark episode + its t = 0 state hash); identity = the dataset.toml digest
 expert_time_estimate_hours = 2.0
 oracle = "none"
-oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-close-i00-privileged__U2cQyVE (run codex-gpt6_luna-medium, batch molmospaces-luna-1003; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/close/unlimited/); human review in PR #47"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-close-i00-privileged__HWWFXrw (run codex-gpt6_luna-medium, batch molmospaces-luna-1006; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/close/unlimited/); human review in PR #47"
 
 [verifier]
 timeout_sec = 1800.0

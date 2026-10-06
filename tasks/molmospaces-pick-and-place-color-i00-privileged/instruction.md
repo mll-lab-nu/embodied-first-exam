@@ -1,9 +1,9 @@
 # MolmoSpaces · pick-and-place-color — frozen episode
 
-**Task:** Pick up the octagonal translucent soap bottle and place it in or on the light green bowl.
+**Task:** Pick up the metal stopwatch with buttons and place it in or on the red bowl.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) in one episode of Ai2's MolmoSpaces benchmark (upstream package `procthor-objaverse/FrankaPickandPlaceColorHardBench/FrankaPickandPlaceColorHardBench_20260304_json_benchmark`,
-episode 52: an AI2-THOR object), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
+episode 26: an Objaverse object), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
 The episode is frozen: the house, every object and the robot start the same way after every reset, and you may reset as
 often as you like. Your deliverable is **one open-loop trajectory**, not a general policy.
 
@@ -28,7 +28,7 @@ s = Session("/app/instance.json")    # builds the episode (10-40 s: the Franka s
 s.layout; row = s.hold_row()         # the row layout; the row that keeps every controller at its current target
 s.step(row)                          # one control step = one upstream Task.step; False once the episode is over
 s.done; s.status()                   # upstream's is_done(); {"success", "done", "steps", "horizon", "state_sha", "resets"}
-s.state()                            # every body's world pose (x y z qw qx qy qz) and every joint's position, by name
+s.state()                            # {"bodies": {name: [x y z qw qx qy qz]}, "joints": {name: [qpos]}, "task", "time", "mujoco"}
 s.model, s.data                      # the live MuJoCo model and data (read them; changing them is not part of the replay)
 s.render(cam); s.render_depth(cam)   # uint8 (H, W, 3); float32 (H, W) depth in m. Cameras: s.cameras
 s.camera_info(cam)                   # intrinsic_cv, extrinsic_cv (world -> camera, OpenCV axes), cam2world_gl, mount
