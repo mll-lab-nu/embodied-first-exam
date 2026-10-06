@@ -1,8 +1,8 @@
 # KinDER subset -- the single source for every tasks/kinder-* directory (`gen_tasks.py render` writes them).
 #
 # Which tasks: KinDER's Dynamic3D tasks (MuJoCo, a TidyBot++ mobile manipulator) whose goal a camera can see or a
-# sentence can name, and (the section at the end) the families a screening of all of KinDER found hard, one variant
-# each. Of all of these, only the four hardest stay (models' runs in docs/benchmarks/kinder.md), with the fixture. Each ships twice (docs/PROTOCOL.md): privileged mode (tasks/kinder-<family>-i00:
+# sentence can name, and (the section at the end) other 3D families of KinDER, one variant each. Of all of these, the
+# four with the most task objects (upstream's `oN`) stay (docs/benchmarks/kinder.md), with the fixture. Each ships twice (docs/PROTOCOL.md): privileged mode (tasks/kinder-<family>-i00:
 # the simulator and its state, one replayable trajectory) and standard mode (-standard: the robot as a service,
 # eai-standard/2.1, its own sensors only).
 #
@@ -71,8 +71,7 @@ scene. The task succeeds the moment every cube's centre is inside the green bin,
 walls and at least 0.5 cm below its rim."""
 
 # ----------------------------------------------------------------------------------------------------------------------
-# From the screening (09-29, GPT-6 Luna once per mode on every KinDER family): the ones it failed in standard mode
-# (then called limited). The variant is the hardest that upstream's baselines (kinder-baselines) configure. Where
+# From the rest of KinDER's 3D families. The variant is the hardest that upstream's baselines (kinder-baselines) configure. Where
 # upstream sets no episode length (PyBullet), max_steps is its baselines' evaluation horizon for the variant, else
 # their default 3000.
 # `standard_statement` is the standard twin's goal sentence where the privileged one names the goal by world coordinates
