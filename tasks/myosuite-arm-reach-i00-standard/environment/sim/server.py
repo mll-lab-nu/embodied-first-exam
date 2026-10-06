@@ -33,16 +33,25 @@ MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 W, H = 640, 480
 LOCK = threading.Lock()
 PID_FILE = os.path.join(DATA, "server.pid")
-E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
+E = {
+    "ready": False,
+    "step": 0,
+    "calls": 0,
+    "done": False,
+    "reason": None,
+    "success": False,
+    "t0": time.time(),
+    "error": None,
+}
 
 os.environ["RCB_SESSION_LOG"] = ""
 import rcb_myosuite as M  # noqa: E402  (first: it picks the rendering backend before mujoco loads)
 import mujoco  # noqa: E402
 
-M.SESSION_LOG = ""          # the sidecar's Session is not the agent's interaction log
+M.SESSION_LOG = ""  # the sidecar's Session is not the agent's interaction log
 _INST = np.load(INSTANCE, allow_pickle=False)
 TASK = str(_INST["task"])
-NU = int(_INST["model__actuator_ctrlrange"].shape[0])   # the journal's row width, known before the scene is built
+NU = int(_INST["model__actuator_ctrlrange"].shape[0])  # the journal's row width, known before the scene is built
 EP = L.Episode(DATA, dim=NU, resume="exact")
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = M.Session(TASK, instance=INSTANCE)
@@ -53,8 +62,10 @@ CTRL_HZ = 1.0 / DT
 SUBSTEPS = int(S.base.frame_skip)
 ROWS: list = []  # every executed row (a resume replays them first): trajectory.npz
 BODY = M.BODY[TASK]
-ROBOT = {"hand": ("MyoHand", "a musculoskeletal model of a human forearm and hand (MyoSuite)"),
-         "arm": ("MyoArm", "a musculoskeletal model of a human shoulder, arm and hand (MyoSuite)")}[BODY]
+ROBOT = {
+    "hand": ("MyoHand", "a musculoskeletal model of a human forearm and hand (MyoSuite)"),
+    "arm": ("MyoArm", "a musculoskeletal model of a human shoulder, arm and hand (MyoSuite)"),
+}[BODY]
 CAMS = [c for c in ("hand_top", "hand_side_inter", "front_view", "side_view") if c in S.cameras()]
 DEFAULT_CAMS = ["hand_top"]
 MUSCLES = [m["name"] for m in S.muscles()]
@@ -67,8 +78,11 @@ J_ID = [MD.joint(n).id for n in J_NAMES]
 GROUPS = [
     ("joint_pos", [f"q_{n}" for n in J_NAMES], "joint angles of the limb (rad)"),
     ("joint_vel", [f"qd_{n}" for n in J_NAMES], "joint velocities (rad/s)"),
-    ("muscle_activation", [f"act_{n}" for n in MUSCLES], "muscle activations in [0, 1] (they follow the excitations "
-                                                           "with a first-order delay)"),
+    (
+        "muscle_activation",
+        [f"act_{n}" for n in MUSCLES],
+        "muscle activations in [0, 1] (they follow the excitations " "with a first-order delay)",
+    ),
     ("muscle_length", [f"len_{n}" for n in MUSCLES], "muscle-tendon lengths (m)"),
     ("joint_effort", [f"effort_{n}" for n in J_NAMES], "generalized force of all muscles on each joint (N m)"),
     ("gripper_opening", [], "none (a hand, not a gripper)"),
@@ -91,7 +105,7 @@ def _intrinsic(cam: str) -> list:
 def _cam_T_gl(data, cam: str) -> np.ndarray:
     i = MD.camera(cam).id
     T = np.eye(4)
-    T[:3, :3] = data.cam_xmat[i].reshape(3, 3)       # MuJoCo cameras: OpenGL axes (x right, y up, z back)
+    T[:3, :3] = data.cam_xmat[i].reshape(3, 3)  # MuJoCo cameras: OpenGL axes (x right, y up, z back)
     T[:3, 3] = data.cam_xpos[i]
     return T
 
@@ -103,7 +117,12 @@ def camera_info(cam: str) -> dict:
     """World -> camera (OpenCV axes) and camera -> world (OpenGL axes) at the current state."""
     c2w = _cam_T_gl(S.data, cam)
     ext = np.linalg.inv(c2w @ GL2CV)[:3, :]
-    return {"intrinsic_cv": _intrinsic(cam), "extrinsic_cv": ext.tolist(), "cam2world_gl": c2w.tolist(), "image_size": [W, H]}
+    return {
+        "intrinsic_cv": _intrinsic(cam),
+        "extrinsic_cv": ext.tolist(),
+        "cam2world_gl": c2w.tolist(),
+        "image_size": [W, H],
+    }
 
 
 def _mount(cam: str) -> dict:
@@ -120,16 +139,20 @@ def _mount(cam: str) -> dict:
     return {"type": "link", "parent_link": body, "link_T_cam_cv": link_T_cam_cv.tolist()}
 
 
-MOUNTED = {"front_view": "static: the whole body from the front (the hand is small in it)",
-           "side_view": "static: the whole body from the side (the hand is small in it)",
-           "hand_top": "on the forearm (radius): a close-up of the hand from above; it moves with the forearm (pronation)",
-           "hand_side_inter": "on the forearm (radius): a close-up of the hand from the thumb side; it moves with the forearm"}
+MOUNTED = {
+    "front_view": "static: the whole body from the front (the hand is small in it)",
+    "side_view": "static: the whole body from the side (the hand is small in it)",
+    "hand_top": "on the forearm (radius): a close-up of the hand from above; it moves with the forearm (pronation)",
+    "hand_side_inter": "on the forearm (radius): a close-up of the hand from the thumb side; it moves with the forearm",
+}
 
 
 # ------------------------------------------------------------------------------------------------- kinematics
-KD = mujoco.MjData(MD)        # kinematics only: a copy of the start state, never stepped
+KD = mujoco.MjData(MD)  # kinematics only: a copy of the start state, never stepped
 KD.qpos[:] = S.data.qpos
-TIPS = [n for n in ("THtip", "IFtip", "MFtip", "RFtip", "LFtip") if mujoco.mj_name2id(MD, mujoco.mjtObj.mjOBJ_SITE, n) >= 0]
+TIPS = [
+    n for n in ("THtip", "IFtip", "MFtip", "RFtip", "LFtip") if mujoco.mj_name2id(MD, mujoco.mjtObj.mjOBJ_SITE, n) >= 0
+]
 MOUNT_LINKS = sorted({MD.body(int(MD.cam_bodyid[MD.camera(c).id])).name for c in CAMS} - {"world"})
 LINKS = TIPS + MOUNT_LINKS
 _rb = int(MD.jnt_bodyid[J_ID[0]])
@@ -144,7 +167,7 @@ HI = np.array([MD.jnt_range[j, 1] if MD.jnt_limited[j] else np.inf for j in J_ID
 def _fk_kd(q) -> None:
     KD.qpos[J_Q] = q
     mujoco.mj_kinematics(MD, KD)
-    mujoco.mj_comPos(MD, KD)      # the Jacobians (mj_jacSite) need it
+    mujoco.mj_comPos(MD, KD)  # the Jacobians (mj_jacSite) need it
 
 
 def _pose(name: str) -> list:
@@ -173,8 +196,8 @@ def do_kinematics(req: dict) -> dict:
         return np.concatenate([t - KD.site_xpos[MD.site(k).id] for k, t in tg.items()])
 
     lam, e = 1e-2, err(q)
-    for _ in range(req["max_iters"]):          # Levenberg-Marquardt on the stacked fingertip position errors
-        if max(np.linalg.norm(e[3 * i:3 * i + 3]) for i in range(len(tg))) < req["tol_pos_m"]:
+    for _ in range(req["max_iters"]):  # Levenberg-Marquardt on the stacked fingertip position errors
+        if max(np.linalg.norm(e[3 * i : 3 * i + 3]) for i in range(len(tg))) < req["tol_pos_m"]:
             break
         _fk_kd(q)
         Js = []
@@ -195,13 +218,17 @@ def do_kinematics(req: dict) -> dict:
     _fk_kd(q)
     errors = {k: (float(np.linalg.norm(t - KD.site_xpos[MD.site(k).id])), 0.0) for k, t in tg.items()}
     ok = all(v[0] <= req["tol_pos_m"] for v in errors.values())
-    return L.ik_response(q, ok, errors, "world", note="fingertips: position only (orientation ignored); no collision check")
+    return L.ik_response(
+        q, ok, errors, "world", note="fingertips: position only (orientation ignored); no collision check"
+    )
 
 
 # ------------------------------------------------------------------------------------------------- spec
 TASK_TEXT = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "task_text.txt")).read().strip()
-EPISODE = (f"one episode, no reset: it ends the moment the task's goal has held for {S.hold_steps} control steps in a row "
-           f"({round(S.hold_steps * DT, 3)} s; success), at the task's failure (see task_text), or when your time is over")
+EPISODE = (
+    f"one episode, no reset: it ends the moment the task's goal has held for {S.hold_steps} control steps in a row "
+    f"({round(S.hold_steps * DT, 3)} s; success), at the task's failure (see task_text), or when your time is over"
+)
 SPEC = {
     "protocol": L.PROTOCOL,
     "protocol_compat": list(L.COMPAT),
@@ -212,8 +239,17 @@ SPEC = {
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_watch_s": MAX_WATCH_S,
-    "cameras": {c: {"rgb": True, "depth": True, "resolution": [W, H], "intrinsic_cv": _intrinsic(c), "mounted": MOUNTED[c],
-                    "mount": _mount(c)} for c in CAMS},
+    "cameras": {
+        c: {
+            "rgb": True,
+            "depth": True,
+            "resolution": [W, H],
+            "intrinsic_cv": _intrinsic(c),
+            "mounted": MOUNTED[c],
+            "mount": _mount(c),
+        }
+        for c in CAMS
+    },
     "default_cameras": DEFAULT_CAMS,
     "action_types": {
         "muscle": {
@@ -221,44 +257,82 @@ SPEC = {
             "layout": MUSCLES,
             "limits": None,
             "units": "one real number a per muscle; excitation u = 1 / (1 + exp(-5 (a - 0.5))); a is not clipped "
-                     "(a = -1: u ~ 0.0006, 0.5: 0.5, 1: 0.92, 2: 0.9994)",
+            "(a = -1: u ~ 0.0006, 0.5: 0.5, 1: 0.92, 2: 0.9994)",
             "semantics": "muscle excitations, one row per control step; activations follow them with a first-order delay "
-                         "(~10 ms up, ~40 ms down); muscles only pull, one muscle can cross several joints, and its force "
-                         "depends on its length and velocity. Rows are `dt` apart (a whole multiple of the control period, "
-                         "at most 0.5 s), `linear` (default: from the previous command) or `hold` between rows; every real "
-                         "value is a valid command, so nothing is clipped",
+            "(~10 ms up, ~40 ms down); muscles only pull, one muscle can cross several joints, and its force "
+            "depends on its length and velocity. Rows are `dt` apart (a whole multiple of the control period, "
+            "at most 0.5 s), `linear` (default: from the previous command) or `hold` between rows; every real "
+            "value is a valid command, so nothing is clipped",
         },
         "not_yet": ["joint_position", "joint_torque", "joint_delta"],
     },
     "proprio_layout": PROPRIO_LAYOUT,
     "proprio_groups": PROPRIO_GROUPS,
     "static": {"muscles": MUSCLES},
-    "world": {"frame": "MyoSuite's world frame, z up; the limb's root is fixed in it (no positions of the scene are given)",
-              "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
-              "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes"},
+    "world": {
+        "frame": "MyoSuite's world frame, z up; the limb's root is fixed in it (no positions of the scene are given)",
+        "up": "+z",
+        "units": {"length": "m", "angle": "rad", "time": "s"},
+        "quaternion_order": "wxyz",
+        "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes",
+    },
     "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "episode": EPISODE,
     "robot_spec": {
-        "name": ROBOT[0], "description": f"{ROBOT[1]}: {NU} muscle actuators, {len(J_NAMES)} joints",
-        "base": {"type": "fixed", "link": ROOT_BODY, "pose": ROOT_POSE,
-                 "note": "the limb's root body is fixed in the world (pose: x y z + wxyz quaternion)"},
-        "joints": [{"name": n, "type": "revolute" if np.isfinite(LO[k]) else "continuous", "unit": "rad",
-                    "position_limits": [float(LO[k]), float(HI[k])] if np.isfinite(LO[k]) else None,
-                    "velocity_limit": None, "effort_limit": None, "group": BODY} for k, n in enumerate(J_NAMES)],
+        "name": ROBOT[0],
+        "description": f"{ROBOT[1]}: {NU} muscle actuators, {len(J_NAMES)} joints",
+        "base": {
+            "type": "fixed",
+            "link": ROOT_BODY,
+            "pose": ROOT_POSE,
+            "note": "the limb's root body is fixed in the world (pose: x y z + wxyz quaternion)",
+        },
+        "joints": [
+            {
+                "name": n,
+                "type": "revolute" if np.isfinite(LO[k]) else "continuous",
+                "unit": "rad",
+                "position_limits": [float(LO[k]), float(HI[k])] if np.isfinite(LO[k]) else None,
+                "velocity_limit": None,
+                "effort_limit": None,
+                "group": BODY,
+            }
+            for k, n in enumerate(J_NAMES)
+        ],
         "grippers": {},
-        "controller": {"type": "muscle actuators (MuJoCo muscle model); no joint-level controller", "control_hz": CTRL_HZ,
-                       "physics_hz": CTRL_HZ * SUBSTEPS, "gains": {},
-                       "note": "the command is each muscle's excitation (the muscles: static.muscles, the action's layout); "
-                               "the joints move only through muscle forces"},
+        "controller": {
+            "type": "muscle actuators (MuJoCo muscle model); no joint-level controller",
+            "control_hz": CTRL_HZ,
+            "physics_hz": CTRL_HZ * SUBSTEPS,
+            "gains": {},
+            "note": "the command is each muscle's excitation (the muscles: static.muscles, the action's layout); "
+            "the joints move only through muscle forces",
+        },
         "tcp": {},
     },
-    "kinematics": {"endpoint": "/kinematics", "joint_names": GROUPS[0][1], "frame": "world", "quaternion_order": "wxyz",
-                   "links": LINKS, "tcp_frames": [], "ee_frames": TIPS, "ik_targets": TIPS,
-                   "ik": {"tol_pos_m": 0.002, "tol_rot_rad": 3.2, "max_iters": 500},
-                   "note": "fingertip sites and the camera mounts in the world frame for joint angles q (`joint_pos` order); "
-                           "ik: fingertip positions only, over all limb joints"},
-    "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0,
-              "max_m": L.DEPTH_MAX_M, "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE},
+    "kinematics": {
+        "endpoint": "/kinematics",
+        "joint_names": GROUPS[0][1],
+        "frame": "world",
+        "quaternion_order": "wxyz",
+        "links": LINKS,
+        "tcp_frames": [],
+        "ee_frames": TIPS,
+        "ik_targets": TIPS,
+        "ik": {"tol_pos_m": 0.002, "tol_rot_rad": 3.2, "max_iters": 500},
+        "note": "fingertip sites and the camera mounts in the world frame for joint angles q (`joint_pos` order); "
+        "ik: fingertip positions only, over all limb joints",
+    },
+    "depth": {
+        "modes": list(L.DEPTH_MODES),
+        "default": "none",
+        "kind": "z-depth",
+        "unit": "m",
+        "invalid": 0,
+        "max_m": L.DEPTH_MAX_M,
+        "frames_encoding": "uint16 mm, zlib",
+        "noise": L.DEPTH_NOISE,
+    },
 }
 L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
 EP.scene_built()
@@ -270,14 +344,16 @@ def ctrl_steps() -> int:
 
 def proprio_row() -> np.ndarray:
     d = S.data
-    return np.concatenate([d.qpos[J_Q], d.qvel[J_V], d.act[:NU], d.actuator_length[:NU], d.qfrc_actuator[J_V]]).astype(np.float32)
+    return np.concatenate([d.qpos[J_Q], d.qvel[J_V], d.act[:NU], d.actuator_length[:NU], d.qfrc_actuator[J_V]]).astype(
+        np.float32
+    )
 
 
 def grab(cams, want_depth: bool):
     rgb, dep = {}, {}
     for c in cams:
         rgb[c] = S.render_frame(c, (H, W))
-        if want_depth:                       # the same renderer (a second OSMesa context next to a live one reads garbage)
+        if want_depth:  # the same renderer (a second OSMesa context next to a live one reads garbage)
             r = S._renderer
             r.enable_depth_rendering()
             r.update_scene(S.data, camera=c)
@@ -298,10 +374,20 @@ def write_final() -> None:
 
 def summary() -> dict:
     n = int(E.get("episode_control_steps") or ctrl_steps())
-    return {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n,
-            "physics_steps": n * SUBSTEPS, "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1),
-            "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": L.PROTOCOL, "n_actions": len(ROWS),
-            **EP.final_fields()}
+    return {
+        "success": bool(E["success"]),
+        "steps": E["step"],
+        "calls": E["calls"],
+        "control_steps": n,
+        "physics_steps": n * SUBSTEPS,
+        "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1),
+        "reason": E["reason"],
+        "done": E["done"],
+        "task": TASK,
+        "protocol": L.PROTOCOL,
+        "n_actions": len(ROWS),
+        **EP.final_fields(),
+    }
 
 
 def finish(reason: str) -> None:
@@ -313,7 +399,9 @@ def finish(reason: str) -> None:
     E["t_end"] = time.time()
     E["episode_control_steps"] = ctrl_steps()
     E["success"] = bool(S.success)
-    EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])})
+    EP.log(
+        {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])}
+    )
     dump()
 
 
@@ -322,8 +410,11 @@ def dump() -> None:
         return
     E["dumped"] = True
     E["live_sha"] = S.state_sha()
-    S.save_trajectory(np.asarray(ROWS, dtype=np.float64).reshape(-1, NU), os.path.join(DATA, "trajectory.npz"),
-                      meta={"source": "standard-mode episode", "reason": E["reason"]})
+    S.save_trajectory(
+        np.asarray(ROWS, dtype=np.float64).reshape(-1, NU),
+        os.path.join(DATA, "trajectory.npz"),
+        meta={"source": "standard-mode episode", "reason": E["reason"]},
+    )
     L._write_json(os.path.join(DATA, "episode.json"), {**summary(), "live_sha": E["live_sha"]})
     write_final()
 
@@ -340,8 +431,10 @@ def ctrl_step(a, rec) -> bool:
 
 
 def recorder(cams, fps: int, meta: dict, video: str) -> L.Recorder:
-    every = max(1, int(round(CTRL_HZ / max(1, fps)))) if video != "none" else 10**9   # no video: first and last frame
-    return L.Recorder(cams, every, grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ)
+    every = max(1, int(round(CTRL_HZ / max(1, fps)))) if video != "none" else 10**9  # no video: first and last frame
+    return L.Recorder(
+        cams, every, grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ
+    )
 
 
 def video_fps(meta: dict) -> int:
@@ -363,11 +456,19 @@ def cameras_of(meta: dict) -> list:
 
 def meta_common(cams) -> dict:
     n = ctrl_steps()
-    return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
-            "sim_time_s": round(n * DT, 4), "time_s": round(time.time() - E["t0"], 2),
-            "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - E["t0"]), 1)),
-            "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
-            "cameras": {c: camera_info(c) for c in cams}}
+    return {
+        "step": E["step"],
+        "calls": E["calls"],
+        "control_steps": n,
+        "physics_steps": n * SUBSTEPS,
+        "sim_time_s": round(n * DT, 4),
+        "time_s": round(time.time() - E["t0"], 2),
+        "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - E["t0"]), 1)),
+        "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()},
+        "done": E["done"],
+        "reason": E["reason"],
+        "cameras": {c: camera_info(c) for c in cams},
+    }
 
 
 def last_command() -> np.ndarray:
@@ -414,12 +515,31 @@ def do_submit(meta: dict, A: np.ndarray):
         if stop:
             break
     rec.tick(force=True, last=True)
-    out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0,
-           "control_steps_chunk": ctrl_steps() - before, "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS,
-           "clipped": [], "n_clipped": 0, "plan": [], "ok": True}
-    EP.log({"ev": "submit", "call": E["calls"], "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams,
-            "control_steps": ctrl_steps() - before, "note": (meta.get("note") or "")[:500],
-            **({"stopped": EP.stop_reason} if EP.stopping else {})})
+    out = {
+        **meta_common(cams),
+        "chunk_id": E["calls"],
+        "type": typ,
+        "executed_rows": E["step"] - step0,
+        "control_steps_chunk": ctrl_steps() - before,
+        "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS,
+        "clipped": [],
+        "n_clipped": 0,
+        "plan": [],
+        "ok": True,
+    }
+    EP.log(
+        {
+            "ev": "submit",
+            "call": E["calls"],
+            "rows": E["step"] - step0,
+            "dt": dt,
+            "interpolate": interp,
+            "cameras": cams,
+            "control_steps": ctrl_steps() - before,
+            "note": (meta.get("note") or "")[:500],
+            **({"stopped": EP.stop_reason} if EP.stopping else {}),
+        }
+    )
     return out, rec.parts(video, fps)
 
 
@@ -440,16 +560,36 @@ def do_observe(meta: dict):
                 break
     rec.tick(force=True, last=True)
     E["calls"] += 1
-    out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
-           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True}
-    EP.log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before,
-            **({"stopped": EP.stop_reason} if EP.stopping else {})})
+    out = {
+        **meta_common(cams),
+        "obs_id": E["calls"],
+        "seconds": seconds,
+        "control_steps_watch": ctrl_steps() - before,
+        "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS,
+        "ok": True,
+    }
+    EP.log(
+        {
+            "ev": "observe",
+            "call": E["calls"],
+            "seconds": seconds,
+            "cameras": cams,
+            "control_steps": ctrl_steps() - before,
+            **({"stopped": EP.stop_reason} if EP.stopping else {}),
+        }
+    )
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
 
 
 def status() -> dict:
-    return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+    return {
+        "step": E["step"],
+        "calls": E["calls"],
+        "control_steps": ctrl_steps(),
+        "done": E["done"],
+        "reason": E["reason"],
+        "elapsed_s": round(time.time() - E["t0"], 1),
+    }
 
 
 def end_from_signal() -> None:
@@ -472,18 +612,41 @@ def replay_row(row) -> None:
     ROWS.append(np.asarray(row, dtype=np.float64))
 
 
-EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
-         start_event={"task": TASK, "env": S.env_id, "cameras": CAMS})
+EP.begin(
+    state=E,
+    step=replay_row,
+    state_sha=S.state_sha,
+    proprio=proprio_row,
+    spec=SPEC,
+    on_end=end_from_signal,
+    start_event={"task": TASK, "env": S.env_id, "cameras": CAMS},
+)
 if E["done"]:
     dump()  # resumed after the episode had ended: the record is rewritten from the replay
 E["ready"] = True
 write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
-print(f"{L.PROTOCOL} MyoSuite sim ready ({TASK}: {S.env_id}; startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
+print(
+    f"{L.PROTOCOL} MyoSuite sim ready ({TASK}: {S.env_id}; startup {EP.n_startups}, resumes {EP.resumes})", flush=True
+)
 try:
-    L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics,
-                      status=status, on_submit_error=lambda exc: finish("error"), log=EP.log, episode=EP,
-                      state_sha=S.state_sha, proprio=proprio_row), port=int(os.environ.get("RCB_PORT", "8000")))
+    L.serve(
+        L.Service(
+            spec=SPEC,
+            lock=LOCK,
+            state=E,
+            submit=do_submit,
+            observe=do_observe,
+            kinematics=do_kinematics,
+            status=status,
+            on_submit_error=lambda exc: finish("error"),
+            log=EP.log,
+            episode=EP,
+            state_sha=S.state_sha,
+            proprio=proprio_row,
+        ),
+        port=int(os.environ.get("RCB_PORT", "8000")),
+    )
 except Exception:  # noqa: BLE001
     traceback.print_exc()
     raise
