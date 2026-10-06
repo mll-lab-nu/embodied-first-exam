@@ -36,12 +36,13 @@ RUN rm -f /etc/apt/sources.list.d/cuda*.list && \
 RUN curl -fsSL --retry 5 -o /tmp/miniforge.sh https://github.com/conda-forge/miniforge/releases/download/26.7.2-0/Miniforge3-26.7.2-0-Linux-x86_64.sh && \
     echo "281b0ac7d550802efc81af633225a5e6116d29ae72f3ab4eae7168c3931a4c05  /tmp/miniforge.sh" | sha256sum -c - && \
     bash /tmp/miniforge.sh -b -p /opt/conda && rm /tmp/miniforge.sh && \
-    /opt/conda/bin/conda create -y -n behavior --override-channels -c conda-forge python=3.10.21 openssl=3.6.4=h781a0a9_0 && /opt/conda/bin/conda clean -afy
+    /opt/conda/bin/conda create -y -n behavior --override-channels -c conda-forge python=3.10.21 openssl=3.6.4=h781a0a9_0 libsqlite=3.53.4=h13e7031_1 && /opt/conda/bin/conda clean -afy
 # Newer conda-forge / PyPI releases appeared after the locks were taken (2026-10-03: openssl 3.6.5, jupytext 1.19.6,
+# 2026-10-05: a libsqlite 3.53.4 rebuild h0737f62_102 that the solver picks over the locked h13e7031_1, gymnasium 1.4.0,
 # platformdirs 4.12.3, wcwidth 0.9.2): these pins make a fresh build reproduce the committed dpkg/conda/pip locks.
 # Build-time only (the constraint file is removed before the locks are written).
 ARG PIP_CONSTRAINT=/tmp/pip-pins.txt
-RUN printf "jupytext==1.19.5\nplatformdirs==4.12.2\nwcwidth==0.9.1\n" > /tmp/pip-pins.txt
+RUN printf "jupytext==1.19.5\nplatformdirs==4.12.2\nwcwidth==0.9.1\ngymnasium==1.3.0\n" > /tmp/pip-pins.txt
 
 # Harbor runs the agent and the verifier with `docker exec`, which bypasses any entrypoint: the env goes first on PATH.
 ENV PATH=/opt/conda/envs/behavior/bin:/opt/conda/bin:${PATH} CONDA_DEFAULT_ENV=behavior
@@ -73,7 +74,7 @@ RUN mkdir /tmp/isaac && cd /tmp/isaac && \
 # since 2024 brings its own Vulkan loader and libglvnd (libGL/libEGL) into the env, and once PyAV has loaded them Isaac Sim's
 # renderer segfaults on its first frame (measured 2026-10-03, driver 580.178.04); the PyPI wheel bundles its libraries under
 # private names. Same PyAV version, numpy < 2 kept.
-RUN conda install -y -n behavior --override-channels -c conda-forge spot=2.16 openssl=3.6.4=h781a0a9_0 && conda clean -afy && \
+RUN conda install -y -n behavior --override-channels -c conda-forge spot=2.16 openssl=3.6.4=h781a0a9_0 libsqlite=3.53.4=h13e7031_1 && conda clean -afy && \
     pip install --no-cache-dir av==16.0.1 && \
     python -c "import numpy, spot; from spot import buddy; assert numpy.__version__ < '2', numpy.__version__; assert all(hasattr(spot, a) for a in ('formula', 'translate', 'atomic_prop_collect')); print('numpy', numpy.__version__, 'spot ok')"
 
