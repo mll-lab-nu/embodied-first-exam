@@ -48,7 +48,7 @@ first task in the family — it proves the whole pipeline end to end with a solv
 is **not part of the scored subset**. It is kept as the template every other task is generated from
 and as the CI fixture that distinguishes "the agent is broken" from "the task is hard".
 
-⏳ **Scheduled for removal.** Delete this task once all 23 scored tasks are `verified` and at least
+⏳ **Scheduled for removal.** Delete this task once all 9 scored tasks are `verified` and at least
 two of them, from different capability classes, have been passed end to end by different agents. The
 original condition — "any scored task passed by a real agent" — was met by `walk` (784.54/700,
 `claude-sonnet-5`), but that was a single run by a single model under the old reward-visible setup,

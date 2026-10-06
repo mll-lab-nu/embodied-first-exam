@@ -18,12 +18,12 @@ HumanoidBench window: produce one replayable trajectory that wipes a window with
 The pass mark is a **threshold on the whole episode's return** (`>= 650` over 1000 steps), not a
 predicate on the final state.
 
-- **Tool use with sustained contact.** With `spoon`, one of the two tool-use tasks in the subset, and
-  the one scored on the tool's contact with a surface. The tool is not the goal, it is the means: the
+- **Tool use with sustained contact.** The subset's one tool-use task, scored on the tool's contact
+  with a surface. The tool is not the goal, it is the means: the
   robot has to grasp it, then control the *tool's* contact with a surface while moving. Losing the grip
   ends the episode.
 - **61 actuators.** Two Shadow hands take the action from 19 numbers to 61 — the same capability class
-  as `push` at triple the search dimension, which is exactly why both are kept.
+  as `push` at triple the search dimension.
 - **A zero-valued contact gate.** Wiping without touching the glass scores nothing for the contact half
   of the reward.
 - **An all-zero trajectory terminates at step 17**, tied with `cube` for the fastest failure in the
