@@ -1,0 +1,101 @@
+{
+ "task": "dusty_transfer/task_0020",
+ "family": "dusty_transfer",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "04f87817034fe1507f3bf5e30b400be7bde82ce35aaecddff576ac250c0aedda",
+ "diagnostics_sha256": "59f39cfef05d3302ca28e13bbaad9494621c4f4fa2e22692519cc8a62bda87d7",
+ "pipeline": "dusty_transfer",
+ "gpu_dynamics": false,
+ "state_sha": "ed90dd164ff74206",
+ "objects": {
+  "commercial_kitchen_table_vxvtec_0": {
+   "category": "commercial_kitchen_table",
+   "position": [
+    -9.28593,
+    -3.58147,
+    0.5387
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "mixing_bowl_68": {
+   "category": "mixing_bowl",
+   "position": [
+    -9.39713,
+    -3.28278,
+    0.9292
+   ],
+   "orientation_xyzw": [
+    7e-05,
+    -2e-05,
+    7e-05,
+    1.0
+   ]
+  },
+  "platter_69": {
+   "category": "platter",
+   "position": [
+    -9.39718,
+    -3.87686,
+    0.88718
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "potato_70": {
+   "category": "potato",
+   "position": [
+    -9.38271,
+    -3.87243,
+    0.90951
+   ],
+   "orientation_xyzw": [
+    0.03022,
+    -0.02051,
+    0.03283,
+    0.99879
+   ]
+  },
+  "dust_sponge_0": {
+   "category": "sponge",
+   "position": [
+    -9.39117,
+    -3.57984,
+    0.88098
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}
