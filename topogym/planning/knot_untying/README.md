@@ -237,7 +237,14 @@ v16 的 `very_easy` 已在两种模式获得 `solved=1`，835 actions／8,341 ti
 
 当前已启动 [v18 独立复验](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/plan.json)：
 重新生成 K2／det1 冻结初态，分别重跑原 source01／source03 的冻结策略，再由双模式 verifier 评分。
-旧实例与旧成绩保留，新版成绩尚未产生；[实时状态](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/status.json)。
+旧实例与旧成绩保留。v18 的 [very_easy 正式评分](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/grading/very_easy/results.json)
+已为 privileged／standard 均 grade=1，848 actions／4,238 ticks／21.19 s；确定性回放通过，无额外 hold、容差、review 或 forcing。
+[Privileged 24 项](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/very_easy_privileged_verification.json)
+与 [standard 29 项](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/very_easy_standard_verification.json)
+证据检查全部通过，包含录像完整解码；[standard verifier 录像](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/grading/very_easy/jobs/002-oracle/topogym-knot-untying-very-easy-i__q9bf78u/verifier/replay.mp4)。
+原调度进程退出后未接续 easier，现已只接续该未运行套件，保留两项已通过成绩；
+[接续记录](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/resume_record.json)。
+easier 的 v18 正式成绩仍待产生；[实时状态](../../../runs/test_results/knot_below_easy_harbor_20261005_01/regrades/v18_20261006_01/status.json)。
 
 ```bash
 python scripts/prepare_knot_instances.py --variations very_easy easier --seed 0 \

@@ -1,6 +1,6 @@
 # 当前开发进度（2026-09-21）
 
-> 2026-10-05 Blanket：very_easy（一角翻折）和 easier（对折后再翻一角）的代码、包内冻结资源和标准场景已接入，移除黄色抓点，沿用原三档布料尺寸、材料与 ALOHA home。very_easy 本地连续动作在 15.905 s 原生成功，覆盖率 97.728%；easier 完整 oracle 尚未通过。按用户最新要求，后续最终验收使用 **v18+ Harbor grading 的 `solved=1`**；独立 v18 准备正在进行，本地结果不替代评分。见[任务页](../develop/tasks/blanket_flatten_zh.md)。
+> 2026-10-06 Blanket：very_easy（一角翻折）和 easier（对折后再翻一角）的代码、包内冻结资源和标准场景已接入，移除黄色抓点，沿用原三档布料尺寸、材料与 ALOHA home。匹配 v18 的两档初态已生成并安装，四路录像核验通过；very_easy 撤控静稳通过，easier 仅场景构形通过，局部抖动仍未满足静稳资格。四个 v18 任务包已构建，两档独立进程精确恢复和新资源打包检查通过；very_easy 在 v18 连续 15.905 s 原生成功（覆盖率 97.5845%），**privileged 已实际 grading `solved=1`**，两次重放确定一致且未使用容差；standard 首次运行因共享显存降至 2 GiB 保护线以下而中断，已保留通过的 privileged 证据，排队等待至少 8 GiB 余量后仅重试 standard；easier 完整评分待执行。见[任务页](../develop/tasks/blanket_flatten_zh.md)与[候选执行状态](../../runs/test_results/blanket_below_easy_20261005/harbor_v18/continuation_04/status.json)。
 
 > 2026-10-04 Knot：**按用户要求，hard 的验收转到现有 Harbor bridge grading**。独立冻结的 v16 hard 双模式候选已生成（实例 `66ea1051ee23377c`），Harbor privileged oracle 已在新实例上原生成功（51.0625 s、2,043 actions、稳定 0.5 s），现进入隔离 verifier 的两遍核验；第一遍初态已加载，通过后再由 bridge 提交同实例轨迹给 standard。Harbor 分数尚未产生。此前 hard14 在本地终态释放判据第 5 版下原生成功（51.335 s、2,054 actions、4→1→0、零回退），证据保留；旧本地回放主动停止于 9.8425 s，3,938 个已采集状态的桌面诊断无 findings，整段物理及视频资格未完成。新候选不继承旧运行的成功标签。见[Harbor 状态](../../runs/test_results/knot_harbor_hard14_20261004_01/status.json)和[任务页](../develop/tasks/knot_untying_zh.md)。
 

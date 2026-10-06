@@ -1,5 +1,7 @@
 # 杂乱被子展平（blanket_flatten）
 
+**2026-10-06 v18 初态与候选：** 用户确认资源可用后恢复持续 goal，两档匹配 v18 运行栈的新初态均已生成并安装到 `cuda_sm89_mp128_87407517a32a` 资源组，原运行栈资源保留。`very_easy_initial_02` 连续完成 6,081 ticks，覆盖率 86.03%、最高点 14.19 mm、最大速度 5.73 mm/s，撤控后稳定 0.6 s。`easier_initial_01` 完成 10,201 ticks，覆盖率 41.12%、最高点 30.47 mm，材料、视觉、桌内及构形检查通过；最大局部速度 0.284 m/s，仍仅具 `scene_layout` 资格，**静稳未通过**。两次准备均未写粒子位置、材料静长或视觉支撑，未加固定粒子，显存峰值均为 1,988 MiB；四路 848×480 / 30 fps 录像完整解码与同步通过。独立 v18 镜像与四个双模式任务包已构建，两档独立进程精确恢复均通过；安装包包含两组运行栈的八个初态资源文件且哈希一致。`very_easy` 已在该 v18 Harbor 环境连续执行 15.905 s / 6,362 ticks 并原生成功，覆盖率 97.5845%、最高点 27.1447 mm、最大速度 0.0183 mm/s，已释放撤手并稳定 0.5 s；637 行动作未被改写，状态为 `native_success_pending_harbor_verifier`，**privileged 的独立 v18 grading 已 `solved=1`**：两次重放末态哈希均为 `fafc54ec0413b16b`，均在原严格门槛内成功，无额外静置、容差使用、待复核或 forcing 事件；评分视频完整解码通过。standard 首次执行至 379 行时，共享 GPU 空闲显存降至 2,046 MiB，触发本任务 2 GiB 保护线而中断；该次原始评分为 `success=0, infra_error=1, finalized=0`，不具完整策略验收资格。已保留全部证据，并重新排队只重试 standard；随后串行验证 `easier` 两种模式。每个模式启动前须连续三次确认至少 8 GiB 空闲显存。见[原始评分](../../../runs/test_results/blanket_below_easy_20261005/harbor_v18/continuation_03/grading_very_easy/jobs/001-oracle/topogym-blanket-flatten-very-eas__Xq23Nex/verifier/reward.json)与[评分回放 MP4](../../../runs/test_results/blanket_below_easy_20261005/harbor_v18/continuation_03/grading_very_easy/jobs/001-oracle/topogym-blanket-flatten-very-eas__Xq23Nex/verifier/replay.mp4)。运行保留至少 2 GiB 空闲显存，系统内存达到 90% 时只停止本任务拥有的工作进程与容器。见 [very_easy 准备报告](../../../runs/test_results/blanket_below_easy_20261005/harbor_v18/very_easy_initial_02/report.json)、[easier 准备报告](../../../runs/test_results/blanket_below_easy_20261005/harbor_v18/easier_initial_01/report.json)与[候选执行状态](../../../runs/test_results/blanket_below_easy_20261005/harbor_v18/continuation_04/status.json)。
+
 **2026-10-05 用户追加验收要求：** 两档变体完成后开发对应 oracle，后续正式验收使用 tooling **v18 或更新版本**的 Harbor grading，分别检查 `very_easy`、`easier` 的 `solved=1`。直接 Env 的 Task success、独立审计与打包检查各自保留范围，不能代替该评分结果。镜像、实例和私有策略必须来自明确冻结的同一版本；不重写旧运行身份。
 
 **2026-10-05 very_easy / easier 折角变体：** 新增具名变体入口 `blanket_flatten_very_easy` / `blanket_flatten_easier`，也可使用 `variation_id="very_easy"` / `"easier"`。`very_easy` 是平铺布的右前角向内翻折，折角两边各 28 cm；`easier` 先沿 60 cm 方向对折为约 30 × 48 cm 的双层长方形，再将自由边的右前角连同两层一起翻折，折角两边各 22 cm。两档沿用 easy–hard 的 60 × 48 cm 布料、12 mm 网格、8 mm 粒径、材料、蓝色方格纹理、桌面摩擦和中心 XY=(-0.1356786, 0.15) m，使用共享 ALOHA home、compact_lab / Nyx 四相机。核对旧三档没有黄色抓点，已按用户要求去除设计预览里的黄色角标；正式任务不添加抓点提示。
@@ -26,6 +28,8 @@ export PYOPENGL_PLATFORM=egl OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_TH
 
 截至初态验收，seed 0 的实测结果如下：
 
+下表为旧运行栈的直接 Env 检查；当前 v18 初态、恢复及 Harbor 评分见本文开头，二者不混用资格。
+
 | 检查 | very_easy | easier |
 | --- | --- | --- |
 | 撤控初态覆盖率 | 86.03% | 41.12% |
@@ -39,7 +43,7 @@ export PYOPENGL_PLATFORM=egl OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_TH
 
 短时静置中两档均未触发成功或失败。回退起点恢复精确，随后动力学重放产生差异；报告保留逐步位置／速度误差，状态为 `replay_mismatch`，不授予精确重放或 Harbor 评分资格。未修改共享求解器或放宽比较容差。安装包构建已核对两档任务模块、四个资源文件和 catalog 哈希；这只证明资源被打包。
 
-准备与验收证据位于 [本轮运行目录](../../../runs/test_results/blanket_below_easy_20261005/)。各子目录保留实际源码快照、配置、资源使用日志、报告及共享录像。初态准备、短时静置与机器人完整解题分别报告，不能互相替代。Harbor 双模式任务包需要在包含新源码和资源的对应运行镜像内重新冻结，旧包不会自动获得新变体。
+准备与验收证据位于 [本轮运行目录](../../../runs/test_results/blanket_below_easy_20261005/)。各子目录保留实际源码快照、配置、资源使用日志、报告及共享录像。初态准备、短时静置与机器人完整解题分别报告，不能互相替代。当前已在匹配新源码和资源的独立 v18 镜像中重新冻结四个双模式候选包；旧包不继承新变体，候选的实际评分进度见本文开头。
 
 历史设计截图保留在 [预览清单](../../../runs/test_results/blanket_corner_preview_20261005/preview_manifest.json)，其中黄色角标已被本轮要求撤销；该静态预览曾一次性写入设计位置，只用于确认折法，不能作为正式冻结状态。`below_easy_preview` 仍是独立设计工具，正式 Env 不调用它。
 

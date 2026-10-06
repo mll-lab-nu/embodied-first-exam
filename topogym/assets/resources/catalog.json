@@ -519,6 +519,30 @@
       "sha256": "6db50522af1cf79660617e253da082118330fb674d1bbd675605934b30a1d1f2",
       "source": "prepared corner_folds_v1 easier, seed 0; scope=scene_layout",
       "license": null
+    },
+    "blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_87407517a32a/very_easy/seed_0/manifest.json": {
+      "path": "variations/blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_87407517a32a/very_easy/seed_0/manifest.json",
+      "sha256": "8e530ac51ce6934923c4c520e5793b21f3b01393f25e4c6989b3fa9763119456",
+      "source": "prepared corner_folds_v1 very_easy, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_87407517a32a/very_easy/seed_0/arrays.npz": {
+      "path": "variations/blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_87407517a32a/very_easy/seed_0/arrays.npz",
+      "sha256": "790060078862958e64e5f1a8478acdcf04714e37e6109f4741f532bd2c520eba",
+      "source": "prepared corner_folds_v1 very_easy, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_87407517a32a/easier/seed_0/manifest.json": {
+      "path": "variations/blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_87407517a32a/easier/seed_0/manifest.json",
+      "sha256": "ceeeb8ef4c5517b2752a35e2557692d012309e8f362e124861796cf63c936b3e",
+      "source": "prepared corner_folds_v1 easier, seed 0; scope=scene_layout",
+      "license": null
+    },
+    "blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_87407517a32a/easier/seed_0/arrays.npz": {
+      "path": "variations/blanket_flatten/corner_folds_archive_v1/cuda_sm89_mp128_87407517a32a/easier/seed_0/arrays.npz",
+      "sha256": "1a1b2b48b1912b7483a58aab1c72b6fbdbd414960c222b52cccc0081f3b2d43a",
+      "source": "prepared corner_folds_v1 easier, seed 0; scope=scene_layout",
+      "license": null
     }
   },
   "schema_version": 1
