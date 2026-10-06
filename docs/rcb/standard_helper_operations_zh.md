@@ -1,5 +1,7 @@
 # 标准 helper batch：实施状态与固定 oracle 实例 K=3 操作手册
 
+> 2026-10-06 回退说明：本文记录的是扩展 helper runner 的历史方案或发布状态。当前开发仓库已恢复原版 `run_agent_batch.sh`，新增派单/自动准备/封存入口已归档；下文命令不再直接适用于当前 checkout。已有固定 helper release 和实验记录未修改。
+
 本页对应 `standard_helper_pipeline_engineering_plan_zh.md` 的实际代码。使用 **`scripts/run_agent_batch.sh`**，保留 `jobs/agents/<batch>-<mode>-<task>/` 和 sibling `agents_mirror/`。旧 difficulty 入口负责维护方准备实例，helper 不必用它调度 rollout。
 
 最新交付安排：上游指定 `SHARING_RUNS.md` 为静态 helper 手册，本页作为工程操作说明；取得官方原文后将 TopoGym 入口补入其 §3b。第三方 helper 使用另行发布的可访问 release，不克隆私有 `robot_coding_bench`。下一阶段开发和实测见 [独立 release 与 HF 小测试计划](helper_release_and_hf_smoke_plan_zh.md)。

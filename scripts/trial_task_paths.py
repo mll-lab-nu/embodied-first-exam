@@ -7,20 +7,7 @@ def original_task(trial):
     trial=Path(trial).resolve()
     for root in trial.parents:
         if (root/'receipt.json').is_file() and (root/'local-task-map.json').is_file():
-            from agent_batch_contract import read, package, validate, linked_rerun
-            receipt=read(root/'receipt.json'); mapping=read(root/'local-task-map.json')
-            b=receipt['report']['batch']; plan=validate(read(root/'agents'/(b+'-plan.json')))
-            if mapping['plan_sha256']!=plan['plan_sha256'] or receipt['plan_sha256']!=plan['plan_sha256']:
-                raise ValueError('Imported native task map identity changed')
-            plans=[plan]
-            for report in receipt['report'].get('rerun_reports',[]):
-                child=linked_rerun(plan,read(root/'agents'/(report['batch']+'-plan.json')))
-                if child['plan_sha256'] not in receipt.get('rerun_plan_sha256',[]): raise ValueError('Unapproved imported rerun')
-                plans.append(child)
-            expected=next((t for p in plans for t in p['tasks'] if trial.parent.name==p['batch']+'-'+t['mode']+'-'+t['base']),None)
-            if expected is None or trial.parent.parent != root/'agents': raise ValueError('Trial outside imported batch')
-            target=Path(mapping['tasks'][expected['name']])
-            return package(target.parent.parent,expected)
+            raise ValueError('Imported native helper batch: use its original pinned helper release to verify task bindings')
         if not (root/'BUNDLE.json').is_file(): continue
         from helper_bundle import safe_path, file_id
         index=json.loads((root/'delivery/path-map.json').read_text())

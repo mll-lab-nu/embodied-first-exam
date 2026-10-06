@@ -1,5 +1,26 @@
 # Helper 原命令与在线构建镜像
 
+> 2026-10-06 回退说明：本文记录的是扩展 helper runner 的历史方案或发布状态。当前开发仓库已恢复原版 `run_agent_batch.sh`，新增派单/自动准备/封存入口已归档；下文命令不再直接适用于当前 checkout。已有固定 helper release 和实验记录未修改。
+
+## 2026-10-06 诊断取证补充
+
+本轮已修复的问题、尚未调整的判定逻辑、待查原因和发布验证范围，统一整理在 [Helper sweep 问题、修复与待查事项](helper_pipeline_debug_summary_20261006_zh.md)。
+
+下面区分已发生的错误和仍待证明的原因。日志增强不改变模型、任务、token 上限或评分判定，也不把旧批次改成成功。
+
+| 待证明的原因 | 已知事实与缺失证据 | 本次支持 |
+| --- | --- | --- |
+| 404 是否为服务商路由或模型可用性问题 | 已有真实 404，也有成功响应；缺发生时间、逐请求关联 ID、提供方信息，以及服务商侧查询结果 | `agent/openrouter-requests.jsonl` 记录本地请求 ID、HTTP 状态、允许列出的服务商 ID/名称、返回模型和 generation ID；不记录请求正文 |
+| Broken pipe 是否由 Muse 取消、上游断流或进程退出引起 | 旧日志只有异常类型，缺写入/读取方向和终态是否已收到 | 逐请求记录读上游、写本地的阶段、耗时、字节数、是否收到并转发终态；需结合 Muse 原生日志确认取消原因 |
+| token 是否漏计或重复计数 | 尚无算术错误证据；已收到的 usage 不覆盖未返回 usage 的潜在计费 | 记录 request→generation→usage、重复 ID 是否计入总数。要证明真实漏计，还需提供方按 generation ID 的计费记录；日志不能自行证明零消耗 |
+| 原生 agent 是否完成却被包装层判失败 | 已看到原生完成事件与包装层非零退出；仍缺同次进程退出码 | `agent/muse-run-status.json` 分列原生退出码、终态、包装层退出码/原因、当时的计量状态，不更改判定规则 |
+| 外层 TimeoutExpired 是否出在镜像复制、Docker 控制或 Harbor | 旧日志没有完整栈，不能还原具体超时命令 | `$JOBS/$B-lane-<id>-diagnostics.jsonl` 记录阶段、操作类别、容器名、期限、耗时、脱敏输出及栈帧；同时保留原始异常和清理异常 |
+| Buildx 是否缺失或不可用 | 已有评分镜像构建 `unknown flag: --file`；缺 helper 本机版本/命令可用性证据 | 启动前检查 `docker buildx version` 和 `docker buildx build --help`，主机元数据保留版本；这些检查不能证明任意镜像构建必定成功 |
+| Vulkan 或冻结资产真的不一致 | 目前主要是 agent 自述；需真实 SIGABRT/渲染栈、实例文件、资产路径与预期/实际 SHA，以及对应镜像身份 | GPU 检查日志附 ICD 文件、Vulkan loader、driver capabilities，明确 `rendering_tested=false`；原始模拟器日志/资产仍需从 trial 证据核对，不绕过冻结校验 |
+| Muse 权限/Bubblewrap 警告是否导致退出 | 尚无直接因果证据 | 原始 stderr 已保存；新增运行状态记录 UID/GID、会话目录权限，与退出码/终态联查 |
+
+新诊断由正式入口自动生成，正常的两次密钥扫描、原布局打包与 HF 上传步骤不变。旧批次缺失的历史信息无法补造。为了定位新问题，需要使用含新 runner 哈希的任务单；不要直接修改已封存 assignment 或旧结果。
+
 正式 144-trial 批次的 API key 操作单见 [刚体 sweep 完整命令](rigid_sweep_helper_runbook_zh.md)。该文档已展开全部 task base，填写批次、HF 和当前本地 release 信息；远端尚未发布的限制也单独标明。本页保留机制说明和通用命令模板。
 
 当前交付配置：8 个刚体／关节刚体任务 × easy、medium、hard × privileged、standard × K=3，共 144 个 trial。每档固定 oracle 参考 seed 0；每个 trial 43200 秒、150M input tokens、10M output tokens。token 超限目前在运行后判分，不是实时切断调用。

@@ -1,8 +1,8 @@
 # 当前运行工具
 
-Helper 一次配置入口：[bash_scripts/run_helper_batch.sh](../bash_scripts/run_helper_batch.sh)，编排代码 `helper_batch.py`；配置模板 [native_helper.example.json](../configs/helpers/native_helper.example.json)。维护方实验设置 [helper_oracle_reference.yaml](../configs/sweeps/helper_oracle_reference.yaml) 固定 10 任务×三档×双模式×K=3，Sol xhigh、每 trial 12 小时与 150M/10M token 事后评分限额。模型/预算随派单发布，helper 不重填；网站导入是另一个流程。
+2026-10-06：按用户要求，`run_agent_batch.sh` 已逐字恢复为 `ci_checks/rcb_vendor.json` 固定的原版（blob `a74bf7cc16e35b3b86ae23595c3e0b63d6bff102`）。新增的 Python 派单 runner、安装/构建/封存工具、helper 包装入口及其任务单已归档到本机 Git 忽略目录 `legacy/run_agent_batch_extensions_20261006/`，活动代码不导入该目录。
 
-标准 helper：`setup_agent_batch.sh` 安装固定工具；`publish_agent_batch.py` 发布已通过预检的包和不可变派单；`run_agent_batch.sh` 保留原入口，自动识别派单并调用 native Harbor。`check_agent_batch.py` 检查全部 K 结果；`finish_agent_batch.py` 记录备注/明确恢复；`agent_batch_delivery.py` 验收普通 agents tar；`create_agent_batch_rerun.py` 生成维护方重跑授权；`check_agent_batch_auth.py` / `check_agent_batch_hf.py` 分别检查模型认证和 HF 交付。见 [操作手册](../docs/rcb/standard_helper_operations_zh.md)。
+原入口直接调用 Harbor，使用已准备好的 `tasks/<base>-privileged` / `tasks/<base>-standard`；重复次数通过 `K` 指定，默认 1。它不再读取 helper assignment，也不自动安装工具、重建冻结镜像或生成 native-batch 封存清单。以前的 helper 操作单仅适用于各自固定的旧 release。独立 difficulty 流程、任务包、镜像材料和已有结果保留。
 
 新实验统一使用 `ci_checks/topogym_active_release.json` 选定的 v15。
 `topogym_versions.py tasks-root/list/check` 解析并校验任务；未生成完整候选时拒绝回退历史目录。
@@ -68,7 +68,7 @@ Helper 一次配置入口：[bash_scripts/run_helper_batch.sh](../bash_scripts/r
 - `check_cast_keyhole_simplifications.py`：Cast Keyhole 五档的静置诊断，默认 3 个控制步，可用 `--steps 100` 检查 2.5 s；新两档支持 `--check-grasp` 进行只读 IK／完整网格接近检查。冻结源码并保存 Nyx 初始帧、共享录像和漂移报告，实际抓持与完整求解另行验证；CPU 只监控，系统内存达到 90% 停止本次子进程。见[修订文档](../docs/tasks_simplifications/cast_keyhole_very_easy_easier_revision_plan_zh.md)。
 - `build_images.sh`、`push_images.sh`、`vendor_rcb.py`、`set_agent_egress.py`：镜像、参考工具及任务出网配置。
 - `run_agent_batch.sh`、`regrade_trials.sh`：批量运行与重评分。
-- `account_failure_check.py`、`log_mirror.py`、`topogym_guarded.py`、`scan_secrets.py`：账号异常检测、日志镜像、本次进程资源监控与产物密钥检查。旧 `mem_guard.py` 不再由活动批处理启动。
+- `account_failure_check.py`、`log_mirror.py`、`scan_secrets.py`：账号异常检测、日志镜像与产物密钥检查。恢复后的原版批处理使用 `mem_guard.py`；`topogym_guarded.py` 仍供其他本地运行入口使用。扫描器不再依赖 native-batch inventory 或重新封存结果。
 - `collect_batch_results.py`、`write_task_results.py`、`make_two_mode_report_zh.py`：收集结果并生成报告。
 
 完整命令见 [Harbor 手册](../docs/rcb/README.md)。任务静态检查仍为 `bash ci_checks/run_all.sh`。

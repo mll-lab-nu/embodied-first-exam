@@ -22,17 +22,6 @@ def main(argv=None):
     parser.add_argument('--report', type=Path)
     args = parser.parse_args(argv)
     try:
-        native=[]; target=Path(args.dir).resolve()
-        if target.name=='agents':
-            from agent_batch_contract import read, validate
-            from agent_batch_delivery import verify_tree
-            for path in sorted(target.glob('*-plan.json')):
-                value=read(path)
-                if value.get('format')!='topogym-native-batch-v1': continue
-                plan=validate(value)
-                # Refuse changing logs under active writers or silently repairing
-                # evidence that changed after sealing.
-                verify_tree(target.parent,plan); native.append(plan)
         # The fixed manual passes both conventional alternatives even when only
         # one authentication method is used. Missing custom paths remain errors;
         # load_secrets still rejects the case where no credential was loaded.
@@ -50,16 +39,6 @@ def main(argv=None):
         result = scan_tree(args.dir, secrets) if args.redact else first
         result['redactions'] = first['redactions']
         if skipped: result['unused_missing_auth_files']=skipped
-        if native:
-            mirror=target.with_name('agents_mirror')
-            if mirror.exists():
-                before=scan_tree(mirror,secrets,redact=args.redact)
-                after=scan_tree(mirror,secrets)
-                result['mirror']=after; result['mirror']['redactions']=before['redactions']
-                result['clean']=result['clean'] and after['clean']
-            if args.redact and result['clean']:
-                from agent_batch_delivery import seal
-                for plan in native: seal(target,plan,secrets)
         if args.report: args.report.write_text(json.dumps(result, indent=2)+'\n')
         print(json.dumps(result, sort_keys=True))
         return 0 if result['clean'] else 1

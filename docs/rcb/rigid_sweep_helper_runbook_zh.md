@@ -1,8 +1,10 @@
 # Running our tasks for us and sending back the logs
 
+> Historical release runbook (2026-10-06): the extended helper runner has been retired from the current development checkout. These commands apply only to the pinned helper release named below, whose remote repository is unchanged. The restored Bash runner does not install tools, read assignments, build frozen images, or select K automatically.
+
 For a helper who runs a batch of our tasks on their own GPU host and cannot reach our review site or our machines. You run the batch with our runner, check it for secrets, pack the job directories without changing their layout or names, and upload one archive. Our receiver validates the results and builds a local review report from those files, so the layout is the contract.
 
-> Release status: this frozen release is published in the private repository [LUIGIVAMPER/topogym-sweep-release-v1](https://github.com/LUIGIVAMPER/topogym-sweep-release-v1), at tag `rigid-v17-20261006-failfast01`. The helper needs access to this private repository and GitHub HTTPS authentication to use the clone command below. No SSH key setup is required; the HTTPS URL does not make the repository public. Review-site integration is deferred; section 8 covers the available receiver workflow.
+> Release status: this frozen release is published in the private repository [LUIGIVAMPER/topogym-sweep-release-v1](https://github.com/LUIGIVAMPER/topogym-sweep-release-v1), at tag `rigid-v17-20261006-diagnostics01`. The helper needs access to this private repository and GitHub HTTPS authentication to use the clone command below. No SSH key setup is required; the HTTPS URL does not make the repository public. Review-site integration is deferred; section 8 covers the available receiver workflow.
 
 > Version scope: this batch freezes `merged-v17` source and grading, including the privileged replay hold rule. At initial publication, all 24 instances were prepared; 6 passed preflight and full preflight was waived by the maintainer for the remaining 18. Additional maintainer preflight checks are separate from this frozen assignment and require no helper action. The online image rebuild and clean local Git clone were verified. These checks do not establish model success or completion of the formal 144-trial experiment.
 
@@ -10,11 +12,11 @@ For a helper who runs a batch of our tasks on their own GPU host and cannot reac
 
 | Item | Example | Why it matters |
 | --- | --- | --- |
-| Repository and release tag | [LUIGIVAMPER/topogym-sweep-release-v1](https://github.com/LUIGIVAMPER/topogym-sweep-release-v1), `rigid-v17-20261006-failfast01` | The tag pins the code, task directories and instructions for this release |
+| Repository and release tag | [LUIGIVAMPER/topogym-sweep-release-v1](https://github.com/LUIGIVAMPER/topogym-sweep-release-v1), `rigid-v17-20261006-diagnostics01` | The tag pins the code, task directories and instructions for this release |
 | Task list and modes | The 24 task bases below; privileged and standard; K=3 | One Harbor job per task and mode; three trials per job |
-| Batch name | `topogym-rigid-solxh-jianwen-20261006-v17-failfast01` | Every job name starts with it; the receiver matches it to our assignment. Use it verbatim |
+| Batch name | `topogym-rigid-solxh-jianwen-20261006-v17-diagnostics01` | Every job name starts with it; the receiver matches it to our assignment. Use it verbatim |
 | Agent settings | `AGENT=codex MODEL=openai/gpt-6-sol EFFORT=xhigh`; helper-supplied API key | The actual model and effort are recorded and must stay the same across this batch |
-| Upload target | Private dataset `eai-v2-internal/helper-uploads`, folder `helpers/jianwen/topogym-rigid-solxh-jianwen-20261006-v17-failfast01/`, write token from us | Where the archive goes |
+| Upload target | Private dataset `eai-v2-internal/helper-uploads`, folder `helpers/jianwen/topogym-rigid-solxh-jianwen-20261006-v17-diagnostics01/`, write token from us | Where the archive goes |
 
 Do not invent your own batch name, change budgets, edit task directories or modify the runner. If something forces a change, ask us first.
 
@@ -24,9 +26,9 @@ This assignment contains eight rigid/articulated-rigid tasks at easy, medium and
 
 ## 2. What you need
 
-- Linux x86_64 host with an NVIDIA GPU (driver >= 580), Docker with Compose v2 and the NVIDIA runtime, enough disk for the images (tens of GB) and all trial artifacts. Your user must be able to run Docker commands.
+- Linux x86_64 host with an NVIDIA GPU (driver >= 580), Docker with Compose v2, Buildx and the NVIDIA runtime, enough disk for the images (tens of GB) and all trial artifacts. Your user must be able to run Docker commands. Harbor uses Buildx to build the verifier network sidecar, even when the main task image already exists. The runner checks Buildx before starting model requests.
 - git, python3 with pip and venv support, and network access. On a fresh Ubuntu host, install these OS prerequisites with `sudo apt update` and `sudo apt install -y git python3-pip python3-venv`. This runner then installs its pinned Harbor, Codex and HF tools automatically in its private environment; no manual venv activation is needed.
-- On Windows/WSL 2, Docker Desktop must be running in Linux-container mode with **Settings > Resources > WSL Integration** enabled for this Ubuntu distribution. Installing Ubuntu alone does not install or expose Docker. Alternatively, use a configured remote Linux GPU host. See [Docker WSL integration](https://docs.docker.com/desktop/features/wsl/). The runner checks Docker access and Compose v2 before installing tools; it does not install a system daemon or change Windows settings.
+- On Windows/WSL 2, Docker Desktop must be running in Linux-container mode with **Settings > Resources > WSL Integration** enabled for this Ubuntu distribution. Installing Ubuntu alone does not install or expose Docker. Alternatively, use a configured remote Linux GPU host. See [Docker WSL integration](https://docs.docker.com/desktop/features/wsl/). The runner checks Docker access, Compose v2 and Buildx before installing tools; it does not install a system daemon or change Windows settings.
 - The benchmark images named in the task directories. This release builds missing images automatically from its frozen materials before running trials.
 - Your own model credentials (an OpenAI API key for section 3, or an OpenRouter API key for section 3b). **Every time you run the configuration/start block, it prompts for a model API key with hidden input, even if the credential file already exists.** Section 3 writes the newly entered key to `$HOME/rcb.env` with `OPENAI_API_KEY` and `OPENAI_BASE_URL=https://api.openai.com/v1`; section 3b writes OpenRouter credentials to its separate file. These private files pass your current input to the background runner and the later secret scan. You do not need to edit them yourself. Tasks, seeds, repetitions and budgets come from the assignment. Do not put subscription-auth settings or `HF_TOKEN` in the model file.
 - The HF write token we send you. The same configuration command prompts for it separately if missing and saves it in `$HOME/.config/eai/helper-hf.token`. Only the existing HF token is reused automatically. Both credentials stay outside the repository, with permissions restricted to their owner, and never go into the upload. Local configuration checks do not verify provider permissions or account credit.
@@ -38,11 +40,11 @@ Run these commands in **Bash on the Linux GPU host**, not in Windows PowerShell 
 The command beginning with `AGENT=codex` and ending with `&` starts the actual experiment through `scripts/run_agent_batch.sh`. The backslashes join the lines into one command; the 24 task names are its arguments. It runs both modes and K=3 from the assignment, for 144 trials. `nohup` and the final `&` leave it running in the background, so the terminal prompt returning does not mean the experiment is finished. Cloning the repository and setting variables alone do not start trials.
 
 ```bash
-git clone https://github.com/LUIGIVAMPER/topogym-sweep-release-v1.git && cd topogym-sweep-release-v1 && git checkout rigid-v17-20261006-failfast01
+git clone https://github.com/LUIGIVAMPER/topogym-sweep-release-v1.git && cd topogym-sweep-release-v1 && git checkout rigid-v17-20261006-diagnostics01
 
 REPO=$PWD
 export JOBS=$PWD/jobs/agents                 # keep the default layout: jobs/agents/<batch>-<mode>-<task>/
-B=topogym-rigid-solxh-jianwen-20261006-v17-failfast01
+B=topogym-rigid-solxh-jianwen-20261006-v17-diagnostics01
 export ENV_FILE="$HOME/rcb.env"
 # Every launch: hidden model API-key prompt; HF-token prompt only if missing.
 # Do not put this configuration command under nohup.
@@ -87,9 +89,9 @@ fi
 - Progress: `$JOBS/$B.log`; the summary table: `$JOBS/$B.summary.md`. During initial setup, see `run_$B.out`. The summary is refreshed after each job, so it may be absent or out of date while that job runs. Appending to `run_$B.out` preserves earlier output when another lane starts.
 - Never delete or move a job directory, including failed or interrupted ones. They are part of the record.
 - After each Harbor job returns, the runner checks all K=3 trial records, even when Harbor exits with code 0. Infrastructure exceptions, missing verdicts or invalid execution evidence stop further job claims and make the lane exit nonzero. Valid unsuccessful scores, pending human review and scored agent-budget timeouts do not stop the batch. Other lanes stop claiming new jobs; already running jobs finish and retain their evidence. The check is at the job boundary, so up to three repetitions can fail before it stops. The reason is recorded in `$JOBS/$B-stop.json` and each checked job's `-trial-check.json` sidecar; unstarted trials remain pending.
-- A trial that crashed for an infrastructure reason (host OOM, GPU lost, network outage): leave it in place, note it in the manifest, and rerun it only if we ask. Reruns go into the batch `topogym-rigid-solxh-jianwen-20261006-v17-failfast01-rerun`, with a new assignment supplied by us; changing `B` alone is not sufficient.
+- A trial that crashed for an infrastructure reason (host OOM, GPU lost, network outage): leave it in place, note it in the manifest, and rerun it only if we ask. Reruns go into the batch `topogym-rigid-solxh-jianwen-20261006-v17-diagnostics01-rerun`, with a new assignment supplied by us; changing `B` alone is not sufficient.
 
-**Check progress (optional; these commands do not start another lane).** Use the same terminal, with `REPO`, `JOBS` and `B` still set. In a new terminal, first enter your release checkout and set `REPO=$PWD`, `export JOBS=$REPO/jobs/agents` and `B=topogym-rigid-solxh-jianwen-20261006-v17-failfast01` again. Keep the batch name used at launch when inspecting an older run; do not substitute this batch name for a different experiment.
+**Check progress (optional; these commands do not start another lane).** Use the same terminal, with `REPO`, `JOBS` and `B` still set. In a new terminal, first enter your release checkout and set `REPO=$PWD`, `export JOBS=$REPO/jobs/agents` and `B=topogym-rigid-solxh-jianwen-20261006-v17-diagnostics01` again. Keep the batch name used at launch when inspecting an older run; do not substitute this batch name for a different experiment.
 
 Follow setup, image construction and runner output:
 
@@ -135,7 +137,7 @@ The full batch below uses the same 24 task bases, both modes, K=3 and per-trial 
 ```bash
 REPO=$PWD
 export JOBS=$PWD/jobs/agents
-B=topogym-rigid-muse-jianwen-20261006-failfast01
+B=topogym-rigid-muse-jianwen-20261006-diagnostics01
 export ENV_FILE="$HOME/.config/eai/openrouter.env"
 if python3 scripts/configure_agent_batch.py --provider openrouter \
   --env-file "$ENV_FILE" \
@@ -180,7 +182,7 @@ For a one-task smoke test, use the following **instead of** the full-batch launc
 ```bash
 REPO=$PWD
 export JOBS=$PWD/jobs/agents
-B=topogym-claws-muse-jianwen-smoke-20261006-failfast01
+B=topogym-claws-muse-jianwen-smoke-20261006-diagnostics01
 export ENV_FILE="$HOME/.config/eai/openrouter.env"
 if python3 scripts/configure_agent_batch.py --provider openrouter \
   --env-file "$ENV_FILE" --hf-token-file "$HOME/.config/eai/helper-hf.token"; then
@@ -200,7 +202,7 @@ The maintainer tested this adapter offline, including the actual fixed Muse CLI 
 After tool installation and image construction have succeeded, this optional command retries **only the model check**. It can make a short paid model session, but does not build images, claim trials, seal a batch or upload results. Run it from the updated release checkout with the existing OpenRouter credential file:
 
 ```bash
-B=topogym-rigid-muse-jianwen-20261006-failfast01
+B=topogym-rigid-muse-jianwen-20261006-diagnostics01
 export JOBS=$PWD/jobs/agents
 ENV_FILE="$HOME/.config/eai/openrouter.env" \
 CODEX_FORCE_AUTH_JSON=0 CODEX_AUTH_JSON_PATH= \
@@ -211,7 +213,15 @@ CODEX_FORCE_AUTH_JSON=0 CODEX_AUTH_JSON_PATH= \
 
 Read the `summary.json` at the printed diagnostics path; it includes the redacted error details. Failed attempts retain their diagnostics even after the temporary container is removed. Use the new batch names in this release for subsequent experiments, preserving older failed batch directories, assignments and sealed inventories. Do not delete old records to bypass a batch-plan mismatch.
 
+**Diagnosing a trial or runner failure.** Diagnostics are written automatically; the launch command is unchanged. Each lane records phases, Docker command categories, deadlines, elapsed time and exception stack frames in `$JOBS/$B-lane-<id>-diagnostics.jsonl`. It omits raw command arguments, environment variables and stack locals. Original and cleanup exceptions are recorded separately. These files enter the normal sealed archive, and are never appended to after successful sealing.
+
+Muse trials also write `agent/openrouter-requests.jsonl` (request IDs, HTTP status, available provider correlation IDs, response/generation IDs, usage and the stage of a disconnect) and `agent/muse-run-status.json` (native process exit, native terminal event, wrapper exit and accounting state). Prompts, tool arguments, model responses and API keys are not included in these new diagnostic files. The model canary retains the same files in its existing private diagnostics directory. Never upload that private directory wholesale.
+
+This diagnostic release retains the existing scoring and accounting policy. `native_terminal: completed` is not a verifier verdict; `usage_complete: false` remains a warning that reported totals cannot establish budget compliance. Provider-side billing must be compared against the recorded generation IDs to establish whether interrupted requests incurred unreported usage. An agent's claim about Vulkan or asset hash mismatches requires the actual simulator error and expected/actual hashes; CUDA startup and the recorded graphics-library inventory alone do not qualify rendering. Old runs cannot acquire missing historical diagnostics by updating code.
+
 ## 4. Check for secrets
+
+The scan and offline verification commands locate the bundled Muse modules automatically, including when called from outside the checkout; no `PYTHONPATH` setting or package installation is needed. Both scans must complete successfully. A traceback is not a clean scan.
 
 The runner already scans and redacts each job. Scan once more over everything you will send:
 
@@ -221,6 +231,16 @@ The runner already scans and redacts each job. Scan once more over everything yo
 ```
 
 Add --var NAME for any other credential variable you used. With a ChatGPT login, the agent logs may show your account id or email. We redact those before anything becomes public. Tell us if you mind them being in the private upload. For this API-key batch, `~/.codex/auth.json` may be absent; the scanner accepts that conventional missing path.
+
+If a stopped batch has no sealed inventory, recover that batch before scanning. Keep `B` and `JOBS` pointing to its original records. This command checks that no lane is active, stops only containers identified as belonging to that batch, and seals the available evidence without rerunning any trial:
+
+```bash
+ENV_FILE="$ENV_FILE" CODEX_FORCE_AUTH_JSON=0 CODEX_AUTH_JSON_PATH= \
+"$REPO/.venv-agent-batch/bin/python" "$REPO/scripts/finish_agent_batch.py" \
+  --jobs "$JOBS" --assignment "$JOBS/$B-plan.json" --recover
+```
+
+Wait for `Sealed; ...` before repeating both scans. An existing partial mirror is retained and scanned; a fresh recovery copy is appended under that mirror's `.recovery/` directory. Recovered mirrors remain incomplete and do not certify uninterrupted logging. Final sync and copy/scan have 5-minute and 15-minute limits; a timed-out owned copy container is removed before recovery can retry. An unlabelled copy from an older release that is still running blocks recovery with its container ID; wait for it to finish. Do not delete or rename the partial mirror. This recovery does not establish that a model trial succeeded.
 
 ## 5. Pack the jobs without changing their layout
 
@@ -239,9 +259,9 @@ sha256sum "${B}__${H}.tar.gz" > "${B}__${H}.tar.gz.sha256"
 ## 6. Write MANIFEST.md
 
 ```text
-batch:            topogym-rigid-solxh-jianwen-20261006-v17-failfast01 (+ authorized rerun if any)
+batch:            topogym-rigid-solxh-jianwen-20261006-v17-diagnostics01 (+ authorized rerun if any)
 helper:           jianwen, contact supplied separately
-repo:             LUIGIVAMPER/topogym-sweep-release-v1, tag rigid-v17-20261006-failfast01, <actual commit>
+repo:             LUIGIVAMPER/topogym-sweep-release-v1, tag rigid-v17-20261006-diagnostics01, <actual commit>
 host:             <CPU>, <RAM GB>, <GPU model x N>, driver <version>, CUDA <version>
 software:         docker <version>, harbor <version>
 images:           <image> <RepoDigest or Id>        (one line per image used)

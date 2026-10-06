@@ -1,0 +1,33 @@
+BUILD_ONLY: the TopoGym image is never pushed to a registry (docs/rcb/PROTOCOL.md §2.4, D5). Every evaluation host builds
+it locally under the name the task packages use; Harbor finds it in the local Docker image store.
+
+Why
+  The image contains the Nyx renderer (TopoGym's RGB observations and replay videos), whose redistribution terms are not
+  confirmed yet (scripts/push_images.sh refuses to push it). The rest is Genesis 1.2.1 (Apache-2.0), libuipc built from
+  source with the determinism patches in uipc-patches/, PyTorch (BSD) and the pip packages in requirements/*.lock.
+
+Which image
+  The name is whatever the task packages FROM; in a helper release tree all packages name one image:
+    IMG=$(grep -h '^FROM' tasks/*-privileged/environment/Dockerfile | sort -u | awk '{print $2}'); echo "$IMG"
+  It must be built from the same tree as the packages (the release's source commit): a package records the simulator
+  source hash, dependency versions and libuipc recipe it was frozen against (environment/runtime_binding.json) and every
+  session refuses to start in an image that differs. The image Id is not part of that check, so a local build is fine.
+
+Host
+  Linux x86_64 (not WSL: Nyx needs the NVIDIA Vulkan driver inside the container), an NVIDIA GPU with driver >= 580,
+  Docker with BuildKit and the NVIDIA Container Toolkit. BuildKit must use the default `docker` driver
+  (`docker buildx ls`: the current builder's driver is `docker`), otherwise the task images cannot FROM a local image.
+  Build: about 60 GB of free disk (the image is 11.2 GB, plus the libuipc builder stage and BuildKit's cache). libuipc's
+  CUDA compile dominates: UIPC_BUILD_JOBS (default 3) sets its parallelism, more needs more RAM; our 2026-10-05 build with
+  16 jobs and a warm vcpkg cache took 15 minutes, a cold build takes longer (not measured). Network access to docker.io,
+  pypi.org, download.pytorch.org, github.com (libuipc and vcpkg sources) and dl.polyhaven.org (the CC0 studio HDRI).
+  No account, key or token is needed.
+  Running needs no network for the simulator.
+
+Build (from the repository root)
+  docker build --build-arg UIPC_BUILD_JOBS=8 -f images/topogym/Dockerfile -t "$IMG" .
+
+Check a build (the line it prints goes into MANIFEST.md, "images:")
+  docker run --rm "$IMG" python -c 'import json; from topogym.simulator.frozen_binding import installed_runtime; print(json.dumps(installed_runtime(), sort_keys=True))' > image_runtime.json
+  python3 -c 'import glob, json, sys; want = json.load(open(sorted(glob.glob("tasks/*/environment/runtime_binding.json"))[0]))["runtime"]; sys.exit(0 if json.load(open("image_runtime.json")) == want else "image differs from the tasks runtime binding: do not run")' \
+    && echo "$IMG $(docker image inspect --format '{{.Id}}' "$IMG") runtime matches the tasks"

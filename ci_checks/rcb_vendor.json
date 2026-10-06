@@ -3,6 +3,7 @@
  "repo": "git@github.com:JamesKrW/robot_coding_bench.git",
  "commit": "78f1bf65db85ed775b5a625e68c5c114de065773",
  "verbatim": {
+  "scripts/run_agent_batch.sh": "scripts/run_agent_batch.sh",
   "scripts/eai_standard/rcb1.py": "scripts/eai_standard/rcb1.py",
   "scripts/eai_standard/run.sh": "scripts/eai_standard/run.sh",
   "scripts/eai_standard/client.env": "scripts/eai_standard/client.env",
@@ -55,7 +56,6 @@
   "ci_checks/check-limited-protocol.py": "ci_checks/check-limited-protocol.py",
   "scripts/eai_standard/selftest.py": "scripts/eai_standard/selftest.py",
   "ci_checks/run_all.sh": "ci_checks/run_all.sh",
-  "scripts/run_agent_batch.sh": "scripts/run_agent_batch.sh",
   ".github/workflows/validate-task.yml": ".github/workflows/validate-task.yml",
   "scripts/account_failure_check.py": "scripts/account_failure_check.py",
   "docs/rcb/PROTOCOL.md": "docs/PROTOCOL.md"
@@ -163,7 +163,6 @@
    "upstream_blob": "c9303f9421cb80d08510b971103312f4b63a434d",
    "reason": "retain the local calibration isolation CI check in addition to the upstream task/protocol checks"
   },
-  "scripts/run_agent_batch.sh": "v15 active-release task selection, immutable batch identities, and supervision restricted to the owned Harbor process",
   ".github/workflows/validate-task.yml": "v15 active catalog selection and bound deterministic verifier evidence",
   "scripts/account_failure_check.py": {
    "upstream_path": "scripts/account_failure_check.py",

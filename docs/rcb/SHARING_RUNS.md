@@ -19,11 +19,11 @@ Names: the project is Embodied Agent Interface v2 (EAI). A few code identifiers 
 
 | Item | Example | Why it matters |
 |---|---|---|
-| Repository, branch and commit | `JamesKrW/robot_coding_bench`, `dev/qineng`, `64a998287` (TopoGym: `dev/jianwen` at the release commit) | The task directories and the runner come from this exact commit |
+| Repository, branch and commit | `JamesKrW/robot_coding_bench`, `dev/qineng`, `64a998287` (TopoGym: `LUIGIVAMPER/topogym-sweep-release-v1` at the release tag) | The task directories and the runner come from this exact commit |
 | Task list and modes | `robowits-stack-cubes-i00`, … (task bases; both modes unless we say otherwise) | One Harbor job per task and mode |
 | **Batch name** | `robowits-lunaxh-alice-1004` | Every job name starts with it; our site finds your run by it. Use it verbatim |
 | Agent settings | `AGENT=codex MODEL=openai/gpt-6-luna EFFORT=xhigh` | The run id is derived from them |
-| Release (TopoGym only) | `merged-v16`, image `rcb-topogym:0.2.14-dev-cu128` | The runner only runs the active release's frozen packages |
+| Release (TopoGym only) | tag `rigid-v18-20261006-01`; its `README.md` names the release and the image | The tag fixes the frozen packages in `tasks/` and the source their image is built from |
 | Upload target | our private Hugging Face dataset `eai-v2-internal/helper-uploads` and a write token for it, or a shared-folder link | Where the archive goes |
 
 Do not invent your own batch name, change budgets, seeds, models or efforts, edit task directories or modify the runner.
@@ -34,11 +34,11 @@ If something forces a change, ask us first. Only we decide reruns (§3).
 - `harbor` on `PATH`, `git`, `python3`.
 - The benchmark images named in the task directories (build or pull them as the repository's `images/<sim>/` explains).
 - BEHAVIOR-1K tasks only: the licensed dataset on the host (`RCB_BEHAVIOR_DATA`). Never copy it into an image or an upload.
-- TopoGym only: the runner takes its tasks from the active release (`scripts/topogym_versions.py tasks-root`) and runs
-  only packages bound to an image on your host, so build that release's candidate on your host first (README "Run" on
-  `dev/jianwen`: `scripts/topogym_merge_candidate.py`, its `build_image.sh`, `scripts/topogym_candidate_pipeline.py
-  --phase all`; hours of GPU time). blanket_flatten's packaged cloth states restore only on the GPU profile they were
-  prepared on (RTX PRO 6000 class, sm_120); on another GPU, leave blanket out and tell us.
+- TopoGym only: `tasks/` at the release tag already holds the frozen packages. Build their one image on your host and
+  run its check as `images/topogym/BUILD_ONLY` says (it is never pushed to a registry); a session refuses to start in an
+  image whose simulator source or dependencies differ from the packages' binding. blanket_flatten's packaged cloth
+  states restore only on the GPU profile they were prepared on (RTX PRO 6000 class, sm_120); on another GPU, leave
+  blanket out and tell us.
 - Your own model credentials (ChatGPT login, API key, …). They stay on your host and never go into the upload. How
   Harbor reads them: `docs/RUNNING.md` on `main` (TopoGym: `docs/rcb/RUNNING.md`).
 
@@ -55,8 +55,7 @@ AGENT=codex MODEL=openai/gpt-6-luna EFFORT=xhigh ENV_FILE=$HOME/eai.env \
   header (`sed -n 2,45p scripts/run_agent_batch.sh`). If they differ, set our agent settings in its terms.
 - One runner is one lane (one trial at a time). Start the same command again to add a lane; every job is claimed by
   exactly one runner.
-- Progress: `$JOBS/$B.log`; the summary table: `$JOBS/$B.summary.md`. TopoGym's runner also freezes the batch's package
-  selection in `$JOBS/$B.release.json`; keep it.
+- Progress: `$JOBS/$B.log`; the summary table: `$JOBS/$B.summary.md`.
 - Never delete or move a job directory, including failed or interrupted ones. They are part of the record.
 - A trial that crashed for an infrastructure reason (host OOM, GPU lost, network outage): leave it in place, note it in
   the manifest, and rerun it only if we ask, with the list of jobs we send. Reruns go into the batch `<batch>-rerun`.
@@ -93,8 +92,7 @@ tar -czf "${B}__${H}__${ID}.tar.gz" agents/"$B"-* agents/"$B".* $(ls -d agents_m
     "INVENTORY_${B}__${H}__${ID}.sha256"
 sha256sum "${B}__${H}__${ID}.tar.gz" > "${B}__${H}__${ID}.tar.gz.sha256"
 ```
-- `agents/<batch>-*` also picks up `<batch>-rerun-*` jobs; `agents/<batch>.*` the log, the summary and TopoGym's
-  `.release.json`. Keep them.
+- `agents/<batch>-*` also picks up `<batch>-rerun-*` jobs; `agents/<batch>.*` the log and the summary. Keep them.
 - `agents_mirror/` is the runner's append-only copy of every agent record (root-owned). If `find` or `tar` cannot read it,
   rerun those two commands with `sudo`, or leave it out and say so in the manifest.
 - Do not rename, flatten, re-encode or prune anything inside the jobs. A partial delivery (the batch is not finished) is
@@ -105,10 +103,10 @@ sha256sum "${B}__${H}__${ID}.tar.gz" > "${B}__${H}__${ID}.tar.gz.sha256"
 batch:            <batch>   (+ <batch>-rerun if any)
 bundle:           <bundle id>, partial: yes | no
 helper:           <name, contact>
-repo:             <repository> <branch> <commit>       (TopoGym: + release name and `scripts/topogym_versions.py identity`)
+repo:             <repository> <branch> <commit>       (TopoGym: + the release tag)
 host:             <CPU>, <RAM GB>, <GPU model x N>, driver <version>, CUDA <version>
 software:         docker <version>, harbor <version>
-images:           <image> <RepoDigest or Id>        (one line per image used)
+images:           <image> <RepoDigest or Id>        (one line per image used; TopoGym: the line BUILD_ONLY's check prints)
 agent:            AGENT=..., MODEL=..., EFFORT=..., credentials: ChatGPT login | API key | ... (no secrets)
 lanes / GPUs:     <N runners>, GPUs <ids>
 trials:           planned <n>, with a verdict <n>, infrastructure failures <n>, not started <n>
@@ -120,6 +118,7 @@ These commands fill most of it:
 git rev-parse HEAD; nvidia-smi --query-gpu=name,driver_version --format=csv; docker --version; harbor --version
 docker image inspect --format '{{index .RepoDigests 0}} {{.Id}}' <image>
 ```
+An image built locally (`BUILD_ONLY`) has no RepoDigest: `docker image inspect --format '{{.Id}}' <image>`.
 
 ## 7. Upload
 Put the archive, its `.sha256` and `MANIFEST.md` in one folder `upload_<batch>/`, then do one of:

@@ -220,14 +220,19 @@ def prepare_manifest(output, *, setting=None, tasks=None, difficulties=None, sam
     if not 0 <= cfg["sampling_seed"] < 2**32 or not 0 < cfg["agent_wall_clock_s"] <= 43200 or cfg["concurrency"] != 1:
         raise ValueError("seed must be uint32; budget 1..43200; concurrency currently 1")
     if 'native_batch' in cfg:
-        from agent_batch_contract import validate_token_budget
         batch=cfg['native_batch']
         if (not isinstance(batch,dict) or set(batch)!={'repetitions','agent','model','effort','token_budget'}
                 or type(batch['repetitions']) is not int or not 1<=batch['repetitions']<=10000
                 or batch['agent']!='codex' or not re.fullmatch(r'openai/[A-Za-z0-9_.-]+',batch['model'])
                 or batch['effort'] not in ('none','minimal','low','medium','high','xhigh','max')):
             raise ValueError('invalid native_batch preset')
-        validate_token_budget(batch['token_budget'])
+        # Retain existing sweep preset validation without importing the retired
+        # batch runner. This metadata does not launch or configure the runner.
+        budget=batch['token_budget']
+        if (not isinstance(budget,dict) or set(budget)!={'input_tokens','output_tokens','enforcement'}
+                or budget['enforcement']!='post_run_score'
+                or any(type(budget[k]) is not int or budget[k]<=0 for k in ('input_tokens','output_tokens'))):
+            raise ValueError('token budget needs positive input/output counts and post_run_score enforcement')
     if cfg.get("instance_selection", "sampled") not in ("sampled", "oracle_reference"):
         raise ValueError("unknown instance selection")
     if cfg.get("instance_selection") == "oracle_reference":

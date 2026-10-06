@@ -260,7 +260,9 @@ For unattended batches, [scripts/run_agent_batch.sh](scripts/run_agent_batch.sh)
 limited twin sequentially by default (`SEQ=1`). Since protocol v1.0 (robot_coding_bench ad9f251e) it takes a tier task's
 base name (`topogym-<family>-<tier>-i00`) and runs its `-privileged` and `-standard` dirs; run the original i00 dirs with
 `harbor run` as above. Set `AGENT`, `MODEL`, `AK` and `ENV_FILE` explicitly;
-its default agent is the OpenRouter adapter. It starts a log-mirror container and memory guard that
+its default agent is native Codex. The original pinned Bash runner was restored on 2026-10-06;
+it does not read helper assignments or install runner dependencies automatically. Set `K` explicitly for repeated trials.
+It starts a log-mirror container and memory guard that
 remain running after the batch. Output naming and details are in the [CLI guide](docs/rcb/README.md).
 
 ## Results

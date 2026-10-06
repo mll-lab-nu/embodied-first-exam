@@ -1,6 +1,6 @@
 # TopoGym Harbor 层：使用手册与改动说明
 
-面向 helper 的正式交付说明统一以 [`SHARING_RUNS.md`](SHARING_RUNS.md) 为入口；本地固定 oracle 实例 K=3 的维护方操作记录见 [标准 helper 操作说明](standard_helper_operations_zh.md)。统一入口 `bash_scripts/run_helper_batch.sh --config <本机配置>` 涵盖准备、运行、打包和 HF 交付，内部调用原 `scripts/run_agent_batch.sh`；接收/网站导入独立。当前预设排除 Knot/Slotted Post Ring/Orbits：10 任务、三档、双模式、K=3，共 60 包/180 trials；Sol xhigh，每 trial 12 小时、150M input/10M output（token 超预算运行后判失败）。正式任务包与真实实验仍待准备和放行。下述全局 active 选择器和历史流程继续保留。
+2026-10-06：按用户要求，`scripts/run_agent_batch.sh` 已恢复为仓库最初固定的上游版本，不再跳转到新增的 Python helper runner。相关派单、自动安装/构建、封存与统一 helper 包装工具已归档至本机 Git 忽略目录 `legacy/run_agent_batch_extensions_20261006/`。旧 helper 文档仅适用于其中指定的历史 release；当前 runner 的任务路径是 `tasks/`，K 默认 1，不再从 assignment 读取实验参数。任务包、镜像材料、已有结果和独立 difficulty 流程保持原状；远端 helper release 此次未修改。
 
 上游已确认私有 HF 接收库建好；第三方 helper 需要独立、可访问的固定 release。官方 `SHARING_RUNS.md` 同步、§3b、release 导出和真实上传/下载小测试见 [下一阶段工程计划](helper_release_and_hf_smoke_plan_zh.md)。
 
@@ -333,7 +333,7 @@ scripts/collect_batch_results.py jobs/agents <批次名>-unlimited-<任务> <批
 scripts/make_two_mode_report_zh.py jobs/agents <unlimited 作业> <limited 作业> <报告目录>
 ```
 
-- `run_agent_batch.sh` 默认 `SEQ=1`，按顺序跑每个任务的 `-privileged` / `-standard` 孪生任务；`SEQ=0` 才让两种模式并行。`topogym_guarded.py` 监控本次 Harbor 进程，内存达到 90% 时停止；CPU 仅记录。日志镜像容器 `rcb-log-mirror` 会继续常驻，可用 `LOG_MIRROR=0` 关闭启动。
+- `run_agent_batch.sh` 默认 `SEQ=1`，按顺序跑每个任务的 `-privileged` / `-standard` 孪生任务；`SEQ=0` 才让两种模式并行。重复次数由 `K` 设置，默认 1。恢复后的原版使用 `mem_guard.py`，可用 `MEM_GUARD=0` 禁用；其行为与之前只管理本次作业的 `topogym_guarded.py` 不同。日志镜像容器 `rcb-log-mirror` 会继续常驻，可用 `LOG_MIRROR=0` 关闭启动。
 - 它会在每个作业后扫描输出里是否泄漏 key，并写出汇总表 `jobs/agents/<批次名>.summary.md`。
 
 注意事项：

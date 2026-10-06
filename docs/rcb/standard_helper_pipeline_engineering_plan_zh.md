@@ -1,5 +1,7 @@
 # 标准 helper 流程：代码核对、问题说明与修复计划
 
+> 2026-10-06 回退说明：本文记录的是扩展 helper runner 的历史方案或发布状态。当前开发仓库已恢复原版 `run_agent_batch.sh`，新增派单/自动准备/封存入口已归档；下文命令不再直接适用于当前 checkout。已有固定 helper release 和实验记录未修改。
+
 2026-10-05 更新：采用冻结材料、helper 联网构建镜像的交付方式。`run_agent_batch.sh` 自动安装固定工具并构建缺失镜像；helper 不增加 prepare/preflight 或 docker build 命令。当前范围为 **8 个刚体任务 × 3 难度 × 双模式 × K=3，共 144 trials**，固定 oracle seed 0；每 trial 12 小时、150M/10M token（运行后判分）。当前入口及唯一需要调整的 MANIFEST 镜像 Id 查询见 [在线构建与原 CLI](helper_native_cli_zh.md)。真实联网重建、首次工具安装、本地 Git clone 完整性检查已通过，报告在 `runs/test_results/helper_online_build_20261005/`；正式 144 trials 和远端 Git 推送尚未执行。下面 2026-10-04 的实施状态和数量保留为历史记录，不代表当前范围或验收状态。
 
 2026-10-04。本文保留实施前审查和计划；下文“拟新增/待完成”是当时状态。**最新实施与可执行命令见 [固定 oracle 实例 K=3 操作手册](standard_helper_operations_zh.md)**。当前工作区 HEAD 为 `ba01d029c986bb5d6fc53dd830480be06936b6ae`，并有未提交修改，因此该 commit 不代表工作区全部实现。
