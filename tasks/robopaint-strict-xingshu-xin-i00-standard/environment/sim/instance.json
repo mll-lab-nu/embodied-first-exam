@@ -1,0 +1,154 @@
+{
+ "task": "robopaint_xingshu_xin",
+ "family": "robopaint_xingshu_xin",
+ "medium": "calligraphy",
+ "sheets": [
+  {
+   "name": "main",
+   "center_xy": [
+    -0.1,
+    0.0
+   ],
+   "rows": 1024,
+   "cols": 1024,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": true
+  },
+  {
+   "name": "practice",
+   "center_xy": [
+    -0.1,
+    -0.1856
+   ],
+   "rows": 1024,
+   "cols": 448,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": false
+  }
+ ],
+ "robot_qpos": [
+  0.0,
+  0.39269908169872414,
+  0.0,
+  -1.9634954084936207,
+  0.0,
+  2.356194490192345,
+  0.7853981633974483
+ ],
+ "robot_base": [
+  -0.615,
+  0.0,
+  0.0
+ ],
+ "control_hz": 20,
+ "sim_hz": 100,
+ "max_steps": 72000,
+ "brush": {
+  "model": "wang2020",
+  "width_cm": [
+   1.187,
+   -0.03
+  ],
+  "drag_cm": [
+   1.075,
+   0.138
+  ],
+  "offset_cm": [
+   -0.967,
+   2.109994,
+   -0.03600172699999993
+  ],
+  "z_max_cm": 1.5,
+  "k_w": 0.02,
+  "k_d": 0.02,
+  "theta_eps_m": 0.0001,
+  "theta_eps_contact_m": 0.001,
+  "bristle_m": 0.03,
+  "bristle_r": 0.0045,
+  "substep_m": 0.00025,
+  "substep_deg": 3.0
+ },
+ "wells": {
+  "plate_center_xy": [
+   -0.1,
+   0.15
+  ],
+  "plate_half_size": [
+   0.1,
+   0.022,
+   0.003
+  ],
+  "plate_top_z": 0.026,
+  "surface_z": 0.028,
+  "wells": [
+   {
+    "name": "ink",
+    "hex": "#131214",
+    "rgb": [
+     0.07451,
+     0.070588,
+     0.078431
+    ],
+    "center_xy": [
+     -0.1,
+     0.15
+    ],
+    "radius_m": 0.02
+   }
+  ],
+  "rule": "a tip inside the ink stone's circle and below the ink surface loads ink and restores the brush (its hairs are gathered back to a point); the brush starts dry"
+ },
+ "target": {
+  "kind": "glyph",
+  "image": "target.png",
+  "success": {
+   "iou": 0.8,
+   "boundary_f": 0.75,
+   "min_stroke_coverage": 0.8,
+   "max_stray_frac": 0.04,
+   "register_mm": 5.0,
+   "max_strokes": 9,
+   "max_path_mm": 1730.0,
+   "min_mark_width_mm": 2.03
+  },
+  "truth_sha": "9d87639d1bb676e9"
+ },
+ "truth": {
+  "character": "信",
+  "box_mm": [
+   38.59225000000001,
+   38.59225000000001,
+   150.0
+  ],
+  "strokes": [
+   "M 460 695 L 460 701 L 458 706 L 443 726 L 436 732 L 427 736 L 413 735 L 371 728 L 338 718 L 334 716 L 332 713 L 334 708 L 338 704 L 359 696 L 368 687 L 380 692 L 395 695 L 399 693 L 413 682 L 423 664 L 425 663 L 429 665 L 443 679 L 456 687 Z",
+   "M 404 692 L 398 696 L 390 696 L 377 693 L 368 688 L 364 676 L 352 659 L 342 640 L 333 626 L 308 595 L 299 587 L 273 558 L 256 534 L 242 520 L 231 503 L 217 488 L 204 469 L 198 456 L 184 436 L 173 426 L 156 383 L 143 362 L 112 305 L 100 288 L 98 283 L 100 279 L 104 278 L 109 279 L 125 285 L 158 315 L 188 363 L 212 407 L 227 425 L 249 458 L 273 483 L 296 511 L 302 522 L 332 559 L 359 589 L 378 618 L 394 639 L 403 648 L 424 661 L 424 666 L 416 681 Z",
+   "M 671 800 L 669 794 L 668 733 L 671 725 L 684 696 L 696 678 L 705 670 L 716 664 L 730 659 L 738 659 L 764 663 L 772 666 L 779 670 L 785 679 L 789 694 L 786 708 L 780 718 L 772 725 L 762 731 L 754 733 L 728 736 L 716 742 L 705 754 L 693 777 L 679 798 L 675 801 Z",
+   "M 910 617 L 907 626 L 900 633 L 893 636 L 877 641 L 864 643 L 848 641 L 817 641 L 790 636 L 768 626 L 747 623 L 691 604 L 659 596 L 619 588 L 592 580 L 566 577 L 532 576 L 478 588 L 473 586 L 471 582 L 474 576 L 486 564 L 502 551 L 532 531 L 569 515 L 592 512 L 604 512 L 664 526 L 685 533 L 726 543 L 748 545 L 763 551 L 783 555 L 826 569 L 858 575 L 878 581 L 897 584 L 903 587 L 906 593 L 909 604 Z",
+   "M 816 451 L 814 459 L 810 468 L 802 476 L 793 480 L 760 485 L 752 484 L 704 470 L 688 467 L 662 454 L 626 442 L 614 442 L 601 445 L 596 448 L 585 459 L 581 457 L 578 451 L 580 442 L 585 434 L 591 426 L 603 414 L 616 406 L 630 399 L 639 397 L 653 396 L 664 396 L 706 403 L 761 420 L 791 425 L 800 429 L 810 436 L 814 443 Z",
+   "M 326 492 L 322 490 L 321 487 L 326 466 L 328 452 L 328 440 L 324 415 L 318 393 L 318 375 L 313 356 L 310 319 L 302 295 L 292 254 L 290 229 L 285 209 L 286 188 L 284 166 L 286 148 L 278 120 L 274 111 L 264 95 L 261 81 L 263 68 L 272 42 L 277 36 L 285 33 L 296 33 L 303 34 L 339 47 L 348 54 L 352 65 L 351 82 L 346 114 L 346 125 L 354 151 L 355 163 L 352 166 L 326 181 L 322 185 L 321 189 L 323 202 L 330 217 L 327 234 L 327 244 L 334 300 L 334 321 L 339 358 L 347 385 L 350 420 L 350 433 L 342 471 L 335 485 L 330 490 Z",
+   "M 369 257 L 365 256 L 361 253 L 340 221 L 335 218 L 329 217 L 321 203 L 320 189 L 321 183 L 335 173 L 352 165 L 355 165 L 358 179 L 365 196 L 368 208 L 373 244 L 372 253 Z",
+   "M 809 359 L 802 364 L 792 367 L 771 368 L 762 366 L 740 357 L 704 337 L 673 315 L 652 305 L 610 287 L 576 280 L 569 280 L 558 283 L 552 286 L 547 290 L 543 295 L 540 302 L 536 328 L 532 330 L 528 329 L 524 323 L 521 314 L 521 304 L 522 297 L 530 273 L 544 255 L 547 250 L 550 220 L 557 201 L 565 174 L 567 141 L 570 140 L 583 143 L 604 152 L 608 178 L 614 199 L 612 202 L 588 210 L 579 217 L 576 222 L 576 229 L 579 234 L 583 239 L 589 242 L 604 242 L 632 248 L 643 253 L 659 256 L 675 263 L 698 267 L 762 293 L 784 298 L 807 314 L 812 321 L 813 326 L 814 346 L 812 353 Z",
+   "M 829 194 L 823 195 L 818 193 L 786 162 L 785 159 L 784 151 L 776 132 L 749 94 L 750 89 L 772 59 L 774 55 L 773 52 L 764 43 L 716 19 L 703 9 L 703 6 L 716 9 L 734 18 L 739 19 L 742 18 L 743 14 L 741 10 L 727 -1 L 724 -6 L 723 -13 L 726 -17 L 734 -17 L 774 -1 L 787 1 L 802 1 L 816 6 L 830 7 L 835 10 L 838 14 L 840 23 L 839 48 L 837 57 L 831 67 L 815 75 L 813 79 L 812 82 L 827 105 L 849 128 L 858 143 L 869 155 L 869 158 L 857 176 Z",
+   "M 905 231 L 881 251 L 872 255 L 863 257 L 843 256 L 827 258 L 812 254 L 798 243 L 741 211 L 711 197 L 694 191 L 678 190 L 652 183 L 642 181 L 635 184 L 620 198 L 614 201 L 609 189 L 603 153 L 589 147 L 569 141 L 567 140 L 572 120 L 573 90 L 578 66 L 581 58 L 593 42 L 613 26 L 618 17 L 623 10 L 644 -8 L 652 -10 L 674 1 L 692 3 L 701 6 L 718 18 L 767 43 L 775 50 L 775 56 L 764 74 L 751 91 L 748 93 L 733 88 L 715 88 L 703 90 L 692 88 L 683 83 L 658 65 L 652 64 L 647 66 L 645 70 L 643 78 L 639 135 L 636 149 L 636 155 L 638 159 L 643 162 L 650 163 L 687 152 L 719 149 L 735 151 L 775 162 L 779 162 L 785 160 L 789 162 L 813 186 L 821 192 L 825 194 L 854 176 L 866 160 L 870 159 L 886 175 L 903 185 L 912 197 L 915 206 L 915 212 L 911 222 Z"
+  ],
+  "n_strokes": 10,
+  "source": "Wikimedia Commons File:神龍蘭亭序全.JPG (https://commons.wikimedia.org/wiki/File:%E7%A5%9E%E9%BE%8D%E8%98%AD%E4%BA%AD%E5%BA%8F%E5%85%A8.JPG): the Shenlong hand copy (馮承素, attributed, Tang, c. 627-650) of Wang Xizhi's 蘭亭序",
+  "license": "Public domain ({{PD-Art|PD-old-100-1923|deathyear=672}} on the Commons file page)",
+  "notice": "The exemplar's ink regions were made by robot-coding-bench (RoboPaint) on 2026-09-28 from a public-domain scan (Wikimedia Commons, File:神龍蘭亭序全.JPG, PD-Art): the characters were cropped, binarised, divided into regions and placed on the sheet; the picture (target.png) is a rendering of those regions.",
+  "tol_mm": 1.0,
+  "area_mm2": 3538.4
+ },
+ "instance_sha": "d7b484e8e757b2d0",
+ "versions": {
+  "mani_skill": "3.0.1",
+  "sapien": "3.0.3",
+  "torch": "2.3.1+cpu",
+  "numpy": "1.24.4",
+  "scipy": "1.15.3",
+  "matplotlib": "3.10.5",
+  "svgpathtools": "?"
+ }
+}

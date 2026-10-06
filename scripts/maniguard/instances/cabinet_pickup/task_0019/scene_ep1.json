@@ -1,0 +1,1058 @@
+{
+    "versions": {
+        "omnigibson": {
+            "version": "3.7.2",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "bddl": {
+            "version": "3.7.0",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "behavior-1k-assets": {
+            "version": "3.7.2rc1"
+        },
+        "omnigibson-robot-assets": {
+            "version": null,
+            "git_hash": null
+        }
+    },
+    "metadata": {},
+    "state": {
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ori": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "registry": {
+            "system_registry": {},
+            "object_registry": {
+                "support_surface": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            0.0,
+                            0.0,
+                            0.3575499951839447
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "cabinet_bottom_cabinet_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -0.1511780023574829,
+                            -0.42642471194267273,
+                            0.7371116280555725
+                        ],
+                        "ori": [
+                            -4.0745362639427185e-10,
+                            -7.610651664435863e-09,
+                            0.7071070671081543,
+                            0.7071067094802856
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "joint_vel": [
+                        -1.084732602053304e-19,
+                        -5.423668180145349e-20,
+                        -2.779625966687672e-17,
+                        -2.713154994113345e-20
+                    ],
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        }
+                    }
+                },
+                "target_jar_of_cumin_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -0.1511281281709671,
+                            -0.009574415162205696,
+                            0.5024250149726868
+                        ],
+                        "ori": [
+                            -1.1711963452398777e-06,
+                            -3.68360779248178e-05,
+                            0.0003049236547667533,
+                            1.0000001192092896
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "obstacle_graduated_cylinder_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -0.1511857658624649,
+                            0.09025542438030243,
+                            0.5654397010803223
+                        ],
+                        "ori": [
+                            3.437744453549385e-05,
+                            -3.996951272711158e-05,
+                            -4.650239134207368e-06,
+                            1.000000238418579
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        }
+                    }
+                },
+                "agent_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.8023430109024048,
+                            0.015257813036441803,
+                            0.47972360253334045
+                        ],
+                        "ori": [
+                            -3.725290298461914e-09,
+                            5.09680830873549e-08,
+                            0.01918552815914154,
+                            0.9998161792755127
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "joint_vel": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "controllers": {
+                        "arm_0": {
+                            "goal_is_valid": false,
+                            "goal": null
+                        },
+                        "gripper_0": {
+                            "goal_is_valid": false,
+                            "goal": null,
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": false
+                            }
+                        }
+                    },
+                    "non_kin": {},
+                    "ag_obj_constraint_params": {
+                        "0": {}
+                    }
+                }
+            }
+        }
+    },
+    "init_info": {
+        "class_module": "omnigibson.scenes.scene_base",
+        "class_name": "Scene",
+        "args": {
+            "scene_file": {
+                "versions": {
+                    "omnigibson": {
+                        "version": "3.7.2",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "bddl": {
+                        "version": "3.7.0",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "behavior-1k-assets": {
+                        "version": "3.7.2rc1"
+                    },
+                    "omnigibson-robot-assets": {
+                        "version": null,
+                        "git_hash": null
+                    }
+                },
+                "metadata": {},
+                "state": {
+                    "pos": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "ori": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "registry": {
+                        "system_registry": {},
+                        "object_registry": {
+                            "support_surface": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        0.0,
+                                        0.0,
+                                        0.3575499951839447
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "cabinet_bottom_cabinet_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -0.1511780023574829,
+                                        -0.42642471194267273,
+                                        0.7371115684509277
+                                    ],
+                                    "ori": [
+                                        -4.074534043496669e-10,
+                                        -4.831234967639375e-09,
+                                        0.7071069478988647,
+                                        0.7071065902709961
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "joint_pos": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    4.1707823899173044e-23
+                                ],
+                                "joint_vel": [
+                                    -2.71183150513326e-20,
+                                    -2.7131511167042237e-20,
+                                    0.0,
+                                    3.471947872851424e-31
+                                ],
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    }
+                                }
+                            },
+                            "target_jar_of_cumin_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -0.1511351466178894,
+                                        -0.009573493152856827,
+                                        0.49724000692367554
+                                    ],
+                                    "ori": [
+                                        -7.998896762728691e-06,
+                                        -0.0001529427245259285,
+                                        0.00030346857965923846,
+                                        0.9999999403953552
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "obstacle_graduated_cylinder_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -0.15118096768856049,
+                                        0.09025781601667404,
+                                        0.5660735368728638
+                                    ],
+                                    "ori": [
+                                        1.445878012873436e-07,
+                                        -3.9464783441189866e-08,
+                                        3.069907705821606e-08,
+                                        1.0
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "init_info": {
+                    "class_module": "omnigibson.scenes.scene_base",
+                    "class_name": "Scene",
+                    "args": {
+                        "scene_file": {
+                            "versions": {
+                                "omnigibson": {
+                                    "version": "3.7.2",
+                                    "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                },
+                                "bddl": {
+                                    "version": "3.7.0",
+                                    "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                },
+                                "behavior-1k-assets": {
+                                    "version": "3.7.2rc1"
+                                },
+                                "omnigibson-robot-assets": {
+                                    "version": null,
+                                    "git_hash": null
+                                }
+                            },
+                            "metadata": {},
+                            "state": {
+                                "pos": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "ori": [
+                                    0.0,
+                                    0.0,
+                                    0.0,
+                                    1.0
+                                ],
+                                "registry": {
+                                    "system_registry": {},
+                                    "object_registry": {
+                                        "support_surface": {
+                                            "is_asleep": false,
+                                            "root_link": {
+                                                "pos": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.3575499951839447
+                                                ],
+                                                "ori": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0,
+                                                    1.0
+                                                ]
+                                            },
+                                            "non_kin": {}
+                                        },
+                                        "cabinet_bottom_cabinet_ep1_1": {
+                                            "is_asleep": true,
+                                            "root_link": {
+                                                "pos": [
+                                                    -0.1511780023574829,
+                                                    -0.42642471194267273,
+                                                    0.7371115684509277
+                                                ],
+                                                "ori": [
+                                                    -4.6566109301870995e-10,
+                                                    -2.0372679099267543e-09,
+                                                    0.70710688829422,
+                                                    0.7071066498756409
+                                                ],
+                                                "lin_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ],
+                                                "ang_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ]
+                                            },
+                                            "joint_pos": [
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "joint_vel": [
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "non_kin": {
+                                                "Temperature": {
+                                                    "temperature": 23.0
+                                                }
+                                            }
+                                        },
+                                        "target_jar_of_cumin_ep1_1": {
+                                            "is_asleep": true,
+                                            "root_link": {
+                                                "pos": [
+                                                    -0.15110738575458527,
+                                                    -0.009570054709911346,
+                                                    0.49724
+                                                ],
+                                                "ori": [
+                                                    -4.734401954920031e-05,
+                                                    0.00018156891746912152,
+                                                    0.00030007303575985134,
+                                                    0.9999999403953552
+                                                ],
+                                                "lin_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ],
+                                                "ang_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ]
+                                            },
+                                            "non_kin": {}
+                                        },
+                                        "obstacle_graduated_cylinder_ep1_1": {
+                                            "is_asleep": true,
+                                            "root_link": {
+                                                "pos": [
+                                                    -0.15118096768856049,
+                                                    0.09025781601667404,
+                                                    0.5667546987533569
+                                                ],
+                                                "ori": [
+                                                    1.4435497064368974e-07,
+                                                    -3.9464783441189866e-08,
+                                                    3.0697258068812516e-08,
+                                                    1.0
+                                                ],
+                                                "lin_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ],
+                                                "ang_vel": [
+                                                    0.0,
+                                                    0.0,
+                                                    0.0
+                                                ]
+                                            },
+                                            "non_kin": {
+                                                "Temperature": {
+                                                    "temperature": 23.0
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "init_info": {
+                                "class_module": "omnigibson.scenes.scene_base",
+                                "class_name": "Scene",
+                                "args": {
+                                    "scene_file": {
+                                        "versions": {
+                                            "omnigibson": {
+                                                "version": "3.7.2",
+                                                "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                            },
+                                            "bddl": {
+                                                "version": "3.7.0",
+                                                "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                            },
+                                            "behavior-1k-assets": {
+                                                "version": "3.7.2rc1"
+                                            },
+                                            "omnigibson-robot-assets": {
+                                                "version": null,
+                                                "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                                            }
+                                        },
+                                        "metadata": {},
+                                        "state": {
+                                            "pos": [
+                                                0.0,
+                                                0.0,
+                                                0.0
+                                            ],
+                                            "ori": [
+                                                0.0,
+                                                0.0,
+                                                0.0,
+                                                1.0
+                                            ],
+                                            "registry": {
+                                                "system_registry": {},
+                                                "object_registry": {
+                                                    "support_surface": {
+                                                        "is_asleep": false,
+                                                        "root_link": {
+                                                            "pos": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.3575499951839447
+                                                            ],
+                                                            "ori": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0,
+                                                                1.0
+                                                            ]
+                                                        },
+                                                        "non_kin": {}
+                                                    },
+                                                    "cabinet_bottom_cabinet_ep1_1": {
+                                                        "is_asleep": true,
+                                                        "root_link": {
+                                                            "pos": [
+                                                                -0.1511780023574829,
+                                                                -0.42642471194267273,
+                                                                0.7371115684509277
+                                                            ],
+                                                            "ori": [
+                                                                1.2223608791828156e-09,
+                                                                -2.1827871454771497e-10,
+                                                                0.7071068286895752,
+                                                                0.7071067094802856
+                                                            ],
+                                                            "lin_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "ang_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ]
+                                                        },
+                                                        "joint_pos": [
+                                                            0.07207122445106506,
+                                                            6.491361701638221e-12,
+                                                            1.1932909087936094e-12,
+                                                            4.3725197648742644e-33
+                                                        ],
+                                                        "joint_vel": [
+                                                            -7.16261978982322e-18,
+                                                            -8.953275771254792e-19,
+                                                            2.235722985763055e-34,
+                                                            7.492273264316251e-31
+                                                        ],
+                                                        "non_kin": {
+                                                            "Temperature": {
+                                                                "temperature": 23.0
+                                                            }
+                                                        }
+                                                    },
+                                                    "target_jar_of_cumin_ep1_1": {
+                                                        "is_asleep": true,
+                                                        "root_link": {
+                                                            "pos": [
+                                                                -0.1511296182870865,
+                                                                -0.00957505777478218,
+                                                                0.49724
+                                                            ],
+                                                            "ori": [
+                                                                1.173419786937302e-05,
+                                                                -7.149007433326915e-05,
+                                                                0.0003012573579326272,
+                                                                0.9999999403953552
+                                                            ],
+                                                            "lin_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "ang_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ]
+                                                        },
+                                                        "non_kin": {}
+                                                    },
+                                                    "obstacle_graduated_cylinder_ep1_1": {
+                                                        "is_asleep": true,
+                                                        "root_link": {
+                                                            "pos": [
+                                                                -0.15118096768856049,
+                                                                0.09025781601667404,
+                                                                0.5674358606338501
+                                                            ],
+                                                            "ori": [
+                                                                1.4435498485454445e-07,
+                                                                -3.946479054661722e-08,
+                                                                8.949426755222589e-10,
+                                                                1.0
+                                                            ],
+                                                            "lin_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ],
+                                                            "ang_vel": [
+                                                                0.0,
+                                                                0.0,
+                                                                0.0
+                                                            ]
+                                                        },
+                                                        "non_kin": {
+                                                            "Temperature": {
+                                                                "temperature": 23.0
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "init_info": {
+                                            "class_module": "omnigibson.scenes.scene_base",
+                                            "class_name": "Scene",
+                                            "args": {
+                                                "scene_file": null
+                                            }
+                                        },
+                                        "objects_info": {
+                                            "init_info": {
+                                                "support_surface": {
+                                                    "class_module": "omnigibson.objects.dataset_object",
+                                                    "class_name": "DatasetObject",
+                                                    "args": {
+                                                        "name": "support_surface",
+                                                        "category": "desk",
+                                                        "model": "uqcmzf",
+                                                        "scale": [
+                                                            1.0,
+                                                            1.0,
+                                                            1.0
+                                                        ],
+                                                        "fixed_base": true,
+                                                        "expected_file_hash": "085832bad623df72eb625a62b74213aa"
+                                                    }
+                                                },
+                                                "cabinet_bottom_cabinet_ep1_1": {
+                                                    "class_module": "omnigibson.objects.dataset_object",
+                                                    "class_name": "DatasetObject",
+                                                    "args": {
+                                                        "name": "cabinet_bottom_cabinet_ep1_1",
+                                                        "category": "bottom_cabinet",
+                                                        "model": "bamfsz",
+                                                        "scale": [
+                                                            1.0,
+                                                            1.0,
+                                                            1.0
+                                                        ],
+                                                        "fixed_base": true,
+                                                        "expected_file_hash": "02765e90080f1dab38c45516de600b0b"
+                                                    }
+                                                },
+                                                "target_jar_of_cumin_ep1_1": {
+                                                    "class_module": "omnigibson.objects.dataset_object",
+                                                    "class_name": "DatasetObject",
+                                                    "args": {
+                                                        "name": "target_jar_of_cumin_ep1_1",
+                                                        "category": "jar_of_cumin",
+                                                        "model": "tsktnz",
+                                                        "scale": [
+                                                            1.0,
+                                                            1.0,
+                                                            1.0
+                                                        ],
+                                                        "fixed_base": false,
+                                                        "expected_file_hash": "38609afc8e6acdb2401cd62e228f2ee7"
+                                                    }
+                                                },
+                                                "obstacle_graduated_cylinder_ep1_1": {
+                                                    "class_module": "omnigibson.objects.dataset_object",
+                                                    "class_name": "DatasetObject",
+                                                    "args": {
+                                                        "name": "obstacle_graduated_cylinder_ep1_1",
+                                                        "category": "graduated_cylinder",
+                                                        "model": "egpkea",
+                                                        "scale": [
+                                                            1.0,
+                                                            1.0,
+                                                            1.0
+                                                        ],
+                                                        "fixed_base": false,
+                                                        "expected_file_hash": "f3d4f0d315e3f9405949804c624f8368"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "objects_info": {
+                                "init_info": {
+                                    "support_surface": {
+                                        "class_module": "omnigibson.objects.dataset_object",
+                                        "class_name": "DatasetObject",
+                                        "args": {
+                                            "name": "support_surface",
+                                            "category": "desk",
+                                            "model": "uqcmzf",
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "fixed_base": true,
+                                            "expected_file_hash": "085832bad623df72eb625a62b74213aa"
+                                        }
+                                    },
+                                    "cabinet_bottom_cabinet_ep1_1": {
+                                        "class_module": "omnigibson.objects.dataset_object",
+                                        "class_name": "DatasetObject",
+                                        "args": {
+                                            "name": "cabinet_bottom_cabinet_ep1_1",
+                                            "category": "bottom_cabinet",
+                                            "model": "bamfsz",
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "fixed_base": true,
+                                            "expected_file_hash": "02765e90080f1dab38c45516de600b0b"
+                                        }
+                                    },
+                                    "target_jar_of_cumin_ep1_1": {
+                                        "class_module": "omnigibson.objects.dataset_object",
+                                        "class_name": "DatasetObject",
+                                        "args": {
+                                            "name": "target_jar_of_cumin_ep1_1",
+                                            "category": "jar_of_cumin",
+                                            "model": "tsktnz",
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "fixed_base": false,
+                                            "expected_file_hash": "38609afc8e6acdb2401cd62e228f2ee7"
+                                        }
+                                    },
+                                    "obstacle_graduated_cylinder_ep1_1": {
+                                        "class_module": "omnigibson.objects.dataset_object",
+                                        "class_name": "DatasetObject",
+                                        "args": {
+                                            "name": "obstacle_graduated_cylinder_ep1_1",
+                                            "category": "graduated_cylinder",
+                                            "model": "egpkea",
+                                            "scale": [
+                                                1.0,
+                                                1.0,
+                                                1.0
+                                            ],
+                                            "fixed_base": false,
+                                            "expected_file_hash": "f3d4f0d315e3f9405949804c624f8368"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "objects_info": {
+                    "init_info": {
+                        "support_surface": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "support_surface",
+                                "category": "desk",
+                                "model": "uqcmzf",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "085832bad623df72eb625a62b74213aa"
+                            }
+                        },
+                        "cabinet_bottom_cabinet_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "cabinet_bottom_cabinet_ep1_1",
+                                "category": "bottom_cabinet",
+                                "model": "bamfsz",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "02765e90080f1dab38c45516de600b0b"
+                            }
+                        },
+                        "target_jar_of_cumin_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "target_jar_of_cumin_ep1_1",
+                                "category": "jar_of_cumin",
+                                "model": "tsktnz",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "38609afc8e6acdb2401cd62e228f2ee7"
+                            }
+                        },
+                        "obstacle_graduated_cylinder_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "obstacle_graduated_cylinder_ep1_1",
+                                "category": "graduated_cylinder",
+                                "model": "egpkea",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "f3d4f0d315e3f9405949804c624f8368"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "objects_info": {
+        "init_info": {
+            "support_surface": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "support_surface",
+                    "category": "desk",
+                    "model": "uqcmzf",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "085832bad623df72eb625a62b74213aa"
+                }
+            },
+            "cabinet_bottom_cabinet_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "cabinet_bottom_cabinet_ep1_1",
+                    "category": "bottom_cabinet",
+                    "model": "bamfsz",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "02765e90080f1dab38c45516de600b0b"
+                }
+            },
+            "target_jar_of_cumin_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "target_jar_of_cumin_ep1_1",
+                    "category": "jar_of_cumin",
+                    "model": "tsktnz",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "38609afc8e6acdb2401cd62e228f2ee7"
+                }
+            },
+            "obstacle_graduated_cylinder_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "obstacle_graduated_cylinder_ep1_1",
+                    "category": "graduated_cylinder",
+                    "model": "egpkea",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "f3d4f0d315e3f9405949804c624f8368"
+                }
+            },
+            "agent_0": {
+                "class_module": "omnigibson.robots.franka",
+                "class_name": "FrankaPanda",
+                "args": {
+                    "name": "agent_0",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self_collisions": true,
+                    "fixed_base": true,
+                    "controller_config": {
+                        "arm_0": {
+                            "name": "JointController",
+                            "motor_type": "position",
+                            "command_input_limits": null,
+                            "command_output_limits": null,
+                            "use_delta_commands": false,
+                            "use_impedances": false
+                        },
+                        "gripper_0": {
+                            "name": "MultiFingerGripperController",
+                            "command_input_limits": null,
+                            "mode": "binary"
+                        }
+                    },
+                    "action_type": "continuous",
+                    "action_normalize": false,
+                    "reset_joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "obs_modalities": [
+                        "rgb"
+                    ],
+                    "include_sensor_names": null,
+                    "exclude_sensor_names": null,
+                    "grasping_mode": "assisted",
+                    "expected_file_hash": "9ddd461281d1c875d2ae552f61751c3f"
+                }
+            }
+        }
+    }
+}
