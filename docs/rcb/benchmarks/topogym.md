@@ -495,7 +495,7 @@ metrics, margins against the live thresholds, positions).
 | family | threshold (task parameter) | live | grading hold | measured spread (trajectory, replays) |
 |---|---|---|---|---|
 | blanket_flatten | coverage (`minimum_coverage_ratio`) | 0.95 | 0.92 | the user's numbers (2026-10-03 20:50; first 0.93). Medium trial ihy7Nru (3089 rows), 5 replays: coverage at the last row 0.927 / 0.931 / 0.956 (and one success at row 2868 at 0.943): about 3 points between replays of one long trajectory; short scripted operations (blanket fix notes): at most 0.7 points |
-| blanket_flatten | particle speed (`maximum_speed_m_s`: the "settled" gate and the final settling's speed) | 0.03 m/s | 0.08 m/s | the user's numbers (20:50). PBD reports a particle's last-substep velocity; on cloth at rest it spikes and restarts the confirmation. ihy7Nru replays, control-step samples: replay B 0.0715 (row 3058), then in its hold 0.0633 / 0.0601 / 0.0666 (+10 / +50 / +70: no confirmation within 2 s at coverage 0.958); another replay 0.044 at the last row; a traced v15 replay 69 of its last 400 rows above 0.03 (4 above 0.08, max 0.097, the agent still moving) and 1 of 80 hold steps (0.065) |
+| blanket_flatten | particle speed (`maximum_speed_m_s`: the "settled" gate and the final settling's speed) | 0.03 m/s | 0.08 m/s | the user's numbers (20:50). Through tooling 18 the speed was PBD's last-substep velocity, which on cloth at rest spikes and restarts the confirmation; since tooling 19 it is the end-of-tick displacement over the tick, numbers unchanged (Cloth settle speed below). ihy7Nru replays, control-step samples: replay B 0.0715 (row 3058), then in its hold 0.0633 / 0.0601 / 0.0666 (+10 / +50 / +70: no confirmation within 2 s at coverage 0.958); another replay 0.044 at the last row; a traced v15 replay 69 of its last 400 rows above 0.03 (4 above 0.08, max 0.097, the agent still moving) and 1 of 80 hold steps (0.065) |
 | blanket_flatten | displacement from the start of the confirmation 3 mm (`maximum_drift_m`), 0.5 s window, height, stretch | unchanged | unchanged | not relaxed: the displacement limit is what proves the cloth is still |
 | knot_untying | rope speed (`terminal.maximum_speed_m_s`: quiet and final settling) | 1 mm/s | 1.25 mm/s | v14 success WWfaVD9 (365 rows), 2 replays, both strict successes at row 365: the window's speeds 0.43-0.90 mm/s, same-step spread up to 0.12 mm/s (just after the release); rope vertices within 11.7 um |
 | knot_untying | planar clearance 8 mm, table band (z), drift 1 mm; the release (terminal v5 since v16: 1 mm from every robot part that can move, world-fixed bases may touch, no overlap with any robot part's interior; v14: 5 mm from every part by bounding boxes) | unchanged | unchanged | same replays: 16.4 mm (spread 1.5e-8 m); margins 2.8 / 1.19 mm (< 1e-8 m); 0.7 um; 7e-8 m (measured on v14's release check). The release conditions are geometric: never relaxed |
@@ -503,6 +503,88 @@ metrics, margins against the live thresholds, positions).
 | slotted_post_ring | ring speed 1 mm/s / 0.02 rad/s, containment (1 mm boundary, z band), separator | unchanged | unchanged | v12 agent ULq3ATD (92 rows + hold), 3 replays: ring position 3 um, speeds 6e-6 m/s / 6e-5 rad/s (< 1 %); the cord, beads and discs (remainder) diverge by 0.3-8 mm (branch-like) |
 | orbits | target speed 1 mm/s / 0.02 rad/s (cord and handle), containment, separator | unchanged | unchanged | v12 agent HHnLEzf (154 rows + 80 hold), 1 replay (the second was stopped by the RAM guard): the cord crept at 1.9-3.3 mm/s through the hold (above the limit, not near it); handle 0.9-2.1e-3 rad/s; separator and z margins constant. No spread measured: no slack |
 | lock_picking | shaft-bore excess 10 um, insertion margin 1 mm, slot clearances | unchanged | unchanged | v12 agents oRtMyhk (1178 rows) / JPLHPHT (1285 rows), 3 replays each: bit-identical up to control step 543 / 476, then a contact branch (32-42 um at onset, 1.2 / 5.7 mm key position and 0.27 rad rotor angle at the end); no success trajectory exists to measure at the goal |
+
+### Cloth settle speed: end-of-tick displacement (tooling v19, 2026-10-06)
+The user's decision (2026-10-06, "option 1"): a cloth particle's speed is its end-of-tick displacement over the tick,
+(x(t) - x(t - dt)) / dt with dt the 2.5 ms physics tick. It is no longer the velocity Genesis' PBD solver stores, which
+is the last solver substep's (pos - ipos) / substep_dt (0.625 ms; 4 substeps per tick). The thresholds are unchanged: live
+0.03 m/s, grading hold 0.08 m/s, displacement from the start of the confirmation 3 mm (`maximum_drift_m`), window 0.5 s.
+- Why. Blanket very_easy (Jianwen's oracle; lab probe 2026-10-06): after the release, particle 7458 sits in a PBD
+  self-collision 2-cycle with three neighbours at the 8 mm particle-size threshold. Stretch and bending move it about
+  50 um, the self-collision puts it back, so it alternates between two points 20.65 um apart every substep. Its end-of-tick
+  position is constant to 1 um, but the stored velocity reads 33.04 mm/s, above the 30 mm/s gate, for as long as the
+  episode lasts. With the old definition standard could never pass; privileged passed only through the 0.08 m/s hold.
+- Where. `topogym/world/genesis_world.py`:
+  - `advance()` keeps every particle entity's positions at the start of the tick;
+  - `read_state()` reports `particles[<name>]["velocity_m_s"]` = (x - x_tick_start) / physics_dt once a tick has run;
+  - before the first tick of an episode (after `reset_clock`), and on a restored state captured before any tick, it reports
+    Genesis' stored velocity as before, so the birth readout, the instance state hashes, `soft_state` and the oracle's
+    archive-exact birth check are unchanged;
+  - `capture_state` / `restore_state` keep the tick-start positions per captured state, so a rewind reports the speed the
+    state had when it was captured.
+
+  Every consumer reads this one field: the Task's settled gate, the final settling's quiet test
+  (`topogym/evaluation/terminal/settling.py`), the grading replays' `particle_speed` threshold (through the task's metrics),
+  the particle speed guard (`_guard_particle_speeds`; its 20 m/s limit was calibrated on last-substep velocities, see the
+  follow-ups), the blanket oracle's quiet wait and its audit, `Session.objects()` and the cloth diagnostics. The frozen PBD state codec's backend identity (`topogym/world/state.py`,
+  `pbd_table_friction.py`, Genesis' files) does not include `genesis_world.py`, so the packaged cloth states restore as
+  before. The instruction texts are unchanged: they state a linear speed limit, and the agent's Session reads the same field.
+- Not changed:
+  - `topogym/world/physics/cloth_preparation.py` keeps reading Genesis' velocity: it is the control variable of its
+    released-stable acceptance;
+  - `topogym/tasks/blanket_flatten/below_easy_preview.py` and `scripts/check_builder_feedback.py` keep their native
+    continuity checks;
+  - rigid bodies and FEM vertices have their own readers.
+- Validation (lab GPU 4, 2026-10-06). Grading replays of graded trajectories under the patched world, compared with their
+  v18-sweep / below-easy grades. Per tick, old = Genesis' velocity read by a hook, new = the displacement; the speeds are
+  the cloth's maximum over its particles.
+
+  | trajectory | old grade | replay, new speed | at rest (old <= 0.03 m/s): abs(new - old) median / p99, mm/s | moving (old > 0.1 m/s): new / old p10 / median / p90; ticks with new <= 0.03 m/s | settled gate differs: new only / old only (ticks) |
+  |---|---|---|---|---|---|
+  | easy, 718 rows | strict, row 718 (tick 7176) | strict, row 718 (tick 7176) | 0.95 / 17.4 | 0.16 / 0.68 / 1.04; 807 | 845 / 28 |
+  | medium, 1696 rows | strict, row 1696 (tick 16953) | strict, row 1696 (tick 16953) | 1.04 / 21.2 | 0.38 / 0.94 / 1.11; 262 | 2041 / 312 |
+  | hard, 4855 rows | strict, row 4855 (tick 48549) | success in the hold's first tick (48550), no tolerance needed | 0.79 / 29.2 | 0.22 / 0.84 / 1.08; 206 | 2800 / 499 |
+  | very_easy, 1454 rows | privileged only through the hold (21 hold steps); standard failed | strict, row 637 (window's worst speed 0.69 mm/s, coverage 0.978) | 4.28 / 5.16 | 0.86 / 0.98 / 1.11; 0 | 331 / 6 |
+  | easier, 633 rows | oracle failed (lay_half: assisted grasp lost) | no success; the goal is never reached either way | - | - | 129 differ |
+
+  - Old-definition artifacts. At rest the stored velocity has a floor of about 5 mm/s (very_easy: at least 5.27 mm/s
+    over 3067 resting ticks), while the displacement reads about 0. It also spikes on cloth that does not move: easy
+    particle 3510 read 0.156 m/s against a displacement of about 1 mm/s. Such ticks are the "moving" ticks with a new
+    speed <= 0.03 m/s in the table. The ihy7Nru replay spikes of 0.04-0.07 m/s on cloth at rest (Replay tolerances) are
+    of the same kind. The very_easy chatter particle: 33.0 mm/s old, about 1e-5 m/s new.
+  - Moving cloth stays unsettled. In very_easy's oracle phases the new speed exceeds 0.03 m/s in 1200 / 1200 ticks of
+    lay_corner (median 0.162 against 0.170 m/s old), 1098 / 1200 of turn_corner (0.1075 / 0.1076) and 256 / 260 of the
+    release.
+  - Where the settled gate differs, the new definition is mostly settled where the old one read an artifact. The few
+    old-only ticks are slow motion near 0.03 m/s, where the tick's average exceeds the last substep's velocity (a particle
+    decelerating within the tick). Goal decisions differ at a few ticks both ways (easy 10 new only / 1 old only, medium
+    52 / 24, very_easy 324 / 0); easy's and medium's success rows are unchanged.
+  - Hard: one tick later. At tick 48349 a particle decelerating within the tick reads 58 mm/s as displacement and at most
+    30 mm/s as last-substep velocity, so the 0.5 s confirmation starts one tick later. The v18 trajectory's last row (9
+    ticks) ends at the old success tick 48549, one tick short of a strict success; its replay succeeds in the first tick
+    of the hold. A v19 oracle run should stop one tick later and grade strictly; the v19 re-grades check it.
+  - Physics identity. Per-tick SHA-256 of the cloth positions, easy rows 0-300 (3000 ticks): the patched and unpatched
+    world, with and without the speed hook, are identical at every tick. On the same packages the patched world gives the
+    same instance state hashes (v18 / below-easy instances: easy 34a6293dbb63deb5, medium 437ce3bc96b437f9, hard
+    e1631bc691da83c8, very_easy 80c2527aa9f1964c). Only the reported speed changes. (The v19 packages' blanket state
+    hashes change anyway, for the same restored physics: the re-key record names the profile merged-v19, as with
+    merged-v18.)
+  - Visual. very_easy's verifier video around the chatter onset (tick ~6041) and after the release: the sheet lies flat
+    and still from the release on; mid-lay frames show the carried corner moving.
+- Follow-ups for Jianwen (not done):
+  - Rigid bodies: their speeds are the rigid solver's velocities at the end of the tick (the IPC coupling's for
+    IPC-coupled bodies). The families that settle rigid bodies could use the same end-of-tick displacement if a similar
+    artifact shows up; none has been seen.
+  - IPC families: FEM vertex velocities are what the IPC coupling writes back per IPC frame; no change unless a
+    measurement shows a similar artifact.
+  - `cloth_preparation.py`: its released-stable acceptance still tests Genesis' velocity. Reading the displacement there
+    would change which prepared states are accepted, i.e. it would make new instances; worth doing if a preparation ever
+    stalls on the same chatter.
+  - The particle speed guard's 20 m/s limit was set from last-substep velocities. The displacement averages a tick's
+    substeps, so a blow-up's first tick may read lower; the traced blow-ups reached 1e3-1e5 m/s by their third tick, so
+    the guard should still end them no later than the tick in which the cloth falls (it runs before the task's
+    predicates), but this was not measured. Replaying the press stress tests of the 2026-10-03 blanket fix notes with
+    Genesis' original contact kernel under tooling 19 would confirm it.
 
 ## Physical-validity policy (tooling v16)
 The user's general policy (2026-10-03 ~21:30, its forcing rule settled 2026-10-04 ~01:10) replaces v14's R1 as the

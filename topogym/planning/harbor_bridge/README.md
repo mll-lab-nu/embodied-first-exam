@@ -41,6 +41,9 @@ Blanket 的 very_easy / easier 按用户要求使用 **tooling v18+** grading。
 现有的 `SessionPolicyRunner` 和生成时关节限速，候选使用 95% 覆盖率及 1.3 抓持拉伸保护。
 必须先在目标镜像／GPU profile 上准备两份初态，再显式传给候选构建器；构建器复制完整数值包，
 只为 release 的覆盖率参数生成重键副本。不能把本地 Env 成功或旧版本轨迹算作 `solved=1`。
+tooling v19 起（用户 2026-10-06 决定），布料粒子速度取每个物理 tick 末的位移除以 tick 时长，不再取 PBD
+最后一个子步的速度；“静止”门槛 0.03 m/s、回放 0.08 m/s 与 3 mm 漂移不变。very_easy 中一个自碰撞二周期粒子
+（tick 末位置不动）按旧定义恒为 33 mm/s，按新定义可静止。详见 `docs/rcb/benchmarks/topogym.md`。
 
 ```bash
 .venv-harbor/bin/python scripts/topogym_merge_candidate.py \
