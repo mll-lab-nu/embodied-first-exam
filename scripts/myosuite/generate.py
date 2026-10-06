@@ -130,6 +130,10 @@ LUNA3 = "Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high`"
 NO_POSITIVE: dict[str, str] = {
     "bimanual": f"two model attempts failed: {LUNA3} and {OPUS3}",
     "dex_cylinder_pass": f"two model attempts failed: {LUNA3} and {OPUS3}",
+    "dex_bunny_inspect": f"two model attempts failed: {OPUS3} and {LUNA3}",
+    "dex_hammer_use": f"two model attempts failed: {LUNA3} and {OPUS3}",
+    "dex_cup_pour": f"two model attempts failed: {OPUS3} and {LUNA3}",
+    "dex_airplane_fly": f"two model attempts failed: {OPUS3} and {LUNA3}",
 }
 REFERENCE = (
     "MyoSuite's own NPG baseline policy for `{env}` (`myosuite/agents/baslines_NPG/`, shipped in the MyoSuite "
