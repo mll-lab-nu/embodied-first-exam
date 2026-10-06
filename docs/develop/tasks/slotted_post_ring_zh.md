@@ -259,4 +259,4 @@ GPU 落稳（TopoGym 镜像 0.2.3-cu128，挂载本分支代码，CUDA，2.5 ms�
 
 边界：物体层面检查把绳当作冻结的折线，不含机器人、IK 与动力学；easier 的“把绳圈连同珠 2 穿下去”没有路径证明，只检查了尺寸关系。
 
-2026-10-06：v18 实例已构建（落稳、精确恢复、无穿透）；very_easy 有机器人 oracle（右臂指尖捏环、直上越柱顶、放入目标区），Harbor 两种模式均评分 1。easier 在现场景下无 oracle：珠 2 沿绳滑动、带不动绳圈，E 50 kPa 的绳一捏即出现反转四面体；用户决定把珠 2 固定在绳圈上（另行提交）。详见 [oracle 说明](../../rcb/ORACLE_FIXES_2_FOR_JIANWEN.md) 第 5 节。
+2026-10-06：v18 实例已构建（落稳、精确恢复、无穿透）；very_easy 有机器人 oracle（右臂指尖捏环、直上越柱顶、放入目标区），Harbor 两种模式均评分 1。easier 在现场景下无 oracle：珠 2 沿绳滑动、带不动绳圈，E 50 kPa 的绳一捏即出现反转四面体；把珠 2 固定在绳圈上的方案（a）在实验室三次运行仍失败（珠 2 之后的绳弯一直压在环上），未提交；用户决定 slotted 只交付 very_easy，easier 交给 William / Jianwen。结果、缩短绳圈的 P2 提案与补丁位置详见 [oracle 说明](../../rcb/ORACLE_FIXES_2_FOR_JIANWEN.md) 第 5 节。
