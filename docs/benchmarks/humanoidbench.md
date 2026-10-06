@@ -16,45 +16,45 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 
 | class | task | robot | ours | note |
 |---|---|---|---|---|
-| C1 flat gait | walk | h1 | ⬜ | passed (privileged) |
+| C1 flat gait | walk | h1 | ✅ | the class's only candidate |
 | | run | h1 | ⬜ | walk's reward at running speed |
 | | stand | h1 | ⬜ | walk's reward at speed 0 |
 | | crawl | h1 | ⬜ | holding still earns 42% of the bar |
-| C2 constrained gait | hurdle | h1 | ✅ | |
-| | stair | h1 | ✅ | |
+| C2 constrained gait | hurdle | h1 | ✅ | runs (5 m/s) |
+| | stair | h1 | ⬜ | walks (1 m/s) |
 | | slide | h1 | ⬜ | stair's reward, byte for byte, easier |
 | | pole | h1 | ⬜ | holding still earns 71% of the bar |
-| C3 stabilisation | balance_simple | h1 | ⬜ | passed (privileged) |
-| | balance_hard | h1 | ✅ | same reward on a rolling cylinder: far harder |
+| C3 stabilisation | balance_simple | h1 | ⬜ | balance_hard is upstream's hard version |
+| | balance_hard | h1 | ✅ | same reward on a rolling cylinder |
 | | sit_simple | h1 | ✅ | fixture, the pipeline check: holding still earns 62% |
-| C4 navigation | door | h1 | ⬜ | passed (privileged) |
-| | maze | h1 | ⬜ | passed (privileged) |
-| C5 whole-body power | powerlift | h1hand | ✅ | |
-| | highbar_simple | h1 | ✅ | |
+| C4 navigation | door | h1 | ✅ | moves 1 object (the door) |
+| | maze | h1 | ⬜ | moves no object |
+| C5 whole-body power | powerlift | h1hand | ✅ | moves 1 object, dexterous hands |
+| | highbar_simple | h1 | ⬜ | moves no object |
 | | highbar_hard | h1strong | ⬜ | highbar's reward on a stronger robot |
-| | basketball | h1 | ⬜ | passed (privileged) |
-| C6 bimanual manip. | push | h1 | ⬜ | passed (both modes) |
-| | window | h1hand | ⬜ | best run 95% of the bar |
-| | spoon | h1hand | ⬜ | holding still earns 58% |
-| C7 in-hand precision | cube | h1hand | ⬜ | passed (privileged) |
+| | basketball | h1 | ⬜ | moves 1 object, no hands |
+| C6 bimanual manip. | push | h1 | ⬜ | moves 1 object, no hands |
+| | window | h1hand | ✅ | moves 1 object (a wiping tool), dexterous hands |
+| | spoon | h1hand | ⬜ | holding still earns 58% of the bar |
+| C7 in-hand precision | cube | h1hand | ✅ | the class's only candidate left |
 | | insert_normal | h1hand | ⬜ | the bar needs no insertion |
 | | insert_small | h1hand | ⬜ | insert_normal's reward, thinner peg |
-| C8 mobile manip. | package | h1 | ✅ | |
-| | reach | h1 | ⬜ | passed (both modes) |
-| | sit_hard | h1 | ⬜ | passed (both modes) |
-| | room | h1hand | ✅ | |
-| C9 long-horizon | bookshelf_simple | h1hand | ✅ | |
+| C8 mobile manip. | package | h1 | ⬜ | moves 1 object |
+| | reach | h1 | ⬜ | moves no object |
+| | sit_hard | h1 | ⬜ | moves no object |
+| | room | h1hand | ✅ | moves 6 objects |
+| C9 long-horizon | bookshelf_simple | h1hand | ✅ | moves 5 objects, dexterous hands |
 | | bookshelf_hard | h1hand | ⬜ | bookshelf_simple's reward, random placement |
-| | truck | h1 | ✅ | |
+| | truck | h1 | ⬜ | moves 5 objects, no hands |
 | | cabinet | h1hand | ⬜ | the bar cannot be reached |
-| | kitchen | h1hand | ⬜ | passed (privileged) |
+| | kitchen | h1hand | ⬜ | moves 4 objects |
 
-Why: one task per reward function, and holding still must earn under 40% of the bar (spoon, at 58%, was kept as an
-exception), so passing takes control, not a pose. That left 23 tasks in 9 capability classes. Since 2026-10-04 only the
-hardest 9 stay, in 5 classes: the 13 that no model passed in either mode (GPT-6 Luna and GPT-6.1 Sol ran all 23, GPT-6
-Sol and Claude Opus 5.5 five; their runs are on the results site) minus window, which came within 5% of the bar, and
-spoon, insert_normal and cabinet, whose bar does not measure the task (their `difficulty` in `subset.toml` at 8c5594a4
-has the derivation). Source, with the reasoning per task: `scripts/humanoidbench/subset.toml` (the generator's input).
+Why these (no model's results enter the choice):
+- **Valid (20):** the bar measures the task and can be reached, and holding still earns under 40% of it: `main`'s 23
+  minus spoon, insert_normal and cabinet.
+- **One per capability class (9):** within a class, upstream's hard version first, then the task that moves more
+  objects, then the dexterous hands (`h1hand`), then the higher speed target.
+- Per-task reasons: the table above and `scripts/humanoidbench/subset.toml`.
 
 ## Modes
 
@@ -69,9 +69,9 @@ no object or target pose; the room camera's pose is given in the robot's startin
 | standard mode: given (a real H1 has it) | not given |
 |---|---|
 | the task text: goal, what ends an episode, pass mark, the reward's terms in words (no formula) | the reward and the return |
-| two head cameras, RGB 256×256; `room_camera`; depth (`RCB_OBS_DEPTH=1`, off) | the robot's position in the room |
+| two head cameras, RGB 256×256 (cube 512); `room_camera`; depth (`RCB_OBS_DEPTH=1`, off) | the robot's position in the room |
 | joint angles and velocities; pelvis IMU: gyro, gravity direction | any object's or target's pose |
-| `spec()`: servo ranges, joint axes and positions, link masses and centres of mass, feet boxes, IMU and camera frames, 50 Hz, the episode length (1000 control steps), budget | contact forces, the simulator itself |
+| `spec()`: servo ranges, joint axes and positions, link masses and centres of mass, feet boxes, IMU and camera frames, 50 Hz, the episode length (1000 control steps; 500 for cube), budget | contact forces, the simulator itself |
 
 ## Answer-key leakage
 
