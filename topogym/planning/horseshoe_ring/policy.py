@@ -634,7 +634,8 @@ class HorseshoePolicy:
         for index,row in enumerate(ring['poses'][1:]):
             target=body_pose(row);current=self.bodies()['left']
             motion=np.linalg.norm(target[0]-current[0])+.10*(target[1]*current[1].inv()).magnitude()
-            yield from self.follow_bodies({'left':target},max(.3,float(motion/.015)),f'place_ring_{index}')
+            yield from self.follow_bodies({'left':target},max(.3,float(motion/.015)),f'place_ring_{index}',
+                                          tracking_m=getattr(self,'place_tracking_m',.002))
     def place_remainder(self):
         self.phase='plan_remainder_placement'
         remainder=self.planner.place_remainder(self.obs)

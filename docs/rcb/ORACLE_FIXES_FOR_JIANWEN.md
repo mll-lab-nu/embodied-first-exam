@@ -854,3 +854,90 @@ pickup per setting. Changes:
     `test-oracle-portability` (the manifest now has 37 files).
   - The full CPU CI in the v18 image gives the same outcome as on `7f0b002cc` for every test. The 10 tests that
     fail there fail the same way.
+
+## 11. v18 below-easy oracle sweep: buzz fixed; rope and knot easier analysed (topospeed, 2026-10-06)
+
+**Sweep.** very_easy and easier of the 8 families your `harbor_bridge/below_easy.py` wired before hedgehog, both modes,
+16 tasks / 32 grades, oracle in the agent slot.
+- Candidate: lab `align_be/cand_be`, your `topogym_merge_candidate.py --families <8> --tiers very_easy easier` on the
+  v18 tree `7f0b002cc`, image `labv18be` (`01c12854`, the v18 release image). Build, preflight (16/16 exact restores)
+  and harbor-smoke (32/32) pass. Grades: `test_harbor_oracles.py --candidate` as your launcher runs it, lab lanes
+  `align_be/sweep/`.
+- Result on `7f0b002cc`: **23 / 32** grade 1, all deterministic. Every non-pass is oracle-side.
+
+| family | very_easy priv / std | easier priv / std | live min (priv) |
+|---|---|---|---|
+| cast_coil | 1 / 1 | 1 / 1 | 2.6 / 2.9 |
+| cast_keyhole | 1 / 1 | 1 / 1 | 5.9 / 7.3 |
+| lock_picking | 1 / 1 | 1 / 1 | 5.3 / 7.9 |
+| interlocked_claws | 1 / 1 | 1 / 1 | 5.1 / 22.0 |
+| fiber_bundling | 1 / 1 | 1 / 1 | 9.8 / 16.0 |
+| knot_untying | 1 / 1 | 0 / blocked | 32.7 / 35.9 |
+| buzz_wire_3d | 0 / blocked -> **1 / 1** with the fix | 1 / 0 -> **1 / 1** with the fix | 17.3 / 19.9 (fixed) |
+| rope_threading | 0 / blocked | 0 / blocked | ~56 to the failure |
+
+With the buzz fix below: **27 / 32**. Open: knot easier (yours, you re-validate it) and rope x2.
+
+**buzz_wire_3d (commit "below-easy buzz_wire_3d: standard-rate rows; very_easy TURN_1 planning margin 1.4 mm").**
+- easier standard: the standard service clipped or rejected the reference rows from row 1621. The simplified stages ran
+  through a plain `SessionPolicyRunner`, and the regrasp rows asked up to 0.18 rad per step (very_easy has 12 such
+  rows). Fix: `rate_limited_runner(session)` (spread), as for buzz easy in O2-2. Largest step afterwards 0.0385 rad.
+- very_easy privileged: "No collision-checked terminal turn from the measured grasp". From an exact replay of the
+  failed trial (final state_sha `58ef8bbb6fe06cd8`), every planned turn keeps at most **1.4735 mm**: TURN_1's 5
+  candidates, 41 yaws 130-170 deg, 210 xy offsets. The 1.5 mm margin admitted none. Fix: very_easy uses 1.4 mm. This is
+  the oracle's own planning margin, not a Task rule (the Task fails only on wand-wire contact); easier keeps 1.5 mm.
+- Evidence: in-process native success from the failure state with TURN_1 at 1.4 mm (row 10,462); Harbor grades on a
+  tree with only these planning files: very_easy 1 / 1 (17.3 / 13.8 min live), easier 1 / 1 (19.9 / 15.6 min).
+
+**knot_untying easier (commit "stop instead of closing when converge() saturated the TCP bias": a safety change,
+not a fix).**
+- Failure: grasp_ends:converge never reaches the rope ends. The left TCP stays 17 mm off while its bias grows to the
+  40 mm cap (16.3, 36.5 mm); the grasp then closed beside the rope, and the lift and spread carried nothing.
+- Exact replay with the commanded rows (lab `kdiag`): from grasp_ends:descend the left **waist (joint 1)** falls behind
+  its command by 0.10-0.16 rad and the wrist roll by 0.14-0.16 rad, while the other joints track within 0.03 rad. The
+  TCP moves a few mm where the commands move about 45 mm. The rigid collider reports no gripper contact.
+- Two bounded re-aim attempts did not help, so the stall is not the rope:
+  - converge 8 mm above the re-aimed grasp pose in free space: left TCP 49 mm off, waist -0.540 rad against a command of
+    -0.382 (other joints within 0.015 rad), jaws open (finger position 27 mm);
+  - rise 3 cm with the jaws closed and converge there: still 48.3 mm off, bias saturated.
+- Not the cause: a joint limit (the waist range is +-pi). Candidates to check: a left-arm collision with the right arm
+  or the scene, or the command path (Session guard rules, the joint-step limiter) altering the waist target; the waist
+  torque cap is 12.9 Nm. Every passing knot run on v18 settles once at 1-4 mm with no prior bias.
+- The committed guard ends the run where it fails ("TCP bias saturated ...; not closing beside the rope"); runs that
+  never saturate are unchanged. Patches of both re-aim attempts: lab `align_be/be_fix_all_v3.patch`.
+
+**rope_threading very_easy and easier (not committed: no native success yet).**
+- Failure (both tiers, identical up to here): raise_to_ring, "IK exhausted 4 seeds" after about 56 min. The straight
+  raise to ring centre + 10 cm (world z 1.35 m) above the pickup keeps the jaws down; the wrist angle climbs to 2.185 rad
+  (range [-1.8675, 2.234]) and the path stops high up.
+- IK probe on the v18 instance (`ropeik`): with the jaws down, **no** target 9 cm or more above the ring centre is
+  reachable for the right arm (any jaw tangent, dx 0-5 cm), so very_easy's orient_above_open_cradle (ring +
+  [0.025, 0, 0.09]) is out of reach as well. Targets 6 cm and 3 cm above it are reachable for most tangents, and every
+  easier feed pose (ring + [0.15 / 0.10 / 0.05 / -0.10, 0, 0.025]) is reachable. The left arm reaches none of them.
+- Variants from one checkpoint at the raise start (`ropefork`: exact replay of 653 rows, then a rewind per variant):
+  - very_easy: one joint-space move to ring + [0.025, 0, 0.06], then your 24-step lowering from 0.06: past the raise,
+    then "right lost the physical rope grasp" while lowering onto the cradle.
+  - easier: one joint-space move to the entrance feed pose ring + [0.15, 0, 0.025]: past the raise and
+    align_ring_entrance, then feed_through_ring stops with "Action would be clipped by the public robot adapter" (the
+    feed needs a joint target outside the public action range).
+- So the raise target needs to come down (6 cm is reachable), and each tier then has a second issue in its threading
+  phase. The variant code is in `topospeed/bin/ropefork_v2.py` (lab).
+- **Speed, a decision for you and the user:** below-easy rope runs at about 2.6 s per control step against 0.73 s for
+  rope easy on v18, so one execution takes 1.5-2 h, over the 72 min rule. The below-easy candidate path uses the Task
+  defaults on purpose (`topogym_merge_candidate.py`: no original-tier overrides for very_easy / easier), so these
+  instances do not get merged-v16's rope profile `contact_relaxed_v16`:
+
+| instance setting | rope below-easy | rope easy (contact_relaxed_v16) |
+|---|---|---|
+| IPC frames per control step | 10 x 2.5 ms (25 ms step) | 1 x 40 ms (40 ms step) |
+| rope mesh | default, 33,070 vertices | 5.5 mm spacing, 12 sides, 4,939 vertices |
+| Newton / PCG tolerance | 1e-3 / 1e-5 | 3e-3 / 3e-5 |
+| robot-rope contact | every link | fingers only |
+| rope material | default | E 5e6 |
+
+  Both freeze a settled IPC state. Likely lever: give the below-easy rope tiers that profile, then re-validate the
+  simplified oracle on it. Not applied.
+
+**Lab paths.** Sweep `align_be/` (candidate, lanes, `tree_fix` = the planning fixes on `7f0b002cc`). Tools in
+`topospeed/bin/`: `bzdiag.py` (buzz replay and turn probe), `kdiag.py` (knot joint tracking), `ropefork_v2.py` and
+`ropeik.py` (rope checkpoint variants and reachability).

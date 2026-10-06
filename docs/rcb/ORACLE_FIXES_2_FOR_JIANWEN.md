@@ -331,3 +331,69 @@ execution at most ~20 % of the 6 h agent budget, ~72 min) by a wide margin. Fact
     generic packager and graders need no change.
 - **Conclusion:** no oracle for these six tasks. Whether they stay in the benchmark as they are, change (slot, cord
   stiffness, disc pose) or get a separate speed allowance is a decision for you and the user.
+
+## 4. horseshoe_ring below-easy (very_easy, easier): scene review, oracle, grades (2026-10-06)
+
+William's 10-02 drafts (`topogym/tasks/horseshoe_ring/below_easy.py`, `horseshoe_ring_{very_easy,easier}.py`, their settled
+layouts) had no oracle and were never built. Lab work: `/DATA2/qineng/rcb/topogym_v1/hsbe/` (JOURNAL.md, `exp/`, `bin/`).
+
+- **Difficulty review (the user's rule: very_easy < easier < easy).** The section check of `below_easy_witness.py` (the
+  ring's bore against the shoe's 137.8 x 24.8 mm section along the chain axis, 90 phases 2 deg apart):
+
+  | tier | bore | passing phases | best clearance |
+  |---|---|---|---|
+  | very_easy | 144 x 144 mm | 90 / 90 | 3.05 mm |
+  | easier, draft | 146 x 120 mm | 27 / 90 | 4.03 mm |
+  | **easier, now** | **146 x 136 mm** | **61 / 90** | **4.04 mm** |
+  | easy (enlarged ring) | 142.6 x 135.9 mm | 53 / 90 | 2.34 mm |
+
+  The draft easier ring passed at fewer phases than the current easy ring (the draft was designed against the original
+  easy ring, 135 x 128 mm, which passes at none). Only the short axis changes: 146 x 136 mm passes at more phases than
+  easy and with more clearance, and still needs a turn at the other 29 (witness design "easier": route certified at
+  90 deg with 1.04 mm, the slide at 0 deg collides; start entangled, span crossings 3/3).
+- **Physics.** The draft easier layout was not settled (ring still moving at 4 mm/s and 0.06 rad/s after its 5 s settle).
+  The new layout: the template assembly spawned 1 mm above the table and settled 8 s on CPU (2.5 ms x 4, robot at home)
+  in the v18 image; the ring comes to rest next to the left shoe after about 2 s (final speeds below 0.03 mm/s). very_easy
+  keeps William's layout (settled). Instances: built by your candidate pipeline (`topogym_merge_candidate.py`,
+  `topogym_candidate_pipeline.py --phase build`) in candidate `hsbe/tree2/runs/test_results/cand_hsbe_v2`; birth
+  state_sha very_easy cd53c55076a70899, easier cddcb02aa13b01be, identical in two independent builds.
+- **Image.** The easier change is public source (`topogym/tasks`, `topogym/assets/resources`), so the v18 image (built
+  from be53c149e) does not contain it. The grades ran on `hsbe2/rcb-topogym:0.2.16-dev-cu128` = your
+  `images/topogym/Dockerfile` built from 7f0b002cc plus this change (every other build input identical to cand_v18b's
+  snapshot; all layers before `COPY topogym/` from the v18b build cache), warmed with `warm_cache.py` on these two
+  instances. The next release image needs a rebuild to carry the easier scene.
+- **Oracle.** Your easy oracle (`gravity_release_table_pickup_stages`: shoe grasps, fold, suspended release, table
+  pickup, placement) with per-tier inputs in `reference_data/horseshoe_ring/{very_easy,easier}/` (manifest-pinned;
+  below-easy recipes may not reuse another tier's files, `ci_checks/test-harbor-below-easy.py`):
+  - `reference.json`, `fold.json`, `support.json`: the easy tier's, with the below-easy assembly template in
+    reference.json (only the ring differs; `load_reference` checks it);
+  - `grasps.json`: the easy grasp poses (within 0.07 mm and 0.12 deg on these instances), the left hand fully open
+    (27 mm) on its descent: with 18 mm the inner left finger enters the larger ring standing next to the left shoe
+    (1.9-15 mm contact in the approach recheck);
+  - `approach.json`: planned and checked on each frozen instance (`hsbe/bin/hs_be_plan.py`, as
+    `run_horseshoe_policy.py` plans it);
+  - rows clamped to the standard step limit (O2-6).
+  - `harbor_bridge/below_easy.py`, `catalog.BELOW_EASY_FAMILIES` and `references.py` dispatch horseshoe_ring's
+    below-easy tiers to `horseshoe_ring.public_session`.
+  - very_easy's placement (`place_ring` gets an optional `tracking_m`, 0.5-5 mm, default 2 mm as before): the larger
+    ring is carried 2-4 mm off the placement route (2.0 mm at 20 %, 3.1 mm at 31 %, peak 4.09 mm at 32 %), so a 2 mm
+    or 3 mm gate stalls the route clock (`exp/X2_very_easy`, `X3a`); very_easy's recipe sets 4 mm, with which the
+    route completes after a short hold at the peak (`X3b`). A thin margin: deterministic on CPU, not robust to path
+    changes. A 20 mm ring-grasp backoff instead loses the ring binding (`X3c`).
+  - Lab runs (the Harbor callback in a frozen privileged Session on the graded instances): very_easy native success at
+    334.0 s sim, 13362 rows, 48 min end to end (`X3b`); easier at 353.6 s sim, 14143 rows, 50.5 min (`X2_easier`);
+    no row clamped, largest arm step 0.0372 rad.
+- **Grades** (your unchanged `run_harbor_oracle_grades.sh`, `--tiers very_easy,easier`; candidate `cand_hsbe_v2`, image
+  `hsbe2` above; lanes `hsbe/tree2/runs/test_results/harbor_grade_hsbe_{very_easy,easier}`): all four pass.
+
+  | tier | privileged | standard | rows | live min (priv / std) | verifier min (priv) |
+  |---|---|---|---|---|---|
+  | very_easy | 1 | 1 | 13362 | 48.4 / 24.3 | 56.8 |
+  | easier | 1 | 1 | 14143 | 51.3 / 25.7 | 56.0 |
+
+  - Privileged: both replays deterministic, strict goal reached, hold 0, review 0, forcing 0.
+  - Standard: live and replay success, live_matches_replay 1, hold 0.
+  - One execution takes about 48-51 min, under the 72 min rule.
+  - Visual check of the easier replay video: shoes grasped, fold, suspended pair, ring on the table with the remainder
+    held up by the right arm, ring carried to the goal; at the end the ring is inside the dashed goal region and the
+    remainder is away from it.

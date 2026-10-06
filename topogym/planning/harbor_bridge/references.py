@@ -25,7 +25,7 @@ def reference_data(root, family, tier, seed):
         includes = ["topogym/planning/interlocked_claws/easier_reference_route.json"]
         for name in includes:
             member(root, name)
-        if family not in ("fiber_bundling", "hedgehog_in_cage"):
+        if family not in ("fiber_bundling", "hedgehog_in_cage", "horseshoe_ring"):
             return {}, includes
     files, includes = {}, []
     prefix = "topogym/planning/harbor_bridge/reference_data/"
@@ -45,7 +45,14 @@ def reference_data(root, family, tier, seed):
         return source
 
     if below_easy:
-        add("pickup.json" if family == "hedgehog_in_cage" else "selection.json")
+        if family == "horseshoe_ring":
+            recipe = json.loads(add("recipe.json").read_text())
+            if recipe.get("variant") != tier or recipe.get("seed") != seed:
+                raise BridgeError("Horseshoe reference recipe differs from the selected tier/seed")
+            for name, item in recipe["selection"][0]["parameters"].items():
+                add(name + ".json", item["sha256"])
+        else:
+            add("pickup.json" if family == "hedgehog_in_cage" else "selection.json")
         includes = ["topogym/planning/interlocked_claws/easier_reference_route.json"]
         return files, includes
     if family == "cast_keyhole":

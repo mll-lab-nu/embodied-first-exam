@@ -11,7 +11,7 @@ def run_feedback_policy(session, output, *, variation):
     family = session.task
     if family not in ("cast_coil", "cast_keyhole", "lock_picking", "buzz_wire_3d",
                        "fiber_bundling", "interlocked_claws", "rope_threading", "knot_untying",
-                       "blanket_flatten", "hedgehog_in_cage") or variation not in ("very_easy", "easier"):
+                       "blanket_flatten", "hedgehog_in_cage", "horseshoe_ring") or variation not in ("very_easy", "easier"):
         raise ValueError("Expected a supported below-easy oracle")
     if session.n_steps or session._resets:
         raise ValueError("Below-easy oracle requires a fresh frozen Session")
@@ -34,6 +34,10 @@ def run_feedback_policy(session, output, *, variation):
         return run(session, output, variation=variation)
     if family == "hedgehog_in_cage":
         from topogym.planning.hedgehog_in_cage.public_session import run_feedback_policy as run
+        return run(session, output, variation=variation)
+    if family == "horseshoe_ring":
+        # The easy tier's staged oracle with this tier's hash-bound inputs (reference_data/horseshoe_ring/<tier>/).
+        from topogym.planning.horseshoe_ring.public_session import run_feedback_policy as run
         return run(session, output, variation=variation)
     if family == "cast_coil":
         from topogym.planning.cast_coil.public_session import run_feedback_policy as run
@@ -78,9 +82,12 @@ def run_feedback_policy(session, output, *, variation):
             submission_hash=session.instance_sha, state_fields=("world",))
     if family == "buzz_wire_3d":
         from topogym.planning.buzz_wire_3d.simplified_policy import SimplifiedBuzzOracle, make_stage_policy
+        from topogym.planning.standard_rate import rate_limited_runner
         oracle = SimplifiedBuzzOracle(session.env, output, variant=variation, regrasp=True,
                                      finish_mode="low_slide_regrasp", terminal_contact_close=False)
-        runner = SessionPolicyRunner(session)
+        # Every committed row within the standard service's per-step joint limit, so the privileged trajectory is the
+        # standard reference as recorded (as for buzz easy, oraclefix2 O2-2; the regrasp rows asked up to 0.18 rad).
+        runner = rate_limited_runner(session)
         for name, parameters in oracle.stages(start="home", part="solve"):
             result = runner.run_policy(request_id=name, policy=make_stage_policy(session.env, parameters),
                                       submission_hash=session.instance_sha, state_fields=("world",))

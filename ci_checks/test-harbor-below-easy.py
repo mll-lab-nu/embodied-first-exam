@@ -86,9 +86,13 @@ class BelowEasy(unittest.TestCase):
                 helpers = collect_helpers(ROOT, session_callback(family, tier).split(":")[0], includes)
                 self.assertTrue(helpers)
                 self.assertTrue(all(f"/{tier}/" in name for name in files))
-        self.assertIsNone(session_callback("horseshoe_ring", "very_easy"))
-        self.assertEqual(session_callback("hedgehog_in_cage", "easier"),
-                         "topogym.planning.harbor_bridge.below_easy:run_feedback_policy")
+        self.assertIsNone(session_callback("slotted_post_ring", "very_easy"))
+        for tier in ("very_easy", "easier"):
+            for family in ("blanket_flatten", "hedgehog_in_cage", "horseshoe_ring"):
+                self.assertEqual(session_callback(family, tier),
+                                 "topogym.planning.harbor_bridge.below_easy:run_feedback_policy")
+            self.assertEqual(session_callback("orbits", tier),
+                             "topogym.planning.orbits.native_session:run_feedback_policy")
         with self.assertRaises(ValueError):
             reference_data(ROOT, "fiber_bundling", "very_easy", 1)
 

@@ -27,7 +27,7 @@ class Registration(unittest.TestCase):
     def test_settings_differ_only_in_the_ring(self):
         very_easy, easier = (task_definition("horseshoe_ring", n)() for n in ("very_easy", "easier"))
         self.assertEqual({k for k in very_easy.config if very_easy.config[k] != easier.config[k]}, {"ring"})
-        self.assertEqual((very_easy.config["ring"], easier.config["ring"]), (ring(144., 144.), ring(146., 120.)))
+        self.assertEqual((very_easy.config["ring"], easier.config["ring"]), (ring(144., 144.), ring(146., 136.)))
         easy = task_definition("horseshoe_ring", "easy")()
         self.assertEqual(len({easy.instance_id, very_easy.instance_id, easier.instance_id}), 3)
 
@@ -43,10 +43,8 @@ class Registration(unittest.TestCase):
 
 class DesignIntent(unittest.TestCase):
     """The ring leaves by sliding along the chains over one shoe once its bore holds the shoe's
-    section: at every phase (very_easy), only after a turn (easier).
-
-    The current easy tier has an enlarged ring; the original below-easy branch's
-    no-passing-phase assertion applied to the older easy geometry.
+    section: at every phase (very_easy), at more phases than the easy tier's enlarged ring but not
+    at all (easier), so very_easy < easier < easy.
     """
 
     def test_current_easy_keeps_its_enlarged_ring_baseline(self):
@@ -60,11 +58,12 @@ class DesignIntent(unittest.TestCase):
         self.assertEqual(report["passing_phases"], len(PHASES_DEG))
         self.assertEqual(report["design"], "very_easy")
 
-    def test_easier_needs_one_turn(self):
+    def test_easier_lies_between_very_easy_and_easy(self):
         report = check_variant("easier")
         self.assertTrue(report["start"]["entangled"])
-        self.assertLess(0, report["passing_phases"])
-        self.assertLess(report["passing_phases"], len(PHASES_DEG) / 2)
+        easy = passing_phases(assembly(task_definition("horseshoe_ring", "easy")()))
+        self.assertLess(len(easy), report["passing_phases"])
+        self.assertLess(report["passing_phases"], len(PHASES_DEG))
         self.assertEqual(report["design"], "easier")
 
 
