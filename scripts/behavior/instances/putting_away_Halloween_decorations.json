@@ -1,0 +1,141 @@
+{
+ "task": "putting_away_Halloween_decorations",
+ "challenge_task": "putting_away_Halloween_decorations",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Put the Halloween decorations away. Two pumpkins, three candles and a cauldron stand on the living-room floor. Put the pumpkins and the candles inside the living-room cabinets (any of them), close every living-room cabinet, and leave the cauldron next to a living-room table.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "0b57502ab5b4023c",
+ "action_dim": 25,
+ "challenge_max_steps": 20682,
+ "objects": {
+  "candle.n.01_1": {
+   "category": "pillar_candle",
+   "position": [
+    5.0334,
+    4.9861,
+    0.055
+   ],
+   "orientation_xyzw": [
+    0.0005,
+    0.0,
+    0.9134,
+    -0.407
+   ]
+  },
+  "cabinet.n.01_1": {
+   "category": "bottom_cabinet",
+   "position": [
+    6.2601,
+    4.5221,
+    0.2144
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    3.8669,
+    5.6663,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "caldron.n.01_1": {
+   "category": "cauldron",
+   "position": [
+    2.9426,
+    3.6686,
+    0.1247
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    -0.8297,
+    0.5581
+   ]
+  },
+  "table.n.02_1": {
+   "category": "coffee_table",
+   "position": [
+    3.5198,
+    5.2904,
+    0.3646
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.0,
+    1.0
+   ]
+  },
+  "pumpkin.n.02_1": {
+   "category": "pumpkin",
+   "position": [
+    3.4331,
+    6.7603,
+    0.0521
+   ],
+   "orientation_xyzw": [
+    0.0263,
+    -0.0119,
+    0.7284,
+    0.6846
+   ]
+  },
+  "candle.n.01_3": {
+   "category": "pillar_candle",
+   "position": [
+    5.0051,
+    3.7344,
+    0.055
+   ],
+   "orientation_xyzw": [
+    0.0021,
+    0.0006,
+    0.9655,
+    0.2602
+   ]
+  },
+  "pumpkin.n.02_2": {
+   "category": "pumpkin",
+   "position": [
+    3.5882,
+    3.5958,
+    0.0521
+   ],
+   "orientation_xyzw": [
+    0.005,
+    -0.0284,
+    -0.1556,
+    0.9874
+   ]
+  },
+  "candle.n.01_2": {
+   "category": "pillar_candle",
+   "position": [
+    3.8625,
+    3.7988,
+    0.055
+   ],
+   "orientation_xyzw": [
+    0.0014,
+    0.0002,
+    0.9636,
+    0.2675
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}
