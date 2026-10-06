@@ -29,7 +29,7 @@ family = "chase_tag"
 mode = "standard"
 protocol = "eai-standard/2.2"
 oracle = "none"
-oracle_evidence = "no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-chase-tag-i00-privilege__6GUXvYA`) fails once its rows are rounded to the client's float32 (the walk no longer reaches the opponent within its 329 rows); the family's solvability rests on the privileged twin; human review in PR #TBD"
+oracle_evidence = "no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-chase-tag-i00-privilege__6GUXvYA`) fails once its rows are rounded to the client's float32 (the walk no longer reaches the opponent within its 329 rows); the family's solvability rests on the privileged twin; human review in PR #65"
 instance_seed = 0                 # myoChallengeChaseTagP1-v0: seed(0), then reset(seed=0)
 expert_time_estimate_hours = 6.0
 
