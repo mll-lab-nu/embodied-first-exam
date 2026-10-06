@@ -19,7 +19,8 @@ simulator file changed, so the public source identity and the image stay as buil
 
 ## Final status, 2026-10-06 (v18): every in-scope oracle passes in both modes
 
-All 33 tasks outside orbits and slotted now have an oracle that passes your grading in both modes. orbits x3 and
+All 33 tasks outside orbits and slotted now have an oracle that passes your grading in both modes (the last two
+results, fiber hard standard and the v18 blanket hard standard, landed 10-06 ~03:40). orbits x3 and
 slotted x3 still have no oracle; they are yours. Nothing failed in the final runs.
 The sections below are the history of 10-04 and 10-05. Where they still say "running" or "pending", this
 section supersedes them.
@@ -44,8 +45,8 @@ section supersedes them.
 | horseshoe_ring | 1 / 1 (38 / 19) | 1 / 1 (40 / 20) | 1 / 1 (43 / 19) | v18 sweep |
 | lock_picking | 1 / 1 (13 / 10) | 1 / 1 (23 / 17) | 1 / 1 (27 / 20) | v18 sweep |
 | buzz_wire_3d | 1 / 1 (19 / 13) | 1 / 1 (37 / 33) | 1 / 1 (74 / 73) | v18 sweep; hard: see below |
-| fiber_bundling | 1 / 1 (22 / 17) | 1 / 1 (56 / 44) | 1 / running (185 / -) | v18 sweep; hard: v17 |
-| blanket_flatten | 1 / 1 (10 / 9) | 1 / 1 (23 / 20) | v17: 1 / 1 (113 / 93); v18: 1 / running (60 / -) | v18 sweep; hard: see below |
+| fiber_bundling | 1 / 1 (22 / 17) | 1 / 1 (56 / 44) | 1 / 1 (185 / 152) | v18 sweep; hard: v17 |
+| blanket_flatten | 1 / 1 (10 / 9) | 1 / 1 (23 / 20) | 1 / 1 (60 / 48) | v18 sweep |
 | rope_threading | 1 / 1 (26 / 21) | 1 / 1 (33 / 27) | 1 / 1 (34 / 27) | v18 post-build grades |
 | knot_untying | 1 / 1 (26 / 23) | 1 / 1 (62 / 55) | 1 / 1 (71 / 65) | v18 post-build grades |
 | orbits, slotted_post_ring | no oracle | no oracle | no oracle | - |
@@ -62,7 +63,7 @@ section supersedes them.
   - Details in `ORACLE_FIXES_2_FOR_JIANWEN.md`.
 - **fiber hard:** v17 grade.
   - Privileged passed (live 185 min), the first fiber hard pass.
-  - The standard twin, fiber hard's first standard grade, was still running when this was written.
+  - Standard passed too (live 152 min), fiber hard's first standard grade.
   - CPU physics are bit-identical from v17 to v18. Only fiber has an entity above 64 DOFs, and v18 changes no
     CPU-family dynamics.
 - **blanket hard, final oracle (11 + 11b + 11c):**
@@ -75,8 +76,8 @@ section supersedes them.
     row; hard gains one step.
   - v17 result: both modes pass at 4855 rows. Live minutes 113 / 93, on a shared GPU without v18's speed-ups. The
     replays are strict at row 4855. The standard stream had n_clipped 0 and hold 0. live_sha is equal across modes.
-  - v18 sweep: privileged passes (60 min live with blanket easy/medium on the same GPU; about 30 min alone). The
-    v18 standard twin was still running when this was written.
+  - v18 sweep: both modes pass (live 60 / 48 min; the privileged run shared its GPU with blanket easy/medium at first;
+    about 30 min alone).
   - v18's blanket speed-ups are byte-identical to v17 (actions, phases, physics steps, task_result, substituted state
     hashes).
 - **Over 72 min, accepted by the user:**
