@@ -26,6 +26,8 @@ TIERS = {  # Route defaults; physical qualification is recorded separately for e
 }
 DT = .025  # control step of the instances (2.5 ms x 10)
 PRE = .05  # pregrasp and retreat height above the pinch, m
+BIAS_LIMIT_M = .04  # cap of the per-arm TCP bias that converge() learns
+BIAS_SATURATED_M = .975*BIAS_LIMIT_M  # converge() clamps the norm to the cap; within 2.5 % counts as saturated
 COMMAND_TABLE_GAP_M = .0005  # planner margin, not an allowed physical penetration
 COMMAND_TABLE_RAISE_PAD_M = .0001  # clear IK's 10 um stopping tolerance on an upward retry
 
@@ -404,6 +406,13 @@ class Runner:
             self.grasp_turn = {side: plans[side][1] for side in sides}
             for side in sides:
                 self.q[side] = self.solve(side, plans[side][0], plans[side][1])
+        # A saturated bias means the arm did not follow its targets (knot easier on v18: the left waist stalled about
+        # 0.16 rad short, also 3 cm above the rope with closed jaws); closing there pinches beside the rope, and the
+        # following lift / spread carry nothing. Stop instead. Runs whose bias never saturates are unchanged.
+        saturated = [side for side in sides if float(np.linalg.norm(self.bias[side])) >= BIAS_SATURATED_M]
+        if saturated:
+            raise RuntimeError(f"{phase}: the TCP bias saturated for {saturated} (TCP error {error*1000:.1f} mm); "
+                               "not closing beside the rope")
         return ss, opening, plans, record
 
     def pinch(self, sides, ss, opening, plans, record, phase):
@@ -441,7 +450,7 @@ class Runner:
                       f"bias {[np.round(self.bias[x]*1000, 1).tolist() for x in sides]} mm", flush=True)
                 for side in sides:
                     bias = self.bias[side]+errors[side]
-                    self.bias[side] = bias*min(1., .04/max(float(np.linalg.norm(bias)), 1e-9))
+                    self.bias[side] = bias*min(1., BIAS_LIMIT_M/max(float(np.linalg.norm(bias)), 1e-9))
                     self.q[side] = self.solve(side, targets[side], self.grasp_turn[side])
         return max(float(np.linalg.norm(self.tcp(side)-targets[side])) for side in sides)
 
