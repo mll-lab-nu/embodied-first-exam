@@ -59,12 +59,21 @@ REVIEW_PROMPT = ('Pitch over. Review it: `game ready "WHY" "PLAN"` (why it went 
 
 
 # the pitcher's commands (spec match.pitching)
+def arsenal(n):
+    d = bbduel.default_spin(n)
+    rad_s, axis = bbduel.spin_vector(n, d['spin_rpm'], d['break_deg'])
+    return dict(speed_mps=list(bbduel.ARSENAL[n]), **bbduel.spin_limits(n), default=d,
+                gyro=bb.PITCH_TYPES[n]['axis'][1], spin_rad_s=rad_s, spin_axis=list(axis))
+
+
 PITCHING = dict(release=list(bb.REL), target_x_m=list(bbduel.TARGET_X), target_z_m=list(bbduel.TARGET_Z),
-              scatter=dict(bbduel.PITCH_SCATTER),
-              arsenal={n: dict(speed_mps=list(bbduel.ARSENAL[n]), spin_rad_s=bb.PITCH_TYPES[n]['spin'],
-                               spin_axis=list(bb.PITCH_TYPES[n]['axis'])) for n in sorted(bbduel.ARSENAL)},
-              command="{'type':'pitch','pitch':TYPE,'speed':m/s,'x':target x,'z':target z} during the "
-                      "windup; at the release the last one is thrown; none = an automatic ball")
+                scatter=dict(bbduel.PITCH_SCATTER), arsenal={n: arsenal(n) for n in sorted(bbduel.ARSENAL)},
+                spin='break_deg b: where the Magnus force pushes the ball, in degrees from straight up towards first '
+                     'base (+x); spin axis for a ball moving along -y = (-cos b * sqrt(1 - gyro^2), gyro, '
+                     'sin b * sqrt(1 - gyro^2)); spin_rad_s and spin_axis: the default spin as a vector',
+                command="{'type':'pitch','pitch':TYPE,'speed':m/s,'x':target x,'z':target z,'spin_rpm':rpm,"
+                        "'break_deg':degrees} during the windup (spin_rpm and break_deg optional: the type's default); "
+                        "at the release the last one is thrown; none = an automatic ball")
 
 
 class Service:
@@ -122,7 +131,8 @@ class Service:
         g = self.g
         s = dict(seat=side, phase=self.phase, done=self.phase == 'over', reason=self.reason,
                  world='running' if self.phase == 'running' else 'frozen',
-                 role=g.role(side), batter=g.batter, pitcher=g.pitcher, plate_appearance=g.pa + 1,
+                 role=g.role(side), batter=g.batter, pitcher=g.pitcher, inning=g.inning, half=g.half,
+                 outs=g.outs, on_base=g.on_base(), plate_appearance=g.pa + 1,
                  your_plate_appearances=sum(1 for r in g.pa_results if r['batter'] == side),
                  count=dict(balls=g.balls, strikes=g.strikes), score=dict(you=g.score[side], opponent=g.score[OTHER[side]]),
                  pitch=g.idx + 1, t_sim=round(g.k * DT, 4), step=g.k, ready=dict(self.ready_seats),
@@ -340,7 +350,7 @@ class Service:
             how = f"{rec['batter']} batting: {rec.get('type', '')} {rec.get('radar', '')} m/s: {rec['outcome']}" + \
                   (f" ({rec['pa_result']})" if rec.get('pa_result') else '')
             self.bc.event('point', g.k, score=dict(g.score), winner=None, how=how, n=len(g.history),
-                          note=f"PA {g.pa + (0 if rec.get('pa_result') else 1)} · count {g.balls}-{g.strikes}",
+                          note=f"{rec['half']} {rec['inning']} · {rec['outs_after']} out · count {g.balls}-{g.strikes}",
                           flight=flight(rec.get('batted_samples')))
         if self.g.done:
             self.end('game_over')
@@ -416,8 +426,8 @@ class Service:
                        pitch_log=[g.public_rec(r) for r in g.history], seats=self.stats, reviews=self.reviews,
                        joined=self.joined, player_modes={s: self.clock[s].mode for s in SIDES}, video=self.video,
                        elapsed_s=time.monotonic() - self.t0,
-                       format=dict(pa_per_seat=bbduel.PA_PER_SEAT, extra_pairs=bbduel.EXTRA_PAIRS,
-                                   pa_max_pitches=bbduel.PA_MAX_PITCHES),
+                       format=dict(innings=bbduel.INNINGS, extra_innings=bbduel.EXTRA_INNINGS,
+                                   run_limit=bbduel.RUN_LIMIT, pa_max_pitches=bbduel.PA_MAX_PITCHES),
                        sim_lag=dict(late_max_s=max(self.lates, default=0),
                                     late_p99_s=float(np.percentile(self.lates, 99)) if self.lates else 0,
                                     run_steps=self.run_steps, run_sim_s=self.run_steps * DT, run_wall_s=self.run_wall,
@@ -432,14 +442,15 @@ class Service:
                 (self.data / 'trajectory.json').write_text(json.dumps(payload, default=float))
                 # PROTOCOL §4.8: the trajectory also as trajectory.npz (the replay reads the JSON; the same commands):
                 # pitch, step, seat (0 A, 1 B), kind (0 none, 1 swing, 2 pitch), then T, plane, height, speed, reach
-                # (swing) or pitch type index, speed, x, z (pitch)
+                # (swing) or pitch type index, speed, x, z, spin_rpm, break_deg (pitch)
                 kinds, names = {'none': 0, 'swing': 1, 'pitch': 2}, sorted(bbduel.ARSENAL)
                 rows = []
                 for p, k, s, d in self.applied:
-                    vals = ([d['t'], d['plane'], d['height'], d['speed'], d['reach']] if d['type'] == 'swing' else
-                            [names.index(d['pitch']), d['speed'], d['x'], d['z'], 0.] if d['type'] == 'pitch' else [0.] * 5)
+                    vals = ([d['t'], d['plane'], d['height'], d['speed'], d['reach'], 0.] if d['type'] == 'swing' else
+                            [names.index(d['pitch']), d['speed'], d['x'], d['z'], d['spin_rpm'], d['break_deg']]
+                            if d['type'] == 'pitch' else [0.] * 6)
                     rows.append([p, k, SIDES.index(s), kinds[d['type']]] + vals)
-                np.savez(self.data / 'trajectory.npz', commands=np.asarray(rows, dtype=np.float64).reshape(-1, 9),
+                np.savez(self.data / 'trajectory.npz', commands=np.asarray(rows, dtype=np.float64).reshape(-1, 10),
                          seed=SEED, first_batter=FIRST, k_end=self.g.k, slowdown=self.slowdown)
             subprocess.run([sys.executable, str(HERE / 'replay.py'), str(self.data)], check=True,
                            timeout=float(os.environ.get('RCB_REPLAY_TIMEOUT_S', '300')))
@@ -465,13 +476,21 @@ class Service:
         return dict(
             seat=side, protocol='eai-standard-realtime/1.0', revision=bbduel.REVISION,
             player_mode=self.clock[side].mode,
-            match=dict(format=f'plate appearances alternate between the seats: one bats, the other pitches; each seat '
-                              f'bats {bbduel.PA_PER_SEAT} times; level bases after that: one more each, up to '
-                              f'{bbduel.EXTRA_PAIRS} times; still level: the winner of the last pitch wins (no draws)', first_player=FIRST,
-                       first_player_meaning='the seat that bats first (plate appearances 1, 3, 5, ...)',
-                       pa_per_seat=bbduel.PA_PER_SEAT, extra_pairs=bbduel.EXTRA_PAIRS,
+            match=dict(format=f'{bbduel.INNINGS} inning(s); in each half-inning one seat bats until it has 3 outs, the '
+                              f'other pitches; level after that: extra innings, each half-inning starting with runners '
+                              f'on first and second base, up to {bbduel.EXTRA_INNINGS}; still level: the winner of the '
+                              f'last pitch wins (no draws)', first_player=FIRST,
+                       first_player_meaning='the seat that bats first (the top of each inning)',
+                       innings=bbduel.INNINGS, extra_innings=bbduel.EXTRA_INNINGS, run_limit=bbduel.RUN_LIMIT,
                        pa_max_pitches=bbduel.PA_MAX_PITCHES,
-                       score='bases: walk 1, single 1, double 2, home run 4 (no triples)',
+                       score='runs: a run for each runner reaching home',
+                       runners='an out leaves the runners where they are; a walk moves only forced runners; a hit '
+                               'moves the batter and every runner as many bases as the hit (single 1, double 2, home '
+                               'run 4; no triples)',
+                       end=f'a half-inning ends at 3 outs or when the batting seat has {bbduel.RUN_LIMIT} runs in it '
+                           f'(runs past that on the play do not count); in the bottom of the last or an extra inning '
+                           f'the game ends as soon as the home seat leads (runs past the winning run count only on a '
+                           f'home run)',
                        count='3 strikes = strikeout, 4 balls = walk, a foul is a strike unless there are already 2 '
                              'strikes; a plate appearance reaching 15 pitches is an out',
                        pitching=PITCHING),

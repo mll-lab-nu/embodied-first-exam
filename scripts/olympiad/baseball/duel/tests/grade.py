@@ -2,8 +2,8 @@
 
 success = a valid game: played out (or won by a review forfeit), the fresh-process replay reproduced the state hash,
 the score, the commands and the step count, and there was no simulator, model-API or metering failure. The winner is
-A_won / B_won (more bases; level after the extra pairs: the winner of the last pitch; no draws; a valid game
-has exactly one winner); A_bases / B_bases (also A_points / B_points) are the scores."""
+A_won / B_won (more runs; level after the extra innings: the winner of the last pitch; no draws; a valid game
+has exactly one winner); A_runs / B_runs (also A_points / B_points) are the scores."""
 import json
 import os
 import shutil
@@ -18,7 +18,7 @@ def grade(d, r, t):
     replay = (d['state_sha'] == r['state_sha'] and d['score'] == r['score'] and
               d['decisions_sha'] == r['decisions_sha'] and d['source_sha'] == r['source_sha'] == t['source_sha'] and
               d['seed'] == r['seed'] == t['seed'] and d['first_batter'] == r['first_batter'] == t['first_batter'] and
-              d['revision'] == r['revision'] == t['revision'] == 'baseball-duel-1' and
+              d['revision'] == r['revision'] == t['revision'] == 'baseball-duel-2' and
               d['steps'] == r['steps'] == t['k_end'] and len(t['commands']) == sum(
                   d['seats'][s]['applied'] for s in ('A', 'B')))
     game = d['reason'] == 'game_over' and r['done'] and d['winner'] in ('A', 'B')
@@ -34,7 +34,7 @@ def grade(d, r, t):
                official_config=int(float(d['slowdown']) in OFFICIAL_SLOWDOWNS), video_rendered=int(d['video'] is True),
                sim_lag_max_s=d['sim_lag']['late_max_s'])
     for s in ('A', 'B'):
-        out[s + '_bases'] = out[s + '_points'] = d['score'][s]
+        out[s + '_runs'] = out[s + '_points'] = d['score'][s]
         out[s + '_won'] = int(valid and d['winner'] == s)
         out[s + '_transient_api_errors'] = int((d.get('transient_api_errors') or {}).get(s, 0))
         out[s + '_unrecovered_api_errors'] = int((d.get('unrecovered_api_errors') or {}).get(s, 0))

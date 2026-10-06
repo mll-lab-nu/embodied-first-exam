@@ -72,6 +72,8 @@ FENCE_R, FENCE_H = 100.0, 3.0
 ZONE_X, ZONE_LO, ZONE_HI = 0.216, 0.46, 1.07
 BASE_PATH = 27.43               # MLB Official Baseball Rules 2.01: the bases are 90 ft apart
 B1 = (BASE_PATH * math.sin(math.radians(45)), BASE_PATH * math.cos(math.radians(45)))   # first base
+BASES = (B1, (0.0, 2 * B1[1]), (-B1[0], B1[1]))   # first, second, third base
+RUNNER_HIDDEN_Z = -3.0                             # a base runner's figure stands this far under an empty base
 RUNNER_TO_1B, THROW_V, TRANSFER = 4.3, 30.0, 0.6
 REACH_H = 2.4
 # name, distance from home, azimuth (deg, + = towards left field / -x), r0, v_run, t_react, infielder
@@ -99,6 +101,12 @@ PITCH_TYPES = {
     "curveball": dict(spin=262.0, axis=(0.866, 0.0, 0.5)),
     # slider: partly gyro spin (along the flight, no Magnus); the rest breaks it to the glove side (+x), a little down
     "slider": dict(spin=250.0, axis=(0.25, -0.60, 0.76)),
+    # thrown only in the duel; MLB-like rates, the gyro share and direction set for MLB-like break at the plate (against
+    # a ball without spin, at the top of the speed band less 1 m/s): sinker 38 cm arm side, 20 cm up; cutter (mostly gyro
+    # spin) 6 cm glove side, 21 cm up; splitter (mostly gyro spin) 25 cm arm side, 9 cm up, so it drops against the fastball
+    "sinker": dict(spin=225.1, axis=(-0.354, -0.565, -0.745)),
+    "cutter": dict(spin=246.1, axis=(-0.338, -0.939, 0.064)),
+    "splitter": dict(spin=151.8, axis=(-0.169, -0.792, -0.587)),
 }
 LEVELS = {
     1: dict(seed=301, n_pa=5, mix={"fastball": 1.0}, mix_2k=None, speeds={"fastball": (34.0, 36.0)},
@@ -442,11 +450,13 @@ def judge_batted(st):
 
 # ------------------------------------------------------------------ one pitch
 class Pitch:
-    def __init__(self, ptype, speed, xt, zt):
+    def __init__(self, ptype, speed, xt, zt, spin=None, axis=None):
+        """A pitch of type `ptype` aimed at (xt, zt); spin (rad/s) and axis default to the type's (PITCH_TYPES)."""
         self.ptype, self.speed, self.target = ptype, speed, (xt, zt)
         pt = PITCH_TYPES[ptype]
-        el, az = aim_pitch(speed, pt["spin"], pt["axis"], xt, zt)
-        self.s0 = launch_state(speed, el, az, pt["spin"], pt["axis"])
+        spin, axis = pt["spin"] if spin is None else spin, pt["axis"] if axis is None else axis
+        el, az = aim_pitch(speed, spin, axis, xt, zt)
+        self.s0 = launch_state(speed, el, az, spin, axis)
         self.el, self.az = el, az
         # the coarse path: 1 ms steps until y = 2.5, then 50 us steps until y = -1.5
         self.path = []                   # (t, state)
@@ -797,7 +807,7 @@ def scene_xml() -> str:
     add('<geom type="box" size="0.30 0.08 0.01" pos="0 18.44 0.125" rgba="1 1 1 1" contype="0" conaffinity="0"/>')
     add('<geom type="box" size="0.216 0.108 0.006" pos="0 0.108 0.006" rgba="1 1 1 1" contype="0" conaffinity="0"/>')
     add('<geom type="box" size="0.153 0.153 0.006" pos="0 0 0.005" euler="0 0 45" rgba="1 1 1 1" contype="0" conaffinity="0"/>')
-    for (bx, by) in ((B1[0], B1[1]), (0.0, 2 * B1[1]), (-B1[0], B1[1])):
+    for (bx, by) in BASES:
         add(f'<geom type="box" size="0.19 0.19 0.04" pos="{bx:.3f} {by:.3f} 0.04" rgba="1 1 1 1" contype="0" conaffinity="0"/>')
     for sgn in (1, -1):
         L = FENCE_R
@@ -814,24 +824,30 @@ def scene_xml() -> str:
             f'euler="0 0 {math.degrees(a0):.3f}" rgba="0.35 0.37 0.42 1" contype="0" conaffinity="0"/>')
 
     def figure(x, y, col, h=1.8, face=0.0):
-        add(f'<geom type="capsule" fromto="{x - 0.12} {y} 0.05 {x - 0.1} {y} {0.5 * h:.2f}" size="0.07" rgba="{col}" contype="0" conaffinity="0"/>')
-        add(f'<geom type="capsule" fromto="{x + 0.12} {y} 0.05 {x + 0.1} {y} {0.5 * h:.2f}" size="0.07" rgba="{col}" contype="0" conaffinity="0"/>')
-        add(f'<geom type="capsule" fromto="{x} {y} {0.52 * h:.2f} {x} {y} {0.80 * h:.2f}" size="0.17" rgba="{col}" contype="0" conaffinity="0"/>')
-        add(f'<geom type="sphere" size="0.11" pos="{x} {y} {0.93 * h:.2f}" rgba="0.85 0.70 0.55 1" contype="0" conaffinity="0"/>')
+        return [f'<geom type="capsule" fromto="{x - 0.12} {y} 0.05 {x - 0.1} {y} {0.5 * h:.2f}" size="0.07" rgba="{col}" contype="0" conaffinity="0"/>',
+                f'<geom type="capsule" fromto="{x + 0.12} {y} 0.05 {x + 0.1} {y} {0.5 * h:.2f}" size="0.07" rgba="{col}" contype="0" conaffinity="0"/>',
+                f'<geom type="capsule" fromto="{x} {y} {0.52 * h:.2f} {x} {y} {0.80 * h:.2f}" size="0.17" rgba="{col}" contype="0" conaffinity="0"/>',
+                f'<geom type="sphere" size="0.11" pos="{x} {y} {0.93 * h:.2f}" rgba="0.85 0.70 0.55 1" contype="0" conaffinity="0"/>']
     # pitcher (follow-through pose is not modelled; a standing figure behind the release point)
-    figure(-0.15, 17.6, "0.16 0.22 0.45 1")
+    g += figure(-0.15, 17.6, "0.16 0.22 0.45 1")
     add(f'<geom type="capsule" fromto="-0.3 17.55 1.45 {REL[0]} {REL[1] + 0.1} {REL[2]}" size="0.045" rgba="0.16 0.22 0.45 1" contype="0" conaffinity="0"/>')
     for (name, d, az, *_r) in FIELDERS:
         if name in ("P", "C"):
             continue
         fx, fy = FIELDER_POS[name]
-        figure(round(fx, 2), round(fy, 2), "0.16 0.22 0.45 1")
+        g += figure(round(fx, 2), round(fy, 2), "0.16 0.22 0.45 1")
     # catcher crouched behind the plate, umpire behind
     add('<geom type="ellipsoid" size="0.3 0.3 0.45" pos="0 -1.05 0.45" rgba="0.2 0.2 0.25 1" contype="0" conaffinity="0"/>')
     add('<geom type="sphere" size="0.13" pos="0 -1.0 1.0" rgba="0.15 0.15 0.2 1" contype="0" conaffinity="0"/>')
     # batter body (the rig's stylised body; the swing rig is the bat body below)
-    figure(-1.05, 0.05, "0.75 0.12 0.12 1")
+    g += figure(-1.05, 0.05, "0.75 0.12 0.12 1")
     geoms = "\n    ".join(g)
+    # base runners (the duel): one figure per base, a mocap body that Renderer.set stands on its base or hides under it
+    runners = []
+    for i, (bx, by) in enumerate(BASES):
+        runners.append(f'<body name="runner{i + 1}" mocap="true" pos="{bx:.3f} {by:.3f} {RUNNER_HIDDEN_Z}">\n      '
+                       + "\n      ".join(figure(0.0, 0.0, "0.75 0.12 0.12 1")) + "\n    </body>")
+    runners = "\n    ".join(runners)
     cams = []
     for name, (pos, tg, fovy) in CAMS.items():
         f, u, r = _look(pos, tg)
@@ -860,6 +876,7 @@ def scene_xml() -> str:
       <geom type="sphere" size="0.05" pos="0.05 0 0" rgba="0.15 0.15 0.15 1" contype="0" conaffinity="0"/>
       <geom type="capsule" fromto="0 0 0 -0.30 -0.15 0.20" size="0.03" rgba="0.75 0.12 0.12 1" contype="0" conaffinity="0"/>
     </body>
+    {runners}
   </worldbody>
 </mujoco>"""
 
@@ -872,7 +889,8 @@ class Renderer:
         self.d = mj.MjData(self.m)
         self.r = mj.Renderer(self.m, height=h, width=w)
 
-    def set(self, ball, sw: Swing | None, t, default_h=0.9):
+    def set(self, ball, sw: Swing | None, t, default_h=0.9, runners=()):
+        """The ball, the bat at time t of the swing (at rest if None) and the base runners (occupied bases 1-3)."""
         mj, d = self.mj, self.d
         d.mocap_pos[0] = ball if ball is not None else (0, -50, -5)
         if sw is None:
@@ -891,6 +909,8 @@ class Renderer:
         d.mocap_quat[1] = q
         d.mocap_pos[2] = (px, PIVOT_Y, H)
         d.mocap_quat[2] = q
+        for b, (bx, by) in enumerate(BASES, 1):
+            d.mocap_pos[2 + b] = (bx, by, 0.0 if b in runners else RUNNER_HIDDEN_Z)
         mj.mj_forward(self.m, d)
 
     def render(self, cam):
@@ -924,9 +944,9 @@ def render_decision(pitch: Pitch, rd: Renderer | None = None) -> bytes:
     return buf.getvalue()
 
 
-def render_video(game: Game, out: str, fps=25):
+def render_video(game: Game, out: str, fps=25, head=None):
     """Replay video: per pitch the catcher camera and a side view of the plate (4x slow motion), then for balls in
-    play the wide field camera (real time); overlay with PA, count and result."""
+    play the wide field camera (real time); overlay with PA, count and result (head(rec) in place of the PA line)."""
     import imageio.v2 as imageio
     from PIL import Image, ImageDraw
     rd = Renderer(640, 360)
@@ -935,8 +955,9 @@ def render_video(game: Game, out: str, fps=25):
     for rec in game.history:
         p, sw = rec["pitch_obj"], rec.get("swing_obj")
         t_end = (rec["contact"]["t"] if "contact" in rec else (p.cross[0] if p.cross else 0.6)) + 0.12
-        head = f"level {game.level}  PA {rec['pa'] + 1}/{game.lv['n_pa']}  count {rec['count'][0]}-{rec['count'][1]}  " \
-               f"bases so far {bases}   pitch {rec['pitch'] + 1}: {rec['type']} {rec['radar']} m/s"
+        line = head(rec) if head else \
+            f"level {game.level}  PA {rec['pa'] + 1}/{game.lv['n_pa']}  count {rec['count'][0]}-{rec['count'][1]}  " \
+            f"bases so far {bases}   pitch {rec['pitch'] + 1}: {rec['type']} {rec['radar']} m/s"
         t = 0.0
         while t <= t_end + 1e-9:
             s = p.state_at(t) if ("contact" not in rec or t < rec["contact"]["t"]) else None
@@ -946,10 +967,10 @@ def render_video(game: Game, out: str, fps=25):
                 pos = (pc[0] + pc[3] * dtc, pc[1] + pc[4] * dtc, pc[2] + pc[5] * dtc)
             else:
                 pos = s[:3]
-            rd.set(pos, sw, t)
+            rd.set(pos, sw, t, runners=rec.get("on_base", ()))
             im = Image.fromarray(np.concatenate([rd.render("behind"), rd.render("plate_side")], axis=1))
             dr = ImageDraw.Draw(im)
-            dr.text((8, 6), head, fill=(255, 255, 0))
+            dr.text((8, 6), line, fill=(255, 255, 0))
             dr.text((8, 20), f"t = {t:.2f} s after release  (slow motion)", fill=(255, 255, 255))
             w.append_data(np.asarray(im))
             t += 0.02 if t < 0.28 else 0.01
@@ -965,10 +986,10 @@ def render_video(game: Game, out: str, fps=25):
                 while j + 1 < len(smp) and smp[j + 1][0] <= tt:
                     j += 1
                 sm = smp[j]
-                rd.set(sm[1:4], sw, 10.0)
+                rd.set(sm[1:4], sw, 10.0, runners=rec.get("on_base", ()))
                 im = Image.fromarray(np.concatenate([rd.render("wide"), rd.render("behind")], axis=1))
                 dr = ImageDraw.Draw(im)
-                dr.text((8, 6), head, fill=(255, 255, 0))
+                dr.text((8, 6), line, fill=(255, 255, 0))
                 dr.text((8, 20), txt, fill=(255, 255, 255))
                 w.append_data(np.asarray(im))
                 if j + 1 >= len(smp) or tt > 7.0:

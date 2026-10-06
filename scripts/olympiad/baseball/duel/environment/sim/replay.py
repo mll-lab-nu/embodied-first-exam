@@ -22,12 +22,18 @@ def fingerprint():
 
 
 class _Video:
-    """bb.render_video's view of a duel: the thrown pitches (an automatic ball has no flight)."""
+    """bb.render_video's view of a duel: the thrown pitches (an automatic ball has no flight) and the overlay line."""
 
     def __init__(self, g):
-        self.level, self.lv = 'duel', g.lv
         self.history = [r for r in g.history if r['pitch_obj'] is not None]
         self.pa_results = g.pa_results
+
+    def head(self, rec):
+        runs = {s: sum(r['runs'] for r in self.pa_results[:rec['pa']] if r['batter'] == s) for s in bbduel.SIDES}
+        bases = ' '.join(('1st', '2nd', '3rd')[b - 1] for b in rec['on_base']) or 'empty'
+        return (f"{rec['half']} {rec['inning']}  {rec['outs']} out  bases {bases}  {rec['batter']} batting  "
+                f"count {rec['count'][0]}-{rec['count'][1]}  runs A {runs['A']} B {runs['B']}   "
+                f"pitch {rec['pitch'] + 1}: {rec['type']} {rec['radar']} m/s")
 
 
 def main(directory, video=False):
@@ -42,7 +48,8 @@ def main(directory, video=False):
     g = bbduel.replay(int(raw['seed']), raw['first_batter'], cmds, int(raw['k_end']))
     if video:
         import bb
-        bb.render_video(_Video(g), str(path / 'replay.mp4'))
+        v = _Video(g)
+        bb.render_video(v, str(path / 'replay.mp4'), head=v.head)
         return
     out = dict(state_sha=g.state_sha(), score=g.score, steps=g.k, done=g.done, pitches=len(g.history),
                decisions_sha=bbduel.decisions_sha([list(c) for c in cmds]), seed=g.seed, first_batter=g.first,

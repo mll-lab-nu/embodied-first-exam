@@ -1,4 +1,7 @@
 """Baseball: the sport-specific sections of the program-play prompt (structure in program_prompt.py)."""
+import ast
+from pathlib import Path
+
 from program_prompt import duel, single
 
 OBJ = "ball"
@@ -30,12 +33,13 @@ N(0, 8 mm) in the height, N(0, 1.5 %) in the speed and N(0, 8 mm) in the reach."
 
 SWING = "**Action** (`act`): a swing command,\n" + SWING_HEAD + "\n" + SWING_TAIL
 
-COUNT = """The pitcher winds up for 0.6-1.2 s (the ball in its hand at the release point), then releases.
+# the count, the zone and the batted balls; the single game scores bases, the duel runs (COUNT, DUEL_COUNT)
+COUNT_HEAD = """The pitcher winds up for 0.6-1.2 s (the ball in its hand at the release point), then releases.
 - **Count**: a pitch you take is a *ball* or a *called strike* (strike zone below); a pitch that touches the ground
   before the plate is a ball. A swing that misses is a strike; a foul ball is a strike, except that a foul with two
-  strikes does not count. 3 strikes = strikeout (0 bases), 4 balls = walk (1 base). A plate appearance that reaches
-  15 pitches without ending is an out (0 bases). The count and the bases a reply shows during a pitch are those before
-  the pitch.
+  strikes does not count."""
+
+ZONE_AND_BATTED = """
 - **Strike zone**: the ball's centre crosses the plane y = 0 (the middle of the plate) with |x| <= 0.216 + 0.0365 m
   and 0.46 - 0.0365 <= z <= 1.07 + 0.0365 m (any part of the ball over the plate, between knee and chest height).
 - **Batted balls**: foul if the first landing point is behind home or outside the foul lines (45 degrees either side
@@ -45,13 +49,16 @@ COUNT = """The pitcher winds up for 0.6-1.2 s (the ball in its hand at the relea
   ground, an infielder (P, C, 1B, 2B, SS, 3B) throws the batter out if fielding time + 0.6 s + distance to first
   base / 30 m/s <= 4.3 s, else it is an infield single; an outfielder fielding it = single, or double if the ball
   first landed beyond 80 m or was fielded after 5 s. A ball over the fence (100 m from home, 3 m high) = home run;
-  off the wall = double. Bases: walk or single 1, double 2, home run 4. Fielder positions and speeds are in
+  off the wall = double."""
+
+COUNT = COUNT_HEAD + """ 3 strikes = strikeout (0 bases), 4 balls = walk (1 base). A plate appearance that reaches
+  15 pitches without ending is an out (0 bases). The count and the bases a reply shows during a pitch are those before
+  the pitch.""" + ZONE_AND_BATTED + """ Bases: walk or single 1, double 2, home run 4. Fielder positions and speeds are in
   `game spec`."""
 
-DEVIATIONS = """- **Deviations from the official rules** (MLB Official Baseball Rules, 2026 edition):
-  - There are no base runners, runs or innings: each plate appearance scores the bases the batter reaches, and there
-    are no triples (5.05, 5.06).
-  - There is no batter's body: no hit by pitch (5.05(b)(2)).
+DEVIATIONS_HEAD = "- **Deviations from the official rules** (MLB Official Baseball Rules, 2026 edition):\n"
+
+DEVIATIONS_COMMON = """  - There is no batter's body: no hit by pitch (5.05(b)(2)).
   - Fouls are never caught and there are no foul tips: a foul never ends a plate appearance (5.09(a)(1), "Foul Tip").
   - Fair or foul is judged at the first landing point, also for short balls ("Fair Ball", "Foul Ball").
   - The strike zone is judged in one plane at the middle of the plate, at fixed heights ("Strike Zone").
@@ -59,14 +66,21 @@ DEVIATIONS = """- **Deviations from the official rules** (MLB Official Baseball 
   - Fielders do not move before contact and catch every ball they reach (no errors).
   - A plate appearance that reaches 15 pitches is an out (MLB has no limit)."""
 
-PHYSICS = """Metres and game seconds; ground z = 0. Home plate is centred at the origin (0.432 m wide); +y points to the pitcher
+DEVIATIONS = DEVIATIONS_HEAD + """  - There are no base runners, runs or innings: each plate appearance scores the bases the batter reaches, and there
+    are no triples (5.05, 5.06).
+""" + DEVIATIONS_COMMON
+
+PHYSICS_HEAD = """Metres and game seconds; ground z = 0. Home plate is centred at the origin (0.432 m wide); +y points to the pitcher
 and centre field, +x to first base (the catcher's right), z up. The bases are 27.43 m apart (first base at (19.40,
 19.40)). The batter bats right-handed from the -x side. The pitcher releases the ball at (-0.50, 16.80, 1.80).
 - **Ball** (0.145 kg, radius 0.0365 m): gravity 9.81, drag and Magnus lift,
   `a = g - K_D |v| v + K_L0 C_L(S) |v| (w_hat x v)` with `K_D = 0.00601 /m`, `K_L0 = 0.01718 /m`, spin factor
   `S = R |w| / |v|`, `C_L = 1.5 S` for S < 0.1, else `0.09 + 0.6 S`; the spin w decays with a 30 s time constant. A
-  pitch's spin rate and axis depend only on its type (spin axis given for a ball moving along -y). A fastball loses
-  about 3 m/s by the plate and reaches it about 0.4-0.5 s after the release; slower pitches take up to 0.6 s.
+  """
+# the single-player pitch's spin is fixed by its type; the duel's pitcher chooses it (DUEL_SPIN)
+TYPE_SPIN = """pitch's spin rate and axis depend only on its type (spin axis given for a ball moving along -y). A fastball loses
+  about 3 m/s by the plate and"""
+PHYSICS_TAIL = """ reaches it about 0.4-0.5 s after the release; slower pitches take up to 0.6 s.
 - **Swing rig**: the bat (0.84 m, 0.90 kg) turns about its knob, the pivot `P = (-0.66 + REACH, 0.25, HEIGHT)`. Bat axis
   direction `u(theta) = (cos th, sin th cos a, sin th sin a)` with a = PLANE; a point s metres from the knob is at
   `P + s u`. theta = 0 is square: the bat lies along +x over the plate (at y = 0.25) and moves towards the pitcher (+y)
@@ -87,6 +101,7 @@ and centre field, +x to first base (the catcher's right), z up. The bases are 27
   miss. Squared up at SPEED 34, a fastball leaves at about 47-50 m/s.
 - **Batted ball**: the same flight model; on the ground it bounces (keeping half its vertical and 75 % of its horizontal
   speed) and then rolls, slowing by 2.5 m/s^2."""
+PHYSICS = PHYSICS_HEAD + TYPE_SPIN + PHYSICS_TAIL
 
 # ------------------------------------------------------------------------------------------------- single player
 SINGLE_TASK = """You are the batter: a simulated swing rig holding a wooden bat stands at home plate, and a computer pitcher throws to
@@ -121,16 +136,34 @@ def single_prompt():
 
 
 # ------------------------------------------------------------------------------------------------- two players
-DUEL_TASK = """Two agents play baseball against each other, pitcher against batter. The plate appearances alternate between the two
-seats: in each, one seat bats (a simulated swing rig holding a wooden bat at home plate) and the other pitches (it
-chooses every pitch). Your seat (`A` or `B`) is in `game spec`, and `match.first_player` is the seat that bats first;
-your current role is `role` in every reply. Each seat bats 5 plate appearances; the score is the bases you collect as
-the batter (walk or single 1, double 2, home run 4). **Win the game: collect more bases than your opponent.** If the
-bases are level after 5 plate appearances each, both bat once more until the bases differ after a pair, at most 5
-times; if they are still level, the winner of the last pitch wins (the batter if that pitch ended the plate appearance
-with a walk or a hit, else the pitcher). There are no draws. Both players receive this document."""
+def engine_constants(*names):
+    """Constants of the duel engine, read from bbduel.py (plain literals there; the generator does not import the sim)."""
+    tree = ast.parse((Path(__file__).resolve().parent / "duel/environment/sim/bbduel.py").read_text())
+    found = {t.id: n.value for n in tree.body if isinstance(n, ast.Assign) for t in n.targets if isinstance(t, ast.Name)}
+    return [ast.literal_eval(found[name]) for name in names]
 
-DUEL_GOAL = """Your goal is to collect more bases than your opponent: watch how each pitch turns out, as batter and as pitcher,
+
+# the duel's format and pitch limits
+INNINGS, EXTRA_INNINGS, RUN_LIMIT, ARSENAL, PITCH_SCATTER, SPIN_RATE, BREAK_SPAN = engine_constants(
+    "INNINGS", "EXTRA_INNINGS", "RUN_LIMIT", "ARSENAL", "PITCH_SCATTER", "SPIN_RATE", "BREAK_SPAN")
+assert INNINGS == 1, "the texts are written for one inning"
+SPIN_PCT = f"{SPIN_RATE[0] * 100:g}-{SPIN_RATE[1] * 100:g} %"
+SPEEDS = ", ".join(f"{n} {lo:g}-{hi:g}" for n, (lo, hi) in ARSENAL.items())
+SCATTER_TEXT = ("target {:g} cm per coordinate, speed {:g} m/s, spin rate {:g} %, break direction {:g} degrees"
+                .format(PITCH_SCATTER["target_m"] * 100, PITCH_SCATTER["speed_mps"], PITCH_SCATTER["spin_frac"] * 100,
+                        PITCH_SCATTER["break_deg"]))
+
+DUEL_TASK = f"""Two agents play baseball against each other, pitcher against batter. In each half-inning one seat bats (a
+simulated swing rig holding a wooden bat at home plate) and the other pitches (it chooses every pitch) until the batting
+seat has 3 outs; then they swap. Your seat (`A` or `B`) is in `game spec`; `match.first_player` is the seat that bats
+first, in the top of each inning (the visitors), and the other seat bats in the bottom (home). Your current role is
+`role` in every reply. The game is {INNINGS} inning: each seat bats one half-inning. **Win the game: score more runs than
+your opponent** (with base runners, as in baseball; rules below). If the runs are level after the inning, extra innings
+are played until they differ, at most {EXTRA_INNINGS}; if they are still level, the winner of the last pitch wins (the batter
+if that pitch ended the plate appearance with a walk or a hit, else the pitcher). There are no draws. Both players
+receive this document."""
+
+DUEL_GOAL = """Your goal is to score more runs than your opponent: watch how each pitch turns out, as batter and as pitcher,
 and adapt your program and strategy."""
 
 DUEL_COMMANDS = [
@@ -138,20 +171,24 @@ DUEL_COMMANDS = [
     ("game status", "GET /status", "the current state, no image"),
     ("game observe", "POST /observe {}", "the newest camera frames (`game` saves the image to a file; HTTP: `observation.image_png_b64`) and the state"),
     ("game act T PLANE HEIGHT SPEED [REACH]", 'POST /act {"type":"swing","t":T,"plane":PLANE,"height":HEIGHT,"speed":SPEED,"reach":REACH}', "batting: a swing command (below)"),
-    ("game pitch TYPE SPEED X Z", 'POST /act {"type":"pitch","pitch":TYPE,"speed":SPEED,"x":X,"z":Z}', "pitching: the pitch (below)"),
+    ("game pitch TYPE SPEED X Z [SPIN BREAK]", 'POST /act {"type":"pitch","pitch":TYPE,"speed":SPEED,"x":X,"z":Z,"spin_rpm":SPIN,"break_deg":BREAK}', "pitching: the pitch (below)"),
     ("game act none", 'POST /act {"type":"none"}', "cancel your swing, or your pitch (no pitch at the release is an automatic ball)"),
     ("game wait DT", 'POST /wait {"dt":DT}', "wait DT seconds (0 < DT <= 1)"),
     ("game start", "POST /start {}", "ready to start; play begins when both players have started"),
     ('game ready "WHY" "PLAN"', 'POST /ready {"why":"...","plan":"..."}', "hand in the review; play resumes when both have"),
 ]
 
-PITCH = """**Pitching** (`game pitch`, HTTP `act` with `"type":"pitch"`, while you pitch): during the windup (0.6-1.2 s; the
-reply's `release_in_s` says when the ball leaves the hand) command the pitch: its TYPE (fastball 34-42 m/s, slider
-33-37.5, changeup 29-35.5, curveball 28-33.5; each type has a fixed spin, given in `game spec` `match.pitching.arsenal`),
-its release SPEED and the TARGET (X, Z) where the ball's centre should cross the plane y = 0 (-0.60 <= X <= 0.60,
-0.20 <= Z <= 1.60 m). The pitcher always releases at (-0.50, 16.80, 1.80) and aims the ball at the target through the
-documented flight. A later `pitch` replaces an earlier one until the release; at the release the last one is thrown,
-with a seeded scatter N(0, 3 cm) on each target coordinate and N(0, 0.3 m/s) on the speed. No pitch commanded at the
+PITCH = f"""**Pitching** (`game pitch`, HTTP `act` with `"type":"pitch"`, while you pitch): during the windup (0.6-1.2 s; the
+reply's `release_in_s` says when the ball leaves the hand) command the pitch: its TYPE and release SPEED in m/s
+({SPEEDS}),
+the TARGET (X, Z) where the ball's centre should cross the plane y = 0 (-0.60 <= X <= 0.60, 0.20 <= Z <= 1.60 m) and,
+optionally, its SPIN rate (rpm, {SPIN_PCT} of the type's default) and BREAK direction (where the spin's Magnus force
+pushes the ball, in degrees from straight up towards first base, within {BREAK_SPAN:g} degrees of the type's default);
+omitted, they are the type's default (`game spec` `match.pitching.arsenal`: the limits, the defaults and the spin
+axis). The pitcher always releases at (-0.50, 16.80, 1.80) and aims the ball at the target through the documented
+flight with the spin it throws. A later `pitch` replaces an earlier one until the release; at the release the last one
+is thrown, with a seeded Gaussian scatter (standard deviations:
+{SCATTER_TEXT}). No pitch commanded at the
 release is an automatic ball. A pitch command is refused after the release."""
 
 BAT = "**Batting** (`game act`, HTTP `act` with `\"type\":\"swing\"`, while you bat, after the release):\n" + SWING_HEAD + \
@@ -160,22 +197,45 @@ BAT = "**Batting** (`game act`, HTTP `act` with `\"type\":\"swing\"`, while you 
 DUEL_ACTION = BAT + "\n\n" + PITCH
 
 DUEL_OBSERVATION = OBSERVATION + """ One observation at a time per seat (HTTP 429 otherwise). Both
-players see the same cameras, whatever their role."""
+players see the same cameras, whatever their role. Base runners (red, like the batter) stand on their bases: a runner on
+second shows behind the pitcher in row 1, one on third in the background of row 2, one on first in neither."""
 
-DUEL_RULES = COUNT + """
+DUEL_COUNT = COUNT_HEAD + """ 3 strikes = strikeout, 4 balls = walk. A plate appearance that reaches 15 pitches without
+  ending is an out. The count, the outs, the runners and the score a reply shows during a pitch are those before the
+  pitch.""" + ZONE_AND_BATTED + f""" Fielder positions and speeds are in `game spec`.
+- **Outs, runners and runs**: a strikeout, a ball caught in the air, a groundout and a plate appearance reaching 15
+  pitches are outs; at 3 outs the half-inning ends. An out leaves the runners where they are. A walk puts the batter
+  on first base and moves up only the runners it forces; a hit moves the batter and every runner as many bases as the
+  hit (single 1, double 2, home run 4). Each runner who reaches home scores a run. Each half-inning of an extra inning
+  begins with runners on first and second base.
+- **End of a half-inning and of the game**: a half-inning also ends when the batting seat has {RUN_LIMIT} runs in it (runs
+  past the limit on that play do not count). In the bottom of the last inning or of an extra inning the game ends
+  as soon as the home seat leads (runs past the winning run count only on a home run)."""
+
+DUEL_SPIN = """pitch's spin rate and axis are the pitcher's choice, with a scatter (Pitching above). A fastball loses about 3 m/s
+  by the plate and"""
+DUEL_PHYSICS = PHYSICS_HEAD + DUEL_SPIN + PHYSICS_TAIL
+
+DUEL_RULES = DUEL_COUNT + """
 - **The opponent**: another agent, with the same commands, limits and scatter as you. After each pitch both players see
-  its record (pitch type, speed, where it crossed the plate, the outcome).
-""" + DEVIATIONS + """
+  its record (pitch type, speed, where it crossed the plate, the outcome). The batter never sees the pitcher's command,
+  and no player sees the spin a pitch was thrown with (the commanded spin with its scatter).
+""" + DEVIATIONS_HEAD + f"""  - The game is {INNINGS} inning, plus extra innings (at most {EXTRA_INNINGS}) if level (MLB: 9 innings, 7.01(a), and extra innings until
+    decided, 7.01(b)); still level after them, the winner of the last pitch wins. Extra innings begin with runners on
+    first and second base, as in the WBSC tie-break rule of international baseball (MLB: one runner on second,
+    7.01(b)(2)).
+  - Runners move only on walks and hits as above: no triples, extra bases taken, stolen bases, wild pitches, force
+    outs, double plays or sacrifice flies (5.06, 5.09).
+  - A half-inning also ends at {RUN_LIMIT} runs (MLB has no limit).
+""" + DEVIATIONS_COMMON + """
   - The pitcher only chooses the pitch; the windup is fixed by the game. A pitch not commanded by the release is an
-    automatic ball, like a pitch-clock violation (5.07(c)).
-  - Level bases after 5 extra pairs of plate appearances: the winner of the last pitch wins (MLB plays extra innings
-    until decided, 7.01(b))."""
+    automatic ball, like a pitch-clock violation (5.07(c))."""
 
 
 def duel_prompt(start="30 minutes", review="300 seconds"):
     return duel(title="Robot baseball, two players: program play", task=DUEL_TASK, obj=OBJ,
                 url="http://sim:8000/<your seat>", commands=DUEL_COMMANDS, observation=DUEL_OBSERVATION,
-                action=DUEL_ACTION, rules=DUEL_RULES, physics=PHYSICS, start=start, review=review, goal=DUEL_GOAL,
+                action=DUEL_ACTION, rules=DUEL_RULES, physics=DUEL_PHYSICS, start=start, review=review, goal=DUEL_GOAL,
                 **WORDS)
 
 

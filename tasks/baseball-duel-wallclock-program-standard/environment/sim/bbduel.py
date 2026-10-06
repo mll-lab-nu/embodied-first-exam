@@ -1,25 +1,39 @@
 """Baseball duel engine: pitcher against batter, two seats, one 100 Hz clock (shared by the service and its replay).
 
-Format (symmetric): plate appearances alternate between the seats; in each, one seat bats and the other pitches.
-FIRST_BATTER bats in plate appearances 1, 3, 5, ..., the other seat in 2, 4, 6, ...; each seat bats PA_PER_SEAT times.
-Score = bases, as in the single-player game (walk or single 1, double 2, home run 4; bb.judge_batted's fielders). If the
-bases are level after the regulation plate appearances, the seats bat one more each until the bases differ after a
-pair, at most EXTRA_PAIRS times; still level after that, the winner of the last pitch wins (the common last-resort rule
-of the real-time sports: the player who won the last point). A pitch is won by the batter if it ends the plate
-appearance with bases (walk or hit), else by the pitcher; the last pitch always ends a plate appearance. There are no
-draws. A plate appearance that reaches PA_MAX_PITCHES pitches without ending ends as an out (no bases): two-
-strike fouls never end a plate appearance, and without this limit a batter could stall the game indefinitely. Every
-game therefore ends after at most 2 * (PA_PER_SEAT + EXTRA_PAIRS) * PA_MAX_PITCHES pitches, always after a completed
-pair of plate appearances.
+Format: innings with outs, base runners and runs (MLB Official Baseball Rules). FIRST_BATTER (the visitors) bats in the
+top of each inning, the other seat (home) in the bottom; in each half-inning one seat bats and the other pitches until
+the batting seat has 3 outs (5.09(e)). The plate appearance's result comes from the single-player game (strikeout,
+walk, bb.judge_batted's outs and hits); an out leaves the runners where they are, a walk moves only forced runners
+(5.05(b)(1), 5.06(b)(3)(B)), a hit moves every runner as many bases as the batter (advance_runners()). A run scores
+for each runner reaching home (5.08(a)); score = runs. The game is INNINGS innings (7.01(a)); it ends after the top
+half of the last inning if home leads (7.01(e)(1)) and in the bottom half as soon as home leads (7.01(e)(3): runs past
+the winning run count only on a home run). Level after the regulation innings: extra innings, at most EXTRA_INNINGS,
+each half-inning starting with runners on first and second base (the WBSC tie-break rule; MLB 7.01(b)(2) puts one
+on second); still level after that, the winner of the last pitch wins (the common last-resort rule of the real-time
+sports: the player who won the last point): the batter if it put the batter on base (the last half-inning ended at the
+run limit), else the pitcher (it ended at 3 outs). There are no draws.
+No tiebreak counts how the runs came: once a half-inning will reach the run limit anyway, the pitcher could steer that
+too (e.g. bases: 7 walks give 7, 4 home runs 16).
+
+Why outs: with a fixed number of plate appearances a walk was a sure, bounded result that the pitcher could always
+force (no pitch = an automatic ball; or a pitch out of the bat's reach), so a leading pitcher conceded walks. A walk
+makes no out, so a pitcher who walks every batter never ends the half-inning and concedes RUN_LIMIT runs, the most a
+half-inning can give (in a bottom half that can end the game, it loses as soon as home leads).
+
+Bounds (MLB has none): a half-inning also ends when the batting seat has RUN_LIMIT runs in it (runs past the limit on
+that play do not count); a plate appearance that reaches PA_MAX_PITCHES pitches without ending is an out (two-strike
+fouls never end a plate appearance). Every half-inning therefore ends after finitely many pitches, and so does the
+game.
 
 A pitch: the pitcher winds up (WINDUP, seeded by the batter's pitch number: both seats see the same sequence) with the
 ball in its hand at the release point bb.REL. During the windup the pitcher commands the pitch (type, speed, target at
-the plate; a later command replaces an earlier one); at the release the last command is thrown, with a seeded
-execution scatter (PITCH_SCATTER) on the target and the speed: bb.Pitch aims the ball's centre at the scattered target
-(y = 0) with the type's spin. No command by the release = an automatic ball. After the release the batter swings as
-in the single-player game (bbrt: the bat square T s after the command takes effect; seeded swing scatter bb.SCATTER,
-keyed by the batter's pitch number). The pitch is over END_AFTER s after the contact or the plate; it is judged while
-the world is frozen (bb.judge_batted and the count, as bb.Game.decide_finish).
+the plate, and the spin: its rate and break direction within SPIN_RATE and BREAK_SPAN of the type's default; a later
+command replaces an earlier one); at the release the last command is thrown, with a seeded execution scatter
+(PITCH_SCATTER) on the target, the speed and the spin (rate and break direction): bb.Pitch aims the ball's centre at
+the scattered target (y = 0) with the scattered spin. No command by the release = an automatic ball. After the
+release the batter swings as in the single-player game (bbrt: the bat square T s after the command takes effect;
+seeded swing scatter bb.SCATTER, keyed by the batter's pitch number). The pitch is over END_AFTER s after the contact
+or the plate; it is judged while the world is frozen (bb.judge_batted and the count, as bb.Game.decide_finish).
 
 Time stamps: k = control steps of running world since the start (frozen time does not count), n = steps since this
 pitch's windup began, t = n * DT - windup = time since release.
@@ -38,15 +52,20 @@ import bbrt
 DT = bbrt.DT
 SIDES = ("A", "B")
 OTHER = {"A": "B", "B": "A"}
-REVISION = "baseball-duel-1"
-PA_PER_SEAT = 5
-EXTRA_PAIRS = 5                  # extra pairs until decided, at most this many; then the last pitch decides
+REVISION = "baseball-duel-2"
+INNINGS = 1                      # regulation innings (MLB: 9)
+EXTRA_INNINGS = 1                # extra innings until decided, at most this many; then the last pitch decides
+RUN_LIMIT = 4                    # runs per half-inning (MLB: no limit)
 PA_MAX_PITCHES = bb.PA_MAX_PITCHES   # a plate appearance reaching 15 pitches is an out (as in the single game)
+ON_BASE = ("walk", "single", "double", "home run")   # the plate appearance results that put the batter on base
 WINDUP = bbrt.WINDUP             # the single-player game's windup (0.6-1.2 s)
-ARSENAL = {"fastball": (34.0, 42.0), "slider": (33.0, 37.5), "changeup": (29.0, 35.5), "curveball": (28.0, 33.5)}
+ARSENAL = {"fastball": (34.0, 42.0), "sinker": (34.0, 41.0), "cutter": (33.0, 39.0), "slider": (33.0, 37.5),
+           "changeup": (29.0, 35.5), "splitter": (30.0, 37.0), "curveball": (28.0, 33.5)}
 TARGET_X = (-0.60, 0.60)
 TARGET_Z = (0.20, 1.60)
-PITCH_SCATTER = dict(target_m=0.03, speed_mps=0.3)
+PITCH_SCATTER = {"target_m": 0.03, "speed_mps": 0.3, "spin_frac": 0.03, "break_deg": 8.0}
+SPIN_RATE = (0.8, 1.2)           # the pitcher's spin rate: this share of the type's default
+BREAK_SPAN = 25.0                # the break direction: at most this many degrees from the type's default
 
 
 def windup_s(seed: int, j: int) -> float:
@@ -62,42 +81,93 @@ def swing_scatter(seed: int, j: int) -> dict:
                 speed=1.0 + z[3] * S["speed_frac"], reach=z[4] * S["reach_m"])
 
 
+def default_spin(name: str) -> dict:
+    """A type's single-player spin (bb.PITCH_TYPES) as the duel's spin parameters, rounded to 1 rpm and 0.1 degree:
+    the rate and the break direction (where the Magnus force pushes a ball moving along -y, in degrees from straight
+    up towards first base, +x)."""
+    pt = bb.PITCH_TYPES[name]
+    ax = pt["axis"]
+    return dict(spin_rpm=round(pt["spin"] * 60 / (2 * math.pi)),
+                break_deg=round(math.degrees(math.atan2(ax[2], -ax[0])), 1))
+
+
+def spin_vector(name: str, spin_rpm: float, break_deg: float) -> tuple:
+    """(rate in rad/s, unit axis) of a `name` pitch with this rate and break direction; the axis keeps the type's
+    gyro component (spin along the flight, which does not break the ball)."""
+    g = bb.PITCH_TYPES[name]["axis"][1]
+    b, t = math.radians(break_deg), math.sqrt(1 - g * g)
+    return spin_rpm * 2 * math.pi / 60, (-math.cos(b) * t, g, math.sin(b) * t)
+
+
+def spin_limits(name: str) -> dict:
+    """The pitcher's choices for a `name` pitch's spin, [low, high] rounded to 0.1: rate (rpm) and break direction."""
+    d = default_spin(name)
+    return dict(spin_rpm=[round(f * d["spin_rpm"], 1) for f in SPIN_RATE],
+                break_deg=[round(d["break_deg"] + s * BREAK_SPAN, 1) for s in (-1, 1)])
+
+
 def validate_pitch(body: dict) -> dict:
-    """A pitch command {'type': 'pitch', 'pitch': TYPE, 'speed': m/s, 'x': m, 'z': m}; raises ValueError."""
+    """A pitch command {'type': 'pitch', 'pitch': TYPE, 'speed': m/s, 'x': m, 'z': m, 'spin_rpm': rpm, 'break_deg':
+    degrees} (the spin defaults to the type's); returns it complete; raises ValueError."""
     name = body.get("pitch")
     if name not in ARSENAL:
         raise ValueError(f"pitch must be one of {sorted(ARSENAL)}")
+    d = default_spin(name)
     sp, x, z = float(body["speed"]), float(body["x"]), float(body["z"])
-    if not np.all(np.isfinite([sp, x, z])):
-        raise ValueError("speed, x and z must be finite numbers")
+    rpm, brk = float(body.get("spin_rpm", d["spin_rpm"])), float(body.get("break_deg", d["break_deg"]))
+    if not np.all(np.isfinite([sp, x, z, rpm, brk])):
+        raise ValueError("speed, x, z, spin_rpm and break_deg must be finite numbers")
     lo, hi = ARSENAL[name]
     if not lo <= sp <= hi:
         raise ValueError(f"a {name} is thrown at {lo:g}-{hi:g} m/s")
     if not (TARGET_X[0] <= x <= TARGET_X[1] and TARGET_Z[0] <= z <= TARGET_Z[1]):
         raise ValueError(f"target x must be in {list(TARGET_X)} m and z in {list(TARGET_Z)} m")
-    return {"type": "pitch", "pitch": name, "speed": sp, "x": x, "z": z}
+    lim = spin_limits(name)                          # rounded: a limit computed from the default may differ by 1e-14
+    lo, hi = lim["spin_rpm"]
+    if not lo - 1e-6 <= rpm <= hi + 1e-6:
+        raise ValueError(f"a {name} spins at {lo:g}-{hi:g} rpm")
+    lo, hi = lim["break_deg"]
+    if not lo - 1e-6 <= brk <= hi + 1e-6:
+        raise ValueError(f"a {name} breaks towards {lo:g} to {hi:g} degrees")
+    return {"type": "pitch", "pitch": name, "speed": sp, "x": x, "z": z, "spin_rpm": rpm, "break_deg": brk}
 
 
 def make_pitch(seed: int, j: int, cmd: dict) -> bb.Pitch:
     """The thrown pitch for the batter's pitch number j: the command with its seeded execution scatter (pure)."""
-    z = bb._rng(seed, 13, j).standard_normal(3)
+    z = bb._rng(seed, 13, j).standard_normal(5)
     S = PITCH_SCATTER
+    spin, axis = spin_vector(cmd["pitch"], cmd["spin_rpm"] * (1 + z[3] * S["spin_frac"]),
+                             cmd["break_deg"] + z[4] * S["break_deg"])
     p = bb.Pitch(cmd["pitch"], cmd["speed"] + z[2] * S["speed_mps"], cmd["x"] + z[0] * S["target_m"],
-                 cmd["z"] + z[1] * S["target_m"])
+                 cmd["z"] + z[1] * S["target_m"], spin, axis)
     if p.cross is None or not all(np.isfinite(p.cross)) or abs(p.cross[1] - p.target[0]) > 0.01 \
             or abs(p.cross[2] - p.target[1]) > 0.01:
         raise ValueError("the pitcher cannot throw this pitch to that target")
     return p
 
 
+def advance_runners(runners: tuple, result: str, bases: int) -> tuple:
+    """The runners (first, second, third occupied) after the batter reaches base, and the runs scored: a walk moves
+    only the runners it forces (5.06(b)(3)(B)); a hit moves the batter and every runner `bases` bases (pure)."""
+    if result == "walk":
+        if all(runners):
+            return runners, 1
+        i = runners.index(False)                      # the batter forces each runner up to the first empty base
+        return runners[:i] + (True,) + runners[i + 1:], 0
+    after = [b + bases for b in (1, 2, 3) if runners[b - 1]] + [bases]
+    return tuple(b in after for b in (1, 2, 3)), sum(b >= 4 for b in after)
+
+
 class Duel:
     def __init__(self, seed: int, first: str):
         assert first in SIDES
         self.seed, self.first = int(seed), first
-        self.level, self.lv = "duel", {"n_pa": 2 * PA_PER_SEAT}      # for bb.render_video
         self.k = 0
         self.pa = 0                                   # index of the current plate appearance (both seats)
         self.balls = self.strikes = 0
+        self.inning, self.top = 1, True               # the current half-inning
+        self.outs, self.half_runs = 0, 0
+        self.runners = (False, False, False)          # first, second, third base occupied
         self.score = {s: 0 for s in SIDES}
         self.pa_results = []                          # every finished plate appearance, in order
         self.history = []                             # one record per pitch
@@ -108,7 +178,19 @@ class Duel:
     # --- who does what
     @property
     def batter(self) -> str:
-        return self.first if self.pa % 2 == 0 else OTHER[self.first]
+        return self.first if self.top else OTHER[self.first]
+
+    @property
+    def half(self) -> str:
+        return "top" if self.top else "bottom"
+
+    def on_base(self) -> list:
+        """The occupied bases (1 = first, 2 = second, 3 = third)."""
+        return [b for b in (1, 2, 3) if self.runners[b - 1]]
+
+    def walkoff_half(self) -> bool:
+        """The bottom of the last or an extra inning: the game ends as soon as home leads (7.01(e)(3))."""
+        return not self.top and self.inning >= INNINGS
 
     @property
     def pitcher(self) -> str:
@@ -204,7 +286,8 @@ class Duel:
         p = self.pitch
         cmd = self.pitch_cmd[0] if self.pitch_cmd else None
         rec = {"pitch": self.idx, "pa": self.pa, "batter": self.batter, "pitcher": self.pitcher, "j": self.j,
-               "count": [self.balls, self.strikes], "pitch_command": cmd, "decision": dict(dec)}
+               "inning": self.inning, "half": self.half, "count": [self.balls, self.strikes], "outs": self.outs,
+               "on_base": self.on_base(), "pitch_command": cmd, "decision": dict(dec)}
         if p is None:
             rec.update(type=None, radar=None, outcome="ball (no pitch)")
         else:
@@ -259,7 +342,7 @@ class Duel:
         return run
 
     def finish(self) -> dict:
-        """Phase 2, once the pitch is over (the world is frozen): the batted ball, the count, the score."""
+        """Phase 2, once the pitch is over (the world is frozen): the batted ball, the count, the runners, the score."""
         assert self.over and not self.judged
         rec, p = self.rec, self.pitch
         if "post_state" in rec:
@@ -292,19 +375,51 @@ class Duel:
         self.history.append(rec)
         self.faced[self.batter] += 1
         if pa_end:
-            b = self.batter
-            self.score[b] += pa_end[1]
-            self.pa_results.append({"pa": self.pa + 1, "batter": b, "pa_of_batter": self.pa_of(b),
-                                    "result": pa_end[0], "bases": pa_end[1],
-                                    "pitches": sum(1 for h in self.history if h["pa"] == self.pa)})
             rec["pa_result"] = pa_end[0]
-            self.pa += 1
-            self.balls = self.strikes = 0
-            if self.pa % 2 == 0 and self.pa >= 2 * PA_PER_SEAT and (
-                    self.score["A"] != self.score["B"] or self.pa >= 2 * (PA_PER_SEAT + EXTRA_PAIRS)):
-                self.done = True
+            self._end_pa(rec, *pa_end)
+        else:
+            rec.update(runs=0, outs_after=self.outs, on_base_after=self.on_base())
         self.judged = True
         return rec
+
+    def _end_pa(self, rec: dict, result: str, bases: int):
+        """The plate appearance's out or runners and runs (within the half-inning's limit), then the next batter."""
+        b = self.batter
+        if result in ON_BASE:
+            self.runners, runs = advance_runners(self.runners, result, bases)
+        else:
+            self.outs, runs = self.outs + 1, 0
+        runs = min(runs, RUN_LIMIT - self.half_runs)
+        if self.walkoff_half() and result != "home run":     # the game ends when the winning run scores (7.01(e)(3))
+            runs = min(runs, self.score[self.pitcher] - self.score[b] + 1)
+        self.score[b] += runs
+        self.half_runs += runs
+        self.pa_results.append({"pa": self.pa + 1, "batter": b, "pa_of_batter": self.pa_of(b),
+                                "inning": self.inning, "half": self.half, "result": result, "bases": bases,
+                                "runs": runs, "pitches": sum(1 for h in self.history if h["pa"] == self.pa)})
+        rec.update(runs=runs, outs_after=self.outs, on_base_after=self.on_base())
+        self._next_batter()
+
+    def _next_batter(self):
+        """After a plate appearance: the next batter, the next half-inning or the end of the game."""
+        self.pa += 1
+        self.balls = self.strikes = 0
+        home, visitors = self.score[OTHER[self.first]], self.score[self.first]
+        if self.walkoff_half() and home > visitors:
+            self.done = True
+        elif self.outs >= 3 or self.half_runs >= RUN_LIMIT:
+            last = self.inning >= INNINGS
+            if self.top and last and home > visitors:                  # 7.01(e)(1)
+                self.done = True
+            elif not self.top and last and (home != visitors or self.inning >= INNINGS + EXTRA_INNINGS):
+                self.done = True
+            else:
+                if not self.top:
+                    self.inning += 1
+                self.top = not self.top
+                self.outs, self.half_runs = 0, 0
+                extra = self.inning > INNINGS                           # extra innings: runners on first and second
+                self.runners = (extra, extra, False)
 
     def next_pitch(self):
         assert self.over and self.judged and not self.done
@@ -312,26 +427,28 @@ class Duel:
 
     # --- results
     def winner(self):
-        """More bases; level after the last extra pair: the winner of the last pitch (None while undecided)."""
+        """More runs; level after the last extra inning: the winner of the last pitch (None while undecided)."""
         a, b = self.score["A"], self.score["B"]
         if a != b:
             return "A" if a > b else "B"
         if not self.done or not self.history:
             return None
         last = self.history[-1]
-        won_by_batter = last.get("pa_result") in ("walk", "single", "double", "home run")
+        won_by_batter = last.get("pa_result") in ON_BASE
         return last["batter"] if won_by_batter else last["pitcher"]
 
     def decided_by(self):
         if not self.done:
             return None
-        return "bases" if self.score["A"] != self.score["B"] else "last pitch"
+        return "runs" if self.score["A"] != self.score["B"] else "last pitch"
 
     def public_rec(self, rec: dict) -> dict:
-        out = {"pitch": rec["pitch"] + 1, "plate_appearance": rec["pa"] + 1, "batter": rec["batter"],
+        out = {"pitch": rec["pitch"] + 1, "inning": rec["inning"], "half": rec["half"],
+               "plate_appearance": rec["pa"] + 1, "batter": rec["batter"],
                "pitcher": rec["pitcher"], "pitch_type": rec["type"], "radar_mps": rec["radar"],
                "plate_crossing": None if rec["crossing"] is None else {"x": rec["crossing"][1], "z": rec["crossing"][2]},
-               "in_zone": rec["zone"], "outcome": rec["outcome"], "count_after": rec["count_after"]}
+               "in_zone": rec["zone"], "outcome": rec["outcome"], "count_after": rec["count_after"],
+               "outs_after": rec["outs_after"], "on_base_after": rec["on_base_after"], "runs": rec["runs"]}
         if "contact" in rec:
             b = rec["batted"]
             out["batted_ball"] = {k: b[k] for k in ("exit_speed", "launch_deg", "spray_deg", "distance", "hang_time",
@@ -366,12 +483,13 @@ class Duel:
     def snapshots(self) -> list:
         sw = self.rec.get("swing_obj") if self.rec is not None else None
         swp = None if sw is None else (sw.t0, sw.plane_deg, sw.H, sw.speed, sw.reach)
+        runners = self.rec["on_base"] if self.rec is not None else self.on_base()      # the runners before this pitch
         out = []
         for i in range(4):
             n = max(0, self.n - bbrt.FRAME_GAP_STEPS * (3 - i))
             t = round(n * DT - self.windup, 4)
             out.append({"pitch": self.idx, "n": n, "k": self.k_begin + n, "t": t,
-                        "ball": [float(x) for x in self.ball_at(t)], "swing": swp})
+                        "ball": [float(x) for x in self.ball_at(t)], "swing": swp, "runners": runners})
         return out
 
     def heard(self):

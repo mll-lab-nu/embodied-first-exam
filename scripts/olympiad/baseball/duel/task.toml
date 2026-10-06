@@ -15,12 +15,12 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/baseball-duel-wallclock-program-standard"
-description = "Two-player baseball, pitcher against batter, in a shared continuous wall-clock world; slowdown chosen at run time (RCB_SLOWDOWN; DUEL_SEED, FIRST_RECEIVER = the seat that bats first). Plate appearances alternate: one seat bats with the swing rig, the other pitches (type, speed and target within stated limits, with execution scatter); each seat bats 5 times (if level, extra pairs until decided, at most 5, then the winner of the last pitch wins: no draws; a plate appearance reaching 15 pitches is an out); score = bases. PROGRAM PLAY: each agent may write an autonomous program that observes and acts without a new model response per action, and may watch, fix and restart it at any time and during reviews (300 s per review, else forfeit). Up to 30 minutes to start after the opponent. Equal isolated seats; one act per seat in flight. Technical failures invalidate the trial."
+description = "Two-player baseball, pitcher against batter, in a shared continuous wall-clock world; slowdown chosen at run time (RCB_SLOWDOWN; DUEL_SEED, FIRST_RECEIVER = the seat that bats first). One inning with outs, base runners and runs: in each half-inning one seat bats with the swing rig until it has 3 outs, the other pitches (type, speed, spin and target within stated limits, with execution scatter); if level, extra innings with runners on first and second base until decided, at most 1, then the winner of the last pitch wins: no draws; a half-inning also ends at 4 runs; a plate appearance reaching 15 pitches is an out; score = runs. PROGRAM PLAY: each agent may write an autonomous program that observes and acts without a new model response per action, and may watch, fix and restart it at any time and during reviews (300 s per review, else forfeit). Up to 30 minutes to start after the opponent. Equal isolated seats; one act per seat in flight. Technical failures invalidate the trial."
 authors = [{ name = "Chi Gui" }]
 keywords = ["program-play", "robotics", "mujoco", "baseball", "batting", "pitching", "interactive", "arena", "multi-seat"]
 
 [metadata]
-revision = "baseball-duel-1-program-v2-param"
+revision = "baseball-duel-2-program-v2-param"
 author_name = "Chi Gui"
 category = "robotics-sports-arena"
 task_type = "trajectory"

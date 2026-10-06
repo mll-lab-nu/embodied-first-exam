@@ -206,7 +206,7 @@ def render_snaps(snaps: list[dict], rd) -> bytes:
         tiles = []
         for sn in snaps:
             sw = None if sn["swing"] is None else bb.Swing(*sn["swing"])
-            rd.set(tuple(sn["ball"]), sw, sn["t"])
+            rd.set(tuple(sn["ball"]), sw, sn["t"], runners=sn.get("runners", ()))
             im = Image.fromarray(rd.render(cam))
             lab = f"{cam}  t={sn['t']:+.2f}s" + ("  (windup)" if sn["t"] < 0 else "")
             ImageDraw.Draw(im).text((6, 4), lab, fill=(255, 255, 0))
