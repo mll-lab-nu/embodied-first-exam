@@ -1,0 +1,101 @@
+{
+ "task": "lid_transport/task_0006",
+ "family": "lid_transport",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "0105a18ef88b0437af3b70c2b0ce9781f5d48b9bb5723c0385f2810b41a33d5d",
+ "diagnostics_sha256": "c110eae80b00457190667e620d28b3d408a2e80704ee852a0cbd469da8f42477",
+ "pipeline": "lid_transport_food",
+ "gpu_dynamics": false,
+ "state_sha": "3463868903df88b2",
+ "objects": {
+  "countertop_kelzer_0": {
+   "category": "countertop",
+   "position": [
+    6.02946,
+    -1.98371,
+    0.86949
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.66913,
+    0.74314
+   ]
+  },
+  "lemon_220": {
+   "category": "lemon",
+   "position": [
+    6.57684,
+    -1.84837,
+    0.92979
+   ],
+   "orientation_xyzw": [
+    -0.06956,
+    0.00061,
+    0.99756,
+    0.0055
+   ]
+  },
+  "lid_221": {
+   "category": "lid",
+   "position": [
+    7.17998,
+    -1.84398,
+    0.89184
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    -0.0,
+    1.0
+   ]
+  },
+  "tupperware_222": {
+   "category": "tupperware",
+   "position": [
+    6.57615,
+    -1.84391,
+    0.95344
+   ],
+   "orientation_xyzw": [
+    0.0,
+    1e-05,
+    -3e-05,
+    1.0
+   ]
+  },
+  "goal_region__tupperware_222": {
+   "category": "goal_region_marker",
+   "position": [
+    7.60837,
+    -1.84391,
+    0.95556
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}

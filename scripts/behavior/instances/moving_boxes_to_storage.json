@@ -1,0 +1,71 @@
+{
+ "task": "moving_boxes_to_storage",
+ "challenge_task": "moving_boxes_to_storage",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Move the two storage containers, which stand on the living-room floor, to the garage: put one on the garage floor and stack the other on top of it (either order).",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "e6b13ded333afb35",
+ "action_dim": 25,
+ "challenge_max_steps": 21894,
+ "objects": {
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    3.8669,
+    5.6663,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "floor.n.01_2": {
+   "category": "floors",
+   "position": [
+    -5.3695,
+    5.5058,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "storage_container.n.01_1": {
+   "category": "storage_box",
+   "position": [
+    3.9006,
+    6.49,
+    0.0724
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    0.1652,
+    0.9863
+   ]
+  },
+  "storage_container.n.01_2": {
+   "category": "storage_box",
+   "position": [
+    4.6249,
+    5.6343,
+    0.0724
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.6894,
+    0.7244
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

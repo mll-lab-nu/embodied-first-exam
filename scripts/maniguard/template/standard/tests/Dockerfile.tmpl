@@ -1,0 +1,6 @@
+# Separate verifier sandbox: grades the sim service's own artifacts; needs nothing but python (the shared eai-standard
+# client base, scripts/eai_standard/client.env; it installs nothing).
+FROM @@CLIENT_IMAGE@@
+COPY test.sh /tests/test.sh
+COPY grade.py /tests/grade.py
+RUN chmod +x /tests/test.sh
