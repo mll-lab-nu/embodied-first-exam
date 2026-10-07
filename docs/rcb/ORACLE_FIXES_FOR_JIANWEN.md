@@ -25,6 +25,37 @@ slotted x3 still have no oracle; they are yours. Nothing failed in the final run
 The sections below are the history of 10-04 and 10-05. Where they still say "running" or "pending", this
 section supersedes them.
 
+### Update, 2026-10-06 21:45: v19 and the below-easy tiers
+
+- **v19** (`89cc32674`, blanket settle speed, the user's decision):
+  - very_easy, easy, medium and hard pass strictly in both modes on `cand_v19b`.
+  - easier fails as it did on v18 (see below).
+  - Table: `benchmarks/topogym.md`, "v19 re-grades".
+- **Rope below-easy environment** (`da47d3a49`, the user's decision):
+  - very_easy and easier now get the regular rope profile (contact_relaxed_v16). Section 11 has the before/after numbers.
+  - The change alters the public source hash, so candidates built from later heads need a rebuilt image.
+- **Below-easy oracle grades.** Your launcher, both modes, merged-v18 candidates on image 0.2.16-dev (blanket: v19).
+  P / S = privileged / standard; 1 = passed.
+
+| family | very_easy (P / S) | easier (P / S) | lab lane |
+|---|---|---|---|
+| cast_coil, cast_keyhole, interlocked_claws, lock_picking, fiber_bundling | 1 / 1 | 1 / 1 | align_be |
+| buzz_wire_3d | 1 / 1 | 1 / 1 | align_be tree_fix (after `f74be5528`) |
+| hedgehog_in_cage | 1 / 1 | 1 / 1 | hhbe |
+| horseshoe_ring | 1 / 1 | 1 / 1 | hsbe |
+| knot_untying | 1 / 1 | 1 / 1 | obe tree_g |
+| slotted_post_ring | 1 / 1 | dropped (the user, 10-06) | sbe |
+| blanket_flatten | 1 / 1 | 0 / not run | v19 |
+| rope_threading | 0 / not run | 0 / not run | align_be (then native runs on `da47d3a49`) |
+| orbits | 0 / not run | 0 / not run | obe tree_g |
+
+- **Totals:** 20 of 26 below-easy tasks and 33 of 39 original-tier tasks pass in both modes.
+- **Still open, all yours:**
+  - rope very_easy and easier: the oracle stops at `raise_to_ring` (IK unreachable, row 589; section 11);
+  - orbits very_easy and easier: `ORACLE_FIXES_2_FOR_JIANWEN.md` section 6;
+  - blanket easier: at lay_half the assisted grasp is lost (edge ratio 1.3014 > 1.3);
+  - orbits and slotted easy, medium and hard: no oracle yet.
+
 - **Release:** merged-v18 (tooling 18, image 0.2.16-dev) at `8d7d16489`. Oracle-only commits after it: `42e4237ce`
   (buzz hard, O2-9) and `960092527` (docs).
 - **Final oracle sweep:**
