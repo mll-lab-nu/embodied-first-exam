@@ -4549,3 +4549,131 @@ digest = "sha256:3967f060583e2ffd6a4cecbf78ad3351e04698293ee74298eba19f2844d19b3
 name = "robot-coding-bench/dexjoco-water-plant-i00-standard"
 digest = "sha256:a515e9a6868f5745811e349340a399ae48c1123e568aab35d1882451d79ad6a2"
 
+[[tasks]]
+name = "robot-coding-bench/behavior-boxing-food-after-dinner-i00-privileged"
+digest = "sha256:cdc688921d636be336d78934076598d1cc4773d3c45a86d542ae262bbb73a7d7"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-boxing-food-after-dinner-i00-standard"
+digest = "sha256:f1cae1f114e5b167c985aad05bf83d0c71b8c0ec7ea6f185e3588bec040b6a47"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-bringing-water-i00-privileged"
+digest = "sha256:d7aa6cbb41690b3bb2e0ccdcf4323edad306a22d58d355c49be115a4a326369e"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-bringing-water-i00-standard"
+digest = "sha256:233cdee8690a1f8eb04f88ecf36c63949cacd440bc63c30345916c89d070f44e"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-cook-a-brisket-i00-privileged"
+digest = "sha256:eaaaa0302e231b6435175861f392c507c389dd344ac768904374cdf8177e1c4f"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-cook-a-brisket-i00-standard"
+digest = "sha256:1a2c3bd9a6012acaa84255dbd3d011dfefbaffc317b645b02c4e62bf2c84c079"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-cook-broccolini-i00-privileged"
+digest = "sha256:c6933671dba75d99424c74008f59bbdfa5c87668c0ea62d7b287819eebfd3754"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-cook-broccolini-i00-standard"
+digest = "sha256:7dda6a42bc52b483692bf3a6f8453bc8fd73c5871721b7d61c59efdfbc75c76b"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-hanging-pictures-i00-privileged"
+digest = "sha256:6d186f86373542a9c92f6635328902cd2501f3edcaf3c7747d42cbb80d823fcd"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-hanging-pictures-i00-standard"
+digest = "sha256:39b979f13cfd4a91dc53a8a00873cab2104ec4ecc2546a1fe41ff0bbabe76bd5"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-make-gift-bags-for-baby-showers-i00-privileged"
+digest = "sha256:f840562bda79fb57e90a588d9c0545b37cb932a1372f22b76ea58c4fb53be040"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-make-gift-bags-for-baby-showers-i00-standard"
+digest = "sha256:ff3a7c4d6eeb17a8426ee964b3bde3e40dc75f74d46b1a02209b28958def3911"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-make-rose-centerpieces-i00-privileged"
+digest = "sha256:445113d5e0dd589cbe51ebc56b132e8098d7c4c8c17e56c3dfcfbf6f18af74d9"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-make-rose-centerpieces-i00-standard"
+digest = "sha256:d552bea4ce95ed6c5e7189e5ef86aa460c721c39a8629d959220b7d934e42245"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-organizing-art-supplies-i00-privileged"
+digest = "sha256:273f8e4490ac710e9c34fa3fd6d1f9f8589d650129b861aa7f856d4b70e89242"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-organizing-art-supplies-i00-standard"
+digest = "sha256:6c96763fd6aab1513152c5a649ed0d1e0d5b503b1c14019181a82aa5370a19fa"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-packing-meal-for-delivery-i00-privileged"
+digest = "sha256:354d76a752c0428e7b8cd4995619376136c6361b061c5b27bd5afe0dad383e0c"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-packing-meal-for-delivery-i00-standard"
+digest = "sha256:8bd61670edc71bad2970faf8a559eae30f59d18b178b01849c394e5c93580bf5"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-preparing-lunch-box-i00-privileged"
+digest = "sha256:24d2d1627675ae61d603a938e1ed6c615e4f097ce806e737cb538d82ba942eb8"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-preparing-lunch-box-i00-standard"
+digest = "sha256:b245fea2d4b4e7932cc7c2131ebbe2f344c060270c4109c4e3f467b087d37c0d"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-rearranging-kitchen-furniture-i00-privileged"
+digest = "sha256:97110cf88fc312678d9606889961ca6babd50d82c4e6a68cce92f1c4dd6757f8"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-rearranging-kitchen-furniture-i00-standard"
+digest = "sha256:88f7dd3acf1a6e3e83a73370d46fe352f97202f20a29a0ee64d4fddef41c678f"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-set-up-a-coffee-station-in-your-kitchen-i00-privileged"
+digest = "sha256:c04fa3cc609059fff926e74be0d461685a96f4fd37dc826027c5a7a6b06eec37"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-set-up-a-coffee-station-in-your-kitchen-i00-standard"
+digest = "sha256:6ec154e2ac43fcc859cb757817a00597957096ac62de73e8d0aaa08cff08bd66"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-sorting-books-on-shelf-i00-privileged"
+digest = "sha256:b77335ebbb950e1ecf678a8218fb776118eab9368f407ab4d10f709430c11219"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-sorting-books-on-shelf-i00-standard"
+digest = "sha256:a7303e76b2aeb63f81c98ca8069090ee978f46dd0218e004c283f8a9b89f31bb"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-store-honey-i00-privileged"
+digest = "sha256:513135202fb26bd665675413479530c53a6051ceb1212268c45df5fedfacb1c2"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-store-honey-i00-standard"
+digest = "sha256:b497c130e26bc161031bf5c9fd2cd859c284462c4bde27b9e9f3284406c45fdd"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-store-produce-i00-privileged"
+digest = "sha256:16699362e8aeca316798780822a165239101922a7896f5de9da56a7184345cf8"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-store-produce-i00-standard"
+digest = "sha256:6dce47ab8a94f4d430e8f5936317319294cbe9556ff9ca300cdbdde983c1a74a"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-vacuuming-floors-i00-privileged"
+digest = "sha256:dfae0778ceb013898ef7d18db4bed2f1d09b9ca133c046d8034ad59cdd9a8651"
+
+[[tasks]]
+name = "robot-coding-bench/behavior-vacuuming-floors-i00-standard"
+digest = "sha256:bf052b08bc20943c82a614c8bc8072957613b84aacfe16a7fdbbeea6a6ea9790"
+
