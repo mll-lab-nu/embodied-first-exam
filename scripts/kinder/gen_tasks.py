@@ -40,9 +40,12 @@ sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normaliz
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
 STANDARD = SHARED / "standard"                 # the standard-mode sidecar, client and verifier (eai-standard/2.1)
 IMAGE = "ghcr.io/mll-lab-nu/eai-kinder:" + (ROOT / "images/kinder/VERSION").read_text().strip()
-# The agent container and the verifier of every standard-mode task: Python and the client only, pinned by digest.
-CLIENT_IMAGE = ("docker.io/library/python:3.12.14-slim"
-                "@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f")
+# The agent container and the verifier of every standard-mode task: the one client base (pinned by digest) and the
+# shared pip pins, both from scripts/eai_standard/ (PROTOCOL §2.4; ci_checks/check-standard-client.sh).
+CLIENT = ROOT / "scripts/eai_standard"
+CLIENT_ENV = dict(l.split("=", 1) for l in (CLIENT / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
+CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
+CLIENT_REQUIREMENTS = CLIENT / CLIENT_ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
 # What a task says about its robot and simulator, by kind (below): the README's category, the instruction's robot,
 # task.toml's keywords.
 KINDS = {
@@ -101,7 +104,8 @@ SENSORS = {
                                 "`spec()[\"proprio_layout\"]` order: `base_x`, `base_y`, `base_yaw` (the odometry frame: "
                                 "where the base started, x the way it faced, y left), `base_vx`, `base_vy`, "
                                 "`base_yaw_rate`, `arm_1` ... `arm_7`, `arm_1_vel` ... `arm_7_vel`, `gripper` (the "
-                                "fingers' position: 0 open, 1 at their closed limit) and `gripper_vel`; "
+                                "fingers' position: 0 open, 1 at their joint's closed limit, about 0.98 when they close "
+                                "on nothing) and `gripper_vel`; "
                                 "`spec()[\"proprio\"]` gives the units.", **_BOTH},
     "kinematic3d": {"standard_robot": "a simulated mobile manipulator (KinDER / PyBullet, kinematic) -- a TidyBot++ base, "
                                       "a Kinova Gen3\n7-DoF arm and a Robotiq 2F-85 gripper",
@@ -315,6 +319,7 @@ def render(t: dict, d: dict, f: dict, tasks_dir: Path = TASKS_DIR) -> list[Path]
                      (STANDARD / "rcb1.py", sim / "rcb1.py"), (SHARED / "rcb_kinder.py", sim / "rcb_kinder.py"),
                      (STANDARD / "rcb_client.py", std / "environment" / "rcb_client.py"),
                      (STANDARD / "rcb1.py", std / "environment" / "rcb1.py"),
+                     (CLIENT_REQUIREMENTS, std / "environment" / "client-requirements.txt"),
                      (STANDARD / "grade.py", std / "tests" / "grade.py")]:
         shutil.copyfile(src, dst)
     copy_oracle(t, "standard", std)
