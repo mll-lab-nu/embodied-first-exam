@@ -308,7 +308,11 @@
    "blur_mm": 1.0,
    "register_mm": 5.0,
    "score_inset_mm": 8.0,
-   "max_strokes": 450
+   "max_strokes": 450,
+   "max_path_mm": 31700.0,
+   "max_scribble": 2.5,
+   "max_scribble_share": 0.1,
+   "scribble_min_mm": 10.0
   },
   "truth_sha": "bee77d000c3de217"
  },
