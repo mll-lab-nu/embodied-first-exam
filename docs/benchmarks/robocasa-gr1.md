@@ -46,9 +46,10 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
 - **Standard-mode observations.** The humanoid's six cameras (`robot0_agentview_center/left/right`, `egoview`,
   `robot0_eye_in_right_hand`, `robot0_eye_in_left_hand`; RGB, depth, intrinsics and current poses), its joints
   (positions, velocities), both grip sites' positions, the last command and the instruction. No object poses, reward or
-  success signal. Watching (`/observe` with `seconds > 0`) holds the last command (before the first, the grip sites'
-  current poses): the grip sites stay within a millimetre, while the IK's posture term may still move the waist and
-  elbows by a few hundredths of a radian.
+  success signal. Camera images (RGB and depth, in both modes and in replay videos) draw the visual meshes only, as
+  robosuite's own cameras do; the collision geoms (geom group 0) are hidden. Watching (`/observe` with `seconds > 0`)
+  holds the last command (before the first, the grip sites' current poses): the grip sites stay within a millimetre,
+  while the IK's posture term may still move the waist and elbows by a few hundredths of a radian.
 
 ## Standard-mode service
 `images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's (PR #22, not merged
