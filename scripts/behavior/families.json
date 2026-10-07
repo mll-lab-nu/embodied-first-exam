@@ -1,9 +1,17 @@
 {
  "boxing_food_after_dinner": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/OmpbFiXPwMo",
+   "duration_s": 240,
+   "episodes": 200,
+   "mean_s": 223,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_single_floor",
   "goal": "Box up the leftovers. Two tacos lie on two plates on the kitchen countertop and an empty tupperware is inside a kitchen cabinet; put both tacos into the tupperware, the tupperware into the refrigerator, and both plates into the sink, and leave the refrigerator closed.",
   "success": [
@@ -39,10 +47,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 374 s on average (11,214 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "bringing_water": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114058418",
+   "duration_s": 315,
+   "episodes": 200,
+   "mean_s": 315,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_single_floor",
   "goal": "Take both bottles out of the kitchen refrigerator, put them on the coffee table in the living room, and leave the refrigerator closed.",
   "success": [
@@ -231,10 +247,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 121 s on average (3,639 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "cook_a_brisket": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/RCSy8B0_s5Y",
+   "duration_s": 251,
+   "episodes": 200,
+   "mean_s": 244,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_double_floor_lower",
   "goal": "Cook the brisket. It is raw, inside the kitchen refrigerator; a chopping board and a frying pan are on the countertop and there is an oven in the kitchen. Cook the brisket and put it on the chopping board; the frying pan must end up on the countertop.",
   "success": [
@@ -247,10 +271,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 244 s on average (7,335 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "cook_broccolini": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/NXoYiAs_KCs",
+   "duration_s": 137,
+   "episodes": 200,
+   "mean_s": 154,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "restaurant_diner",
   "goal": "Cook the broccolini with garlic. Three broccolini and two garlic cloves lie on a plate on the kitchen countertop, next to a frying pan; put all of them into the frying pan, put the pan on the stove, and cook them.",
   "success": [
@@ -306,10 +338,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 307 s on average (9,195 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "hanging_pictures": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060330",
+   "duration_s": 80,
+   "episodes": 200,
+   "mean_s": 80,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_double_floor_lower",
   "goal": "Hang the poster, which lies on the kitchen countertop, on one of the wall nails in the kitchen.",
   "success": [
@@ -390,10 +430,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 478 s on average (14,351 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "make_gift_bags_for_baby_showers": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/EY42jyNoEh8",
+   "duration_s": 242,
+   "episodes": 200,
+   "mean_s": 322,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "Rs_int",
   "goal": "Make two gift bags in the living room. The two sacks lie on the breakfast table, the two toy dice stand on the cabinet, and the two wafers are inside that cabinet. Move both sacks onto the coffee table and put one toy die and one wafer into each sack.",
   "success": [
@@ -406,10 +454,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 322 s on average (9,651 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "make_rose_centerpieces": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/Nb8kdrf7c_M",
+   "duration_s": 111,
+   "episodes": 200,
+   "mean_s": 151,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_double_floor_lower",
   "goal": "Make a centerpiece. The vase and three roses lie on the cabinet in the living room; put all three roses into the vase and stand the vase on the living-room coffee table.",
   "success": [
@@ -421,10 +477,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 151 s on average (4,532 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "organizing_art_supplies": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/M1D9oCKBJZg",
+   "duration_s": 228,
+   "episodes": 200,
+   "mean_s": 206,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_double_floor_upper",
   "goal": "In the bedroom, pack the art supplies lying on the desk (a glue stick, a rubber eraser, a paintbrush and a marker) into the carryall, which stands on the floor, and put the carryall on the desk.",
   "success": [
@@ -462,10 +526,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 355 s on average (10,638 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "packing_meal_for_delivery": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/DirqFshrOAA",
+   "duration_s": 300,
+   "episodes": 200,
+   "mean_s": 295,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "restaurant_diner",
   "goal": "Pack three hamburgers for delivery. The three wrapped hamburgers lie on a tray on the kitchen countertop, next to three sacks and a storage container; put each hamburger into its own sack and stand all three sacks on top of the storage container.",
   "success": [
@@ -492,10 +564,18 @@
   }
  },
  "preparing_lunch_box": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114057330",
+   "duration_s": 275,
+   "episodes": 200,
+   "mean_s": 275,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_single_floor",
   "goal": "Pack the lunch box on the kitchen countertop. The two apple halves, the club sandwich and the chocolate chip cookie lie on the chopping board on the countertop; the bottle of tea is inside the kitchen refrigerator. Put all five into the packing box and leave the refrigerator closed.",
   "success": [
@@ -635,10 +715,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 428 s on average (12,855 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "rearranging_kitchen_furniture": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114056046",
+   "duration_s": 298,
+   "episodes": 200,
+   "mean_s": 298,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_double_floor_lower",
   "goal": "Put the toaster, the food processor and the French press, which stand on the kitchen countertop, away into one kitchen cabinet, and close that cabinet.",
   "success": [
@@ -650,10 +738,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 298 s on average (8,943 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "set_up_a_coffee_station_in_your_kitchen": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114056931",
+   "duration_s": 209,
+   "episodes": 200,
+   "mean_s": 209,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_single_floor",
   "goal": "Set up a coffee station on the kitchen countertop. The coffee maker stays on the countertop; bring the bottle of coffee from the kitchen shelf to stand next to it, put the paper coffee filter on top of the coffee maker, stand the saucer next to the coffee maker with the coffee cup on the saucer, and stand the electric kettle next to the coffee maker.",
   "success": [
@@ -761,10 +857,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 447 s on average (13,419 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "sorting_books_on_shelf": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/wXUyDWyvpRA",
+   "duration_s": 200,
+   "episodes": 200,
+   "mean_s": 258,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_double_floor_upper",
   "goal": "Sort the books in the living-room bookcase into stacks by kind. There are three comic books, two notebooks and two hardbacks; some are inside the bookcase and some are lying on top of books of another kind. Keep all seven inside the bookcase, stack the three comic books together, lay one notebook on the other, and lay one hardback on the other.",
   "success": [
@@ -801,10 +905,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 531 s on average (15,939 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "store_honey": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/oFu38YPgVEU",
+   "duration_s": 193,
+   "episodes": 200,
+   "mean_s": 226,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "Rs_int",
   "goal": "Put the jar of honey, which stands on the kitchen countertop, inside the cabinet in the entryway.",
   "success": [
@@ -815,10 +927,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 226 s on average (6,767 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "store_produce": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/jppOziwq7xI",
+   "duration_s": 316,
+   "episodes": 200,
+   "mean_s": 317,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "restaurant_diner",
   "goal": "Store the produce. Two mangos and two pomegranates are in the wicker basket on the kitchen floor; put all four into one of the two kitchen refrigerators, all into the same one.",
   "success": [
@@ -965,10 +1085,18 @@
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 377 s on average (11,323 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  },
  "vacuuming_floors": {
-  "include": false,
-  "excluded": "no oracle and no positive yet (review 2026-10-01): kept out of the benchmark until one exists",
+  "include": true,
+  "added": "2026-10-07",
+  "added_note": "added 2026-10-07 at the user's request (it was held out by the review of 2026-10-01: no oracle and no positive); no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
   "instance_id": 301,
   "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/RqYuT-aj21A",
+   "duration_s": 65,
+   "episodes": 200,
+   "mean_s": 80,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
   "scene": "house_double_floor_upper",
   "goal": "The bedroom floor is covered with dust and a vacuum cleaner stands on it; remove every bit of dust from the floor.",
   "success": [
