@@ -70,7 +70,7 @@ TOOLING = ("rcb_behavior.py", "r1pro_primitives_eval.yaml")     # the privileged
 IMAGE = "ghcr.io/mll-lab-nu/eai-behavior:0.1.1"
 # the pull request whose human review covers the families with an `added` date (PROTOCOL §2.7): its number goes here once it
 # exists, then rerun this script and `cd tasks && harbor add --scan .` (the texts change, hence the digests)
-REVIEW_PR = "TBD"
+REVIEW_PR = "71"
 NO_ORACLE = ("No oracle: the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull request that adds it, on a positive "
              "example and a `nop` run per mode.")
 PARTIAL = ("Oracle `partial`: the reference solution scored 1 on earlier versions of this task (`task.toml` `oracle_evidence`) "
