@@ -1,0 +1,76 @@
+{
+ "family": "bimanual_microwave_cook",
+ "demo": "microwave_cook_demo_10_2026-02-09_11-56-09_655851",
+ "instance_sha": "6c16f3cfa1c737c7",
+ "objects": [
+  "hot_dog",
+  "microwave",
+  "door_hinge",
+  "door_handle",
+  "start_button",
+  "stop_button",
+  "table_top"
+ ],
+ "cameras": [
+  "back",
+  "handcam_rgb_right",
+  "handcam_rgb_left"
+ ],
+ "tcp0": "right [-0.443, -0.4, 1.517] / [0.0, 1.0, 0.0, 0.0], left [-0.443, 0.4, 1.517] / [0.0, 1.0, 0.0, 0.0]",
+ "table_top_z": 0.943,
+ "arm_bases": {
+  "link0_right": [
+   -0.75,
+   -0.4,
+   0.924
+  ],
+  "link0_left": [
+   -0.75,
+   0.4,
+   0.924
+  ]
+ },
+ "hand_lo": [
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  0.26,
+  -0.1,
+  -0.19,
+  -0.16
+ ],
+ "hand_hi": [
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  1.4,
+  1.16,
+  1.64,
+  1.72
+ ],
+ "oracle_rows": 815,
+ "oracle_state_sha": "6f9ad37acc38b448",
+ "steps_per_s": 190,
+ "success_src": "def _compute_success(self):\n    # ---- door must be closed ----\n    micro_qpos = float(self._data.joint(\"microjoint\").qpos)\n    microwave_closed = abs(micro_qpos) < 1e-2\n\n    # ---- hot_dog must be inside interior bbox ----\n    inside = self.hot_dog_inside_microwave(margin=0.01)\n\n    contact = self._geom_in_contact(\"start_button\")\n\n    # Debug helpers kept nearby for local inspection when needed.\n    # print(\"microjoint qpos:\", micro_qpos)\n    # print(\"hot_dog inside:\", inside)\n    # print(\"start button pressed:\", contact)\n\n    return inside and microwave_closed and contact\n\ndef hot_dog_inside_microwave(self, margin=0.0):\n    # ---- hot_dog world position ----\n    p_world = self._data.sensor(\"hot_dog_pos\").data\n\n    # ---- transform to microwave local frame ----\n    p_local = self.world_to_body(\"microwave_object\", p_world)\n\n    # ---- read interior box sites (local frame) ----\n    p0 = self._model.site(\"int_p0\").pos\n    px = self._model.site(\"int_px\").pos\n    py = self._model.site(\"int_py\").pos\n    pz = self._model.site(\"int_pz\").pos\n\n    inside_x = (p0[0] - margin) <= p_local[0] <= (px[0] + margin)\n    inside_y = (p0[1] - margin) <= p_local[1] <= (py[1] + margin)\n    inside_z = (p0[2] - margin) <= p_local[2] <= (pz[2] + margin)\n\n    return inside_x and inside_y and inside_z",
+ "success_path": "dexjoco/dexjoco/sim/envs/panda_bimanual_microwave_cook_env.py",
+ "rcb_src": "",
+ "water_aim_max_deg": 45.0
+}
