@@ -45,7 +45,7 @@ SUCCESS_OK = {"iou", "boundary_f", "min_stroke_coverage", "max_stray_frac", "reg
               "paint_iou", "blur_mm", "tol_mm", "de_mean_coarse", "ssim_L_fine", "edge_corr", "region_cov_min", "region_cov_mean",
               "coarse_mm", "fine_mm", "region_de",                          # the painting rule's optional terms (P/1)
               "score_inset_mm",                                             # the scored window's inset from the sheet edges (O/4)
-              "max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm"}   # RoboPaint-strict
+              "max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm"}   # the process rules
 ip = os.path.join(env, "instance.json")
 if os.path.exists(ip):
     inst = json.load(open(ip))

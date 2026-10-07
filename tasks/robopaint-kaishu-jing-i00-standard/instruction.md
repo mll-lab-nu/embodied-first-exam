@@ -57,6 +57,26 @@ client and one episode. **Task (臨帖):** copy the exemplar character **靜** i
   most 16 strokes on the main sheet** (the recorded episode is replayed twice and both replays must agree). The continuous score
   is the IoU (scaled by 16 / strokes above 16 strokes).
 
+## Process rules
+Write the character with brush strokes, the way a person writes it: each stroke of the exemplar is written along its length,
+with the brush pressed for the stroke's width (vary the press where the width changes); going over a stroke again is fine.
+Colouring in or filling the shapes, zigzag or serpentine fills, and contour-offset fills (paths that go round and round inside a
+shape) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the replayed
+episode with two numbers you can compute yourself; only inked strokes on the main sheet count (the practice sheet is free):
+- `path_mm`: the total length of the brush tip's path while it presses on the main sheet with ink (all strokes together, sampled
+  at every physics step);
+- `mark_width_mm`: the average width of your marks = the area each stroke inks on its own (its own mark, ink coverage ≥ 0.5;
+  where different strokes overlap, each counts its own), summed over the strokes, divided by `path_mm`.
+
+**Colouring in = `path_mm` > 2680 mm and `mark_width_mm` < 1.63 mm** (a long path of thin marks): it
+fails the task. Our reference solution writes this exemplar with `path_mm` 892 mm and `mark_width_mm`
+5.45 mm; the limits are 3 times its path (rounded up) and 0.3 times its mark width
+(rounded down). A pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
+under the path limit: both are fine.
+
+**Success iff the picture rule above holds and the run is not colouring in.** The continuous score is the one above, × min(1,
+2680 / `path_mm`) when it is colouring in.
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot

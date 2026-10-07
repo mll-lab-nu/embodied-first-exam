@@ -1,32 +1,37 @@
 #!/usr/bin/env python3
-"""Generate RoboPaint-strict: tasks/robopaint-strict-<family>-<target>-i00-{privileged,standard} from the committed RoboPaint pairs
-tasks/robopaint-<family>-<target>-i00-{privileged,standard} (docs/benchmarks/robopaint-strict.md).
+"""Generate the RoboPaint tasks: tasks/robopaint-<family>-<target>-i00-{privileged,standard} (docs/benchmarks/robopaint.md).
 
-    python3 scripts/robopaint_strict/mk_tasks.py                          # (re)write every strict pair; `git diff tasks/` stays empty
+    python3 scripts/robopaint_strict/mk_tasks.py                          # (re)write every pair; `git diff tasks/` stays empty
     python3 scripts/robopaint_strict/mk_tasks.py --check                  # write nothing; exit 1 if a task dir differs
     python3 scripts/robopaint_strict/mk_tasks.py robopaint-kaishu-yong-i00 # these pairs only
-Needs only Python 3 (no simulator). Then `cd tasks && harbor add --scan .` when a digest changed.
+Needs only Python 3 (no simulator, no numpy). Then `cd tasks && harbor add --scan .` when a digest changed.
 
-A strict pair is its RoboPaint pair (same scene, frozen instance, picture, tooling, picture rule and reference solution) with the
-process rules added:
+Two stages, the second on the output of the first:
+  1. the pair without process rules: scripts/robopaint_brush_mk_task.py --refresh into a temporary directory. It rebuilds the pair
+     from its committed frozen files (instance, picture, reference plan), the committed tooling of its family's template pair
+     (graders, sidecars, solution code, and the wiring of rcb_brush_strict.py) and the texts of scripts/robopaint_templates/;
+  2. the process rules (this script), added to that pair:
   - every copy of the frozen instance gets the rules in target.success: max_path_mm everywhere; calligraphy and lettering
-    min_mark_width_mm (colouring in = a longer path of thinner marks); paintings max_scribble, max_scribble_share,
+    min_mark_width_mm (colouring in = a longer path of thin marks); paintings max_scribble, max_scribble_share,
     scribble_min_mm (sweeps). rules.json holds the family parameters and, per pair, the reference solution's path and mark width
     on the main sheet (reference_path_mm, reference_mark_width_mm, measured by measure_reference.py in the base image);
     max_path_mm = path_factor x that path rounded up to round_mm, min_mark_width_mm = mark_factor x that width rounded down to
     0.01 mm. The scene and its hash (instance_sha) do not change;
-  - rcb_brush_strict.py (graders' side only: tests/, environment/scorer/, environment/sim/) applies them: the verifier replays
-    with it (tests/grade.py, tests/Dockerfile), the privileged scoring service imports it (RCB_TOOL_MODULE) and the standard
-    collect hook replays with it (RCB_TOOL);
+  - rcb_brush_strict.py (this directory: graders' side only, tests/, environment/scorer/, environment/sim/) applies them: the
+    verifier replays with it (tests/grade.py, tests/Dockerfile), the privileged scoring service imports it (RCB_TOOL_MODULE) and the
+    standard collect hook replays with it (RCB_TOOL). The tasks' wiring comes with the template pair's code; this script checks it;
   - the texts: the rules from texts/rules_<group>_<mode>.md in instruction.md (after "Target and score"), texts/readme_<mode>.md
-    in README.md, a sentence in the task.toml description; the benchmark name RoboPaint-strict, the family
-    robopaint_strict_<family>_<target>, the keyword robopaint-strict, the oracle evidence (rules.json).
+    in README.md, a sentence in the task.toml description, the oracle evidence (rules.json).
 Every task ends with scripts/task_conventions.py's normalize(); a task dir holds exactly what the generator writes.
+
+"Strict" survives only in internal names: this directory, rcb_brush_strict.py, RCB_TOOL_MODULE=rcb_brush_strict and the reward.json
+key strict_ok (the process rules).
 """
 
 from __future__ import annotations
-import argparse, json, math, os, pathlib, re, sys, tempfile
+import argparse, json, math, os, pathlib, re, subprocess, sys, tempfile
 
+sys.dont_write_bytecode = True
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts" / "robopaint_strict"
 MODULE = "rcb_brush_strict.py"
@@ -38,6 +43,17 @@ GROUP = {
     "oil": "painting",
 }
 SRC_RE = re.compile(r"^robopaint-(kaishu|xingshu|lettering|acrylic|oil)-([a-z0-9]+(?:-[a-z0-9]+)*)-i00$")
+# the instance keys of the rules (= rcb_brush_strict.RULE_KEYS)
+RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm")
+PLACES = {"privileged": ("tests/", "environment/scorer/"), "standard": ("environment/sim/",)}  # the graders' copies of MODULE
+WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code
+    "privileged": (
+        ("tests/grade.py", MODULE),
+        ("tests/Dockerfile", f" {MODULE} "),
+        ("environment/docker-compose.yaml", "RCB_TOOL_MODULE: rcb_brush_strict"),
+    ),
+    "standard": (("environment/docker-compose.yaml", f"RCB_TOOL: /srv/{MODULE}"),),
+}
 
 
 def render(t: str, v: dict) -> str:
@@ -54,7 +70,7 @@ def fmt(x: float) -> str:
 
 
 def rules_for(base: str, cfg: dict) -> tuple[dict, dict]:
-    """(the rule keys added to target.success, the text values) of a RoboPaint pair <base>."""
+    """(the rule keys added to target.success, the text values) of the pair <base>."""
     fam = SRC_RE.match(base).group(1)
     F = cfg["families"][fam]
     ref = float(cfg["reference_path_mm"][base])
@@ -89,7 +105,6 @@ def rules_for(base: str, cfg: dict) -> tuple[dict, dict]:
         "MAX_SCRIBBLE_SHARE": fmt(F.get("max_scribble_share", 0)),
         "SCRIBBLE_SHARE_PCT": fmt(100 * F.get("max_scribble_share", 0)),
         "SCRIBBLE_MIN_MM": fmt(F.get("scribble_min_mm", 0)),
-        "SRC": base,
         "EVIDENCE": f"path_mm {ref:.0f} of the {fmt(budget)} mm budget; its strokes are sweeps",
         **v_mark,
     }
@@ -97,11 +112,13 @@ def rules_for(base: str, cfg: dict) -> tuple[dict, dict]:
 
 
 def add_rule(raw: bytes, rule: dict) -> bytes:
-    """An instance.json (indent=1, ensure_ascii=False, no trailing newline, as rcb_brush_score writes it) with the rules added at
-    the end of target.success."""
+    """An instance.json (indent=1, ensure_ascii=False, no trailing newline, as rcb_brush_score writes it) with exactly the rules of
+    `rule` at the end of target.success (a committed instance already holds them; they are replaced, never doubled)."""
     d = json.loads(raw.decode("utf-8"))
     if json.dumps(d, indent=1, ensure_ascii=False).encode("utf-8") != raw:
         raise SystemExit("an instance.json is not in rcb_brush_score's format (indent=1, ensure_ascii=False)")
+    for k in RULE_KEYS:
+        d["target"]["success"].pop(k, None)
     d["target"]["success"].update(rule)
     return json.dumps(d, indent=1, ensure_ascii=False).encode("utf-8")
 
@@ -112,18 +129,43 @@ def sub1(s: str, old: str, new: str, where: str) -> str:
     return s.replace(old, new)
 
 
-def plan_pair(base: str, cfg: dict) -> dict:
-    """{task dir name: {rel path: (bytes, mode)}} for both strict twins of the RoboPaint pair <base>."""
+def sub_re1(s: str, pattern: str, repl, where: str) -> str:
+    s2, n = re.subn(pattern, repl, s, count=1, flags=re.M)
+    if n != 1:
+        raise SystemExit(f"{where}: no match for {pattern!r}")
+    return s2
+
+
+def rebuild_base(todo: list[str], out: pathlib.Path) -> None:
+    """Stage 1: the pairs <todo> without process rules, written to `out` by robopaint_brush_mk_task.py --refresh from the committed
+    pairs under tasks/ (their frozen files; the template pair of each family under tasks/ for the tooling)."""
+    cmd = [
+        sys.executable,
+        str(ROOT / "scripts" / "robopaint_brush_mk_task.py"),
+        "--refresh",
+        *[str(ROOT / "tasks" / f"{b}-privileged") for b in todo],
+        "--template-root",
+        str(ROOT / "tasks"),
+        "--out-root",
+        str(out),
+    ]
+    p = subprocess.run(cmd, capture_output=True, text=True)
+    if p.returncode:
+        raise SystemExit(f"robopaint_brush_mk_task.py --refresh failed ({p.returncode}):\n{(p.stdout + p.stderr)[-3000:]}")
+
+
+def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
+    """{task dir name: {rel path: (bytes, mode)}} for both twins of the pair <base>, from stage 1's output in `stage`."""
     fam, slug = SRC_RE.match(base).groups()
     rule, v = rules_for(base, cfg)
     module = (HERE / MODULE).read_bytes()
     texts = {p.name: p.read_text(encoding="utf-8") for p in (HERE / "texts").glob("*.md")}
     out = {}
     for mode in ("privileged", "standard"):
-        src = ROOT / "tasks" / f"{base}-{mode}"
+        name = f"{base}-{mode}"
+        src = stage / name
         if not (src / "task.toml").is_file():
-            raise SystemExit(f"{src}: missing (the RoboPaint pair is the source of the strict pair)")
-        name = f"robopaint-strict-{fam}-{slug}-i00-{mode}"
+            raise SystemExit(f"{src}: missing (stage 1 did not write it)")
         files = {
             p.relative_to(src).as_posix(): [p.read_bytes(), 0o755 if p.stat().st_mode & 0o100 else 0o644]
             for p in sorted(src.rglob("*"))
@@ -132,66 +174,34 @@ def plan_pair(base: str, cfg: dict) -> dict:
         for rel in list(files):
             if rel.endswith("instance.json"):
                 files[rel][0] = add_rule(files[rel][0], rule)
-        if mode == "privileged":
-            files["tests/" + MODULE] = [module, 0o644]
-            files["environment/scorer/" + MODULE] = [module, 0o644]
-            g = files["tests/grade.py"][0].decode()
-            g = sub1(
-                g,
-                'tool = os.path.join(here, "rcb_brush.py")',
-                f'tool = os.path.join(here, "{MODULE}")   # RoboPaint-strict: the picture rule + the process rules',
-                "tests/grade.py",
-            )
-            files["tests/grade.py"][0] = g.encode()
-            df = files["tests/Dockerfile"][0].decode()
-            df = sub1(df, " rcb_brush_score.py ", f" rcb_brush_score.py {MODULE} ", "tests/Dockerfile")
-            files["tests/Dockerfile"][0] = df.encode()
-            dc = files["environment/docker-compose.yaml"][0].decode()
-            dc = sub1(
-                dc,
-                "RCB_TOOL_MODULE: rcb_brush\n",
-                "RCB_TOOL_MODULE: rcb_brush_strict   # the scores with the process rules (rcb_brush_strict.py)\n",
-                "environment/docker-compose.yaml",
-            )
-            files["environment/docker-compose.yaml"][0] = dc.encode()
-        else:
-            files["environment/sim/" + MODULE] = [module, 0o644]
-            dc = files["environment/docker-compose.yaml"][0].decode()
-            dc = sub1(
-                dc,
-                "RCB_TOOL: /srv/rcb_brush.py\n",
-                f"RCB_TOOL: /srv/{MODULE}   # the collect hook's replays score with the process rules\n",
-                "environment/docker-compose.yaml",
-            )
-            files["environment/docker-compose.yaml"][0] = dc.encode()
+        for place in PLACES[mode]:
+            files[place + MODULE] = [module, 0o644]
+        for rel, needle in WIRING[mode]:
+            if needle not in files[rel][0].decode():
+                raise SystemExit(
+                    f"{name}/{rel}: {MODULE} is not wired in ({needle!r} missing); the wiring is part of the template pair's code"
+                )
         # texts
         ins = files["instruction.md"][0].decode()
-        ins = re.sub(r"\A# RoboPaint · ", "# RoboPaint-strict · ", ins)
-        if not ins.startswith("# RoboPaint-strict · "):
-            raise SystemExit(f"{src}/instruction.md: unexpected title")
         block = render(texts[f"rules_{GROUP[fam]}_{mode}.md"], v).rstrip() + "\n\n"
         m = re.search(r"^## Target and score\n.*?(?=^## )", ins, re.S | re.M)
         if not m:
             raise SystemExit(f"{src}/instruction.md: no '## Target and score' section")
-        ins = ins[: m.end()] + block + ins[m.end() :]
-        files["instruction.md"][0] = ins.encode()
+        files["instruction.md"][0] = (ins[: m.end()] + block + ins[m.end() :]).encode()
         rd = files["README.md"][0].decode()
-        for m_ in ("privileged", "standard"):  # the twin is the strict twin
-            rd = rd.replace(f"`{base}-{m_}`", f"`robopaint-strict-{fam}-{slug}-i00-{m_}`")
         if mode == "privileged":
             rd = sub1(
                 rd,
                 "Oracle label `partial`: the recorded oracle runs predate this version's files (task.toml `oracle_evidence`); human "
                 "review in PR #3.",
-                "Oracle label `partial`: the RoboPaint pair's reference solution, scored under the process rules "
-                "(task.toml `oracle_evidence`).",
+                "Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).",
                 "README.md",
             )
         else:
             rd = sub1(
                 rd,
                 "label `partial` (task.toml `oracle_evidence`: the recorded runs predate this version), human review in PR #3.",
-                "label `partial` (task.toml `oracle_evidence`: the RoboPaint pair's reference solution, scored under the process rules).",
+                "label `partial` (task.toml `oracle_evidence`: the reference solution, scored under the process rules).",
                 "README.md",
             )
         rd = sub1(
@@ -212,21 +222,10 @@ def plan_pair(base: str, cfg: dict) -> dict:
         )
         files["README.md"][0] = rd.encode()
         tt = files["task.toml"][0].decode()
-        tt = re.sub(r'^description = "RoboPaint ', 'description = "RoboPaint-strict ', tt, count=1, flags=re.M)
         sentence = render(texts[f"toml_{GROUP[fam]}.md"], v).strip().replace('"', '\\"')
-        tt = re.sub(r'^(description = ".*)"$', lambda mm: mm.group(1) + " " + sentence + '"', tt, count=1, flags=re.M)
-        old_fam = f"robopaint_{fam}_{slug.replace('-', '_')}"
-        new_fam = f"robopaint_strict_{fam}_{slug.replace('-', '_')}"
-        tt = sub1(tt, f'family = "{old_fam}"', f'family = "{new_fam}"', "task.toml")
-        tt = sub1(tt, f'"{old_fam}"]', f'"{new_fam}"]', "task.toml keywords")
-        tt = sub1(
-            tt,
-            'keywords = ["robotics", "robopaint", ',
-            'keywords = ["robotics", "robopaint", "robopaint-strict", ',
-            "task.toml keywords",
-        )
+        tt = sub_re1(tt, r'^(description = ".*)"$', lambda mm: mm.group(1) + " " + sentence + '"', "task.toml")
         ev = render(cfg["oracle_evidence"][mode], v).replace('"', '\\"')
-        tt = re.sub(r'^oracle_evidence = ".*"$', lambda mm: f'oracle_evidence = "{ev}"', tt, count=1, flags=re.M)
+        tt = sub_re1(tt, r'^oracle_evidence = ".*"$', lambda mm: f'oracle_evidence = "{ev}"', "task.toml")
         files["task.toml"][0] = tt.encode()
         out[name] = {k: (b, m_) for k, (b, m_) in files.items()}
     return out
@@ -239,7 +238,7 @@ def normalized(planned: dict) -> dict:
 
     sys.path.pop(0)
     out = {}
-    with tempfile.TemporaryDirectory(prefix="robopaint_strict_mk_") as td:
+    with tempfile.TemporaryDirectory(prefix="robopaint_mk_") as td:
         for name, files in planned.items():
             for rel, (data, mode) in files.items():
                 p = pathlib.Path(td) / name / rel
@@ -295,9 +294,7 @@ def sync(task: pathlib.Path, files: dict, check: bool) -> list[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument(
-        "pairs", nargs="*", help="RoboPaint pairs robopaint-<family>-<target>-i00 (default: every pair of rules.json)"
-    )
+    ap.add_argument("pairs", nargs="*", help="pairs robopaint-<family>-<target>-i00 (default: every pair of rules.json)")
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args()
     cfg = json.loads((HERE / "rules.json").read_text(encoding="utf-8"))
@@ -306,19 +303,20 @@ def main() -> int:
     if bad:
         raise SystemExit(f"not a RoboPaint brush pair with a reference path in rules.json: {bad}")
     diffs = []
-    for base in todo:
-        for name, files in normalized(plan_pair(base, cfg)).items():
-            diffs += sync(ROOT / "tasks" / name, files, a.check)
-    if not a.pairs:  # strict dirs whose pair is no longer generated
-        made = {f"robopaint-strict-{b[len('robopaint-') :]}-{m}" for b in todo for m in ("privileged", "standard")}
-        for t in sorted((ROOT / "tasks").glob("robopaint-strict-*")):
+    with tempfile.TemporaryDirectory(prefix="robopaint_base_") as td:
+        stage = pathlib.Path(td)
+        rebuild_base(todo, stage)
+        for base in todo:
+            for name, files in normalized(plan_pair(base, cfg, stage)).items():
+                diffs += sync(ROOT / "tasks" / name, files, a.check)
+    if not a.pairs:  # task dirs whose pair is no longer generated
+        made = {f"{b}-{m}" for b in todo for m in ("privileged", "standard")}
+        for t in sorted((ROOT / "tasks").glob("robopaint-*")):
             if t.is_dir() and t.name not in made:
                 diffs.append(f"stale  {t.name} (no reference path in rules.json: remove it)")
     for d in diffs:
         print(d)
-    print(
-        f"{'checked' if a.check else 'generated'} RoboPaint-strict task dirs for {len(todo)} pair(s): {len(diffs)} difference(s)"
-    )
+    print(f"{'checked' if a.check else 'generated'} RoboPaint task dirs for {len(todo)} pair(s): {len(diffs)} difference(s)")
     return 1 if (a.check and diffs) else 0
 
 

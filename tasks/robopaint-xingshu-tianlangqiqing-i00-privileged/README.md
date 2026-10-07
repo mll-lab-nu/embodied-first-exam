@@ -7,11 +7,17 @@
 | Twin | `robopaint-xingshu-tianlangqiqing-i00-standard` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_xingshu_tianlangqiqing` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: xingshu-u-oracle-final0928, xingshu-u-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (a67040a8: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on tianlangqiqing and zhi, this pair included), tooling snapshot 23 (ccb213d0: the scorer; re-scores bit-identical), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only. Not re-run on this version (static validation only). |
+| Oracle | `partial` — Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 1555 and mark_width_mm 3.67, against the colouring-in limits 4670 mm and 1.10 mm. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task
+**Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
+than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 4670 mm (3 × the reference
+solution's 1555 mm) made of marks narrower than 1.10 mm on average (`mark_width_mm`: each stroke's own
+inked area / `path_mm`; 0.3 × the reference's 3.67 mm). They are part of the frozen instance (the rules added to its `target.success`); the graders'
+`rcb_brush_strict.py` applies them (the verifier and the scoring service).
+
 Copy the exemplar work 天朗氣清 (4 characters in running script, two columns read right to left) shown in `environment/target.png` onto the 227 mm main sheet in at most 29 strokes, with ink from an ink stone and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).
 
 Copy the exemplar (臨帖), scored against the picture after the best single shift of the sheet, at most 5 mm along each axis (translation only): IoU of the inked areas ≥ 0.80, boundary F (edge precision / recall within
@@ -37,7 +43,10 @@ arm parked at the end. The plan is frozen at generation time (`solution/oracle_q
 5692 control steps, 29 strokes, IoU 0.856, boundary F 0.919, min stroke coverage 0.823, stray 0.0147.
 
 ## Verification
-Oracle label `partial`: the recorded oracle runs predate this version's files (task.toml `oracle_evidence`); human review in PR #3.
+"The rule" below is the picture rule and the process rules (Task); the replays run
+`tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
+`max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
+Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`); pass iff
 both replayed main sheets meet the rule, the final-state hashes (ink of both sheets + robot state + brush state) agree and the
 rebuilt frozen instance matches the recorded one (target picture and scoring data included). Physics is PhysX on the CPU and the

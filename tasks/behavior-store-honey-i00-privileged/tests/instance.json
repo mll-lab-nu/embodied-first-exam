@@ -1,0 +1,71 @@
+{
+ "task": "store_honey",
+ "challenge_task": "store_honey",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Put the jar of honey, which stands on the kitchen countertop, inside the cabinet in the entryway.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "2c9b79635c088421",
+ "action_dim": 25,
+ "challenge_max_steps": 10150,
+ "objects": {
+  "countertop.n.01_1": {
+   "category": "countertop",
+   "position": [
+    -0.805,
+    1.5345,
+    1.0582
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.7071,
+    -0.7071
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -0.0699,
+    -1.2871,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "jar__of__honey.n.01_1": {
+   "category": "jar_of_honey",
+   "position": [
+    -1.3291,
+    1.6101,
+    1.1595
+   ],
+   "orientation_xyzw": [
+    0.0002,
+    -0.0002,
+    -0.3457,
+    0.9383
+   ]
+  },
+  "cabinet.n.01_1": {
+   "category": "bottom_cabinet",
+   "position": [
+    1.6731,
+    2.1951,
+    0.425
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    1.0,
+    -0.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

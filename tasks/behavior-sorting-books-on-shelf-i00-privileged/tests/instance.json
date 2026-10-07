@@ -1,0 +1,141 @@
+{
+ "task": "sorting_books_on_shelf",
+ "challenge_task": "sorting_books_on_shelf",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Sort the books in the living-room bookcase into stacks by kind. There are three comic books, two notebooks and two hardbacks; some are inside the bookcase and some are lying on top of books of another kind. Keep all seven inside the bookcase, stack the three comic books together, lay one notebook on the other, and lay one hardback on the other.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "6021ac5bf5cf5fb2",
+ "action_dim": 25,
+ "challenge_max_steps": 11609,
+ "objects": {
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -1.9037,
+    -2.0497,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "comic_book.n.01_2": {
+   "category": "comic_book",
+   "position": [
+    -4.6275,
+    -0.6613,
+    0.4091
+   ],
+   "orientation_xyzw": [
+    0.0111,
+    0.0101,
+    -0.3993,
+    0.9167
+   ]
+  },
+  "comic_book.n.01_1": {
+   "category": "comic_book",
+   "position": [
+    -4.9617,
+    -0.6589,
+    0.3991
+   ],
+   "orientation_xyzw": [
+    0.0052,
+    -0.0175,
+    0.9602,
+    0.2788
+   ]
+  },
+  "notebook.n.01_2": {
+   "category": "notebook",
+   "position": [
+    -4.966,
+    -0.6513,
+    0.4137
+   ],
+   "orientation_xyzw": [
+    0.0043,
+    -0.0176,
+    0.9731,
+    0.2295
+   ]
+  },
+  "comic_book.n.01_3": {
+   "category": "comic_book",
+   "position": [
+    -4.6154,
+    -0.6626,
+    0.7313
+   ],
+   "orientation_xyzw": [
+    0.0196,
+    -0.0016,
+    0.0792,
+    0.9967
+   ]
+  },
+  "hardback.n.01_1": {
+   "category": "hardback",
+   "position": [
+    -4.9178,
+    -0.7146,
+    0.7343
+   ],
+   "orientation_xyzw": [
+    0.014,
+    -0.0138,
+    0.7042,
+    0.7097
+   ]
+  },
+  "hardback.n.01_2": {
+   "category": "hardback",
+   "position": [
+    -4.6284,
+    -0.6626,
+    0.7563
+   ],
+   "orientation_xyzw": [
+    -0.0026,
+    -0.0195,
+    0.9913,
+    -0.1301
+   ]
+  },
+  "notebook.n.01_1": {
+   "category": "notebook",
+   "position": [
+    -4.618,
+    -0.6714,
+    0.3936
+   ],
+   "orientation_xyzw": [
+    -0.0166,
+    -0.0079,
+    0.4315,
+    -0.9019
+   ]
+  },
+  "bookcase.n.01_1": {
+   "category": "bookcase",
+   "position": [
+    -4.8142,
+    -0.6311,
+    0.5308
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.7071,
+    0.7071
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

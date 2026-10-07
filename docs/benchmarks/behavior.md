@@ -1,11 +1,10 @@
 # BEHAVIOR-1K
 
 BEHAVIOR-1K v3.9.2 (OmniGibson 3.9.2 on Isaac Sim 5.1, the stack the 2026 BEHAVIOR Challenge pins): household tasks for
-the R1Pro mobile manipulator. `simulator = "behavior"`, `robot = "r1pro"`. 61 challenge tasks, each as a privileged task
+the R1Pro mobile manipulator. `simulator = "behavior"`, `robot = "r1pro"`. 77 challenge tasks, each as a privileged task
 `behavior-<family>-i00-privileged` and its standard twin `behavior-<family>-i00-standard`, on the 2026 challenge's
-public_test instance 301: the 11 of the first release, which have a reference solution or a positive example, and 50
-supplementary tasks for harder testing (2026-10-04, below), which have neither yet. The generator knows 16 more challenge
-tasks; they stay out of the benchmark.
+public_test instance 301: the 11 of the first release, which have a reference solution or a positive example, and 66
+supplementary tasks for harder testing (50 on 2026-10-04 and 16 on 2026-10-07, below), which have neither yet.
 
 ## Prerequisites (every BEHAVIOR run)
 - **The image**, built on the host: `ghcr.io/mll-lab-nu/eai-behavior:<images/behavior/VERSION>`
@@ -28,7 +27,8 @@ tasks; they stay out of the benchmark.
 - `scripts/behavior/mk_tasks.py` generates every task from the template twins `tasks/behavior-picking-up-trash-i00-privileged`
   and `-standard` (maintained by hand), `scripts/behavior/families.json` (the texts of each family: goal, success conditions,
   difficulty, the standard goal in words; the oracle level and its evidence: the cited positive, or the challenge's
-  official human demonstrations, `"demo"`; `"include"`), the BDDL problems
+  official human demonstrations, `"demo"`; `"added"`, the date of the pull request of a family added after the first 50;
+  `"include"`), the BDDL problems
   `scripts/behavior/bddl/` (BEHAVIOR-1K's `bddl` package, MIT: `/behavior-src/bddl3/bddl/activity_definitions/<task>/problem0.bddl`
   in the image), the frozen instances `scripts/behavior/instances/` and the reference solutions
   `scripts/behavior/solutions/`, plus the eai-standard/2.2 layer from `scripts/eai_standard/`. A rerun reproduces the
@@ -46,7 +46,7 @@ tasks; they stay out of the benchmark.
 |---|---|---|
 | picking_up_trash, putting_shoes_on_rack | `partial` | human-written reference solutions on the frozen task-level primitives `solution/rcb_behavior_ref.py`; the standard oracle streams the privileged oracle's joint targets through the client. They scored 1 on earlier versions (`oracle_evidence` cites the runs; picking_up_trash privileged 1 of 3), and the standard twins' service, collect hook, grader and oracle client changed since (crash recovery): not re-run on this version, hence not `full` |
 | clean_up_broken_glass, collecting_aluminum_cans, composting_waste, dispose_of_glass, hiding_Easter_eggs, installing_a_scanner, stacking_wood, tidying_bedroom, turning_on_radio | `none` | a privileged model trial graded 1 by the separate verifier on a pre-v1.0 version (trial id, agent log and replay in `oracle_evidence` and the README); human review per family |
-| the 50 supplementary families (below) | `none` | no positive example yet: the 2026 challenge's official human teleoperation demonstrations of the activity with the R1Pro in the same scene model (the video, its duration, the number of episodes and their mean duration in `oracle_evidence` and the README); human review per family; results reported separately until a positive scores 1 (PROTOCOL §7, open item 4) |
+| the 66 supplementary families (below) | `none` | no positive example yet: the 2026 challenge's official human teleoperation demonstrations of the activity with the R1Pro in the same scene model (the video, its duration, the number of episodes and their mean duration in `oracle_evidence` and the README); human review per family; results reported separately until a positive scores 1 (PROTOCOL §7, open item 4) |
 
 The labels follow one rule: `full` only when a recorded oracle run scored 1 on a byte-identical grader, frozen instance and
 oracle code, with every tooling change since shown to be off the oracle and replay path. This version was validated
@@ -88,6 +88,28 @@ putting_away_toys, putting_dirty_dishes_in_sink, putting_dishes_away_after_clean
 rearrange_your_room, setting_mousetraps, setting_the_fire, setting_the_table, setup_a_bar_for_a_cocktail_party,
 slicing_vegetables, sorting_household_items, sorting_vegetables, storing_food, thawing_frozen_food, tidying_bathroom,
 tidying_living_room, unloading_the_car, wash_dog_toys.
+
+### Second batch (2026-10-07)
+16 more challenge tasks, added at the user's request: boxing_food_after_dinner, bringing_water, cook_a_brisket,
+cook_broccolini, hanging_pictures, make_gift_bags_for_baby_showers, make_rose_centerpieces, organizing_art_supplies,
+packing_meal_for_delivery, preparing_lunch_box, rearranging_kitchen_furniture, set_up_a_coffee_station_in_your_kitchen,
+sorting_books_on_shelf, store_honey, store_produce, vacuuming_floors. The review of 2026-10-01 had kept them out (no
+oracle and no positive example); they join the 50 on the same terms: the frozen public_test instance 301 that
+`scripts/behavior/instances/` already held (the same robot config and OmniGibson 3.9.2 as the others), `oracle = "none"`, the official
+demonstrations as the solvability evidence (`demo`, from the challenge's task list like the 50's), and results reported
+separately until a positive scores 1 (PROTOCOL §7, open item 4). Their teleoperators needed 80-322 s on average (a median
+of about 235 s): shorter tasks than the 50. Their predicates are the 61's (`inside`, `ontop`, `open`, `nextto`, `cooked`,
+`covered`) plus `attached` (hanging_pictures, the poster on a wall nail), which `goal.py` words. Their `families.json`
+entries carry `added` (2026-10-07), so that `oracle_evidence` and the README name the pull request of the human review
+(`REVIEW_PR` in `mk_tasks.py`) instead of "per family".
+Checked on 2026-10-07 on ws (one RTX 4090 shared with other users' jobs, one job at a time): Harbor `nop` in both modes on all
+16 families scored 0 with no infrastructure error (privileged: no trajectory, `missing_trajectory`, about 30 s; standard: one
+simulator start, the episode finalized without a step, `live_success` and `replay_success` 0, `deterministic` 1, the live state
+hash equal to both fresh-process replays', 515-1355 s per run). The frozen instance rebuilt bit-exactly in 5 families
+(bringing_water, make_gift_bags_for_baby_showers, preparing_lunch_box, store_honey, store_produce) and with every object pose
+within tolerance in the other 11 (`instance_ok`, not `instance_exact`). A nop takes no step and OmniGibson judges the goal only
+inside `step()`, so it does not show that a goal is false at the start; each family's BDDL `:init` does (the review table of the
+pull request). The generator's `--check`, `task_conventions.py --check` and the per-task CI checks pass on the 32 directories.
 
 ## Time budget (D8)
 14400 s (the protocol maximum) for every task of both modes, the same in the whole benchmark:

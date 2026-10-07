@@ -1,4 +1,4 @@
-## Process rules (RoboPaint-strict)
+## Process rules
 Write the character with brush strokes, the way a person writes it: each stroke of the exemplar is written along its length,
 with the brush pressed for the stroke's width (vary the press where the width changes); going over a stroke again is fine.
 Colouring in or filling the shapes, zigzag or serpentine fills, and contour-offset fills (paths that go round and round inside a

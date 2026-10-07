@@ -2,8 +2,9 @@
 # Generated task dirs are what their generator writes from today's sources (PROTOCOL §2.1): runs the check mode of
 # every generator that has one (no simulator needed), which compares tasks/ with a fresh render. Whether it also flags
 # a task dir the generator no longer writes is up to the generator. Generators without a check mode
-# (scripts/robotwin_mk_*.py, dtb_mk_task.py, mj_mk_limited.py, robopaint_brush_mk_task.py, metaworldplus/generate.py) are
-# re-run by hand. The VLABench and RoboCasa checks also compare file modes, so run them from a checkout made with umask 022.
+# (scripts/robotwin_mk_*.py, dtb_mk_task.py, mj_mk_limited.py, metaworldplus/generate.py) are re-run by hand. RoboPaint's check
+# (robopaint_strict/mk_tasks.py) runs robopaint_brush_mk_task.py --refresh into a temporary directory and adds the process rules
+# (standard library only). The VLABench and RoboCasa checks also compare file modes, so run them from a checkout made with umask 022.
 # Usage: check-generated-tasks.sh   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
