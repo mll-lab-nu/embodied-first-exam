@@ -37,8 +37,6 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
   `humanoidbench-<category>-<family>-i<NN>`, `myosuite-<family>-i<NN>`, `dexjoco-<family-with-dashes>-i<NN>`.
 - RoboPaint: `<base>` is `robopaint-<family>-<target>-i<NN>`; Chinese targets by pinyin (the codepoint appended on a
   collision, e.g. `robopaint-kaishu-shu-66f8-i00`); `[metadata].family = "robopaint_<family>_<target>"`.
-- RoboPaint-strict: `<base>` is `robopaint-strict-<family>-<target>-i<NN>` (RoboPaint's pair with process rules);
-  `[metadata].family = "robopaint_strict_<family>_<target>"`; RoboPaint's benchmark-specific fields apply.
 - ManiGuard: `<base>` is `maniguard-<family-with-dashes>-i<NN>`, NN = the ManiGuard-Bench task index (base level, e.g.
   `maniguard-jar-transport-i14` = `jar_transport/task_0014`); `[metadata].family` is ManiGuard's family (`jar_transport`).
 - `[task].name = "robot-coding-bench/<folder>"`.
