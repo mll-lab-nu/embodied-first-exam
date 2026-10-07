@@ -1,0 +1,37 @@
+{
+ "env": "Go1Getup",
+ "candidates": [
+  {
+   "seed": 0,
+   "start_tilt_deg": 74.8,
+   "skipped": "tilted less than 90 degrees after the settle"
+  },
+  {
+   "seed": 1,
+   "start_tilt_deg": 25.5,
+   "skipped": "tilted less than 90 degrees after the settle"
+  },
+  {
+   "seed": 2,
+   "skipped": "not dropped (starts standing)"
+  },
+  {
+   "seed": 3,
+   "start_tilt_deg": 39.5,
+   "skipped": "tilted less than 90 degrees after the settle"
+  },
+  {
+   "seed": 4,
+   "skipped": "not dropped (starts standing)"
+  },
+  {
+   "seed": 5,
+   "start_tilt_deg": 110.0,
+   "success": true,
+   "tilt_deg": 2.34,
+   "imu_height": 0.2568,
+   "steps": 136,
+   "chosen": true
+  }
+ ]
+}

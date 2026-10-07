@@ -20,7 +20,7 @@ mode = "privileged"
 instance_seed = 0
 expert_time_estimate_hours = 3.0
 oracle = "none"
-oracle_evidence = "GPT-6 Luna's graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (recorded before protocol v1.0) on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #8"
+oracle_evidence = "GPT-6 Luna's privileged-mode trajectory of 2026-10-04 (it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc) and its graded standard-mode episode with 50 resets recorded before protocol v1.0, run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores both 1, and the standard service scores the episode 1 when it is sent through the client; human review in PR #8"
 
 [verifier]
 timeout_sec = 900.0
