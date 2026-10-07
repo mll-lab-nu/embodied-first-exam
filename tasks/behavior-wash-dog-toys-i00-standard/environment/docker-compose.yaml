@@ -21,6 +21,8 @@ services:
     environment:
       OMP_NUM_THREADS: "8"   # thread pools capped (PyTorch sizes its pool to the host: 128 on a 256-core
       MKL_NUM_THREADS: "8"   # host, spinning on every small tensor op); user 2026-09-27
+      RCB_TEXTURE_BUDGET: ${RCB_TEXTURE_BUDGET:-}   # optional: Isaac's texture memory as a fraction of the GPU (rcb_behavior.py
+                                                    # _cap_texture_memory); unset: Isaac's default (0.6)
       RCB_TASK: wash_dog_toys
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL: /srv/rcb_behavior.py
