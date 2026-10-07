@@ -1,0 +1,7 @@
+{
+ "task_text": "Move all five fingertips onto their targets: the norm of the stacked fingertip-to-target errors (5 tips x 3 coordinates) below 0.0625 m, for 50 consecutive control steps (1.0 s). Failure (the episode ends, from the third control step on): that norm above 0.220 m.",
+ "default_cameras": [
+  "hand_top"
+ ],
+ "reference": null
+}

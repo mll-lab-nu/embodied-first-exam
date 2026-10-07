@@ -1,0 +1,28 @@
+{
+ "env": "BarkourJoystick",
+ "candidates": [
+  {
+   "seed": 0,
+   "activity": 1.0,
+   "push_peak_n": 0.0,
+   "skipped": "pushes null or weak (peak under 20% of the torso's weight; a 1-step kick is zero in Playground's half-sine)"
+  },
+  {
+   "seed": 1,
+   "activity": 1.0,
+   "push_peak_n": 9.1,
+   "skipped": "pushes null or weak (peak under 20% of the torso's weight; a 1-step kick is zero in Playground's half-sine)"
+  },
+  {
+   "seed": 2,
+   "activity": 1.0,
+   "push_peak_n": 35.4,
+   "success": true,
+   "fell_at": null,
+   "worst_lin_err": 0.0329,
+   "worst_yaw_err": 0.0276,
+   "steps": 1000,
+   "chosen": true
+  }
+ ]
+}

@@ -1,0 +1,3 @@
+Open the microwave door, put the hot dog inside, close the door and press the start button. Success, at one control step: the hot dog is inside the cavity (1 cm margin), the door hinge is within 0.01 rad of closed, and the start button is in contact with something.
+
+The microwave stands on the table with its door closed; the hot dog lies in front of it. The door has a handle and a hinge (`door_hinge`); the start and stop buttons are on the front panel.
