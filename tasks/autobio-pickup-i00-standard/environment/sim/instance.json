@@ -1,0 +1,183 @@
+{
+ "benchmark": "autobio",
+ "family": "pickup",
+ "seed": 0,
+ "rule": "first",
+ "upstream": {
+  "repo": "autobio-bench/AutoBio",
+  "commit": "08504213356cbfe9a82bcd33a43cd282945a45df",
+  "module": "pickup_centrifuge_tube",
+  "class": "Pickup"
+ },
+ "control_dt": 0.002,
+ "model_sha": "d3406a0e2ed85218",
+ "init_sha": "42f230966a7b71a8",
+ "prompt": "pick up the centrifuge tube on the rack",
+ "n_action": 7,
+ "actuators": [
+  {
+   "index": 0,
+   "name": "waist",
+   "mujoco_name": "1/aloha:left/waist",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/aloha:left/waist",
+   "arm": "arm",
+   "range": [
+    -3.14158,
+    3.14158
+   ],
+   "kp": 43.0,
+   "kv": 0.0,
+   "force_range": null
+  },
+  {
+   "index": 1,
+   "name": "shoulder",
+   "mujoco_name": "1/aloha:left/shoulder",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/aloha:left/shoulder",
+   "arm": "arm",
+   "range": [
+    -1.85005,
+    1.25664
+   ],
+   "kp": 265.0,
+   "kv": 0.0,
+   "force_range": null
+  },
+  {
+   "index": 2,
+   "name": "elbow",
+   "mujoco_name": "1/aloha:left/elbow",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/aloha:left/elbow",
+   "arm": "arm",
+   "range": [
+    -1.76278,
+    1.6057
+   ],
+   "kp": 227.0,
+   "kv": 0.0,
+   "force_range": null
+  },
+  {
+   "index": 3,
+   "name": "forearm_roll",
+   "mujoco_name": "1/aloha:left/forearm_roll",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/aloha:left/forearm_roll",
+   "arm": "arm",
+   "range": [
+    -3.14158,
+    3.14158
+   ],
+   "kp": 78.0,
+   "kv": 0.0,
+   "force_range": null
+  },
+  {
+   "index": 4,
+   "name": "wrist_angle",
+   "mujoco_name": "1/aloha:left/wrist_angle",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/aloha:left/wrist_angle",
+   "arm": "arm",
+   "range": [
+    -1.8675,
+    2.23402
+   ],
+   "kp": 37.0,
+   "kv": 0.0,
+   "force_range": null
+  },
+  {
+   "index": 5,
+   "name": "wrist_rotate",
+   "mujoco_name": "1/aloha:left/wrist_rotate",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/aloha:left/wrist_rotate",
+   "arm": "arm",
+   "range": [
+    -3.14158,
+    3.14158
+   ],
+   "kp": 10.4,
+   "kv": 0.0,
+   "force_range": null
+  },
+  {
+   "index": 6,
+   "name": "gripper",
+   "mujoco_name": "1/aloha:left/gripper",
+   "kind": "gripper",
+   "unit": "m",
+   "drives": "1/aloha:left/left_finger",
+   "arm": "arm",
+   "range": [
+    0.002,
+    0.037
+   ],
+   "kp": 2000.0,
+   "kv": 124.0,
+   "force_range": null
+  }
+ ],
+ "arms": [
+  {
+   "key": "arm",
+   "kind": "aloha",
+   "tcp": "tcp",
+   "joints": [
+    "waist",
+    "shoulder",
+    "elbow",
+    "forearm_roll",
+    "wrist_angle",
+    "wrist_rotate"
+   ]
+  }
+ ],
+ "robot_joints": [
+  "waist",
+  "shoulder",
+  "elbow",
+  "forearm_roll",
+  "wrist_angle",
+  "wrist_rotate",
+  "left_finger",
+  "right_finger"
+ ],
+ "cameras": [
+  "table_cam_front",
+  "table_cam_left",
+  "wrist_cam"
+ ],
+ "default_cameras": [
+  "table_cam_front",
+  "wrist_cam"
+ ],
+ "initial_command": [
+  0.019525401570929912,
+  -0.7454431900882741,
+  1.2202763376071644,
+  0.004488318299689688,
+  -0.1729035601983286,
+  0.029178822613331212,
+  0.0084
+ ],
+ "initial_score": 0.0,
+ "reference_rows": 3945,
+ "expert_rows": 4676,
+ "steps_per_s": 1000,
+ "idle_score_10s": 0.0,
+ "reference_steps": 3945,
+ "reference_sha": "e167e764260a6fe6",
+ "reference_score": 1.0,
+ "reference_source": "AutoBio's scripted expert (pickup_centrifuge_tube.py @ 0850421), seed 0"
+}

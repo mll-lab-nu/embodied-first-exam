@@ -5313,3 +5313,75 @@ digest = "sha256:ce0ffbbac335105e6ee0929b4cca074de772b380df32e28c03067f0ed11898f
 name = "robot-coding-bench/robotangle-rope-threading-medium-i00-standard"
 digest = "sha256:61a76e1dc4a129237492c8d6009b20e35c4f2c0848b581a265445b531dab291e"
 
+[[tasks]]
+name = "robot-coding-bench/autobio-insert-centrifuge-5430-i00-privileged"
+digest = "sha256:d81329ae8aaa537ecbc775649475e3b3cf638eba9b1a1b8d2a726115f6d1106a"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-insert-centrifuge-5430-i00-standard"
+digest = "sha256:540ad6f349fdbcc0925d82921f8a620a0c02b81841f32e27545ff83eef724999"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-insert-i00-privileged"
+digest = "sha256:94c21ffc50d112ae2b12a6629f41223b34409605a798a7b526079ac03b0e743a"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-insert-i00-standard"
+digest = "sha256:efb563e2308d34efc8ab1f2cfb15b866e45aada0d592f4a263c828aa72223f25"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-pickup-i00-privileged"
+digest = "sha256:4fbaa92ff2a31c6e700ecc28137835f7050c38994f116edb1ecb631cf75fef2d"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-pickup-i00-standard"
+digest = "sha256:733df897fc6fd2cf9fa4653f3de0fba817d86c5c8754b8849e4a25e4ecf2cc3c"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-pipette-i00-privileged"
+digest = "sha256:89b4fd8e6f6ed1496ad0594e4e26cbea69b5da49bb82f93dabc69ab840b388b6"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-pipette-i00-standard"
+digest = "sha256:4971c2b16372b9316fc6b9fba7a76ed94083f65c4899a153c6ceb648844bb9ed"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-screw-loose-i00-privileged"
+digest = "sha256:43b63dad8612e81055f3f250bb55146b92384d9aa4878d0355fcc67902cb3fab"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-screw-loose-i00-standard"
+digest = "sha256:e729dc3476afd2009b891c31769edfb5e6dbf2ab846bc7157334512287371ce2"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-screw-tighten-i00-privileged"
+digest = "sha256:00a190cdffb948592ab8ed88f70fe70e65667b117d36479e47ccdf12a548e52f"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-screw-tighten-i00-standard"
+digest = "sha256:91138e6a526bfc0709b216bf309b45008ecc1fa029dbef7aac9018a77ebe3428"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-cycler-close-i00-privileged"
+digest = "sha256:1b8102cd0940bcdb2489c605ed0aa1ae6625016f138a668d5b1e4149792a98b2"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-cycler-close-i00-standard"
+digest = "sha256:e21e1b224e28523513f1d64aff3e4802618d50f3c77a1b49bd3c5c2fd5851b74"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-cycler-open-i00-privileged"
+digest = "sha256:69b2701e1a78f17d1f729996e52c6522ddbe6d5c592cc431ffe66b977028000e"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-cycler-open-i00-standard"
+digest = "sha256:2b0c08752a76b481b7775dfa82817e61ead7065712776b89194d8da8188c8804"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-mixer-i00-privileged"
+digest = "sha256:f1e9d4cc9d86ecfb8a890560eacccb4be2d85c433ede9454419f37297b2618e1"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-mixer-i00-standard"
+digest = "sha256:e99369a7545fa6fa7a48bf4e0de8ce81e2bf5b9f666cf921a7721bc78b77cd80"
+

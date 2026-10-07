@@ -1,0 +1,390 @@
+{
+ "benchmark": "autobio",
+ "family": "pipette",
+ "seed": 0,
+ "rule": "first",
+ "upstream": {
+  "repo": "autobio-bench/AutoBio",
+  "commit": "08504213356cbfe9a82bcd33a43cd282945a45df",
+  "module": "mani_pipette",
+  "class": "Pipette"
+ },
+ "control_dt": 0.002,
+ "model_sha": "40806bc5f581ca3e",
+ "init_sha": "228ededc6af93404",
+ "prompt": "dual-UR5e pipetting: one arm lifts centrifuge tube, the other aligns pipette tip and aspirates liquid",
+ "n_action": 14,
+ "actuators": [
+  {
+   "index": 0,
+   "name": "arm1_shoulder_pan",
+   "mujoco_name": "1/ur:shoulder_pan",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/ur:shoulder_pan",
+   "arm": "arm1",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 2000.0,
+   "kv": 100.0,
+   "force_range": [
+    -150.0,
+    150.0
+   ]
+  },
+  {
+   "index": 1,
+   "name": "arm1_shoulder_lift",
+   "mujoco_name": "1/ur:shoulder_lift",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/ur:shoulder_lift",
+   "arm": "arm1",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 2000.0,
+   "kv": 100.0,
+   "force_range": [
+    -150.0,
+    150.0
+   ]
+  },
+  {
+   "index": 2,
+   "name": "arm1_elbow",
+   "mujoco_name": "1/ur:elbow",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/ur:elbow",
+   "arm": "arm1",
+   "range": [
+    -3.1415,
+    3.1415
+   ],
+   "kp": 2000.0,
+   "kv": 100.0,
+   "force_range": [
+    -150.0,
+    150.0
+   ]
+  },
+  {
+   "index": 3,
+   "name": "arm1_wrist_1",
+   "mujoco_name": "1/ur:wrist_1",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/ur:wrist_1",
+   "arm": "arm1",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 500.0,
+   "kv": 25.0,
+   "force_range": [
+    -28.0,
+    28.0
+   ]
+  },
+  {
+   "index": 4,
+   "name": "arm1_wrist_2",
+   "mujoco_name": "1/ur:wrist_2",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/ur:wrist_2",
+   "arm": "arm1",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 500.0,
+   "kv": 25.0,
+   "force_range": [
+    -28.0,
+    28.0
+   ]
+  },
+  {
+   "index": 5,
+   "name": "arm1_wrist_3",
+   "mujoco_name": "1/ur:wrist_3",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/ur:wrist_3",
+   "arm": "arm1",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 500.0,
+   "kv": 25.0,
+   "force_range": [
+    -28.0,
+    28.0
+   ]
+  },
+  {
+   "index": 6,
+   "name": "arm1_dh_rh_thj3",
+   "mujoco_name": "1/ur:dh:rh_thj3",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "1/ur:dh:rh_thj3",
+   "arm": "arm1",
+   "range": [
+    0.0,
+    1.3
+   ],
+   "kp": 1.0,
+   "kv": 0.01,
+   "force_range": [
+    -10.0,
+    10.0
+   ]
+  },
+  {
+   "index": 7,
+   "name": "arm2_shoulder_pan",
+   "mujoco_name": "2/ur:shoulder_pan",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "2/ur:shoulder_pan",
+   "arm": "arm2",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 2000.0,
+   "kv": 100.0,
+   "force_range": [
+    -150.0,
+    150.0
+   ]
+  },
+  {
+   "index": 8,
+   "name": "arm2_shoulder_lift",
+   "mujoco_name": "2/ur:shoulder_lift",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "2/ur:shoulder_lift",
+   "arm": "arm2",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 2000.0,
+   "kv": 100.0,
+   "force_range": [
+    -150.0,
+    150.0
+   ]
+  },
+  {
+   "index": 9,
+   "name": "arm2_elbow",
+   "mujoco_name": "2/ur:elbow",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "2/ur:elbow",
+   "arm": "arm2",
+   "range": [
+    -3.1415,
+    3.1415
+   ],
+   "kp": 2000.0,
+   "kv": 100.0,
+   "force_range": [
+    -150.0,
+    150.0
+   ]
+  },
+  {
+   "index": 10,
+   "name": "arm2_wrist_1",
+   "mujoco_name": "2/ur:wrist_1",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "2/ur:wrist_1",
+   "arm": "arm2",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 500.0,
+   "kv": 25.0,
+   "force_range": [
+    -28.0,
+    28.0
+   ]
+  },
+  {
+   "index": 11,
+   "name": "arm2_wrist_2",
+   "mujoco_name": "2/ur:wrist_2",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "2/ur:wrist_2",
+   "arm": "arm2",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 500.0,
+   "kv": 25.0,
+   "force_range": [
+    -28.0,
+    28.0
+   ]
+  },
+  {
+   "index": 12,
+   "name": "arm2_wrist_3",
+   "mujoco_name": "2/ur:wrist_3",
+   "kind": "joint",
+   "unit": "rad",
+   "drives": "2/ur:wrist_3",
+   "arm": "arm2",
+   "range": [
+    -6.2831,
+    6.2831
+   ],
+   "kp": 500.0,
+   "kv": 25.0,
+   "force_range": [
+    -28.0,
+    28.0
+   ]
+  },
+  {
+   "index": 13,
+   "name": "arm2_2f85_fingers_actuator",
+   "mujoco_name": "2/ur:2f85:fingers_actuator",
+   "kind": "gripper",
+   "unit": "0 (open) .. 255 (closed)",
+   "drives": "2/ur:2f85:split",
+   "arm": "arm2",
+   "range": [
+    0.0,
+    255.0
+   ],
+   "kp": 0.3137255,
+   "kv": 10.0,
+   "force_range": [
+    -5.0,
+    5.0
+   ]
+  }
+ ],
+ "arms": [
+  {
+   "key": "arm1",
+   "kind": "ur5e",
+   "tcp": "arm1_tcp",
+   "joints": [
+    "arm1_shoulder_pan",
+    "arm1_shoulder_lift",
+    "arm1_elbow",
+    "arm1_wrist_1",
+    "arm1_wrist_2",
+    "arm1_wrist_3"
+   ]
+  },
+  {
+   "key": "arm2",
+   "kind": "ur5e",
+   "tcp": "arm2_tcp",
+   "joints": [
+    "arm2_shoulder_pan",
+    "arm2_shoulder_lift",
+    "arm2_elbow",
+    "arm2_wrist_1",
+    "arm2_wrist_2",
+    "arm2_wrist_3"
+   ]
+  }
+ ],
+ "robot_joints": [
+  "arm1_shoulder_pan",
+  "arm1_shoulder_lift",
+  "arm1_elbow",
+  "arm1_wrist_1",
+  "arm1_wrist_2",
+  "arm1_wrist_3",
+  "arm1_dh_rh_thj1",
+  "arm1_dh_rh_thj2",
+  "arm1_dh_rh_thj3",
+  "arm1_dh_rh_thj4",
+  "arm1_dh_rh_ffj1",
+  "arm1_dh_rh_ffj2",
+  "arm1_dh_rh_ffj3",
+  "arm1_dh_rh_ffj4",
+  "arm1_dh_rh_mfj2",
+  "arm1_dh_rh_mfj3",
+  "arm1_dh_rh_mfj4",
+  "arm1_dh_rh_rfj1",
+  "arm1_dh_rh_rfj2",
+  "arm1_dh_rh_rfj3",
+  "arm1_dh_rh_rfj4",
+  "arm1_dh_rh_lfj1",
+  "arm1_dh_rh_lfj2",
+  "arm1_dh_rh_lfj3",
+  "arm1_dh_rh_lfj4",
+  "arm2_shoulder_pan",
+  "arm2_shoulder_lift",
+  "arm2_elbow",
+  "arm2_wrist_1",
+  "arm2_wrist_2",
+  "arm2_wrist_3",
+  "arm2_2f85_right_driver_joint",
+  "arm2_2f85_right_coupler_joint",
+  "arm2_2f85_right_spring_link_joint",
+  "arm2_2f85_right_follower_joint",
+  "arm2_2f85_left_driver_joint",
+  "arm2_2f85_left_coupler_joint",
+  "arm2_2f85_left_spring_link_joint",
+  "arm2_2f85_left_follower_joint"
+ ],
+ "cameras": [
+  "table_cam_front",
+  "table_cam_left",
+  "arm1_wrist_cam",
+  "arm2_wrist_cam"
+ ],
+ "default_cameras": [
+  "table_cam_front",
+  "arm1_wrist_cam",
+  "arm2_wrist_cam"
+ ],
+ "initial_command": [
+  0.0043037873274483895,
+  -1.5105236623928355,
+  1.5252883182996897,
+  -0.0030538080264438106,
+  1.6353894113066656,
+  1.5583174422525385,
+  0.0,
+  0.007835460015641596,
+  -1.474433723949897,
+  1.5091441518825777,
+  -1.5591309984766935,
+  -1.5179105080247095,
+  -1.5571910877812134,
+  0.0
+ ],
+ "initial_score": 0.0,
+ "reference_rows": 6973,
+ "expert_rows": 7220,
+ "steps_per_s": 2000,
+ "idle_score_10s": 0.0,
+ "reference_steps": 6973,
+ "reference_sha": "babc980bc0c8411f",
+ "reference_score": 1.0,
+ "reference_source": "AutoBio's scripted expert (mani_pipette.py @ 0850421), seed 0"
+}
