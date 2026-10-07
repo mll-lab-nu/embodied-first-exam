@@ -18,7 +18,7 @@ AutoBio (autobio-bench/AutoBio, MuJoCo 3.3.0) comes from the base image, with it
   tasks): the first step at which it holds ends the episode as a success. Rule `final` (the thermal mixer, whose
   `check()` is a score in [0, 1]): the episode is judged where it ends, success = score 1. A physics warning from
   MuJoCo (unstable state) ends the episode as a failure, as AutoBio's evaluator does.
-- An episode lasts at most MAX_STEPS control steps (600 s of simulated time), a technical cap that bounds the grader's
+- An episode lasts at most MAX_STEPS control steps (1200 s of simulated time), a technical cap that bounds the grader's
   replays; rule `final` is judged there, rule `first` has not succeeded by then.
 - Nothing here calls mj_forward on the live MjData: observations (camera poses, tool poses, rendering) are computed on
   a scratch copy, so looking never changes the physics.
@@ -48,7 +48,7 @@ import numpy as np
 ROOT = os.environ.get("AUTOBIO_ROOT", "/opt/AutoBio/autobio")
 SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jsonl")
 CONTROL_DT = 0.002  # one control step = one physics step
-MAX_STEPS = 300_000  # an episode lasts at most 600 s of simulated time (a technical cap: it bounds the grader's replays)
+MAX_STEPS = 600_000  # an episode lasts at most 1200 s of simulated time (a technical cap: it bounds the grader's replays)
 W, H = 640, 480
 # family (AutoBio's task id) -> (module, task class, rule)
 FAMILIES = {

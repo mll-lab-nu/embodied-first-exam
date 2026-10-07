@@ -62,8 +62,9 @@ success rate), load rotor 14.7 / 1.0.
     success iff the score is 1 in the state in which the episode ends (privileged: after the last row; standard: at the
     agent's `done`, or when its time is over); the score is reported as `progress`.
   - AutoBio's time limits (15 to 45 s of simulated time) are lifted: the wall clock is the budget (PROTOCOL §4.5). One
-    technical cap bounds the grader's replays: an episode ends after 300000 control steps (600 s of simulated time),
-    stated in the instructions and in `/spec` (`max_control_steps`).
+    technical cap bounds the grader's replays: an episode ends after 600000 control steps (1200 s of simulated time),
+    stated in the instructions and in `/spec` (`max_control_steps`). It is meant never to bind: the busiest episode of
+    the sample model trial used 287425 steps in its hour.
   - A MuJoCo physics warning (an unstable state) ends the episode as a failure, as AutoBio's evaluator does. The
     renderer's own warning (`VGEOMFULL`) is not counted, so that looking never changes a verdict.
 - **The checks, in words** (thresholds are AutoBio's):
@@ -182,7 +183,7 @@ as committed (their digests in `tasks/dataset.toml`).
 - **`harbor run -a oracle`, all 18:** reward 1 on 9 of 9 privileged and 9 of 9 standard tasks, no exception. Privileged:
   both fresh-process replays end in the same state, `instance_ok` in both. Standard: the live episode and both
   fresh-process replays succeed and end in the same state (`live_matches_replay` 1 on all nine). In both modes that
-  state is the reference's recorded one. 64 to 233 s per trial (build, run, verify; median 95 s).
+  state is the reference's recorded one. 63 to 246 s per trial (build, run, verify; median 99 s).
 - **`harbor run -a nop`, all 18:** reward 0 on all. Privileged: no trajectory. Standard: the episode times out with no
   control step executed.
 - **`make_facts.py --check`** (in the image, without network): the nine instances rebuild to their model and
@@ -203,12 +204,37 @@ as committed (their digests in `tasks/dataset.toml`).
   each camera's calibration landing on the gripper in the depth image.
 - **Rendering does not change a verdict:** a replay that renders frames ends in the same state as one that does not,
   in all nine families.
-- **Static checks:** `bash ci_checks/run_all.sh` on the whole repository in a checkout made with umask 022 (`protocol
-  v1.0: 1317 task(s) conform`, `ok shared sources: autobio 18 task dirs, 10 shared files`, no FAIL line);
-  `python3 scripts/task_conventions.py --check tasks/*/` and `python3 scripts/autobio/generate.py --check`: clean.
+- **Static checks:** `bash ci_checks/run_all.sh tasks/autobio-*` in a checkout made with umask 022: every check
+  passes (`protocol v1.1: 18 task(s) conform`, `ok shared sources: autobio 18 task dirs, 10 shared files`,
+  `ok scripts/autobio/generate.py: 18 task directories match`), and so does the run over the whole repository;
+  `python3 scripts/task_conventions.py --check tasks/*/`: clean.
 - **The image:** `pip freeze` in the image equals `images/autobio/requirements.txt` (41 packages); no class
   `...Expert` is left in it (`strip_experts.py --check`, part of the build). The raw start states of `pickup` and
   `thermal_mixer` hash the same in a plain `pip` environment outside the image.
+
+## Sample model trial (2026-10-07)
+Run `codex-gpt6_luna-xhigh`: Harbor's native Codex agent (0.160.1) with GPT-6 Luna, reasoning effort xhigh, ChatGPT
+login, web search off, 3600 s, one attempt per task, one lane (`scripts/run_agent_batch.sh`). Four of the nine families,
+both modes:
+
+| family (AutoBio's level) | privileged | standard |
+|---|---|---|
+| `pickup` (easy) | **1**, after 436 s: a top-down grasp of the cap with the tooling's IK, 3214 rows | **1**, after 324 s: the cap found in both fixed cameras (colour, depth, calibration), `/kinematics` IK, 21 calls |
+| `thermal_mixer` (hard) | **1**, after 880 s: the buttons' approach poses from AutoBio's instrument helper, each button held until the panel state read from the simulator reached its target, 5663 rows | **0**, out of time: it read the display through the wrist camera and pressed buttons, but the wrong ones or in the wrong direction; the panel ended at about 1:25, 17 °C, 900 rpm. 967 calls, 287425 control steps |
+| `screw_tighten` (hard) | **1**, after 2365 s: cap picked up, set on the tube and turned down while the second arm held the tube; success at step 34862 with the cap's height 7 µm under the check's limit | **0**, out of time: the cap was lifted, slipped out during the transfer and was not found again. 151 calls |
+| `insert_centrifuge_5430` (hard) | **1**, after 2661 s: the tube taken from the plate by its cap and lowered into the slot, 6205 rows | **0**, out of time: the tube left the plate but was lost in the bowl; contacts turned the rotor. 261 calls |
+
+- Privileged 4 of 4, standard 1 of 4. With the simulator, AutoBio's task code and scene helpers in hand, the agent
+  solved all four, the three "hard" ones included (on which the paper's policies reach 2 to 15 %); what it could not
+  do within the hour is the same work from cameras and proprioception in one episode.
+- Every pass was looked at: each is the manipulation the task asks for (the replay videos show the 50 mL tube held
+  by its cap, the cap on the tube's thread, the target settings on the mixer's display, the 1.5 mL tube lowered into
+  the rotor in the gripper), and each privileged trajectory replays to one state in two fresh processes. No trial ended in an infrastructure or grader error; every standard episode's live state
+  equals both replays.
+- Cost: 90.5M input tokens (88.1M cached) and 0.83M output over the eight trials.
+- The trials ran on the task directories before the episode cap was raised from 300000 to 600000 control steps (the
+  only change since). No trial reached the cap; the standard `thermal_mixer` trial came within 4 % of it, which is why
+  it was raised.
 
 ## Files
 `scripts/autobio/`: `generate.py`, `make_facts.py`, `families.json`, `instances/`, `oracles/`, `kill_test.sh`, `shared/`

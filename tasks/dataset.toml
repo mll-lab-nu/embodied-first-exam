@@ -5315,73 +5315,73 @@ digest = "sha256:61a76e1dc4a129237492c8d6009b20e35c4f2c0848b581a265445b531dab291
 
 [[tasks]]
 name = "robot-coding-bench/autobio-insert-centrifuge-5430-i00-privileged"
-digest = "sha256:d81329ae8aaa537ecbc775649475e3b3cf638eba9b1a1b8d2a726115f6d1106a"
+digest = "sha256:1a2ae0fc73a1876e89853c29d1199b9a5150cc45c895cb48ff35c973f09eff2f"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-insert-centrifuge-5430-i00-standard"
-digest = "sha256:540ad6f349fdbcc0925d82921f8a620a0c02b81841f32e27545ff83eef724999"
+digest = "sha256:b674fa05cddcdf223ae6bc977f33b16815c8e87e426ae16b743453142f2d5a8a"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-insert-i00-privileged"
-digest = "sha256:94c21ffc50d112ae2b12a6629f41223b34409605a798a7b526079ac03b0e743a"
+digest = "sha256:e5062226f63e38bb86af4c758a7167fe7685986966118598e1dc7c33bb7e7280"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-insert-i00-standard"
-digest = "sha256:efb563e2308d34efc8ab1f2cfb15b866e45aada0d592f4a263c828aa72223f25"
+digest = "sha256:08a722bfbf3437d3920c09c46ac762c989e04b873eb8d31e0867bfab0a2e990d"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-pickup-i00-privileged"
-digest = "sha256:4fbaa92ff2a31c6e700ecc28137835f7050c38994f116edb1ecb631cf75fef2d"
+digest = "sha256:c0dbc3718b4da5fa1731dedb5885cf6e1d4a4586f2b5e9f5c428c63976227995"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-pickup-i00-standard"
-digest = "sha256:733df897fc6fd2cf9fa4653f3de0fba817d86c5c8754b8849e4a25e4ecf2cc3c"
+digest = "sha256:bd23162ba2763e9d65a9cb7f327d8245c91768af6df56311f1281c0af50bbe69"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-pipette-i00-privileged"
-digest = "sha256:89b4fd8e6f6ed1496ad0594e4e26cbea69b5da49bb82f93dabc69ab840b388b6"
+digest = "sha256:eb82fe39670d39215bf1a8485b9144a5691938ef3bdb1d5a552430f66b9e0388"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-pipette-i00-standard"
-digest = "sha256:4971c2b16372b9316fc6b9fba7a76ed94083f65c4899a153c6ceb648844bb9ed"
+digest = "sha256:ac922aeef0b5c5123b38a80c12b54dee423a7750a2cd61e1d3d5ea02bacc71be"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-screw-loose-i00-privileged"
-digest = "sha256:43b63dad8612e81055f3f250bb55146b92384d9aa4878d0355fcc67902cb3fab"
+digest = "sha256:f1f839acc90b46588d71924bddc492fef8decae32d235794abcef27d335dd4a8"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-screw-loose-i00-standard"
-digest = "sha256:e729dc3476afd2009b891c31769edfb5e6dbf2ab846bc7157334512287371ce2"
+digest = "sha256:464b47a53a382fc0b5ea9149c613fcfc6e14ea0124d679af25230bdcbd6c40bd"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-screw-tighten-i00-privileged"
-digest = "sha256:00a190cdffb948592ab8ed88f70fe70e65667b117d36479e47ccdf12a548e52f"
+digest = "sha256:d0edd80c424f56867f978ad6703ec15ad41bce061a4716bbfbe75421ef449bf8"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-screw-tighten-i00-standard"
-digest = "sha256:91138e6a526bfc0709b216bf309b45008ecc1fa029dbef7aac9018a77ebe3428"
+digest = "sha256:6efe5f6d2eaf4e7488b11fb37b7d8898ba560830b63a2c60d9116a9a25164ad6"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-thermal-cycler-close-i00-privileged"
-digest = "sha256:1b8102cd0940bcdb2489c605ed0aa1ae6625016f138a668d5b1e4149792a98b2"
+digest = "sha256:fa84274d62a50cf4816673d0a854c6e034b91523e3fe375a1c0c7b202bf86fa1"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-thermal-cycler-close-i00-standard"
-digest = "sha256:e21e1b224e28523513f1d64aff3e4802618d50f3c77a1b49bd3c5c2fd5851b74"
+digest = "sha256:0df22bb6b44963786c7533734184482ad1c3ec38a9db5ee09febf4408e04a133"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-thermal-cycler-open-i00-privileged"
-digest = "sha256:69b2701e1a78f17d1f729996e52c6522ddbe6d5c592cc431ffe66b977028000e"
+digest = "sha256:cbc834c978c8d779f0e5e9bb43a768d69f2b2db8757d8224790aadd7b7167ea4"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-thermal-cycler-open-i00-standard"
-digest = "sha256:2b0c08752a76b481b7775dfa82817e61ead7065712776b89194d8da8188c8804"
+digest = "sha256:f51a5bfe9f49ed93c5926b3f69bba9fadce4e1547df967974f24ae971cfda2bf"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-thermal-mixer-i00-privileged"
-digest = "sha256:f1e9d4cc9d86ecfb8a890560eacccb4be2d85c433ede9454419f37297b2618e1"
+digest = "sha256:a3852ae175321fe7130f85419a745363b3272d78bdbc331a9777befa4c98145d"
 
 [[tasks]]
 name = "robot-coding-bench/autobio-thermal-mixer-i00-standard"
-digest = "sha256:e99369a7545fa6fa7a48bf4e0de8ce81e2bf5b9f666cf921a7721bc78b77cd80"
+digest = "sha256:68f1cefd6354d4c4ecaac7e717e36152bea84c99eb2175b1dc0dfccf101c7aa0"
 

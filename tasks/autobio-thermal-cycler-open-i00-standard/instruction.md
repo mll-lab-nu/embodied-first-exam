@@ -52,5 +52,5 @@ grippers' commands, the tool frames.
 `spec["action_types"]["joint_position"]["layout"]` order. Rows are `dt` apart (a whole multiple of the 2 ms control
 period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the previous target) or
 `"hold"`; the client sends them as float32. The control rate is 500 Hz (one physics step per control step). There is
-no step budget: the one technical cap is `spec["max_control_steps"]`, 300000 (600 s of simulated time), at which the
+no step budget: the one technical cap is `spec["max_control_steps"]`, 600000 (1200 s of simulated time), at which the
 episode ends. A response carries at most 3000 frames per camera (`video_fps` up to 50, default 10).

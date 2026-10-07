@@ -51,7 +51,7 @@ CLI equivalent of the grader:
 - Action: 14 position targets per control step, in this order: `arm1_shoulder_pan`, `arm1_shoulder_lift`, `arm1_elbow`, `arm1_wrist_1`, `arm1_wrist_2`, `arm1_wrist_3`, `arm1_dh_rh_thj3` (the thumb joint that presses the pipette's plunger: 0 .. 1.3 rad, larger presses), `arm2_shoulder_pan`, `arm2_shoulder_lift`, `arm2_elbow`, `arm2_wrist_1`, `arm2_wrist_2`, `arm2_wrist_3`, `arm2_2f85_fingers_actuator` (the Robotiq gripper: 0 open .. 255 closed). Arm joints are in rad. Each entry is the target of a PD position drive (stiffness, damping and force limit per entry: `s.actuators()`); a target outside the entry's range is clipped to it.
 - One control step is one physics step, 2 ms: a row is executed for exactly one step, so a motion lasting 1 s is 500
   rows (repeat a row to hold a target). Your wall-clock time is the budget (the reference replays at about
-  2000 control steps/s here); the one technical cap is 300000 rows per trajectory (600 s of simulated
+  2000 control steps/s here); the one technical cap is 600000 rows per trajectory (1200 s of simulated
   time). A MuJoCo physics warning (an unstable simulation) ends the episode as a failure.
 - World frame: z up, metres; poses are x y z + wxyz quaternion; angles in rad.
 - Only the rows are replayed: anything else you change in `s.model` or `s.data` is lost in the grader's fresh process.

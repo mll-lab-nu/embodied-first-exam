@@ -22,7 +22,7 @@ instance_seed = 0                 # AutoBio's reset(seed=0) of Pipette
 expert_time_estimate_hours = 2.0
 
 [verifier]
-timeout_sec = 3600.0
+timeout_sec = 5400.0
 environment_mode = "separate"
 network_mode = "no-network"
 

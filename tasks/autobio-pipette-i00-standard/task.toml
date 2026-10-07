@@ -42,7 +42,7 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 3600
+timeout_sec = 5400
 
 [agent]
 timeout_sec = 3600.0

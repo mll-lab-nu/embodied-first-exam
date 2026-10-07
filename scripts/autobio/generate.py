@@ -217,7 +217,7 @@ CLI equivalent of the grader:
 - Action: {action_text(f).format(where="s.actuators()")}
 - One control step is one physics step, 2 ms: a row is executed for exactly one step, so a motion lasting 1 s is 500
   rows (repeat a row to hold a target). Your wall-clock time is the budget (the reference replays at about
-  {f["steps_per_s"]} control steps/s here); the one technical cap is 300000 rows per trajectory (600 s of simulated
+  {f["steps_per_s"]} control steps/s here); the one technical cap is 600000 rows per trajectory (1200 s of simulated
   time). A MuJoCo physics warning (an unstable simulation) ends the episode as a failure.
 - World frame: z up, metres; poses are x y z + wxyz quaternion; angles in rad.
 - Only the rows are replayed: anything else you change in `s.model` or `s.data` is lost in the grader's fresh process.
@@ -289,7 +289,7 @@ grippers' commands, the tool frames.
 `spec["action_types"]["joint_position"]["layout"]` order. Rows are `dt` apart (a whole multiple of the 2 ms control
 period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the previous target) or
 `"hold"`; the client sends them as float32. The control rate is 500 Hz (one physics step per control step). There is
-no step budget: the one technical cap is `spec["max_control_steps"]`, 300000 (600 s of simulated time), at which the
+no step budget: the one technical cap is `spec["max_control_steps"]`, 600000 (1200 s of simulated time), at which the
 episode ends. A response carries at most 3000 frames per camera (`video_fps` up to 50, default 10).
 """
 
@@ -336,11 +336,11 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 3600
+timeout_sec = 5400
 """
         if std
         else """[verifier]
-timeout_sec = 3600.0
+timeout_sec = 5400.0
 environment_mode = "separate"
 network_mode = "no-network"
 

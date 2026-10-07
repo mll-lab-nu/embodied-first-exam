@@ -21,8 +21,8 @@ import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_autobio.py")
-MAX_ROWS = 300_000  # rcb_autobio.MAX_STEPS: 600 s of simulated time; a replay runs 600 to 20000 control steps/s
-REPLAY_TIMEOUT_S = 1500
+MAX_ROWS = 600_000  # rcb_autobio.MAX_STEPS: 1200 s of simulated time; a replay runs 600 to 20000 control steps/s
+REPLAY_TIMEOUT_S = 1700
 
 
 def write(ok: bool, out: dict) -> None:

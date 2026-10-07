@@ -51,7 +51,7 @@ CLI equivalent of the grader:
 - Action: 7 position targets per control step, in this order: `waist`, `shoulder`, `elbow`, `forearm_roll`, `wrist_angle`, `wrist_rotate`, `gripper` (the gripper's finger position: 0.002 m closed .. 0.037 m open). Arm joints are in rad. Each entry is the target of a PD position drive (stiffness, damping and force limit per entry: `s.actuators()`); a target outside the entry's range is clipped to it.
 - One control step is one physics step, 2 ms: a row is executed for exactly one step, so a motion lasting 1 s is 500
   rows (repeat a row to hold a target). Your wall-clock time is the budget (the reference replays at about
-  1000 control steps/s here); the one technical cap is 300000 rows per trajectory (600 s of simulated
+  1000 control steps/s here); the one technical cap is 600000 rows per trajectory (1200 s of simulated
   time). A MuJoCo physics warning (an unstable simulation) ends the episode as a failure.
 - World frame: z up, metres; poses are x y z + wxyz quaternion; angles in rad.
 - Only the rows are replayed: anything else you change in `s.model` or `s.data` is lost in the grader's fresh process.
