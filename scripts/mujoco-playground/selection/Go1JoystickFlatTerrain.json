@@ -1,0 +1,15 @@
+{
+ "env": "Go1JoystickFlatTerrain",
+ "candidates": [
+  {
+   "seed": 0,
+   "activity": 1.0,
+   "success": true,
+   "fell_at": null,
+   "worst_lin_err": 0.0732,
+   "worst_yaw_err": 0.0914,
+   "steps": 1000,
+   "chosen": true
+  }
+ ]
+}
