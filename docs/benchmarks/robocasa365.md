@@ -50,7 +50,9 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
   Standard episodes have no step limit (D1).
 - **Standard-mode observations.** The robot's four cameras (`robot0_agentview_center/left/right`,
   `robot0_eye_in_hand`; RGB, depth, intrinsics and current poses), its joints, end-effector position, last command and
-  the instruction. No object poses, scene layout, reward or success signal.
+  the instruction. No object poses, scene layout, reward or success signal. Camera images (RGB and depth, in both modes
+  and in replay videos) draw the visual meshes only, as robosuite's own cameras do; the collision geoms (geom group 0)
+  are hidden.
 
 ## Standard-mode service
 `images/robocasa365/standard/server_casa.py`, the same service as RoboCasa's (`docs/benchmarks/robocasa.md`).
