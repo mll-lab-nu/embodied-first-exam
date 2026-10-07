@@ -150,16 +150,17 @@ def _renderer(depth: bool):
 
 
 def _update(r, cam):
+    """Visual geoms only, as robosuite's own cameras (casa_tool.scene_option): no collision geoms in RGB or depth."""
     cid, free = CAMS[cam]
     if cid is not None:
-        r.update_scene(S.data, camera=cid)
+        r.update_scene(S.data, camera=cid, scene_option=TOOL.scene_option())
     else:
         c = S.mj.MjvCamera()
         c.lookat[:] = free["lookat"]
         c.distance = free["distance"]
         c.azimuth = free["azimuth"]
         c.elevation = free["elevation"]
-        r.update_scene(S.data, camera=c)
+        r.update_scene(S.data, camera=c, scene_option=TOOL.scene_option())
 
 
 def grab(cams, depth: bool):

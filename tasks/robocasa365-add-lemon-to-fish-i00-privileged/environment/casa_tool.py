@@ -346,6 +346,16 @@ def action_spec(env) -> dict:
 
 
 # -- the session ----------------------------------------------------------------------------------------------
+def scene_option() -> mujoco.MjvOption:
+    """What robosuite's own cameras draw (its defaults render_collision_mesh=False, render_visual_mesh=True): the visual
+    geoms (group 1), not the collision geoms (group 0). MuJoCo's default MjvOption also draws group 0, which paints the
+    collision shells over the scene (red fixtures, a green robot) and into the depth image."""
+    opt = mujoco.MjvOption()
+    opt.geomgroup[0] = 0
+    opt.geomgroup[1] = 1
+    return opt
+
+
 class Session:
     mj = mujoco
 
@@ -530,7 +540,8 @@ class Session:
         if (w, h) not in self._renderers:
             self._renderers[(w, h)] = mujoco.Renderer(self.model, h, w)
         r = self._renderers[(w, h)]
-        r.update_scene(self.data, camera=self.camera_views.get(camera, {"camera": camera})["camera"])
+        cam = self.camera_views.get(camera, {"camera": camera})["camera"]
+        r.update_scene(self.data, camera=cam, scene_option=scene_option())
         return r.render().copy()
 
     def render_grid(self, size: tuple[int, int] = (320, 240)) -> np.ndarray:
