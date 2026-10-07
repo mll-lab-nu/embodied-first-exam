@@ -31,13 +31,10 @@ def candidate_inputs(family, tier, instance, instance_path):
     from topogym.tasks.release_profile import environment_inputs
     if tier in ("very_easy", "easier"):
         # New simple scenes use their own current Task defaults. Original-tier
-        # geometry/contact overrides must never leak into these variants.
+        # geometry/contact overrides must never leak into these variants. Blanket and rope take the release's
+        # environment profile (rope: the original tiers' environment without their ring layout).
         overrides, changes = {}, ["current below-easy Task defaults and current Harbor timing/grasp profile"]
-        if family == "rope_threading":
-            from topogym.tasks.rope_threading.simplified import recommended_grasp_assist
-            overrides["grasp_assist"] = to_jsonable(recommended_grasp_assist(instance["variation_id"]))
-            changes.append("declare the simplified oracle's recommended contact-gated IPC grasp assistance")
-        elif family == "blanket_flatten":
+        if family in ("blanket_flatten", "rope_threading"):
             params, overrides, changes = environment_inputs(family, tier,
                 variation=instance["variation_id"], seed=instance["seed"], parameters=params)
     else:

@@ -938,6 +938,50 @@ not a fix).**
   Both freeze a settled IPC state. Likely lever: give the below-easy rope tiers that profile, then re-validate the
   simplified oracle on it. Not applied.
 
+**Update: applied (rpe, 2026-10-06, the user's decision). rope_threading very_easy / easier take the regular rope
+tiers' environment.**
+- Change, on the v19 head `89cc32674`: `release_profile.environment_inputs("rope_threading", very_easy | easier)` returns the
+  environment of easy / medium / hard (`contact_relaxed_v16`: the right-hand column above, plus its initial-shape rope
+  reference, 10 mm/s terminal speed limit, 1 mm `round_ring` aperture allowance and `ipc_soft_band_v1` 6 mm / 1000 / strain 2.0)
+  without those tiers' ring layout (R2 yaw and offset, R3 offset and mount side). Rings, cradle and layout of the two scenes
+  are unchanged. `topogym_merge_candidate.py`'s below-easy path takes rope from `environment_inputs`, as it does for blanket
+  (it declared `recommended_grasp_assist` before). The regular tiers' inputs are byte-identical. CI: `test-harbor-below-easy`
+  pins the below-easy rope inputs; `test-v15-release-selection` checks that they equal rope easy's and that the Task keeps its
+  own geometry and terminal thresholds.
+- Candidate (lab `rpe/cand_rpe`: your `topogym_merge_candidate.py --families rope_threading --tiers very_easy easier`, then the
+  pipeline's build / preflight / harbor-smoke; image `rpe/rcb-topogym:0.2.17-dev-cu128` = the v19 image's layers + this
+  source, warmed): export-ipc-state, make-instance, preflight (2 / 2 exact restores) and the four Harbor nops pass.
+- The built simulator dicts equal rope easy's (`align_v18/cand_v18b`) except 3 of 45 leaves: the two `geometry.ring_*.R2`
+  leaves of the original layout, absent in the one-ring scenes, and `variation_id`. `grasp_assist` is identical. The v18
+  below-easy instances differed in 18 of 45.
+- Birth: the settled frame-0 state, like rope easy's (the profile sets `reset_physics_steps` 0; the old below-easy states
+  were frozen after 300 x 2.5 ms ticks). At rest (0 mm/s), IPC valid, volume ratio 0.943-1.078, no rope vertex inside a
+  fixture (closest 126 mm), table gap 0.30 mm. A 5 s zero-action hold moves the rope 0.12 mm (it settles onto the table)
+  and ends at 4.5 um/s, exactly as rope easy's.
+
+| | before (below-easy Task defaults) | after (regular rope environment) |
+|---|---|---|
+| IPC frames per control step | 10 x 2.5 ms (40 Hz control) | 1 x 40 ms (25 Hz control, as rope easy) |
+| rope mesh | 33,070 vertices | 4,939 vertices |
+| Newton / PCG tolerance | 1e-3 / 1e-5 | 3e-3 / 3e-5 |
+| robot-rope contact | every link | fingers only |
+| grasp assist | contact 1 mm, strength 100, strain 1.3, error 10 mm | contact 6 mm, strength 1000, strain 2.0, error 25 mm |
+| `bench_step.py`, per control step, GPU 5 (median) | 3.14 s very_easy, 3.41 s easier | 0.146 s very_easy, 0.146 s easier (rope easy 0.150 s) |
+| wall clock per control step quoted in the public instructions (home hold) | 1.3 s easier, 1.2 s very_easy | 0.36 s easier, 0.37 s very_easy (easy / medium / hard: 0.35-0.37 s) |
+| native oracle until its failure | about 56 min, 653 rows | 4.7 min, 589 rows (0.45-0.49 s per row incl. IK) |
+| build, both instances, 2 GPUs | 208-212 s | 111-112 s |
+
+- Oracle (your `ThreadingPolicy` via `below_easy.py`, planning code unchanged, native from a fresh frozen Session, lab
+  `rpe/runs/orc_*`): both tiers run the approach, the descent, the acquisition and the pickup lift (the 25 mm lift check
+  passes; rope volume ratio never below 0.9376, no forcing event), then stop where they stopped before: `raise_to_ring`,
+  `ValueError: IK exhausted 4 seeds: Unreachable EE pose: position residual=0.00130459 m, orientation=0.0186824 rad`, at
+  row 589 (23.6 s of simulation) after 286 s (very_easy) / 278 s (easier). A fresh-process replay of each recorded
+  trajectory ends on the same `state_sha` (very_easy `edda674d062f8e7f`, easier `a4915cef8233e4ff`). So the profile changes
+  neither analysis above: the raise target ring + 10 cm with the jaws down is out of the right arm's reach, and the second
+  issue of each tier (cradle lowering, feed pose) lies behind it. What changed is the cost of finding out and of every
+  later attempt: under 5 minutes to the raise instead of an hour.
+
 **Lab paths.** Sweep `align_be/` (candidate, lanes, `tree_fix` = the planning fixes on `7f0b002cc`). Tools in
 `topospeed/bin/`: `bzdiag.py` (buzz replay and turn probe), `kdiag.py` (knot joint tracking), `ropefork_v2.py` and
-`ropeik.py` (rope checkpoint variants and reachability).
+`ropeik.py` (rope checkpoint variants and reachability). The rope profile change (candidate, image, benches, native oracle
+and replay runs, journal): `rpe/`.

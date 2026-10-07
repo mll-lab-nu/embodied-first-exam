@@ -1,6 +1,7 @@
 """One Genesis scene, one physical clock and in-episode state restoration."""
 from __future__ import annotations
 
+import weakref
 from copy import deepcopy
 from importlib.metadata import version
 from uuid import uuid4
@@ -86,6 +87,12 @@ class GenesisWorld:
         self._material_maps = []
         self._release_geometry = None
         self._rigid_layouts = {}
+        # Particle speed = end-of-tick displacement (read_state): every particle entity's positions at the start of the
+        # last tick (= the end of the tick before it), None until a tick has run since the build, reset_clock or a
+        # restore of a state captured before any tick; and the same value per captured WorldState, so a restored state
+        # reports the speed it had when it was captured (keyed by the state object; dropped with it).
+        self._tick_start_particles = None
+        self._tick_start_by_state = {}
 
     @classmethod
     def from_tabletop(cls, env_cfg, robot_cfg, *, physics_options=None,
@@ -338,6 +345,7 @@ class GenesisWorld:
         if self._faulted:
             raise RuntimeError("World is faulted; restore an existing state before advancing")
         before = int(self.scene.t)
+        start = self._particle_positions()
         try:
             if self._grasp_manager is not None:
                 self._grasp_manager.before_tick(self.physics_step + 1)
@@ -366,6 +374,13 @@ class GenesisWorld:
         except BaseException:
             self._faulted = True
             raise
+        self._tick_start_particles = start
+
+    def _particle_positions(self):
+        """Every particle entity's current positions (host copies), or None in a scene without particles."""
+        names = [n for n, e in self.entities.items()
+                 if hasattr(e, "get_particles_pos") and not hasattr(e, "material_coordinates")]
+        return {n: to_numpy(self.entities[n].get_particles_pos()).reshape(-1, 3).copy() for n in names} or None
 
     def reset_clock(self):
         """Start the episode clock after initialization, without modifying physics."""
@@ -375,6 +390,7 @@ class GenesisWorld:
         if self._grasp_manager is not None:
             raise RuntimeError("Configure grasp assistance after restarting the episode clock")
         self.physics_step = 0
+        self._tick_start_particles = None
         if self._contact_collector is not None:
             self._contact_collector.birth()
 
@@ -393,8 +409,19 @@ class GenesisWorld:
                 from .physics.fem import read_vertices
                 fem[name] = read_vertices(entity)
             elif hasattr(entity, "get_particles_pos"):
-                particles[name] = dict(position_m=to_numpy(entity.get_particles_pos()).reshape(-1, 3),
-                                       velocity_m_s=to_numpy(entity.get_particles_vel()).reshape(-1, 3))
+                # A particle's speed is its end-of-tick displacement over the tick, |x(t) - x(t - dt)| / dt (user's
+                # decision 2026-10-06), not Genesis' velocity, which is the last solver substep's (pos - ipos) /
+                # substep_dt: a PBD self-collision 2-cycle that alternates between two points 20.65 um apart every
+                # 0.625 ms substep reports 33 mm/s although its end-of-tick position stays put to 1 um (blanket
+                # very_easy), and such a particle could never pass the 30 mm/s "settled" gate. Every consumer of the
+                # particle velocity (the Task's settled gate, the final settling's quiet test, the grading replays'
+                # thresholds, the speed guard, the oracles) reads this one value. Before the first tick of an episode
+                # (and on a restored state captured before any tick) Genesis' stored velocity is reported unchanged.
+                position = to_numpy(entity.get_particles_pos()).reshape(-1, 3)
+                start = None if self._tick_start_particles is None else self._tick_start_particles.get(name)
+                particles[name] = dict(position_m=position,
+                                       velocity_m_s=to_numpy(entity.get_particles_vel()).reshape(-1, 3) if start is None
+                                       else (position-start)/self.physics_dt_s)
             elif getattr(entity, "_solver", None) is rigid:
                 readout = readout or _RigidReadout(rigid, self._rigid_layouts)
                 bodies[name], articulations[name] = readout.entity(name, entity)
@@ -497,12 +524,16 @@ class GenesisWorld:
                        for entity in self.scene.sim.entities if hasattr(entity, "_tgt"))
         python_rng, numpy_rng, torch_rng, cuda_rng, world_rng = capture_rng(self.rng)
         store = getattr(self.scene.sim.coupler, "checkpoint_store", None)
-        return WorldState(self._world_id, self.physics_step, native, buffers, tuple(flags), inputs,
-                          python_rng, numpy_rng, torch_rng, cuda_rng, world_rng,
-                          int(self.scene.t), int(self.scene.sim._cur_substep_global),
-                          None if store is None else store.capture(),
-                          None if self._contact_collector is None else self._contact_collector.read(),
-                          None if self._grasp_manager is None else self._grasp_manager.capture())
+        state = WorldState(self._world_id, self.physics_step, native, buffers, tuple(flags), inputs,
+                           python_rng, numpy_rng, torch_rng, cuda_rng, world_rng,
+                           int(self.scene.t), int(self.scene.sim._cur_substep_global),
+                           None if store is None else store.capture(),
+                           None if self._contact_collector is None else self._contact_collector.read(),
+                           None if self._grasp_manager is None else self._grasp_manager.capture())
+        key = id(state)
+        self._tick_start_by_state[key] = self._tick_start_particles
+        weakref.finalize(state, self._tick_start_by_state.pop, key, None)
+        return state
 
     def restore_state(self, state):
         self._require_built()
@@ -532,6 +563,7 @@ class GenesisWorld:
             if self._grasp_manager is not None:
                 self._grasp_manager.restore(state.grasp_state)
             restore_rng(state, self.rng)
+            self._tick_start_particles = self._tick_start_by_state.get(id(state))
             self._last_buffers = state.buffers
             self._buffer_comparison_cache.clear()
             self._faulted = False

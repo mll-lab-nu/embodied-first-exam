@@ -99,6 +99,36 @@ class Selection(unittest.TestCase):
             self.assertEqual(overrides, fixed_overrides)
             self.assertNotIn("ring_yaw_deg", draws["geometry"])
 
+    def test_rope_below_easy_tiers_share_the_environment_and_keep_their_scene(self):
+        from topogym.config.registry import task_definition
+        from topogym.planning.rope_threading.profiles import contact_relaxed_profile
+        regular = contact_relaxed_profile("easy")
+        easy_source = ROOT / "tasks/topogym-rope-threading-easy-i00-privileged/environment/instance.json"
+        _, _, easy_config, _, _ = candidate_inputs("rope_threading", "easy", json.loads(easy_source.read_text()), easy_source)
+        for tier in ("very_easy", "easier"):
+            params, overrides, changes = environment_inputs("rope_threading", tier)
+            self.assertTrue(changes)
+            self.assertEqual(overrides, regular["simulator_overrides"])
+            # Everything but the original tiers' ring layout, which is scene geometry.
+            self.assertEqual(params, {k: v for k, v in regular["task_parameters"].items() if k != "geometry"})
+            # The merge path takes exactly these inputs; the simulator dict equals rope easy's but for the scene fields.
+            selection = dict(variation_id=tier, seed=0, simulator={}, qualification="unbuilt selection")
+            built, built_overrides, config, _, _ = candidate_inputs("rope_threading", tier, selection,
+                                                                    Path("unused/instance.json"))
+            self.assertEqual((built, built_overrides), (params, overrides))
+            scene = ("variation_id", "task_parameters")
+            self.assertEqual({k: v for k, v in config.items() if k not in scene},
+                             {k: v for k, v in easy_config.items() if k not in scene})
+            # The Task accepts the profile and keeps its own ring layout and terminal definition.
+            own = task_definition("rope_threading", tier)()
+            task = task_definition("rope_threading", tier)(params)
+            self.assertEqual(task.config["geometry"], own.config["geometry"])
+            self.assertEqual(task.config["terminal"], {**own.config["terminal"], "maximum_speed_m_s": .01})
+            self.assertEqual((task.config["rope_robot_contact"], task.config["rope_reference_shape"]), ("fingers", "initial"))
+        for family, tier in (("knot_untying", "very_easy"), ("rope_threading", "base")):
+            with self.assertRaisesRegex(ValueError, "No .* profile"):
+                environment_inputs(family, tier)
+
     def test_blanket_sampling_never_resolves_host_physics_resources(self):
         from sample_difficulty_instances import sample_instances
         with patch("topogym.world.physics.initial_state_compatibility.resource_profile",

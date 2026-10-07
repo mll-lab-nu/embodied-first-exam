@@ -71,11 +71,20 @@ class BelowEasy(unittest.TestCase):
                     self.assertEqual(config["task_parameters"], {"minimum_coverage_ratio": .95})
                     self.assertEqual(config["grasp_assist"]["model"], "pbd_local_patch_v1")
                     self.assertEqual(config["grasp_assist"]["targets"][0]["max_strain_ratio"], 1.3)
+                elif row["family"] == "rope_threading":
+                    # The original tiers' environment profile (merged-v16's contact_relaxed_v16), not their ring layout.
+                    params = config["task_parameters"]
+                    self.assertEqual(params["rope_mesh"], dict(spacing=.0055, sides=12))
+                    self.assertEqual((params["rope_material"], params["rope_robot_contact"]), (dict(E=5e6), "fingers"))
+                    self.assertNotIn("geometry", params)
+                    self.assertEqual(config["physics_dt_s"] * config["control_decimation"], .04)
+                    self.assertEqual(config["ipc_options"]["newton_tolerance"], .003)
                 else:
                     self.assertFalse(config.get("task_parameters"))
                 if row["family"] == "rope_threading":
                     self.assertEqual(config["grasp_assist"]["model"], "ipc_soft_band_v1")
                     self.assertEqual(config["grasp_assist"]["targets"][0]["entity"], "rope")
+                    self.assertEqual(config["grasp_assist"]["targets"][0]["strength"], 1000.)
                 self.assertTrue(any("topogym_mk_task.py" in " ".join(c) for c in commands))
                 self.assertTrue(any("topogym_mk_limited.py" in " ".join(c) for c in commands))
 

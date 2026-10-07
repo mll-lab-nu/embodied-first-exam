@@ -41,6 +41,9 @@ Blanket 的 very_easy / easier 按用户要求使用 **tooling v18+** grading。
 现有的 `SessionPolicyRunner` 和生成时关节限速，候选使用 95% 覆盖率及 1.3 抓持拉伸保护。
 必须先在目标镜像／GPU profile 上准备两份初态，再显式传给候选构建器；构建器复制完整数值包，
 只为 release 的覆盖率参数生成重键副本。不能把本地 Env 成功或旧版本轨迹算作 `solved=1`。
+tooling v19 起（用户 2026-10-06 决定），布料粒子速度取每个物理 tick 末的位移除以 tick 时长，不再取 PBD
+最后一个子步的速度；“静止”门槛 0.03 m/s、回放 0.08 m/s 与 3 mm 漂移不变。very_easy 中一个自碰撞二周期粒子
+（tick 末位置不动）按旧定义恒为 33 mm/s，按新定义可静止。详见 `docs/rcb/benchmarks/topogym.md`。
 
 ```bash
 .venv-harbor/bin/python scripts/topogym_merge_candidate.py \
@@ -300,7 +303,7 @@ Blanket、Rope、Knot 的 easy / medium / hard，共 33 个实例、最多 66 �
 及可用 CUDA/Nyx GPU。三档 Harbor 回调的参考输入随 `topogym/planning/` 交付，
 无需复制原机器的 `runs/` 或 `solvability_proof/*/*/evidence/`。
 首次执行从独立源码快照构建候选镜像，再生成双模式任务；默认镜像标签为
-`ghcr.io/luigivamper/rcb-topogym:<images/topogym/VERSION>-cu128`（v18：`0.2.16-dev-cu128`），本地构建不会 push 镜像。
+`ghcr.io/luigivamper/rcb-topogym:<images/topogym/VERSION>-cu128`（v19：`0.2.17-dev-cu128`），本地构建不会 push 镜像。
 恢复已绑定队列时不重新构建镜像，镜像 ID 和源码身份仍须匹配。
 不要在队列运行时修改其源码、镜像标签或任务包；其他运行若使用同一开发镜像标签，
 应先协调构建时间，或显式准备独立镜像与候选任务后传 `--tasks-root`。
@@ -329,7 +332,7 @@ Genesis 1.2.1、torch 2.11.0+cu128、numpy 2.3.5、quadrants 1.0.2。
 接收机器须匹配完整兼容性清单；使用其他硬件时，经 `scripts/prepare_blanket_initial_states.py`
 准备对应 profile 的初态，再生成并验收新的冻结实例。更换初态属于新实例，不能继承旧分数或改写兼容性哈希。
 
-当前 active 为 v18，`tasks_root=null`；仓库 `tasks/` 中的 78 个原三档包仍为 v14。
+当前 active 为 v19，`tasks_root=null`；仓库 `tasks/` 中的 78 个原三档包仍为 v14。
 因此新机器使用下面的构建入口生成候选，或显式传入同源码生成的活动版本 `--tasks-root`。
 直接运行默认 `test_harbor_oracles.py` 会因活动任务树未冻结而 blocked，这是版本保护。
 
@@ -581,7 +584,7 @@ runner 文件存在不代表已有完整成功证据。任何物理/几何版本
 
 已发布的 v14 / `0.2.12-cu128` 工具哈希与镜像引用冻结在
 `ci_checks/topogym_tooling_versions.json`，现有 78 个三档任务目录和 dataset 保留。
-活动模板为 **tooling 18 / image 0.2.16-dev**（merged-v18），这是待验收候选编号；v15 候选（0.2.13-dev）、v16 候选（0.2.14-dev）与 v17（0.2.15-dev）的工具哈希已冻结。
+活动模板为 **tooling 19 / image 0.2.17-dev**（merged-v19），这是待验收候选编号；v15 候选（0.2.13-dev）、v16 候选（0.2.14-dev）、v17（0.2.15-dev）与 v18（0.2.16-dev）的工具哈希已冻结。
 唯一开发目标由 `ci_checks/topogym_active_release.json` 的 `active` 指定，`published` 保留正式基线。
 当前 active 的 `tasks_root=null`，明确表示新镜像/任务树尚未完成，不能把 `tasks/` 下的旧版本当成候选。
 两种生成器拒绝覆盖其他 tooling 版本的目录，standard twin 必须来自同版本 privileged 包。

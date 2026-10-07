@@ -2298,7 +2298,12 @@ SIMULATOR_INSTABILITY = "simulator_instability"     # the episode end of a numer
 # 159,526 and 20.1 -> 28.5 -> 5,337 m/s, the cloth falling off the table at the third tick. 20 m/s keeps twice the
 # headroom over the fastest run that did not blow up and still ends every blow-up no later than the tick in which its
 # cloth would fall (the guard runs before the task's predicates). A cloth particle faster than this means the
-# simulation, not the agent, failed.
+# simulation, not the agent, failed. These speeds are PBD's last-substep velocities (the particle speed through tooling
+# 18). Since tooling 19 the guard reads what every consumer reads, the end-of-tick displacement over the tick
+# (topogym/world/genesis_world.py read_state), an average over the tick's substeps: substep-scale oscillations read
+# lower, and a blow-up's first tick may read lower too. The traced blow-ups reached 1e3-1e5 m/s by their third tick, so
+# their displacement should cross the limit by then as well; this limit was not measured again with the displacement
+# (docs/rcb/benchmarks/topogym.md, Cloth settle speed: follow-ups).
 PARTICLE_SPEED_LIMIT_M_S = 20.0
 # Depenetration allowance of the PBD-rigid contact (_bound_pbd_rigid_contacts): the speed beyond the colliding body's own
 # approach and the particle's own inward motion at which a contact may push a particle out (resolving penetration left by
@@ -2569,8 +2574,10 @@ GRADING_HOLD_S = 2.0
 # family -> {threshold: (task parameter, the side that passes, slack in the parameter's unit, towards passing)}.
 # blanket_flatten: the user's numbers (2026-10-03 20:50): coverage live 0.95 / hold 0.92; particle speed live 0.03 / hold
 # 0.08 m/s (maximum_speed_m_s: the cheap "settled" gate and the final settling's speed; the 3 mm displacement from the start
-# of confirmation, maximum_drift_m, and the 0.5 s window stay). PBD reports a particle's last-substep velocity: on cloth at
-# rest it spikes to 0.04-0.07 m/s and restarts the confirmation (ihy7Nru's replays). knot's rope speed: 2 x the largest
+# of confirmation, maximum_drift_m, and the 0.5 s window stay). Through tooling 18 the particle speed was PBD's last-substep
+# velocity, which on cloth at rest spikes to 0.04-0.07 m/s and restarted the confirmation (ihy7Nru's replays); since tooling
+# 19 (the user's decision, 2026-10-06) the world reports a particle's end-of-tick displacement over the tick
+# (topogym/world/genesis_world.py read_state), and these numbers are unchanged. knot's rope speed: 2 x the largest
 # replay-to-replay spread measured in a success's confirmation window (0.12 mm/s, lab 2026-10-03); its release conditions
 # (terminal v5) are geometric and never relaxed. The other families: no measured spread that a small slack would absorb
 # (docs/rcb/benchmarks/topogym.md, "Grading replays"), so the hold only; rope_threading's live thresholds are the release

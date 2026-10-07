@@ -50,7 +50,7 @@ threshold, grader, instance or agent-facing tooling changed.
 | buzz_wire_3d | hard | **1** | **1** | O2-9: traverse re-timed 3x + your retreat stopped after row 43488, open, retreat 4 cm | graded live oracle 74 min end to end in Harbor; lab `exp/R3h3`: success at 808.6 s sim, 32344 rows, 87 min end to end on a busier host (over the 72 min rule; accepted by the user, as for fiber hard); finish margins 0.12 mm / 1.2 deg; grade `tree/runs/test_results/harbor_grade_of2_bz_hard2` |
 | slotted_post_ring | easy / medium / hard | no oracle | - | - | section 3 (task-level decision) |
 | slotted_post_ring | very_easy | **1** | **1** | new below-easy oracle (section 5) | lanes `ve1` and `vefinal` (this commit's code): 325 rows, 8.1 s sim, live oracle about 30 min end to end |
-| slotted_post_ring | easier | no oracle on the built scene | - | scene change decided (bead 2 fixed on the loop) | section 5 |
+| slotted_post_ring | easier | no oracle | - | none committed: the fixed-bead scene (a) failed on lab; easier goes to William / Jianwen (the user, 10-06) | section 5 (results, proposal P2, patches) |
 | orbits | easy / medium / hard | no oracle | - | - | section 3 (task-level decision) |
 
 ## 1. horseshoe_ring easy and hard
@@ -454,8 +454,56 @@ oracle and were never built. Lab work: `/DATA2/qineng/rcb/topogym_v1/sbe/` (JOUR
     3. Use bead 2 as a pulley, held 30 cm over the widened gap for 40 steps, then lowered in (`ea_full2`): the cord on
        the table is not drawn through the bead and the slot; after the release 11 cord points are still over the tube.
   - Decision (the user, 10-06): give easier a scene with bead 2 fixed on the loop as a permanent cord attachment, like
-    the end stops, which keeps the cord physics of the other slotted tiers. That change, its image and instance, and the
-    three-stage oracle above (slide the ring, lift bead 2 over the gap, lower it in) come as a separate commit series.
+    the end stops, which keeps the cord physics of the other slotted tiers (option (a)).
+  - **Fixed-bead scene (a): built on lab, not committed.**
+    - `AttachmentSpec` gained an `"at"` endpoint: a 20 mm band centred on a material coordinate (`tasks/base.py`,
+      `world/physics/ipc.py`; the start/end branch is byte-identical). easier declares `cord_bead_right` at s 0.520 m
+      (model_revision `below_easy_v2_fixed_bead`).
+    - Identity: the build inputs of every IPC family are unchanged (rope_threading, knot_untying and orbits, 5 tiers
+      each; slotted easy/medium/hard/very_easy), and the very_easy rebuild reproduced state_sha `db90ac12104d6f1a`.
+    - Image `sbe2w` (`c9d4b33079f8`), candidate `sbe/cand_sbe2`: easier exact (state_sha `4f78f94f13f8a44b`), nops 4/4.
+    - Birth settle: ring tilt 2.8 deg, attachment residuals < 1e-7 m, IPC valid, cord volume ratio min 0.67. The cord
+      starts 5-7 mm past the separator (12.4 mm with the sliding bead).
+  - **The three-stage oracle fails on it.** Stages: slide the ring away from the post's back face (24 mm commanded,
+    back gap 56 mm after it); pass the loop by bead 2 into the gap; then the very_easy lift and placement. Runs from
+    the frozen privileged Session (lab `exp/repl_ea2`, `exp/repl_ea3`); IPC valid on every row:
+
+    | run | bead 2 carry | loop pass | cord points over the ring (hanging / after the release) | rows |
+    |---|---|---|---|---|
+    | `ea_fixed1` | to 23 cm above the table, over the gap | held, lowered into the gap, let go | 33 / 10 | 502 |
+    | `ea_v1_high` | straight to 33 cm, over the gap | slipped out of the pinch near the hold (finger q 0.026 -> 0.018) and fell into the gap | 16 / 23 | 548 |
+    | `ea_v2_upover` | straight up to 31 cm, then over the gap | held, lowered into the gap, let go | 29 / 14 | 575 |
+
+    - Why the loop stays draped:
+      - Bead 2 sits 166 mm of cord from the slot's back exit on one side and 342 mm on the other. Whatever the hold,
+        the bight and return strand beyond the bead stay on the far tube and the table.
+      - The short side caps the bead near 24 cm above the table unless cord is pulled through the slot. V1 needed about
+        85 mm more on that side and lost the bead. Its squeeze target, q 0.018, gives about 17 N per finger at the
+        held q 0.026 (kp 2000 N/m; the limit is 35 N).
+      - The whole 508 mm loop would also have to end inside the 56 mm gap.
+    - No second pass: in every run the bead ends in the gap, 2-23 mm from the post's back face, and no clear, reachable
+      pinch of it is found (`StageFailure: no clear, reachable pinch of bead 2 ...`). In the `ea_fixed1` probe every
+      candidate enters a fixture box (post or base) or fails IK.
+  - **Proposal P2 (not built): a short far loop with bead 2 fixed at its apex** (bore along x; far-loop controls
+    shortened, bead index 16).
+    - CPU geometry (`below_easy_witness.check_variant` on the patched tree): every route check passes, design `easier`,
+      widest gap 66 mm.
+    - Strands 187 / 193 mm (was 166 / 342); cord 1.107 m (was 1.236). The authored cord reaches 0.125 m behind the post
+      (was 0.213); the separator is about 0.22 m behind it.
+    - Expected: nothing hangs beyond the bead, and a hold 20-23 cm over the gap keeps both strands inside the gap column.
+      The open risk is the roughly 280 mm of slack that has to fold into the gap after the release.
+    - Still needed: dev image, re-settle (export-ipc-state), oracle tuning (bead pinch closing along y), then image,
+      grades and CI.
+  - **Decision (the user, 10-06 evening): slotted ships very_easy only. easier, without an oracle, goes to William /
+    Jianwen.** The fixed-bead change is not committed. Patches, listed in `INDEX.txt`, are on lab in
+    `/DATA2/qineng/rcb/topogym_v1/sbe/patches/` and in the laptop workspace's
+    `tmp/2026-10-06_slotted_below_easy/patches/`:
+    - `easier_a_fixed_bead_bcc5f84d3.patch`: (a) with the three-stage oracle and its CI (`git format-patch` on
+      eb38a16fd).
+    - `easier_p2_short_loop_on_bcc5f84d3.patch`: P2 on top of (a).
+    - `easier_dev_variant_lib.py`: the V1 / V2 REPL code.
+    - Lab trees `sbe/easier_tree` (= (a)) and `sbe/p2_tree` (= (a) + P2); candidate `sbe/cand_sbe2`; images `sbe2` and
+      `sbe2w`.
 - **Launcher wiring (this commit series).** `bash_scripts/run_harbor_oracle_grades.sh` accepts `slotted_post_ring` next
   to orbits (01245b248 added orbits and the below-easy families to the `check-oracle-portability --families` choices); the
   default queue is unchanged (33 cases, no slotted). `test-harbor-below-easy` now expects slotted to be dispatched (it

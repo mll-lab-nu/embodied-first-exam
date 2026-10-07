@@ -1,11 +1,11 @@
-"""Public environment choices of the active release (merged-v18), shared by fixed and sampled task builders.
+"""Public environment choices of the active release (merged-v19), shared by fixed and sampled task builders.
 
 This module contains environment parameters only, never oracle routes. Scene
 draws keep their seed and placement; explicit release leaves override defaults.
 """
 from copy import deepcopy
 
-PROFILE = "merged-v18"
+PROFILE = "merged-v19"
 IPC_FAMILIES = frozenset({"knot_untying", "rope_threading", "orbits", "slotted_post_ring"})
 
 
@@ -17,16 +17,22 @@ def merge(base, changes):
 
 
 def environment_inputs(family, tier, *, variation=None, seed=0, parameters=None):
+    below_easy = tier in ("very_easy", "easier")
     if tier not in ("easy", "medium", "hard") and not (
-            family == "blanket_flatten" and tier in ("very_easy", "easier")):
+            family in ("blanket_flatten", "rope_threading") and below_easy):
         raise ValueError(f"No {PROFILE} profile for tier {tier!r}")
     params, overrides, changes = deepcopy(parameters or {}), {}, []
     if family == "rope_threading":
-        geometry = dict(ring_yaw_deg=dict(R2=53.13010235415598), ring_offsets_m=dict(R2=[-.035, -.05, 0.]))
-        if tier != "easy":
-            geometry["ring_offsets_m"]["R3"] = [0., .06, 0.]
-            geometry["ring_mount_sides"] = dict(R3=-1)
-        params = merge(params, dict(geometry=geometry, rope_mesh=dict(spacing=.0055, sides=12),
+        # One environment for all five tiers. The ring layout below belongs to the three original tiers' scenes; the
+        # below-easy scenes (one cradle or ring) keep their own geometry.
+        scene = {}
+        if not below_easy:
+            geometry = dict(ring_yaw_deg=dict(R2=53.13010235415598), ring_offsets_m=dict(R2=[-.035, -.05, 0.]))
+            if tier != "easy":
+                geometry["ring_offsets_m"]["R3"] = [0., .06, 0.]
+                geometry["ring_mount_sides"] = dict(R3=-1)
+            scene = dict(geometry=geometry)
+        params = merge(params, dict(**scene, rope_mesh=dict(spacing=.0055, sides=12),
             rope_material=dict(E=5e6), rope_reference_shape="initial", rope_robot_contact="fingers",
             aperture_contact_allowance_m=.001, aperture_check_profile="round_ring",
             terminal=dict(maximum_speed_m_s=.01)))
@@ -35,7 +41,9 @@ def environment_inputs(family, tier, *, variation=None, seed=0, parameters=None)
                              collision_detection_method="linear_bvh"),
             grasp_assist=dict(model="ipc_soft_band_v1", max_translation_error_m=.025, max_penetration_m=.006,
                 targets=[dict(entity="rope", max_strain_ratio=2., strength=1000., require_exposed_patch=False)]))
-        changes.append("contact_relaxed_v16: explicit geometry/material/contact/grasp/timing/terminal candidate")
+        changes.append("contact_relaxed_v16: explicit material/contact/grasp/timing/terminal candidate, the scene's own "
+                       "ring layout" if below_easy else
+                       "contact_relaxed_v16: explicit geometry/material/contact/grasp/timing/terminal candidate")
     elif family == "blanket_flatten":
         # v16 live goal (the user's decision, 2026-10-03): the task default 0.90 accepted a folded corner. The graders'
         # replay hold accepts 0.92 (harbor_templates/topogym/common/rcb_topogym.py REPLAY_TOLERANCES). The packaged v14
