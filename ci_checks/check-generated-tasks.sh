@@ -23,4 +23,8 @@ if [ -f "$root/scripts/robotangle/mk_tasks.py" ]; then   # RoboTangle (its tasks
   if out=$(python3 "$root/scripts/robotangle/mk_tasks.py" --check 2>&1); then echo "ok scripts/robotangle/mk_tasks.py: ${out##*$'\n'}"
   else echo "FAIL scripts/robotangle/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
 fi
+if [ -f "$root/scripts/labutopia/generate.py" ]; then   # LabUtopia (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/labutopia/generate.py" --check 2>&1); then echo "ok scripts/labutopia/generate.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/labutopia/generate.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
 exit $rc
