@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-long-alphabet-soup-and-cream-cheese-in-basket-receptacle-relocation-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |

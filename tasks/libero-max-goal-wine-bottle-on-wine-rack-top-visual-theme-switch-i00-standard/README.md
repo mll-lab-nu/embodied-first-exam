@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |

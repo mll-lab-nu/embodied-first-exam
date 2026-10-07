@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-object-butter-in-basket-distractor-burst-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |

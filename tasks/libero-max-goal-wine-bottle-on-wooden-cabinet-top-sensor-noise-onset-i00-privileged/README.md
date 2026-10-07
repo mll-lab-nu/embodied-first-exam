@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-goal-wine-bottle-on-wooden-cabinet-top-sensor-noise-onset-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

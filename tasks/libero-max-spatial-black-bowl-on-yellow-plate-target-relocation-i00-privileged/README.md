@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-spatial-black-bowl-on-yellow-plate-target-relocation-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

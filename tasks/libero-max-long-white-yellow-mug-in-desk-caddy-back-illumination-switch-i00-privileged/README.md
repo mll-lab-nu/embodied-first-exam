@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-long-white-yellow-mug-in-desk-caddy-back-illumination-switch-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

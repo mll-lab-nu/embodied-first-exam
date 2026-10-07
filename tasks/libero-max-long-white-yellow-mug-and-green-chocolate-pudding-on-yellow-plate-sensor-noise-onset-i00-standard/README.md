@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-long-white-yellow-mug-and-green-chocolate-pudding-on-yellow-plate-sensor-noise-onset-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |

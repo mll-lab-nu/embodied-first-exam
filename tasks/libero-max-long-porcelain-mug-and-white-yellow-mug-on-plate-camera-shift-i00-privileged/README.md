@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-camera-shift-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

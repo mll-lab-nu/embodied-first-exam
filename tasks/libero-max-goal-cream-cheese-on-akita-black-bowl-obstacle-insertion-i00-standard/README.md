@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-goal-cream-cheese-on-akita-black-bowl-obstacle-insertion-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |

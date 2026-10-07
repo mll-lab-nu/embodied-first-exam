@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-spatial-akita-black-bowl-on-plate-visual-theme-switch-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

@@ -1,0 +1,27 @@
+# @@PRIV@@
+
+@@GOAL@@ One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `@@PACKAGE@@`, episode @@EPISODE_INDEX@@:
+@@VARIANT@@), with @@ROBOT_TEXT@@. Privileged mode: full simulator state, unlimited resets; the deliverable is one
+open-loop trajectory of joint-position targets, one row per control step.
+
+## Difficulty
+@@DIFFICULTY@@
+
+## Reference solution
+None is shipped. Upstream's scripted experts (`molmo_spaces/policy/solvers`) are reference solutions and are not in the
+image; neither are grasp files nor the public MolmoBot trajectories (agent egress: the model APIs only).
+
+## Verification
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`).
+Each replay is upstream's evaluation loop: one upstream `Task.step` per row until upstream's `is_done()` (the
+benchmark's @@HORIZON_S@@ s horizon = @@HORIZON_STEPS@@ control steps) or the last row, then upstream's `judge_success()`
+on the final state: @@SUCCESS@@. Pass iff both replays succeed and end in the same state; `replay.mp4` is rendered after
+the verdict. No oracle; human review in PR #@@REVIEW_PR@@ (PROTOCOL §2.7: per family, this task and its twin, a
+positive example and the `nop` result).
+
+## Details
+| | |
+|---|---|
+| Upstream | molmo-spaces 0.2.9 (MuJoCo 3.5.0, CPU physics; EGL rendering on the GPU), benchmark `@@BENCHMARK@@`, package `@@PACKAGE@@` (@@UPSTREAM@@), episode @@EPISODE_INDEX@@, house @@HOUSE@@ |
+| Frozen episode | `environment/instance.json`: the upstream episode unchanged except `source` (its expert trajectory's path) removed@@NAV_NOTE@@, plus the numbers the texts quote (`facts`) and its t = 0 record (`t0`: state hash, action layout) |
+| Generator | `scripts/molmospaces/mk_tasks.py` (`families.json`, `instances/`, `template/`, `shared/`); docs/benchmarks/molmospaces.md |

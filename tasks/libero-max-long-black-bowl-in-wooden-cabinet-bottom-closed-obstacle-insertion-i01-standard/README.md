@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i01-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |

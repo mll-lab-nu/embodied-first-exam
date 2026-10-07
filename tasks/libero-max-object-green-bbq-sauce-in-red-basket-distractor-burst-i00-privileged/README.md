@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-object-green-bbq-sauce-in-red-basket-distractor-burst-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

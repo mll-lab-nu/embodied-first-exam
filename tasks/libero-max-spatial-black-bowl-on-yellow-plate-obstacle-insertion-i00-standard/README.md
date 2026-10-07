@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-spatial-black-bowl-on-yellow-plate-obstacle-insertion-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |

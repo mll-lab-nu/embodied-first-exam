@@ -1,0 +1,7 @@
+{
+ "task_text": "Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the left leg is the prosthesis, driven by its own controller, so you command only the 54 muscles. Failure (the episode ends): falling, leaving the track sideways, or moving 2 m backwards. There is no time limit.",
+ "default_cameras": [
+  "side_view"
+ ],
+ "reference": null
+}

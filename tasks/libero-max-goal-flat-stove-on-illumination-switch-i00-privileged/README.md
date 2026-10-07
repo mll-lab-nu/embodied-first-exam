@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-goal-flat-stove-on-illumination-switch-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

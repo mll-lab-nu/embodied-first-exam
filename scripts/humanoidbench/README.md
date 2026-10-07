@@ -52,7 +52,7 @@ floor measured any other way would not be the number the verifier produces.
 
 ## Changing something that every task shares
 
-Edit `shared/` or `templates/`, then `./gen_tasks.py render`. All forty-eight directories (24 tasks, two modes)
+Edit `shared/` or `templates/`, then `./gen_tasks.py render`. All twenty directories (10 tasks, two modes)
 move together — that is the whole point. `./gen_tasks.py check` fails when `tasks/` is not what `render` writes from
 today's sources, so a bar in `facts.json` or a sentence in `subset.toml` cannot change without the instructions
 following.

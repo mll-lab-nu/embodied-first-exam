@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-object-salad-dressing-in-basket-sensor-noise-onset-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-visual-theme-switch-i01-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |

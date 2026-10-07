@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-distractor-burst-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

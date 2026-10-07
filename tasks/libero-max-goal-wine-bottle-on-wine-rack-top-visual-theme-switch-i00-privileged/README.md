@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | privileged |
 | Twin | `libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00-standard` |
 | Simulator / robot | `robosuite` / `franka-panda` |

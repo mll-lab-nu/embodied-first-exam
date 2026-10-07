@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | — |
+| Benchmark | LIBERO-MAX |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-object-green-chocolate-pudding-in-red-basket-camera-shift-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |
