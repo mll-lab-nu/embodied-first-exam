@@ -7,13 +7,14 @@ them, to the goal orientation: that of the translucent cube with the same faces 
 hands.
 
 ## Rules (real-robot rules)
-- **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds,
-  when the robot falls (its pelvis drops too low), when either cube drops, after 500 control steps (10 s of
-  robot time), when your time is up, or on a simulator error. Nothing else ends it: a robot that has fallen
-  without meeting one of these (lying on its side, sitting, face down) goes on until step 500, so an episode
-  that is still running does not mean the robot is still up. `spec()["budget"]["reset"]` is 0 in the standard
-  configuration. (A run that grants N resets says so there; then `r.reset()` abandons the running episode and
-  starts a new one from the same starting state, only the last episode is graded, and a success ends the run.)
+- **One episode; a reset only where `spec()` grants one.** The episode starts when the service comes up. It
+  ends when the task succeeds, when the robot falls (its pelvis drops too low), when either cube drops, after
+  500 control steps (10 s of robot time), when your time is up, or on a simulator error. Nothing else ends it:
+  a robot that has fallen without meeting one of these (lying on its side, sitting, face down) goes on until
+  step 500, so an episode that is still running does not mean the robot is still up.
+  `spec()["budget"]["reset"]` is 0 in the standard configuration. (A run that grants N resets says so there;
+  then `r.reset()` starts a new episode from the same starting state (abandoning the running one, or after one
+  has ended), only the last episode is graded, and a success ends the run.)
 - **Time moves only inside calls.** `submit` runs your servo targets and `get_obs(seconds=s)` holds the last
   ones for s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while
   you think; `get_obs()` with no seconds is free.

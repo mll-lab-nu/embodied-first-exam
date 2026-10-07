@@ -31,7 +31,8 @@ import requests
 SPEC_KEYS_REQ = {"protocol", "protocol_compat", "simulator", "robot", "task_text", "control_hz", "max_chunk_s", "max_watch_s",
                  "cameras", "default_cameras", "action_types", "proprio_layout", "proprio_groups", "static", "world", "budget",
                  "robot_spec", "kinematics", "depth"}
-SPEC_KEYS_OK = SPEC_KEYS_REQ | {"physics_substeps", "physics_hz", "on_service_error", "max_call_wall_s"}   # + crash recovery
+SPEC_KEYS_OK = SPEC_KEYS_REQ | {"physics_substeps", "physics_hz", "on_service_error", "max_call_wall_s",   # + crash recovery
+                                "episode", "max_control_steps"}                                           # PROTOCOL §4.7, §4.5
 CAM_KEYS_REQ = {"rgb", "depth", "mounted", "resolution", "intrinsic_cv", "mount"}
 CAM_KEYS_OK = CAM_KEYS_REQ | {"calibration_in_obs", "depth_range_m"}
 ROBOT_KEYS_REQ = {"name", "base", "joints", "grippers", "controller", "tcp"}
