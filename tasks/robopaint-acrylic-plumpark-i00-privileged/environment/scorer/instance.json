@@ -223,7 +223,11 @@
    "paint_iou": 0.95,
    "blur_mm": 1.0,
    "register_mm": 5.0,
-   "max_strokes": 384
+   "max_strokes": 384,
+   "max_path_mm": 42300.0,
+   "max_scribble": 2.5,
+   "max_scribble_share": 0.1,
+   "scribble_min_mm": 10.0
   },
   "truth_sha": "e78b7e2e01e9a436"
  },
