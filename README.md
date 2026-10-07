@@ -37,7 +37,7 @@ measures the same thing under real-robot constraints. The standard-mode wire pro
 | robosuite example (`robosuite-cube-stack-i00-privileged`) | robosuite (MuJoCo) · Franka Panda | 1 (privileged) | full |
 | RoboTwin 2.0 (`robotwin_2_0_<task>`) | SAPIEN 3 + CuRobo · ALOHA-AgileX dual arm | 47 of 50 | full (upstream expert) |
 | DexToolBench (`dextoolbench_<cat>_<obj>_<task>`) | MuJoCo 3.3.7 · KUKA iiwa14 + Sharpa HA4 hand | 21 of 24 | full on 6, partial on 15 |
-| MuJoCo Playground (`mujoco_playground_<env>`) | MuJoCo · ALOHA, Franka Panda | 4 | full (scripted IK) |
+| MuJoCo Playground (`mujoco_playground_<env>`) | MuJoCo · ALOHA, Franka Panda; quadrupeds: Unitree Go1, Boston Dynamics Spot, Google Barkour vB | 4 manipulation + 9 quadruped | full (manipulation: scripted IK; quadrupeds: Playground's Go1 policy or policies trained on its rewards) |
 | KinDER (`kinder-<family>-i00`) | MuJoCo 3.3 / PyBullet · TidyBot++ mobile manipulator | 11 | full on 1, none on 10 (human review) |
 | HumanoidBench (`humanoidbench-<family>-i00`) | MuJoCo · Unitree H1 humanoid | 24 | full on 1, none on 23 (human review) |
 | MetaWorld+ (`metaworldplus-<env>-i00`) | MuJoCo (Meta-World v3) · Rethink Sawyer | 50 | full |
@@ -112,9 +112,9 @@ harbor view jobs
   oracle agent alone. Upstream experts are removed from the agent's images.
 - **Recorded evidence in standard mode.** The simulator service records the episode, replays it in a fresh simulator,
   and writes the verdict inputs. The agent never holds the simulator.
-- **Network policy.** DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, RoboPaint-strict, VLABench, MyoSuite and the three
-  RoboCasa benchmarks restrict agent egress to model APIs by default, because their reference policies, demonstrations or
-  baselines are public. RoboTwin, MuJoCo Playground, robosuite, RoboWits, RoboLab and BEHAVIOR-1K use Harbor's default
+- **Network policy.** DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, RoboPaint-strict, VLABench, MyoSuite, the three
+  RoboCasa benchmarks and MuJoCo Playground's quadruped tasks restrict agent egress to model APIs by default, because their reference policies, demonstrations or
+  baselines are public. RoboTwin, MuJoCo Playground's manipulation tasks, robosuite, RoboWits, RoboLab and BEHAVIOR-1K use Harbor's default
   (public) and can be switched with `scripts/set_agent_egress.py allowlist`. Separately, the harness's own web search is
   off by default in batch runs (it runs at the model provider, past any allowlist).
 - **Reproducibility.** Base images are pinned by tag (pinning every pip dependency is part of the migration). A task's identity is its digest in `tasks/dataset.toml`,
