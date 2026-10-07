@@ -64,7 +64,7 @@ def main() -> int:
         if acts.ndim != 2 or acts.shape[1] != ACTION_DIM or acts.shape[0] > MAX_STEPS or not np.all(np.isfinite(acts)):
             write(False, {"success": 0, "final_reward": 0.0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0,
                           "grader_error": 0, **cost}); return 0
-        tool = os.path.join(here, "rcb_brush.py")
+        tool = os.path.join(here, "rcb_brush_strict.py")   # the picture rule + the process rules
         t0 = time.time(); runs = []
         for i in range(a.repeat):
             video = os.path.join(LOG_DIR, "replay.mp4") if (i == 0 and not a.no_video) else None

@@ -16,7 +16,7 @@ services:
     environment:
       RCB_TASK: robopaint_xingshu_xian
       RCB_INSTANCE: /srv/instance.json
-      RCB_TOOL: /srv/rcb_brush.py
+      RCB_TOOL: /srv/rcb_brush_strict.py   # the collect hook's replays score with the process rules
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "7200"
       RCB_STARTUP_TIMEOUT_S: "600"     # startup watchdog: >= 4x the slowest measured start (126 s; docs/benchmarks/robopaint.md)
