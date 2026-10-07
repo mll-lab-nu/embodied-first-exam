@@ -50,6 +50,7 @@ measures the same thing under real-robot constraints. The standard-mode wire pro
 | RoboCasa (`robocasa-<task>-i00`) | robosuite · Franka Panda on an Omron mobile base | 29 | full (upstream demonstrations) |
 | RoboCasa365 (`robocasa365-<task>-i00`) | robosuite · Franka Panda on an Omron mobile base | 50 | full (upstream demonstrations) |
 | RoboCasa-GR1 (`robocasa-gr1-<task>-i00`) | robosuite · Fourier GR1 humanoid | 24 | full (upstream demonstrations) |
+| DexJoCo (`dexjoco-<family>-i00`) | MuJoCo 3.4 · Franka Panda + Allegro hand, one or two arms | 11 | full (upstream human demonstrations) |
 | MyoSuite (`myosuite-<family>-i00`) | MyoSuite 2.12.2 (MuJoCo 3.6, CPU) · musculoskeletal hand, arm, torso and legs (MyoHand, MyoArm, MyoLegs, with prostheses in two tasks), muscle commands; MyoChallenge and MyoDex tasks | 22 | full on 3 (MyoSuite's NPG baselines), none on 19 (human review) |
 
 Each task directory carries a README in one layout: a key table (benchmark, mode, twin, simulator and robot, family and
@@ -113,7 +114,7 @@ harbor view jobs
 - **Recorded evidence in standard mode.** The simulator service records the episode, replays it in a fresh simulator,
   and writes the verdict inputs. The agent never holds the simulator.
 - **Network policy.** DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, RoboPaint-strict, VLABench, MyoSuite, the three
-  RoboCasa benchmarks and MuJoCo Playground's quadruped tasks restrict agent egress to model APIs by default, because their reference policies, demonstrations or
+  RoboCasa benchmarks, DexJoCo and MuJoCo Playground's quadruped tasks restrict agent egress to model APIs by default, because their reference policies, demonstrations or
   baselines are public. RoboTwin, MuJoCo Playground's manipulation tasks, robosuite, RoboWits, RoboLab and BEHAVIOR-1K use Harbor's default
   (public) and can be switched with `scripts/set_agent_egress.py allowlist`. Separately, the harness's own web search is
   off by default in batch runs (it runs at the model provider, past any allowlist).

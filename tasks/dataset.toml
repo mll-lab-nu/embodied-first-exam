@@ -5117,3 +5117,91 @@ digest = "sha256:a39156e282927ad7dbfa821c80111293caeb551ffc356a4b400822a5f26d0c8
 name = "robot-coding-bench/mujoco_playground_spot_joystick_gait_tracking-standard"
 digest = "sha256:d1fc73ff53db47e6bb72e31f3c9b91e8e5956d79caf65e1c83777d2427b7f49e"
 
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-assembly-i00-privileged"
+digest = "sha256:f694dff30996428d375c1380fb922f61d9bc91281576f6528ee6defe33982909"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-assembly-i00-standard"
+digest = "sha256:b79fc2e0158c5f409fbd1cfd89627e83cdd3200bc600c03848c9a3e207f2bc4c"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-hanoi-i00-privileged"
+digest = "sha256:046b51b712d6473129dd2b40f239d5d1d01d33f537625932bf56a7fd92fbfaed"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-hanoi-i00-standard"
+digest = "sha256:53fc54dec9f42658a37371c0beef39866ce90876346fa86a55996acb9d0b057d"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-microwave-cook-i00-privileged"
+digest = "sha256:bb72725f5470d6c003a1bb5c400183753952e56e89eddc843bf2406c6f456ade"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-microwave-cook-i00-standard"
+digest = "sha256:2ee7b2be7c14938126f697dfb7d968b1196ba82438054f1d18e2d8d4e77db26b"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-photograph-i00-privileged"
+digest = "sha256:894498e1aff23acb06d3a3d4153b5eba0ea20109b6b5520abab392b7b899c17f"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-photograph-i00-standard"
+digest = "sha256:36fcc50e2388b74ccfd88adcb5b6509473aeee422216259b8b1d06cc3f2003f8"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-unlock-ipad-i00-privileged"
+digest = "sha256:56ce91e6fe7418554792903461614c6a9040149423cb600d9cffbdf20b331502"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-bimanual-unlock-ipad-i00-standard"
+digest = "sha256:6c195b434fbcab3df2594fb435923db9f1b841715739b5475142c2771caef2c1"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-click-mouse-i00-privileged"
+digest = "sha256:951737bef9b9f6040ac78a06d845232116702fe7c00a263edb9c72a1609d6b87"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-click-mouse-i00-standard"
+digest = "sha256:5e1b4a77e1dc00749c9b2ffc92a2482fe2b2ddce572e3b1ef786dd9298c4acb6"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-fold-glasses-i00-privileged"
+digest = "sha256:8bb93e5d5459e1ad6020fd0889f78e7588f63edafce4ce52ecd87a23df109f00"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-fold-glasses-i00-standard"
+digest = "sha256:278ffc15aefcdd6afb217de9bf8f2bd176259b97011b3ea263c11c11e77f558b"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-hammer-nail-i00-privileged"
+digest = "sha256:ed84b115a81285361800499377787b8f6f135967ad42c921ff8c09df849b2a39"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-hammer-nail-i00-standard"
+digest = "sha256:7f4018a8b260383753e8d53be4ed8ef5f63714b9c8cd7894f249d35adf64fc8b"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-pick-bucket-i00-privileged"
+digest = "sha256:16874cb8a33e29802b3da64ee044b6458a90e10ffa8f7981c15af926bc3cbf52"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-pick-bucket-i00-standard"
+digest = "sha256:9df447e71585c6ec93233d6e627b2b86a1cae524e6aaafb3bf044ae75c00e2ae"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-pinch-tongs-i00-privileged"
+digest = "sha256:dcd4cca08649748ecb014f75aa78fbd343d2ca3ff5fab070a3637b5e174ae311"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-pinch-tongs-i00-standard"
+digest = "sha256:0f7e6c105f3bc21ea5510a7951e1c850719213c8eacf099974d2f6f3a19068c9"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-water-plant-i00-privileged"
+digest = "sha256:3967f060583e2ffd6a4cecbf78ad3351e04698293ee74298eba19f2844d19b30"
+
+[[tasks]]
+name = "robot-coding-bench/dexjoco-water-plant-i00-standard"
+digest = "sha256:a515e9a6868f5745811e349340a399ae48c1123e568aab35d1882451d79ad6a2"
+
