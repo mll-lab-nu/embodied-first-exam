@@ -5,11 +5,12 @@ arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulato
 and you reach it only through a client. **Task:** put the six brown rods lying on the floor (30 cm long) into the row of eleven narrow cupboards standing side by side ahead of the robot, one rod each, each into a cupboard's 40 cm-tall compartment: taking the rods in order of their distance from where the centre of the robot's base starts, nearest first, they go into the 11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row, counted from the robot's left as it faces the row at the start. The task succeeds the moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and within the cupboard's 10 cm width and 30 cm depth.
 
 ## Rules (real-robot rules)
-- **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
-  1000 control steps (100 s of robot time), when your time is up, or on a simulator error; nothing else ends it.
+- **One episode; a reset only where `spec()` grants one.** The episode starts when the service comes up. It ends
+  when the task succeeds, after 1000 control steps (100 s of robot time), when your time is up, or on a simulator
+  error; nothing else ends it.
   `spec()["budget"]["reset"]` is 0 in the standard configuration. (A run that grants N resets says so there; then
-  `r.reset()` abandons the running episode and starts a new one from the same starting state, only the last episode
-  is graded, and a success ends the run.)
+  `r.reset()` starts a new episode from the same starting state (abandoning the running one, or after one has
+  ended), only the last episode is graded, and a success ends the run.)
 - **Time moves only inside calls.** `submit` runs your actions, and `get_obs(seconds=s)` holds the last command for
   s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while you think;
   `get_obs()` with no seconds is free.
@@ -52,7 +53,7 @@ res = r.submit("delta", A)       # A: (T, 11), one 10 Hz control step per row
 Measured cost here: about 14.2 ms per control step in one-row calls asking for one camera, 19.4 ms
 with both robot cameras' images (and the wrist's depth), 10.0 ms per step in chunks of 10 rows asking for one camera (video="none" each time).
 
-Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: `base_x`, `base_y`, `base_yaw` (the odometry frame: where the base started, x the way it faced, y left), `base_vx`, `base_vy`, `base_yaw_rate`, `arm_1` ... `arm_7`, `arm_1_vel` ... `arm_7_vel`, `gripper` (the fingers' position: 0 open, 1 at their closed limit) and `gripper_vel`; `spec()["proprio"]` gives the units.
+Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: `base_x`, `base_y`, `base_yaw` (the odometry frame: where the base started, x the way it faced, y left), `base_vx`, `base_vy`, `base_yaw_rate`, `arm_1` ... `arm_7`, `arm_1_vel` ... `arm_7_vel`, `gripper` (the fingers' position: 0 open, 1 at their joint's closed limit, about 0.98 when they close on nothing) and `gripper_vel`; `spec()["proprio"]` gives the units.
 
 Each row of a `delta` chunk is 11 numbers, one 10 Hz control step, in the order of `spec()["action_types"]["delta"]["layout"]`:
 - `base_x`, `base_y`: how far to move the base, metres in the odometry frame, together at most 0.1 a step; `base_yaw`: how far to turn it, radians (+ = counter-clockwise), at most 0.1.
