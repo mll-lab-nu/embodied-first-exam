@@ -49,9 +49,12 @@ REWARDS = HERE / "rewards.json"   # the scoring formulas, kept out of the image 
 ORACLES = HERE / "oracles"
 IMAGE = ("ghcr.io/mll-lab-nu/eai-humanoidbench:"
          + (ROOT / "images/humanoidbench/VERSION").read_text().strip())
-# The agent container and the verifier of every standard-mode task: Python and the client only, pinned by digest.
-CLIENT_IMAGE = ("docker.io/library/python:3.12.14-slim"
-                "@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f")
+# The agent container and the verifier of every standard-mode task: the one client base (pinned by digest) and the
+# shared pip pins, both from scripts/eai_standard/ (PROTOCOL §2.4; ci_checks/check-standard-client.sh).
+CLIENT = ROOT / "scripts/eai_standard"
+CLIENT_ENV = dict(l.split("=", 1) for l in (CLIENT / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
+CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
+CLIENT_REQUIREMENTS = CLIENT / CLIENT_ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
 
 # robot id -> (how instruction.md names it, task.toml's metadata.robot)
 ROBOTS = {
@@ -445,6 +448,7 @@ def render_standard(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASK
     for src, rel in [("rcb_client.py", "environment/rcb_client.py"), ("rcb1.py", "environment/rcb1.py"),
                      ("grade.py", "tests/grade.py")]:
         shutil.copyfile(STANDARD / src, out / rel)
+    shutil.copyfile(CLIENT_REQUIREMENTS, out / "environment/client-requirements.txt")
     copy_oracle(t, "standard", out)
     normalize(out)
     return out

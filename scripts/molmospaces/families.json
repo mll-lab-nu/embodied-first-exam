@@ -1,0 +1,129 @@
+{
+  "_comment": "MolmoSpaces families (docs/benchmarks/molmospaces.md). package: the upstream benchmark package under molmospaces-bench-v2/20260415; upstream_benchmark: its name in upstream's evaluation docs; variants: the family's two kinds of episode; keep: the upstream episode index the benchmark ships as <family>-i00, the first in the package's order that passes the filters (make_instances.py checks it); success: the upstream success rule in words, filled with the instance's facts.",
+  "families": {
+    "pick": {
+      "package": "procthor-objaverse/FrankaPickHardBench/FrankaPickHardBench_20260206_json_benchmark",
+      "upstream_benchmark": "Pick-v2-classic (MolmoBot benchmarks)",
+      "robot_config": "FrankaRobotConfig",
+      "policy_dt_ms": 66.0,
+      "variants": {
+        "a": "an AI2-THOR object",
+        "b": "an Objaverse object"
+      },
+      "keep": 387,
+      "success": "the object touches the robot and nothing else, and it is at least {lift_cm:g} cm higher than where it started",
+      "difficulty": "Grasp and lift one named object in an unseen, cluttered house (ProcTHOR layout with Objaverse objects); the object must touch the robot and nothing else at the end, so a grasp that drops it, or still rests it on a surface, fails. The object starts with at least five other objects within 30 cm of it. 303 control steps (20 s)."
+    },
+    "pick-and-place": {
+      "package": "procthor-objaverse/FrankaPickandPlaceHardBench/FrankaPickandPlaceHardBench_20260206_json_benchmark",
+      "upstream_benchmark": "PnP-v2 (MolmoBot benchmarks)",
+      "robot_config": "FrankaRobotConfig",
+      "policy_dt_ms": 66.0,
+      "variants": {
+        "a": "an AI2-THOR object",
+        "b": "an Objaverse object"
+      },
+      "keep": 134,
+      "success": "the robot does not touch the object; the receptacle supports the object (it carries at least {support_pct:g}% of the object's weight through contact, or the object lies on it by upstream's on-receptacle test, or the object is within {carry_mm:g} mm and {carry_deg:g} degrees, relative to the receptacle, of a pose in which it was supported at an earlier control step); and the receptacle has moved at most {max_disp_cm:g} cm and tilted at most {max_tilt_deg:g} degrees from its start pose",
+      "difficulty": "Pick a named object and set it into or onto a named receptacle in an unseen, cluttered house; at the end the gripper must have let go, the receptacle must carry the object, and the receptacle must not have been knocked away or tipped. The object starts with at least five other objects within 30 cm of it. 606 control steps (40 s)."
+    },
+    "pick-and-place-next-to": {
+      "package": "procthor-objaverse/FrankaPickandPlaceNextToHardBench/FrankaPickandPlaceNextToHardBench_20260305_json_benchmark",
+      "upstream_benchmark": "PnP-next-to-v2 (MolmoBot benchmarks)",
+      "robot_config": "FrankaRobotConfig",
+      "policy_dt_ms": 66.0,
+      "variants": {
+        "a": "an AI2-THOR object",
+        "b": "an Objaverse object"
+      },
+      "keep": 89,
+      "success": "the horizontal gap between the two objects' axis-aligned bounding boxes is between {min_gap_cm:g} and {max_gap_cm:g} cm; both rest on the same supporting body; and the reference object has moved at most {max_disp_cm:g} cm and rotated at most {max_rot_deg:g} degrees from its start pose",
+      "difficulty": "Pick a named object and put it down beside a named reference object, on the same surface and with at most a few centimetres between their bounding boxes, without moving the reference object much. The object starts with at least five other objects within 30 cm of it. 455 control steps (30 s)."
+    },
+    "pick-and-place-color": {
+      "package": "procthor-objaverse/FrankaPickandPlaceColorHardBench/FrankaPickandPlaceColorHardBench_20260304_json_benchmark",
+      "upstream_benchmark": "PnP-color-v2 (MolmoBot benchmarks)",
+      "robot_config": "FrankaRobotConfig",
+      "policy_dt_ms": 66.0,
+      "variants": {
+        "a": "an AI2-THOR object",
+        "b": "an Objaverse object"
+      },
+      "keep": 26,
+      "success": "the rule of pick-and-place, for the receptacle of the named colour (the other, differently coloured receptacle does not count): the robot does not touch the object; that receptacle supports the object (at least {support_pct:g}% of its weight through contact, or upstream's on-receptacle test, or within {carry_mm:g} mm and {carry_deg:g} degrees, relative to the receptacle, of a pose in which it was supported at an earlier control step); and that receptacle has moved at most {max_disp_cm:g} cm and tilted at most {max_tilt_deg:g} degrees",
+      "difficulty": "Pick-and-place where the receptacles look alike and only their colour tells them apart: the object has to end up in the one of the named colour. The object starts with at least five other objects within 30 cm of it. 606 control steps (40 s)."
+    },
+    "open": {
+      "package": "ithor/FrankaOpenHardBench/FrankaOpenHardBench_20260206_json_benchmark",
+      "upstream_benchmark": "FrankaOpenHardBench: upstream's Hard configuration of Open, not in its evaluation docs",
+      "robot_config": "FrankaRobotConfig",
+      "policy_dt_ms": 66.0,
+      "variants": {
+        "a": "a drawer (sliding joint)",
+        "b": "a hinged door (revolute joint)"
+      },
+      "keep": 49,
+      "success": "some joint of {scope} is open at least {open_pct:g}% of its range (all start closed)",
+      "difficulty": "Open an articulated fixture in a hand-built AI2-THOR kitchen: find a handle, grasp or push it and move it along its joint. Any fixture of the named kind counts. Upstream's Hard configuration: the arm starts in a randomised posture and the robot up to 30° off facing the fixture. 455 control steps (30 s)."
+    },
+    "close": {
+      "package": "ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark",
+      "upstream_benchmark": "FrankaCloseHardBench: upstream's Hard configuration of Close, not in its evaluation docs",
+      "robot_config": "FrankaRobotConfig",
+      "policy_dt_ms": 66.0,
+      "variants": {
+        "a": "a drawer (sliding joint)",
+        "b": "a hinged door (revolute joint)"
+      },
+      "keep": 51,
+      "success": "the target's joint is open at most {close_pct:g}% of its range (it starts {start_pct:.0f}% open)",
+      "difficulty": "Close an articulated fixture that starts half open, in a hand-built AI2-THOR kitchen. Upstream's Hard configuration: the arm starts in a randomised posture and the robot up to 30° off facing the fixture. 455 control steps (30 s)."
+    },
+    "navigate-to": {
+      "package": "holodeck-objaverse/NavToObjDataGenConfig/NavToObjHolodeckBench_20260115_json_benchmark",
+      "upstream_benchmark": "Navigation, Holodeck houses (MolmoSpaces benchmarks; the ProcTHOR-10k package was built on scene version 20251121, 0.2.9 loads 20251217 and its episodes miss objects)",
+      "robot_config": "RBY1Config",
+      "policy_dt_ms": 200.0,
+      "variants": {
+        "a": "one target object",
+        "b": "several objects of the target type (the nearest counts)"
+      },
+      "keep": 237,
+      "success": "for the {candidates} nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than {near_m:g} m and at least one of its pixels shows in head_camera",
+      "difficulty": "Drive the mobile base through an unseen multi-room house to an object of a named type, ending close to it and facing it so the head camera sees it. The nearest target starts at least 8 m away and out of the head camera's view. 500 control steps (100 s at 5 Hz)."
+    },
+    "open-door": {
+      "package": "procthor-10k/rby1_benchmarks/door_opening_benchmark",
+      "upstream_benchmark": "Door Open (MolmoSpaces benchmarks)",
+      "robot_config": "RBY1MConfig",
+      "policy_dt_ms": 100.0,
+      "variants": {
+        "a": "a door to push",
+        "b": "a door to pull"
+      },
+      "keep": 0,
+      "success": "the door's hinge is open at least {open_pct:g}% of its {range_deg:g}-degree range",
+      "difficulty": "Open a closed room door with the mobile manipulator: base and arms have to move together to swing it past two thirds of its range, pushing or pulling as the door opens. 400 control steps (40 s at 10 Hz)."
+    }
+  },
+  "robots": {
+    "FrankaRobotConfig": {
+      "taxonomy": "franka-robotiq-2f85",
+      "text": "a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup)",
+      "short": "a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base",
+      "units": "fr3_joint1..7 in rad; gripper: the Robotiq command, 0 = open .. 255 = closed"
+    },
+    "RBY1Config": {
+      "taxonomy": "rainbow-rby1",
+      "text": "a Rainbow Robotics RB-Y1 mobile manipulator: holonomic base, 6-joint torso, two 7-joint arms with parallel grippers, head camera",
+      "short": "a Rainbow Robotics RB-Y1 mobile manipulator",
+      "units": "base_x, base_y in m and base_theta in rad (world frame); torso, arm joints in rad; grippers: the finger motor's force, -100 .. 100 (positive closes, negative opens, 0 exerts none)"
+    },
+    "RBY1MConfig": {
+      "taxonomy": "rainbow-rby1",
+      "text": "a Rainbow Robotics RB-Y1 mobile manipulator (upstream's RBY1M configuration): holonomic base, 6-joint torso, two 7-joint arms with parallel grippers, head camera",
+      "short": "a Rainbow Robotics RB-Y1 mobile manipulator",
+      "units": "base_x, base_y in m and base_theta in rad (world frame); torso, arm joints in rad; grippers: the finger motor's force, -100 .. 100 (positive closes, negative opens, 0 exerts none)"
+    }
+  }
+}

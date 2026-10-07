@@ -7,7 +7,7 @@
 | Twin | `kinder-sweep-simple-i00-privileged` |
 | Simulator / robot | `kinder` / `tidybot-plus-plus` |
 | Family / instance | `sweep-simple` / seed 0 |
-| Oracle | `none` — GPT-6 Luna's graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (recorded before protocol v1.0) on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #8 |
+| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory of 2026-10-04 (it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc) and its graded standard-mode episode with 50 resets recorded before protocol v1.0, run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores both 1, and the standard service scores the episode 1 when it is sent through the client; human review in PR #8 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
 
