@@ -1,0 +1,115 @@
+{
+ "task": "stack_retrieve/task_0008",
+ "family": "stack_retrieve",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "10fa3fe7c30fd9a29f9d4810f96364fe30738ed3f43e060f57a7c6f48bac88d5",
+ "diagnostics_sha256": "1b60b1b576dd9dd8d503866f0682a96bbb1f361eea255cad1c58f97d8becfc89",
+ "pipeline": "stack_flat",
+ "gpu_dynamics": false,
+ "state_sha": "67161e85980b5298",
+ "objects": {
+  "desk_iotfzl_0": {
+   "category": "desk",
+   "position": [
+    -1.30211,
+    -2.95,
+    0.62467
+   ],
+   "orientation_xyzw": [
+    0.00133,
+    -0.00051,
+    -6e-05,
+    1.0
+   ]
+  },
+  "target_half_french_toast_ep1_1": {
+   "category": "half_french_toast",
+   "position": [
+    -1.30287,
+    -2.96673,
+    0.74185
+   ],
+   "orientation_xyzw": [
+    -1e-05,
+    -1e-05,
+    -0.0008,
+    1.0
+   ]
+  },
+  "stack_can_of_bay_leaves_ep1_1": {
+   "category": "can_of_bay_leaves",
+   "position": [
+    -1.30004,
+    -2.96487,
+    0.79219
+   ],
+   "orientation_xyzw": [
+    -0.00924,
+    0.02001,
+    -0.00134,
+    0.99976
+   ]
+  },
+  "stack_can_of_bay_leaves_ep1_2": {
+   "category": "can_of_bay_leaves",
+   "position": [
+    -1.30235,
+    -2.96488,
+    0.86402
+   ],
+   "orientation_xyzw": [
+    -0.01013,
+    0.01938,
+    -0.00256,
+    0.99976
+   ]
+  },
+  "stack_can_of_bay_leaves_ep1_3": {
+   "category": "can_of_bay_leaves",
+   "position": [
+    -1.30103,
+    -2.96356,
+    0.93586
+   ],
+   "orientation_xyzw": [
+    -0.01086,
+    0.01882,
+    -0.00809,
+    0.99973
+   ]
+  },
+  "goal_region__target_half_french_toast_ep1_1": {
+   "category": "goal_region_marker",
+   "position": [
+    -1.30001,
+    -2.60279,
+    0.74204
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}

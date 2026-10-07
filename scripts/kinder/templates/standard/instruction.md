@@ -4,11 +4,12 @@ You control {{standard_robot}} -- **as if it were real hardware**: the simulator
 and you reach it only through a client. **Task:** {{task_statement}}
 
 ## Rules (real-robot rules)
-- **One episode, no reset.** The episode starts when the service comes up. It ends when the task succeeds, after
-  {{max_steps}} control steps{{robot_time}}, when your time is up, or on a simulator error; nothing else ends it.
+- **One episode; a reset only where `spec()` grants one.** The episode starts when the service comes up. It ends
+  when the task succeeds, after {{max_steps}} control steps{{robot_time}}, when your time is up, or on a simulator
+  error; nothing else ends it.
   `spec()["budget"]["reset"]` is 0 in the standard configuration. (A run that grants N resets says so there; then
-  `r.reset()` abandons the running episode and starts a new one from the same starting state, only the last episode
-  is graded, and a success ends the run.)
+  `r.reset()` starts a new episode from the same starting state (abandoning the running one, or after one has
+  ended), only the last episode is graded, and a success ends the run.)
 - **Time moves only inside calls.** `submit` runs your actions, and `get_obs(seconds=s)` holds the last command for
   s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while you think;
   `get_obs()` with no seconds is free.
