@@ -20,8 +20,8 @@ predicate on the final state.
 
 - **The only task in the benchmark whose objective is a statistic, not a pose.** Upstream scores
   `tolerance(max(variance of the objects' x and y), margin=3)` — there is no destination to reach and no
-  per-object goal. The agent has to invent the placement, which is a planning problem the other 22 tasks
-  never pose. (This is also why the old "= `package` six times over" reading was wrong: `Room` is an
+  per-object goal. The agent has to invent the placement, which is a planning problem no other task in the
+  subset poses. (This is also why the old "= `package` six times over" reading was wrong: `Room` is an
   independent `Task` with an independent reward.)
 - **Six objects, 42 DoF of task state** — the widest scene in the subset — on top of 61 actuators.
   Every object moved is a chance to knock another one away.

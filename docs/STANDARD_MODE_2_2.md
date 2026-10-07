@@ -5,10 +5,10 @@
 > says otherwise, every 2.2 addition is a MAY capability, and a request written for 2.0 or 2.1 gets the same answer as
 > before (plus parts and keys an old client ignores). Which parts are required is listed in PROTOCOL §4.
 
-**Who serves it.** The standard twins of five benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint and ManiGuard
+**Who serves it.** The standard twins of six benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard and MolmoSpaces
 ([docs/benchmarks/](benchmarks/)). The RoboTwin and MuJoCo standard tasks serve 2.1.
 
-**One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/), the D9 shared source of these four
+**One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/), the D9 shared source of these six
 benchmarks: the service layer `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash
 recovery), the client `rcb_client.py` + `rcb1.py`, the sidecar entrypoint `run.sh`, and the client image: `client.env`
 (the one client base, pinned by digest) and `client-requirements.txt` (exact pins). The generators copy the code unchanged
@@ -144,7 +144,7 @@ Every 2.2 service has at least the groups `joint_pos`, `joint_vel`, `gripper_ope
 `tcp_pose` (7 columns per `kinematics.tcp_frames` entry) and `joint_effort` (the PD drive-effort estimate, or the
 simulator's measured effort).
 
-## 10. Never provided (the declaration of these five benchmarks, PROTOCOL D7)
+## 10. Never provided (the declaration of these six benchmarks, PROTOCOL D7)
 Through any endpoint, part or `/spec` field, and in the task's texts (instruction, README, task.toml description): where
 things are in the world (object poses and positions, world coordinates of workspace items: table or sheet heights, sheet,
 well or bin centres, a pixel-to-world formula, a camera's distance to the scene); segmentation of any kind; physical
@@ -152,7 +152,7 @@ parameters of the scene (mass, friction, damping, inertia, restitution; the robo
 the success predicate. Provided: a detailed goal, object names and inventories, categories, sizes and colours where the
 task needs them, qualitative relations, the robot and its tool, camera calibration, world conventions (BEHAVIOR's floor at
 z = 0 defines its frame), the budget. `rcb_limited.check_spec` refuses to start a service whose `/spec` names a forbidden
-field or puts a position into `static`; `ci_checks/check-limited-texts.sh` checks the texts of these five benchmarks (other
+field or puts a position into `static`; `ci_checks/check-limited-texts.sh` checks the texts of these six benchmarks (other
 benchmarks decide for themselves, D7); `ci_checks/check-limited-protocol.py` checks every response of a live service.
 Accepted consequence: a calibrated camera aimed at the workspace tells roughly where the workspace is.
 
@@ -201,7 +201,7 @@ The resume check depends on the simulator's determinism class, which the adapter
 
 | class | rule | benchmarks |
 |---|---|---|
-| `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) | RoboWits on Genesis' CPU backend; RoboLab (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact); RoboPaint (ManiSkill/SAPIEN, CPU PhysX, CPU brush model) |
+| `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) | RoboWits on Genesis' CPU backend; RoboLab (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact); RoboPaint (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); MolmoSpaces (MuJoCo, CPU physics) |
 | `approx` | the hash is compared and the result recorded; a mismatch does not end the episode: `resume_state_mismatch = 1`, and the robot's deviation from its checkpointed proprio is recorded (max \|Δ\| over `joint_pos`; the largest TCP position error from `tcp_pose`). Only a gross divergence, a TCP more than `RCB_RESUME_MAX_DEV_M` (0.05 m) from where it was, ends the episode as `resume_failed` (`infra_error = 1`) | simulators declared nondeterministic: RoboWits on the GPU backend (the particle families separate_marbles_and_sand and stabilize_bottle, `RCB_ROBOWITS_BACKEND=gpu`); BEHAVIOR-1K (OmniGibson declares rollouts nondeterministic; measured so far: live = fresh replay on every 2.2 run, so it normally resumes exactly); ManiGuard (OmniGibson 3.7.2; not measured yet) |
 
 This relaxes "the hash checked" of PROTOCOL §4.7 for declared-nondeterministic simulators only. It cannot raise a score:
@@ -231,7 +231,7 @@ numeric ones into `reward.json` (MAY fields, PROTOCOL §2.6), with `infra_error`
 - The collect hook starts with `python3 /srv/rcb_limited.py end "$DATA"`: it waits through a resume (no PID file until the
   service is ready), signals only the process that wrote the newest `startups.jsonl` line, resends SIGUSR1 every 30 s, and
   exits 2 when `final.json` already holds the verdict (a give-up, or an in-process grade; `--wait-key video_done` for
-  RoboWits), 0 when the service dumped the episode and exited (RoboLab, BEHAVIOR, RoboPaint: the hook replays next).
+  RoboWits), 0 when the service dumped the episode and exited (RoboLab, BEHAVIOR, RoboPaint, MolmoSpaces: the hook replays next).
 - Adapters: `EP = L.Episode(DATA, dim, resume, persist)`; `EP.startup()` before the scene is built and `EP.scene_built()`
   after; `EP.journal(a)` in the control step (its True return stops the call: loops that test `E["done"]` test
   `EP.stopping` too); `S.record_start()` then `EP.begin(...)` instead of logging `start` and installing a SIGUSR1
@@ -249,6 +249,7 @@ their evaluation hosts.
 | RoboLab | 13 (20) | 98–217 s | default enough |
 | BEHAVIOR-1K | 6 (12) | 130–404 s (scene load); cold builds on a loaded lab host 433–519 s | `RCB_STARTUP_TIMEOUT_S` = 1800: each trial starts with a cold Kit cache (its own `*_trusted` volume), about 250 s more |
 | RoboPaint | brush families, 285 standard trials on ws, ws3 and lab (up to 50 at once) | episode start at most 126 s after Harbor's environment setup began (median ~30 s); the Session build alone at most 106 s | `RCB_STARTUP_TIMEOUT_S` = 600 (≥ 4× the slowest start) |
+| MolmoSpaces | 8 (213), on a lab host (RTX 4090, 32 cores) | episode start 8–52 s after Harbor's environment setup began (median 11 s; navigate-to 33–52 s) | `RCB_STARTUP_TIMEOUT_S` = 300 |
 
 ### 13.5 Cost and tests
 One state hash per call (not per step). A resume replays the episode so far without rendering: RoboWits ~700 steps/s
@@ -263,28 +264,28 @@ and is graded correctly; check that `live_matches_replay` stays 1 where it was) 
 `episode.jsonl` (calls, checkpoints, resumes), `journal.f64`, `startups.jsonl`, `calls/NNNNNN/` (meta + last frames per call),
 `server.log`, and at the end `trajectory.npz`, the replays, `replay.mp4`, `final.json`. The collect hook signals the service
 by PID after the agent container is stopped; RoboWits grades in-process (Genesis' CPU backend repeats exactly), RoboLab,
-BEHAVIOR and RoboPaint dump the episode, exit, and the hook replays it in two fresh processes. A separate, network-less
+BEHAVIOR, RoboPaint and MolmoSpaces dump the episode, exit, and the hook replays it in two fresh processes. A separate, network-less
 verifier grades `final.json`: `success = live ∧ replay ∧ deterministic` (RoboWits' GPU-backend families: determinism
 reported, not required), reward fields as in PROTOCOL §2.6 and §4.8. A GPU lost to a host systemd reload is reported as
 `gpu_lost` / `grader_error`. 2.1's live recording (`live.mp4`) is a RoboTwin service feature, not part of 2.2.
 
 ## 15. Privileged-mode parity
-Every privileged Session of the four benchmarks offers the same information from the same code: `s.camera_info()`,
+Every privileged Session of the six benchmarks offers the same information from the same code: `s.camera_info()`,
 `s.render_depth(cam)`, `s.robot_spec()`, `s.kinematics(req)` (`s.kinematics_spec()` = `/spec` `kinematics`). Privileged mode
 stays privileged (object state through the tooling).
 
 ## 16. Per-simulator notes (the protocol is the same; the robot and the clock differ)
-| | RoboWits (Genesis 0.4.7) | RoboLab (Isaac Lab 2.3) | BEHAVIOR-1K (OmniGibson 3.9.2, R1Pro) | RoboPaint (ManiSkill 3.0.1 / SAPIEN 3.0.3) | ManiGuard (OmniGibson 3.7.2, Franka long-finger) |
-|---|---|---|---|---|---|
-| rows streamed at | 30 Hz control (4 substeps) | 15 Hz control (8 substeps) | 30 Hz control (4 substeps) | 20 Hz control (5 substeps) | 20 Hz control (6 substeps) |
-| `joint_position` | 16: per arm 7 joints + gripper width (m) | 8: 7 joints + binary gripper (switched) | 25: base (per-step targets, robot frame) + trunk + arms + grippers | 7 joints | 8: 7 joints + binary gripper (+1 / -1, switched) |
-| `ee_pose` | 16 (right first), IK per row, gripper-tip frame | 8, closed-loop differential IK, fingertip-centre frame | 16 (left first, xyzw), cuRobo IK for both end effectors per row | 7, brush-tip targets `dt` apart, IK per control step | 8 (xyzw), numpy IK per row, fingertip-centre frame |
-| cameras | `ego` (static), `wrist_right`, `wrist_left` | `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static), `wrist_cam` | head + two wrist cameras (224×224, moving) | `canvas_cam`, `practice_cam`, `scene_cam`, `side_cam` (static) | `cam_opposite`, `cam_left`, `cam_right`, `cam_left_shoulder` (static), `wrist` |
-| depth | Genesis rasterizer | Isaac `distance_to_image_plane` | OmniGibson `depth_linear` | SAPIEN depth buffer (geometry only: ink and paint never show) | OmniGibson `depth_linear` |
-| `/kinematics` | pinocchio on the URDF (14 arm joints) | numpy model of the USD joints (7) | numpy model of the articulation (trunk + arms), cuRobo fallback | SAPIEN's pinocchio (7) | numpy model of the articulation (7 arm joints), world frame |
-| proprio columns (2.0 → 2.2) | 30 → 80 | 16 → 32 | 49 → 121 | 14 → 28 | — → 43 (no 2.0 version) |
-| grading replays | in-process (exact) | two fresh processes | two fresh processes | two fresh processes | two fresh processes |
-| resume class (§13.1) | `exact` (CPU backend), `approx` (GPU backend) | `exact` | `approx` | `exact` | `approx` (until measured) |
+| | RoboWits (Genesis 0.4.7) | RoboLab (Isaac Lab 2.3) | BEHAVIOR-1K (OmniGibson 3.9.2, R1Pro) | RoboPaint (ManiSkill 3.0.1 / SAPIEN 3.0.3) | ManiGuard (OmniGibson 3.7.2, Franka long-finger) | MolmoSpaces (molmo-spaces 0.2.9, MuJoCo 3.5.0) |
+|---|---|---|---|---|---|---|
+| rows streamed at | 30 Hz control (4 substeps) | 15 Hz control (8 substeps) | 30 Hz control (4 substeps) | 20 Hz control (5 substeps) | 20 Hz control (6 substeps) | Franka 15.15 Hz (33 substeps); RB-Y1 5 Hz (navigation, 100) or 10 Hz (door, 50) |
+| `joint_position` | 16: per arm 7 joints + gripper width (m) | 8: 7 joints + binary gripper (switched) | 25: base (per-step targets, robot frame) + trunk + arms + grippers | 7 joints | 8: 7 joints + binary gripper (+1 / -1, switched) | Franka 8: 7 joints + Robotiq command (0–255); RB-Y1 25: base x, y, θ (world) + torso 6 + arms 14 + two gripper forces |
+| `ee_pose` | 16 (right first), IK per row, gripper-tip frame | 8, closed-loop differential IK, fingertip-centre frame | 16 (left first, xyzw), cuRobo IK for both end effectors per row | 7, brush-tip targets `dt` apart, IK per control step | 8 (xyzw), numpy IK per row, fingertip-centre frame | not offered (`not_yet`) |
+| cameras | `ego` (static), `wrist_right`, `wrist_left` | `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static), `wrist_cam` | head + two wrist cameras (224×224, moving) | `canvas_cam`, `practice_cam`, `scene_cam`, `side_cam` (static) | `cam_opposite`, `cam_left`, `cam_right`, `cam_left_shoulder` (static), `wrist` | Franka: wrist and shoulder (moving), three randomised static; RB-Y1: head + two wrist cameras (moving) |
+| depth | Genesis rasterizer | Isaac `distance_to_image_plane` | OmniGibson `depth_linear` | SAPIEN depth buffer (geometry only: ink and paint never show) | OmniGibson `depth_linear` | MuJoCo depth buffer |
+| `/kinematics` | pinocchio on the URDF (14 arm joints) | numpy model of the USD joints (7) | numpy model of the articulation (trunk + arms), cuRobo fallback | SAPIEN's pinocchio (7) | numpy model of the articulation (7 arm joints), world frame | upstream's `MlSpacesKinematics` on the robot's MuJoCo model (Franka 7, RB-Y1 23 with the base) |
+| proprio columns (2.0 → 2.2) | 30 → 80 | 16 → 32 | 49 → 121 | 14 → 28 | — → 43 (no 2.0 version) | 2.2 only: 29 (Franka), 85 (RB-Y1) |
+| grading replays | in-process (exact) | two fresh processes | two fresh processes | two fresh processes | two fresh processes | two fresh processes |
+| resume class (§13.1) | `exact` (CPU backend), `approx` (GPU backend) | `exact` | `approx` | `exact` | `approx` (until measured) | `exact` |
 
 ## 17. Known issues
 - RoboWits: during the in-process grading replay, `/status` and a late `/observe` report the replay's counter and scene;
