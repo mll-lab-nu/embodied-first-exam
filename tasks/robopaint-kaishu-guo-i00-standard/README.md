@@ -7,11 +7,17 @@
 | Twin | `robopaint-kaishu-guo-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_kaishu_guo` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: kaishu-l-oracle-final0928, kaishu-l-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (aaffb039: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on tiandaochouqin and yong), tooling snapshot 23 (ccb213d0: the scorer; re-scores bit-identical), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only; protocol v1.0 gave the standard service, collect hook, grader and oracle client crash recovery. Not re-run on this version (static validation only). |
+| Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs (ws3, 2026-10-05): path_mm 848 and mark_width_mm 6.20, against the colouring-in limits 2550 mm and 1.85 mm. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task
+**Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
+than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 2550 mm (3 × the reference
+solution's 848 mm) made of marks narrower than 1.85 mm on average (`mark_width_mm`: each stroke's own
+inked area / `path_mm`; 0.3 × the reference's 6.20 mm). They are part of the frozen instance (the rules added to its `target.success`); the collect hook's
+replays apply them with the graders' `rcb_brush_strict.py`.
+
 Standard-mode twin of `robopaint-kaishu-guo-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.2` client
 (docs/STANDARD_MODE_2_2.md) and the target picture (`/app/target.png`, 1024 px covering the main sheet); the simulator and the
 brush model run in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar for the cameras), which owns the scene
@@ -25,9 +31,12 @@ replayed main sheet and writes `final.json`; the verifier runs in a separate san
 Same scene, exemplar and rule as `robopaint-kaishu-guo-i00-privileged` (see its Difficulty), without its privileged help: no reset, no sheet readout, no model of the mark and no score. Every stroke on the main sheet is permanent and is seen only through the cameras; how the tool marks the paper has to be learned from test strokes on the practice sheet.
 
 ## Reference solution
-`solution/`: streams the privileged oracle's joint targets (one row per control step, `hold`) as `joint_position` chunks; the recorded trajectory then equals the privileged oracle's; label `partial` (task.toml `oracle_evidence`: the recorded runs predate this version), human review in PR #3.
+`solution/`: streams the privileged oracle's joint targets (one row per control step, `hold`) as `joint_position` chunks; the recorded trajectory then equals the privileged oracle's; label `partial` (task.toml `oracle_evidence`: the reference solution, scored under the process rules).
 
 ## Verification
+"The rule" below is the picture rule and the process rules (Task); the collect hook's replays run
+`environment/sim/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
+`max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
 `success` = both fresh-process replays of the recorded episode meet the rule after the best single shift of the sheet, at most 5 mm along each axis (IoU ≥ 0.80, boundary F ≥ 0.75, every stroke covered ≥ 0.80, stray ≤ 0.04, ≤ 11 strokes) ∧ they agree exactly (computed in the sidecar after the agent is gone); every metric of the replayed sheet in `reward.json`; `/logs/verifier/replay.mp4`.
 
 ## Details
