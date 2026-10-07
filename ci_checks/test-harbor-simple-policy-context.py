@@ -14,14 +14,16 @@ from topogym.planning.harbor_bridge.actions import SessionPolicyRunner
 from topogym.planning.solvability import QualificationWorkflow
 from topogym.planning.interlocked_claws.simplified_policy import SimplifiedClawsPolicy
 from topogym.planning.lock_picking.lock_picking_medium_planning import LockPickingMediumPolicy
+from topogym.utils.grasp import GraspAssistConfig, GraspTarget
 
 
 class Context(unittest.TestCase):
     def test_actual_claws_and_lock_initializers_receive_declared_contract(self):
         for robot_id, policy in (("aloha", SimplifiedClawsPolicy(part="acquire")),
                 ("panda_robotiq", LockPickingMediumPolicy(geometry={}))):
+            assist = GraspAssistConfig(model="contact_weld_v1", targets=(GraspTarget("part", "base"),))
             env = SimpleNamespace(_robot=SimpleNamespace(description=None),
-                _world=SimpleNamespace(physics_step=0), config=SimpleNamespace(grasp_assist={"model": "contact_weld_v1"}),
+                _world=SimpleNamespace(physics_step=0), config=SimpleNamespace(grasp_assist=assist),
                 timing_spec={"control_dt_s": .025})
             session = SimpleNamespace(env=env, n_steps=0, episode_done=True, episode_end=None,
                 success=lambda: False, _recording=[], _recorded_ticks=[])
@@ -52,10 +54,17 @@ class FrozenOrigin(unittest.TestCase):
         for p in reversed(self.patches): p.stop()
         self.temp.cleanup()
 
-    def test_bound_restored_origin_is_not_a_standalone_birth_proof(self):
+    def test_bound_restored_origin_is_a_proof_birth(self):
+        # Harbor restores the frozen birth on branch 1 before any action; state 0 at physics step 0 is still the birth.
         runner, _ = self.make_runner()
-        with self.assertRaisesRegex(ValueError, "fresh episode birth"):
-            QualificationWorkflow(runner, self.root / "proof", {}, mode="proof")
+        proof = QualificationWorkflow(runner, self.root / "proof", {}, mode="proof")
+        self.assertEqual(proof.report["birth"]["branch_id"], 1)
+        for index, field in enumerate(("state_id", "physics_step")):
+            runner, state = self.make_runner()
+            state[field] = 1
+            with self.assertRaisesRegex(ValueError, "fresh episode birth"):
+                QualificationWorkflow(runner, self.root / f"late{index}", {}, mode="proof")
+        runner, _ = self.make_runner()
         flow = QualificationWorkflow(runner, self.root / "session", {}, mode="session")
         self.assertEqual(flow.report["birth"]["branch_id"], 1)
         with self.assertRaisesRegex(ValueError, "unavailable"):

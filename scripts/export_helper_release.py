@@ -27,7 +27,7 @@ RUNNER_BLOB = "a74bf7cc16e35b3b86ae23595c3e0b63d6bff102"   # upstream e768a13a8 
 CONTEXT = (".dockerignore", "images/topogym", "requirements", "assets/robots", "scripts/prepare_nyx_studio.py", "topogym")
 OMIT = {"agents", "planning", "data", "deferred", "legacy", "redundants", "rollout_simulation", "__pycache__"}  # prune.py
 CHECKOUT = ("scripts/run_agent_batch.sh", "scripts/log_mirror.py", "scripts/mem_guard.py", "scripts/scan_secrets.py",
-            "scripts/secret_scan.py", "scripts/write_task_results.py", "scripts/task_names.py",
+            "scripts/secret_scan.py", "scripts/write_task_results.py", "scripts/task_names.py", "scripts/install.sh",
             "scripts/account_failure_check.py",
             "images/topogym/BUILD_ONLY", "docs/rcb/SHARING_RUNS.md", "docs/rcb/RUNNING.md")
 
@@ -82,10 +82,13 @@ def readme(name, commit, runtime, ref, tasks):
              f"Image build context: TopoGym commit `{commit}`; simulator source `{runtime['source']['sha256']}` "
              f"({runtime['source']['files']} files).", "",
              "Follow [docs/rcb/SHARING_RUNS.md](docs/rcb/SHARING_RUNS.md). TopoGym specifics:", "",
-             "1. Build the image once and check it: [images/topogym/BUILD_ONLY](images/topogym/BUILD_ONLY).",
-             "2. Run `scripts/run_agent_batch.sh` with the batch name and agent settings we send (variables: "
+             "1. Install Harbor once per host: `scripts/install.sh` (robot_coding_bench's host setup; Harbor pinned to 0.23.0, the "
+             "version this release was tested with). It prints the Harbor version; a shell that does not find `harbor` "
+             "afterwards: `export PATH=\"$HOME/.local/bin:$PATH\"`.",
+             "2. Build the image once and check it: [images/topogym/BUILD_ONLY](images/topogym/BUILD_ONLY).",
+             "3. Run `scripts/run_agent_batch.sh` with the batch name and agent settings we send (variables: "
              "`sed -n 2,45p scripts/run_agent_batch.sh`).",
-             "3. Several GPUs: start each lane with its own GPU, e.g. `TOPOGYM_GPU_UUID=1 AGENT=... nohup "
+             "4. Several GPUs: start each lane with its own GPU, e.g. `TOPOGYM_GPU_UUID=1 AGENT=... nohup "
              "scripts/run_agent_batch.sh ...`; the task containers use `${TOPOGYM_GPU_UUID:-0}` (an index or a GPU UUID "
              "from `nvidia-smi -L`), so lanes without it all share GPU 0. Docker Compose warnings about unset "
              "`TOPOGYM_BATCH` / `TOPOGYM_BATCH_OWNER` are harmless.", "",

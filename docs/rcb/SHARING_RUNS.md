@@ -23,7 +23,7 @@ Names: the project is Embodied Agent Interface v2 (EAI). A few code identifiers 
 | Task list and modes | `robowits-stack-cubes-i00`, … (task bases; both modes unless we say otherwise) | One Harbor job per task and mode |
 | **Batch name** | `robowits-lunaxh-alice-1004` | Every job name starts with it; our site finds your run by it. Use it verbatim |
 | Agent settings | `AGENT=codex MODEL=openai/gpt-6-luna EFFORT=xhigh` | The run id is derived from them |
-| Release (TopoGym only) | tag `rigid-v18-20261006-02`; its `README.md` names the release and the image | The tag fixes the frozen packages in `tasks/` and the source their image is built from |
+| Release (TopoGym only) | tag `rigid-v18-20261006-08`; its `README.md` names the release and the image | The tag fixes the frozen packages in `tasks/` and the source their image is built from |
 | Upload target | our private Hugging Face dataset `eai-v2-internal/helper-uploads` and a write token for it, or a shared-folder link | Where the archive goes |
 
 Do not invent your own batch name, change budgets, seeds, models or efforts, edit task directories or modify the runner.
