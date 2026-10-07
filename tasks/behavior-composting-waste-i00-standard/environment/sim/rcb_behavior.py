@@ -806,6 +806,38 @@ def ensure_warp_runtime() -> None:
         _log("ensure_warp_runtime failed:", repr(exc))
 
 
+TEXTURE_BUDGET_KEY = "/rtx-transient/resourcemanager/texturestreaming/memoryBudget"
+
+
+def _cap_texture_memory() -> None:
+    """RCB_TEXTURE_BUDGET (optional, a fraction of the GPU's memory, e.g. 0.1): Isaac Sim's texture streaming budget,
+    0.6 by default, so a session's textures grow with the card (a 48 GB card lets one replay reach 16.5 GB; capped at
+    0.1, 8.8 GB, measured 2026-10-06 on collecting_childrens_toys) and two trials can share a card. Rendering only:
+    physics, the replay and its state hashes are unchanged (same final state_sha with and without). OmniGibson rebuilds
+    sys.argv before it starts Kit, so the setting goes in through SimulationApp's extra_args. Unset or empty: Isaac's
+    default."""
+    raw = os.environ.get("RCB_TEXTURE_BUDGET", "").strip()
+    if not raw:
+        return
+    budget = float(raw)
+    if not 0.0 < budget <= 1.0:
+        raise ValueError(f"RCB_TEXTURE_BUDGET={raw!r}: a fraction of GPU memory in (0, 1]")
+    import isaacsim
+    app = isaacsim.SimulationApp
+    if getattr(app, "_rcb_texture_budget", None) is not None:
+        return
+    launch = app.__init__
+
+    def __init__(self, launch_config=None, *args, **kwargs):
+        launch_config = dict(launch_config or {})
+        launch_config["extra_args"] = list(launch_config.get("extra_args") or []) + [f"--{TEXTURE_BUDGET_KEY}={budget}"]
+        launch(self, launch_config, *args, **kwargs)
+
+    app.__init__ = __init__
+    app._rcb_texture_budget = budget
+    _log(f"texture streaming budget capped at {budget} of GPU memory (RCB_TEXTURE_BUDGET)")
+
+
 # --------------------------------------------------------------------------- evaluator wrappers (hydra targets)
 try:  # only importable inside the simulator image; the module must still import on a bare host for --help / selftest.
     from omnigibson.envs import EnvironmentWrapper as _EnvWrapper
@@ -857,6 +889,7 @@ class Session:
             raise KeyError(f"unknown task {task!r}; known: {list(TASKS)}")
         self.task, self.spec = task, TASKS[task]
         _import_warp_early()
+        _cap_texture_memory()
         import torch as th
         import omnigibson as og
         from omnigibson.macros import gm
