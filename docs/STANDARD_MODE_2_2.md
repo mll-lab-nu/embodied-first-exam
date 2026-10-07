@@ -5,8 +5,9 @@
 > says otherwise, every 2.2 addition is a MAY capability, and a request written for 2.0 or 2.1 gets the same answer as
 > before (plus parts and keys an old client ignores). Which parts are required is listed in PROTOCOL §4.
 
-**Who serves it.** The standard twins of six benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard and MolmoSpaces
-([docs/benchmarks/](benchmarks/)). The RoboTwin and MuJoCo standard tasks serve 2.1.
+**Who serves it.** The standard twins of eight benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces,
+MyoSuite and DexJoCo ([docs/benchmarks/](benchmarks/); MyoSuite: MuJoCo on the CPU, resume class `exact`), and MuJoCo Playground's
+quadruped tasks. The RoboTwin and the other MuJoCo standard tasks (DexToolBench, MuJoCo Playground's manipulation tasks) serve 2.1.
 
 **One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/), the D9 shared source of these six
 benchmarks: the service layer `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash

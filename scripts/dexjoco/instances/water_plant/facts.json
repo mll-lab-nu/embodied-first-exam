@@ -1,0 +1,72 @@
+{
+ "family": "water_plant",
+ "demo": "water_plant_demo_10_2026-02-05_19-50-27_886249",
+ "instance_sha": "04f14553ced4b0ed",
+ "objects": [
+  "spray_bottle",
+  "spray_trigger",
+  "spray_nozzle",
+  "plant",
+  "table_top"
+ ],
+ "cameras": [
+  "front",
+  "back",
+  "left",
+  "right",
+  "top0",
+  "handcam_rgb"
+ ],
+ "tcp0": "[-0.443, -0.0, 1.517] / [0.0, -1.0, 0.0, -0.0025]",
+ "table_top_z": 0.964,
+ "arm_bases": {
+  "link0": [
+   -0.75,
+   0.0,
+   0.924
+  ]
+ },
+ "hand_lo": [
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  0.26,
+  -0.1,
+  -0.19,
+  -0.16
+ ],
+ "hand_hi": [
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  1.4,
+  1.16,
+  1.64,
+  1.72
+ ],
+ "oracle_rows": 307,
+ "oracle_state_sha": "a4342b4b85a7241c",
+ "steps_per_s": 390,
+ "success_src": "def _compute_success(self):\n    site_id = self._model.site(\"ref_point\").id\n    p_world = self._data.site_xpos[site_id]\n    obj_world_pos = self._data.body(\"plant\").xpos\n\n    R = 0.2\n    HALF_H = 0.2\n    dx, dy, dz = p_world - obj_world_pos\n    inside = (dx * dx + dy * dy <= R * R) and (-HALF_H <= dz <= HALF_H)\n\n    failed_trigger_outside = (not inside) and self._trigger_pulled\n\n    if inside and self._trigger_pulled:\n        self._success_counter += 1\n    else:\n        self._success_counter = 0\n\n    success = self._success_counter >= _SUCCESS_STEPS_REQUIRED\n    return success, failed_trigger_outside",
+ "success_path": "dexjoco/dexjoco/sim/envs/panda_water_plant_env.py",
+ "rcb_src": "def water_aim_deg(model, data) -> float:\n    \"\"\"Angle (deg) between the spray direction and the direction from the nozzle reference point to the plant. The spray\n    direction is the bottle body's +z axis, along which DexJoCo draws its spray cone: perpendicular to the bottle's long\n    axis (+y, bottom to spray head), out of the front of the head on the side the trigger faces.\"\"\"\n    spray = data.body(\"link_2\").xmat.reshape(3, 3)[:, 2]\n    to_plant = data.body(\"plant\").xpos - data.site(\"ref_point\").xpos\n    c = float(np.dot(spray, to_plant) / max(1e-9, np.linalg.norm(to_plant)))\n    return float(np.degrees(np.arccos(np.clip(c, -1.0, 1.0))))",
+ "water_aim_max_deg": 45.0
+}

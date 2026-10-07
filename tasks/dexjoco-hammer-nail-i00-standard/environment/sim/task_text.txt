@@ -1,0 +1,3 @@
+Pick up the hammer and drive the nail into the wooden block by striking its head. A strike counts only if the hammer face was moving down faster than 0.02 m/s just before it touched the nail; each counted strike drives the nail 8 mm x min(3, speed / 0.02) deeper (at most 7.26 cm). Success: the nail is at least 4 cm deep.
+
+The hammer lies on the table at the robot's right (low y); the nail stands upright in a wooden block in front of the robot. The nail is not a free body: it only moves down when struck.

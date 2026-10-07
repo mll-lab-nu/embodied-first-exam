@@ -1,0 +1,7 @@
+{
+ "task_text": "Bring the index fingertip to the target point in space: its distance below 0.0125 m for 50 consecutive control steps (1.0 s). Failure (the episode ends, from the third control step on): the distance above 1.00 m.",
+ "default_cameras": [
+  "hand_top"
+ ],
+ "reference": null
+}
