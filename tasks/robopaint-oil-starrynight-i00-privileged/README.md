@@ -7,11 +7,17 @@
 | Twin | `robopaint-oil-starrynight-i00-standard` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_oil_starrynight` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: oil-u-oracle-final0928, oil-u-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (cc866ac9: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on irises and pearlearring), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only. Not re-run on this version (static validation only). |
+| Oracle | `partial` — Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 13189 of the 39600 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task
+**Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
+than coloured in: the brush tip's path while it presses on the main sheet with paint (`path_mm`) is at most 39600 mm (3 ×
+the reference solution's 13189 mm), and at most 10 % of it lies in strokes longer than
+2.5 × the diagonal of their bounding box (zigzags, back-and-forth fills, spirals, loops). They are part of the frozen instance (the rules added to its `target.success`); the graders'
+`rcb_brush_strict.py` applies them (the verifier and the scoring service).
+
 The instance: paint the picture in `environment/target.png` (a square crop of Vincent van Gogh's The Starry Night, 1889: a public-domain masterpiece, cropped and downscaled to the 227 mm main sheet) in at most 683 strokes, with 16 premixed paints (the picture's colours quantised) on a plate and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; everything frozen in `environment/instance.json`.
 
 Paint the picture: mean CIELAB ΔE <= 8.4, p90 ΔE <= 15.5, SSIM of L* >= 0.56, edge correlation >= 0.28, paint IoU >= 0.96 (all after the best single shift of the sheet, at most 5 mm along each axis, inside the central area 8 mm in from the sheet's edges) and at most 683 strokes. `final_reward` = max(0, 1 - mean ΔE / 20) (× 683 / strokes above 683). The thresholds are the reference solution's execution by this robot (456 strokes: mean ΔE 7.64, p90 13.74, SSIM 0.595, edge correlation 0.337, paint IoU 0.999) with a margin (ΔE x 1.1, SSIM - 0.03, edge correlation - 0.05, paint IoU - 0.03).
@@ -24,7 +30,10 @@ The reference solution is our baseline painter's stroke program (`solution/progr
 34159 control steps, 456 strokes, mean ΔE 7.636, p90 ΔE 13.740, SSIM 0.5950, paint IoU 0.9991.
 
 ## Verification
-Oracle label `partial`: the recorded oracle runs predate this version's files (task.toml `oracle_evidence`); human review in PR #3.
+"The rule" below is the picture rule and the process rules (Task); the replays run
+`tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
+`max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
+Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`); pass iff
 both replayed main sheets meet the rule, the final-state hashes (paint layers of both sheets + robot state + the loaded paint)
 agree and the rebuilt frozen instance matches the recorded one. PhysX and libmypaint (single-threaded, with the image's
