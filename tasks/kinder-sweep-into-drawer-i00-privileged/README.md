@@ -7,7 +7,7 @@
 | Twin | `kinder-sweep-into-drawer-i00-standard` |
 | Simulator / robot | `kinder` / `tidybot-plus-plus` |
 | Family / instance | `sweep-into-drawer` / seed 0 |
-| Oracle | `none` — none known: GPT-6 Luna failed both modes, and KinDER's paper reports success on this variant only as a rate (at most 0.14, its best method), with no rollout of this instance; human review in PR #8 |
+| Oracle | `none` — GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet; human review in PR #8 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
 

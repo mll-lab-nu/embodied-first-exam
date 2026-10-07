@@ -1,8 +1,8 @@
 # KinDER subset -- the single source for every tasks/kinder-* directory (`gen_tasks.py render` writes them).
 #
 # Which tasks: KinDER's Dynamic3D tasks (MuJoCo, a TidyBot++ mobile manipulator) whose goal a camera can see or a
-# sentence can name, and (the section at the end) the families a screening of all of KinDER found hard, one variant
-# each (docs/benchmarks/kinder.md). Each ships twice (docs/PROTOCOL.md): privileged mode (tasks/kinder-<family>-i00:
+# sentence can name, and (the section at the end) other 3D families of KinDER, one variant each. Of all of these, the
+# four with the most task objects (upstream's `oN`) stay (docs/benchmarks/kinder.md), with the fixture. Each ships twice (docs/PROTOCOL.md): privileged mode (tasks/kinder-<family>-i00:
 # the simulator and its state, one replayable trajectory) and standard mode (-standard: the robot as a service,
 # eai-standard/2.1, its own sensors only).
 #
@@ -32,28 +32,6 @@ verifier_timeout_sec = 900
 review_pr = 8             # the pull request whose human review covers the tasks without an oracle (0: not opened yet)
 
 [[task]]
-family = "tossing"
-env_id = "kinder/Tossing3D-o1-v0"
-task_view = { position = [1.0, -2.6, 2.4], lookat = [1.4, 1.2, 0.2], fovy = 65 }   # upstream: 5.5 m up, 72 deg down
-expert_hours = 3.0
-difficulty = """Dynamic: the cube has to get over a low wall that spans the room, into a bin on the far side."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet"""
-task_statement = """get the green cube lying on the floor into the yellow bin on the far side of the low wall that
-runs across the room. The task succeeds the moment the cube's centre is inside the bin's goal region, the translucent
-green box marked in the bin."""
-
-[[task]]
-family = "balance-beam"
-env_id = "kinder/BalanceBeam3D-o3-v0"
-expert_hours = 3.0
-difficulty = """Tool use and dynamics: three cubes of two weights must sit inside the marked region of a seesaw and leave
-it within 5° of level, so where each goes has to balance the others."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet"""
-task_statement = """put the two small green cubes and the larger dark-red cube on the seesaw so that it balances. The
-task succeeds the moment all three cubes' centres are inside the translucent green region marked on the seesaw's
-beam and the beam is within 5° of level."""
-
-[[task]]
 family = "dynamo"
 env_id = "kinder/Dynamo3D-o3-v0"
 task_view = { position = [-1.0, -1.2, 2.8], lookat = [2.2, 1.9, 0.0], fovy = 70 }  # upstream: 6.75 m up, straight down
@@ -76,8 +54,7 @@ expert_hours = 4.0
 difficulty = """Nonprehensile, tool use, dynamics: open a closed drawer, then sweep five small cubes off the counter into it
 with a wiper. KinDER's paper reports at most 0.14 success for its best method on this variant and 0.00 for sampling
 MPC on the true simulator."""
-oracle_evidence = """none known: GPT-6 Luna failed both modes, and KinDER's paper reports success on this variant only as a rate (at most
-0.14, its best method), with no rollout of this instance"""
+oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet"""
 task_statement = """get the five small dark-red cubes on top of the kitchen island into the middle drawer of the
 island's upper row of drawers, which starts closed; a wiper lies next to the cubes. The task succeeds the moment all
 five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls."""
@@ -93,19 +70,8 @@ task_statement = """move all 30 small dark-red cubes from the yellow bin into th
 scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner
 walls and at least 0.5 cm below its rim."""
 
-[[task]]
-family = "shelf"
-env_id = "kinder/Shelf3D-o2-v0"
-expert_hours = 3.0
-difficulty = """Spatial and geometric: two cubes from the floor into the top compartment of a cramped cupboard."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1; it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example, and none is known yet"""
-task_statement = """pick up the dark-red cube and the dark-green cube from the floor and put both in the top compartment
-of the brown cupboard, which has three compartments one above another. The task succeeds the moment both cubes rest on
-that compartment's floor."""
-
 # ----------------------------------------------------------------------------------------------------------------------
-# From the screening (09-29, GPT-6 Luna once per mode on every KinDER family): the ones it failed in standard mode
-# (then called limited). The variant is the hardest that upstream's baselines (kinder-baselines) configure. Where
+# From the rest of KinDER's 3D families. The variant is the hardest that upstream's baselines (kinder-baselines) configure. Where
 # upstream sets no episode length (PyBullet), max_steps is its baselines' evaluation horizon for the variant, else
 # their default 3000.
 # `standard_statement` is the standard twin's goal sentence where the privileged one names the goal by world coordinates
@@ -136,54 +102,7 @@ env_id = "kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitc
 expert_hours = 3.0
 difficulty = """Nonprehensile, tool use: ten small cubes on the floor into a box marked at the kitchen island's end, with a
 wiper at hand."""
-oracle_evidence = """GPT-6 Luna's graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (recorded before protocol v1.0) on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client"""
+oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04 (it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc) and its graded standard-mode episode with 50 resets recorded before protocol v1.0, run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores both 1, and the standard service scores the episode 1 when it is sent through the client"""
 task_statement = """get the ten small dark-red cubes scattered on the floor into the translucent grey box marked on the
 floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the
 floor next to the cubes. The task succeeds the moment all ten cubes' centres are inside that box."""
-
-[[task]]
-family = "sort-blocks"
-env_id = "kinder/SortClutteredBlocks3D-o4-sort_the_cluttered_blocks_into_bins-v0"
-expert_hours = 3.0
-difficulty = """Spatial: four clustered cubes, each into the bin of its colour."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory and graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (both modes) on the results site; today's privileged verifier scores both 1, and so does the standard service when either is sent through the client"""
-task_statement = """sort the four small cubes clustered in the middle of the white table into the four open bins on it by
-colour: the dark-red cube into the red bin, the dark-green one into the green bin, the dark-blue one into the blue bin
-and the yellow one into the yellow bin. The task succeeds the moment every cube's centre is inside the bin of its own
-colour, at least 1 cm from each of its inner walls, at least 1 cm below its rim and at least 0.5 cm above its floor."""
-
-[[task]]
-family = "obstruction-3d"
-env_id = "kinder/Obstruction3D-o4-v0"
-max_steps = 3000
-expert_hours = 4.0
-difficulty = """Geometric, kinematic (PyBullet): clear three blocks off a pad, then place a block on it; a move that would
-collide is refused."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory, run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client"""
-task_statement = """put the purple block (`target_block`) on the thin purple pad on the wooden table (`target_region`); three
-of the four small red blocks (`obstruction0`, `obstruction1`, `obstruction3`) sit on the pad and the fourth
-(`obstruction2`) is elsewhere on the table. The task succeeds the moment the robot holds nothing, the block's underside
-is within 5 mm of the pad's top surface, and all four of its bottom corners lie within the pad's outline enlarged by
-5 mm on every side."""
-standard_statement = """put the purple block on the thin purple pad on the wooden table; three of the four small red blocks
-sit on the pad and the fourth is elsewhere on the table. The task succeeds the moment the robot holds nothing, the
-block's underside is within 5 mm of the pad's top surface, and all four of its bottom corners lie within the pad's
-outline enlarged by 5 mm on every side."""
-
-[[task]]
-family = "packing-3d"
-env_id = "kinder/Packing3D-p3-v0"
-max_steps = 3000
-expert_hours = 4.0
-difficulty = """Geometric, kinematic (PyBullet): pack three flat parts into a tray, flat and without overlap."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory and graded standard-mode episode (50 resets), run `codex-gpt6_luna-medium` (both modes) on the results site; today's privileged verifier scores both 1, and so does the standard service when either is sent through the client"""
-task_statement = """put the three flat green parts on the grey table, a square (`part0`) and two right triangles (`part1`,
-`part2`), each with a small red peg on top, into the purple tray in the middle of the table (`rack`). The task succeeds
-the moment the robot holds nothing and every part rests in the tray: its flat body (peg excluded) lies within the
-tray's inner outline, its underside is within 5 mm of the tray floor's height and its top is no more than 5 mm above
-the tray's rim, it is within 5 mm of the tray without penetrating it, and no two parts (pegs included) overlap."""
-standard_statement = """put the three flat green parts on the grey table, a square and two right triangles, each with a small red
-peg on top, into the purple tray in the middle of the table. The task succeeds the moment the robot holds nothing and
-every part rests in the tray: its flat body (peg excluded) lies within the tray's inner outline, its underside is
-within 5 mm of the tray floor's height and its top is no more than 5 mm above the tray's rim, it is within 5 mm of the
-tray without penetrating it, and no two parts (pegs included) overlap."""

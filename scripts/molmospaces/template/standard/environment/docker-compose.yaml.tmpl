@@ -1,0 +1,32 @@
+# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# Rendering runs on an NVIDIA GPU (EGL), physics on the CPU. Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits
+# non-zero when the service crashes and compose restarts the same container (its /data kept); the service resumes the
+# episode from its journal. RCB_STARTUP_TIMEOUT_S: the startup watchdog (an episode starts 8-52 s after Harbor's
+# environment setup begins, docs/STANDARD_MODE_2_2.md §13.4).
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: @@IMAGE@@
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /tmp
+    command: sh /srv/run.sh
+    restart: on-failure:6
+    environment:
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TOOL: /srv/rcb_molmospaces.py
+      RCB_DATA: /data
+      RCB_WALL_CLOCK_S: "3600"
+      RCB_STARTUP_TIMEOUT_S: "300"
+      RCB_ACTION_UNITS: @@UNITS_YAML@@
+      PYTHONPATH: /srv
+      RCB_SESSION_LOG: ""
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

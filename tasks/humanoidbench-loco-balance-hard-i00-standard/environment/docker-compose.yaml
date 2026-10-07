@@ -15,7 +15,7 @@ services:
       RCB_TASK: balance_hard
       RCB_INSTANCE: /srv/instance.npz
       RCB_TASK_TEXT: "Stand on the balance board and stay on it, upright and still, for the whole episode."
-      RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls, when anything but the roller under the board touches the ground (see Scoring), after 1000 control steps, when your time is up (timeout), or on a simulator error."
+      RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls, when anything but the roller under the board touches the ground or the roller touches anything but the ground and the board (see Scoring), after 1000 control steps, when your time is up (timeout), or on a simulator error."
       RCB_WALL_CLOCK_S: "3600.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.

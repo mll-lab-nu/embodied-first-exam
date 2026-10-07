@@ -1,0 +1,15 @@
+{
+ "env": "SpotFlatTerrainJoystick",
+ "candidates": [
+  {
+   "seed": 0,
+   "activity": 0.799,
+   "success": true,
+   "fell_at": null,
+   "worst_lin_err": 0.1555,
+   "worst_yaw_err": 0.072,
+   "steps": 1000,
+   "chosen": true
+  }
+ ]
+}
