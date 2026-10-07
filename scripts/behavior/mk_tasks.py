@@ -15,7 +15,9 @@ Sources (everything a rerun needs; a rerun reproduces the committed tasks, `git 
 - scripts/behavior/families.json: per family the goal texts (privileged: goal, success conditions, difficulty, objects,
   note; standard: the goal in words, the closing paragraph), the scene, the oracle level with its evidence, and either the
   cited positive (trial, batch, version, results-site log, Hugging Face replay) or, for the supplementary families without
-  one, the 2026 challenge's official human demonstrations (`demo`: video, its duration, episodes, mean duration);
+  one, the 2026 challenge's official human demonstrations (`demo`: video, its duration, episodes, mean duration); `added`
+  (optional) is the date of the pull request that added a supplementary family after the first 50 (default 2026-10-04): the
+  evidence and the README of those families cite that pull request's human review (REVIEW_PR below);
 - scripts/behavior/bddl/<family>.bddl: the task's BDDL problem (its :goal block is quoted in the privileged instruction;
   goal.py words the predicates it uses), as in the image's /behavior-src/bddl3/bddl/activity_definitions/<family>/problem0.bddl;
 - scripts/behavior/instances/<family>.json: the frozen instance (2026 challenge public_test instance 301 and its state
@@ -66,6 +68,9 @@ LAYER = {"environment/sim/rcb_limited.py": "rcb_limited.py", "environment/sim/rc
          "environment/client-requirements.txt": "client-requirements.txt"}           # the client's pip pins (client.env)
 TOOLING = ("rcb_behavior.py", "r1pro_primitives_eval.yaml")     # the privileged environment/ copies are the source
 IMAGE = "ghcr.io/mll-lab-nu/eai-behavior:0.1.1"
+# the pull request whose human review covers the families with an `added` date (PROTOCOL §2.7): its number goes here once it
+# exists, then rerun this script and `cd tasks && harbor add --scan .` (the texts change, hence the digests)
+REVIEW_PR = "71"
 NO_ORACLE = ("No oracle: the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull request that adds it, on a positive "
              "example and a `nop` run per mode.")
 PARTIAL = ("Oracle `partial`: the reference solution scored 1 on earlier versions of this task (`task.toml` `oracle_evidence`) "
@@ -74,7 +79,10 @@ PARTIAL = ("Oracle `partial`: the reference solution scored 1 on earlier version
 NO_POSITIVE = ("No oracle and no verified positive example: the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull "
                "request that adds it, on the official human demonstrations and a `nop` run per mode; until a positive example "
                "scores 1, its results are reported separately from the tasks with a verified solution (PROTOCOL §7, open item 4).")
-REVIEW = {"full": "", "partial": PARTIAL, "none": NO_ORACLE, "none_demo": NO_POSITIVE}
+NO_POSITIVE_PR = (f"No oracle; human review in PR #{REVIEW_PR} (PROTOCOL §2.7), on the official human demonstrations and a `nop` run per "
+                  "mode; until a positive example scores 1, its results are reported separately from the tasks with a verified "
+                  "solution (PROTOCOL §7, open item 4).")
+REVIEW = {"full": "", "partial": PARTIAL, "none": NO_ORACLE, "none_demo": NO_POSITIVE, "none_demo_pr": NO_POSITIVE_PR}
 EVIDENCE = ("No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: "
             "model trial {trial} ({batch}, {where}) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 "
             "version of this task (dev/qineng {ran_at}; grader verdict and frozen instance unchanged since); agent log {log}, "
@@ -84,7 +92,7 @@ EVIDENCE_DEMO = ("No reference solution and no verified positive example yet: BE
                  "on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 "
                  "BEHAVIOR Challenge publishes {episodes} teleoperated demonstrations of this activity on the R1Pro in this scene "
                  "model ({mean_s} s on average); demonstration video ({duration_s} s): {video} (challenge task list {page}). "
-                 "Supplementary task (added 2026-10-04); human review per family (protocol §2.7).")
+                 "Supplementary task (added {added}); human review {review} (protocol §2.7).")
 VERIFY_PRIVILEGED = (
     "Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff the BDDL goal\n"
     "holds after every replay, the final-state hashes agree and the rebuilt frozen instance matches the recorded one\n"
@@ -142,7 +150,8 @@ def goal_block(bddl: str) -> str:
 
 def evidence(fam: str, e: dict, mode: str) -> str:
     if "positive" not in e:                       # no positive yet: the official human demonstrations (both modes)
-        return EVIDENCE_DEMO.format(**e["demo"])
+        added = e.get("added")                  # a family added after the first 50 cites the pull request of its review
+        return EVIDENCE_DEMO.format(**e["demo"], added=added or "2026-10-04", review=f"in PR #{REVIEW_PR}" if added else "per family")
     p = e["positive"]
     where = "privileged" if mode == "privileged" else f"the privileged twin {priv(fam)} on the same frozen instance and BDDL goal"
     return EVIDENCE.format(trial=p["trial"], batch=p["batch"], where=where, ran_at=p["ran_at"], log=p["log"], replay=p["replay"])
@@ -182,7 +191,9 @@ def details(rows: list[tuple[str, str]], sections: list[tuple[str, str]] = ()) -
 
 
 def review_key(e: dict) -> str:
-    return "none_demo" if e["oracle"] == "none" and "positive" not in e else e["oracle"]
+    if e["oracle"] == "none" and "positive" not in e:
+        return "none_demo_pr" if e.get("added") else "none_demo"
+    return e["oracle"]
 
 
 def readme(name: str, task: str, difficulty: str, reference: str, verification: str, level: str, more: str) -> str:
