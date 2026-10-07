@@ -60,6 +60,27 @@ strokes**.
   ≤ 0.04 and at most 16 strokes on the main sheet.** (The recorded episode is replayed twice and both replays must agree.) The continuous score is the IoU
   (scaled by 16 / strokes above 16 strokes).
 
+## Process rules
+Letter the word with pen strokes, the way a scribe writes it: each stroke of a letter is a pass of the pen along it, its width
+coming from the pen (a broad nib: its angle and the direction of travel; a pointed pen: the pressure); going over a stroke again
+is fine. Colouring in or filling the letters' shapes, zigzag or serpentine fills (back-and-forth passes across a stroke), and
+contour-offset fills are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the
+replayed episode with two numbers you can compute yourself; only inked strokes on the main sheet count (the practice sheet is
+free):
+- `path_mm`: the total length of the pen tip's path while it presses on the main sheet with ink (all strokes together, sampled
+  at every physics step);
+- `mark_width_mm`: the average width of your marks = the area each stroke inks on its own (its own mark, ink coverage ≥ 0.5;
+  where different strokes overlap, each counts its own), summed over the strokes, divided by `path_mm`.
+
+**Colouring in = `path_mm` > 1680 mm and `mark_width_mm` < 0.23 mm** (a long path of thin marks): it
+fails the task. Our reference solution writes this word with `path_mm` 557 mm and `mark_width_mm`
+0.79 mm; the limits are 3 times its path (rounded up) and 0.3 times its mark width
+(rounded down). A pressed pen, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
+under the path limit: both are fine.
+
+**Success iff the picture rule above holds and the run is not colouring in.** The continuous score is the one above, × min(1,
+1680 / `path_mm`) when it is colouring in.
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot

@@ -47,6 +47,23 @@ copy the painting shown in the picture `/app/target.png` (a small acrylic painti
 - Before scoring, the main sheet is aligned with the picture: your painting is moved by the single translation (no rotation or scaling, one shift for the whole sheet, whole pixels up to 5 mm along each axis) that best matches the picture; every quantity below is taken after that shift, which is reported (`register_dx_mm`, `register_dy_mm`). If the best match lies at the 5 mm limit, no shift is applied.
 - The grader compares the main sheet with the picture: both blurred (σ = 1 mm); **ΔE** = the CIELAB colour difference (ΔE*ab) per pixel over the region where either has paint (dilated by 2 mm): its mean and 90th percentile; **SSIM** of the lightness L* (σ 1.5 mm windows); **edge correlation** = the correlation of the lightness-gradient magnitudes of the two blurred pictures over that region; **paint IoU** of the painted areas (paint coverage ≥ 0.5); the **number of strokes** on the main sheet (painted contacts). **Success iff, after the best single shift of the sheet, at most 5 mm along each axis, mean ΔE ≤ 2.0, p90 ΔE ≤ 6.0, SSIM ≥ 0.92, edge correlation ≥ 0.8, paint IoU ≥ 0.95 and at most 390 strokes** (the recorded episode is replayed twice and both replays must agree). The continuous score is max(0, 1 - mean ΔE / 20) (scaled by 390 / strokes above 390). Reported as well: the mean ΔE after a 4 mm blur, the SSIM at a 0.5 mm blur, and per colour region of the picture (the connected areas nearest to one paint, at least 30 mm²) the fraction within ΔE 10: the minimum and the area-weighted mean.
 
+## Process rules
+Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush, pressed for the width you want.
+Colouring in or filling areas with a thin line, zigzag or serpentine fills, and contour-offset fills (paths that circle round and
+round inside an area) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the
+replayed episode with two numbers you can check yourself; only painted strokes on the main sheet count (the practice sheet is
+free):
+- **Paint path budget: `path_mm` ≤ 35900 mm.** `path_mm` is the total length of the brush tip's path while it presses
+  on the main sheet with paint (all strokes together, sampled at every physics step). The strokes of our reference solution add up
+  to 11956 mm; the budget is 3 times that, rounded up.
+- **Strokes are sweeps: `scribble_share` ≤ 0.1.** A stroke's scribble ratio is its length divided by the
+  diagonal of its bounding box on the sheet (taken as at least 10 mm): about 1 for a straight or curved sweep,
+  2 for a sweep out and back along the same line, more for a zigzag, a back-and-forth fill, a spiral or a loop. `scribble_share`
+  is the share of `path_mm` in strokes whose ratio is above 2.5.
+
+**Success iff the picture rule above holds and both process rules hold.** The continuous score is the one above ×
+min(1, 35900 / `path_mm`) × (1 − `scribble_share` when the second rule fails).
+
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot

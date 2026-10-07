@@ -20,7 +20,7 @@ services:
     command: sh /srv/run.sh
     environment:
       RCB_INSTANCE: /srv/instance.json
-      RCB_TOOL_MODULE: rcb_brush
+      RCB_TOOL_MODULE: rcb_brush_strict   # the scores with the process rules (rcb_brush_strict.py)
       RCB_SCORER_PORT: "8001"
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""

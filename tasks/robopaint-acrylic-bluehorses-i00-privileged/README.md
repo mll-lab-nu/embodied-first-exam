@@ -7,11 +7,17 @@
 | Twin | `robopaint-acrylic-bluehorses-i00-standard` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_acrylic_bluehorses` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/. Oracle 1 and nop 0 in the release validation (ws3, 2026-09-28: acrylic-u-oracle-final0928, acrylic-u-nop-final0928), on earlier scoring and tooling. Changed since: the v2 registered scoring (8bc4fc0c: scorer and success rule; the saved oracle trajectories re-scored, all pass; Harbor oracle and nop on applesoranges and redfuji), tooling snapshot 23 (ccb213d0: the scorer; re-scores bit-identical), the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only. Not re-run on this version (static validation only). |
+| Oracle | `partial` — Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 11956 of the 35900 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task
+**Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
+than coloured in: the brush tip's path while it presses on the main sheet with paint (`path_mm`) is at most 35900 mm (3 ×
+the reference solution's 11956 mm), and at most 10 % of it lies in strokes longer than
+2.5 × the diagonal of their bounding box (zigzags, back-and-forth fills, spirals, loops). They are part of the frozen instance (the rules added to its `target.success`); the graders'
+`rcb_brush_strict.py` applies them (the verifier and the scoring service).
+
 The instance: copy the painting in `environment/target.png` (a small acrylic painting after Franz Marc's The Large Blue Horses, 1911; the exemplar = this robot's painting of a hidden program of 300 strokes in 4 layers made by our stroke-based painting optimiser from the public-domain source) onto the 227 mm main sheet in at most 390 strokes, with 10 premixed paints on a plate and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; everything frozen in `environment/instance.json` (the brush preset's text included).
 
 Copy the painting (笔触临摹): after the best single shift of the sheet, at most 5 mm along each axis, mean CIELAB ΔE <= 2.0, p90 ΔE <= 6.0, SSIM of L* >= 0.92, edge correlation >= 0.8, paint IoU >= 0.95 and at most 390 strokes. `final_reward` = max(0, 1 - mean ΔE / 20) (× 390 / strokes above 390).
@@ -24,7 +30,10 @@ The exemplar IS the robot's execution of the hidden stroke program (`solution/pr
 32954 control steps, 309 strokes, mean ΔE 0.133, p90 ΔE 0.254, SSIM 0.9999, paint IoU 1.0000.
 
 ## Verification
-Oracle label `partial`: the recorded oracle runs predate this version's files (task.toml `oracle_evidence`); human review in PR #3.
+"The rule" below is the picture rule and the process rules (Task); the replays run
+`tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
+`max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
+Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`); pass iff
 both replayed main sheets meet the rule, the final-state hashes (paint layers of both sheets + robot state + the loaded paint)
 agree and the rebuilt frozen instance matches the recorded one. PhysX and libmypaint (single-threaded, with the image's
