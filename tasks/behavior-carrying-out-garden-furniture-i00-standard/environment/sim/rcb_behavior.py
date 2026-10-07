@@ -822,6 +822,9 @@ def _cap_texture_memory() -> None:
     budget = float(raw)
     if not 0.0 < budget <= 1.0:
         raise ValueError(f"RCB_TEXTURE_BUDGET={raw!r}: a fraction of GPU memory in (0, 1]")
+    # `import isaacsim` bootstraps Kit, which asks for the EULA on stdin unless this is set (EOF in a trial: "Unable to
+    # bootstrap inner kit kernel"); OmniGibson sets it right before its own `import isaacsim`, which this one now precedes.
+    os.environ.setdefault("OMNI_KIT_ACCEPT_EULA", "YES")
     import isaacsim
     app = isaacsim.SimulationApp
     if getattr(app, "_rcb_texture_budget", None) is not None:
