@@ -1,0 +1,74 @@
+{
+ "family": "bimanual_assembly",
+ "demo": "assembly_demo_10_2026-03-19_17-36-54_867270",
+ "instance_sha": "e39abc9b3d77cd72",
+ "objects": [
+  "peg",
+  "peg_tip",
+  "tray",
+  "socket",
+  "table_top"
+ ],
+ "cameras": [
+  "back",
+  "handcam_rgb_right",
+  "handcam_rgb_left"
+ ],
+ "tcp0": "right [-0.443, -0.4, 1.517] / [0.0, -1.0, 0.0, -0.0025], left [-0.443, 0.4, 1.517] / [0.0, -1.0, 0.0, -0.0025]",
+ "table_top_z": 0.956,
+ "arm_bases": {
+  "link0_right": [
+   -0.75,
+   -0.4,
+   0.924
+  ],
+  "link0_left": [
+   -0.75,
+   0.4,
+   0.924
+  ]
+ },
+ "hand_lo": [
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  0.26,
+  -0.1,
+  -0.19,
+  -0.16
+ ],
+ "hand_hi": [
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  1.4,
+  1.16,
+  1.64,
+  1.72
+ ],
+ "oracle_rows": 586,
+ "oracle_state_sha": "f5a74b67a4e1dfd7",
+ "steps_per_s": 230,
+ "success_src": "def _compute_success(self) -> bool:\n    success, _, _ = self._compute_success_metrics()\n    return bool(success)\n\ndef _compute_success_metrics(self) -> Tuple[bool, bool, int]:\n    contact_count = 0\n    for i in range(int(self._data.ncon)):\n        c = self._data.contact[i]\n        g1 = int(c.geom1)\n        g2 = int(c.geom2)\n        if (\n            (g1 == self._peg_geom_id and g2 == self._socket_bottom_geom_id)\n            or (g2 == self._peg_geom_id and g1 == self._socket_bottom_geom_id)\n        ):\n            contact_count += 1\n    bottom_contact = contact_count > 0\n    triggered = bottom_contact\n\n    if triggered:\n        if not getattr(self, \"_success_started\", False):\n            self._success_started = True\n            self._success_counter = 1\n        else:\n            self._success_counter += 1\n    else:\n        self._success_started = False\n        self._success_counter = 0\n    # print(f\"Triggered: {triggered}\")\n    if getattr(self, \"_success_counter\", 0) >= 30:\n        return True\n\n    return False\n    # return bool(bottom_contact), bool(bottom_contact), int(contact_count)",
+ "success_path": "dexjoco/dexjoco/sim/envs/panda_bimanual_assembly_env.py",
+ "rcb_src": "",
+ "water_aim_max_deg": 45.0
+}
