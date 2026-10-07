@@ -1,0 +1,30 @@
+# @@STD@@
+
+Standard-mode twin of `@@PRIV@@` (the same frozen MolmoSpaces episode): @@GOAL@@ The agent gets only the
+`eai-standard/2.2` client (docs/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar
+(`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
+model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
+service exit, replays the trajectory in two fresh processes and writes `final.json`; the verifier grades those artifacts
+in a separate sandbox (`tests/Dockerfile`).
+
+## Difficulty
+That of `@@PRIV@@` (its README), without resets, object poses or a success check: every move is planned from camera
+images, depth and the robot's own proprioception, within the benchmark's @@HORIZON_S@@ s of simulated time.
+
+## Reference solution
+None is shipped (see `@@PRIV@@`).
+
+## Verification
+`success` = live success ∧ replay success ∧ deterministic. The episode follows upstream's evaluation: one upstream
+`Task.step` per executed row; it ends at upstream's `is_done()` (@@HORIZON_STEPS@@ control steps), at the agent's `done`,
+or when the agent's time is up; then upstream's `judge_success()` on the final state: @@SUCCESS@@. The two fresh-process
+replays of the recorded rows (`rcb_molmospaces.py replay`) must succeed and end in the same state; `replay.mp4` is
+rendered after the verdict. No oracle; human review in PR #@@REVIEW_PR@@ (PROTOCOL §2.7: per family, this task
+and its twin, a positive example and the `nop` result).
+
+## Details
+| | |
+|---|---|
+| Upstream | molmo-spaces 0.2.9, benchmark `@@BENCHMARK@@`, package `@@PACKAGE@@` (@@UPSTREAM@@), episode @@EPISODE_INDEX@@ |
+| World-frame information | none in the texts: object names and the goal only; the robot's own pose and the camera calibration come from the service (docs/benchmarks/molmospaces.md) |
+| Generator | `scripts/molmospaces/mk_tasks.py`; docs/benchmarks/molmospaces.md |
