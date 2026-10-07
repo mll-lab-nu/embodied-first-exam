@@ -43,6 +43,7 @@
 #                whole conversation); 0 = token usage only
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
 #   GATEWAY_EXTRA_HOSTS  more model API host patterns the gateway forwards to, space-separated (e.g. "*.services.ai.azure.com")
+#   GATEWAY_START_WAIT  seconds to wait for the gateway to come up (10); raise it on busy shared nodes
 #   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (100000000 / 10000000, PROTOCOL
 #                §5): past it every further model request is refused and the trial counts as failed; 0 = no limit
 # Runner-side tools (not task code): while trials run, the container rcb-log-mirror copies every trial's agent/ directory
@@ -61,7 +62,7 @@ AGENT_CONFIG="${AGENT_CONFIG:-}"; ENV_FILE="${ENV_FILE:-}"
 MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${N_S:-2}"; K="${K:-1}"; WAIT_FOR="${WAIT_FOR:-}"
 JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"; LABEL="${LABEL:-$AGENT + $MODEL ($EFFORT)}"
 LOG_MIRROR="${LOG_MIRROR:-1}"; MEM_GUARD="${MEM_GUARD:-1}"
-GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-1}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"
+GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-1}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"; GATEWAY_START_WAIT="${GATEWAY_START_WAIT:-10}"
 TOKEN_BUDGET_IN="${TOKEN_BUDGET_IN:-100000000}"; TOKEN_BUDGET_OUT="${TOKEN_BUDGET_OUT:-10000000}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
@@ -130,8 +131,8 @@ if [ "$GATEWAY" = 1 ]; then
   gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
   setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
   gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
-  for _ in $(seq 50); do [ -s "$ready" ] && break; sleep 0.2; done
-  [ -s "$ready" ] || { log "usage gateway did not start (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
+  for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && break; sleep 0.2; done
+  [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
   GW="http://$GATEWAY_BIND:$(cat "$ready")"
   # the upstream each base URL would have used: this environment, else the env file, else the API's default
   upstream() {  # <VAR> <default>
