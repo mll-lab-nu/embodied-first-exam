@@ -1,7 +1,6 @@
 """
-rcb_brush_strict.py — RoboPaint-strict: RoboPaint's brush tasks with process rules on top of the picture score. The robot, the
-scene, the brush models, the target and the picture score are RoboPaint's own (rcb_brush.py and rcb_brush_score.py, byte-identical
-to the RoboPaint tasks'); this module only adds the rules and is used on the graders' side:
+rcb_brush_strict.py — RoboPaint's process rules on top of the picture score. The robot, the scene, the brush models, the target and
+the picture score are those of rcb_brush.py and rcb_brush_score.py; this module only adds the rules and is used on the graders' side:
   - the privileged verifier (tests/grade.py replays with `python rcb_brush_strict.py replay ...`),
   - the privileged scoring service behind Session.score() (environment/scorer/, RCB_TOOL_MODULE=rcb_brush_strict),
   - the standard sim sidecar's collect hook (environment/sim/finalize.sh with RCB_TOOL=/srv/rcb_brush_strict.py).
@@ -21,9 +20,9 @@ texts; a rule whose keys are absent is off):
   sweeps (paintings: max_scribble, max_scribble_share, scribble_min_mm): a stroke's scribble ratio = its length / the diagonal of
                       its bounding box (at least scribble_min_mm); scribble_share = the share of path_mm in strokes whose ratio
                       exceeds max_scribble (zigzags, back-and-forth fills, spirals, loops) must be <= max_scribble_share.
-success = RoboPaint's rule (image_success, unchanged) and every process rule (strict_ok). final_reward = RoboPaint's continuous
-score x min(1, max_path_mm / path_mm) when the colouring-in or path rule fails x (1 - scribble_share) when the sweep rule fails:
-rule-abiding work keeps RoboPaint's score.
+success = the picture rule (image_success) and every process rule (strict_ok). final_reward = the picture rule's continuous score
+x min(1, max_path_mm / path_mm) when the colouring-in or path rule fails x (1 - scribble_share) when the sweep rule fails:
+rule-abiding work keeps the picture rule's score.
 
 CLI: the same as rcb_brush.py (replay / render / run-oracle / selftest), scored with the rules.
 """

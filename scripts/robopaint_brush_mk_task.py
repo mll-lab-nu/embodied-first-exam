@@ -10,7 +10,7 @@
     python scripts/robopaint_brush_mk_task.py --family lettering --word minim --hand italic --template minim
     python scripts/robopaint_brush_mk_task.py --family acrylic --painting <name> --template redfuji   # a program entry (programs_json/)
     python scripts/robopaint_brush_mk_task.py --family oil --painting <name> --reference-png <picture.png> --difficulty extreme
-    python scripts/robopaint_brush_mk_task.py --refresh [tasks/robopaint-<family>-<target>-i00 ...]   # regenerate committed pairs
+    python scripts/robopaint_brush_mk_task.py --refresh [tasks/robopaint-<family>-<target>-i00 ...] --out-root <dir>   # rebuild committed pairs
 
 --template names the family's template pair under --template-root (default tasks/; the defaults: kaishu / xingshu yong, lettering
 minim, acrylic redfuji, oil cypresses); any committed pair of the family serves (the code is identical within a family,
@@ -20,12 +20,19 @@ own entry is its current program: a painting pair is remade with itself as the t
 -> tasks/robopaint-<family>-<target>-i00-privileged/ and ...-i00-standard/ (mode standard, eai-standard/2.2), family
 robopaint_<family>_<target>; every task ends with scripts/task_conventions.py's normalize (the repository's conventions).
 
---refresh regenerates committed pairs from their own frozen files (no docker, no GPU): the template pair's code, the
-eai-standard/2.2 layer, the base image of images/robopaint/VERSION and the rendered texts around the frozen instance, the
-reference plan and its records. Rerunning it on the committed tasks leaves `git diff tasks/` empty.
+The pairs this script writes have RoboPaint's picture rule only. The process rules (docs/benchmarks/robopaint.md) are added by
+scripts/robopaint_strict/mk_tasks.py, the generator of the committed tasks: it runs --refresh into a temporary directory and writes
+tasks/ from that. For a new pair: this script, then scripts/robopaint_strict/measure_reference.py (the reference solution's path and
+mark width into rules.json), then mk_tasks.py.
+
+--refresh rebuilds committed pairs from their own frozen files (no docker, no GPU, standard library only): the template pair's code,
+the eai-standard/2.2 layer, the base image of images/robopaint/VERSION and the rendered texts around the frozen instance, the
+reference plan and its records. It writes into --out-root, which must not be tasks/ (the texts lack the process rules); to regenerate
+the committed tasks run scripts/robopaint_strict/mk_tasks.py.
 
 Files: the code of the template pair (tasks/robopaint-<family>-<template>-i00*, or --template-root) is copied (tooling, graders,
-sidecars and solution code stay byte-identical within a family); the standard twin's client and service layer come from
+sidecars and solution code stay byte-identical within a family; the wiring of the process rules' module rcb_brush_strict.py comes
+with them); the standard twin's client and service layer come from
 scripts/eai_standard/ (byte-identical everywhere); the texts are rendered from scripts/robopaint_templates/<family>/
 ({u,l}_{instruction.md,README.md,task.toml} with {{PLACEHOLDERS}}, values from the frozen files: derive_values); the frozen files
 are made inside the base image (docker, GPU):
@@ -34,11 +41,11 @@ the reference oracle (kaishu: solution/opt_calli.py per-stroke optimisation + so
 solution/ref_nib.py; paintings: solution/ref_oil.py paints the hidden program, the painted sheet becomes the exemplar), and a
 self-test of the scoring path (the scoring service on the graders' copy; the oracle through it on the agent's copy; its metrics
 must equal the graders' own score of the same trajectory). What each container gets follows the leak rule (the agent: scene,
-picture, tooling; the scorer / verifier / sim sidecar: the graders' copy). Then: bash ci_checks/run_all.sh <dirs>, harbor oracle /
-nop runs in both modes, `harbor add <dirs>` from tasks/.
+picture, tooling; the scorer / verifier / sim sidecar: the graders' copy). Then: scripts/robopaint_strict/mk_tasks.py, bash
+ci_checks/run_all.sh <dirs>, harbor oracle / nop runs in both modes, `harbor add <dirs>` from tasks/.
 """
 from __future__ import annotations
-import argparse, json, math, os, re, shlex, shutil, subprocess, sys, tempfile
+import argparse, ast, json, math, os, re, shlex, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
 sys.dont_write_bytecode = True                 # the solution modules imported from task dirs (letters.py, programs.py) leave no caches
@@ -514,10 +521,7 @@ def derive_values(family: str, slug: str, dst_u: Path, difficulty: str | None) -
             if not v["SOURCES"]:
                 raise SystemExit(f"{TPL['dir'] / 'xingshu' / 'targets.json'}: no sources entry for {slug!r} (or '*')")
     elif family == "lettering":
-        sys.path.insert(0, str(dst_u / "solution"))
-        import letters as LT
-        sys.path.pop(0)
-        tdir = "lettering_pointed" if LT.HANDS[tr["hand"]].get("pen") == "pointed" else "lettering"
+        tdir = "lettering_pointed" if inst["medium"] == "pointed_pen" else "lettering"     # lettering_target: pointed hands -> pointed_pen
         n = int(tr["n_strokes"]); d = difficulty or "medium"
         v.update({"TITLE": tr["word"], "WORD": tr["word"], "HAND": tr["hand"], "N": n, "DIFFICULTY": d, "NLETTERS": len(tr["word"].replace(" ", "")),
                   "IOU": f'{tg["success"]["iou"]:.2f}', "DPAD": pad(f'"{d}"', 19), "NPAD": pad(str(n), 19)})
@@ -553,6 +557,16 @@ def set_client(d: Path) -> None:
             f.write_text(s2)
 
 
+def npy_rows(path: Path) -> int:
+    """The number of rows of a .npy array (the shape in its header): --refresh needs only the standard library, no numpy."""
+    with open(path, "rb") as f:
+        if f.read(6) != b"\x93NUMPY":
+            raise SystemExit(f"{path}: not a .npy file")
+        major = f.read(2)[0]
+        header = f.read(int.from_bytes(f.read(2 if major == 1 else 4), "little")).decode("latin1")
+    return int(ast.literal_eval(header)["shape"][0])
+
+
 def assemble(family: str, slug: str, tpl: str, template_root: Path, out_root: Path, frozen_u: dict, frozen_l: dict, stats: str,
              difficulty: str | None, keep_programs: bool) -> tuple[Path, Path]:
     """Write the pair robopaint-<family>-<slug>-i00-privileged / -standard under out_root: the template pair's code (tooling,
@@ -585,8 +599,7 @@ def assemble(family: str, slug: str, tpl: str, template_root: Path, out_root: Pa
     for d, frozen in ((dst_u, frozen_u), (dst_l, frozen_l)):
         for rel, b in frozen.items():
             (d / rel).parent.mkdir(parents=True, exist_ok=True); (d / rel).write_bytes(b)
-    import numpy as np
-    n_acts = int(np.load(dst_u / "solution" / "oracle_qpos.npy").shape[0])
+    n_acts = npy_rows(dst_u / "solution" / "oracle_qpos.npy")
     (dst_l / "solution" / "oracle_meta.json").write_text(json.dumps({"K": 1, "interpolate": "hold", "source": f"{name} oracle trajectory ({n_acts} control steps)"}) + "\n")
     values, tdir = derive_values(family, slug, dst_u, difficulty)
     for side, d in (("u", dst_u), ("l", dst_l)):
@@ -637,13 +650,17 @@ def main() -> int:
     ap.add_argument("--reference-png", help="oil: the reference picture (1024 px RGB; becomes target.png)")
     ap.add_argument("--difficulty", choices=("easy", "medium", "hard", "extreme"))
     ap.add_argument("--template", help="the template pair's target (default: the family's)")
-    ap.add_argument("--refresh", nargs="*", metavar="PAIR", help="regenerate committed pairs (tasks/robopaint-<family>-<target>-i00-privileged) "
-                    "from their frozen files; no directory = every brush-family pair under --out-root")
+    ap.add_argument("--refresh", nargs="*", metavar="PAIR", help="rebuild committed pairs (tasks/robopaint-<family>-<target>-i00-privileged) "
+                    "from their frozen files into --out-root (not tasks/: scripts/robopaint_strict/mk_tasks.py regenerates the committed "
+                    "tasks); no directory = every brush-family pair under --out-root")
     ap.add_argument("--template-root", default=str(ROOT / "tasks")); ap.add_argument("--out-root", default=str(ROOT / "tasks"))
     ap.add_argument("--templates-dir", default=str(TEMPLATES_DEFAULT)); ap.add_argument("--image", default=IMAGE); ap.add_argument("--force", action="store_true")
     a = ap.parse_args()
     TPL["dir"] = Path(a.templates_dir)
     if a.refresh is not None:
+        if Path(a.out_root).resolve() == (ROOT / "tasks").resolve():
+            sys.exit("--refresh writes pairs without the process rules: regenerate tasks/ with scripts/robopaint_strict/mk_tasks.py "
+                     "(or give --out-root another directory)")
         dirs = [Path(d.rstrip("/")) for d in a.refresh] or sorted(p for p in Path(a.out_root).iterdir() if p.is_dir() and re.fullmatch(
             rf"robopaint-({'|'.join(FAMILIES)})-[a-z0-9-]+-i00(-privileged)?", p.name))
         return refresh(dirs, a)

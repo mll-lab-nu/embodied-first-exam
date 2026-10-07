@@ -1,0 +1,79 @@
+{
+ "family": "bimanual_hanoi",
+ "demo": "hanoi_demo_10_2026-03-13_15-45-06_925668",
+ "instance_sha": "93165d7fd0c8813c",
+ "objects": [
+  "disk_small",
+  "disk_medium",
+  "disk_large",
+  "post_a",
+  "post_b",
+  "post_c"
+ ],
+ "cameras": [
+  "front",
+  "back",
+  "left",
+  "right",
+  "top0",
+  "handcam_rgb_right",
+  "handcam_rgb_left"
+ ],
+ "tcp0": "right [-0.443, -0.4, 1.517] / [0.0, -1.0, 0.0, -0.0025], left [-0.443, 0.4, 1.517] / [0.0, -1.0, 0.0, -0.0025]",
+ "table_top_z": 0.942,
+ "arm_bases": {
+  "link0_right": [
+   -0.75,
+   -0.4,
+   0.924
+  ],
+  "link0_left": [
+   -0.75,
+   0.4,
+   0.924
+  ]
+ },
+ "hand_lo": [
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  0.26,
+  -0.1,
+  -0.19,
+  -0.16
+ ],
+ "hand_hi": [
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  1.4,
+  1.16,
+  1.64,
+  1.72
+ ],
+ "oracle_rows": 1085,
+ "oracle_state_sha": "1a9ae74984155266",
+ "steps_per_s": 140,
+ "success_src": "def _compute_success_metrics(self) -> Tuple[bool, Dict[str, Any]]:\n    state = self._reconstruct_tower_state()\n    towers = state[\"towers\"]\n    disk_assignment = state[\"disk_assignment\"]\n    disk_positions = state[\"disk_positions\"]\n    disk_static = state[\"disk_static\"]\n    post_positions = state[\"post_positions\"]\n    base_top_z = state[\"base_top_z\"]\n\n    tower_state = self._tower_state_repr(towers)\n    all_disks_static = all(bool(v) for v in disk_static.values())\n\n    illegal_candidate = False\n    illegal_reason = \"\"\n\n    for post_name, disks in towers.items():\n        ranks = [self._disk_size_rank[disk] for disk in disks]\n        if any(ranks[i] < ranks[i + 1] for i in range(len(ranks) - 1)):\n            if all(disk_static[disk] for disk in disks):\n                xy_error, height_error = self._tower_geometry_errors(\n                    disks, post_name, disk_positions, post_positions, base_top_z\n                )\n                if (\n                    xy_error <= self._post_assignment_tol\n                    and height_error <= self._placement_height_tol\n                ):\n                    illegal_candidate = True\n                    illegal_reason = f\"illegal_stack_{post_name}\"\n                    break\n\n    if not illegal_candidate and all_disks_static:\n        on_table = [disk for disk, assign in disk_assignment.items() if assign == \"table\"]\n        if on_table:\n            illegal_candidate = True\n            illegal_reason = \"disk_on_table\"\n\n    if illegal_candidate:\n        if illegal_reason == self._illegal_trigger_reason:\n            self._illegal_trigger_count += 1\n        else:\n            self._illegal_trigger_reason = illegal_reason\n            self._illegal_trigger_count = 1\n    else:\n        self._illegal_trigger_reason = \"\"\n        self._illegal_trigger_count = 0\n\n    illegal_state = self._illegal_trigger_count >= self._illegal_trigger_target\n\n    xy_error_max = 0.0\n    height_error_max = 0.0\n    target_stack = [\"hanoi_disk_large\", \"hanoi_disk_medium\", \"hanoi_disk_small\"]\n\n    if towers[\"C\"] == target_stack and len(towers[\"A\"]) == 0 and len(towers[\"B\"]) == 0:\n        xy_error_max, height_error_max = self._tower_geometry_errors(\n            target_stack, \"C\", disk_positions, post_positions, base_top_z\n        )\n        geom_success = (\n            xy_error_max <= self._post_assignment_tol\n            and height_error_max <= self._placement_height_tol\n            and all_disks_static\n        )\n    else:\n        geom_success = False\n\n    if geom_success and not illegal_state:\n        self._success_trigger_count += 1\n    else:\n        self._success_trigger_count = 0\n\n    success = self._success_trigger_count >= self._success_trigger_target\n\n    return bool(success), {\n        \"tower_state\": tower_state,\n        \"disk_assignment\": dict(disk_assignment),\n        \"all_disks_static\": bool(all_disks_static),\n        \"illegal_state\": bool(illegal_state),\n        \"illegal_reason\": illegal_reason,\n        \"xy_error_max\": float(xy_error_max),\n        \"height_error_max\": float(height_error_max),\n    }\n\ndef _compute_success(self) -> bool:\n    success, _ = self._compute_success_metrics()\n    return bool(success)",
+ "success_path": "dexjoco/dexjoco/sim/envs/panda_bimanual_hanoi_env.py",
+ "rcb_src": "",
+ "water_aim_max_deg": 45.0
+}

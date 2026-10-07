@@ -109,7 +109,9 @@
    "min_stroke_coverage": 0.8,
    "max_stray_frac": 0.04,
    "register_mm": 5.0,
-   "max_strokes": 14
+   "max_strokes": 14,
+   "max_path_mm": 2680.0,
+   "min_mark_width_mm": 1.8
   },
   "truth_sha": "810fa36a57fa87d7"
  },

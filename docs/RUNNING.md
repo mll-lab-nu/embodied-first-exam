@@ -93,6 +93,7 @@ provider `base_url`s rewritten and `supports_websockets = false`). The agent is 
 `claude-code` with its own credentials: the gateway forwards every request unchanged to the same API, never stores a key,
 and refuses any host that is not a model API (`scripts/set_agent_egress.py` HOSTS), so it is no way around an egress
 allowlist. Under an allowlist the runner adds `--allow-agent-host 172.17.0.1`.
+The runner waits `GATEWAY_START_WAIT` seconds (10) for the gateway to come up; raise it on busy shared nodes.
 
 Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts):
 ```
