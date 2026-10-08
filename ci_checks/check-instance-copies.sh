@@ -8,6 +8,7 @@
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"; rc=0
 case "$n" in
+  *-standard-realtime) ref="${n%-standard-realtime}-privileged/tests"; copy="environment/sim" ;;   # a sim sidecar too
   *-standard) ref="${n%-standard}-privileged/tests"; copy="environment/sim" ;;
   robopaint-*) ref="$n/tests"; copy="environment/scorer" ;;
   *) ref="$n/tests"; copy="environment" ;;

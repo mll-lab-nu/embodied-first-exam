@@ -1,0 +1,72 @@
+{
+ "family": "hammer_nail",
+ "demo": "hammer_nail_demo_10_2026-02-05_19-18-55_029010",
+ "instance_sha": "095c53d8e9a1cae0",
+ "objects": [
+  "hammer",
+  "nail",
+  "nail_top",
+  "wood_top",
+  "table_top"
+ ],
+ "cameras": [
+  "front",
+  "back",
+  "left",
+  "right",
+  "top0",
+  "handcam_rgb"
+ ],
+ "tcp0": "[-0.059, 0.008, 1.096] / [1.0, 0.0, 0.0, 0.0]",
+ "table_top_z": 0.936,
+ "arm_bases": {
+  "link0": [
+   -0.75,
+   0.0,
+   0.924
+  ]
+ },
+ "hand_lo": [
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  -0.47,
+  -0.2,
+  -0.17,
+  -0.23,
+  0.26,
+  -0.1,
+  -0.19,
+  -0.16
+ ],
+ "hand_hi": [
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  0.47,
+  1.61,
+  1.71,
+  1.62,
+  1.4,
+  1.16,
+  1.64,
+  1.72
+ ],
+ "oracle_rows": 202,
+ "oracle_state_sha": "8c86453dc2ab732f",
+ "steps_per_s": 400,
+ "success_src": "def _compute_success(self):\n    return float(self._nail_depth) >= self._success_depth\n\ndef _apply_hammer_nail_interaction(self) -> bool:\n    if not self._hammer_geom_ids or not self._nail_geom_ids:\n        return False\n\n    hammer_set = set(self._hammer_geom_ids)\n    nail_set = set(self._nail_geom_ids)\n    hit = False\n    ncon = int(self._data.ncon)\n    for i in range(ncon):\n        c = self._data.contact[i]\n        g1 = int(c.geom1)\n        g2 = int(c.geom2)\n        if (g1 in hammer_set and g2 in nail_set) or (\n            g2 in hammer_set and g1 in nail_set\n        ):\n            hit = True\n            break\n\n    if not hit:\n        return False\n\n    preimpact_vz = min(self._vz_buf) if self._vz_buf else 0.0\n    if preimpact_vz >= -self._impact_vel_threshold:\n        return True\n\n    depth = float(self._nail_depth)\n    max_depth = float(self._nail_max_depth)\n    scale = min(3.0, abs(preimpact_vz) / max(self._impact_vel_threshold, 1e-6))\n    delta = self._impact_insert_step * scale\n    new_depth = min(max_depth, depth + delta)\n    if new_depth > depth:\n        self._nail_depth = new_depth\n        new_pos = self._nail_init_pos.copy()\n        new_pos[2] = self._nail_init_pos[2] - new_depth\n        self._data.mocap_pos[self._nail_mocap_id] = new_pos\n        self._data.mocap_quat[self._nail_mocap_id] = self._nail_init_quat\n        mujoco.mj_forward(self._model, self._data)\n\n    return True",
+ "success_path": "dexjoco/dexjoco/sim/envs/panda_hammer_nail_env.py",
+ "rcb_src": "",
+ "water_aim_max_deg": 45.0
+}

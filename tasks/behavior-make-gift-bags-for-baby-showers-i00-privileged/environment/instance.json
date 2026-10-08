@@ -1,0 +1,155 @@
+{
+ "task": "make_gift_bags_for_baby_showers",
+ "challenge_task": "make_gift_bags_for_baby_showers",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Make two gift bags in the living room. The two sacks lie on the breakfast table, the two toy dice stand on the cabinet, and the two wafers are inside that cabinet. Move both sacks onto the coffee table and put one toy die and one wafer into each sack.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "0d037790f62e2bb2",
+ "action_dim": 25,
+ "challenge_max_steps": 14476,
+ "objects": {
+  "cabinet.n.01_1": {
+   "category": "bottom_cabinet",
+   "position": [
+    1.6596,
+    -1.495,
+    0.3777
+   ],
+   "orientation_xyzw": [
+    -0.0001,
+    -0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "wafer.n.02_1": {
+   "category": "wafer",
+   "position": [
+    1.4622,
+    -0.8747,
+    0.6084
+   ],
+   "orientation_xyzw": [
+    0.0049,
+    0.0039,
+    0.6162,
+    -0.7876
+   ]
+  },
+  "sack.n.01_2": {
+   "category": "paper_bag",
+   "position": [
+    1.2126,
+    0.6496,
+    0.8653
+   ],
+   "orientation_xyzw": [
+    -0.0002,
+    0.0002,
+    0.9961,
+    0.0888
+   ]
+  },
+  "breakfast_table.n.01_1": {
+   "category": "breakfast_table",
+   "position": [
+    1.4726,
+    0.4148,
+    0.5976
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    1.0,
+    -0.0066
+   ]
+  },
+  "coffee_table.n.01_1": {
+   "category": "coffee_table",
+   "position": [
+    -0.4765,
+    -1.2198,
+    0.2572
+   ],
+   "orientation_xyzw": [
+    -0.0004,
+    -0.0004,
+    1.0,
+    -0.0025
+   ]
+  },
+  "sack.n.01_1": {
+   "category": "paper_bag",
+   "position": [
+    1.402,
+    0.369,
+    0.8653
+   ],
+   "orientation_xyzw": [
+    -0.0001,
+    0.0001,
+    0.9987,
+    0.05
+   ]
+  },
+  "toy_dice.n.01_2": {
+   "category": "toy_dice",
+   "position": [
+    1.3913,
+    -1.3813,
+    0.771
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    -0.0,
+    0.888,
+    0.4598
+   ]
+  },
+  "toy_dice.n.01_1": {
+   "category": "toy_dice",
+   "position": [
+    1.3444,
+    -1.0456,
+    0.771
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    -0.7828,
+    0.6222
+   ]
+  },
+  "wafer.n.02_2": {
+   "category": "wafer",
+   "position": [
+    1.4646,
+    -0.9379,
+    0.6181
+   ],
+   "orientation_xyzw": [
+    -0.067,
+    -0.0358,
+    0.2784,
+    -0.9574
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -0.0699,
+    -1.2871,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

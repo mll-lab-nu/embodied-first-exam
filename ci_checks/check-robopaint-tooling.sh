@@ -4,8 +4,8 @@
 # lettering, acrylic, oil; line): rcb_brush.py / rcb_brush_score.py (brush families), rcb_paint.py / rcb_paint_score.py (line),
 # rcb_scorer.py, environment/rcb_client.py and the limited sim service environment/sim/server.py. A tooling change is rolled out
 # to every family of the stack at once, each with its own re-validation (new rule features are opt-in per task through the
-# instance's success rule, so an unchanged rule scores exactly as before). RoboPaint-strict (tasks/robopaint-strict-*, one
-# "family" here) uses the same files plus its rules module rcb_brush_strict.py.
+# instance's success rule, so an unchanged rule scores exactly as before). The process rules' module rcb_brush_strict.py (graders'
+# side: tests/, environment/scorer/ or environment/sim/) is one more shared file.
 # Usage: check-robopaint-tooling.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"

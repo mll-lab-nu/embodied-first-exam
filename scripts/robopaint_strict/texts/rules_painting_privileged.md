@@ -1,4 +1,4 @@
-## Process rules (RoboPaint-strict)
+## Process rules
 Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush, pressed for the width you want.
 Colouring in or filling areas with a thin line, zigzag or serpentine fills, and contour-offset fills (paths that circle round and
 round inside an area) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the

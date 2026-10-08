@@ -1,4 +1,4 @@
-## Process rules (RoboPaint-strict)
+## Process rules
 Letter the word with pen strokes, the way a scribe writes it: each stroke of a letter is a pass of the pen along it, its width
 coming from the pen (a broad nib: its angle and the direction of travel; a pointed pen: the pressure); going over a stroke again
 is fine. Colouring in or filling the letters' shapes, zigzag or serpentine fills (back-and-forth passes across a stroke), and

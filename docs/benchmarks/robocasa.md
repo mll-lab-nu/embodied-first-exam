@@ -57,7 +57,8 @@ Not included (82):
   `robot0_eye_in_hand`; RGB, depth, intrinsics and the current camera-to-world pose, since they move with the robot),
   its joints (positions, velocities), end-effector position and last command, and the instruction. No object poses,
   scene layout, reward or success signal. RoboCasa's goals are relational (an object onto a fixture), so there is no
-  target point to give.
+  target point to give. Camera images (RGB and depth, in both modes and in replay videos) draw the visual meshes only,
+  as robosuite's own cameras do; the collision geoms (geom group 0) are hidden.
 
 ## Standard-mode service (`images/robocasa/standard/server_casa.py`)
 Derived from `images/mujoco/limited/server_mj.py` (via MetaWorld+'s `server_mw.py`) and identical in protocol and

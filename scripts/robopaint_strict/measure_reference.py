@@ -6,7 +6,7 @@ the repository root:
     docker run --rm --gpus all -v "$PWD:/repo:ro" -w /repo ghcr.io/mll-lab-nu/eai-robopaint:0.2.0 \
         python scripts/robopaint_strict/measure_reference.py [robopaint-<family>-<target>-i00 ...] > reference.jsonl
 
-Per pair, in a fresh process: replay solution/oracle_qpos.npy from the graders' copy of the RoboPaint instance (tests/) with
+Per pair, in a fresh process: replay solution/oracle_qpos.npy from the graders' copy of the instance (tests/) with
 rcb_brush_strict's Session and print one JSON line: path_mm (the brush tip's path pressed on the main sheet with ink or paint),
 mark_width_mm (calligraphy and lettering: the strokes' own mark area / path_mm), longest_stroke_mm, scribble_max, the strokes and
 the picture rule's verdict. rules.json takes path_mm as reference_path_mm and mark_width_mm as reference_mark_width_mm.

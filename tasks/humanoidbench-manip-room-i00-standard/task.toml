@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/humanoidbench-manip-room-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench room on the same frozen instance as humanoidbench-manip-room-i00-privileged. The agent only gets a client: /observe and /submit (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). One episode, no reset, no privileged state, no reward; the sim service records the episode, replays it in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench room on the same frozen instance as humanoidbench-manip-room-i00-privileged. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes, replays the last one in a fresh simulator and grades it."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "humanoidbench", "mujoco", "h1hand", "manipulation", "standard-mode", "trajectory", "room"]
 
