@@ -12,7 +12,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/mll-lab-nu/eai-robotangle:0.2.21
+    image: ghcr.io/mll-lab-nu/eai-robotangle:0.2.22
     volumes:
       - ./sim:/srv:ro
     working_dir: /tmp
