@@ -1,0 +1,59 @@
+<mujoco model="iiwa_2">
+    <compiler angle="radian" autolimits="true" />
+
+    <worldbody>
+        <body name="iiwa_2/base" pos="1.51 0 -0.1" quat="0 0 0 1">
+            <body name="iiwa_2/link_1" pos="0 0 0.1575">
+                <inertial pos="4.007709e-06 -0.033936 0.122467" mass="8.240527" fullinertia="0.021981 0.022182 0.008234 -2.897243e-07 6.3165236e-07 0.003285" />
+                <joint name="iiwa_2/joint_1" pos="0 0 0" axis="0 0 1" range="-2.96706 2.96706" damping="0.33032" frictionloss="0.384477" />
+                <body name="iiwa_2/link_2" pos="0 0 0.2025" quat="0 0 0.707107 0.707107">
+                    <inertial pos="0.003402 0.034792 0.046725" mass="6.357896" fullinertia="0.015565 0.005180 0.015484 -4.147301e-06 1.192255e-05 0.002538" />
+                    <joint name="iiwa_2/joint_2" pos="0 0 0" axis="0 0 1" range="-2.0944 2.0944" damping="0.21216" frictionloss="0.496333" />
+                    <body name="iiwa_2/link_3" pos="0 0.2045 0" quat="0 0 0.707107 0.707107">
+                        <inertial pos="-0.001452 0.031526 0.133584" mass="4.042756" fullinertia="0.010914 0.010381 0.003139 -3.540575e-06 -9.059062e-06 -0.002128" />
+                        <joint name="iiwa_2/joint_3" pos="0 0 0" axis="0 0 1" range="-2.96706 2.96706" damping="0.1" frictionloss="0.173951" />
+                        <body name="iiwa_2/link_4" pos="0 0 0.2155" quat="0.707107 0.707107 0 0">
+                            <inertial pos="-0.002527 0.053508 0.037205" mass="3.642249" fullinertia="0.007536 0.002538 0.007206 -5.707028e-06 2.781894e-06 0.001256" />
+                            <joint name="iiwa_2/joint_4" pos="0 0 0" axis="0 0 1" range="-2.0944 2.0944" damping="0.219041" frictionloss="0.3751" />
+                            <body name="iiwa_2/link_5" pos="0 0.1845 0" quat="0 0 0.707107 0.707107">
+                                <inertial pos="0.001855 0.024573 0.080131" mass="2.580896" fullinertia="0.005201 0.004488 0.002242 1.089316e-07 9.035623e-07 -0.001613" />
+                                <joint name="iiwa_2/joint_5" pos="0 0 0" axis="0 0 1" range="-2.96706 2.96706" damping="0.185923" frictionloss="0.481099" />
+                                <body name="iiwa_2/link_6" pos="0 0 0.2155" quat="0.707107 0.707107 0 0">
+                                    <inertial pos="-0.001739 -0.001973 -0.002502" mass="2.760564" fullinertia="0.002534 0.001821 0.002393 -1.311766e-06 9.508242e-07 0.000134" />
+                                    <joint name="iiwa_2/joint_6" pos="0 0 0" axis="0 0 1" range="-2.0944 2.0944" damping="0.1" frictionloss="0.196149" />
+                                    <body name="iiwa_2/link_7" pos="0 0.081 0" quat="0 0 0.707107 0.707107">
+                                        <inertial pos="0.000735 0.000387 0.026460" mass="1.285417" fullinertia="0.000151 0.000150 0.000187 -7.223100e-08 2.038333e-06 -3.396830e-07" />
+                                        <joint name="iiwa_2/joint_7" pos="0 0 0" axis="0 0 1" range="-3.05433 3.05433" damping="0.1" frictionloss="0.299238" armature="0.01" />
+                                        <body name="iiwa_2/striker_joint_link" pos="0 0 0.585">
+                                            <inertial pos="0 0 0" mass="0.1" diaginertia="0.001 0.001 0.001" />
+                                            <body name="iiwa_2/striker_mallet" pos="0 0 0">
+                                                <inertial pos="0 0 0.0682827" mass="0.283" diaginertia="0.005 0.005 0.005" />
+                                                <joint name="iiwa_2/striker_joint_1" pos="0 0 0" axis="0 1 0" range="-1.5708 1.5708" damping="0.0" />
+                                                <joint name="iiwa_2/striker_joint_2" pos="0 0 0" axis="1 0 0" range="-1.5708 1.5708" damping="0.0" />
+                                                <geom name="iiwa_2/ee" type="cylinder" rgba=".05 .65 .2 1" size="0.04815 0.03" pos="0 0 0.0505" friction="0 0 0" class="robot" />
+                                            </body>
+                                        </body>
+                                    <geom type="capsule" fromto="0 0 0 0.0 0.0 0.585" size=".028" rgba="1 .42 .04 1" contype="0" conaffinity="0" /></body>
+                                <geom type="capsule" fromto="0 0 0 0.0 0.081 0.0" size=".045" rgba="1 .42 .04 1" contype="0" conaffinity="0" /></body>
+                            <geom type="capsule" fromto="0 0 0 0.0 0.0 0.2155" size=".045" rgba="1 .42 .04 1" contype="0" conaffinity="0" /></body>
+                        <geom type="capsule" fromto="0 0 0 0.0 0.1845 0.0" size=".045" rgba="1 .42 .04 1" contype="0" conaffinity="0" /></body>
+                    <geom type="capsule" fromto="0 0 0 0.0 0.0 0.2155" size=".045" rgba="1 .42 .04 1" contype="0" conaffinity="0" /></body>
+                <geom type="capsule" fromto="0 0 0 0.0 0.2045 0.0" size=".045" rgba="1 .42 .04 1" contype="0" conaffinity="0" /></body>
+            <geom type="capsule" fromto="0 0 0 0.0 0.0 0.2025" size=".045" rgba="1 .42 .04 1" contype="0" conaffinity="0" /></body>
+        <geom type="capsule" fromto="0 0 0 0.0 0.0 0.1575" size=".045" rgba="1 .42 .04 1" contype="0" conaffinity="0" /></body>
+    </worldbody>
+
+
+    <actuator>
+        <motor name="iiwa_2/joint_1" joint="iiwa_2/joint_1" ctrlrange="-320 320" />
+        <motor name="iiwa_2/joint_2" joint="iiwa_2/joint_2" ctrlrange="-320 320" />
+        <motor name="iiwa_2/joint_3" joint="iiwa_2/joint_3" ctrlrange="-176 176" />
+        <motor name="iiwa_2/joint_4" joint="iiwa_2/joint_4" ctrlrange="-176 176" />
+        <motor name="iiwa_2/joint_5" joint="iiwa_2/joint_5" ctrlrange="-110 110" />
+        <motor name="iiwa_2/joint_6" joint="iiwa_2/joint_6" ctrlrange="-40 40" />
+        <motor name="iiwa_2/joint_7" joint="iiwa_2/joint_7" ctrlrange="-40 40" />
+        <motor name="iiwa_2/striker_joint_1" joint="iiwa_2/striker_joint_1" ctrlrange="-10 10" />
+        <motor name="iiwa_2/striker_joint_2" joint="iiwa_2/striker_joint_2" ctrlrange="-10 10" />
+    </actuator>
+
+</mujoco>
