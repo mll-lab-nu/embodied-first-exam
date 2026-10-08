@@ -1,0 +1,771 @@
+From c64c5dcfefed2dc04534daace78353522f4122eb Mon Sep 17 00:00:00 2001
+From: qineng-det <det@topogym.local>
+Date: Mon, 5 Oct 2026 14:00:38 -0500
+Subject: [PATCH 1/4] cuda: reproducible linear solve (TopoGym determinism
+ series 1/4)
+
+Replaces the float atomics on the global linear solve path with fixed-order
+sums. Physics unchanged; only the summation order is fixed, so identical
+inputs give bit-identical iterates in every process (same GPU model).
+
+Atomics replaced:
+- linear_fused_pcg.cu fused_dot: per-warp sums atomicAdd'ed into d_result
+  -> det::sum (det_reduce.h): every thread sums a fixed index set, a
+  cub::BlockReduce per block, and the last block to finish (integer atomic
+  counter) sums the per-block partials in index order; one launch.
+- spmv.cu Spmv::rbk_sym_spmv / rbk_sym_spmv_dot as used by
+  GlobalLinearSystem (symmetric BCOO, one triangle stored): row segments
+  added across warps with atomic adds, the transposed half
+  y_j += A_ij^T x_i scattered with atomic adds, warp dot sums atomicAdd'ed
+  -> DetSymSpmv (det_spmv.h): after every assembly, an integer-only plan
+  (cub radix sort of (row, col) keys) expands A into a row-sorted block CSR
+  with both triangles (blocks copied, transposed where needed) and splits
+  the block rows into short rows (< 33 blocks) and long rows (the
+  affine-body rows that touch many contacts). The SpMV gives each short
+  row 4 lanes (lane l sums blocks l, l + 4, ... in order; a fixed xor
+  butterfly combines them) and each long row a whole thread block (a fixed
+  cub::BlockReduce tree); both loop over their row lists with a fixed
+  grid stride. The fused dot sums each lane group's rows in loop order,
+  each thread block's groups in group order, and the last thread block
+  to finish sums the per-block partials in index order.
+
+Checks: the same assembled system solved twice in one process: solution
+entries that differ, rope_threading medium 15009 of 15165 -> 0 (55
+solves), knot_untying medium K2 0 of 96852 (244 solves); PCG iteration
+counts equal. Kernel time on the same matrix in the same process (stock /
+this patch, SpMV, SpMV + dot): rope medium (5055 block rows, longest row
+206 blocks) 8.2 / 8.3 us, 11.2 / 10.3 us; knot medium (32284 block rows,
+longest row 883 blocks) 22.4 / 22.5 us, 26.7 / 26.4 us.
+---
+ src/backends/cuda/linear_system/det_reduce.h  |  90 ++++
+ src/backends/cuda/linear_system/det_spmv.h    |  78 ++++
+ .../linear_system/global_linear_system.cu     |   7 +-
+ .../cuda/linear_system/global_linear_system.h |   2 +
+ .../cuda/linear_system/linear_fused_pcg.cu    |  38 +-
+ src/backends/cuda/linear_system/spmv.cu       | 414 ++++++++++++++++++
+ 6 files changed, 595 insertions(+), 34 deletions(-)
+ create mode 100644 src/backends/cuda/linear_system/det_reduce.h
+ create mode 100644 src/backends/cuda/linear_system/det_spmv.h
+
+diff --git a/src/backends/cuda/linear_system/det_reduce.h b/src/backends/cuda/linear_system/det_reduce.h
+new file mode 100644
+index 0000000..f120db8
+--- /dev/null
++++ b/src/backends/cuda/linear_system/det_reduce.h
+@@ -0,0 +1,90 @@
++#pragma once
++// Deterministic reductions (TopoGym determinism series, patch 0001).
++//
++// Replaces float atomicAdd reductions (e.g. warp sums atomically added into one device scalar), whose summation order
++// follows the GPU scheduler and so changes the rounding from run to run. Here the grid size is a function of n only,
++// every thread sums a fixed index set in a fixed order and cub::BlockReduce combines a block with a fixed shuffle tree;
++// the last block to finish (found with an integer atomic counter) then sums the per-block partials in index order.
++// Which block happens to be last does not matter: it computes the same fixed-order sum. One kernel launch per sum.
++// Same GPU model and n => same bits.
++#include <type_define.h>
++#include <cub/block/block_reduce.cuh>
++#include <muda/buffer/device_buffer.h>
++
++namespace uipc::backend::cuda::det
++{
++constexpr int kBlockDim = 256;
++constexpr int kMaxGrid  = 1024;
++
++inline int grid_size(int n)
++{
++    int g = (n + kBlockDim * 4 - 1) / (kBlockDim * 4);
++    return g < 1 ? 1 : (g > kMaxGrid ? kMaxGrid : g);
++}
++
++// scratch of one call site: per-block partials and the completion counter (0 between calls)
++struct SumScratch
++{
++    muda::DeviceBuffer<Float>        partial;
++    muda::DeviceBuffer<unsigned int> counter;
++};
++
++template <typename Load>
++__global__ void sum_kernel(int n, Load load, Float* partial, unsigned int* counter, Float* out)
++{
++    using BlockReduce = cub::BlockReduce<Float, kBlockDim>;
++    __shared__ typename BlockReduce::TempStorage temp;
++    __shared__ bool                              last;
++    Float acc = 0;
++    for(int i = blockIdx.x * kBlockDim + threadIdx.x; i < n; i += gridDim.x * kBlockDim)
++        acc += load(i);
++    Float s = BlockReduce(temp).Sum(acc);
++    if(threadIdx.x == 0)
++    {
++        partial[blockIdx.x] = s;
++        __threadfence();
++        last = atomicAdd(counter, 1u) == gridDim.x - 1;  // integer count: order-independent
++    }
++    __syncthreads();
++    if(!last)
++        return;
++    __threadfence();
++    Float acc2 = 0;
++    for(int i = threadIdx.x; i < static_cast<int>(gridDim.x); i += kBlockDim)
++        acc2 += __ldcg(partial + i);
++    Float total = BlockReduce(temp).Sum(acc2);
++    if(threadIdx.x == 0)
++    {
++        *out     = total;
++        *counter = 0;
++    }
++}
++
++// *out (device) = sum_{i<n} load(i), bit-reproducible. Default stream.
++template <typename Load>
++void sum(int n, Load load, SumScratch& scratch, Float* out)
++{
++    int g = grid_size(n);
++    if(scratch.partial.size() < static_cast<size_t>(g))
++        scratch.partial.resize(g);
++    if(scratch.counter.size() == 0)
++    {
++        scratch.counter.resize(1);
++        cudaMemset(scratch.counter.data(), 0, sizeof(unsigned int));
++    }
++    sum_kernel<<<g, kBlockDim>>>(n, load, scratch.partial.data(), scratch.counter.data(), out);
++}
++
++struct DotLoad
++{
++    const Float* x;
++    const Float* y;
++    __device__ Float operator()(int i) const { return x[i] * y[i]; }
++};
++
++struct ArrayLoad
++{
++    const Float* a;
++    __device__ Float operator()(int i) const { return a[i]; }
++};
++}  // namespace uipc::backend::cuda::det
+diff --git a/src/backends/cuda/linear_system/det_spmv.h b/src/backends/cuda/linear_system/det_spmv.h
+new file mode 100644
+index 0000000..c93e6cd
+--- /dev/null
++++ b/src/backends/cuda/linear_system/det_spmv.h
+@@ -0,0 +1,78 @@
++#pragma once
++// Deterministic symmetric block SpMV (TopoGym determinism series, patch 0001).
++//
++// The symmetric BCOO matrix stores one triangle. Spmv::rbk_sym_spmv(_dot) scatters every off-diagonal block into two
++// block rows with atomic adds (y_i += A_ij x_j across warp segments, y_j += A_ij^T x_i) and atomically adds warp sums
++// into the dot product, so y and p^T A p round differently from run to run. DetSymSpmv instead expands A, after every
++// assembly, into a row-sorted block CSR holding both triangles (integer-only plan: cub radix sort of (row, col) keys;
++// then the blocks, transposed where needed, are copied into that order) and splits the block rows into short and long
++// ones. A short row gets 4 lanes (lane l sums the row's blocks l, l + 4, ... in order, a fixed xor butterfly combines
++// them); a long row (the affine-body rows that touch many contacts) gets a whole thread block (a fixed cub::BlockReduce
++// tree). The fused dot sums each lane group's rows in loop order and each thread block's groups in group order, and the
++// last thread block to finish sums the per-block partials in index order. Every partial sum has a fixed place in a fixed
++// order: no result depends on the scheduler.
++#include <algorithm>
++#include <type_define.h>
++#include <uipc/common/log.h>
++#include <linear_system/det_reduce.h>
++#include <muda/buffer/device_buffer.h>
++#include <muda/buffer/var_view.h>
++#include <muda/ext/linear_system/bcoo_matrix_view.h>
++#include <muda/ext/linear_system/dense_vector_view.h>
++
++namespace uipc::backend::cuda
++{
++class DetSymSpmv
++{
++  public:
++    // the expanded CSR of A's current values and sparsity (call after every assembly / conversion of A)
++    void build(muda::CBCOOMatrixView<Float, 3> A);
++
++    // y = a * A * x + b * y
++    void spmv(Float                           a,
++              muda::CBCOOMatrixView<Float, 3> A,
++              muda::CDenseVectorView<Float>   x,
++              Float                           b,
++              muda::DenseVectorView<Float>    y);
++
++    // y = a * A * x + b * y  and  d_dot = x^T (a * A * x)
++    void spmv_dot(Float                           a,
++                  muda::CBCOOMatrixView<Float, 3> A,
++                  muda::CDenseVectorView<Float>   x,
++                  Float                           b,
++                  muda::DenseVectorView<Float>    y,
++                  muda::VarView<Float>            d_dot);
++
++    bool built() const { return m_built; }
++
++
++  private:
++    void run(Float a, muda::CBCOOMatrixView<Float, 3> A, muda::CDenseVectorView<Float> x, Float b,
++             muda::DenseVectorView<Float> y, Float* dot_out);
++
++    bool              m_built    = false;
++    int               m_rows     = 0;
++    int               m_entries  = 0;
++    int               m_triplets = 0;
++    const Matrix3x3*  m_values   = nullptr;  // A's block storage at build time
++    int               m_n_short  = 0;
++    int               m_n_long   = 0;
++
++    muda::DeviceBuffer<int>                m_entry_counts;  // per triplet: 1 (diagonal) or 2
++    muda::DeviceBuffer<int>                m_entry_offsets;
++    muda::DeviceBuffer<unsigned long long> m_keys_in;
++    muda::DeviceBuffer<unsigned long long> m_keys_out;
++    muda::DeviceBuffer<int>                m_vals_in;  // 2 * triplet + transposed
++    muda::DeviceBuffer<int>                m_vals_out;
++    muda::DeviceBuffer<int>                m_row_counts;
++    muda::DeviceBuffer<int>                m_row_offsets;
++    muda::DeviceBuffer<Matrix3x3>          m_csr_blocks;  // row-sorted blocks of both triangles
++    muda::DeviceBuffer<int>                m_csr_cols;
++    muda::DeviceBuffer<int>                m_row_flag;   // 1 = long row
++    muda::DeviceBuffer<int>                m_row_pos;
++    muda::DeviceBuffer<int>                m_short_rows;
++    muda::DeviceBuffer<int>                m_long_rows;
++    det::SumScratch                        m_dot_scratch;  // fused dot: per-block partials + counter
++    muda::DeviceBuffer<std::byte>          m_temp;
++};
++}  // namespace uipc::backend::cuda
+diff --git a/src/backends/cuda/linear_system/global_linear_system.cu b/src/backends/cuda/linear_system/global_linear_system.cu
+index b7615c4..2fefbdc 100644
+--- a/src/backends/cuda/linear_system/global_linear_system.cu
++++ b/src/backends/cuda/linear_system/global_linear_system.cu
+@@ -226,6 +226,7 @@ void GlobalLinearSystem::Impl::build_linear_system()
+ 
+     converter.ge2sym(triplet_A);
+     converter.convert(triplet_A, bcoo_A);
++    det_spmver.build(bcoo_A.cview());  // TopoGym determinism series, patch 0001
+ 
+     _assemble_preconditioner();
+ 
+@@ -497,7 +498,8 @@ void GlobalLinearSystem::Impl::spmv(Float                         a,
+                                     Float                         b,
+                                     muda::DenseVectorView<Float>  y)
+ {
+-    spmver.rbk_sym_spmv(a, bcoo_A.cview(), x, b, y);
++    // TopoGym determinism series, patch 0001: gather SpMV (no atomic scatter)
++    det_spmver.spmv(a, bcoo_A.cview(), x, b, y);
+ 
+     // Just some debug options
+     //  * spmver.sym_spmv(a, bcoo_A.cview(), x, b, y);      // Slightly slower
+@@ -508,7 +510,8 @@ void GlobalLinearSystem::Impl::spmv_dot(muda::CDenseVectorView<Float> x,
+                                         muda::DenseVectorView<Float>  y,
+                                         muda::VarView<Float>          d_dot)
+ {
+-    spmver.rbk_sym_spmv_dot(1.0, bcoo_A.cview(), x, 0.0, y, d_dot);
++    // TopoGym determinism series, patch 0001: gather SpMV + two-pass dot (no atomics)
++    det_spmver.spmv_dot(1.0, bcoo_A.cview(), x, 0.0, y, d_dot);
+ }
+ 
+ bool GlobalLinearSystem::Impl::accuracy_statisfied(muda::DenseVectorView<Float> r)
+diff --git a/src/backends/cuda/linear_system/global_linear_system.h b/src/backends/cuda/linear_system/global_linear_system.h
+index d03f138..42d74d2 100644
+--- a/src/backends/cuda/linear_system/global_linear_system.h
++++ b/src/backends/cuda/linear_system/global_linear_system.h
+@@ -1,4 +1,5 @@
+ #pragma once
++#include <linear_system/det_spmv.h>
+ #include <sim_system.h>
+ #include <functional>
+ #include <uipc/common/list.h>
+@@ -308,6 +309,7 @@ class GlobalLinearSystem : public SimSystem
+         muda::DeviceDenseMatrix<Float>      debug_A;  // dense A for debug
+ 
+         Spmv                      spmver;
++        DetSymSpmv                det_spmver;  // TopoGym determinism series, patch 0001
+         MatrixConverter<Float, 3> converter;
+ 
+         bool initialized = false;
+diff --git a/src/backends/cuda/linear_system/linear_fused_pcg.cu b/src/backends/cuda/linear_system/linear_fused_pcg.cu
+index 705b621..6ab6fc4 100644
+--- a/src/backends/cuda/linear_system/linear_fused_pcg.cu
++++ b/src/backends/cuda/linear_system/linear_fused_pcg.cu
+@@ -3,6 +3,8 @@
+ #include <linear_system/global_linear_system.h>
+ #include <uipc/common/timer.h>
+ #include <cub/warp/warp_reduce.cuh>
++#include <linear_system/det_reduce.h>
++#include <muda/buffer/device_buffer.h>
+ namespace uipc::backend::cuda
+ {
+ REGISTER_SIM_SYSTEM(LinearFusedPCG);
+@@ -115,42 +117,14 @@ void LinearFusedPCG::check_iter_rz_nan_inf(Float rz, SizeT k)
+     }
+ }
+ 
+-// d_result = x^T * y  (cublas-free, device-only, CUB warp reduction)
++// d_result = x^T * y, bit-reproducible (TopoGym determinism series, patch 0001: replaces the warp sums atomically added
++// into d_result, whose order followed the scheduler).
+ void fused_dot(muda::CDenseVectorView<Float> x,
+                muda::CDenseVectorView<Float> y,
+                muda::VarView<Float>          d_result)
+ {
+-    using namespace muda;
+-
+-    cudaMemsetAsync(d_result.data(), 0, sizeof(Float));
+-
+-    constexpr int block_dim   = 256;
+-    constexpr int warp_size   = 32;
+-    constexpr int num_warps   = block_dim / warp_size;
+-    int           n           = x.size();
+-    int           block_count = (n + block_dim - 1) / block_dim;
+-
+-    Launch(block_count, block_dim)
+-        .file_line(__FILE__, __LINE__)
+-        .apply(
+-            [x        = x.cviewer().name("x"),
+-             y        = y.cviewer().name("y"),
+-             d_result = d_result.viewer().name("d_result"),
+-             n] __device__() mutable
+-            {
+-                using WarpReduce = cub::WarpReduce<Float, warp_size>;
+-                __shared__ typename WarpReduce::TempStorage temp_storage[num_warps];
+-
+-                int   i   = blockIdx.x * blockDim.x + threadIdx.x;
+-                Float val = (i < n) ? x(i) * y(i) : Float(0);
+-
+-                int   warp_id  = threadIdx.x / warp_size;
+-                int   lane_id  = threadIdx.x & (warp_size - 1);
+-                Float warp_sum = WarpReduce(temp_storage[warp_id]).Sum(val);
+-
+-                if(lane_id == 0)
+-                    muda::atomic_add(d_result.data(), warp_sum);
+-            });
++    static det::SumScratch scratch;
++    det::sum(static_cast<int>(x.size()), det::DotLoad{x.data(), y.data()}, scratch, d_result.data());
+ }
+ 
+ // Same as linear_pcg update_xr: alpha = rz/pAp, x += alpha*p, r -= alpha*Ap. Alpha computed on device from d_rz, d_pAp.
+diff --git a/src/backends/cuda/linear_system/spmv.cu b/src/backends/cuda/linear_system/spmv.cu
+index e54f421..bec5d1c 100644
+--- a/src/backends/cuda/linear_system/spmv.cu
++++ b/src/backends/cuda/linear_system/spmv.cu
+@@ -1,4 +1,8 @@
+ #include <linear_system/spmv.h>
++#include <linear_system/det_spmv.h>
++#include <linear_system/det_reduce.h>
++#include <cub/device/device_scan.cuh>
++#include <cub/device/device_radix_sort.cuh>
+ #include <muda/launch/launch.h>
+ #include <cub/warp/warp_reduce.cuh>
+ #include <cub/warp/warp_scan.cuh>
+@@ -629,4 +633,414 @@ void Spmv::cpu_sym_spmv(Float                           a,
+     // Copy result back to device
+     y.buffer_view().copy_from(y_host.data());
+ }
++
++// ---- DetSymSpmv (TopoGym determinism series, patch 0001; see det_spmv.h) ---------------------------------------------
++namespace det_spmv_detail
++{
++__global__ void count_entries(int T, const int* ri, const int* ci, int* counts)
++{
++    int t = blockIdx.x * blockDim.x + threadIdx.x;
++    if(t < T)
++        counts[t] = (ri[t] == ci[t]) ? 1 : 2;
++    else if(t == T)
++        counts[t] = 0;
++}
++
++__global__ void fill_entries(int T, const int* ri, const int* ci, const int* offsets, unsigned long long* keys, int* vals)
++{
++    int t = blockIdx.x * blockDim.x + threadIdx.x;
++    if(t >= T)
++        return;
++    unsigned long long i = static_cast<unsigned int>(ri[t]);
++    unsigned long long j = static_cast<unsigned int>(ci[t]);
++    int                o = offsets[t];
++    keys[o]              = (i << 32) | j;
++    vals[o]              = 2 * t;
++    if(i != j)
++    {
++        keys[o + 1] = (j << 32) | i;
++        vals[o + 1] = 2 * t + 1;
++    }
++}
++
++__global__ void count_rows(int m, const unsigned long long* keys, int* row_counts)
++{
++    int e = blockIdx.x * blockDim.x + threadIdx.x;
++    if(e < m)
++        atomicAdd(&row_counts[keys[e] >> 32], 1);  // integer counts: the result does not depend on the order
++}
++
++__global__ void pack_csr(int m, const int* vals, const int* ri, const int* ci, const Matrix3x3* blocks,
++                         Matrix3x3* csr_blocks, int* csr_cols)
++{
++    int e = blockIdx.x * blockDim.x + threadIdx.x;
++    if(e >= m)
++        return;
++    int v = vals[e];
++    int t = v >> 1;
++    if(v & 1)
++    {
++        csr_blocks[e] = blocks[t].transpose();
++        csr_cols[e]   = ri[t];
++    }
++    else
++    {
++        csr_blocks[e] = blocks[t];
++        csr_cols[e]   = ci[t];
++    }
++}
++
++// Rows are split once per assembly (integer only) into short rows (at most kLongRowMin - 1 blocks) and long rows. A
++// short row gets LS lanes (lane l sums the row's blocks l, l + LS, ... in order, a fixed xor butterfly combines the
++// lanes); a long row gets a whole thread block (a fixed cub::BlockReduce tree combines the threads). Both groups loop over their row list with a fixed grid stride (grid sizes depend
++// only on the row counts), every lane of a warp takes part in every shuffle. With a dot product, each lane group sums
++// its rows' dots in loop order, the thread block sums its groups in group order into partial[block], and the last
++// thread block to finish (integer atomic counter) sums the partials in index order. Every partial sum has a fixed place
++// in a fixed order, so y and the dot do not depend on the scheduler.
++constexpr int kSpmvBlock    = 128;
++constexpr int kShortLanes   = 4;    // lanes per short row
++constexpr int kLongRowMin   = 33;   // rows with at least this many blocks take a whole thread block
++constexpr int kMaxShortGrid = 512;
++constexpr int kMaxLongGrid  = 64;
++
++__global__ void flag_long_rows(int rows, const int* row_offsets, int* flag)
++{
++    int r = blockIdx.x * blockDim.x + threadIdx.x;
++    if(r < rows)
++        flag[r] = (row_offsets[r + 1] - row_offsets[r]) >= kLongRowMin ? 1 : 0;
++    else if(r == rows)
++        flag[r] = 0;
++}
++
++__global__ void split_rows(int rows, const int* flag, const int* pos, int* short_rows, int* long_rows)
++{
++    int r = blockIdx.x * blockDim.x + threadIdx.x;
++    if(r >= rows)
++        return;
++    if(flag[r])
++        long_rows[pos[r]] = r;
++    else
++        short_rows[r - pos[r]] = r;
++}
++
++// one row by L lanes; every lane calls it (shuffles); returns the row's dot contribution on lane 0 of the group
++template <int L>
++__device__ __forceinline__ Float row_product(bool             valid,
++                                             int              r,
++                                             int              lane,
++                                             Float            a,
++                                             Float            b,
++                                             const int*       row_offsets,
++                                             const Matrix3x3* csr_blocks,
++                                             const int*       csr_cols,
++                                             const Float*     x,
++                                             Float*           y)
++{
++    constexpr unsigned full = 0xffffffffu;
++    Float              acc0 = 0, acc1 = 0, acc2 = 0;
++    if(valid)
++    {
++        int end = row_offsets[r + 1];
++        for(int e = row_offsets[r] + lane; e < end; e += L)
++        {
++            const Matrix3x3& blk = csr_blocks[e];
++            int              c   = csr_cols[e];
++            Float            x0 = x[3 * c], x1 = x[3 * c + 1], x2 = x[3 * c + 2];
++            acc0 += blk(0, 0) * x0 + blk(0, 1) * x1 + blk(0, 2) * x2;
++            acc1 += blk(1, 0) * x0 + blk(1, 1) * x1 + blk(1, 2) * x2;
++            acc2 += blk(2, 0) * x0 + blk(2, 1) * x1 + blk(2, 2) * x2;
++        }
++    }
++#pragma unroll
++    for(int k = L / 2; k > 0; k >>= 1)
++    {
++        acc0 += __shfl_xor_sync(full, acc0, k, L);
++        acc1 += __shfl_xor_sync(full, acc1, k, L);
++        acc2 += __shfl_xor_sync(full, acc2, k, L);
++    }
++    Float rd = 0;
++    if(valid && lane == 0)
++    {
++        Float ax0 = a * acc0, ax1 = a * acc1, ax2 = a * acc2;
++        rd        = x[3 * r] * ax0 + x[3 * r + 1] * ax1 + x[3 * r + 2] * ax2;
++        if(b != 0)
++        {
++            ax0 += b * y[3 * r];
++            ax1 += b * y[3 * r + 1];
++            ax2 += b * y[3 * r + 2];
++        }
++        y[3 * r]     = ax0;
++        y[3 * r + 1] = ax1;
++        y[3 * r + 2] = ax2;
++    }
++    return rd;
++}
++
++// blocks [0, grid_short): short rows, LS lanes each; blocks [grid_short, gridDim.x): long rows, full warps
++template <int LS, bool WithDot>
++__global__ void gather_spmv(int              n_short,
++                            int              n_long,
++                            int              grid_short,
++                            const int*       short_rows,
++                            const int*       long_rows,
++                            Float            a,
++                            Float            b,
++                            const int*       row_offsets,
++                            const Matrix3x3* csr_blocks,
++                            const int*       csr_cols,
++                            const Float*     x,
++                            Float*           y,
++                            Float*           partial,
++                            unsigned int*    counter,
++                            Float*           dot_out)
++{
++    __shared__ Float group_dot[kSpmvBlock / LS];
++    __shared__ bool  last;
++    Float            mine = 0;
++    int              lane, group, groups;
++    if(static_cast<int>(blockIdx.x) < grid_short)
++    {
++        constexpr int RPB = kSpmvBlock / LS;
++        lane              = threadIdx.x % LS;
++        group             = threadIdx.x / LS;
++        groups            = RPB;
++        int stride        = grid_short * RPB;
++        int rounds        = (n_short + stride - 1) / stride;  // the same for every thread
++        for(int k = 0; k < rounds; ++k)
++        {
++            int  i     = blockIdx.x * RPB + group + k * stride;
++            bool valid = i < n_short;
++            mine += row_product<LS>(valid, valid ? short_rows[i] : 0, lane, a, b, row_offsets, csr_blocks, csr_cols, x, y);
++        }
++    }
++    else
++    {
++        // long rows: one thread block per row (thread t sums the row's blocks t, t + kSpmvBlock, ... in order; a
++        // cub::BlockReduce, a fixed tree, combines the threads); the blocks loop over the long-row list with a fixed stride
++        using BlockReduceRow = cub::BlockReduce<Float, kSpmvBlock>;
++        __shared__ typename BlockReduceRow::TempStorage row_temp;
++        int grid_long = gridDim.x - grid_short;
++        int rounds    = (n_long + grid_long - 1) / grid_long;  // the same for every thread
++        lane          = threadIdx.x;
++        group         = 0;
++        groups        = 1;
++        for(int k = 0; k < rounds; ++k)
++        {
++            int   i     = (blockIdx.x - grid_short) + k * grid_long;
++            bool  valid = i < n_long;  // the same for the whole thread block
++            int   r     = valid ? long_rows[i] : 0;
++            Float acc0 = 0, acc1 = 0, acc2 = 0;
++            if(valid)
++            {
++                int end = row_offsets[r + 1];
++                for(int e = row_offsets[r] + threadIdx.x; e < end; e += kSpmvBlock)
++                {
++                    const Matrix3x3& blk = csr_blocks[e];
++                    int              c   = csr_cols[e];
++                    Float            x0 = x[3 * c], x1 = x[3 * c + 1], x2 = x[3 * c + 2];
++                    acc0 += blk(0, 0) * x0 + blk(0, 1) * x1 + blk(0, 2) * x2;
++                    acc1 += blk(1, 0) * x0 + blk(1, 1) * x1 + blk(1, 2) * x2;
++                    acc2 += blk(2, 0) * x0 + blk(2, 1) * x1 + blk(2, 2) * x2;
++                }
++            }
++            Float s0 = BlockReduceRow(row_temp).Sum(acc0);
++            __syncthreads();
++            Float s1 = BlockReduceRow(row_temp).Sum(acc1);
++            __syncthreads();
++            Float s2 = BlockReduceRow(row_temp).Sum(acc2);
++            __syncthreads();
++            if(valid && threadIdx.x == 0)
++            {
++                Float ax0 = a * s0, ax1 = a * s1, ax2 = a * s2;
++                mine += x[3 * r] * ax0 + x[3 * r + 1] * ax1 + x[3 * r + 2] * ax2;
++                if(b != 0)
++                {
++                    ax0 += b * y[3 * r];
++                    ax1 += b * y[3 * r + 1];
++                    ax2 += b * y[3 * r + 2];
++                }
++                y[3 * r]     = ax0;
++                y[3 * r + 1] = ax1;
++                y[3 * r + 2] = ax2;
++            }
++        }
++    }
++    if constexpr(WithDot)
++    {
++        if(lane == 0)
++            group_dot[group] = mine;
++        __syncthreads();
++        if(threadIdx.x == 0)
++        {
++            Float s = 0;
++            for(int g = 0; g < groups; ++g)
++                s += group_dot[g];
++            partial[blockIdx.x] = s;
++            __threadfence();
++            last = atomicAdd(counter, 1u) == gridDim.x - 1;  // integer count: order-independent
++        }
++        __syncthreads();
++        if(!last)
++            return;
++        __threadfence();
++        using BlockReduce = cub::BlockReduce<Float, kSpmvBlock>;
++        __shared__ typename BlockReduce::TempStorage temp;
++        Float                                        acc = 0;
++        for(int i = threadIdx.x; i < static_cast<int>(gridDim.x); i += kSpmvBlock)
++            acc += __ldcg(partial + i);
++        Float total = BlockReduce(temp).Sum(acc);
++        if(threadIdx.x == 0)
++        {
++            *dot_out = total;
++            *counter = 0;
++        }
++    }
++}
++
++template <int LS>
++void launch_gather(int n_short, int n_long, const int* short_rows, const int* long_rows, Float a, Float b,
++                   const int* row_offsets, const Matrix3x3* csr_blocks, const int* csr_cols, const Float* x, Float* y,
++                   det::SumScratch* scratch, Float* dot_out)
++{
++    constexpr int rpb_short  = kSpmvBlock / LS;
++    int           grid_short = n_short > 0 ? std::min((n_short + rpb_short - 1) / rpb_short, kMaxShortGrid) : 0;
++    int           grid_long  = n_long > 0 ? std::min(n_long, kMaxLongGrid) : 0;
++    int           grid       = grid_short + grid_long;
++    if(grid == 0)
++        return;
++    if(dot_out)
++    {
++        if(scratch->partial.size() < static_cast<size_t>(grid))
++            scratch->partial.resize(grid);
++        if(scratch->counter.size() == 0)
++        {
++            scratch->counter.resize(1);
++            cudaMemset(scratch->counter.data(), 0, sizeof(unsigned int));
++        }
++        gather_spmv<LS, true><<<grid, kSpmvBlock>>>(n_short, n_long, grid_short, short_rows, long_rows, a, b, row_offsets,
++                                                    csr_blocks, csr_cols, x, y, scratch->partial.data(),
++                                                    scratch->counter.data(), dot_out);
++    }
++    else
++    {
++        gather_spmv<LS, false><<<grid, kSpmvBlock>>>(n_short, n_long, grid_short, short_rows, long_rows, a, b,
++                                                     row_offsets, csr_blocks, csr_cols, x, y, nullptr, nullptr, nullptr);
++    }
++}
++}  // namespace det_spmv_detail
++
++void DetSymSpmv::build(muda::CBCOOMatrixView<Float, 3> A)
++{
++    using namespace det_spmv_detail;
++    constexpr int bd = 256;
++    m_triplets       = A.triplet_count();
++    m_rows           = A.total_rows();
++    int        T     = m_triplets;
++    const int* ri    = A.row_indices().data();
++    const int* ci    = A.col_indices().data();
++
++    m_entry_counts.resize(T + 1);
++    m_entry_offsets.resize(T + 1);
++    count_entries<<<(T + 1 + bd - 1) / bd, bd>>>(T, ri, ci, m_entry_counts.data());
++    size_t bytes = 0;
++    cub::DeviceScan::ExclusiveSum(nullptr, bytes, m_entry_counts.data(), m_entry_offsets.data(), T + 1);
++    if(m_temp.size() < bytes)
++        m_temp.resize(bytes);
++    cub::DeviceScan::ExclusiveSum((void*)m_temp.data(), bytes, m_entry_counts.data(), m_entry_offsets.data(), T + 1);
++    int m = 0;
++    cudaMemcpy(&m, m_entry_offsets.data() + T, sizeof(int), cudaMemcpyDeviceToHost);
++    m_entries = m;
++
++    m_keys_in.resize(m);
++    m_keys_out.resize(m);
++    m_vals_in.resize(m);
++    m_vals_out.resize(m);
++    if(T > 0)
++        fill_entries<<<(T + bd - 1) / bd, bd>>>(T, ri, ci, m_entry_offsets.data(), m_keys_in.data(), m_vals_in.data());
++    bytes = 0;
++    cub::DeviceRadixSort::SortPairs(nullptr, bytes, m_keys_in.data(), m_keys_out.data(), m_vals_in.data(),
++                                    m_vals_out.data(), m);
++    if(m_temp.size() < bytes)
++        m_temp.resize(bytes);
++    cub::DeviceRadixSort::SortPairs((void*)m_temp.data(), bytes, m_keys_in.data(), m_keys_out.data(),
++                                    m_vals_in.data(), m_vals_out.data(), m);
++
++    m_row_counts.resize(m_rows + 1);
++    m_row_offsets.resize(m_rows + 1);
++    cudaMemset(m_row_counts.data(), 0, (m_rows + 1) * sizeof(int));
++    if(m > 0)
++        count_rows<<<(m + bd - 1) / bd, bd>>>(m, m_keys_out.data(), m_row_counts.data());
++    bytes = 0;
++    cub::DeviceScan::ExclusiveSum(nullptr, bytes, m_row_counts.data(), m_row_offsets.data(), m_rows + 1);
++    if(m_temp.size() < bytes)
++        m_temp.resize(bytes);
++    cub::DeviceScan::ExclusiveSum((void*)m_temp.data(), bytes, m_row_counts.data(), m_row_offsets.data(), m_rows + 1);
++
++    m_csr_blocks.resize(m);
++    m_csr_cols.resize(m);
++    m_values = A.values().data();
++    if(m > 0)
++        pack_csr<<<(m + bd - 1) / bd, bd>>>(m, m_vals_out.data(), ri, ci, m_values, m_csr_blocks.data(), m_csr_cols.data());
++
++    // short / long row lists (integer only)
++    m_row_flag.resize(m_rows + 1);
++    m_row_pos.resize(m_rows + 1);
++    flag_long_rows<<<(m_rows + 1 + bd - 1) / bd, bd>>>(m_rows, m_row_offsets.data(), m_row_flag.data());
++    bytes = 0;
++    cub::DeviceScan::ExclusiveSum(nullptr, bytes, m_row_flag.data(), m_row_pos.data(), m_rows + 1);
++    if(m_temp.size() < bytes)
++        m_temp.resize(bytes);
++    cub::DeviceScan::ExclusiveSum((void*)m_temp.data(), bytes, m_row_flag.data(), m_row_pos.data(), m_rows + 1);
++    int n_long = 0;
++    cudaMemcpy(&n_long, m_row_pos.data() + m_rows, sizeof(int), cudaMemcpyDeviceToHost);
++    m_n_long  = n_long;
++    m_n_short = m_rows - n_long;
++    m_short_rows.resize(std::max(m_n_short, 1));
++    m_long_rows.resize(std::max(m_n_long, 1));
++    if(m_rows > 0)
++        split_rows<<<(m_rows + bd - 1) / bd, bd>>>(m_rows, m_row_flag.data(), m_row_pos.data(), m_short_rows.data(),
++                                                   m_long_rows.data());
++    m_built = true;
++}
++
++void DetSymSpmv::run(Float                           a,
++                     muda::CBCOOMatrixView<Float, 3> A,
++                     muda::CDenseVectorView<Float>   x,
++                     Float                           b,
++                     muda::DenseVectorView<Float>    y,
++                     Float*                          dot_out)
++{
++    using namespace det_spmv_detail;
++    UIPC_ASSERT(m_built && m_triplets == A.triplet_count() && m_values == A.values().data() && 3 * m_rows == x.size()
++                    && x.size() == y.size(),
++                "DetSymSpmv: the expanded CSR does not match the matrix (rebuild after assembling A)");
++    if(m_rows <= 0)
++        return;
++    const int*       ro = m_row_offsets.data();
++    const Matrix3x3* cb = m_csr_blocks.data();
++    const int*       cc = m_csr_cols.data();
++    const int*       sr = m_short_rows.data();
++    const int*       lr = m_long_rows.data();
++    launch_gather<kShortLanes>(m_n_short, m_n_long, sr, lr, a, b, ro, cb, cc, x.data(), y.data(), &m_dot_scratch, dot_out);
++}
++
++void DetSymSpmv::spmv(Float                           a,
++                      muda::CBCOOMatrixView<Float, 3> A,
++                      muda::CDenseVectorView<Float>   x,
++                      Float                           b,
++                      muda::DenseVectorView<Float>    y)
++{
++    run(a, A, x, b, y, nullptr);
++}
++
++void DetSymSpmv::spmv_dot(Float                           a,
++                          muda::CBCOOMatrixView<Float, 3> A,
++                          muda::CDenseVectorView<Float>   x,
++                          Float                           b,
++                          muda::DenseVectorView<Float>    y,
++                          muda::VarView<Float>            d_dot)
++{
++    run(a, A, x, b, y, d_dot.data());
++}
++
+ }  // namespace uipc::backend::cuda
+\ No newline at end of file
+-- 
+2.34.1
+

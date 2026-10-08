@@ -1,9 +1,10 @@
 # The verifier replays in the simulator, which needs the GPU (CUDA physics, Nyx camera images for the replay video).
-# Nyx renders through Vulkan, so the container needs the NVIDIA graphics libraries as well as compute: `runtime: nvidia`
-# with NVIDIA_DRIVER_CAPABILITIES=all (`capabilities: [gpu]` alone injects compute only).
+# Nyx renders through Vulkan: the device reservation below passes exactly one GPU (Nyx needs exactly one), and
+# NVIDIA_DRIVER_CAPABILITIES=all makes the container toolkit mount the driver's graphics libraries, which the image's
+# Vulkan ICD and EGL vendor files name (images/robotangle/Dockerfile). No `runtime: nvidia`: with the image's
+# NVIDIA_VISIBLE_DEVICES=all it can expose every GPU of the host.
 services:
   main:
-    runtime: nvidia
     shm_size: "2gb"
     environment:
       NVIDIA_DRIVER_CAPABILITIES: all

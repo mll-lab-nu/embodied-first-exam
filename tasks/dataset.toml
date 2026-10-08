@@ -4859,419 +4859,419 @@ digest = "sha256:8e41c22f5a7f3b0c1137874d2841fc3e074a3ef4645faa1182b110f919b4d79
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-blanket-flatten-easy-i00-privileged"
-digest = "sha256:5eef1c1a53064e5f43ee98286d67fdd5f64b18e7c63fde8b768458f054e31681"
+digest = "sha256:a350f73feb43a55cbae5d754612dfc8445ed13f54220f01de5622e98d05924ef"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-blanket-flatten-easy-i00-standard"
-digest = "sha256:76509eb44a2da878935d620083c0139aebdf3341e4f556b884fed0e5f848dde3"
+digest = "sha256:9d09d044ba07d26105160e54c62833220224512f8a597b2522a07562d26e1ad5"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-blanket-flatten-hard-i00-privileged"
-digest = "sha256:30c190b880bb487bc822d29e9e352331754eed826fe43be8ab5d9fb25f9bf9ce"
+digest = "sha256:77404fabc5a5d2448e504db966717e615c62bf4c479fcb53f252e25f07d4b74c"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-blanket-flatten-hard-i00-standard"
-digest = "sha256:bb50ba19fc945748156ae45f757198ab9a98ff207eb4c94232cba0146c5150a3"
+digest = "sha256:f0aebc44c71a6fb38fc0ee0b918e5d62107db869a7a4b793cafb1f48761dc20d"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-blanket-flatten-medium-i00-privileged"
-digest = "sha256:d7b4c399b66c0b4aedfc902375e27acc1ff45d40c4351ddcf407e58a1a7c9b72"
+digest = "sha256:8271085456a1fb6bae2d862d57b0e9b0d4df544113e7e43bbde18305263494f8"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-blanket-flatten-medium-i00-standard"
-digest = "sha256:6774b3e7613c177df98b6977628a3479a43e30ab004e83cab686ba6eb188c191"
+digest = "sha256:d3d5aef0aaee65c74851769a4ed01576c7ebd61b40c1e792a127b9bba7f8c6b3"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-blanket-flatten-very-easy-i00-privileged"
-digest = "sha256:6cc2a204740c581d8cd25abc45c4b24eda801c8e7dcd7bf5142c3427aa3ecaf7"
+digest = "sha256:5f428189db59d85562662db0356856d12a302d03abacc3b94399cb10f02ce3df"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-blanket-flatten-very-easy-i00-standard"
-digest = "sha256:2fcab2aa87e59894ae0d53cc647010bdb1932303c37b5e68550a3b3fe4e29fc5"
+digest = "sha256:fc241fe026946682055eb6e68fc479c4ba738a6d54547f85b0207f55de21537b"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-easier-i00-privileged"
-digest = "sha256:1f9150888037e6fa90cc0ae0af46978b4d495956c194ce41e1c7e6d970355f86"
+digest = "sha256:a9995c03680928659a9f464177f1d5e8dc6470efb1e44fc90e832e494a52fb39"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-easier-i00-standard"
-digest = "sha256:cba718743e82e7aefc3a3e51c161194f6f0ff2eb3661b664a9547493edffb6da"
+digest = "sha256:e1c0101a284dd58610ed71976eef7491a62d35d0e59bb3983471b81d4b5a5eb6"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-easy-i00-privileged"
-digest = "sha256:a7afd33db98c2490416ed135f5f1c7d25747cafed4b15b9d9477e6d665b3babd"
+digest = "sha256:b7e45ca171d6d43028157c7dd7d4f5f37344b4f191c2188d513cfd330088de59"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-easy-i00-standard"
-digest = "sha256:f7317e3d1931bdd8f1d3ccd01cabeff4a3637dbcf57525fac0ff66f7a4b2ab79"
+digest = "sha256:f2baf4f6363461e720d0e14bc0b737fa15077853d6a8b5be7c6852753c0be046"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-hard-i00-privileged"
-digest = "sha256:587a71d7c4723881a9a67a500562bb4c63f21c7fcb2e0256cd7176c41abd5cd5"
+digest = "sha256:878282b01afd8a1bffab87a6551611af712e6ed3829e56770c13e66764a673bd"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-hard-i00-standard"
-digest = "sha256:15d46ad9fb8cdd181322c52e221fa5b6499b117a2b8725119bbbda9838beff1e"
+digest = "sha256:b50a1cdbd4445f5a224cf85801ead6ed08aa195c643f8140696dd409c2bc15f1"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-medium-i00-privileged"
-digest = "sha256:2df205f9bb68cb65d922ff4a7a82b9d8d4f4852a6a30be2e28ade3a5e4685fce"
+digest = "sha256:215464bdbb58ca49e384d1aef1dadf675ed28ff971dab236cf1e5b89df22614e"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-medium-i00-standard"
-digest = "sha256:e3ec606b368027bff1a1c393ccb8f9373ee1feac293566a3c56e065d3ba6e1cc"
+digest = "sha256:70063bd92795b680e78e66058fa1035b273e2c1b8cadd894a6a8787e39a76a08"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-very-easy-i00-privileged"
-digest = "sha256:96d89c611b9472387d1d10da0980023c8e8d42a0b2e1dbc86eb8e77650412a5f"
+digest = "sha256:61bed5e7ae418fee31d7d8f5b8ff88cb6b2e085af4de1641f5926b4cafac65be"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-buzz-wire-3d-very-easy-i00-standard"
-digest = "sha256:0837e1ca63a89eea663c62e2b2766c5915587c871f902299dfd8332a83efd778"
+digest = "sha256:87565a62b6109961debe6f79682ef6acf87ebba729e98cfea6a9c30a828fce84"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-easier-i00-privileged"
-digest = "sha256:f871f9db03385475b605ae270596952ccbd02c23dabcd6a60ad0581c21e98c63"
+digest = "sha256:ec775ebf14496a308904e17bef3a0baf84ebacac1a7527e7bfb3b924bce4e672"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-easier-i00-standard"
-digest = "sha256:2e6ba7127323207e59421e9646c690623897c306256256c5ed05cb6ce58e492b"
+digest = "sha256:caea3bb93e1536ae05bdae51456ea1451133d73be222141d05b3bf62f637f12d"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-easy-i00-privileged"
-digest = "sha256:62962b061b6754fd9398d126ca1295b90146734fdbc414b51e179f3ef8492541"
+digest = "sha256:895601411ad0465f87398bbbe14cfbfcd4fc691da415b0d7b2ec554a22a245cc"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-easy-i00-standard"
-digest = "sha256:a48ced4826e2e7f25693b3d73778d33552353852f16a450ce3cf7bfd85fcf7e5"
+digest = "sha256:caeb746035ee63b465d7a84796b2c27c8dce035633e02ec9cc61b7fa0f3e8f1a"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-hard-i00-privileged"
-digest = "sha256:7e9ed0d1d9281e8a2572300e06b5856c3aea9d0c808190954de0d1ca0555e7d1"
+digest = "sha256:bc60fc4651f18ad60600cc22385f1ec72ec91b34b3073c0f6dc4de0757fa1607"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-hard-i00-standard"
-digest = "sha256:6912ef5de84ce429de0a17b6ee8322aba1522bbab89539dd3853cf7a1c967d99"
+digest = "sha256:6f40fe3ae819e4d6bd9c79065338510364a7a011784348e696f02dfdf21c3cad"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-medium-i00-privileged"
-digest = "sha256:f585d044346bfbf7de507147ecf5849a3ff7582489b323928decc6c45037d550"
+digest = "sha256:7a1caaca7167774362ce31a1602a9bfaf24f3ae3ef166c20c964e7e1ef01a372"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-medium-i00-standard"
-digest = "sha256:1f788d7f8eb0f0b313cf3a2fef14cfe57f4ae7e5f92df2471df5393db45583e7"
+digest = "sha256:2871656a6b5c66b269e819d3a50d4eb3e1028bb48699fa41d6b57989a3456793"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-very-easy-i00-privileged"
-digest = "sha256:e91b3e31514d4ccb58cdb478cac37fe27947e3ef9f162890283f42559a25384b"
+digest = "sha256:3bb1d75be9a27e844c8d528d0d3a1d879c464620e5f46a23810b27d658a69816"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-coil-very-easy-i00-standard"
-digest = "sha256:b8e269451e9cb62e81392e247a3f8cdf767d3a79a7fd861981ae25e751c39e28"
+digest = "sha256:4da87ef1ac4fe688b781359dadca5093e64dfe46b14d85a2c88e039fee90ba91"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-easier-i00-privileged"
-digest = "sha256:5c1d038a2ad08715bc062248c95a9bf26cccbc27f0e09cab6688402d47fab35b"
+digest = "sha256:2633a2bfeb1609601552b6c026466cef8fe7e932112eae90801ac5589194a3fb"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-easier-i00-standard"
-digest = "sha256:6fa2988e4f10b17d3268f7427df405bb8c529013ea80b0744d5f6a04755b5da3"
+digest = "sha256:cb3a280c9a9c9b38bd08d3be1f3360d75d93857a660e0f1e93262217ca900a04"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-easy-i00-privileged"
-digest = "sha256:d9e30b1392703041a9aa679053cbf2eec2371894d571163b24b607afbf617f82"
+digest = "sha256:eced195c0f03fa62e0d253e5d19709356ce7c03d698f4443daa4af99301f54e7"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-easy-i00-standard"
-digest = "sha256:2a2b82fae0c75993b116b4eff6c2dfa46cea901f3d2d3c625c9ec8d1e1ea959c"
+digest = "sha256:ef4317a767b26c7851a7a37873cb087a45abcd3ae94828fd3b5e38d262c58b23"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-hard-i00-privileged"
-digest = "sha256:fd17db0e3f07c9b1d45763c58f752a299f03df8da211ef710b2dfce26c03e417"
+digest = "sha256:80a06e26907898eaad918c48c797d0dc4b7be78c41605b56bcb5d3dd928c776f"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-hard-i00-standard"
-digest = "sha256:7c54a28f4bd6377e26e69596d43cae9630714e5a6e50d0ffef966ddd20dbd905"
+digest = "sha256:616791fa74a258dd5293b60d15ccf9563a95a2b6ce3fe40629795313e37ea25a"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-medium-i00-privileged"
-digest = "sha256:4ebafaf7daa81c9b7e6c8b469a5b7448db06c1f168876cf69b44cae246995290"
+digest = "sha256:a1cdf8052141fc1426f3909805def4c5b7270aff3ffe6a4cbdb58dbd8c1a0b42"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-medium-i00-standard"
-digest = "sha256:94d13d1be17601027895318845f5aaa752e03d7e154a515c8053e8be5e4a20c9"
+digest = "sha256:ddc30dd3704d8a6e8b8263abb057a2ba356dbc97985aa653e975a93a6d133a4d"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-very-easy-i00-privileged"
-digest = "sha256:d5a8d5b47b887217e54ae2b8035089f31b8dafabeede2d7c39a2d9a2acabc002"
+digest = "sha256:f940ce9960b04d127a2cdaf1d0c0687ece7ef6c3142133d2d309823357b459cf"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-cast-keyhole-very-easy-i00-standard"
-digest = "sha256:726b5d11732775a53a8bcd30943349ef6f65cace791d478386fc5f8b642a4cb4"
+digest = "sha256:7266608a2f6520ad842168acb4ebe5335dcbb35b58b9a9bca260ea32b100448b"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-easier-i00-privileged"
-digest = "sha256:59278feea1a2ae0d1af4a4f37a0b92d40f769b554880ab7a6ca647345362b9fe"
+digest = "sha256:83bf145771fe7f7259319dea002c5cee3d1df94313e5817b0706e96aa6f0b83c"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-easier-i00-standard"
-digest = "sha256:76c83734f1a7aa23a50f66feb232e0d71ba967aa14685b679444cc2ad327df42"
+digest = "sha256:bfecf5fd64362e5bd5b07b21da68dd5175ee3bab88ef0bbd8e17218562d1cce1"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-easy-i00-privileged"
-digest = "sha256:4e0ffc8db4514de051c06b401e00f33ae4d533536efc4431484b583d6ae697a2"
+digest = "sha256:8a584603e75ca8f252d9ac8add83a17b7acef845f1b0d5f303bf703027f04d7c"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-easy-i00-standard"
-digest = "sha256:cc409dcc5c0ee875d10fab9b7a3996ca47d8db044b39c50cb51ced76b5740ec3"
+digest = "sha256:d3293e93d040e4d2ef7ca7b413a0e8b1740ccc730ce28012b48ba2da6c3e0dc7"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-hard-i00-privileged"
-digest = "sha256:91af3844923290657f7b86354322a300d0a2483442e0d027dab0b4171f535a5b"
+digest = "sha256:298de8c378ae9ca5b3f87a46b088a7c4250c89892564f267eff2e2a62c44a8f5"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-hard-i00-standard"
-digest = "sha256:37ef79d86ffd3c872754b80e16666ab9f5335581f1128e71bcd3e8e093298a38"
+digest = "sha256:180f7b33a8c7381e0d1cc24267f2bcc633a37345acaa646d09177ac3409fd7ff"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-medium-i00-privileged"
-digest = "sha256:4bccb8564bfe1a56529fafd6d9684be529b13da7fe57f37de33c0b2b685af936"
+digest = "sha256:cdbe79a7b53e7da1faa12f9afa902ee99b97cf41a6d3f75d84a7c15797a240c5"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-medium-i00-standard"
-digest = "sha256:7df18276c2be4b71d1df11b203142d0ebf980e4ab9e6deca142453d1b5766a26"
+digest = "sha256:c3f1f06629f1b3de24666306fd8b4e5484791a13e3d3acf0127134653fd00e1a"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-very-easy-i00-privileged"
-digest = "sha256:162c0f25bcefb4b8a579493890fc7ea769eb51198950a6a7d2328cd441de1a3a"
+digest = "sha256:7abcdf1f23f4b432e3609f6bc7e0986f629122d4fa58e83402d925fb1e3502d4"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-fiber-bundling-very-easy-i00-standard"
-digest = "sha256:72c4e9e367757ad78c9df597be452242cb38ebc792450c17289abf553213f8b0"
+digest = "sha256:2bc1646547091b14bfe9fb6f7cd413920196a24cf864b6c6ace49dd9ff208e11"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-easier-i00-privileged"
-digest = "sha256:bc532f7de463ea5a893eb969433376cb1b85982ac9711f56d95be7d33e0dfee1"
+digest = "sha256:2b644155b2a32e2f36c8b93c1cc4ab79d079d4032a1d2ff2446c5f79fdce9f68"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-easier-i00-standard"
-digest = "sha256:c4aa9b1894b896d6dc5dcdac179a840b63321aefa5129b0937a79e5983a1fe9f"
+digest = "sha256:4b9b0fa99455531f61cc62285ef5ff35d52899e49ceda4f7ddf4918b2655c948"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-easy-i00-privileged"
-digest = "sha256:b21a724b75b5e4e7268492285b716920f8ff3750bef077799510e4460b70f43f"
+digest = "sha256:821a77ff3b585dc918effa717c2756304a15017d38d8d0cf38f23df0126c8eb6"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-easy-i00-standard"
-digest = "sha256:00ee36345375cb4ce526a76face8b0535eac51aee1467e1a5ea46ffddeae8f97"
+digest = "sha256:7049fd536145f2abf002e02e7c0bd63d1d42881eb98025a22b99ede658213f97"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-hard-i00-privileged"
-digest = "sha256:3eb1c73bcf2b6067bb6b928700b10567792a137d70f6a5d6a7eccd9e2d9cad49"
+digest = "sha256:a93f5e29d06f7c5caf750e33e98acffeedf55b7d91209091d642cb72e30ead03"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-hard-i00-standard"
-digest = "sha256:8daa4591b1040f914c2e0bcb716b03c0770cb064488a4314c69d47355536931c"
+digest = "sha256:f94f0e65bafffef8e818e4347ccd7346f88c91028236e5f6fce8ffc83a69756a"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-medium-i00-privileged"
-digest = "sha256:76082faad2d6f45ff6ac5f6f98d2bab02ea1eeeeabadf2d95875e203c051232b"
+digest = "sha256:e14e63505b6b5c7f84dde3ef9838b956969d04ada7ea397970d1286741c67cbb"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-medium-i00-standard"
-digest = "sha256:03eb9bb414775ecf2b6e0479c522d73b1c6ef22a4806ab2472bb4ed67cdd8503"
+digest = "sha256:b9719174e6c5e8dc45e2a41dae325496ffd7704523dfabb15496f1676fc04393"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-very-easy-i00-privileged"
-digest = "sha256:f86ddced0eba8fd60e92e3823dfa27da03bf691e892aba332e0b9eb0c1123566"
+digest = "sha256:19b7005865eaf96ed0cd87eb7f7828e1b3ff46c336b9b340f22a79b0e4835817"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-very-easy-i00-standard"
-digest = "sha256:c19b02fb4d8676bd3f86f657f7e609601a11887daec3ac1844ddaaa2fb12df27"
+digest = "sha256:df86f80876d0446efa1d0e32c75815d585d7660cc6ec97947547b67f9bc5ed08"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-easier-i00-privileged"
-digest = "sha256:97d9e8b3bcca62f9b9883349e3054f56dc4021277d337538a45d26eee7e399cb"
+digest = "sha256:09ba399a9932944329710b1a7e477795881a2bfce7ec7876aa8e99641564eec7"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-easier-i00-standard"
-digest = "sha256:ec346b6f345b47c8d67b90288f2755148977bd0fdb4cc63bae869dae0be5bf57"
+digest = "sha256:bde42a1e2fd55e77e0074076eccb3f2917d8e9748fc42dbdca9a3f2c56a95954"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-easy-i00-privileged"
-digest = "sha256:b6873aca4f435fd84db9822bc07a02530c2f3b0847e313fe6aaf55e39229b038"
+digest = "sha256:e3260d44a461b1f496f6dd3251ca4801cc1ec37175fdf6d4f8665efad6c950f9"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-easy-i00-standard"
-digest = "sha256:386e633d2bbf7edefad51dd3c91f6b1f2adb99443171ce77f2d3b07888f197b8"
+digest = "sha256:91431e1f8bfeda20991cf4dee9fbf80d309dcad52aed982cabc8c231c7c305e6"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-hard-i00-privileged"
-digest = "sha256:49afbbdd7b66046850d60f606ea1cbb4c267ec1d63e6052895e2baf06a740273"
+digest = "sha256:eafa328f36beffb04be2270c2a856ef77b66b6e98973548ae596be93d2959246"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-hard-i00-standard"
-digest = "sha256:36d95e3cffcbd62a4db4fc59f411c6340d291d49761636b031de9baafeab4336"
+digest = "sha256:da1647b9af57a43277981f7e53a8581d79646cc7bc5560ae202f6baa5c07a54e"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-medium-i00-privileged"
-digest = "sha256:9d52b8255454067e11b66f44bf9cdaf186bb5be70480b0d1be60476f5104bef6"
+digest = "sha256:346843ceea21beee35e67b6b0e8920b9b09fd93522693e475aba3bda55e0d6ba"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-medium-i00-standard"
-digest = "sha256:c63460ef19bc97f69d81bcb77141d0efbf427c50bba7265a102b413e3cca8826"
+digest = "sha256:0efdf9e81b9f366a48e9d7f51072233df170c073877e0468b82a2e9d49f20898"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-very-easy-i00-privileged"
-digest = "sha256:58a7199c4a60465c8b95f14fa6f2eb049159c28e4fb1eb8312e1bfb66817278b"
+digest = "sha256:de8d167374fe6971c36d4540cd5f33eeadd78c84666a2dc7a5d717411ad2fc90"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-horseshoe-ring-very-easy-i00-standard"
-digest = "sha256:ae658aa6fb8ed5ab2f0830f13ed6301156486caac71ba99c97aafd4491b8d545"
+digest = "sha256:720ed7f84a5e9076462464e2126b4937f515d95eb6fe8459f3532af7610292f7"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-easier-i00-privileged"
-digest = "sha256:641f6e34d5b361d5b25e32a15ada4f2de1b63588d7f45161f035d7d8326bca50"
+digest = "sha256:0208bb8aaef0d0035e85699d307acf18502626efca3138a8c95bc2d6a7fab3e0"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-easier-i00-standard"
-digest = "sha256:8a13a27f352bc943d38ea184fc91088811a2d5ec97f049f8a91ac3c8b4e1022f"
+digest = "sha256:08e40141d04de0dd92514ad71c58026e2e2c8af33baa51502a217f3826aa17d5"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-easy-i00-privileged"
-digest = "sha256:75799b2332ed2c69ba23d20f0122e3ed94b373338967cc815c3da09e4cafd6fb"
+digest = "sha256:149d8a5508d045c93c87356792fc0e26deb2bf51694ead8488edebf2093f44d8"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-easy-i00-standard"
-digest = "sha256:8b9301ba51f7ec613c7d09e915307eb2ba7237ca6f8bcd5efcca064019a8e7a2"
+digest = "sha256:b093fb1a2b78c3b0b9c21dc29819ce963f2f22d825ec869b11027d28ba8457d3"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-hard-i00-privileged"
-digest = "sha256:294d627ab7bfbf7eb1330eadb890a4a1eba984e98f79b8de510380410ddd41c4"
+digest = "sha256:1ae72352642ee6b3c0050dc7f9d936b44c184f8f65f76fc839fea0181f669f94"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-hard-i00-standard"
-digest = "sha256:752b33ab2472d195b15834b150f0655664889fb008b66d85ce2c9e4dce4f5f0c"
+digest = "sha256:0c7428fa82dc23df3628bb0424fee2f94907fc18ce98ae8c1482ab4ebce23efa"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-medium-i00-privileged"
-digest = "sha256:8bd10e56671bd07ef8e864ef07709a75e7682216ff7d21d3b7624b3853c6bab6"
+digest = "sha256:f79c710e4e0108d834bbb6163ba0bd0e9b2916bde980c72000e6008cadfaa2d6"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-medium-i00-standard"
-digest = "sha256:079401474284da65358a608574d2c82568379de628067431acc6903474d69421"
+digest = "sha256:447dfc4f2683ab7420037bb95cc67f6b59dc23a5b435cee48d71f323d75af8a8"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-very-easy-i00-privileged"
-digest = "sha256:7bb81da248a117d515b6eda10e81eb91d9b8d92c8ffee980b2ec1ca098ed66a0"
+digest = "sha256:2ec91aa42622dc3b84177363e07c66222e7ac03017fe794144bfff9d13ee2a54"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-interlocked-claws-very-easy-i00-standard"
-digest = "sha256:fabe075b8bff0f649746773c1a36d30abfb8fca1c68b317ff1650a18efe62a3e"
+digest = "sha256:405acf0bd5894c628de8a1e5878245e355ae14877b26ed5a4965f1845269ad8d"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-easier-i00-privileged"
-digest = "sha256:5cb778c76698df6beb6eab28cdadd02af04ac3af57c04985c8c3ed732573dfb8"
+digest = "sha256:7067d1f5d16c3a20c105580c47e00a23d6a0a86f99109bf9c7237ea4061b8672"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-easier-i00-standard"
-digest = "sha256:d861b006bd10122449f9c18fca064cfac1430e35af88e2d683f2c6dd4fb384dc"
+digest = "sha256:6bcb31ed8bc7288ffdc38bd631440d9c0b888ac981774682d4032b663a4233c4"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-easy-i00-privileged"
-digest = "sha256:2572bd4b3b8f8a7bf5b23f117a6c239750ea5f4b7d79025b68d14a7205eb37e5"
+digest = "sha256:99d6984a53be66ab947efee43af37f5ac91bf6273bb5c2425906e7031d1d1cf9"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-easy-i00-standard"
-digest = "sha256:c4a2a7f9348289a0459c658fa9a469ee9e87cabf51d67bdb8b441f45210e1a28"
+digest = "sha256:facd5529b035d1aca10c3421f24851e653f3d20e95263125f90266565b6550a7"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-hard-i00-privileged"
-digest = "sha256:033e5552fd44d313d6fdf3b8ca9516a230e313d5ed8989bd28c52cb37c43384d"
+digest = "sha256:f50e79c2609f2d274294dbbd633b450e479033bc1c1212d19e4d55d05045f3c9"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-hard-i00-standard"
-digest = "sha256:2d0c5dbcfaee1ca8512246fd5d45f089eb7dea399f39e5dd2df9ef3ab085b0dd"
+digest = "sha256:7fd504b363bd5ea7a762c25e7b401b1d3b7cada1b2430587eb36c1551de26e7d"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-medium-i00-privileged"
-digest = "sha256:ee6e84b4be05bcafb7bab34d72e8bce1e9cd70acbc926208d8e7c137265b4514"
+digest = "sha256:fd6dca0da9f1d71530a7f775cb0419ac0c17c4873bb7a465f6afed78127786c1"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-medium-i00-standard"
-digest = "sha256:b82c4af2ee66bb714e4f5de914668f64d1f0fc9260e0a998fdeba3ae296172bb"
+digest = "sha256:91d839a426174920a0e07d36e0525b695ca07b7c8e70e6fe4210980e4ef2dd67"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-very-easy-i00-privileged"
-digest = "sha256:7e111ff148c37ef291217ae0a7e305d02a0a1169039e2768dab02a3ee03dd32d"
+digest = "sha256:5e827dbc298ee4824666e9bf41b76cafda84e09000da4e1f566035538c214f40"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-knot-untying-very-easy-i00-standard"
-digest = "sha256:68c0440cbeb135e0c5f9003010448d6e557d933a779a1d632e9cab8e4afc760a"
+digest = "sha256:d393aed06adf1afcd6afdb533c448c54705133a0a0aceacbeeb8768ad0f82a73"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-easier-i00-privileged"
-digest = "sha256:61ca2c60252d8d85ea300cdb5592065a0eb07f0c60083c24354d5f4b080dfc27"
+digest = "sha256:fa755dc96297f08f47aa27d28d1dad07583a833cf62b8b3ac50d7d03e7e09e28"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-easier-i00-standard"
-digest = "sha256:dd86ddd656986af0ae9ec5d2ed77f98e1e03d198dd347749fb1eaed365438632"
+digest = "sha256:ec61da6c12f46e1ecfa92202608eaaed2ee35c098e485629715582eccff08a74"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-easy-i00-privileged"
-digest = "sha256:ccbd95f0b47c469c508ed9fd2d3bb42f1186d9642d8f82006af4f268a31eac65"
+digest = "sha256:9e365fe6598aac323623e0d031d6b89b370d7a5744f875fcec9b3b18bc34c07c"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-easy-i00-standard"
-digest = "sha256:392fa300b6d9788644ef26c600a1c8964636c9415f59f0efb23a8f413201f97e"
+digest = "sha256:6bbabaee3ef5991bb65b706fd14a0244aa325caa2cf096aa88411f802a539934"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-hard-i00-privileged"
-digest = "sha256:4a1df4904b81e5d683932ab993d81d54c5bd6942814088ba4fb19ece2ec78b29"
+digest = "sha256:8da97f3ef3758ce82cfaef5b4351b76e9407579710241aa106e7396679dea1af"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-hard-i00-standard"
-digest = "sha256:f2f1817a140c496025e6dbe618867cd9af8cd8e261cac0f906145dfe6117d4b2"
+digest = "sha256:e78add14ca0e581f32fb40ab9bd4dc40060881a75863502d4969fc60f7168701"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-medium-i00-privileged"
-digest = "sha256:1ab6b079c6aa9011fac47756f84a77e453888db1b2814c6b5af425d485339af3"
+digest = "sha256:5d89d7aebd644e1bd5237024668a34a0ce379696bb32dc1e5e738ffba4950560"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-medium-i00-standard"
-digest = "sha256:c386a8410557e610c6ccc769e4de091dc1d4d63fcb728fdc425b58f6ce4ecbc3"
+digest = "sha256:01f3f4dd4e023818faeb35ad43b6a22d317cafb88b1a8327a160e1d8af837aeb"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-very-easy-i00-privileged"
-digest = "sha256:6e758075acdacca8c355f21633734062a4451f5977904359f23ce2c0443d9b19"
+digest = "sha256:0663d135b24df88b81506be7a6184de1284daaeabc17427099831ad33c31ead4"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-lock-picking-very-easy-i00-standard"
-digest = "sha256:950036070d53c67557302c73b3fe0e7e80992d4554e7e62e29c2d9252b311d07"
+digest = "sha256:a5edc4985923a22eea8fcbd97083d23152b6ee6f431a970f8225d0b8c775888a"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-rope-threading-easy-i00-privileged"
-digest = "sha256:0eab49cda5aa1de68850c2e771d12fdbb2e108e6ede08b5feae5bb3489e2603b"
+digest = "sha256:8471bc8c7e953d15bcbd541a7f7b9e96b786c5e8490127f9bcbb18ca995f1523"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-rope-threading-easy-i00-standard"
-digest = "sha256:b4d69a65c0a1381d20edd7e3f48b0c3c1e382a4e834cfd6a6bd47500ef56dade"
+digest = "sha256:a2effb7710ad0bef2eff93da71ed55b80ecd8c594a75ce6ec0b841589aa98144"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-rope-threading-hard-i00-privileged"
-digest = "sha256:20f63786f0afb4577473867e10153336a18440fc46520767637d1493986c45dd"
+digest = "sha256:83438ed17c71ce0faa55aa8d630b8b7575c621785d77ecb85d4663993958618e"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-rope-threading-hard-i00-standard"
-digest = "sha256:b232fd1511e7d04584055d3090f243c181201f8ce2e3c1028384689235543228"
+digest = "sha256:b7c22a7a8f128713b02acbe9e0cec2fc3718b6b571237bd06e9fcb2e7713ad25"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-rope-threading-medium-i00-privileged"
-digest = "sha256:ce0ffbbac335105e6ee0929b4cca074de772b380df32e28c03067f0ed11898f1"
+digest = "sha256:561b49acbcd02077aa3a44d7ea30ca7eb02088a739f92d2f3eff7a282f3e8bac"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-rope-threading-medium-i00-standard"
-digest = "sha256:61a76e1dc4a129237492c8d6009b20e35c4f2c0848b581a265445b531dab291e"
+digest = "sha256:59ae3561c49af726f9569a8a530db916a5c7cd9bd387f835505d902b93b1bf9d"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-balance-hard-i00-standard-realtime"

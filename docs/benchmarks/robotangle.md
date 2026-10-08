@@ -15,8 +15,8 @@ Renaming them would change the hashes every task is bound to.
   (`franka-robotiq-2f85`; 8-D) in hedgehog_in_cage, lock_picking, buzz_wire_3d and fiber_bundling.
 - Physics:
   - CPU float64 rigid bodies (bit-deterministic on one host): cast_coil, cast_keyhole, hedgehog_in_cage,
-    horseshoe_ring, buzz_wire_3d, fiber_bundling;
-  - GPU fp32 rigid: lock_picking, interlocked_claws;
+    interlocked_claws, horseshoe_ring, buzz_wire_3d, fiber_bundling;
+  - GPU fp32 rigid: lock_picking;
   - IPC deformables with deterministic libuipc patches: rope_threading, knot_untying;
   - PBD cloth: blanket_flatten.
 - Grasping: an assisted grasp (`contact_weld_v1` and similar, metadata `grasp`) where the family uses one; physical
@@ -47,9 +47,13 @@ Each task carries copies of the tooling (`rcb_topogym.py`), the graders and the 
 `runtime_binding.json` binds:
 - the frozen instance (canonical JSON hash and asset hashes), which keeps its creation source as provenance;
 - the tooling hash;
-- the release runtime: the public simulator source, python, five pinned dependencies and the audited libuipc build.
+- the release runtime: the public simulator source, python, five pinned dependencies and the audited libuipc build;
+- `uipc_builds`: both libuipc builds of the image by their `uipc-build.json` sha256, the audited wheel and the sm_86 build
+  (Image, GPU architecture).
 
-Every session refuses to start in an image whose installed runtime differs from it.
+Every session refuses to start in an image whose installed runtime differs from it, whose libuipc builds are not those
+two, or whose libuipc build in use is not the one the rule picks for the GPU. The session's `runtime_binding` names that
+build (`uipc_build`).
 
 ## Large files: the private HF dataset
 
@@ -57,8 +61,9 @@ The frozen instances (`instance.json` + `instance_assets/`: archived IPC settled
 file; 52 bases, 173 MB) are **not in git** (CONTRIBUTING: no files > 2 MB). Owner decision, 2026-10-08. They live in the
 private Hugging Face dataset `eai-v2-internal/robotangle-assets`, pinned by commit and by the sha256 of every file in
 `scripts/robotangle/assets.json` (`scripts/robotangle/assets.py fetch|check|pin`). The same dataset holds the image's build
-inputs: the release tree (`git archive` of `2dafa5f2b`, the paths the image copies) and the audited libuipc wheel with its
-`uipc-build.json` (recovered byte-for-byte from the wheel layer of the 0.2.17 image; its sha256 matches the build record).
+inputs: the release tree (`git archive` of `2dafa5f2b`, the paths the image copies), the audited libuipc wheel with its
+`uipc-build.json` (recovered byte-for-byte from the wheel layer of the 0.2.17 image; its sha256 matches the build record)
+and, since 0.2.21, the sm_86 build of the same recipe with its `uipc-build.json` (Image, GPU architecture).
 - The image carries every instance under `/opt/robotangle/instances/<base>/`.
 - A task directory keeps only `runtime_binding.json` (instance canonical sha256 + every asset's sha256 + tooling + runtime),
   so a task's identity (its dataset digest) still pins its instance.
@@ -70,14 +75,68 @@ inputs: the release tree (`git archive` of `2dafa5f2b`, the paths the image copi
 - Access: members of `eai-v2-internal` (`hf auth login` or `HF_TOKEN`). Only image builders need it; eval hosts pull the
   image.
 
-## Image (BUILD_ONLY)
+## Image
 
-`ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>` (0.2.19). It is never public: the Nyx renderer
-is installed from binary wheels on PyPI (`gs-nyx`) that carry no licence metadata, and this is an internal release.
-0.2.19 is pushed as a non-public organisation package (visibility `internal`, org members only; digest
-`sha256:66b8b157d350…`), like the other BUILD_ONLY images. Build instructions are in images/robotangle/BUILD_ONLY: the
-context comes from the pinned HF dataset, so the build needs neither `dev/jianwen` nor an unpublished wheel. One image and one version
-serve both modes:
+`ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>` (0.2.21) is a public image, pushed by the maintainers after
+validation. It contains Genesis AI's Nyx renderer (the `gs-nyx` wheels on PyPI); the benchmark owner has permission to
+redistribute it in this image.
+
+0.2.21 is 0.2.19 plus the NVIDIA Vulkan ICD and EGL vendor files and the sm_86 libuipc build (GPU architecture, below).
+0.2.20, 0.2.19 plus the ICD and EGL files only, was built for validation and never pushed. 0.2.19 was an internal
+organisation package. The build context comes from the private HF dataset (Large files, above). That dataset stays
+internal; only the built image is public. Build instructions are in images/robotangle/README.md.
+
+**GPU:** every task container gets exactly one GPU through its compose device reservation (`count: 1`,
+`capabilities: [gpu]`) and no `runtime: nvidia`, as in `images/robopaint/`.
+- NVIDIA_DRIVER_CAPABILITIES=all makes the container toolkit mount the driver's graphics libraries, and the image's ICD
+  files point the Vulkan and EGL loaders at them. On a host whose toolkit injects devices through CDI (e.g. lab: Docker
+  29.8 with nvidia-cdi-hook), the toolkit also mounts the host's `/etc/vulkan/icd.d/nvidia_icd.json`, and Vulkan listed
+  the same GPU twice; the image sets `VK_ICD_FILENAMES` to its own ICD file, so it lists one.
+- With `runtime: nvidia`, the image's NVIDIA_VISIBLE_DEVICES=all could expose every GPU of the host. Nyx crashes when two
+  are visible.
+- `count: 1` is always host GPU 0: Docker turns `count: N` into device IDs `0..N-1`, so on a multi-GPU host every agent,
+  sim and verifier container lands on GPU 0 unless the runner pins GPUs. Two ways to use more GPUs:
+  - one GPU per host or VM;
+  - per-lane copies of the task directories whose reservations name the lane's GPU (`device_ids`), including
+    `tests/docker-compose.yaml`. These copies are never committed (PROTOCOL §2.4).
+- VRAM and concurrency:
+  - an IPC sim (knot_untying, rope_threading) needs about 9-10 GB and runs alone on a 24 GB GPU. Next to other RoboTangle
+    sims on one 24 GB RTX 4090, IPC scene builds failed with CUDA out of memory;
+  - blanket_flatten needs about 6 GB;
+  - at most 2 rigid trials per GPU.
+- GPU architecture. Every family renders with Nyx, which needs RT cores; knot_untying and rope_threading also run libuipc's
+  CUDA kernels, which come in two builds of one recipe:
+
+  | compute capability | GPUs (examples) | libuipc build | run on it so far |
+  |---|---|---|---|
+  | 8.9 (sm_89) | RTX 4090, L4, L40S, RTX 6000 Ada | the audited wheel: native sm_89 code | RTX 4090: nops, exact restores of rope and knot |
+  | 12.x (sm_120) | RTX 5090, RTX PRO 6000 Blackwell | the audited wheel: native sm_120 code | RTX PRO 6000: every oracle evidence run |
+  | 8.6 (sm_86) | RTX A6000, A40, A10, RTX 3090 | the sm_86 build: native sm_86 code | nothing yet: no such GPU was available |
+  | 8.0, 9.0, 10.0 | A100, H100, H200, B200 | — | none: no RT cores, so Nyx cannot render and no RoboTangle task runs |
+
+  - The audited wheel (`89-real;120-real;120-virtual`) has native code for sm_89 and sm_120 only, and its compute_120 PTX
+    cannot run on an older GPU. It stays the build every 8.9 and 12.x GPU loads, so these GPUs run the same libuipc binary
+    as every evidence run and check so far. The sm_86 build (`86-real;86-virtual`) is the same recipe with only the architecture list changed,
+    and the same pyuipc version and source commit, which the frozen IPC settled states record, so they restore with it.
+    Every other GPU loads it: native code on 8.6, its compute_86 PTX elsewhere (untested). A GPU of compute capability
+    7.5 (T4, RTX 20xx) can run neither build: its first IPC launch fails, and the sim ends with an infrastructure error.
+  - Why two builds and not one wheel for all three: a single wheel of the same recipe built for sm_86, sm_89 and sm_120
+    (2026-10-08) reproduced every host library and all 1216 sm_120 functions of the audited wheel byte for byte, but 8 of
+    its 1230 sm_89 functions came out different (`make_spd<12>` and kernels of ExternalArticulationConstraint, the
+    driving revolute and prismatic joints and the discrete-shell bending plasticity; the IPC coupler likely runs
+    ExternalArticulationConstraint). An RTX 4090 would then run other IPC code than the audited wheel it was checked with,
+    so that wheel is kept as evidence only (not in the image).
+  - Selection (the tooling, `rcb_topogym.py` `select_uipc_build`): at Session start, before anything imports uipc, the
+    tooling reads the visible GPU's compute capability through the CUDA driver API. 8.9 and 12.x keep the audited wheel in
+    site-packages (`/opt/uipc-build.json`), so nothing changes there; any other GPU puts the sm_86 build's prefix
+    (`/opt/uipc_sm86`) first on `sys.path`. A process that already imported uipc from the other build, or GPUs of mixed
+    compute capability, are refused. `scripts/robotangle/release.json` `uipc_builds` records both builds, their rule,
+    dataset folder and recipe; the sm_86 recipe is `images/robotangle/uipc-sm86-build/`.
+  - The image build checks both wheels against their build records in the recipe's builder image (cuobjdump of nvcc
+    12.8: wheel, version and backend hashes, native kernels, PTX) and keeps the result in `/opt/uipc-check.json`.
+  - The host driver must include the graphics (GL/Vulkan) user-space libraries, not a compute-only install.
+
+One image and one version serve both modes:
 - the privileged environment and verifier `FROM` it;
 - the standard `sim` sidecar uses it;
 - the standard agent container and verifier use the shared client image pinned by digest.
@@ -147,7 +206,8 @@ in official runs (PROTOCOL §5).
 
 Every task is `oracle = "full"`, by the owner's decision of 2026-10-07. Each base has a passing oracle run in both modes on an
 earlier build of this benchmark (the facts below). No oracle was re-run on this release's exact build (dev/jianwen
-`2dafa5f2b`, source `ecb43962`, tooling `587043f1`). The previous release, `6b6804ae4` (source `8f12ee70`, tooling `ae724119`),
+`2dafa5f2b`, source `ecb43962`, tooling `075ec08a`: the release template's `587043f1` plus the libuipc build selection).
+The previous release, `6b6804ae4` (source `8f12ee70`, tooling `ae724119`),
 had no oracle re-runs either.
 
 The positive examples are recorded oracle runs that scored 1 in both modes:
@@ -305,7 +365,9 @@ and work on families that are not shipped (5536fdfd6: slotted_post_ring and orbi
 
 1. ~~The audited libuipc wheel~~ done 2026-10-08: in the private HF dataset (Large files, above).
 2. ~~Build and check the image~~ done 2026-10-08: 0.2.19 built from the pinned dataset; its installed runtime equals
-   `release.json` `runtime` (the BUILD_ONLY check); every task image stages its instance and passes `check_inputs`.
+   `release.json` `runtime` (the check in images/robotangle/README.md); every task image stages its instance and passes
+   `check_inputs`. 0.2.21 (public; the GPU fix and the sm_86 libuipc build above) is to be validated the same way before
+   it is pushed, on an RTX 4090 and an RTX PRO 6000.
 3. **Exact-restore preflight per frozen instance on that image.** Each instance was frozen by an earlier TopoGym source
    and is bound to this release's runtime; whether it restores bit-exactly here is not yet checked.
 4. **nop, both modes, every task, on this build (`2dafa5f2b`).** The records above are from earlier builds:
@@ -318,6 +380,9 @@ and work on families that are not shipped (5536fdfd6: slotted_post_ring and orbi
    maintainers pre-generate and cache the blanket initial states on the eval hosts, so the 5–9 min generation is not on
    the agent's clock, and spot-check easy / medium / hard generation before formal runs.
 7. **The tiers not in this release** (above).
+8. **IPC on compute capability 8.6** (RTX A6000 class, the sm_86 libuipc build): compiled and audited, never run on such a
+   GPU; none was available. GPU physics is not bit-identical across GPU models anyway, so the evidence from the RTX PRO 6000
+   does not transfer bit for bit to any other GPU.
 
 ## Protocol requests (raised in the proposal issue; decided 2026-10-08)
 
@@ -330,5 +395,4 @@ and work on families that are not shipped (5536fdfd6: slotted_post_ring and orbi
 - Genesis 1.2.1: Apache-2.0.
 - libuipc: Apache-2.0.
 - ALOHA 2 and Robotiq 2F-85 models: MuJoCo Menagerie (BSD-3-Clause / per their LICENSE files).
-- Nyx: binary wheels on PyPI without licence metadata; internal release, hence BUILD_ONLY (maintainers may keep a private
-  organisation package for internal runners).
+- Nyx (Genesis AI, the `gs-nyx` wheels on PyPI): the benchmark owner has permission to redistribute it in the public image.
