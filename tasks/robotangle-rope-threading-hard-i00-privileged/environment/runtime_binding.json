@@ -25,9 +25,10 @@
     "instance_assets/ipc_state/dump/dump/cuda/finite_element/finite_element_method.cu/q_v.0": "2c6429f744aaa16e40bd394c68c34c6703bef2a1c730f47a0651f07429c79a4d",
     "instance_assets/ipc_state/dump/dump/cuda/global_geometry/global_vertex_manager.cu/positions.0": "3a13c3fa98e240c962f7777aa244a22bf271ce871b9af7d645392802261f4a76",
     "instance_assets/ipc_state/dump/dump/cuda/global_geometry/global_vertex_manager.cu/prev_positions.0": "3a13c3fa98e240c962f7777aa244a22bf271ce871b9af7d645392802261f4a76",
-    "instance_assets/ipc_state/manifest.json": "ee59c0caded15cec0791fd89f52143cf1849e0a1b54ea9da1706a0d5c26d41db"
+    "instance_assets/ipc_state/manifest.json": "ee59c0caded15cec0791fd89f52143cf1849e0a1b54ea9da1706a0d5c26d41db",
+    "instance_assets/frozen_assets/rope_volume.npz": "e9aa97cd65022712dc9380f053cb7307a2965bee10484d358c2374de8daacf8e"
   },
-  "tooling_sha256": "976d20c52d96dceeb25474c30d366680933c45873c6c7de9a7e9bf265b426b67",
+  "tooling_sha256": "c80aa5a9df97bad19e80ffa4f882ce91df6a1142f59a24c63a79afe2c84bb521",
   "creation_source": {
     "sha256": "5b5677f0c66edb787caf601342124018fa79a3b5d6f6520de039efb9e33d2b6d",
     "files": 342
