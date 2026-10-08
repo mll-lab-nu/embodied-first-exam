@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/mll-lab-nu/eai-"
-PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2"}   # standard mode
+PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"}   # standard mode (2.4: the operations capability, issue #89)
 REALTIME_PROTOCOLS = {"eai-standard/2.3"}                # realtime mode (PROTOCOL §4b): 2.3 is the realtime capability
 LEGACY_PROTOCOLS = {"rcb-limited/2.1"}
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")

@@ -9,7 +9,7 @@ pre-v1.0 task (old field names, protocol spelling, README layout); renaming dire
 
 What it does:
 - `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
-  for standard tasks (realtime tasks: `eai-standard/2.3`, set by their generator), `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
+  for standard tasks (2.2 / 2.4 and realtime tasks' `eai-standard/2.3` are set by their generators), `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - protocol spelling `rcb-limited/2.x` -> `eai-standard/2.x` and "limited mode" -> "standard mode" in the task's text and
   services; the client accepts both spellings.
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
@@ -151,10 +151,11 @@ def normalize_toml(task: Path) -> None:
 
 
 def _shared_sources() -> set[bytes]:
-    """Contents of the files generators copy unchanged from scripts/eai_standard/ (the eai-standard/2.2 layer, D9): their copies
-    must stay byte-identical to the source (check-tooling-identity.sh), so normalize never rewrites them."""
+    """Contents of the files generators copy unchanged from scripts/eai_standard/ (the eai-standard/2.2 layer, and the 2.4
+    layer in v2_4/; D9): their copies must stay byte-identical to the source (check-tooling-identity.sh), so normalize never
+    rewrites them."""
     src = Path(__file__).resolve().parent / "eai_standard"
-    return {p.read_bytes() for p in src.glob("*") if p.is_file()} if src.is_dir() else set()
+    return {p.read_bytes() for p in src.rglob("*") if p.is_file() and "__pycache__" not in p.parts} if src.is_dir() else set()
 
 
 def normalize_text_files(task: Path) -> None:
