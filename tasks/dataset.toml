@@ -5275,43 +5275,43 @@ digest = "sha256:59ae3561c49af726f9569a8a530db916a5c7cd9bd387f835505d902b93b1bf9
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-balance-hard-i00-standard-realtime"
-digest = "sha256:fb83727ee84b95669150682c085685f6d6b411daa32df8e13ca1117d7505a7bd"
+digest = "sha256:a31367e2e1252eb022d536c6abdb2f0efd70d15378f4fd96a0ca67a0e46dfaec"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-standard-realtime"
-digest = "sha256:632b9a97b1de2444cc06c3831191ac230cc850e0d8199b85f7219c26bb759a19"
+digest = "sha256:5067f2d1160663a0c24b3d6bc0fbe686f49027c6fd84ae4dae7d359134a123c2"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00-standard-realtime"
-digest = "sha256:d9a419de81ce89d4abe8ea0bf9f766a02ab654e0aa89bd78ee6c72a0a63a80c9"
+digest = "sha256:aeed66bf19b39787d90163e8487b550a28df9bff3a483bd72ae006860dfa3fcf"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-walk-i00-standard-realtime"
-digest = "sha256:a36f2681e7febf5f23aa76ed80f87305c217ddd58a9f5755307cd59dd51e5c5c"
+digest = "sha256:2893fb8137ec25c8f04a50f704b6c2e659f6c0ac6addfc0d659b0e0f57cb26fa"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-bookshelf-simple-i00-standard-realtime"
-digest = "sha256:8e40cd364013690468d3321116902e133b064cc3d00cccda1777e05672f25dad"
+digest = "sha256:f7f501be23781cb9059df32d3a9926253c40847294872e3ada096589771cd423"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-cube-i00-standard-realtime"
-digest = "sha256:d0acf7ad4e6fa851896dd9171e8244af38de4eeaa27a9cedaca4eb4a07baa850"
+digest = "sha256:f32d1e3b2b84f7aeb4e5b87c53814522d0bd2ea12c7093b56922fe1189065bb4"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-door-i00-standard-realtime"
-digest = "sha256:329c3664690de2aad723b2ca84e60c148326537d96606cfefa5264fafaaa0099"
+digest = "sha256:73dfb4a6d095ceddff9b4f4c84ed2499bfaab0f784d1e6027155f25324491443"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-powerlift-i00-standard-realtime"
-digest = "sha256:3c0bb3b4937bd83fe8a7ddb5c948d603dbf70430aef5cbc481c5b8f0d918ad21"
+digest = "sha256:c7b2b4e814bb0c753abc33e05d2e0d026dc0c4899a8221e941791b72203960d9"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-room-i00-standard-realtime"
-digest = "sha256:0141c76441205aa6bb46cbe11b1382d66ab7b139f2d01d65d217b69d0de45633"
+digest = "sha256:0391e3afe167d16680fabf68de773944dbf012c48a411deb48f66909ac975e6f"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-manip-window-i00-standard-realtime"
-digest = "sha256:644ea74934e769224704ca3a02b7ac51d6c04f15394d9a3364b70a5816366dc9"
+digest = "sha256:1022cf7988317b93b4d805807d7defc24e10be88b1dc29cca357e09ffbe681a8"
 
 [[tasks]]
 name = "robot-coding-bench/libero-max-goal-akita-black-bowl-on-flat-stove-cook-target-relocation-i00-privileged"

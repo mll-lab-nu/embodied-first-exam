@@ -21,7 +21,7 @@ services:
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.
       RCB_SLOWDOWN: "${RCB_SLOWDOWN:-1}"                # 1: real time (official); S: one step every S x control_dt s, reported apart
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-{{reset_budget}}}"       # standard-realtime mode's default: {{reset_budget}} resets (PROTOCOL §4b); 0: one episode
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-{{reset_budget}}}"       # HumanoidBench's: {{reset_budget}} resets (PROTOCOL §4.5 exception; the mode's default is 0); 0: one episode
       RCB_OBS_PROPRIO: "${RCB_OBS_PROPRIO:-1}"          # 1: + joint angles/velocities; 0: images only
       RCB_OBS_IMU: "${RCB_OBS_IMU:-1}"                  # 1: + pelvis IMU (angular velocity, gravity direction)
       RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-1}"  # 1: + room_camera, fixed in the room
