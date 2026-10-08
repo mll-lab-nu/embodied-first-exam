@@ -381,8 +381,13 @@ def simulator_config(task: str, eval_index: int | None = None, *, variation_id: 
     if "ipc_options" in cfg:
         from topogym.config.registry import task_definition
         definition = task_definition(spec["task_id"], resolved["variation_id"])
+        own = getattr(definition, "simulator_settings", None)
+        if definition.physics_model != "fem_ipc" and own is not None:
+            # A setting leaving IPC that declares its own settings (the Slotted rigid-chain settings, 2026-10-08).
+            cfg.pop("ipc_options")
+            cfg.update(own)
         # Only Orbits very_easy / easier here; another tier leaving IPC brings its own settings.
-        if definition.physics_model != "fem_ipc" and getattr(definition, "difficulty", "") in {"very_easy", "easier"}:
+        elif definition.physics_model != "fem_ipc" and getattr(definition, "difficulty", "") in {"very_easy", "easier"}:
             cfg.pop("ipc_options")
             cfg.update(compute_backend="cpu", precision="64", rigid_options={"use_contact_island": False},
                        reset_physics_steps=1200)
