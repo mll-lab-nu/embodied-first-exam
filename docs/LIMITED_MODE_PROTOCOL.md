@@ -165,12 +165,13 @@ episode is graded. Results with `N > 0` are reported separately and never ranked
 ## Standard-realtime mode: `eai-standard/2.3`
 Time does not stop. The wire protocol of the standard-realtime mode (PROTOCOL §4b, v1.1; protocol-change issue #86), served by
 standard-realtime tasks only (`<base>-standard-realtime`, `mode = "standard-realtime"`, `protocol = "eai-standard/2.3"`; implemented by HumanoidBench's,
-`scripts/humanoidbench/shared/realtime/rcb_realtime.py`). 2.3 is 2.2 plus the realtime capability below; every 2.2
+`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which RoboOlympics' tasks use unchanged). 2.3 is 2.2 plus the realtime capability below; every 2.2
 addition stays a MAY, so a 2.1 service with this capability is a 2.3 service. Same endpoints, RCB1 frames, crash
 recovery and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S (`RCB_SLOWDOWN`, default 1 = real
 time; results with S ≠ 1 are reported separately from S = 1), `control_dt`, `wall_s_per_control_step`, `max_ahead_steps`.
 Defaults of the mode: `budget.reset = 0`, as in standard mode (the reset capability above; `RCB_RESET_BUDGET` overrides it;
-HumanoidBench's per-benchmark exception is 50, PROTOCOL §4.5), and S = 1.
+HumanoidBench's per-benchmark exception is 50, PROTOCOL §4.5), and S = 1 (RoboOlympics' per-benchmark exception is 10,
+PROTOCOL §4b).
 - **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` or `/observe`
   with `seconds > 0` (after a reset, and after a crash recovery, the episode is paused again) and runs one control step
   every `control_dt` × S seconds of wall time, whatever the agent does, until the episode ends.
