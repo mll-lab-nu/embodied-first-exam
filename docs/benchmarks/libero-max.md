@@ -46,8 +46,10 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
     mismatch, and forcing Zen on the 8488C removes it.
   - **numpy's own SIMD loops.** numpy dispatches its math loops at run time, and the frozen hashes use its AVX-512
     loops. Both reference CPUs dispatch the same targets (up to `AVX512_ICL`). With those loops switched off
-    (`NPY_DISABLE_CPU_FEATURES`, standing in for an AVX2-only CPU), 3 of 6 sampled instances differ. So hosts without
-    AVX-512 (for example AMD Zen 3 or older Intel desktop CPUs) cannot start these instances.
+    (`NPY_DISABLE_CPU_FEATURES`, standing in for an AVX2-only CPU), 3 of 6 sampled instances differ. A real AVX2-only
+    CPU, an AWS AMD EPYC 7R13 (Zen 3, the rcb-gpu hosts), rebuilt only 10 of the first 24 instances checked with 0.1.1.
+    So run LIBERO-MAX on hosts that dispatch like the two reference CPUs (`AVX512_ICL`: Intel Ice Lake or newer Xeon,
+    AMD Zen 4 or newer), and check any other host type with `rebuild_check.sh`.
   - **Exact or nothing.** There is no tolerance. On a host whose kernels differ, every Session refuses, loudly, and the
     error names the kernels in use (`lmx_tool.numerics()`).
     - Why no tolerance: a state off by rounding grows over a contact-rich episode. With 0.1.0 on the 8488C, 3 of the 64
@@ -113,6 +115,7 @@ cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
 | scripted cheat attempts (patched tooling and success check, forged reward files, `sitecustomize.py`, tampered instance copy; hidden endpoints, wrong action type and `dt`, NaN rows, forged `final.json`), on the first 48-case revision (graders and service unchanged since; the tool only gained `state()["articulations"]`) | privileged 0, standard 0; hidden endpoints 404, malformed submits 400 |
 | `generate.py --check`, `task_conventions.py --check`, `ci_checks/run_all.sh` | clean; no LIBERO-MAX warnings |
 | `rebuild_check.sh` (start hash; reference replayed to the recorded final hash, event step and success), 64 instances | 0.1.0 on Intel Xeon 8488C (AWS rcb-cpu): 0/64, OpenBLAS Prescott kernels, 3 references fail; 0.1.1 on the 8488C: 64/64; 0.1.1 on AMD 7950X: 64/64 |
+| `rebuild_check.sh`, 0.1.1, AWS AMD EPYC 7R13 (Zen 3, no AVX-512) | 10 of the first 24 instances rebuild: numpy's AVX-512 loops are missing (OpenBLAS runs Zen); not a supported host |
 | kernel probes on the 7950X, 6 instances (one per 11 in sorted order) | OpenBLAS Prescott forced: 0/6; Haswell forced: 6/6; Zen with numpy's AVX-512 loops off: 3/6 |
 
 Measured on the reference machine (AMD Ryzen 9 7950X): about 20 ms of physics per control step, about 70 ms per
