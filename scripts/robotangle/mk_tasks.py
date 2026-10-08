@@ -156,7 +156,7 @@ def provenance(base: str, rec: dict) -> str:
                 "which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at "
                 "every session start.")
     rows.append(f"- Release: dev/jianwen `{REL['release_commit'][:9]}` (task templates `{REL['template_commit'][:9]}`), "
-                f"image `{IMAGE}` (BUILD_ONLY, images/robotangle/).")
+                f"image `{IMAGE}` (images/robotangle/).")
     rows.append("- Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the "
                 "simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.")
     return "\n".join(rows)
@@ -178,13 +178,29 @@ def rewrite_toml(s: str, base: str, rec: dict) -> str:
     return s
 
 
+def changes(mode: str) -> list[str]:
+    """The README Change Log (PROTOCOL §2.8: published tasks fixed in place)."""
+    grader = ("The standard grader counts a fresh replay that crashed without writing its verdict (e.g. CUDA out of memory) "
+              "as a grader error; it counted as instance_mismatch." if mode == "standard" else "The graders are unchanged.")
+    return [
+        "- 2026-10-08: base image 0.2.19 -> 0.2.21, now public. The simulator, the frozen instances and the audited libuipc "
+        "wheel are unchanged: on compute capability 8.9 and 12.x (e.g. RTX 4090, L40S, RTX PRO 6000) the physics runs the "
+        "same libuipc code as before. New: the NVIDIA Vulkan ICD and EGL vendor files, and a second libuipc build of the "
+        "audited recipe for compute capability 8.6 (RTX A6000 class), which the tooling selects at Session start on every "
+        "other GPU, so knot_untying and rope_threading run there too. The runtime binding names both builds, and the tooling "
+        "hash changes with the selection. The compose files reserve one GPU without `runtime: nvidia`, which with the "
+        f"image's NVIDIA_VISIBLE_DEVICES=all could expose every GPU (Nyx needs exactly one). {grader} The scene, frozen "
+        "instance and pass rule are unchanged, so the task keeps its name.",
+    ]
+
+
 def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
     s = text(s).replace("from `tests/instance.json`", "from the frozen instance (`/tests/instance.json`, staged from the image and "
                         "checked against `tests/runtime_binding.json`)")
     s = re.sub(r"(?ms)^## Reference solution\n.*?(?=^## )", "## Reference solution\n" + ref_solution(mode, rec) + "\n\n", s)
     nop = nop_words(base, mode, rec)
     s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + "\n\n" + nop + "\n\n", s)
-    return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n"
+    return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n" + "\n".join(changes(mode)) + "\n"
 
 
 def binding(base: str, inst_dir: pathlib.Path | None = None) -> bytes:
@@ -203,6 +219,9 @@ def binding(base: str, inst_dir: pathlib.Path | None = None) -> bytes:
         assert lock["asset_files"] == assets, f"{base}: instance_assets differ from the binding"
     lock["tooling_sha256"] = sha((SHARED / "rcb_topogym.py").read_bytes())
     lock["runtime"] = REL["runtime"]
+    # both libuipc builds the tooling chooses from by the GPU's compute capability (rcb_topogym.select_uipc_build), by their
+    # uipc-build.json sha256; the runtime's own uipc_build_sha256 stays the audited build, the image's default
+    lock["uipc_builds"] = {name: b["uipc_build_sha256"] for name, b in sorted(REL["uipc_builds"].items())}
     return (json.dumps(lock, indent=2) + "\n").encode()
 
 
@@ -218,6 +237,24 @@ def copy_tree(src: pathlib.Path, dst: pathlib.Path) -> None:
             put(dst / p.relative_to(src), p.read_bytes())
         elif p.is_dir():
             (dst / p.relative_to(src)).mkdir(parents=True, exist_ok=True)
+
+
+GPU_OLD = ("# Nyx renders through Vulkan, so the container needs the NVIDIA graphics libraries as well as compute: `runtime: nvidia`\n"
+           "# with NVIDIA_DRIVER_CAPABILITIES=all (`capabilities: [gpu]` alone injects compute only).\n")
+GPU_NEW = ("# Nyx renders through Vulkan: the device reservation below passes exactly one GPU (Nyx needs exactly one), and\n"
+           "# NVIDIA_DRIVER_CAPABILITIES=all makes the container toolkit mount the driver's graphics libraries, which the image's\n"
+           "# Vulkan ICD and EGL vendor files name (images/robotangle/Dockerfile). No `runtime: nvidia`: with the image's\n"
+           "# NVIDIA_VISIBLE_DEVICES=all it can expose every GPU of the host.\n")
+
+
+def gpu_lines(name: str, s: str) -> str:
+    """Compose files: one GPU through the device reservation only, as images/robopaint/ (no `runtime: nvidia`)."""
+    if not name.endswith("docker-compose.yaml"):
+        return s
+    assert s.count(GPU_OLD) == 1 and len(re.findall(r"(?m)^\s*runtime: nvidia\n", s)) == 1, f"{name}: unexpected GPU block"
+    s = re.sub(r"(?m)^\s*runtime: nvidia\n", "", s.replace(GPU_OLD, GPU_NEW))
+    assert "count: 1" in s and "capabilities: [gpu]" in s and "NVIDIA_DRIVER_CAPABILITIES: all" in s, name
+    return s
 
 
 def image_lines(s: str) -> str:
@@ -259,7 +296,7 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None) -
         put(t / "instruction.md", text(rd("instruction.md")).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
-                put(t / n, staged(n, image_lines(rd(n)), base).encode())
+                put(t / n, staged(n, gpu_lines(n, image_lines(rd(n))), base).encode())
         put(t / "tests/test.sh", (up / "tests/test.sh").read_bytes(), exe=True)
         lock = binding(base, inst_src)
         tool = (SHARED / "rcb_topogym.py").read_bytes()
@@ -298,7 +335,8 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None) -
 
 
 def snapshot(d: pathlib.Path) -> dict:
-    return {p.relative_to(d).as_posix(): (p.read_bytes(), os.stat(p).st_mode & 0o777) for p in sorted(d.rglob("*")) if p.is_file()}
+    return {p.relative_to(d).as_posix(): (p.read_bytes(), 0o755 if os.stat(p).st_mode & 0o100 else 0o644)   # exec bit only
+            for p in sorted(d.rglob("*")) if p.is_file()}
 
 
 def main(argv: list[str]) -> int:

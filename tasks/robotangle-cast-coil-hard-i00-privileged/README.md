@@ -9,7 +9,7 @@
 | Family / instance | `cast_coil` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robotangle:0.2.19` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotangle:0.2.21` |
 
 ## Task
 RoboTangle cast_coil (ALOHA 2, Genesis): produce one replayable trajectory. Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both. Frozen scene instance (variation cast_coil_hard, seed 0).
@@ -60,7 +60,10 @@ Assemble the gold and silver Cast Coil pieces into their matching interlocking c
 - A failure is reported in `s.status()["episode_end"]` as "A task body fell below the table" or "forced_breakdown: <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops against these limits, and `s.status()["review"]` the deep task contacts that would hold a success for review.
 
 ### Provenance
-- Frozen instance: built by TopoGym source `5b5677f0` (graded package `align_v18/cand_v18b/tasks/topogym-cast-coil-hard-i00-privileged` on the lab host); bound to this release's runtime (source `ecb43962`, tooling `587043f1`). An exact-restore preflight on this build is pending (docs/benchmarks/robotangle.md, Pending).
-- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `7f7f95dd3719`, under `instances/cast-coil-hard-i00/` (scripts/robotangle/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
-- Release: dev/jianwen `2dafa5f2b` (task templates `2dafa5f2b`), image `ghcr.io/mll-lab-nu/eai-robotangle:0.2.19` (BUILD_ONLY, images/robotangle/).
+- Frozen instance: built by TopoGym source `5b5677f0` (graded package `align_v18/cand_v18b/tasks/topogym-cast-coil-hard-i00-privileged` on the lab host); bound to this release's runtime (source `ecb43962`, tooling `075ec08a`). An exact-restore preflight on this build is pending (docs/benchmarks/robotangle.md, Pending).
+- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `08eb48360ce6`, under `instances/cast-coil-hard-i00/` (scripts/robotangle/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
+- Release: dev/jianwen `2dafa5f2b` (task templates `2dafa5f2b`), image `ghcr.io/mll-lab-nu/eai-robotangle:0.2.21` (images/robotangle/).
 - Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
+
+### Change Log
+- 2026-10-08: base image 0.2.19 -> 0.2.21, now public. The simulator, the frozen instances and the audited libuipc wheel are unchanged: on compute capability 8.9 and 12.x (e.g. RTX 4090, L40S, RTX PRO 6000) the physics runs the same libuipc code as before. New: the NVIDIA Vulkan ICD and EGL vendor files, and a second libuipc build of the audited recipe for compute capability 8.6 (RTX A6000 class), which the tooling selects at Session start on every other GPU, so knot_untying and rope_threading run there too. The runtime binding names both builds, and the tooling hash changes with the selection. The compose files reserve one GPU without `runtime: nvidia`, which with the image's NVIDIA_VISIBLE_DEVICES=all could expose every GPU (Nyx needs exactly one). The graders are unchanged. The scene, frozen instance and pass rule are unchanged, so the task keeps its name.
