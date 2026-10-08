@@ -1,0 +1,56 @@
+{
+ "case": {
+  "case_id": "pro-visual-noise-glare-spatial-t01-i09-sensor_noise_onset-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 9,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/visual_noise_glare/libero_spatial/task_1",
+   "change": {
+    "noise_std": 36.0,
+    "occlusion_fraction": 0.16,
+    "operation": "set_sensor_corruption",
+    "seed": 3093855192
+   },
+   "change_family": "OBS",
+   "change_type": "sensor_noise_onset",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3093855192
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-visual-noise-glare-spatial-t01-i09-sensor_noise_onset-d1",
+   "seed": 3093855192,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "akita_black_bowl_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/visual_noise_glare",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "01_visual_noise_glare/bddl/libero_spatial/pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "visual_noise_glare",
+   "init_reference_bddl_file": "libero_spatial_lan/pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate.bddl",
+   "init_states_file": "libero_spatial/pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate.pruned_init",
+   "language": "Pick the akita black bowl next to the ramekin and place it on the plate",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 1,
+  "task_name": "pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate",
+  "task_suite_name": "libero_spatial",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "a5171c2a6d172f4296358058b7a18f46ac01514caa3265b499f07b7bfb68a5f2",
+ "instance_sha": "fe0239e7dae7df999c98fc3f626a2c9071aa978f1f265b1394bbbf3498bbdffe",
+ "schema": "eai-libero-max-instance/1"
+}

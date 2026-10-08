@@ -1,0 +1,54 @@
+{
+ "case": {
+  "case_id": "pro-task-10-t05-i00-illumination_switch-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 0,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/task/libero_10/task_5",
+   "change": {
+    "operation": "set_lighting",
+    "scale": 1.8
+   },
+   "change_family": "OBS",
+   "change_type": "illumination_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3028333183
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-task-10-t05-i00-illumination_switch-d1",
+   "seed": 3028333183,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "white_yellow_mug_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/task",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_10_task/STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "task",
+   "init_reference_bddl_file": "libero_10_task/STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy.bddl",
+   "init_states_file": "libero_10_task/STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy.pruned_init",
+   "language": "pick up the cup and place it in the back compartment of the caddy",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 5,
+  "task_name": "STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy",
+  "task_suite_name": "libero_10",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "b2ffca8fe237a9ebb0ba47d163dbb1d3b4f1025d3e1f786945d9d70f229e2987",
+ "instance_sha": "9d28171d6710745c44ad555f09d720e848cf4c43ee3136d982fa334f9257cd29",
+ "schema": "eai-libero-max-instance/1"
+}

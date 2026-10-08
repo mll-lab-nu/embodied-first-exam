@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-object-shape-object-t09-i04-distractor_burst-d0-p195",
+ "event": "distractor_burst",
+ "suite": "libero_object",
+ "language": "Pick the orange juice and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "orange_juice_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "801606c1f0003bcf2f3ab88c0723407b6143fcd5029ca17d350cc5b18451e6a8",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "orange_juice_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "orange_juice_1:placed",
+  "trace": [
+   "147:pick orange_juice_1:retreat failed goal=[0.004, 0.269, 0.306] eef=[0.003, 0.269, 0.242] obj c=[0.016, 0.283, 0.107] half=[0.027, 0.066, 0.026] top=0.174 fingers=-1.57 contacts=[]",
+   "147:orange_juice_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 147,
+  "event_fired": true,
+  "event_step": 10,
+  "steps_left": 133,
+  "state_sha": "0532727e9763a8028bf357eb0b8b0f4c3b55d8d459731c7503145c49d3a59f3b",
+  "initial_state_sha": "801606c1f0003bcf2f3ab88c0723407b6143fcd5029ca17d350cc5b18451e6a8"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 147,
+   "event_fired": true,
+   "event_step": 10,
+   "steps_left": 133,
+   "state_sha": "0532727e9763a8028bf357eb0b8b0f4c3b55d8d459731c7503145c49d3a59f3b",
+   "initial_state_sha": "801606c1f0003bcf2f3ab88c0723407b6143fcd5029ca17d350cc5b18451e6a8"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 147,
+   "event_fired": true,
+   "event_step": 10,
+   "steps_left": 133,
+   "state_sha": "0532727e9763a8028bf357eb0b8b0f4c3b55d8d459731c7503145c49d3a59f3b",
+   "initial_state_sha": "801606c1f0003bcf2f3ab88c0723407b6143fcd5029ca17d350cc5b18451e6a8"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

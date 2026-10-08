@@ -1,0 +1,121 @@
+{
+ "case_id": "pro-object-10-t06-i09-sensor_noise_onset-d0-p195",
+ "event": "sensor_noise_onset",
+ "suite": "libero_10",
+ "language": "put the white mug on the plate and put the chocolate pudding to the right of the plate",
+ "goal": [
+  [
+   "on",
+   "white_yellow_mug_1",
+   "yellow_plate_1"
+  ],
+  [
+   "on",
+   "green_chocolate_pudding_1",
+   "living_room_table_yellow_plate_right_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "2c1f2b0b0bbafa2dbbbe5276080fb722aa81947d2570dc3cf84b3357570c4a90",
+ "robot_base": {
+  "pos": [
+   -0.51,
+   0.0,
+   0.42
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "white_yellow_mug_1",
+    "yellow_plate_1"
+   ],
+   [
+    "on",
+    "green_chocolate_pudding_1",
+    "living_room_table_yellow_plate_right_region"
+   ]
+  ],
+  "phase": "green_chocolate_pudding_1:lower",
+  "trace": [
+   "133:white_yellow_mug_1:placed",
+   "236:pick green_chocolate_pudding_1:lower failed goal=[0.148, 0.099, 0.442] eef=[0.158, 0.123, 0.519] obj c=[0.161, 0.124, 0.517] half=[0.04, 0.023, 0.014] top=0.532 fingers=-1.58 contacts=['gripper0_finger1_collision>green_chocolate_pudding_1_g1', 'gripper0_finger1_pad_collision>green_chocolate_pudding_1_g1', 'gripper0_finger2_collision>green_chocolate_pudding_1_g1', 'gripper0_finger2_pad_collision>green_chocolate_pudding_1_g1', 'gripper0_hand_collision>white_yellow_mug_1_g14', 'gripper0_hand_collision>white_yellow_mug_1_g15', 'gripper0_hand_collision>white_yellow_mug_1_g16', 'gripper0_hand_collision>white_yellow_mug_1_g17']"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 236,
+  "event_fired": true,
+  "event_step": 16,
+  "steps_left": 284,
+  "state_sha": "3ad65c25833f1e8ec91c95faf7744706459ed052ef2851f412fc03d439de0b80",
+  "initial_state_sha": "2c1f2b0b0bbafa2dbbbe5276080fb722aa81947d2570dc3cf84b3357570c4a90"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 236,
+   "event_fired": true,
+   "event_step": 16,
+   "steps_left": 284,
+   "state_sha": "3ad65c25833f1e8ec91c95faf7744706459ed052ef2851f412fc03d439de0b80",
+   "initial_state_sha": "2c1f2b0b0bbafa2dbbbe5276080fb722aa81947d2570dc3cf84b3357570c4a90"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 236,
+   "event_fired": true,
+   "event_step": 16,
+   "steps_left": 284,
+   "state_sha": "3ad65c25833f1e8ec91c95faf7744706459ed052ef2851f412fc03d439de0b80",
+   "initial_state_sha": "2c1f2b0b0bbafa2dbbbe5276080fb722aa81947d2570dc3cf84b3357570c4a90"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

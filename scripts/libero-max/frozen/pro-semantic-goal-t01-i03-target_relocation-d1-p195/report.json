@@ -1,0 +1,110 @@
+{
+ "case_id": "pro-semantic-goal-t01-i03-target_relocation-d1-p195",
+ "event": "target_relocation",
+ "suite": "libero_goal",
+ "language": "place the bowl on the stove",
+ "goal": [
+  [
+   "on",
+   "akita_black_bowl_1",
+   "flat_stove_1_cook_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "8241c3dc4af527ed17f04ca642f095126bc13252e8b8c37ecf076d6ec30d7175",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "akita_black_bowl_1",
+    "flat_stove_1_cook_region"
+   ]
+  ],
+  "phase": "akita_black_bowl_1:lower",
+  "trace": [
+   "119:pick akita_black_bowl_1:lower failed goal=[-0.277, 0.165, 0.976] eef=[-0.28, 0.164, 0.984] obj c=[-0.26, 0.203, 0.96] half=[0.054, 0.054, 0.025] top=0.998 fingers=-1.95 contacts=['gripper0_finger1_pad_collision>akita_black_bowl_1_g20', 'gripper0_finger1_pad_collision>akita_black_bowl_1_g21', 'gripper0_finger2_collision>akita_black_bowl_1_g20', 'gripper0_finger2_pad_collision>akita_black_bowl_1_g20', 'gripper0_finger2_pad_collision>akita_black_bowl_1_g21']"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 119,
+  "event_fired": true,
+  "event_step": 12,
+  "steps_left": 181,
+  "state_sha": "4059f8b659960347887f7dd3a72d602a534d966f9b1fbebe8798985d08fd8882",
+  "initial_state_sha": "8241c3dc4af527ed17f04ca642f095126bc13252e8b8c37ecf076d6ec30d7175"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 119,
+   "event_fired": true,
+   "event_step": 12,
+   "steps_left": 181,
+   "state_sha": "4059f8b659960347887f7dd3a72d602a534d966f9b1fbebe8798985d08fd8882",
+   "initial_state_sha": "8241c3dc4af527ed17f04ca642f095126bc13252e8b8c37ecf076d6ec30d7175"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 119,
+   "event_fired": true,
+   "event_step": 12,
+   "steps_left": 181,
+   "state_sha": "4059f8b659960347887f7dd3a72d602a534d966f9b1fbebe8798985d08fd8882",
+   "initial_state_sha": "8241c3dc4af527ed17f04ca642f095126bc13252e8b8c37ecf076d6ec30d7175"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

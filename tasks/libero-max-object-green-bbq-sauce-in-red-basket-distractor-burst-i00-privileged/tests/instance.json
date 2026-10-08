@@ -1,0 +1,158 @@
+{
+ "case": {
+  "case_id": "pro-object-object-t03-i05-distractor_burst-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 5,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/object/libero_object/task_3",
+   "change": {
+    "distractor_count": 5,
+    "operation": "insert_distractors",
+    "placements": [
+     {
+      "object": "chocolate_pudding_1",
+      "offset_m": [
+       0.14328403,
+       -0.0732919,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "green_bbq_sauce_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "salad_dressing_1",
+      "offset_m": [
+       0.06624897,
+       0.06604021,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "green_bbq_sauce_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "ketchup_1",
+      "offset_m": [
+       -0.05917451,
+       0.11659099,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "green_bbq_sauce_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "cream_cheese_1",
+      "offset_m": [
+       -0.10689063,
+       -0.01675694,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "green_bbq_sauce_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "alphabet_soup_1",
+      "offset_m": [
+       -0.01997338,
+       -0.12483167,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "green_bbq_sauce_1",
+      "support_entity": "floor"
+     }
+    ]
+   },
+   "change_family": "CLUTTER",
+   "change_type": "distractor_burst",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 2704879361
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-object-object-t03-i05-distractor_burst-d1",
+   "seed": 2704879361,
+   "setup": [
+    {
+     "object": "chocolate_pudding_1",
+     "offworld_position_m": [
+      -2.0,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "salad_dressing_1",
+     "offworld_position_m": [
+      -2.2,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "ketchup_1",
+     "offworld_position_m": [
+      -2.4,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "cream_cheese_1",
+     "offworld_position_m": [
+      -2.6,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "alphabet_soup_1",
+     "offworld_position_m": [
+      -2.8,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    }
+   ],
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "green_bbq_sauce_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/object",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_object_object/pick_up_the_bbq_sauce_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "object",
+   "init_reference_bddl_file": "libero_object_object/pick_up_the_bbq_sauce_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object_object/pick_up_the_bbq_sauce_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the bbq sauce and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 3,
+  "task_name": "pick_up_the_bbq_sauce_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "23765c256e80b2c4007f2b66b7b5bc5e69263fb19c364a449a49de49e8c5cd87",
+ "instance_sha": "e98b843166b0099700af48d870d41fcba4ac2e44dd86b042c44f47c951273d3d",
+ "schema": "eai-libero-max-instance/1"
+}

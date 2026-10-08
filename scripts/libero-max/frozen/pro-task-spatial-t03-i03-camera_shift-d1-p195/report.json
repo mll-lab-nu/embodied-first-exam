@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-task-spatial-t03-i03-camera_shift-d1-p195",
+ "event": "camera_shift",
+ "suite": "libero_spatial",
+ "language": "Pick the akita black bowl on the top of the cabinet and place it on the plate",
+ "goal": [
+  [
+   "on",
+   "akita_black_bowl_2",
+   "plate_1"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "87540a5c207cc7b064ed758926ce86bafb4e89d941ecdf9589e429a07ba5beb0",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "akita_black_bowl_2",
+    "plate_1"
+   ]
+  ],
+  "phase": "akita_black_bowl_2:placed",
+  "trace": [
+   "143:pick akita_black_bowl_2:retreat failed goal=[0.038, 0.239, 1.083] eef=[0.038, 0.239, 0.983] obj c=[0.05, 0.196, 0.934] half=[0.054, 0.054, 0.025] top=0.960 fingers=-1.28 contacts=[]",
+   "143:akita_black_bowl_2:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 143,
+  "event_fired": true,
+  "event_step": 17,
+  "steps_left": 77,
+  "state_sha": "657867e7311b19cd3218b4d8dac5c0a8f903b7358ea9ae6026eca825714c2eda",
+  "initial_state_sha": "87540a5c207cc7b064ed758926ce86bafb4e89d941ecdf9589e429a07ba5beb0"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 143,
+   "event_fired": true,
+   "event_step": 17,
+   "steps_left": 77,
+   "state_sha": "657867e7311b19cd3218b4d8dac5c0a8f903b7358ea9ae6026eca825714c2eda",
+   "initial_state_sha": "87540a5c207cc7b064ed758926ce86bafb4e89d941ecdf9589e429a07ba5beb0"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 143,
+   "event_fired": true,
+   "event_step": 17,
+   "steps_left": 77,
+   "state_sha": "657867e7311b19cd3218b4d8dac5c0a8f903b7358ea9ae6026eca825714c2eda",
+   "initial_state_sha": "87540a5c207cc7b064ed758926ce86bafb4e89d941ecdf9589e429a07ba5beb0"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

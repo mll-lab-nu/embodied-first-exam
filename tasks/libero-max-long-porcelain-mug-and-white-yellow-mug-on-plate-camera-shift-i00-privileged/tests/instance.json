@@ -1,0 +1,62 @@
+{
+ "case": {
+  "case_id": "pro-camera-view-angle-10-t04-i08-camera_shift-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 8,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/camera_view_angle/libero_10/task_4",
+   "change": {
+    "calibration": "fixed_global_viewpoint",
+    "camera": "agentview",
+    "delta_fovy_degrees": -12.0,
+    "delta_position_m": [
+     -0.06,
+     0.03,
+     0.0
+    ],
+    "operation": "shift_camera",
+    "yaw_degrees": -22.0
+   },
+   "change_family": "OBS",
+   "change_type": "camera_shift",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 949298979
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-camera-view-angle-10-t04-i08-camera_shift-d1",
+   "seed": 949298979,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "porcelain_mug_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/camera_view_angle",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "02_camera_view_angle/bddl/libero_10/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "camera_view_angle",
+   "init_reference_bddl_file": "libero_10_lan/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl",
+   "init_states_file": "libero_10/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.pruned_init",
+   "language": "put the white mug on the left plate and put the yellow and white mug on the right plate",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 4,
+  "task_name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate",
+  "task_suite_name": "libero_10",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "289cfd13dacf26cb651ac89d7958658e37ca02bdeabb25e32a4d602964229fb4",
+ "instance_sha": "898ae37cfd1d138a4582dd0c0d8654e12781316558b9cdcf416032cae6e30219",
+ "schema": "eai-libero-max-instance/1"
+}
