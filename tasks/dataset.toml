@@ -2690,10 +2690,6 @@ name = "robot-coding-bench/robopaint-xingshu-zhi-i00-standard"
 digest = "sha256:702d00a8a07b40be4daaa2aaaf83d2d4aa78ca1a8d17d8c2fa2bdbd2d4dad46e"
 
 [[tasks]]
-name = "robot-coding-bench/robosuite-cube-stack-i00-privileged"
-digest = "sha256:e175062b2f08dc5438f4bfd26f060bb9a4d30639d18e0f1c38bfcd2684043e6f"
-
-[[tasks]]
 name = "robot-coding-bench/robotwin_2_0_adjust_bottle-privileged"
 digest = "sha256:38e93311ea9b1c38134a92ad330ba4af4052bf942a0d795c5591b43f73ca2024"
 
