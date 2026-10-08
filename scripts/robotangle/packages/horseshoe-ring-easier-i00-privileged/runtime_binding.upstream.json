@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "f6dca57414e76cf477654c5b45baf572f8ad8a1e1b296aa530fc998c6f64b9a4",
+  "asset_files": {
+    "instance_assets/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "tooling_sha256": "a9d09d6694eaad428d5d0e26ac20e40a477759d540b4b1b298b4f49319ae390a",
+  "creation_source": {
+    "sha256": "e0ae4ba903bb072fa1f532bf5aee780a051e8d2c25ebbebb427775a4f660b917",
+    "files": 342
+  },
+  "runtime": {
+    "source": {
+      "sha256": "e0ae4ba903bb072fa1f532bf5aee780a051e8d2c25ebbebb427775a4f660b917",
+      "files": 342
+    },
+    "python": "3.11.15",
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1"
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "hsbe2/rcb-topogym:0.2.16-dev-cu128",
+    "id": "sha256:04fa65dbd8aa0dc16734392c3d735992e53fd8cc589b9e295b679c6c73ed455a",
+    "repo_digests": []
+  }
+}
