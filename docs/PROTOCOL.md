@@ -371,11 +371,28 @@ agent latency counts, the agent's own program may act), on the 2.x endpoints and
 | An episode starts paused; its clock starts at its first `/submit` (or `/observe` with `seconds > 0`) and then runs one control step every `control_dt` × S s of wall time, whatever the agent does, until the episode ends; after a reset or a crash recovery the episode is paused again | MUST | [new] |
 | `/submit` writes a plan of future targets from control step `at` (default: the next one) and answers at once; rows whose steps have run are dropped (`late_steps`); the last target is held when the plan runs out | MUST | [new] |
 | Grading replays the targets the simulator **applied** at each control step (the journal), so the replay equals the live run whatever the timing; latency and jitter are recorded (`ticks.f64`; `max_lag_s`, `stalls`, `held_steps`, `late_steps` in `final.json`) and never decide the verdict | MUST | [new] |
-| Slowdown S: `RCB_SLOWDOWN`, default **1** (real time). Results with S ≠ 1 are reported separately from S = 1 and state S; official results use S = 1 | MUST | [new] |
+| Slowdown S: `RCB_SLOWDOWN`, default **1** (real time; per-benchmark exceptions below: RoboOlympics 10). Results with S ≠ 1 are reported separately from S = 1 and state S; official results use S = 1, or the benchmark's documented S | MUST | [new] |
 | Reset budget: **no reset by default** (`budget.reset = 0`), as in standard mode; per-benchmark exceptions only as in §4.5 (HumanoidBench: 50). The reset capability is §4.5's; `RCB_RESET_BUDGET` overrides it; results state the budget and are compared only under the same budget | MUST | [new] (v1.1.2, #102: v1.1 and v1.1.1 wrongly made HumanoidBench's 50 the mode's default) |
 | A simulator crash is an infrastructure failure, never the agent's: past `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed` (no call spans a crash: `/submit` answers at once), a failed resume `resume_failed`, and a simulator error that ends the graded episode (`reason = "error"`) — all with `infra_error = 1` | MUST | [new] (owner, 2026-10-08) |
 | The agent's controller runs in the agent's own container and streams targets through the client; no agent code runs next to the simulator | MUST | [new] |
-| A standard-realtime task shares its privileged twin's frozen instance and success rule (its verifier grades the sidecar's record, as in standard mode); its instruction says that time does not stop | MUST | [new] |
+| A standard-realtime task shares its privileged twin's frozen instance and success rule (its verifier grades the sidecar's record, as in standard mode; a benchmark without a privileged mode only by the exception below); its instruction says that time does not stop | MUST | [new] |
+
+**Per-benchmark exceptions.** A benchmark's standard-realtime tasks may differ from a default or a MUST of this section
+only by owner decision, recorded here and in `docs/benchmarks/<bench>.md` (and, where CI checks the rule, in its
+exception list), in the same way as HumanoidBench's reset budget (§4.5) and RoboTangle's agent budget (§2.3). The
+interface, the encoding, crash recovery and the evidence are never excepted: every standard-realtime task serves
+`eai-standard/2.3`. That benchmark's results state what differs and are compared only with results under the same
+settings.
+- **RoboOlympics** (owner, 2026-10-08; `roboolympics-<sport>-<format>-i<NN>-standard-realtime`, real-time sports
+  against a scripted opponent, [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md)):
+  - slowdown: `RCB_SLOWDOWN` defaults to **10**, RoboOlympics' official slowdown of these sports (a rally is over in a
+    few seconds, faster than a model's turn); it stays an override, and the results state S and are reported
+    separately (as every S ≠ 1).
+  - no privileged twin: the sports measure play from camera images against an opponent; there is no trajectory
+    deliverable. `ci_checks/check-instance-copies.sh` and `scripts/task_conventions.py` (`NO_TWIN`) exempt exactly
+    these tasks.
+  The breaks between points are part of the sports' rules, not a protocol feature: the clock never stops (the match
+  stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early).
 
 ## 5. Results, cost, token budget
 | Item | Level | Basis |

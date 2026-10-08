@@ -9,7 +9,7 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
 | upstream | LIBERO-MAX @ `a1e3cef` (benchmark 3.0.0; event runtime and case parameters); LIBERO-PRO @ `2b910b5` (MIT; LIBERO package and assets), task data `zhouxueyang/LIBERO-Pro` @ `c86fc3b` (CC-BY-4.0); robosuite 1.4.0, MuJoCo 3.2.6 |
 | tasks | `tasks/libero-max-<suite>-<task>-<event>-iNN-privileged` and `...-standard` |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda"`, `family = "libero-max/<suite>/<event>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/eai-libero-max:0.1.0` (`images/libero-max/`), 3.5 GB, CPU only |
+| image | `ghcr.io/mll-lab-nu/eai-libero-max:0.1.1` (`images/libero-max/`; `sha256:0e5b5e15aaeb761e4b66772a351f4195392fa638572d47bec5d924305c89aa99`), 3.5 GB, CPU only; x86-64 with AVX-512 (see Host CPUs) |
 | standard client | the shared client base and pins of `scripts/eai_standard/`; `rcb_client.py`, `rcb1.py` and the standard `grade.py` are byte copies of main's (HumanoidBench / VLABench); `rcb_service.py` is too, plus one hook (3 lines): `verify()` may return `extra`, merged into the verdict, which LIBERO-MAX uses to record `event_fired` / `event_step` (live) and `replay_event_fired` / `replay_event_step` in `final.json` (evidence only, never part of the success rule; a candidate to upstream to the shared service) |
 | generator | `scripts/libero-max/` (`select_cases.py` → `cases.json`, `freeze.sh` → `frozen/`, `generate.py` → `tasks/`, `generate.py --check`) |
 
@@ -36,6 +36,26 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   camera_view_angle variant) did not rebuild bit-exactly a second time in the same process. `lmx_tool` therefore
   refuses a second Session in one process (loudly, with the reason), and every verification replay and replay video
   runs in a fresh process (privileged grader, standard service).
+- **Host CPUs.** The start state is bit-exact only with the numeric kernels it was frozen with, because robosuite's OSC
+  controller and LIBERO's code run on numpy and scipy. Two parts of the stack choose kernels by CPU at run time:
+  - **OpenBLAS.** numpy 1.22.4 and scipy 1.10.1 bundle OpenBLAS 0.3.18, which picks its kernels per CPU: Zen on the
+    reference AMD Ryzen 9 7950X, but its generic Prescott (SSE3) kernels on the AWS hosts' Intel Xeon Platinum 8488C
+    (Sapphire Rapids), a CPU it does not know. With image 0.1.0 none of the 64 instances rebuilt there (the Session
+    refused with a hash mismatch), and 3 references replayed to a failure. Image 0.1.1 sets `OPENBLAS_CORETYPE=Zen`
+    (AVX2 + FMA kernels; a build-time check asserts both libraries use them). Forcing Prescott on the 7950X reproduces the
+    mismatch, and forcing Zen on the 8488C removes it.
+  - **numpy's own SIMD loops.** numpy dispatches its math loops at run time, and the frozen hashes use its AVX-512
+    loops. Both reference CPUs dispatch the same targets (up to `AVX512_ICL`). With those loops switched off
+    (`NPY_DISABLE_CPU_FEATURES`, standing in for an AVX2-only CPU), 3 of 6 sampled instances differ. A real AVX2-only
+    CPU, an AWS AMD EPYC 7R13 (Zen 3, the rcb-gpu hosts), rebuilt only 10 of the first 24 instances checked with 0.1.1.
+    So run LIBERO-MAX on hosts that dispatch like the two reference CPUs (`AVX512_ICL`: Intel Ice Lake or newer Xeon,
+    AMD Zen 4 or newer), and check any other host type with `rebuild_check.sh`.
+  - **Exact or nothing.** There is no tolerance. On a host whose kernels differ, every Session refuses, loudly, and the
+    error names the kernels in use (`lmx_tool.numerics()`).
+    - Why no tolerance: a state off by rounding grows over a contact-rich episode. With 0.1.0 on the 8488C, 3 of the 64
+      reference trajectories failed even though their events fired at the recorded steps.
+    - Before using a new host type, run `bash scripts/libero-max/rebuild_check.sh [parallel]`: every instance's start
+      hash, plus its reference replayed to the recorded final hash, event step and success.
 - **Event.** LIBERO-MAX's frozen change and trigger: the first control step at which the gripper is within the case's
   distance (0.18 m) of the trigger object (LIBERO-MAX's `distance_to_entity`), the change is applied once by
   LIBERO-MAX's backend (objects or fixtures moved, objects parked off-scene at reset brought in, camera pose and field
@@ -80,6 +100,7 @@ bash scripts/libero-max/freeze.sh candidates.json frozen-candidates 8       # ~2
 python3 scripts/libero-max/select_cases.py pick candidates.json frozen-candidates scripts/libero-max/cases.json
 bash scripts/libero-max/freeze.sh                                          # the chosen cases -> scripts/libero-max/frozen/
 python3 scripts/libero-max/generate.py && python3 scripts/libero-max/generate.py --check
+bash scripts/libero-max/rebuild_check.sh 8                                 # per host type: 64/64 rebuild bit-exactly
 cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
 ```
 
@@ -93,6 +114,9 @@ cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
 | `harbor run -a nop` | 4/4 privileged and 4/4 standard reward 0 |
 | scripted cheat attempts (patched tooling and success check, forged reward files, `sitecustomize.py`, tampered instance copy; hidden endpoints, wrong action type and `dt`, NaN rows, forged `final.json`), on the first 48-case revision (graders and service unchanged since; the tool only gained `state()["articulations"]`) | privileged 0, standard 0; hidden endpoints 404, malformed submits 400 |
 | `generate.py --check`, `task_conventions.py --check`, `ci_checks/run_all.sh` | clean; no LIBERO-MAX warnings |
+| `rebuild_check.sh` (start hash; reference replayed to the recorded final hash, event step and success), 64 instances | 0.1.0 on Intel Xeon 8488C (AWS rcb-cpu): 0/64, OpenBLAS Prescott kernels, 3 references fail; 0.1.1 on the 8488C: 64/64; 0.1.1 on AMD 7950X: 64/64 |
+| `rebuild_check.sh`, 0.1.1, AWS AMD EPYC 7R13 (Zen 3, no AVX-512) | 10 of the first 24 instances rebuild: numpy's AVX-512 loops are missing (OpenBLAS runs Zen); not a supported host |
+| kernel probes on the 7950X, 6 instances (one per 11 in sorted order) | OpenBLAS Prescott forced: 0/6; Haswell forced: 6/6; Zen with numpy's AVX-512 loops off: 3/6 |
 
 Measured on the reference machine (AMD Ryzen 9 7950X): about 20 ms of physics per control step, about 70 ms per
 256×256 camera image (OSMesa); a privileged oracle trial takes 2–3 min, most of it the verifier's two fresh replays.
