@@ -3,6 +3,8 @@
   "image/release-2dafa5f2b.tar.gz": "d7b6fa7a514592a0677d587374630bb1c3c95ef30d3c6db104ce3aff33ba237d",
   "image/uipc-prebuilt/pyuipc-0.0.25+topogym.det1.cuda128-cp311-cp311-manylinux_2_34_x86_64.whl": "a50f5fdda86289aa08cbcfcbce0bb81fe983e6c829372fa316f9936f662d02e9",
   "image/uipc-prebuilt/uipc-build.json": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1",
+  "image/uipc-sm86/pyuipc-0.0.25+topogym.det1.cuda128-cp311-cp311-manylinux_2_34_x86_64.whl": "d7f2fd659e1db6ffe1e0ed32b1aefc3b60945204e6371efadfdd2ac674b8ea1c",
+  "image/uipc-sm86/uipc-build.json": "712470d2166b40058a4b6f304fb4a041bffc45c71ab37c7dec2d33d1a0b34011",
   "instances/blanket-flatten-easy-i00/instance.json": "8c88216f6f6a97224af9c243c81f00cad3b434874f4514611c159799b98aad65",
   "instances/blanket-flatten-easy-i00/instance_assets/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "instances/blanket-flatten-easy-i00/instance_assets/initial_state/arrays.npz": "285bbe9895dfa1939fdc8345b65bb756f39d4d5978808c7db3f63890dbff91f7",
@@ -462,5 +464,5 @@
  "release_archive": "image/release-2dafa5f2b.tar.gz",
  "repo": "eai-v2-internal/robotangle-assets",
  "repo_type": "dataset",
- "revision": "7f7f95dd3719e3677f146732264668e82ca7a3f8"
+ "revision": "08eb48360ce62b5ded7810c3dfb178b4a5e5e6fe"
 }

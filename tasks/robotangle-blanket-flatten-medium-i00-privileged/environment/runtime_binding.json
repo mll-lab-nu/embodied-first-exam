@@ -6,7 +6,7 @@
     "instance_assets/initial_state/arrays.npz": "f4238c7d0712ddba243cc27dabe75ccec63c76583aeb06d05d46af6a47bd2c4a",
     "instance_assets/initial_state/manifest.json": "0c65613086a9c0501a6de3b1a1f78ce1724fefb208bacece62050948c2472172"
   },
-  "tooling_sha256": "587043f1c651281849b3d737fc4cb8fb90cda8c5f8e4b30f294440faa6bc0cb7",
+  "tooling_sha256": "075ec08a0b0a39de216a681cc1cb17d91a3058a7ddefe8b105ce7d4988a1c073",
   "creation_source": {
     "sha256": "db0bb48985b4cc02c47bdcd15ca5388a3d7d71286165827b7c8c6b360f77bbf5",
     "files": 356
@@ -30,5 +30,9 @@
     "reference": "labv19/rcb-topogym:0.2.17-dev-cu128",
     "id": "sha256:0655430754aed4e7bc779d36be15569c3a6e8b79d43fd57f39f4e5562ef588be",
     "repo_digests": []
+  },
+  "uipc_builds": {
+    "audited": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1",
+    "sm86": "712470d2166b40058a4b6f304fb4a041bffc45c71ab37c7dec2d33d1a0b34011"
   }
 }

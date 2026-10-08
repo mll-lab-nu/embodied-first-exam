@@ -2734,6 +2734,140 @@ def strict_goal(statuses) -> tuple[int, int] | None:
     return None
 
 
+# --------------------------------------------------------------------------- libuipc build per GPU
+# The image holds two builds of one libuipc recipe (pyuipc 0.0.25+topogym.det1.cuda128: libuipc 292c98c3 plus the
+# determinism patches, nvcc 12.8; images/robotangle/Dockerfile). Both have the same version and source commit, which the
+# frozen IPC settled states hold, so either restores them. They differ only in their uipc-build.json, whose sha256 names
+# the build (scripts/robotangle/release.json and every runtime binding: uipc_builds):
+#   audited  the wheel of every evidence run, in site-packages (/opt/uipc-build.json): SASS sm_89 and sm_120, PTX compute_120;
+#   sm86     its own prefix /opt/uipc_sm86: SASS sm_86 (runs on 8.6 and 8.7), PTX compute_86 (JIT-compiled on 9.x and 10.x).
+# The rule: compute capability 8.9 or 12.x loads the audited wheel, any other GPU the sm86 build, no visible GPU the audited
+# wheel (no libuipc scene runs there). A Session applies it before anything imports uipc and refuses a choice that
+# contradicts it; installed_runtime() and the session's runtime_binding name the build in use.
+UIPC_BUILDS = {"audited": None, "sm86": "/opt/uipc_sm86"}   # build -> its prefix (site-packages/, uipc-build.json); None: site-packages
+DEFAULT_UIPC_BUILD = "/opt/uipc-build.json"
+_GPU_CAPABILITIES: list | None = None
+_UIPC_BUILD: dict | None = None
+
+
+def gpu_capabilities() -> list[tuple[int, int]]:
+    """Compute capabilities of the CUDA devices this process sees (CUDA_VISIBLE_DEVICES applies), from the CUDA driver API
+    through ctypes: no context, no torch. Empty without a driver or a visible device."""
+    global _GPU_CAPABILITIES
+    if _GPU_CAPABILITIES is None:
+        import ctypes
+        caps = []
+        try:
+            cuda = ctypes.CDLL("libcuda.so.1")
+        except OSError:
+            cuda = None
+        count = ctypes.c_int(0)
+        if cuda is not None and cuda.cuInit(0) == 0 and cuda.cuDeviceGetCount(ctypes.byref(count)) == 0:
+            for index in range(count.value):
+                device, major, minor = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
+                if (cuda.cuDeviceGet(ctypes.byref(device), index) != 0
+                        or cuda.cuDeviceGetAttribute(ctypes.byref(major), 75, device) != 0     # ..._COMPUTE_CAPABILITY_MAJOR
+                        or cuda.cuDeviceGetAttribute(ctypes.byref(minor), 76, device) != 0):   # ..._COMPUTE_CAPABILITY_MINOR
+                    raise RuntimeError(f"CUDA driver error while reading the compute capability of device {index}")
+                caps.append((major.value, minor.value))
+        _GPU_CAPABILITIES = caps
+    return list(_GPU_CAPABILITIES)
+
+
+def uipc_build_for(capabilities) -> str:
+    """The rule (above): the libuipc build for the visible GPUs. Mixed compute capabilities are refused: a process loads
+    one build, and a RoboTangle container sees exactly one GPU (Nyx needs one)."""
+    caps = sorted({tuple(c) for c in capabilities})
+    if len(caps) > 1:
+        raise RuntimeError("The visible GPUs have different compute capabilities ("
+                           + ", ".join(f"{a}.{b}" for a, b in caps) + "): a process loads one libuipc build. Give the "
+                           "container exactly one GPU, as RoboTangle needs, or GPUs of one model.")
+    if not caps:
+        return "audited"
+    major, minor = caps[0]
+    return "audited" if (major, minor) == (8, 9) or major == 12 else "sm86"
+
+
+def _sha256_file(path) -> str | None:
+    path = Path(path)
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def select_uipc_build(capability: tuple[int, int] | None = None) -> dict:
+    """Choose this process's libuipc build by the rule, once and before uipc is imported: the sm86 prefix goes first on
+    sys.path when the rule picks it. `capability` stands in for the GPU's (tests); a Session refuses a choice that
+    contradicts the visible GPU (uipc_build_in_use). Returns the build in use: its name, the compute capability it was
+    chosen for, its uipc-build.json and that file's sha256, and the uipc package Python imports."""
+    global _UIPC_BUILD
+    if _UIPC_BUILD is not None:
+        return _UIPC_BUILD
+    import importlib
+    import importlib.util
+    caps = [tuple(capability)] if capability is not None else gpu_capabilities()
+    name = uipc_build_for(caps)
+    prefix = UIPC_BUILDS[name]
+    record = Path(prefix, "uipc-build.json") if prefix else Path(DEFAULT_UIPC_BUILD)
+    site = Path(prefix, "site-packages") if prefix else None
+    if site is not None:
+        loaded = sys.modules.get("uipc")
+        if loaded is not None and not Path(loaded.__file__).resolve().is_relative_to(site):
+            raise InstanceMismatch(f"uipc was imported from {loaded.__file__} before the Session chose the {name} build ({site})")
+        if not record.is_file():
+            raise InstanceMismatch(f"this image has no {name} libuipc build ({record})")
+        if str(site) not in sys.path:
+            sys.path.insert(0, str(site))
+            importlib.invalidate_caches()
+    spec = importlib.util.find_spec("uipc")
+    module = Path(spec.origin).resolve() if spec is not None and spec.origin else None
+    others = [Path(p, "site-packages") for n, p in UIPC_BUILDS.items() if p and n != name]
+    if module is not None and ((site is not None and not module.is_relative_to(site))
+                               or any(module.is_relative_to(o) for o in others)):
+        raise InstanceMismatch(f"uipc resolves to {module}, not to the {name} libuipc build")
+    _UIPC_BUILD = dict(build=name, capability=list(caps[0]) if caps else None, uipc_build=str(record),
+                       uipc_build_sha256=_sha256_file(record), module=str(module) if module else None)
+    return _UIPC_BUILD
+
+
+def uipc_build_in_use() -> dict:
+    """select_uipc_build(), refused when it contradicts the rule for the visible GPU (a forced choice)."""
+    chosen = select_uipc_build()
+    rule = uipc_build_for(gpu_capabilities())
+    if chosen["build"] != rule:
+        raise InstanceMismatch(f"libuipc build {chosen['build']} (chosen for compute capability {chosen['capability']}) "
+                               f"contradicts the rule for the visible GPU ({gpu_capabilities() or 'none'}: {rule})")
+    return chosen
+
+
+def installed_runtime(root=None) -> dict:
+    """topogym.simulator.frozen_binding.installed_runtime() for an image with two libuipc builds: uipc_builds = the builds
+    the rule chooses from (name -> its uipc-build.json sha256, None if absent), uipc_build_sha256 = the one this process
+    uses (select_uipc_build)."""
+    from topogym.simulator.frozen_binding import installed_runtime as image_runtime
+    runtime = image_runtime(root)
+    runtime["uipc_builds"] = {name: _sha256_file(Path(prefix, "uipc-build.json") if prefix else DEFAULT_UIPC_BUILD)
+                              for name, prefix in UIPC_BUILDS.items()}
+    runtime["uipc_build_sha256"] = select_uipc_build()["uipc_build_sha256"]
+    return runtime
+
+
+def check_runtime(lock: dict) -> dict:
+    """frozen_binding.check_runtime() for an image with two libuipc builds. The binding's runtime names the default
+    (audited) build and lock["uipc_builds"] both allowed ones: the image must hold exactly those, and this process must use
+    the one the rule chooses for the visible GPU."""
+    from topogym.simulator.frozen_binding import BindingMismatch, validate_lock
+    validate_lock(lock)
+    builds = lock.get("uipc_builds")
+    if (not isinstance(builds, dict) or set(builds) != set(UIPC_BUILDS)
+            or builds["audited"] != lock["runtime"].get("uipc_build_sha256")):
+        raise BindingMismatch(f"Runtime binding lacks the libuipc builds {sorted(UIPC_BUILDS)} (uipc_builds; audited = runtime's)")
+    chosen = uipc_build_in_use()
+    expected = dict(lock["runtime"], uipc_builds=builds, uipc_build_sha256=builds[chosen["build"]])
+    actual = installed_runtime()
+    if actual != expected:
+        raise BindingMismatch("Actual installed source/dependencies/libuipc builds differ from the bound runtime")
+    return actual
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
@@ -2745,6 +2879,7 @@ class Session:
             raise ValueError("TopoGym sessions follow the GPU-backend rule; the physics device comes from the instance")
         self.task, self.spec = task, dict(TASKS[task])
         self.runtime_binding = None
+        self.uipc_build = uipc_build_in_use()     # the libuipc build, by the rule, before anything imports uipc
         inst = None
         if instance is not None:
             if gripper_space is not None:
@@ -2756,14 +2891,14 @@ class Session:
                 raise ValueError(f"instance task {inst.get('task')} != session task {task}")
             lock_path = Path(instance).resolve().parent / "runtime_binding.json"
             if lock_path.is_file():
-                from topogym.simulator.frozen_binding import check_inputs, check_runtime, binding_id
+                from topogym.simulator.frozen_binding import check_inputs, binding_id
                 try:
                     lock = json.loads(lock_path.read_text())
                     check_inputs(instance, __file__, lock)
-                    runtime = check_runtime(lock)
+                    runtime = check_runtime(lock)       # this tooling's: both libuipc builds and the one in use
                 except (OSError, ValueError, KeyError) as exc:
                     raise InstanceMismatch(f"Frozen runtime binding failed: {exc}") from exc
-                self.runtime_binding = dict(binding_id=binding_id(lock), runtime=runtime,
+                self.runtime_binding = dict(binding_id=binding_id(lock), runtime=runtime, uipc_build=self.uipc_build,
                                             creation_source=lock["creation_source"], image=lock["image"])
             eval_index = inst["eval_index"]
             cfg = dict(inst["simulator"])       # the frozen configuration: the task directory's own copy
@@ -3845,8 +3980,7 @@ def cmd_describe(a) -> None:
     """What the task generator writes into instruction.md / README.md: cameras, robot, kinematics, the success predicate's
     source, the table height; one JSON line."""
     import inspect
-    from topogym.simulator.frozen_binding import installed_runtime
-    runtime_identity = installed_runtime()
+    runtime_identity = installed_runtime()      # this tooling's: both libuipc builds and the one in use
     s = Session(a.task, instance=a.instance)
     t = s.env._task
     from topogym.tasks.goal_description import TASK_IDS, describe_goal

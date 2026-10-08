@@ -4,7 +4,7 @@
   "asset_files": {
     "instance_assets/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   },
-  "tooling_sha256": "587043f1c651281849b3d737fc4cb8fb90cda8c5f8e4b30f294440faa6bc0cb7",
+  "tooling_sha256": "075ec08a0b0a39de216a681cc1cb17d91a3058a7ddefe8b105ce7d4988a1c073",
   "creation_source": {
     "sha256": "e0ae4ba903bb072fa1f532bf5aee780a051e8d2c25ebbebb427775a4f660b917",
     "files": 342
@@ -28,5 +28,9 @@
     "reference": "hsbe2/rcb-topogym:0.2.16-dev-cu128",
     "id": "sha256:04fa65dbd8aa0dc16734392c3d735992e53fd8cc589b9e295b679c6c73ed455a",
     "repo_digests": []
+  },
+  "uipc_builds": {
+    "audited": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1",
+    "sm86": "712470d2166b40058a4b6f304fb4a041bffc45c71ab37c7dec2d33d1a0b34011"
   }
 }
