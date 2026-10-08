@@ -5825,3 +5825,15 @@ digest = "sha256:db85ddcea9dc8166e98d696310bf5a17c44bcf75ee63c1a6983e1b0cd8b140d
 name = "robot-coding-bench/libero-max-spatial-black-bowl-on-yellow-plate-target-relocation-i00-standard"
 digest = "sha256:146535d4a9b6088a6d4d0fdceced69a4047b095d392440e9afa43524707c2913"
 
+[[tasks]]
+name = "robot-coding-bench/roboolympics-airhockey-match-i00-standard-realtime"
+digest = "sha256:daaa62a3f87d3facf0b3489cf1e08934016f88a988f201d9398b33f1aeded868"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-badminton-match-i00-standard-realtime"
+digest = "sha256:28186585dae5dfd7885b56a550b37f96b9854f2387f0052f6d8af7ca407a0c68"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-tabletennis-match-i00-standard-realtime"
+digest = "sha256:000794b70e4bed0b3514a33b5ea42d36cd8e9eade15bd6d62cfc3b9caaac3041"
+
