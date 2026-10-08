@@ -51,7 +51,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. RoboCasa, RoboCasa365 and RoboCasa-GR1 on robosuite), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
-| D8 | Agent time budget | 3600 s by default; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. |
+| D8 | Agent time budget | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboTangle 21600 s (owner, 2026-10-08). |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. A transparent usage gateway that forwards requests unchanged and only records token usage (`scripts/usage_gateway/`) is allowed. |
@@ -62,7 +62,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 1. `task.toml`, `instruction.md`, `README.md`, `environment/Dockerfile`, `tests/test.sh` (executable), `tests/Dockerfile`. [CI] `solution/solve.sh` depending on the oracle level (§2.7). [new]
 2. `[task].name = "robot-coding-bench/<folder>"`; required metadata present and valid (§2.3). [CI]
-3. Top-level `artifacts` includes `"/app/output/"`; `[agent].timeout_sec` set and ≤ 14400. [CI]
+3. Top-level `artifacts` includes `"/app/output/"`; `[agent].timeout_sec` set and ≤ 14400, or ≤ the benchmark's documented exception (§2.3). [CI]
 4. Every image reference pinned to a tag or digest, never `:latest`. [CI]
 5. `[verifier] environment_mode = "separate"`; `tests/Dockerfile` copies `test.sh`. [CI]
 6. `instruction.md` names the deliverable under `/app/output/` and never mentions `/tests/`. [CI]
@@ -111,10 +111,20 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
 | `instance_seed`; benchmark-specific fields registered in TAXONOMY | MAY | [current] |
 | Top-level `artifacts` includes `"/app/output/"` | MUST | [CI] |
-| `[agent].timeout_sec` set, ≤ 14400; 3600 unless justified (uniform within a benchmark) | MUST / SHOULD | [CI] / [new] |
+| `[agent].timeout_sec` set, ≤ 14400 (per-benchmark exceptions below); 3600 unless justified (uniform within a benchmark) | MUST / SHOULD | [CI] / [new] |
 | `[verifier].environment_mode = "separate"` | MUST | [CI] |
 | `[verifier].timeout_sec`, `[environment]` `cpus` / `memory_mb` / `build_timeout_sec` | SHOULD | [current] |
 | `[environment].gpus` (unsupported by Harbor's local Docker sandbox; see §2.4) | MUST NOT | [current] |
+
+**Per-benchmark agent budget exceptions.** A benchmark's tasks may set `[agent].timeout_sec` above 14400 s only by owner
+decision. The decision is recorded here, in `docs/benchmarks/<bench>.md`, and in the exception table of
+`ci_checks/check-task-fields.sh`. The budget is uniform within the benchmark, in both modes. A standard sidecar's wall
+clock (`RCB_WALL_CLOCK_S`, `/spec.budget.wall_clock_s`) equals it. That benchmark's results state the budget and are
+compared only with results under the same budget (D8). The token budget (D10) is unchanged.
+- **RoboTangle** (owner, 2026-10-08; issue #87): 21600 s (6 h) for every task. The topological puzzles are much
+  harder than typical robotics tasks (reference executions take 2–185 min of simulated work), and the benchmark's
+  owner sets the budget to probe the capability ceiling. Simulator speed-ups add interaction within it; they never
+  shorten it (`docs/benchmarks/robotangle.md`, added with the tasks in #81).
 
 ### 2.4 Images, registry, GPU
 
