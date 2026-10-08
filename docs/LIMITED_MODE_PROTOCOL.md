@@ -153,7 +153,8 @@ camera poses are in the robot's starting frame); see [docs/benchmarks/](benchmar
 tables. A request body over 64 MB gets 413 before it is decoded.
 
 ## Optional reset capability
-Off by default (`budget.reset = 0`): one trial is one episode. A run may set `RCB_RESET_BUDGET=N` on the service
+Off by default (`budget.reset = 0`): one trial is one episode. Exception, by owner decision (PROTOCOL §4.5): HumanoidBench's
+standard tasks default to `budget.reset = 50` (2026-10-07). A run may set `RCB_RESET_BUDGET=N` on the service
 (implemented by the KinDER and HumanoidBench services). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
 `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running episode and starts a new one from the
 same frozen state, `N` times in all; `/status` and `meta` add `episode`, `resets_left` and `control_steps_total`. After a

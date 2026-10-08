@@ -30,7 +30,7 @@ is the task's own business.
 | Term | Meaning | Former name |
 |---|---|---|
 | **privileged mode** | Agent and simulator share a container; the agent may read privileged state, reset freely, call planning primitives. The deliverable is a trajectory. | unlimited |
-| **standard mode** | Robot as a service: the simulator runs in a sidecar the agent cannot open; the agent only sends actions and receives images and proprioception through a client; no reset. | limited |
+| **standard mode** | Robot as a service: the simulator runs in a sidecar the agent cannot open; the agent only sends actions and receives images and proprioception through a client; no reset, unless the benchmark grants a reset budget (§4.5). | limited |
 | **`eai-standard/2.x`** | The standard-mode wire protocol (§4). | `rcb-limited/2.x` |
 | **`eai-<name>`** | Base image (a simulator stack, usually one per benchmark) under `ghcr.io/mll-lab-nu/` (§2.4). | `rcb-<sim>` under several registries; `eai-<name>` under `embodied-agent-interface-v2-internal` until 2026-10-02 |
 
@@ -41,7 +41,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exception (owner, 2026-10-07): HumanoidBench standard defaults to N = 50 (§4.5). No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -287,12 +287,21 @@ resumes the same episode; success is decided on a replay.
 ### 4.5 Budget and privileged information
 | Item | Level | Basis |
 |---|---|---|
-| No reset by default: one trial is one episode | MUST | [current] |
+| No reset by default: one trial is one episode (per-benchmark exceptions below) | MUST | [current] |
 | Optional reset capability: `budget.reset = N` via `POST /reset`, default 0; results with N > 0 are reported separately, never ranked with N = 0 | MAY | [new] |
 | No step limit; wall clock is the only hard budget; simulation steps are reported as cost | MUST | [current] |
 | A technical episode cap stated in `spec.max_control_steps` | MAY | [current] |
 | Exposing object poses, scene files, seeds, the success predicate, segmentation, object contact forces | MUST NOT | [current] |
 | Robot proprioception, camera calibration, task text | MAY | [current] |
+
+**Per-benchmark reset defaults.** A benchmark's standard tasks may default to a reset budget N > 0 only by owner
+decision, recorded here and in `docs/benchmarks/<bench>.md`; the capability is the one above (`POST /reset`, only the
+last episode graded, a success ends the trial: [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md)), the budget stays an override (`RCB_RESET_BUDGET`), and that benchmark's
+results must state the reset budget and are compared only with results under the same budget.
+- **HumanoidBench** (owner, 2026-10-07): `budget.reset = 50`. The H1 falls within 1–3 s of robot time and the agent has
+  no simulator to practise in, so a single episode is one blind attempt. `RCB_RESET_BUDGET=0` still runs one episode;
+  HumanoidBench standard results recorded before 2026-10-07 ran with 0 and are reported separately
+  ([`benchmarks/humanoidbench.md`](benchmarks/humanoidbench.md)).
 
 ### 4.6 Errors (no physics executed)
 `400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed body)
