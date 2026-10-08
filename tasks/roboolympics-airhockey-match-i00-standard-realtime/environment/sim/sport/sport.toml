@@ -1,0 +1,220 @@
+# airhockey: robot air hockey after the USAA rules (docs/framework_zh.md §4.2, §8). Migrated from the legacy tree in
+# stage 2 (scripts/olympiad/airhockey, scripts/olympiad/shared/airhockey/sim); revision v3 (2026-10-07, review item
+# B13) widened the goal mouth to 0.40 m (D10), so the legacy recordings (revision v2) no longer replay and golden/ holds
+# native recordings; revision v4 (2026-10-08) sets it to 0.35 m (a medium width, decided after the goal-width study).
+# The [[tasks]] ids keep the Season-1 task names (airhockey-match-wallclock-program-standard,
+# airhockey-duel-wallclock-program-standard).
+
+[sport]
+name = "airhockey"
+title = "Air hockey"
+summary = "robot air hockey on a physical MuJoCo table: a seven-axis KUKA iiwa arm holding a mallet at each end, the puck sliding on the air cushion, in a continuous world slowed by a factor S; you command your mallet's target in your own half and see the table only through your fixed camera; one game to 7 goals under the USAA rules (seven-second rule, dead-puck face-offs, a safety cap with a stated last resort, a 0.35 m goal mouth); format match: you against a scripted opponent (level 1-4), format duel: two players"
+protocol = "realtime"
+revision = "airhockey-program-v4+players-25k+core-0.2"   # plugin.REVISION; bump on any change that alters play (players-25k: the players' images draw the arms with the KUKA iiwa 14's 25k visual meshes)
+physics = "mujoco 3.3.7 (1 kHz physics, 10 ms control): two physically simulated KUKA iiwa arms with passive striker joints (AirHockeyChallenge robot model), a 10 g puck on an air-cushion plane, physical rails and mallets"
+image = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0"
+status = "sport"
+publish = true
+category = "robotics-sports-arena"
+
+[rulebook]
+name = "USAA (United States Air Hockey Association) Official Rules of Air Hockey, as published by Gold Standard Air Hockey"
+version = "retrieved 2026-10-05"
+url = "https://goldstandardairhockey.com/usaa-official-rules-of-air-hockey/"
+
+[[deviations]]
+id = "D1"
+rule = "I.1, III.1"
+text = "one game to 7 points instead of a match of several games"
+affects_result = true
+[[deviations]]
+id = "D2"
+rule = "- (the rules have no time limit)"
+text = "a safety cap of 120 s of play (frozen time does not count) or 40 rallies; then the player with more goals wins, at equal goals the scorer of the last goal, at 0:0 the player in whose half the puck spent less time, and if that is equal the player who did not have the first possession (the stated last resort: no draws)"
+affects_result = true
+[[deviations]]
+id = "D3"
+rule = "III.1-2"
+text = "the game starts with the puck at rest in the half of the first player (FIRST_PLAYER, the coin toss) instead of a face-off; a face-off places the puck at rest at the table centre with both mallets at home instead of a referee's release"
+affects_result = true
+[[deviations]]
+id = "D4"
+rule = "I.10, VI.1"
+text = "the seven-second rule is a foul with the rulebook's penalty, forfeiture of the puck: the opponent gets it at rest on its spot; a foul gives no point"
+affects_result = true
+[[deviations]]
+id = "D5"
+rule = "IV.6, I.11"
+text = "a dead puck (play suspended) is added for a puck that no mallet can reach for 2 s (the robots' reach) or that touches the centre line for 7 s (I.11 has no limit); it is followed by a face-off"
+affects_result = true
+[[deviations]]
+id = "D6"
+rule = "I.4, I.14-15"
+text = "after every goal (I.4: the player scored upon gets the puck), foul or dead puck both mallets return home and the world freezes for the reviews; the time-outs are not used"
+affects_result = false
+[[deviations]]
+id = "D7"
+rule = "I.8, I.13, VI.6"
+text = "palming, goal-tending and topping cannot occur: only the mallets touch the puck and it stays flat on the table"
+affects_result = false
+[[deviations]]
+id = "D8"
+rule = "I.12, VI.9"
+text = "the mallets cannot cross the centre line: the mallet workspace ends 0.05 m before it (and at 1.45 m from the robot's base), so the players cannot touch each other"
+affects_result = true
+[[deviations]]
+id = "D9"
+rule = "-"
+text = "the players are seven-axis KUKA iiwa arms holding a mallet, commanded by a Cartesian target for the mallet (a smooth path of at most 2 m/s and 10 m/s^2, inverse kinematics and torque-limited motors), not human hands"
+affects_result = false
+[[deviations]]
+id = "D10"
+rule = "II.A.1 (the rules name the sanctioned tables, not their dimensions)"
+text = "the goal mouth is 0.35 m wide (|y| <= 0.175) instead of the 0.25 m of the table model (AirHockeyChallenge, 1.948 x 1.038 m): the arms move the mallet at about 2 m/s, so a shot takes 0.5-1 s to arrive and a defender that follows the puck would cover a 0.25 m mouth almost completely"
+affects_result = true
+
+[formats.match]                       # one seat against the scripted opponent inside the world (seat B of hockey.py)
+seats = ["A"]
+opponent = true                       # success = winning a valid game (core/grading.py), as in the legacy task
+levels = [1, 2, 3, 4]                 # the opponent level (RCB_LEVEL; default 1)
+[formats.duel]
+seats = ["A", "B"]
+first = ["A", "B"]                    # who has the puck first (FIRST_PLAYER); the runner plays both orders
+
+[modes]
+action_levels = ["low"]               # the mallet target is the only level (the legacy interface)
+plays = ["program"]
+
+[timing]
+slowdown = 20                         # S (RCB_SLOWDOWN); the legacy default of both tasks (official: match 1-20, duel 10, 20)
+start_timeout_s = 1800                # after the first seat started (duel); format match: from the service start
+ready_timeout_s = 300                 # each review (legacy duel: 300 s; the legacy single had no limit)
+
+[actions.cli]                         # `game target X Y`, `game none`
+low = { target = ["x", "y"], none = [] }
+
+[observation]
+fields = ["rally", "t_play", "play_time_left_s", "score", "own", "rallies", "last_rally"]
+renderer = "mujoco"
+frame_budget_ms = 250                 # one 320 x 240 tile (CPU, osmesa)
+columns = 1
+# Since revision airhockey-program-v4+players-25k the arms are drawn with the KUKA LBR iiwa 14's visual meshes
+# (presentation/presentation.toml players = "25k", bundled into the simulator; the core's camera worker draws the
+# players' scene, renderer rule 6). Measured 2026-10-08 (osmesa, host load ~8-10 on 32 cores), median / p95 ms per
+# observation at 1 llvmpipe thread: match scene 8.6 / 17.7, 25k meshes 12.0 / 15.2 (duel 12.1 / 25.0); 2 threads:
+# 6.3 / 9.5 and 8.7 / 16.9
+render_threads = 1                    # llvmpipe threads per render process (LP_NUM_THREADS): one tile is cheap
+
+[spec]                                # the rules (also /spec); the numeric tables come from hockey.py (/spec)
+real_time = "this sport is real time (where the generic text above says otherwise, this line holds): `game wait DT` (POST /wait {\"dt\": DT}, 0 < DT <= 1) lets the world run DT game seconds; `game ready \"WHY\" \"PLAN\"` is due only after each rally, not after each action; acts are never out of turn, one in flight at a time; there is no release point and no execution scatter: your target goes to the mallet's path, the arm's inverse kinematics and its motors"
+robot = "a seven-axis KUKA iiwa arm whose end holds a mallet; seat A plays from the end x < 0, seat B from the end x > 0 (format match: you are A, the scripted opponent is B; `match.opponent_level` in /spec)"
+action = "target: a target for your mallet's centre in table metres (world frame). It must lie in your mallet's workspace (`workspace` in /spec): in your own half, 0.05 <= |x| <= 0.92, |y| <= 0.47, and at most 1.45 m from your robot's base at (-1.51, 0) for seat A, (+1.51, 0) for seat B; a target outside it is refused (HTTP 400). The mallet moves towards the target along a smooth path of at most 2 m/s and 10 m/s^2, driven by the arm's inverse kinematics and torque-limited motors, so it arrives later than the command and may lag when the arm is loaded or hits the puck. A command takes effect at the next 10 ms control step and holds until replaced; none holds the mallet where it is. The service has no puck tracking: aiming, timing and defending are up to you"
+observation = "one 320 x 240 RGB image per observation from your fixed camera above and behind your end of the table (`cameras` in /spec: pose, field of view, focal length; pixel centres at (column + 0.5, row + 0.5)). The puck is red, the mallet of seat A blue, the mallet of seat B green, the arms orange; four yellow markers are at (+-0.9, +-0.46) on the table surface and the centre line is grey. The state gives the score (points and fouls per seat), the time of play, your own mallet position, its command and your arm's joint positions and velocities (`own`), and the rallies that ended (`rallies`, the latest `last_rally`); no puck or opponent coordinates and no seed. Both seats see the game the same way: the two cameras are images of each other turned half a turn about the table centre"
+rally = "a rally starts with the puck at rest in one player's half on a spot at |x| = 0.58 (y varies between -0.18 and 0.18, from the seed), both mallets at home (|x| = 0.82, y = 0); the first rally starts with the puck in the half of `match.first_player`"
+goal = "the puck wholly inside a goal scores 1 point for the other player, whoever touched it last; the player scored upon gets the puck for the next rally"
+seven_second_rule = "if the puck stays wholly in one player's half for 7 s, that player commits a foul: the next rally starts with the puck in the opponent's half; a foul gives no point; the 7 s start again when the puck has wholly entered the other half; while it touches the centre line it is in nobody's half (either player may hit it)"
+dead_puck = "if for 2 s neither mallet can reach the puck (near the centre line at the sides, beyond both workspaces), or the puck touches the centre line for 7 s, the next rally starts with a face-off: the puck at rest at the table centre"
+review = "every goal, foul or dead puck ends the rally: both mallets return home, the world freezes for the reviews, then the next rally starts"
+game = "the first player to score 7 goals wins; the game also ends after 120 s of play (frozen time does not count) or 40 rallies, then the tiebreaks below decide"
+opponent = "format match: the scripted opponent (seat B, in the trusted simulator) guards its goal and strikes the puck at yours from the true puck position a reaction delay ago; levels 1-4 differ in its mallet speed (0.4 / 0.6 / 1 / 2 m/s), reaction delay and defence (level 1 does not guard its goal; level 4 guards the puck's predicted crossing point); it never reads your commands"
+table = "metres, seconds; the table frame: x along the table (seat A's end at x < 0, seat B's at x > 0), y across, z up. Playing surface 1.948 x 1.038 m (|x| <= 0.974, |y| <= 0.519), surrounded by rails; a goal mouth 0.35 m wide (|y| <= 0.175) in the middle of each end rail; the centre line is x = 0"
+puck = "radius 0.03165 m, mass 10 g; it slides flat on the air cushion and slows by about 10 % per second; rails return about 80 % of the puck's speed across them; mallets push it physically (a hit gives the puck up to about 1.3 times the mallet's speed); the puck's top face is at z = 0.022, its centre plane z = 0.012"
+mallet = "radius 0.04815 m, its centre 0.0645 m above the surface; home (-0.82, 0) for A, (0.82, 0) for B; the arm links have no collision geometry"
+cameras_pose = "the camera of seat A at (0, -1.3, 2.2), image right (1, 0, 0), image up (0, 0.861, 0.509), 48 degree vertical field of view; seat B's is the same turned half a turn about the table centre"
+rates = "physics 1000 Hz, control 100 Hz (10 ms steps)"
+
+[tiebreaks]
+order = ["goals", "last_goal", "territory", "first_possession"]
+text = "the first player to score 7 goals wins; at the safety cap (120 s of play or 40 rallies) the player with more goals wins; at equal goals the player who scored the last goal; if nobody has scored, the player in whose half the puck spent less time; last resort (not from the rulebook): the player who did not have the puck first"
+last_resort_in_prompt = true
+
+[[exploits]]
+id = "E1"
+text = "an out-of-range or malformed target (the other half, outside the workspace or the reach, non-finite, unknown fields) is refused (HTTP 400) and changes nothing; acting while the world is frozen is refused (409)"
+test = "test_exploit_bad_and_frozen_actions_are_refused"
+[[exploits]]
+id = "E2"
+text = "stalling with the puck in the own half is a seven-second foul, not a point: the opponent gets the puck"
+test = "test_exploit_stalling_with_the_puck_is_a_foul_not_a_point"
+[[exploits]]
+id = "E3"
+text = "parking the puck where no mallet reaches it is a dead puck after 2 s, followed by a face-off at the centre (which both mallets reach)"
+test = "test_exploit_parking_the_puck_out_of_reach_is_a_dead_puck"
+[[exploits]]
+id = "E4"
+text = "a puck resting on the centre line (nobody's half, no seven-second count) is a dead puck after 7 s"
+test = "test_exploit_centre_line_stall_is_a_dead_puck"
+[[exploits]]
+id = "E5"
+text = "every puck position away from the centre line can be reached by the mallet of its half (no dead zone at the rails)"
+test = "test_exploit_puck_at_the_rails_is_reachable"
+[[exploits]]
+id = "E6"
+text = "parking the mallet in front of the own goal and never playing loses to a player that plays"
+test = "test_exploit_parking_in_front_of_the_goal_loses"
+[[exploits]]
+id = "E7"
+text = "doing nothing loses to the scripted opponent (format match)"
+test = "test_exploit_doing_nothing_loses_to_the_scripted_opponent"
+[[exploits]]
+id = "E8"
+text = "the observation and /spec hold no puck or opponent coordinate and no seed (only the camera image shows the puck)"
+test = "test_exploit_world_state_hidden"
+[[exploits]]
+id = "E9"
+text = "the two robots are identical and point-symmetric through the table centre (geometry, physical parameters, and the puck's path under mirrored commands)"
+test = "test_exploit_mirror_symmetric_robots"
+[[exploits]]
+id = "E10"
+text = "no draws: a game without any play still ends at the cap and every step of the tiebreak chain decides; seven goals end the game at once"
+test = "test_exploit_no_draw_tiebreak_chain"
+
+[players]
+reference = "reference"               # Sport.players() names: camera-only, wins the default configuration
+reference_class = "builtin_players:Reference"
+check = ["random"]                    # policies for the generic tests
+
+[fairness]
+# Two copies of the reference player. Realtime: a wide interval only warns; a reference duel is up to 12000 control
+# steps with two camera images every 5 steps (about 100 s of CPU each), so N is small. Result (README, revision v4):
+# N = 40, first mover 0.0 pp (95% CI +-15.5 pp), seat A -15.0 pp (+-14.8 pp) (no failure; wide: a warning for a
+# realtime sport); 28 of the 40 games decided by goals (26 by the count, 2 by the last goal), 12 by territory (v3 at
+# 0.40 m: 24 and 16; v2: 4 and 36).
+policy = "reference"
+matches_per_order = 20
+max_advantage_pp = 5
+mirror = "statistical"                # world-frame observations and actions: a swapped match is not the same view
+
+[check]                               # tools/check time limits
+stage_timeout_s = 10800               # fairness: 40 reference duels of about 100 s each, over an hour on a shared host
+live_player_timeout_s = 3600          # live: a capped game is 2400 s at x20 plus the reviews
+
+[official]                            # grade.py applies the legacy rule per format (match: the level's own seeds)
+seeds = [1, 2, 3, 101, 111, 121, 202, 212, 222, 303, 313, 323, 404, 414, 424]
+levels = [1, 2, 3, 4]
+first_any = true
+
+[golden]
+episodes = "golden"                   # native recordings of revision v4 (tools/golden.py record)
+
+[[tasks]]
+id = "airhockey-match-wallclock-program-standard"
+format = "match"
+action_level = "low"
+[[tasks]]
+id = "airhockey-duel-wallclock-program-standard"
+format = "duel"
+action_level = "low"
+
+[broadcast]                           # spectators: the replay video's camera (the legacy `overview` camera)
+camera = { name = "broadcast", pos = [0.0, -2.3, 2.5], lookat = [0.0, -1.623, 1.764], up = [0.0, 0.736, 0.677], fovy_deg = 55, width = 640, height = 360 }
+
+[capabilities]                        # docs/capabilities_zh.md: 2 primary, 1 secondary, 0 none
+a1 = 2                                # 3D: the puck and the opponent's mallet only from the oblique camera image
+a2 = 2                                # puck dynamics: rail rebounds, air-cushion drag, mallet impacts
+a3 = 2                                # execution: an arm with a lagging Cartesian path, IK and torque limits
+a4 = 2                                # real time: the puck moves while the program thinks
+b1 = 0
+b2 = 1                                # attack vs defence, shots away from the opponent's mallet
+b3 = 0
+physics = ["collision", "friction_rolling"]

@@ -1,0 +1,69 @@
+{
+ "formats": {
+  "duel": {
+   "first": [
+    "A",
+    "B"
+   ],
+   "seats": [
+    "A",
+    "B"
+   ]
+  },
+  "match": {
+   "levels": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "opponent": true,
+   "seats": [
+    "A"
+   ]
+  }
+ },
+ "official": {
+  "first_any": true,
+  "levels": [
+   1,
+   2,
+   3,
+   4
+  ],
+  "seeds": [
+   1,
+   2,
+   3,
+   101,
+   111,
+   121,
+   202,
+   212,
+   222,
+   303,
+   313,
+   323,
+   404,
+   414,
+   424
+  ],
+  "slowdowns": {
+   "direct": [
+    20,
+    50,
+    100
+   ],
+   "program": [
+    1,
+    2,
+    5,
+    10,
+    20
+   ]
+  }
+ },
+ "protocol": "realtime",
+ "sport": "tabletennis",
+ "task": "tabletennis-match-wallclock-program-standard"
+}

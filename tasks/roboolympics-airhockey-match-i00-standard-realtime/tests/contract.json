@@ -1,0 +1,55 @@
+{
+ "formats": {
+  "duel": {
+   "first": [
+    "A",
+    "B"
+   ],
+   "seats": [
+    "A",
+    "B"
+   ]
+  },
+  "match": {
+   "levels": [
+    1,
+    2,
+    3,
+    4
+   ],
+   "opponent": true,
+   "seats": [
+    "A"
+   ]
+  }
+ },
+ "official": {
+  "first_any": true,
+  "levels": [
+   1,
+   2,
+   3,
+   4
+  ],
+  "seeds": [
+   1,
+   2,
+   3,
+   101,
+   111,
+   121,
+   202,
+   212,
+   222,
+   303,
+   313,
+   323,
+   404,
+   414,
+   424
+  ]
+ },
+ "protocol": "realtime",
+ "sport": "airhockey",
+ "task": "airhockey-match-wallclock-program-standard"
+}

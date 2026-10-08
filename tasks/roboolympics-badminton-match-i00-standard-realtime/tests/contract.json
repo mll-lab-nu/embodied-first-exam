@@ -1,0 +1,54 @@
+{
+ "formats": {
+  "duel-wallclock": {
+   "first": [
+    "A",
+    "B"
+   ],
+   "seats": [
+    "A",
+    "B"
+   ]
+  },
+  "match-wallclock": {
+   "levels": [
+    1,
+    2
+   ],
+   "opponent": true,
+   "seats": [
+    "A"
+   ]
+  }
+ },
+ "official": {
+  "first_any": true,
+  "levels": [
+   1,
+   2
+  ],
+  "seeds": [
+   1,
+   2,
+   3,
+   101,
+   111,
+   121,
+   202,
+   212,
+   222
+  ],
+  "slowdowns": {
+   "program": [
+    1,
+    2,
+    5,
+    10,
+    20
+   ]
+  }
+ },
+ "protocol": "realtime",
+ "sport": "badminton",
+ "task": "badminton-match-wallclock-program-standard"
+}

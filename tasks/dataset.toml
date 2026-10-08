@@ -5313,3 +5313,15 @@ digest = "sha256:0141c76441205aa6bb46cbe11b1382d66ab7b139f2d01d65d217b69d0de4563
 name = "robot-coding-bench/humanoidbench-manip-window-i00-standard-realtime"
 digest = "sha256:644ea74934e769224704ca3a02b7ac51d6c04f15394d9a3364b70a5816366dc9"
 
+[[tasks]]
+name = "robot-coding-bench/roboolympics-airhockey-match-i00-standard-realtime"
+digest = "sha256:477b1087c96111b377b378958f551226162eb1d06d0f1d86ac456ef6d3a86e2f"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-badminton-match-i00-standard-realtime"
+digest = "sha256:b0d50e48eec23d6986537e810936d832c624417714d9d8476156bc5f52937835"
+
+[[tasks]]
+name = "robot-coding-bench/roboolympics-tabletennis-match-i00-standard-realtime"
+digest = "sha256:6e07702c67738254f7cb1d166aa87c8c416731115f3afba036af3664c09ff384"
+
