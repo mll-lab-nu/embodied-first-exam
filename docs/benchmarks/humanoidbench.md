@@ -62,7 +62,7 @@ Why these (no model's results enter the choice):
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
 | standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, replayed in a fresh simulator |
-| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (the standard-realtime mode's default, PROTOCOL §4b) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
+| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's exception, PROTOCOL §4.5; the mode's default is 0) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
 
 ### Standard mode's reset budget: 50
 
@@ -98,7 +98,7 @@ recorded before this change (budget 0) are a different configuration from today'
 In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
 chunks loses nothing. A real H1 does not wait. The standard-realtime mode (PROTOCOL §4b, protocol v1.1;
 `tasks/humanoidbench-*-i00-standard-realtime`, 10 tasks, one per family, `mode = "standard-realtime"`) is standard mode with the same
-instance, sensors, success rule, reset budget (50, the standard-realtime mode's default), wall clock (1 h) and client, on a
+instance, sensors, success rule, reset budget (50, HumanoidBench's exception to the mode's default of 0, PROTOCOL §4.5), wall clock (1 h) and client, on a
 clock that does not stop (`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which extends `rcb_service.py`; the
 wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMITED_MODE_PROTOCOL.md "Standard-realtime mode"):
 
@@ -133,7 +133,7 @@ that reads proprioception and streams targets at the control rate through the cl
 `cameras=[]` costs a few ms over the shared network namespace), run in the background, and improved between episodes.
 The agent's code still runs only in its own container, never next to the simulator (standard mode's isolation is
 kept); the 50 resets are what make that loop of writing, running and revising a controller possible at all, which is
-why the standard-realtime mode defaults to 50 resets rather than D1's 0.
+why HumanoidBench's standard-realtime tasks default to 50 resets rather than the mode's 0 (D1, PROTOCOL §4.5 and §4b).
 
 World-frame information (PROTOCOL D7): privileged mode gives the full state; standard mode gives none -- no root pose,
 no object or target pose; the room camera's pose is given in the robot's starting frame.
