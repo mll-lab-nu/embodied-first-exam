@@ -17,7 +17,8 @@ Sources (everything a rerun needs; a rerun reproduces the committed tasks, `git 
   cited positive (trial, batch, version, results-site log, Hugging Face replay) or, for the supplementary families without
   one, the 2026 challenge's official human demonstrations (`demo`: video, its duration, episodes, mean duration); `added`
   (optional) is the date of the pull request that added a supplementary family after the first 50 (default 2026-10-04): the
-  evidence and the README of those families cite that pull request's human review (REVIEW_PR below);
+  evidence and the README of those families cite that pull request's human review, REVIEW_PR below unless the family has its
+  own `review_pr`: a pull request number, or a batch name that REVIEW_PRS below resolves (the third batch: THIRD_BATCH_PR);
 - scripts/behavior/bddl/<family>.bddl: the task's BDDL problem (its :goal block is quoted in the privileged instruction;
   goal.py words the predicates it uses), as in the image's /behavior-src/bddl3/bddl/activity_definitions/<family>/problem0.bddl;
 - scripts/behavior/instances/<family>.json: the frozen instance (2026 challenge public_test instance 301 and its state
@@ -68,9 +69,14 @@ LAYER = {"environment/sim/rcb_limited.py": "rcb_limited.py", "environment/sim/rc
          "environment/client-requirements.txt": "client-requirements.txt"}           # the client's pip pins (client.env)
 TOOLING = ("rcb_behavior.py", "r1pro_primitives_eval.yaml")     # the privileged environment/ copies are the source
 IMAGE = "ghcr.io/mll-lab-nu/eai-behavior:0.1.1"
-# the pull request whose human review covers the families with an `added` date (PROTOCOL §2.7): its number goes here once it
-# exists, then rerun this script and `cd tasks && harbor add --scan .` (the texts change, hence the digests)
+# the pull request whose human review covers the families with an `added` date (PROTOCOL §2.7), unless a family names its own
+# `review_pr` in families.json: a pull request number, or a batch name resolved by REVIEW_PRS. REVIEW_PR is the second batch's
+# (the 16 families of 2026-10-07); THIRD_BATCH_PR is the pull request of the 23 families that completed the challenge's 100
+# (`"review_pr": "third_batch"`): "TBD" until it exists, then set it here (the one place), rerun this script and
+# `cd tasks && harbor add --scan .` (the README and task.toml of those 46 directories change, hence their digests).
 REVIEW_PR = "71"
+THIRD_BATCH_PR = "75"
+REVIEW_PRS = {"third_batch": THIRD_BATCH_PR}
 NO_ORACLE = ("No oracle: the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull request that adds it, on a positive "
              "example and a `nop` run per mode.")
 PARTIAL = ("Oracle `partial`: the reference solution scored 1 on earlier versions of this task (`task.toml` `oracle_evidence`) "
@@ -79,7 +85,7 @@ PARTIAL = ("Oracle `partial`: the reference solution scored 1 on earlier version
 NO_POSITIVE = ("No oracle and no verified positive example: the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull "
                "request that adds it, on the official human demonstrations and a `nop` run per mode; until a positive example "
                "scores 1, its results are reported separately from the tasks with a verified solution (PROTOCOL §7, open item 4).")
-NO_POSITIVE_PR = (f"No oracle; human review in PR #{REVIEW_PR} (PROTOCOL §2.7), on the official human demonstrations and a `nop` run per "
+NO_POSITIVE_PR = ("No oracle; human review in PR #{pr} (PROTOCOL §2.7), on the official human demonstrations and a `nop` run per "
                   "mode; until a positive example scores 1, its results are reported separately from the tasks with a verified "
                   "solution (PROTOCOL §7, open item 4).")
 REVIEW = {"full": "", "partial": PARTIAL, "none": NO_ORACLE, "none_demo": NO_POSITIVE, "none_demo_pr": NO_POSITIVE_PR}
@@ -151,7 +157,7 @@ def goal_block(bddl: str) -> str:
 def evidence(fam: str, e: dict, mode: str) -> str:
     if "positive" not in e:                       # no positive yet: the official human demonstrations (both modes)
         added = e.get("added")                  # a family added after the first 50 cites the pull request of its review
-        return EVIDENCE_DEMO.format(**e["demo"], added=added or "2026-10-04", review=f"in PR #{REVIEW_PR}" if added else "per family")
+        return EVIDENCE_DEMO.format(**e["demo"], added=added or "2026-10-04", review=f"in PR #{review_pr(e)}" if added else "per family")
     p = e["positive"]
     where = "privileged" if mode == "privileged" else f"the privileged twin {priv(fam)} on the same frozen instance and BDDL goal"
     return EVIDENCE.format(trial=p["trial"], batch=p["batch"], where=where, ran_at=p["ran_at"], log=p["log"], replay=p["replay"])
@@ -190,14 +196,21 @@ def details(rows: list[tuple[str, str]], sections: list[tuple[str, str]] = ()) -
     return out + "".join(f"\n### {t}\n{b}\n" for t, b in sections)
 
 
+def review_pr(e: dict) -> str:
+    """The pull request whose human review a family added after the first 50 cites: its own `review_pr` (a number, or a batch
+    name from REVIEW_PRS), else REVIEW_PR."""
+    v = e.get("review_pr")
+    return str(REVIEW_PRS.get(v, v) if v else REVIEW_PR)
+
+
 def review_key(e: dict) -> str:
     if e["oracle"] == "none" and "positive" not in e:
         return "none_demo_pr" if e.get("added") else "none_demo"
     return e["oracle"]
 
 
-def readme(name: str, task: str, difficulty: str, reference: str, verification: str, level: str, more: str) -> str:
-    review = f"\n\n{REVIEW[level]}" if REVIEW[level] else ""
+def readme(name: str, task: str, difficulty: str, reference: str, verification: str, level: str, more: str, pr: str = "") -> str:
+    review = f"\n\n{REVIEW[level].replace('{pr}', pr)}" if REVIEW[level] else ""
     return (f"# {name}\n\n## Task\n{task.strip()}\n\n## Difficulty\n{difficulty.strip()}\n\n## Reference solution\n{reference.strip()}\n\n"
             f"## Verification\n{verification.strip()}{review}\n\n{more}")
 
@@ -232,7 +245,7 @@ def readme_privileged(fam: str, e: dict) -> str:
             ("GPU", "an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`)"),
             ("Budget", "14400 s: every Python process pays ~3 min of Isaac Sim + scene load; ~7-11 control steps/s "
                        "(docs/benchmarks/behavior.md)")]
-    return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e), details(rows))
+    return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e), details(rows), review_pr(e))
 
 
 def readme_standard(fam: str, e: dict, text: str) -> str:
@@ -261,7 +274,7 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
             ("Budget", "14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md)")]
-    return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e), details(rows, [("Sidecar and grading", SIDECAR)]))
+    return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e), details(rows, [("Sidecar and grading", SIDECAR)]), review_pr(e))
 
 
 def standard_description(fam: str, seed: int, text: str) -> str:

@@ -1,0 +1,57 @@
+{
+ "task": "attach_a_camera_to_a_tripod",
+ "challenge_task": "attach_a_camera_to_a_tripod",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Attach the digital camera to the camera tripod. Both lie on the bedroom floor.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "a361fbe596e37781",
+ "action_dim": 25,
+ "challenge_max_steps": 5867,
+ "objects": {
+  "camera_tripod.n.01_1": {
+   "category": "camera_tripod",
+   "position": [
+    -3.1994,
+    1.1296,
+    0.8039
+   ],
+   "orientation_xyzw": [
+    0.0024,
+    -0.0002,
+    0.9836,
+    -0.1805
+   ]
+  },
+  "digital_camera.n.01_1": {
+   "category": "digital_camera",
+   "position": [
+    -3.4493,
+    0.4359,
+    0.0383
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.5966,
+    0.8025
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -4.4615,
+    1.9268,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

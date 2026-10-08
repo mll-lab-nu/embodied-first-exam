@@ -1,0 +1,36 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/behavior-cook-bacon-i00-privileged"
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) cook_bacon (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Cook the bacon. A tray with six slices of bacon is inside the kitchen refrigerator and a frying pan stands on the stove; cook all six slices and leave the refrigerator closed. Frozen scene instance (challenge public_test instance 301)."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "cook_bacon"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "behavior"            # BEHAVIOR-1K v3.9.2 = OmniGibson 3.9.2 on Isaac Sim (the 2026 challenge stack)
+robot = "r1pro"
+family = "cook_bacon"
+mode = "privileged"               # privileged state, unlimited resets, thin primitives (docs/PROTOCOL.md §3)
+oracle = "none"
+oracle_evidence = "No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (256 s on average); demonstration video (256 s): https://player.vimeo.com/video/1114061497 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #75 (protocol §2.7)."
+instance_seed = 301               # scene = environment/instance.json (2026 challenge public_test instance 301 + its state hash); identity = dataset.toml digest
+expert_time_estimate_hours = 3.0
+
+[verifier]
+timeout_sec = 5400.0              # two fresh-process replays: ~3 min Isaac + scene load each, then 7-11 control steps/s
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 14400.0             # BEHAVIOR budget: every Python process pays ~3 min of Isaac Sim + scene load, ~10 steps/s (docs/benchmarks/behavior.md)
+# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 8
+memory_mb = 24576
+
+[verifier.environment]
+build_timeout_sec = 1800.0
