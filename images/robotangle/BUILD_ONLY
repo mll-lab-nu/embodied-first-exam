@@ -1,0 +1,49 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION> is never public (docs/PROTOCOL.md §2.4, D5).
+The maintainers keep it as a non-public organisation package (visibility internal, org members only): 0.2.19 is pushed
+(sha256:66b8b157d350d28e43e0c43dbc9bd196a6d20a2e12b20fae57055bdeeb639590). Eval hosts pull it with an org login, or build it
+locally under that tag from the pinned HF dataset below; Harbor finds it in the local Docker image store.
+
+Why
+  The image contains Genesis AI's Nyx renderer (RoboTangle's RGB observations and replay videos), installed from binary
+  wheels on PyPI (gs-nyx) that carry no licence metadata. This is an internal release: every evaluation host builds the
+  image locally, and maintainers may keep a private organisation package for internal runners. The rest is Genesis 1.2.1 (Apache-2.0), libuipc (Apache-2.0) built with the determinism patches of the
+  release tree, PyTorch (BSD), the pinned pip locks of the release tree, the ALOHA 2 model (MuJoCo Menagerie, BSD-3-Clause)
+  and the Robotiq 2F-85 model (MuJoCo Menagerie).
+
+What the image is built from
+  - images/robotangle/Dockerfile: images/topogym/Dockerfile of the release commit, UIPC_WHEEL defaulting to prebuilt, plus
+    a last stage with every task's frozen instance (/opt/robotangle/instances/<base>/) and stage_instance.py.
+  - The build context, prepared by scripts/robotangle/fetch_image_context.sh in images/robotangle/context/ (git-ignored)
+    from the private Hugging Face dataset eai-v2-internal/robotangle-assets at the revision pinned in
+    scripts/robotangle/assets.json, every file checked against its sha256 there:
+      image/release-2dafa5f2b.tar.gz   the release tree (scripts/robotangle/release.json `release_commit`, dev/jianwen
+                                       2dafa5f2b): `git archive` of the paths images/topogym/Dockerfile copies;
+      image/uipc-prebuilt/             the audited libuipc wheel and its uipc-build.json (sha256 39781d19…, the wheel every
+                                       lab evidence image installed; nvcc output is not bit-reproducible, so a wheel
+                                       compiled on your host never matches the binding);
+      instances/                       every task's frozen instance (instance.json + instance_assets/).
+    Access: a member of eai-v2-internal, `hf auth login` (or HF_TOKEN in the environment; never printed).
+
+Host
+  blanket_flatten: on a GPU other than the one its frozen PBD states were prepared on (an RTX PRO 6000 Blackwell), the
+  task generates the birth state from the recipe frozen in the instance. It caches the state inside the container
+  ($TOPOGYM_INITIAL_STATE_CACHE, default /opt/rcb-cache), so a fresh container generates it again. Standard mode
+  generates in the sim startup (5-9 min for very_easy, on the agent's clock). Generated states are not oracle-validated
+  (docs/benchmarks/robotangle.md, GPU portability). The other families run on any supported GPU.
+  Linux x86_64 (not WSL: Nyx needs the NVIDIA Vulkan driver inside the container), an NVIDIA GPU with driver >= 580, Docker
+  with BuildKit (default `docker` driver) and the NVIDIA Container Toolkit with the `nvidia` runtime registered (the task
+  compose files use `runtime: nvidia` with NVIDIA_DRIVER_CAPABILITIES=all for Vulkan). Exactly one GPU per container (two
+  visible GPUs crash Nyx). Build: about 25 GB of free disk (11.3 GB image plus BuildKit cache); network access to docker.io,
+  pypi.org, download.pytorch.org and dl.polyhaven.org (the CC0 studio HDRI). Running needs no network. Read access to the HF
+  dataset is needed (above).
+
+Build (from the repository root)
+  scripts/robotangle/fetch_image_context.sh [<download dir>]
+  docker build -f images/robotangle/Dockerfile -t ghcr.io/mll-lab-nu/eai-robotangle:$(cat images/robotangle/VERSION) images/robotangle/context
+  (scripts/build_images.sh builds it from images/robotangle/BUILD_CONTEXT once the context exists and skips it otherwise.)
+  Optional, faster scene builds: images/topogym/warm_cache.sh of the context fills the kernel caches on a GPU host.
+
+Check a build: the image must install exactly the runtime every task is bound to
+  docker run --rm ghcr.io/mll-lab-nu/eai-robotangle:$(cat images/robotangle/VERSION) python -c 'import json; from topogym.simulator.frozen_binding import installed_runtime; print(json.dumps(installed_runtime(), sort_keys=True))' > /tmp/robotangle_runtime.json
+  python3 -c 'import json, sys; sys.exit(0 if json.load(open("/tmp/robotangle_runtime.json")) == json.load(open("scripts/robotangle/release.json"))["runtime"] else "image differs from the tasks runtime binding: do not run")'
+  Every session checks it again at start (`runtime_binding_ok` in reward.json) and refuses a different runtime.
