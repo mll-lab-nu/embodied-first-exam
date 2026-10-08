@@ -26,7 +26,8 @@ def public_source(ctx: pathlib.Path) -> dict:
 
 def main() -> int:
     ctx = pathlib.Path(sys.argv[1])
-    rt = json.loads((pathlib.Path(__file__).resolve().parent / "release.json").read_text())["runtime"]
+    rel = json.loads((pathlib.Path(__file__).resolve().parent / "release.json").read_text())
+    rt = rel["runtime"]
     bad = []
     src = public_source(ctx)
     if src != rt["source"]:
@@ -34,6 +35,12 @@ def main() -> int:
     uj = ctx / "images/topogym/uipc-prebuilt/uipc-build.json"
     if not uj.is_file() or hashlib.sha256(uj.read_bytes()).hexdigest() != rt["uipc_build_sha256"]:
         bad.append(f"{uj}: missing or not the audited uipc-build.json ({rt['uipc_build_sha256'][:12]}…)")
+    # the per-arch libuipc builds (release.json uipc_builds): the default one is the audited wheel above; a build with its
+    # own prefix is in the context as its dataset folder without "image/" (fetch_image_context.sh: image/uipc-sm86 -> uipc-sm86)
+    for arch, b in sorted(rel.get("uipc_builds", {}).items()):
+        bj = ctx / b["dataset"].removeprefix("image/") / "uipc-build.json" if b.get("prefix") else uj
+        if not bj.is_file() or hashlib.sha256(bj.read_bytes()).hexdigest() != b["uipc_build_sha256"]:
+            bad.append(f"{bj}: missing or not the {arch} uipc-build.json ({b['uipc_build_sha256'][:12]}…)")
     for b in bad:
         print("FAIL", b)
     if not bad:
