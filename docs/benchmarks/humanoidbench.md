@@ -61,7 +61,36 @@ Why these (no model's results enter the choice):
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
-| standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | none (optional capability, reported separately) | the recorded episode, replayed in a fresh simulator |
+| standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, replayed in a fresh simulator |
+
+### Standard mode's reset budget: 50
+
+HumanoidBench's standard configuration grants **50 resets** (`RCB_RESET_BUDGET` defaults to 50 in every
+`-standard` task's `environment/docker-compose.yaml`, so `spec()["budget"]["reset"]` is 50), by the owner's decision
+of 2026-10-07. Without one, the agent gets a single blind attempt: the H1 falls within 1-3 s of robot time under a
+first guess, and in standard mode there is no simulator to practise in. This is a per-benchmark exception to PROTOCOL
+D1's default of 0 (§4.5); results state the reset budget they ran under. What a reset does (`rcb_service.py`, the
+`eai-standard/2.1` service shared with KinDER and VLABench; `scripts/humanoidbench/shared/standard/`):
+
+- `POST /reset` (`r.reset()`) abandons the running episode, or follows one that has ended (`failed`: a fall or the
+  step limit; `error`), and starts a new one from the frozen instance: `Session.reset()` restores the robot, the scene,
+  the task state and the model-side goals, the same restore the verifier's fresh replay starts from. Each episode has
+  its own `max_control_steps`; the wall clock is the trial's and never restarts. The reply carries the start's images
+  and proprioception, `episode` and `resets_left`.
+- Refused (409) once an episode has succeeded (a success ends the trial), once the agent's time is up, or when the
+  budget is spent; then the running episode is the last one.
+- **Only the last episode is graded.** The finalize replays the episode since the last reset in a fresh simulator;
+  `trajectory.npz`, `replay.mp4` and `replay.last.png` are that episode. Since a success ends the trial at once, this
+  is the same as "the trial passes iff some episode passes and its replay agrees". Every episode stays in the
+  evidence: `trajectory_live.f64` journals every control step of the trial, `episode.jsonl` logs each reset (its
+  checkpoint's `ep_start` is where the new episode begins in the journal) and `calls/` each call.
+- `final.json` and `reward.json` report `reset_budget` (50), `resets` (used), `n_actions` (the graded episode's steps)
+  and `sim_steps` (every episode's, the cost); `final.json` also `episodes`.
+- A crash resumes the current episode (the one after the last reset), never a reset; the resets used survive it.
+
+`RCB_RESET_BUDGET=0 harbor run ...` runs the single-episode configuration (no `/reset`, 404); any other value N
+grants N. Results under a budget other than 50 are reported separately, and HumanoidBench standard-mode results
+recorded before this change (budget 0) are a different configuration from today's.
 
 World-frame information (PROTOCOL D7): privileged mode gives the full state; standard mode gives none -- no root pose,
 no object or target pose; the room camera's pose is given in the robot's starting frame.
@@ -93,8 +122,8 @@ harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .en
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
 ```
 `codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
-`codex-gpt6_luna-medium`); `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
-reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t
+`codex-gpt6_luna-medium`). Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
+with none (one episode), whose results are reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-humanoidbench:$(cat images/humanoidbench/VERSION) .` (from the
 repository root).
 
@@ -102,5 +131,6 @@ repository root).
 
 Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (verdict, cost, what happened),
 `reward.json`, the replay's last frame and videos are published on the results site, keyed by run id. Standard-mode
-runs with the optional reset capability (50 resets) are reported separately from the standard configuration (no
-reset, PROTOCOL D1), and runs recorded before protocol v1.0 are marked as such.
+results state their reset budget: the standard configuration is 50 resets (since 2026-10-07); runs with 0 -- every
+HumanoidBench standard-mode run recorded before that date -- are reported separately, and runs recorded before
+protocol v1.0 are marked as such.
