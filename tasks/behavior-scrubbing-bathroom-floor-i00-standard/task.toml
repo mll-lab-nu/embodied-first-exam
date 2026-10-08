@@ -40,7 +40,8 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end the episode (waits through a resume), replay twice in fresh processes, write final.json
-timeout_sec = 21600               # 6 h (user 2026-09-29): a 4 h episode can record 50k+ steps, replayed twice at ~14-20 steps/s, far slower on a loaded host
+timeout_sec = 37800               # 10.5 h = the episode end (up to 2 h through a resume) + two replays as long as the privileged
+                                  # grader allows (4 h each) + 30 min; measured on an 8-vCPU L40S: 626 s Isaac start, < 3.5 steps/s
 
 [agent]
 timeout_sec = 14400.0             # BEHAVIOR budget (Isaac Sim + scene load, ~10 steps/s), same as the privileged twin (docs/benchmarks/behavior.md)

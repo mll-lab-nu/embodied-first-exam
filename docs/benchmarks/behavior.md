@@ -165,7 +165,17 @@ BDDL goals; the BDDL problems are copied from the image. Their predicates are th
 - measured: the 9 positives used 2,251-12,791 s of agent time (median 7,917 s); 8 of the 9 would not have finished in
   the 3600 s default.
 
-The standard collect hook may take up to 6 h for the two replays of a long episode (`[[verifier.collect]] timeout_sec`).
+### Verifier time (2026-10-08)
+Time limits only; the pass rules are unchanged. Measured on an idle 8-vCPU L40S host (job #3137, a privileged can_meat
+trajectory of 10,475 control steps): the Isaac start took 626 s, and the replay had not finished when the old flat 3600 s
+per replay ran out, i.e. it ran slower than 3.5 control steps/s (AWS L40S/L4 and Slurm L40S hosts with 8 vCPU are the eval hosts).
+- **Privileged.** `tests/grade.py` gives each of the two fresh-process replays `min(4 h, max(3600 s, 1200 s + steps / 2))`:
+  20 min for the Isaac start plus a worst case of 2 control steps/s, never less than the old 3600 s, at most 4 h (enough for
+  26,400 steps at 2 steps/s, ~46,000 at 3.5). A replay over its limit is a grader error (`grader_error` = 1,
+  `replay_timed_out` = 1), as before. `[verifier] timeout_sec` = 30600 s: two capped replays plus 30 min.
+- **Standard.** The collect hook (`environment/sim/finalize.sh`) replays with the same tooling CLI and has no per-replay limit;
+  its `[[verifier.collect]] timeout_sec` = 37800 s (was 6 h): the episode end (up to 2 h through a resume) plus two 4 h
+  replays plus 30 min.
 
 ## Kit cache: one per trial
 Isaac keeps shaders and generated Python in its Kit cache (`/cache`). Every compose file names its cache volume without a

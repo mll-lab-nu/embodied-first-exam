@@ -35,6 +35,7 @@ No oracle; human review in PR #71 (PROTOCOL §2.7), on the official human demons
 | Crash recovery | `restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same episode after a crash (resume class `approx`, docs/STANDARD_MODE_2_2.md §13.1); startup watchdog `RCB_STARTUP_TIMEOUT_S` = 1800 s |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |
 | Budget | 14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md) |
+| Collect hook time | 37800 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + 30 min |
 
 ### Sidecar and grading
 The agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar
@@ -43,3 +44,6 @@ record in `/out`), which owns the scene and records the episode as a (T, 25) tra
 (`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes
 (Isaac: only the first replay in a process is bit-exact, and two simulators do not fit in one container) and writes
 `final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.
+
+### Change Log
+- 2026-10-08: collect-hook time limit only. `[[verifier.collect]] timeout_sec` is 37800 s (was 21600 s): the episode end (up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of min(4 h, max(3600 s, 1200 s + steps / 2))) plus 30 min; measured on an 8-vCPU L40S host (job #3137): the Isaac start took 626 s and a 10,475-step replay ran slower than 3.5 control steps/s. The replays still have no limit of their own. The scene, frozen instance and pass rule are unchanged, so the task keeps its name.

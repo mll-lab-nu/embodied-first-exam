@@ -115,6 +115,26 @@ SIDECAR = (
     "(`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes\n"
     "(Isaac: only the first replay in a process is bit-exact, and two simulators do not fit in one container) and writes\n"
     "`final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.")
+# The README Change Log (PROTOCOL §2.8: published tasks fixed in place), per mode, oldest first.
+REPLAY_LIMIT = "min(4 h, max(3600 s, 1200 s + steps / 2))"      # tests/grade.py replay_timeout(), per fresh-process replay
+MEASURED = ("measured on an 8-vCPU L40S host (job #3137): the Isaac start took 626 s and a 10,475-step replay ran slower than "
+            "3.5 control steps/s")
+CHANGES = {
+    "privileged": [
+        f"2026-10-08: verifier time limits only. `tests/grade.py` gives each of the two fresh-process replays {REPLAY_LIMIT} "
+        f"instead of a flat 3600 s, and `[verifier] timeout_sec` is 30600 s (was 5400 s), {MEASURED}, so long trajectories "
+        "hit the old limit as a grader error. The scene, frozen instance and pass rule are unchanged, so the task keeps its "
+        "name; a trial graded before this date with `grader_error` = 1 can be regraded."],
+    "standard": [
+        "2026-10-08: collect-hook time limit only. `[[verifier.collect]] timeout_sec` is 37800 s (was 21600 s): the episode end "
+        f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT}) "
+        f"plus 30 min; {MEASURED}. The replays still have no limit of their own. The scene, frozen instance and pass rule are "
+        "unchanged, so the task keeps its name."],
+}
+
+
+def change_log(mode: str) -> str:
+    return "\n### Change Log\n" + "".join(f"- {c}\n" for c in CHANGES[mode])
 
 
 def base(fam: str) -> str:
@@ -244,8 +264,10 @@ def readme_privileged(fam: str, e: dict) -> str:
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition), never baked in"),
             ("GPU", "an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`)"),
             ("Budget", "14400 s: every Python process pays ~3 min of Isaac Sim + scene load; ~7-11 control steps/s "
-                       "(docs/benchmarks/behavior.md)")]
-    return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e), details(rows), review_pr(e))
+                       "(docs/benchmarks/behavior.md)"),
+            ("Verifier time", f"each replay {REPLAY_LIMIT}; `[verifier] timeout_sec` 30600 s (two capped replays + 30 min)")]
+    return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e),
+                  details(rows) + change_log("privileged"), review_pr(e))
 
 
 def readme_standard(fam: str, e: dict, text: str) -> str:
@@ -273,8 +295,10 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                                "episode after a crash (resume class `approx`, docs/STANDARD_MODE_2_2.md §13.1); startup watchdog "
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
-            ("Budget", "14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md)")]
-    return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e), details(rows, [("Sidecar and grading", SIDECAR)]), review_pr(e))
+            ("Budget", "14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md)"),
+            ("Collect hook time", "37800 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + 30 min")]
+    return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e),
+                  details(rows, [("Sidecar and grading", SIDECAR)]) + change_log("standard"), review_pr(e))
 
 
 def standard_description(fam: str, seed: int, text: str) -> str:
