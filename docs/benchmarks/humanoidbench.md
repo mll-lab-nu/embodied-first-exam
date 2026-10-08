@@ -8,9 +8,9 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | simulator | MuJoCo 3.1.6 + dm_control, CPU |
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
-| tasks | 10 × 2 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged` and `-standard` (`eai-standard/2.1`) |
+| tasks | 10 × 3 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-realtime` (the realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
 | image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` (`images/humanoidbench/`) |
-| oracle | `sit_simple` (the fixture): full, both modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml) |
+| oracle | `sit_simple` (the fixture): full, all three modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml; realtime: approved by the owner in PR #83, 2026-10-08) |
 
 ## Tasks: upstream's 32, ours ✅ (9 scored + the `sit_simple` fixture)
 
@@ -62,6 +62,7 @@ Why these (no model's results enter the choice):
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
 | standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, replayed in a fresh simulator |
+| realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (the realtime mode's default, PROTOCOL §4b) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
 
 ### Standard mode's reset budget: 50
 
@@ -92,6 +93,48 @@ D1's default of 0 (§4.5); results state the reset budget they ran under. What a
 grants N. Results under a budget other than 50 are reported separately, and HumanoidBench standard-mode results
 recorded before this change (budget 0) are a different configuration from today's.
 
+### Realtime mode: time does not stop
+
+In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
+chunks loses nothing. A real H1 does not wait. The realtime mode (PROTOCOL §4b, protocol v1.1;
+`tasks/humanoidbench-*-i00-realtime`, 10 tasks, one per family, `mode = "realtime"`) is standard mode with the same
+instance, sensors, success rule, reset budget (50, the realtime mode's default), wall clock (1 h) and client, on a
+clock that does not stop (`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which extends `rcb_service.py`; the
+wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMITED_MODE_PROTOCOL.md "Realtime mode"):
+
+- **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
+  at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every 20 ms of wall time
+  (`RCB_SLOWDOWN` = S: every S × 20 ms; 1 by default, other values reported separately) until the episode ends. Each
+  episode after a reset starts paused again; so does an episode resumed after a crash.
+- **Actions.** The service keeps a plan, one target row per coming control step. `submit` expands its chunk exactly as
+  in 2.1 (rows `dt` apart, `linear` or `hold`) and writes it into the plan from control step `at` (default: the next
+  one), replacing what was planned from there, and answers at once with the robot as it is now. A row whose step has
+  already run when the request arrives is dropped (`late_steps`). When the plan runs out, the last target is held
+  (zero-order hold): a slow agent's robot keeps its last servo targets, as a position-controlled H1 would.
+- **Observations.** `get_obs()` is the robot now; `get_obs(seconds=s)` watches the next s seconds and returns what the
+  cameras saw, without touching the plan. `cameras=[]` returns proprioception only (the controller's call).
+- **Grading.** Unchanged: the journal (`trajectory_live.f64`) holds the sim row the simulator applied at every control
+  step, whatever was submitted, and the finalize replays the last episode's rows in a fresh simulator. The replay
+  therefore equals the live run however late or early the agent was; `deterministic` checks it. Evidence beside it:
+  `ticks.f64` (each step's wall time and the call that planned it; -1 = held), `calls.jsonl`, `submitted.f64` (every
+  row as sent), and in `final.json` `max_lag_s`, `stalls`, `held_steps`, `late_steps`.
+- **Timing guarantees.** The simulator thread runs a due control step before any waiting request; HumanoidBench's
+  physics takes 0.3–2.2 ms per control step (facts.json, `episode_seconds`) and a head-camera image about 0.5 ms on the
+  sidecar's GPU, against a 20 ms step. A service that falls behind runs the missed steps back to back; more than
+  0.5 s behind, it drops the debt (a stall) instead of fast-forwarding the robot.
+- **Crashes.** A simulator crash is an infrastructure failure, not the agent's (owner, 2026-10-08): past
+  `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed`, a failed resume `resume_failed`, and a simulator error that
+  ends the graded episode (`reason = "error"`) counts too; `final.json` and `reward.json` carry `infra_error = 1`.
+
+**What makes it a meaningful task.** A model's turn takes seconds; the H1 falls within 1-3 s of robot time without
+active balance; a whole episode is 20 s (cube: 10 s). An agent that answers each observation with a model call cannot
+keep the robot up, so the instruction says so and tells it to write a controller: a Python loop in its own container
+that reads proprioception and streams targets at the control rate through the client (a one-row call with
+`cameras=[]` costs a few ms over the shared network namespace), run in the background, and improved between episodes.
+The agent's code still runs only in its own container, never next to the simulator (standard mode's isolation is
+kept); the 50 resets are what make that loop of writing, running and revising a controller possible at all, which is
+why the realtime mode defaults to 50 resets rather than D1's 0.
+
 World-frame information (PROTOCOL D7): privileged mode gives the full state; standard mode gives none -- no root pose,
 no object or target pose; the room camera's pose is given in the robot's starting frame.
 
@@ -120,6 +163,8 @@ its model-API key in its container, so it could call a search-enabled model thro
 ```bash
 harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-hurdle-i00-standard
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
+harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-walk-i00-realtime
+harbor run -p tasks/humanoidbench-loco-sit-simple-i00-realtime -a oracle   # streams the same 999 rows
 ```
 `codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
 `codex-gpt6_luna-medium`). Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
@@ -133,4 +178,6 @@ Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (ve
 `reward.json`, the replay's last frame and videos are published on the results site, keyed by run id. Standard-mode
 results state their reset budget: the standard configuration is 50 resets (since 2026-10-07); runs with 0 -- every
 HumanoidBench standard-mode run recorded before that date -- are reported separately, and runs recorded before
-protocol v1.0 are marked as such.
+protocol v1.0 are marked as such. Realtime results (`-realtime`) are their own mode and are never pooled with
+standard ones; they state the reset budget and `slowdown`. Official runs use `slowdown` 1 (the default); results
+with `RCB_SLOWDOWN` ≠ 1 are reported separately from them (PROTOCOL §4b).

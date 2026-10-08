@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# task.toml: name matches folder, required metadata (docs/PROTOCOL.md §2.3, docs/TAXONOMY.md), deliverable dir, agent timeout cap.
+# task.toml: name matches folder, required metadata (docs/PROTOCOL.md §2.3, docs/TAXONOMY.md), deliverable dir, agent timeout cap (with per-benchmark exceptions).
 t="$1"; python3 - "$t" <<'PY'
 import sys, tomllib, pathlib
 t = pathlib.Path(sys.argv[1]); d = tomllib.load(open(t / "task.toml", "rb")); rc = 0
@@ -20,6 +20,11 @@ elif m["mode"] != suffix: fail(f"[metadata].mode = {m['mode']!r} but the directo
 if "tier" in m: fail("[metadata].tier was removed in protocol v1.0 (use mode)")
 if "/app/output/" not in d.get("artifacts", []): fail('top-level artifacts must include "/app/output/"')
 if not d.get("agent", {}).get("timeout_sec"): fail("[agent].timeout_sec required")
-elif d["agent"]["timeout_sec"] > 14400: fail("[agent].timeout_sec > 4h cap")
+else:
+    # PROTOCOL §2.3: 14400 s cap; per-benchmark exceptions by owner decision, recorded in PROTOCOL §2.3 (task-directory prefix -> cap)
+    BUDGET_EXCEPTIONS = {"robotangle-": 21600}   # RoboTangle, owner 2026-10-08 (issue #87)
+    cap = next((c for p, c in BUDGET_EXCEPTIONS.items() if t.name.startswith(p)), 14400)
+    if d["agent"]["timeout_sec"] > cap:
+        fail(f"[agent].timeout_sec > {cap} s cap" + (" (4h, PROTOCOL §2.3)" if cap == 14400 else " (documented exception, PROTOCOL §2.3)"))
 sys.exit(rc)
 PY

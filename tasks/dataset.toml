@@ -4857,3 +4857,43 @@ digest = "sha256:bcd3454da1d025561cd49379c330a500c627553a5f8356022de9444ca47ad05
 name = "robot-coding-bench/behavior-wash-a-baseball-cap-i00-standard"
 digest = "sha256:8e41c22f5a7f3b0c1137874d2841fc3e074a3ef4645faa1182b110f919b4d795"
 
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-balance-hard-i00-realtime"
+digest = "sha256:3bc849e4978c8d460622149681ef7de68acea397b865fb25349ecab14de2e2b6"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-realtime"
+digest = "sha256:07a0e363f302e169045cb1657b1d0aa8dbfe2fba7277cad7b385a753b9b516c2"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00-realtime"
+digest = "sha256:61e0d7446aeb1166c0e88a0169f40e37bae48d666af3a065bd6e6b0f0c20e5cd"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-loco-walk-i00-realtime"
+digest = "sha256:64807537534bcc06e61d31883112af37db4b099ca815731fea99c1650fa79e9f"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-bookshelf-simple-i00-realtime"
+digest = "sha256:9d0079f945ab17e1fe913f25e6117a484e70af701ba12a436a9a89611c1d84e9"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-cube-i00-realtime"
+digest = "sha256:f029c3a894980d4f8dc0743de18db414cb5e08d45d3e73b26e8dba43c276f4b5"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-door-i00-realtime"
+digest = "sha256:5da640207ccf505e9a3e5f11bfbb16da506c366f17c8587c7ad59d1f3083dc8e"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-powerlift-i00-realtime"
+digest = "sha256:9d638d785822688ecbd508caeaca7813dcb2115e713a945d535b3358950fae16"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-room-i00-realtime"
+digest = "sha256:0f69d1f68d980bee70e3a3c386035aeb6ef60a8e185e2fc3f6b3f0870aae9979"
+
+[[tasks]]
+name = "robot-coding-bench/humanoidbench-manip-window-i00-realtime"
+digest = "sha256:bb9f5d6ec8905c2e5192acf52ff935dd89214a0dda96d4a8b04543fdd1b2cf6c"
+

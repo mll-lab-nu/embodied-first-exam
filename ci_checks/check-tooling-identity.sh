@@ -12,6 +12,8 @@
 #    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE_2_2.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
 #    `restart: on-failure:N` with N >= 3 (PROTOCOL §4.1, §4.7).
+#    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboTangle) is held to the same rules, with rcb_limited.py and
+#    rcb_client.py from scripts/eai_standard/v2_4/ (docs/STANDARD_MODE_2_4.md) and 2.2's rcb1.py and run.sh.
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -27,6 +29,9 @@ LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "r
          "environment/sim/rcb1.py": "rcb1.py", "environment/sim/run.sh": "run.sh"}
 sha = lambda p: hashlib.sha256(open(p, "rb").read()).hexdigest()[:16]  # noqa: E731
 canon = {f: sha(os.path.join(src, f)) for f in set(LAYER.values()) if os.path.isfile(os.path.join(src, f))}
+V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (scripts/eai_standard/v2_4/); the rest is 2.2's
+canon24 = {f: sha(os.path.join(src, "v2_4" if f in V24 else "", f)) for f in set(LAYER.values())
+           if os.path.isfile(os.path.join(src, "v2_4" if f in V24 else "", f))}
 seen = collections.defaultdict(lambda: collections.defaultdict(dict))   # benchmark -> role -> {sha: first copy}
 dirs = collections.Counter(); bad = []; n_layer = 0
 
@@ -51,14 +56,17 @@ for t in sorted(os.listdir(tasks)):
         continue
     bench = t.split("-")[0]
     proto = str(tomllib.load(open(tt, "rb")).get("metadata", {}).get("protocol", ""))
-    if re.fullmatch(r"(eai-standard|rcb-limited)/2\.2", proto):
+    v24 = proto == "eai-standard/2.4"
+    if v24 or re.fullmatch(r"(eai-standard|rcb-limited)/2\.2", proto):
         n_layer += 1
+        ver, ref = ("2.4", canon24) if v24 else ("2.2", canon)
         for rel, f in sorted(LAYER.items()):
             p = os.path.join(tasks, t, rel)
+            srcf = f"scripts/eai_standard/{'v2_4/' if v24 and f in V24 else ''}{f}"
             if not os.path.isfile(p):
-                bad.append(f"{t}: {rel} missing (eai-standard/2.2 layer, scripts/eai_standard/{f})")
-            elif sha(p) != canon.get(f):
-                bad.append(f"{t}: {rel} differs from scripts/eai_standard/{f} (regenerate the task)")
+                bad.append(f"{t}: {rel} missing (eai-standard/{ver} layer, {srcf})")
+            elif sha(p) != ref.get(f):
+                bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
         cf = os.path.join(tasks, t, "environment/docker-compose.yaml")
         blk = sim_service(cf) if os.path.isfile(cf) else ""
         m = re.search(r"^\s*restart:\s*[\"']?on-failure:(\d+)", blk, re.M)
@@ -80,12 +88,12 @@ for t in sorted(os.listdir(tasks)):
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for b, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 if bad:
-    print("FAIL shared sources (byte-identical copies; the 2.2 layer as in scripts/eai_standard/):")
+    print("FAIL shared sources (byte-identical copies; the 2.2 / 2.4 layers as in scripts/eai_standard/):")
     for b in bad[:60]:
         print("  -", b)
     if len(bad) > 60:
         print(f"  ... {len(bad) - 60} more")
     sys.exit(1)
 print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo tasks")
-      + f"; the eai-standard/2.2 layer in {n_layer} task dirs")
+      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs")
 PY

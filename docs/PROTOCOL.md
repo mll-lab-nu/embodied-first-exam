@@ -4,7 +4,8 @@ Status: **final** (2026-09-30; v1.0.1 2026-10-01: both modes carry a suffix, no 
 task README; **v1.1 2026-10-08: a third mode, realtime (§4b), served by `eai-standard/2.3`; protocol-change issue #86**).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard mode is specified in
 [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`, and the realtime mode's `eai-standard/2.3`);
-its 2.2 extension in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md).
+its 2.2 extension in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md), and the 2.4 operations capability in
+[`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md) (2026-10-08, issue #89).
 
 > **Names.** v1.0 renamed the two modes (unlimited → **privileged**, limited → **standard**) and the standard-mode
 > protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**); task directories end in `-privileged` or `-standard`. Base images
@@ -44,14 +45,14 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exception (owner, 2026-10-07): HumanoidBench standard defaults to N = 50 (§4.5). The realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exception (owner, 2026-10-07): HumanoidBench standard defaults to N = 50 (§4.5). The realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
 | D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. RoboCasa, RoboCasa365 and RoboCasa-GR1 on robosuite), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
-| D8 | Agent time budget | 3600 s by default; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. |
+| D8 | Agent time budget | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboTangle 21600 s (owner, 2026-10-08). |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. A transparent usage gateway that forwards requests unchanged and only records token usage (`scripts/usage_gateway/`) is allowed. |
@@ -62,7 +63,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 1. `task.toml`, `instruction.md`, `README.md`, `environment/Dockerfile`, `tests/test.sh` (executable), `tests/Dockerfile`. [CI] `solution/solve.sh` depending on the oracle level (§2.7). [new]
 2. `[task].name = "robot-coding-bench/<folder>"`; required metadata present and valid (§2.3). [CI]
-3. Top-level `artifacts` includes `"/app/output/"`; `[agent].timeout_sec` set and ≤ 14400. [CI]
+3. Top-level `artifacts` includes `"/app/output/"`; `[agent].timeout_sec` set and ≤ 14400, or ≤ the benchmark's documented exception (§2.3). [CI]
 4. Every image reference pinned to a tag or digest, never `:latest`. [CI]
 5. `[verifier] environment_mode = "separate"`; `tests/Dockerfile` copies `test.sh`. [CI]
 6. `instruction.md` names the deliverable under `/app/output/` and never mentions `/tests/`. [CI]
@@ -106,15 +107,25 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `[task].description`, `authors`, `keywords` | SHOULD | [current] |
 | `[metadata]`: `author_name`, `task_type ∈ {trajectory, policy}`, `simulator`, `robot`, `family`, `mode ∈ {privileged, standard, realtime}`, `expert_time_estimate_hours` | MUST | [CI] |
 | `tier` | MUST NOT | [CI] (`privileged` → `mode = "privileged"`, `perception` → `mode = "standard"`) |
-| Standard tasks: `protocol = "eai-standard/2.1"` or `"eai-standard/2.2"`; realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
+| Standard tasks: `protocol = "eai-standard/2.1"`, `"eai-standard/2.2"` or `"eai-standard/2.4"`; realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
 | `oracle ∈ {full, partial, none}`; `oracle_evidence` when not `full` | MUST | [CI] |
 | `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
 | `instance_seed`; benchmark-specific fields registered in TAXONOMY | MAY | [current] |
 | Top-level `artifacts` includes `"/app/output/"` | MUST | [CI] |
-| `[agent].timeout_sec` set, ≤ 14400; 3600 unless justified (uniform within a benchmark) | MUST / SHOULD | [CI] / [new] |
+| `[agent].timeout_sec` set, ≤ 14400 (per-benchmark exceptions below); 3600 unless justified (uniform within a benchmark) | MUST / SHOULD | [CI] / [new] |
 | `[verifier].environment_mode = "separate"` | MUST | [CI] |
 | `[verifier].timeout_sec`, `[environment]` `cpus` / `memory_mb` / `build_timeout_sec` | SHOULD | [current] |
 | `[environment].gpus` (unsupported by Harbor's local Docker sandbox; see §2.4) | MUST NOT | [current] |
+
+**Per-benchmark agent budget exceptions.** A benchmark's tasks may set `[agent].timeout_sec` above 14400 s only by owner
+decision. The decision is recorded here, in `docs/benchmarks/<bench>.md`, and in the exception table of
+`ci_checks/check-task-fields.sh`. The budget is uniform within the benchmark, in both modes. A standard sidecar's wall
+clock (`RCB_WALL_CLOCK_S`, `/spec.budget.wall_clock_s`) equals it. That benchmark's results state the budget and are
+compared only with results under the same budget (D8). The token budget (D10) is unchanged.
+- **RoboTangle** (owner, 2026-10-08; issue #87): 21600 s (6 h) for every task. The topological puzzles are much
+  harder than typical robotics tasks (reference executions take 2–185 min of simulated work), and the benchmark's
+  owner sets the budget to probe the capability ceiling. Simulator speed-ups add interaction within it; they never
+  shorten it (`docs/benchmarks/robotangle.md`, added with the tasks in #81).
 
 ### 2.4 Images, registry, GPU
 
@@ -224,8 +235,8 @@ example → nop result → predicate summary*. The reviewer checks:
 ## 4. Standard mode (`mode = "standard"`): `eai-standard/2.x`
 
 Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are in
-[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (2.1) and [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md) (2.2). This
-section lists what is required.
+[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (2.1), [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md) (2.2) and
+[`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md) (2.4). This section lists what is required.
 
 ### 4.0 Versions
 | Version | Date | Content |
@@ -236,8 +247,9 @@ section lists what is required.
 | **eai-standard/2.1** | 2026-09-30 | rename only; identical to rcb-limited/2.1 including crash recovery. **Current.** |
 | eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md)) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite and DexJoCo |
 | eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Realtime mode"); every 2.2 addition stays a MAY. Served by realtime-mode tasks only (HumanoidBench); standard tasks stay on 2.1 / 2.2. Issue #86 |
+| eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md)): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
-Standard services report `eai-standard/2.1` or `eai-standard/2.2`, realtime services `eai-standard/2.3`; the shipped clients
+Standard services report `eai-standard/2.1`, `eai-standard/2.2` or `eai-standard/2.4`, realtime services `eai-standard/2.3`; the shipped clients
 accept every 2.x version and the former `rcb-limited/2.x` spelling as well.
 
 **Core rules.** The simulator runs in a sidecar the agent cannot open; four endpoints; RCB1 binary responses; no
@@ -402,6 +414,16 @@ recovery of §4.7 (with the per-simulator resume rule); the shared implementatio
 submit), and the evidence of §4b. Every 2.2 addition stays a MAY capability, so a 2.1 service with the realtime capability
 is a 2.3 service. Only realtime-mode tasks serve it (§4b); 2.x clients connect to it unchanged, and the timing semantics
 are declared in `/spec.timing` and the task's instruction.
+
+**`eai-standard/2.4`** (2026-10-08, issue #89; [`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md)). 2.3 plus the operations
+capability: `meta.operation_id` and `meta.request_deadline_unix_s` on `/submit` and `/observe` (408 for an expired request,
+409 for an id already admitted: a call is never executed twice), `GET /operations/<id>` (`admitted`, `completed`, `error`,
+`interrupted` with `execution_uncertain` after a crash), a service-owned watchdog that ends a hung native call as an infra
+error, a physics-tick ledger that resumes replay with the ticks each row took, and fsynced journals. Every earlier addition
+(2.2's, and 2.3's realtime capability) stays a MAY, so a 2.2 service with the operations capability is a 2.4 service;
+standard tasks may declare it, realtime tasks stay on 2.3. The reference implementation is `scripts/eai_standard/v2_4/`
+(`rcb_limited.py`, `rcb_client.py`; `rcb1.py` and `run.sh` are 2.2's), copied unchanged into every 2.4 task. First
+served by RoboTangle, whose release named it "2.3" before that number went to the realtime capability.
 
 **Not accepted:** step caps; single-control `step()` calls.
 

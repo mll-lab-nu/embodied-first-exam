@@ -6,8 +6,8 @@
 #   - every FROM is CLIENT_IMAGE;
 #   - every `pip install` installs the pins: `-r <file>` with a byte-identical copy of client-requirements.txt in the
 #     build context, or the full pin list inline (name==version for every pin, nothing else).
-# A failure for the eai-standard/2.2 tasks, whose generators copy client.env and the pins (BEHAVIOR-1K, RoboLab,
-# RoboWits, RoboPaint). For every other task it only reports (a warning, never a failure) whether all standard tasks
+# A failure for the eai-standard/2.2 and 2.4 tasks, whose generators copy client.env and the pins (BEHAVIOR-1K, RoboLab,
+# RoboWits, RoboPaint; RoboTangle on 2.4). For every other task it only reports (a warning, never a failure) whether all standard tasks
 # share the one client image of client.env (their own pip pins are their benchmark's business; PROTOCOL §7, open).
 # Usage: check-standard-client.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
@@ -83,7 +83,7 @@ for t in sorted(os.listdir(tasks)):
         if os.path.isfile(df):
             probs += [f"{sub}/Dockerfile: {p}" for p in pip_problems(df, os.path.join(tasks, t, sub))]
             froms += re.findall(r"^\s*FROM\s+(\S+)", re.sub(r"\\\n", " ", open(df).read()), re.M | re.I)
-    is22 = bool(re.fullmatch(r"(eai-standard|rcb-limited)/2\.2", str(meta.get("protocol", ""))))
+    is22 = bool(re.fullmatch(r"(eai-standard|rcb-limited)/2\.2|eai-standard/2\.4", str(meta.get("protocol", ""))))   # 2.2 and 2.4 layers
     n22 += is22
     v1 += 1
     if any(f != IMAGE for f in froms):
@@ -101,6 +101,6 @@ if v1_off:
 else:
     print(f"ok one client image: all {v1} standard task dirs FROM {IMAGE}")
 if not bad:
-    print(f"ok standard client: {n22} eai-standard/2.2 task dirs on the client image with the shared pins")
+    print(f"ok standard client: {n22} eai-standard/2.2 / 2.4 task dirs on the client image with the shared pins")
 sys.exit(1 if bad else 0)
 PY

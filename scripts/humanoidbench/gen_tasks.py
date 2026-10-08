@@ -18,6 +18,10 @@ everything the tasks have in common, `shared/` the one real copy of the tooling 
                                           # behaves differently from the verifier's  (needs mujoco)
     ./gen_tasks.py measure-standard [family ...] # check + time the standard twins' sim service (needs a GPU)
 
+Every task with a [task.standard] table is rendered three times, once per mode (docs/PROTOCOL.md D12):
+`<base>-privileged`, `<base>-standard` and `<base>-realtime` (the realtime mode, §4b: standard mode on a clock that does
+not stop, eai-standard/2.3; templates/realtime/, shared/realtime/).
+
 `render` writes everything in tasks/ but the instances, which only `instance` draws, and the results/ of agent runs;
 it is idempotent:
 run it after editing a template or a prose field and every task picks the change up at once.
@@ -455,6 +459,63 @@ def render_standard(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASK
     return out
 
 
+# --------------------------------------------------------------------------- realtime mode
+# The realtime task (`<base>-realtime`, mode = "realtime", eai-standard/2.3; docs/PROTOCOL.md §4b): the standard twin's
+# sidecar, client and verifier, except that the service runs the episode on a clock that does not stop
+# (shared/realtime/rcb_realtime.py, which extends rcb_service.py unchanged) and the agent gets the realtime client
+# (`submit(..., at=)`, `cameras=[]`). Same instance, same success rule; reset budget `realtime_reset_budget` (50, the
+# realtime mode's default); the instruction tells the agent to drive the robot with a controller program.
+REALTIME_TEMPLATES = HERE / "templates" / "realtime"
+REALTIME = HERE / "shared" / "realtime"
+
+
+def realtime_dir_name(t: dict, instance_tag: str) -> str:
+    return base_dir_name(t, instance_tag) + "-realtime"
+
+
+# A recorded episode (a trajectory) is solvability evidence here too: planned from step 0 (`at`), its rows run at the
+# same control steps.
+REALTIME_EVIDENCE = ("; in realtime, the same rows planned into the episode from step 0 (submit's `at`) run at the "
+                     "same control steps and are graded the same")
+
+
+def realtime_context(t: dict, defaults: dict, facts: dict) -> dict:
+    ctx = standard_context(t, defaults, facts)
+    ev = t.get("oracle_evidence", "")
+    ev += REALTIME_EVIDENCE if "trajectory" in ev else ""      # a recorded episode, not "none known" or an RL score
+    # the realtime tasks' own human review: the pull request that added them (realtime_review_pr; 0: not opened yet)
+    review = {**defaults, "review_pr": defaults.get("realtime_review_pr", 0)}
+    oracle = oracle_fields({**t, "oracle_evidence": ev}, review, "realtime")
+    return ctx | {
+        "base_dir": base_dir_name(t, defaults["instance_tag"]),
+        "control_ms": f"{1000 / facts['standard']['control_hz']:g}",
+        "reset_budget": int(defaults["realtime_reset_budget"]),   # the compose default: spec()["budget"]["reset"]
+        "reference_solution": t.get("realtime_reference_solution", NO_ORACLE),
+        **oracle,
+    }
+
+
+def render_realtime(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASKS_DIR) -> Path:
+    ctx = realtime_context(t, defaults, facts)
+    out = tasks_dir / realtime_dir_name(t, defaults["instance_tag"])
+    clear(out)
+    write_templates(out, REALTIME_TEMPLATES, [
+        ("instruction.md", "instruction.md"), ("README.md", "README.md"), ("task.toml", "task.toml"),
+        ("docker-compose.yaml", "environment/docker-compose.yaml")], ctx, md_width=110, items=True)
+    write_templates(out, STANDARD_TEMPLATES, [
+        ("Dockerfile", "environment/Dockerfile"), ("tests.Dockerfile", "tests/Dockerfile"),
+        ("test.sh", "tests/test.sh")], ctx, md_width=110, items=True)
+    sim = write_sim_dir(t, defaults, out / "environment" / "sim")
+    shutil.copyfile(REALTIME / "rcb_realtime.py", sim / "rcb_realtime.py")
+    for src, rel in [(REALTIME / "rcb_client.py", "environment/rcb_client.py"),
+                     (STANDARD / "rcb1.py", "environment/rcb1.py"), (STANDARD / "grade.py", "tests/grade.py")]:
+        shutil.copyfile(src, out / rel)
+    shutil.copyfile(CLIENT_REQUIREMENTS, out / "environment/client-requirements.txt")
+    copy_oracle(t, "realtime", out)
+    normalize(out)
+    return out
+
+
 # --------------------------------------------------------------------------- simulator-backed commands
 def unresolved_calls(family: str) -> list[str]:
     """What the restored formula calls on self that the task class does not have. The all-zero episode cannot find
@@ -628,6 +689,7 @@ def cmd_render(args) -> int:
         print("rendered", render(t, defaults, facts[t["family"]]).relative_to(ROOT))
         if "standard" in t:
             print("rendered", render_standard(t, defaults, facts[t["family"]]).relative_to(ROOT))
+            print("rendered", render_realtime(t, defaults, facts[t["family"]]).relative_to(ROOT))
     return 0
 
 
@@ -639,7 +701,8 @@ FORMULA = re.compile(r"\b(?:bounds|margin|value_at_margin)\s*=|\brewards\.tolera
 
 def leaks(task: Path, families: set[str]) -> list[str]:
     toml = tomllib.loads((task / "task.toml").read_text())
-    own, standard = toml["metadata"]["family"], toml["metadata"]["mode"] == "standard"
+    # standard and realtime tasks score in the sim sidecar (environment/sim/), privileged ones in tests/
+    own, standard = toml["metadata"]["family"], toml["metadata"]["mode"] in ("standard", "realtime")
     home = task / ("environment/sim" if standard else "tests")               # where the formula has to be
     agent_side = [f for f in sorted((task / "environment").rglob("*"))
                   if f.is_file() and not (standard and home in f.parents)]
@@ -676,6 +739,7 @@ def cmd_check(args) -> int:
             rendered.add(render(t, defaults, facts[t["family"]], Path(tmp)).name)
             if "standard" in t:
                 rendered.add(render_standard(t, defaults, facts[t["family"]], Path(tmp)).name)
+                rendered.add(render_realtime(t, defaults, facts[t["family"]], Path(tmp)).name)
         for name in sorted(rendered):
             failed += _diff(filecmp.dircmp(TASKS_DIR / name, Path(tmp) / name, ignore=["results", "__pycache__"]), name)
     failed += [f"tasks/{p.name}: no longer rendered" for p in sorted(TASKS_DIR.glob("humanoidbench-*"))
