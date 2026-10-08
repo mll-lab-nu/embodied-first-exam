@@ -1,0 +1,14 @@
+{
+ "methods": [
+  {
+   "cls": "Hurdle",
+   "module": "humanoid_bench.envs.basic_locomotion_envs",
+   "name": "get_reward",
+   "source": "def get_reward(self):\n    self.wall_collision_ids = [\n        self._env.named.data.geom_xpos.axes.row.names.index(wall_name)\n        for wall_name in [\n            \"left_barrier_collision\",\n            \"right_barrier_collision\",\n            \"behind_barrier_collision\",\n        ]\n    ]\n\n    standing = rewards.tolerance(\n        self.robot.head_height(),\n        bounds=(_STAND_HEIGHT, float(\"inf\")),\n        margin=_STAND_HEIGHT / 4,\n    )\n    upright = rewards.tolerance(\n        self.robot.torso_upright(),\n        bounds=(0.8, float(\"inf\")),\n        sigmoid=\"linear\",\n        margin=1.9,\n        value_at_margin=0,\n    )\n    stand_reward = standing * upright\n    small_control = rewards.tolerance(\n        self.robot.actuator_forces(),\n        margin=10,\n        value_at_margin=0,\n        sigmoid=\"quadratic\",\n    ).mean()\n    small_control = (4 + small_control) / 5\n    com_velocity = self.robot.center_of_mass_velocity()[0]\n    move = rewards.tolerance(\n        com_velocity,\n        bounds=(self._move_speed, float(\"inf\")),\n        margin=self._move_speed,\n        value_at_margin=0,\n        sigmoid=\"linear\",\n    )\n    move = (5 * move + 1) / 6\n    wall_collision_discount = 1\n\n    for pair in self._env.data.contact.geom:\n        if any(\n            [\n                wall_collision_id in pair\n                for wall_collision_id in self.wall_collision_ids\n            ]\n        ):  # for no hand. if for hand, > 155\n            wall_collision_discount = 0.1\n            # print(pair)\n            break\n\n    reward = small_control * stand_reward * move * wall_collision_discount\n\n    return reward, {\n        \"stand_reward\": stand_reward,\n        \"small_control\": small_control,\n        \"move\": move,\n        \"standing\": standing,\n        \"upright\": upright,\n        \"wall_collision_discount\": wall_collision_discount,\n    }"
+  }
+ ],
+ "module_globals": {
+  "humanoid_bench.envs.basic_locomotion_envs": "_CRAWL_HEIGHT = 0.8\n_STAND_HEIGHT = 1.65"
+ },
+ "task_class": "humanoid_bench.envs.basic_locomotion_envs.Hurdle"
+}
