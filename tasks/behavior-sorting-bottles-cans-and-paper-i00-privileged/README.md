@@ -7,7 +7,7 @@
 | Twin | `behavior-sorting-bottles-cans-and-paper-i00-standard` |
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `sorting_bottles_cans_and_paper` / seed 301 |
-| Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (342 s on average); demonstration video (312 s): https://www.youtube.com/embed/h8-XZ85UxSU (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #TBD (protocol §2.7). |
+| Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (342 s on average); demonstration video (312 s): https://www.youtube.com/embed/h8-XZ85UxSU (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #75 (protocol §2.7). |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-behavior:0.1.1` |
 
@@ -31,7 +31,7 @@ holds after every replay, the final-state hashes agree and the rebuilt frozen in
 (`tests/grade.py`), plus `/logs/verifier/replay.mp4`. A fresh process reproduces the live run bit for bit (the replay
 starts from the loaded state, no reset); an in-process reset is only approximate, hence two fresh processes.
 
-No oracle; human review in PR #TBD (PROTOCOL §2.7), on the official human demonstrations and a `nop` run per mode; until a positive example scores 1, its results are reported separately from the tasks with a verified solution (PROTOCOL §7, open item 4).
+No oracle; human review in PR #75 (PROTOCOL §2.7), on the official human demonstrations and a `nop` run per mode; until a positive example scores 1, its results are reported separately from the tasks with a verified solution (PROTOCOL §7, open item 4).
 
 ## Details
 | | |

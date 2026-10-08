@@ -75,7 +75,7 @@ IMAGE = "ghcr.io/mll-lab-nu/eai-behavior:0.1.1"
 # (`"review_pr": "third_batch"`): "TBD" until it exists, then set it here (the one place), rerun this script and
 # `cd tasks && harbor add --scan .` (the README and task.toml of those 46 directories change, hence their digests).
 REVIEW_PR = "71"
-THIRD_BATCH_PR = "TBD"
+THIRD_BATCH_PR = "75"
 REVIEW_PRS = {"third_batch": THIRD_BATCH_PR}
 NO_ORACLE = ("No oracle: the family is reviewed by a maintainer (PROTOCOL §2.7) in the pull request that adds it, on a positive "
              "example and a `nop` run per mode.")
