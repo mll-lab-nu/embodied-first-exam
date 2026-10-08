@@ -2922,6 +2922,44 @@ def _accept_realized_identities() -> None:
         pbd.restore_declared_initial_state = restore_declared_initial_state
 
 
+# --------------------------------------------------------------------------- frozen generated assets (IPC ropes)
+# The IPC rope volume meshes (knot_untying, rope_threading) come from tetgen, whose interior points depend on the last bits of its input surface
+# (numpy SIMD rounding): on a CPU of another instruction-set class it inserts other interior points (measured
+# 2026-10-08, AVX2 vs AVX-512: knot medium 32212 vs 32280 vertices, hard 40769 vs 40747), and the frozen IPC settled
+# state, stored per vertex, no longer fits; other CPUs (the maintainers' AMD EPYC 7R13) may differ for rope_threading too. These
+# instances carry the mesh they were frozen with
+# (instance_assets/frozen_assets/rope_volume.npz, sha256 = the instance's asset_identity entry): it replaces the generated
+# file before the task reads it, so every CPU builds the frozen mesh.
+_FROZEN_ASSETS: dict = {}          # generated file name -> the active instance's frozen copy
+
+
+def _install_frozen_assets(instance_dir, identity: dict) -> None:
+    import shutil
+    _FROZEN_ASSETS.clear()
+    folder = Path(instance_dir) / "instance_assets" / "frozen_assets"
+    for path in sorted(folder.iterdir()) if folder.is_dir() else []:
+        if path.is_file():
+            if hashlib.sha256(path.read_bytes()).hexdigest() != identity.get(path.name):
+                raise InstanceMismatch(f"frozen asset {path.name} is not the generated asset this instance records")
+            _FROZEN_ASSETS[path.name] = path
+    if not _FROZEN_ASSETS:
+        return
+    import topogym.tasks.knot_untying.common as knot
+    import topogym.tasks.rope_threading.common as rope
+    for module in (knot, rope):
+        if getattr(module.load_centerline_map, "_rcb_frozen", False):
+            continue
+        load = module.load_centerline_map
+
+        def load_centerline_map(volume, *args, _load=load, **kwargs):   # declare(): after the volume is final
+            frozen = _FROZEN_ASSETS.get(Path(volume).name)
+            if frozen is not None:
+                shutil.copyfile(frozen, volume)
+            return _load(volume, *args, **kwargs)
+        load_centerline_map._rcb_frozen = True
+        module.load_centerline_map = load_centerline_map
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
@@ -2955,6 +2993,7 @@ class Session:
                 self.runtime_binding = dict(binding_id=binding_id(lock), runtime=runtime, uipc_build=self.uipc_build,
                                             creation_source=lock["creation_source"], image=lock["image"])
                 _accept_realized_identities()      # the binding pins the generator: archives accept this host's asset bytes
+                _install_frozen_assets(Path(instance).resolve().parent, inst.get("asset_identity") or {})
             eval_index = inst["eval_index"]
             cfg = dict(inst["simulator"])       # the frozen configuration: the task directory's own copy
             cfg["task_parameters"] = dict(cfg.get("task_parameters", {}))

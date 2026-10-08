@@ -77,11 +77,12 @@ and, since 0.2.21, the sm_86 build of the same recipe with its `uipc-build.json`
 
 ## Image
 
-`ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>` (0.2.21) is a public image, pushed by the maintainers after
+`ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>` (0.2.22) is a public image, pushed by the maintainers after
 validation. It contains Genesis AI's Nyx renderer (the `gs-nyx` wheels on PyPI); the benchmark owner has permission to
 redistribute it in this image.
 
-0.2.21 is 0.2.19 plus the NVIDIA Vulkan ICD and EGL vendor files and the sm_86 libuipc build (GPU architecture, below).
+0.2.21 is 0.2.19 plus the NVIDIA Vulkan ICD and EGL vendor files and the sm_86 libuipc build (GPU architecture, below). 0.2.22 adds the frozen rope meshes of the IPC instances (CPU instruction-set class, below): the published 0.2.21 image
+plus one layer with those files, content-identical to a full build from the pinned dataset revision.
 0.2.20, 0.2.19 plus the ICD and EGL files only, was built for validation and never pushed. 0.2.19 was an internal
 organisation package. The build context comes from the private HF dataset (Large files, above). That dataset stays
 internal; only the built image is public. Build instructions are in images/robotangle/README.md.
@@ -180,6 +181,11 @@ state the 6 h budget and are compared only with results under the same budget (D
   live episode and the fresh replay realize it alike. Hosts that reproduce the frozen bytes are unaffected. Exactness
   against the reference hosts is recorded, not required: software (the runtime binding) and data (the frozen
   instance) must be identical, and live and replay on the evaluation host must agree;
+- knot_untying's rope volume mesh: tetgen's interior points depend on the same rounding, and on an AVX2-only CPU knot
+  medium and hard got another mesh (32212 vs 32280 and 40769 vs 40747 vertices), which their frozen IPC settled state
+  does not fit. From image 0.2.22 every IPC instance (knot_untying, rope_threading) carries the mesh it was frozen with
+  (`instance_assets/frozen_assets/rope_volume.npz`, the sha256 its asset identity records), and the tooling uses it
+  instead of regenerating it (rope_threading's meshes matched on the AVX2 CPUs checked, but other CPUs may differ);
 - GPU families are graded strictly live and tolerantly on replay, with the tolerances in each task's README Details.
 
 ## Standard mode: `eai-standard/2.4`

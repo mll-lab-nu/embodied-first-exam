@@ -201,6 +201,12 @@ def changes(mode: str) -> list[str]:
         + (" and the sim service" if mode == "standard" else "") + " record `instance_realized` and `assets_exact`. A host "
         "that reproduces the frozen bytes runs exactly as before. The tooling hash changes; the image, scene, frozen instance "
         "and pass rule are unchanged, so the task keeps its name.",
+        "- 2026-10-08 (3): base image 0.2.21 -> 0.2.22. The image adds, for the eight IPC instances (knot_untying, "
+        "rope_threading), the rope volume mesh each was frozen with (`instance_assets/frozen_assets/rope_volume.npz`, the sha256 "
+        "its asset identity records), and the tooling uses it instead of regenerating it: tetgen's interior points depend on "
+        "the CPU's floating-point rounding, and on CPUs without AVX-512 knot_untying medium and hard got another mesh, which "
+        "their frozen settled state does not fit. Nothing else in the image changes. The scene, frozen instance and pass rule are unchanged, so the task "
+        "keeps its name.",
     ]
 
 
@@ -221,7 +227,15 @@ def binding(base: str, inst_dir: pathlib.Path | None = None) -> bytes:
     assert lock["instance_sha256"] == pinned, f"{base}: the bound instance is not the one pinned in assets.json"
     prefix = f"instances/{base}/"
     pinned_assets = {k[len(prefix):]: v for k, v in ASSETS["files"].items() if k.startswith(prefix + "instance_assets/")}
+    # Frozen generated assets (image 0.2.22: knot_untying's rope volume meshes, rcb_topogym._install_frozen_assets), added to
+    # the instance after the upstream lock: each is a generated file whose sha256 the instance's asset_identity records.
+    frozen = {k: v for k, v in pinned_assets.items() if k.startswith("instance_assets/frozen_assets/")}
+    lock["asset_files"] = {**lock["asset_files"], **frozen}
     assert lock["asset_files"] == pinned_assets, f"{base}: instance_assets pinned in assets.json differ from the binding"
+    if inst_dir is not None and frozen:
+        identity = json.loads((inst_dir / "instance.json").read_text()).get("asset_identity") or {}
+        for rel, want in frozen.items():
+            assert identity.get(pathlib.PurePosixPath(rel).name) == want, f"{base}: {rel} is not the generated asset it records"
     if inst_dir is not None:
         canon = json.dumps(json.loads((inst_dir / "instance.json").read_text()), sort_keys=True, separators=(",", ":"), allow_nan=False)
         assert lock["instance_sha256"] == sha(canon.encode()), f"{base}: instance.json is not the bound instance"
