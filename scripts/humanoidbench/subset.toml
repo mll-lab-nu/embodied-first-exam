@@ -100,6 +100,10 @@ review_pr = 9               # the pull request whose human review covers the tas
 # own, so with no reset its whole run is one blind attempt. A per-benchmark exception to PROTOCOL D1's default of 0
 # (docs/benchmarks/humanoidbench.md); `RCB_RESET_BUDGET=0 harbor run ...` still runs the single-episode configuration.
 standard_reset_budget = 50
+# Realtime mode's reset budget (docs/PROTOCOL.md §4b): 50 by default, the owner's decision of 2026-10-08 (the same as
+# standard's); `RCB_RESET_BUDGET` overrides it. RCB_SLOWDOWN defaults to 1 (real time); other values are reported apart.
+realtime_reset_budget = 50
+realtime_review_pr = 83     # the pull request that added the realtime tasks; the owner approved them there (2026-10-08)
 
 # =====================================================================================================
 # C1 · flat-ground periodic gait
@@ -610,6 +614,11 @@ CI fixture, not something an agent could reproduce from inside.'''
 standard_reference_solution = '''`solution/oracle_replay.py` sends the same 999 rows (`solution/sit_simple_actions.npy`)
 through the client, one per control step (`dt` = 0.02 s, `interpolate="hold"`), as an agent would send them; the
 service ends the episode the moment the return reaches the pass mark. No privileged information at run time.'''
+realtime_reference_solution = '''`solution/oracle_stream.py` plans the same 999 rows (`solution/sit_simple_actions.npy`)
+into the running episode, one per control step (`dt` = 0.02 s, `interpolate="hold"`): the first 500 from step 0 (that
+call starts the clock), the rest from step 500 (`at=500`), sent at once, so every row runs at its own control step
+whatever the timing; the service ends the episode the moment the return reaches the pass mark. No privileged
+information at run time.'''
 
 [task.standard]
 ends = "when the robot falls (its pelvis drops below about half its standing height, not far below its height when seated)"
