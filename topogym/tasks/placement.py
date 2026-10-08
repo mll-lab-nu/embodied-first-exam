@@ -71,17 +71,7 @@ class PlacementGoalMixin:
         from topogym.assets.geometry.goal_region import write_goal_region
         if hasattr(self, "goal_region"):
             raise ValueError("The placement region is already fixed for this task instance")
-        clouds = {}
-        for entity in spec.entities:
-            if entity.name not in (*self.placement_targets, *self.placement_remainder):
-                continue
-            if entity.volume_path is not None:
-                with np.load(entity.volume_path) as volume:
-                    points = volume["spawn"]
-            else:
-                points = self.placement_vertices[entity.name]
-            clouds[entity.name] = body_points(dict(position_m=entity.position_m,
-                quaternion_wxyz=entity.quaternion_wxyz), points)
+        clouds = self.placement_clouds(spec)
         table = scene_config.env.world.table
         center, half = np.asarray(table.pos[:2]), np.asarray(table.size[:2])/2
         mount = scene_config.env.robot_mount
@@ -102,6 +92,21 @@ class PlacementGoalMixin:
         return replace(spec, entities=(*spec.entities, write_goal_region(asset_dir, self.goal_region)),
                        metadata={**spec.metadata, "instance_id": self.instance_id,
                                  "terminal": self.terminal_metadata()})
+
+    def placement_clouds(self, spec):
+        """{target or remainder name: its authored world points}, from which the region is chosen."""
+        clouds = {}
+        for entity in spec.entities:
+            if entity.name not in (*self.placement_targets, *self.placement_remainder):
+                continue
+            if entity.volume_path is not None:
+                with np.load(entity.volume_path) as volume:
+                    points = volume["spawn"]
+            else:
+                points = self.placement_vertices[entity.name]
+            clouds[entity.name] = body_points(dict(position_m=entity.position_m,
+                quaternion_wxyz=entity.quaternion_wxyz), points)
+        return clouds
 
     def terminal_metadata(self):
         metadata = super().terminal_metadata()
