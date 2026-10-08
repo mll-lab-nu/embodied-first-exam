@@ -29,7 +29,7 @@ the expected size of the pull request.
 
 ## Authoring a task
 1. Copy the closest existing pair (`tasks/robotwin_2_0_stack_blocks_two-privileged/` and `-standard/`) or generate tasks
-   with a script under `scripts/<bench>/`. Name them `<base>-privileged` / `<base>-standard` (and `<base>-realtime` for the realtime mode, PROTOCOL §2.2, §4b) and write
+   with a script under `scripts/<bench>/`. Name them `<base>-privileged` / `<base>-standard` (and `<base>-standard-realtime` for the standard-realtime mode, PROTOCOL §2.2, §4b) and write
    the README in the standard layout (§2.1); there is no `results/` directory.
 2. Fill in `task.toml` (PROTOCOL §2.3), `instruction.md` (§2.5, written by a human), the verifier under `tests/`
    (§2.6, separate sandbox) and `solution/` (§2.7).

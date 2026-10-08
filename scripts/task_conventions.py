@@ -8,8 +8,8 @@ pre-v1.0 task (old field names, protocol spelling, README layout); renaming dire
     python3 scripts/task_conventions.py --check tasks/<task>   # exit 1 if normalizing would change anything
 
 What it does:
-- `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
-  for standard tasks (2.2 / 2.4 and realtime tasks' `eai-standard/2.3` are set by their generators), `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
+- `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-standard-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
+  for standard tasks (2.2 / 2.4 and standard-realtime tasks' `eai-standard/2.3` are set by their generators), `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - protocol spelling `rcb-limited/2.x` -> `eai-standard/2.x` and "limited mode" -> "standard mode" in the task's text and
   services; the client accepts both spellings.
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
@@ -68,20 +68,23 @@ def replace_words(s: str) -> str:
     return s
 
 
-MODES = ("privileged", "standard", "realtime")   # PROTOCOL D12: the three modes, each the suffix of its task directories
-SIDECAR_MODES = ("standard", "realtime")          # robot as a service: the simulator runs in the `sim` sidecar (§4, §4b)
+# PROTOCOL D12: the three modes, each the whole suffix of its task directories. A mode is recognised by its complete
+# suffix only: `-standard-realtime` is never `-standard` (it does not end in it), and `-standard` is never standard-realtime.
+MODES = ("privileged", "standard", "standard-realtime")
+SIDECAR_MODES = ("standard", "standard-realtime")   # robot as a service: the simulator runs in the `sim` sidecar (§4, §4b)
 
 
 def mode_of(task: Path) -> str:
-    for mode in MODES:
+    for mode in sorted(MODES, key=len, reverse=True):   # longest suffix first
         if task.name.endswith(f"-{mode}"):
             return mode
-    raise ValueError(f"{task.name}: task directories end in -privileged, -standard or -realtime (docs/PROTOCOL.md §2.2)")
+    raise ValueError(f"{task.name}: task directories end in -privileged, -standard or -standard-realtime "
+                     "(docs/PROTOCOL.md §2.2)")
 
 
 def base_of(task: Path) -> str:
-    """The name without its mode suffix (`-privileged`, `-standard`, `-realtime`; PROTOCOL §2.2)."""
-    return re.sub(r"-(privileged|standard|realtime)$", "", task.name)
+    """The name without its mode suffix (`-privileged`, `-standard`, `-standard-realtime`; PROTOCOL §2.2)."""
+    return re.sub(r"-(standard-realtime|privileged|standard)$", "", task.name)
 
 
 def bench_of(task: Path) -> str:

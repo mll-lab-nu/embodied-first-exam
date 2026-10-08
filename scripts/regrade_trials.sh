@@ -10,7 +10,7 @@ for tr in "$JOB"/robotwin_2_0_*/; do
   [ -f "$rj" ] || continue; [ -f "$traj" ] || continue
   ge=$(python3 -c "import json;d=json.load(open('$rj'));print(int(d.get('grader_error',0)))"); vr=$(python3 -c "import json;d=json.load(open('$rj'));print(int(d.get('video_rendered',0)))")
   [ "$ge" = 1 ] || [ "$vr" = 0 ] || continue
-  task=$(python3 -c "import json;print(json.load(open('$tr/result.json'))['task_name'].split('/')[-1])"); case "$task" in *-standard|*-realtime|*-limited) continue;; esac   # standard and realtime mode: the sidecar grades
+  task=$(python3 -c "import json;print(json.load(open('$tr/result.json'))['task_name'].split('/')[-1])"); case "$task" in *-standard|*-standard-realtime|*-limited) continue;; esac   # standard and standard-realtime: the sidecar grades
   case "$task" in *-privileged) ;; *) task="$task-privileged";; esac   # pre-v1.0 jobs
   fam=${task#robotwin_2_0_}; fam=${fam%-privileged}
   [ -d "$R/tasks/$task/tests" ] || { echo "skip $task: no tasks/$task/tests"; continue; }

@@ -10,8 +10,8 @@ implementation: [`scripts/eai_standard/v2_4/`](../scripts/eai_standard/v2_4/), w
 `eai-standard/2.4` = 2.3 + the **operations capability** below.
 - Every earlier addition stays a MAY capability. That covers 2.2's depth, `frame_time_s`, extrinsics, `POST /kinematics`
   and the per-call wall bound, and 2.3's realtime capability ([`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md),
-  "Realtime mode"). So a 2.2 service that adds the operations capability is a 2.4 service.
-- Standard-mode tasks may declare `protocol = "eai-standard/2.4"` (PROTOCOL §2.3). Realtime-mode tasks stay on 2.3
+  "Standard-realtime mode"). So a 2.2 service that adds the operations capability is a 2.4 service.
+- Standard-mode tasks may declare `protocol = "eai-standard/2.4"` (PROTOCOL §2.3). Standard-realtime tasks stay on 2.3
   (PROTOCOL §4b).
 - Everything in PROTOCOL §4 holds unchanged: four endpoints (plus `/kinematics` and the one below), RCB1, no reset,
   crash recovery that resumes the same episode, and grading by a fresh replay.

@@ -3,7 +3,7 @@
 (+ replay.mp4, replay.last.png). One folder per agent+model; the privileged and standard twins each get their own.
 usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir> [--analysis <make_two_mode_report_zh.py>]"""
 import json, pathlib, shutil, sys, re, glob, datetime as dt, ast
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_names import canonical  # noqa: E402
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_names import base, canonical, mode as mode_of  # noqa: E402
 jobs, job, slug, label = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
 root = pathlib.Path(__file__).resolve().parents[1]
 if "--out" not in sys.argv: sys.exit("--out <dir> is required: results are published on the results site, not committed (PROTOCOL D3)")
@@ -30,7 +30,7 @@ for trial in sorted((jobs / job).glob("*__*")):
     tdir = root / "tasks" / task
     if not tdir.is_dir(): continue
     rw = json.load(open(trial / "verifier/reward.json")) if (trial / "verifier/reward.json").exists() else {}
-    ar = r.get("agent_result") or {}; mode = task.rsplit("-", 1)[1]; limited = mode != "privileged"; fam = task.replace("robotwin_2_0_", "").rsplit("-", 1)[0]
+    ar = r.get("agent_result") or {}; mode = mode_of(task); limited = mode != "privileged"; fam = base(task).replace("robotwin_2_0_", "")
     out = out_root / task / slug; out.mkdir(parents=True, exist_ok=True)
     for f in ("replay.mp4", "replay.last.png"):
         if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)
@@ -39,7 +39,7 @@ for trial in sorted((jobs / job).glob("*__*")):
     ok = rw.get("success") == 1 and not over
     an = analysis.get(fam, {}).get("L" if limited else "U", "")
     lines = [f"# {label} — {task}\n",
-             f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{ {'standard': 'standard (robot as a service)', 'realtime': 'realtime (robot as a service, time does not stop)'}.get(mode, 'privileged')}**.\n",
+             f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{ {'standard': 'standard (robot as a service)', 'standard-realtime': 'standard-realtime (robot as a service, time does not stop)'}.get(mode, 'privileged')}**.\n",
              "| | |", "|---|---|",
              f"| result | {'**1 (success)**' if ok else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
              f"| agent time | {span(r.get('agent_execution') or {})} s |",

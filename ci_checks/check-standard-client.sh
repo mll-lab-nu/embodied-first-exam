@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # PROTOCOL §2.4: the agent container and the verifier of every standard task share ONE client base image, pinned by
 # digest, and pinned pip versions. The image and the pins are scripts/eai_standard/client.env (CLIENT_IMAGE) and
-# scripts/eai_standard/client-requirements.txt. For each standard or realtime task (mode standard / limited / realtime, or
-# a -standard / -limited / -realtime name), environment/Dockerfile and tests/Dockerfile:
+# scripts/eai_standard/client-requirements.txt. For each standard or standard-realtime task (mode standard / limited /
+# standard-realtime, or a -standard / -limited / -standard-realtime name), environment/Dockerfile and tests/Dockerfile:
 #   - every FROM is CLIENT_IMAGE;
 #   - every `pip install` installs the pins: `-r <file>` with a byte-identical copy of client-requirements.txt in the
 #     build context, or the full pin list inline (name==version for every pin, nothing else).
@@ -75,7 +75,7 @@ for t in sorted(os.listdir(tasks)):
     if not os.path.isfile(tt):
         continue
     meta = tomllib.load(open(tt, "rb")).get("metadata", {})
-    if not (meta.get("mode") in ("standard", "limited", "realtime") or t.endswith(("-standard", "-limited", "-realtime"))):
+    if not (meta.get("mode") in ("standard", "limited", "standard-realtime") or t.endswith(("-standard", "-limited", "-standard-realtime"))):
         continue
     probs, froms = [], []
     for sub in ("environment", "tests"):
