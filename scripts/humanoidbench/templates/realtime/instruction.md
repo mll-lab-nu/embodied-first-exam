@@ -1,4 +1,4 @@
-# {{family}} — instance {{instance_tag}} — REALTIME MODE (robot as a service; time does not stop)
+# {{family}} — instance {{instance_tag}} — STANDARD-REALTIME MODE (robot as a service; time does not stop)
 
 You control a simulated {{robot_label}} (HumanoidBench / MuJoCo) **as if it were real hardware**: the
 simulator runs in a service you cannot open, and you reach it only through a client. Like real hardware, it does not
@@ -26,7 +26,7 @@ HumanoidBench scores the *whole episode*, not a final state: it passes iff the s
 a fresh replay of the recorded episode, the servo targets the robot actually executed at each control step, must reach
 it as well and end in the same state.
 
-## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, realtime mode)
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, standard-realtime mode)
 Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;
 help(rcb_client)"`); the calls and the endpoints they use:
 
