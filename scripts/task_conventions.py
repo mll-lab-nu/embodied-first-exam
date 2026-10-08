@@ -42,7 +42,7 @@ TEXT_REPLACEMENTS = [  # (old, new), applied to task text files in order
 ]
 BENCHMARKS = [  # (directory prefix, label)
     ("robotwin_2_0_", "RoboTwin 2.0"), ("dextoolbench_", "DexToolBench"), ("mujoco_playground_", "MuJoCo Playground"),
-    ("robosuite-", "robosuite (example task)"), ("kinder-", "KinDER"), ("humanoidbench-", "HumanoidBench"),
+    ("kinder-", "KinDER"), ("humanoidbench-", "HumanoidBench"),
     ("metaworldplus-", "MetaWorld+"),
     ("robowits-", "RoboWits"), ("robopaint-", "RoboPaint"), ("robolab-", "RoboLab"),
     ("behavior-", "BEHAVIOR-1K"), ("maniguard-", "ManiGuard"),
@@ -110,7 +110,7 @@ def dtb_goals(task: Path) -> tuple[int, int] | None:
 def oracle_level(task: Path) -> tuple[str, str] | None:
     """(oracle, oracle_evidence) for benchmarks whose oracle level follows from their own files; None = keep as is."""
     n = task.name
-    if n.startswith(("robotwin_2_0_", "robosuite-", "mujoco_playground_")):
+    if n.startswith(("robotwin_2_0_", "mujoco_playground_")):
         return "full", ""
     if n.startswith("dextoolbench_"):
         g = dtb_goals(task)
