@@ -11,7 +11,7 @@ The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (v1.0.1). Contrib
 
 ## Evaluation modes
 
-Every task instance (except the robosuite example) is offered in two modes that share the same frozen scene.
+Every task instance is offered in two modes that share the same frozen scene.
 
 | | **Privileged mode** | **Standard mode** ("robot as a service") |
 |---|---|---|
@@ -34,7 +34,6 @@ measures the same thing under real-robot constraints. The standard-mode wire pro
 
 | Benchmark | Simulator / robot | Tasks (per mode) | Oracle |
 |---|---|---|---|
-| robosuite example (`robosuite-cube-stack-i00-privileged`) | robosuite (MuJoCo) · Franka Panda | 1 (privileged) | full |
 | RoboTwin 2.0 (`robotwin_2_0_<task>`) | SAPIEN 3 + CuRobo · ALOHA-AgileX dual arm | 47 of 50 | full (upstream expert) |
 | DexToolBench (`dextoolbench_<cat>_<obj>_<task>`) | MuJoCo 3.3.7 · KUKA iiwa14 + Sharpa HA4 hand | 21 of 24 | full on 6, partial on 15 |
 | MuJoCo Playground (`mujoco_playground_<env>`) | MuJoCo · ALOHA, Franka Panda; quadrupeds: Unitree Go1, Boston Dynamics Spot, Google Barkour vB | 4 manipulation + 9 quadruped | full (manipulation: scripted IK; quadrupeds: Playground's Go1 policy or policies trained on its rewards) |
@@ -86,17 +85,17 @@ harbor run -p tasks -i robotwin_2_0_stack_blocks_two-privileged -a codex -m open
 harbor run -p tasks -i robotwin_2_0_stack_blocks_two-standard -a claude-code -m anthropic/claude-fable-5-1
 
 # reference checks: the oracle scores 1, the nop agent scores 0
-harbor run -p tasks -i robosuite-cube-stack-i00-privileged -a oracle
-harbor run -p tasks -i robosuite-cube-stack-i00-privileged -a nop
+harbor run -p tasks -i robotwin_2_0_stack_blocks_two-privileged -a oracle
+harbor run -p tasks -i robotwin_2_0_stack_blocks_two-privileged -a nop
 harbor view jobs
 ```
 
 **Requirements:**
 - Docker.
-- An NVIDIA GPU with `nvidia-container-toolkit` for RoboTwin (CuRobo, Vulkan) and for MuJoCo rendering. The robosuite example runs on CPU; KinDER's physics runs on CPU.
+- An NVIDIA GPU with `nvidia-container-toolkit` for RoboTwin (CuRobo, Vulkan) and for MuJoCo rendering. KinDER's physics runs on CPU.
 - GPUs are passed through by `environment/docker-compose.yaml`, because Harbor's local Docker sandbox does not support `[environment].gpus`.
 - Reference hardware is an RTX 4090. Four RoboTwin instances rebuild to a different state on other GPUs (e.g. L40S) and are then reported as `grader_error` (PROTOCOL §3).
-- Disk space for the base images (the RoboTwin and robosuite images are about 22 GB each). They are built locally until they are published.
+- Disk space for the base images (the RoboTwin image is about 22 GB). They are built locally until they are published.
 
 **Running official results:**
 - Use Harbor's native agents, with the harness's web search off: Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (the default of `scripts/run_agent_batch.sh`; PROTOCOL §5). The search runs at the model provider, so no egress allowlist stops it.
@@ -114,7 +113,7 @@ harbor view jobs
   and writes the verdict inputs. The agent never holds the simulator.
 - **Network policy.** DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, MyoSuite, the three
   RoboCasa benchmarks, DexJoCo and MuJoCo Playground's quadruped tasks restrict agent egress to model APIs by default, because their reference policies, demonstrations or
-  baselines are public. RoboTwin, MuJoCo Playground's manipulation tasks, robosuite, RoboWits, RoboLab and BEHAVIOR-1K use Harbor's default
+  baselines are public. RoboTwin, MuJoCo Playground's manipulation tasks, RoboWits, RoboLab and BEHAVIOR-1K use Harbor's default
   (public) and can be switched with `scripts/set_agent_egress.py allowlist`. Separately, the harness's own web search is
   off by default in batch runs (it runs at the model provider, past any allowlist).
 - **Reproducibility.** Base images are pinned by tag (pinning every pip dependency is part of the migration). A task's identity is its digest in `tasks/dataset.toml`,
@@ -131,7 +130,7 @@ docs/                  PROTOCOL.md (contract), LIMITED_MODE_PROTOCOL.md (standar
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
                        RUNNING.md (batches, logs, recordings), LEAKAGE.md (where answer keys survive),
                        benchmarks/ (per-benchmark notes)
-third_party/           upstream sources used by the base images (cap-x, RoboTwin)
+third_party/           upstream sources used by the base images (RoboTwin)
 ```
 
 ## Results
@@ -149,5 +148,5 @@ and [docs/REVIEWING.md](docs/REVIEWING.md).
 ## License
 
 [MIT](LICENSE) for the code in this repository. Third-party simulators, assets, reference solutions derived from
-upstream experts, and the contents of the base images keep their own licenses (e.g. RoboTwin and cap-x: MIT; CuRobo:
+upstream experts, and the contents of the base images keep their own licenses (e.g. RoboTwin: MIT; CuRobo:
 NVIDIA license). See the upstream projects in `third_party/` and each benchmark's README.

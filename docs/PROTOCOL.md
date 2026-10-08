@@ -45,7 +45,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
-| D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. robosuite, RoboCasa, RoboCasa365), so each may have its own image; an image is shared only where the dependency set is identical. |
+| D5 | Images | One registry (EAI organization), images named `eai-<name>` and versioned in `images/<name>/VERSION`; every image that may be redistributed is public, the rest are `BUILD_ONLY`. One image per **benchmark**, not per simulator: benchmarks on the same simulator may need different versions of it and of its dependencies (e.g. RoboCasa, RoboCasa365 and RoboCasa-GR1 on robosuite), so each may have its own image; an image is shared only where the dependency set is identical. |
 | D6 | PR granularity | One benchmark per PR; changes to shared files go in a separate PR reviewed by a maintainer. |
 | D7 | World-frame information in instructions | Decided per benchmark, consistent within it, documented in the benchmark's doc. |
 | D8 | Agent time budget | 3600 s by default; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. |
@@ -91,7 +91,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 ### 2.2 Naming
 | Item | Level | Basis |
 |---|---|---|
-| Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`robosuite-cube-stack-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
+| Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`metaworldplus-<env>-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
 | Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` | MUST | suffix [CI]; shared instance [current] |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
@@ -129,7 +129,7 @@ Harbor builds the task images locally from the task directory on every run; only
 | Sidecars built with `build:` | MUST NOT | [new] |
 | Dependencies pinned; no downloads during verification | MUST | no downloads: [current]; pinning: [new] (standard-mode client images and the MuJoCo image install unpinned pip packages today, §7) |
 | Within a benchmark, one base image and one version: privileged `environment` and `tests`, and the standard `sim` service, use the same `eai-<name>:<ver>` | MUST | [new] |
-| Different benchmarks on the same simulator (same `simulator` value) using different images or versions | MAY | [new] (D5; e.g. `robosuite` for robosuite, RoboCasa, RoboCasa365) |
+| Different benchmarks on the same simulator (same `simulator` value) using different images or versions | MAY | [new] (D5; e.g. `robosuite` for RoboCasa, RoboCasa365 and RoboCasa-GR1) |
 | Standard-mode agent containers and verifiers share one client base image pinned by digest | MUST | [new] |
 | Merging different simulator stacks into one image only when their dependency versions are identical (frozen-instance hashes depend on them) | MUST | [new] |
 | GPU: an NVIDIA device reservation (`count: 1`) in compose on `main` (privileged) or `sim` (standard); in `tests/docker-compose.yaml` too if replay needs it | MUST | [current] |
@@ -175,8 +175,8 @@ Harbor builds the task images locally from the task directory on every run; only
 |---|---|---|
 | Reference solutions only under `solution/` (mounted for the oracle agent only) | MUST | [current] |
 | A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container) | MUST NOT | [current] |
-| Upstream experts scrubbed from images (e.g. cap-x `oracle_code`, RoboTwin `play_once`) | MUST | [current] |
-| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, MolmoSpaces, MyoSuite and DexJoCo; RoboTwin, MuJoCo Playground, robosuite, RoboWits, RoboLab and BEHAVIOR-1K are open by default and switched per run with `scripts/set_agent_egress.py` (allowlist contents under review, §7) |
+| Upstream experts scrubbed from images (e.g. RoboTwin `play_once`) | MUST | [current] |
+| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, MolmoSpaces, MyoSuite and DexJoCo; RoboTwin, MuJoCo Playground, RoboWits, RoboLab and BEHAVIOR-1K are open by default and switched per run with `scripts/set_agent_egress.py` (allowlist contents under review, §7) |
 | `nop` scores 0 | MUST | [current] |
 | `oracle = "full"`: the oracle scores 1 | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
