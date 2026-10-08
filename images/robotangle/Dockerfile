@@ -1,9 +1,10 @@
 # RoboTangle base image (eai-robotangle; formerly rcb-topogym): images/topogym/Dockerfile of the release commit in
 # scripts/robotangle/release.json, unchanged except that UIPC_WHEEL defaults to prebuilt (the task bindings name the audited
-# libuipc wheel) and the robot_coding_bench stage at the end (the frozen instances). Its build context is prepared by
+# libuipc wheel) and the robot_coding_bench additions at the end (the frozen instances, the sm86 libuipc build, the check of
+# both libuipc wheels). Its build context is prepared by
 # scripts/robotangle/fetch_image_context.sh in images/robotangle/context/ (images/robotangle/BUILD_CONTEXT) from the private
-# HF dataset pinned in scripts/robotangle/assets.json. BUILD_ONLY: never public; a private GHCR package for org members
-# (images/robotangle/BUILD_ONLY).
+# HF dataset pinned in scripts/robotangle/assets.json (internal; only the built image is public). Build instructions:
+# images/robotangle/README.md.
 # rcb-topogym: Genesis 1.2.1 / Nyx with cu128 torch and original pyuipc 0.0.25 materials (libuipc 292c98c3 plus the
 # determinism patches in images/topogym/uipc-patches: summation order fixed, physics unchanged).
 # Infrastructure only, no benchmark code (docs/rcb/PROTOCOL.md §1): the task tooling (rcb_topogym.py) comes with each task,
@@ -109,4 +110,33 @@ ENV PYTHONPATH=/opt/topogym TOPOGYM_SOURCE=/opt/topogym/SOURCE.json
 COPY instances/ /opt/robotangle/instances/
 COPY stage_instance.py /opt/robotangle/stage_instance.py
 RUN chmod -R a+rX /opt/robotangle
+# robot_coding_bench: the NVIDIA Vulkan ICD and EGL vendor files, as in images/robopaint/. The tasks pass one GPU with a
+# compose device reservation and no `runtime: nvidia`; NVIDIA_DRIVER_CAPABILITIES=all makes the container toolkit mount the
+# driver's graphics libraries, and these files point the Vulkan and EGL loaders at them (Nyx renders through Vulkan).
+RUN mkdir -p /usr/share/vulkan/icd.d /usr/share/glvnd/egl_vendor.d && \
+    printf '{"file_format_version":"1.0.0","ICD":{"library_path":"libGLX_nvidia.so.0","api_version":"1.3.0"}}\n' > /usr/share/vulkan/icd.d/nvidia_icd.json && \
+    printf '{"file_format_version":"1.0.0","ICD":{"library_path":"libEGL_nvidia.so.0"}}\n' > /usr/share/glvnd/egl_vendor.d/10_nvidia.json
+# The container toolkit's CDI mode also mounts the host's ICD json (/etc/vulkan/icd.d), which would list the GPU twice.
+ENV VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+# robot_coding_bench: the sm86 libuipc build, in its own prefix /opt/uipc_sm86 (the audited wheel above stays as it is). The
+# same recipe as the audited wheel (images/topogym/uipc-build.json, build_uipc.sh, the determinism patches, nvcc 12.8) with
+# the architectures 86-real;86-virtual (images/robotangle/uipc-sm86-build), and the same pyuipc version and source commit,
+# which the frozen IPC settled states hold. The task tooling chooses the build at Session start, before uipc is imported:
+# compute capability 8.9 or 12.x keeps the audited wheel, any other GPU gets /opt/uipc_sm86/site-packages first on sys.path
+# (rcb_topogym.py select_uipc_build; scripts/robotangle/release.json uipc_builds).
+RUN --mount=type=bind,source=uipc-sm86,target=/tmp/uipc-sm86 \
+    --mount=type=bind,source=install_uipc_prefix.py,target=/tmp/install_uipc_prefix.py \
+    python /tmp/install_uipc_prefix.py /tmp/uipc-sm86 /opt/uipc_sm86 && chmod -R a+rX /opt/uipc_sm86
 WORKDIR /app
+
+# robot_coding_bench: both libuipc wheels checked against their uipc-build.json in the recipe's builder image (cuobjdump of
+# nvcc 12.8): wheel, version and CUDA backend hashes, the native kernels and PTX each record lists, its required SASS and the
+# PTX of every `-virtual` architecture (verify_uipc_wheel.py check). The image keeps the result in /opt/uipc-check.json.
+FROM ${UIPC_BUILDER} AS uipc-check
+COPY --from=uipc-wheels /out/wheels/ /check/audited/
+COPY uipc-sm86/ /check/sm86/
+COPY verify_uipc_wheel.py /check/verify_uipc_wheel.py
+RUN /opt/python/cp311-cp311/bin/python /check/verify_uipc_wheel.py check /check/audited /check/sm86 > /check/uipc-check.json
+
+FROM runtime AS final
+COPY --from=uipc-check /check/uipc-check.json /opt/uipc-check.json

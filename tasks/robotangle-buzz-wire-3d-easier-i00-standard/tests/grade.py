@@ -53,7 +53,10 @@ try:
                      (row.get("runtime_binding") or {}).get("binding_id") == wanted for row in (startup, replay))
 except (OSError, ValueError, TypeError):
     pass
-mismatch = mismatch or not binding_ok
+# A real mismatch is recorded in replay.verdict.json (replay.py). A replay process that crashed (e.g. CUDA out of memory)
+# writes none: that is a grader error (finalize.sh), not instance_mismatch.
+verdict = os.path.isfile("/data/replay.verdict.json")
+mismatch = mismatch or (verdict and not binding_ok)
 grader_error = not infra and not mismatch and not d.get("gave_up") and not replayed
 # the live (strict) success first: a tolerant replay success never stands in for a live failure
 ok = bool(d.get("success")) and bool(d.get("replay_success")) and (bool(d.get("deterministic")) or gpu) and not infra and not grader_error and not mismatch
