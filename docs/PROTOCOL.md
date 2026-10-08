@@ -191,7 +191,7 @@ Harbor builds the task images locally from the task directory on every run; only
 | Reference solutions only under `solution/` (mounted for the oracle agent only) | MUST | [current] |
 | A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container) | MUST NOT | [current] |
 | Upstream experts scrubbed from images (e.g. RoboTwin `play_once`) | MUST | [current] |
-| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, MolmoSpaces, MyoSuite and DexJoCo; RoboTwin, MuJoCo Playground, RoboWits, RoboLab and BEHAVIOR-1K are open by default and switched per run with `scripts/set_agent_egress.py` (allowlist contents under review, §7) |
+| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, MolmoSpaces, MyoSuite and DexJoCo; RoboTwin, MuJoCo Playground, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle are open by default and switched per run with `scripts/set_agent_egress.py` (allowlist contents under review, §7) |
 | `nop` scores 0 | MUST | [current] |
 | `oracle = "full"`: the oracle scores 1 | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |

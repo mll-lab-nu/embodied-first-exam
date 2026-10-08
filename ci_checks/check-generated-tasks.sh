@@ -19,4 +19,8 @@ for gen in "kinder/gen_tasks.py check" "humanoidbench/gen_tasks.py check" "behav
     echo "FAIL scripts/$gen:"; echo "$out" | tail -n 40; rc=1
   fi
 done
+if [ -f "$root/scripts/robotangle/mk_tasks.py" ]; then   # RoboTangle (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/robotangle/mk_tasks.py" --check 2>&1); then echo "ok scripts/robotangle/mk_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/robotangle/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
 exit $rc
