@@ -15,6 +15,16 @@ import argparse, json, os, subprocess, sys, time, traceback
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
+# Wall-clock limit of ONE replay process, scaled with the trajectory (2026-10-08; time limit only, the verdict rules are
+# unchanged). Measured on an idle 8-vCPU L40S host (job #3137): Isaac start + scene load 626 s, and a 10,475-step replay
+# had not finished when the old flat 3600 s ran out (< 3.5 control steps/s). Allowance: REPLAY_STARTUP_S for the start plus
+# a worst case of REPLAY_MIN_RATE control steps/s, never below the old 3600 s, at most REPLAY_CAP_S (4 h);
+# task.toml's [verifier] timeout_sec fits two capped replays plus overhead.
+REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE, REPLAY_CAP_S = 3600.0, 1200.0, 2.0, 14400.0
+
+
+def replay_timeout(n_steps: int) -> float:
+    return min(REPLAY_CAP_S, max(REPLAY_FLOOR_S, REPLAY_STARTUP_S + n_steps / REPLAY_MIN_RATE))
 
 
 def write(ok: bool, out: dict) -> None:
@@ -63,11 +73,16 @@ def main() -> int:
         if acts.ndim != 2 or acts.shape[1] != ACTION_DIM or acts.shape[0] > MAX_STEPS or not np.all(np.isfinite(acts)):
             write(False, {"success": 0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, **cost}); return 0
         tool = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_behavior.py")
-        t0 = time.time(); runs = []
+        t0 = time.time(); runs = []; limit = replay_timeout(int(acts.shape[0]))
         for i in range(a.repeat):
             video = os.path.join(LOG_DIR, "replay.mp4") if (i == a.repeat - 1 and not a.no_video) else None   # never affects the verdict
             cmd = [sys.executable, tool, "replay", "--task", a.family, "--instance", a.instance, "--traj", a.traj] + (["--video", video, "--fps", str(a.video_fps)] if video else [])
-            p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=sys.stderr, text=True, timeout=3600, env={**os.environ, "RCB_SESSION_LOG": ""})
+            try:
+                p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=sys.stderr, text=True, timeout=limit, env={**os.environ, "RCB_SESSION_LOG": ""})
+            except subprocess.TimeoutExpired:
+                print(f"[grade] replay {i + 1} exceeded its {limit:.0f} s limit ({len(acts)} steps)", file=sys.stderr, flush=True)
+                write(False, {"success": 0, "grader_error": 1, "replay_timed_out": 1, "replay_timeout_s": round(limit, 1),
+                              "n_actions": int(len(acts)), "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
             lines = [l for l in p.stdout.splitlines() if l.startswith("{")]
             runs.append(json.loads(lines[-1]) if lines else {"error": f"replay process rc={p.returncode}"})
         outs = [(r.get("replays") or [{}])[0] for r in runs]
@@ -83,7 +98,7 @@ def main() -> int:
                # progress: the 2026 challenge's q_score of the last replay (before 2026-09-27 this read a key "progress"
                # that the replay does not report, so final_reward was always 0)
                "final_reward": float(outs[-1].get("q_score") or 0.0), "q_score": float(outs[-1].get("q_score") or 0.0),
-               "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0,
+               "replay_wall_s": round(time.time() - t0, 1), "replay_timeout_s": round(limit, 1), "grader_error": 0,
                "video_rendered": int(os.path.isfile(os.path.join(LOG_DIR, "replay.mp4"))), **cost}
         write(ok, out)
     except Exception:  # noqa: BLE001
