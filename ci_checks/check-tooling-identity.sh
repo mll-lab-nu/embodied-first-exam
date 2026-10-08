@@ -77,7 +77,8 @@ for t in sorted(os.listdir(tasks)):
     if bench not in MODULE:
         continue
     dirs[bench] += 1
-    mode = "realtime" if t.endswith("-realtime") else "standard" if t.endswith(("-standard", "-limited")) else "privileged"
+    mode = ("standard-realtime" if t.endswith("-standard-realtime") else "standard" if t.endswith(("-standard", "-limited"))
+            else "privileged")
     for dp, dns, fns in os.walk(os.path.join(tasks, t)):
         dns[:] = [d for d in dns if d not in ("results", "__pycache__")]
         for f in fns:
