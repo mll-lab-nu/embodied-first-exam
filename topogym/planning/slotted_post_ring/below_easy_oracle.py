@@ -46,8 +46,9 @@ LIFT_STEP_M = .005             # TCP travel per control step while carrying the 
 PLACE_HEIGHT_M = .06           # held ring centre above the table in the goal square
 CARRY_YAWS_DEG = (0., -30., 30., -60., 60., -90., 90.)
 # Pinch angles about the ring centre (world frame, degrees), in order of preference: the near-right quarter, where the
-# gap between ring and post is widest and the settled cord stays clear of the gripper.
-GRASP_ANGLES_DEG = (-40., -50., -30., -20., -60., -10., 0.)
+# gap between ring and post is widest and the settled cord stays clear of the gripper, then round the ring (the rigid
+# chain has no bending stiffness and settles beside the post front, over that quarter: 2026-10-07).
+GRASP_ANGLES_DEG = (-40., -50., -30., -20., -60., -10., 0., *range(10, 181, 10), *range(-170, -60, 10))
 
 
 class BelowEasyPolicy(SlottedOraclePolicy):
@@ -88,37 +89,17 @@ class BelowEasyPolicy(SlottedOraclePolicy):
         approach = (out * R.from_rotvec(np.radians(lean) * closing)).apply(DOWN)
         return np.asarray(centre, float) - PINCH_DEPTH_M * approach, frame(approach, flip * out.apply(closing)), approach
 
-    def find_pinch(self, centre, closing, opening):
-        """The pinch (p, r, approach, choice) nearest the current arm among the leans / tilts / finger orientations whose
-        pre-grasp and pinch the right arm reaches with the arm and the open fingers clear of the post and base; None if
-        there is none."""
-        q = self.qpos()
-        fingers = self.kin.robot._q_indices["right"][6:]
-        boxes = list(self.geo.fixture_boxes_m.values())
-        current = self.kin.arm("right", q)
-        best = None
-        for lean in LEANS_DEG:
-            for tilt in TILTS_DEG:
-                for flip in (1, -1):
-                    p, r, approach = self.pinch_pose(centre, closing, lean, tilt, flip)
-                    try:
-                        qa = self.kin.solve_near("right", p - PRE_GRASP_M * approach, r, q)
-                        qb = self.kin.solve_near("right", p, r, qa)
-                    except ValueError:
-                        continue
-                    qa[fingers] = qb[fingers] = opening
-                    if max(self.kin.penetration("right", qi, boxes, CLEAR_FIXTURES_M) for qi in (qa, qb)) > 0:
-                        continue
-                    distance = float(np.abs(self.kin.arm("right", qa) - current).max())
-                    if best is None or distance < best[0]:
-                        best = (distance, p, r, approach, dict(lean=lean, tilt=tilt, flip=flip))
-        return None if best is None else best[1:]
-
     def ring_pinch(self):
-        """First ring angle whose gripper box is clear of the cord and which has a clear, reachable pinch."""
+        """Ring pinch (p, r, approach) at the first angle whose gripper box is clear of the cord, clear of the fixed parts,
+        from which the right hand's straight lift reaches the height that takes the ring's lowest point
+        LIFT_CLEARANCE_M over the post top."""
         g = self.geo
         c, n = self.ring()
         cord = self.cord_points()
+        boxes = list(g.fixture_boxes_m.values())
+        fingers = self.kin.robot._q_indices["right"][6:]
+        rise = g.post_top_z + LIFT_CLEARANCE_M + .005 - (c[2] - g.ring_tube_radius_m)
+        q0 = self.qpos()
         rejected = []
         for deg in GRASP_ANGLES_DEG:
             a = np.radians(deg)
@@ -128,12 +109,26 @@ class BelowEasyPolicy(SlottedOraclePolicy):
             if clearance < CORD_CLEARANCE_M:
                 rejected.append((deg, "cord", round(clearance, 4)))
                 continue
-            found = self.find_pinch(c + g.ring_major_radius_m * u, radial, PINCH_OPEN_M)
-            if found is not None:
-                self.note("ring pinch", angle_deg=deg, cord_clearance_m=clearance, rejected=rejected, **found[3])
-                return found[:3]
-            rejected.append((deg, "no clear reachable pose"))
-        raise StageFailure(f"no reachable ring pinch clear of the cord and fixtures: {rejected}")
+            for lean in LEANS_DEG:
+                for tilt in TILTS_DEG:
+                    for flip in (1, -1):
+                        p, r, approach = self.pinch_pose(c + g.ring_major_radius_m * u, radial, lean, tilt, flip)
+                        try:
+                            qa = self.kin.solve_near("right", p - PRE_GRASP_M * approach, r, q0)
+                            qb = self.kin.solve_near("right", p, r, qa)
+                            q = qb
+                            for h in np.arange(.02, rise + .02, .02):
+                                q = self.kin.solve("right", p + [0., 0., h], r, q)
+                        except ValueError:
+                            continue
+                        qa[fingers] = qb[fingers] = PINCH_OPEN_M
+                        if max(self.kin.penetration("right", qi, boxes, CLEAR_FIXTURES_M) for qi in (qa, qb)) > 0:
+                            continue
+                        self.note("ring pinch", angle_deg=deg, lean=lean, tilt=tilt, flip=flip,
+                                  cord_clearance_m=clearance, rejected=rejected)
+                        return p, r, approach
+            rejected.append((deg, "no liftable pose"))
+        raise StageFailure(f"no liftable ring pinch clear of the cord and fixtures: {rejected}")
 
     # ----- stages -------------------------------------------------------------------------------------------------
     def stage_lift_ring(self):
@@ -221,12 +216,15 @@ class BelowEasyPolicy(SlottedOraclePolicy):
 
 # ----- easier (LoopOverRingLayout) ----------------------------------------------------------------------------------
 BEAD_OPEN_M = .037             # tips 57 mm apart round the 39 mm bead (the gripper's widest)
-BEAD_CLOSED_M = .006           # squeeze target; the bead holds the fingers at about 0.027
+# A gentle squeeze, the bead's centre 11 mm ahead of the TCP: on the rigid chain (2026-10-07) a squeeze to 0.006 pressed the
+# sphere out between the tips (finger q fell from 0.0257 to closed during the carry, at 12 and 14 mm alike); to 0.020 at
+# 11 mm the fingers held 0.0266 from the pinch to the release (depths 9-11 mm and targets 0.016 / 0.020 compared).
+BEAD_CLOSED_M = .020
+BEAD_PINCH_DEPTH_M = .011
 BEAD_HELD_TOLERANCE_M = .005
 RING_RAISE_M = .006            # the held ring raised off the cord before bead2 is carried
 RING_SHIFTS_M = (.005, .003, 0.)   # +y shift of the held ring before its lift (the gap behind the post widens); the
                                    # first that keeps the hand clear of the post (the inner finger meets its side)
-RING_PINCH_ANGLES_DEG = (-10., -20., 0., -30., -40., -50., 10.)
 BEAD_CARRY_Z_M = .11           # bead2's centre above the table while carried over the ring
 BEAD_POST_GAP_M = .012         # bead2's centre this far beyond (bead radius + the post's back face) when let go: nearer,
                                # the left forearm meets the post; the bead then tips into the gap
@@ -235,6 +233,8 @@ VIA_Z_M = .15                  # the left hand's path round the post's -x side: 
 VIA_X_M = -.30                 # ... and world x (left of the base)
 LEFT_PARK_REL = np.array([-.30, .10, .25])   # left hand parked here (from the post centre) for the ring's lift
 CARRY_LEVEL_FRACTIONS = (.4, .25, .6)
+RING_SET_DOWN_M = .003         # the carried ring's lowest point above the table when the hand opens
+HAND_BACK_OFF_M = .06          # the opened hand then moves back along its approach
 
 
 class EasierPolicy(BelowEasyPolicy):
@@ -261,50 +261,10 @@ class EasierPolicy(BelowEasyPolicy):
                     bead2=(b - np.asarray(g.origin_m)).round(4).tolist())
 
     # ----- planning -----------------------------------------------------------------------------------------------
-    def liftable_ring_pinch(self):
-        """Ring pinch (p, r, approach) clear of the cord and the fixed parts from which the right hand's straight lift
-        reaches the height that takes the ring's lowest point LIFT_CLEARANCE_M over the post top."""
-        g = self.geo
-        c, n = self.ring()
-        cord = self.cord_points()
-        boxes = list(g.fixture_boxes_m.values())
-        fingers = self.kin.robot._q_indices["right"][6:]
-        rise = g.post_top_z + LIFT_CLEARANCE_M + .005 - (c[2] - g.ring_tube_radius_m)
-        q0 = self.qpos()
-        rejected = []
-        for deg in RING_PINCH_ANGLES_DEG:
-            a = np.radians(deg)
-            u = geo.inplane([np.cos(a), np.sin(a), 0.], n)
-            radial = np.array([u[0], u[1], 0.]) / np.linalg.norm(u[:2])
-            clearance = self.ring_pinch_clearance(c, radial, np.array([-radial[1], radial[0], 0.]), cord)
-            if clearance < CORD_CLEARANCE_M:
-                rejected.append((deg, "cord"))
-                continue
-            for lean in LEANS_DEG:
-                for tilt in TILTS_DEG:
-                    for flip in (1, -1):
-                        p, r, approach = self.pinch_pose(c + g.ring_major_radius_m * u, radial, lean, tilt, flip)
-                        try:
-                            qa = self.kin.solve_near("right", p - PRE_GRASP_M * approach, r, q0)
-                            qb = self.kin.solve_near("right", p, r, qa)
-                            q = qb
-                            for h in np.arange(.02, rise + .02, .02):
-                                q = self.kin.solve("right", p + [0., 0., h], r, q)
-                        except ValueError:
-                            continue
-                        qa[fingers] = qb[fingers] = PINCH_OPEN_M
-                        if max(self.kin.penetration("right", qi, boxes, CLEAR_FIXTURES_M) for qi in (qa, qb)) > 0:
-                            continue
-                        self.note("ring pinch", angle_deg=deg, lean=lean, tilt=tilt, flip=flip,
-                                  cord_clearance_m=clearance, rejected=rejected)
-                        return p, r, approach
-            rejected.append((deg, "no liftable pose"))
-        raise StageFailure(f"no liftable ring pinch clear of the cord and fixtures: {rejected}")
-
     def bead_closing(self):
         """Horizontal closing direction square to bead2's bore (the cord's direction through it)."""
         b, _ = self.body("bead_right")
-        s = np.arange(0., float(np.max(self.world["fem"]["cord"]["material_s_m"])), .004)
+        s = np.arange(0., geo.cord_length(self.world), .004)
         k = int(np.argmin([np.linalg.norm(geo.cord_point(self.world, v) - b) for v in s]))
         bore = geo.cord_point(self.world, s[k] + .012) - geo.cord_point(self.world, s[k] - .012)
         return np.array([bore[1], -bore[0], 0.]) / np.linalg.norm(bore[:2])
@@ -323,6 +283,7 @@ class EasierPolicy(BelowEasyPolicy):
                     poses, q = {}, q0
                     for name in ("pick", "pre", "lift", "over", "drop"):
                         p, r, approach = self.pinch_pose(centres["pick" if name == "pre" else name], closing, 0., tilt, flip)
+                        p = p - (BEAD_PINCH_DEPTH_M - PINCH_DEPTH_M) * approach
                         if name == "pre":
                             p = p - PRE_GRASP_M * approach
                         try:
@@ -351,7 +312,7 @@ class EasierPolicy(BelowEasyPolicy):
     def stage_hold_ring(self):
         """Right hand pinches the ring where its straight lift is reachable and raises it a little off the cord."""
         g = self.geo
-        p, r, approach = self.liftable_ring_pinch()
+        p, r, approach = self.ring_pinch()
         self._targets["right"][1] = PINCH_OPEN_M
         yield from self.route("right", p - PRE_GRASP_M * approach, r, speed=self.joint_speed, settle=4)
         yield from self.line({"right": (p, r)}, speed=self.joint_speed, settle=4, step_m=.003)
@@ -391,7 +352,9 @@ class EasierPolicy(BelowEasyPolicy):
             raise StageFailure(f"no bead between the fingertips (finger q {held:.4f} m, expected {expected:.4f})")
         for name in ("lift", "over"):
             yield from self.line({"left": poses[name]}, speed=self.joint_speed, settle=4)
+            self.note(f"bead2 {name}", finger_q_m=self.finger_q("left"), **self.loop_outside())
         yield from self.line({"left": poses["drop"]}, speed=self.joint_speed, settle=10, step_m=.003)
+        self.note("bead2 lowered", finger_q_m=self.finger_q("left"), **self.loop_outside())
         yield from self.gripper("left", BEAD_OPEN_M, steps=6, ramp=False)
         tp, tr = self.tcp("left")
         yield from self.line({"left": (tp + [0., 0., .12], tr)}, speed=self.joint_speed, settle=20)
@@ -433,6 +396,25 @@ class EasierPolicy(BelowEasyPolicy):
                   crossings=geo.ring_crossings(self.world, g))
         if self.ring_low_point() < g.post_top_z + .01:
             raise StageFailure("the ring did not rise past the post top")
+
+    def stage_place_ring(self):
+        """Carry the ring into the goal square, set it down on the table, open and back the hand off, and wait for the
+        task's success. Held in one hand on the rigid chain (2026-10-07) the ring swayed at 0.5-1.4 mm/s, across the
+        goal's 1 mm/s stillness limit, so the success window never completed; lying on the table it is still."""
+        g = self.geo
+        yield from self.follow({"right": self.plan_carry()}, self.joint_speed, 4)
+        tp, tr = self.tcp("right")
+        yield from self.line({"right": (tp + [0., 0., g.table_z_m + RING_SET_DOWN_M - self.ring_low_point()], tr)},
+                             speed=self.joint_speed, settle=8, step_m=.003)
+        yield from self.gripper("right", PINCH_OPEN_M, steps=6, ramp=False)
+        yield from self.hold(8)
+        tp, tr = self.tcp("right")
+        yield from self.line({"right": (tp - HAND_BACK_OFF_M * tr.apply([1., 0., 0.]), tr)}, speed=self.joint_speed,
+                             settle=4)
+        c, n = self.ring()
+        self.note("ring set down", center=c.tolist(), tilt_deg=float(np.degrees(np.arccos(min(1., abs(n[2]))))))
+        self.sync_to_measured(["right"])
+        yield from self.hold(160)
 
     def plan_carry(self):
         """Joint waypoints: level away from the post until the ring is clear of its top, level on towards the goal

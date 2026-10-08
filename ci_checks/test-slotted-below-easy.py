@@ -64,6 +64,68 @@ class DesignIntent(unittest.TestCase):
         self.assertGreater(report["widest_gap_m"], report["bead_diameter_m"])
 
 
+class RigidChain(unittest.TestCase):
+    """The team's rigid link chain (2026-10-07) in both below-easy settings; MuJoCo compiles the written MJCF."""
+
+    @classmethod
+    def setUpClass(cls):
+        import tempfile
+        cls.folder = tempfile.TemporaryDirectory()
+        cls.tasks = {}
+        for name in ("very_easy", "easier"):
+            task = task_definition("slotted_post_ring", name)()
+            folder = Path(cls.folder.name)/name
+            folder.mkdir()
+            task.declare(folder, .92)
+            cls.tasks[name] = (task, folder)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.folder.cleanup()
+
+    def test_chain_follows_the_team_parameters(self):
+        import mujoco
+        import numpy as np
+        for name, (task, folder) in self.tasks.items():
+            with self.subTest(name=name):
+                self.assertEqual(task.physics_model, "rigid_articulated")
+                model = mujoco.MjModel.from_xml_path(str(folder/"cord.xml"))
+                mass = {mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i): float(model.body_mass[i])
+                        for i in range(model.nbody)}
+                self.assertAlmostEqual(task.link_lengths.sum()/len(task.link_names), .0165, delta=.0005)
+                r = task.layout.rope_radius_m
+                for link, length in zip(task.link_names, task.link_lengths):
+                    self.assertAlmostEqual(mass[link], 650*np.pi*r*r*length, places=9)   # the cylinder only
+                self.assertAlmostEqual(mass["disc_left"], .0623, places=6)
+                self.assertAlmostEqual(mass["bead_right"], .01717, places=6)
+                data = mujoco.MjData(model)
+                mujoco.mj_forward(model, data)
+                self.assertEqual(data.ncon, 0)   # Genesis drops pairs touching in the built pose: build without contact
+
+    def test_lengths_keep_the_authored_routes(self):
+        self.assertEqual(len(self.tasks["very_easy"][0].link_names), 56)
+        self.assertEqual(len(self.tasks["easier"][0].link_names), 75)
+
+    def test_weld_targets_links_and_ring_not_beads(self):
+        from topogym.tasks.slotted_post_ring.common import recommended_grasp_assist
+        for name in ("very_easy", "easier"):
+            config = recommended_grasp_assist(f"slotted_post_ring_{name}")
+            entities = {target.entity for target in config.targets}
+            self.assertEqual((config.model, entities, config.max_tcp_distance_m),
+                             ("contact_weld_v1", {"cord", "target_ring"}, .09))
+            self.assertFalse(any(target.link.startswith("bead") for target in config.targets))
+        self.assertIsNone(recommended_grasp_assist("slotted_post_ring_easy"))
+
+    def test_settings_simulate_on_the_cpu_without_ipc(self):
+        from harbor_templates.topogym.common.rcb_topogym import simulator_config
+        for name in ("very_easy", "easier"):
+            cfg = simulator_config("slotted_post_ring", variation_id=f"slotted_post_ring_{name}", seed=0)
+            self.assertEqual((cfg["compute_backend"], cfg["precision"], cfg["reset_physics_steps"]), ("cpu", "64", 1200))
+            self.assertFalse(cfg.get("ipc_options"))
+            self.assertEqual(cfg["grasp_assist"]["model"], "contact_weld_v1")
+        self.assertTrue(simulator_config("slotted_post_ring", variation_id="slotted_post_ring_easy", seed=0)["ipc_options"])
+
+
 class Oracle(unittest.TestCase):
     """Wiring and fingertip sizes of the below-easy oracle (below_easy_oracle.py); no physics."""
 

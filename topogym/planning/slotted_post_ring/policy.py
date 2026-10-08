@@ -373,7 +373,7 @@ class SlottedOraclePolicy:
     def bead_grip(self, name="bead_left"):
         """Top-down pinch across a bead, closing horizontally and square to its bore (the cord's direction)."""
         b, _ = self.body(name)
-        s = np.arange(0., float(np.max(self.world["fem"]["cord"]["material_s_m"])), .004)
+        s = np.arange(0., geo.cord_length(self.world), .004)
         k = int(np.argmin([np.linalg.norm(geo.cord_point(self.world, v)-b) for v in s]))
         bore = geo.cord_point(self.world, s[k]+.012)-geo.cord_point(self.world, s[k]-.012)
         bore[2] = 0.
@@ -605,7 +605,7 @@ class SlottedOraclePolicy:
             raise StageFailure("disc parked inside the ring's footprint")
 
     def cord_points(self, step_m=.005):
-        s = np.arange(0., float(np.max(self.world["fem"]["cord"]["material_s_m"])), step_m)
+        s = np.arange(0., geo.cord_length(self.world), step_m)
         return np.array([geo.cord_point(self.world, v) for v in s])
 
     def ring_pinch_clearance(self, center, radial, tangent, cord):

@@ -303,7 +303,9 @@ TASKS: dict[str, dict] = {
         text="Free the removable metal ring from the slotted post and cord assembly. Place the entire ring inside the "
              "green dashed goal area and hold it still briefly. Keep the post, cord, beads, discs and other puzzle "
              "components outside the area on the puzzle/system side. Holding the target with the gripper is allowed.",
-        instances=[dict(variation_id="slotted_post_ring_hard", seed=0)]),
+        # Weld on any link and on the ring for the rigid-chain settings only; the FEM tiers' recommendation is none
+        # (tasks/slotted_post_ring/common.py).
+        instances=[dict(variation_id="slotted_post_ring_hard", seed=0)], grasp_assist="recommended"),
 }
 for _name, _t in TASKS.items():
     _t.setdefault("simulator", {}); _t.setdefault("grasp_assist", None); _t.setdefault("fixture", False)

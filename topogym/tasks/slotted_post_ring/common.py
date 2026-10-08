@@ -98,3 +98,21 @@ class SlottedPostRingTask(PlacementGoalMixin, TaskDefinition):
 
     def goal_region_observation(self, region):
         return region.observation(self.placement_targets, self.placement_remainder)
+
+
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """Contact weld for the rigid-chain settings (very_easy, easier; the team's chain standard, 2026-10-07): any chain
+    link, and the ring by a region round its centre (a pinch on the tube is about 61 mm from it, hence the 0.09 m TCP
+    distance). The beads are not targets: they must slide on the chain, and a weld would let the chain pull them off. The
+    FEM tiers keep their unassisted contract."""
+    from topogym.config.registry import task_definition
+    from topogym.utils.grasp import GraspAssistConfig, GraspTarget
+    task = task_definition("slotted_post_ring", variation_id, seed)(task_parameters, seed=seed)
+    if task.physics_model != "rigid_articulated":
+        return None
+    layout, _, _, roots, _, _ = task.chain_parts()
+    lengths = np.linalg.norm(np.diff(roots, axis=0), axis=1)
+    targets = [GraspTarget("cord", f"link_{i:02d}", (length/2, 0., 0.), length/2+.005) for i, length in enumerate(lengths)]
+    targets.append(GraspTarget("target_ring", "target_ring", (0., 0., 0.),
+                               layout.ring_major_radius_m+layout.ring_tube_radius_m+.01))
+    return GraspAssistConfig("contact_weld_v1", tuple(targets), max_tcp_distance_m=.09)

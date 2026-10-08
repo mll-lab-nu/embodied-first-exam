@@ -72,15 +72,18 @@ EASIER = dict(
             dict(name="turn_page", duration_s=4., to=dict(left=(-.356, .15, .12), right=(.084, .15, .12))),
             dict(name="lay_page", duration_s=4., to=dict(left=(-.356, .33, .03), right=(.084, .33, .03))),
         )),
-        # 3. Between the flipped patches the upper layer now lies face up: pinch
-        #    it there, 7 cm inside them and 4 cm in from the free edge, and pull
-        #    it out to 1 cm short of its flat place (y = 0.35), the near half
-        #    held by table friction, as easy spreads. (A pinch on a strip folded
-        #    back is a second page turn: its rim reached 1.50, 2026-10-07.)
-        dict(grasp_uv=dict(left=(-.15, .20), right=(.15, .20)), segments=(
-            dict(name="lift_edge", duration_s=1.5, by=dict(left=(0., 0., .05), right=(0., 0., .05))),
-            dict(name="spread_edge", duration_s=4., to=dict(left=(-.286, .34, .05), right=(.014, .34, .05))),
-            dict(name="lay_edge", duration_s=2., to=dict(left=(-.286, .34, .03), right=(.014, .34, .03))),
+        # 3. The flipped patches still leave a 1.5 cm hem along the whole free
+        #    edge (on top, v 0.225-0.24, 2026-10-07); inside it the upper layer
+        #    lies face up but 1.5 cm short with a ridge along the crease. Pinch
+        #    it 7 cm inside the patches and 2 cm inside the hem (v = 0.17) and
+        #    pull it out to 3 mm short of its flat place (y = 0.32), the near
+        #    half held by table friction, as easy spreads: the coverage then
+        #    loses only the hem (3 %). (A pinch on a strip folded back is a
+        #    second page turn: its rim reached 1.50, 2026-10-07.)
+        dict(grasp_uv=dict(left=(-.15, .17), right=(.15, .17)), segments=(
+            dict(name="lift_edge", duration_s=1.5, by=dict(left=(0., 0., .04), right=(0., 0., .04))),
+            dict(name="spread_edge", duration_s=4., to=dict(left=(-.286, .317, .04), right=(.014, .317, .04))),
+            dict(name="lay_edge", duration_s=2., to=dict(left=(-.286, .317, .03), right=(.014, .317, .03))),
         )),
     ),
 )

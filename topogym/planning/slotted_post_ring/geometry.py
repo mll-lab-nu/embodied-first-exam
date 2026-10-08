@@ -60,7 +60,10 @@ class SceneGeometry:
     def from_task(cls, task):
         layout = task.layout
         origin = tuple(float(v) for v in np.r_[task.config["center_xy_m"], task.table_height_m])
-        centers = {name: np.asarray(task.placement_vertices[name], float).mean(axis=0).tolist() for name in PARTS}
+        # Rigid-chain settings (below-easy) give their parts in each body's own frame; the FEM tiers' parts are rigid
+        # entities whose frame is the authored one.
+        local = {**task.placement_vertices, **getattr(task, "body_vertices", {})}
+        centers = {name: np.asarray(local[name], float).mean(axis=0).tolist() for name in PARTS}
         return cls(local_centers=centers, origin_m=origin, table_z_m=float(task.table_height_m),
                    disc_radius_m=layout.disc_radius_m, disc_thickness_m=layout.disc_thickness_m,
                    bead_radius_m=layout.bead_radius_m, ring_major_radius_m=layout.ring_major_radius_m,
@@ -75,22 +78,49 @@ class SceneGeometry:
                    goal_center_xy_m=tuple(task.goal_region.center_xy_m), goal_half_size_m=tuple(task.goal_region.half_size_m),
                    separator_offset_m=float(task.goal_region.separator_offset_m),
                    # The local v15 discs lie flat; the imported layout used upright discs with an x normal.
-                   disc_normal_local=tuple(np.eye(3)[np.argmin(np.ptp(task.placement_vertices["disc_left"], axis=0))]),
+                   disc_normal_local=tuple(np.eye(3)[np.argmin(np.ptp(local["disc_left"], axis=0))]),
                    standing_discs=bool(getattr(layout, "disc_stands", False)))
+
+
+def _part(world, name):
+    """A rigid entity's pose, or in the rigid-chain settings a disc or bead body of the cord entity."""
+    return world["bodies"][name] if name in world["bodies"] else world["articulations"]["cord"]["links"][name]
 
 
 def body(world, geometry, name):
     """(center, rotation) of a rigid part."""
-    b = world["bodies"][name]
+    b = _part(world, name)
     r = rot(b["quaternion_wxyz"])
     return r.apply(geometry.local_centers[name])+np.asarray(b["position_m"], float), r
 
 
 def speed(world, name):
-    return float(np.linalg.norm(world["bodies"][name]["linear_velocity_m_s"]))
+    return float(np.linalg.norm(_part(world, name)["linear_velocity_m_s"]))
+
+
+def _chain(world):
+    """The rigid chain's joints from the left disc eye to the right one, and their arc lengths. A link frame sits at a
+    joint: link i < middle at its right end (it points back), the others at their left end; the discs at their eyes."""
+    if (world.get("fem") or {}).get("cord") is not None:
+        return None
+    links = world["articulations"]["cord"]["links"]
+    names = sorted(n for n in links if n.startswith("link_"))
+    points = np.array([links["disc_left"]["position_m"], *(links[n]["position_m"] for n in names),
+                       links["disc_right"]["position_m"]], float)
+    points = points[np.r_[True, np.linalg.norm(np.diff(points, axis=0), axis=1) > 1e-6]]
+    return np.r_[0., np.cumsum(np.linalg.norm(np.diff(points, axis=0), axis=1))], points
+
+
+def cord_length(world):
+    chain = _chain(world)
+    return float(chain[0][-1]) if chain is not None else float(np.max(world["fem"]["cord"]["material_s_m"]))
 
 
 def cord_point(world, s_m, half_width_m=.003):
+    chain = _chain(world)
+    if chain is not None:
+        s, points = chain
+        return np.array([np.interp(s_m, s, points[:, k]) for k in range(3)])
     cord = world["fem"]["cord"]
     s = np.asarray(cord["material_s_m"], float).reshape(-1)
     x = np.asarray(cord["position_m"], float).reshape(-1, 3)
@@ -134,7 +164,7 @@ def ring_on_post(world, geometry):
 def ring_crossings(world, geometry, step_m=.0025):
     """Material arc lengths (and signs) where the cord pierces the ring's disk inside the tube centreline."""
     c, n = ring_disk(world, geometry)
-    s = np.arange(0., float(np.max(world["fem"]["cord"]["material_s_m"])), step_m)
+    s = np.arange(0., cord_length(world), step_m)
     x = np.array([cord_point(world, v, half_width_m=step_m) for v in s])
     d = (x-c) @ n
     out = []

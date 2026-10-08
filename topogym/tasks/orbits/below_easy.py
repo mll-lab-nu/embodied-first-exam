@@ -44,16 +44,20 @@ class OrbitsBelowEasyTask(OrbitsTask):
     }
     defaults = merge_parameters(OrbitsTask.defaults, variant_parameters)
     fixed_parameters = ('linear_scale', 'cord_profile', 'geometry')
-    model_revision = 'below_easy_v8_stiff_team_chain_v1'
+    model_revision = 'below_easy_v10_stiff_chain_armature1e5_v1'
     physics_model = "rigid_articulated"
     placement_attachment_names = ()
     # The teammates' Orbits chain standard (2026-10-07), at this 0.85 layout: 16.5 mm capsule links (their 23.1 mm at
-    # linear_scale 1.19) of the authored cord's 3.74 mm diameter, ball-joint damping 2e-4 and armature 1e-6, one 2.5 ms
+    # linear_scale 1.19) of the authored cord's 3.74 mm diameter, ball-joint damping 2e-4, one 2.5 ms
     # substep with the CG constraint solver. Before: 6 mm cord of 20 mm links, damping 1e-4, four substeps.
     CHAIN_RADIUS_M = .00187
     LINK_LENGTH_M = .0165
     JOINT_DAMPING = 2e-4
-    JOINT_ARMATURE = 1e-6
+    # Armature 1e-5 for these two tiers (the teammates' 1e-6; user, 2026-10-08): Genesis' grasp weld and the middle
+    # tie are soft constraints (time constant two substeps) scaled by the links' effective inertia, and the 0.18 g
+    # links let about 1 N of cord tension pull the weld past its 10 mm limit and the tie past 2 mm while easier's
+    # bight rose through the ring hole; at 1e-5 the weld stayed within 5 mm and the tie within 0.7 mm up to 0.19 m.
+    JOINT_ARMATURE = 1e-5
     # Bending stiffness as a Young's modulus, k = E pi r^4 / (4 L) per ball joint, pulling each joint back to the
     # authored loop (a charging-cable cord; user, 2026-10-07). Two hands lifting a limp loop let it hang into their
     # vertical plane, one strand pressed on the post, which the ball then caught (very_easy run 17 tore the handle tie).
@@ -101,7 +105,11 @@ class OrbitsBelowEasyTask(OrbitsTask):
         self.origin = np.r_[xy-local_anchor[:2], table_height_m]
         turn = tuple(rotation.as_quat()[[3, 0, 1, 2]])
         fixture = [name for name in parts if name not in {"cord", "handle"}]
+        # Fixture friction 0.3 like the chain (teammate standard): Genesis takes the larger of two contact frictions,
+        # and the URDF default of 1.0 made the easier legs drag over the ring rim hard enough to stretch the middle tie
+        # to 2 mm while the bight rose (local easier run 3, 2026-10-08); the MuJoCo reference at 0.3 stretched it 0.7 mm.
         entities = [EntitySpec(name, "urdf", visual_collision_urdf(folder, name), tuple(self.origin), turn, fixed=True,
+                               material={"friction": .3},
                                morph_options={"convexify": False, "decimate": False, "file_meshes_are_zup": True,
                                               "align": False, "merge_fixed_links": False})
                     for name in fixture]

@@ -503,10 +503,18 @@ class NativeOrbits:
                 if 'No collision-free' not in str(error) or side == 'left':
                     raise
                 print(f'ring-hole pinch: {error}; trying the left hand', flush=True)
-        point = self.local(self.contact(side)[0])
+        # Rise in 1 cm steps, each time moving the pads onto the held link: the legs sliding over the support-side rim
+        # drag it toward that rim, and holding the hand still let the soft weld stretch from 4 to 10 mm and let go
+        # (local easier runs 2-3, 2026-10-08). The hand follows toward the rim at most to 45 mm inside it (the
+        # gripper's half width).
         top = lay.ball_z+lay.ball_radius_m
-        self.move({side: self.world_points([point[0], point[1], top+.06])}, {side: turns[side]},
-                  'bight_up_through_hole', speed=.02)
+        limit = lay.post_x[-1]-lay.ring_tube_radius_m-.045
+        z = self.local(self.contact(side)[0][None])[0][2]
+        while z < top+.06-1e-6:
+            z = min(z+.01, top+.06)
+            cord = self.local(self.at(station)[None])[0]
+            self.move({side: self.world_points([min(cord[0], limit), cord[1], z])}, {side: turns[side]},
+                      'bight_up_through_hole', speed=.02)
         self.hold(.5, 'bight_up_settle')
         if np.linalg.norm(self.at(station)-self.contact(side)[0]) > .02:
             raise RuntimeError('The bight slipped while lifted through the ring hole')

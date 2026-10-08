@@ -38,12 +38,20 @@ oracle 还没跑通 2（orbits easier、blanket easier）。能否直接拿去�
 
 | 任务 / 档 | oracle 两个模式 | 评分所用代码 | 还差什么 |
 | - | - | - | - |
-| blanket very_easy | 1 / 1 | v19 本身（`89cc32674`），已提交 | 只差和其他任务一起进同一个候选；最接近就绪 |
-| knot 两档、slotted very_easy | 1 / 1 | merged-v18 候选，已提交 | D6：v19 下重评，或逐位核对回放后沿用（knot、slotted 不用布料，v19 的改动不碰它们的物理，预计结果不变） |
+| blanket very_easy | 1 / 1 | lab 的 v19（`89cc32674`），**不含** `99c3d27b0`（共享 IK 与路径检查，改了 `robot_oracle.py` 与 `harbor_bridge/actions.py`），也不含之后 easier 对 `robot_oracle.py` 的未提交改动 | 用当前代码重评一次 |
+| knot 两档、slotted very_easy | 1 / 1 | lab：merged-v18 候选（knot `7571e4194`），本机 knot：冻结快照 `source03`；都**不含** `99c3d27b0`（两家族的 `kinematics.py` 改用共享 `OracleIKSolver`） | 用当前代码重评一次（本机 ik01 作业本应评 knot，但停在 not_run）；D6 随之不再需要 |
 | rope 两档 | 1 / 1，换机器逐位一致，噪声 22 / 22 | 工作区快照（v19 + 未提交改动） | 提交代码，用提交后的代码建候选重评一次 |
 | slotted easier | 1 / 1 | 独立 worktree（v19 + 未提交改动） | 同上 |
 | orbits very_easy | 第 18 次 1 / 1，最终配置第 19 次在跑 | 工作区（未提交） | 第 19 次两个模式为 1，再提交、进候选 |
 | orbits easier、blanket easier | 未跑通 | — | oracle 本身 |
+
+评分走的路线（20:45 核对）：以上所有通过都经 `scripts/oracle_runners/test_harbor_oracles.py --candidate … --no-nop --execute`，
+即原生 `harbor run -p <任务目录> -a oracle`：任务目录的 `environment/`、`tests/` 与候选逐字节相同（打包时按哈希核对，
+只加 runtime_binding），verifier 是任务自带的 `tests/`，privileged 两遍新进程回放、standard 经 sidecar。与真实使用的差别：
+① 都加了 `--no-nop`，没有跑"什么都不做得 0"的对照（`docs/rcb/README.md` 的验收要求有这一项）；② standard 的 oracle
+是把 privileged 轨迹经 standard 服务回放（按单步 0.04 rad 换算时序），证明这条轨迹走公开接口可执行、可复现，不是只看图像的
+闭环策略；③ 评的是候选目录，不是 `topogym_candidate_pipeline.py --phase all` 激活后的 `tasks/`（launcher 只跑 build 阶段，
+初态精确恢复由 verifier 的 `instance_exact` 检查）。
 
 另一点：工作区里还有别的会话对共享文件的未提交改动（`harbor_templates/topogym/common/rcb_topogym.py`、
 `topogym/tasks/goal_description.py` 等），上面各次评分各自用的是当时的快照。最终候选把这些改动合在一起后，

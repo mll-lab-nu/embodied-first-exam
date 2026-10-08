@@ -101,4 +101,13 @@ easier（2026-10-07，`EasierPolicy`）：困住环的只是远侧绳圈上的�
 珠倒进空隙；左手退回停放位；环向 +y 移 5 mm 后直上，搭着的绳向内滑落；放置多加一段平移，让在环靠立柱一侧的手越过柱顶后
 再下降。开发 Session 上经 `public_session` 从出生态连续一次原生成功，874 行；证据
 `runs/test_results/slotted_easier_oracle_dev_20261007_01/`。试过但不用的：捏珠 1 拉绳（珠孔口把 E 50 kPa 的绳压出反转
-四面体）、推左端盘把绳从长孔拉回（可行但左臂够不远）。Harbor 候选与评分未做。
+四面体）、推左端盘把绳从长孔拉回（可行但左臂够不远）。FEM 版 2026-10-07 在 mll-4090-1 Harbor 双模式 1
+（`runs/test_results/slotted_easier_harbor_v19_20261007_01/`）。
+
+刚体链（2026-10-07，团队链标准）：very_easy / easier 的绳改为 16.5 mm 胶囊链（球关节，阻尼 2e-4，无弯曲刚度，只按圆柱计质量），
+端盘用球关节挂在盘眼上，珠子与链同一 MJCF 实体（Genesis 的碰撞位掩码只在实体内生效），环为 32 段胶囊；CPU float64，
+`contact_weld_v1` 可焊链节和环、不焊珠子（`assets/geometry/slotted_post_chain.py`、`tasks/slotted_post_ring/below_easy.py`）。
+oracle 读链关节作为绳的中心线（`geometry._chain`）；随链改动的三处：捏环角度扩到整圈并预检直上越柱顶可达（链落稳后
+贴在立柱前面，very_easy 改捏 120°）；捏珠 2 改为深度 11 mm、夹紧目标 0.020（0.006 会把球从指尖间挤出）；easier 放下环
+后松手（单手夹着的环摆动 0.5–1.4 mm/s，越过 1 mm/s 的静止门槛）。本机 CPU 开发运行：very_easy 431 行、easier 871 行原生
+成功，每步 0.15–0.2 s。
