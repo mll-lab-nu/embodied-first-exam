@@ -10,10 +10,12 @@ m = d.get("metadata", {})
 for k in ["author_name", "task_type", "simulator", "robot", "family", "expert_time_estimate_hours"]:
     if k not in m: fail(f"[metadata].{k} missing")
 if m.get("task_type") not in ("trajectory", "policy"): fail("task_type must be trajectory|policy")
-# Protocol v1.0 (§2.2, §2.3): the directory ends in -privileged or -standard and `mode` says the same; no `tier`.
+# Protocol v1.1 (§2.2, §2.3, D12): the directory ends in its mode (-privileged, -standard, -realtime) and `mode` says the
+# same; no `tier`.
+MODES = ("privileged", "standard", "realtime")
 suffix = t.name.rsplit("-", 1)[-1]
-if suffix not in ("privileged", "standard"): fail("directory name must end in -privileged or -standard")
-if m.get("mode") not in ("privileged", "standard"): fail("[metadata].mode must be privileged|standard")
+if suffix not in MODES: fail("directory name must end in -privileged, -standard or -realtime")
+if m.get("mode") not in MODES: fail("[metadata].mode must be privileged|standard|realtime")
 elif m["mode"] != suffix: fail(f"[metadata].mode = {m['mode']!r} but the directory ends in -{suffix}")
 if "tier" in m: fail("[metadata].tier was removed in protocol v1.0 (use mode)")
 if "/app/output/" not in d.get("artifacts", []): fail('top-level artifacts must include "/app/output/"')
