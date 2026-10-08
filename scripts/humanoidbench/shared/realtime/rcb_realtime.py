@@ -1,7 +1,8 @@
-"""eai-standard/2.3, the realtime mode's protocol: the sim service of HumanoidBench's `-realtime` tasks (docs/PROTOCOL.md
-§4b, docs/LIMITED_MODE_PROTOCOL.md "Realtime mode"; docs/benchmarks/humanoidbench.md). Entry point of the sidecar:
-`python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged). 2.3 is 2.2 plus the realtime capability, every 2.2
-addition optional: this service is rcb_service's 2.1 service with the capability, and reports eai-standard/2.3.
+"""eai-standard/2.3, the standard-realtime mode's protocol: the sim service of HumanoidBench's `-standard-realtime` tasks
+(docs/PROTOCOL.md §4b, docs/LIMITED_MODE_PROTOCOL.md "Standard-realtime mode"; docs/benchmarks/humanoidbench.md). Entry
+point of the sidecar: `python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged). 2.3 is 2.2 plus the realtime
+capability, every 2.2 addition optional: this service is rcb_service's 2.1 service with the capability, and reports
+eai-standard/2.3.
 
 It extends rcb_service.Service: the same endpoints, RCB1 frames, budgets (reset, wall clock), evidence, crash recovery
 and finalize. Only the time model differs. In standard mode time moves only inside calls; here the episode has a clock:
@@ -55,7 +56,7 @@ import numpy as np
 import rcb_service
 from rcb_service import MAX_BODY, Recorder, Refused, Service, bad_request
 
-PROTOCOL = "eai-standard/2.3"   # the realtime mode's protocol (PROTOCOL §4b); rcb_service.py itself serves 2.1
+PROTOCOL = "eai-standard/2.3"   # the standard-realtime mode's protocol (PROTOCOL §4b); rcb_service.py itself serves 2.1
 MAX_LAG_S = 0.5          # behind the clock by more than this: drop the debt (a stall) instead of catching up
 CHECKPOINT_S = 1.0       # robot time between checkpoints while the clock runs (the most a crash loses)
 

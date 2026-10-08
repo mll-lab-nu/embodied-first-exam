@@ -1,15 +1,16 @@
-# Robot Coding Bench — Task Protocol v1.1
+# Robot Coding Bench — Task Protocol v1.1.1
 
 Status: **final** (2026-09-30; v1.0.1 2026-10-01: both modes carry a suffix, no results in the repository, standard
-task README; **v1.1 2026-10-08: a third mode, realtime (§4b), served by `eai-standard/2.3`; protocol-change issue #86**).
+task README; **v1.1 2026-10-08: a third mode (§4b), served by `eai-standard/2.3`; protocol-change issue #86; v1.1.1 2026-10-08: the third mode is named
+`standard-realtime`, issue #97**).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard mode is specified in
-[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`, and the realtime mode's `eai-standard/2.3`);
+[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`, and the standard-realtime mode's `eai-standard/2.3`);
 its 2.2 extension in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md), and the 2.4 operations capability in
 [`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md) (2026-10-08, issue #89).
 
 > **Names.** v1.0 renamed the two modes (unlimited → **privileged**, limited → **standard**) and the standard-mode
 > protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**); task directories end in `-privileged` or `-standard`. Base images
-> moved to `ghcr.io/mll-lab-nu/eai-<name>` on 2026-10-02 (§7). v1.1 added a third mode, **realtime** (`-realtime`): standard
+> moved to `ghcr.io/mll-lab-nu/eai-<name>` on 2026-10-02 (§7). v1.1 added a third mode, **standard-realtime** (`-standard-realtime`): standard
 > mode's robot as a service, on a clock that does not stop.
 
 ## 0. Conventions
@@ -34,7 +35,7 @@ is the task's own business.
 |---|---|---|
 | **privileged mode** | Agent and simulator share a container; the agent may read privileged state, reset freely, call planning primitives. The deliverable is a trajectory. | unlimited |
 | **standard mode** | Robot as a service: the simulator runs in a sidecar the agent cannot open; the agent only sends actions and receives images and proprioception through a client; no reset, unless the benchmark grants a reset budget (§4.5). | limited |
-| **realtime mode** | Standard mode on a clock that does not stop: once an episode starts, the robot runs in real time (divided by the slowdown S) whatever the agent does, holds its last targets while the agent thinks, and the agent drives it from a program of its own (§4b, `eai-standard/2.3`). | — (v1.1) |
+| **standard-realtime mode** | Standard mode on a clock that does not stop: once an episode starts, the robot runs in real time (divided by the slowdown S) whatever the agent does, holds its last targets while the agent thinks, and the agent drives it from a program of its own (§4b, `eai-standard/2.3`). | — (v1.1) |
 | **`eai-standard/2.x`** | The standard-mode wire protocol (§4). | `rcb-limited/2.x` |
 | **`eai-<name>`** | Base image (a simulator stack, usually one per benchmark) under `ghcr.io/mll-lab-nu/` (§2.4). | `rcb-<sim>` under several registries; `eai-<name>` under `embodied-agent-interface-v2-internal` until 2026-10-02 |
 
@@ -45,7 +46,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exception (owner, 2026-10-07): HumanoidBench standard defaults to N = 50 (§4.5). The realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exception (owner, 2026-10-07): HumanoidBench standard defaults to N = 50 (§4.5). The standard-realtime mode's `eai-standard/2.3` (§4b) is 2.2 plus the realtime capability. `eai-standard/2.4` (issue #89) is 2.3 plus the operations capability; standard tasks may use it. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -57,7 +58,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. A transparent usage gateway that forwards requests unchanged and only records token usage (`scripts/usage_gateway/`) is allowed. |
 | The harness's web search is off in official runs: Codex `web_search = "disabled"` (Harbor `--ak web_search=disabled`), Claude Code `WebSearch` and `WebFetch` disallowed (`--ak disallowed_tools=WebSearch,WebFetch`). The search runs at the model provider, so no egress allowlist stops it; `scripts/run_agent_batch.sh` sets both by default (`WEB_SEARCH=disabled`) | MUST | [new] (2026-10-02: tested with Codex 0.159.2 and gpt-6-luna — with ChatGPT login the default searches GitHub and quotes upstream experts, `disabled` stops it; with an Azure API key Codex offers no search, but the API runs one for a request that carries the `web_search` tool, which only the usage gateway's raw log can reveal) |
-| D12 | Mode naming | `mode ∈ {privileged, standard, realtime}` (realtime since v1.1, owner 2026-10-08, #86); the `tier` field is removed; every task directory ends in its mode: `-privileged`, `-standard` or `-realtime`. |
+| D12 | Mode naming | `mode ∈ {privileged, standard, standard-realtime}` (the third mode since v1.1, #86; named `standard-realtime` since v1.1.1, owner 2026-10-08, #97: it is standard mode's robot as a service on a clock that does not stop); the `tier` field is removed; every task directory ends in its mode: `-privileged`, `-standard` or `-standard-realtime`. |
 
 ## 1. Checklist (every task)
 
@@ -73,10 +74,10 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 10. Reference solutions only under `solution/`; nothing the agent can reach contains or points to one. [current]
 11. `nop` scores 0; with an oracle, the oracle scores 1; without one, human review (§2.7). [new]
 12. A published task's `environment/` and `tests/` inputs never change; a change is a new task. [current]
-13. The directory name ends in `-privileged`, `-standard` or `-realtime`, matching `mode` (§2.2); no `results/` directory (D3). [CI]
+13. The directory name ends in `-privileged`, `-standard` or `-standard-realtime`, matching `mode` (§2.2); no `results/` directory (D3). [CI]
 14. `README.md` in the standard layout (§2.1). [CI] (sections and key rows; `scripts/task_conventions.py --check` for the rest)
 15. Runs with Harbor's native agents; no custom runner or adapter, and no gateway beyond the recording-only usage gateway (D11). [new]
-16. Standard-mode tasks also satisfy every MUST in §4; realtime-mode tasks every MUST in §4 and §4b.
+16. Standard-mode tasks also satisfy every MUST in §4; standard-realtime tasks every MUST in §4 and §4b.
 
 ## 2. Task contract
 
@@ -97,7 +98,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 |---|---|---|
 | Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`metaworldplus-<env>-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
 | Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` | MUST | suffix [CI]; shared instance [current] |
-| Realtime tasks: `<base>-realtime`, sharing the privileged twin's frozen instance and `instance_seed`; its twin is `<base>-privileged` (a benchmark that has realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
+| Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`; its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
 ### 2.3 `task.toml`
@@ -105,9 +106,9 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 |---|---|---|
 | `schema_version = "1.3"`; `[task].name = "robot-coding-bench/<folder>"` | MUST | [current]; name [CI] |
 | `[task].description`, `authors`, `keywords` | SHOULD | [current] |
-| `[metadata]`: `author_name`, `task_type ∈ {trajectory, policy}`, `simulator`, `robot`, `family`, `mode ∈ {privileged, standard, realtime}`, `expert_time_estimate_hours` | MUST | [CI] |
+| `[metadata]`: `author_name`, `task_type ∈ {trajectory, policy}`, `simulator`, `robot`, `family`, `mode ∈ {privileged, standard, standard-realtime}`, `expert_time_estimate_hours` | MUST | [CI] |
 | `tier` | MUST NOT | [CI] (`privileged` → `mode = "privileged"`, `perception` → `mode = "standard"`) |
-| Standard tasks: `protocol = "eai-standard/2.1"`, `"eai-standard/2.2"` or `"eai-standard/2.4"`; realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
+| Standard tasks: `protocol = "eai-standard/2.1"`, `"eai-standard/2.2"` or `"eai-standard/2.4"`; standard-realtime tasks: `protocol = "eai-standard/2.3"`; privileged tasks: no `protocol` | MUST | [CI] |
 | `oracle ∈ {full, partial, none}`; `oracle_evidence` when not `full` | MUST | [CI] |
 | `simulator`, `robot` from the vocabularies in [`TAXONOMY.md`](TAXONOMY.md) (extend by PR) | MUST | [current]; CI check [new] |
 | `instance_seed`; benchmark-specific fields registered in TAXONOMY | MAY | [current] |
@@ -246,10 +247,10 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 | rcb-limited/2.1 | 2026-09-27 | 82-column proprioception, optional depth noise; crash recovery added 2026-09-29 (no version bump) |
 | **eai-standard/2.1** | 2026-09-30 | rename only; identical to rcb-limited/2.1 including crash recovery. **Current.** |
 | eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md)) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite and DexJoCo |
-| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Realtime mode"); every 2.2 addition stays a MAY. Served by realtime-mode tasks only (HumanoidBench); standard tasks stay on 2.1 / 2.2. Issue #86 |
+| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md)): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
-Standard services report `eai-standard/2.1`, `eai-standard/2.2` or `eai-standard/2.4`, realtime services `eai-standard/2.3`; the shipped clients
+Standard services report `eai-standard/2.1`, `eai-standard/2.2` or `eai-standard/2.4`, standard-realtime services `eai-standard/2.3`; the shipped clients
 accept every 2.x version and the former `rcb-limited/2.x` spelling as well.
 
 **Core rules.** The simulator runs in a sidecar the agent cannot open; four endpoints; RCB1 binary responses; no
@@ -355,11 +356,11 @@ results must state the reset budget and are compared only with results under the
 (implemented for RoboTwin). If recorded: rendered from the replay by default, frames stamped with the call, never
 affecting the verdict.
 
-## 4b. Realtime mode (`mode = "realtime"`): `eai-standard/2.3`
+## 4b. Standard-realtime mode (`mode = "standard-realtime"`): `eai-standard/2.3`
 
 Standard mode on a clock that does not stop (v1.1; owner, 2026-10-08; issue #86). Everything in §4 holds (sidecar
 topology, endpoints, RCB1, actions, privileged information, crash recovery, evidence, replay grading) except where this
-section says otherwise. Wire details: [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Realtime mode". The time model
+section says otherwise. Wire details: [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Standard-realtime mode". The time model
 is the one proposed in #41 (the world runs at 1/S of real speed, a command takes effect at the next control step, all
 agent latency counts, the agent's own program may act), on the 2.x endpoints and without its proxy (D11).
 
@@ -373,7 +374,7 @@ agent latency counts, the agent's own program may act), on the 2.x endpoints and
 | Reset budget: **`budget.reset = 50` by default** (the reset capability of §4.5; `RCB_RESET_BUDGET` overrides it; results state the budget and are compared only under the same budget) | MUST (default) | [new] (owner, 2026-10-08: the same as HumanoidBench standard) |
 | A simulator crash is an infrastructure failure, never the agent's: past `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed` (no call spans a crash: `/submit` answers at once), a failed resume `resume_failed`, and a simulator error that ends the graded episode (`reason = "error"`) — all with `infra_error = 1` | MUST | [new] (owner, 2026-10-08) |
 | The agent's controller runs in the agent's own container and streams targets through the client; no agent code runs next to the simulator | MUST | [new] |
-| A realtime task shares its privileged twin's frozen instance and success rule (its verifier grades the sidecar's record, as in standard mode); its instruction says that time does not stop | MUST | [new] |
+| A standard-realtime task shares its privileged twin's frozen instance and success rule (its verifier grades the sidecar's record, as in standard mode); its instruction says that time does not stop | MUST | [new] |
 
 ## 5. Results, cost, token budget
 | Item | Level | Basis |
@@ -384,7 +385,7 @@ agent latency counts, the agent's own program may act), on the 2.x endpoints and
 | Align reasoning effort, `max_turns`, token budget and `[agent].timeout_sec` before comparing agents | SHOULD | [current] |
 | Run id `<harness>-<model>-<effort>` | MUST | [new] |
 | Results are not committed to the repository: they are published on the results site and the Hugging Face dataset, keyed by run id; no `results/` directory in a task directory, no batch reports under `docs/` | MUST | [CI] for task directories |
-| Privileged, standard and realtime results reported separately; standard and realtime results state the protocol version and reset budget, realtime results also the slowdown S (S ≠ 1 reported separately from S = 1) | MUST | [new] (realtime: v1.1) |
+| Privileged, standard and standard-realtime results reported separately; standard and standard-realtime results state the protocol version and reset budget, standard-realtime results also the slowdown S (S ≠ 1 reported separately from S = 1) | MUST | [new] (realtime: v1.1) |
 
 Harbor 0.23 has no token cap. **With the usage gateway on** (`GATEWAY=1` in `scripts/run_agent_batch.sh`, D11), the
 budget is enforced during the run: once a trial's recorded input or output reaches its budget, the gateway refuses every
@@ -408,11 +409,11 @@ mounting, `robot_spec`, `world`, a stateless `POST /kinematics`, and a per-call 
 `meta.stopped`; the episode's only budget stays the wall clock) — all MAY capabilities. Its services implement the crash
 recovery of §4.7 (with the per-simulator resume rule); the shared implementation is `scripts/eai_standard/`.
 
-**`eai-standard/2.3`** (v1.1, 2026-10-08, issue #86; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Realtime mode").
+**`eai-standard/2.3`** (v1.1, 2026-10-08, issue #86; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Standard-realtime mode").
 2.2 plus the realtime capability: `/spec.timing`, `/submit` with `at` answering at once, `cameras: []` for no images, the
 `meta` / `/status` fields `running`, `planned_steps`, `lag_s` (and `start_step`, `late_steps`, `plan_end_step` on a
 submit), and the evidence of §4b. Every 2.2 addition stays a MAY capability, so a 2.1 service with the realtime capability
-is a 2.3 service. Only realtime-mode tasks serve it (§4b); 2.x clients connect to it unchanged, and the timing semantics
+is a 2.3 service. Only standard-realtime tasks serve it (§4b); 2.x clients connect to it unchanged, and the timing semantics
 are declared in `/spec.timing` and the task's instruction.
 
 **`eai-standard/2.4`** (2026-10-08, issue #89; [`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md)). 2.3 plus the operations
@@ -421,7 +422,7 @@ capability: `meta.operation_id` and `meta.request_deadline_unix_s` on `/submit` 
 `interrupted` with `execution_uncertain` after a crash), a service-owned watchdog that ends a hung native call as an infra
 error, a physics-tick ledger that resumes replay with the ticks each row took, and fsynced journals. Every earlier addition
 (2.2's, and 2.3's realtime capability) stays a MAY, so a 2.2 service with the operations capability is a 2.4 service;
-standard tasks may declare it, realtime tasks stay on 2.3. The reference implementation is `scripts/eai_standard/v2_4/`
+standard tasks may declare it, standard-realtime tasks stay on 2.3. The reference implementation is `scripts/eai_standard/v2_4/`
 (`rcb_limited.py`, `rcb_client.py`; `rcb1.py` and `run.sh` are 2.2's), copied unchanged into every 2.4 task. First
 served by RoboTangle, whose release named it "2.3" before that number went to the realtime capability.
 

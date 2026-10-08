@@ -2,7 +2,7 @@
 
 Operational notes for running batches and reading results. The contract is [PROTOCOL.md](PROTOCOL.md); the
 standard-mode wire protocol is [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md). Task directories end in `-privileged`,
-`-standard` or `-realtime` (PROTOCOL §4b: realtime results state the reset budget and the slowdown `RCB_SLOWDOWN`, default
+`-standard` or `-standard-realtime` (PROTOCOL §4b: standard-realtime results state the reset budget and the slowdown `RCB_SLOWDOWN`, default
 1; results with another slowdown are reported separately).
 
 ## Agent logs and timelines
@@ -38,7 +38,7 @@ separate verifiers. Results (per-task and batch reports) go to the results site 
 
 ## Unattended batches (`scripts/run_agent_batch.sh`)
 `scripts/run_agent_batch.sh <batch> <base> ...` runs one Harbor-native agent over `<base>-privileged` and `<base>-standard`
-(and `<base>-realtime` with `MODES="privileged standard realtime"`) for each task base (a missing twin is skipped), one Harbor job per task and mode. Starting the same command again adds a
+(and `<base>-standard-realtime` with `MODES="privileged standard standard-realtime"`) for each task base (a missing twin is skipped), one Harbor job per task and mode. Starting the same command again adds a
 lane: every job is claimed by exactly one runner (`$JOBS/.claims/<job>`). The run id is derived as in TAXONOMY (D4) and
 checked. Configuration is Harbor's own:
 

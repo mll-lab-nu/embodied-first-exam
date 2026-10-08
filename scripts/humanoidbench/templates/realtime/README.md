@@ -1,6 +1,6 @@
-# {{base_dir}}-realtime
+# {{base_dir}}-standard-realtime
 
-Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §4b) of `{{task_dir}}`:
+Standard-realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §4b) of `{{task_dir}}`:
 the same frozen instance and the same success rule as it and as `{{base_dir}}-standard`, but time does not stop. Once an
 episode's clock starts (its first `submit`), the robot runs at {{control_hz}} Hz in real time and holds its last servo
 targets while the agent thinks, so the agent drives it with a controller program of its own that streams targets
@@ -11,10 +11,10 @@ grades the sidecar's record in a container of its own (`tests/Dockerfile`, no ne
 
 | | |
 |---|---|
-| mode / sensors | realtime: head-camera RGB + joint angles and velocities (HumanoidBench's own `image` and `proprio` sensors), a pelvis IMU and a camera fixed in the room; {{standard_tier}}, no reward; {{reset_budget}} resets (a new episode from the frozen start each, paused until its first `submit`; only the last episode is graded) |
+| mode / sensors | standard-realtime: head-camera RGB + joint angles and velocities (HumanoidBench's own `image` and `proprio` sensors), a pelvis IMU and a camera fixed in the room; {{standard_tier}}, no reward; {{reset_budget}} resets (a new episode from the frozen start each, paused until its first `submit`; only the last episode is graded) |
 | time | the episode's clock starts at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every {{control_dt}} s of wall time until the episode ends; `submit` writes a plan of future targets (from step `at`) and answers at once; the last target is held when the plan runs out |
 | action space | HumanoidBench's own: {{nu}} normalised position targets, {{control_hz}} Hz, streamed one row at a time or in chunks of up to 10 s |
-| knobs (compose env) | `RCB_SLOWDOWN` (1: real time, the official configuration; S: one control step every S x {{control_dt}} s, results reported apart from S = 1), `RCB_RESET_BUDGET` ({{reset_budget}}: the realtime mode's default, PROTOCOL §4b), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are this task's configuration; a run that changes one is reported separately, and `episode.jsonl` records the `/spec` it ran under |
+| knobs (compose env) | `RCB_SLOWDOWN` (1: real time, the official configuration; S: one control step every S x {{control_dt}} s, results reported apart from S = 1), `RCB_RESET_BUDGET` ({{reset_budget}}: the standard-realtime mode's default, PROTOCOL §4b), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are this task's configuration; a run that changes one is reported separately, and `episode.jsonl` records the `/spec` it ran under |
 | agent API | `environment/rcb_client.py` (the realtime client; its docstring is the reference); `instruction.md` lists the endpoints |
 
 Note: {{standard_camera_note}}
