@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Standard mode (PROTOCOL §4.1: no simulator or simulation code in the agent container): the agent's image is built
+# Standard and realtime mode (PROTOCOL §4.1, §4b: no simulator or simulation code in the agent container): the agent's image is built
 # from environment/, but never takes environment/sim/, which compose mounts into the sim sidecar only (and which may
 # hold the scoring code). Every COPY / ADD source of environment/Dockerfile is therefore a named path outside sim/:
 # not `.` or `..`, not a wildcard. Sources from another stage or image (--from) and ADD URLs are not from environment/.
 # Usage: check-standard-agent-image.sh tasks/<task-dir>
 set -uo pipefail
 t="${1%/}"
-case "$(basename "$t")" in *-standard) ;; *) exit 0 ;; esac
+case "$(basename "$t")" in *-standard|*-realtime) ;; *) exit 0 ;; esac
 python3 - "$t" <<'PY'
 import json, pathlib, posixpath, re, sys
 t = pathlib.Path(sys.argv[1]); rc = 0
