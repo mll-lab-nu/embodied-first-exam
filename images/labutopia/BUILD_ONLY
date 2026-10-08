@@ -1,0 +1,56 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-labutopia:<images/labutopia/VERSION> is never pushed to a registry (docs/PROTOCOL.md
+§2.4, D5). Every evaluation host builds it locally; the LabUtopia tasks reference that tag and Harbor finds it in the
+local Docker image store.
+
+Why
+  The image contains NVIDIA Isaac Sim 6.1.0 / Omniverse Kit (pip wheels from pypi.nvidia.com), which NVIDIA licenses
+  for use, not for redistribution, and 64 files from NVIDIA's public asset server (images/labutopia/
+  nvidia_assets.sha256: Isaac Sim's Franka robot model, the cabinet LabUtopia's laboratory stage references in the
+  Isaac 4.2 asset tree, four materials of the Omniverse material library, one sample file). LabUtopia
+  (github.com/Rui-li023/LabUtopia @ 8df7278) is MIT for its code and CC BY-NC 4.0 for its assets (0.36 GB through git
+  LFS, baked in): research and educational use only.
+
+What the builder accepts
+  - the NVIDIA Isaac Sim / Omniverse license agreement (the image sets OMNI_KIT_ACCEPT_EULA=YES and ACCEPT_EULA=Y, and
+    every container that runs it accepts it again at launch);
+  - NVIDIA's terms for the isaacsim wheels on pypi.nvidia.com and for the Isaac Sim and Omniverse assets;
+  - LabUtopia's MIT licence and the CC BY-NC 4.0 licence of its assets.
+  No account, key or token is needed: everything is downloaded anonymously.
+
+Isaac Sim 6.1.0, not LabUtopia's 5.1.0
+  LabUtopia's README installs Isaac Sim 5.1.0 (Python 3.11). This image installs 6.1.0 (Python 3.12). On the host the
+  benchmark was built on (RTX PRO 6000 Blackwell Server Edition, NVIDIA driver 595.91.07) Isaac Sim 5.1.0 crashes at
+  start-up in librtx.scenedb.plugin.so, a known incompatibility of the R595 driver branch for which NVIDIA's answer is
+  the 580 branch (github.com/isaac-sim/IsaacSim discussions/648, issues/619); 6.1.0 is the first release whose
+  requirements list an R595 driver (595.58.03 on Linux). LabUtopia's code at the pinned commit runs on it unchanged:
+  the three adjustments 6.1 needs are in the tooling (scripts/labutopia/shared/rcb_labutopia.py, `_compat`). The Python
+  environment is Isaac Sim 6.1.0's own (numpy 2.3, torch 2.11) plus hydra-core and omegaconf at LabUtopia's pins and
+  h5py, pandas, zarr, dill, einops, tqdm and imageio-ffmpeg at versions that go with it; LabUtopia's other pins
+  (numpy 1.26 and its policy-training packages) are not installed. The frozen instances, the reference trajectories
+  and every recorded result are for this image. Not checked: Isaac Sim 6.1.0 with a 580-branch driver.
+
+What is not in the image
+  LabUtopia's scripted controllers, their motion primitives and its policy code (controllers/, policy/,
+  data_collectors/, main.py and the two factories that build them): images/labutopia/strip_solutions.py removes them
+  in the layer that clones the repository and the build fails if the check afterwards finds one. They are the
+  benchmark's reference solutions.
+
+Host
+  Linux x86_64, Docker with the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 6.1.0
+  supports (NVIDIA lists 595.58.03 on Linux; checked on 595.91.07 with an RTX PRO 6000 Blackwell Server Edition).
+  Isaac Sim renders with RTX; PhysX runs on the CPU. Build: about 90 GB of free disk, network access to github.com (+
+  its LFS), astral.sh, pypi.org, pypi.nvidia.com and omniverse-content-production.s3-us-west-2.amazonaws.com; about 25
+  minutes on a fast link. The image is 40 GB. Run: 32 GB of RAM per simulator that renders (the first simulator with
+  its renderer in a container prepares the stage for it: 5 to 15 minutes on 8 idle cores, up to 21 GB of RAM; a simulator
+  without the renderer takes about 6 GB). Nothing is fetched at run time: the tasks run without network.
+
+Build (from the repository root)
+  docker build -f images/labutopia/Dockerfile -t ghcr.io/mll-lab-nu/eai-labutopia:$(cat images/labutopia/VERSION) .
+
+Check a build
+  docker run --rm --gpus all --shm-size 8g -v $PWD/scripts/labutopia:/w:ro \
+      ghcr.io/mll-lab-nu/eai-labutopia:$(cat images/labutopia/VERSION) python /w/make_facts.py --check
+  rebuilds the nine frozen instances and replays each reference trajectory in two fresh processes: the placements
+  must equal the recorded ones, and both replays must succeed and end in one state. On the host the benchmark was built
+  on they end in the recorded state as well; PhysX can differ in the last bits between hosts (docs/benchmarks/
+  robolab.md has seen it), in which case the check says so and a trial is graded on the host it ran on.
