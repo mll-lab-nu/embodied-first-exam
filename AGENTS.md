@@ -34,6 +34,9 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.1) and `CONTRIBUTING.md` 
   MolmoSpaces standard tasks: its layer (`rcb_limited.py` with crash recovery, `rcb_client.py`, `rcb1.py`, `run.sh`) has one source,
   `scripts/eai_standard/` (D9), copied unchanged into every 2.2 task (`check-tooling-identity.sh`); each benchmark adds
   only its adapter `environment/sim/server.py` (`scripts/eai_standard/toy_server.py` is the smallest one).
+- `eai-standard/2.4` (docs/STANDARD_MODE_2_4.md, RoboTangle): 2.3 + the operations capability. Its layer is
+  `scripts/eai_standard/v2_4/rcb_limited.py` + `rcb_client.py` with 2.2's `rcb1.py` and `run.sh`, copied unchanged
+  into every 2.4 task (`check-tooling-identity.sh`).
   `python3 scripts/eai_standard/selftest.py` tests the crash recovery on the CPU in about two minutes.
 - Benchmark-level rules (templates, generators, budgets, tooling file names, the world-frame and tooling declarations):
   `docs/benchmarks/<bench>.md`.
