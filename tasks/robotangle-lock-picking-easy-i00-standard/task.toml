@@ -20,7 +20,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/robotangle-lock-picking-easy-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.3): RoboTangle lock_picking on the same frozen instance as the privileged task. Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboTangle lock_picking on the same frozen instance as the privileged task. Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "Jianwen Lyu" }]
 keywords = ["robotics", "robotangle", "genesis", "panda_robotiq", "standard-mode", "trajectory", "lock_picking"]
 
@@ -31,7 +31,7 @@ simulator = "robotangle"
 robot = "franka-robotiq-2f85"
 family = "lock_picking"
 mode = "standard"                  # RGB + proprioception only; no object poses, no success predicate, no reset
-protocol = "eai-standard/2.3"
+protocol = "eai-standard/2.4"
 oracle = "full"
 difficulty = "easy"
 grasp = "assisted (the contact_weld_v1 grasp regions on lock_key)"

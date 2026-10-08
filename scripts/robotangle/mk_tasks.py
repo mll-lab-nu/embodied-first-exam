@@ -1,24 +1,34 @@
 #!/usr/bin/env python3
 """Render the RoboTangle tasks (formerly TopoGym; docs/benchmarks/robotangle.md):
-tasks/robotangle-<family>-<tier>-i00-privileged and its standard twin -standard (eai-standard/2.3).
+tasks/robotangle-<family>-<tier>-i00-privileged and its standard twin -standard (eai-standard/2.4).
 
-usage: python3 scripts/robotangle/mk_tasks.py [--check] [--list] [base ...]
+usage: python3 scripts/robotangle/mk_tasks.py [--check] [--list] [--assets <dir>] [base ...]
   no base   every base in release.json
   --check   write nothing; exit 1 if a task would change, or if an identity check fails
   --list    print the bases with their evidence
+  --assets  a local copy of the pinned HF dataset (scripts/robotangle/assets.py fetch <dir>): also check the frozen
+            instances' bytes against the runtime bindings (without it, the pins in assets.json are compared)
 
 Inputs, all in the repository (Python standard library only, plus scripts/task_conventions.normalize):
   release.json   the release (dev/jianwen commit, public simulator source, runtime) and, per base, where its frozen
                  instance comes from and which recorded oracle runs are its evidence (scripts/robotangle/import_evidence.py)
   shared/        the release's task templates (harbor_templates/topogym at release.json template_commit), verbatim:
-                 the tooling rcb_topogym.py, the graders, the standard client, the sim service, the standard oracle player
+                 the tooling rcb_topogym.py, the graders, the sim service adapter (server.py, replay.py, finalize.sh),
+                 the standard oracle player
+  scripts/eai_standard/v2_4/ + scripts/eai_standard/
+                 the eai-standard/2.4 layer (docs/STANDARD_MODE_2_4.md, issue #89): rcb_limited.py and rcb_client.py
+                 from v2_4/, rcb1.py, run.sh and the client pins from scripts/eai_standard/. The release called its
+                 layer "2.3"; that number went to the realtime capability (#86), so the layer and the texts say 2.4
   packages/      per task, the upstream texts of the graded package (task.toml, README.md, instruction.md, Dockerfiles,
                  compose files, test.sh) and its upstream runtime binding; the generator applies the RoboTangle rename
                  (user-facing names only), the image name and the evidence wording to them
   oracles/       the recorded oracle trajectories of the evidence runs (privileged deliverable; standard episode)
-  tasks/robotangle-<base>-privileged/environment/instance.json + instance_assets/
-                 the frozen instance, the one input kept in the task itself; copied to tests/ and to the standard
-                 twin's environment/sim/
+  assets.json    the frozen instances (instance.json + instance_assets/, up to 20 MB per file) are not in git: they are
+                 in the private HF dataset eai-v2-internal/robotangle-assets, pinned here by commit and sha256
+                 (scripts/robotangle/assets.py). The image carries them (images/robotangle/Dockerfile); a task keeps its
+                 runtime_binding.json, which names the instance's canonical sha256 and every asset's sha256, and stages
+                 its instance from the image (images/robotangle/stage_instance.py: privileged environment/ and tests/
+                 Dockerfiles, the standard sim service's entrypoint), where the tooling checks the binding again.
 Nothing at run time imports repository code: the tooling and the sim layer are copies (PROTOCOL D9).
 """
 from __future__ import annotations
@@ -32,18 +42,23 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as TC  # noqa: E402  the protocol's conventions: every generator ends with normalize(task_dir)
 
 REL = json.loads((HERE / "release.json").read_text())
-NOP = json.loads((HERE / "nop_records.json").read_text())   # nop runs on this release's build (very_easy / easier)
+NOP = json.loads((HERE / "nop_records.json").read_text())
+ASSETS = json.loads((HERE / "assets.json").read_text())        # the pinned HF dataset (scripts/robotangle/assets.py)
+STAGED = "/tmp/robotangle-instance"                             # where the standard sim stages its instance   # nop runs on this release's build (very_easy / easier)
 VERSION = (ROOT / "images/robotangle/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-robotangle:{VERSION}"
 ROBOT = {"aloha": "aloha-2", "panda_robotiq": "franka-robotiq-2f85"}
 ROBOT_WORDS = {"(aloha, Genesis)": "(ALOHA 2, Genesis)", "(panda_robotiq, Genesis)": "(Franka Panda + Robotiq 2F-85, Genesis)"}
-DOCS = [("docs/rcb/STANDARD_MODE_2_3.md", "docs/benchmarks/robotangle.md"), ("docs/rcb/STANDARD_MODE_2_2.md", "docs/STANDARD_MODE_2_2.md"),
+DOCS = [("docs/rcb/STANDARD_MODE_2_3.md", "docs/STANDARD_MODE_2_4.md"), ("docs/rcb/STANDARD_MODE_2_2.md", "docs/STANDARD_MODE_2_2.md"),
         ("docs/rcb/benchmarks/topogym.md", "docs/benchmarks/robotangle.md"), ("docs/rcb/PROTOCOL.md", "docs/PROTOCOL.md"),
         ("docs/rcb/TAXONOMY.md", "docs/TAXONOMY.md"), ("docs/rcb/LIMITED_MODE_PROTOCOL.md", "docs/LIMITED_MODE_PROTOCOL.md")]
 IMAGE_RX = re.compile(r"(?:[\w.-]+/)+rcb-topogym:[\w.-]+")
-# eai-standard/2.3 layer kept byte-identical to the release (normalize would respell its rcb-limited/2.x COMPAT entries);
-# docs/benchmarks/robotangle.md, "Protocol requests"
-KEEP_BYTES = ("environment/sim/rcb_limited.py",)
+EAI = ROOT / "scripts/eai_standard"
+LAYER = {"environment/rcb_client.py": EAI / "v2_4/rcb_client.py", "environment/rcb1.py": EAI / "rcb1.py",
+         "environment/client-requirements.txt": EAI / "client-requirements.txt",
+         "environment/sim/rcb_limited.py": EAI / "v2_4/rcb_limited.py", "environment/sim/rcb1.py": EAI / "rcb1.py",
+         "environment/sim/run.sh": EAI / "run.sh"}   # the eai-standard/2.4 layer, copied unchanged (check-tooling-identity.sh)
+PROTO = ("eai-standard/2.3", "eai-standard/2.4")   # the release's name of the layer -> its registered version (#89)
 sha = lambda b: hashlib.sha256(b).hexdigest()  # noqa: E731
 
 
@@ -59,7 +74,7 @@ def text(s: str) -> str:
         s = s.replace(a, b)
     for a, b in ROBOT_WORDS.items():
         s = s.replace(a, b)
-    s = s.replace("TopoGym", "RoboTangle")
+    s = s.replace("TopoGym", "RoboTangle").replace(*PROTO)
     s = re.sub(r"\bhis (?=[a-z]+(?:_[a-z0-9]+)*_v\d)", "the ", s)
     return s.replace("his qualification record", "the author's qualification record")
 
@@ -134,6 +149,12 @@ def provenance(base: str, rec: dict) -> str:
             f"`{rec['instance_package']}/topogym-{base}-privileged` on the lab host); bound to this release's runtime "
             f"(source `{REL['runtime']['source']['sha256'][:8]}`, tooling `{REL['tooling_sha256'][:8]}`). An exact-restore "
             "preflight on this build is pending (docs/benchmarks/robotangle.md, Pending)."]
+    rows.append(f"- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF "
+                f"dataset `{ASSETS['repo']}` at `{ASSETS['revision'][:12]}`, under `instances/{base}/` "
+                "(scripts/robotangle/assets.json pins each file's sha256). The image carries them, and "
+                "`/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, "
+                "which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at "
+                "every session start.")
     rows.append(f"- Release: dev/jianwen `{REL['release_commit'][:9]}` (task templates `{REL['template_commit'][:9]}`), "
                 f"image `{IMAGE}` (BUILD_ONLY, images/robotangle/).")
     rows.append("- Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the "
@@ -158,19 +179,28 @@ def rewrite_toml(s: str, base: str, rec: dict) -> str:
 
 
 def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
-    s = text(s)
+    s = text(s).replace("from `tests/instance.json`", "from the frozen instance (`/tests/instance.json`, staged from the image and "
+                        "checked against `tests/runtime_binding.json`)")
     s = re.sub(r"(?ms)^## Reference solution\n.*?(?=^## )", "## Reference solution\n" + ref_solution(mode, rec) + "\n\n", s)
     nop = nop_words(base, mode, rec)
     s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + "\n\n" + nop + "\n\n", s)
     return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n"
 
 
-def binding(base: str, inst_dir: pathlib.Path) -> bytes:
+def binding(base: str, inst_dir: pathlib.Path | None = None) -> bytes:
+    """The task's runtime binding: the upstream lock (instance and asset hashes) with this release's tooling and runtime.
+    The frozen instance must be the pinned one in assets.json; with inst_dir (a local copy), its bytes are checked too."""
     lock = json.loads((PKG / f"{base}-privileged" / "runtime_binding.upstream.json").read_text())
-    canon = json.dumps(json.loads((inst_dir / "instance.json").read_text()), sort_keys=True, separators=(",", ":"), allow_nan=False)
-    assert lock["instance_sha256"] == sha(canon.encode()), f"{base}: instance.json is not the bound instance"
-    assets = {p.relative_to(inst_dir).as_posix(): sha(p.read_bytes()) for p in sorted((inst_dir / "instance_assets").rglob("*")) if p.is_file()}
-    assert lock["asset_files"] == assets, f"{base}: instance_assets differ from the binding"
+    pinned = ASSETS["instances"].get(base, {}).get("instance_sha256")
+    assert lock["instance_sha256"] == pinned, f"{base}: the bound instance is not the one pinned in assets.json"
+    prefix = f"instances/{base}/"
+    pinned_assets = {k[len(prefix):]: v for k, v in ASSETS["files"].items() if k.startswith(prefix + "instance_assets/")}
+    assert lock["asset_files"] == pinned_assets, f"{base}: instance_assets pinned in assets.json differ from the binding"
+    if inst_dir is not None:
+        canon = json.dumps(json.loads((inst_dir / "instance.json").read_text()), sort_keys=True, separators=(",", ":"), allow_nan=False)
+        assert lock["instance_sha256"] == sha(canon.encode()), f"{base}: instance.json is not the bound instance"
+        assets = {p.relative_to(inst_dir).as_posix(): sha(p.read_bytes()) for p in sorted((inst_dir / "instance_assets").rglob("*")) if p.is_file()}
+        assert lock["asset_files"] == assets, f"{base}: instance_assets differ from the binding"
     lock["tooling_sha256"] = sha((SHARED / "rcb_topogym.py").read_bytes())
     lock["runtime"] = REL["runtime"]
     return (json.dumps(lock, indent=2) + "\n").encode()
@@ -195,7 +225,30 @@ def image_lines(s: str) -> str:
     return re.sub(r"(?m)^(\s*image:\s*)" + IMAGE_RX.pattern, lambda m: m.group(1) + IMAGE, s)
 
 
-def render(base: str, out: pathlib.Path, inst_src: pathlib.Path) -> list[pathlib.Path]:
+STAGE = "RUN python /opt/robotangle/stage_instance.py {base} {dest} --purge   # the frozen instance, from the image (scripts/robotangle/assets.json), checked against runtime_binding.json"
+ENTRY = ('    # The frozen instance comes from the image (scripts/robotangle/assets.json): the entrypoint stages it next to a copy of\n'
+         '    # runtime_binding.json and checks it (images/robotangle/stage_instance.py), then runs the command.\n'
+         '    entrypoint: ["sh", "-c", "python /opt/robotangle/stage_instance.py {base} ' + STAGED + ' --binding /srv/runtime_binding.json && exec \\"$$@\\"", "stage"]\n')
+
+
+def staged(name: str, s: str, base: str) -> str:
+    """Task files that stage the frozen instance from the image instead of copying it from the task directory."""
+    def sub(a: str, b: str) -> str:
+        assert s.count(a) == 1, f"{base} {name}: expected one {a!r}"
+        return s.replace(a, b)
+    if name == "environment/Dockerfile" and "COPY instance.json /app/instance.json\n" in s:
+        s = sub("COPY instance.json /app/instance.json\n", "")
+        s = sub("COPY instance_assets/ /app/instance_assets/", STAGE.format(base=base, dest="/app"))
+    elif name == "tests/Dockerfile" and "instance_assets" in s:
+        s = sub("COPY grade.py instance.json rcb_topogym.py test.sh /tests/", "COPY grade.py rcb_topogym.py test.sh /tests/")
+        s = sub("COPY instance_assets/ /tests/instance_assets/", STAGE.format(base=base, dest="/tests"))
+    elif name == "environment/docker-compose.yaml" and "RCB_INSTANCE: /srv/instance.json" in s:
+        s = sub("RCB_INSTANCE: /srv/instance.json", f"RCB_INSTANCE: {STAGED}/instance.json")
+        s = sub("    command: sh /srv/run.sh\n", ENTRY.format(base=base) + "    command: sh /srv/run.sh\n")
+    return s
+
+
+def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None) -> list[pathlib.Path]:
     rec = REL["bases"][base]
     dirs = []
     for mode in ("privileged", "standard"):
@@ -206,14 +259,12 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path) -> list[pathlib
         put(t / "instruction.md", text(rd("instruction.md")).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
-                put(t / n, image_lines(rd(n)).encode())
+                put(t / n, staged(n, image_lines(rd(n)), base).encode())
         put(t / "tests/test.sh", (up / "tests/test.sh").read_bytes(), exe=True)
         lock = binding(base, inst_src)
         tool = (SHARED / "rcb_topogym.py").read_bytes()
         if mode == "privileged":
             for d in ("environment", "tests"):
-                copy_tree(inst_src / "instance_assets", t / d / "instance_assets")
-                put(t / d / "instance.json", (inst_src / "instance.json").read_bytes())
                 put(t / d / "runtime_binding.json", lock)
                 put(t / d / "rcb_topogym.py", tool)
             put(t / "tests/grade.py", (SHARED / "privileged/grade.py").read_bytes())
@@ -225,12 +276,10 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path) -> list[pathlib
                     "# on the evidence run named in README.md (Reference solution). Uses nothing but the recorded file.\n"
                     "set -euo pipefail\nmkdir -p /app/output\ncp /solution/trajectory.npz /app/output/trajectory.npz\n").encode(), exe=True)
         else:
-            for n in ("rcb_client.py", "rcb1.py", "client-requirements.txt"):
-                put(t / "environment" / n, (SHARED / "standard" / n).read_bytes())
-            for n in ("server.py", "rcb_limited.py", "rcb1.py", "replay.py", "finalize.sh", "run.sh"):
+            for rel, src in LAYER.items():
+                put(t / rel, src.read_bytes())
+            for n in ("server.py", "replay.py", "finalize.sh"):
                 put(t / "environment/sim" / n, (SHARED / "standard/sim" / n).read_bytes())
-            copy_tree(inst_src / "instance_assets", t / "environment/sim/instance_assets")
-            put(t / "environment/sim/instance.json", (inst_src / "instance.json").read_bytes())
             put(t / "environment/sim/runtime_binding.json", lock)
             put(t / "environment/sim/rcb_topogym.py", tool)
             put(t / "tests/grade.py", (SHARED / "standard/grade.py").read_bytes())
@@ -244,10 +293,7 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path) -> list[pathlib
                 put(t / "solution/oracle_replay.py", (SHARED / "standard/solution/oracle_replay.py").read_bytes())
                 put(t / "solution/solve.sh", (SHARED / "standard/solution/solve.sh").read_bytes(), exe=True)
     for t in dirs:
-        keep = {k: (t / k).read_bytes() for k in KEEP_BYTES if (t / k).is_file()}
-        TC.normalize(t)
-        for k, b in keep.items():
-            (t / k).write_bytes(b)
+        TC.normalize(t)          # leaves the layer alone: scripts/eai_standard/ is a shared source (task_conventions)
     return dirs
 
 
@@ -258,6 +304,7 @@ def snapshot(d: pathlib.Path) -> dict:
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true"); ap.add_argument("--list", action="store_true")
+    ap.add_argument("--assets", type=pathlib.Path, help="a local copy of the pinned HF dataset (assets.py fetch)")
     ap.add_argument("bases", nargs="*")
     a = ap.parse_args(argv)
     bases = a.bases or sorted(REL["bases"])
@@ -270,12 +317,10 @@ def main(argv: list[str]) -> int:
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
         for b in bases:
-            inst = TASKS / f"robotangle-{b}-privileged" / "environment"
-            if not (inst / "instance.json").is_file():
+            inst = a.assets / "instances" / b if a.assets else None
+            if inst is not None and not (inst / "instance.json").is_file():
                 bad.append(f"{b}: no frozen instance at {inst}"); continue
-            staged = tmp / "in" / b
-            copy_tree(inst / "instance_assets", staged / "instance_assets"); put(staged / "instance.json", (inst / "instance.json").read_bytes())
-            for t in render(b, tmp / "out", staged):
+            for t in render(b, tmp / "out", inst):
                 cur = TASKS / t.name
                 if a.check:
                     if not cur.is_dir() or snapshot(cur) != snapshot(t):

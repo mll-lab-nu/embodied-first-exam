@@ -9,7 +9,7 @@
 | Family / instance | `interlocked_claws` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robotangle:0.2.18` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotangle:0.2.19` |
 
 ## Task
 RoboTangle interlocked_claws (ALOHA 2, Genesis): produce one replayable trajectory. Completely separate the two claw pieces and briefly hold both still. Frozen scene instance (variation interlocked_claws_easy, seed 0).
@@ -21,7 +21,7 @@ Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 
 `solution/solve.sh` copies `solution/trajectory.npz` (sha256 `a419425fdb727fc9…`) to `/app/output/`: the trajectory the author's oracle (the RoboTangle planner on dev/jianwen) produced on merged-v18 (source 5b5677f0, tooling a9d09d66; lab run 20261006T045105-4151492), where the verifier scored it 1 in two fresh-process replays. This family's task, geometry and asset files are unchanged from that build to this release; the shared simulator, tooling, graders and sim service changed only in paths that do not act on this family's scene (the cloth particle speed, a constraint solver chosen by name, the generated PBD birth state of dev/jianwen 2dafa5f2b), apart from the new report fields `initial_state_generated` and `initial_state`. The oracle was not re-run on this build (docs/benchmarks/robotangle.md, Evidence).
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
+Open-loop replay of `/app/output/trajectory.npz` from the frozen instance (`/tests/instance.json`, staged from the image and checked against `tests/runtime_binding.json`) in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
 replay (two passes, no separate video replay). The physics runs on the CPU and is bit-deterministic on one host; the final-state hashes
 (`deterministic`) are still diagnostic, as for the GPU families; the rebuilt frozen scene must match (`instance_ok`)
@@ -59,5 +59,6 @@ Completely separate the two claw pieces and briefly hold both still.
 
 ### Provenance
 - Frozen instance: built by TopoGym source `5b5677f0` (graded package `align_v18/cand_v18b/tasks/topogym-interlocked-claws-easy-i00-privileged` on the lab host); bound to this release's runtime (source `ecb43962`, tooling `587043f1`). An exact-restore preflight on this build is pending (docs/benchmarks/robotangle.md, Pending).
-- Release: dev/jianwen `2dafa5f2b` (task templates `2dafa5f2b`), image `ghcr.io/mll-lab-nu/eai-robotangle:0.2.18` (BUILD_ONLY, images/robotangle/).
+- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `7f7f95dd3719`, under `instances/interlocked-claws-easy-i00/` (scripts/robotangle/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
+- Release: dev/jianwen `2dafa5f2b` (task templates `2dafa5f2b`), image `ghcr.io/mll-lab-nu/eai-robotangle:0.2.19` (BUILD_ONLY, images/robotangle/).
 - Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.

@@ -1,5 +1,7 @@
-"""eai-standard/2.2 client (formerly rcb-limited/2.x) — the only thing a standard-mode agent gets (installed at
-/opt/tools/rcb_client.py).
+"""eai-standard/2.4 client (the 2.2 client, formerly rcb-limited/2.x, plus operation ids; docs/STANDARD_MODE_2_4.md) — the
+only thing a standard-mode agent gets (installed at /opt/tools/rcb_client.py). Against a 2.4 service every submit /
+get_obs carries an operation id and a request deadline: after a timeout, `r.operation_status()` (or
+`r.operation_status(r.last_operation_id)`) says whether the call ran; never re-send it blindly.
 
     from rcb_client import Robot
     r = Robot()                                  # finds the service (sim:8000, then localhost:8000), waits for warm-up
@@ -131,7 +133,7 @@ class Robot:
         budget = float(self._spec.get("max_call_wall_s", 900))
         timeout = max(timeout, budget + 120)
         meta = dict(meta)
-        if self._spec.get("protocol") == "eai-standard/2.3":
+        if self._spec.get("protocol") == "eai-standard/2.4":
             meta.setdefault("operation_id", uuid.uuid4().hex)
             meta.setdefault("request_deadline_unix_s", time.time() + budget)
             self.last_operation_id = meta["operation_id"]

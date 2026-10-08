@@ -35,7 +35,9 @@ Renaming them would change the hashes every task is bound to.
 - shared/: the release's task templates, verbatim;
 - packages/: the upstream per-task texts;
 - oracles/: the recorded oracle trajectories;
-- the frozen instance kept in each privileged task's environment/.
+- the eai-standard/2.4 layer in `scripts/eai_standard/v2_4/` (+ 2.2's `rcb1.py`, `run.sh`, client pins), copied unchanged;
+- `assets.json`: the pins of the frozen instances (below). With `--assets <dir>` (a local copy, `scripts/robotangle/assets.py
+  fetch <dir>`) it also checks every instance's bytes against the bindings; without it, against the pinned hashes.
 
 It needs only the Python standard library and `scripts/task_conventions.py`. `--check` re-renders into a temporary
 directory and fails on any byte or mode difference. `scripts/robotangle/import_evidence.py` is the one-off importer that
@@ -49,11 +51,32 @@ Each task carries copies of the tooling (`rcb_topogym.py`), the graders and the 
 
 Every session refuses to start in an image whose installed runtime differs from it.
 
+## Large files: the private HF dataset
+
+The frozen instances (`instance.json` + `instance_assets/`: archived IPC settled states, PBD initial states, up to 20 MB per
+file; 52 bases, 173 MB) are **not in git** (CONTRIBUTING: no files > 2 MB). Owner decision, 2026-10-08. They live in the
+private Hugging Face dataset `eai-v2-internal/robotangle-assets`, pinned by commit and by the sha256 of every file in
+`scripts/robotangle/assets.json` (`scripts/robotangle/assets.py fetch|check|pin`). The same dataset holds the image's build
+inputs: the release tree (`git archive` of `2dafa5f2b`, the paths the image copies) and the audited libuipc wheel with its
+`uipc-build.json` (recovered byte-for-byte from the wheel layer of the 0.2.17 image; its sha256 matches the build record).
+- The image carries every instance under `/opt/robotangle/instances/<base>/`.
+- A task directory keeps only `runtime_binding.json` (instance canonical sha256 + every asset's sha256 + tooling + runtime),
+  so a task's identity (its dataset digest) still pins its instance.
+- `/opt/robotangle/stage_instance.py <base> <dest>` copies the task's instance next to that binding and checks it:
+  privileged `environment/Dockerfile` (`/app`) and `tests/Dockerfile` (`/tests`), both with `--purge` (the image keeps no
+  other task's instance); the standard `sim` service's `entrypoint` (`/tmp/robotangle-instance`, `RCB_INSTANCE` points
+  there), which then runs the unchanged `command: sh /srv/run.sh`. Every session checks the binding again
+  (`frozen_binding.check_inputs`).
+- Access: members of `eai-v2-internal` (`hf auth login` or `HF_TOKEN`). Only image builders need it; eval hosts pull the
+  image.
+
 ## Image (BUILD_ONLY)
 
-`ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>`. It is not published: the Nyx renderer
-is installed from binary wheels on PyPI (`gs-nyx`) that carry no licence metadata, and this is an internal release (maintainers
-may keep a private organisation package). Build instructions are in images/robotangle/BUILD_ONLY. One image and one version
+`ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>` (0.2.19). It is never public: the Nyx renderer
+is installed from binary wheels on PyPI (`gs-nyx`) that carry no licence metadata, and this is an internal release.
+0.2.19 is pushed as a non-public organisation package (visibility `internal`, org members only; digest
+`sha256:66b8b157d350…`), like the other BUILD_ONLY images. Build instructions are in images/robotangle/BUILD_ONLY: the
+context comes from the pinned HF dataset, so the build needs neither `dev/jianwen` nor an unpublished wheel. One image and one version
 serve both modes:
 - the privileged environment and verifier `FROM` it;
 - the standard `sim` sidecar uses it;
@@ -67,8 +90,9 @@ speed-ups give the agent more interaction within the 6 h; they never shorten it.
 2–185 min (fiber_bundling hard is the longest). The standard sidecar's wall clock (`RCB_WALL_CLOCK_S`) is 21600 s as
 well.
 
-This exceeds PROTOCOL §2.3's cap of 14400 s, so `check-task-fields.sh` fails on every task. The proposal issue asks the
-maintainers to accept it (Protocol requests).
+This is above PROTOCOL §2.3's default cap of 14400 s. **Accepted by the owner (2026-10-08) as a documented per-benchmark
+exception** (PROTOCOL §2.3, issue #87, PR #88; `check-task-fields.sh` caps `robotangle-*` at 21600 s). RoboTangle results
+state the 6 h budget and are compared only with results under the same budget (D8).
 
 ## Grading and determinism
 
@@ -89,21 +113,23 @@ maintainers to accept it (Protocol requests).
 - CPU families replay bit-exactly on one host;
 - GPU families are graded strictly live and tolerantly on replay, with the tolerances in each task's README Details.
 
-## Standard mode: `eai-standard/2.3`
+## Standard mode: `eai-standard/2.4`
 
-The standard twins serve `eai-standard/2.3`, TopoGym's documented hardening of 2.2 (dev/jianwen
-docs/rcb/STANDARD_MODE_2_3.md). Requests, cameras, proprioception, RCB1 frames and the process model are those of 2.2.
-2.3 adds:
+The standard twins serve `eai-standard/2.4` ([`STANDARD_MODE_2_4.md`](../STANDARD_MODE_2_4.md), issue #89, PR #90), TopoGym's
+documented hardening of 2.2. The release called it "2.3" (dev/jianwen docs/rcb/STANDARD_MODE_2_3.md); that number went to
+the realtime capability (#86), so it was registered as 2.4 = 2.3 + the operations capability (realtime stays optional; the
+RoboTangle service does not offer it). Requests, cameras, proprioception, RCB1 frames and the process model are those of 2.2.
+2.4 adds:
 - request identity: `operation_id` plus a request deadline; an expired request gets 408 before execution;
 - `GET /operations/<id>`, so that a timed-out call can be queried instead of re-sent, which would execute it twice;
 - a service-owned watchdog for native calls that never return;
 - the actual physics-tick ledger in journals and trajectories;
 - instance qualification before grading (`instance_mismatch` → not evaluable).
 
-The 2.3 layer (`environment/rcb_client.py`, `environment/sim/rcb_limited.py`) is kept byte-identical to the release.
-`check-protocol-v1.py` therefore fails on every standard twin, because 2.3 is not in the allowlist.
-`scripts/task_conventions.py --check` flags the same twins, because `normalize` would respell the `rcb-limited/2.x`
-compatibility entries of `rcb_limited.py`. Both are requested from the maintainers (Protocol requests).
+The layer (`environment/rcb_client.py`, `environment/sim/rcb_limited.py`) is the reference implementation in
+`scripts/eai_standard/v2_4/`: the release's files with the version string 2.3 → 2.4 and 2.4 module headers, nothing else.
+`check-tooling-identity.sh` keeps every copy byte-identical, and `task_conventions.normalize` leaves it alone (a shared
+source). The generator respells "eai-standard/2.3" to 2.4 in the task texts as well.
 
 ## World-frame information (D7)
 
@@ -277,9 +303,9 @@ and work on families that are not shipped (5536fdfd6: slotted_post_ring and orbi
 
 ## Pending (stated in the pull request)
 
-1. **The audited libuipc wheel.** Publish it as a private artifact for builders: its uipc-build.json has sha256
-   39781d19…, the wheel of every lab evidence image.
-2. **Build and check the image** (BUILD_ONLY).
+1. ~~The audited libuipc wheel~~ done 2026-10-08: in the private HF dataset (Large files, above).
+2. ~~Build and check the image~~ done 2026-10-08: 0.2.19 built from the pinned dataset; its installed runtime equals
+   `release.json` `runtime` (the BUILD_ONLY check); every task image stages its instance and passes `check_inputs`.
 3. **Exact-restore preflight per frozen instance on that image.** Each instance was frozen by an earlier TopoGym source
    and is bound to this release's runtime; whether it restores bit-exactly here is not yet checked.
 4. **nop, both modes, every task, on this build (`2dafa5f2b`).** The records above are from earlier builds:
@@ -288,14 +314,16 @@ and work on families that are not shipped (5536fdfd6: slotted_post_ring and orbi
    Each needs a GPU host with the image; one simulator per GPU.
 5. **The oracle players** (`harbor run -p tasks/<task> -a oracle`) on a sample: two or more tasks per mode.
 6. **blanket_flatten on GPUs other than the RTX PRO 6000:** validate the generated states for easy / medium / hard, and an
-   oracle on a generated state (GPU portability above).
+   oracle on a generated state (GPU portability above). Owner decision 2026-10-08: blanket_flatten ships (all 8 tasks); the
+   maintainers pre-generate and cache the blanket initial states on the eval hosts, so the 5–9 min generation is not on
+   the agent's clock, and spot-check easy / medium / hard generation before formal runs.
 7. **The tiers not in this release** (above).
 
-## Protocol requests (raised in the proposal issue)
+## Protocol requests (raised in the proposal issue; decided 2026-10-08)
 
-- **Agent budget:** allow 21600 s for a benchmark whose doc justifies it (D8 wording, `check-task-fields.sh` cap).
-- **Standard protocol:** accept `eai-standard/2.3` as an additive minor version: the allowlist, plus the 2.3 layer as
-  the reference implementation for RoboTangle.
+- **Agent budget:** accepted as a documented per-benchmark exception, 21600 s (issue #87, PR #88).
+- **Standard protocol:** accepted as `eai-standard/2.4` (2.3 went to the realtime capability): the allowlist, the
+  reference implementation `scripts/eai_standard/v2_4/`, the identity and client checks (issue #89, PR #90).
 
 ## Licences
 

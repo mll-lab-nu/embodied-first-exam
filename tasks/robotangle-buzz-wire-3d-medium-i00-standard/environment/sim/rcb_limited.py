@@ -1,7 +1,9 @@
-"""eai-standard/2.2 (formerly rcb-limited/2.2): the HTTP layer, the protocol helpers and the crash recovery that every
-2.2 sim service shares (docs/STANDARD_MODE_2_2.md; the 2.1 base is docs/LIMITED_MODE_PROTOCOL.md).
+"""eai-standard/2.4: the 2.2 layer (the HTTP layer, the protocol helpers and the crash recovery; docs/STANDARD_MODE_2_2.md,
+the 2.1 base is docs/LIMITED_MODE_PROTOCOL.md) plus the operations capability of docs/STANDARD_MODE_2_4.md: operation ids
+and request deadlines (408 / 409), GET /operations/<id>, the service-owned call watchdog, the physics-tick ledger
+(journal.ticks.i64) and fsynced journals. First served by RoboTangle (whose release called it 2.3).
 
-The source is scripts/eai_standard/rcb_limited.py; the generators copy it unchanged into every standard task's
+The source is scripts/eai_standard/v2_4/rcb_limited.py; the generators copy it unchanged into every 2.4 task's
 environment/sim/ (ci_checks/check-tooling-identity.sh). A service keeps its simulator to itself (scene, action
 execution, cameras, kinematic model) and hands this module plain callables:
 
@@ -43,7 +45,7 @@ import numpy as np
 
 import rcb1
 
-PROTOCOL = "eai-standard/2.3"
+PROTOCOL = "eai-standard/2.4"
 COMPAT = ["eai-standard/2.2", "rcb-limited/2.0", "rcb-limited/2.1", "eai-standard/2.1"]   # requests written for these are served unchanged
 MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024

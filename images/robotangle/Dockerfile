@@ -1,7 +1,9 @@
 # RoboTangle base image (eai-robotangle; formerly rcb-topogym): images/topogym/Dockerfile of the release commit in
 # scripts/robotangle/release.json, unchanged except that UIPC_WHEEL defaults to prebuilt (the task bindings name the audited
-# libuipc wheel). Its build context is the release tree that scripts/robotangle/fetch_image_context.sh exports to
-# images/robotangle/context/ (images/robotangle/BUILD_CONTEXT). BUILD_ONLY: never pushed (images/robotangle/BUILD_ONLY).
+# libuipc wheel) and the robot_coding_bench stage at the end (the frozen instances). Its build context is prepared by
+# scripts/robotangle/fetch_image_context.sh in images/robotangle/context/ (images/robotangle/BUILD_CONTEXT) from the private
+# HF dataset pinned in scripts/robotangle/assets.json. BUILD_ONLY: never public; a private GHCR package for org members
+# (images/robotangle/BUILD_ONLY).
 # rcb-topogym: Genesis 1.2.1 / Nyx with cu128 torch and original pyuipc 0.0.25 materials (libuipc 292c98c3 plus the
 # determinism patches in images/topogym/uipc-patches: summation order fixed, physics unchanged).
 # Infrastructure only, no benchmark code (docs/rcb/PROTOCOL.md §1): the task tooling (rcb_topogym.py) comes with each task,
@@ -100,4 +102,11 @@ RUN mkdir -p /data && chmod 1777 /data
 ENV XDG_CACHE_HOME=/opt/rcb-cache CUDA_CACHE_PATH=/opt/rcb-cache/nv/ComputeCache
 RUN mkdir -p /opt/rcb-cache && chmod 1777 /opt/rcb-cache
 ENV PYTHONPATH=/opt/topogym TOPOGYM_SOURCE=/opt/topogym/SOURCE.json
+# robot_coding_bench: every task's frozen instance (instance.json + instance_assets/), from the private HF dataset
+# eai-v2-internal/robotangle-assets at the revision in scripts/robotangle/assets.json (fetch_image_context.sh checks every
+# sha256). A task directory keeps only runtime_binding.json; stage_instance.py copies the task's instance next to it
+# and checks it against that binding (privileged: environment/ and tests/ Dockerfiles; standard: the sim's entrypoint).
+COPY instances/ /opt/robotangle/instances/
+COPY stage_instance.py /opt/robotangle/stage_instance.py
+RUN chmod -R a+rX /opt/robotangle
 WORKDIR /app

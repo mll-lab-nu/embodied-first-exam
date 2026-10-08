@@ -9,7 +9,7 @@
 | Family / instance | `blanket_flatten` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robotangle:0.2.18` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotangle:0.2.19` |
 
 ## Task
 RoboTangle blanket_flatten (ALOHA 2, Genesis): produce one replayable trajectory. Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw. Frozen scene instance (variation blanket_flatten_easy, seed 0).
@@ -21,7 +21,7 @@ Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 
 `solution/solve.sh` copies `solution/trajectory.npz` (sha256 `31381f648436b014…`) to `/app/output/`: the trajectory the author's oracle (the RoboTangle planner on dev/jianwen) produced on merged-v19 (source db0bb489, tooling 5a4308ae; lab run 20261006T214105-4161726), where the verifier scored it 1 in two fresh-process replays. blanket_flatten's state handling changed in this release (dev/jianwen 2dafa5f2b). Where the instance's stored PBD archive applies (the GPU it was prepared on, an RTX PRO 6000 Blackwell), nothing changes. On another GPU the task generates the birth state from the recipe frozen in the instance, before the episode (5-9 min for very_easy; standard: in the sim startup, counted against the agent's clock). It caches the state inside the container, so a fresh container such as the privileged verifier's generates it again. Generated states have not been oracle-validated: this tier's evidence is from the stored state. The oracle was not re-run on this build (docs/benchmarks/robotangle.md, Evidence).
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff the
+Open-loop replay of `/app/output/trajectory.npz` from the frozen instance (`/tests/instance.json`, staged from the image and checked against `tests/runtime_binding.json`) in a fresh process, twice; pass iff the
 task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
 replay (two passes, no separate video replay). The physics runs on the GPU, which is not bit-deterministic: the
 final-state hashes (`deterministic`) are diagnostic; the rebuilt frozen scene must match (`instance_ok`)
@@ -64,5 +64,6 @@ Unfold and spread the blanket flat on the table without overlaps or excessive st
 
 ### Provenance
 - Frozen instance: built by TopoGym source `db0bb489` (graded package `topospeed/v19/cand_v19b/tasks/topogym-blanket-flatten-easy-i00-privileged` on the lab host); bound to this release's runtime (source `ecb43962`, tooling `587043f1`). An exact-restore preflight on this build is pending (docs/benchmarks/robotangle.md, Pending).
-- Release: dev/jianwen `2dafa5f2b` (task templates `2dafa5f2b`), image `ghcr.io/mll-lab-nu/eai-robotangle:0.2.18` (BUILD_ONLY, images/robotangle/).
+- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `7f7f95dd3719`, under `instances/blanket-flatten-easy-i00/` (scripts/robotangle/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
+- Release: dev/jianwen `2dafa5f2b` (task templates `2dafa5f2b`), image `ghcr.io/mll-lab-nu/eai-robotangle:0.2.19` (BUILD_ONLY, images/robotangle/).
 - Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.

@@ -20,7 +20,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/robotangle-hedgehog-in-cage-medium-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.3): RoboTangle hedgehog_in_cage on the same frozen instance as the privileged task. Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboTangle hedgehog_in_cage on the same frozen instance as the privileged task. Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "Jianwen Lyu" }]
 keywords = ["robotics", "robotangle", "genesis", "panda_robotiq", "standard-mode", "trajectory", "hedgehog_in_cage"]
 
@@ -31,7 +31,7 @@ simulator = "robotangle"
 robot = "franka-robotiq-2f85"
 family = "hedgehog_in_cage"
 mode = "standard"                  # RGB + proprioception only; no object poses, no success predicate, no reset
-protocol = "eai-standard/2.3"
+protocol = "eai-standard/2.4"
 oracle = "full"
 difficulty = "medium"
 grasp = "assisted (the contact_weld_v1 grasp regions on hedgehog_ball)"

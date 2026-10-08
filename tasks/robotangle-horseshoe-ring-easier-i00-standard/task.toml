@@ -20,7 +20,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/robotangle-horseshoe-ring-easier-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.3): RoboTangle horseshoe_ring on the same frozen instance as the privileged task. Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboTangle horseshoe_ring on the same frozen instance as the privileged task. Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "Jianwen Lyu" }]
 keywords = ["robotics", "robotangle", "genesis", "aloha", "standard-mode", "trajectory", "horseshoe_ring"]
 
@@ -31,7 +31,7 @@ simulator = "robotangle"
 robot = "aloha-2"
 family = "horseshoe_ring"
 mode = "standard"                  # RGB + proprioception only; no object poses, no success predicate, no reset
-protocol = "eai-standard/2.3"
+protocol = "eai-standard/2.4"
 oracle = "full"
 difficulty = "easier"
 grasp = "assisted (the contact_weld_v1 grasp regions on horseshoe_left, horseshoe_right, target_ring)"

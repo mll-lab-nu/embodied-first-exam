@@ -3,16 +3,16 @@
 | | |
 |---|---|
 | Benchmark | RoboTangle |
-| Mode | standard (`eai-standard/2.3`) |
+| Mode | standard (`eai-standard/2.4`) |
 | Twin | `robotangle-hedgehog-in-cage-easier-i00-privileged` |
 | Simulator / robot | `robotangle` / `franka-robotiq-2f85` |
 | Family / instance | `hedgehog_in_cage` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 21600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robotangle:0.2.18` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robotangle:0.2.19` |
 
 ## Task
-Standard-mode twin of `robotangle-hedgehog-in-cage-easier-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.3` client
+Standard-mode twin of `robotangle-hedgehog-in-cage-easier-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.4` client
 (docs/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
 sidecar), which owns the scene and records the episode as a (T, 8) trajectory; its collect hook
 (`environment/sim/finalize.sh`) replays the trajectory once in a fresh process for success, rendering the video during
@@ -58,12 +58,13 @@ Separate and place the whole hedgehog ball, including every spike inside the gre
 | | |
 |---|---|
 | mode | standard (RGB, optional depth, proprioception, calibrated cameras, no reset) |
-| action space | `eai-standard/2.3`: `submit` chunks of `joint_position` (8, streamed at the 40 Hz control rate with the agent's `dt`) or `ee_pose` (8, IK per row); `observe` frames or a watch window; binary RCB1 responses |
+| action space | `eai-standard/2.4`: `submit` chunks of `joint_position` (8, streamed at the 40 Hz control rate with the agent's `dt`) or `ee_pose` (8, IK per row); `observe` frames or a watch window; binary RCB1 responses |
 | oracle | none yet (`oracle = "none"`, no `solution/`) |
 | verification | `success` = live success ∧ replay success: the live episode, then one fresh-process replay in the sidecar's collect hook, after the live service has exited; the state hashes are reported, not required (GPU physics is not bit-deterministic; the CPU rigid families' is, on one host); `/logs/verifier/replay.mp4` is rendered during that replay |
-| crash recovery | `eai-standard/2.3` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
+| crash recovery | `eai-standard/2.4` §13: journal + per-call checkpoints, `restart: on-failure:6`, resume class `approx` |
 
 ### Provenance
 - Frozen instance: built by TopoGym source `5b5677f0` (graded package `hhbe/cand_hh/tasks/topogym-hedgehog-in-cage-easier-i00-privileged` on the lab host); bound to this release's runtime (source `ecb43962`, tooling `587043f1`). An exact-restore preflight on this build is pending (docs/benchmarks/robotangle.md, Pending).
-- Release: dev/jianwen `2dafa5f2b` (task templates `2dafa5f2b`), image `ghcr.io/mll-lab-nu/eai-robotangle:0.2.18` (BUILD_ONLY, images/robotangle/).
+- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `7f7f95dd3719`, under `instances/hedgehog-in-cage-easier-i00/` (scripts/robotangle/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
+- Release: dev/jianwen `2dafa5f2b` (task templates `2dafa5f2b`), image `ghcr.io/mll-lab-nu/eai-robotangle:0.2.19` (BUILD_ONLY, images/robotangle/).
 - Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
