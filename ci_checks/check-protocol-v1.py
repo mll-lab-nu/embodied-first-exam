@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/mll-lab-nu/eai-"
 PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"}   # standard mode (2.4: the operations capability, issue #89)
-REALTIME_PROTOCOLS = {"eai-standard/2.3"}                # realtime mode (PROTOCOL §4b): 2.3 is the realtime capability
+REALTIME_PROTOCOLS = {"eai-standard/2.3"}                # standard-realtime mode (PROTOCOL §4b): 2.3 = the realtime capability
 LEGACY_PROTOCOLS = {"rcb-limited/2.1"}
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")
 TEXT_SUFFIXES = {".md", ".toml", ".py", ".sh", ".yaml", ".yml", ".json", ".jsonl", ".txt", ".cfg", ".xml", ".urdf", ""}
@@ -60,18 +60,21 @@ def check_task(task: Path) -> None:
     if name.endswith("-limited") or mode == "limited":
         warn("mode name `limited` / `-limited` (use `standard` / `-standard`)", name)
     if mode is None:
-        warn("missing `mode` (privileged | standard | realtime)", name)
+        warn("missing `mode` (privileged | standard | standard-realtime)", name)
     if "tier" in meta:
         warn("deprecated `tier` field (use `mode`)", name)
-    realtime = mode == "realtime" or name.endswith("-realtime")
+    # whole suffixes only: `-standard-realtime` does not end in `-standard`, and `mode` is compared exactly
+    realtime = mode == "standard-realtime" or name.endswith("-standard-realtime")
     standard = not realtime and (mode in ("standard", "limited") or name.endswith(("-limited", "-standard")))
+    if name.endswith("-realtime") and not name.endswith("-standard-realtime") or mode == "realtime":
+        warn("mode name `realtime` / `-realtime` (the third mode is `standard-realtime`, PROTOCOL D12)", name)
     proto = meta.get("protocol")
     if standard and proto in LEGACY_PROTOCOLS:
         warn("protocol spelled `rcb-limited/2.1` (use `eai-standard/2.1`)", name)
     elif standard and proto not in PROTOCOLS:
         warn(f"standard-mode `protocol` not in {sorted(PROTOCOLS)}", f"{name} ({proto})")
     if realtime and proto not in REALTIME_PROTOCOLS:
-        warn(f"realtime-mode `protocol` not in {sorted(REALTIME_PROTOCOLS)}", f"{name} ({proto})")
+        warn(f"standard-realtime `protocol` not in {sorted(REALTIME_PROTOCOLS)}", f"{name} ({proto})")
     if not standard and not realtime and proto is not None:
         warn("`protocol` set on a privileged task", name)
 
@@ -128,11 +131,11 @@ def main() -> int:
     if not args:
         check_repository()
     if not hits:
-        print(f"protocol v1.1: {len(tasks)} task(s) conform")
+        print(f"protocol v1.1.1: {len(tasks)} task(s) conform")
         return 0
     strict = os.environ.get("RCB_PROTOCOL_STRICT") == "1"
     hard = {r: w for r, w in hits.items() if not r.startswith("legacy")}
-    print(f"protocol v1.1: {'violations' if hard or strict else 'warnings'} "
+    print(f"protocol v1.1.1: {'violations' if hard or strict else 'warnings'} "
           "(`legacy:` rules are accepted until the image move, docs/PROTOCOL.md §7; all others fail):")
     for rule, where in sorted(hits.items(), key=lambda kv: (not kv[0].startswith("legacy"), -len(kv[1]))):
         examples = ", ".join(where[:3]) + (", ..." if len(where) > 3 else "")

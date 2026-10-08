@@ -3,8 +3,8 @@
 Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.1) and `CONTRIBUTING.md` first.
 
 - Terminology (protocol v1.0): **privileged** mode (formerly unlimited) and **standard** mode (formerly limited,
-  wire protocol `eai-standard/2.x`, formerly `rcb-limited/2.x`); v1.1 adds a third mode, **realtime** (standard mode on a
-  clock that does not stop, `eai-standard/2.3`, PROTOCOL §4b). Task directories end in `-privileged`, `-standard` or `-realtime`;
+  wire protocol `eai-standard/2.x`, formerly `rcb-limited/2.x`); v1.1 adds a third mode, **standard-realtime** (standard mode on a
+  clock that does not stop, `eai-standard/2.3`, PROTOCOL §4b). Task directories end in `-privileged`, `-standard` or `-standard-realtime`;
   base images are `ghcr.io/mll-lab-nu/eai-<name>`, one image per benchmark (PROTOCOL D5; formerly `rcb-<sim>`). No `results/` in task dirs.
 - Generators under `scripts/` end with `scripts/task_conventions.py` (`normalize`): fields, protocol spelling, test.sh, graders,
   README layout, no `results/`. `python3 scripts/task_conventions.py --check tasks/<task>` reports a task it would change.

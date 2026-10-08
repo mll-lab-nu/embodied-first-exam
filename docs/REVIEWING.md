@@ -29,7 +29,7 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
 - Does the task run with Harbor's native agents, without custom adapters or runners, and without any gateway other than
   the recording-only usage gateway (PROTOCOL D11)?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
-- Names end in their mode, `-privileged` / `-standard` / `-realtime`; README in the standard layout; no `results/` in task directories.
+- Names end in their mode, `-privileged` / `-standard` / `-standard-realtime`; README in the standard layout; no `results/` in task directories.
 
 ## Human review (oracle `partial` or `none`)
 Review per family (same generator and predicate), at least two instances per family:

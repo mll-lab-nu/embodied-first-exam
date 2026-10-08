@@ -19,13 +19,14 @@
 #     ChatGPT login (codex)          CODEX_FORCE_AUTH_JSON=1 (Harbor uploads ~/.codex/auth.json into each trial)
 #     Claude subscription            CLAUDE_FORCE_OAUTH=1 and CLAUDE_CODE_OAUTH_TOKEN (`claude setup-token`)
 #     Azure OpenAI (codex)           AGENT_CONFIG=<config.toml with the Azure provider> and its key variable
-#   MODES        "privileged standard"   K  attempts per task (1); add `realtime` for <base>-realtime where it exists
+#   MODES        "privileged standard"   K  attempts per task (1); add `standard-realtime` for <base>-standard-realtime where it exists
 #   SEQ          1 = one trial at a time per runner (default): task by task, each mode in MODES order, one Harbor job per
 #                task and mode ($JOBS/<batch>-<mode>-<task>/). Start the same command again to add a lane: every job is
 #                claimed (mkdir $JOBS/.claims/<job>) by exactly one runner, so K runners run K trials at a time. A job that
 #                already has its result.json (Harbor writes it when the job starts) is skipped; to rerun an interrupted
 #                job, move its directory and its claim away first.
-#                0 = one job per mode ($JOBS/<batch>-<mode>/), the modes side by side, N_P / N_S concurrent trials (2 / 2)
+#                0 = one job per mode ($JOBS/<batch>-<mode>/), the modes side by side, N_P / N_S concurrent trials (2 / 2;
+#                N_S also for standard-realtime)
 #   WAIT_FOR     a file that must exist before a mode starts, e.g. "standard:<path>" (default: none)
 #   JOBS         <repo>/jobs/agents     LABEL  the run's title for the results README
 #   RUN_ID       the run id (PROTOCOL D4, docs/TAXONOMY.md): <harness>-<model>-<effort>, derived from AGENT / MODEL /
@@ -102,7 +103,7 @@ mkdir -p "$JOBS/.plan"
 python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
 import json, os, pathlib, sys
 repo, out, batch, run_id, seq, modes, *tasks = sys.argv[1:]
-name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "realtime": f"{t}-realtime"}.get(m, f"{t}-privileged")
+name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "standard-realtime": f"{t}-standard-realtime"}.get(m, f"{t}-privileged")
 jobs = [{"job": f"{batch}-{m}-{t}" if seq == "1" else f"{batch}-{m}", "task": name(m, t), "mode": m}
         for t in tasks for m in modes.split() if (pathlib.Path(repo) / "tasks" / name(m, t)).is_dir()]
 tmp = pathlib.Path(f"{out}.{os.getpid()}")
@@ -203,7 +204,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     except Exception:
         wall = ""
     task = (r.get("task_name") or trial.name.split("__")[0]).split("/")[-1]
-    mode = "realtime" if task.endswith("-realtime") else "standard" if task.endswith(("-standard", "-limited")) else "privileged"
+    mode = "standard-realtime" if task.endswith("-standard-realtime") else "standard" if task.endswith(("-standard", "-limited")) else "privileged"
     keys = {k: rw[k] for k in ("deterministic", "live_success", "replay_success", "instance_ok", "missing_trajectory", "grader_error",
                                "infra_error", "resumes") if k in rw}
     rows.append((r.get("started_at") or "~", f"| {task} | {mode} | {rw.get('success', '-')} | {json.dumps(keys)} | "
@@ -240,10 +241,10 @@ run_job() {  # <job> <concurrency> <harbor -i args...>
   log "done $job (harbor rc=$?)"
 }
 
-name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-realtime (PROTOCOL §2.2)
+name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-standard-realtime (PROTOCOL §2.2)
   case "$1" in
     standard|limited) echo "$2-standard" ;;
-    realtime) echo "$2-realtime" ;;
+    standard-realtime) echo "$2-standard-realtime" ;;
     *) echo "$2-privileged" ;;
   esac
 }
@@ -274,7 +275,7 @@ else
   for m in $MODES; do
     inc=(); for t in "${tasks[@]}"; do [ -d "$R/tasks/$(name "$m" "$t")" ] && inc+=(-i "$(name "$m" "$t")"); done
     [ ${#inc[@]} -eq 0 ] && continue
-    n="$N_P"; case "$m" in standard|limited) n="$N_S" ;; esac
+    n="$N_P"; case "$m" in standard|limited|standard-realtime) n="$N_S" ;; esac   # sidecar modes
     (wait_for "$m"; run_job "$batch-$m" "$n" "${inc[@]}") &
     pids+=($!)
   done

@@ -10,12 +10,12 @@ m = d.get("metadata", {})
 for k in ["author_name", "task_type", "simulator", "robot", "family", "expert_time_estimate_hours"]:
     if k not in m: fail(f"[metadata].{k} missing")
 if m.get("task_type") not in ("trajectory", "policy"): fail("task_type must be trajectory|policy")
-# Protocol v1.1 (§2.2, §2.3, D12): the directory ends in its mode (-privileged, -standard, -realtime) and `mode` says the
-# same; no `tier`.
-MODES = ("privileged", "standard", "realtime")
-suffix = t.name.rsplit("-", 1)[-1]
-if suffix not in MODES: fail("directory name must end in -privileged, -standard or -realtime")
-if m.get("mode") not in MODES: fail("[metadata].mode must be privileged|standard|realtime")
+# Protocol v1.1.1 (§2.2, §2.3, D12): the directory ends in its mode (-privileged, -standard, -standard-realtime) and
+# `mode` says the same; no `tier`. The suffix is the whole mode name, longest first: -standard-realtime is not -realtime.
+MODES = ("standard-realtime", "privileged", "standard")
+suffix = next((x for x in MODES if t.name.endswith("-" + x)), t.name.rsplit("-", 1)[-1])
+if suffix not in MODES: fail("directory name must end in -privileged, -standard or -standard-realtime")
+if m.get("mode") not in MODES: fail("[metadata].mode must be privileged|standard|standard-realtime")
 elif m["mode"] != suffix: fail(f"[metadata].mode = {m['mode']!r} but the directory ends in -{suffix}")
 if "tier" in m: fail("[metadata].tier was removed in protocol v1.0 (use mode)")
 if "/app/output/" not in d.get("artifacts", []): fail('top-level artifacts must include "/app/output/"')

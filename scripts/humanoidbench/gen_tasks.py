@@ -19,7 +19,7 @@ everything the tasks have in common, `shared/` the one real copy of the tooling 
     ./gen_tasks.py measure-standard [family ...] # check + time the standard twins' sim service (needs a GPU)
 
 Every task with a [task.standard] table is rendered three times, once per mode (docs/PROTOCOL.md D12):
-`<base>-privileged`, `<base>-standard` and `<base>-realtime` (the realtime mode, §4b: standard mode on a clock that does
+`<base>-privileged`, `<base>-standard` and `<base>-standard-realtime` (the standard-realtime mode, §4b: standard mode on a clock that does
 not stop, eai-standard/2.3; templates/realtime/, shared/realtime/).
 
 `render` writes everything in tasks/ but the instances, which only `instance` draws, and the results/ of agent runs;
@@ -459,18 +459,18 @@ def render_standard(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASK
     return out
 
 
-# --------------------------------------------------------------------------- realtime mode
-# The realtime task (`<base>-realtime`, mode = "realtime", eai-standard/2.3; docs/PROTOCOL.md §4b): the standard twin's
+# --------------------------------------------------------------------------- standard-realtime mode
+# The standard-realtime task (`<base>-standard-realtime`, mode = "standard-realtime", eai-standard/2.3; docs/PROTOCOL.md §4b): the standard twin's
 # sidecar, client and verifier, except that the service runs the episode on a clock that does not stop
 # (shared/realtime/rcb_realtime.py, which extends rcb_service.py unchanged) and the agent gets the realtime client
 # (`submit(..., at=)`, `cameras=[]`). Same instance, same success rule; reset budget `realtime_reset_budget` (50, the
-# realtime mode's default); the instruction tells the agent to drive the robot with a controller program.
+# standard-realtime mode's default); the instruction tells the agent to drive the robot with a controller program.
 REALTIME_TEMPLATES = HERE / "templates" / "realtime"
 REALTIME = HERE / "shared" / "realtime"
 
 
 def realtime_dir_name(t: dict, instance_tag: str) -> str:
-    return base_dir_name(t, instance_tag) + "-realtime"
+    return base_dir_name(t, instance_tag) + "-standard-realtime"
 
 
 # A recorded episode (a trajectory) is solvability evidence here too: planned from step 0 (`at`), its rows run at the
@@ -485,7 +485,7 @@ def realtime_context(t: dict, defaults: dict, facts: dict) -> dict:
     ev += REALTIME_EVIDENCE if "trajectory" in ev else ""      # a recorded episode, not "none known" or an RL score
     # the realtime tasks' own human review: the pull request that added them (realtime_review_pr; 0: not opened yet)
     review = {**defaults, "review_pr": defaults.get("realtime_review_pr", 0)}
-    oracle = oracle_fields({**t, "oracle_evidence": ev}, review, "realtime")
+    oracle = oracle_fields({**t, "oracle_evidence": ev}, review, "standard-realtime")
     return ctx | {
         "base_dir": base_dir_name(t, defaults["instance_tag"]),
         "control_ms": f"{1000 / facts['standard']['control_hz']:g}",
@@ -511,7 +511,7 @@ def render_realtime(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASK
                      (STANDARD / "rcb1.py", "environment/rcb1.py"), (STANDARD / "grade.py", "tests/grade.py")]:
         shutil.copyfile(src, out / rel)
     shutil.copyfile(CLIENT_REQUIREMENTS, out / "environment/client-requirements.txt")
-    copy_oracle(t, "realtime", out)
+    copy_oracle(t, "standard-realtime", out)
     normalize(out)
     return out
 
@@ -701,8 +701,8 @@ FORMULA = re.compile(r"\b(?:bounds|margin|value_at_margin)\s*=|\brewards\.tolera
 
 def leaks(task: Path, families: set[str]) -> list[str]:
     toml = tomllib.loads((task / "task.toml").read_text())
-    # standard and realtime tasks score in the sim sidecar (environment/sim/), privileged ones in tests/
-    own, standard = toml["metadata"]["family"], toml["metadata"]["mode"] in ("standard", "realtime")
+    # standard and standard-realtime tasks score in the sim sidecar (environment/sim/), privileged ones in tests/
+    own, standard = toml["metadata"]["family"], toml["metadata"]["mode"] in ("standard", "standard-realtime")
     home = task / ("environment/sim" if standard else "tests")               # where the formula has to be
     agent_side = [f for f in sorted((task / "environment").rglob("*"))
                   if f.is_file() and not (standard and home in f.parents)]
