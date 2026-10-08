@@ -572,7 +572,8 @@ is the last solver substep's (pos - ipos) / substep_dt (0.625 ms; 4 substeps per
   - Hard: one tick later. At tick 48349 a particle decelerating within the tick reads 58 mm/s as displacement and at most
     30 mm/s as last-substep velocity, so the 0.5 s confirmation starts one tick later. The v18 trajectory's last row (9
     ticks) ends at the old success tick 48549, one tick short of a strict success; its replay succeeds in the first tick
-    of the hold. A v19 oracle run should stop one tick later and grade strictly; the v19 re-grades check it.
+    of the hold. The v19 oracle run stops one tick later (tick 48550, the same 4855 rows) and grades strictly in both
+    modes (v19 re-grades below).
   - Physics identity. Per-tick SHA-256 of the cloth positions, easy rows 0-300 (3000 ticks): the patched and unpatched
     world, with and without the speed hook, are identical at every tick. On the same packages the patched world gives the
     same instance state hashes (v18 / below-easy instances: easy 34a6293dbb63deb5, medium 437ce3bc96b437f9, hard
@@ -581,6 +582,32 @@ is the last solver substep's (pos - ipos) / substep_dt (0.625 ms; 4 substeps per
     merged-v18.)
   - Visual. very_easy's verifier video around the chatter onset (tick ~6041) and after the release: the sheet lies flat
     and still from the release on; mid-lay frames show the carried corner moving.
+- v19 re-grades (lab, 2026-10-06). The five blanket instances of the release (candidate built and preflighted with
+  Jianwen's pipeline, exact restores; image `rcb-topogym:0.2.17-dev-cu128` = sha256:06554307), graded with his launcher
+  (`scripts/oracle_runners/test_harbor_oracles.py --candidate --no-nop --execute`, both modes) on lab GPUs 4 / 7, at most
+  two blanket simulations per GPU. Times in minutes, under lab load: privileged = the oracle's live run (the reference
+  execution) and the verifier's two replays; standard = the live episode and the collect hook's replay. No pass needed
+  a replay tolerance, and every grading replay succeeded strictly within the trajectory's rows (hold 0). Each tier ends
+  in one state hash across both privileged replays and the standard live episode and replay.
+
+  | tier | mode | grade | rows | success tick | strict success | state hash | time |
+  |---|---|---|---|---|---|---|---|
+  | easy | privileged | 1 | 718 | 7176 (= v18) | row 718, both replays | 71cd36a47dc1538c | oracle 7.5, verifier 14.1 |
+  | easy | standard | 1 (live 1, replay 1) | 718 | 7176 | live; replay at row 718 | 71cd36a47dc1538c | live 5.9, replay 6.1 |
+  | medium | privileged | 1 | 1696 | 16953 (= v18) | row 1696, both replays | a0ae567c95fb796f | oracle 21.8, verifier 38.9 |
+  | medium | standard | 1 (live 1, replay 1) | 1696 | 16953 | live; replay at row 1696 | a0ae567c95fb796f | live 19.6, replay 19.3 |
+  | hard | privileged | 1 | 4855 | 48550 (v18: 48549) | row 4855, both replays | a8da7bf066549ba6 | oracle 54.1, verifier 106.5 |
+  | hard | standard | 1 (live 1, replay 1) | 4855 | 48550 | live; replay at row 4855 | a8da7bf066549ba6 | live 48.1, replay 51.8 |
+  | very_easy | privileged | 1 | 637 | 6363 | row 637, both replays | 51c8d213bf1b7bc8 | oracle 6.4, verifier 12.0 |
+  | very_easy | standard | 1 (live 1, replay 1) | 637 | 6363 | live; replay at row 637 | 51c8d213bf1b7bc8 | live 4.9, replay 5.2 |
+  | easier | privileged | 0 (score_failed) | 633 | - | none: the oracle stops at lay_half, "assisted grasp lost" (edge ratio 1.3014 > 1.3), then 80 hold steps | 942d21cc4ef26576 | oracle 6.7, verifier 12.9 |
+  | easier | standard | not run (blocked_dependency: no grade-1 privileged trajectory) | | | | | |
+
+  Against v18: easy and medium succeed at the same rows and ticks; hard one tick later; very_easy now passes both modes
+  strictly (v18 below-easy grades: 1454 rows, privileged only through the hold, standard failed); easier is unchanged,
+  an oracle problem left for Jianwen. The reference executions stay under 72 min (hard 54.1). These grades ran on v19 itself
+  (89cc32674). The next commit, da47d3a49 (rope below-easy profile), changes the public source hash, so candidates built
+  from later heads need a rebuilt image.
 - Follow-ups for Jianwen (not done):
   - Rigid bodies: their speeds are the rigid solver's velocities at the end of the tick (the IPC coupling's for
     IPC-coupled bodies). The families that settle rigid bodies could use the same end-of-tick displacement if a similar
