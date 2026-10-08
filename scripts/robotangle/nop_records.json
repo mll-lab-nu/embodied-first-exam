@@ -1,0 +1,235 @@
+{
+ "build": "release 6b6804ae4 image ghcr.io/mll-lab-nu/eai-robotangle:0.2.17 sha256:b4cc8d786c446fadb26b5bf0ad13ff5882a6a352dd2e15cb62007dc551bf1dcb",
+ "date": "2026-10-07",
+ "host": "RTX 4090 (compute capability 8.9)",
+ "runs": {
+  "blanket-flatten-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 37
+   },
+   "standard": {
+    "clean": false,
+    "reward": 0,
+    "wall_s": 255
+   }
+  },
+  "buzz-wire-3d-easier": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 37
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 263
+   }
+  },
+  "buzz-wire-3d-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 34
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 257
+   }
+  },
+  "cast-coil-easier": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 34
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 163
+   }
+  },
+  "cast-coil-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 40
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 165
+   }
+  },
+  "cast-keyhole-easier": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 39
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 155
+   }
+  },
+  "cast-keyhole-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 39
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 158
+   }
+  },
+  "fiber-bundling-easier": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 38
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 168
+   }
+  },
+  "fiber-bundling-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 39
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 163
+   }
+  },
+  "hedgehog-in-cage-easier": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 40
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 180
+   }
+  },
+  "hedgehog-in-cage-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 36
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 190
+   }
+  },
+  "horseshoe-ring-easier": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 35
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 224
+   }
+  },
+  "horseshoe-ring-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 36
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 224
+   }
+  },
+  "interlocked-claws-easier": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 37
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 167
+   }
+  },
+  "interlocked-claws-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 35
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 154
+   }
+  },
+  "knot-untying-easier": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 35
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 398
+   }
+  },
+  "knot-untying-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 35
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 384
+   }
+  },
+  "lock-picking-easier": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 35
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 356
+   }
+  },
+  "lock-picking-very-easy": {
+   "privileged": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 47
+   },
+   "standard": {
+    "clean": true,
+    "reward": 0,
+    "wall_s": 350
+   }
+  }
+ }
+}
