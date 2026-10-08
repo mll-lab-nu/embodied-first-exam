@@ -15,10 +15,12 @@ results are published on the results site, not kept here (PROTOCOL D3).
 | `measure_baselines.py` | the `nop` / `hold` floors for all 32 upstream families, including the ones outside the subset — the evidence for which families deserve a slot |
 | `templates/` | everything the tasks have in common, with `{{placeholders}}` |
 | `templates/standard/`, `shared/standard/` | the same for each task's standard-mode twin (`tasks/*-standard/`, `eai-standard/2.1`): `rcb_service.py` (the simulator-agnostic service: endpoints, RCB1, episode, crash recovery, finalize), `server.py` (the HumanoidBench adapter), `rcb_client.py` and `rcb1.py` (the agent's client; its docstring is the API reference), `grade.py` (the verifier). Per-task prose is the task's `[task.standard]` table in `subset.toml` |
+| `templates/realtime/`, `shared/realtime/` | each task's realtime-mode task (`tasks/*-realtime/`, `eai-standard/2.3`, PROTOCOL §4b): standard mode on a clock that does not stop. `rcb_realtime.py` (the service: extends `rcb_service.py` with the clock and the plan; the sidecar runs it instead of `server.py`, with the same adapter) and `rcb_client.py` (the realtime client: `submit(..., at=)`, `cameras=[]`); the rest is the standard twin's |
 | `standard_probe.py` | what `measure-standard` runs against a twin's sim service: contract checks, the all-zero return against `facts.json`, a crash it must survive, the t=0 camera images, and the per-step cost the instruction quotes |
-| `oracles/<family>/<mode>/` | a task's reference solution, where it has one (only the `sit_simple` fixture, both modes; files directly under `oracles/<family>/` go to both); `render` copies it to `solution/` |
+| `oracles/<family>/<mode>/` | a task's reference solution, where it has one (only the `sit_simple` fixture: privileged, standard and realtime; files directly under `oracles/<family>/` go to all); `render` copies it to `solution/` |
 | `configs/codex-openrouter.yaml` | the Harbor job config the recorded runs use: Harbor's own Codex agent on OpenRouter |
 | `tests/test_standard_service.py` | the standard-mode service, client and verifier against a toy simulator (`python -m unittest discover -s scripts/humanoidbench/tests`; numpy, requests) |
+| `tests/test_realtime_service.py` | the realtime service and client over real HTTP against the same toy simulator: the paused start, the clock, the plan (`at`, late rows, holds), watches, resets, the tick log, a restart |
 | `gen_tasks.py` | the generator |
 
 ```bash
@@ -52,8 +54,8 @@ floor measured any other way would not be the number the verifier produces.
 
 ## Changing something that every task shares
 
-Edit `shared/` or `templates/`, then `./gen_tasks.py render`. All twenty directories (10 tasks, two modes)
-move together — that is the whole point. `./gen_tasks.py check` fails when `tasks/` is not what `render` writes from
+Edit `shared/` or `templates/`, then `./gen_tasks.py render`. All thirty directories (10 tasks: privileged, standard,
+realtime) move together — that is the whole point. `./gen_tasks.py check` fails when `tasks/` is not what `render` writes from
 today's sources, so a bar in `facts.json` or a sentence in `subset.toml` cannot change without the instructions
 following.
 
