@@ -376,6 +376,16 @@ agent latency counts, the agent's own program may act), on the 2.x endpoints and
 | The agent's controller runs in the agent's own container and streams targets through the client; no agent code runs next to the simulator | MUST | [new] |
 | A standard-realtime task shares its privileged twin's frozen instance and success rule (its verifier grades the sidecar's record, as in standard mode); its instruction says that time does not stop | MUST | [new] |
 
+**Per-benchmark exception (proposed, pending the owner's decision; §7 Open 6).**
+- **RoboOlympics** (`roboolympics-<sport>-<format>-i<NN>-standard-realtime`, three tasks): real-time sports against a
+  scripted opponent. They serve RoboOlympics' own realtime protocol `eai-standard-realtime/1.0` (the #41 time model this
+  section adopts) instead of `eai-standard/2.3`, with these differences: slowdown S = 10, not 1; no reset; no privileged
+  twin; the `game` CLI / `/start` `/act` `/wait` `/ready` with PNG camera tiles instead of 2.x's endpoints, RCB1 and
+  `rcb_client.py`; the world freezes for a review between units (a point, a goal); a simulator crash is an infrastructure failure
+  without journal resume; their own evidence files. The list and the reasons are in
+  [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md); `ci_checks/check-protocol-v1.py` (`REALTIME_EXCEPTIONS`) and
+  `scripts/task_conventions.py` (`NO_TWIN`) accept exactly this. Results state S and are reported separately.
+
 ## 5. Results, cost, token budget
 | Item | Level | Basis |
 |---|---|---|
@@ -466,6 +476,8 @@ Open:
 5. Agent egress (owner, 2026-10-02: kept as it is): the per-benchmark settings stay; the harness's web search is off (§5).
    Findings: agents installed nothing and cloned nothing in 423 recorded trials; the one observed leak was the
    harness's web search (now off, §5); PyPI is not neutral (the `metaworld` wheel ships every task's scripted expert).
+6. RoboOlympics' standard-realtime tasks deviate from §4b (the exception in §4b): the owner decides which differences
+   stay and which the tasks must drop (`docs/benchmarks/roboolympics.md`).
 
 Decided (owner, 2026-10-02):
 1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,

@@ -20,6 +20,8 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/mll-lab-nu/eai-"
 PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"}   # standard mode (2.4: the operations capability, issue #89)
 REALTIME_PROTOCOLS = {"eai-standard/2.3"}                # standard-realtime mode (PROTOCOL §4b): 2.3 = the realtime capability
+# Documented per-benchmark protocol exceptions (PROTOCOL §4b, §7): task-directory prefix -> the protocol it serves instead
+REALTIME_EXCEPTIONS = {"roboolympics-": "eai-standard-realtime/1.0"}   # RoboOlympics' own realtime protocol (open item)
 LEGACY_PROTOCOLS = {"rcb-limited/2.1"}
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")
 TEXT_SUFFIXES = {".md", ".toml", ".py", ".sh", ".yaml", ".yml", ".json", ".jsonl", ".txt", ".cfg", ".xml", ".urdf", ""}
@@ -73,7 +75,8 @@ def check_task(task: Path) -> None:
         warn("protocol spelled `rcb-limited/2.1` (use `eai-standard/2.1`)", name)
     elif standard and proto not in PROTOCOLS:
         warn(f"standard-mode `protocol` not in {sorted(PROTOCOLS)}", f"{name} ({proto})")
-    if realtime and proto not in REALTIME_PROTOCOLS:
+    if realtime and proto not in REALTIME_PROTOCOLS and not any(
+            name.startswith(p) and proto == v for p, v in REALTIME_EXCEPTIONS.items()):
         warn(f"standard-realtime `protocol` not in {sorted(REALTIME_PROTOCOLS)}", f"{name} ({proto})")
     if not standard and not realtime and proto is not None:
         warn("`protocol` set on a privileged task", name)
