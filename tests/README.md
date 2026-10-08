@@ -33,3 +33,17 @@
 
 这些命令要求实际 Genesis / CUDA / Nyx，输出目录须不存在；它们不是 CPU 静态检查。
 Harbor 的任务检查与评分文件在 `ci_checks/` 和 `tasks/*/tests/`，仍按 [Harbor 手册](../docs/rcb/README.md)执行。
+
+## Oracle 对 GPU 数值噪声的敏感度（诊断，不是评分）
+
+`oracle_noise_sensitivity.py` 跑一次 oracle（闭环）或回放一条已录轨迹（开环），用两种方式模拟换 GPU 型号后的数值差别：
+`--action-noise-rad` 在每个控制步给机械臂关节目标加 N(0, σ)；`--tolerance-scale` 把 IPC 的 Newton 与线性求解容差乘以一个系数。
+Session 由发布配置的环境输入构建，报告记录出生状态 hash 以确认与冻结实例一致。目前支持 rope_threading very_easy / easier。
+
+```bash
+python tests/oracle_noise_sensitivity.py --tier very_easy --mode closed --reference <评分轨迹.npz> \
+  --output <新目录> --solution <打包 solution 目录> --action-noise-rad 1e-6 --noise-seed 1
+```
+
+不要用 `FiniteElementStateAccessorFeature.copy_from` 往 IPC 写回加噪的绳状态：即使噪声为 0，写回一次后下一步绳就偏 0.38 mm、
+9.5 mm/s（回读的位置和速度不变），每步写回会让绳一直静止不下来（2026-10-07 实测）。

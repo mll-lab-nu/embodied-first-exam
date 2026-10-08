@@ -49,9 +49,11 @@ def environment_inputs(family, tier, *, variation=None, seed=0, parameters=None)
         # replay hold accepts 0.92 (harbor_templates/topogym/common/rcb_topogym.py REPLAY_TOLERANCES). The packaged v14
         # cloth states are re-keyed for it, not prepared again (scripts/topogym_merge_candidate.py).
         params = merge(params, dict(minimum_coverage_ratio=.95))
+        # The assist's edge-stretch guard: 1.5 where a route lifts layers off a stack, as medium / hard do (easier: the
+        # pinch over its stacked corner loads 1.29-1.33, measured 2026-10-07, the user's decision to align).
         overrides["grasp_assist"] = dict(model="pbd_local_patch_v1", stable_time_s=.03,
             targets=[dict(entity="blanket", spatial_radius_m=.018, material_radius_m=.018,
-                          max_strain_ratio=1.3 if tier in ("very_easy", "easier", "easy") else 1.5)])
+                          max_strain_ratio=1.3 if tier in ("very_easy", "easy") else 1.5)])
         changes.append("public birth UV support and explicit two-hand patch assistance; live coverage 0.95")
     elif family == "horseshoe_ring":
         changes.append("local default ring-clearance geometry and matching recommended grasp")

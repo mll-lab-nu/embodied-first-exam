@@ -93,5 +93,12 @@
 `below_easy_oracle.py` + `public_session.py`，经 `harbor_bridge/below_easy.py` 分派，与上面迁入的 12 阶段路线无关，只复用
 `policy.SlottedOraclePolicy` 的直线、转移与固定件检查。very_easy：右臂指尖径向捏环管（沿环倾斜 30-45° 进手，夹爪本体
 150 mm 宽，竖直进手必碰立柱），直上至环最低点高出柱顶 30 mm，平移离柱后直线放到目标区中心上方 6 cm 并保持至任务成功；
-每行关节步长不超过 0.03 rad，经 `standard_rate.rate_limited_runner`。easier 暂缺 oracle，`public_session` 拒绝；尝试与
-场景决定见 `docs/rcb/ORACLE_FIXES_2_FOR_JIANWEN.md` 第 5 节。
+每行关节步长不超过 0.03 rad，经 `standard_rate.rate_limited_runner`。
+
+easier（2026-10-07，`EasierPolicy`）：困住环的只是远侧绳圈上的珠 2（直径 39 mm），它过不了环与立柱背面之间的空隙（出生
+落稳后约 37 mm）；绳本身只是搭在环上，两端都在环内。右手先选直上越柱顶可达的捏法捏环并抬 6 mm；左手经立柱 −x 侧
+（离桌 15 cm、世界 x = −0.30 m）到珠 2，沿 x 方向捏起，越过环后段，放到立柱背面后方 12 mm 处（再近左前臂会碰立柱）松手，
+珠倒进空隙；左手退回停放位；环向 +y 移 5 mm 后直上，搭着的绳向内滑落；放置多加一段平移，让在环靠立柱一侧的手越过柱顶后
+再下降。开发 Session 上经 `public_session` 从出生态连续一次原生成功，874 行；证据
+`runs/test_results/slotted_easier_oracle_dev_20261007_01/`。试过但不用的：捏珠 1 拉绳（珠孔口把 E 50 kPa 的绳压出反转
+四面体）、推左端盘把绳从长孔拉回（可行但左臂够不远）。Harbor 候选与评分未做。

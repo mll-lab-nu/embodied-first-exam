@@ -118,7 +118,7 @@ class BlanketRunnerTests(unittest.TestCase):
     def test_worker_preserves_frozen_scene_and_route_contracts(self):
         # The hard witness needs 33687 ticks, beyond the other tiers' budget.
         with tempfile.TemporaryDirectory() as folder:
-            for tier, budget, guard in (("very_easy", 20000, 1.3), ("easier", 48000, 1.3),
+            for tier, budget, guard in (("very_easy", 20000, 1.3), ("easier", 48000, 1.5),
                                         ("easy", 28000, 1.3), ("medium", 28000, 1.5),
                                         ("hard", 40000, 1.5)):
                 with self.subTest(variation=tier):

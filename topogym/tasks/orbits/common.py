@@ -20,8 +20,29 @@ from topogym.evaluation.task_metrics import placement_candidate, rigid_asset_ver
 # in metres after linear_scale. Imported oracle geometry does not replace them.
 CORD_PROFILES = {
     "compact_external_handle_v1": dict(handle_x_m=.41, cord_length_m=.80),
-    "below_easy_external_handle_v1": dict(handle_x_m=.32, cord_length_m=.80),
+    # very_easy stiff loop (2026-10-07): 0.90 m around the 35 mm bight, the MuJoCo lift sweep's best clearance.
+    "below_easy_stiff_loop_v1": dict(handle_x_m=.32, cord_length_m=.90),
+    # easier, standard solution (2026-10-07): the loop passes around the whole 247 mm ring (MuJoCo reference run).
+    "easier_ring_hole_v2": dict(handle_x_m=.42, cord_length_m=1.25),
 }
+
+
+def recommended_grasp_assist(variation_id, seed=0, *, task_parameters=None):
+    """Contact weld on any chain link for the rigid-chain tiers (very_easy, easier; user, 2026-10-07): friction pinches
+    on the chain let it slip out under load. The FEM tiers keep their unassisted contract."""
+    from topogym.config.registry import task_definition
+    from topogym.utils.grasp import GraspAssistConfig, GraspTarget
+    from .below_easy import OrbitsBelowEasyTask
+    task = task_definition("orbits", variation_id, seed)(task_parameters, seed=seed)
+    # Only these two tiers' chain (its link layout comes from chain_roots); other tiers keep their own contract.
+    if not isinstance(task, OrbitsBelowEasyTask):
+        return None
+    _, _, roots = task.chain_roots()
+    lengths = np.linalg.norm(np.diff(roots, axis=0), axis=1)
+    # An 8 mm sphere about each link's middle (teammate standard): the ~23 mm finger pads often touch two links, and a
+    # pinch touching two targets does not weld.
+    return GraspAssistConfig("contact_weld_v1", tuple(
+        GraspTarget("cord", f"link_{i:02d}", (length/2, 0., 0.), .008) for i, length in enumerate(lengths)))
 
 
 def profile_value(profile, key, ring_count):

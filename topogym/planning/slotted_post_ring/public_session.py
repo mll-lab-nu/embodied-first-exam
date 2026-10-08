@@ -5,19 +5,17 @@ from topogym.planning.harbor_bridge.callbacks import prepare_output
 def run_feedback_policy(session, output, *, variation):
     from topogym.planning.standard_rate import rate_limited_runner
     from topogym.utils.io import write_json_atomic
-    from .below_easy_oracle import BelowEasyPolicy
+    from .below_easy_oracle import BelowEasyPolicy, EasierPolicy
     from .geometry import SceneGeometry
     from .kinematics import ArmIK
 
-    if variation == "easier":
-        raise ValueError("No Slotted Post easier oracle: its cord loop over the ring is not passed by any tried move "
-                         "(docs/rcb/ORACLE_FIXES_2_FOR_JIANWEN.md section 5)")
-    if variation != "very_easy":
+    if variation not in ("very_easy", "easier"):
         raise ValueError("The Slotted Post oracle covers the below-easy settings only")
     output = prepare_output(session, output, __file__)
     env = session.env
-    policy = BelowEasyPolicy(kinematics=ArmIK(env._robot), geometry=SceneGeometry.from_task(env._task),
-                             control_dt_s=env.timing_spec["control_dt_s"])
+    policy = (EasierPolicy if variation == "easier" else BelowEasyPolicy)(
+        kinematics=ArmIK(env._robot), geometry=SceneGeometry.from_task(env._task),
+        control_dt_s=env.timing_spec["control_dt_s"])
     # Every recorded row keeps the standard service's joint-step limit (topogym/planning/standard_rate.py).
     runner = rate_limited_runner(session)
     try:

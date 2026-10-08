@@ -83,7 +83,7 @@ class CornerFoldContracts(unittest.TestCase):
         self.assertIs(CornerFoldPreparation.run, ClothPreparation.run)
         self.assertIs(CornerFoldPreparation.tick, ClothPreparation.tick)
         self.assertIs(CornerFoldPreparation.drive, ClothPreparation.drive)
-        for tier, expected in (("very_easy", ["corner_fold"]), ("easier", ["half_fold", "corner_fold"])):
+        for tier, expected in (("very_easy", ["corner_fold"]), ("easier", ["fold_away", "half_fold", "corner_fold", "fold_return"])):
             task = task_definition("blanket_flatten", tier)({"initialization_mode": "flat_for_preparation"})
             task.material_uv = np.array([[0., 0.]])
             controller = CornerFoldPreparation.__new__(CornerFoldPreparation)

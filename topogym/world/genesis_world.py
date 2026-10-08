@@ -141,9 +141,13 @@ class GenesisWorld:
             require_episode_checkpoint(compute_backend)
             extra = dict(fem_options=gs.options.FEMOptions(**dict(options.get("fem", {}))),
                          coupler_options=scene_options(options["ipc"]))
+        rigid = dict(options.get("rigid", {}))
+        if isinstance(rigid.get("constraint_solver"), str):
+            # Tasks name the solver ("CG", "Newton") and stay free of a genesis import.
+            rigid["constraint_solver"] = gs.constraint_solver[rigid["constraint_solver"]]
         builder = StandardTabletopSceneBuilder(
             env_cfg, robot_cfg,
-            rigid_options=gs.options.RigidOptions(**dict(options.get("rigid", {}))),
+            rigid_options=gs.options.RigidOptions(**rigid),
             pbd_options=gs.options.PBDOptions(**dict(options["pbd"])) if "pbd" in options else None,
             scene_options=extra)
         try:

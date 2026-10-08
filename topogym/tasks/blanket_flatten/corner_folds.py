@@ -12,10 +12,22 @@ ARCHIVE_REVISION = "corner_folds_archive_v1"
 TIERS = ("very_easy", "easier")
 
 
+def profile_parameters(profile):
+    """The fold profile as Task parameters. The 2026-10 options appear only where they differ from their defaults (the
+    reworked easier), so very_easy keeps its parameters and frozen-state identity, and a frozen state of an earlier
+    easier layout no longer matches easier."""
+    values = asdict(profile)
+    if not values["upper_corner_only"]:
+        values.pop("upper_corner_only")
+    if not values["far_half_fold"]:
+        values.pop("far_half_fold")
+    return values
+
+
 def scene_parameters(difficulty):
     parameters = gathered_parameters("easy")
     parameters.pop("gathered_profile")
-    parameters["corner_fold_profile"] = asdict(profile_for(difficulty))
+    parameters["corner_fold_profile"] = profile_parameters(profile_for(difficulty))
     return parameters
 
 

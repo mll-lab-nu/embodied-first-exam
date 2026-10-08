@@ -86,6 +86,135 @@ class ActionBoundary(unittest.TestCase):
             oracle.submit(row, 'beyond')
         self.assertEqual(len(oracle.session.calls), 1)
 
+    def test_reach_checks_every_row_and_stages_the_wrist_first_past_a_mid_path_collision(self):
+        """very_easy's right approach: both endpoints pass, but the joint-interpolated rows sweep the right gripper past
+        the parked left one (0.44 mm, local Harbor run 10-06). Rows are checked before any step; the wrist goes first."""
+        oracle = controller()
+        target = np.zeros(14)
+        target[7], target[11] = .4, .5  # right waist, right wrist_angle
+
+        def check(q):
+            swept = .1 < q[7] < .3 and q[11] < .3
+            return {'passed': not swept, 'issues': ['inter_arm'] if swept else []}
+
+        oracle.collision_check = check
+        oracle.reach_checked(target, 'approach')
+        for _, requested in oracle.session.calls:
+            self.assertTrue(check(requested)['passed'])
+        np.testing.assert_allclose(oracle.session.accepted, target, atol=2e-6, rtol=0)
+        oracle = controller()
+        oracle.collision_check = lambda q: {'passed': not .1 < q[7] < .3, 'issues': ['inter_arm']}
+        with self.assertRaisesRegex(RuntimeError, 'No collision-free joint ordering'):
+            oracle.reach_checked(target, 'approach')
+        self.assertEqual(oracle.session.calls, [])
+
+    def test_grasp_takes_the_least_tilted_candidate_whose_whole_approach_is_clear(self):
+        """very_easy run 6: the upright pregrasp passed at both ends, but its path crossed the parked hand in every
+        joint ordering. The next tilt, whose path is clear, is taken; no row is sent for the blocked one."""
+        from unittest import mock
+        from scipy.spatial.transform import Rotation
+        import topogym.planning.orbits.native_session as module
+
+        class Settled(Exception):
+            pass
+
+        oracle = controller()
+        oracle.robot = SimpleNamespace(_q_indices={'left': list(range(8))},
+                                       groups={'left': SimpleNamespace(arm_limits_rad=[[-np.pi, np.pi]]*6)})
+        oracle.full_q, oracle.arm_bases = np.zeros(8), {'left': np.array([0., .5, 0.])}
+        oracle.bias, oracle.pinch_turns, oracle.grasps, oracle.close_width = {'left': np.zeros(3)}, {}, {}, .0028
+        oracle.line = lambda: None
+        oracle.at = lambda arc, line=None: np.array([.3, .1, .02])
+        oracle.jaws = lambda widths, phase, seconds=.5: None
+        tilts = iter(np.repeat([0., 15., 30., 45., 0., 15., 30., 45.], 2))
+        oracle.solve_contact_pose = lambda side, point, turn, q: np.r_[.3, 0., 0., 0., next(tilts)/100, 0., 0., 0.]
+
+        def check(q):  # waist through (0.1, 0.2) rad with the wrist angle still below 0.1 rad: crosses the parked hand
+            return {'passed': not (.1 < q[0] < .2 and q[4] < .1)}
+
+        def settle(seconds, phase):
+            raise Settled(phase)
+
+        oracle.collision_check, oracle.hold = check, settle
+        with mock.patch.object(module, 'vertical_pinch', lambda point, tangent, flip: (None, Rotation.identity())):
+            with self.assertRaisesRegex(Settled, 'approach_settle'):
+                oracle.grasp_one('left', .2)
+        self.assertTrue(all(check(row)['passed'] for _, row in oracle.session.calls))
+        np.testing.assert_allclose(oracle.session.accepted[:6], [.3, 0., 0., 0., .15, 0.], atol=2e-6)
+
+    def test_move_refuses_an_ik_branch_change_before_stepping(self):
+        """very_easy run 8: leaning the right wrist met the forearm-roll limit; the IK answered from another branch
+        and walking the joints across swung the gripper and threw the cord. The jump is refused, nothing is sent."""
+        from scipy.spatial.transform import Rotation
+        oracle = controller()
+        oracle.contact = lambda side: (np.zeros(3), Rotation.identity())
+        rows = iter([np.r_[np.zeros(7), [0., 0., 0., 3.1, 0., 0.], 0.], np.r_[np.zeros(7), [0., 0., 0., 2.3, .8, 0.], 0.]])
+        oracle.solve_contacts = lambda points, turns: next(rows)
+        oracle.session.accepted[10] = 3.08
+        with self.assertRaisesRegex(RuntimeError, 'IK branch change in lean'):
+            oracle.move({'right': np.zeros(3)}, {'right': Rotation.from_rotvec([.05, 0., 0.])}, 'lean')
+        self.assertEqual(len(oracle.session.calls), 1)
+
+    def test_grasp_prefers_a_candidate_with_forearm_roll_travel(self):
+        """Both candidates have clear approaches; the upright one sits 0.04 rad from the forearm-roll limit, so the
+        15-degree one with travel for a later wrist lean is taken."""
+        from unittest import mock
+        from scipy.spatial.transform import Rotation
+        import topogym.planning.orbits.native_session as module
+
+        class Settled(Exception):
+            pass
+
+        oracle = controller()
+        oracle.robot = SimpleNamespace(_q_indices={'left': list(range(8))},
+                                       groups={'left': SimpleNamespace(arm_limits_rad=[[-np.pi, np.pi]]*6)})
+        oracle.full_q, oracle.arm_bases = np.zeros(8), {'left': np.array([0., .5, 0.])}
+        oracle.bias, oracle.pinch_turns, oracle.grasps, oracle.close_width = {'left': np.zeros(3)}, {}, {}, .0028
+        oracle.line = lambda: None
+        oracle.at = lambda arc, line=None: np.array([.3, .1, .02])
+        oracle.jaws = lambda widths, phase, seconds=.5: None
+        rolls = iter(np.repeat([3.1, 1., 1., 1., 1., 1., 1., 1.], 2))
+        oracle.solve_contact_pose = lambda side, point, turn, q: np.r_[0., 0., 0., next(rolls), 0., 0., 0., 0.]
+
+        def settle(seconds, phase):
+            raise Settled(phase)
+
+        oracle.hold = settle
+        with mock.patch.object(module, 'vertical_pinch', lambda point, tangent, flip: (None, Rotation.identity())):
+            with self.assertRaisesRegex(Settled, 'approach_settle'):
+                oracle.grasp_one('left', .2)
+        self.assertAlmostEqual(float(oracle.session.accepted[3]), 1., places=5)
+
+    def test_a_pinch_that_does_not_lift_the_cord_is_retried_once(self):
+        """A pinch on a cord lying on its support held 3 times in 5 (2026-10-07); the cord stays where it was, so
+        the hand opens, rises 6 cm, forgets its alignment bias and grasps again. A second miss still fails."""
+        from scipy.spatial.transform import Rotation
+        from topogym.planning.orbits.native_session import GraspNotFollowing
+        oracle = controller()
+        oracle.bias, oracle.grasps = {'left': np.array([.001, 0., -.003])}, {}
+        oracle.contact = lambda side: (np.array([.2, .1, .03]), Rotation.identity())
+        phases, attempts = [], []
+        oracle.jaws = lambda widths, phase, seconds=.5: phases.append(phase)
+        oracle.move = lambda contacts, turns, phase, speed=.04: phases.append((phase, contacts['left'][2]))
+
+        def grasp_one(side, station, pre_height=.06):
+            attempts.append(oracle.bias[side].copy())
+            oracle.grasps[side] = station
+            if len(attempts) < 2:
+                raise GraspNotFollowing(f'Physical grasp did not follow: {side}')
+            return {side: 'turn'}
+
+        oracle.grasp_one = grasp_one
+        self.assertEqual(oracle.grasp_retry('left', .3), {'left': 'turn'})
+        self.assertEqual(phases, ['regrasp_open', ('regrasp_lift', .09)])
+        np.testing.assert_array_equal(attempts[1], np.zeros(3))
+        attempts.clear()
+        oracle.grasp_one = lambda side, station, pre_height=.06: (attempts.append(1), (_ for _ in ()).throw(
+            GraspNotFollowing(f'Physical grasp did not follow: {side}')))
+        with self.assertRaises(GraspNotFollowing):
+            oracle.grasp_retry('left', .3)
+        self.assertEqual(len(attempts), 2)
+
     def test_terminal_episode_never_receives_an_extra_action(self):
         oracle = controller()
         oracle.session.episode_end = 'success'
@@ -111,7 +240,8 @@ class ActionBoundary(unittest.TestCase):
         oracle = controller()
         cord, tracking = np.array([.30, .10, .0229]), np.array([-.002, .001, 0.])
         lift, phases = [0.], []
-        oracle.robot = SimpleNamespace(_q_indices={'left': list(range(8))})
+        oracle.robot = SimpleNamespace(_q_indices={'left': list(range(8))},
+                                       groups={'left': SimpleNamespace(arm_limits_rad=[[-np.pi, np.pi]]*6)})
         oracle.full_q, oracle.arm_bases = np.zeros(8), {'left': np.array([0., .5, 0.])}
         oracle.bias, oracle.pinch_turns, oracle.grasps, oracle.close_width = {'left': np.zeros(3)}, {}, {}, .0028
         oracle.line = lambda: None
@@ -146,6 +276,20 @@ class ActionBoundary(unittest.TestCase):
                              'topogym.planning.orbits.native_session:run_feedback_policy')
         for tier in ('easy', 'medium', 'hard'):
             self.assertIsNone(session_callback('orbits', tier))
+
+
+class ChainFreeCheck(unittest.TestCase):
+    def test_cord_links_leave_the_swept_check_and_the_fixture_stays(self):
+        """local very_easy 2026-10-07: a loop link resting on a finger refused every motion of that hand."""
+        from unittest import mock
+        from topogym.planning.orbits.native_session import chain_free_check
+
+        class Stand:
+            def __init__(self, env):
+                self.shapes = [SimpleNamespace(entity=e) for e in ('robot', 'cord', 'cord', 'post_1', 'stopper_ball')]
+        with mock.patch('topogym.planning.oracle_path.SceneCandidateCheck', Stand):
+            kept = [s.entity for s in chain_free_check(None).shapes]
+        self.assertEqual(kept, ['robot', 'post_1', 'stopper_ball'])
 
 
 if __name__ == '__main__':

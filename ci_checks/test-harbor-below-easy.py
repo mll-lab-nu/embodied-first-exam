@@ -70,7 +70,8 @@ class BelowEasy(unittest.TestCase):
                 if row["family"] == "blanket_flatten":
                     self.assertEqual(config["task_parameters"], {"minimum_coverage_ratio": .95})
                     self.assertEqual(config["grasp_assist"]["model"], "pbd_local_patch_v1")
-                    self.assertEqual(config["grasp_assist"]["targets"][0]["max_strain_ratio"], 1.3)
+                    self.assertEqual(config["grasp_assist"]["targets"][0]["max_strain_ratio"],
+                                     1.5 if row["tier"] == "easier" else 1.3)
                 elif row["family"] == "rope_threading":
                     # The original tiers' environment profile (merged-v16's contact_relaxed_v16), not their ring layout.
                     params = config["task_parameters"]

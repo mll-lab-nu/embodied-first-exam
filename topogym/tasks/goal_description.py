@@ -103,6 +103,9 @@ def describe_goal(task):
         remainder = getattr(task, "placement_remainder_description", remainder)
         summary = f"Separate and place {target} inside the green dashed goal region. Keep {remainder} on the puzzle/system side."
         region = getattr(task, "goal_region", None)
+        # Orbits very_easy / easier: a rigid link chain on the handle, its two halves tied at the middle (2026-10-07).
+        chain = (name == "orbits" and getattr(task, "physics_model", "") == "rigid_articulated"
+                 and getattr(task, "difficulty", "") in {"very_easy", "easier"})
         margin = getattr(region, "boundary_margin_m", .001)
         penetration = getattr(region, "penetration_tolerance_m", .001)
         rules += [
@@ -112,8 +115,10 @@ def describe_goal(task):
             "It need not touch the table.",
             f"Keep {remainder}, and every other remaining puzzle component, entirely on the system side of the fixed separator. "
             "Moving the whole puzzle into the goal is not completion.",
-            "Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. "
-            + ("Every point of the target cord must also move at most 1 mm/s. " if name == "orbits" else "")
+            ("Keep the handle's linear speed at most 10 mm/s and angular speed at most 0.02 rad/s, and every cord link's "
+             "linear speed at most 10 mm/s. " if chain else
+             "Keep each target rigid part's linear speed at most 1 mm/s and angular speed at most 0.02 rad/s. "
+             + ("Every point of the target cord must also move at most 1 mm/s. " if name == "orbits" else ""))
             + "Holding the target with the gripper is allowed; release is not required.",
         ]
         if region is not None:
@@ -121,7 +126,10 @@ def describe_goal(task):
         if name == "horseshoe_ring":
             rules.append("Keep every permanent chain/eye interlock intact; free only the removable target ring.")
             failures.append("Losing any permanent chain/eye connection ends the episode in failure.")
-        if name in {"slotted_post_ring", "orbits"}:
+        if chain:
+            rules.append("Keep the cord loop closed: its two halves stay joined at the middle within 2 mm.")
+            failures.append("Breaking the cord loop at its middle tie ends the episode in failure.")
+        elif name in {"slotted_post_ring", "orbits"}:
             endpoints = "both end discs" if name == "slotted_post_ring" else "both handle attachment points"
             rules.append(f"Keep the cord intact and attached to {endpoints}; each attachment residual must be at most 2 mm. "
                          "No inverted or collapsed cord volume is accepted.")

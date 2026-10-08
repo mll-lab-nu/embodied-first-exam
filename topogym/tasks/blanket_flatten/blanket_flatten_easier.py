@@ -1,4 +1,4 @@
-"""A half-folded blanket with one corner of the two-layer packet turned inward."""
+"""A half-folded blanket with the free corner of its upper layer turned inward."""
 from .corner_folds import CornerFoldBlanketTask, tier_defaults
 
 

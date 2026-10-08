@@ -290,7 +290,8 @@ TASKS: dict[str, dict] = {
              "handle inside the green dashed goal area and hold them still briefly. Keep the rings, posts and other fixed "
              "components outside the area on the puzzle/system side. Holding the target is allowed; placing only the "
              "handle in the area is not completion.",
-        instances=[dict(variation_id="orbits_reference85", seed=0)]),
+        # Weld on any link for the rigid-chain tiers only; the FEM tiers' recommendation is none (tasks/orbits/common.py).
+        instances=[dict(variation_id="orbits_reference85", seed=0)], grasp_assist="recommended"),
     "rope_threading": dict(
         task_id="rope_threading", robot="aloha",
         text="Thread the rope through this instance's required rings in the specified material order and direction. "
@@ -371,6 +372,18 @@ def simulator_config(task: str, eval_index: int | None = None, *, variation_id: 
     resolved = variation_registration(spec["task_id"], inst["variation_id"], inst["seed"])
     cfg = {**dict(task_id=spec["task_id"], robot_id=spec["robot"], variation_id=inst["variation_id"], seed=int(inst["seed"])),
            **_COMMON, **spec["simulator"]}
+    # A variation can leave its family's IPC: Orbits very_easy / easier became a rigid link chain (2026-10-07). It then
+    # takes the rigid families' CPU float64 solve with the family's one substep (the teammates' chain standard), no IPC
+    # settings, and settles for 3 s (1200 ticks) before every build: the chain falls onto the table and its links
+    # hanging from the handle stop swinging.
+    if "ipc_options" in cfg:
+        from topogym.config.registry import task_definition
+        definition = task_definition(spec["task_id"], resolved["variation_id"])
+        # Only Orbits very_easy / easier here; another tier leaving IPC brings its own settings.
+        if definition.physics_model != "fem_ipc" and getattr(definition, "difficulty", "") in {"very_easy", "easier"}:
+            cfg.pop("ipc_options")
+            cfg.update(compute_backend="cpu", precision="64", rigid_options={"use_contact_island": False},
+                       reset_physics_steps=1200)
     assist = spec["grasp_assist"]
     if assist == "recommended":
         from dataclasses import asdict

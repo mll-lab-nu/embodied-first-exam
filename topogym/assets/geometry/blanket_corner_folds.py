@@ -20,13 +20,21 @@ class CornerFoldProfile:
     corner_leg_m: float = .28
     layer_gap_m: float = .016
     table_clearance_m: float = .004
+    # After a half fold, turn the free corner of the upper layer only (2026-10-06): turning both layers put the lower
+    # layer's corner on top of the stack, enclosing the upper layer's corner. False keeps that original packet turn.
+    upper_corner_only: bool = False
+    # Fold the far half (+Y, away from the arms) over the near half, which stays in place, instead of the left half
+    # over the right half (2026-10-07). The arms are mirror images about the sheet's centre line x = -0.136 and reach
+    # only 9-11 cm past it top-down, so a left-right half fold cannot be turned back by one hand; the crease of this
+    # fold runs between them, and both hands hold the upper layer's free edge on their own sides.
+    far_half_fold: bool = False
 
 
 def profile_for(variation):
     if variation == "very_easy":
         return CornerFoldProfile()
     if variation == "easier":
-        return CornerFoldProfile(half_fold=True, corner_leg_m=.22)
+        return CornerFoldProfile(half_fold=True, corner_leg_m=.18, upper_corner_only=True, far_half_fold=True)
     raise ValueError("Corner-fold preview requires very_easy or easier")
 
 
@@ -55,8 +63,11 @@ def _turn_over(points, normal, offset, axis_height, radius, *, bend_start=None, 
 def folded_positions(uv, length=.60, width=.48, profile=None, *, half_progress=1., corner_progress=1.):
     """Map one continuous sheet; positive X / negative Y is the turned corner.
 
-    Easier folds the left half over the right half, recenters the resulting
-    rectangle at the same table XY, then turns BOTH layers at the free corner.
+    Easier folds the far half over the near half, which stays in place
+    (`far_half_fold`; without it, the left half folds over the right half and
+    the resulting rectangle is recentred at the same table XY), then turns the
+    free corner of the upper layer onto that layer (`upper_corner_only`;
+    without it, BOTH layers turn).
     No new mesh, rest shape, disconnected flap or hidden support is created.
     """
     profile = profile or CornerFoldProfile()
@@ -71,24 +82,37 @@ def folded_positions(uv, length=.60, width=.48, profile=None, *, half_progress=1
         raise ValueError("Fold progress must be between zero and one")
     if profile.half_fold and half_progress < 1 and corner_progress > 0:
         raise ValueError("Complete the half fold before turning the packet corner")
-    packet_length = length/2 if profile.half_fold else length
-    if profile.corner_leg_m + np.pi*profile.layer_gap_m >= min(packet_length, width):
+    if profile.far_half_fold and not profile.half_fold:
+        raise ValueError("far_half_fold selects which half the half fold turns")
+    packet_length = length/2 if profile.half_fold and not profile.far_half_fold else length
+    packet_width = width/2 if profile.far_half_fold else width
+    if profile.corner_leg_m + np.pi*profile.layer_gap_m >= min(packet_length, packet_width):
         raise ValueError("Keep the corner bend clear of the opposite packet edges")
     if (np.abs(uv) > np.array([length, width])/2 + 1e-8).any():
         raise ValueError("Material coordinates lie outside the blanket")
     points = np.column_stack((uv, np.zeros(len(uv))))
     gap = profile.layer_gap_m
     if profile.half_fold:
-        points = _turn_over(points, [-1., 0.], 0., gap/2, gap/2, progress=half_progress)
-        points[:, 0] -= length/4*half_progress
+        if profile.far_half_fold:
+            points = _turn_over(points, [0., 1.], 0., gap/2, gap/2, progress=half_progress)
+        else:
+            points = _turn_over(points, [-1., 0.], 0., gap/2, gap/2, progress=half_progress)
+            points[:, 0] -= length/4*half_progress
         if half_progress < 1:
             points[:, 2] += profile.table_clearance_m
             return points
     normal = np.array([1., -1.])/np.sqrt(2)
     offset = (packet_length/2 + width/2 - profile.corner_leg_m)/np.sqrt(2)
     height = 1.5*gap if profile.half_fold else gap/2
-    points = _turn_over(points, normal, offset, height, height-points[:, 2],
-        bend_start=-np.pi*height/2 if profile.half_fold else None, progress=corner_progress)
+    if profile.half_fold and profile.upper_corner_only:
+        # The upper layer (the turned half, one gap above the table) turns its own corner one gap higher; the
+        # lower layer stays flat under it.
+        upper = uv[:, 1] > 0 if profile.far_half_fold else uv[:, 0] < 0
+        points[upper] = _turn_over(points[upper], normal, offset, height, height-points[upper, 2],
+                                   progress=corner_progress)
+    else:
+        points = _turn_over(points, normal, offset, height, height-points[:, 2],
+            bend_start=-np.pi*height/2 if profile.half_fold else None, progress=corner_progress)
     points[:, 2] += profile.table_clearance_m
     return points
 

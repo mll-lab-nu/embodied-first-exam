@@ -43,7 +43,7 @@ def run_feedback_policy(session, output, *, variation):
         from topogym.planning.horseshoe_ring.public_session import run_feedback_policy as run
         return run(session, output, variation=variation)
     if family == "slotted_post_ring":
-        # very_easy: ring pinch, lift past the post top, held placement; easier is refused (no oracle yet).
+        # very_easy: ring pinch, lift past the post top, held placement; easier: bead2 carried into the gap first.
         from topogym.planning.slotted_post_ring.public_session import run_feedback_policy as run
         return run(session, output, variation=variation)
     if family == "cast_coil":

@@ -119,15 +119,25 @@ class Contact:
     pinched material point's current XY and to `depth` below the hover height
     over its patch, so a patch that sags or slides is followed rather than
     approached at a stale pose. Admitted hands keep their command.
+
+    With `hold_admitted` (2026-10-07): the arms do not hold a pose exactly
+    (2-6 mm), and an admitted hand that waits for the other drags and presses
+    its held patch into the layer under it. So unheld hands descend together:
+    up to 3 mm a step while their measured finger distance exceeds `ready_m`,
+    then they wait there until every unheld hand has arrived and step 1 mm
+    together; an admitted hand is held at the measured TCP of its admission;
+    and a lost hand ends the phase (the assist re-admits it only after the
+    jaws open, and lowering it further crushes the stack).
     """
     def __init__(self, arms, commands, q, grip, *, hover, centers, uv, patch, step_m=.001, max_steps=25, dwell=10,
-                 sides=SIDES):
+                 sides=SIDES, hold_admitted=False, ready_m=.0085):
         self.arms, self.commands, self.q, self.grip = arms, commands, q, grip
         self.sides = tuple(sides)     # oraclefix 11: a one-hand stage lowers only its own hand
         self.hover, self.centers, self.uv, self.patch = hover, centers, uv, patch
         self.step_m, self.max_steps, self.dwell = step_m, max_steps, dwell
         self.depth = dict.fromkeys(SIDES, 0.)
         self.steps, self.tick, self.log = 0, 0, []
+        self.hold_admitted, self.ready_m, self.held_tcp = hold_admitted, ready_m, {}
 
     def act(self, obs):
         state = held(obs)
@@ -141,12 +151,32 @@ class Contact:
             x = np.asarray(world["particles"]["blanket"]["position_m"])
             self.log.append(dict(step=self.steps, held=state, admission=world.get("grasp", {}).get("admission", {}),
                                  commands={s: c.tolist() for s, c in self.commands.items()}))
+            step = dict.fromkeys(self.sides, self.step_m)
+            if self.hold_admitted:
+                grasp = world.get("grasp", {})
+                if any(grasp.get("hands", {}).get(s, {}).get("phase") == "lost" for s in self.sides):
+                    return None
+                tcp = self.arms.tcp()
+                # Finger surface to nearest particle centre; NaN when not measured (strain rejection), which keeps the
+                # 1 mm step and is never ready (NaN compares false).
+                admission = grasp.get("admission", {})
+                gap = {s: min(admission.get(s, {}).get("minimum_finger_distances_m") or [np.nan]) for s in self.sides}
+                waiting = [s for s in self.sides if not state[s]]
+                ready = all(gap[s] <= self.ready_m for s in waiting)
+                for s in waiting:
+                    if gap[s] > self.ready_m:
+                        step[s] = min(max(gap[s]-self.ready_m, self.step_m), .003)
+                    elif gap[s] <= self.ready_m and not ready:
+                        step[s] = 0.
             for side in self.sides:
                 if not state[side]:
-                    self.depth[side] += self.step_m
+                    self.depth[side] += step[side]
                     center = self.centers[side]
                     top = float(x[material_patch(x, self.uv, center, **self.patch), 2].max())
                     self.commands[side] = np.array([*x[center][:2], top+self.hover[side]-self.depth[side]])
+                elif self.hold_admitted:
+                    held_tcp = self.held_tcp.setdefault(side, np.asarray(tcp[side], float))
+                    self.commands[side] = self.commands[side]+(held_tcp-np.asarray(tcp[side], float))
                 self.q = self.arms.solve(side, self.commands[side], self.q)
         self.tick += 1
         return self.arms.action(self.q, self.grip)
@@ -376,7 +406,7 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
         report.update(fingertip_extension_m=extension, stages=[])
         q = arms.qpos()
         # oraclefix 11: a route may append one measured fold-layout stage after its last stage (see fold_stage).
-        stages, fold_checked, nudges = list(route["stages"]), False, 0
+        stages, fold_layouts, nudges = list(route["stages"]), 0, 0
         for index, stage in enumerate(stages):
             if task.result.terminated:
                 break
@@ -432,13 +462,15 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
             actions = [arms.action(q+smoothstep((i+1)/count)*(goal-q), grip) for i in range(count)]
             actions += hold(.3, goal, grip)
             run(name("approach"), Sequence(actions), actions)
-            # 2. Descend so fingertips stop 1.5 mm above the live patch top.
+            # 2. Descend so fingertips stop above the live patch top: 1.5 mm, or the route's `fingertip_gap_m` where
+            #    the arm's tracking error would press the fingers into a stack of layers.
+            gap = route.get("fingertip_gap_m", FINGERTIP_GAP_M)
             x, q = cloth(), arms.qpos()
             commands = {}
             for side in active:
                 patch = material_patch(x, uv, centers[side], **PATCH)
                 top = float(x[patch, 2].max())+task.layout.particle_size_m/2
-                commands[side] = np.array([*x[centers[side]][:2], top+FINGERTIP_GAP_M+extension[side]])
+                commands[side] = np.array([*x[centers[side]][:2], top+gap+extension[side]])
             log["pinch_commands_m"] = {s: c.tolist() for s, c in commands.items()}
             actions, q, _ = cartesian(arms, q, arms.tcp(), commands, 1.5, dt, grip)
             actions += hold(.3, q, grip)
@@ -447,10 +479,13 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
             grip = {s: PINCH_M if s in active else OPEN_M for s in SIDES}
             actions = hold(.6, q, grip)
             run(name("close"), Sequence(actions, stop=lambda obs: all(held(obs)[s] for s in active)), actions)
-            hover = {s: task.layout.particle_size_m/2+FINGERTIP_GAP_M+extension[s] for s in active}
-            contact = Contact(arms, commands, q, grip, hover=hover, centers=centers, uv=uv, patch=PATCH, sides=active)
+            hover = {s: task.layout.particle_size_m/2+gap+extension[s] for s in active}
+            contact = Contact(arms, commands, q, grip, hover=hover, centers=centers, uv=uv, patch=PATCH, sides=active,
+                              hold_admitted=route.get("hold_admitted_height", False))
             phase = run(name("contact"), contact)
             log["contact_log"] = contact.log
+            if task.result.terminated:      # the Task's goal held while the hands came down: nothing left to grasp
+                break
             if not all(phase["held"][s] for s in active):
                 raise RuntimeError(f"Assist did not admit both hands: {phase['held']}")
             # 4. Route segments: the held patches follow the witness route. Commands continue from the
@@ -478,18 +513,22 @@ def run_route_oracle(env, runner, output, *, variation="easy"):
             actions, q, _ = cartesian(arms, q, starts, up, 1.5, dt, grip)
             run(name("retreat"), Sequence(actions), actions)
             # oraclefix 11: after the route's last stage, let the sheet relax, then lay out a folded corner if one is
-            # measured (one extra stage at most). A fold left on the table keeps jittering under PBD self-contact.
+            # measured (one extra stage, or up to the route's `max_stages`: each lays out the then largest folded
+            # corner). A fold left on the table keeps jittering under PBD self-contact.
             fold = route.get("fold_layout")
-            if fold and not fold_checked and index == len(stages)-1 and not task.result.task_success:
-                fold_checked = True
+            if fold and fold_layouts < fold.get("max_stages", 1) and index == len(stages)-1 and not task.result.task_success:
+                fold_layouts += 1
                 # Adaptive: stop once every particle has stayed within the Task's speed limit for its window (cap settle_s)
                 actions = hold(fold["settle_s"], q, grip)
                 quiet = Quiet(task.config["maximum_speed_m_s"], task.config["stable_duration_s"], dt)
-                run("fold_settle", Sequence(actions, stop=quiet), actions)
+                run("fold_settle" if fold_layouts == 1 else f"fold_settle_{fold_layouts}", Sequence(actions, stop=quiet),
+                    actions)
                 log["fold_settle_ended_quiet"] = quiet.done
                 if not task.result.task_success:
                     extra, diagnosis = fold_stage(cloth(), uv, table, task.layout, fold, arms.tcp())
                     report["fold_layout"] = diagnosis
+                    if "max_stages" in fold:
+                        report.setdefault("fold_layouts", []).append(diagnosis)
                     write_json_atomic(output/"oracle_report.json", to_jsonable(report))
                     if extra is not None:
                         stages.append(extra)

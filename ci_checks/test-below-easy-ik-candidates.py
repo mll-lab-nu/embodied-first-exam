@@ -13,6 +13,7 @@ from scipy.spatial.transform import Rotation
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from topogym.planning import oracle_ik as ik
+from topogym.planning.rope_threading.kinematics import CONTACT_IN_TCP_M
 from topogym.planning.oracle_path import SceneCandidateCheck, Shape, joint_samples
 from topogym.solvers.genesis_kinematics import GenesisIKSolver
 
@@ -285,22 +286,41 @@ class RopeRouteTests(unittest.TestCase):
             issues=['ring_or_support'] if reject_collision else []))
         return policy
 
-    def test_both_tiers_choose_lower_complete_route_after_high_route_rejection(self):
+    def test_both_tiers_choose_a_complete_checked_route(self):
         for tier in ('very_easy', 'easier'):
             policy = self.policy(tier)
             route = policy.plan_ring_transfer(np.array([0., 0., .2]))
             trials = policy.planning[-1]['candidates']
-            self.assertTrue(trials[-1]['height_m'] == .06 or not trials[-1]['via_raise'])
             self.assertTrue(trials[-1]['accepted'])
             self.assertTrue(all(not t['accepted'] for t in trials[:-1]))
-            self.assertEqual(route[-1][0], 'lower_onto_cradle' if tier == 'very_easy' else 'feed_through_ring')
+            self.assertEqual(route[-1][0], 'lower_onto_cradle' if tier == 'very_easy' else 'feed_tail_through_ring')
+
+    def test_easier_feeding_hand_stays_on_entrance_side(self):
+        policy = self.policy('easier')
+        center = np.array([0., 0., .2])
+        route = policy.plan_ring_transfer(center)
+        contacts = [p+r.apply(CONTACT_IN_TCP_M) for _, (p, r), _, _ in route]
+        # Only the tail passes the plane (ring normal +x); the hand stops 35 mm or more before it.
+        self.assertTrue(all(c[0]-center[0] >= .035-1e-9 for c in contacts))
+        self.assertAlmostEqual(contacts[0][0]-center[0], .13)
 
     def test_unreachable_or_colliding_alternatives_report_search_failure(self):
         policy = self.policy('very_easy', reject_collision=True)
         with self.assertRaisesRegex(RuntimeError, 'current search'):
             policy.plan_ring_transfer(np.array([0., 0., .2]))
-        self.assertEqual(len(policy.planning[-1]['candidates']), 18)
+        # 3 carry heights x 3 yaws x 3 jaw tilts; the old 18 included raises above the ring.
+        self.assertEqual(len(policy.planning[-1]['candidates']), 27)
         self.assertTrue(all(not x['accepted'] for x in policy.planning[-1]['candidates']))
+
+    def test_very_easy_route_stays_below_ring_centre_and_ends_on_rim(self):
+        policy = self.policy('very_easy')
+        center = np.array([0., 0., .2])
+        route = policy.plan_ring_transfer(center)
+        self.assertEqual([name for name, *_ in route[:2]], ['carry_beside_cradle', 'slide_tail_through_cradle'])
+        contacts = [p+r.apply(CONTACT_IN_TCP_M) for _, (p, r), _, _ in route]
+        self.assertTrue(all(c[2] < center[2] for c in contacts))
+        self.assertAlmostEqual(contacts[-1][2]-center[2], -.066)
+        self.assertAlmostEqual(contacts[0][0]-center[0], .10)
 
 
 if __name__ == '__main__':

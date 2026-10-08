@@ -206,7 +206,10 @@ def prepare(output, families=(), tiers=("easy", "medium", "hard"), *, image=None
                      "--task-parameters", str(folder / "task_parameters.json"),
                      "--simulator-overrides", str(folder / "simulator_overrides.json")]
         commands = []
-        if family in {"knot_untying", "rope_threading", "orbits", "slotted_post_ring"}:
+        from topogym.config.registry import task_definition
+        # Orbits very_easy / easier are a rigid link chain (2026-10-07): no IPC state to export.
+        if family in {"knot_untying", "rope_threading", "orbits", "slotted_post_ring"} and \
+                task_definition(family, inst["variation_id"]).physics_model == "fem_ipc":
             commands.append(container(["export-ipc-state", *selection, "--out", folder / "ipc_state"]))
             selection += ["--ipc-settled-state", str(folder / "ipc_state/manifest.json")]
         commands.append(container(["make-instance", *selection, "--gripper-space",

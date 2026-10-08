@@ -477,7 +477,7 @@
       "payload_layout_sha256": "501e68e1e4c2ce33a9af158ca0ba996ad8592221d50242a017f1b564e5c08f8f"
     },
     "provenance": {
-      "world_source_sha256": "f144850973ec1ce7fcce30c8cc63c34892e044b1e053ba1cfcf17e899764fb3d",
+      "world_source_sha256": "ce80836034933b9237a0cb8bdd41837b6eba169d748664a28800d8c6b55d6d3e",
       "codec_source_sha256": "5db2cfdc457907bbf586a6abedb9d940793f6c34216f2fab06ba69f6c7440b5a",
       "compatibility_source_sha256": "659b9ec29a8d215b48256803c0480247ceb41e7c13e0c89ee9b1670cea2bd2f4",
       "gpu_name": "NVIDIA GeForce RTX 4090",
@@ -548,9 +548,11 @@
         "initial_state_acceptance": "scene_layout",
         "corner_fold_profile": {
           "half_fold": true,
-          "corner_leg_m": 0.22,
+          "corner_leg_m": 0.18,
           "layer_gap_m": 0.016,
-          "table_clearance_m": 0.004
+          "table_clearance_m": 0.004,
+          "upper_corner_only": true,
+          "far_half_fold": true
         }
       },
       "physics_options": {
@@ -1225,20 +1227,22 @@
       "compute_backend": "cuda",
       "precision": "64"
     },
-    "identity_sha256": "510865574c304aef51efb0ab63c4e4e41fc23f6a77708d358cf9988d662c0c1c",
+    "identity_sha256": "fc47f0bc4dcda532436280cfb88c78e663cd722e733344a13969bb329aef0210",
     "qualification": {
       "passed": false,
       "scope": "scene_layout",
       "scene_layout_passed": true,
-      "report_sha256": "d7841b451964cc52ca3cc657d077659d3fdde75e8db6621964080720bedf8057",
+      "report_sha256": "ac2da9b95f97834fda05cf21a4b69e45eb5b16949b9ce3e037a622600cffcbe4",
       "preparation": {
         "kind": "offline_bounded_velocity_preparation",
         "robot_manipulation": false,
         "profile": {
           "half_fold": true,
-          "corner_leg_m": 0.22,
+          "corner_leg_m": 0.18,
           "layer_gap_m": 0.016,
-          "table_clearance_m": 0.004
+          "table_clearance_m": 0.004,
+          "upper_corner_only": true,
+          "far_half_fold": true
         },
         "parameters": {
           "gather_seconds": 3.0,
@@ -1269,100 +1273,148 @@
         "rest_writes": 0,
         "support_writes": 0,
         "pins_added": 0,
-        "velocity_control_ticks": 9960,
+        "velocity_control_ticks": 13000,
         "completed": false,
         "stages": [
           {
-            "name": "half_fold",
+            "name": "fold_away",
             "start_tick": 0,
-            "end_tick": 4120,
-            "target_rms_error_m": 3.878872041360916e-05,
+            "end_tick": 1320,
+            "target_rms_error_m": 1.6625473651010334e-05,
             "metrics": {
               "finite": true,
               "particles": 8181,
-              "coverage_ratio": 0.49272170562358253,
+              "coverage_ratio": 1.0000000000000013,
               "coverage_fallback_precision_grid_m": 1e-08,
-              "minimum_height_m": 0.09990051767088903,
-              "maximum_height_m": 0.11609943641021692,
-              "p95_height_m": 0.1160084963857716,
-              "maximum_speed_m_s": 0.00026530541580445854,
-              "p99_speed_m_s": 0.0001864515855954081,
-              "mean_speed_m_s": 5.1248936231693965e-05,
+              "minimum_height_m": 0.09999999999999998,
+              "maximum_height_m": 0.09999999999999998,
+              "p95_height_m": 0.09999999999999998,
+              "maximum_speed_m_s": 0.00020563769060899517,
+              "p99_speed_m_s": 0.00020563769052017733,
+              "mean_speed_m_s": 0.00020563769045677479,
               "outside_table_particles": 0,
-              "maximum_edge_stretch": 1.0000119458915009,
-              "minimum_edge_stretch": 0.9999530151188375,
-              "maximum_visual_edge_stretch": 1.0217367325970172,
+              "maximum_edge_stretch": 1.0000000000000833,
+              "minimum_edge_stretch": 0.999999999999963,
+              "maximum_visual_edge_stretch": 1.0000000000000555,
+              "minimum_nonlocal_particle_distance_m": 0.008,
+              "self_contact_check": "nonlocal particle separation; not surface CCD certification"
+            }
+          },
+          {
+            "name": "half_fold",
+            "start_tick": 1320,
+            "end_tick": 5440,
+            "target_rms_error_m": 4.318425497500174e-05,
+            "metrics": {
+              "finite": true,
+              "particles": 8181,
+              "coverage_ratio": 0.49090413087057433,
+              "coverage_fallback_precision_grid_m": 1e-08,
+              "minimum_height_m": 0.09990077902289285,
+              "maximum_height_m": 0.11609917800314118,
+              "p95_height_m": 0.1160067354013471,
+              "maximum_speed_m_s": 0.00024556882529630476,
+              "p99_speed_m_s": 0.00016637912690367501,
+              "mean_speed_m_s": 5.3760747498809724e-05,
+              "outside_table_particles": 0,
+              "maximum_edge_stretch": 1.0000122505799591,
+              "minimum_edge_stretch": 0.9999545991841967,
+              "maximum_visual_edge_stretch": 1.021737672454295,
               "minimum_nonlocal_particle_distance_m": 0.008,
               "self_contact_check": "nonlocal particle separation; not surface CCD certification"
             }
           },
           {
             "name": "corner_fold",
-            "start_tick": 4120,
-            "end_tick": 7040,
-            "target_rms_error_m": 0.00022592231330365405,
+            "start_tick": 5440,
+            "end_tick": 8360,
+            "target_rms_error_m": 0.00019938524916956666,
             "metrics": {
               "finite": true,
               "particles": 8181,
-              "coverage_ratio": 0.39286516812691913,
+              "coverage_ratio": 0.490880907615915,
               "coverage_fallback_precision_grid_m": 1e-08,
-              "minimum_height_m": 0.09988329322039602,
-              "maximum_height_m": 0.14800770347422676,
-              "p95_height_m": 0.14799893719155055,
-              "maximum_speed_m_s": 0.016150250652085817,
-              "p99_speed_m_s": 0.006039922967346637,
-              "mean_speed_m_s": 0.0004642544323631504,
+              "minimum_height_m": 0.0998714659861143,
+              "maximum_height_m": 0.1351455948854824,
+              "p95_height_m": 0.131349670110677,
+              "maximum_speed_m_s": 0.015089921456601216,
+              "p99_speed_m_s": 0.005562499974020948,
+              "mean_speed_m_s": 0.0003735935988926964,
               "outside_table_particles": 0,
-              "maximum_edge_stretch": 1.020162930291472,
-              "minimum_edge_stretch": 0.9893478405392842,
-              "maximum_visual_edge_stretch": 1.0217599663272843,
+              "maximum_edge_stretch": 1.0195974375152066,
+              "minimum_edge_stretch": 0.9890539237621089,
+              "maximum_visual_edge_stretch": 1.0222705708674418,
+              "minimum_nonlocal_particle_distance_m": 0.008,
+              "self_contact_check": "nonlocal particle separation; not surface CCD certification"
+            }
+          },
+          {
+            "name": "fold_return",
+            "start_tick": 8360,
+            "end_tick": 10080,
+            "target_rms_error_m": 0.00019996137502297374,
+            "metrics": {
+              "finite": true,
+              "particles": 8181,
+              "coverage_ratio": 0.4908808797600454,
+              "coverage_fallback_precision_grid_m": 1e-08,
+              "minimum_height_m": 0.09987149782800475,
+              "maximum_height_m": 0.13514590507758328,
+              "p95_height_m": 0.13135045494988173,
+              "maximum_speed_m_s": 0.015290869149073568,
+              "p99_speed_m_s": 0.005568683375672714,
+              "mean_speed_m_s": 0.0004286783080325685,
+              "outside_table_particles": 0,
+              "maximum_edge_stretch": 1.0195722215234773,
+              "minimum_edge_stretch": 0.9890698031424825,
+              "maximum_visual_edge_stretch": 1.0222576517944943,
               "minimum_nonlocal_particle_distance_m": 0.008,
               "self_contact_check": "nonlocal particle separation; not surface CCD certification"
             }
           },
           {
             "name": "lower_to_table",
-            "start_tick": 7040,
-            "end_tick": 7960,
-            "target_rms_error_m": 0.00012751748440029413,
+            "start_tick": 10080,
+            "end_tick": 11000,
+            "target_rms_error_m": 0.00010630835753819938,
             "metrics": {
               "finite": true,
               "particles": 8181,
-              "coverage_ratio": 0.3928452115943764,
+              "coverage_ratio": 0.49086572165512693,
               "coverage_fallback_precision_grid_m": 1e-08,
-              "minimum_height_m": 0.004020010585492617,
-              "maximum_height_m": 0.05214783124725719,
-              "p95_height_m": 0.05214039486520328,
-              "maximum_speed_m_s": 0.00670073005036478,
-              "p99_speed_m_s": 0.0035110233096383075,
-              "mean_speed_m_s": 0.000542515834438022,
+              "minimum_height_m": 0.004002497623039281,
+              "maximum_height_m": 0.03974845211562572,
+              "p95_height_m": 0.035620753519532755,
+              "maximum_speed_m_s": 0.0074763184049951486,
+              "p99_speed_m_s": 0.0028963807945446437,
+              "mean_speed_m_s": 0.00046905887900202574,
               "outside_table_particles": 0,
-              "maximum_edge_stretch": 1.015520267591843,
-              "minimum_edge_stretch": 0.9898307901277137,
-              "maximum_visual_edge_stretch": 1.021811937461716,
+              "maximum_edge_stretch": 1.0155394860337386,
+              "minimum_edge_stretch": 0.9924376865799235,
+              "maximum_visual_edge_stretch": 1.022498919944763,
               "minimum_nonlocal_particle_distance_m": 0.008,
               "self_contact_check": "nonlocal particle separation; not surface CCD certification"
             }
           }
         ],
         "acceptance": "scene_layout",
-        "release_tick": 9960,
+        "release_tick": 13000,
         "final_metrics": {
           "finite": true,
           "particles": 8181,
-          "coverage_ratio": 0.41117527085414846,
+          "coverage_ratio": 0.49795434398827376,
           "coverage_fallback_precision_grid_m": 1e-08,
           "minimum_height_m": 0.0039999999999998925,
-          "maximum_height_m": 0.03046735260268385,
-          "p95_height_m": 0.024673432192396483,
-          "maximum_speed_m_s": 0.28370292352012655,
-          "p99_speed_m_s": 0.07545759981707288,
-          "mean_speed_m_s": 0.005651561784498132,
+          "maximum_height_m": 0.02606098656832767,
+          "p95_height_m": 0.017608923005843602,
+          "maximum_speed_m_s": 0.07952352416466386,
+          "p99_speed_m_s": 0.021178950454170918,
+          "mean_speed_m_s": 0.0012699702321082628,
           "outside_table_particles": 0,
-          "maximum_edge_stretch": 1.0338143232122317,
-          "minimum_edge_stretch": 0.9746856013118345,
-          "maximum_visual_edge_stretch": 1.0470044115658568,
-          "minimum_nonlocal_particle_distance_m": 0.00793671415500023,
+          "maximum_edge_stretch": 1.0261721335973157,
+          "minimum_edge_stretch": 0.9840728111771117,
+          "maximum_visual_edge_stretch": 1.0395729259445698,
+          "minimum_nonlocal_particle_distance_m": 0.007972757956801179,
           "self_contact_check": "nonlocal particle separation; not surface CCD certification"
         },
         "final_gates": {
@@ -1378,14 +1430,14 @@
         },
         "scene_layout_completed": true,
         "motion_qualification": "deferred",
-        "final_tick": 10201,
+        "final_tick": 13241,
         "layout_observation_seconds": 0.6000000000000014,
-        "layout_drift_m": 0.0025041968302883856,
+        "layout_drift_m": 0.0007844978816836867,
         "gravity_restored": true,
         "projection": {
-          "calls": 7960,
-          "maximum_iterations_used": 84,
-          "maximum_relative_residual": 9.999923042795229e-05
+          "calls": 11000,
+          "maximum_iterations_used": 85,
+          "maximum_relative_residual": 9.99980520976847e-05
         },
         "rest_unchanged": true,
         "binding_unchanged": true
@@ -1436,7 +1488,7 @@
             "items": {
               "_s_global": {
                 "kind": "scalar",
-                "value": 10201
+                "value": 13241
               },
               "qpos": {
                 "kind": "tensor",
@@ -41327,15 +41379,15 @@
       },
       "physics_step": {
         "kind": "scalar",
-        "value": 10201
+        "value": 13241
       },
       "scene_tick": {
         "kind": "scalar",
-        "value": 10201
+        "value": 13241
       },
       "engine_substep": {
         "kind": "scalar",
-        "value": 40804
+        "value": 52964
       },
       "robot": {
         "kind": "dict",
@@ -41431,6 +41483,6 @@
   },
   "arrays": {
     "path": "arrays.npz",
-    "sha256": "1a1b2b48b1912b7483a58aab1c72b6fbdbd414960c222b52cccc0081f3b2d43a"
+    "sha256": "0391e0a149c1c83a1e7aff1c60e64b207c80af951ef0ecdd9a593429973890c1"
   }
 }

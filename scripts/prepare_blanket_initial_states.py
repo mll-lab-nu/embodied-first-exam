@@ -16,6 +16,16 @@ import numpy as np
 from topogym.utils.io import write_json_atomic, sha256_file, to_jsonable
 
 
+def profile_record(profile):
+    """The profile as the Task records it (corner folds: only the options that differ from their defaults), which
+    scripts/install_blanket_initial_state.py compares with the frozen state's parameters."""
+    from topogym.assets.geometry.blanket_corner_folds import CornerFoldProfile
+    if isinstance(profile, CornerFoldProfile):
+        from topogym.tasks.blanket_flatten.corner_folds import profile_parameters
+        return profile_parameters(profile)
+    return asdict(profile)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
@@ -125,7 +135,7 @@ def main():
     if args.particle_diagnostics and args.tier in ("very_easy", "easier"):
         parser.error("--particle-diagnostics currently requires a gathered profile")
     report = dict(status="in_progress", robot_manipulation=False, kind="offline_initial_state_preparation",
-        config=to_jsonable(config), profile=asdict(profile), preparation=asdict(preparation),
+        config=to_jsonable(config), profile=profile_record(profile), preparation=asdict(preparation),
         acceptance=args.acceptance, scene_variation=scene_variation,
         source_sha256={str(p.relative_to(source)): sha256_file(p) for p in sorted(source.rglob("*.py"))})
     write_json_atomic(root/"report.json", report)

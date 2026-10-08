@@ -85,11 +85,9 @@ class Oracle(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("slotted_post_ring easier: passed", result.stdout)
 
-    def test_public_session_runs_very_easy_only(self):
+    def test_public_session_runs_the_below_easy_settings_only(self):
         from types import SimpleNamespace
         from topogym.planning.slotted_post_ring.public_session import run_feedback_policy
-        with self.assertRaisesRegex(ValueError, "No Slotted Post easier oracle"):
-            run_feedback_policy(SimpleNamespace(), Path("unused"), variation="easier")
         with self.assertRaisesRegex(ValueError, "below-easy settings only"):
             run_feedback_policy(SimpleNamespace(), Path("unused"), variation="easy")
 
@@ -101,6 +99,15 @@ class Oracle(unittest.TestCase):
         self.assertGreater(gap(O.PINCH_OPEN_M) - tube, .008)   # at least 4 mm beside the tube on each side
         self.assertLess(gap(O.PINCH_CLOSED_M), tube)           # the tube stops the closing fingers: they squeeze it
         self.assertLess(gap(O.PINCH_OPEN_M), 2 * (.037 - O.TIP_OFFSET_M))   # within the gripper's range
+
+    def test_fingertip_pinch_fits_the_bead(self):
+        from topogym.planning.slotted_post_ring import below_easy_oracle as O
+        layout = task_definition("slotted_post_ring", "easier")().make_layout()
+        gap = lambda q: 2 * (q - O.TIP_OFFSET_M)
+        bead = 2 * layout.bead_radius_m
+        self.assertGreater(gap(O.BEAD_OPEN_M) - bead, .008)   # at least 4 mm beside the bead on each side
+        self.assertLess(gap(O.BEAD_CLOSED_M), bead)           # the bead stops the closing fingers
+        self.assertLessEqual(O.BEAD_OPEN_M, .037)             # within the gripper's range
 
 
 if __name__ == "__main__":
