@@ -1,0 +1,228 @@
+# tabletennis: robot table tennis, real time (docs/framework_zh.md §4.2, §8). Migrated from the legacy tree in stage 2
+# (scripts/olympiad/tabletennis, scripts/olympiad/shared/tabletennis): the simulator (sim/: the physics, the referee,
+# the scripted opponent, the stroke planner, the arm command layer, the duel) is unchanged, so the legacy recordings
+# replay bit-exactly (golden/convert.py). The declarations below are data: the core, tools/generate.py, tools/check
+# and the prompt read them.
+
+[sport]
+name = "tabletennis"
+title = "Table tennis"
+summary = "robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle, DeepMind ball and table model, recorded real serves), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); format match: you against a scripted opponent (level 1-4) that serves every point, format duel: two players and a neutral serve machine, the receiver changing every point"
+protocol = "realtime"
+revision = "wallclock-6+duel-wallclock-4+core-0.2"   # bump on any change that alters play (sim/, the rules, the observation)
+physics = "mujoco"
+image = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0"
+status = "sport"
+publish = true
+category = "robotics-sports-arena"
+
+[rulebook]
+name = "ITTF Laws of Table Tennis (ITTF Statutes 2025, chapter 2)"
+version = "2025 (effective 1 January 2025)"
+url = "https://db.ittf.com/sites/default/files/public/2025-02/ITTF_Statutes_2025_tracked_changes_version.pdf"
+
+[[deviations]]
+id = "D1"
+rule = "ITTF 2.11, 2.12"
+text = "one game to 5 points (from 4:4 a lead of 2 is needed, at 6:6 the next point wins: 7 points at most) instead of a best-of-games match with games to 11"
+affects_result = true
+[[deviations]]
+id = "D2"
+rule = "ITTF 2.6, 2.13"
+text = "the robots cannot toss the ball: format match - the opponent serves every point with recorded real serves and you always receive; format duel - a neutral machine serves recorded real serves and the receiver changes every point (as under the expedite system, 2.13.3, 2.15.3)"
+affects_result = true
+[[deviations]]
+id = "D3"
+rule = "ITTF 2.5.7"
+text = "only the blade can strike the ball: the ball touching the handle or arm loses the point"
+affects_result = true
+[[deviations]]
+id = "D4"
+rule = "ITTF 2.10.1.9-2.10.1.11"
+text = "a robot has no free hand: any contact of the arm or paddle with the table, net or floor loses the point"
+affects_result = true
+[[deviations]]
+id = "D5"
+rule = "ITTF 2.10.1.7"
+text = "any double hit loses the point, deliberate or not"
+affects_result = true
+[[deviations]]
+id = "D6"
+rule = "ITTF 2.15.4"
+text = "the expedite rule applies from the first point: the receiver's 13th good return in a rally wins it the point (this bounds every rally)"
+affects_result = true
+[[deviations]]
+id = "D7"
+rule = "ITTF 2.9.1.1 (let)"
+text = "a serve that touches the net or is irregular is a let; duel: faults by both players at the same instant are a let; the robot that is not receiving is transparent to the serve until it bounces on the receiver's half (the recorded serves were made for an empty serving end)"
+affects_result = true
+[[deviations]]
+id = "D8"
+rule = "- (cost limit, not from the rulebook)"
+text = "if 40 points (lets included) are played the game ends: the player ahead wins; at a level score the player who won the last point (never reached in practice)"
+affects_result = true
+
+[formats.match]                       # one model seat against the scripted opponent inside the world (match.Match)
+seats = ["A"]
+opponent = true                       # success = winning a valid match (core/grading.py), as in the legacy task
+levels = [1, 2, 3, 4]                 # the opponent level (RCB_LEVEL; default 1)
+[formats.duel]
+seats = ["A", "B"]
+first = ["A", "B"]                    # the first receiver (FIRST_PLAYER); the runner plays both orders
+
+[modes]
+action_levels = ["high", "low"]       # high: the paddle state at contact (the stroke planner); low: joint targets
+plays = ["program", "direct"]
+
+[timing]
+slowdown = 20                         # the legacy default (RCB_SLOWDOWN); the direct tasks: [[tasks]] slowdown = 50
+start_timeout_s = 1800                # duel: up to 30 minutes to start after the first player
+ready_timeout_s = 300                 # each review (after every point), else the side loses
+
+[actions.cli]                         # the `game` shortcuts per action level (anything else: game act JSON)
+high = { none = [] }
+low = { hold = [] }
+
+[seat]                                # every task's player image (the legacy tasks' OpenCV)
+pip = ["opencv-python-headless==5.0.0.93"]
+[seat.low]                            # the low action level's information boundary: the robot's own model + MuJoCo
+files = { "/opt/robot/robot_only.xml" = "seat/robot_only.xml", "/opt/robot/assets" = "sim/scene/assets" }
+pip = ["mujoco==3.3.7", "absl-py==2.5.0", "etils==1.14.0", "fsspec==2026.9.0", "glfw==2.10.2", "PyOpenGL==3.1.10",
+       "typing_extensions==4.16.0", "zipp==4.1.0"]   # = the sim image's MuJoCo and its closure (tests check the pin)
+run = ["python -c \"import mujoco; m = mujoco.MjModel.from_xml_path('/opt/robot/robot_only.xml'); assert (m.nbody, m.njnt, m.nu) == (10, 7, 7)\""]
+note = "Your robot's own model is /opt/robot/robot_only.xml (MJCF: the arm and paddle only, nothing of the world; meshes in /opt/robot/assets), with MuJoCo at the simulator's version"
+
+[actions.direct]                      # direct play: the commands of the `game` MCP tool (players/nocode/game_mcp.py)
+high = [["game act T PX PY PZ NX NY NZ VX VY VZ", "POST /act {\"type\":\"act\",\"t\":T,\"pos\":[PX,PY,PZ],\"normal\":[NX,NY,NZ],\"vel\":[VX,VY,VZ]}", "a paddle command: the blade's state at contact, T s after the command takes effect"],
+        ["game act none", "POST /act {\"type\":\"none\"}", "cancel; the arm returns to its ready pose"]]
+
+[observation]
+fields = ["point", "score", "ball", "t_since_played", "serve_in_s", "ball_in_play", "ball_state", "you_receive_serves",
+          "q", "paddle_pos", "paddle_normal", "command", "qd", "q_target", "points", "shots", "heard"]
+renderer = "mujoco"                   # the sport draws its own images (camera_job: a 4-frame history); see README
+frame_budget_ms = 1500                # the legacy images (8 tiles 480 x 360, MuJoCo osmesa on CPU): about 0.1-0.2 s per tile, ~1.3 s per observation measured under host load (tiles cached between observations, same pixels)
+columns = 4
+# Since wallclock-6 / duel-wallclock-4 the arms are drawn with the Franka Panda's visual meshes (presentation/
+# presentation.toml players = "25k", bundled into the simulator; renderer rule 6). Measured 2026-10-07 (8 new tiles,
+# osmesa, host load 20-50 on 32 cores), median / p95 ms per observation at 2 llvmpipe threads: match scene 88 / 112,
+# 25k meshes 161 / 182, full meshes 387 / 451 (1 thread: 148, 233, 564)
+render_threads = 2                    # llvmpipe threads per render process (LP_NUM_THREADS); one render process per seat
+sim_cpus = 6                          # the sim container: 2 seats x 2 render threads + the world, the planners and the core
+
+[spec]                                # the rule constants and conventions (also in /spec and the prompt)
+game_format = "first to 5 points; from 4:4 a lead of 2 is needed; at 6:6 the next point wins (7 at most)"
+rules = "after exactly one bounce on your half, hit the ball once so that it lands on your opponent's half, directly or after touching the net (the upper table edges count, the vertical sides do not); the same holds for your opponent's returns. You lose the point for a volley, a double hit, two bounces, a miss, a ball that lands on your own half or out, the ball touching your arm or handle while it is over or travelling towards your half, or your arm or paddle touching the table, net or floor. A shot that passes a player's half without touching it is out, even if it then hits that player's robot. A serve that touches the net or is irregular is a let. The receiver's 13th good return in a rally wins it the point (expedite rule). At 40 points played (lets included) the player ahead wins, at a level score the player who won the last point"
+opponent = "format match: the opponent serves every point (you always receive) and returns every ball it can reach; higher levels react faster, reach further and play faster, wider balls with more spin (`match.opponent_level` in game spec)"
+duel = "format duel: a neutral machine serves every point (first on the server's half, then on the receiver's); the receiver changes every point, `match.first_receiver` receives the first; both players get this document and see the game in their own frame"
+world = "metres; your frame: x to your right, y towards the opponent, z up; table top z = 0, |x| <= 0.7625, |y| <= 1.37; net at y = 0, top z = 0.1525; your half y < 0; your robot's base at (0, -1.75, 0) facing +y"
+ball = "radius 0.02 m, orange; gravity 9.81 m/s^2; air drag about 0.13 |v| v; spin bends the flight by a few cm; a bounce keeps about 96 % of the vertical and 87 % of the horizontal speed; a ball takes about 0.6-0.9 s from the opponent to you"
+reach = "the blade can meet a ball whose centre is within about 0.85 m of the shoulder (0, -1.75, 0.33) and above z = 0.12"
+blade = "15 x 15 cm; at contact its centre is 2.75 cm from the ball's centre along the face normal; with n the unit face normal the ball leaves with about v_out = v_paddle - 0.96((v_in - v_paddle).n)n + (v_in - v_paddle) - ((v_in - v_paddle).n)n"
+observation = "observe: one PNG of 2 rows (camera behind your robot, camera at the side) x 4 columns (frames 40 ms apart, newest right) of 480 x 360 tiles, with each frame's control step (observation.view_steps); no ball coordinates; yellow marks every 0.25 m along the table edges; cameras' poses and intrinsics in game spec (pinhole, 45 degree vertical field of view, focal length 434.6 px, principal point at the tile centre)"
+action_high = "high action level: act {type: act, t, pos, normal, vel} = the blade's state at contact t seconds after the command takes effect (centre pos, face normal pointing at the opponent, velocity m/s); limits 0 < t <= 2.5, |x| <= 1.2, -2.5 <= y <= -0.5, 0 <= z <= 1.2, speed <= 8 m/s; it replaces the stroke under way; the service plans the swing (IK, joint speed limits) and the reply predicts how close the arm gets; the delivered state scatters by about 4 mm, 0.6 degrees and 2 %; {type: none} returns the arm to its ready pose"
+action_low = "low action level: joint position targets at 100 Hz, no IK or stroke planner: traj {k0, q: rows of 7 targets} (row i = control step k0 + i, <= 300 rows, consecutive rows within the per-step speed limit, the first row used within that limit of the target in force), slew {q, speed} (every joint towards q at speed x its limit), hold; game spec gives the kinematic chain, limits, the joint controller and the robot's own model (robot_model.robot_only_xml)"
+real_time = "the world runs on its own clock at 1/S of real speed (S = timing.slowdown in game spec); it never waits for you; an act takes effect at the next 10 ms control step after it arrives (the reply's took_effect); one act and one observation per seat in flight; after each point the world freezes until every player has sent game ready WHY PLAN"
+scatter_and_seed = "the serves, the opponent's returns and the execution scatter are drawn from the seed (RCB_SEED / DUEL_SEED)"
+
+[tiebreaks]
+order = ["game"]
+text = "the first player to 5 points with a lead of 2, or the first to 7, wins the game (the match); a let scores no point; if 40 points (lets included) are played, the player ahead wins and at a level score the player who won the last point (last resort, not from the rulebook)"
+last_resort_in_prompt = true
+
+[[exploits]]
+id = "E1"
+text = "an out-of-range, non-finite, too fast or malformed command is refused (HTTP 400) and changes nothing"
+test = "test_exploit_bad_commands_are_refused"
+[[exploits]]
+id = "E2"
+text = "a trajectory whose first row jumps beyond the joint speed limit from the target in force is rejected; the previous command goes on and the simulator never sees the jump"
+test = "test_exploit_discontinuous_start_is_rejected"
+[[exploits]]
+id = "E3"
+text = "the observation holds no ball, opponent or seed state (only the cameras show the ball); /spec holds no seed"
+test = "test_exploit_no_hidden_state"
+[[exploits]]
+id = "E4"
+text = "a player that never moves loses every point (stalling gains nothing)"
+test = "test_exploit_never_moving_loses"
+[[exploits]]
+id = "E5"
+text = "the high action level is the legacy service's planner: the same acts give the same joint targets (no hidden advantage or handicap from the migration)"
+test = "test_exploit_high_level_equals_legacy_planner"
+[[exploits]]
+id = "E6"
+text = "the robot's own model and kinematic chain given at the low level reproduce the simulator's arm and hold nothing of the world"
+test = "test_exploit_robot_model_is_the_simulator_arm"
+[[exploits]]
+id = "E7"
+text = "direct play: a program, a pipe or any tool call other than a literal game command or opening a camera image forfeits the match (players/nocode audit, core grading)"
+test = "test_exploit_nocode_audit_forfeits"
+
+[players]
+reference = "reference"               # Sport.players() names: camera-only, wins the default configuration
+reference_class = "builtin_players:Reference"
+check = ["idle"]                      # the generic tests' check policy (never acts: every point ends quickly)
+
+[fairness]
+policy = "reference"                  # the camera-only reference on both seats (high level), seeds 1..N, both first receivers
+matches_per_order = 20                # the contract minimum: N = 40 (95% CI about +-15 pp; realtime: a wide CI only warns); an in-process duel takes 15-20 min on the shared host
+max_advantage_pp = 5
+mirror = "statistical"                # seat B is the mirrored world: floating-point physics is not bit-symmetric
+
+[official]                            # grade.py computes official_config with the legacy per-format rule (README)
+seeds = [1, 2, 3, 101, 111, 121, 202, 212, 222, 303, 313, 323, 404, 414, 424]
+levels = [1, 2, 3, 4]
+slowdowns = { program = [1, 2, 5, 10, 20], direct = [20, 50, 100] }
+first_any = true
+
+[golden]
+episodes = "golden"                   # + the legacy records of the golden-data store, converted by golden/convert.py
+
+[[tasks]]
+id = "tabletennis-match-wallclock-program-standard"          # the Season-1 task name
+format = "match"
+action_level = "high"
+play = "program"
+[[tasks]]
+id = "tabletennis-match-wallclock-program-lowlevel-standard"          # the Season-1 task name
+format = "match"
+action_level = "low"
+play = "program"
+[[tasks]]
+id = "tabletennis-match-wallclock-direct-standard"          # the Season-1 task name
+format = "match"
+action_level = "high"
+play = "direct"
+slowdown = 50                         # the legacy direct default (a model call per act); agent budget 10800 s
+[[tasks]]
+id = "tabletennis-duel-wallclock-program-standard"          # the Season-1 task name
+format = "duel"
+action_level = "high"
+play = "program"
+[[tasks]]
+id = "tabletennis-duel-wallclock-program-lowlevel-standard"          # the Season-1 task name
+format = "duel"
+action_level = "low"
+play = "program"
+[[tasks]]
+id = "tabletennis-duel-wallclock-direct-standard"          # the Season-1 task name
+format = "duel"
+action_level = "high"
+play = "direct"
+slowdown = 50
+
+[broadcast]                           # spectators: the replay video's camera (the whole table from the side, above)
+camera = { name = "broadcast", pos = [4.4, 0.0, 2.2], lookat = [0.0, 0.0, 0.2], fovy_deg = 50, width = 640, height = 360 }
+
+[capabilities]                        # docs/capabilities_zh.md §6
+a1 = 2                                # 3D: the ball only from two cameras (triangulation, the contact point)
+a2 = 2                                # dynamics: drag, spin, bounce, the contact law
+a3 = 2                                # embodiment: the paddle state (high) or joint targets with its own IK (low)
+a4 = 2                                # real time: the world never waits; latency costs game time
+b1 = 1                                # rules: the ITTF point rules
+b2 = 2                                # strategy: placement away from the opponent, reading its returns
+b3 = 0
+physics = ["spin_bounce"]
+
+[check]
+stage_timeout_s = 10800               # stage 2 (~20 in-process matches) took ~75 min on a loaded shared host (4238 s on main without fine meshes)

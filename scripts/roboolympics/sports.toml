@@ -1,0 +1,98 @@
+# What gen_tasks.py writes about each sport into its tasks (instruction.md, README.md, /spec's task text). The
+# authoritative interface is the sim service's /spec (shared/sim/rcb_olympics.py: action_types, proprio_layout,
+# cameras, rules): these texts describe it, tests/test_adapter.py checks that the columns and types named here are the
+# service's. The rules themselves come from the sport's sport.toml ([spec], [[deviations]], [tiebreaks]).
+
+[tabletennis]
+title = "Table tennis"
+task_text = "Win a game of table tennis against the scripted opponent: return its serves and shots onto its half."
+episode_text = "Ends when the game is decided (first to 5 points, from 4:4 a lead of 2, at most 7; success: you won), when your time is up (timeout), or on a simulator error."
+intro = """You play robot table tennis (ITTF rules with the deviations below) against a scripted opponent: a MuJoCo Franka
+Panda holding a paddle, at your end of a real-size table, seen only through two cameras. The opponent serves every
+point (recorded real serves) and returns every ball it can reach; you always receive. One game to 5 points."""
+unit = "point"
+robot = "Franka Panda (MuJoCo Menagerie panda_nohand) holding a 15 x 15 cm paddle; its base at (0, -1.75, 0) facing +y"
+actions = """| type | row | what it does |
+|---|---|---|
+| `stroke` | `[t, x, y, z, nx, ny, nz, vx, vy, vz]` | the blade's state at contact, `t` seconds after the command takes effect: centre `x y z` (m), face normal `nx ny nz` (pointing where the ball should go), velocity `vx vy vz` (m/s). The service plans the swing (IK, joint speed limits, rehearsals on its own copy of the arm) from the arm's state at that step, then the arm returns to its ready pose. A new stroke replaces the one under way. Limits: 0 < t <= 2.5, \\|x\\| <= 1.2, -2.5 <= y <= -0.5, 0 <= z <= 1.2, speed <= 8 m/s (clipped, `meta["clipped"]`). The delivered state scatters by about 4 mm, 0.6 degrees and 2 % (from the task's frozen seed) |
+| `rest` | `[0]` | cancel the stroke under way: the arm returns to its ready pose |
+| `ready` | `[0]` | end the break now (see Time) |"""
+proprio = """`match_step`, `break`, `break_left_s`, `finished`; `score_you`, `score_opponent`, `point` (the point being
+played, from 1); the current ball: `ball_is_serve` (1: the opponent's serve, 0: its return), `t_since_played` (seconds
+since the opponent served or hit it; negative while a serve waits), `serve_in_s`, `ball_in_play`, `ball_coming` (coming
+to you), `ball_going` (going to the opponent); what you heard of the current ball, as the time on its clock
+(`t_since_played`) of the first event of each kind, NaN if not heard yet: `heard_opp_bounce_t` (a bounce on the
+opponent's half), `heard_own_bounce_t` (a bounce on your half), `heard_net_t`, `heard_paddle_t` (your paddle),
+`heard_robot_t` (your arm), `heard_floor_t`; your arm: `q1`..`q7` (joint angles, rad), `paddle_x/y/z` (blade centre),
+`paddle_nx/ny/nz` (face normal); the stroke under way: `stroke_active`, `stroke_contact_in_s`, and how well the planner
+can deliver it: `stroke_speed_scale` (> 1: the paddle speed was cut by the joint speed limits), `stroke_blade_error_m`,
+`stroke_normal_error_deg`, `stroke_ik_residual`; `last_point_won` (1 you, -1 the opponent, 0 a let);
+`commands_applied`, `commands_refused`, `last_refused_step`."""
+cameras = """two cameras, 480 x 360 RGB each: `behind` (behind and above your robot, looking down the table) and `side` (at
+the side of the table, looking along +x: your robot is on the right). Pose (`position`, `forward`, `up`), field of view
+(45 degrees vertical), `focal_px` (434.6) and `principal_point_px` in `spec()["cameras"]`; pinhole: u = cx + f x_right /
+depth, v = cy - f y_up / depth. The ball is orange, the opponent is the red paddle; yellow marks every 0.25 m along the
+table edges. Each image is stamped with the match step `k` and the current ball's clock `t`."""
+tip = """A ball takes about 0.6-0.9 s of game time from the opponent to you (6-9 s of wall time at S = 10). Three or more
+frames of the ball (`get_obs(seconds=0.12, video_fps=25, video="frames")` returns four, 40 ms apart, with one proprio
+row each) let you triangulate it with the two cameras and fit its flight."""
+
+[badminton]
+title = "Badminton"
+task_text = "Win a game of singles badminton against the scripted opponent: serve, and return its shots into its court."
+episode_text = "Ends when the game is decided (first to 5 points, from 4-4 by 2, at most 7; or a player disqualified; success: you won), when your time is up (timeout), or on a simulator error."
+intro = """You play robot singles badminton (BWF rules with the deviations below) against a scripted opponent: a MuJoCo
+Franka Panda on a 1 m pedestal whose base slides on rails, holding a racket, seen only through two cameras. Rally
+scoring; you serve the first point, then the winner of each rally serves. One game to 5 points."""
+unit = "point"
+robot = "Franka Panda on a 1.0 m pedestal whose base slides on x-y rails, holding a badminton racket"
+actions = """| type | row | what it does |
+|---|---|---|
+| `stroke` | `[t, x, y, z, nx, ny, nz, vx, vy, vz]` | the racket head's state at contact, `t` seconds after the command takes effect: head centre `x y z` (m), string-face normal `nx ny nz`, head velocity `vx vy vz` (m/s). It takes effect `spec()["rules"]["act"]["lead_steps"]` control steps after its row's step (4 at S = 10: the planning time; `stroke_pending_effect_step` shows it) and `t` counts from then; the service plans the swing and the base's move, then the robot returns to its ready pose and the base home. A stroke, toss or rest planned before the previous one took effect is refused. Limits: 0 < t <= 5, \\|x\\| <= 3.4, -7.5 <= y <= -0.3, 0.2 <= z <= 3.0, speed <= 8 m/s (clipped) |
+| `toss` | `[x, y, z, height]` | your serve's toss: the shuttle appears at `x y z` (your half, y <= -0.5, 0.5-1.8 m high, within 1.0 m of your base horizontally) when the command takes effect (the same lead), from rest or rising `height` (0-0.5 m) straight up. Only the server, once per serve, once the receiver is ready (`serve_phase` 1, open). Then hit it with a stroke (it may be sent before the toss); the serve rules are in `spec()["rules"]["serve"]` |
+| `rest` | `[0]` | cancel the stroke under way (the same lead) |
+| `ready` | `[0]` | end the break now (see Time) |"""
+proprio = """`match_step`, `break`, `break_left_s`, `finished`; `score_you`, `score_opponent`, `point`; the serve:
+`you_serve`, `serve_court_right`, `serve_phase` (0 waiting: the receiver is getting ready, 1 open: toss now, 2 tossed,
+3 done), `serve_opens_in_s`, `serve_deadline_in_s` (toss before it: an undue delay is a fault), `serve_tossed_at_step`;
+the shuttle: `ball_kind` (0 the opponent's serve, 1 your serve, 2 the opponent's return), `t_since_played` (seconds
+since it was played: served, tossed or hit; NaN before), `ball_in_play`, `ball_not_served`, `ball_tossed` (yours to
+hit), `ball_coming`, `ball_going`; your robot: `base_x`, `base_y`, `q1`..`q7`, `racket_x/y/z`, `racket_nx/ny/nz`; the
+stroke under way: `stroke_active`, `stroke_contact_in_s`, `stroke_traj_steps_left`, `stroke_pending_effect_step` (a
+stroke, toss or rest waiting for its effect step, NaN if none), `stroke_head_speed_limited`,
+`stroke_pose_not_delivered` (the planner's notes); `last_point_won`; `commands_applied`, `commands_refused`,
+`last_refused_step`."""
+cameras = """two cameras, 480 x 360 RGB each: `behind` (behind and above your base line, looking down the court) and `side`
+(at the side of the court, x < 0, looking along +x: your half is on the right). Pose, field of view (45 degrees),
+`focal_px` and `principal_point_px` in `spec()["cameras"]`. The shuttle is drawn enlarged: an orange cork (a 12 cm
+ball centred on its position) with a white skirt behind it; yellow marks every 1 m outside the singles side lines and
+behind the base lines. Each image is stamped with the match step `k` and the shuttle's clock `t`."""
+tip = """Four frames 60 ms apart (`get_obs(seconds=0.18, video_fps=17, video="frames")`) with the two cameras let you
+triangulate the shuttle and fit its flight (gravity and quadratic drag, `spec()["rules"]["shuttle"]`)."""
+
+[airhockey]
+title = "Air hockey"
+task_text = "Win a game of air hockey against the scripted opponent: score goals into its goal and defend yours."
+episode_text = "Ends when the game is decided (the first to 7 goals; at the safety cap of 120 s of play or 40 rallies the tiebreaks; success: you won), when your time is up (timeout), or on a simulator error."
+intro = """You play robot air hockey (USAA rules with the deviations below) against a scripted opponent: a MuJoCo KUKA
+iiwa 14 arm holding a mallet at your end of the table (x < 0), seen only through one fixed camera. A rally starts with
+the puck at rest in one player's half; a goal, a seven-second foul or a dead puck ends it. The first to 7 goals wins."""
+unit = "rally"
+robot = "KUKA LBR iiwa 14 holding a mallet (the striker on two passive joints), its base at (-1.51, 0) beside your end"
+actions = """| type | row | what it does |
+|---|---|---|
+| `mallet` | `[x, y]` | the mallet centre's target (m, table frame): the robot drives the mallet there along a speed- and acceleration-limited path (`spec()["rules"]["mallet_path"]`) and holds it until replaced. Own half only: a target outside the workspace (`spec()["rules"]["workspace"]`: 0.05 <= -x <= 0.92, \\|y\\| <= 0.47, at most 1.45 m from your base) is moved to its nearest point (`meta["clipped"]`). Rows may be a chunk `dt` apart with `interpolate="linear"`; a row equal to the target in force changes nothing |
+| `stop` | `[0]` | the mallet stops where it is (its target becomes its position) |
+| `ready` | `[0]` | end the break now (see Time) |"""
+proprio = """`match_step`, `break`, `break_left_s`, `finished`; `score_you`, `score_opponent`, `rally` (the rally being
+played, from 1), `t_play` (seconds of play; breaks do not count), `play_time_left_s` (to the 120 s cap); your mallet:
+`mallet_x/y/z` (its centre), `target_x/y` (the target in force); your arm: `q1`..`q7`, `q_striker1/2` and their
+velocities `qd1`..`qd7`, `qd_striker1/2`; the last rally: `last_rally_how` (1 goal, 2 seven-second foul, 3 dead puck,
+4 time cap), `last_rally_scored` (1 you, -1 the opponent, 0 nobody), `last_rally_fouled` (who committed a foul),
+`last_rally_next_puck` (who gets the puck next, 0 a face-off); `commands_applied`, `commands_refused`,
+`last_refused_step`."""
+cameras = """one camera, `front`, 320 x 240 RGB, fixed above and behind your end of the table (pose, field of view 48
+degrees, `focal_px`, `principal_point_px` in `spec()["cameras"]`). The puck is red; the opponent's mallet is at the
+far end."""
+tip = """The puck moves fast: track it over several consecutive images (`get_obs(seconds=0)` in a loop, each with its
+`t_play`) and move the mallet with a program that runs in the background."""
