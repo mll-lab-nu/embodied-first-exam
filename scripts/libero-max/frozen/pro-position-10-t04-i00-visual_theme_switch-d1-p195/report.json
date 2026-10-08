@@ -1,0 +1,122 @@
+{
+ "case_id": "pro-position-10-t04-i00-visual_theme_switch-d1-p195",
+ "event": "visual_theme_switch",
+ "suite": "libero_10",
+ "language": "put the white mug on the left plate and put the yellow and white mug on the right plate",
+ "goal": [
+  [
+   "on",
+   "porcelain_mug_1",
+   "plate_1"
+  ],
+  [
+   "on",
+   "white_yellow_mug_1",
+   "plate_2"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "19b1ea26101c22d653ec2e8d16b0804ec69eeab6cad387401322089055367ec9",
+ "robot_base": {
+  "pos": [
+   -0.51,
+   0.0,
+   0.42
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "porcelain_mug_1",
+    "plate_1"
+   ],
+   [
+    "on",
+    "white_yellow_mug_1",
+    "plate_2"
+   ]
+  ],
+  "phase": "white_yellow_mug_1:placed",
+  "trace": [
+   "202:porcelain_mug_1:placed",
+   "371:pick white_yellow_mug_1:retreat failed goal=[0.05, 0.282, 0.68] eef=[0.05, 0.282, 0.58] obj c=[0.028, 0.292, 0.538] half=[0.07, 0.053, 0.052] top=0.600 fingers=-0.61 contacts=[]",
+   "371:white_yellow_mug_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 371,
+  "event_fired": true,
+  "event_step": 56,
+  "steps_left": 149,
+  "state_sha": "cd39565191665c33e692114a15f2d96dc9ab62d11ec4d2f4b02f2f9c788090aa",
+  "initial_state_sha": "19b1ea26101c22d653ec2e8d16b0804ec69eeab6cad387401322089055367ec9"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 371,
+   "event_fired": true,
+   "event_step": 56,
+   "steps_left": 149,
+   "state_sha": "cd39565191665c33e692114a15f2d96dc9ab62d11ec4d2f4b02f2f9c788090aa",
+   "initial_state_sha": "19b1ea26101c22d653ec2e8d16b0804ec69eeab6cad387401322089055367ec9"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 371,
+   "event_fired": true,
+   "event_step": 56,
+   "steps_left": 149,
+   "state_sha": "cd39565191665c33e692114a15f2d96dc9ab62d11ec4d2f4b02f2f9c788090aa",
+   "initial_state_sha": "19b1ea26101c22d653ec2e8d16b0804ec69eeab6cad387401322089055367ec9"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

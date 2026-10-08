@@ -1,0 +1,158 @@
+{
+ "case": {
+  "case_id": "pro-view-occlusion-object-t07-i01-distractor_burst-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 1,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/view_occlusion/libero_object/task_7",
+   "change": {
+    "distractor_count": 5,
+    "operation": "insert_distractors",
+    "placements": [
+     {
+      "object": "butter_1",
+      "offset_m": [
+       -0.06230481,
+       0.13820903,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "milk_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "cream_cheese_1",
+      "offset_m": [
+       -0.09303549,
+       -0.0102152,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "milk_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "chocolate_pudding_1",
+      "offset_m": [
+       -0.0212355,
+       -0.10223603,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "milk_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "orange_juice_1",
+      "offset_m": [
+       0.14745646,
+       -0.08422398,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "milk_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "tomato_sauce_1",
+      "offset_m": [
+       0.11304358,
+       0.10273888,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "milk_1",
+      "support_entity": "floor"
+     }
+    ]
+   },
+   "change_family": "CLUTTER",
+   "change_type": "distractor_burst",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1218496238
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-view-occlusion-object-t07-i01-distractor_burst-d0",
+   "seed": 1218496238,
+   "setup": [
+    {
+     "object": "butter_1",
+     "offworld_position_m": [
+      -2.0,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "cream_cheese_1",
+     "offworld_position_m": [
+      -2.2,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "chocolate_pudding_1",
+     "offworld_position_m": [
+      -2.4,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "orange_juice_1",
+     "offworld_position_m": [
+      -2.6,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "tomato_sauce_1",
+     "offworld_position_m": [
+      -2.8,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    }
+   ],
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "milk_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/view_occlusion",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "05_view_occlusion/bddl/libero_object/pick_up_the_milk_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "view_occlusion",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_milk_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object/pick_up_the_milk_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the milk and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 7,
+  "task_name": "pick_up_the_milk_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "15a4e48739a24874e110955bdf187767fda79dfe93d4b13d54958b007fbe9add",
+ "instance_sha": "d69b2e3399ad1ecb8af77618603541a3586482df40a70cf80eb4821e7207005a",
+ "schema": "eai-libero-max-instance/1"
+}

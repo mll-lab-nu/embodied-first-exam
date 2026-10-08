@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-object-texture-goal-t09-i08-obstacle_insertion-d0-p195",
+ "event": "obstacle_insertion",
+ "suite": "libero_goal",
+ "language": "Put the wine bottle on the rack",
+ "goal": [
+  [
+   "on",
+   "wine_bottle_1",
+   "wine_rack_1_top_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "2f6303e31b849dc4836d8a638d5d2628a3bad5e9b4f52ce2a58ac94d9df0f1b4",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "wine_bottle_1",
+    "wine_rack_1_top_region"
+   ]
+  ],
+  "phase": "wine_bottle_1:placed",
+  "trace": [
+   "131:pick wine_bottle_1:retreat failed goal=[-0.27, -0.179, 1.386] eef=[-0.27, -0.179, 1.286] obj c=[-0.263, -0.179, 1.228] half=[0.021, 0.022, 0.078] top=1.307 fingers=3.14 contacts=[]",
+   "131:wine_bottle_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 131,
+  "event_fired": true,
+  "event_step": 35,
+  "steps_left": 169,
+  "state_sha": "663c54abf517ef37ec9d7b85edbbe9893e5a7a561ff3ebfdfcdcc49ff9bb69a3",
+  "initial_state_sha": "2f6303e31b849dc4836d8a638d5d2628a3bad5e9b4f52ce2a58ac94d9df0f1b4"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 131,
+   "event_fired": true,
+   "event_step": 35,
+   "steps_left": 169,
+   "state_sha": "663c54abf517ef37ec9d7b85edbbe9893e5a7a561ff3ebfdfcdcc49ff9bb69a3",
+   "initial_state_sha": "2f6303e31b849dc4836d8a638d5d2628a3bad5e9b4f52ce2a58ac94d9df0f1b4"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 131,
+   "event_fired": true,
+   "event_step": 35,
+   "steps_left": 169,
+   "state_sha": "663c54abf517ef37ec9d7b85edbbe9893e5a7a561ff3ebfdfcdcc49ff9bb69a3",
+   "initial_state_sha": "2f6303e31b849dc4836d8a638d5d2628a3bad5e9b4f52ce2a58ac94d9df0f1b4"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

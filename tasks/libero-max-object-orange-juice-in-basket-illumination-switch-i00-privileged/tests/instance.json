@@ -1,0 +1,54 @@
+{
+ "case": {
+  "case_id": "pro-object-texture-object-t09-i05-illumination_switch-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 5,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/object_texture/libero_object/task_9",
+   "change": {
+    "operation": "set_lighting",
+    "scale": 1.8
+   },
+   "change_family": "OBS",
+   "change_type": "illumination_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 425422001
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-object-texture-object-t09-i05-illumination_switch-d1",
+   "seed": 425422001,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "orange_juice_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/object_texture",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "04_object_texture/bddl/libero_object/pick_up_the_orange_juice_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "object_texture",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_orange_juice_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object/pick_up_the_orange_juice_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the orange juice and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 9,
+  "task_name": "pick_up_the_orange_juice_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "6406832a82a606b4ed891e01daea785d13eff6aa6083378748497a45574b1e38",
+ "instance_sha": "8c4e0fb016924d41f40438ca0e7df3ebb8b3ce4a77bc7c70727f5c0541a9e2fb",
+ "schema": "eai-libero-max-instance/1"
+}

@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-view-occlusion-object-t04-i05-distractor_burst-d1-p195",
+ "event": "distractor_burst",
+ "suite": "libero_object",
+ "language": "Pick the ketchup and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "ketchup_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "7a9f0c9431e67c152f32ea2d937ac63023063d84d28015210515131d3fdcd572",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "ketchup_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "ketchup_1:placed",
+  "trace": [
+   "146:pick ketchup_1:retreat failed goal=[-0.015, 0.265, 0.321] eef=[-0.015, 0.265, 0.221] obj c=[-0.014, 0.265, 0.11] half=[0.028, 0.073, 0.018] top=0.183 fingers=-1.57 contacts=[]",
+   "146:ketchup_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 146,
+  "event_fired": true,
+  "event_step": 11,
+  "steps_left": 134,
+  "state_sha": "b8303b89a0cc65edac7bac63d7630f4fec2fb6cbfa0c875bef01279ea2815af7",
+  "initial_state_sha": "7a9f0c9431e67c152f32ea2d937ac63023063d84d28015210515131d3fdcd572"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 146,
+   "event_fired": true,
+   "event_step": 11,
+   "steps_left": 134,
+   "state_sha": "b8303b89a0cc65edac7bac63d7630f4fec2fb6cbfa0c875bef01279ea2815af7",
+   "initial_state_sha": "7a9f0c9431e67c152f32ea2d937ac63023063d84d28015210515131d3fdcd572"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 146,
+   "event_fired": true,
+   "event_step": 11,
+   "steps_left": 134,
+   "state_sha": "b8303b89a0cc65edac7bac63d7630f4fec2fb6cbfa0c875bef01279ea2815af7",
+   "initial_state_sha": "7a9f0c9431e67c152f32ea2d937ac63023063d84d28015210515131d3fdcd572"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-camera-view-angle-spatial-t06-i03-target_relocation-d0-p195",
+ "event": "target_relocation",
+ "suite": "libero_spatial",
+ "language": "Pick the akita black bowl next to the cookies box and place it on the plate",
+ "goal": [
+  [
+   "on",
+   "akita_black_bowl_1",
+   "plate_1"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "09e78509c6e6545b662ffdde8bc85717117c16b06f0486212df1008e1b82932c",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "akita_black_bowl_1",
+    "plate_1"
+   ]
+  ],
+  "phase": "akita_black_bowl_1:placed",
+  "trace": [
+   "124:pick akita_black_bowl_1:retreat failed goal=[0.004, 0.22, 1.092] eef=[0.004, 0.22, 0.992] obj c=[0.043, 0.209, 0.938] half=[0.054, 0.054, 0.025] top=0.970 fingers=-0.17 contacts=[]",
+   "124:akita_black_bowl_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 124,
+  "event_fired": true,
+  "event_step": 20,
+  "steps_left": 96,
+  "state_sha": "d90cc112394f19fb9255e3cd31d155195f7c0307c8ad357f9c5f6fffa71061f7",
+  "initial_state_sha": "09e78509c6e6545b662ffdde8bc85717117c16b06f0486212df1008e1b82932c"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 124,
+   "event_fired": true,
+   "event_step": 20,
+   "steps_left": 96,
+   "state_sha": "d90cc112394f19fb9255e3cd31d155195f7c0307c8ad357f9c5f6fffa71061f7",
+   "initial_state_sha": "09e78509c6e6545b662ffdde8bc85717117c16b06f0486212df1008e1b82932c"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 124,
+   "event_fired": true,
+   "event_step": 20,
+   "steps_left": 96,
+   "state_sha": "d90cc112394f19fb9255e3cd31d155195f7c0307c8ad357f9c5f6fffa71061f7",
+   "initial_state_sha": "09e78509c6e6545b662ffdde8bc85717117c16b06f0486212df1008e1b82932c"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

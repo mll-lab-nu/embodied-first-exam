@@ -1,0 +1,63 @@
+{
+ "case": {
+  "case_id": "pro-view-occlusion-goal-t09-i07-visual_theme_switch-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 7,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/view_occlusion/libero_goal/task_9",
+   "change": {
+    "operation": "set_visual_theme",
+    "rgb_multiplier": [
+     1.25,
+     0.7,
+     1.1
+    ],
+    "rgb_permutation": [
+     1,
+     2,
+     0
+    ]
+   },
+   "change_family": "OBS",
+   "change_type": "visual_theme_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1914939055
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-view-occlusion-goal-t09-i07-visual_theme_switch-d1",
+   "seed": 1914939055,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "wine_bottle_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/view_occlusion",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "05_view_occlusion/bddl/libero_goal/put_the_wine_bottle_on_the_rack.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "view_occlusion",
+   "init_reference_bddl_file": "libero_goal_lan/put_the_wine_bottle_on_the_rack.bddl",
+   "init_states_file": "libero_goal/put_the_wine_bottle_on_the_rack.pruned_init",
+   "language": "Put the wine bottle on the rack",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 9,
+  "task_name": "put_the_wine_bottle_on_the_rack",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "a424a4f9eab2a7ff2b111bee37781f4592176c8eda0e00b5ab5e1399c2941d9d",
+ "instance_sha": "efefce66488f9eeea6c0d09f19e95c3e238aaf5a9b29ccd6d070817879a78b9a",
+ "schema": "eai-libero-max-instance/1"
+}
