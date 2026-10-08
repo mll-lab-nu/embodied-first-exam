@@ -52,6 +52,7 @@ def main() -> int:
                "instance_sha": s.instance_sha, "runtime_binding": s.runtime_binding,
                "instance_exact": bool(s.instance_exact), "instance_matches": bool(s.instance_matches),
                "instance_generated": bool(getattr(s, "instance_generated", False)), "initial_state": getattr(s, "initial_state", None),
+               "instance_realized": bool(getattr(s, "instance_realized", False)), "assets_exact": bool(getattr(s, "assets_exact", True)),
                "wall_s": round(time.time() - t0, 1), "video": False, "media_status": "pending" if a.video else "disabled"}
         M.atomic_json(os.path.join(a.data, "replay.verdict.json"), out)
         if a.video:

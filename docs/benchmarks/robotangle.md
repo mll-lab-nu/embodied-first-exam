@@ -170,6 +170,16 @@ state the 6 h budget and are compared only with results under the same budget (D
 - a physical-validity policy: contact-penetration limits, joint-torque caps and a table guard;
 - a breakdown of the simulator is an infrastructure error, not a failure (`simulator_instability`, `infra_error`);
 - CPU families replay bit-exactly on one host;
+- CPU instruction-set class: the asset generators run on numpy and OpenBLAS, whose SIMD kernels depend on the CPU.
+  On a host without the class an instance was frozen on (AVX2 only vs AVX-512), the pinned generator writes the same
+  asset files with other bytes: floating-point noise up to 1e-8 m and face order (measured 2026-10-08: 29 of the 44
+  instances checkable without a GPU, in buzz_wire_3d, fiber_bundling, hedgehog_in_cage, horseshoe_ring,
+  interlocked_claws and lock_picking). With the runtime binding exact, the same files and the frozen state exactly or
+  within the pose tolerance, the Session realizes the instance there (`instance_realized`, `assets_exact: false`),
+  and the IPC settled-state and stored PBD archives accept an identity that differs only in those asset bytes; the
+  live episode and the fresh replay realize it alike. Hosts that reproduce the frozen bytes are unaffected. Exactness
+  against the reference hosts is recorded, not required: software (the runtime binding) and data (the frozen
+  instance) must be identical, and live and replay on the evaluation host must agree;
 - GPU families are graded strictly live and tolerantly on replay, with the tolerances in each task's README Details.
 
 ## Standard mode: `eai-standard/2.4`
@@ -369,7 +379,9 @@ and work on families that are not shipped (5536fdfd6: slotted_post_ring and orbi
    `check_inputs`. 0.2.21 (public; the GPU fix and the sm_86 libuipc build above) is to be validated the same way before
    it is pushed, on an RTX 4090 and an RTX PRO 6000.
 3. **Exact-restore preflight per frozen instance on that image.** Each instance was frozen by an earlier TopoGym source
-   and is bound to this release's runtime; whether it restores bit-exactly here is not yet checked.
+   and is bound to this release's runtime. 2026-10-08: the asset regeneration of the 44 instances checkable without a
+   GPU matches the frozen bytes on an AVX-512 CPU and is realized on an AVX2 one (CPU instruction-set class, above);
+   the full restore of every instance is not yet checked on both classes.
 4. **nop, both modes, every task, on this build (`2dafa5f2b`).** The records above are from earlier builds:
    `harbor run -p tasks/<task> -a nop`, or
    `for t in tasks/robotangle-*/; do harbor run -p "$t" -a nop -n 1 -k 1; done`.
