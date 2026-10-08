@@ -1,4 +1,4 @@
-"""eai-standard/2.1 client, realtime: your whole interface to the robot (installed at /opt/tools/rcb_client.py, on
+"""eai-standard/2.3 client (realtime mode): your whole interface to the robot (installed at /opt/tools/rcb_client.py, on
 PYTHONPATH).
 
     from rcb_client import Robot, EpisodeOver

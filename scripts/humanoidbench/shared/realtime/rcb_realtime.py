@@ -1,6 +1,7 @@
-"""eai-standard/2.1 with the realtime capability: the sim service of HumanoidBench's `-realtime-standard` tasks
-(docs/LIMITED_MODE_PROTOCOL.md, "Realtime capability"; docs/benchmarks/humanoidbench.md). Entry point of the sidecar:
-`python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged).
+"""eai-standard/2.3, the realtime mode's protocol: the sim service of HumanoidBench's `-realtime` tasks (docs/PROTOCOL.md
+§4b, docs/LIMITED_MODE_PROTOCOL.md "Realtime mode"; docs/benchmarks/humanoidbench.md). Entry point of the sidecar:
+`python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged). 2.3 is 2.2 plus the realtime capability, every 2.2
+addition optional: this service is rcb_service's 2.1 service with the capability, and reports eai-standard/2.3.
 
 It extends rcb_service.Service: the same endpoints, RCB1 frames, budgets (reset, wall clock), evidence, crash recovery
 and finalize. Only the time model differs. In standard mode time moves only inside calls; here the episode has a clock:
@@ -31,8 +32,10 @@ request. A service that falls behind (a long render) runs the missed steps back 
 MAX_LAG_S behind, it drops the debt instead (a stall, counted) rather than fast-forward the robot.
 
 A crash resumes the same episode from its last checkpoint (one per second of robot time while the clock runs), paused.
-No call spans a crash here (submit answers at once), so a crash is never put down to the agent's call: past
-RCB_MAX_RESUMES restarts the trial ends `sim_crashed` (infra_error).
+A simulator crash is an infrastructure failure, never the agent's (PROTOCOL §4b, owner 2026-10-08). No call spans a
+crash here (submit answers at once), so a crash is never put down to the agent's call: past RCB_MAX_RESUMES restarts the
+trial ends `sim_crashed` (infra_error), a failed resume `resume_failed` (infra_error), and a simulator error that ends
+the graded episode (reason "error") sets infra_error in final.json too.
 """
 from __future__ import annotations
 
@@ -52,6 +55,7 @@ import numpy as np
 import rcb_service
 from rcb_service import MAX_BODY, Recorder, Refused, Service, bad_request
 
+PROTOCOL = "eai-standard/2.3"   # the realtime mode's protocol (PROTOCOL §4b); rcb_service.py itself serves 2.1
 MAX_LAG_S = 0.5          # behind the clock by more than this: drop the debt (a stall) instead of catching up
 CHECKPOINT_S = 1.0       # robot time between checkpoints while the clock runs (the most a crash loses)
 
@@ -101,6 +105,7 @@ class RealtimeService(Service):
     # ------------------------------------------------------------------ spec, status, evidence
     def _spec(self) -> dict:
         spec = super()._spec()
+        spec["protocol"] = PROTOCOL
         cdt = self.sim.control_dt
         spec["timing"] = {
             "realtime": True, "slowdown": self.slowdown, "control_dt": cdt,
@@ -127,11 +132,15 @@ class RealtimeService(Service):
         return {**super().meta(), **self._realtime_counters()}
 
     def _timing_record(self) -> dict:
-        return {"realtime": 1, "slowdown": self.slowdown, "max_lag_s": round(self.max_lag, 4), "stalls": self.stalls,
-                "held_steps": self.held_steps, "late_steps": self.late_steps}
+        return {"protocol": PROTOCOL, "realtime": 1, "slowdown": self.slowdown, "max_lag_s": round(self.max_lag, 4),
+                "stalls": self.stalls, "held_steps": self.held_steps, "late_steps": self.late_steps}
 
     def _write_final(self) -> None:
         self.verdict.update(self._timing_record())   # final.json merges the verdict; none of these keys is a verdict's
+        if self.reason == "error":                   # a simulator error ended the graded episode: infrastructure (§4b)
+            self.verdict["infra_error"] = 1
+        else:                                        # (an episode that erred and was reset away is not graded)
+            self.verdict.pop("infra_error", None)
         super()._write_final()
 
     def _checkpoint(self, ev: str, **kw) -> None:
@@ -457,8 +466,9 @@ class RealtimeService(Service):
 
 def main(build, port: int = 8000) -> None:
     """rcb_service.main -- the start count, back-off, startup watchdog, resume -- with this service in place of
-    Service (RCB_SLOWDOWN: 1 = real time)."""
+    Service (RCB_SLOWDOWN: 1 = real time), and eai-standard/2.3 in everything it logs and writes."""
     rcb_service.Service = RealtimeService
+    rcb_service.PROTOCOL = PROTOCOL
     rcb_service.main(build, port)
 
 

@@ -18,9 +18,9 @@ everything the tasks have in common, `shared/` the one real copy of the tooling 
                                           # behaves differently from the verifier's  (needs mujoco)
     ./gen_tasks.py measure-standard [family ...] # check + time the standard twins' sim service (needs a GPU)
 
-Every task with a [task.standard] table is rendered three times: `<base>-privileged`, its standard-mode twin
-`<base>-standard` and the realtime variant `<base>-realtime-standard` (standard mode on a clock that does not stop;
-templates/realtime/, shared/realtime/).
+Every task with a [task.standard] table is rendered three times, once per mode (docs/PROTOCOL.md D12):
+`<base>-privileged`, `<base>-standard` and `<base>-realtime` (the realtime mode, §4b: standard mode on a clock that does
+not stop, eai-standard/2.3; templates/realtime/, shared/realtime/).
 
 `render` writes everything in tasks/ but the instances, which only `instance` draws, and the results/ of agent runs;
 it is idempotent:
@@ -459,17 +459,18 @@ def render_standard(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASK
     return out
 
 
-# --------------------------------------------------------------------------- standard mode, realtime
-# The realtime variant (`<base>-realtime-standard`): the standard twin's sidecar, client and verifier, except that
-# the service runs the episode on a clock that does not stop (shared/realtime/rcb_realtime.py, which extends
-# rcb_service.py unchanged) and the agent gets the realtime client (`submit(..., at=)`, `cameras=[]`). Same instance,
-# same success rule, same reset budget; the instruction tells the agent to drive the robot with a controller program.
+# --------------------------------------------------------------------------- realtime mode
+# The realtime task (`<base>-realtime`, mode = "realtime", eai-standard/2.3; docs/PROTOCOL.md §4b): the standard twin's
+# sidecar, client and verifier, except that the service runs the episode on a clock that does not stop
+# (shared/realtime/rcb_realtime.py, which extends rcb_service.py unchanged) and the agent gets the realtime client
+# (`submit(..., at=)`, `cameras=[]`). Same instance, same success rule; reset budget `realtime_reset_budget` (50, the
+# realtime mode's default); the instruction tells the agent to drive the robot with a controller program.
 REALTIME_TEMPLATES = HERE / "templates" / "realtime"
 REALTIME = HERE / "shared" / "realtime"
 
 
 def realtime_dir_name(t: dict, instance_tag: str) -> str:
-    return base_dir_name(t, instance_tag) + "-realtime-standard"
+    return base_dir_name(t, instance_tag) + "-realtime"
 
 
 # A recorded episode (a trajectory) is solvability evidence here too: planned from step 0 (`at`), its rows run at the
@@ -488,6 +489,7 @@ def realtime_context(t: dict, defaults: dict, facts: dict) -> dict:
     return ctx | {
         "base_dir": base_dir_name(t, defaults["instance_tag"]),
         "control_ms": f"{1000 / facts['standard']['control_hz']:g}",
+        "reset_budget": int(defaults["realtime_reset_budget"]),   # the compose default: spec()["budget"]["reset"]
         "reference_solution": t.get("realtime_reference_solution", NO_ORACLE),
         **oracle,
     }
@@ -699,7 +701,8 @@ FORMULA = re.compile(r"\b(?:bounds|margin|value_at_margin)\s*=|\brewards\.tolera
 
 def leaks(task: Path, families: set[str]) -> list[str]:
     toml = tomllib.loads((task / "task.toml").read_text())
-    own, standard = toml["metadata"]["family"], toml["metadata"]["mode"] == "standard"
+    # standard and realtime tasks score in the sim sidecar (environment/sim/), privileged ones in tests/
+    own, standard = toml["metadata"]["family"], toml["metadata"]["mode"] in ("standard", "realtime")
     home = task / ("environment/sim" if standard else "tests")               # where the formula has to be
     agent_side = [f for f in sorted((task / "environment").rglob("*"))
                   if f.is_file() and not (standard and home in f.parents)]

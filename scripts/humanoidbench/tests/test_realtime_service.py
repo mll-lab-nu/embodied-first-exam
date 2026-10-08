@@ -49,7 +49,7 @@ class Live(unittest.TestCase):
         self.start_service()
 
     def start_service(self):
-        self.svc = rcb_realtime.RealtimeService(FastSim(self.goal), data=self.data, reset_budget=self.reset_budget,
+        self.svc = rcb_realtime.RealtimeService(self.make_sim(), data=self.data, reset_budget=self.reset_budget,
                                                 slowdown=1.0)
         self.svc.start()
         self.srv = self.svc.http_server(("127.0.0.1", 0))
@@ -59,6 +59,9 @@ class Live(unittest.TestCase):
         for t in self.threads:
             t.start()
         self.r = Robot(f"http://127.0.0.1:{self.srv.server_address[1]}", timeout=10)
+
+    def make_sim(self):
+        return FastSim(self.goal)
 
     def stop_service(self):
         self.stop.set()
@@ -92,7 +95,7 @@ class TestClock(Live):
         self.assertTrue(t["realtime"])
         self.assertEqual(t["slowdown"], 1.0)
         self.assertAlmostEqual(t["wall_s_per_control_step"], 0.01)
-        self.assertEqual(self.r.spec()["protocol"], "eai-standard/2.1")
+        self.assertEqual(self.r.spec()["protocol"], "eai-standard/2.3")
 
     def test_an_episode_waits_paused_until_its_first_submit(self):
         self.r.get_obs()
@@ -194,12 +197,36 @@ class TestEnd(Live):
             self.r.submit("move", [[1.0]], cameras=[])
         fin = self.finalize()
         self.assertTrue(fin["success"])
+        self.assertEqual(fin["protocol"], "eai-standard/2.3")
+        self.assertNotIn("infra_error", fin)
 
     def test_a_watch_ends_with_the_episode(self):
         self.r.submit("move", [[1.0]] * 10, interpolate="hold", cameras=[])
         res = self.r.get_obs(cameras=[], seconds=1.0)
         self.assertTrue(res.done)
         self.assertLess(res.meta["control_steps_watch"], 10)
+
+
+class TestSimulatorError(Live):
+    """PROTOCOL §4b: a simulator error that ends the graded episode is infrastructure, not the agent's failure."""
+
+    def make_sim(self):
+        def boom(sim):
+            if sim.t == 5:
+                raise RuntimeError("simulator blew up")
+        sim = FastSim(self.goal)
+        sim.on_step = boom
+        return sim
+
+    def test_a_simulator_error_is_an_infra_error(self):
+        self.r.submit("move", [[1.0]] * 10, interpolate="hold", cameras=[])
+        time.sleep(0.15)
+        st = self.r.status()
+        self.assertTrue(st["done"])
+        self.assertEqual(st["reason"], "error")
+        fin = self.finalize()
+        self.assertEqual(fin["infra_error"], 1)
+        self.assertFalse(fin["success"])
 
 
 class TestResetAndResume(Live):

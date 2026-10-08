@@ -1,4 +1,4 @@
-"""Oracle (standard mode, realtime): the reference actions (sit_simple_actions.npy, the privileged oracle's 999 rows of
+"""Oracle (realtime mode): the reference actions (sit_simple_actions.npy, the privileged oracle's 999 rows of
 normalised servo targets) streamed through the client into the running episode's plan, one row per control step
 (dt = control_dt, hold): the first chunk starts the clock at step 0, the second is planned from the step where the
 first ends, long before that step comes, so every row runs at its own control step. The service ends the episode the
