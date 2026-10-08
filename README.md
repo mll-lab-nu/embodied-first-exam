@@ -48,7 +48,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
 | RoboPaint (`robopaint-<style>-<target>-i00`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 82 | partial |
 | RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 53 | full on 2, none on 51 (human review) |
-| BEHAVIOR-1K (`behavior-<activity>-i00`) | OmniGibson / Isaac Sim · Galaxea R1 Pro | 77 | partial on 2, none on 75 (human review; 66 supplementary tasks without a verified positive yet) |
+| BEHAVIOR-1K (`behavior-<activity>-i00`) | OmniGibson / Isaac Sim · Galaxea R1 Pro | 100 | partial on 2, none on 98 (human review; 89 supplementary tasks without a verified positive yet) |
 | VLABench (`vlabench-<task>-i00`) | MuJoCo + dm_control · Franka Panda | 36 | full |
 | RoboCasa (`robocasa-<task>-i00`) | robosuite · Franka Panda on an Omron mobile base | 29 | full (upstream demonstrations) |
 | RoboCasa365 (`robocasa365-<task>-i00`) | robosuite · Franka Panda on an Omron mobile base | 50 | full (upstream demonstrations) |

@@ -1716,5 +1716,560 @@
   "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 358 s on average (10,752 control steps at 30 Hz) and drove 37.83 m; the scene loads 5 rooms, and the goal uses `real`.",
   "std_goal": "Chop the firewood. Four logs, an axe and a chopping block lie on the driveway in the garden; split all four logs in half. Success means all of the following hold at the same time: (1) all eight half logs exist. How the simulator judges them: real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.",
   "std_closing": "For scale: the 2026 challenge's human teleoperators needed 358 s on average (10,752 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "clean_boxing_gloves": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060008",
+   "duration_s": 275,
+   "episodes": 200,
+   "mean_s": 275,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Clean the boxing gloves. Two dusty boxing gloves lie on the countertop in the utility room, where a washer stands; get both gloves clean, so that no dust is left on either of them.",
+  "success": [
+   "neither boxing glove (`boxing_glove.n.01_1`, `_2`) is covered with dust (`dust.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 275 s on average (8,235 control steps at 30 Hz) and drove 28.58 m; the scene loads 5 rooms, and the goal uses `covered`.",
+  "std_goal": "Clean the boxing gloves. Two dusty boxing gloves lie on the countertop in the utility room, where a washer stands; get both gloves clean, so that no dust is left on either of them. Success means all of the following hold at the same time: (1) neither boxing glove is covered with dust. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 275 s on average (8,235 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "wash_a_baseball_cap": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060147",
+   "duration_s": 278,
+   "episodes": 200,
+   "mean_s": 278,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Wash the baseball caps. Two dirty baseball caps lie on the countertop in the utility room, where a washer stands; get both caps clean, so that no dirt is left on either of them.",
+  "success": [
+   "neither baseball cap (`baseball_cap.n.01_1`, `_2`) is covered with dirt (`dirt.n.02_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 278 s on average (8,349 control steps at 30 Hz) and drove 28.94 m; the scene loads 5 rooms, and the goal uses `covered`.",
+  "std_goal": "Wash the baseball caps. Two dirty baseball caps lie on the countertop in the utility room, where a washer stands; get both caps clean, so that no dirt is left on either of them. Success means all of the following hold at the same time: (1) neither baseball cap is covered with dirt. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 278 s on average (8,349 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "attach_a_camera_to_a_tripod": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060393",
+   "duration_s": 130,
+   "episodes": 200,
+   "mean_s": 130,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_upper",
+  "goal": "Attach the digital camera to the camera tripod. Both lie on the bedroom floor.",
+  "success": [
+   "the digital camera (`digital_camera.n.01_1`) is attached to the camera tripod (`camera_tripod.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 130 s on average (3,912 control steps at 30 Hz) and drove 11.3 m; the scene loads 3 rooms, and the goal uses `attached`.",
+  "std_goal": "Attach the digital camera to the camera tripod. Both lie on the bedroom floor. Success means all of the following hold at the same time: (1) the digital camera is attached to the camera tripod. How the simulator judges them: attached(A, B): A is fixed to B through their attachment points; the joint forms by itself when A's attachment point is brought within 5 cm and 15° of a compatible one on B. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 130 s on average (3,912 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "clean_a_trumpet": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060606",
+   "duration_s": 177,
+   "episodes": 200,
+   "mean_s": 177,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_upper",
+  "goal": "Clean the trumpet. A cornet (a trumpet) covered with dust and a scrub brush lie on the desk in the bedroom; remove every bit of dust from the cornet.",
+  "success": [
+   "no dust (`dust.n.01_1`) is left on the cornet (`cornet.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 177 s on average (5,307 control steps at 30 Hz) and drove 12.39 m; the scene loads 3 rooms, and the goal uses `covered`.",
+  "std_goal": "Clean the trumpet. A cornet (a trumpet) covered with dust and a scrub brush lie on the desk in the bedroom; remove every bit of dust from the cornet. Success means all of the following hold at the same time: (1) no dust is left on the cornet. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 177 s on average (5,307 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "spraying_for_bugs": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060681",
+   "duration_s": 216,
+   "episodes": 200,
+   "mean_s": 216,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Spray the potted plants against bugs. An insectifuge atomizer and two potted plants stand on the garden floor; spray insectifuge onto both plants until each of them is covered with it.",
+  "success": [
+   "both potted plants (`pot_plant.n.01_1`, `_2`) are covered with insectifuge (`insectifuge.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 216 s on average (6,480 control steps at 30 Hz) and drove 21.98 m; the scene loads 4 rooms, and the goal uses `covered`.",
+  "std_goal": "Spray the potted plants against bugs. An insectifuge atomizer and two potted plants stand on the garden floor; spray insectifuge onto both plants until each of them is covered with it. Success means all of the following hold at the same time: (1) both potted plants are covered with insectifuge. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 216 s on average (6,480 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "spraying_fruit_trees": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060748",
+   "duration_s": 278,
+   "episodes": 200,
+   "mean_s": 278,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Spray the fruit trees. A pesticide atomizer lies on the garden floor near two trees; spray pesticide onto both trees until each of them is covered with it.",
+  "success": [
+   "both trees (`tree.n.01_1`, `_2`) are covered with pesticide (`pesticide.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 278 s on average (8,346 control steps at 30 Hz) and drove 23.5 m; the scene loads 4 rooms, and the goal uses `covered`.",
+  "std_goal": "Spray the fruit trees. A pesticide atomizer lies on the garden floor near two trees; spray pesticide onto both trees until each of them is covered with it. Success means all of the following hold at the same time: (1) both trees are covered with pesticide. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 278 s on average (8,346 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "make_microwave_popcorn": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114060842",
+   "duration_s": 108,
+   "episodes": 200,
+   "mean_s": 108,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Make microwave popcorn. A bag of popcorn kernels lies on the kitchen countertop and there is a microwave in the kitchen; heat the bag in the microwave until the popcorn is cooked, so that the cooked (popped) popcorn ends up inside the bag.",
+  "success": [
+   "cooked popcorn (`cooked__popcorn.n.01_1`) exists (the kernels have popped)",
+   "the popcorn bag (`popcorn__bag.n.01_1`) contains the cooked popcorn"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 108 s on average (3,238 control steps at 30 Hz) and drove 8.6 m; the scene loads 4 rooms, and the goal uses `contains`, `real`.",
+  "std_goal": "Make microwave popcorn. A bag of popcorn kernels lies on the kitchen countertop and there is a microwave in the kitchen; heat the bag in the microwave until the popcorn is cooked, so that the cooked (popped) popcorn ends up inside the bag. Success means all of the following hold at the same time: (1) cooked popcorn exists (the kernels have popped); (2) the popcorn bag contains the cooked popcorn. How the simulator judges them: contains(A, S): at least one particle of the substance S lies inside A's container volume. real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 108 s on average (3,238 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "chop_an_onion": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114061062",
+   "duration_s": 213,
+   "episodes": 200,
+   "mean_s": 213,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Chop an onion in the kitchen. A Vidalia onion is in the sink; a bowl, a chopping board and a paring knife lie on the countertop. Dice the onion on the chopping board with the knife, put the diced onion into the bowl, then put both the knife and the chopping board into the sink.",
+  "success": [
+   "diced onion (`diced__vidalia_onion.n.01_1`) exists (the onion has been diced)",
+   "the bowl (`bowl.n.01_1`) contains the diced onion",
+   "the paring knife (`parer.n.02_1`) is inside the sink (`sink.n.01_1`)",
+   "the chopping board (`chopping_board.n.01_1`) is inside the sink"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 213 s on average (6,400 control steps at 30 Hz) and drove 17.0 m; the scene loads 4 rooms, and the goal uses `inside`, `contains`, `real`.",
+  "std_goal": "Chop an onion in the kitchen. A Vidalia onion is in the sink; a bowl, a chopping board and a paring knife lie on the countertop. Dice the onion on the chopping board with the knife, put the diced onion into the bowl, then put both the knife and the chopping board into the sink. Success means all of the following hold at the same time: (1) diced onion exists (the onion has been diced); (2) the bowl contains the diced onion; (3) the paring knife is inside the sink; (4) the chopping board is inside the sink. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. contains(A, S): at least one particle of the substance S lies inside A's container volume. real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 213 s on average (6,400 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "cook_hot_dogs": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114061371",
+   "duration_s": 305,
+   "episodes": 200,
+   "mean_s": 305,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Cook the hot dogs. Two hot dogs are inside the kitchen refrigerator and a microwave stands in the kitchen; cook both hot dogs.",
+  "success": [
+   "both hot dogs (`hotdog.n.02_1`, `_2`) are cooked"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 305 s on average (9,145 control steps at 30 Hz) and drove 25.78 m; the scene loads 7 rooms, and the goal uses `cooked`.",
+  "std_goal": "Cook the hot dogs. Two hot dogs are inside the kitchen refrigerator and a microwave stands in the kitchen; cook both hot dogs. Success means all of the following hold at the same time: (1) both hot dogs are cooked. How the simulator judges them: cooked(A): the highest temperature A has ever reached is at least its cooking temperature (70 °C by default). Heat comes from a heat source that is on (a stove burner, an oven: 200 °C) within 0.2 m of A; once cooked, A stays cooked. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 305 s on average (9,145 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "cook_bacon": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://player.vimeo.com/video/1114061497",
+   "duration_s": 256,
+   "episodes": 200,
+   "mean_s": 256,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Cook the bacon. A tray with six slices of bacon is inside the kitchen refrigerator and a frying pan stands on the stove; cook all six slices and leave the refrigerator closed.",
+  "success": [
+   "all six slices of bacon (`bacon.n.01_1` to `_6`) are cooked",
+   "the refrigerator (`electric_refrigerator.n.01_1`) is closed"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 256 s on average (7,680 control steps at 30 Hz) and drove 20.92 m; the scene loads 7 rooms, and the goal uses `open`, `cooked`.",
+  "std_goal": "Cook the bacon. A tray with six slices of bacon is inside the kitchen refrigerator and a frying pan stands on the stove; cook all six slices and leave the refrigerator closed. Success means all of the following hold at the same time: (1) all six slices of bacon are cooked; (2) the refrigerator is closed. How the simulator judges them: open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. cooked(A): the highest temperature A has ever reached is at least its cooking temperature (70 °C by default). Heat comes from a heat source that is on (a stove burner, an oven: 200 °C) within 0.2 m of A; once cooked, A stays cooked. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 256 s on average (7,680 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "sorting_bottles_cans_and_paper": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/h8-XZ85UxSU",
+   "duration_s": 312,
+   "episodes": 200,
+   "mean_s": 342,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Sort the recycling in the kitchen. Three buckets stand on the kitchen floor; two wine bottles, two cans of soda, a newspaper and a magazine lie around the kitchen, some on the countertop and some on the floor. Sort them into the buckets: both wine bottles into one bucket, both cans into a second one, and the newspaper and the magazine into the third, with nothing of another kind in any of them.",
+  "success": [
+   "both wine bottles (`wine_bottle.n.01_1`, `_2`) are inside the same bucket (`bucket.n.01_1` to `_3`), together with no can of soda, newspaper or magazine",
+   "both cans of soda (`can__of__soda.n.01_1`, `_2`) are inside the same other bucket, together with no wine bottle, newspaper or magazine",
+   "the newspaper (`newspaper.n.03_1`) and the magazine (`magazine.n.02_1`) are inside the same third bucket, together with no can of soda or wine bottle"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 342 s on average (10,264 control steps at 30 Hz) and drove 26.76 m; the scene loads 4 rooms, and the goal uses `inside`.",
+  "std_goal": "Sort the recycling in the kitchen. Three buckets stand on the kitchen floor; two wine bottles, two cans of soda, a newspaper and a magazine lie around the kitchen, some on the countertop and some on the floor. Sort them into the buckets: both wine bottles into one bucket, both cans into a second one, and the newspaper and the magazine into the third, with nothing of another kind in any of them. Success means all of the following hold at the same time: (1) both wine bottles are inside the same bucket, together with no can of soda, newspaper or magazine; (2) both cans of soda are inside the same other bucket, together with no wine bottle, newspaper or magazine; (3) the newspaper and the magazine are inside the same third bucket, together with no can of soda or wine bottle. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 342 s on average (10,264 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "re_shelving_library_books": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/AQdhTrye7NQ",
+   "duration_s": 281,
+   "episodes": 200,
+   "mean_s": 318,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_upper",
+  "goal": "Reshelve the library books. Three books lie on the table in the living room; put every one of them inside a bookcase in the living room (the books may go into different bookcases).",
+  "success": [
+   "every book (`book.n.02_1` to `_3`) is inside some bookcase (`bookcase.n.01_*`; different bookcases are fine)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 318 s on average (9,528 control steps at 30 Hz) and drove 19.62 m; the scene loads 1 rooms, and the goal uses `inside`.",
+  "std_goal": "Reshelve the library books. Three books lie on the table in the living room; put every one of them inside a bookcase in the living room (the books may go into different bookcases). Success means all of the following hold at the same time: (1) every book is inside some bookcase (`bookcase.n.01_*`; different bookcases are fine). How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 318 s on average (9,528 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "sweeping_garage": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/0bdsrbEeFEc",
+   "duration_s": 126,
+   "episodes": 200,
+   "mean_s": 149,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Sweep the garage. The garage floor is covered with sand and dust, and a broom and a bucket lie on it; remove all the sand and all the dust from the floor.",
+  "success": [
+   "no sand (`sand.n.04_1`) is left on the garage floor (`floor.n.01_1`)",
+   "no dust (`dust.n.01_1`) is left on the garage floor"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 149 s on average (4,473 control steps at 30 Hz) and drove 19.08 m; the scene loads 2 rooms, and the goal uses `covered`.",
+  "std_goal": "Sweep the garage. The garage floor is covered with sand and dust, and a broom and a bucket lie on it; remove all the sand and all the dust from the floor. Success means all of the following hold at the same time: (1) no sand is left on the garage floor; (2) no dust is left on the garage floor. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 149 s on average (4,473 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "scrubbing_bathroom_floor": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/u9wtUgoB8o8",
+   "duration_s": 123,
+   "episodes": 200,
+   "mean_s": 105,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Scrub the bathroom floor. The bathroom floor is covered with dirt and a scrub brush lies on it; remove every bit of dirt from the floor.",
+  "success": [
+   "no dirt (`dirt.n.02_1`) is left on the bathroom floor (`floor.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 105 s on average (3,154 control steps at 30 Hz) and drove 5.38 m; the scene loads 3 rooms, and the goal uses `covered`.",
+  "std_goal": "Scrub the bathroom floor. The bathroom floor is covered with dirt and a scrub brush lies on it; remove every bit of dirt from the floor. Success means all of the following hold at the same time: (1) no dirt is left on the bathroom floor. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 105 s on average (3,154 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "halve_an_egg": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/c1YJezdD7oM",
+   "duration_s": 212,
+   "episodes": 200,
+   "mean_s": 213,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Halve the egg. A hard-boiled egg is inside the kitchen refrigerator; a chopping board with a carving knife on it and a plate lie on the countertop, and there is a sink in the kitchen. Cut the egg in half, put both halves on the plate and put the carving knife into the sink.",
+  "success": [
+   "both egg halves (`half__hard-boiled_egg.n.01_1`, `_2`) exist (the egg has been cut)",
+   "both halves are on top of the plate (`plate.n.04_1`)",
+   "the carving knife (`carving_knife.n.01_1`) is inside the sink (`sink.n.01_1`)"
+  ],
+  "objects": [
+   "carving_knife.n.01_1",
+   "chopping_board.n.01_1",
+   "countertop.n.01_1",
+   "electric_refrigerator.n.01_1",
+   "sink.n.01_1",
+   "plate.n.04_1",
+   "hard-boiled_egg.n.01_1",
+   "half__hard-boiled_egg.n.01_1",
+   "half__hard-boiled_egg.n.01_2"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 213 s on average (6,377 control steps at 30 Hz) and drove 14.06 m; the scene loads 7 rooms, and the goal uses `inside`, `ontop`, `real`.",
+  "std_goal": "Halve the egg. A hard-boiled egg is inside the kitchen refrigerator; a chopping board with a carving knife on it and a plate lie on the countertop, and there is a sink in the kitchen. Cut the egg in half, put both halves on the plate and put the carving knife into the sink. Success means all of the following hold at the same time: (1) both egg halves exist (the egg has been cut); (2) both halves are on top of the plate; (3) the carving knife is inside the sink. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. ontop(A, B): A touches B and B is directly below A (and not above it). real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 213 s on average (6,377 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "installing_smoke_detectors": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/gRtLcTllXqQ",
+   "duration_s": 68,
+   "episodes": 200,
+   "mean_s": 86,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_double_floor_lower",
+  "goal": "Install the smoke detector. A fire alarm lies on the table in the living room; attach it to the wall nail in the living room.",
+  "success": [
+   "the fire alarm (`fire_alarm.n.02_1`) is attached to the wall nail (`wall_nail.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 86 s on average (2,569 control steps at 30 Hz) and drove 8.61 m; the scene loads 4 rooms, and the goal uses `attached`.",
+  "std_goal": "Install the smoke detector. A fire alarm lies on the table in the living room; attach it to the wall nail in the living room. Success means all of the following hold at the same time: (1) the fire alarm is attached to the wall nail. How the simulator judges them: attached(A, B): A is fixed to B through their attachment points; the joint forms by itself when A's attachment point is brought within 5 cm and 15° of a compatible one on B. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 86 s on average (2,569 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "turning_out_all_lights_before_sleep": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/AN8l_cduvqU",
+   "duration_s": 337,
+   "episodes": 200,
+   "mean_s": 334,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "house_single_floor",
+  "goal": "Turn out all the lights before sleep. Three light switches (in the kitchen, the utility room and the dining room) and two table lamps (one on the coffee table in the living room, one on the countertop in the utility room) are all switched on; switch every one of them off.",
+  "success": [
+   "all three light switches (`switch.n.01_1` to `_3`) are switched off",
+   "both table lamps (`table_lamp.n.01_1`, `_2`) are switched off"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 334 s on average (10,006 control steps at 30 Hz) and drove 40.25 m; the scene loads 8 rooms, and the goal uses `toggled_on`.",
+  "std_goal": "Turn out all the lights before sleep. Three light switches (in the kitchen, the utility room and the dining room) and two table lamps (one on the coffee table in the living room, one on the countertop in the utility room) are all switched on; switch every one of them off. Success means all of the following hold at the same time: (1) all three light switches are switched off; (2) both table lamps are switched off. How the simulator judges them: toggled_on(A): A's switch is on. It flips when a robot finger touches A's toggle button for 5 consecutive control steps; touch it again, after letting go, to flip it back. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 334 s on average (10,006 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "cook_a_frozen_pie": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/H4z3xTJn058",
+   "duration_s": 323,
+   "episodes": 200,
+   "mean_s": 289,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "restaurant_diner",
+  "goal": "Cook the frozen pie. A frozen apple pie is inside the refrigerator in the kitchen, a tray lies on the countertop and there is an oven in the kitchen; cook the pie and put it on the tray.",
+  "success": [
+   "the apple pie (`apple_pie.n.01_1`) is cooked",
+   "the apple pie is on top of the tray (`tray.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: hard. The 2026 challenge's 200 teleoperated demonstrations took 289 s on average (8,668 control steps at 30 Hz) and drove 18.99 m; the scene loads 1 rooms, and the goal uses `ontop`, `cooked`.",
+  "std_goal": "Cook the frozen pie. A frozen apple pie is inside the refrigerator in the kitchen, a tray lies on the countertop and there is an oven in the kitchen; cook the pie and put it on the tray. Success means all of the following hold at the same time: (1) the apple pie is cooked; (2) the apple pie is on top of the tray. How the simulator judges them: ontop(A, B): A touches B and B is directly below A (and not above it). cooked(A): the highest temperature A has ever reached is at least its cooking temperature (70 °C by default). Heat comes from a heat source that is on (a stove burner, an oven: 200 °C) within 0.2 m of A; once cooked, A stays cooked. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 289 s on average (8,668 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "installing_a_modem": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/zHEfUkrCWfc",
+   "duration_s": 63,
+   "episodes": 200,
+   "mean_s": 80,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "Rs_int",
+  "goal": "Install the modem. A modem, switched off, sits on the coffee table in the living room; the room also has two cabinets and a television. Switch the modem on and put it on the same cabinet as the television, next to it.",
+  "success": [
+   "the modem (`modem.n.01_1`) is switched on",
+   "the modem is next to the television (`television_receiver.n.01_1`)",
+   "the television and the modem both stand on top of the same cabinet (`cabinet.n.01_1` or `_2`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 80 s on average (2,413 control steps at 30 Hz) and drove 2.66 m; the scene loads 4 rooms, and the goal uses `ontop`, `nextto`, `toggled_on`.",
+  "std_goal": "Install the modem. A modem, switched off, sits on the coffee table in the living room; the room also has two cabinets and a television. Switch the modem on and put it on the same cabinet as the television, next to it. Success means all of the following hold at the same time: (1) the modem is switched on; (2) the modem is next to the television; (3) the television and the modem both stand on top of the same cabinet. How the simulator judges them: ontop(A, B): A touches B and B is directly below A (and not above it). nextto(A, B): the gap between A's and B's axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions, and nothing lies between them along a horizontal axis. toggled_on(A): A's switch is on. It flips when a robot finger touches A's toggle button for 5 consecutive control steps; touch it again, after letting go, to flip it back. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 80 s on average (2,413 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "make_cabinet_doors": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/rqqgwEPTLwk",
+   "duration_s": 120,
+   "episodes": 200,
+   "mean_s": 115,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "Rs_int",
+  "goal": "Make the cabinet door. A cabinet base and a cabinet door lie on the living-room floor; attach the door to the base.",
+  "success": [
+   "the cabinet door (`cabinet_door.n.01_1`) is attached to the cabinet base (`cabinet_base.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 115 s on average (3,442 control steps at 30 Hz) and drove 4.47 m; the scene loads 4 rooms, and the goal uses `attached`.",
+  "std_goal": "Make the cabinet door. A cabinet base and a cabinet door lie on the living-room floor; attach the door to the base. Success means all of the following hold at the same time: (1) the cabinet door is attached to the cabinet base. How the simulator judges them: attached(A, B): A is fixed to B through their attachment points; the joint forms by itself when A's attachment point is brought within 5 cm and 15° of a compatible one on B. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 115 s on average (3,442 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "store_batteries": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/jMSkFQy95FY",
+   "duration_s": 328,
+   "episodes": 200,
+   "mean_s": 257,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "Rs_int",
+  "goal": "Store the batteries. Three batteries lie around the house, two on the coffee table in the living room and one on the kitchen countertop; put all three inside one of the two cabinets in the living room (all in the same one).",
+  "success": [
+   "all three batteries (`battery.n.02_1` to `_3`) are inside one and the same cabinet (`cabinet.n.01_1` or `_2`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 257 s on average (7,704 control steps at 30 Hz) and drove 14.16 m; the scene loads 4 rooms, and the goal uses `inside`.",
+  "std_goal": "Store the batteries. Three batteries lie around the house, two on the coffee table in the living room and one on the kitchen countertop; put all three inside one of the two cabinets in the living room (all in the same one). Success means all of the following hold at the same time: (1) all three batteries are inside one and the same cabinet. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 257 s on average (7,704 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "installing_a_fax_machine": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/v1CrUuIN0lY",
+   "duration_s": 148,
+   "episodes": 200,
+   "mean_s": 136,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "office_cubicles_right",
+  "goal": "Install the fax machine. A fax machine, switched off, stands on the floor of the shared office; put it on top of one of the carrels (cubicle desks) there and switch it on.",
+  "success": [
+   "the fax machine (`facsimile.n.02_1`) is switched on",
+   "the fax machine is on top of a carrel (`carrel.n.02_*`, any of them)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 136 s on average (4,077 control steps at 30 Hz) and drove 10.23 m; the scene loads 7 rooms, and the goal uses `ontop`, `toggled_on`.",
+  "std_goal": "Install the fax machine. A fax machine, switched off, stands on the floor of the shared office; put it on top of one of the carrels (cubicle desks) there and switch it on. Success means all of the following hold at the same time: (1) the fax machine is switched on; (2) the fax machine is on top of a carrel (`carrel.n.02_*`, any of them). How the simulator judges them: ontop(A, B): A touches B and B is directly below A (and not above it). toggled_on(A): A's switch is on. It flips when a robot finger touches A's toggle button for 5 consecutive control steps; touch it again, after letting go, to flip it back. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 136 s on average (4,077 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
+ },
+ "clean_a_keyboard": {
+  "include": true,
+  "added": "2026-10-07",
+  "review_pr": "third_batch",
+  "added_note": "added 2026-10-07 at the user's request: one of the 23 challenge tasks that families.json did not know, completing the 2026 challenge's 100; no positive example yet, so its results are reported separately (PROTOCOL §7, open item 4)",
+  "instance_id": 301,
+  "oracle": "none",
+  "demo": {
+   "video": "https://www.youtube.com/embed/yEV3cFqyu-4",
+   "duration_s": 142,
+   "episodes": 200,
+   "mean_s": 129,
+   "page": "https://behavior.stanford.edu/challenge/tasks/index.html"
+  },
+  "scene": "office_cubicles_right",
+  "goal": "Clean the keyboard. A dusty keyboard and a pipe cleaner lie on the desk in the private office; remove every bit of dust from the keyboard.",
+  "success": [
+   "no dust (`dust.n.01_1`) is left on the keyboard (`keyboard.n.01_1`)"
+  ],
+  "difficulty": "First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 129 s on average (3,876 control steps at 30 Hz) and drove 4.46 m; the scene loads 6 rooms, and the goal uses `covered`.",
+  "std_goal": "Clean the keyboard. A dusty keyboard and a pipe cleaner lie on the desk in the private office; remove every bit of dust from the keyboard. Success means all of the following hold at the same time: (1) no dust is left on the keyboard. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.",
+  "std_closing": "For scale: the 2026 challenge's human teleoperators needed 129 s on average (3,876 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta[\"done\"]`."
  }
 }

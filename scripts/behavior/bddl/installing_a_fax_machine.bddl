@@ -1,0 +1,32 @@
+(define (problem installing_a_fax_machine-0)
+    (:domain behavior-1k)
+
+    (:objects
+     	facsimile.n.02_1 - facsimile.n.02
+    	floor.n.01_1 floor.n.01_2 - floor.n.01
+    	carrel.n.02_1 carrel.n.02_* - carrel.n.02
+    	agent.n.01_1 - agent.n.01
+    )
+    
+    (:init 
+        (ontop facsimile.n.02_1 floor.n.01_1) 
+        (not 
+            (toggled_on facsimile.n.02_1)
+        ) 
+        (inroom floor.n.01_1 shared_office)
+        (inroom carrel.n.02_1 shared_office) 
+        (inroom carrel.n.02_* shared_office) 
+        (inroom floor.n.01_2 corridor) 
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+    
+    (:goal 
+        (and 
+            (toggled_on ?facsimile.n.02_1)
+            (exists 
+                (?carrel.n.02 - carrel.n.02)
+                (ontop ?facsimile.n.02_1 ?carrel.n.02)
+            )
+        )
+    )
+)
