@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # World-frame information in standard-mode texts (PROTOCOL §2.5, D7: decided per benchmark, consistent within it). This
-# check enforces the declaration of six benchmarks only: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard and MolmoSpaces
+# check enforces the declaration of seven benchmarks only: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces and RoboTangle
 # (docs/benchmarks/<bench>.md, "World-frame information"; eai-standard/2.2 § Never provided). Their standard tasks never
 # say WHERE things are in the world: no object poses or positions and no world coordinates of workspace items (table /
 # sheet heights, sheet or well centres, a pixel-to-world formula, a camera's distance to the scene), in anything that
@@ -14,7 +14,7 @@ set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"
 case "$n" in
   robopaint-line-*) exit 0 ;;
-  behavior-*-standard|robolab-*-standard|robowits-*-standard|robopaint-*-standard|maniguard-*-standard|molmospaces-*-standard) ;;
+  behavior-*-standard|robolab-*-standard|robowits-*-standard|robopaint-*-standard|maniguard-*-standard|molmospaces-*-standard|robotangle-*-standard) ;;
   behavior-*-limited|robolab-*-limited|robowits-*-limited|robopaint-*-limited) ;;
   *) exit 0 ;;
 esac
