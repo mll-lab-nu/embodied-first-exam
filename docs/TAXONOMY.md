@@ -31,6 +31,8 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
 | ManiGuard | `grasping` | `assisted` · `sticky` (the grasping mode ManiGuard's evaluator uses for the family) |
 
 ## Task names
+- `<base>-realtime-standard`: a standard-mode variant of the same instance, `mode = "standard"`, with the realtime
+  capability (time does not stop, PROTOCOL §4.5); HumanoidBench has one per family. Its twin is `<base>-privileged`.
 - `<base>-privileged` and `<base>-standard`, the two modes of one frozen instance. `<base>` is
   `<simulator>-<family-with-dashes>-i<NN>`, or the benchmark's own task name: `robotwin_2_0_<robotwin_task>`,
   `dextoolbench_<category>_<object>_<task>`, `mujoco_playground_<env>`, `kinder-<family>-i<NN>`,

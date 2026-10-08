@@ -41,7 +41,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 
 | # | Topic | Decision |
 |---|---|---|
-| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exception (owner, 2026-10-07): HumanoidBench standard defaults to N = 50 (§4.5). No step caps. |
+| D1 | Standard-mode protocol | Only `eai-standard/2.x`. Additive extensions are accepted through a protocol-change PR (2.2 is accepted once its services implement crash recovery). Reset is only an optional capability (`budget.reset = N`, default 0; results with N > 0 are reported separately). Documented per-benchmark exception (owner, 2026-10-07): HumanoidBench standard defaults to N = 50 (§4.5). The realtime capability (time does not stop; `/spec.timing`, §4.5) is a 2.x capability, served by its own task variant `<base>-realtime-standard`. No step caps. |
 | D2 | Tasks without an oracle | Allowed, with mandatory human review (§2.7). |
 | D3 | Results | Not in the repository: agent results (per-task READMEs, videos, timelines, batch tables) are published on the results site and the Hugging Face dataset; a task directory has no `results/`. |
 | D4 | Run id | `<harness>-<model>-<effort>`, model token with underscores (`codex-gpt6_luna-xhigh`); provider, tier and settings go in metadata. |
@@ -53,7 +53,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
 | D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. A transparent usage gateway that forwards requests unchanged and only records token usage (`scripts/usage_gateway/`) is allowed. |
 | The harness's web search is off in official runs: Codex `web_search = "disabled"` (Harbor `--ak web_search=disabled`), Claude Code `WebSearch` and `WebFetch` disallowed (`--ak disallowed_tools=WebSearch,WebFetch`). The search runs at the model provider, so no egress allowlist stops it; `scripts/run_agent_batch.sh` sets both by default (`WEB_SEARCH=disabled`) | MUST | [new] (2026-10-02: tested with Codex 0.159.2 and gpt-6-luna — with ChatGPT login the default searches GitHub and quotes upstream experts, `disabled` stops it; with an Azure API key Codex offers no search, but the API runs one for a request that carries the `web_search` tool, which only the usage gateway's raw log can reveal) |
-| D12 | Mode naming | `mode ∈ {privileged, standard}`; the `tier` field is removed; every task directory ends in `-privileged` or `-standard`. |
+| D12 | Mode naming | `mode ∈ {privileged, standard}`; the `tier` field is removed; every task directory ends in `-privileged` or `-standard`. A standard-mode variant of the same instance is a standard task named `<base>-<variant>-standard` (§2.2); the one variant is `realtime`. |
 
 ## 1. Checklist (every task)
 
@@ -93,6 +93,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 |---|---|---|
 | Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`metaworldplus-<env>-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
 | Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` | MUST | suffix [CI]; shared instance [current] |
+| A standard-mode variant: `<base>-<variant>-standard`, `mode = "standard"`, the same frozen instance; its twin is `<base>-privileged` and it sits beside `<base>-standard`. Variants: `realtime` (the realtime capability, §4.5) | MAY | suffix and instance [CI] [new] |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
 ### 2.3 `task.toml`
@@ -289,6 +290,7 @@ resumes the same episode; success is decided on a replay.
 |---|---|---|
 | No reset by default: one trial is one episode (per-benchmark exceptions below) | MUST | [current] |
 | Optional reset capability: `budget.reset = N` via `POST /reset`, default 0; results with N > 0 are reported separately, never ranked with N = 0 | MAY | [new] |
+| Optional realtime capability: time does not stop. `/spec.timing` (`realtime`, `slowdown`) declares it; once an episode's clock starts (its first `/submit`), one control step runs every `control_dt` × `slowdown` s of wall time whatever the agent does; `/submit` writes a plan of future targets and answers at once; the last target is held when the plan runs out; grading replays the targets the simulator applied ([`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md)). Served by `<base>-realtime-standard` tasks; their results are reported separately, never ranked with plain standard ones | MAY | [new] (HumanoidBench) |
 | No step limit; wall clock is the only hard budget; simulation steps are reported as cost | MUST | [current] |
 | A technical episode cap stated in `spec.max_control_steps` | MAY | [current] |
 | Exposing object poses, scene files, seeds, the success predicate, segmentation, object contact forces | MUST NOT | [current] |

@@ -161,5 +161,39 @@ same frozen state, `N` times in all; `/status` and `meta` add `episode`, `resets
 success or once the agent's time is up, `/reset` returns 409, as it does when the budget is spent. Only the last
 episode is graded. Results with `N > 0` are reported separately and never ranked with `N = 0` (PROTOCOL D1, §4.5).
 
+## Optional realtime capability
+Time does not stop (PROTOCOL §4.5; implemented by HumanoidBench's `-realtime-standard` tasks,
+`scripts/humanoidbench/shared/realtime/rcb_realtime.py`). Same endpoints, RCB1 frames, budgets, crash recovery and
+grading as 2.1; the task is its own directory, `<base>-realtime-standard` (PROTOCOL §2.2), with `protocol =
+"eai-standard/2.1"`. `/spec.timing` declares it: `realtime: true`, `slowdown` S (1 = real time; `RCB_SLOWDOWN`, results
+with S ≠ 1 reported separately), `wall_s_per_control_step`, `max_ahead_steps`.
+- **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` or `/observe`
+  with `seconds > 0` (after a reset, and after a crash recovery, the episode is paused again) and runs one control step
+  every `control_dt` × S seconds of wall time, whatever the agent does, until the episode ends.
+- **`/submit`** answers at once. The chunk is expanded into control steps exactly as in 2.1 (`dt`, `linear` / `hold`) and
+  becomes the plan from control step `at` (an integer of the episode; absent: the next step; at most `max_ahead_steps`
+  ahead), replacing what was planned from `at` on and keeping what is planned before it; `linear` starts from the target
+  in force just before `at`. Rows for steps that have run when the request arrives are dropped. When the plan runs out,
+  the last target is held (zero-order hold). `meta` adds `start_step`, `late_steps`, `plan_end_step`; every `meta` and
+  `/status` add `running`, `planned_steps`, `lag_s`. The answer carries the frames and proprioception of now, no video.
+- **`/observe`** with `seconds = 0` answers at once; with `seconds > 0` it waits while that much robot time runs and
+  returns what the cameras saw (2.1's video, frames, proprio rows); it never changes the plan. `cameras: []` asks for
+  no images, only proprioception.
+- **Grading** is 2.1's: the journal holds the sim row the simulator applied at every control step, and the graded
+  episode's rows are replayed in a fresh simulator, so the replay equals the live run whatever the timing. Evidence
+  added: `ticks.f64` (per journal row: wall time, the call whose chunk gave the row, -1 when held), `calls.jsonl` and
+  `submitted.f64` (one line per call and every row as sent, instead of `calls/NNNNNN/`), and in `final.json`
+  `realtime`, `slowdown`, `max_lag_s`, `stalls`, `held_steps`, `late_steps`.
+- **Service.** The simulator's thread runs a due control step before any waiting request; behind the clock it runs the
+  missed steps back to back, and more than 0.5 s behind it drops the debt (a stall, counted) instead of fast-forwarding
+  the robot. Checkpoints every second of robot time while the clock runs; a crash resumes the same episode, paused.
+- **Agent code** runs where it does in standard mode, in the agent's own container: a controller that streams targets
+  through the client, not code uploaded next to the simulator.
+
+The time model matches the one proposed for the Embodied Agent Olympiad's `eai-standard-realtime/1.0` (PR #41: the
+world runs at 1/S of real speed, a command takes effect at the next control step and replaces the one under way, all
+agent latency counts, the agent's own program may act) and uses its `slowdown` name. It stays inside 2.x: no `/start`,
+`/act`, `/wait`, `/ready`, seats, reviews or metering proxy; native agents only (PROTOCOL D11).
+
 ## Versioning
 `protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise + crash recovery; `eai-standard/2.1` is the v1.0 name of 2.1. Minor versions only add; the 2.x client accepts every 2.x version under both spellings. Accepted, pending: `eai-standard/2.2` (PROTOCOL §6).

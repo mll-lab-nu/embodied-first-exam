@@ -8,7 +8,7 @@ pre-v1.0 task (old field names, protocol spelling, README layout); renaming dire
     python3 scripts/task_conventions.py --check tasks/<task>   # exit 1 if normalizing would change anything
 
 What it does:
-- `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard`), no `tier`, `protocol = "eai-standard/2.1"`
+- `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard`, also `-realtime-standard`), no `tier`, `protocol = "eai-standard/2.1"`
   for standard tasks, `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - protocol spelling `rcb-limited/2.x` -> `eai-standard/2.x` and "limited mode" -> "standard mode" in the task's text and
   services; the client accepts both spellings.
@@ -76,7 +76,13 @@ def mode_of(task: Path) -> str:
 
 
 def base_of(task: Path) -> str:
-    return re.sub(r"-(privileged|standard)$", "", task.name)
+    """The name without its mode suffix, and without a standard-mode variant (`<base>-realtime-standard`, PROTOCOL §2.2)."""
+    return re.sub(r"(-realtime)?-(privileged|standard)$", "", task.name)
+
+
+def variant_of(task: Path) -> str:
+    """A standard-mode variant's name (`realtime`: time does not stop, PROTOCOL §4.5), or "" for the plain modes."""
+    return "realtime" if task.name.endswith("-realtime-standard") else ""
 
 
 def bench_of(task: Path) -> str:
@@ -294,7 +300,8 @@ def render_readme(task: Path) -> str:
     oracle = md.get("oracle", "")
     ev = md.get("oracle_evidence", "")
     head = [("Benchmark", bench_of(task) or "—"),
-            ("Mode", f"{mode} (`{md['protocol']}`)" if mode == "standard" and md.get("protocol") else mode)]
+            ("Mode", (f"{mode}, {variant_of(task)}" if variant_of(task) else mode)
+             + (f" (`{md['protocol']}`)" if mode == "standard" and md.get("protocol") else ""))]
     # a standard task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
     head.append(("Twin", f"`{twin}`" if mode == "standard" or task.with_name(twin).is_dir() else "— (privileged only)"))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
