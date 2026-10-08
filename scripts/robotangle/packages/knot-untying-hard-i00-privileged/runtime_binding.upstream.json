@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "704760adbbf12b8de53dc415cb6809fed88f7e05c9120e07db86f576ac8e0d0c",
+  "asset_files": {
+    "instance_assets/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "instance_assets/ipc_state/arrays.npz": "b38793a706f7135e145d496e58d2a84b929b5374351b93caf91bf051f3bb8ee1",
+    "instance_assets/ipc_state/dump/dump/common/sim_engine.cpp/state.300.json": "bddd725c3d5199b44cbe81fb38752800652057fd53fb293184ba64862a0c4288",
+    "instance_assets/ipc_state/dump/dump/cuda/affine_body/affine_body_dynamics.cu/q.300": "d6599443849368c8f2572bd5d8804a130082bdad16dd863f623aa0eb4d4644ac",
+    "instance_assets/ipc_state/dump/dump/cuda/affine_body/affine_body_dynamics.cu/q_prev.300": "b63840f74551294f7e2d235190263c4a614161f2cd497464083f2f078d0a5944",
+    "instance_assets/ipc_state/dump/dump/cuda/affine_body/affine_body_dynamics.cu/q_v.300": "d794bcffacabd41522ce96e9f62cb3e317b78af96baec00b2aa18602406453d6",
+    "instance_assets/ipc_state/dump/dump/cuda/affine_body/bdf/abd_bdf2_state.cu/q_n_1.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/ipc_state/dump/dump/cuda/affine_body/bdf/abd_bdf2_state.cu/qv_n_1.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/ipc_state/dump/dump/cuda/affine_body/constitutions/affine_body_prismatic_joint.cu/pj_current_distances.300": "f7b26721b2fdf655856ae47495b52e2a500c0e89c374c57aad316ff48b5e2254",
+    "instance_assets/ipc_state/dump/dump/cuda/affine_body/constitutions/affine_body_revolute_joint.cu/rj_current_angle.300": "e1f648ea6055797f72a974fa96f57a59db745aba20aaadac04aca95f7a76e275",
+    "instance_assets/ipc_state/dump/dump/cuda/affine_body/constraints/external_articulation_constraint.cu/delta_theta.300": "b432a2e16c7768f1cc26120ce4a3fa3df955b85c377004d4c03ddd5c5f3058f3",
+    "instance_assets/ipc_state/dump/dump/cuda/collision_detection/simplex_trajectory_filter.cu/EEs.300": "27588e27943bfb8b99317356e919dd6bbf1409218950cf44c39fc7cb21ca6b66",
+    "instance_assets/ipc_state/dump/dump/cuda/collision_detection/simplex_trajectory_filter.cu/PEs.300": "d095289a3470c02f4273665412f45e8553ecd5d9e8ceb2b6f2227cf11449f81b",
+    "instance_assets/ipc_state/dump/dump/cuda/collision_detection/simplex_trajectory_filter.cu/PPs.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/ipc_state/dump/dump/cuda/collision_detection/simplex_trajectory_filter.cu/PTs.300": "53eeb349d914bc5306fef589f3e226584c0da0604ff2fdf34e6f4eac5fe9fb30",
+    "instance_assets/ipc_state/dump/dump/cuda/collision_detection/vertex_half_plane_trajectory_filter.cu/PHs.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/ipc_state/dump/dump/cuda/finite_element/bdf/fem_bdf2_state.cu/q_n_1.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/ipc_state/dump/dump/cuda/finite_element/bdf/fem_bdf2_state.cu/qv_n_1.300": "1b9995ef111a2576f6a7a983b66d6e56acca4c92a993d6af2fc0a11718d43d05",
+    "instance_assets/ipc_state/dump/dump/cuda/finite_element/finite_element_method.cu/q.300": "ca76ba760de743e227cd90b9998a40f4bd454563008f3f7359c7961ce7b8d807",
+    "instance_assets/ipc_state/dump/dump/cuda/finite_element/finite_element_method.cu/q_prev.300": "74f5064aef82749f91af86c6f8a9678a741ff96f311aa33c4469a4fe589abe04",
+    "instance_assets/ipc_state/dump/dump/cuda/finite_element/finite_element_method.cu/q_v.300": "ba241fbe7c13083f044eedfb08823dd5ee7b51bc9191de749e9f1338361929f1",
+    "instance_assets/ipc_state/dump/dump/cuda/global_geometry/global_vertex_manager.cu/positions.300": "fcfeb3a49b8e612d953ddbc1ea582b09e70ffa2123b9189a76275445b0a87334",
+    "instance_assets/ipc_state/dump/dump/cuda/global_geometry/global_vertex_manager.cu/prev_positions.300": "41863f1ceeec7da60af4362b611bfadb441d9039fc7ee3eea70734d80f4d3594",
+    "instance_assets/ipc_state/manifest.json": "9f8dc27b090be46357bc3cae15da510c07a3a8d66190163eb546fcc9f4acc14d"
+  },
+  "tooling_sha256": "a9d09d6694eaad428d5d0e26ac20e40a477759d540b4b1b298b4f49319ae390a",
+  "creation_source": {
+    "sha256": "5b5677f0c66edb787caf601342124018fa79a3b5d6f6520de039efb9e33d2b6d",
+    "files": 342
+  },
+  "runtime": {
+    "source": {
+      "sha256": "5b5677f0c66edb787caf601342124018fa79a3b5d6f6520de039efb9e33d2b6d",
+      "files": 342
+    },
+    "python": "3.11.15",
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1"
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "labv18b/rcb-topogym:0.2.16-dev-cu128",
+    "id": "sha256:01c128542994e47afda1f27ca5b55543bad136e67cedf5886df367ca6563b062",
+    "repo_digests": []
+  }
+}
