@@ -1,7 +1,7 @@
 # Harbor job config: Harbor's own Codex agent, served by OpenRouter -- the run id codex-gpt6_luna-medium. Needs
 # OPENROUTER_API_KEY in the environment (or `--env-file .env`). Paths are relative to the repository root:
 #   harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml -p tasks/humanoidbench-loco-hurdle-i00-standard
-#   RCB_RESET_BUDGET=50 harbor run -c ... -p tasks/<task>-standard   # the optional reset capability: report separately
+#   RCB_RESET_BUDGET=0 harbor run -c ... -p tasks/<task>-standard    # no reset (standard's default is 50): report separately
 agents:
   - name: codex
     model_name: openai/gpt-6-luna

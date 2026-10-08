@@ -1,0 +1,35 @@
+(define (problem cook_hot_dogs-0)
+    (:domain behavior-1k)
+
+    (:objects
+        microwave.n.02_1 - microwave.n.02
+        hotdog.n.02_1 hotdog.n.02_2 - hotdog.n.02
+        electric_refrigerator.n.01_1 - electric_refrigerator.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+    
+    (:init 
+        (inside hotdog.n.02_1 electric_refrigerator.n.01_1) 
+        (inside hotdog.n.02_2 electric_refrigerator.n.01_1) 
+        (not 
+            (cooked hotdog.n.02_1)
+        ) 
+        (not 
+            (cooked hotdog.n.02_2)
+        ) 
+        (inroom electric_refrigerator.n.01_1 kitchen) 
+        (inroom microwave.n.02_1 kitchen) 
+        (inroom floor.n.01_1 kitchen) 
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+    
+    (:goal 
+        (and 
+            (forall 
+                (?hotdog.n.02 - hotdog.n.02) 
+                (cooked ?hotdog.n.02)
+            )
+        )
+    )
+)

@@ -1,0 +1,71 @@
+{
+ "task": "spraying_for_bugs",
+ "challenge_task": "spraying_for_bugs",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Spray the potted plants against bugs. An insectifuge atomizer and two potted plants stand on the garden floor; spray insectifuge onto both plants until each of them is covered with it.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "bb564d30b80711a0",
+ "action_dim": 25,
+ "challenge_max_steps": 9719,
+ "objects": {
+  "pot_plant.n.01_1": {
+   "category": "pot_plant",
+   "position": [
+    13.7068,
+    9.5588,
+    0.1786
+   ],
+   "orientation_xyzw": [
+    -0.0043,
+    0.0008,
+    0.7082,
+    0.706
+   ]
+  },
+  "insectifuge__atomizer.n.01_1": {
+   "category": "insectifuge_atomizer",
+   "position": [
+    15.8266,
+    9.5815,
+    0.0887
+   ],
+   "orientation_xyzw": [
+    -0.0002,
+    0.0012,
+    0.7873,
+    0.6165
+   ]
+  },
+  "pot_plant.n.01_2": {
+   "category": "pot_plant",
+   "position": [
+    14.4313,
+    9.9099,
+    0.1786
+   ],
+   "orientation_xyzw": [
+    -0.0026,
+    -0.0035,
+    0.9487,
+    -0.316
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    15.1947,
+    9.5491,
+    -0.0806
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}
