@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-object-spatial-t00-i08-obstacle_insertion-d1-p195",
+ "event": "obstacle_insertion",
+ "suite": "libero_spatial",
+ "language": "Pick the akita black bowl between the plate and the ramekin and place it on the plate",
+ "goal": [
+  [
+   "on",
+   "black_bowl_1",
+   "yellow_plate_1"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "ad2545056b7370f2d7b87facc447ff15cd01e0369932f60773541381ea306b7c",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "black_bowl_1",
+    "yellow_plate_1"
+   ]
+  ],
+  "phase": "black_bowl_1:placed",
+  "trace": [
+   "115:pick black_bowl_1:retreat failed goal=[0.037, 0.159, 1.083] eef=[0.037, 0.159, 0.983] obj c=[0.061, 0.198, 0.935] half=[0.054, 0.054, 0.025] top=0.963 fingers=-2.14 contacts=[]",
+   "115:black_bowl_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 115,
+  "event_fired": true,
+  "event_step": 13,
+  "steps_left": 105,
+  "state_sha": "65330872193399265a97c58797742a395af03f9a187a7ad88e0f4751dcc9fb53",
+  "initial_state_sha": "ad2545056b7370f2d7b87facc447ff15cd01e0369932f60773541381ea306b7c"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 115,
+   "event_fired": true,
+   "event_step": 13,
+   "steps_left": 105,
+   "state_sha": "65330872193399265a97c58797742a395af03f9a187a7ad88e0f4751dcc9fb53",
+   "initial_state_sha": "ad2545056b7370f2d7b87facc447ff15cd01e0369932f60773541381ea306b7c"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 115,
+   "event_fired": true,
+   "event_step": 13,
+   "steps_left": 105,
+   "state_sha": "65330872193399265a97c58797742a395af03f9a187a7ad88e0f4751dcc9fb53",
+   "initial_state_sha": "ad2545056b7370f2d7b87facc447ff15cd01e0369932f60773541381ea306b7c"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

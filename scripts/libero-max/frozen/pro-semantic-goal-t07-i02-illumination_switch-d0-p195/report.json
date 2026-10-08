@@ -1,0 +1,108 @@
+{
+ "case_id": "pro-semantic-goal-t07-i02-illumination_switch-d0-p195",
+ "event": "illumination_switch",
+ "suite": "libero_goal",
+ "language": "switch on the stove",
+ "goal": [
+  [
+   "turnon",
+   "flat_stove_1"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "55060a97c526374f84b30432476c2f179f64def021daf8260e061f25f18d16b2",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "turnon",
+    "flat_stove_1"
+   ]
+  ],
+  "phase": "flat_stove_1:turned q=0.525",
+  "trace": [
+   "81:flat_stove_1:turned q=0.525"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 81,
+  "event_fired": true,
+  "event_step": 13,
+  "steps_left": 219,
+  "state_sha": "d756891a4b117dcc104dbe2cb89db6b719637c85cd48e740ecbc11ea9b86e589",
+  "initial_state_sha": "55060a97c526374f84b30432476c2f179f64def021daf8260e061f25f18d16b2"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 81,
+   "event_fired": true,
+   "event_step": 13,
+   "steps_left": 219,
+   "state_sha": "d756891a4b117dcc104dbe2cb89db6b719637c85cd48e740ecbc11ea9b86e589",
+   "initial_state_sha": "55060a97c526374f84b30432476c2f179f64def021daf8260e061f25f18d16b2"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 81,
+   "event_fired": true,
+   "event_step": 13,
+   "steps_left": 219,
+   "state_sha": "d756891a4b117dcc104dbe2cb89db6b719637c85cd48e740ecbc11ea9b86e589",
+   "initial_state_sha": "55060a97c526374f84b30432476c2f179f64def021daf8260e061f25f18d16b2"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}
