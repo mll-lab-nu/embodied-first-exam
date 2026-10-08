@@ -52,7 +52,11 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
     ("libero-max-", "LIBERO-MAX"),
     ("robotangle-", "RoboTangle"),
+    ("roboolympics-", "RoboOlympics"),
 ]
+# Documented per-benchmark exception (PROTOCOL §4b, owner 2026-10-08): standard-realtime tasks without a privileged twin
+# (the same list: ci_checks/check-instance-copies.sh NO_TWIN)
+NO_TWIN = {"roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)"}
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
                "Base image"}
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
@@ -305,7 +309,9 @@ def render_readme(task: Path) -> str:
     head = [("Benchmark", bench_of(task) or "—"),
             ("Mode", mode + (f" (`{md['protocol']}`)" if mode in SIDECAR_MODES and md.get("protocol") else ""))]
     # a standard or realtime task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
-    head.append(("Twin", f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir() else "— (privileged only)"))
+    no_twin = next((v for p, v in NO_TWIN.items() if task.name.startswith(p)), None)
+    head.append(("Twin", no_twin or (f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir()
+                                     else "— (privileged only)")))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
              ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),
