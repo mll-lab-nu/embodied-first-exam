@@ -1,0 +1,45 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION> is never pushed to a public registry (docs/PROTOCOL.md
+§2.4, D5). Every evaluation host builds it locally under that tag; Harbor finds it in the local Docker image store.
+Maintainers may keep a private package for org members.
+
+Why
+  The image contains Genesis AI's Nyx renderer (RoboTangle's RGB observations and replay videos), installed from binary
+  wheels on PyPI (gs-nyx) that carry no licence metadata. This is an internal release: every evaluation host builds the
+  image locally, and maintainers may keep a private organisation package for internal runners. The rest is Genesis 1.2.1 (Apache-2.0), libuipc (Apache-2.0) built with the determinism patches of the
+  release tree, PyTorch (BSD), the pinned pip locks of the release tree, the ALOHA 2 model (MuJoCo Menagerie, BSD-3-Clause)
+  and the Robotiq 2F-85 model (MuJoCo Menagerie).
+
+What the image is built from
+  - images/robotangle/Dockerfile: images/topogym/Dockerfile of the release commit, UIPC_WHEEL defaulting to prebuilt.
+  - The build context: the release tree at scripts/robotangle/release.json `release_commit` (dev/jianwen 2dafa5f2b),
+    exported by scripts/robotangle/fetch_image_context.sh to images/robotangle/context/ (git-ignored). The simulator
+    source (RoboTangle's Python package, still named `topogym`) is about 160 MB, so it is not copied into this repository.
+    Exporting it needs read access to this repository's history (the commit is on dev/jianwen).
+  - The audited libuipc wheel, given as UIPC_PREBUILT_DIR (the wheel + its uipc-build.json). The task bindings name its
+    uipc-build.json (sha256 39781d19…, scripts/robotangle/release.json `runtime.uipc_build_sha256`): the wheel every lab
+    evidence image (TopoGym merged-v17..v19) installed. nvcc output is not bit-reproducible, so a wheel compiled on your
+    host never matches the binding.
+
+Host
+  blanket_flatten: on a GPU other than the one its frozen PBD states were prepared on (an RTX PRO 6000 Blackwell), the
+  task generates the birth state from the recipe frozen in the instance. It caches the state inside the container
+  ($TOPOGYM_INITIAL_STATE_CACHE, default /opt/rcb-cache), so a fresh container generates it again. Standard mode
+  generates in the sim startup (5-9 min for very_easy, on the agent's clock). Generated states are not oracle-validated
+  (docs/benchmarks/robotangle.md, GPU portability). The other families run on any supported GPU.
+  Linux x86_64 (not WSL: Nyx needs the NVIDIA Vulkan driver inside the container), an NVIDIA GPU with driver >= 580, Docker
+  with BuildKit (default `docker` driver) and the NVIDIA Container Toolkit with the `nvidia` runtime registered (the task
+  compose files use `runtime: nvidia` with NVIDIA_DRIVER_CAPABILITIES=all for Vulkan). Exactly one GPU per container (two
+  visible GPUs crash Nyx). Build: about 25 GB of free disk (11.3 GB image plus BuildKit cache); network access to docker.io,
+  pypi.org, download.pytorch.org and dl.polyhaven.org (the CC0 studio HDRI). Running needs no network. No account, key or
+  token is needed beyond read access to this repository.
+
+Build (from the repository root)
+  UIPC_PREBUILT_DIR=<dir with the audited wheel and uipc-build.json> scripts/robotangle/fetch_image_context.sh
+  docker build -f images/robotangle/Dockerfile -t ghcr.io/mll-lab-nu/eai-robotangle:$(cat images/robotangle/VERSION) images/robotangle/context
+  (scripts/build_images.sh builds it from images/robotangle/BUILD_CONTEXT once the context exists and skips it otherwise.)
+  Optional, faster scene builds: images/topogym/warm_cache.sh of the context fills the kernel caches on a GPU host.
+
+Check a build: the image must install exactly the runtime every task is bound to
+  docker run --rm ghcr.io/mll-lab-nu/eai-robotangle:$(cat images/robotangle/VERSION) python -c 'import json; from topogym.simulator.frozen_binding import installed_runtime; print(json.dumps(installed_runtime(), sort_keys=True))' > /tmp/robotangle_runtime.json
+  python3 -c 'import json, sys; sys.exit(0 if json.load(open("/tmp/robotangle_runtime.json")) == json.load(open("scripts/robotangle/release.json"))["runtime"] else "image differs from the tasks runtime binding: do not run")'
+  Every session checks it again at start (`runtime_binding_ok` in reward.json) and refuses a different runtime.
