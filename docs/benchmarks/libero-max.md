@@ -63,8 +63,8 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   (what kinds of change), not which change or when. No object poses, no goal, no success signal.
 
 ## Licence
-LIBERO-MAX (an academic project) has no licence file upstream; its authors have granted permission to use its event
-parameters and its event runtime in this benchmark, with attribution. Two parts come from it: (1) the event parameters and
+LIBERO-MAX (an academic project) has no licence file upstream; its authors have given full permission, in writing, to
+use and redistribute its event parameters and its event runtime in this benchmark, with attribution. Two parts come from it: (1) the event parameters and
 case choice (`cases.json`, and the instances made from it), (2) LIBERO-MAX's event runtime in the image (`src/libero_max`,
 about 1,800 lines used: `substrate.py`, `pro_runtime.py`, `cosmos_integration.py`, `libero_backend.py`, `runtime.py`,
 `scenario.py`, `env_factory.py`). Both stay isolated: `cases.json` is the only input that carries the parameters, so either
