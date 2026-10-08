@@ -423,6 +423,7 @@ def standard_context(t: dict, defaults: dict, facts: dict) -> dict:
         "standard_camera_note": one(S["camera_note"]),
         "standard_expert_hours": 2 * t["expert_hours"],   # the privileged estimate, doubled: no search, no state
         "standard_actuator_layout": standard_actuator_layout(facts["actuator_names"], sf["joints"]),
+        "reset_budget": int(defaults["standard_reset_budget"]),   # the compose default: spec()["budget"]["reset"]
         "room_camera_pose_line": compose_line("RCB_ROOM_CAMERA_POSE", S.get("room_camera_pose", ""),
                                               S.get("room_camera_comment", "")),
         "image_hw_line": compose_line("RCB_IMAGE_HW", str(S.get("image_hw", "")), S.get("image_hw_comment", "")),
