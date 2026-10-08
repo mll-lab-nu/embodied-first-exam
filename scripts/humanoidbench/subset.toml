@@ -100,7 +100,7 @@ review_pr = 9               # the pull request whose human review covers the tas
 # own, so with no reset its whole run is one blind attempt. A per-benchmark exception to PROTOCOL D1's default of 0
 # (docs/benchmarks/humanoidbench.md); `RCB_RESET_BUDGET=0 harbor run ...` still runs the single-episode configuration.
 standard_reset_budget = 50
-realtime_review_pr = 0      # the pull request whose human review covers the realtime variants (0: not opened yet)
+realtime_review_pr = 83     # the pull request whose human review covers the realtime variants (0: not opened yet)
 
 # =====================================================================================================
 # C1 · flat-ground periodic gait
