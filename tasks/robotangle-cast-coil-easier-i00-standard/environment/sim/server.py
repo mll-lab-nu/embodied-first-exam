@@ -135,6 +135,7 @@ try:
     M.atomic_json(os.path.join(DATA, "startup_binding.json"), dict(
         instance_exact=S.instance_exact, runtime_binding=S.runtime_binding,
         instance_generated=bool(getattr(S, "instance_generated", False)), instance_sha=S.instance_sha,
+        instance_realized=bool(getattr(S, "instance_realized", False)), assets_exact=bool(getattr(S, "assets_exact", True)),
         initial_state=getattr(S, "initial_state", None)))
 except M.InstanceMismatch as exc:
     # This frozen instance is not evaluable. Do not restart it as a GPU crash

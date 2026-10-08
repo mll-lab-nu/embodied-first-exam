@@ -35,7 +35,7 @@ gpu = True  # CUDA physics: determinism reported, not required
 infra = bool(d.get("infra_error")) or bool(d.get("gpu_lost")) or not (d.get("finalized") or d.get("gave_up"))
 replayed = d.get("replay_success") is not None and os.path.isfile("/data/trajectory.npz")
 mismatch = bool(d.get("instance_mismatch")) or d.get("instance_matches") is False
-binding_ok = generated = False
+binding_ok = generated = realized = False
 try:
     expected = json.loads(Path("/tests/runtime_binding.json").read_text())
     wanted = hashlib.sha256(json.dumps(expected, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()).hexdigest()
@@ -49,7 +49,13 @@ try:
             for row in (startup, replay))
         and len({((row.get("initial_state") or {}).get("manifest_sha256"), row.get("instance_sha"))
                  for row in (startup, replay)}) == 1)
-    binding_ok = same_state and all((row.get("instance_exact") is True or row.get("instance_generated") is True) and
+    # Assets realized on this CPU (another instruction-set class than the frozen one's; instance_realized): the live episode
+    # and the replay must realize the same state.
+    realized = any(row.get("instance_realized") is True for row in (startup, replay))
+    same_state = same_state and (not realized or (all(row.get("instance_realized") is True for row in (startup, replay))
+                                                  and startup.get("instance_sha") == replay.get("instance_sha")))
+    binding_ok = same_state and all((row.get("instance_exact") is True or row.get("instance_generated") is True
+                                     or row.get("instance_realized") is True) and
                      (row.get("runtime_binding") or {}).get("binding_id") == wanted for row in (startup, replay))
 except (OSError, ValueError, TypeError):
     pass
@@ -90,7 +96,8 @@ write(credited, {"success": int(credited), "success_pending_review": int(pending
            "gave_up": int(bool(d.get("gave_up"))), "sim_startups": num("sim_startups"), "resumes": num("resumes"),
            "resume_state_mismatch": num("resume_state_mismatch"), "resume_max_tcp_dev_m": num("resume_max_tcp_dev_m", float),
            "resume_max_joint_dev": num("resume_max_joint_dev", float), "instance_mismatch": int(mismatch),
-           "initial_state_generated": int(bool(generated)), "grader_error": int(grader_error)})
+           "initial_state_generated": int(bool(generated)), "instance_realized": int(bool(realized)),
+           "grader_error": int(grader_error)})
 
 # Commit rewards before copying optional artifacts.
 for f in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl", "startups.jsonl", "startup_binding.json", "server.log", "replay.log", "replay.verdict.json", "final.json", "replay.frame_map.jsonl", "replay.recording_manifest.json"):

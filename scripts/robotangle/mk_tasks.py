@@ -191,6 +191,16 @@ def changes(mode: str) -> list[str]:
         "hash changes with the selection. The compose files reserve one GPU without `runtime: nvidia`, which with the "
         f"image's NVIDIA_VISIBLE_DEVICES=all could expose every GPU (Nyx needs exactly one). {grader} The scene, frozen "
         "instance and pass rule are unchanged, so the task keeps its name.",
+        "- 2026-10-08 (2): the instance now also starts on a CPU of another instruction-set class. The asset generators run "
+        "on numpy and OpenBLAS, whose SIMD kernels depend on the CPU: on a host without AVX-512 (e.g. AWS L4 / L40S "
+        "instances) the pinned generator writes the frozen asset files with other bytes (floating-point noise up to 1e-8 m, "
+        "face order), and the Session refused the instance (IPC and stored PBD states also refused their archive). Such a "
+        "host now realizes the frozen recipe (`instance_realized`): the same asset files from the generator the runtime "
+        "binding pins, archives that differ from this scene only in those bytes, and the frozen state, exactly or within "
+        "the pose tolerance; the live episode and the fresh replay realize it alike. The graders"
+        + (" and the sim service" if mode == "standard" else "") + " record `instance_realized` and `assets_exact`. A host "
+        "that reproduces the frozen bytes runs exactly as before. The tooling hash changes; the image, scene, frozen instance "
+        "and pass rule are unchanged, so the task keeps its name.",
     ]
 
 
