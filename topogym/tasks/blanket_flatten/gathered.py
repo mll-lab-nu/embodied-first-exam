@@ -60,10 +60,16 @@ class GatheredBlanketTask(BlanketFlattenTask):
         return any(_parameter_at(merged, axis["path"]) != _parameter_at(cls.defaults, axis["path"])
                    for axis in axes(cls))
 
+    def initial_state_recipe(self):
+        """The offline preparation that births this scene (scripts/prepare_blanket_initial_states.py --tier): controller,
+        fold profile and default preparation configuration."""
+        from topogym.world.physics.cloth_preparation import ClothPreparation, PreparationConfig
+        return ClothPreparation, GatheredProfile(**self.config["gathered_profile"]), PreparationConfig()
+
     def frozen_initial_state(self):
         # Archives are explicit fixed representatives. Arbitrary seeds/configs
         # require their own preparation; never quietly reuse another seed.
-        if not (
+        if self.generated_initial_state is None and not (
                 self.config["initial_state_path"] or self.config["initial_state_resource"]):
             option = "--seeded" if self.seeded_draw(self.config) else f"--tier {self.difficulty}"
             raise ValueError(f"No frozen Blanket {self.difficulty} scene for seed {self.seed}; "

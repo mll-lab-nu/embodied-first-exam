@@ -327,6 +327,10 @@ class Env:
             else:
                 folder = self.config.work_dir / self._episode_id
                 folder.mkdir(parents=True, exist_ok=False)
+            # A frozen PBD instance whose stored archive was prepared on another GPU (resource profile) births from its own
+            # recipe realized on this one (cached); None: the stored archive applies and nothing changes.
+            from topogym.world.physics.pbd_initial_state_generation import ensure_initial_state
+            generated = ensure_initial_state(self.config, cfg, self._task)
             table = cfg.env.world.table
             spec = self._task.declare(
                 folder / "assets", float(table.pos[2] + table.size[2] / 2)
@@ -388,6 +392,8 @@ class Env:
                 self._initial_state_report = restore_declared_initial_state(
                     self._world, self._robot, spec.initial_state,
                     identity=scene_identity(self.config, cfg, self._task, spec, self._asset_build))
+                if generated is not None:
+                    self._initial_state_report["generated"] = generated
             if self.config.ipc_settled_state is not None:
                 from topogym.world.physics.ipc_settled_state import identity, restore_settled_state
                 self._initial_state_report = restore_settled_state(

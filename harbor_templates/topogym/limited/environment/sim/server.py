@@ -133,7 +133,9 @@ import rcb_topogym as M  # noqa: E402
 try:
     S = M.Session(TASK, instance=INSTANCE, strict=True)
     M.atomic_json(os.path.join(DATA, "startup_binding.json"), dict(
-        instance_exact=S.instance_exact, runtime_binding=S.runtime_binding))
+        instance_exact=S.instance_exact, runtime_binding=S.runtime_binding,
+        instance_generated=bool(getattr(S, "instance_generated", False)), instance_sha=S.instance_sha,
+        initial_state=getattr(S, "initial_state", None)))
 except M.InstanceMismatch as exc:
     # This frozen instance is not evaluable. Do not restart it as a GPU crash
     # or wait for a trajectory that could never have been executed.

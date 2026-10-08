@@ -60,8 +60,19 @@ class CornerFoldBlanketTask(BlanketFlattenTask):
         from topogym.world.physics.initial_state_compatibility import resource_profile
         return f"blanket_flatten/{ARCHIVE_REVISION}/{resource_profile()}/{self.difficulty}/seed_{seed}/manifest.json"
 
+    def initial_state_recipe(self):
+        """The offline preparation that births this scene (scripts/prepare_blanket_initial_states.py --tier): controller,
+        fold profile and default preparation configuration."""
+        from dataclasses import replace
+        from topogym.world.physics.cloth_preparation import PreparationConfig
+        from .corner_preparation import CornerFoldPreparation
+        # A single corner intentionally retains more area than gathered folds: birth strictly below the 90 % goal.
+        return (CornerFoldPreparation, CornerFoldProfile(**self.config["corner_fold_profile"]),
+                replace(PreparationConfig(), maximum_coverage_ratio=.89))
+
     def frozen_initial_state(self):
-        if not (self.config["initial_state_path"] or self.config["initial_state_resource"]):
+        if self.generated_initial_state is None and not (
+                self.config["initial_state_path"] or self.config["initial_state_resource"]):
             raise ValueError(f"No frozen Blanket {self.difficulty} scene for seed {self.seed}; run "
                 f"scripts/prepare_blanket_initial_states.py --tier {self.difficulty} --seed {self.seed} "
                 "--acceptance scene_layout --output <new-directory>, then "

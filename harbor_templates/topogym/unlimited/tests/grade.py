@@ -82,8 +82,10 @@ def main() -> int:
         if a.repeat < 2:
             raise ValueError("grading requires at least two replays")
         s = Session(a.family, instance=a.instance, strict=True)
-        if not s.instance_matches or not s.instance_exact or not s.runtime_binding:
-            raise InstanceMismatch("verifier requires an exact frozen instance and a runtime binding")
+        # A frozen PBD state prepared on another GPU is generated from the instance's recipe on this one (instance_generated)
+        generated = bool(getattr(s, "instance_generated", False))
+        if not s.instance_matches or not (s.instance_exact or generated) or not s.runtime_binding:
+            raise InstanceMismatch("verifier requires the frozen instance (exact, or its recipe realized on this GPU) and a runtime binding")
         t0 = time.time()
         outs, video_error = [], None
         while len(outs) < a.repeat:
@@ -115,6 +117,7 @@ def main() -> int:
                "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": 1,
                "infra_error": int(unstable), "simulator_instability": int(unstable),
                "instance_ok": int(bool(s.instance_matches)), "instance_exact": int(bool(s.instance_exact)),
+               "initial_state_generated": int(generated),
                "runtime_binding_ok": 1,
                "n_actions": int(grading[-1].get("rows", outs[-1]["sim_steps"])), "submitted_actions": int(len(acts)),
                "sim_steps": int(outs[-1]["sim_steps"]), "physics_steps": int(outs[-1].get("physics_steps", 0)),
@@ -127,7 +130,7 @@ def main() -> int:
         import hashlib, uuid
         from pathlib import Path
         evidence = dict(commit_id=uuid.uuid4().hex, replays=outs,
-                        runtime_binding=s.runtime_binding,
+                        runtime_binding=s.runtime_binding, initial_state=getattr(s, "initial_state", None),
                         strict_goal=dict(replay=goal[0], row=goal[1]) if goal else None,
                         review=dict(pending=pending, replays=reviews) if any(reviews) else None,
                         forcing=forcing if any(forcing) else None,

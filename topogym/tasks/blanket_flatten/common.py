@@ -68,12 +68,27 @@ class BlanketFlattenTask(TaskDefinition):
         config.pop("initial_state_path", None)
         return config
 
+    # A state generated from this instance's recipe because its stored archive does not apply on this GPU
+    # (world/physics/pbd_initial_state_generation.py, set by Env.reset before declare); None: the stored archive.
+    generated_initial_state = None
+
     def frozen_initial_state(self):
+        if self.generated_initial_state is not None:
+            return self.generated_initial_state
+        stored = self.stored_initial_state()
+        if stored is None:
+            raise ValueError("Frozen Blanket requires exactly one initial-state path or resource")
+        return stored
+
+    def stored_initial_state(self):
+        """The archive this instance names (hash-checked), or None when it names none."""
         from topogym.assets.library import resource_path
         from topogym.utils.io import sha256_file
         cfg = self.config
         path, resource = cfg["initial_state_path"], cfg["initial_state_resource"]
-        if bool(path) == bool(resource):
+        if not path and not resource:
+            return None
+        if path and resource:
             raise ValueError("Frozen Blanket requires exactly one initial-state path or resource")
         path = resource_path(resource) if resource else Path(path).expanduser().resolve()
         digest = sha256_file(path)

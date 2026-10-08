@@ -903,6 +903,33 @@ def _plain(v):
     return v
 
 
+def _register_runtime_physics(margin: float) -> None:
+    """The kernels this tooling replaces act on every scene of its process, the preparation of a generated frozen state
+    included (topogym/world/physics/pbd_initial_state_generation.py), so they enter that state's recipe. An image without
+    generated states has nothing to register."""
+    try:
+        from topogym.world.physics.pbd_initial_state_generation import register_runtime_physics
+    except ImportError:
+        return
+    register_runtime_physics("rcb_topogym", dict(tooling_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        deterministic_gpu_physics=DETERMINISTIC_GPU_PHYSICS, rigid_solve_arm=RIGID_SOLVE_ARM,
+        pbd_depenetration_margin_m_s=margin))
+
+
+def _initial_state_record(env) -> dict | None:
+    """Where the episode's frozen PBD birth state came from: the instance's stored archive, or one generated from the
+    instance's recipe on this GPU because the stored one was prepared on another (resource profile). None: no such state."""
+    report = getattr(env, "_initial_state_report", None) or {}
+    if "manifest_sha256" not in report:
+        return None
+    generated = report.get("generated")
+    if not generated:
+        return {"source": "stored", "manifest_sha256": report["manifest_sha256"]}
+    keys = ("manifest_sha256", "state_sha256", "recipe_sha256", "recipe_match", "resource_profile", "stored_profile",
+            "stored_manifest_sha256", "cache", "preparation_wall_s", "ensure_wall_s")
+    return {"source": "generated", **{k: generated.get(k) for k in keys}}
+
+
 def _drop_fem_gradient_checkpoints(env) -> bool:
     """Active FEM solvers only (tooling v4): bound Genesis 1.2.1's per-substep FEM checkpoint store.
 
@@ -2765,6 +2792,7 @@ class Session:
             torch.set_num_threads(4)
         self.deterministic_physics = _deterministic_gpu_physics()   # before genesis.init / the first scene build
         margin = _bound_pbd_rigid_contacts()   # before the scene's first physics step (kernels compile on first use)
+        _register_runtime_physics(margin)
         self.env = Env(SimulatorConfig(**cfg))
         # Tooling v7: frames come only from env.sensor_frame() (render_frame / render_grid / render_depth / videos), so the
         # per-step observation skips the camera pass and a frame is rendered when asked (image 0.2.9; physics identical).
@@ -2802,11 +2830,29 @@ class Session:
         self._restore()
         self.asset_identity = self._asset_identity()
         self.instance_sha = self.state_sha()
+        self.initial_state = _initial_state_record(self.env)
+        self.instance_generated = (self.initial_state or {}).get("source") == "generated"
         expected = inst.get("state_sha") if inst else None
         self.instance_exact = expected is None or expected == self.instance_sha
         assets_match = inst is None or inst.get("asset_identity", self.asset_identity) == self.asset_identity
-        self.instance_matches = assets_match and (self.instance_exact or (inst is not None and self._poses_match(inst)))
-        if not self.instance_exact or not assets_match:
+        if self.instance_generated:
+            # The frozen evidence state (state_sha) was prepared on another GPU. The instance is its recipe, realized on
+            # this GPU: the stored archive's scene identity and preparation equal the ones run here (recipe_match). Its
+            # state hash is this run's own; every process of the run restores the same generated archive.
+            gen = self.initial_state
+            self.instance_matches = assets_match and (expected is None or gen.get("recipe_match") is True)
+            msg = (f"initial state generated for {gen.get('resource_profile')} (cache {gen.get('cache')}; the frozen "
+                   f"state {expected} belongs to {gen.get('stored_profile')}): state_sha {self.instance_sha}")
+            if not self.instance_matches:
+                if strict or self.runtime_binding is not None:
+                    self.env.close()
+                    raise InstanceMismatch(msg + "; it does not realize this instance's recipe and assets")
+                _log("WARNING:", msg, "does not realize this instance's recipe and assets")
+            else:
+                _log(msg)
+        else:
+            self.instance_matches = assets_match and (self.instance_exact or (inst is not None and self._poses_match(inst)))
+        if not self.instance_generated and (not self.instance_exact or not assets_match):
             msg = f"instance state sha {self.instance_sha} != expected {expected}"
             if strict or self.runtime_binding is not None:
                 self.env.close()
@@ -3007,6 +3053,7 @@ class Session:
                 "physics_steps": self.physics_steps, "sim_time_s": self.sim_time_s,
                 "resets": self._resets, "state_sha": self.state_sha(), "episode_end": self.episode_end,
                 "instability": self.instability, "instance_exact": self.instance_exact,
+                "instance_generated": self.instance_generated,
                 "runtime_binding": self.runtime_binding, "review": self.monitor.review(), "forcing": self.monitor.forcing()}
 
     # ---- recording / trajectories
@@ -3775,7 +3822,8 @@ def cmd_replay(a) -> None:
     t0 = time.time()
     outs = [s.replay(acts, physics_steps=ticks, grading=True) for _ in range(a.repeat)]   # as the graders replay
     out = {"n_actions": int(len(acts)), "instance_sha": s.instance_sha, "instance_matches": s.instance_matches,
-           "instance_exact": s.instance_exact, "replays": outs, "all_success": all(o["success"] for o in outs),
+           "instance_exact": s.instance_exact, "instance_generated": s.instance_generated, "initial_state": s.initial_state,
+           "replays": outs, "all_success": all(o["success"] for o in outs),
            "deterministic": len({o["state_sha"] for o in outs}) == 1, "strict_goal": strict_goal(outs),
            "wall_s": round(time.time() - t0, 1)}
     if a.video:
