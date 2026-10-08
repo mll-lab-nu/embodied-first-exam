@@ -50,7 +50,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("vlabench-", "VLABench"),
     ("robocasa-gr1-", "RoboCasa-GR1"),  # before "robocasa-": the first matching prefix wins
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
-    ("libero-max-", "LIBERO-MAX"),
+    ("libero-max-", "LIBERO-MAX"), ("sim_to_real-", "Sim-to-Real (I2RT YAM)"),
 ]
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
                "Base image"}

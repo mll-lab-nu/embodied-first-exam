@@ -4677,3 +4677,11 @@ digest = "sha256:b62ebc5c97ee084950d32ffc0441c365b9e1e316b00bd75f3ffde99e447efcb
 name = "robot-coding-bench/behavior-vacuuming-floors-i00-standard"
 digest = "sha256:f37ce74b4b89db349a48f62c5437fed8bc87922d71a7a9bdbd06672b28b69003"
 
+[[tasks]]
+name = "robot-coding-bench/sim_to_real-cube-stack-three-i00-privileged"
+digest = "sha256:9080c86a6d98ae4ccee1fee19ffe1a02c60f52d37f682fb42c48c32228d23a1d"
+
+[[tasks]]
+name = "robot-coding-bench/sim_to_real-handover-to-bin-i00-privileged"
+digest = "sha256:a587f67ffe28f13e7b73b761d37b75c11830b750e1ae3c687e407a76e355daa6"
+
