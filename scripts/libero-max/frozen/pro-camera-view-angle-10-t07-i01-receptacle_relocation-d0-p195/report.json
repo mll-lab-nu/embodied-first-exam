@@ -1,0 +1,121 @@
+{
+ "case_id": "pro-camera-view-angle-10-t07-i01-receptacle_relocation-d0-p195",
+ "event": "receptacle_relocation",
+ "suite": "libero_10",
+ "language": "put both the alphabet soup and the cream cheese box in the basket",
+ "goal": [
+  [
+   "in",
+   "alphabet_soup_1",
+   "basket_1_contain_region"
+  ],
+  [
+   "in",
+   "cream_cheese_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "216272de2aad19cad35ba3ae742ebb5bad669a408fe7f36e5dd44749dba120a4",
+ "robot_base": {
+  "pos": [
+   -0.51,
+   0.0,
+   0.42
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "alphabet_soup_1",
+    "basket_1_contain_region"
+   ],
+   [
+    "in",
+    "cream_cheese_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "cream_cheese_1:down",
+  "trace": [
+   "155:alphabet_soup_1:placed",
+   "269:pick cream_cheese_1:down failed goal=[-0.169, 0.043, 0.448] eef=[-0.162, 0.001, 0.473] obj c=[-0.169, 0.043, 0.448] half=[0.041, 0.021, 0.009] top=0.459 fingers=1.52 contacts=['gripper0_finger1_collision>basket_1_g4', 'gripper0_hand_collision>alphabet_soup_1_g11', 'gripper0_hand_collision>alphabet_soup_1_g3', 'gripper0_hand_collision>alphabet_soup_1_g8', 'gripper0_hand_collision>basket_1_g2']"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 269,
+  "event_fired": true,
+  "event_step": 6,
+  "steps_left": 251,
+  "state_sha": "4c3253e1acc33348e706ced730ed20a75c5f4830555c0f304244f8821f99a3f2",
+  "initial_state_sha": "216272de2aad19cad35ba3ae742ebb5bad669a408fe7f36e5dd44749dba120a4"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 269,
+   "event_fired": true,
+   "event_step": 6,
+   "steps_left": 251,
+   "state_sha": "4c3253e1acc33348e706ced730ed20a75c5f4830555c0f304244f8821f99a3f2",
+   "initial_state_sha": "216272de2aad19cad35ba3ae742ebb5bad669a408fe7f36e5dd44749dba120a4"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 269,
+   "event_fired": true,
+   "event_step": 6,
+   "steps_left": 251,
+   "state_sha": "4c3253e1acc33348e706ced730ed20a75c5f4830555c0f304244f8821f99a3f2",
+   "initial_state_sha": "216272de2aad19cad35ba3ae742ebb5bad669a408fe7f36e5dd44749dba120a4"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

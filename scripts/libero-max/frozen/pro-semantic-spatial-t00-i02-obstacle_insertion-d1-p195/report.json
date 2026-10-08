@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-semantic-spatial-t00-i02-obstacle_insertion-d1-p195",
+ "event": "obstacle_insertion",
+ "suite": "libero_spatial",
+ "language": "lift the black bowl between the plate and ramekin and set it on the plate",
+ "goal": [
+  [
+   "on",
+   "akita_black_bowl_1",
+   "plate_1"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "24c77564cccab34ba33540b132749fb83b36e150f102327bbebf85288c1a9064",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "on",
+    "akita_black_bowl_1",
+    "plate_1"
+   ]
+  ],
+  "phase": "akita_black_bowl_1:placed",
+  "trace": [
+   "117:pick akita_black_bowl_1:retreat failed goal=[0.035, 0.172, 1.105] eef=[0.035, 0.172, 1.005] obj c=[0.053, 0.206, 0.936] half=[0.054, 0.054, 0.025] top=0.968 fingers=-2.12 contacts=[]",
+   "117:akita_black_bowl_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 117,
+  "event_fired": true,
+  "event_step": 14,
+  "steps_left": 103,
+  "state_sha": "430b320eb8ba27d4cd4c8839b782ab88f536feb755e28c0ac4dceb955aa1def5",
+  "initial_state_sha": "24c77564cccab34ba33540b132749fb83b36e150f102327bbebf85288c1a9064"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 117,
+   "event_fired": true,
+   "event_step": 14,
+   "steps_left": 103,
+   "state_sha": "430b320eb8ba27d4cd4c8839b782ab88f536feb755e28c0ac4dceb955aa1def5",
+   "initial_state_sha": "24c77564cccab34ba33540b132749fb83b36e150f102327bbebf85288c1a9064"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 117,
+   "event_fired": true,
+   "event_step": 14,
+   "steps_left": 103,
+   "state_sha": "430b320eb8ba27d4cd4c8839b782ab88f536feb755e28c0ac4dceb955aa1def5",
+   "initial_state_sha": "24c77564cccab34ba33540b132749fb83b36e150f102327bbebf85288c1a9064"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

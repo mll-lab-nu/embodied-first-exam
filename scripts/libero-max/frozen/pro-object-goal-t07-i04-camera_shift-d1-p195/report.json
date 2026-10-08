@@ -1,0 +1,108 @@
+{
+ "case_id": "pro-object-goal-t07-i04-camera_shift-d1-p195",
+ "event": "camera_shift",
+ "suite": "libero_goal",
+ "language": "Turn on the stove",
+ "goal": [
+  [
+   "turnon",
+   "yellow_stove_1"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "38d6f2280e95afc8b8a74bc77dc3c5f061687b41414748ad24ea484f4d3e9c0f",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "turnon",
+    "yellow_stove_1"
+   ]
+  ],
+  "phase": "yellow_stove_1:turned q=0.525",
+  "trace": [
+   "81:yellow_stove_1:turned q=0.525"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 81,
+  "event_fired": true,
+  "event_step": 13,
+  "steps_left": 219,
+  "state_sha": "414cebc1ab5a01fd2b9770a39828436c6651a76d99144171943cc71099daec83",
+  "initial_state_sha": "38d6f2280e95afc8b8a74bc77dc3c5f061687b41414748ad24ea484f4d3e9c0f"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 81,
+   "event_fired": true,
+   "event_step": 13,
+   "steps_left": 219,
+   "state_sha": "414cebc1ab5a01fd2b9770a39828436c6651a76d99144171943cc71099daec83",
+   "initial_state_sha": "38d6f2280e95afc8b8a74bc77dc3c5f061687b41414748ad24ea484f4d3e9c0f"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 81,
+   "event_fired": true,
+   "event_step": 13,
+   "steps_left": 219,
+   "state_sha": "414cebc1ab5a01fd2b9770a39828436c6651a76d99144171943cc71099daec83",
+   "initial_state_sha": "38d6f2280e95afc8b8a74bc77dc3c5f061687b41414748ad24ea484f4d3e9c0f"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

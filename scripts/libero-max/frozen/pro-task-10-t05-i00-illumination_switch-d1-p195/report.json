@@ -1,0 +1,110 @@
+{
+ "case_id": "pro-task-10-t05-i00-illumination_switch-d1-p195",
+ "event": "illumination_switch",
+ "suite": "libero_10",
+ "language": "pick up the cup and place it in the back compartment of the caddy",
+ "goal": [
+  [
+   "in",
+   "white_yellow_mug_1",
+   "desk_caddy_1_back_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "b2ffca8fe237a9ebb0ba47d163dbb1d3b4f1025d3e1f786945d9d70f229e2987",
+ "robot_base": {
+  "pos": [
+   -0.75,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "white_yellow_mug_1",
+    "desk_caddy_1_back_contain_region"
+   ]
+  ],
+  "phase": "white_yellow_mug_1:lower",
+  "trace": [
+   "240:pick white_yellow_mug_1:lower failed goal=[-0.454, -0.128, 1.101] eef=[-0.432, -0.13, 1.125] obj c=[-0.414, -0.136, 1.083] half=[0.07, 0.053, 0.052] top=1.157 fingers=3.10 contacts=['gripper0_finger1_collision>white_yellow_mug_1_g18', 'gripper0_finger1_collision>white_yellow_mug_1_g19', 'gripper0_finger2_collision>white_yellow_mug_1_g18', 'gripper0_finger2_collision>white_yellow_mug_1_g19', 'gripper0_hand_collision>white_yellow_mug_1_g17', 'gripper0_hand_collision>white_yellow_mug_1_g18']"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 244,
+  "event_fired": true,
+  "event_step": 34,
+  "steps_left": 276,
+  "state_sha": "369d238f404a6f1e3c4985a08d44ec8fd6c467843b96ce15e91b5e3fcd36f215",
+  "initial_state_sha": "b2ffca8fe237a9ebb0ba47d163dbb1d3b4f1025d3e1f786945d9d70f229e2987"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 244,
+   "event_fired": true,
+   "event_step": 34,
+   "steps_left": 276,
+   "state_sha": "369d238f404a6f1e3c4985a08d44ec8fd6c467843b96ce15e91b5e3fcd36f215",
+   "initial_state_sha": "b2ffca8fe237a9ebb0ba47d163dbb1d3b4f1025d3e1f786945d9d70f229e2987"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 244,
+   "event_fired": true,
+   "event_step": 34,
+   "steps_left": 276,
+   "state_sha": "369d238f404a6f1e3c4985a08d44ec8fd6c467843b96ce15e91b5e3fcd36f215",
+   "initial_state_sha": "b2ffca8fe237a9ebb0ba47d163dbb1d3b4f1025d3e1f786945d9d70f229e2987"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}
