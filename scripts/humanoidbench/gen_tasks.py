@@ -463,8 +463,9 @@ def render_standard(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASK
 # The standard-realtime task (`<base>-standard-realtime`, mode = "standard-realtime", eai-standard/2.3; docs/PROTOCOL.md §4b): the standard twin's
 # sidecar, client and verifier, except that the service runs the episode on a clock that does not stop
 # (shared/realtime/rcb_realtime.py, which extends rcb_service.py unchanged) and the agent gets the realtime client
-# (`submit(..., at=)`, `cameras=[]`). Same instance, same success rule; reset budget `realtime_reset_budget` (50, the
-# standard-realtime mode's default); the instruction tells the agent to drive the robot with a controller program.
+# (`submit(..., at=)`, `cameras=[]`). Same instance, same success rule; reset budget `realtime_reset_budget` (50,
+# HumanoidBench's exception to the mode's default of 0, PROTOCOL §4.5); the instruction tells the agent to drive the
+# robot with a controller program.
 REALTIME_TEMPLATES = HERE / "templates" / "realtime"
 REALTIME = HERE / "shared" / "realtime"
 
