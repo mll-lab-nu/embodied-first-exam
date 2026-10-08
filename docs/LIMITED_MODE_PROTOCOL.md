@@ -161,12 +161,15 @@ same frozen state, `N` times in all; `/status` and `meta` add `episode`, `resets
 success or once the agent's time is up, `/reset` returns 409, as it does when the budget is spent. Only the last
 episode is graded. Results with `N > 0` are reported separately and never ranked with `N = 0` (PROTOCOL D1, §4.5).
 
-## Optional realtime capability
-Time does not stop (PROTOCOL §4.5; implemented by HumanoidBench's `-realtime-standard` tasks,
-`scripts/humanoidbench/shared/realtime/rcb_realtime.py`). Same endpoints, RCB1 frames, budgets, crash recovery and
-grading as 2.1; the task is its own directory, `<base>-realtime-standard` (PROTOCOL §2.2), with `protocol =
-"eai-standard/2.1"`. `/spec.timing` declares it: `realtime: true`, `slowdown` S (1 = real time; `RCB_SLOWDOWN`, results
-with S ≠ 1 reported separately), `wall_s_per_control_step`, `max_ahead_steps`.
+## Realtime mode: `eai-standard/2.3`
+Time does not stop. The wire protocol of the realtime mode (PROTOCOL §4b, v1.1; protocol-change issue #86), served by
+realtime tasks only (`<base>-realtime`, `mode = "realtime"`, `protocol = "eai-standard/2.3"`; implemented by HumanoidBench's,
+`scripts/humanoidbench/shared/realtime/rcb_realtime.py`). 2.3 is 2.2 plus the realtime capability below; every 2.2
+addition stays a MAY, so a 2.1 service with this capability is a 2.3 service. Same endpoints, RCB1 frames, crash
+recovery and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S (`RCB_SLOWDOWN`, default 1 = real
+time; results with S ≠ 1 are reported separately from S = 1), `control_dt`, `wall_s_per_control_step`, `max_ahead_steps`.
+Defaults of the mode (owner, 2026-10-08): `budget.reset = 50` (the reset capability above; `RCB_RESET_BUDGET` overrides
+it), S = 1.
 - **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` or `/observe`
   with `seconds > 0` (after a reset, and after a crash recovery, the episode is paused again) and runs one control step
   every `control_dt` × S seconds of wall time, whatever the agent does, until the episode ends.
@@ -187,6 +190,9 @@ with S ≠ 1 reported separately), `wall_s_per_control_step`, `max_ahead_steps`.
 - **Service.** The simulator's thread runs a due control step before any waiting request; behind the clock it runs the
   missed steps back to back, and more than 0.5 s behind it drops the debt (a stall, counted) instead of fast-forwarding
   the robot. Checkpoints every second of robot time while the clock runs; a crash resumes the same episode, paused.
+- **Crashes are infrastructure.** No call spans a crash (`/submit` answers at once), so a crash is never put down to the
+  agent: past `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed`, a failed resume `resume_failed`, and a simulator
+  error that ends the graded episode (`reason = "error"`) is one too; `final.json` carries `infra_error = 1` in all three.
 - **Agent code** runs where it does in standard mode, in the agent's own container: a controller that streams targets
   through the client, not code uploaded next to the simulator.
 
@@ -196,4 +202,4 @@ agent latency counts, the agent's own program may act) and uses its `slowdown` n
 `/act`, `/wait`, `/ready`, seats, reviews or metering proxy; native agents only (PROTOCOL D11).
 
 ## Versioning
-`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise + crash recovery; `eai-standard/2.1` is the v1.0 name of 2.1. Minor versions only add; the 2.x client accepts every 2.x version under both spellings. Accepted, pending: `eai-standard/2.2` (PROTOCOL §6).
+`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise + crash recovery; `eai-standard/2.1` is the v1.0 name of 2.1. Minor versions only add; the 2.x client accepts every 2.x version under both spellings. Accepted, pending: `eai-standard/2.2` (PROTOCOL §6). `eai-standard/2.3` (2026-10-08) = 2.2 + the realtime capability, the realtime mode's protocol (above).

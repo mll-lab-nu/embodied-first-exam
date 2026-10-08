@@ -155,7 +155,7 @@ def trial_state(t: pathlib.Path, job: dict, ri: int, root: pathlib.Path, plan_ru
     exc = (r.get("exception_info") or {}).get("exception_type") or ""
     return {
         "id": f"{ri}:{t.relative_to(root)}", "task": task, "bench": info["bench"],
-        "mode": "standard" if task.endswith("-standard") else "privileged",
+        "mode": next((m for m in ("standard", "realtime") if task.endswith(f"-{m}")), "privileged"),
         "run": plan_run or run_id((cfg.get("agent") or {})), "job": job.get("job_name") or t.parent.name,
         "trial": t.name, "state": state, "reward": reward, "exception": exc,
         "agent_start": a0, "agent_end": a1 or (now if state == "running" else None), "timeout": info["timeout"],
@@ -270,7 +270,7 @@ video,img{max-width:100%;border-radius:6px;border:1px solid var(--line)}.close{f
 <header><h1>Live Board</h1><span class="mut" id="meta"></span></header>
 <main><div class="cards" id="cards"></div>
 <div class="tools"><select id="run"><option value="">all runs</option></select><select id="st"><option value="">all states</option></select>
-<select id="mode"><option value="">both modes</option><option>privileged</option><option>standard</option></select>
+<select id="mode"><option value="">all modes</option><option>privileged</option><option>standard</option><option>realtime</option></select>
 <input id="q" placeholder="filter task / benchmark"><button id="view">matrix view</button></div>
 <div class="wrap" id="table"></div></main>
 <aside id="drawer"></aside>

@@ -30,7 +30,7 @@ for trial in sorted((jobs / job).glob("*__*")):
     tdir = root / "tasks" / task
     if not tdir.is_dir(): continue
     rw = json.load(open(trial / "verifier/reward.json")) if (trial / "verifier/reward.json").exists() else {}
-    ar = r.get("agent_result") or {}; limited = task.endswith("-standard"); fam = task.replace("robotwin_2_0_", "").removesuffix("-privileged").removesuffix("-standard")
+    ar = r.get("agent_result") or {}; mode = task.rsplit("-", 1)[1]; limited = mode != "privileged"; fam = task.replace("robotwin_2_0_", "").rsplit("-", 1)[0]
     out = out_root / task / slug; out.mkdir(parents=True, exist_ok=True)
     for f in ("replay.mp4", "replay.last.png"):
         if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)
@@ -39,7 +39,7 @@ for trial in sorted((jobs / job).glob("*__*")):
     ok = rw.get("success") == 1 and not over
     an = analysis.get(fam, {}).get("L" if limited else "U", "")
     lines = [f"# {label} — {task}\n",
-             f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{'standard (robot as a service)' if limited else 'privileged'}**.\n",
+             f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{ {'standard': 'standard (robot as a service)', 'realtime': 'realtime (robot as a service, time does not stop)'}.get(mode, 'privileged')}**.\n",
              "| | |", "|---|---|",
              f"| result | {'**1 (success)**' if ok else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
              f"| agent time | {span(r.get('agent_execution') or {})} s |",
