@@ -1,8 +1,9 @@
 # Running evaluations
 
 Operational notes for running batches and reading results. The contract is [PROTOCOL.md](PROTOCOL.md); the
-standard-mode wire protocol is [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md). Task directories end in `-privileged` or
-`-standard`.
+standard-mode wire protocol is [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md). Task directories end in `-privileged`,
+`-standard` or `-realtime` (PROTOCOL §4b: realtime results state the reset budget and the slowdown `RCB_SLOWDOWN`, default
+1; results with another slowdown are reported separately).
 
 ## Agent logs and timelines
 Harbor keeps, per trial, `agent/codex.txt` (every message, command and output), `agent/trajectory.json` and the raw
@@ -37,7 +38,7 @@ separate verifiers. Results (per-task and batch reports) go to the results site 
 
 ## Unattended batches (`scripts/run_agent_batch.sh`)
 `scripts/run_agent_batch.sh <batch> <base> ...` runs one Harbor-native agent over `<base>-privileged` and `<base>-standard`
-for each task base (a missing twin is skipped), one Harbor job per task and mode. Starting the same command again adds a
+(and `<base>-realtime` with `MODES="privileged standard realtime"`) for each task base (a missing twin is skipped), one Harbor job per task and mode. Starting the same command again adds a
 lane: every job is claimed by exactly one runner (`$JOBS/.claims/<job>`). The run id is derived as in TAXONOMY (D4) and
 checked. Configuration is Harbor's own:
 
@@ -93,6 +94,7 @@ provider `base_url`s rewritten and `supports_websockets = false`). The agent is 
 `claude-code` with its own credentials: the gateway forwards every request unchanged to the same API, never stores a key,
 and refuses any host that is not a model API (`scripts/set_agent_egress.py` HOSTS), so it is no way around an egress
 allowlist. Under an allowlist the runner adds `--allow-agent-host 172.17.0.1`.
+The runner waits `GATEWAY_START_WAIT` seconds (10) for the gateway to come up; raise it on busy shared nodes.
 
 Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts):
 ```

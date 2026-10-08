@@ -19,7 +19,7 @@
 #     ChatGPT login (codex)          CODEX_FORCE_AUTH_JSON=1 (Harbor uploads ~/.codex/auth.json into each trial)
 #     Claude subscription            CLAUDE_FORCE_OAUTH=1 and CLAUDE_CODE_OAUTH_TOKEN (`claude setup-token`)
 #     Azure OpenAI (codex)           AGENT_CONFIG=<config.toml with the Azure provider> and its key variable
-#   MODES        "privileged standard"   K  attempts per task (1)
+#   MODES        "privileged standard"   K  attempts per task (1); add `realtime` for <base>-realtime where it exists
 #   SEQ          1 = one trial at a time per runner (default): task by task, each mode in MODES order, one Harbor job per
 #                task and mode ($JOBS/<batch>-<mode>-<task>/). Start the same command again to add a lane: every job is
 #                claimed (mkdir $JOBS/.claims/<job>) by exactly one runner, so K runners run K trials at a time. A job that
@@ -43,6 +43,7 @@
 #                whole conversation); 0 = token usage only
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
 #   GATEWAY_EXTRA_HOSTS  more model API host patterns the gateway forwards to, space-separated (e.g. "*.services.ai.azure.com")
+#   GATEWAY_START_WAIT  seconds to wait for the gateway to come up (10); raise it on busy shared nodes
 #   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (100000000 / 10000000, PROTOCOL
 #                §5): past it every further model request is refused and the trial counts as failed; 0 = no limit
 # Runner-side tools (not task code): while trials run, the container rcb-log-mirror copies every trial's agent/ directory
@@ -61,7 +62,7 @@ AGENT_CONFIG="${AGENT_CONFIG:-}"; ENV_FILE="${ENV_FILE:-}"
 MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${N_S:-2}"; K="${K:-1}"; WAIT_FOR="${WAIT_FOR:-}"
 JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"; LABEL="${LABEL:-$AGENT + $MODEL ($EFFORT)}"
 LOG_MIRROR="${LOG_MIRROR:-1}"; MEM_GUARD="${MEM_GUARD:-1}"
-GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-1}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"
+GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-1}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"; GATEWAY_START_WAIT="${GATEWAY_START_WAIT:-10}"
 TOKEN_BUDGET_IN="${TOKEN_BUDGET_IN:-100000000}"; TOKEN_BUDGET_OUT="${TOKEN_BUDGET_OUT:-10000000}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
@@ -101,7 +102,7 @@ mkdir -p "$JOBS/.plan"
 python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
 import json, os, pathlib, sys
 repo, out, batch, run_id, seq, modes, *tasks = sys.argv[1:]
-name = lambda m, t: f"{t}-standard" if m in ("standard", "limited") else f"{t}-privileged"
+name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "realtime": f"{t}-realtime"}.get(m, f"{t}-privileged")
 jobs = [{"job": f"{batch}-{m}-{t}" if seq == "1" else f"{batch}-{m}", "task": name(m, t), "mode": m}
         for t in tasks for m in modes.split() if (pathlib.Path(repo) / "tasks" / name(m, t)).is_dir()]
 tmp = pathlib.Path(f"{out}.{os.getpid()}")
@@ -130,8 +131,8 @@ if [ "$GATEWAY" = 1 ]; then
   gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
   setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
   gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
-  for _ in $(seq 50); do [ -s "$ready" ] && break; sleep 0.2; done
-  [ -s "$ready" ] || { log "usage gateway did not start (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
+  for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && break; sleep 0.2; done
+  [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
   GW="http://$GATEWAY_BIND:$(cat "$ready")"
   # the upstream each base URL would have used: this environment, else the env file, else the API's default
   upstream() {  # <VAR> <default>
@@ -202,7 +203,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     except Exception:
         wall = ""
     task = (r.get("task_name") or trial.name.split("__")[0]).split("/")[-1]
-    mode = "standard" if task.endswith(("-standard", "-limited")) else "privileged"
+    mode = "realtime" if task.endswith("-realtime") else "standard" if task.endswith(("-standard", "-limited")) else "privileged"
     keys = {k: rw[k] for k in ("deterministic", "live_success", "replay_success", "instance_ok", "missing_trajectory", "grader_error",
                                "infra_error", "resumes") if k in rw}
     rows.append((r.get("started_at") or "~", f"| {task} | {mode} | {rw.get('success', '-')} | {json.dumps(keys)} | "
@@ -239,9 +240,10 @@ run_job() {  # <job> <concurrency> <harbor -i args...>
   log "done $job (harbor rc=$?)"
 }
 
-name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard (PROTOCOL §2.2)
+name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-realtime (PROTOCOL §2.2)
   case "$1" in
     standard|limited) echo "$2-standard" ;;
+    realtime) echo "$2-realtime" ;;
     *) echo "$2-privileged" ;;
   esac
 }

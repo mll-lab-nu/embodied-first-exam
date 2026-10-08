@@ -6,11 +6,11 @@ Known values; a new value is added by pull request (CI validation of these vocab
 |---|---|
 | `author_name` | the author's name (an organization may go in `author_org`) |
 | `task_type` | `trajectory` · `policy` |
-| `mode` | `privileged` · `standard` (formerly `unlimited` / `limited`) |
-| `protocol` | standard mode only: `eai-standard/2.1` · `eai-standard/2.2` (BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, MuJoCo Playground's quadruped tasks; [STANDARD_MODE_2_2.md](STANDARD_MODE_2_2.md)) |
+| `mode` | `privileged` · `standard` (formerly `unlimited` / `limited`) · `realtime` (protocol v1.1, PROTOCOL §4b) |
+| `protocol` | standard and realtime mode only. Realtime: `eai-standard/2.3`. Standard: `eai-standard/2.1` · `eai-standard/2.2` (BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, MuJoCo Playground's quadruped tasks; [STANDARD_MODE_2_2.md](STANDARD_MODE_2_2.md)) |
 | `simulator` | `robosuite` · `robotwin` (RoboTwin 2.0 = SAPIEN 3 + CuRobo) · `mujoco` · `kinder` (KinDER: MuJoCo and PyBullet) · `humanoidbench` (HumanoidBench: MuJoCo + dm_control) · `robowits` (RoboWits on Genesis) · `robolab` (NVIDIA RoboLab on Isaac Lab) · `behavior` (BEHAVIOR-1K: OmniGibson on Isaac Sim) · `maniskill` (ManiSkill 3 / SAPIEN: RoboPaint) · `vlabench` (VLABench: MuJoCo + dm_control) · `maniguard` (ManiGuard: BEHAVIOR-1K 3.7.2, OmniGibson on Isaac Sim 4.5) · `molmospaces` (Ai2 MolmoSpaces: MuJoCo) · `myosuite` (MyoSuite: musculoskeletal models on MuJoCo) · `dexjoco` (DexJoCo: MuJoCo 3.4 + its gymnasium envs) — the simulator, not the image: benchmarks on one simulator may use different images and versions (PROTOCOL D5) |
 | `robot` | `franka-panda` · `aloha-agilex` · `aloha-2` · `kuka-iiwa14-sharpa-ha4` · `tidybot-plus-plus` · `unitree-h1` · `unitree-h1hand` (H1 with two Shadow hands) · `sawyer` (Rethink Robotics Sawyer, as in Meta-World) · `marvin-bimanual` (RoboWits) · `franka-robotiq-2f85` (a Franka arm with a Robotiq 2F-85, the DROID setup: RoboLab, MolmoSpaces' FR3) · `r1pro` (BEHAVIOR-1K) · `franka-panda-omron` (RoboCasa's PandaOmron: Franka Panda on an Omron mobile base with a lift torso) · `fourier-gr1` (Fourier GR1 humanoid: two arms, waist and two Fourier dexterous hands, fixed base; RoboCasa-GR1) · `franka-panda-longfinger` (ManiGuard: Franka Panda with long fin-ray fingers) · `rainbow-rby1` (Rainbow Robotics RB-Y1: holonomic base, 6-joint torso, two 7-joint arms with parallel grippers; MolmoSpaces) · `myohand` (MyoSuite's MyoHand: a musculoskeletal human forearm and hand, 39 muscles) · `myoarm` (MyoSuite's MyoArm: a musculoskeletal human shoulder, arm and hand, 34 or 63 muscles) · `myoarm-torso` (MyoSuite's table-tennis player: torso, right arm and hand on a sliding pelvis) · `myoarm-mpl` (MyoSuite's MyoArm next to the Modular Prosthetic Limb, a motorized arm) · `myolegs` (MyoSuite's MyoLegs: a free-standing musculoskeletal torso and both legs) · `myoleg-osl` (MyoSuite's MyoLeg with an Open-Source Leg knee-ankle prosthesis) · `unitree-go1` (Unitree Go1 quadruped; MuJoCo Playground) · `boston-dynamics-spot` (Boston Dynamics Spot quadruped; MuJoCo Playground) · `google-barkour-vb` (Google Barkour vB quadruped; MuJoCo Playground) · `franka-allegro` (Franka Panda with a 16-DoF Allegro hand; DexJoCo) · `franka-allegro-bimanual` (two of them side by side; DexJoCo) |
-| `family` | free-form slug naming the scene/goal, shared by its instances (e.g. `cube_stack`, `dextoolbench/brush/blue_brush/sweep_forward`) |
+| `family` | free-form slug naming the scene/goal, shared by its instances (e.g. `stack_blocks_two`, `dextoolbench/brush/blue_brush/sweep_forward`) |
 | `oracle` | `full` (oracle scores 1) · `partial` (oracle reaches part of the goal) · `none` — see PROTOCOL §2.7 |
 | `oracle_evidence` | required unless `oracle = "full"`: where the evidence for solvability is (PR, results site, upstream record) |
 | `expert_time_estimate_hours` | number |
@@ -31,7 +31,8 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
 | ManiGuard | `grasping` | `assisted` · `sticky` (the grasping mode ManiGuard's evaluator uses for the family) |
 
 ## Task names
-- `<base>-privileged` and `<base>-standard`, the two modes of one frozen instance. `<base>` is
+- `<base>-privileged`, `<base>-standard` and `<base>-realtime`, the modes of one frozen instance (realtime: PROTOCOL §4b;
+  HumanoidBench has it for every family with a standard twin; a realtime task's twin is `<base>-privileged`). `<base>` is
   `<simulator>-<family-with-dashes>-i<NN>`, or the benchmark's own task name: `robotwin_2_0_<robotwin_task>`,
   `dextoolbench_<category>_<object>_<task>`, `mujoco_playground_<env>`, `kinder-<family>-i<NN>`,
   `humanoidbench-<category>-<family>-i<NN>`, `myosuite-<family>-i<NN>`, `dexjoco-<family-with-dashes>-i<NN>`.

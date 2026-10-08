@@ -8,8 +8,8 @@ pre-v1.0 task (old field names, protocol spelling, README layout); renaming dire
     python3 scripts/task_conventions.py --check tasks/<task>   # exit 1 if normalizing would change anything
 
 What it does:
-- `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard`), no `tier`, `protocol = "eai-standard/2.1"`
-  for standard tasks, `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
+- `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
+  for standard tasks (realtime tasks: `eai-standard/2.3`, set by their generator), `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - protocol spelling `rcb-limited/2.x` -> `eai-standard/2.x` and "limited mode" -> "standard mode" in the task's text and
   services; the client accepts both spellings.
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
@@ -42,7 +42,7 @@ TEXT_REPLACEMENTS = [  # (old, new), applied to task text files in order
 ]
 BENCHMARKS = [  # (directory prefix, label)
     ("robotwin_2_0_", "RoboTwin 2.0"), ("dextoolbench_", "DexToolBench"), ("mujoco_playground_", "MuJoCo Playground"),
-    ("robosuite-", "robosuite (example task)"), ("kinder-", "KinDER"), ("humanoidbench-", "HumanoidBench"),
+    ("kinder-", "KinDER"), ("humanoidbench-", "HumanoidBench"),
     ("metaworldplus-", "MetaWorld+"),
     ("robowits-", "RoboWits"), ("robopaint-", "RoboPaint"), ("robolab-", "RoboLab"),
     ("behavior-", "BEHAVIOR-1K"), ("maniguard-", "ManiGuard"),
@@ -67,16 +67,20 @@ def replace_words(s: str) -> str:
     return s
 
 
+MODES = ("privileged", "standard", "realtime")   # PROTOCOL D12: the three modes, each the suffix of its task directories
+SIDECAR_MODES = ("standard", "realtime")          # robot as a service: the simulator runs in the `sim` sidecar (§4, §4b)
+
+
 def mode_of(task: Path) -> str:
-    if task.name.endswith("-standard"):
-        return "standard"
-    if task.name.endswith("-privileged"):
-        return "privileged"
-    raise ValueError(f"{task.name}: task directories end in -privileged or -standard (docs/PROTOCOL.md §2.2)")
+    for mode in MODES:
+        if task.name.endswith(f"-{mode}"):
+            return mode
+    raise ValueError(f"{task.name}: task directories end in -privileged, -standard or -realtime (docs/PROTOCOL.md §2.2)")
 
 
 def base_of(task: Path) -> str:
-    return re.sub(r"-(privileged|standard)$", "", task.name)
+    """The name without its mode suffix (`-privileged`, `-standard`, `-realtime`; PROTOCOL §2.2)."""
+    return re.sub(r"-(privileged|standard|realtime)$", "", task.name)
 
 
 def bench_of(task: Path) -> str:
@@ -110,7 +114,7 @@ def dtb_goals(task: Path) -> tuple[int, int] | None:
 def oracle_level(task: Path) -> tuple[str, str] | None:
     """(oracle, oracle_evidence) for benchmarks whose oracle level follows from their own files; None = keep as is."""
     n = task.name
-    if n.startswith(("robotwin_2_0_", "robosuite-", "mujoco_playground_")):
+    if n.startswith(("robotwin_2_0_", "mujoco_playground_")):
         return "full", ""
     if n.startswith("dextoolbench_"):
         g = dtb_goals(task)
@@ -250,7 +254,7 @@ def parse_readme(s: str) -> tuple[str, list[tuple[str, str]], list[tuple[str, st
 
 
 def image_of(task: Path) -> str:
-    if task.name.endswith("-standard"):
+    if mode_of(task) in SIDECAR_MODES:
         c = read_text(task / "environment/docker-compose.yaml") or ""
         m = re.search(r"^\s*image:\s*(\S+)", c, re.M)
         if m:
@@ -289,14 +293,14 @@ def render_readme(task: Path) -> str:
     rowd = {k.lower(): v for k, v in rows}
     secd = {t: b for t, b in sections}
     mode = md.get("mode", mode_of(task))
-    twin = base_of(task) + ("-privileged" if mode == "standard" else "-standard")
+    twin = base_of(task) + ("-privileged" if mode in SIDECAR_MODES else "-standard")
     seed = md.get("instance_seed")
     oracle = md.get("oracle", "")
     ev = md.get("oracle_evidence", "")
     head = [("Benchmark", bench_of(task) or "—"),
-            ("Mode", f"{mode} (`{md['protocol']}`)" if mode == "standard" and md.get("protocol") else mode)]
-    # a standard task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
-    head.append(("Twin", f"`{twin}`" if mode == "standard" or task.with_name(twin).is_dir() else "— (privileged only)"))
+            ("Mode", mode + (f" (`{md['protocol']}`)" if mode in SIDECAR_MODES and md.get("protocol") else ""))]
+    # a standard or realtime task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
+    head.append(("Twin", f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir() else "— (privileged only)"))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
              ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),

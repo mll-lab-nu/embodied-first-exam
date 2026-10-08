@@ -6,14 +6,19 @@ forward down the walled track and over the hurdles, without touching the side or
 falling.
 
 ## Rules (real-robot rules)
-- **One episode; a reset only where `spec()` grants one.** The episode starts when the service comes up. It
-  ends when the task succeeds, when the robot falls (its pelvis drops near the ground), after 1000 control
-  steps (20 s of robot time), when your time is up, or on a simulator error. Nothing else ends it: a robot
-  that has fallen without meeting one of these (lying on its side, sitting, face down) goes on until step
-  1000, so an episode that is still running does not mean the robot is still up. `spec()["budget"]["reset"]`
-  is 0 in the standard configuration. (A run that grants N resets says so there; then `r.reset()` starts a new
-  episode from the same starting state (abandoning the running one, or after one has ended), only the last
-  episode is graded, and a success ends the run.)
+- **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, when
+  the robot falls (its pelvis drops near the ground), after 1000 control steps (20 s of robot time), when your
+  time is up, or on a simulator error. Nothing else ends it: a robot that has fallen without meeting one of
+  these (lying on its side, sitting, face down) goes on until step 1000, so an episode that is still running
+  does not mean the robot is still up. You have **50 resets** (`spec()["budget"]["reset"]`, which is
+  authoritative: if it says 0, there is no reset and the one episode is the run). `r.reset()` puts the robot
+  and the scene back on the same frozen starting state and starts a new episode with its own 1000 control
+  steps, either abandoning the running episode or after one has ended; it takes no robot time and returns the
+  start's images and proprioception. Once an episode has ended, `submit` raises `EpisodeOver` (its message
+  gives `resets_left`) until you reset. **Only the last episode is graded**: an episode you reset away is
+  never graded, a success ends the run at once (no reset after it), and when your time is up the episode then
+  running is the one graded. The wall clock is the run's and never restarts; `meta["episode"]` and
+  `meta["resets_left"]` count the episodes.
 - **Time moves only inside calls.** `submit` runs your servo targets and `get_obs(seconds=s)` holds the last
   ones for s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while
   you think; `get_obs()` with no seconds is free.
@@ -24,10 +29,11 @@ falling.
   simulator error, else `"failed"`). `spec()` gives the robot's own facts, as its URDF would: each actuator's
   range, each joint's axis and position, each link's mass and centre of mass, the feet's collision boxes, the
   IMU's frame, each camera's field of view and pose.
-- There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the
-  script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
+- There is nothing to hand in: the service records every episode, replays the last one in a fresh simulator
+  and grades the replay. Keep the script that drives the robot at `/app/output/gen.py` for the record: save it
+  early and keep it current.
 - Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way,
-  so do not stop early: while the episode runs, it can still pass.
+  so do not stop early: while the episode runs, or a reset is left, the run can still pass.
 
 ## Scoring
 HumanoidBench scores the *whole episode*, not a final state: it passes iff the summed per-step reward reaches
@@ -48,9 +54,10 @@ Your whole interface to the robot. Its docstring is the full reference
 |---|---|---|
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
 | `r.spec()` | `GET /spec` | the robot's facts: the actuators' order and ranges, `control_dt` (0.02 s), `max_control_steps` (1000), the cameras, `proprio_layout`, `budget` |
-| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
 | `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or hold the last targets and watch for `seconds` (at most 30) |
 | `r.submit("joint_position", A, dt=0.02, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of 19 targets `dt` seconds apart (a multiple of 0.02; a chunk covers at most 10 s); stops early when the episode ends |
+| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the frozen starting state (at most 50 in all); returns the start's frames |
 
 The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
 `clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
