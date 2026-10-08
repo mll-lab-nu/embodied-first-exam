@@ -1,0 +1,17 @@
+# Appearance of air hockey's robots (docs/framework_zh.md §3.1, renderer rule 6; renderers/presentation/__init__.py):
+# the KUKA LBR iiwa 14's visual meshes on the arm's bodies, same kinematics. Since revision airhockey-program-v4 /
+# players-25k the players' images use it too (`players`): tools/sportlib bundles this directory and the 25k level of
+# detail of the meshes (renderers/presentation/lod.json, sha256-pinned, licence kept) into the simulator, and the core's
+# camera worker draws the players' scene (core/observe.players_scene), so they are part of source_sha; spectator
+# re-renders from a checkout use the full meshes.
+[presentation]
+version = 2
+label = "KUKA LBR iiwa 14 visual meshes (MuJoCo Menagerie)"
+players = "25k"                       # the players' images: the meshes decimated to ~25k triangles per arm
+
+[[presentation.robot]]
+model = "kuka_iiwa_14"                # renderers/presentation/menagerie.json (fetched, sha256-pinned)
+bodies = '^iiwa_[12]/(?P<x>base|link)_?(?P<n>[1-7]?)$'
+body = "{x}{n}"                       # iiwa_1/base -> base, iiwa_1/link_3 -> link3 (the challenge's frames are Menagerie's)
+hide = "all"                          # the arm's capsules move to the hidden group 3 ...
+hide_bodies = '^iiwa_[12]/(base|link_[1-6])$'   # ... but link_7 keeps its capsule: the striker's 0.585 m shaft
