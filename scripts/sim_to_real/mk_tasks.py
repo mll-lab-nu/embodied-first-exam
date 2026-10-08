@@ -8,6 +8,7 @@ Standard library only (plus scripts/task_conventions.py, which every generator e
   scripts/sim_to_real/instances/<family>.json          the frozen instances (make_instances.py, in the image)
   scripts/sim_to_real/oracles/oracle_yam.py            the reference controller; oracles/<family>/oracle_targets.npy
   scripts/sim_to_real/shared/                          the tooling rcb_yam.py and the grader grade.py
+  scripts/sim_to_real/assets/                          the RoboLab asset conversion baked into the base image
 The texts are the templates below. docs/benchmarks/sim_to_real.md describes the benchmark.
 """
 
@@ -71,7 +72,9 @@ s.reset()           # back to the start (as often as you like)
 img = s.render("top_cam")                           # also left/wrist_cam, right/wrist_cam (D405s), front_view
 ```
 Everything in `s.model` / `s.data` is readable (privileged mode), e.g. for inverse kinematics with `mujoco.mj_jacSite`
-on the `left/grasp_site` / `right/grasp_site` sites (the point between the finger pads).
+on the `left/grasp_site` / `right/grasp_site` sites (the point between the finger pads). Each object is one body named
+as above; its meshes (the textured `visual.obj` in the body frame and the convex collision hulls `col_NN.obj`) and its
+`meta.json` (bounding box, mass) are in `/opt/eai_s2r/assets/objects/<name>/`.
 """
 
 RULES_TEXT = """\
@@ -87,71 +90,65 @@ frozen start in a separate sandbox (MuJoCo on the CPU is bit-exact). Leave the s
 - You have 60 minutes of wall-clock time. Do not stop early: use the time to check your trajectory with `s.replay`.
 """
 
+COMMON_SUCCESS = (
+    "In both families an object counts as **in** its container exactly as in NVIDIA RoboLab's `object_in_container`: "
+    "its centre of mass lies inside the container's bounding box in the container's own frame (with one container "
+    "height of open-top slack above it) **and** it touches the container. At the **end of the trajectory** every goal "
+    "object must be in, the container must be upright (within 20 degrees), every object must be at rest (speed below "
+    "5 cm/s) and touched by neither robot (the grippers have let go), and the two arms must never have touched each "
+    "other. `s.check()` (also returned by `s.step`) computes exactly this."
+)
+
 FAMILIES: dict[str, dict] = {
-    "cube_stack_three": dict(
-        title="Stack three cubes",
+    "fruits_in_bowl": dict(
+        title="Fruits in the bowl",
         scene=(
-            "Three 4 cm wooden cubes (40 g) — **blue**, **green** and **red** — lie on the table in front of the "
-            "left arm, each at its own position and yaw."
+            "A cluttered breakfast table in front of the **left arm**: a red **bowl** (16 cm across, 5.5 cm deep), a "
+            "**banana**, a **lemon**, an **orange**, a red **mug** and a **tomato soup can**, all scanned household "
+            "objects (YCB, from RoboLab's asset library) with their real masses (banana 66 g, lemon 29 g)."
         ),
-        goal=(
-            "**Task:** build a tower: **green on top of blue, red on top of green**, with the blue cube where it is "
-            "or anywhere else on the table."
-        ),
-        success=(
-            "At the **end of the trajectory**: the blue cube rests on the table (its centre within 1 cm of "
-            "z = 0.02), the green cube's centre is within 2 cm horizontally of the blue cube's and 4 cm (± 1 cm) "
-            "above it, the red cube likewise on the green one; all three cubes are at rest (speed below 5 cm/s) "
-            "and no part of either robot touches any cube. `s.check()` (also returned by `s.step`) computes "
-            "exactly this: `blue_on_table`, `green_on_blue`, `red_on_green`, `at_rest`, "
-            "`gripper_touches_object`, `arm_collision`, `success`."
-        ),
+        goal="**Task:** put the **banana** and the **lemon** into the bowl. The other objects may stay where they are.",
+        fields="`banana_in_bowl`, `lemon_in_bowl`, `bowl_upright`, `at_rest`, `robot_touches_object`, `arm_collision`, `success`",
         difficulty=(
-            "Two precise pick-and-place moves with one 6-joint arm and no motion primitives: the agent writes "
-            "its own inverse kinematics, finds grasps that are reachable (the YAM's top-down workspace is "
-            "small: the gripper can point straight down only up to about 0.45 m from the base, and only near "
-            "the table), grasps 4 cm cubes between 1.4 x 1.6 cm finger pads, and places each cube within 2 cm on "
-            "the one below without knocking the tower over, under a real-robot rate limit. Medium: a "
-            "scripted IK controller solves it in about 16 s of robot time."
+            "Pick-and-place of real object shapes in clutter with one 6-joint arm and no motion primitives: the agent "
+            "writes its own inverse kinematics, finds grasps on a curved banana (its bounding-box centre is in the air) "
+            "and on a light, round lemon that rolls when pushed, keeps the 10 cm-wide gripper and the wrist camera clear "
+            "of the mug and the can next to them, and lets go above a bowl smaller than the banana, all inside the "
+            "YAM's small top-down workspace (the gripper points straight down only up to about 0.45 m from the base) "
+            "and under a real-robot rate limit. Medium: a scripted controller solves it in about 14 s of robot time."
         ),
         reference=(
-            "`solution/oracle_yam.py` (`cube_stack_three`): damped-least-squares IK on the left arm's grasp "
-            "site, top-down grasps aligned with each cube's faces, green then red placed 4 mm above their "
-            "resting height and released; 785 control steps (15.7 s)."
+            "`solution/oracle_yam.py` (`fruits_in_bowl`): damped-least-squares IK on the left arm's grasp site; grasps "
+            "from each object's mesh (the banana's middle cross-section, the lemon across its narrow side), the approach "
+            "tilted away from the base where vertical is out of reach; each fruit released 2 cm above the bowl's rim."
         ),
         hours=1.5,
     ),
-    "handover_to_bin": dict(
-        title="Hand the block over and drop it in the bin",
+    "pack_tote": dict(
+        title="Pack the groceries into the tote",
         scene=(
-            "An orange **block** (4 x 4 x 10 cm, 80 g) stands upright on the table at the left arm's outer side, "
-            "beyond the right arm's reach. An open grey **bin** (16 x 16 cm inside, walls 6 cm high, 1 cm thick) "
-            "is fixed to the table at the right arm's outer side, beyond the left arm's reach."
+            "RoboLab's grey **tote** (42 x 28 x 10.5 cm, 0.6 kg, free to slide) stands between the two arms. On the left "
+            "arm's outer side: a **tomato soup can** (349 g) and a **foam brick** (28 g); on the right arm's outer side: "
+            "a **potted meat can** (`spam_can`, 370 g) and a **marker** (16 g). Each pair is out of the other arm's "
+            "reach; the tote can be reached by both."
         ),
-        goal=(
-            "**Task:** get the block into the bin. Neither arm can do it alone: the left arm has to pass the block "
-            "to the right arm (a handover in the air, or putting it down where the right arm can reach it), and "
-            "the right arm puts it into the bin."
-        ),
-        success=(
-            "At the **end of the trajectory**: the block's centre is inside the bin's inner walls and less than "
-            "11 cm above the bin's base (so the block stands or lies on the bin floor), the block is at rest "
-            "(speed below 5 cm/s), no part of either robot touches it, and the two arms never touched each other. "
-            "`s.check()` (also returned by `s.step`) computes exactly this: `block_in_bin`, `at_rest`, "
-            "`gripper_touches_object`, `arm_collision`, `success`."
+        goal="**Task:** put all four objects into the tote.",
+        fields=(
+            "`tomato_soup_can_in_tote`, `foam_brick_in_tote`, `spam_can_in_tote`, `marker_in_tote`, `tote_upright`, "
+            "`at_rest`, `robot_touches_object`, `arm_collision`, `success`"
         ),
         difficulty=(
-            "A bimanual task: two arms planned together with no motion primitives, a handover between two "
-            "small 6-joint arms whose dexterous workspaces barely overlap (top-down grasps reach only about "
-            "0.45 m from each base, the bases are 0.61 m apart), grasps that leave room for the other "
-            "gripper, and no arm-to-arm contact ever (the wrist cameras stick out). Medium: a scripted IK "
-            "controller solves it in about 16 s of robot time."
+            "A bimanual packing task: both arms planned together with no motion primitives, four objects of very "
+            "different size and weight (a 349 g can, a 16 g marker lying flat), lifts that must clear a 10.5 cm rim "
+            "although the YAM can point straight down only near the table (higher up the approach has to tilt), drops "
+            "that land inside the tote without knocking it over or bouncing out, and no arm-to-arm contact ever while "
+            "both arms work over the same tote. Medium: a scripted controller solves it in about 28 s of robot time, "
+            "and fails on half of the random layouts it was tried on."
         ),
         reference=(
-            "`solution/oracle_yam.py` (`handover_to_bin`): the left arm grasps the block's top from above and "
-            "carries it to a handover point between the arms; the right arm, waiting beside it, grasps the "
-            "lower half from behind (approach +x), the left arm lets go and slides out, the right arm carries "
-            "the block over the bin and lets go 4 cm above the rim; 822 control steps (16.4 s)."
+            "`solution/oracle_yam.py` (`pack_tote`): the left arm packs its two objects, returns to rest, then the right "
+            "arm packs its two; mesh-based grasps, approach tilts chosen per waypoint, each object released 2.5 cm above "
+            "the rim over its own slot in the tote."
         ),
         hours=2.0,
     ),
@@ -170,7 +167,7 @@ def instruction(fam: str, f: dict) -> str:
 
 {ROBOT_TEXT}
 ## Success
-{f["success"]}
+{COMMON_SUCCESS} Fields: {f["fields"]}.
 
 {TOOLING_TEXT}
 {RULES_TEXT}"""
@@ -216,14 +213,14 @@ build_timeout_sec = 1800.0
 
 
 def readme(fam: str, f: dict, inst: dict) -> str:
-    o = inst["objects"]
     goal = f["goal"].replace("**Task:** ", "")
-    poses = "; ".join(f"{k} at ({v['xy'][0]}, {v['xy'][1]}) yaw {v['yaw']} rad" for k, v in o.items())
+    poses = "; ".join(f"{k} at ({v['pos'][0]:.3f}, {v['pos'][1]:.3f})" for k, v in inst["objects"].items())
     return f"""# {dirname(fam)}
 
 ## Task
-{f["scene"]} {goal[0].upper() + goal[1:]} The scene is the MuJoCo digital twin of a physical I2RT YAM
-bimanual station; the deliverable is a rate-limited joint trajectory meant to be replayed on the real robot later.
+{f["scene"]} {goal} The scene is the MuJoCo digital twin of a physical I2RT YAM bimanual station with scanned YCB
+objects (physical copies can be bought), built from NVIDIA RoboLab's asset library; the deliverable is a rate-limited
+joint trajectory meant to be replayed on the real robot later.
 
 ## Difficulty
 {f["difficulty"]}
@@ -232,18 +229,17 @@ bimanual station; the deliverable is a rate-limited joint trajectory meant to be
 {f["reference"]}
 
 ## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` twice from the frozen instance in fresh sessions. Success =
-{f["success"].split(" `s.check()`")[0][0].lower() + f["success"].split(" `s.check()`")[0][1:]} Also required: every row within the joint limits and
-the rate limit, and both replays ending in the same state hash.
+`tests/grade.py` replays `/app/output/trajectory.npz` twice from the frozen instance in fresh sessions. {COMMON_SUCCESS}
+Also required: every row within the joint limits and the rate limit, and both replays ending in the same state hash.
 
 ## Details
 | | |
 |---|---|
-| source | robot_coding_bench (this repository): scene and success rule written for this benchmark; YAM arm from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ f054586 `i2rt_yam/yam_linear_4310.xml` (MIT); station extrinsics from [i2rt-robotics/i2rt](https://github.com/i2rt-robotics/i2rt) v1.3.6 `yam_station_linear_4310_d405` (MIT) |
-| physics | MuJoCo 3.3.7, 500 Hz, implicitfast; control 50 Hz (10 substeps); rate limit 3 rad/s (joints), 0.25 m/s (grippers) |
-| instance | seed {inst["seed"]} (`rcb_yam.make_instance`): {poses}; initial-state hash {inst["state_sha"]} |
+| source | robot_coding_bench (this repository): scene layout and task written for this benchmark, success predicate = RoboLab's `object_in_container`; objects, tote, oak texture and HDRI from [NVIDIA RoboLab](https://github.com/NVlabs/RoboLab) v0.3.1 assets (YCB: MIT; RoboLab: Apache-2.0; Poly Haven HDRI: CC0), converted by `scripts/sim_to_real/assets/build_assets.py`; YAM arm from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie) @ f054586 `i2rt_yam/yam_linear_4310.xml` (MIT); station extrinsics from [i2rt-robotics/i2rt](https://github.com/i2rt-robotics/i2rt) v1.3.6 (MIT) |
+| physics | MuJoCo 3.3.7, 500 Hz, implicitfast, elliptic cones; objects collide through convex hulls (CoACD) and carry the YCB set's measured masses; control 50 Hz (10 substeps); rate limit 3 rad/s (joints), 0.25 m/s (grippers) |
+| instance | seed {inst["seed"]} (`rcb_yam.make_instance`: seeded layout, then 1.5 s of settling): {poses}; initial-state hash {inst["state_sha"]} |
 | deliverable | `(T, 14)` applied position targets per control step, T ≤ 3000; bit-exact replay |
-| sim-to-real | the instance's object poses are what a physical setup reproduces (a printed placement mat in the left arm's base frame); the recorded targets go to the I2RT SDK's joint-position command unchanged (gripper: travel / 0.0475 → the SDK's 0–1) |
+| sim-to-real | the objects are YCB items that can be bought; the instance's object poses are what a physical setup reproduces (a printed placement mat in the left arm's base frame); the recorded targets go to the I2RT SDK's joint-position command unchanged (gripper: travel / 0.0475 → the SDK's 0–1) |
 """
 
 

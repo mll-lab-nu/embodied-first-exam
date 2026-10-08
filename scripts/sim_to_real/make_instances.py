@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SEEDS = {"cube_stack_three": 1101, "handover_to_bin": 2202}
+SEEDS = {"fruits_in_bowl": 3101, "pack_tote": 4202}
 ENV = {**os.environ, "PYTHONPATH": f"{HERE}/shared:{HERE}/oracles", "RCB_SESSION_LOG": "", "RCB_AGENT_TRACE_DIR": ""}
 REPLAY = (
     "import json, sys, numpy as np, rcb_yam as ry; s = ry.Session(sys.argv[1]); "

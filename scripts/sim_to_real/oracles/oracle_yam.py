@@ -2,7 +2,9 @@
 
 A scripted controller on the privileged tooling: damped-least-squares IK on each arm's `grasp_site` (position and full
 orientation, the arm has 6 joints), Cartesian waypoints interpolated in joint space, the rate limit applied by
-`Session.step`. Writes the applied targets of one successful run.
+`Session.step`. Grasps come from each object's mesh (grasp centre and the finger axis across its narrowest horizontal
+side); the approach tilts away from the base (0-45 degrees) where a vertical approach is out of the YAM's workspace.
+Writes the applied targets of one successful run.
 
     python oracle_yam.py <instance.json> <out_targets.npy>
 """
@@ -130,105 +132,167 @@ class Runner:
         self.hold(n)
 
 
-def finger_axis(yaw, ref=np.pi / 2):
-    """A horizontal axis normal to a box face with this yaw, the one closest to ref."""
-    c = [yaw + k * np.pi / 2 for k in range(-4, 5)]
-    t = min(c, key=lambda a: abs(np.angle(np.exp(1j * (a - ref)))))
-    return np.array([np.cos(t), np.sin(t), 0.0])
-
-
 def yaw_of(quat_wxyz):
     w, x, y, z = quat_wxyz
     return float(np.arctan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)))
 
 
-TRANSIT_Z = 0.10
-
-
-def cube_stack_three(r: Runner):
-    """Left arm: green onto blue, then red onto green; top-down grasps."""
-    side = "left"
-    r.grip(side, 0.032, 1)
-    for name, below in (("cube_green", "cube_blue"), ("cube_red", "cube_green")):
-        o = r.s.state()["objects"][name]
-        p, R = o["pos"], frame(DOWN, finger_axis(yaw_of(o["quat_wxyz"])))
-        r.joints({side: r.solve(side, np.r_[p[:2], TRANSIT_Z], R)}, 60)
-        r.line(side, np.r_[p[:2], p[2] + 0.001], R, 40)
-        r.settle(10)
-        r.grip(side, -0.005, 25)
-        r.line(side, np.r_[p[:2], TRANSIT_Z + 0.04], R, 30)
-        u = r.s.state()["objects"][below]
-        Ru = frame(DOWN, finger_axis(yaw_of(u["quat_wxyz"])))
-        top = u["pos"][2] + 2 * ry.CUBE_HALF + 0.001  # the grasp site sits 1 mm above the held cube's centre
-        r.joints({side: r.solve(side, np.r_[u["pos"][:2], TRANSIT_Z + 0.04], Ru)}, 50)
-        r.settle(10)
-        r.line(side, np.r_[u["pos"][:2], top + 0.004], Ru, 40)
-        r.settle(15)
-        r.grip(side, 0.032, 20)
-        r.line(side, np.r_[u["pos"][:2], TRANSIT_Z + 0.04], Ru, 30)
-    r.joints({side: np.zeros(6)}, 80)
-    r.grip(side, ry.HOME_GRIPPER, 1)
-    r.settle(40)
-
-
-def handover_to_bin(r: Runner):
-    """Left: top-down grasp near the block's top, carry it to the handover point between the arms. Right: waits beside
-    that point, grasps the block lower down from behind (approach +x), left lets go and slides out, right carries the
-    block over the bin and lets go above it. Both grippers close along y at the handover, which keeps the left wrist
-    camera clear of the right gripper (the arms must never touch)."""
-    st = r.s.state()
-    bp, byaw = st["objects"]["block"]["pos"], yaw_of(st["objects"]["block"]["quat_wxyz"])
-    binp = st["bin"]["pos"]
-    hz = ry.BLOCK_HALF[2]
-    H = np.array([0.28, -0.305, 0.115])  # block centre at the handover
-    Rl = frame(DOWN, finger_axis(byaw))
-    Rl_h = frame(DOWN, [0, 1, 0])
-    Rr = frame([1, 0, 0], [0, 1, 0])
-    g = np.r_[H[:2], H[2] - 0.01]
-    r.grip("left", 0.035, 1)
-    r.grip("right", 0.035, 1)
-    r.joints(
-        {
-            "left": r.solve("left", np.r_[bp[:2], bp[2] + hz + 0.06], Rl),
-            "right": r.solve("right", g - [0.08, 0, 0], Rr),
-        },
-        70,
+def quat_mat(q):
+    w, x, y, z = q
+    return np.array(
+        [
+            [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+            [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+            [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
+        ]
     )
-    r.line("left", np.r_[bp[:2], bp[2] + 0.035], Rl, 40)
-    r.settle(10)
-    r.grip("left", -0.005, 25)
-    r.line("left", np.r_[bp[:2], bp[2] + 0.035 + 0.08], Rl, 30)
-    r.joints({"left": r.solve("left", H + [0, 0, 0.035], Rl_h)}, 70)
-    r.settle(20)
-    blk = r.s.state()["objects"]["block"]["pos"]
-    g = np.r_[blk[:2], blk[2] - 0.01]
-    r.line("right", g - [0.08, 0, 0], Rr, 20)
-    r.line("right", g, Rr, 40)
-    r.settle(10)
-    r.grip("right", -0.005, 25)
-    r.grip("left", 0.035, 20)
-    pl, _ = r.arm["left"].fk(r.q("left"))
-    r.line("left", pl + [0, 0.08, 0.01], Rl_h, 25)
-    r.joints({"left": np.zeros(6)}, 80)
-    pr, _ = r.arm["right"].fk(r.q("right"))
-    r.line("right", pr + [0, 0, 0.04], Rr, 20)
-    drop = np.r_[binp[:2], 0.145]  # block bottom ~4 cm above the rim
-    r.joints({"right": r.solve("right", drop + [0, 0, 0.02], Rr)}, 90)
-    r.line("right", drop, Rr, 20)
-    r.settle(15)
-    r.grip("right", 0.04, 25)
-    r.line("right", drop + [-0.06, 0, 0.04], Rr, 25)
-    r.joints({"right": np.zeros(6)}, 80)
+
+
+# Per object: the local axis the fingers close along, and where to grasp (local z: "center" or "top-<m>").
+GRASP = {
+    "banana": ("x", "mid"),
+    "lemon": ("y", "center"),
+    "orange": ("x", "center"),
+    "tomato_soup_can": ("x", "top-0.025"),
+    "foam_brick": ("x", "top-0.02"),
+    "spam_can": ("y", "top-0.025"),
+    "marker": ("x", "center"),
+}
+TILTS = np.radians([0, 10, 20, 30, 40, 50])
+
+
+def _verts(name):
+    pts = [
+        list(map(float, ln.split()[1:4]))
+        for ln in open(ry.ASSETS / "objects" / name / "visual.obj")
+        if ln.startswith("v ")
+    ]
+    return np.array(pts)
+
+
+class Planner:
+    def __init__(self, r: Runner):
+        self.r, self.s = r, r.s
+        self.base = {"left": np.zeros(3), "right": ry.RIGHT_BASE.copy()}
+
+    def grasp(self, name):
+        """World grasp point, finger axis, and the held object's bottom below the grasp point."""
+        o = self.s.state()["objects"][name]
+        R, p = quat_mat(o["quat_wxyz"]), o["pos"]
+        v = _verts(name)
+        ax, where = GRASP[name]
+        if where == "mid":  # a banana: the mid cross-section, not the bbox centre (it is curved)
+            sel = v[np.abs(v[:, 1] - np.median(v[:, 1])) < 0.012]
+            c = sel.mean(0)
+        else:
+            c = (v.min(0) + v.max(0)) / 2
+            if where.startswith("top"):
+                c[2] = v[:, 2].max() - float(where[4:])
+        g = p + R @ c
+        f = R[:, "xyz".index(ax)].copy()
+        f[2] = 0
+        f /= np.linalg.norm(f)
+        bottom = (p + (R @ v.T).T)[:, 2].min()
+        return g, f, g[2] - bottom
+
+    def frames(self, side, pos, fingers):
+        """Candidate orientations at pos: approach tilted away from the base by each of TILTS."""
+        d = np.asarray(pos)[:2] - self.base[side][:2]
+        d /= np.linalg.norm(d)
+        f = np.asarray(fingers, float)
+        if f @ np.array([-d[1], d[0], 0]) < 0:  # fingers' sign closest to the arm's natural wrist roll
+            f = -f
+        return [frame([np.sin(t) * d[0], np.sin(t) * d[1], -np.cos(t)], f) for t in TILTS]
+
+    def reach(self, side, pts, fingers, near=None):
+        """One orientation that reaches every point of pts; returns (R, [q per point])."""
+        last = None
+        for R in self.frames(side, pts[0], fingers):
+            try:
+                qs, q = [], near
+                for p in pts:
+                    q = self.r.solve(side, p, R, near=q)
+                    qs.append(q)
+                return R, qs
+            except RuntimeError as e:
+                last = e
+        raise RuntimeError(f"{side}: cannot reach {pts[0]} ({last})")
+
+    def pick(self, side, name, lift=0.10):
+        r = self.r
+        g, f, h = self.grasp(name)
+        R, (q_pre, _) = self.reach(side, [g + [0, 0, 0.08], g], f)
+        r.grip(side, 0.045, 1)
+        r.joints({side: q_pre}, 50)
+        r.settle(5)
+        r.line(side, g, R, 35)
+        r.settle(8)
+        r.grip(side, -0.005, 22)
+        try:
+            r.line(side, g + [0, 0, lift], R, 30)
+        except RuntimeError:
+            _, (q,) = self.reach(side, [g + [0, 0, lift]], f)
+            r.joints({side: q}, 30)
+        return R, h
+
+    def place(self, side, xy, bottom_z, h, fingers, settle=10):
+        r = self.r
+        tgt = np.r_[xy, bottom_z + h]
+        R, (q_above, _) = self.reach(side, [tgt + [0, 0, 0.05], tgt], fingers)
+        r.joints({side: q_above}, 55)
+        r.settle(5)
+        r.line(side, tgt, R, 20)
+        r.settle(settle)
+        r.grip(side, 0.045, 20)
+        self.retreat(side, R, fingers)
+
+    def retreat(self, side, R, fingers, dz=0.06):
+        """Straight up by dz; if that leaves the workspace, to the same point with another tilt."""
+        r = self.r
+        p, _ = r.arm[side].fk(r.q(side))
+        try:
+            r.line(side, p + [0, 0, dz], R, 20)
+        except RuntimeError:
+            _, (q,) = self.reach(side, [p + [0, 0, dz]], fingers)
+            r.joints({side: q}, 25)
+
+    def home(self, side, n=70):
+        self.r.joints({side: np.zeros(6)}, n)
+
+
+def fruits_in_bowl(r: Runner):
+    P = Planner(r)
+    for name in ("banana", "lemon"):
+        _, h = P.pick("left", name)
+        bowl = r.s.state()["objects"]["bowl"]["pos"]
+        f = P.grasp(name)[1]
+        P.place("left", bowl[:2], 0.055 + 0.02, h, f)
+    P.home("left")
+    r.settle(60)
+
+
+def pack_tote(r: Runner):
+    P = Planner(r)
+    tote = r.s.state()["objects"]["tote"]
+    c = tote["pos"]
+    rim = 0.105 + 0.025
+    slots = {"left": [(-0.06, 0.075), (0.06, 0.075)], "right": [(-0.06, -0.075), (0.06, -0.075)]}  # world-frame offsets
+    for side, names in (("left", ("tomato_soup_can", "foam_brick")), ("right", ("spam_can", "marker"))):
+        for name, (dx, dy) in zip(names, slots[side]):
+            _, h = P.pick(side, name, lift=0.12)
+            f = P.grasp(name)[1]
+            P.place(side, c[:2] + [dx, dy], rim, h, f)
+        P.home(side)
     r.settle(60)
 
 
 def main(inst_path: str, out: str) -> None:
     r = Runner(inst_path)
-    {"cube_stack_three": cube_stack_three, "handover_to_bin": handover_to_bin}[r.s.family](r)
+    {"fruits_in_bowl": fruits_in_bowl, "pack_tote": pack_tote}[r.s.family](r)
     A = r.s.record_stop()
     live = r.s.check()
     rep = r.s.replay(A)
-    print(json.dumps({"live": live, "replay": {k: v for k, v in rep.items()}, "steps": len(A)}, default=str))
+    print(json.dumps({"live": live, "replay": rep, "steps": len(A)}, default=str))
     np.save(out, A)
 
 
