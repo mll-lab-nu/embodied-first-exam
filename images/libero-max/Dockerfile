@@ -7,8 +7,13 @@
 # manifests, results and figures, every .git, and the Hugging Face client used to fetch the task data (last layers).
 # Build from the repository root (the COPY names images/libero-max/...): see docs/benchmarks/libero-max.md.
 FROM docker.io/library/python:3.10.18-slim-bookworm@sha256:445b9efb2c047a7ccdb30d293fd6b1aa0f62a55062dc2b69051df91e10848749
+# OPENBLAS_CORETYPE=Zen (0.1.1): the frozen start-state hashes depend on OpenBLAS's kernels (robosuite's OSC controller
+# and LIBERO run on numpy/scipy). The OpenBLAS 0.3.18 that numpy 1.22.4 and scipy 1.10.1 bundle picks them per CPU
+# (Zen on the reference AMD 7950X, its generic Prescott kernels on an Intel Xeon 8488C, which it does not know), so
+# the same instance rebuilt differently there. Pinned to the kernels the instances were frozen with (AVX2 + FMA).
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+    MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+    OPENBLAS_CORETYPE=Zen
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends libosmesa6 libgl1 libglib2.0-0 \
     libmagickwand-6.q16-6 libexpat1 libfontconfig1 git && rm -rf /var/lib/apt/lists/*
 COPY images/libero-max/requirements.txt /tmp/requirements.txt
@@ -38,4 +43,10 @@ RUN test -z "$(find /opt -name '*.hdf5' -o -name '.git' -o -name 'download_utils
     && test ! -e /opt/libero-max/scripts && test ! -e /opt/libero-max/benchmark \
     && python -c "import importlib.util as u; assert u.find_spec('huggingface_hub') is None" \
     && python -c "import mujoco, robosuite, torch; from libero.libero import benchmark; from libero_max.cosmos_integration import CosmosInterventionEnv; print('ok', mujoco.__version__, robosuite.__version__)"
+# Both bundled OpenBLAS builds run their Zen kernels (OPENBLAS_CORETYPE above), whatever CPU builds the image.
+RUN python -c 'import ctypes, numpy, scipy.linalg; scipy.linalg.inv(numpy.eye(2)); \
+    libs = {x.split()[-1] for x in open("/proc/self/maps") if "libopenblas" in x}; \
+    fns = [getattr(ctypes.CDLL(p), "openblas_get_corename64_" if "openblas64" in p else "openblas_get_corename") for p in libs]; \
+    [setattr(f, "restype", ctypes.c_char_p) for f in fns]; cores = sorted(f().decode() for f in fns); \
+    print("openblas", cores); assert len(cores) == 2 and set(cores) == {"Zen"}, cores'
 WORKDIR /app

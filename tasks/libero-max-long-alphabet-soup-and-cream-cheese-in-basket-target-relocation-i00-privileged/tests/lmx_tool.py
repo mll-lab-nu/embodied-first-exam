@@ -92,6 +92,29 @@ def _integration_sha(sim) -> str:
     return hashlib.sha256(a.tobytes()).hexdigest()
 
 
+def numerics() -> dict:
+    """The CPU-dependent numeric kernels this process uses. The frozen hashes were made with OpenBLAS's Zen kernels
+    (OPENBLAS_CORETYPE=Zen, set in the image: unpinned, OpenBLAS 0.3.18 picks per CPU, e.g. its generic Prescott
+    kernels on Sapphire Rapids) and numpy's AVX-512 math loops, so a CPU without AVX-512 cannot rebuild them."""
+    import ctypes
+
+    out = {"OPENBLAS_CORETYPE": os.environ.get("OPENBLAS_CORETYPE")}
+    try:
+        from numpy.core._multiarray_umath import __cpu_features__ as feats
+
+        out["numpy_avx512_skx"] = bool(feats.get("AVX512_SKX"))
+        with open("/proc/self/maps") as f:
+            libs = sorted({ln.split()[-1] for ln in f if "libopenblas" in ln})
+        for lib in libs:
+            dll = ctypes.CDLL(lib)
+            get = getattr(dll, "openblas_get_corename64_", None) or dll.openblas_get_corename
+            get.restype = ctypes.c_char_p
+            out[Path(lib).name.split("-")[0]] = get().decode()
+    except Exception as exc:  # noqa: BLE001  (diagnostics only)
+        out["error"] = repr(exc)[:200]
+    return out
+
+
 def build(case: dict):
     """LIBERO-MAX's own path: the LIBERO-PRO task variant, its initial state, the PRO substrate and the event runtime.
     Returns (wrapped env, task, robosuite env). Raises if this process already built a simulator."""
@@ -148,8 +171,9 @@ class Session:
         self.initial_state_sha = _integration_sha(self.sim)
         if check and self.initial_state_sha != self.inst.get("initial_state_sha"):
             raise RuntimeError(
-                "the frozen instance did not rebuild bit-exactly (different simulator, assets or versions): "
-                f"{self.initial_state_sha[:12]} != {str(self.inst.get('initial_state_sha'))[:12]}"
+                "the frozen instance did not rebuild bit-exactly (different simulator, assets, versions or CPU "
+                f"numeric kernels): {self.initial_state_sha[:12]} != {str(self.inst.get('initial_state_sha'))[:12]}; "
+                f"numerics here: {canonical(numerics())} (frozen with OpenBLAS Zen kernels and numpy AVX-512 loops)"
             )
         self.max_steps = SUITE_MAX_STEPS[self.case["task_suite_name"]]
         self.actions: list[np.ndarray] = []
