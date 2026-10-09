@@ -16,7 +16,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/myosuite-dex-bunny-inspect-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite dex_bunny_inspect (MyoHand, 39 muscles) on the same frozen instance as myosuite-dex-bunny-inspect-i00-privileged: Move the Stanford bunny along MyoDex's recorded inspect (lift it and turn it to look at it) motion: a reference of the object's pose over 99 control steps (1.98 s), from GRAB motion capture (TCDM / MyoDex). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; one episode, no reset, no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite dex_bunny_inspect (MyoHand, 39 muscles) on the same frozen instance as myosuite-dex-bunny-inspect-i00-privileged: Move the Stanford bunny along MyoDex's recorded inspect (lift it and turn it to look at it) motion: a reference of the object's pose over 99 control steps (1.98 s), from GRAB motion capture (TCDM / MyoDex). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode, replays it in fresh processes and grades it."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "dex_bunny_inspect", "standard-mode"]
 

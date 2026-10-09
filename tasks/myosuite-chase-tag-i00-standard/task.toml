@@ -16,7 +16,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/myosuite-chase-tag-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite chase_tag (MyoLegs, 80 muscles) on the same frozen instance as myosuite-chase-tag-i00-privileged: Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; one episode, no reset, no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite chase_tag (MyoLegs, 80 muscles) on the same frozen instance as myosuite-chase-tag-i00-privileged: Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode, replays it in fresh processes and grades it."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myolegs", "code-as-policy", "trajectory", "chase_tag", "standard-mode"]
 
