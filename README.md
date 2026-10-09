@@ -28,7 +28,7 @@ measures the same thing under real-robot constraints. The standard-mode wire pro
 
 A third mode, **standard-realtime** (protocol v1.1, `eai-standard/2.3`, PROTOCOL §4b), is standard mode on a clock that does not
 stop: once an episode starts, the robot runs in real time and holds its last targets while the agent thinks, so the agent
-drives it from a controller program of its own. It is offered where a benchmark's tasks call for it (HumanoidBench, RoboOlympics), as
+drives it from a controller program of its own. It is offered where a benchmark's tasks call for it (HumanoidBench, RoboOlympics, BiGym 2.0), as
 `<base>-standard-realtime` next to `<base>-privileged` and `<base>-standard`; its results are reported separately.
 
 > **Names.** Protocol v1.0 renamed *unlimited/limited* to *privileged/standard* and `rcb-limited/2.1` to
@@ -46,7 +46,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | HumanoidBench (`humanoidbench-<family>-i00`) | MuJoCo · Unitree H1 humanoid | 24; + 10 standard-realtime (`-standard-realtime`: time does not stop) | full on 1, none on 23 (human review); standard-realtime: full on 1, none on 9 |
 | MetaWorld+ (`metaworldplus-<env>-i00`) | MuJoCo (Meta-World v3) · Rethink Sawyer | 50 | full |
 | RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
-| RoboPaint (`robopaint-<style>-<target>-i00`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 82 | partial |
+| RoboPaint (`robopaint-<style>-<target>-i<NN>`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 43 | partial |
 | RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 53 | full on 2, none on 51 (human review) |
 | YAMLab (`yamlab-<family>-iNN`) | Isaac Lab / Isaac Sim (YAMLab) · two I2RT YAM arms with parallel grippers | 50 (2 families × 25 object pairs) | full (upstream human demonstrations) |
 | BEHAVIOR-1K (`behavior-<activity>-i00`) | OmniGibson / Isaac Sim · Galaxea R1 Pro | 100 | partial on 2, none on 98 (human review; 89 supplementary tasks without a verified positive yet) |
@@ -57,6 +57,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | DexJoCo (`dexjoco-<family>-i00`) | MuJoCo 3.4 · Franka Panda + Allegro hand, one or two arms | 11 | full (upstream human demonstrations) |
 | MyoSuite (`myosuite-<family>-i00`) | MyoSuite 2.12.2 (MuJoCo 3.6, CPU) · musculoskeletal hand, arm, torso and legs (MyoHand, MyoArm, MyoLegs, with prostheses in two tasks), muscle commands; MyoChallenge and MyoDex tasks | 22 | full on 3 (MyoSuite's NPG baselines), none on 19 (human review) |
 | RoboTangle (`robotangle-<family>-<tier>-i00`; formerly TopoGym) | Genesis 1.2.1 (rigid bodies on CPU float64 or GPU fp32, libuipc IPC and PBD deformables), Nyx RGB · ALOHA 2 bimanual; Franka Panda + Robotiq 2F-85 | 52 (11 families × up to 5 tiers) | full |
+| BiGym 2.0 (`bigym2-<family>-i00`) | MuJoCo 3.8.1 + NVIDIA GR00T-WBC (CPU; EGL rendering) · Unitree G1 humanoid with Dex1-1 grippers, legs and waist driven by the whole-body controller | 13 (+ 13 standard-realtime) | none (human review) |
 | RoboOlympics (`roboolympics-<sport>-<format>-i00`) | MuJoCo 3.3.7 (CPU, OSMesa) · Franka Panda with a paddle (table tennis) or with a racket on an x-y base (badminton); KUKA iiwa 14 with a mallet (air hockey) | 3, standard-realtime only (real-time sports against a scripted opponent; S = 10 and no privileged twin, PROTOCOL §4b exceptions) | full (RoboOlympics' reference players, camera images only) |
 
 Each task directory carries a README in one layout: a key table (benchmark, mode, twin, simulator and robot, family and

@@ -32,7 +32,7 @@ protocol = "eai-standard/2.3"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "none known: no run has passed it, and published RL reaches 31% of the bar (paper 57, FastTD3 244, bar 800); human review in PR #83"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 31% of the bar (paper 57, FastTD3 244, bar 800) with upstream's mesh feet on MuJoCo 3.1.6 (box feet since image 0.2.0); human review in PR #83"
 
 [verifier]
 timeout_sec = 900.0

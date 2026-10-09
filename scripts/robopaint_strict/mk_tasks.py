@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the RoboPaint tasks: tasks/robopaint-<family>-<target>-i00-{privileged,standard} (docs/benchmarks/robopaint.md).
+"""Generate the RoboPaint tasks: tasks/robopaint-<family>-<target>-i<NN>-{privileged,standard} (docs/benchmarks/robopaint.md).
 
     python3 scripts/robopaint_strict/mk_tasks.py                          # (re)write every pair; `git diff tasks/` stays empty
     python3 scripts/robopaint_strict/mk_tasks.py --check                  # write nothing; exit 1 if a task dir differs
-    python3 scripts/robopaint_strict/mk_tasks.py robopaint-kaishu-yong-i00 # these pairs only
+    python3 scripts/robopaint_strict/mk_tasks.py robopaint-kaishu-yongzibafa-i00 # these pairs only
 Needs only Python 3 (no simulator, no numpy). Then `cd tasks && harbor add --scan .` when a digest changed.
 
 Two stages, the second on the output of the first:
@@ -21,7 +21,11 @@ Two stages, the second on the output of the first:
     verifier replays with it (tests/grade.py, tests/Dockerfile), the privileged scoring service imports it (RCB_TOOL_MODULE) and the
     standard collect hook replays with it (RCB_TOOL). The tasks' wiring comes with the template pair's code; this script checks it;
   - the texts: the rules from texts/rules_<group>_<mode>.md in instruction.md (after "Target and score"), texts/readme_<mode>.md
-    in README.md, a sentence in the task.toml description, the oracle evidence (rules.json).
+    in README.md, a sentence in the task.toml description, the oracle evidence (rules.json: oracle_evidence, or the family's own
+    entry in oracle_evidence_family, or the pair's own entry in oracle_evidence_pairs), and the pair's change log (rules.json
+    change_log: README "Change Log").
+The limits stay those of the reference solution they were set on (reference_path_mm, reference_mark_width_mm); a pair whose
+reference solution was re-made since has its current one's path and mark width in rules.json current_reference (the evidence).
 Every task ends with scripts/task_conventions.py's normalize(); a task dir holds exactly what the generator writes.
 
 "Strict" survives only in internal names: this directory, rcb_brush_strict.py, RCB_TOOL_MODULE=rcb_brush_strict and the reward.json
@@ -38,11 +42,12 @@ MODULE = "rcb_brush_strict.py"
 GROUP = {
     "kaishu": "calligraphy",
     "xingshu": "calligraphy",
+    "caoshu": "calligraphy",
     "lettering": "lettering",
     "acrylic": "painting",
     "oil": "painting",
 }
-SRC_RE = re.compile(r"^robopaint-(kaishu|xingshu|lettering|acrylic|oil)-([a-z0-9]+(?:-[a-z0-9]+)*)-i00$")
+SRC_RE = re.compile(r"^robopaint-(kaishu|xingshu|caoshu|lettering|acrylic|oil)-([a-z0-9]+(?:-[a-z0-9]+)*)-i\d\d$")
 # the instance keys of the rules (= rcb_brush_strict.RULE_KEYS)
 RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm")
 PLACES = {"privileged": ("tests/", "environment/scorer/"), "standard": ("environment/sim/",)}  # the graders' copies of MODULE
@@ -74,19 +79,22 @@ def rules_for(base: str, cfg: dict) -> tuple[dict, dict]:
     fam = SRC_RE.match(base).group(1)
     F = cfg["families"][fam]
     ref = float(cfg["reference_path_mm"][base])
+    cur = cfg.get("current_reference", {}).get(base, {})  # a reference solution re-made after the limits were set
+    ev_path = float(cur.get("path_mm", ref))
     step = float(F["round_mm"])
     budget = math.ceil(F["path_factor"] * ref / step - 1e-9) * step
     rule = {"max_path_mm": float(budget)}
     v_mark = {}
     if "mark_factor" in F:  # calligraphy, lettering: colouring in = a long path AND thin marks
         ref_w = float(cfg["reference_mark_width_mm"][base])
+        ev_w = float(cur.get("mark_width_mm", ref_w))
         min_w = math.floor(F["mark_factor"] * ref_w / 0.01 + 1e-9) * 0.01
         rule["min_mark_width_mm"] = round(min_w, 2)
         v_mark = {
             "MIN_MARK_WIDTH_MM": f"{min_w:.2f}",
             "REF_MARK_WIDTH_MM": f"{ref_w:.2f}",
             "MARK_FACTOR": fmt(F["mark_factor"]),
-            "EVIDENCE": f"path_mm {ref:.0f} and mark_width_mm {ref_w:.2f}, against the colouring-in limits {fmt(budget)} mm and "
+            "EVIDENCE": f"path_mm {ev_path:.0f} and mark_width_mm {ev_w:.2f}, against the colouring-in limits {fmt(budget)} mm and "
             f"{min_w:.2f} mm",
         }
     if "max_scribble" in F:
@@ -105,7 +113,7 @@ def rules_for(base: str, cfg: dict) -> tuple[dict, dict]:
         "MAX_SCRIBBLE_SHARE": fmt(F.get("max_scribble_share", 0)),
         "SCRIBBLE_SHARE_PCT": fmt(100 * F.get("max_scribble_share", 0)),
         "SCRIBBLE_MIN_MM": fmt(F.get("scribble_min_mm", 0)),
-        "EVIDENCE": f"path_mm {ref:.0f} of the {fmt(budget)} mm budget; its strokes are sweeps",
+        "EVIDENCE": f"path_mm {ev_path:.0f} of the {fmt(budget)} mm budget; its strokes are sweeps",
         **v_mark,
     }
     return rule, v
@@ -220,11 +228,19 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
             + "\n\n",
             "README.md",
         )
+        log = cfg.get("change_log", {}).get(base)
+        if log:  # normalize() files it under Details as "### Change Log"
+            rd = rd.rstrip("\n") + "\n\n## Change Log\n" + "\n".join(f"- {e}" for e in log) + "\n"
         files["README.md"][0] = rd.encode()
         tt = files["task.toml"][0].decode()
         sentence = render(texts[f"toml_{GROUP[fam]}.md"], v).strip().replace('"', '\\"')
         tt = sub_re1(tt, r'^(description = ".*)"$', lambda mm: mm.group(1) + " " + sentence + '"', "task.toml")
-        ev = render(cfg["oracle_evidence"][mode], v).replace('"', '\\"')
+        evs = (
+            cfg.get("oracle_evidence_pairs", {}).get(base)
+            or cfg.get("oracle_evidence_family", {}).get(fam)
+            or cfg["oracle_evidence"]
+        )
+        ev = render(evs[mode], v).replace('"', '\\"')
         tt = sub_re1(tt, r'^oracle_evidence = ".*"$', lambda mm: f'oracle_evidence = "{ev}"', "task.toml")
         files["task.toml"][0] = tt.encode()
         out[name] = {k: (b, m_) for k, (b, m_) in files.items()}
@@ -294,7 +310,7 @@ def sync(task: pathlib.Path, files: dict, check: bool) -> list[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("pairs", nargs="*", help="pairs robopaint-<family>-<target>-i00 (default: every pair of rules.json)")
+    ap.add_argument("pairs", nargs="*", help="pairs robopaint-<family>-<target>-i<NN> (default: every pair of rules.json)")
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args()
     cfg = json.loads((HERE / "rules.json").read_text(encoding="utf-8"))

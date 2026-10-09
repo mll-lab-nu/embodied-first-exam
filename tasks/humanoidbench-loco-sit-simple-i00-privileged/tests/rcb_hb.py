@@ -292,7 +292,7 @@ class Session:
         self.data.time = float(snap[nq + nv])
         self.data.ctrl[:] = 0.0
         mujoco.mj_forward(self.model, self.data)           # 3. recompute derived quantities
-        self.data.qacc_warmstart[:] = snap[nq + nv + 1:]   # 4. AFTER forward -- forward overwrites it
+        self.data.qacc_warmstart[:] = snap[nq + nv + 1:]   # 4. AFTER forward (MuJoCo < 3.3.6's forward overwrote it)
         self._restore_bookkeeping()
 
     def _restore_bookkeeping(self) -> None:

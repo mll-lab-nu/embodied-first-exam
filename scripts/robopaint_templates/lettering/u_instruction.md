@@ -1,18 +1,20 @@
-# RoboPaint · lettering · {{WORD}} — frozen instance
+# RoboPaint · lettering · {{TITLE}} — frozen instance
 
-You control a simulated **Franka Panda arm holding a broad-edge (chisel) dip pen** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3 physics (PhysX
-on the CPU) for the robot; the pen's mark is the chisel edge swept along the path it takes. **Task:** copy the lettering shown in the picture
-`/app/target.png` onto the main sheet with pen and ink, **in at most {{N}} strokes**.
+You control a simulated **Franka Panda arm holding a pointed flexible dip pen** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3 physics (PhysX
+on the CPU) for the robot; the pen's mark is the ink laid between the two tines, whose spread follows the press depth. **Task (臨摹, copying an
+exemplar):** copy {{TASK_MD}}, shown in the picture `/app/target.png`, onto the main sheet with pen and ink, **in at most {{N}}
+strokes**.
 
 This is a *fixed scene instance*: you may reset and retry as many times as you want. Your deliverable is **one replayable
 trajectory**, not a general policy.
 
 ## The pen, the ink and the sheets
-- The pen is a rigid holder with a **broad-edge (chisel) steel nib 4 mm wide** at its end (no collision; the holder hits the
-  paper 6 mm below its surface); the robot's tool point (TCP) is the middle of the nib's writing edge. **The edge lies along the tool's y axis**
-  (the second column of the tip pose's rotation matrix); at the start pose that is along the writing line (world -y).
-  `s.tip_down_quat(yaw)` turns the pen about the vertical by `yaw` (counter-clockwise as seen by the writer, looking at the sheet with its far edge up). The part of the edge that is below a sheet's surface writes (a tilted pen writes with one corner); a steel nib does
-  not widen when pressed harder. Moved along its edge the nib draws a 0.4 mm line; moved across it, a line as wide as the nib.
+- The pen is a rigid holder with a **pointed flexible steel nib** (two tines split by a slit; no collision; the holder hits
+  the paper 6 mm below its surface); the robot's tool point (TCP) is the point. A light touch (a press of up to 1.0 mm below a sheet's surface)
+  writes a **hairline 0.4 mm wide**; pressed deeper, the tines spread apart and the line widens **linearly with the press depth,
+  up to 2.0 mm at a 3.5 mm press** (fully open; no wider beyond that). The tines spread along the **tool's y axis** (the second
+  column of the tip pose's rotation matrix; at the start pose along the writing line, world -y): a pressed stroke is wide
+  where the point moves across that axis and stays thin where it moves along it. `s.tip_down_quat(yaw)` turns the pen about the vertical by `yaw` (counter-clockwise as seen by the writer, looking at the sheet with its far edge up).
 - **Ink**: the pen starts **dry** (strokes leave no mark). The ink well lies on a plate on the robot's left (+y): centre
   **(x, y) = (-0.100, 0.150)**, radius 20 mm, ink surface **z = 0.028 m** (plate top 0.026 m, rigid). **Dipping** = the tip inside the
   well's circle and below the ink surface: the pen is then inked (it never runs dry). `s.wells()` returns these facts.
@@ -20,7 +22,7 @@ trajectory**, not a general policy.
   **(-0.100, 0.000)**, is the one that is scored; the **practice sheet**, 227.18 x 99.41 mm centred at **(-0.100, -0.1856)** (the
   robot's right of the main sheet), is for test strokes and is never scored or counted. `s.sheet_facts()`.
 - The tip is sampled at every physics step (100 Hz); one continuous contact with a sheet is one **stroke**; ink is permanent (only
-  `s.reset()` clears it). The mark model is `NibPainter` in `/opt/tools/rcb_brush.py`.
+  `s.reset()` clears it). The mark model is `PointedPenPainter` in `/opt/tools/rcb_brush.py`.
 - The arm is position-controlled (PD, 20 Hz targets): a moving target is followed with a lag of about 0.1 s (2 mm at 2 cm/s).
 
 ## Target and score
@@ -36,13 +38,14 @@ trajectory**, not a general policy.
   scaling, one shift for the whole sheet, whole pixels, at most 5 mm along each axis) that best matches the picture; every quantity
   below is taken after that shift, which is reported (`register_dx_mm`, `register_dy_mm`; the unshifted IoU as `iou_unregistered`).
   If the best match lies at the 5 mm limit, no shift is applied. **IoU** of the inked areas; **boundary F**: how well
-  the edges of your ink match the edges of the exemplar's ink (precision / recall within 1 mm); **stroke coverage**: the fraction
-  of each of the exemplar's strokes covered by your ink (the worst one counts); **stray ink**: ink more than 1 mm
+  the edges of your ink match the edges of the exemplar's ink (precision / recall within 1 mm); **region coverage**: the exemplar's ink is
+  divided into {{NREG}} regions, at most 30 mm each along its strokes; the fraction of each region covered by your ink (the worst
+  one counts); **stray ink**: ink more than 1 mm
   away from the exemplar's ink, as a fraction of the exemplar's inked area; the **number of strokes** on the main sheet (inked
   contacts).
-  **Success iff IoU ≥ {{IOU}}, boundary F ≥ 0.80, every stroke of the exemplar covered ≥ 0.75, stray ink
+  **Success iff IoU ≥ {{IOU}}, boundary F ≥ 0.80, every region covered ≥ 0.75, stray ink
   ≤ 0.04 and at most {{N}} strokes on the main sheet.** `final_reward` = the IoU (scaled by {{N}} / strokes if there are more than {{N}}).
-  Reported as well: ink precision / recall, missing ink, the mean stroke coverage. `s.score()` returns exactly these metrics for
+  Reported as well: ink precision / recall, missing ink, the mean region coverage. `s.score()` returns exactly these metrics for
   the current sheet: a scoring service (a separate container) replays the actions you have executed since your last `s.reset()` and
   scores the resulting sheet, so a call after a long episode takes as long as that replay.
 
@@ -100,4 +103,4 @@ The grader replays in two fresh processes, each exactly this CLI (a fresh proces
   is the no-op. Control runs at 20 Hz (physics 100 Hz).
 - **Your wall-clock budget is 2 h (7200 s)**; there is no step budget. A runaway guard stops an episode at 72000 control steps
   (1 h of simulated time). Everything runs on the CPU except camera rendering.
-- The exemplar's letterforms were authored for this benchmark and are in the public domain (CC0-1.0): `/app/NOTICE-exemplar.md`.
+- The exemplar comes from a public-domain engraved copybook plate (1741): `/app/NOTICE-exemplar.md`.

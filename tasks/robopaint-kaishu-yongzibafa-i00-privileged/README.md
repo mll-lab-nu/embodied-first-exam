@@ -7,7 +7,7 @@
 | Twin | `robopaint-kaishu-yongzibafa-i00-standard` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_kaishu_yongzibafa` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 1075 and mark_width_mm 4.47, against the colouring-in limits 3230 mm and 1.34 mm. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
+| Oracle | `partial` — Reference solution in solution/, re-made on 2026-10-09 by the calligraphy planner of solution/README.md (README, Change Log; docs/benchmarks/robopaint.md, Targets). The verifier scores it 1 under the process rules (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1270 and mark_width_mm 3.71, against the colouring-in limits 3230 mm and 1.34 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): docs/benchmarks/robopaint.md (Validation). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
@@ -35,11 +35,14 @@ position-controlled arm (PD lag ~0.1 s). The tooling gives only thin primitives;
 `s.brush_state()` are privileged feedback. The stroke cap rules out filling the exemplar with many thin strokes.
 
 ## Reference solution
-Generated once (DESIGN §17), on the graders' copy: per stroke, a robot-free trajectory optimisation against the brush model
-(handle control points (x, y, press) initialised by inverting the trailing dynamics along the stroke, scipy least_squares on the
-rendered stroke), then executed on the robot with lag feed-forward and iterative learning control, a dip before every stroke, the
-arm parked at the end. The plan is frozen at generation time (`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
-4105 control steps, 21 strokes, IoU 0.891, boundary F 0.941, min stroke coverage 0.860, stray 0.0123.
+Generated on the graders' copy (the calligraphy planner of 2026-10-09, `solution/opt_calli.py --profile print`; DESIGN §17): per
+stroke, a robot-free trajectory optimisation against the brush model: handle control points (x, y, press) about every 6 mm along
+a path through the stroke's ink (several paths tried, the best kept), initialised by inverting the trailing dynamics, scipy
+least_squares on the rendered stroke against the exemplar with stray ink weighted up, under-covered strokes optimised again. The
+brush enters the paper along the stroke and leaves it back onto its own root (回锋), with a minimum press so that every stroke
+stays one contact. Then executed on the robot with lag feed-forward and iterative learning control, a dip before every stroke,
+the arm parked at the end. The plan is frozen at generation time (`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
+4400 control steps, 21 strokes, IoU 0.940, boundary F 0.988, min stroke coverage 0.931, stray 0.0015.
 
 ## Verification
 "The rule" below is the picture rule and the process rules (Task); the replays run
@@ -71,3 +74,6 @@ nothing derived from the target except `target.png` (`ci_checks/check-robopaint-
 ### Licences
 The exemplar derives from the fonts AR PL KaitiM GB / AR PL UKai via Make Me a Hanzi (Arphic Public License):
 `environment/ARPHICPL.TXT`, `environment/NOTICE-exemplar.md`.
+
+### Change Log
+- 2026-10-09: the reference solution only, re-made so that it copies the exemplar closely (the owner's request: every stroke, no blob where a stroke starts, no needle where it ends): the calligraphy planner of 2026-10-09 and its plan (the privileged twin's `solution/`, its `README.md` has the method) and the new trajectory (`solution/oracle_qpos.npy`, the same in both twins). The reference's verifier metrics went from IoU 0.891, boundary F 0.941, minimum stroke coverage 0.860, stray 0.0123 to 0.940, 0.988, 0.931, 0.0015; `path_mm` 1075 -> 1270 mm and `mark_width_mm` 4.47 -> 3.71 mm, far from colouring in. Harbor oracle 1 and nop 0 on both modes after the change (ws3, 2026-10-09). The instance, the picture, the pass rule and the process limits (set on the first reference) are unchanged, so the task keeps its name.

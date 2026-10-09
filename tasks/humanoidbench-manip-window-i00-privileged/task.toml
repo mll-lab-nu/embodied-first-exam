@@ -48,6 +48,6 @@ allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.
 
 [environment]
 build_timeout_sec = 1800.0
-# the deliverable is reachable by search; one episode is ~1.46 s of one core
+# the deliverable is reachable by search; one episode is ~1.66 s of one core
 cpus = 16
 memory_mb = 16384
