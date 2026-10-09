@@ -25,12 +25,15 @@ rows are replayed in a fresh simulator at the end. What is graded is the rows th
 submitted, so the replay equals the live run however the timing went. Evidence added (never visible to the agent):
 ticks.f64 (per journal row: wall time, and the call whose chunk gave the row, -1 for a held one), calls.jsonl (one line
 per call; no calls/NNNNNN/ directories: a controller calls 50 times a second) and submitted.f64 (every row as sent:
-call id, then the row). final.json adds realtime, slowdown, max_lag_s, stalls, held_steps and late_steps.
+call id, then the row). final.json adds realtime, slowdown, max_lag_s, stalls, held_steps, late_steps and
+max_queue_wait_s (the longest a request waited for the simulator thread).
 
 Threads: the simulator and its GL context belong to the main thread, which runs the clock and serves every request in
 between control steps; the HTTP threads only read, queue and encode. A control step that is due runs before any waiting
-request. A service that falls behind (a long render) runs the missed steps back to back, skipping none; more than
-MAX_LAG_S behind, it drops the debt instead (a stall, counted) rather than fast-forward the robot.
+request. A service that falls behind (a long render, a simulator step slower than control_dt, a busy host) runs the
+missed steps back to back, skipping none, and serves one waiting request after each of them, so a request waits at most
+about a step's time; more than MAX_LAG_S behind, it drops the debt instead (a stall, counted) rather than fast-forward the
+robot.
 
 A crash resumes the same episode from its last checkpoint (one per second of robot time while the clock runs), paused.
 A simulator crash is an infrastructure failure, never the agent's (PROTOCOL §4b, owner 2026-10-08). No call spans a
@@ -66,6 +69,7 @@ class _Job:
 
     def __init__(self, method: str, path: str, body: bytes, content_length: int | None = None):
         self.method, self.path, self.body, self.content_length = method, path, body, content_length
+        self.queued = time.monotonic()
         self.done = threading.Event()
         self.reply: tuple = ()           # ("raw", code, ctype, body) | ("rcb1", meta, parts) | ("rec", meta, Recorder)
 
@@ -98,6 +102,7 @@ class RealtimeService(Service):
         self.q: queue.Queue = queue.Queue()
         self.max_lag = self.lag = 0.0
         self.stalls = self.held_steps = self.late_steps = 0
+        self.max_queue_wait = 0.0
         self._ticks: list[tuple[float, float]] = []        # (wall time, call id) per journal row not yet on disk
         super().__init__(sim, **kw)
         self.ticks_path = os.path.join(self.data, "ticks.f64")
@@ -134,7 +139,8 @@ class RealtimeService(Service):
 
     def _timing_record(self) -> dict:
         return {"protocol": PROTOCOL, "realtime": 1, "slowdown": self.slowdown, "max_lag_s": round(self.max_lag, 4),
-                "stalls": self.stalls, "held_steps": self.held_steps, "late_steps": self.late_steps}
+                "stalls": self.stalls, "held_steps": self.held_steps, "late_steps": self.late_steps,
+                "max_queue_wait_s": round(self.max_queue_wait, 4)}
 
     def _write_final(self) -> None:
         self.verdict.update(self._timing_record())   # final.json merges the verdict; none of these keys is a verdict's
@@ -230,6 +236,7 @@ class RealtimeService(Service):
     # ------------------------------------------------------------------ requests (simulator thread)
     def dispatch(self, job: _Job) -> None:
         """Serve one queued request; a watch finishes later, from tick()."""
+        self.max_queue_wait = max(self.max_queue_wait, time.monotonic() - job.queued)
         try:
             self.first_request()
             path = urlparse(job.path).path
@@ -405,11 +412,17 @@ class RealtimeService(Service):
             wait = self.due_in(time.monotonic())
             if wait is not None and wait <= 0:
                 self.tick()
-                continue
-            try:
-                job = self.q.get(timeout=0.25 if wait is None else min(wait, 0.25))
-            except queue.Empty:
-                continue
+                # Behind the clock (a simulator step slower than control_dt, or a busy host), a step is due again at
+                # once: serve one waiting request between steps, or no request would be served until the next stall.
+                try:
+                    job = self.q.get_nowait()
+                except queue.Empty:
+                    continue
+            else:
+                try:
+                    job = self.q.get(timeout=0.25 if wait is None else min(wait, 0.25))
+                except queue.Empty:
+                    continue
             self.dispatch(job)
 
     def submit_job(self, job: _Job) -> tuple[int, str, bytes]:
