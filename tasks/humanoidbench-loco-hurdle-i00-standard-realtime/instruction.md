@@ -3,8 +3,8 @@
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) **as if it were real hardware**: the
 simulator runs in a service you cannot open, and you reach it only through a client. Like real hardware, it
 does not wait for you: once an episode is running, the robot moves in real time while you think. **Task:** run
-the robot forward down the walled track and over the hurdles, without touching the side or back walls and
-without falling.
+the robot forward down the walled track, past the hurdles, without touching the side or back walls and without
+falling.
 
 ## Rules (real-robot rules)
 - **Time does not stop.** An episode starts paused, on the frozen starting state, its servos holding their
@@ -71,10 +71,10 @@ upright (head at standing height, torso vertical) and low actuator force, multip
 target is a sprint rather than a walk, on the order of 5 m/s. On top of that, touching any barrier's collision
 geometry multiplies that entire step down to a small fraction of its value: contact is a gate to be respected,
 not a penalty to be traded off. Only the walls that line the track on both sides and behind the start count as
-barriers here; the hurdles themselves carry no such penalty, but they are solid and have to be cleared. The
-service ends the episode the moment the pass mark is reached (`reason = "success"`), and a fresh replay of the
-recorded episode, the servo targets the robot actually executed at each control step, must reach it as well
-and end in the same state.
+barriers here; the hurdles carry no such penalty, and in upstream's model they have no collision geometry at
+all (drawn, not solid): the robot runs through them. The service ends the episode the moment the pass mark is
+reached (`reason = "success"`), and a fresh replay of the recorded episode, the servo targets the robot
+actually executed at each control step, must reach it as well and end in the same state.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, standard-realtime mode)
 Your whole interface to the robot. Its docstring is the full reference
@@ -103,7 +103,7 @@ while True:                                     # the first submit starts the cl
         break
     a = ...                                     # from res.meta["proprio"]["now"]
 ```
-Measured cost here in standard mode: about 5.0 ms per one-row call asking for one head camera, physics
+Measured cost here in standard mode: about 4.4 ms per one-row call asking for one head camera, physics
 included; a call with `cameras=[]` skips the rendering. A control step is 20 ms.
 
 Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order,

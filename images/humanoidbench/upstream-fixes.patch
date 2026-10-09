@@ -1,0 +1,80 @@
+diff --git a/humanoid_bench/assets/tasks/powerlift.xml b/humanoid_bench/assets/tasks/powerlift.xml
+index 82dbc36..59126bd 100644
+--- a/humanoid_bench/assets/tasks/powerlift.xml
++++ b/humanoid_bench/assets/tasks/powerlift.xml
+@@ -9,8 +9,10 @@
+         <body name="dumbbell" pos="0.5 0 0.2">
+             <freejoint name="free_dumbbell"/>
+             <geom name="post" type="cylinder" pos="0 0 0" size="0.029 0.65" zaxis="0 1 0" material="steel_cover" class="visual"/>
+-            <geom name="left_weight" type="cylinder" pos="0 0.75 0" size="0.2 0.2" zaxis="0 1 0" material="metal_cover" class="visual"/>
+-            <geom name="right_weight" type="cylinder" pos="0 -0.75 0" size="0.2 0.2" zaxis="0 1 0" material="metal_cover" class="visual"/>
++            <!-- [rcb fix] density on the visual plates: class "collision" sets mass="0", which silently overrode the
++                 collision plates' density="500" and left the visual geoms at 1000 kg/m3 (104 kg dumbbell; now 53.7 kg) -->
++            <geom name="left_weight" type="cylinder" pos="0 0.75 0" size="0.2 0.2" zaxis="0 1 0" material="metal_cover" class="visual" density="500"/>
++            <geom name="right_weight" type="cylinder" pos="0 -0.75 0" size="0.2 0.2" zaxis="0 1 0" material="metal_cover" class="visual" density="500"/>
+             
+             <geom type="cylinder" pos="0 0 0" size="0.029 0.65" zaxis="0 1 0" class="collision"/>
+             <geom type="cylinder" pos="0 0.75 0" size="0.2 0.2" zaxis="0 1 0" class="collision" density="500"/>
+diff --git a/humanoid_bench/envs/room.py b/humanoid_bench/envs/room.py
+index 4a183f9..0e964a2 100644
+--- a/humanoid_bench/envs/room.py
++++ b/humanoid_bench/envs/room.py
+@@ -137,13 +137,54 @@ class Room(Task):
+         position = self._env.data.qpos.flat.copy()
+         velocity = self._env.data.qvel.flat.copy()
+         for i in range(-7, 0):
+-            position[i * 7] = np.random.uniform(-3.5 + (i + 7), -3.5 + (i + 8))
+-            position[i * 7 + 1] = np.random.uniform(1.2, 3.5) * np.random.choice(
+-                [1, -1]
+-            )
++            x = np.random.uniform(-3.5 + (i + 7), -3.5 + (i + 8))
++            y = np.random.uniform(1.2, 3.5) * np.random.choice([1, -1])
++            # [rcb fix] The scene has 6 free objects, so i = -7 (qpos[-49:-42]) is not an object but the right hand's
++            # little finger: upstream wrote x/y into rh_LFJ2/rh_LFJ1 (range 0..1.57 rad) and the finger started bent
++            # through its own fingertip. Still draw, so the 6 objects keep upstream's placement; write objects only.
++            if i == -7:
++                continue
++            position[i * 7] = x
++            position[i * 7 + 1] = y
+             if i == -4:
+                 position[i * 7 + 3 : i * 7 + 7] = np.array(
+                     [0.0733422, 0.0519076, -0.240058, -0.966591]
+                 )
+         self._env.set_state(position, velocity)
++        # [rcb fix] Upstream keeps the keyframe's heights, which put the tilted headphone and package_a 5-8 cm into the
++        # floor (they shot out at the first step). Lift each object until its lowest point is on the floor (z = 0).
++        lift = _floor_lift(self._env.model, self._env.data)
++        if lift:
++            for adr, dz in lift:
++                position[adr + 2] += dz
++            self._env.set_state(position, velocity)
+         return super().reset_model()
++
++
++def _floor_lift(m, d):
++    """(qpos address, dz) for every free object whose collision geoms reach below z = 0 (the robot is excluded)."""
++    out = []
++    for j in range(m.njnt):
++        b = m.jnt_bodyid[j]
++        if m.jnt_type[j] != mujoco.mjtJoint.mjJNT_FREE or m.body(b).name == "pelvis":
++            continue
++        low = min((_lowest(m, d, g) for g in range(m.ngeom)
++                   if m.body_rootid[m.geom_bodyid[g]] == b and (m.geom_contype[g] or m.geom_conaffinity[g])),
++                  default=0.0)
++        if low < 0:
++            out.append((m.jnt_qposadr[j], -low))
++    return out
++
++
++def _lowest(m, d, g):
++    """The lowest world z of geom g (exact for sphere, capsule, cylinder and box; its bounding box otherwise)."""
++    R, z, s, t = d.geom_xmat[g].reshape(3, 3), d.geom_xpos[g][2], m.geom_size[g], m.geom_type[g]
++    az = abs(R[2, 2])
++    if t == mujoco.mjtGeom.mjGEOM_SPHERE:
++        return z - s[0]
++    if t == mujoco.mjtGeom.mjGEOM_CAPSULE:
++        return z - az * s[1] - s[0]
++    if t == mujoco.mjtGeom.mjGEOM_CYLINDER:
++        return z - az * s[1] - s[0] * np.sqrt(max(0.0, 1 - az * az))
++    c, h = m.geom_aabb[g][:3], (s if t == mujoco.mjtGeom.mjGEOM_BOX else m.geom_aabb[g][3:])
++    return z + (R @ c)[2] - np.abs(R[2]) @ h
