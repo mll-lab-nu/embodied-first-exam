@@ -254,9 +254,6 @@ class TestResetAndResume(Live):
         self.assertLessEqual(len(self.ticks()), n_ticks)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class SlowSim(FastSim):
     """The toy point, its every step slower than its control_dt: the service is behind its clock the whole time."""
@@ -286,3 +283,6 @@ class BehindTheClock(Live):
         self.assertLess(self.svc.max_queue_wait, 0.2)
         self.assertIn("max_queue_wait_s", self.svc._timing_record())
 
+
+if __name__ == "__main__":
+    unittest.main()
