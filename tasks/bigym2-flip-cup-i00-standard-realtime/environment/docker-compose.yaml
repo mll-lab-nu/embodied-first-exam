@@ -1,0 +1,32 @@
+# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# GPU on sim: physics and the whole-body controller run on the CPU, but upstream's env renders the robot's three cameras
+# every control step, and every image the agent asks for is rendered here (EGL). `graphics` mounts the EGL ICD.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/mll-lab-nu/eai-bigym2:0.1.1
+    volumes:
+      - ./sim:/srv:ro
+    command: python /srv/rcb_realtime.py
+    restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
+    environment:
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TASK_TEXT: "Turn the upside-down cup the right way up and gently set it back down."
+      RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): the cup stands the right way up (its axis within 5 degrees of vertical), touching the counter, held by neither gripper (held = a finger of the gripper touching the object); a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 1850 control steps"
+      RCB_WALL_CLOCK_S: "3600"
+      # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
+      # configuration; results under other settings are reported separately.
+      RCB_SLOWDOWN: "${RCB_SLOWDOWN:-1}"                # 1: real time (official); S: one step every S x control_dt s, reported apart
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode (the protocol's default)
+      RCB_IMAGE_HW: "${RCB_IMAGE_HW:-84}"               # the side of each onboard camera's square image, pixels (84: upstream's)
+      RCB_SESSION_LOG: ""
+      NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
