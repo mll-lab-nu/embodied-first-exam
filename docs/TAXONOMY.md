@@ -24,7 +24,7 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
 | RoboPaint | `difficulty` | `easy` · `medium` · `hard` · `extreme` |
 | RoboPaint | `medium` | `calligraphy` · `broad_nib` · `pointed_pen` · `mypaint` (the brush model) |
 | RoboPaint | `stroke_count`, `characters` | integers (the stroke cap; the characters of a calligraphy work) |
-| RoboPaint | `structure` | `single` · `left-right` · `top-bottom` · `enclosure` · `work` |
+| RoboPaint | `structure` | `single` · `left-right` · `top-bottom` · `enclosure` · `work` (calligraphy) · `word` · `line` (lettering) |
 | ManiGuard | `maniguard_task` | the ManiGuard-Bench task, `<family>/task_NNNN` (its base level) |
 | ManiGuard | `constraint_class` | `spatial` (an invariant: upright, not dropped, no contact) · `ordering` (one thing before another) |
 | ManiGuard | `skill` | `pick_and_place` · `articulated` · `long_horizon` (ManiGuard's family classes) |
