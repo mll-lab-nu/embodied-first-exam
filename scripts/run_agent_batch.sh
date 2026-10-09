@@ -43,7 +43,9 @@
 #                (<trial>/gateway/raw.jsonl.xz, deduplicated, see scripts/usage_gateway/rawlog.py; private: it holds the
 #                whole conversation); 0 = token usage only
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
-#   GATEWAY_EXTRA_HOSTS  more model API host patterns the gateway forwards to, space-separated (e.g. "*.services.ai.azure.com")
+#   GATEWAY_EXTRA_HOSTS  more model API host patterns the gateway forwards to, space-separated (e.g. "*.services.ai.azure.com");
+#                a plain-HTTP base URL with a port (ANTHROPIC_BASE_URL / OPENAI_BASE_URL=http://<host>:<port>, a self-hosted
+#                model server) is forwarded too, to exactly that <host>:<port>
 #   GATEWAY_START_WAIT  seconds to wait for the gateway to come up (10); raise it on busy shared nodes
 #   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (100000000 / 10000000, PROTOCOL
 #                §5): past it every further model request is refused and the trial counts as failed; 0 = no limit
@@ -129,19 +131,23 @@ fi
 # transparent usage gateway (one per runner, stopped with it): the agent's base URL points at it, it forwards unchanged
 if [ "$GATEWAY" = 1 ]; then
   mkdir -p "$JOBS/.gateway"; ready="$JOBS/.gateway/port.$$"; rm -f "$ready"
-  gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
-  setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
-  gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
-  for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && break; sleep 0.2; done
-  [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
-  GW="http://$GATEWAY_BIND:$(cat "$ready")"
   # the upstream each base URL would have used: this environment, else the env file, else the API's default
   upstream() {  # <VAR> <default>
     local v="${!1:-}"
     [ -z "$v" ] && [ -n "$ENV_FILE" ] && v=$(sed -n "s/^[[:space:]]*\(export[[:space:]]\+\)\?$1=//p" "$ENV_FILE" | tail -1 | tr -d "\"'")
     printf '%s' "${v:-$2}"
   }
-  via_gw() { sed -E "s#^https://([^/]+)#$GW/u/\1#" <<< "$1"; }   # https://host/path -> $GW/u/host/path
+  gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
+  # a plain-HTTP base URL (a self-hosted model server, e.g. sglang): the gateway may forward to exactly that host:port
+  [ "$AGENT" = claude-code ] && agent_up=$(upstream ANTHROPIC_BASE_URL https://api.anthropic.com) || agent_up=$(upstream OPENAI_BASE_URL https://api.openai.com/v1)
+  [[ "$agent_up" =~ ^http://([A-Za-z0-9.-]+:[0-9]+)(/|$) ]] && gw_args+=(--http-host "${BASH_REMATCH[1]}")
+  setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
+  gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
+  for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && break; sleep 0.2; done
+  [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
+  GW="http://$GATEWAY_BIND:$(cat "$ready")"
+  # https://host/path -> $GW/u/host/path; http://host:port/path -> $GW/h/host:port/path (`t`: one rewrite only)
+  via_gw() { sed -E -e "s#^https://([^/]+)#$GW/u/\1#; t" -e "s#^http://([A-Za-z0-9.-]+:[0-9]+)#$GW/h/\1#" <<< "$1"; }
   if [ "$AGENT" = claude-code ]; then
     AGENT_ARGS+=(--ae "ANTHROPIC_BASE_URL=$(via_gw "$(upstream ANTHROPIC_BASE_URL https://api.anthropic.com)")")
   else
