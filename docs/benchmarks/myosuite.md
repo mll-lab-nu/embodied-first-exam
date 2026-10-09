@@ -139,7 +139,10 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   by `reset(seed=0)`, so a second episode differed from the first until the session restored all of them.
 - The robot wrapper trap: MyoSuite steps the physics in its robot wrapper's own MjData (`base.robot.mj_data`);
   `base.mj_data` is a mirror. Snapshots and the state hash use the robot's data, and a restore writes it back to every
-  copy; without that, mid-episode restores silently diverged.
+  copy; without that, mid-episode restores silently diverged. The mirror is refreshed from `qpos`, `qvel` and `act`
+  only and then `mj_forward`ed with `ctrl = 0`, so its `qfrc_actuator` is the force of a zero command: the standard
+  service's `effort_<joint>` proprioception read it until 2026-10-09 (the MyoDex wrist servos reported `kp * (0 - q)`
+  whatever was commanded; muscle-driven joints were off too). It now reads the robot's data.
 
 ## Human review (oracle = none): family → positive example → nop → predicate
 Positive examples are successful model trials on the privileged tasks (the same frozen instances): Claude Code + Claude

@@ -407,7 +407,11 @@ def ctrl_steps() -> int:
 
 def proprio_row() -> np.ndarray:
     d = S.data
-    parts = [d.qpos[J_Q], d.qvel[J_V], d.act[ACT_ADR], d.actuator_length[MUS_IDX], d.qfrc_actuator[J_V]]
+    # joint_effort from the physics, not the mirror: MyoSuite steps its robot wrapper's own MjData and refreshes
+    # S.data (base.mj_data) from qpos / qvel / act only, then mj_forward with ctrl = 0. The mirror's qfrc_actuator was
+    # the force of a zero command: the wrist / pelvis / MPL position servos read kp * (0 - q) whatever was commanded.
+    phys = S.base.robot.mj_data
+    parts = [d.qpos[J_Q], d.qvel[J_V], d.act[ACT_ADR], d.actuator_length[MUS_IDX], phys.qfrc_actuator[J_V]]
     if ROOT is not None:
         parts += [d.qpos[MD.jnt_qposadr[ROOT]:MD.jnt_qposadr[ROOT] + 7], d.qvel[MD.jnt_dofadr[ROOT]:MD.jnt_dofadr[ROOT] + 6]]
     return np.concatenate(parts).astype(
