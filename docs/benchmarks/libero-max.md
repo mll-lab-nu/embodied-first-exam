@@ -1,6 +1,7 @@
 # LIBERO-MAX
 
-Robot manipulation with a change mid-task: [LIBERO-MAX](https://github.com/liberomax/LIBERO-MAX) cases built on
+Robot manipulation with a change mid-task: [LIBERO-MAX](https://github.com/liberomax/LIBERO-MAX)
+([paper](https://arxiv.org/abs/2609.36518)) cases built on
 [LIBERO-PRO](https://github.com/Zxy-MLlab/LIBERO-PRO) variants of [LIBERO](https://github.com/Lifelong-Robot-Learning/LIBERO)
 tasks, each with one online event, in both modes: 64 cases, 128 tasks.
 
@@ -83,14 +84,24 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   (what kinds of change), not which change or when. No object poses, no goal, no success signal.
 
 ## Licence
-LIBERO-MAX (an academic project) has no licence file upstream; its authors have given full permission, in writing, to
-use and redistribute its event parameters and its event runtime in this benchmark, with attribution. Two parts come from it: (1) the event parameters and
+LIBERO-MAX (Zhang et al., [*LIBERO-MAX: Do Robot Policies Adapt When the World Changes?*](https://arxiv.org/abs/2609.36518),
+2026) has no licence file upstream; its authors have given written permission to redistribute the two parts below in
+this benchmark, with attribution. Two parts come from it: (1) the event parameters and
 case choice (`cases.json`, and the instances made from it), (2) LIBERO-MAX's event runtime in the image (`src/libero_max`,
 about 1,800 lines used: `substrate.py`, `pro_runtime.py`, `cosmos_integration.py`, `libero_backend.py`, `runtime.py`,
 `scenario.py`, `env_factory.py`). Both stay isolated: `cases.json` is the only input that carries the parameters, so either
 part could be replaced by an own implementation of the same eight change types without touching the generator or the
 tools. LIBERO-PRO (MIT / CC-BY-4.0) and LIBERO (MIT) need nothing beyond attribution. LIBERO-plus (no licence file,
 third-party TurboSquid assets) is a separate project and stays out of scope.
+
+The permission, by email from Yunbei Zhang (LIBERO-MAX's first author), in reply to our request to redistribute these
+two parts unmodified in this public repository and in a public Docker image, citing the paper and linking the
+repository:
+
+> I'm happy to grant permission to redistribute the two components as described. Please cite our paper and link to the
+> LIBERO-MAX repository. I'll also update the repository with a license soon.
+
+This page cites the paper and links the repository; when the repository adds a licence, the benchmark follows it.
 
 ## Rebuilding
 ```bash
