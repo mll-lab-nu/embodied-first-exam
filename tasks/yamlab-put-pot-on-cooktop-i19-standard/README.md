@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `yamlab-put-pot-on-cooktop-i19-privileged` (same frozen instance: YAMLab's objects `pot` = `Pot/pot_019` and `cooktop` = `Cooktop/cooktop_019` as placed in teleoperation
-demonstration `putpot_019.hdf5 demo_0`, both arms at the home pose): the agent gets only the `eai-standard/2.2` client
+demonstration `putpot_019.hdf5 demo_1`, both arms at the home pose): the agent gets only the `eai-standard/2.2` client
 (docs/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
 sidecar), which owns the scene and records the episode as a (T, 14) trajectory of YAMLab's own actions. The collect hook
 (`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes and
@@ -27,7 +27,7 @@ missed grasp or a dropped object stays that way.
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's actions (`solution/oracle_qpos.npy`: the 1 s ramp from the home
-pose and the recorded teleoperation demonstration `putpot_019.hdf5 demo_0`, one row per control step, `hold`) as one-second
+pose and the recorded teleoperation demonstration `putpot_019.hdf5 demo_1`, one row per control step, `hold`) as one-second
 `joint_position` chunks through the client; after a service crash it waits for the resumed episode and continues from the
 control step the service reports.
 
@@ -36,7 +36,7 @@ control step the service reports.
 collect hook; `tests/grade.py` reads `final.json` with no network and writes the reward fields (with `infra_error` and the
 crash-recovery fields), plus `/logs/verifier/replay.mp4`. YAMLab's success check (evaluation thresholds) is evaluated after
 every control step; the episode ends at the first step where every stage has latched, live and in the replays. Oracle: the
-live episode and both replays end in the privileged oracle's final state (hash `00488e6f67c0fe57`). `nop`: the episode ends
+live episode and both replays end in the privileged oracle's final state (hash `9709f637ddf063a3`). `nop`: the episode ends
 on the time-out with no stage reached, reward 0.
 
 ## Details

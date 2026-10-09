@@ -13,7 +13,7 @@
 
 ## Task
 Two I2RT YAM arms on a workstation table pass a mug from the left gripper to the right one in the air and hang it on a mug tree: YAMLab's HangMugOnTree. Instance i21: YAMLab's objects `mug` = `Mug/mug_021` and `mug_tree` = `MugTree/mug_tree_021`, placed as in YAMLab teleoperation demonstration
-`hangmug_021.hdf5 demo_0` (its recorded initial state: both arms at the home pose, grippers open). The deliverable is one replayable
+`hangmug_021.hdf5 demo_0` (its recorded initial state: both arms at the home pose, grippers open; placement-schedule entry 0: the mug at x = 0.726 m, y = 0.150 m, yaw 105°). The deliverable is one replayable
 trajectory of YAMLab's own 14-D joint-position actions at 30 Hz (`/app/output/trajectory.npz`), graded by YAMLab's staged
 success check with its evaluation thresholds.
 

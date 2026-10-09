@@ -2,7 +2,9 @@
 """Select YAMLab's frozen instances and record their oracles (run on a GPU host with eai-yamlab built; not part of any task).
 
 For each task, walk YAMLab's teleoperation files in order (one object pair per file: putpot_000 = Pot/pot_000 +
-Cooktop/cooktop_000, ...) and, inside a file, its demos in order. A candidate is accepted when, in the eai-yamlab image,
+Cooktop/cooktop_000, ...). YAMLab records a file's demos on a fixed placement schedule (demo j = schedule entry j:
+PutPotOnCooktop 3 lateral pot positions x 3 yaws, HangMugOnTree 3 mug yaws); inside the k-th file (k = 0, 1, ...) the
+demos are tried from demo k mod n on, wrapping around, so the instances spread over the schedule. A candidate is accepted when, in the eai-yamlab image,
   1. `rcb_yamlab.py make-instance` writes the instance (the demo's recorded initial state) and the oracle actions (a 30-step
      ramp from the home pose to the demo's first action, then the demo's recorded actions),
   2. `run-actions` executes them in a fresh process and succeeds (YAMLab's evaluation-threshold stages all latch),
@@ -146,7 +148,11 @@ def main() -> None:
             with h5py.File(f, "r") as h:
                 n = len([k for k in h["data"].keys() if k.startswith("demo_")])
             log = []
-            for demo in range(min(n, a.max_demos)):
+            # YAMLab records a file's demos on a fixed placement schedule (PutPotOnCooktop: 3 lateral positions x 3 yaws,
+            # HangMugOnTree: 3 yaws, demo j = schedule entry j). The k-th file starts at demo k mod n and wraps around, so
+            # the instances spread evenly over the schedule instead of all taking its first placement.
+            k = files.index(f)
+            for demo in [(k + j) % n for j in range(n)][: a.max_demos]:
                 v = run_candidate(task, teleop, f, demo, out, a.cache); log.append(v)
                 print(json.dumps({k: v.get(k) for k in ("task", "file", "demo", "rc", "accepted", "n_actions", "replay_shas", "infra")}), flush=True)
                 if v.get("accepted"):
@@ -169,7 +175,7 @@ def main() -> None:
                         chosen[name] = v
         with lock:
             selection[task] = {"chosen": dict(sorted(chosen.items())[: a.per_task]), "tried": tried,
-                               "rule": "files in order; inside a file, demos in order; the first accepted demo is the pair's instance"}
+                               "rule": "files in order; inside the k-th file, demos from k mod n on (wrapping); the first accepted demo is the pair's instance"}
             sel_path.write_text(json.dumps(selection, indent=1))
         print(json.dumps({"task": task, "chosen": len(chosen), "tried": len(tried)}), flush=True)
 

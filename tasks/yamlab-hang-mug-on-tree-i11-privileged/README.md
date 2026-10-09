@@ -13,7 +13,7 @@
 
 ## Task
 Two I2RT YAM arms on a workstation table pass a mug from the left gripper to the right one in the air and hang it on a mug tree: YAMLab's HangMugOnTree. Instance i11: YAMLab's objects `mug` = `Mug/mug_011` and `mug_tree` = `MugTree/mug_tree_011`, placed as in YAMLab teleoperation demonstration
-`hangmug_011.hdf5 demo_0` (its recorded initial state: both arms at the home pose, grippers open). The deliverable is one replayable
+`hangmug_011.hdf5 demo_2` (its recorded initial state: both arms at the home pose, grippers open; placement-schedule entry 2: the mug at x = 0.726 m, y = 0.150 m, yaw 165°). The deliverable is one replayable
 trajectory of YAMLab's own 14-D joint-position actions at 30 Hz (`/app/output/trajectory.npz`), graded by YAMLab's staged
 success check with its evaluation thresholds.
 
@@ -22,17 +22,17 @@ Three ordered stages with an in-air handover: the left gripper must lift the mug
 the primitives are only IK / joint moves and gripper commands. This mode is the control for the standard twin.
 
 ## Reference solution
-`solution/oracle_actions.npy` (652 control steps, run by `solution/oracle.py` through the agent's own tooling): a
+`solution/oracle_actions.npy` (649 control steps, run by `solution/oracle.py` through the agent's own tooling): a
 30-step (1 s) linear move from the home pose to the first action of the human teleoperation demonstration of this instance
-(`hangmug_011.hdf5 demo_0` of `yamlab/yamlab_datasets` @ `fc6be97`), then that demonstration's recorded actions, replayed open-loop.
+(`hangmug_011.hdf5 demo_2` of `yamlab/yamlab_datasets` @ `fc6be97`), then that demonstration's recorded actions, replayed open-loop.
 YAMLab's demonstrations are not in the image, and the agent's network reaches only the model APIs.
 
 ## Verification
 `tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the instance
 (`tests/instance.json`; the rebuilt start is checked against its hash); pass iff YAMLab's success check holds in both
 (every stage latched) and both end in the same state (`deterministic`), plus `/logs/verifier/replay.mp4` (top camera and
-both wrist cameras). Oracle: 652 control steps, every stage latched at the last one; the live run and two
-fresh-process replays end in the same state (hash `b0421453d1d6cc72`). `nop`: no trajectory, reward 0; no stage holds at
+both wrist cameras). Oracle: 649 control steps, every stage latched at the last one; the live run and two
+fresh-process replays end in the same state (hash `4a302d96f2efe180`). `nop`: no trajectory, reward 0; no stage holds at
 the start.
 
 ## Details

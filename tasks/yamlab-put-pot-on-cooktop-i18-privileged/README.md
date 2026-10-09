@@ -13,7 +13,7 @@
 
 ## Task
 Two I2RT YAM arms on a workstation table lift a pot together (both grippers must hold it) and put it down upright on a cooktop, then let go: YAMLab's PutPotOnCooktop. Instance i18: YAMLab's objects `pot` = `Pot/pot_018` and `cooktop` = `Cooktop/cooktop_018`, placed as in YAMLab teleoperation demonstration
-`putpot_018.hdf5 demo_0` (its recorded initial state: both arms at the home pose, grippers open). The deliverable is one replayable
+`putpot_018.hdf5 demo_0` (its recorded initial state: both arms at the home pose, grippers open; placement-schedule entry 0: the pot at x = 0.711 m, y = 0.091 m, yaw -118°). The deliverable is one replayable
 trajectory of YAMLab's own 14-D joint-position actions at 30 Hz (`/app/output/trajectory.npz`), graded by YAMLab's staged
 success check with its evaluation thresholds.
 

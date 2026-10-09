@@ -19,7 +19,8 @@ def main() -> int:
     sel_dir = pathlib.Path(sys.argv[1]).resolve()
     sel = json.loads((sel_dir / "selection.json").read_text())
     out = {"source": {"dataset": "yamlab/yamlab_datasets", "revision": "fc6be973b8645cca50c0e9236bfbd64afa42696f",
-                      "rule": "teleoperation files in order (one object pair each); inside a file, demos in order; the first demo "
+                      "rule": "teleoperation files in order (one object pair each); inside the k-th file, demos from k mod n on, "
+                              "wrapping (demo j = entry j of YAMLab's placement schedule); the first demo "
                               "whose oracle (30-step ramp from the home pose + the recorded actions) succeeds live and in two "
                               "fresh-process replays, all three ending in the same state, is the pair's instance"},
            "families": {}, "tried": {}}

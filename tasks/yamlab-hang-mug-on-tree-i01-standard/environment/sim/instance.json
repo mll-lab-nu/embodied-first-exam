@@ -100,10 +100,10 @@
      0.7254999876022339,
      0.15000000596046448,
      0.7938554883003235,
-     0.608759343624115,
+     0.3826834261417389,
      0.0,
      0.0,
-     0.7933549284934998
+     0.9238795638084412
     ],
     "root_velocity": [
      0.0,
@@ -135,7 +135,7 @@
    }
   }
  },
- "state_sha": "9dd84606f81fe81f",
+ "state_sha": "793e46f8d8129b0c",
  "action_dim": 14,
  "control_hz": 30,
  "sim_dt": 0.00833333333333,
@@ -171,10 +171,10 @@
     0.79386
    ],
    "orientation_wxyz": [
-    0.608759,
+    0.382683,
     0.0,
     0.0,
-    0.793355
+    0.92388
    ],
    "size": [
     0.1003,
@@ -183,13 +183,13 @@
    ],
    "bounds": [
     [
-     0.67581,
-     0.09172,
+     0.66316,
+     0.08766,
      0.7567
     ],
     [
-     0.77519,
-     0.20828,
+     0.78784,
+     0.21234,
      0.83101
     ]
    ],
@@ -252,9 +252,9 @@
  "source": {
   "dataset": "yamlab/yamlab_datasets",
   "file": "hangmug_001.hdf5",
-  "demo": 0,
+  "demo": 1,
   "state": "initial_state",
-  "oracle": "30-step ramp from the home targets + the demo's 743 actions"
+  "oracle": "30-step ramp from the home targets + the demo's 656 actions"
  },
  "versions": {
   "isaaclab": "0.54.3",

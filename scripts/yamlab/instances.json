@@ -2,7 +2,7 @@
  "source": {
   "dataset": "yamlab/yamlab_datasets",
   "revision": "fc6be973b8645cca50c0e9236bfbd64afa42696f",
-  "rule": "teleoperation files in order (one object pair each); inside a file, demos in order; the first demo whose oracle (30-step ramp from the home pose + the recorded actions) succeeds live and in two fresh-process replays, all three ending in the same state, is the pair's instance"
+  "rule": "teleoperation files in order (one object pair each); inside the k-th file, demos from k mod n on, wrapping (demo j = entry j of YAMLab's placement schedule); the first demo whose oracle (30-step ramp from the home pose + the recorded actions) succeeds live and in two fresh-process replays, all three ending in the same state, is the pair's instance"
  },
  "families": {
   "put_pot_on_cooktop": [
@@ -23,122 +23,122 @@
    },
    {
     "file": "putpot_001.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "pot": "Pot/pot_001",
      "cooktop": "Cooktop/cooktop_001"
     },
-    "instance_sha": "fb6b2f0f99f0104b",
-    "n_actions": 402,
-    "oracle_sha": "3d8679fa5dde981a",
+    "instance_sha": "4d54786ae9179dd4",
+    "n_actions": 392,
+    "oracle_sha": "87d66f378a46655c",
     "replay_shas": [
-     "3d8679fa5dde981a",
-     "3d8679fa5dde981a"
+     "87d66f378a46655c",
+     "87d66f378a46655c"
     ]
    },
    {
     "file": "putpot_002.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "pot": "Pot/pot_002",
      "cooktop": "Cooktop/cooktop_002"
     },
-    "instance_sha": "6b012a75f5058f7f",
-    "n_actions": 418,
-    "oracle_sha": "eee0750b650b6b3c",
+    "instance_sha": "1213fcde67eea6e5",
+    "n_actions": 394,
+    "oracle_sha": "45d043ffb882c6ac",
     "replay_shas": [
-     "eee0750b650b6b3c",
-     "eee0750b650b6b3c"
+     "45d043ffb882c6ac",
+     "45d043ffb882c6ac"
     ]
    },
    {
     "file": "putpot_003.hdf5",
-    "demo": 0,
+    "demo": 3,
     "assets": {
      "pot": "Pot/pot_003",
      "cooktop": "Cooktop/cooktop_003"
     },
-    "instance_sha": "671582dfa216e1ea",
-    "n_actions": 407,
-    "oracle_sha": "76ad4ad8cb95fe18",
+    "instance_sha": "13059b979b5a28f3",
+    "n_actions": 413,
+    "oracle_sha": "47cde4fb2fab209d",
     "replay_shas": [
-     "76ad4ad8cb95fe18",
-     "76ad4ad8cb95fe18"
+     "47cde4fb2fab209d",
+     "47cde4fb2fab209d"
     ]
    },
    {
     "file": "putpot_004.hdf5",
-    "demo": 0,
+    "demo": 4,
     "assets": {
      "pot": "Pot/pot_004",
      "cooktop": "Cooktop/cooktop_004"
     },
-    "instance_sha": "ab89455e36092633",
-    "n_actions": 403,
-    "oracle_sha": "c701da46406087f9",
+    "instance_sha": "829f71b9a0006991",
+    "n_actions": 379,
+    "oracle_sha": "25de7047553400f6",
     "replay_shas": [
-     "c701da46406087f9",
-     "c701da46406087f9"
+     "25de7047553400f6",
+     "25de7047553400f6"
     ]
    },
    {
     "file": "putpot_005.hdf5",
-    "demo": 0,
+    "demo": 5,
     "assets": {
      "pot": "Pot/pot_005",
      "cooktop": "Cooktop/cooktop_005"
     },
-    "instance_sha": "8a5df49f517507aa",
-    "n_actions": 426,
-    "oracle_sha": "dc82962ee29236ef",
+    "instance_sha": "51c8fb4c0b4e6231",
+    "n_actions": 412,
+    "oracle_sha": "fd71da43fa0f7e5e",
     "replay_shas": [
-     "dc82962ee29236ef",
-     "dc82962ee29236ef"
+     "fd71da43fa0f7e5e",
+     "fd71da43fa0f7e5e"
     ]
    },
    {
     "file": "putpot_006.hdf5",
-    "demo": 0,
+    "demo": 6,
     "assets": {
      "pot": "Pot/pot_006",
      "cooktop": "Cooktop/cooktop_006"
     },
-    "instance_sha": "07f6edf12c7aeaf8",
-    "n_actions": 390,
-    "oracle_sha": "341ffac0c439d036",
+    "instance_sha": "5afc7b999c74f86b",
+    "n_actions": 392,
+    "oracle_sha": "ac3aa17436495634",
     "replay_shas": [
-     "341ffac0c439d036",
-     "341ffac0c439d036"
+     "ac3aa17436495634",
+     "ac3aa17436495634"
     ]
    },
    {
     "file": "putpot_007.hdf5",
-    "demo": 0,
+    "demo": 7,
     "assets": {
      "pot": "Pot/pot_007",
      "cooktop": "Cooktop/cooktop_007"
     },
-    "instance_sha": "420f197bdb63618f",
-    "n_actions": 407,
-    "oracle_sha": "52e16d99ab57d4e2",
+    "instance_sha": "215a5ff17300762f",
+    "n_actions": 394,
+    "oracle_sha": "583c6340243030ac",
     "replay_shas": [
-     "52e16d99ab57d4e2",
-     "52e16d99ab57d4e2"
+     "583c6340243030ac",
+     "583c6340243030ac"
     ]
    },
    {
     "file": "putpot_008.hdf5",
-    "demo": 0,
+    "demo": 8,
     "assets": {
      "pot": "Pot/pot_008",
      "cooktop": "Cooktop/cooktop_008"
     },
-    "instance_sha": "68abaad9c5cbc06f",
-    "n_actions": 384,
-    "oracle_sha": "4d1d4ea6f8c56346",
+    "instance_sha": "f7f9c08fccb6ef9f",
+    "n_actions": 363,
+    "oracle_sha": "d4ee5afb6995c665",
     "replay_shas": [
-     "4d1d4ea6f8c56346",
-     "4d1d4ea6f8c56346"
+     "d4ee5afb6995c665",
+     "d4ee5afb6995c665"
     ]
    },
    {
@@ -158,122 +158,122 @@
    },
    {
     "file": "putpot_010.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "pot": "Pot/pot_010",
      "cooktop": "Cooktop/cooktop_010"
     },
-    "instance_sha": "6c14152b899be604",
-    "n_actions": 343,
-    "oracle_sha": "63db680363c4a7e0",
+    "instance_sha": "60169a246289a54c",
+    "n_actions": 322,
+    "oracle_sha": "79166bbaa4906f50",
     "replay_shas": [
-     "63db680363c4a7e0",
-     "63db680363c4a7e0"
+     "79166bbaa4906f50",
+     "79166bbaa4906f50"
     ]
    },
    {
     "file": "putpot_011.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "pot": "Pot/pot_011",
      "cooktop": "Cooktop/cooktop_011"
     },
-    "instance_sha": "6bea18ce46e2f0ce",
-    "n_actions": 384,
-    "oracle_sha": "eaef0780f9b2384e",
+    "instance_sha": "1f4144e061fa4741",
+    "n_actions": 334,
+    "oracle_sha": "0eb70c669df35429",
     "replay_shas": [
-     "eaef0780f9b2384e",
-     "eaef0780f9b2384e"
+     "0eb70c669df35429",
+     "0eb70c669df35429"
     ]
    },
    {
     "file": "putpot_012.hdf5",
-    "demo": 0,
+    "demo": 3,
     "assets": {
      "pot": "Pot/pot_012",
      "cooktop": "Cooktop/cooktop_012"
     },
-    "instance_sha": "4ac4991cda9f7cb8",
-    "n_actions": 349,
-    "oracle_sha": "a46103c1190f6524",
+    "instance_sha": "768a252f57a7c251",
+    "n_actions": 332,
+    "oracle_sha": "9eb2e1dc6b398e99",
     "replay_shas": [
-     "a46103c1190f6524",
-     "a46103c1190f6524"
+     "9eb2e1dc6b398e99",
+     "9eb2e1dc6b398e99"
     ]
    },
    {
     "file": "putpot_013.hdf5",
-    "demo": 0,
+    "demo": 4,
     "assets": {
      "pot": "Pot/pot_013",
      "cooktop": "Cooktop/cooktop_013"
     },
-    "instance_sha": "f767528e4afffef2",
-    "n_actions": 339,
-    "oracle_sha": "c6c7d535d5e2c061",
+    "instance_sha": "f7cb3bf5b6533367",
+    "n_actions": 318,
+    "oracle_sha": "f4fa834ad4a6c73e",
     "replay_shas": [
-     "c6c7d535d5e2c061",
-     "c6c7d535d5e2c061"
+     "f4fa834ad4a6c73e",
+     "f4fa834ad4a6c73e"
     ]
    },
    {
     "file": "putpot_014.hdf5",
-    "demo": 0,
+    "demo": 5,
     "assets": {
      "pot": "Pot/pot_014",
      "cooktop": "Cooktop/cooktop_014"
     },
-    "instance_sha": "a2d600ca047bcbe9",
-    "n_actions": 359,
-    "oracle_sha": "5f58d06a83c3209d",
+    "instance_sha": "85d7a70f69fb3efc",
+    "n_actions": 348,
+    "oracle_sha": "27820d106685f8c5",
     "replay_shas": [
-     "5f58d06a83c3209d",
-     "5f58d06a83c3209d"
+     "27820d106685f8c5",
+     "27820d106685f8c5"
     ]
    },
    {
     "file": "putpot_015.hdf5",
-    "demo": 0,
+    "demo": 6,
     "assets": {
      "pot": "Pot/pot_015",
      "cooktop": "Cooktop/cooktop_015"
     },
-    "instance_sha": "3ea0f3583873b707",
-    "n_actions": 336,
-    "oracle_sha": "c4791ced07bf95fd",
+    "instance_sha": "26215055ca0c1140",
+    "n_actions": 324,
+    "oracle_sha": "01a965ac14c0cc4d",
     "replay_shas": [
-     "c4791ced07bf95fd",
-     "c4791ced07bf95fd"
+     "01a965ac14c0cc4d",
+     "01a965ac14c0cc4d"
     ]
    },
    {
     "file": "putpot_016.hdf5",
-    "demo": 0,
+    "demo": 7,
     "assets": {
      "pot": "Pot/pot_016",
      "cooktop": "Cooktop/cooktop_016"
     },
-    "instance_sha": "030216d790e874f9",
-    "n_actions": 342,
-    "oracle_sha": "b9faf51108de273d",
+    "instance_sha": "4897821d19e12dcc",
+    "n_actions": 333,
+    "oracle_sha": "2db7e3a9a47b8954",
     "replay_shas": [
-     "b9faf51108de273d",
-     "b9faf51108de273d"
+     "2db7e3a9a47b8954",
+     "2db7e3a9a47b8954"
     ]
    },
    {
     "file": "putpot_017.hdf5",
-    "demo": 0,
+    "demo": 8,
     "assets": {
      "pot": "Pot/pot_017",
      "cooktop": "Cooktop/cooktop_017"
     },
-    "instance_sha": "09c9def300542a62",
-    "n_actions": 383,
-    "oracle_sha": "5435b3831a636ddd",
+    "instance_sha": "07effa01d7cc10f0",
+    "n_actions": 317,
+    "oracle_sha": "44ddabf3765b3df4",
     "replay_shas": [
-     "5435b3831a636ddd",
-     "5435b3831a636ddd"
+     "44ddabf3765b3df4",
+     "44ddabf3765b3df4"
     ]
    },
    {
@@ -293,92 +293,92 @@
    },
    {
     "file": "putpot_019.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "pot": "Pot/pot_019",
      "cooktop": "Cooktop/cooktop_019"
     },
-    "instance_sha": "c57cd60f4ad40b95",
-    "n_actions": 352,
-    "oracle_sha": "00488e6f67c0fe57",
+    "instance_sha": "ecb543e2856e9116",
+    "n_actions": 302,
+    "oracle_sha": "9709f637ddf063a3",
     "replay_shas": [
-     "00488e6f67c0fe57",
-     "00488e6f67c0fe57"
+     "9709f637ddf063a3",
+     "9709f637ddf063a3"
     ]
    },
    {
     "file": "putpot_020.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "pot": "Pot/pot_020",
      "cooktop": "Cooktop/cooktop_020"
     },
-    "instance_sha": "6beae83d2db29b6a",
-    "n_actions": 311,
-    "oracle_sha": "631e253ca53cbe2e",
+    "instance_sha": "90e75da137c563d9",
+    "n_actions": 313,
+    "oracle_sha": "ac54311727b3466e",
     "replay_shas": [
-     "631e253ca53cbe2e",
-     "631e253ca53cbe2e"
+     "ac54311727b3466e",
+     "ac54311727b3466e"
     ]
    },
    {
     "file": "putpot_021.hdf5",
-    "demo": 0,
+    "demo": 3,
     "assets": {
      "pot": "Pot/pot_021",
      "cooktop": "Cooktop/cooktop_021"
     },
-    "instance_sha": "6fd2e55e76f9b838",
-    "n_actions": 344,
-    "oracle_sha": "0a6bcc481af5bebd",
+    "instance_sha": "cbc293ec31e700d7",
+    "n_actions": 358,
+    "oracle_sha": "07e7d2f76f787e75",
     "replay_shas": [
-     "0a6bcc481af5bebd",
-     "0a6bcc481af5bebd"
+     "07e7d2f76f787e75",
+     "07e7d2f76f787e75"
     ]
    },
    {
     "file": "putpot_022.hdf5",
-    "demo": 0,
+    "demo": 4,
     "assets": {
      "pot": "Pot/pot_022",
      "cooktop": "Cooktop/cooktop_022"
     },
-    "instance_sha": "7d947d8d975a942e",
-    "n_actions": 332,
-    "oracle_sha": "4c2bf59f0589b9b3",
+    "instance_sha": "654ce36e556b717b",
+    "n_actions": 296,
+    "oracle_sha": "2e0b872f816527da",
     "replay_shas": [
-     "4c2bf59f0589b9b3",
-     "4c2bf59f0589b9b3"
+     "2e0b872f816527da",
+     "2e0b872f816527da"
     ]
    },
    {
     "file": "putpot_023.hdf5",
-    "demo": 0,
+    "demo": 5,
     "assets": {
      "pot": "Pot/pot_023",
      "cooktop": "Cooktop/cooktop_023"
     },
-    "instance_sha": "b1ff55a5afdc8107",
-    "n_actions": 333,
-    "oracle_sha": "eb130d31b20e2f2f",
+    "instance_sha": "f3f5ab9a2c37d80d",
+    "n_actions": 295,
+    "oracle_sha": "2f48e051162048dd",
     "replay_shas": [
-     "eb130d31b20e2f2f",
-     "eb130d31b20e2f2f"
+     "2f48e051162048dd",
+     "2f48e051162048dd"
     ]
    },
    {
     "file": "putpot_024.hdf5",
-    "demo": 0,
+    "demo": 6,
     "assets": {
      "pot": "Pot/pot_024",
      "cooktop": "Cooktop/cooktop_024"
     },
-    "instance_sha": "efc59832ba7d2c5a",
-    "n_actions": 338,
-    "oracle_sha": "86c76b3f38a30b1f",
+    "instance_sha": "84156f753fe919ca",
+    "n_actions": 347,
+    "oracle_sha": "c6c7902936f17f0f",
     "replay_shas": [
-     "86c76b3f38a30b1f",
-     "86c76b3f38a30b1f"
+     "c6c7902936f17f0f",
+     "c6c7902936f17f0f"
     ]
    }
   ],
@@ -400,32 +400,32 @@
    },
    {
     "file": "hangmug_001.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "mug": "Mug/mug_001",
      "mug_tree": "MugTree/mug_tree_001"
     },
-    "instance_sha": "9dd84606f81fe81f",
-    "n_actions": 733,
-    "oracle_sha": "ca42817632afe585",
+    "instance_sha": "793e46f8d8129b0c",
+    "n_actions": 652,
+    "oracle_sha": "d739c2adb28e7caf",
     "replay_shas": [
-     "ca42817632afe585",
-     "ca42817632afe585"
+     "d739c2adb28e7caf",
+     "d739c2adb28e7caf"
     ]
    },
    {
     "file": "hangmug_002.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "mug": "Mug/mug_002",
      "mug_tree": "MugTree/mug_tree_002"
     },
-    "instance_sha": "aeaa2e7726820c73",
-    "n_actions": 740,
-    "oracle_sha": "1ed3ca95762295dd",
+    "instance_sha": "7921ec0493ccf76a",
+    "n_actions": 732,
+    "oracle_sha": "2b8459c04e9ab3c6",
     "replay_shas": [
-     "1ed3ca95762295dd",
-     "1ed3ca95762295dd"
+     "2b8459c04e9ab3c6",
+     "2b8459c04e9ab3c6"
     ]
    },
    {
@@ -445,32 +445,32 @@
    },
    {
     "file": "hangmug_004.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "mug": "Mug/mug_004",
      "mug_tree": "MugTree/mug_tree_004"
     },
-    "instance_sha": "36db7239aff3585a",
-    "n_actions": 639,
-    "oracle_sha": "5fb27d1081ef4d80",
+    "instance_sha": "9d7ae6a8d33fb2d3",
+    "n_actions": 634,
+    "oracle_sha": "33e650bb549e3ddd",
     "replay_shas": [
-     "5fb27d1081ef4d80",
-     "5fb27d1081ef4d80"
+     "33e650bb549e3ddd",
+     "33e650bb549e3ddd"
     ]
    },
    {
     "file": "hangmug_005.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "mug": "Mug/mug_005",
      "mug_tree": "MugTree/mug_tree_005"
     },
-    "instance_sha": "c5003a678ca85a65",
-    "n_actions": 723,
-    "oracle_sha": "cb93b7dd45df563b",
+    "instance_sha": "6872efdfcee6f443",
+    "n_actions": 682,
+    "oracle_sha": "66c2873c59a34b22",
     "replay_shas": [
-     "cb93b7dd45df563b",
-     "cb93b7dd45df563b"
+     "66c2873c59a34b22",
+     "66c2873c59a34b22"
     ]
    },
    {
@@ -490,32 +490,32 @@
    },
    {
     "file": "hangmug_007.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "mug": "Mug/mug_007",
      "mug_tree": "MugTree/mug_tree_007"
     },
-    "instance_sha": "332eaa4ebb84aa8e",
-    "n_actions": 629,
-    "oracle_sha": "870f78e8516d9ecb",
+    "instance_sha": "3081ccc223c0f272",
+    "n_actions": 633,
+    "oracle_sha": "b7d9a8bf580d7f12",
     "replay_shas": [
-     "870f78e8516d9ecb",
-     "870f78e8516d9ecb"
+     "b7d9a8bf580d7f12",
+     "b7d9a8bf580d7f12"
     ]
    },
    {
     "file": "hangmug_008.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "mug": "Mug/mug_008",
      "mug_tree": "MugTree/mug_tree_008"
     },
-    "instance_sha": "69a90a38ffbe5b1f",
-    "n_actions": 594,
-    "oracle_sha": "242b65f6f5ae5ab2",
+    "instance_sha": "3c59dad40f5d2856",
+    "n_actions": 605,
+    "oracle_sha": "f9bf5720d55fceb1",
     "replay_shas": [
-     "242b65f6f5ae5ab2",
-     "242b65f6f5ae5ab2"
+     "f9bf5720d55fceb1",
+     "f9bf5720d55fceb1"
     ]
    },
    {
@@ -535,32 +535,32 @@
    },
    {
     "file": "hangmug_010.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "mug": "Mug/mug_010",
      "mug_tree": "MugTree/mug_tree_010"
     },
-    "instance_sha": "e0c8b63193ff0ce4",
-    "n_actions": 607,
-    "oracle_sha": "720946353053f690",
+    "instance_sha": "70790879bed91fef",
+    "n_actions": 592,
+    "oracle_sha": "d378d0490454b5f6",
     "replay_shas": [
-     "720946353053f690",
-     "720946353053f690"
+     "d378d0490454b5f6",
+     "d378d0490454b5f6"
     ]
    },
    {
     "file": "hangmug_011.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "mug": "Mug/mug_011",
      "mug_tree": "MugTree/mug_tree_011"
     },
-    "instance_sha": "ba92ab9879924519",
-    "n_actions": 652,
-    "oracle_sha": "b0421453d1d6cc72",
+    "instance_sha": "18beb8ba1fb5835a",
+    "n_actions": 649,
+    "oracle_sha": "4a302d96f2efe180",
     "replay_shas": [
-     "b0421453d1d6cc72",
-     "b0421453d1d6cc72"
+     "4a302d96f2efe180",
+     "4a302d96f2efe180"
     ]
    },
    {
@@ -580,32 +580,32 @@
    },
    {
     "file": "hangmug_013.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "mug": "Mug/mug_013",
      "mug_tree": "MugTree/mug_tree_013"
     },
-    "instance_sha": "26aa1c873daeee77",
-    "n_actions": 592,
-    "oracle_sha": "a7ece3660033b544",
+    "instance_sha": "335a4c84b27038ac",
+    "n_actions": 577,
+    "oracle_sha": "321a9d8be0abd35a",
     "replay_shas": [
-     "a7ece3660033b544",
-     "a7ece3660033b544"
+     "321a9d8be0abd35a",
+     "321a9d8be0abd35a"
     ]
    },
    {
     "file": "hangmug_014.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "mug": "Mug/mug_014",
      "mug_tree": "MugTree/mug_tree_014"
     },
-    "instance_sha": "ffd2b50b4397491d",
-    "n_actions": 657,
-    "oracle_sha": "0568b6f72b898a2b",
+    "instance_sha": "851cda6a4c16e917",
+    "n_actions": 621,
+    "oracle_sha": "497440af52f140bb",
     "replay_shas": [
-     "0568b6f72b898a2b",
-     "0568b6f72b898a2b"
+     "497440af52f140bb",
+     "497440af52f140bb"
     ]
    },
    {
@@ -625,32 +625,32 @@
    },
    {
     "file": "hangmug_016.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "mug": "Mug/mug_016",
      "mug_tree": "MugTree/mug_tree_016"
     },
-    "instance_sha": "365f724641898f24",
-    "n_actions": 671,
-    "oracle_sha": "d61649bbe6292913",
+    "instance_sha": "feede08f10108eaf",
+    "n_actions": 698,
+    "oracle_sha": "34abd717f018bd36",
     "replay_shas": [
-     "d61649bbe6292913",
-     "d61649bbe6292913"
+     "34abd717f018bd36",
+     "34abd717f018bd36"
     ]
    },
    {
     "file": "hangmug_017.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "mug": "Mug/mug_017",
      "mug_tree": "MugTree/mug_tree_017"
     },
-    "instance_sha": "94d062499d15290e",
-    "n_actions": 618,
-    "oracle_sha": "8ea8703a206ca5ad",
+    "instance_sha": "00c6d110ebf97873",
+    "n_actions": 612,
+    "oracle_sha": "f2723ff4bfe73098",
     "replay_shas": [
-     "8ea8703a206ca5ad",
-     "8ea8703a206ca5ad"
+     "f2723ff4bfe73098",
+     "f2723ff4bfe73098"
     ]
    },
    {
@@ -670,32 +670,32 @@
    },
    {
     "file": "hangmug_019.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "mug": "Mug/mug_019",
      "mug_tree": "MugTree/mug_tree_019"
     },
-    "instance_sha": "3086537cbc2a4365",
-    "n_actions": 656,
-    "oracle_sha": "67b864cb05103612",
+    "instance_sha": "c995b74c8e90c47d",
+    "n_actions": 615,
+    "oracle_sha": "a3313db6c294ac0a",
     "replay_shas": [
-     "67b864cb05103612",
-     "67b864cb05103612"
+     "a3313db6c294ac0a",
+     "a3313db6c294ac0a"
     ]
    },
    {
     "file": "hangmug_020.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "mug": "Mug/mug_020",
      "mug_tree": "MugTree/mug_tree_020"
     },
-    "instance_sha": "0decd9dae89dbe88",
-    "n_actions": 608,
-    "oracle_sha": "53d80e3c25c330a5",
+    "instance_sha": "daaa6b77d07dd594",
+    "n_actions": 612,
+    "oracle_sha": "2fd1447a9bbdd3f5",
     "replay_shas": [
-     "53d80e3c25c330a5",
-     "53d80e3c25c330a5"
+     "2fd1447a9bbdd3f5",
+     "2fd1447a9bbdd3f5"
     ]
    },
    {
@@ -715,32 +715,32 @@
    },
    {
     "file": "hangmug_022.hdf5",
-    "demo": 0,
+    "demo": 1,
     "assets": {
      "mug": "Mug/mug_022",
      "mug_tree": "MugTree/mug_tree_022"
     },
-    "instance_sha": "12a0b305344832b3",
-    "n_actions": 609,
-    "oracle_sha": "5bca33629bed3381",
+    "instance_sha": "7cc55bdaed3ce65b",
+    "n_actions": 583,
+    "oracle_sha": "fa7d1ec80378b56c",
     "replay_shas": [
-     "5bca33629bed3381",
-     "5bca33629bed3381"
+     "fa7d1ec80378b56c",
+     "fa7d1ec80378b56c"
     ]
    },
    {
     "file": "hangmug_023.hdf5",
-    "demo": 0,
+    "demo": 2,
     "assets": {
      "mug": "Mug/mug_023",
      "mug_tree": "MugTree/mug_tree_023"
     },
-    "instance_sha": "1054b734710f2167",
-    "n_actions": 655,
-    "oracle_sha": "0f7f542556ac8d79",
+    "instance_sha": "7652b52a3c3e7d8c",
+    "n_actions": 609,
+    "oracle_sha": "51a64ea82fd1c1fd",
     "replay_shas": [
-     "0f7f542556ac8d79",
-     "0f7f542556ac8d79"
+     "51a64ea82fd1c1fd",
+     "51a64ea82fd1c1fd"
     ]
    },
    {

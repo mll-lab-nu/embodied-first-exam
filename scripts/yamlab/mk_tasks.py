@@ -88,6 +88,15 @@ def cm(x: float) -> str:
     return f"{100 * x:.1f}"
 
 
+def placement(I: dict, demo: int) -> str:
+    """The moved object's placement on YAMLab's teleoperation schedule (demo j = entry j; the base object never moves)."""
+    import math
+    obj = list(I["assets"])[0]
+    p = I["objects"][obj]["position"]; w, x, y, z = I["objects"][obj]["orientation_wxyz"]
+    yaw = math.degrees(math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z)))
+    return f"placement-schedule entry {demo}: the {obj.replace('_', ' ')} at x = {p[0]:.3f} m, y = {p[1]:.3f} m, yaw {yaw:.0f}°"
+
+
 def objects_block(I: dict) -> str:
     names = list(I["assets"])
     parts = [f"`{n}` (YAMLab asset `{I['assets'][n]}`, {' × '.join(cm(v) for v in I['objects'][n]['size'])} cm)" for n in names]
@@ -137,7 +146,7 @@ def plan_instance(fam: str, i: int, R: dict, version: str) -> dict[str, dict[str
               "GOAL_TOML": toml_str(F["goal_toml"]), "ORACLE_SHA": R["oracle_sha"]}
     priv = {"GOAL": F["goal"][0].upper() + F["goal"][1:], "OBJECTS_BLOCK": objects_block(I), "SUCCESS_BLOCK": success_block(fam, I["success_params"], False),
             "README_GOAL": F["readme_goal"], "DIFFICULTY": F["difficulty"], "N_ORACLE": str(R["n_actions"]),
-            "FROZEN": f"{fam}-i{i:02d}"}
+            "FROZEN": f"{fam}-i{i:02d}", "PLACEMENT": placement(I, R["demo"])}
     std = {"STANDARD_GOAL": F["standard_goal"][0].upper() + F["standard_goal"][1:],
            "STANDARD_SUCCESS": success_block(fam, I["success_params"], True)}
     out: dict[str, dict[str, tuple[bytes, int]]] = {}

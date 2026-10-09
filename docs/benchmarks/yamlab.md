@@ -20,7 +20,11 @@ object assets (pot_k + cooktop_k, mug_k + mug_tree_k) placed as in one of YAMLab
 - Selection (`scripts/yamlab/select_instances.py`, in the image, on a GPU host) and freezing (`scripts/yamlab/freeze.py`):
   YAMLab's dataset `yamlab/yamlab_datasets` @ fc6be97 has 40 teleoperation files per task, one object pair each
   (`putpot_007.hdf5` = `Pot/pot_007` + `Cooktop/cooktop_007`), with 9 (PutPotOnCooktop) or 3 (HangMugOnTree) human
-  demonstrations. Files are walked in order and, inside a file, demos in order; a candidate is accepted when
+  demonstrations recorded on YAMLab's fixed placement schedule: demo j is schedule entry j (PutPotOnCooktop: the pot at
+  3 lateral positions × 3 yaws, -118° / -90° / -62°; HangMugOnTree: the mug at 3 yaws, 105° / 135° / 165°; the cooktop and
+  the tree never move). Files are walked in order; inside the k-th file the demos are tried from demo k mod n on,
+  wrapping around, so the instances spread evenly over the schedule (the first selection took every file's demo 0, which
+  gave all 25 instances of a family the same placement). A candidate is accepted when
   1. `rcb_yamlab.py make-instance` rebuilds the demo's recorded initial state (YAMLab's reset: both arms at the home pose,
      joints 0, grippers open; both objects where the demo found them) and writes it with its hash and YAMLab's success
      thresholds for that pair;

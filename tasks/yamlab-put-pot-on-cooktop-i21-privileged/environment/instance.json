@@ -116,7 +116,7 @@
    "pot": {
     "root_pose": [
      0.7105000019073486,
-     0.10423408448696136,
+     0.15000000596046448,
      0.8296300172805786,
      0.5141028165817261,
      0.0,
@@ -134,7 +134,7 @@
    }
   }
  },
- "state_sha": "6fd2e55e76f9b838",
+ "state_sha": "cbc293ec31e700d7",
  "action_dim": 14,
  "control_hz": 30,
  "sim_dt": 0.00833333333333,
@@ -166,7 +166,7 @@
   "pot": {
    "position": [
     0.7105,
-    0.10423,
+    0.15,
     0.82963
    ],
    "orientation_wxyz": [
@@ -183,12 +183,12 @@
    "bounds": [
     [
      0.51177,
-     -0.11831,
+     -0.07254,
      0.7567
     ],
     [
      0.90923,
-     0.32678,
+     0.37254,
      0.90256
     ]
    ],
@@ -250,9 +250,9 @@
  "source": {
   "dataset": "yamlab/yamlab_datasets",
   "file": "putpot_021.hdf5",
-  "demo": 0,
+  "demo": 3,
   "state": "initial_state",
-  "oracle": "30-step ramp from the home targets + the demo's 346 actions"
+  "oracle": "30-step ramp from the home targets + the demo's 368 actions"
  },
  "versions": {
   "isaaclab": "0.54.3",
