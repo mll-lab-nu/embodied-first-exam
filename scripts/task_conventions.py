@@ -53,6 +53,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("libero-max-", "LIBERO-MAX"),
     ("robotangle-", "RoboTangle"),
     ("roboolympics-", "RoboOlympics"),
+    ("bigym2-", "BiGym 2.0"),
 ]
 # Documented per-benchmark exception (PROTOCOL §4b, owner 2026-10-08): standard-realtime tasks without a privileged twin
 # (the same list: ci_checks/check-instance-copies.sh NO_TWIN)
