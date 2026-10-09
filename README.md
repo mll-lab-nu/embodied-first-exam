@@ -46,7 +46,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | HumanoidBench (`humanoidbench-<family>-i00`) | MuJoCo · Unitree H1 humanoid | 24; + 10 standard-realtime (`-standard-realtime`: time does not stop) | full on 1, none on 23 (human review); standard-realtime: full on 1, none on 9 |
 | MetaWorld+ (`metaworldplus-<env>-i00`) | MuJoCo (Meta-World v3) · Rethink Sawyer | 50 | full |
 | RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
-| RoboPaint (`robopaint-<style>-<target>-i00`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 82 | partial |
+| RoboPaint (`robopaint-<style>-<target>-i<NN>`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 43 | partial |
 | RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 53 | full on 2, none on 51 (human review) |
 | BEHAVIOR-1K (`behavior-<activity>-i00`) | OmniGibson / Isaac Sim · Galaxea R1 Pro | 100 | partial on 2, none on 98 (human review; 89 supplementary tasks without a verified positive yet) |
 | VLABench (`vlabench-<task>-i00`) | MuJoCo + dm_control · Franka Panda | 36 | full |
