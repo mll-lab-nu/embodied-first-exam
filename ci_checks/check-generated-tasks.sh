@@ -28,4 +28,8 @@ if [ -f "$root/scripts/robotangle/mk_tasks.py" ]; then   # RoboTangle (its tasks
   if out=$(python3 "$root/scripts/robotangle/mk_tasks.py" --check 2>&1); then echo "ok scripts/robotangle/mk_tasks.py: ${out##*$'\n'}"
   else echo "FAIL scripts/robotangle/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
 fi
+if [ -f "$root/scripts/yamlab/mk_tasks.py" ]; then   # YAMLab (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/yamlab/mk_tasks.py" --check 2>&1); then echo "ok scripts/yamlab/mk_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/yamlab/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
 exit $rc
