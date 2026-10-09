@@ -8,6 +8,8 @@ and never logs or stores.
 
 Routes: /u/<host>/<path> -> https://<host>/<path>. <host> must be a model API (MODEL_HOSTS below, the hosts
 scripts/set_agent_egress.py allows), so the gateway can never carry an agent past its egress allowlist.
+/h/<host>:<port>/<path> -> http://<host>:<port>/<path>, only for an exact <host>:<port> the runner named with --http-host
+(a self-hosted model server without TLS, e.g. sglang's Anthropic-compatible API): the agent's own configured base URL.
 
 Attribution: a request's source IP is the trial's container (or, under an egress allowlist, its egress sidecar). Harbor
 names a trial's compose project `<trial>__env`, so `docker inspect` maps the IP to the project and the project to the
@@ -64,6 +66,7 @@ def _model_hosts() -> list[str]:
 
 
 MODEL_HOSTS = _model_hosts()   # extended at start-up by --extra-host (e.g. an Azure AI Foundry *.services.ai.azure.com)
+HTTP_HOSTS: set[str] = set()   # --http-host: exact <host>:<port> plain-HTTP upstreams (/h/ routes)
 HOP = {"connection", "keep-alive", "proxy-connection", "te", "trailers", "transfer-encoding", "upgrade", "host",
        "content-length", "accept-encoding"}
 SECRET = {"authorization", "x-api-key", "api-key", "cookie", "set-cookie", "chatgpt-account-id", "openai-organization",
@@ -266,10 +269,10 @@ def trial_totals(trial: pathlib.Path | None) -> dict:
             return {}
 
 
-def budget_error(host: str, tot: dict) -> dict:
+def budget_error(host: str, path: str, tot: dict) -> dict:
     msg = (f"token budget exceeded for this trial: input {tot.get('input', 0)} / {ARGS.budget_input}, output "
            f"{tot.get('output', 0)} / {ARGS.budget_output} (PROTOCOL §5); the run is over")
-    if "anthropic" in host:
+    if "anthropic" in host or path.split("?")[0].endswith("/messages"):   # Anthropic Messages API, any host
         return {"type": "error", "error": {"type": "invalid_request_error", "message": msg}}
     return {"error": {"message": msg, "type": "invalid_request_error", "code": "token_budget_exceeded", "param": None}}
 
@@ -298,7 +301,10 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/_gateway/health":
             return self._reply(200, {"ok": True})
         m = re.match(r"^/u/([A-Za-z0-9.-]+)(/.*)?$", self.path)
-        if not m or not any(fnmatch.fnmatch(m.group(1).lower(), h) for h in MODEL_HOSTS):
+        plain = re.match(r"^/h/([A-Za-z0-9.-]+:[0-9]+)(/.*)?$", self.path)   # a --http-host upstream (no TLS)
+        if plain and plain.group(1).lower() in HTTP_HOSTS:
+            m = plain
+        elif not m or not any(fnmatch.fnmatch(m.group(1).lower(), h) for h in MODEL_HOSTS):
             return self._reply(403, {"error": "usage gateway: not a model API host (scripts/set_agent_egress.py HOSTS)"})
         if (self.headers.get("Upgrade") or "").lower() == "websocket":
             return self._reply(405, {"error": "usage gateway: no WebSocket; use HTTPS (supports_websockets = false)"})
@@ -313,14 +319,14 @@ class Handler(BaseHTTPRequestHandler):
                            "path": path.split("?")[0], "status": 400, "model": None, "usage": {}, "usage_raw": {},
                            "request_bytes": len(body), "response_bytes": 0, "client_gone": False,
                            "refused": "over_token_budget"}, None)
-            return self._reply(400, budget_error(host, tot))
+            return self._reply(400, budget_error(host, path, tot))
         hdrs = {k: v for k, v in self.headers.items() if k.lower() not in HOP}
         hdrs["Host"] = host
         if body:
             hdrs["Content-Length"] = str(len(body))
         acc, chunks, client_gone = {}, [], False
         try:
-            conn = http.client.HTTPSConnection(host, timeout=ARGS.timeout)
+            conn = (http.client.HTTPConnection if m is plain else http.client.HTTPSConnection)(host, timeout=ARGS.timeout)
             conn.request(self.command, path, body=body or None, headers=hdrs)
             r = conn.getresponse()
         except Exception as exc:  # noqa: BLE001 -- the agent sees an upstream error, as it would without the gateway
@@ -377,17 +383,20 @@ def main() -> int:
     p.add_argument("--ready-file", type=pathlib.Path, help="written with the port once the gateway listens")
     p.add_argument("--timeout", type=float, default=900.0, help="upstream socket timeout, seconds")
     p.add_argument("--extra-host", action="append", default=[], help="another model API host pattern to forward to (repeatable)")
+    p.add_argument("--http-host", action="append", default=[],
+                   help="a plain-HTTP model server <host>:<port>, reached at /h/<host>:<port>/... (repeatable, exact match)")
     p.add_argument("--budget-input", type=int, default=100_000_000, help="per-trial input tokens; 0 = no limit (D10)")
     p.add_argument("--budget-output", type=int, default=10_000_000, help="per-trial output tokens; 0 = no limit (D10)")
     ARGS = p.parse_args()
     ARGS.jobs = ARGS.jobs.resolve()
     MODEL_HOSTS.extend(h.lower() for h in ARGS.extra_host)
+    HTTP_HOSTS.update(h.lower() for h in ARGS.http_host)
     (ARGS.jobs / ".gateway").mkdir(parents=True, exist_ok=True)
     TRIALS = Trials(ARGS.jobs)
     srv = ThreadingHTTPServer((ARGS.bind, ARGS.port), Handler)
     srv.daemon_threads = True
     port = srv.server_address[1]
-    log(f"listening on {ARGS.bind}:{port}, jobs {ARGS.jobs}, raw={ARGS.raw}, hosts {MODEL_HOSTS}")
+    log(f"listening on {ARGS.bind}:{port}, jobs {ARGS.jobs}, raw={ARGS.raw}, hosts {MODEL_HOSTS}, http {sorted(HTTP_HOSTS)}")
     if ARGS.ready_file:
         ARGS.ready_file.write_text(str(port))
     srv.serve_forever()
