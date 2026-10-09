@@ -5837,3 +5837,158 @@ digest = "sha256:28186585dae5dfd7885b56a550b37f96b9854f2387f0052f6d8af7ca407a0c6
 name = "robot-coding-bench/roboolympics-tabletennis-match-i00-standard-realtime"
 digest = "sha256:000794b70e4bed0b3514a33b5ea42d36cd8e9eade15bd6d62cfc3b9caaac3041"
 
+[[tasks]]
+name = "robot-coding-bench/bigym2-dishwasher-close-i00-privileged"
+digest = "sha256:c7a052b96fb81d59a778506195b66d27118ff42de4161be70e4d84e9e05be7f7"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-dishwasher-close-i00-standard"
+digest = "sha256:76f26fe057ad5ed86abeccda395f30c7c73b7681206dacc021b2602a182313cc"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-dishwasher-close-i00-standard-realtime"
+digest = "sha256:1c033b52d361c946bf606af96db762f360b58670aaf8307aaa34afb675cc3beb"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-dishwasher-load-plates-i00-privileged"
+digest = "sha256:85ced129443b2c9a75fb83d4f380a5f53c4e61b83429f920fafbb775b257a586"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-dishwasher-load-plates-i00-standard"
+digest = "sha256:5e5f3738c5c12b288b773e37cf778c226c6cc3b08cd4766928c7d2ed32ab80ba"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-dishwasher-load-plates-i00-standard-realtime"
+digest = "sha256:c04c155656973c239defee79f8e74da0547b402e953634badb91846efc2a550a"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-drawer-top-open-i00-privileged"
+digest = "sha256:d5c6a23962e06c33890c5c3467ce19ea11019695b7e66b8c4c7ce44bca7ce08a"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-drawer-top-open-i00-standard"
+digest = "sha256:16046c289924079ee27a2c5ee669724751ee23fc4b98c0377a0000d4ec8cd29b"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-drawer-top-open-i00-standard-realtime"
+digest = "sha256:0a66800303373ca90ac2a74a3134e3053605ba9e367dcd42afb0802db1e9c820"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-flip-cup-i00-privileged"
+digest = "sha256:5c8a6f0dba912b04ded5cd3aa1732ef216b8420512929f023f24554f726f2249"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-flip-cup-i00-standard"
+digest = "sha256:d4f1fb40a37dc7bd2de6b808f73e3a45eacd8d1f3c20d2798c0d45b377e660b0"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-flip-cup-i00-standard-realtime"
+digest = "sha256:5f1edbcf15b97c61b7208f45bc06efc7c9fbc0735c8f00992f4230701248fc20"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-flip-cutlery-i00-privileged"
+digest = "sha256:6929667054656651d8a9c736172dd4eab4ed4046b83f7500348732ba2922f145"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-flip-cutlery-i00-standard"
+digest = "sha256:35aa63a38204706cc04ed27c1f16bf97346509c6fda4a4b145ae86415f8ba93b"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-flip-cutlery-i00-standard-realtime"
+digest = "sha256:50f0eebdfde84f46d3a87911eb00e112a905ec042124ef835c7b789b94b0167a"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-move-two-plates-i00-privileged"
+digest = "sha256:7a404579e07b9ecd084fa04a24279582f802080560f34db56004bdae6336ee3c"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-move-two-plates-i00-standard"
+digest = "sha256:7a5965709ce0e81a833c4dd288729827393eca1f6ec49c4ac52548d604bdbfe9"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-move-two-plates-i00-standard-realtime"
+digest = "sha256:499e920708eb2f359b1a6e5bbbeb1492f0d9b286ecd15525c1d05193f057fd99"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-pick-box-i00-privileged"
+digest = "sha256:c18d8bb5d94a7cd5e01179c8e03abbaf7ebf070656c94a144c74f83e46fbb65c"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-pick-box-i00-standard"
+digest = "sha256:c71e55a7e73ffdba7bbb24b0ecc70fb87657db403d4d7a213be27b4ab4c731f7"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-pick-box-i00-standard-realtime"
+digest = "sha256:43021a8fa924e03d1d37c5ba91dad48a3af15724a9dac431757a17ba1601f31c"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-put-cups-i00-privileged"
+digest = "sha256:c29f550af6a2a665fcb88ca5570c56a6636799609c29ef3655283415258e53c0"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-put-cups-i00-standard"
+digest = "sha256:53b5eb05b6ca1412ab2876234856381cd22071856cd2a3ce5187dd6c420139b2"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-put-cups-i00-standard-realtime"
+digest = "sha256:04004fa9328439a34af3aaa82ab8bd715a5447a32138a515ff17df02951c8a42"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-reach-target-dual-i00-privileged"
+digest = "sha256:6ee78698fdff3b4286b8da934c8f7c022adc274faa1086d180f153b87f865154"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-reach-target-dual-i00-standard"
+digest = "sha256:8f02fdb7efe73e89b96e25ebb1b6ef794216844055238d3a02779b979a6f58f4"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-reach-target-dual-i00-standard-realtime"
+digest = "sha256:248f314a41e0045aaf60993b4171c5f5b9dad84375ad7b947f377f9c2500737a"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-sandwich-remove-i00-privileged"
+digest = "sha256:23614d82a56a6dd7bcaafb32917418e1efa187b0ace78aa9fd3db661af159ebe"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-sandwich-remove-i00-standard"
+digest = "sha256:e0f5d56efd10ab436b4f501e146b91aca318881019d9b8905315d1d93a000a01"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-sandwich-remove-i00-standard-realtime"
+digest = "sha256:174c96057eec34b6609e0bad651accdd05c545823918b47ff89d9c5de08a856a"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-saucepan-to-hob-i00-privileged"
+digest = "sha256:b0a72dfb1e5eea1c967fb0ab012c017630083bf314ed2a1bde2720f507642ffa"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-saucepan-to-hob-i00-standard"
+digest = "sha256:82751af738979f3e667c1e11f46d256fef8d197ab9d5162c05cd01bd91a374cd"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-saucepan-to-hob-i00-standard-realtime"
+digest = "sha256:818a453d948b907edb6532302de1bde49b1d43f14d90e9f9f926fb3cde29b54a"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-stack-blocks-i00-privileged"
+digest = "sha256:834ee8c23fa4bb54db3015d11aef0c336f6330a49a3b29f17712ad8e7cec1cd1"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-stack-blocks-i00-standard"
+digest = "sha256:8539fc58f6e433cbccff110a31e77e7af82b63e5c560626fc68d4b5395d0eed5"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-stack-blocks-i00-standard-realtime"
+digest = "sha256:93275d5a606f309d3f33a59179af9d41fede1ee552e4715305f46e551d4049a9"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-wall-cupboard-open-i00-privileged"
+digest = "sha256:9cba353d9b5e41d8e9861235ac31cf3773c3014f4bceb1d4a5f3900051c18025"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-wall-cupboard-open-i00-standard"
+digest = "sha256:b21e2b14438c169305db78c39721efc1ba8b832b0bf2d353c79d87251caea27c"
+
+[[tasks]]
+name = "robot-coding-bench/bigym2-wall-cupboard-open-i00-standard-realtime"
+digest = "sha256:c2b067539847d48654bfda81de3be451f791561136261823088e287c3a199896"

@@ -1,0 +1,67 @@
+# bigym2 @@FAMILY@@ — instance i00 — STANDARD MODE (robot as a service)
+
+You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo) **as if it were real
+hardware**: the simulator runs in a service you cannot open, and you reach it only through a client. NVIDIA's GR00T
+whole-body controller, a learned policy that runs inside every control step, drives the legs and waist and keeps the
+robot balanced: you command where it walks, how high its pelvis is@@PITCH_PHRASE@@, its arm joints and its grippers.
+**Task:** @@SENTENCE@@
+
+@@SCENE@@ (Distances are from your pelvis along the floor, directions from the way you face,
+heights above the floor; measured on this scene.)
+
+## Rules (real-robot rules)
+- **One episode, no reset.** The episode starts when the service comes up, from a fixed starting state. `spec()["budget"]["reset"]` is authoritative: it is 0 here, so the one episode is the run.
+- **Time moves only inside calls.** `submit` runs your commands and `get_obs(seconds=s)` stands still for s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while you think; `get_obs()` with no seconds is free.
+- **No privileged state, no score.** You see what the robot's three cameras see (RGB, @@IMAGE_HW@@×@@IMAGE_HW@@: `head`, `left_wrist`, `right_wrist`) and its own proprioception (below). Not where any object is now (only the start sentence above), not the success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`). `spec()` gives the robot's facts: the action slots and their bounds, each camera's field of view and its pose at the start.
+- There is nothing to hand in: the service records the episode, replays it in a fresh simulator and grades the replay. Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
+- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way, so do not stop early: while the episode runs, the run can still pass.
+
+## Success
+@@SUCCESS_PAR@@
+
+The episode ends when the success has held for 1 s (`reason = "success"`)@@ENDS_FAIL@@, when the pelvis gets more than
+10 m from the scene's origin, on a simulator error, after **@@HORIZON_STEPS@@ control steps** (@@HORIZON_S@@ s of robot
+time), or when your time is up. A fresh replay of the recorded episode must succeed as well and end in the same
+state.
+
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
+Your whole interface to the robot. Its docstring is the full reference (`python -c "import rcb_client;
+help(rcb_client)"`); here the action type is `"whole_body"` (not the docstring's example name):
+
+| call | endpoint | what it does |
+|---|---|---|
+| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
+| `r.spec()` | `GET /spec` | the robot's facts: `action_types["whole_body"]` (layout, lower, upper, units), `control_dt` (0.02 s), `max_control_steps` (@@HORIZON_STEPS@@), the cameras, `proprio_layout`, `budget` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s` |
+| `r.get_obs(cameras=None, seconds=0, video="frames")` | `POST /observe` | the current frames (free), or stand still and watch for `seconds` (at most 30) |
+| `r.submit("whole_body", A, dt=0.02, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of @@DIM@@ commands `dt` seconds apart (a multiple of 0.02; a chunk covers at most 10 s); stops early when the episode ends |
+
+The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
+`clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
+`res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in `meta["clipped"]`, never
+refused; a malformed request raises `ValueError` and runs nothing. The response of the call that ends the
+episode also carries `meta["outcome"]`, BiGym's own label of how it ended (`success`, `fell`, `timeout`, `terminated`,
+`physics_error`). Standing still is the row with the current height,
+lean, arm and gripper targets and zero `vx`, `vy`, `wz`; `get_obs(seconds=s)` does that from your last row.
+Measured here: a control step costs about 14 ms of service time inside a `submit` (a 1 s chunk returns in about
+0.7 s); `get_obs()` without seconds about 10 ms.
+```python
+from rcb_client import Robot
+r = Robot()
+res = r.submit("whole_body", A, dt=0.02)   # A: (T, @@DIM@@) commands, one row per control step
+```
+
+## Action rows (@@DIM@@ floats, physical units)
+@@LAYOUT_TABLE@@
+
+The last column is the row that stands still at the start. @@CONTROLLER@@
+
+`spec()["joints"]` gives each arm, waist and finger joint's axis, a point on it and its range (the pelvis frame with
+every joint at 0: `spec()["joint_frame"]`; the sign convention: `spec()["joint_sign"]`), `spec()["grippers"]` the point between each gripper's finger
+pads on its wrist link, and `spec()["cameras"][camera]["mount"]` each camera's pose on its link. Keep your own copy of the last row you sent: a row rebuilt from the measured joint angles sits a little below
+the targets the arms were holding (the servos track with a small error), so holding with it lets the arms sag. The
+client's docstring explains the protocol with another benchmark's examples (`joint_position`, bounds [-1, 1], `imu`,
+`links`, `depth`): for this task `spec()` is authoritative.
+
+## Proprioception
+Each row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: @@PROPRIO_TEXT@@
