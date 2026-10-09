@@ -1,7 +1,8 @@
 """Provenance for sit_simple_actions.npy: the training-free search that produced it.
 
     # inside the base image, from the task dir: tests/ has the reward the image deletes (rcb_rewards.py)
-    PYTHONPATH=tests python solution/cem_mpc.py h1-sit_simple-v0 --out sit_simple_actions.npy   # ~2.5 min, 32 cores
+    PYTHONPATH=tests python solution/cem_mpc.py h1-sit_simple-v0 --instance tests/instance.npz \
+        --out sit_simple_actions.npy   # ~3 min, 32 cores
 
 solve.sh does NOT run this -- it replays the recorded .npy, so the oracle costs one episode and is
 deterministic. This file is here so the reference solution can be regenerated and audited -- it re-runs
@@ -25,10 +26,10 @@ from multiprocessing import Pool
 import numpy as np
 
 os.environ.setdefault("MUJOCO_GL", "osmesa")
-import gymnasium as gym                      # noqa: E402
 import humanoid_bench                        # noqa: E402,F401  (registers the env ids)
 import mujoco                                # noqa: E402
 from humanoid_bench.env import TASKS         # noqa: E402
+from rcb_hb import Session                   # noqa: E402  (tests/ ships it beside rcb_rewards.py)
 from rcb_rewards import restore              # noqa: E402
 
 restore()   # the image has no reward function; without it every rollout would score 0 (forked workers inherit this)
@@ -44,7 +45,9 @@ P.add_argument("--iters", type=int, default=2, help="CEM refits per replan")
 P.add_argument("--exec-steps", type=int, default=3, help="actions executed for real per replan")
 P.add_argument("--std0", type=float, default=0.25)
 P.add_argument("--std-min", type=float, default=0.02)
-P.add_argument("--seed", type=int, default=0)
+P.add_argument("--seed", type=int, default=0, help="the search's own RNG")
+P.add_argument("--instance", required=True, help="the frozen instance the verifier replays from: the search starts "
+               "there (a fresh env.reset(seed) is not byte-identical to it on MuJoCo 3.3.x)")
 P.add_argument("--workers", type=int, default=32)
 A = P.parse_args()
 
@@ -54,10 +57,14 @@ ROBOT = A.env_id.split("-", 1)[0]
 _worker_env = None
 
 
+def _start_env():
+    """The env, at the frozen instance the search starts from."""
+    return Session(instance=A.instance).env
+
+
 def _init_worker():
     global _worker_env
-    _worker_env = gym.make(A.env_id, render_mode=None)
-    _worker_env.reset(seed=A.seed)
+    _worker_env = _start_env()
 
 
 def _knots_to_sequence(knots):
@@ -103,7 +110,7 @@ def _score(arg):
 
 
 def main():
-    env = gym.make(A.env_id, render_mode=None)
+    env = _start_env()
     low = env.unwrapped
     nu = low.model.nu
     bar = TASKS[TASK].success_bar
@@ -114,7 +121,6 @@ def main():
     nominal = np.clip(2 * (qpos0[7:7 + nu] - low.action_low) / (low.action_high - low.action_low) - 1, -1, 1)
     nominal_knots = np.tile(nominal, (A.knots, 1))
 
-    env.reset(seed=A.seed)
     mean = nominal_knots.copy()
     rng = np.random.default_rng(A.seed)
     actions, episode_return, t0 = [], 0.0, time.time()

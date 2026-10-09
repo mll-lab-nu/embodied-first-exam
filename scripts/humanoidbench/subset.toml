@@ -32,7 +32,7 @@
 #              episode_return must equal facts.json's nop_return to the last digit. That equality is the
 #              thing being checked, not just the verdict -- since the image has no reward function, it is
 #              also the proof that tests/rewards.json restored upstream's exact formula. Tasks with an
-#              oracle also need oracle = 1 (sit_simple: 820.28/750 through the full Harbor pipeline).
+#              oracle also need oracle = 1 (sit_simple: 818.41/750 through the full Harbor pipeline).
 #
 # WHERE THE NUMBERS LIVE
 #   Nothing measurable is hand-written here. Success bars, action/observation dimensions, episode limits
@@ -104,6 +104,10 @@ standard_reset_budget = 50
 # exception to the mode's default of 0, docs/PROTOCOL.md §4.5 and §4b); `RCB_RESET_BUDGET` overrides it. RCB_SLOWDOWN defaults to 1 (real time); other values are reported apart.
 realtime_reset_budget = 50
 realtime_review_pr = 83     # the pull request that added the standard-realtime tasks; the owner approved them there (2026-10-08)
+# Physics relative to upstream, one README row per task (and a Change Log line). Every task runs on MuJoCo 3.3.7
+# (images/humanoidbench/Dockerfile); `physics_fix` adds where the image also fixes upstream's model for the task's scene
+# (images/humanoidbench/box_feet.py, upstream-fixes.patch).
+physics_note = "upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics)."
 
 # =====================================================================================================
 # C1 · flat-ground periodic gait
@@ -119,7 +123,7 @@ status = "verified"
 expert_hours = 2.0
 completion_rate = "133%"
 evidence = "paper SAC 854, FastTD3 928, bar 700"
-oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (834.80 / 700), run `claude_code-claude_opus_5_5-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; published RL passes as well (SAC 854, FastTD3 928)"
+oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (834.80 / 700 on image 0.1.6, MuJoCo 3.1.6), run `claude_code-claude_opus_5_5-medium` on the results site; it is open-loop, so it does not carry over to image 0.2.0's physics (51.46 / 700 there); published RL passes as well (SAC 854, FastTD3 928, on upstream's MuJoCo 3.1.6)"
 one_liner = "walks the Unitree H1 forward and keeps it walking"
 task_statement = "walk the robot forward and keep walking, without falling."
 scene_note = "flat ground, and the robot's initial pose never changes between resets."
@@ -177,16 +181,17 @@ expert_hours = 3.0
 completion_rate = "127%"
 evidence = "paper 143, FastTD3 887, bar 700"
 oracle_evidence = "no rollout of this instance; published RL passes the bar (FastTD3 887 / 700)"
-one_liner = "runs the Unitree H1 over a line of hurdles"
-task_statement = "run the robot forward down the walled track and over the hurdles, without touching the side or back walls and without falling."
+one_liner = "runs the Unitree H1 down a walled track past a line of hurdles"
+task_statement = "run the robot forward down the walled track, past the hurdles, without touching the side or back walls and without falling."
 scene_note = "the hurdles and the robot's initial pose never change between resets."
 scoring_note = '''Forward speed, staying upright (head at standing height, torso vertical) and low
 actuator force, multiplied together — but the speed target is a sprint rather than a walk, on the order
 of 5 m/s. On top of that,
 touching any barrier's collision geometry multiplies that entire step down to a small fraction of its
 value: contact is a gate to be respected, not a penalty to be traded off. Only the walls that line the
-track on both sides and behind the start count as barriers here; the hurdles themselves carry no such
-penalty, but they are solid and have to be cleared.'''
+track on both sides and behind the start count as barriers here; the hurdles carry no such penalty, and
+in upstream's model they have no collision geometry at all (drawn, not solid): the robot runs through
+them.'''
 ends_note = "The episode ends early if the pelvis drops near the ground."
 obs_layout = "qpos(26) + qvel(25), robot state only"
 task_notes = ""
@@ -196,9 +201,12 @@ difficulty = '''- **A multiplicative gate, not a penalty.** Contact with the sid
   respected exactly.
 - **Running, not walking.** The speed term is scaled to 5 m/s, so a comfortable walking gait leaves most
   of the per-step reward on the table even when nothing is hit.
-- **The only task in the subset that requires leaving the ground.** Clearing a hurdle needs a ballistic
-  phase with the right take-off timing — a qualitatively different motion from the contact-scheduled
-  gaits of `walk` and `stair`.'''
+- **The hurdles are scenery.** Upstream draws them without collision geometry and its reward never
+  looks at them, so nothing has to be jumped: the task is a sprint down the walled track.'''
+change_log = ["""2026-10-08: the task text no longer says the hurdles are solid and have to be cleared: upstream's
+model draws them without collision geometry and its reward never looks at them. The scene, instance, pass rule and
+verifier are unchanged, so the task keeps its name; runs recorded before this change were told otherwise and are
+reported separately."""]
 
 [task.standard]
 ends = "when the robot falls (its pelvis drops near the ground)"
@@ -222,7 +230,7 @@ status = "verified"
 expert_hours = 4.0
 completion_rate = "31%"
 evidence = "paper 57, FastTD3 244, bar 800"
-oracle_evidence = "none known: no run has passed it, and published RL reaches 31% of the bar (paper 57, FastTD3 244, bar 800)"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 31% of the bar (paper 57, FastTD3 244, bar 800) with upstream's mesh feet on MuJoCo 3.1.6 (box feet since image 0.2.0)"
 one_liner = "keeps the Unitree H1 standing on a board balanced on a rolling sphere"
 task_statement = "stand on the balance board and stay on it, upright and still, for the whole episode."
 scene_note = "the board, the roller beneath it and the robot's initial pose never change between resets."
@@ -234,6 +242,9 @@ ground — the board included — or the sphere touches anything other than the 
 every step after that is worth nothing.'''
 obs_layout = "qpos(40) + qvel(37), robot + board + roller state"
 task_notes = ""
+physics_fix = '''**box feet**: a mesh foot on a box gets one contact point, which on 3.1.6 reported wrong depths (a robot
+with every joint locked slid off a stair tread) and on 3.3.7 never comes to rest; each foot is four boxes that follow
+the mesh's hull, the sole exactly (`images/humanoidbench/box_feet.py`).'''
 difficulty = '''- **Same reward function as `balance_simple`, three times the gap to the bar.** The published best goes
   from 98.6% to 31% with no change to the scoring code — only the support changes, from a board on a
   fixed pivot to a board on a free-rolling sphere (task DoF 7 → 14): the pair isolates how much of a
@@ -242,7 +253,7 @@ difficulty = '''- **Same reward function as `balance_simple`, three times the ga
 - **The support drifts.** A rolling fulcrum integrates the robot's errors instead of merely reflecting
   them, so a correction that works once stops working a second later; there is no fixed operating point
   to stabilise around.
-- **An all-zero trajectory terminates at step 44**, earlier than on the simple board.'''
+- **An all-zero trajectory terminates at step 46**, earlier than on the simple board.'''
 
 [task.standard]
 ends = "when the robot falls, when anything but the roller under the board touches the ground or the roller touches anything but the ground and the board (see Scoring)"
@@ -264,7 +275,7 @@ status = "verified"
 expert_hours = 3.0
 completion_rate = "55%"
 evidence = "paper 285, FastTD3 332, bar 600"
-oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (676.02 / 600), run `claude_code-claude_opus_5_5-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client"
+oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (676.02 / 600 on image 0.1.6, MuJoCo 3.1.6), run `claude_code-claude_opus_5_5-medium` on the results site; it is open-loop, so it does not carry over to image 0.2.0's physics (9.24 / 600 there)"
 one_liner = "walks the Unitree H1 through a closed door"
 task_statement = "walk to the door, press the handle, pull the door open towards the robot, and walk through it."
 scene_note = "the door and the robot's initial pose never change between resets."
@@ -306,7 +317,7 @@ status = "verified"
 expert_hours = 4.0
 completion_rate = "41%"
 evidence = "paper 286, FastTD3 325, bar 800"
-oracle_evidence = "none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800)"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800) with upstream's 104 kg dumbbell (53.7 kg since image 0.2.0)"
 one_liner = "lifts a dumbbell overhead with the Unitree H1"
 task_statement = '''lift the dumbbell from the floor to overhead — close to two metres up — and hold it
 there.'''
@@ -318,15 +329,17 @@ means lifting it high and keeping it there for most of the episode, not improvin
 ends_note = "The episode ends early if the pelvis drops near the ground."
 obs_layout = "qpos(83) + qvel(81), robot + dumbbell state"
 task_notes = ""
+physics_fix = '''**dumbbell mass**: upstream's plates have density="500" on geoms whose class sets mass="0", so it never
+applied and the dumbbell weighed 104 kg; it is 53.7 kg (`images/humanoidbench/upstream-fixes.patch`).'''
 difficulty = '''- **🚩 Kept although RL does poorly on it.** Upstream shapes the lift with
   `tolerance(height, bounds=(1.9, 2.1), margin=2)`, a broad Gaussian: the dumbbell on the floor already
   scores ~0.19 of the term, and at 1.5 m ~0.91. FastTD3 reaches 41% — **less than holding the starting
   pose would score if the robot stayed standing** (about 0.35 a step). The hypothesis behind keeping it is
   that an agent *told the goal in words* is not held back the way RL is.
 - **Load-bearing, not momentum.** The rest of C5 is about timing a burst of energy; this is about holding
-  a mass against gravity through a long range of motion — the dumbbell weighs about 104 kg, twice the
+  a mass against gravity through a long range of motion — the dumbbell weighs 53.7 kg, as much as the
   robot. Holding the start pose, the robot falls over within about 150 steps without lifting it, and the
-  episode ends at step 378, when the pelvis sinks below the 0.2 m termination height.
+  episode ends at step 423, when the pelvis sinks below the 0.2 m termination height.
 - **61 actuators**, because the dumbbell needs hands to grip.'''
 
 [task.standard]
@@ -414,7 +427,7 @@ difficulty = '''- **The only true in-hand reorientation in the benchmark.** Both
   has to be rotated *within* the grasp — fingers must release and re-grip without letting the cube fall,
   which is a qualitatively different skill from `insert_normal`'s rigid-grip transport.
 - **A sharp objective with a cliff on both sides.** The orientation term decays fast, and dropping a
-  cube ends the episode; holding the start pose lasts only 84 steps.
+  cube ends the episode; holding the start pose lasts only 83 steps.
 - **Goal state outside `(qpos, qvel)`.** Upstream puts the target orientation in `model.body_quat[-1]`,
   drawn from the global `np.random` that `reset(seed=)` does not reach. The instance snapshot covers
   `body_quat` for exactly this task; without it, agent and verifier would
@@ -460,6 +473,11 @@ together scores, wherever in the room you do it.'''
 ends_note = "The episode ends if the pelvis drops near the ground."
 obs_layout = "qpos(118) + qvel(111), robot + all six objects"
 task_notes = ""
+physics_fix = '''**reset**: upstream's reset loops over seven objects in a scene of six and wrote the seventh's x/y into
+the right little finger's two joints (it started bent through its own fingertip, pressing on it with about 1.4 kN), and
+left the tilted headphones and a package 5-8 cm inside the floor. The finger now starts in range and every object on
+the floor, at upstream's positions; the frozen instance was redrawn with the fix
+(`images/humanoidbench/upstream-fixes.patch`).'''
 difficulty = '''- **The only task in the benchmark whose objective is a statistic, not a pose.** Upstream scores
   `tolerance(max(variance of the objects' x and y), margin=3)` — there is no destination to reach and no
   per-object goal. The agent has to invent the placement, which is a planning problem no other task in the
@@ -566,10 +584,10 @@ task_notes = ""
 difficulty = '''- **No pose to snap to.** Reaching the chair late still forfeits the reward of every step spent
   standing, so the agent has to sit *early* and then stay still — a partial credit landscape, not a
   goal test.
-- **Doing nothing already gets 85% of the bar.** An all-zero action commands the mid-point of every
+- **Doing nothing already gets 80% of the bar.** An all-zero action commands the mid-point of every
   actuator's range, which slumps the robot back against the chair's backrest with the pelvis just above
-  the seat, and it stays there for the full episode: **637.6 /
-  750**, measured. Holding the *starting* pose instead scores 468.12 (62.4%). That is the single clearest
+  the seat, and it stays there for the full episode: **601.2 /
+  750**, measured. Holding the *starting* pose instead scores 578.51 (77.1%). That is the single clearest
   reason this task is a fixture and not a scored task — the gap a solution has to close is small enough
   that almost anything coherent closes it.
 - **19 coupled DoF under gravity.** The agent has to work out *which* joints put a humanoid on a chair
@@ -579,8 +597,8 @@ difficulty = '''- **No pose to snap to.** Reaching the chair late still forfeits
 **Measured difficulty** (`mini-swe-agent` + `meta/muse-spark-1.3`, first attempt): **solved, 979.03 /
 750** in 26 steps, 337 s of agent time and $0.36. It did not search — it read the model, picked a seated
 joint target by hand (hip −1.4, knee 1.7, ankle −0.35), cosine-blended into it over 30 steps and held,
-then self-checked with `Session.replay`. That beats this task's CEM-MPC oracle (820.28) and the
-published SAC baseline (861), which needs millions of environment steps.
+then self-checked with `Session.replay`. That beat this task's CEM-MPC oracle of the time (820.28; 818.41 since
+image 0.2.0) and the published SAC baseline (861), which needs millions of environment steps.
 
 🚩 That run also read `Sit.get_reward()` and quoted its bounds back at us, which is the measurement that
 led to the reward function being removed from the image entirely
@@ -601,10 +619,10 @@ distinction is worth most while 23 task directories are being generated for the 
 the only task carrying an oracle, so it is also the only one where the oracle = 1 path can be
 exercised.'''
 reference_solution = '''`solution/sit_simple_actions.npy` — a 999-step action sequence that scores
-**820.28 / 750**, replayed by `solution/oracle_sit_simple.py`. HumanoidBench ships no reference solutions
+**818.41 / 750**, replayed by `solution/oracle_sit_simple.py`. HumanoidBench ships no reference solutions
 (its "solutions" are training curves), so this one was produced by training-free CEM-MPC against the
-simulator itself: `solution/cem_mpc.py` reruns that search in ~2.5 minutes on 32 cores (last run:
-817.7/750). It is a fresh search, not a replay, so it produces an equivalent passing trajectory rather
+simulator itself, from the frozen instance: `solution/cem_mpc.py` reruns that search in ~3 minutes on 32 cores
+(last run, MuJoCo 3.3.7: 818.4/750). It is a fresh search, not a replay, so it produces an equivalent passing trajectory rather
 than this exact file. `solve.sh` replays the recording instead of searching, so the oracle is
 deterministic and costs one episode.
 
