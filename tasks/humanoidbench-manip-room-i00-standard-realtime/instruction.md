@@ -102,7 +102,7 @@ while True:                                     # the first submit starts the cl
         break
     a = ...                                     # from res.meta["proprio"]["now"]
 ```
-Measured cost here in standard mode: about 4.5 ms per one-row call asking for one head camera, physics
+Measured cost here in standard mode: about 5.4 ms per one-row call asking for one head camera, physics
 included; a call with `cameras=[]` skips the rendering. A control step is 20 ms.
 
 Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order,

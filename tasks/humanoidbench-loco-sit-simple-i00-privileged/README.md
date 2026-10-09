@@ -9,7 +9,7 @@
 | Family / instance | `sit_simple` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0` |
 
 ## Task
 HumanoidBench sit_simple: produce one replayable trajectory that sits the Unitree H1 on the chair, frozen scene instance 00.
@@ -21,10 +21,10 @@ predicate on the final state.
 - **No pose to snap to.** Reaching the chair late still forfeits the reward of every step spent
   standing, so the agent has to sit *early* and then stay still — a partial credit landscape, not a
   goal test.
-- **Doing nothing already gets 85% of the bar.** An all-zero action commands the mid-point of every
+- **Doing nothing already gets 80% of the bar.** An all-zero action commands the mid-point of every
   actuator's range, which slumps the robot back against the chair's backrest with the pelvis just above
-  the seat, and it stays there for the full episode: **637.6 /
-  750**, measured. Holding the *starting* pose instead scores 468.12 (62.4%). That is the single clearest
+  the seat, and it stays there for the full episode: **601.2 /
+  750**, measured. Holding the *starting* pose instead scores 578.51 (77.1%). That is the single clearest
   reason this task is a fixture and not a scored task — the gap a solution has to close is small enough
   that almost anything coherent closes it.
 - **19 coupled DoF under gravity.** The agent has to work out *which* joints put a humanoid on a chair
@@ -34,8 +34,9 @@ predicate on the final state.
 **Measured difficulty** (`mini-swe-agent` + `meta/muse-spark-1.3`, first attempt): **solved, 979.03
 / 750** in 26 steps, 337 s of agent time and $0.36. It did not search — it read the model, picked a
 seated joint target by hand (hip −1.4, knee 1.7, ankle −0.35), cosine-blended into it over 30 steps
-and held, then self-checked with `Session.replay`. That beats this task's CEM-MPC oracle (820.28)
-and the published SAC baseline (861), which needs millions of environment steps.
+and held, then self-checked with `Session.replay`. That beat this task's CEM-MPC oracle of the time
+(820.28; 818.41 since image 0.2.0) and the published SAC baseline (861), which needs millions of
+environment steps.
 
 🚩 That run also read `Sit.get_reward()` and quoted its bounds back at us, which is the measurement
 that led to the reward function being removed from the image entirely
@@ -58,8 +59,8 @@ this is the only task carrying an oracle, so it is also the only one where the o
 be exercised.
 
 **Measured floors** (this instance, `scripts/humanoidbench/gen_tasks.py verify`): an all-zero
-trajectory scores **637.64 / 750**. Holding the starting pose instead — the floor a competent agent
-gets before writing a controller — scores **62.4%** of the bar; that is the number this task was
+trajectory scores **601.23 / 750**. Holding the starting pose instead — the floor a competent agent
+gets before writing a controller — scores **77.1%** of the bar; that is the number this task was
 selected on (the give-away limit of `gen_tasks.py verify`). **External evidence**: published RL
 results reach **124%** of the bar (paper 861, FastTD3 929, bar 750) — training runs of millions of
 environment steps, not a one-hour coding session, so treat it as proof that the task *has* a
@@ -67,17 +68,17 @@ solution rather than as a target.
 
 **The agent does not see the reward function.** It is deleted from the image and restored only
 inside the verifier (`images/humanoidbench/scrub_oracles.py`, `tests/rcb_rewards.py`), so the
-numbers above are comparable with the paper while the agent works from the task statement and the
-physical state alone.
+numbers above are upstream's own scoring (on our physics: see *Physics vs upstream*) while the agent
+works from the task statement and the physical state alone.
 
 ## Reference solution
-`solution/sit_simple_actions.npy` — a 999-step action sequence that scores **820.28 / 750**,
+`solution/sit_simple_actions.npy` — a 999-step action sequence that scores **818.41 / 750**,
 replayed by `solution/oracle_sit_simple.py`. HumanoidBench ships no reference solutions (its
 "solutions" are training curves), so this one was produced by training-free CEM-MPC against the
-simulator itself: `solution/cem_mpc.py` reruns that search in ~2.5 minutes on 32 cores (last run:
-817.7/750). It is a fresh search, not a replay, so it produces an equivalent passing trajectory
-rather than this exact file. `solve.sh` replays the recording instead of searching, so the oracle is
-deterministic and costs one episode.
+simulator itself, from the frozen instance: `solution/cem_mpc.py` reruns that search in ~3 minutes
+on 32 cores (last run, MuJoCo 3.3.7: 818.4/750). It is a fresh search, not a replay, so it produces
+an equivalent passing trajectory rather than this exact file. `solve.sh` replays the recording
+instead of searching, so the oracle is deterministic and costs one episode.
 
 ⚠️ The oracle searches against the reward function, which the task image no longer has. It runs with
 the verifier's restore path (`tests/rcb_rewards.py`) or outside the container; it is a development
@@ -96,6 +97,7 @@ leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`)
 | | |
 |---|---|
 | Capability class | fixture (C3 · quasi-static stabilisation, too easy to score) (see `scripts/humanoidbench/subset.toml`) |
+| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics). |
 
 ### GPU
 Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
@@ -110,3 +112,6 @@ Generated by `scripts/humanoidbench/gen_tasks.py` from `scripts/humanoidbench/su
 Everything in this directory except the instance (`environment/instance.npz` and its byte copy
 `tests/instance.npz`) is reproducible with `gen_tasks.py render sit_simple`; the instance with
 `gen_tasks.py instance sit_simple` (seed 0, sha `ef2c205ae550`).
+
+### Change Log
+- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6 (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.

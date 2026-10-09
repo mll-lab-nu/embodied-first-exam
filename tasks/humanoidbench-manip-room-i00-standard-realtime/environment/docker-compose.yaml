@@ -7,7 +7,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6
+    image: ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0
     volumes:
       - ./sim:/srv:ro
     command: python /srv/rcb_realtime.py
