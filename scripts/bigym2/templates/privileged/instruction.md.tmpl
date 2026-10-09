@@ -1,0 +1,69 @@
+# bigym2 @@FAMILY@@ — instance i00
+
+You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo) via Python. NVIDIA's
+GR00T whole-body controller, a learned policy that runs inside every simulator step, drives its legs and waist and
+keeps it balanced: you command where it walks, how high its pelvis is@@PITCH_PHRASE@@, its arm joints and its grippers.
+**Task:** @@SENTENCE@@
+
+@@SCENE@@ (Distances are from your pelvis along the floor, directions from the way you face,
+heights above the floor; measured on this scene.)
+
+This is a *fixed scene instance* (BiGym's `@@TASK@@`, reset with seed @@SEED@@). You may reset and retry as many
+times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+
+## Success
+@@SUCCESS_PAR@@
+
+The episode ends when the success has held for 1 s (that step is the success)@@ENDS_FAIL@@, when the pelvis gets more
+than 10 m from the scene's origin, on a physics error, or after **@@HORIZON_STEPS@@ control steps** (@@HORIZON_S@@ s at
+50 Hz). The success check is BiGym's own (`is_success` in `bigym.loco.eval`); `s.status()["success"]` reports it.
+
+## Deliverable
+Leave three files under `/app/output/`. **Only the first is scored**; the other two are how a human reads your work
+afterwards, so keep them short and factual.
+
+| file | what goes in it |
+|---|---|
+| `trajectory.npz` | the trajectory, written with `s.save_trajectory(rows)` (below): `actions`, one row of @@DIM@@ floats per control step. Replayed open-loop from the frozen instance in two fresh processes, one row per step until the episode ends; scored 1 if both replays succeed and end in the same state, else 0. At most @@HORIZON_STEPS@@ rows; rows after the episode's end are ignored |
+| `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`**, reading nothing but `/app/instance.json` and files under `/app/output/` |
+| `NOTES.md` | **at most 20 lines**: your final approach and why it works, and the approaches that failed and what each told you |
+
+The tooling also appends its own log, `rcb_session_log.jsonl`, to `/app/output/`: leave it there and do not set
+`RCB_SESSION_LOG`.
+
+**Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py` and `NOTES.md` to
+match) whenever you have a better one.** Your wall-clock budget is 1 h and it ends without warning; a run that ends
+with no file scores zero. Do not stop early: keep improving until the time is up.
+
+## Tooling (already installed; run `python` from any directory)
+```python
+from rcb_bigym2 import Session
+s = Session("/app/instance.json")      # a few seconds: the scene + the controller's 200-step warm-up
+s.layout                               # the @@DIM@@ action slots, in order (below)
+row = s.hold_row()                     # stand still: your last command with zero vx, vy, wz (before any: upstream's)
+done = s.step(row)                     # one control step (50 Hz); True once the episode is over
+s.status()                             # success, done, outcome, fell, steps, horizon, state_sha
+s.reset()                              # back to the frozen instance (unlimited; under a second, a new Session ~3 s)
+s.task                                 # BiGym's task env: its props (s.task.cup, ...) and s.task.robot
+s.env, s.tools, s.model, s.data        # the env wrapper steps go through, BiGym's EnvTools, MuJoCo model and data
+s.tools.ik(left_pos=p, right_pos=q)    # BiGym's IK: 14 arm targets (left 7, right 7) putting each gripper's
+                                       # *_end_effector site (the point between its finger pads) at a world point
+s.image("head", 256, 256)              # an onboard camera's RGB image (head, left_wrist, right_wrist); 84x84 by
+                                       # default (upstream's size), up to 640x640
+s.held(s.task.cup)                     # BiGym's "held", per gripper: {"left": bool, "right": bool}; the upstream call
+                                       # takes the keys of s.task.robot.grippers (HandSide), not strings
+s.replay(rows)                         # what the verifier does, here: {"success", "state_sha", ...}
+s.save_trajectory(rows)                # writes the SCORED file /app/output/trajectory.npz; pass another path to explore
+```
+The simulator is deterministic on the CPU: the same rows from the frozen instance give the same state, so a trajectory
+you generate closed-loop replays exactly. `python /opt/tools/rcb_bigym2.py replay --instance /app/instance.json --traj
+/app/output/trajectory.npz --out /tmp/r.json` runs the verifier's replay from the shell. The BiGym package (`bigym`) is
+installed; its documentation and source are in the package. On the G1, BiGym's `pinch_position` (a gripper's "pinch
+site") is the wrist link's origin, 0.148 m behind the finger pads; the point between the pads is the
+`left_end_effector` / `right_end_effector` site (`wrist_position`). The container reaches your model's API and nothing
+else: BiGym's recorded demonstrations and other published trajectories are not part of this task.
+
+## Action rows (@@DIM@@ floats, physical units)
+@@LAYOUT_TABLE@@
+
+Values outside the bounds are clipped; the last column is the row that stands still at the start. @@CONTROLLER@@

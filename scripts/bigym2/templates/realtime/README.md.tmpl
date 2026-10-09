@@ -1,0 +1,23 @@
+# @@RT@@
+
+@@SENTENCE@@ (BiGym 2.0 `@@TASK@@`; the robot as a service on a clock that does not stop: its three onboard cameras and
+its proprioception only, one episode.)
+
+## Difficulty
+@@DIFFICULTY@@ In standard-realtime mode the robot keeps running at 50 Hz while the agent thinks, holding its last
+command (standing still), so the agent drives it from a controller program of its own.
+
+## Reference solution
+None (as `@@PRIV@@`).
+
+## Verification
+As `@@STD@@`: the sidecar judges the live episode with BiGym's own success check and replays the commands the
+simulator executed in a fresh simulator; `tests/grade.py` reads `/data/final.json`. Success condition: @@SUCCESS@@.
+@@FAIL_SENTENCE@@@@REVIEW@@
+
+## Details
+| | |
+|---|---|
+| Service | `environment/sim/rcb_realtime.py` (eai-standard/2.3) with the BiGym 2.0 adapter `server.py`, `rcb_bigym2.py`, `instance.json` (= the privileged twin's) |
+| Clock | real time (`RCB_SLOWDOWN`, default 1) from the first `submit` |
+| Horizon | @@HORIZON_STEPS@@ control steps (@@HORIZON_S@@ s at 50 Hz) |
