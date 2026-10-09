@@ -16,7 +16,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/myosuite-hand-pose-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite hand_pose (MyoHand, 39 muscles) on the same frozen instance as myosuite-hand-pose-i00-privileged: Put the hand in the target pose: the norm of the 23 hand and wrist joint-angle errors (rad) below 0.7 for 50 consecutive control steps (1.0 s). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; one episode, no reset, no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite hand_pose (MyoHand, 39 muscles) on the same frozen instance as myosuite-hand-pose-i00-privileged: Put the hand in the target pose: the norm of the 23 hand and wrist joint-angle errors (rad) below 0.7 for 50 consecutive control steps (1.0 s). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode, replays it in fresh processes and grades it."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "hand_pose", "standard-mode"]
 
