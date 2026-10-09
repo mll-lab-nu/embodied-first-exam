@@ -286,6 +286,11 @@ def context(t: dict, defaults: dict, facts: dict) -> dict:
         "robot_slug": robot_slug,
         "paper_category_long": CATEGORY_LONG[t["paper_category"]],
         "image": IMAGE,
+        "physics_note": " ".join((defaults["physics_note"] + (" Also fixed here: " + t["physics_fix"]
+                                                               if t.get("physics_fix") else "")).split()),
+        "physics_log": ", and this task's own fix (*Physics vs upstream*)" if t.get("physics_fix") else "",
+        # this task's own Change Log lines, after the ones every task has
+        "change_log": "".join("\n- " + " ".join(e.split()) for e in t.get("change_log", [])),
         "client_image": CLIENT_IMAGE,
         "keywords": ", ".join(f'"{k}"' for k in keywords),
         "actuator_layout": f"{actuator_order(facts['actuator_names'])} {CONSTANT_ACTION}",

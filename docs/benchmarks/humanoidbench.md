@@ -5,11 +5,11 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | | |
 |---|---|
 | upstream | [HumanoidBench](https://humanoid-bench.github.io/) (RSS 2024), pinned at `cb11890`; 32 registered tasks |
-| simulator | MuJoCo 3.1.6 + dm_control, CPU |
+| simulator | MuJoCo 3.3.7 + dm_control, CPU (upstream pins 3.1.6; see Physics) |
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
 | tasks | 10 × 3 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (the standard-realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
-| image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` (`images/humanoidbench/`) |
+| image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0` (`images/humanoidbench/`) |
 | oracle | `sit_simple` (the fixture): full, all three modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml; standard-realtime: approved by the owner in PR #83, 2026-10-08) |
 
 ## Tasks: upstream's 32, ours ✅ (9 scored + the `sit_simple` fixture)
@@ -26,7 +26,7 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | | pole | h1 | ⬜ | holding still earns 71% of the bar |
 | C3 stabilisation | balance_simple | h1 | ⬜ | balance_hard is upstream's hard version |
 | | balance_hard | h1 | ✅ | same reward on a rolling cylinder |
-| | sit_simple | h1 | ✅ | fixture, the pipeline check: holding still earns 62% |
+| | sit_simple | h1 | ✅ | fixture, the pipeline check: holding still earns 77% |
 | C4 navigation | door | h1 | ✅ | moves 1 object (the door) |
 | | maze | h1 | ⬜ | moves no object |
 | C5 whole-body power | powerlift | h1hand | ✅ | moves 1 object, dexterous hands |
@@ -119,7 +119,7 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMI
   `ticks.f64` (each step's wall time and the call that planned it; -1 = held), `calls.jsonl`, `submitted.f64` (every
   row as sent), and in `final.json` `max_lag_s`, `stalls`, `held_steps`, `late_steps`.
 - **Timing guarantees.** The simulator thread runs a due control step before any waiting request; HumanoidBench's
-  physics takes 0.3–2.2 ms per control step (facts.json, `episode_seconds`) and a head-camera image about 0.5 ms on the
+  physics takes 0.4–2.1 ms per control step (facts.json, `episode_seconds`) and a head-camera image about 0.5 ms on the
   sidecar's GPU, against a 20 ms step. A service that falls behind runs the missed steps back to back; more than
   0.5 s behind, it drops the debt (a stall) instead of fast-forwarding the robot.
 - **Crashes.** A simulator crash is an infrastructure failure, not the agent's (owner, 2026-10-08): past
@@ -145,6 +145,26 @@ no object or target pose; the room camera's pose is given in the robot's startin
 | joint angles and velocities; pelvis IMU: gyro, gravity direction | any object's or target's pose |
 | `spec()`: servo ranges, joint axes and positions, link masses and centres of mass, feet boxes, IMU and camera frames, 50 Hz, the episode length (1000 control steps; 500 for cube), budget | contact forces, the simulator itself |
 
+## Physics: fixes to upstream (image 0.2.0)
+
+Rewards, success bars and terminations are upstream's; the physics is fixed where it was measurably wrong (the image
+build fails unless each fix holds).
+
+| scope | upstream bug | fix | measured |
+|---|---|---|---|
+| every task | MuJoCo 3.1.6 collides general convex shapes (mesh, cylinder) through libccd's MPR, which now and then reports a depth and normal unrelated to the geometry | MuJoCo 3.3.7 (native convex collision) and the matching dm_control's array-size table | hip self-contact normal off > 20° in 64% of 1008 logged contacts (up to 66°, kN forces) → p90 0.6°; forearm-door depth over-reported by up to 98 mm → never; flat ground statistically unchanged |
+| `balance_hard` (and `stair`, `balance_simple`, not shipped; `h1` and `h1hand`) | a mesh foot on a box gets one contact point: on 3.1.6 wrong depths (a robot with every joint locked slid off a stair tread in 9 of 10 placements), on 3.3.7 it never comes to rest | feet = four boxes that follow the hull, sole exact (`box_feet.py`) | locked robot on 9 stair placements: still (< 1 mm/s); foot-box depth exact in all 75,406 contacts of our logged episodes |
+| `room` | the reset loops over 7 objects in a scene of 6 and writes the 7th's x/y into the right little finger (1.4 kN on its own fingertip); headphones and a package start 5-8 cm inside the floor | write the 6 objects only (same draws, same placement); lift objects onto the floor (`upstream-fixes.patch`) | finger in range, no self-contact; objects on the floor |
+| `powerlift` | the plates' `density="500"` sits on geoms whose class sets `mass="0"`, so it never applied | the density on the visual plates (`upstream-fixes.patch`) | dumbbell 104.0 kg → 53.7 kg |
+
+Results on image 0.1.6 or earlier are other physics and are reported apart; none is comparable with the paper's
+numbers. The instances were drawn on MuJoCo 3.1.6 and load identically on 0.2.0, room's redrawn with its fix
+(`scripts/humanoidbench/README.md`). Known and not fixed: masses where upstream set no density (room's packages 24 and 40 kg) or chose one (the door, 160 kg at
+`density="600"`), the ±0.01 start noise on every `qpos` (feet start up to 18 mm in the floor), `sit_simple`'s chair box
+overlapping the heels by 19 mm (its mesh feet touch that box; it is a fixture), and `hurdle`'s hurdles, which upstream draws
+without collision geometry and its reward never reads (the robot runs through them; the task text says so since
+2026-10-08).
+
 ## Answer-key leakage
 
 A dense reward is the answer key: with it the task is to invert an expression, not to control a robot. So the image has
@@ -154,7 +174,7 @@ or `environment/sim/` (standard) -- and is patched back there (`shared/rcb_rewar
 reaches the model APIs and nothing else (`[agent]` allowlist, `scripts/set_agent_egress.py`), so it cannot fetch the
 public upstream back; instructions describe the scoring in words, with no tolerance or weight
 (`scripts/humanoidbench/subset.toml`, "HOW TO WRITE scoring_note"; `gen_tasks.py check` looks for formula fragments).
-Known gaps: the 0.1.6 image still holds `_WALK_SPEED` and `_RUN_SPEED`, which a class body references (the move
+Known gaps: the image still holds `_WALK_SPEED` and `_RUN_SPEED`, which a class body references (the move
 term's bound for walk, stair and hurdle; the instructions give the same order of magnitude), and a native agent holds
 its model-API key in its container, so it could call a search-enabled model through the allowed host.
 

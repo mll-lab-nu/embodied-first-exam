@@ -6,7 +6,7 @@ services:
   main:
     depends_on: [sim]
   sim:
-    image: ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6
+    image: ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0
     volumes:
       - ./sim:/srv:ro
     command: python /srv/server.py
@@ -14,7 +14,7 @@ services:
     environment:
       RCB_TASK: hurdle
       RCB_INSTANCE: /srv/instance.npz
-      RCB_TASK_TEXT: "Run the robot forward down the walled track and over the hurdles, without touching the side or back walls and without falling."
+      RCB_TASK_TEXT: "Run the robot forward down the walled track, past the hurdles, without touching the side or back walls and without falling."
       RCB_EPISODE: "Ends when the summed reward reaches the pass mark (success), when the robot falls (its pelvis drops near the ground), after 1000 control steps, when your time is up (timeout), or on a simulator error."
       RCB_WALL_CLOCK_S: "3600.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard

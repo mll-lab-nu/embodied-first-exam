@@ -21,7 +21,7 @@ mode = "privileged"
 instance_seed = 0
 expert_time_estimate_hours = 3.0
 oracle = "none"
-oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (676.02 / 600), run `claude_code-claude_opus_5_5-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; human review in PR #9"
+oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (676.02 / 600 on image 0.1.6, MuJoCo 3.1.6), run `claude_code-claude_opus_5_5-medium` on the results site; it is open-loop, so it does not carry over to image 0.2.0's physics (9.24 / 600 there); human review in PR #9"
 
 [verifier]
 timeout_sec = 900.0
@@ -48,6 +48,6 @@ allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.
 
 [environment]
 build_timeout_sec = 1800.0
-# the deliverable is reachable by search; one episode is ~0.45 s of one core
+# the deliverable is reachable by search; one episode is ~0.52 s of one core
 cpus = 16
 memory_mb = 16384

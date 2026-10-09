@@ -63,9 +63,11 @@ following.
 
 `gen_tasks.py instance` will not overwrite an existing `instance.npz` without `--force`. An instance is an
 identity, not a cache: it is what the `dataset.toml` digest covers and what any recorded trajectory was
-solved against. Redrawing with the same seed does reproduce it byte for byte — `Session.make_instance()`
-seeds both the gymnasium RNG and the legacy global `np.random` that upstream uses for goals — so the guard
-only ever catches the accidental case.
+solved against. Redrawing with the same seed reproduces the scene — `Session.make_instance()` seeds both the
+gymnasium RNG and the legacy global `np.random` that upstream uses for goals — but not the bytes on every image:
+the instances were drawn on MuJoCo 3.1.6 (room's with image 0.2.0's reset fix), and MuJoCo 3.3.7, unlike 3.1.6, does
+not normalise the root quaternion in place nor write `qacc_warmstart` in `mj_forward`. They load identically on
+0.2.0, so keep them.
 
 Background: `docs/benchmarks/humanoidbench.md` (why these tasks) and upstream,
 [HumanoidBench](https://github.com/carlosferrazza/humanoid-bench).
