@@ -21,7 +21,7 @@ mode = "privileged"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 oracle = "none"
-oracle_evidence = "none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800); human review in PR #9"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800) with upstream's 104 kg dumbbell (53.7 kg since image 0.2.0); human review in PR #9"
 
 [verifier]
 timeout_sec = 900.0
@@ -48,6 +48,6 @@ allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.
 
 [environment]
 build_timeout_sec = 1800.0
-# the deliverable is reachable by search; one episode is ~1.17 s of one core
+# the deliverable is reachable by search; one episode is ~1.18 s of one core
 cpus = 16
 memory_mb = 16384

@@ -124,7 +124,9 @@ check("range", np.allclose(sim.s.data.ctrl[:nu], lo + (A[-1].astype(np.float32) 
 call(svc, "/reset", {"video": "none"})
 run(svc, A)
 check("reset", ok_start and not any(drift.values()) and sim.state_sha() == one_by_one, steps=len(A), pixels_changed=drift)
-B, lin = A[:min(20, (facts["nop_steps"] - 1) // 2)], {"dt": 2 * sim.control_dt, "interpolate": "linear"}
+# Each row of B is 2 control steps, so B must end well inside the episode. Random rows can end it sooner than the
+# all-zero trajectory does: balance_hard's (46 steps) ended before half of nop_steps; a third leaves room.
+B, lin = A[:min(20, (facts["nop_steps"] - 1) // 3)], {"dt": 2 * sim.control_dt, "interpolate": "linear"}
 call(svc, "/reset", {"video": "none"})
 for b in B:
     run(svc, b[None], **lin)

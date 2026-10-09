@@ -68,8 +68,8 @@ from rcb_client import Robot
 r = Robot()
 res = r.submit("joint_position", A, dt=0.02)   # A: (T, 19) servo targets in [-1, 1], one row per control step
 ```
-Measured cost here: about 4.2 ms per control step in one-row calls asking for one head camera,
-6.0 ms with both head cameras' images, 0.9 ms per step in chunks of 10 rows asking for one camera
+Measured cost here: about 5.0 ms per control step in one-row calls asking for one head camera,
+7.3 ms with both head cameras' images, 1.1 ms per step in chunks of 10 rows asking for one camera
 (video="none" each time).
 
 Each proprioception row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order,
