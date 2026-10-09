@@ -1,0 +1,24 @@
+{
+ "rule": {
+  "de_mean": 3.9,
+  "de_p90": 6.5,
+  "ssim_L": 0.85,
+  "edge_corr": 0.59,
+  "paint_iou": 0.96,
+  "blur_mm": 1.0,
+  "register_mm": 5.0,
+  "score_inset_mm": 8.0
+ },
+ "baseline": {
+  "de_mean": 3.4921,
+  "de_p90": 5.7437,
+  "ssim_L": 0.893556,
+  "edge_corr": 0.64595,
+  "region_cov_min": 0.816001,
+  "region_cov_mean": 0.991418,
+  "de_mean_coarse": 2.278,
+  "ssim_L_fine": 0.818363,
+  "paint_iou": 0.999529,
+  "n_strokes": 1580.0
+ }
+}

@@ -7,7 +7,7 @@
 | Twin | `robopaint-kaishu-yongzibafa-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_kaishu_yongzibafa` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs (ws3, 2026-10-05): path_mm 1075 and mark_width_mm 4.47, against the colouring-in limits 3230 mm and 1.34 mm. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
+| Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets), re-made on 2026-10-09 (README, Change Log; docs/benchmarks/robopaint.md, Targets). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs: path_mm 1270 and mark_width_mm 3.71, against the colouring-in limits 3230 mm and 1.34 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): docs/benchmarks/robopaint.md (Validation). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
@@ -50,3 +50,6 @@ Same scene, exemplar and rule as `robopaint-kaishu-yongzibafa-i00-privileged` (s
 ### Licences
 The exemplar derives from the fonts AR PL KaitiM GB / AR PL UKai via Make Me a Hanzi (Arphic Public License):
 `environment/ARPHICPL.TXT`, `environment/NOTICE-exemplar.md`.
+
+### Change Log
+- 2026-10-09: the reference solution only, re-made so that it copies the exemplar closely (the owner's request: every stroke, no blob where a stroke starts, no needle where it ends): the calligraphy planner of 2026-10-09 and its plan (the privileged twin's `solution/`, its `README.md` has the method) and the new trajectory (`solution/oracle_qpos.npy`, the same in both twins). The reference's verifier metrics went from IoU 0.891, boundary F 0.941, minimum stroke coverage 0.860, stray 0.0123 to 0.940, 0.988, 0.931, 0.0015; `path_mm` 1075 -> 1270 mm and `mark_width_mm` 4.47 -> 3.71 mm, far from colouring in. Harbor oracle 1 and nop 0 on both modes after the change (ws3, 2026-10-09). The instance, the picture, the pass rule and the process limits (set on the first reference) are unchanged, so the task keeps its name.
