@@ -1,8 +1,9 @@
-# Robot Coding Bench — Task Protocol v1.1.1
+# Robot Coding Bench — Task Protocol v1.1.2
 
 Status: **final** (2026-09-30; v1.0.1 2026-10-01: both modes carry a suffix, no results in the repository, standard
 task README; **v1.1 2026-10-08: a third mode (§4b), served by `eai-standard/2.3`; protocol-change issue #86; v1.1.1 2026-10-08: the third mode is named
-`standard-realtime`, issue #97**).
+`standard-realtime`, issue #97; v1.1.2 2026-10-08: the standard-realtime mode's default reset budget is 0, as in standard
+mode, and HumanoidBench's 50 is a per-benchmark exception, issue #102**).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard mode is specified in
 [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`, and the standard-realtime mode's `eai-standard/2.3`);
 its 2.2 extension in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md), and the 2.4 operations capability in
@@ -313,11 +314,11 @@ resumes the same episode; success is decided on a replay.
 | Exposing object poses, scene files, seeds, the success predicate, segmentation, object contact forces | MUST NOT | [current] |
 | Robot proprioception, camera calibration, task text | MAY | [current] |
 
-**Per-benchmark reset defaults.** A benchmark's standard tasks may default to a reset budget N > 0 only by owner
+**Per-benchmark reset defaults.** A benchmark's standard or standard-realtime tasks may default to a reset budget N > 0 only by owner
 decision, recorded here and in `docs/benchmarks/<bench>.md`; the capability is the one above (`POST /reset`, only the
 last episode graded, a success ends the trial: [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md)), the budget stays an override (`RCB_RESET_BUDGET`), and that benchmark's
 results must state the reset budget and are compared only with results under the same budget.
-- **HumanoidBench** (owner, 2026-10-07): `budget.reset = 50`. The H1 falls within 1–3 s of robot time and the agent has
+- **HumanoidBench** (owner, 2026-10-07; its standard-realtime tasks too, 2026-10-08): `budget.reset = 50`. The H1 falls within 1–3 s of robot time and the agent has
   no simulator to practise in, so a single episode is one blind attempt. `RCB_RESET_BUDGET=0` still runs one episode;
   HumanoidBench standard results recorded before 2026-10-07 ran with 0 and are reported separately
   ([`benchmarks/humanoidbench.md`](benchmarks/humanoidbench.md)).
@@ -370,11 +371,28 @@ agent latency counts, the agent's own program may act), on the 2.x endpoints and
 | An episode starts paused; its clock starts at its first `/submit` (or `/observe` with `seconds > 0`) and then runs one control step every `control_dt` × S s of wall time, whatever the agent does, until the episode ends; after a reset or a crash recovery the episode is paused again | MUST | [new] |
 | `/submit` writes a plan of future targets from control step `at` (default: the next one) and answers at once; rows whose steps have run are dropped (`late_steps`); the last target is held when the plan runs out | MUST | [new] |
 | Grading replays the targets the simulator **applied** at each control step (the journal), so the replay equals the live run whatever the timing; latency and jitter are recorded (`ticks.f64`; `max_lag_s`, `stalls`, `held_steps`, `late_steps` in `final.json`) and never decide the verdict | MUST | [new] |
-| Slowdown S: `RCB_SLOWDOWN`, default **1** (real time). Results with S ≠ 1 are reported separately from S = 1 and state S; official results use S = 1 | MUST | [new] |
-| Reset budget: **`budget.reset = 50` by default** (the reset capability of §4.5; `RCB_RESET_BUDGET` overrides it; results state the budget and are compared only under the same budget) | MUST (default) | [new] (owner, 2026-10-08: the same as HumanoidBench standard) |
+| Slowdown S: `RCB_SLOWDOWN`, default **1** (real time; per-benchmark exceptions below: RoboOlympics 10). Results with S ≠ 1 are reported separately from S = 1 and state S; official results use S = 1, or the benchmark's documented S | MUST | [new] |
+| Reset budget: **no reset by default** (`budget.reset = 0`), as in standard mode; per-benchmark exceptions only as in §4.5 (HumanoidBench: 50). The reset capability is §4.5's; `RCB_RESET_BUDGET` overrides it; results state the budget and are compared only under the same budget | MUST | [new] (v1.1.2, #102: v1.1 and v1.1.1 wrongly made HumanoidBench's 50 the mode's default) |
 | A simulator crash is an infrastructure failure, never the agent's: past `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed` (no call spans a crash: `/submit` answers at once), a failed resume `resume_failed`, and a simulator error that ends the graded episode (`reason = "error"`) — all with `infra_error = 1` | MUST | [new] (owner, 2026-10-08) |
 | The agent's controller runs in the agent's own container and streams targets through the client; no agent code runs next to the simulator | MUST | [new] |
-| A standard-realtime task shares its privileged twin's frozen instance and success rule (its verifier grades the sidecar's record, as in standard mode); its instruction says that time does not stop | MUST | [new] |
+| A standard-realtime task shares its privileged twin's frozen instance and success rule (its verifier grades the sidecar's record, as in standard mode; a benchmark without a privileged mode only by the exception below); its instruction says that time does not stop | MUST | [new] |
+
+**Per-benchmark exceptions.** A benchmark's standard-realtime tasks may differ from a default or a MUST of this section
+only by owner decision, recorded here and in `docs/benchmarks/<bench>.md` (and, where CI checks the rule, in its
+exception list), in the same way as HumanoidBench's reset budget (§4.5) and RoboTangle's agent budget (§2.3). The
+interface, the encoding, crash recovery and the evidence are never excepted: every standard-realtime task serves
+`eai-standard/2.3`. That benchmark's results state what differs and are compared only with results under the same
+settings.
+- **RoboOlympics** (owner, 2026-10-08; `roboolympics-<sport>-<format>-i<NN>-standard-realtime`, real-time sports
+  against a scripted opponent, [`benchmarks/roboolympics.md`](benchmarks/roboolympics.md)):
+  - slowdown: `RCB_SLOWDOWN` defaults to **10**, RoboOlympics' official slowdown of these sports (a rally is over in a
+    few seconds, faster than a model's turn); it stays an override, and the results state S and are reported
+    separately (as every S ≠ 1).
+  - no privileged twin: the sports measure play from camera images against an opponent; there is no trajectory
+    deliverable. `ci_checks/check-instance-copies.sh` and `scripts/task_conventions.py` (`NO_TWIN`) exempt exactly
+    these tasks.
+  The breaks between points are part of the sports' rules, not a protocol feature: the clock never stops (the match
+  stands still for a bounded time while the control steps go on, and the agent's `ready` command ends a break early).
 
 ## 5. Results, cost, token budget
 | Item | Level | Basis |

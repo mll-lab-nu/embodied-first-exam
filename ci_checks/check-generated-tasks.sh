@@ -4,7 +4,8 @@
 # a task dir the generator no longer writes is up to the generator. Generators without a check mode
 # (scripts/robotwin_mk_*.py, dtb_mk_task.py, mj_mk_limited.py, metaworldplus/generate.py) are re-run by hand. RoboPaint's check
 # (robopaint_strict/mk_tasks.py) runs robopaint_brush_mk_task.py --refresh into a temporary directory and adds the process rules
-# (standard library only). The VLABench, RoboCasa and MuJoCo Playground (quadruped) checks also compare file modes, so run
+# (standard library only), as does RoboOlympics' (scripts/roboolympics/gen_tasks.py check, which compares the executable
+# bits too). The VLABench, RoboCasa, MuJoCo Playground (quadruped) and LIBERO-MAX checks also compare file modes, so run
 # them from a checkout made with umask 022.
 # Usage: check-generated-tasks.sh   (repo-level; run_all.sh calls it once)
 set -uo pipefail
@@ -13,7 +14,7 @@ for gen in "kinder/gen_tasks.py check" "humanoidbench/gen_tasks.py check" "behav
            "robolab/mk_tasks.py --check" "robowits/mk_tasks.py --check" "vlabench/generate.py --check" \
            "robocasa/generate.py --check" "robocasa365/generate.py --check" "robocasa-gr1/generate.py --check" \
            "maniguard/mk_tasks.py --check" "robopaint_strict/mk_tasks.py --check" \
-           "mujoco-playground/generate.py --check"; do
+           "mujoco-playground/generate.py --check" "libero-max/generate.py --check"; do
   read -r script mode <<<"$gen"
   if out=$(python3 "$root/scripts/$script" "$mode" 2>&1); then
     echo "ok scripts/$script: ${out##*$'\n'}"
@@ -21,6 +22,10 @@ for gen in "kinder/gen_tasks.py check" "humanoidbench/gen_tasks.py check" "behav
     echo "FAIL scripts/$gen:"; echo "$out" | tail -n 40; rc=1
   fi
 done
+if [ -f "$root/scripts/roboolympics/gen_tasks.py" ]; then   # RoboOlympics (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/roboolympics/gen_tasks.py" check 2>&1); then echo "ok scripts/roboolympics/gen_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/roboolympics/gen_tasks.py check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
 if [ -f "$root/scripts/robotangle/mk_tasks.py" ]; then   # RoboTangle (its tasks pull request adds the generator)
   if out=$(python3 "$root/scripts/robotangle/mk_tasks.py" --check 2>&1); then echo "ok scripts/robotangle/mk_tasks.py: ${out##*$'\n'}"
   else echo "FAIL scripts/robotangle/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi

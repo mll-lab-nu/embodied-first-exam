@@ -1,0 +1,124 @@
+{
+ "case_id": "pro-object-10-t03-i02-obstacle_insertion-d0-p195",
+ "event": "obstacle_insertion",
+ "suite": "libero_10",
+ "language": "put the black bowl in the bottom drawer of the cabinet and close it",
+ "goal": [
+  [
+   "close",
+   "wooden_cabinet_1_bottom_region"
+  ],
+  [
+   "in",
+   "black_bowl_1",
+   "wooden_cabinet_1_bottom_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "f26a1280d7c99a6bbcbfd53344719fe0cb50addc5ceceacec6d6a07c2bc25482",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "black_bowl_1",
+    "wooden_cabinet_1_bottom_region"
+   ],
+   [
+    "close",
+    "wooden_cabinet_1_bottom_region"
+   ]
+  ],
+  "phase": "wooden_cabinet_1_bottom_region:closed q=0.001",
+  "trace": [
+   "138:black_bowl_1:placed",
+   "138:close: room={1: 0.183, -1: 0.266} sides=[-1, 1]",
+   "201:close: pushed q=0.001 eef-side=[-0.003, -0.056, 0.007] contacts=['gripper0_hand_collision>wooden_cabinet_1_g3']",
+   "201:close: on handle q=0.001 contacts=['gripper0_hand_collision>wooden_cabinet_1_g3']",
+   "201:close: pushed q=0.001 eef-side=[-0.123, -0.056, 0.007] contacts=['gripper0_hand_collision>wooden_cabinet_1_g3']",
+   "201:close: on handle q=0.001 contacts=['gripper0_hand_collision>wooden_cabinet_1_g3']",
+   "201:wooden_cabinet_1_bottom_region:closed q=0.001"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 201,
+  "event_fired": true,
+  "event_step": 15,
+  "steps_left": 319,
+  "state_sha": "7977ecebcc3296c6e8147121572f734c34a5434e5e7bc392501ec841aacd41b7",
+  "initial_state_sha": "f26a1280d7c99a6bbcbfd53344719fe0cb50addc5ceceacec6d6a07c2bc25482"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 201,
+   "event_fired": true,
+   "event_step": 15,
+   "steps_left": 319,
+   "state_sha": "7977ecebcc3296c6e8147121572f734c34a5434e5e7bc392501ec841aacd41b7",
+   "initial_state_sha": "f26a1280d7c99a6bbcbfd53344719fe0cb50addc5ceceacec6d6a07c2bc25482"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 201,
+   "event_fired": true,
+   "event_step": 15,
+   "steps_left": 319,
+   "state_sha": "7977ecebcc3296c6e8147121572f734c34a5434e5e7bc392501ec841aacd41b7",
+   "initial_state_sha": "f26a1280d7c99a6bbcbfd53344719fe0cb50addc5ceceacec6d6a07c2bc25482"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

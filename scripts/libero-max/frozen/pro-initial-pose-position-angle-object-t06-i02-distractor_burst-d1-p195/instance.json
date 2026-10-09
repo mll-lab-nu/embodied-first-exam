@@ -1,0 +1,158 @@
+{
+ "case": {
+  "case_id": "pro-initial-pose-position-angle-object-t06-i02-distractor_burst-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 2,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/initial_pose_position_angle/libero_object/task_6",
+   "change": {
+    "distractor_count": 5,
+    "operation": "insert_distractors",
+    "placements": [
+     {
+      "object": "orange_juice_1",
+      "offset_m": [
+       0.0719148,
+       -0.12134793,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "butter_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "ketchup_1",
+      "offset_m": [
+       0.13475509,
+       0.03025072,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "butter_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "chocolate_pudding_1",
+      "offset_m": [
+       0.01295483,
+       0.13839822,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "butter_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "bbq_sauce_1",
+      "offset_m": [
+       -0.10409668,
+       0.0449337,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "butter_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "tomato_sauce_1",
+      "offset_m": [
+       -0.10377714,
+       -0.11792924,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "butter_1",
+      "support_entity": "floor"
+     }
+    ]
+   },
+   "change_family": "CLUTTER",
+   "change_type": "distractor_burst",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1651117051
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-initial-pose-position-angle-object-t06-i02-distractor_burst-d1",
+   "seed": 1651117051,
+   "setup": [
+    {
+     "object": "orange_juice_1",
+     "offworld_position_m": [
+      -2.0,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "ketchup_1",
+     "offworld_position_m": [
+      -2.2,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "chocolate_pudding_1",
+     "offworld_position_m": [
+      -2.4,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "bbq_sauce_1",
+     "offworld_position_m": [
+      -2.6,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "tomato_sauce_1",
+     "offworld_position_m": [
+      -2.8,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    }
+   ],
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "butter_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/initial_pose_position_angle",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "07_initial_pose_position_angle/bddl/libero_object/pick_up_the_butter_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "initial_pose_position_angle",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_butter_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object/pick_up_the_butter_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the butter and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 6,
+  "task_name": "pick_up_the_butter_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "021b7de4557daa690e4d0f08ab146ead1b0caaf8707223ba06632b9d179b232c",
+ "instance_sha": "1c32883d6bb17f19f9479ef6a3fa78da3189297731e1bf4cfaade123d0fb86d6",
+ "schema": "eai-libero-max-instance/1"
+}

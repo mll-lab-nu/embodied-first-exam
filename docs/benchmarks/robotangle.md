@@ -77,11 +77,12 @@ and, since 0.2.21, the sm_86 build of the same recipe with its `uipc-build.json`
 
 ## Image
 
-`ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>` (0.2.21) is a public image, pushed by the maintainers after
+`ghcr.io/mll-lab-nu/eai-robotangle:<images/robotangle/VERSION>` (0.2.22) is a public image, pushed by the maintainers after
 validation. It contains Genesis AI's Nyx renderer (the `gs-nyx` wheels on PyPI); the benchmark owner has permission to
 redistribute it in this image.
 
-0.2.21 is 0.2.19 plus the NVIDIA Vulkan ICD and EGL vendor files and the sm_86 libuipc build (GPU architecture, below).
+0.2.21 is 0.2.19 plus the NVIDIA Vulkan ICD and EGL vendor files and the sm_86 libuipc build (GPU architecture, below). 0.2.22 adds the frozen rope meshes of the IPC instances (CPU instruction-set class, below): the published 0.2.21 image
+plus one layer with those files, content-identical to a full build from the pinned dataset revision.
 0.2.20, 0.2.19 plus the ICD and EGL files only, was built for validation and never pushed. 0.2.19 was an internal
 organisation package. The build context comes from the private HF dataset (Large files, above). That dataset stays
 internal; only the built image is public. Build instructions are in images/robotangle/README.md.
@@ -170,6 +171,21 @@ state the 6 h budget and are compared only with results under the same budget (D
 - a physical-validity policy: contact-penetration limits, joint-torque caps and a table guard;
 - a breakdown of the simulator is an infrastructure error, not a failure (`simulator_instability`, `infra_error`);
 - CPU families replay bit-exactly on one host;
+- CPU instruction-set class: the asset generators run on numpy and OpenBLAS, whose SIMD kernels depend on the CPU.
+  On a host without the class an instance was frozen on (AVX2 only vs AVX-512), the pinned generator writes the same
+  asset files with other bytes: floating-point noise up to 1e-8 m and face order (measured 2026-10-08: 29 of the 44
+  instances checkable without a GPU, in buzz_wire_3d, fiber_bundling, hedgehog_in_cage, horseshoe_ring,
+  interlocked_claws and lock_picking). With the runtime binding exact, the same files and the frozen state exactly or
+  within the pose tolerance, the Session realizes the instance there (`instance_realized`, `assets_exact: false`),
+  and the IPC settled-state and stored PBD archives accept an identity that differs only in those asset bytes; the
+  live episode and the fresh replay realize it alike. Hosts that reproduce the frozen bytes are unaffected. Exactness
+  against the reference hosts is recorded, not required: software (the runtime binding) and data (the frozen
+  instance) must be identical, and live and replay on the evaluation host must agree;
+- knot_untying's rope volume mesh: tetgen's interior points depend on the same rounding, and on an AVX2-only CPU knot
+  medium and hard got another mesh (32212 vs 32280 and 40769 vs 40747 vertices), which their frozen IPC settled state
+  does not fit. From image 0.2.22 every IPC instance (knot_untying, rope_threading) carries the mesh it was frozen with
+  (`instance_assets/frozen_assets/rope_volume.npz`, the sha256 its asset identity records), and the tooling uses it
+  instead of regenerating it (rope_threading's meshes matched on the AVX2 CPUs checked, but other CPUs may differ);
 - GPU families are graded strictly live and tolerantly on replay, with the tolerances in each task's README Details.
 
 ## Standard mode: `eai-standard/2.4`
@@ -369,7 +385,9 @@ and work on families that are not shipped (5536fdfd6: slotted_post_ring and orbi
    `check_inputs`. 0.2.21 (public; the GPU fix and the sm_86 libuipc build above) is to be validated the same way before
    it is pushed, on an RTX 4090 and an RTX PRO 6000.
 3. **Exact-restore preflight per frozen instance on that image.** Each instance was frozen by an earlier TopoGym source
-   and is bound to this release's runtime; whether it restores bit-exactly here is not yet checked.
+   and is bound to this release's runtime. 2026-10-08: the asset regeneration of the 44 instances checkable without a
+   GPU matches the frozen bytes on an AVX-512 CPU and is realized on an AVX2 one (CPU instruction-set class, above);
+   the full restore of every instance is not yet checked on both classes.
 4. **nop, both modes, every task, on this build (`2dafa5f2b`).** The records above are from earlier builds:
    `harbor run -p tasks/<task> -a nop`, or
    `for t in tasks/robotangle-*/; do harbor run -p "$t" -a nop -n 1 -k 1; done`.

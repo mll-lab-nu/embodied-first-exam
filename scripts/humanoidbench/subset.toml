@@ -100,8 +100,8 @@ review_pr = 9               # the pull request whose human review covers the tas
 # own, so with no reset its whole run is one blind attempt. A per-benchmark exception to PROTOCOL D1's default of 0
 # (docs/benchmarks/humanoidbench.md); `RCB_RESET_BUDGET=0 harbor run ...` still runs the single-episode configuration.
 standard_reset_budget = 50
-# Standard-realtime mode's reset budget (docs/PROTOCOL.md §4b): 50 by default, the owner's decision of 2026-10-08 (the same as
-# standard's); `RCB_RESET_BUDGET` overrides it. RCB_SLOWDOWN defaults to 1 (real time); other values are reported apart.
+# Standard-realtime tasks' reset budget: 50, the owner's decision of 2026-10-08 (the same as standard's; a per-benchmark
+# exception to the mode's default of 0, docs/PROTOCOL.md §4.5 and §4b); `RCB_RESET_BUDGET` overrides it. RCB_SLOWDOWN defaults to 1 (real time); other values are reported apart.
 realtime_reset_budget = 50
 realtime_review_pr = 83     # the pull request that added the standard-realtime tasks; the owner approved them there (2026-10-08)
 

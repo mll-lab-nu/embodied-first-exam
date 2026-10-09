@@ -2868,6 +2868,98 @@ def check_runtime(lock: dict) -> dict:
     return actual
 
 
+# --------------------------------------------------------------------------- generated assets on another CPU class
+# The asset generators run on numpy and OpenBLAS, whose SIMD kernels depend on the CPU: a host of another instruction-set
+# class (AVX2 only vs AVX-512) writes the same asset files with other bytes from the same pinned generator (measured
+# 2026-10-08: floating-point noise <= 1e-8 m and face order; the rope volume meshes differ only in the last bit of their
+# spawn and elastic rest positions, with identical elements and faces). The frozen state archives record their scene's
+# identity, generated-asset sha256 included, and would refuse such a host for their own scene. Session.instance_realized
+# accepts the host for the instance; these hooks accept it for the archives, for exactly that difference.
+_REALIZED_IDENTITIES: list = []    # archives this process restored with its own asset bytes (Session.native_states_realized)
+
+
+def _same_files_other_bytes(stored, current) -> bool:
+    """Two scene identities that differ only in their generated assets' sha256, over the same files."""
+    if not isinstance(stored, dict) or not isinstance(current, dict):
+        return False
+    changed = {k for k in set(stored) | set(current) if stored.get(k) != current.get(k)}
+    a, b = stored.get("asset_sha256"), current.get("asset_sha256")
+    return changed == {"asset_sha256"} and isinstance(a, dict) and isinstance(b, dict) and set(a) == set(b)
+
+
+def _realized_identity(manifest_path, identity: dict) -> dict:
+    """`identity` with the archive's own asset sha256 when they are the only difference (same files); else unchanged."""
+    from topogym.world.initial_state import read_archive_manifest
+    stored = read_archive_manifest(Path(manifest_path))["metadata"].get("identity")
+    current = json.loads(json.dumps(identity))
+    if stored == current or not _same_files_other_bytes(stored, current):
+        return identity
+    _REALIZED_IDENTITIES.append(dict(archive=Path(manifest_path).parent.name, assets=sorted(
+        n for n in current["asset_sha256"] if stored["asset_sha256"][n] != current["asset_sha256"][n])))
+    return dict(identity, asset_sha256=dict(stored["asset_sha256"]))
+
+
+def _accept_realized_identities() -> None:
+    """Installed once a runtime binding (pinned generator source and dependencies) has been checked: the IPC settled state
+    and the stored PBD initial state accept this host's asset bytes; every other identity difference still refuses."""
+    import topogym.world.initial_state as pbd
+    import topogym.world.physics.ipc_settled_state as ipc
+    _REALIZED_IDENTITIES.clear()
+    if not getattr(ipc.restore_settled_state, "_rcb_realized", False):
+        restore_ipc = ipc.restore_settled_state
+
+        def restore_settled_state(world, manifest_path, *, scene_identity):
+            return restore_ipc(world, manifest_path, scene_identity=_realized_identity(manifest_path, scene_identity))
+        restore_settled_state._rcb_realized = True
+        ipc.restore_settled_state = restore_settled_state
+    if not getattr(pbd.restore_declared_initial_state, "_rcb_realized", False):
+        restore_pbd = pbd.restore_declared_initial_state
+
+        def restore_declared_initial_state(world, robot, declaration, *, identity):
+            return restore_pbd(world, robot, declaration,
+                               identity=_realized_identity(declaration.manifest_path, identity))
+        restore_declared_initial_state._rcb_realized = True
+        pbd.restore_declared_initial_state = restore_declared_initial_state
+
+
+# --------------------------------------------------------------------------- frozen generated assets (IPC ropes)
+# The IPC rope volume meshes (knot_untying, rope_threading) come from tetgen, whose interior points depend on the last bits of its input surface
+# (numpy SIMD rounding): on a CPU of another instruction-set class it inserts other interior points (measured
+# 2026-10-08, AVX2 vs AVX-512: knot medium 32212 vs 32280 vertices, hard 40769 vs 40747), and the frozen IPC settled
+# state, stored per vertex, no longer fits; other CPUs (the maintainers' AMD EPYC 7R13) may differ for rope_threading too. These
+# instances carry the mesh they were frozen with
+# (instance_assets/frozen_assets/rope_volume.npz, sha256 = the instance's asset_identity entry): it replaces the generated
+# file before the task reads it, so every CPU builds the frozen mesh.
+_FROZEN_ASSETS: dict = {}          # generated file name -> the active instance's frozen copy
+
+
+def _install_frozen_assets(instance_dir, identity: dict) -> None:
+    import shutil
+    _FROZEN_ASSETS.clear()
+    folder = Path(instance_dir) / "instance_assets" / "frozen_assets"
+    for path in sorted(folder.iterdir()) if folder.is_dir() else []:
+        if path.is_file():
+            if hashlib.sha256(path.read_bytes()).hexdigest() != identity.get(path.name):
+                raise InstanceMismatch(f"frozen asset {path.name} is not the generated asset this instance records")
+            _FROZEN_ASSETS[path.name] = path
+    if not _FROZEN_ASSETS:
+        return
+    import topogym.tasks.knot_untying.common as knot
+    import topogym.tasks.rope_threading.common as rope
+    for module in (knot, rope):
+        if getattr(module.load_centerline_map, "_rcb_frozen", False):
+            continue
+        load = module.load_centerline_map
+
+        def load_centerline_map(volume, *args, _load=load, **kwargs):   # declare(): after the volume is final
+            frozen = _FROZEN_ASSETS.get(Path(volume).name)
+            if frozen is not None:
+                shutil.copyfile(frozen, volume)
+            return _load(volume, *args, **kwargs)
+        load_centerline_map._rcb_frozen = True
+        module.load_centerline_map = load_centerline_map
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
@@ -2900,6 +2992,8 @@ class Session:
                     raise InstanceMismatch(f"Frozen runtime binding failed: {exc}") from exc
                 self.runtime_binding = dict(binding_id=binding_id(lock), runtime=runtime, uipc_build=self.uipc_build,
                                             creation_source=lock["creation_source"], image=lock["image"])
+                _accept_realized_identities()      # the binding pins the generator: archives accept this host's asset bytes
+                _install_frozen_assets(Path(instance).resolve().parent, inst.get("asset_identity") or {})
             eval_index = inst["eval_index"]
             cfg = dict(inst["simulator"])       # the frozen configuration: the task directory's own copy
             cfg["task_parameters"] = dict(cfg.get("task_parameters", {}))
@@ -2970,12 +3064,26 @@ class Session:
         expected = inst.get("state_sha") if inst else None
         self.instance_exact = expected is None or expected == self.instance_sha
         assets_match = inst is None or inst.get("asset_identity", self.asset_identity) == self.asset_identity
+        # The asset generators run on numpy / OpenBLAS, whose SIMD kernels depend on the CPU: a host without the instruction
+        # set the instance was frozen on (e.g. AVX2 only vs AVX-512) writes the same files with other bytes, from the same
+        # generator code (the runtime binding pins source and dependencies). Measured 2026-10-08: floating-point noise
+        # (<= 1e-8 m, mostly ~1e-16) and face order. Such a host realizes the frozen recipe (instance_realized): the same
+        # files, the frozen state exactly or within the pose tolerance; every process of the run (live episode, fresh
+        # replay) realizes it alike, so its state hash is this run's own.
+        self.assets_exact = assets_match
+        frozen_assets = (inst or {}).get("asset_identity") or {}
+        self.asset_differences = sorted(n for n in self.asset_identity if frozen_assets.get(n) != self.asset_identity[n])
+        realized_assets = (not assets_match and inst is not None and self.runtime_binding is not None
+                           and set(frozen_assets) == set(self.asset_identity))
+        assets_ok = assets_match or realized_assets
+        self.instance_realized = False
         if self.instance_generated:
             # The frozen evidence state (state_sha) was prepared on another GPU. The instance is its recipe, realized on
             # this GPU: the stored archive's scene identity and preparation equal the ones run here (recipe_match). Its
             # state hash is this run's own; every process of the run restores the same generated archive.
             gen = self.initial_state
-            self.instance_matches = assets_match and (expected is None or gen.get("recipe_match") is True)
+            self.instance_matches = assets_ok and (expected is None or gen.get("recipe_match") is True)
+            self.instance_realized = realized_assets and self.instance_matches
             msg = (f"initial state generated for {gen.get('resource_profile')} (cache {gen.get('cache')}; the frozen "
                    f"state {expected} belongs to {gen.get('stored_profile')}): state_sha {self.instance_sha}")
             if not self.instance_matches:
@@ -2986,8 +3094,17 @@ class Session:
             else:
                 _log(msg)
         else:
-            self.instance_matches = assets_match and (self.instance_exact or (inst is not None and self._poses_match(inst)))
-        if not self.instance_generated and (not self.instance_exact or not assets_match):
+            self.instance_matches = assets_ok and (self.instance_exact or (inst is not None and self._poses_match(inst)))
+            # With the binding checked and the same asset files, a state that differs from the frozen one only within the
+            # pose tolerance (quantities this host's kernels derive) is this host's realization too, like other asset bytes.
+            realizable = inst is not None and self.runtime_binding is not None and set(frozen_assets) == set(self.asset_identity)
+            self.instance_realized = realizable and self.instance_matches and (realized_assets or not self.instance_exact)
+        self.native_states_realized = list(_REALIZED_IDENTITIES)
+        if self.instance_realized:
+            _log(f"instance realized on this host: {len(self.asset_differences)} generated asset file(s) differ in bytes "
+                 f"from the frozen ones ({', '.join(self.asset_differences[:8])}); same files and pinned generator, state "
+                 + ("exact" if self.instance_exact else f"{self.instance_sha} within the pose tolerance of {expected}"))
+        if not self.instance_generated and not self.instance_realized and (not self.instance_exact or not assets_match):
             msg = f"instance state sha {self.instance_sha} != expected {expected}"
             if strict or self.runtime_binding is not None:
                 self.env.close()
