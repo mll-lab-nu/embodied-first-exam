@@ -7,7 +7,7 @@
 | Twin | `bigym2-reach-target-dual-i00-privileged` |
 | Simulator / robot | `bigym2` / `unitree-g1-dex1` |
 | Family / instance | `reach-target-dual` / seed 0 |
-| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-reach-target-dual-i00-pri__fxPRBTg (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #0 |
+| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-reach-target-dual-i00-pri__fxPRBTg (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-bigym2:0.1.1` |
 
@@ -25,7 +25,7 @@ None (as `bigym2-reach-target-dual-i00-privileged`).
 ## Verification
 The sim sidecar judges the live episode with BiGym's own success check (`is_success`: the task's success held for 1 s,
 no fall), then replays the recorded episode in a fresh simulator; `tests/grade.py` reads `/data/final.json`: pass iff
-the live run and the replay succeed and end in the same state. Success condition: the point between the left gripper's two finger pads is inside the red sphere and the right gripper's inside the green sphere at the same time: each within 0.05 m of its sphere's centre (the spheres' radius). No oracle; human review in PR #0 (PROTOCOL §2.7).
+the live run and the replay succeed and end in the same state. Success condition: the point between the left gripper's two finger pads is inside the red sphere and the right gripper's inside the green sphere at the same time: each within 0.05 m of its sphere's centre (the spheres' radius). No oracle; human review in PR #123 (PROTOCOL §2.7).
 
 ## Details
 | | |

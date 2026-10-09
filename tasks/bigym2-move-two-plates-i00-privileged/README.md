@@ -7,7 +7,7 @@
 | Twin | `bigym2-move-two-plates-i00-standard` |
 | Simulator / robot | `bigym2` / `unitree-g1-dex1` |
 | Family / instance | `move-two-plates` / seed 0 |
-| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #0 |
+| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-bigym2:0.1.1` |
 
@@ -25,7 +25,7 @@ on the Hugging Face Hub and never reach the agent (no network but the model APIs
 `tests/grade.py` replays `/app/output/trajectory.npz` from the frozen instance in two fresh processes (`rcb_bigym2.py
 replay`: upstream's official env, one step per row until upstream ends the episode). Pass iff upstream's `is_success`
 holds in both (the task's success held for 1 s, no fall) and both end in the same state. Success condition: each plate stands in a slot of the right-hand rack: its centre within 0.05 m of one of that rack's six slot points, standing on edge with its face toward your right (its axis within 20 degrees of the robot's right at the start, as the plates stand now; a plate turned around does not count), touching the right-hand rack, not touching the table, held by neither gripper; both plates at once.
-A plate touching the floor ends the episode as a failure. No oracle; human review in PR #0 (PROTOCOL §2.7).
+A plate touching the floor ends the episode as a failure. No oracle; human review in PR #123 (PROTOCOL §2.7).
 
 ## Details
 | | |

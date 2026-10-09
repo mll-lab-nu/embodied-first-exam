@@ -7,7 +7,7 @@
 | Twin | `bigym2-drawer-top-open-i00-privileged` |
 | Simulator / robot | `bigym2` / `unitree-g1-dex1` |
 | Family / instance | `drawer-top-open` / seed 0 |
-| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-drawer-top-open-i00-privi__BR52Quk (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #0 |
+| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-drawer-top-open-i00-privi__BR52Quk (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-bigym2:0.1.1` |
 
@@ -25,7 +25,7 @@ None (as `bigym2-drawer-top-open-i00-privileged`).
 ## Verification
 The sim sidecar judges the live episode with BiGym's own success check (`is_success`: the task's success held for 1 s,
 no fall), then replays the recorded episode in a fresh simulator; `tests/grade.py` reads `/data/final.json`: pass iff
-the live run and the replay succeed and end in the same state. Success condition: the top drawer is out to within 10% of its full travel (within about 0.038 m of fully open). No oracle; human review in PR #0 (PROTOCOL §2.7).
+the live run and the replay succeed and end in the same state. Success condition: the top drawer is out to within 10% of its full travel (within about 0.038 m of fully open). No oracle; human review in PR #123 (PROTOCOL §2.7).
 
 ## Details
 | | |

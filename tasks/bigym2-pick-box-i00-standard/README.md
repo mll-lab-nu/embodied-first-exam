@@ -7,7 +7,7 @@
 | Twin | `bigym2-pick-box-i00-privileged` |
 | Simulator / robot | `bigym2` / `unitree-g1-dex1` |
 | Family / instance | `pick-box` / seed 0 |
-| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #0 |
+| Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-bigym2:0.1.1` |
 
@@ -25,7 +25,7 @@ None (as `bigym2-pick-box-i00-privileged`).
 ## Verification
 The sim sidecar judges the live episode with BiGym's own success check (`is_success`: the task's success held for 1 s,
 no fall), then replays the recorded episode in a fresh simulator; `tests/grade.py` reads `/data/final.json`: pass iff
-the live run and the replay succeed and end in the same state. Success condition: the box rests on the kitchen counter's top: touching it, its centre above the counter top, its lowest point within 0.03 m of the top's height; held by neither gripper. No oracle; human review in PR #0 (PROTOCOL §2.7).
+the live run and the replay succeed and end in the same state. Success condition: the box rests on the kitchen counter's top: touching it, its centre above the counter top, its lowest point within 0.03 m of the top's height; held by neither gripper. No oracle; human review in PR #123 (PROTOCOL §2.7).
 
 ## Details
 | | |
