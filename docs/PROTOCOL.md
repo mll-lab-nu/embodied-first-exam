@@ -193,7 +193,7 @@ Harbor builds the task images locally from the task directory on every run; only
 | Reference solutions only under `solution/` (mounted for the oracle agent only) | MUST | [current] |
 | A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container) | MUST NOT | [current] |
 | Upstream experts scrubbed from images (e.g. RoboTwin `play_once`) | MUST | [current] |
-| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, MolmoSpaces, MyoSuite and DexJoCo; RoboTwin, MuJoCo Playground, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle are open by default and switched per run with `scripts/set_agent_egress.py` (allowlist contents under review, §7) |
+| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, MolmoSpaces, MyoSuite, DexJoCo and YAMLab; RoboTwin, MuJoCo Playground, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle are open by default and switched per run with `scripts/set_agent_egress.py` (allowlist contents under review, §7) |
 | `nop` scores 0 | MUST | [current] |
 | `oracle = "full"`: the oracle scores 1 | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
@@ -247,7 +247,7 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 | rcb-limited/2.0 | 2026-09-24 | no reset; `/submit` action chunks, `/observe`; binary RCB1 responses |
 | rcb-limited/2.1 | 2026-09-27 | 82-column proprioception, optional depth noise; crash recovery added 2026-09-29 (no version bump) |
 | **eai-standard/2.1** | 2026-09-30 | rename only; identical to rcb-limited/2.1 including crash recovery. **Current.** |
-| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md)) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite and DexJoCo |
+| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md)) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo and YAMLab |
 | eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md)): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
