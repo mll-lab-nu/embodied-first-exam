@@ -131,11 +131,11 @@ def main() -> int:
     if not args:
         check_repository()
     if not hits:
-        print(f"protocol v1.1.2: {len(tasks)} task(s) conform")
+        print(f"protocol v1.1.3: {len(tasks)} task(s) conform")
         return 0
     strict = os.environ.get("RCB_PROTOCOL_STRICT") == "1"
     hard = {r: w for r, w in hits.items() if not r.startswith("legacy")}
-    print(f"protocol v1.1.2: {'violations' if hard or strict else 'warnings'} "
+    print(f"protocol v1.1.3: {'violations' if hard or strict else 'warnings'} "
           "(`legacy:` rules are accepted until the image move, docs/PROTOCOL.md §7; all others fail):")
     for rule, where in sorted(hits.items(), key=lambda kv: (not kv[0].startswith("legacy"), -len(kv[1]))):
         examples = ", ".join(where[:3]) + (", ..." if len(where) > 3 else "")

@@ -155,8 +155,9 @@ tables. A request body over 64 MB gets 413 before it is decoded.
 ## Optional reset capability
 Off by default (`budget.reset = 0`): one trial is one episode, in standard and standard-realtime mode alike. Exception, by
 owner decision (PROTOCOL §4.5): HumanoidBench's standard tasks (2026-10-07) and standard-realtime tasks (2026-10-08) default
-to `budget.reset = 50`. A run may set `RCB_RESET_BUDGET=N` on the service
-(implemented by the KinDER and HumanoidBench services). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
+to `budget.reset = 50`, MyoSuite's standard tasks (2026-10-09) to `budget.reset = 10`. A run may set `RCB_RESET_BUDGET=N`
+on the service (implemented by the KinDER, HumanoidBench and MyoSuite services; MyoSuite's 2.2 client has no `reset()`,
+so its instruction calls `POST /reset` through `Robot._post`). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
 `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running episode and starts a new one from the
 same frozen state, `N` times in all; `/status` and `meta` add `episode`, `resets_left` and `control_steps_total`. After a
 success or once the agent's time is up, `/reset` returns 409, as it does when the budget is spent. Only the last
