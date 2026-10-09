@@ -1,0 +1,229 @@
+{
+ "_doc": "The caoshu exemplars: one source scan (download it unmodified from source.url into --source-dir and check its SHA-1), per target the crop box in source pixels (x0, y0, x1, y1) and cs_exemplar.py's parameters (box_mm: the frame on the sheet, 150 mm singles / the work's frame; exclude: source rectangles of a neighbour's ink; weak_scale: hysteresis for faint ligatures; hair_r: keep hairlines; split_src_y: the source rows between a work's characters). line = the scroll line the characters come from. Version 2 (10-09, ink_v 2): whole ink components (never clipped at the box; `cut` severs a ligature into a neighbour), `bridge_lines` joins a 牽絲 the scan shows as dashes along its path, `close_regions` fills the 飛白 of one stroke, edges smoothed on the signed distance with hairlines exempt; spur_k_fan below its default keeps a short stroke end that meets a junction beside a longer branch (中's vertical above its loop, 臨's top), which the skeleton pruning would otherwise drop. cs_qa.py draws each target's outline on the scan for review.",
+ "source": {
+  "file": "zhangxu_gushisitie.jpg",
+  "url": "https://upload.wikimedia.org/wikipedia/commons/a/ae/%E5%BC%B5%E6%97%AD_%E5%8F%A4%E8%A9%A9%E5%9B%9B%E5%B8%96.jpg",
+  "page": "https://commons.wikimedia.org/wiki/File:%E5%BC%B5%E6%97%AD_%E5%8F%A4%E8%A9%A9%E5%9B%9B%E5%B8%96.jpg",
+  "title": "張旭《古詩四帖》 (attributed to Zhang Xu, Tang, 8th century; ink on coloured paper; Liaoning Provincial Museum)",
+  "licence": "{{PD-old-70}} on the Commons file page (public domain)",
+  "sha1": "b2e19768317f8234c3308a91013934240bf1074f",
+  "size_px": [
+   11787,
+   1600
+  ],
+  "downloaded": "2026-10-08"
+ },
+ "targets": [
+  {
+   "slug": "wen",
+   "chars": "文",
+   "kind": "single",
+   "ink_v": 2,
+   "box": [
+    7930,
+    1262,
+    8136,
+    1600
+   ],
+   "box_mm": 150,
+   "weak_scale": 1.15,
+   "exclude": [
+    [
+     8066,
+     1230,
+     8140,
+     1292
+    ],
+    [
+     7890,
+     1262,
+     7934,
+     1600
+    ],
+    [
+     8075,
+     1318,
+     8118,
+     1418
+    ],
+    [
+     8052,
+     1324,
+     8080,
+     1365
+    ]
+   ],
+   "min_src_px": 150,
+   "line": "天火鍊真文 (庾信《步虛詞》 '龍泥印玉策，天火鍊真文'; the 5th character)"
+  },
+  {
+   "slug": "zhen",
+   "chars": "真",
+   "kind": "single",
+   "ink_v": 2,
+   "box": [
+    7915,
+    905,
+    8136,
+    1292
+   ],
+   "box_mm": 150,
+   "weak_scale": 1.15,
+   "exclude": [
+    [
+     7890,
+     1190,
+     7918,
+     1300
+    ],
+    [
+     8025,
+     1268,
+     8068,
+     1340
+    ]
+   ],
+   "close_regions": [
+    [
+     8050,
+     1175,
+     8125,
+     1295,
+     2
+    ]
+   ],
+   "line": "天火鍊真文 (the 4th character)"
+  },
+  {
+   "slug": "nangong",
+   "chars": "南宮",
+   "kind": "work",
+   "ink_v": 2,
+   "box": [
+    8425,
+    20,
+    8705,
+    795
+   ],
+   "box_mm": 210,
+   "side_em": 960,
+   "split_src_y": [
+    478
+   ],
+   "weak_scale": 1.45,
+   "bridge_lines": [
+    [
+     [
+      [
+       8503,
+       554
+      ],
+      [
+       8528,
+       545
+      ],
+      [
+       8552,
+       537
+      ],
+      [
+       8575,
+       531
+      ],
+      [
+       8600,
+       528
+      ],
+      [
+       8622,
+       528
+      ]
+     ],
+     4
+    ]
+   ],
+   "exclude": [
+    [
+     8420,
+     5,
+     8492,
+     52
+    ]
+   ],
+   "line": "南宮生絳雲 (庾信《步虛詞》 '北闕臨丹水，南宮生絳雲'; the first two characters, joined by a 牽絲)"
+  },
+  {
+   "slug": "siwushaonian",
+   "chars": "四五少年",
+   "kind": "work",
+   "ink_v": 2,
+   "box": [
+    3240,
+    50,
+    3545,
+    1275
+   ],
+   "box_mm": 210,
+   "side_em": 960,
+   "split_src_y": [
+    300,
+    680,
+    930
+   ],
+   "weak_scale": 1.3,
+   "line": "四五少年讚 (the title of 謝靈運《巖下見一老公四五少年讚》, its second column; the first four characters)"
+  },
+  {
+   "slug": "zhongtiangechuifen",
+   "chars": "中天哥吹分",
+   "kind": "work",
+   "ink_v": 2,
+   "box": [
+    7470,
+    20,
+    7700,
+    1600
+   ],
+   "box_mm": 210,
+   "side_em": 960,
+   "split_src_y": [
+    305,
+    670,
+    1137,
+    1401
+   ],
+   "line": "中天哥吹分 (庾信《步虛詞》 '上元風雨散，中天哥吹分', line 2)",
+   "spur_k_fan": 0.6
+  },
+  {
+   "slug": "beiquelindanshui",
+   "chars": "北闕臨丹水",
+   "kind": "work",
+   "ink_v": 2,
+   "box": [
+    8705,
+    20,
+    9105,
+    1600
+   ],
+   "box_mm": 210,
+   "side_em": 960,
+   "split_src_y": [
+    320,
+    826,
+    1073,
+    1416
+   ],
+   "exclude": [
+    [
+     9055,
+     70,
+     9100,
+     295
+    ]
+   ],
+   "spur_k_fan": 1.6,
+   "line": "北闕臨丹水 (庾信《步虛詞》 '北闕臨丹水，南宮生絳雲'; the column before 南宮, written as one line of ligatures)"
+  }
+ ]
+}
