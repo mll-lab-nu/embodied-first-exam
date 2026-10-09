@@ -353,7 +353,7 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     put(s / "environment/docker-compose.yaml", compose(instruction, episode))
     put(s / "environment/rcb_client.py", src=SHARED / "standard/rcb_client.py")
     put(s / "environment/rcb1.py", src=SHARED / "standard/rcb1.py")
-    for f in ("server.py", "rcb_service.py", "rcb1.py"):
+    for f in ("server.py", "rcb_service.py", "rcb1.py", "finalize.sh"):
         put(s / "environment/sim" / f, src=SHARED / "standard" / f)
     put(s / "environment/sim/lmx_tool.py", src=SHARED / "lmx_tool.py")
     put(s / "environment/sim/instance.json", src=fz / "instance.json")
