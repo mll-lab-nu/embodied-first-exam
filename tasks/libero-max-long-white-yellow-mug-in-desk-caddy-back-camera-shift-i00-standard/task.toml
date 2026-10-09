@@ -42,11 +42,13 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it.
+# Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
+# restarting), which ends the episode, replays it in a fresh simulator (the verdict) and renders the video. The replay of a
+# long episode on a busy host takes many minutes; the hook waits for the verdict, not for the video.
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
-timeout_sec = 900
+command = "sh /srv/finalize.sh"
+timeout_sec = 3300
 
 [agent]
 timeout_sec = 3600.0

@@ -4,7 +4,14 @@
 success = live_success AND replay_success AND deterministic (the replay ends in the live run's final state).
 Writes /logs/verifier/reward.txt (1/0) and a numeric-only reward.json, and copies the evidence (replay video, last
 frame, trajectory, event log) next to them for humans; the evidence never decides the verdict.
-infra_error = 1: no verdict on the agent (the service crashed past its restarts, never finished, or failed to finalize).
+
+The verdict is in once the episode ended (`done`) and, for a live success, once the replay's verdict is on disk
+(`deterministic` present: rcb_service writes it before it renders the video). `finalized` only says the video is done
+too: a video still rendering when the collect hook stops waiting costs the video, never the verdict (PROTOCOL §2.6).
+An episode that ended without a live success (time up, the step cap, a simulator error) is a failure whatever its
+replay says, so it needs no replay.
+infra_error = 1: no verdict on the agent -- the service crashed past its restarts (its own infra_error), the episode
+never ended, or a live success has no replay verdict (the replay did not finish in time or failed).
 """
 import json
 import os
@@ -33,13 +40,15 @@ def main() -> None:
         with open(path) as f:
             d = json.load(f)
         live, replay, det = (bool(d.get(k)) for k in ("live_success", "replay_success", "deterministic"))
+        ended = bool(d.get("done"))
+        replayed = "deterministic" in d                  # the fresh replay's verdict is on disk
         failed_finalize = bool(d.get("finalize_error"))
-        unfinished = not d.get("finalized")
-        infra = bool(d.get("infra_error")) or failed_finalize or unfinished
+        infra = bool(d.get("infra_error")) or not ended or (live and not replayed)
         ok = live and replay and det and not infra
         out = {"success": int(ok), "live_success": int(live), "replay_success": int(replay), "deterministic": int(det),
-               "finalized": int(not unfinished), "missing_log": 0, "infra_error": int(infra),
-               "grader_error": int(failed_finalize),
+               "replayed": int(replayed), "finalized": int(bool(d.get("finalized"))), "missing_log": 0,
+               "infra_error": int(infra), "grader_error": int(failed_finalize),
+               "timeout": int(d.get("reason") == "timeout"), "sim_error": int(d.get("reason") == "error"),
                "sim_crashed_on_call": int(d.get("reason") == "sim_crashed_on_call"),
                "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps_total") or 0),
                "calls": int(d.get("calls") or 0), "rows": int(d.get("rows") or 0), "resets": int(d.get("resets") or 0),
