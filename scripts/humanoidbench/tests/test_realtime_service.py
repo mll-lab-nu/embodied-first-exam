@@ -254,5 +254,35 @@ class TestResetAndResume(Live):
         self.assertLessEqual(len(self.ticks()), n_ticks)
 
 
+
+class SlowSim(FastSim):
+    """The toy point, its every step slower than its control_dt: the service is behind its clock the whole time."""
+
+    def step(self, row):
+        time.sleep(0.015)                                    # 15 ms of work per 10 ms control step
+        return super().step(row)
+
+
+class BehindTheClock(Live):
+    """A simulator slower than real time must not starve requests (before the fix they waited for the next stall,
+    MAX_LAG_S of debt = 0.5 s or more)."""
+
+    def make_sim(self):
+        return SlowSim(self.goal)
+
+    def test_requests_are_served_while_behind(self):
+        self.r.submit("move", [[0.0]], cameras=[])           # starts the clock
+        waits = []
+        for _ in range(10):
+            t = time.monotonic()
+            self.r.status()
+            waits.append(time.monotonic() - t)
+        self.assertTrue(self.svc.running)
+        self.assertGreater(self.svc.lag, 0.0)               # it is behind
+        self.assertLess(max(waits), 0.2, waits)              # and still answers within about a step
+        self.assertLess(self.svc.max_queue_wait, 0.2)
+        self.assertIn("max_queue_wait_s", self.svc._timing_record())
+
+
 if __name__ == "__main__":
     unittest.main()
