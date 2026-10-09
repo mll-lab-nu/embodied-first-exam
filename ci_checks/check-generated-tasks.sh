@@ -28,4 +28,8 @@ if [ -f "$root/scripts/robotangle/mk_tasks.py" ]; then   # RoboTangle (its tasks
   if out=$(python3 "$root/scripts/robotangle/mk_tasks.py" --check 2>&1); then echo "ok scripts/robotangle/mk_tasks.py: ${out##*$'\n'}"
   else echo "FAIL scripts/robotangle/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
 fi
+if [ -f "$root/scripts/bigym2/gen_tasks.py" ]; then   # BiGym 2.0 (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/bigym2/gen_tasks.py" check 2>&1); then echo "ok scripts/bigym2/gen_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/bigym2/gen_tasks.py check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
 exit $rc
