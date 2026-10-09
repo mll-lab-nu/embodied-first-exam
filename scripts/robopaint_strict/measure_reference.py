@@ -4,7 +4,7 @@ reference_path_mm and reference_mark_width_mm). Runs in the base image (SAPIEN n
 the repository root:
 
     docker run --rm --gpus all -v "$PWD:/repo:ro" -w /repo ghcr.io/mll-lab-nu/eai-robopaint:0.2.0 \
-        python scripts/robopaint_strict/measure_reference.py [robopaint-<family>-<target>-i00 ...] > reference.jsonl
+        python scripts/robopaint_strict/measure_reference.py [robopaint-<family>-<target>-i<NN> ...] > reference.jsonl
 
 Per pair, in a fresh process: replay solution/oracle_qpos.npy from the graders' copy of the instance (tests/) with
 rcb_brush_strict's Session and print one JSON line: path_mm (the brush tip's path pressed on the main sheet with ink or paint),
@@ -31,8 +31,8 @@ print(json.dumps({k: st.get(k) for k in keys}))
 def main() -> int:
     pairs = sys.argv[1:] or sorted(
         p.name[: -len("-privileged")]
-        for p in (ROOT / "tasks").glob("robopaint-*-i00-privileged")
-        if re.match(r"^robopaint-(kaishu|xingshu|lettering|acrylic|oil)-", p.name)
+        for p in (ROOT / "tasks").glob("robopaint-*-i[0-9][0-9]-privileged")
+        if re.match(r"^robopaint-(kaishu|xingshu|caoshu|lettering|acrylic|oil)-", p.name)
     )
     for base in pairs:
         t = ROOT / "tasks" / f"{base}-privileged"

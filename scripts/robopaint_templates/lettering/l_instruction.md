@@ -1,9 +1,9 @@
-# RoboPaint · lettering · {{WORD}} — STANDARD MODE (robot as a service, eai-standard/2.2)
+# RoboPaint · lettering · {{TITLE}} — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-You control a **Franka Panda arm holding a broad-edge (chisel) dip pen** (ManiSkill 3.0.1 physics; the pen's mark comes from a model of a real
+You control a **Franka Panda arm holding a pointed flexible dip pen** (ManiSkill 3.0.1 physics; the pen's mark comes from a model of a real
 pen) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
-**Task:** copy the lettering shown in the picture `/app/target.png` onto the main sheet with pen and ink, **in at most {{N}}
-strokes**.
+**Task (臨摹, copying an exemplar):** copy {{TASK_MD}}, shown in the picture `/app/target.png`, onto the main sheet with pen and
+ink, **in at most {{N}} strokes**.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends when your time is up (or on a simulator error). Ink is
@@ -25,11 +25,12 @@ strokes**.
   look at and where you store it is your code's decision.
 
 ## The pen, the ink and the sheets (`spec["static"]`)
-- The pen is a rigid holder with a **broad-edge (chisel) steel nib 4 mm wide** at its end (no collision; the holder hits the
-  paper 6 mm below its surface); the proprio "tip" pose is the middle of the nib's writing edge. **The edge lies along the tool's y axis**
-  (the second column of the tip pose's rotation matrix); at the start pose that is along the writing line (world -y).
-  Turning the pen about the vertical turns it (the camera images show the nib). The part of the edge that is below a sheet's surface writes (a tilted pen writes with one corner); a steel nib does
-  not widen when pressed harder. Moved along its edge the nib draws a 0.4 mm line; moved across it, a line as wide as the nib.
+- The pen is a rigid holder with a **pointed flexible steel nib** (two tines split by a slit; no collision; the holder hits
+  the paper 6 mm below its surface); the proprio "tip" pose is the point. A light touch writes a **hairline 0.4 mm
+  wide**; pressed deeper, the tines spread apart and the line widens, **up to 2.0 mm** when they are fully open (no wider
+  beyond); how the width follows the press is for you to find out (the practice sheet is there for that). The tines spread along the **tool's y axis** (the second
+  column of the tip pose's rotation matrix; at the start pose along the writing line, world -y): a pressed stroke is wide
+  where the point moves across that axis and stays thin where it moves along it. Turning the pen about the vertical turns it (the camera images show the nib).
 - **Ink**: the pen starts **dry** (strokes leave no mark). The ink well, radius 20 mm, lies on a rigid plate on the robot's left
   (+y). **Dipping** = the tip inside the well's circle and below the ink surface: the pen is then inked (it never runs dry). The
   robot does not report whether the pen is inked; the nib looks dark on the cameras when it is.
@@ -51,11 +52,12 @@ strokes**.
   scaling, one shift for the whole sheet, whole pixels, at most 5 mm along each axis) that best matches the picture; every quantity
   below is taken after that shift, which is reported (`register_dx_mm`, `register_dy_mm`; the unshifted IoU as `iou_unregistered`).
   If the best match lies at the 5 mm limit, no shift is applied. **IoU** of the inked areas; **boundary F**: how well
-  the edges of your ink match the edges of the exemplar's ink (precision / recall within 1 mm); **stroke coverage**: the fraction
-  of each of the exemplar's strokes covered by your ink (the worst one counts); **stray ink**: ink more than 1 mm
+  the edges of your ink match the edges of the exemplar's ink (precision / recall within 1 mm); **region coverage**: the exemplar's ink is
+  divided into {{NREG}} regions, at most 30 mm each along its strokes; the fraction of each region covered by your ink (the worst
+  one counts); **stray ink**: ink more than 1 mm
   away from the exemplar's ink, as a fraction of the exemplar's inked area; the **number of strokes** on the main sheet (inked
   contacts).
-  **Success iff IoU ≥ {{IOU}}, boundary F ≥ 0.80, every stroke of the exemplar covered ≥ 0.75, stray ink
+  **Success iff IoU ≥ {{IOU}}, boundary F ≥ 0.80, every region covered ≥ 0.75, stray ink
   ≤ 0.04 and at most {{N}} strokes on the main sheet.** (The recorded episode is replayed twice and both replays must agree.) The continuous score is the IoU
   (scaled by {{N}} / strokes above {{N}} strokes).
 
@@ -110,4 +112,4 @@ view along the sheets that shows the pen height).
 Wrist note: turning the pen far about the vertical can run joint 7 into its limit on one side; the other way round reaches the
 same orientation of the nib (the mark is the same for a pen turned by 180°).
 
-The exemplar's letterforms were authored for this benchmark and are in the public domain (CC0-1.0): `/app/NOTICE-exemplar.md`.
+The exemplar comes from a public-domain engraved copybook plate (1741): `/app/NOTICE-exemplar.md`.
