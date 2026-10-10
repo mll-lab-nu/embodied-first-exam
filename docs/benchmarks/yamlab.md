@@ -7,9 +7,37 @@ manipulation with two I2RT YAM arms (6 joints each, parallel two-finger grippers
 - `hang_mug_on_tree` (HangMugOnTree-v0): lift a mug with the left gripper, hand it to the right one in the air, hang it on
   a mug tree.
 
-25 frozen instances per family (50), each a privileged task `yamlab-<family>-iNN-privileged` and its standard twin
-`yamlab-<family>-iNN-standard` (`eai-standard/2.2`): 100 task directories. Each instance is a different pair of YAMLab's
+5 frozen instances per family (10), each a privileged task `yamlab-<family>-iNN-privileged` and its standard twin
+`yamlab-<family>-iNN-standard` (`eai-standard/2.2`): 20 task directories. Each instance is a different pair of YAMLab's
 object assets (pot_k + cooktop_k, mug_k + mug_tree_k) placed as in one of YAMLab's human teleoperation demonstrations.
+The instances keep the ids they were frozen with (Instances): `put_pot_on_cooktop` i00, i03, i04, i07, i08;
+`hang_mug_on_tree` i10, i13, i15, i20, i21.
+
+## Instances
+25 instances per family were frozen (Tasks and generator); on 2026-10-10 (owner) the set was cut to 5 per family, because
+the 25 differ only in the object pair and one of 9 (pot) or 3 (mug) placements and so repeat each other. The kept five are
+chosen among the instances whose standard task GPT-6 Luna's run (`codex-gpt6_luna-xhigh`) had graded at that time, mixing
+its successes and failures and spreading over the placement schedule:
+
+| Instance | Placement (schedule entry) | Luna, standard | Luna, privileged |
+|---|---|---|---|
+| `put_pot_on_cooktop` i00 | 0 | fail | fail |
+| `put_pot_on_cooktop` i03 | 3 | fail | success |
+| `put_pot_on_cooktop` i04 | 4 | fail | success |
+| `put_pot_on_cooktop` i07 | 7 | fail | fail |
+| `put_pot_on_cooktop` i08 | 8 | fail | fail |
+| `hang_mug_on_tree` i10 | 1 | fail | success |
+| `hang_mug_on_tree` i13 | 1 | success | fail |
+| `hang_mug_on_tree` i15 | 0 | fail | fail |
+| `hang_mug_on_tree` i20 | 2 | success | success |
+| `hang_mug_on_tree` i21 | 0 | success | fail (time-out) |
+
+`put_pot_on_cooktop` had no graded Luna success in standard mode (0 of the 10 graded: i00-i05, i07, i08, i10, i11), so its
+five are failures; the three that ended in an agent time-out (i01, i02, i05) were not taken. `hang_mug_on_tree`: 4 of 25
+succeeded (i13, i20, i21, i23); three are kept, one per placement, with two failures that ended without a time-out.
+The kept tasks are byte-identical to before (their results stand); the other 20 instances per family (40 pairs, 80 task
+directories) are removed with their frozen files. `scripts/yamlab/instances.json` lists the kept instances with their ids
+and, under `pruned`, the removed ids; `freeze.py`'s `KEEP` applies the same cut.
 
 ## Tasks and generator
 - `python3 scripts/yamlab/mk_tasks.py` writes every YAMLab task dir (both modes) from `scripts/yamlab/` alone:
@@ -31,8 +59,8 @@ object assets (pot_k + cooktop_k, mug_k + mug_tree_k) placed as in one of YAMLab
   2. the oracle (below) succeeds live in a fresh process;
   3. two `replay` runs, each in its own fresh process (the second one also films the replay), succeed and end in the
      live run's state hash.
-  The first accepted demo of a file is that pair's instance; the first 25 accepted pairs per family become i00..i24.
-  `instances.json` lists the rejected candidates with their reason.
+  The first accepted demo of a file is that pair's instance; the first 25 accepted pairs per family became i00..i24, of
+  which five per family are kept (Instances). `instances.json` lists the rejected candidates with their reason.
 - The tasks carry the frozen instance in `environment/` and `tests/` (privileged) and `environment/sim/` (standard).
 
 ## Success (YAMLab's own, evaluation thresholds)
@@ -51,7 +79,7 @@ The stage flags of YAMLab's task managers (`yamlab/envs/tasks/*_manager.py`) wit
   momentary pose does not count. The instructions give every number (privileged: also the world heights).
 
 ## Oracle (PROTOCOL §2.7)
-`oracle = "full"`, 50/50 in both modes. The reference solution is YAMLab's own human demonstration of that instance: a
+`oracle = "full"`, 50/50 in both modes (measured on the 25 + 25 instances before the prune; the 10 kept are among them). The reference solution is YAMLab's own human demonstration of that instance: a
 30-step (1 s) linear move from the home pose to the demonstration's first action, then its recorded 14-D actions, replayed
 open-loop. YAMLab's own replay tool restores the recorded *states* frame by frame; here only the actions are replayed, and
 with PhysX on the CPU they reproduce the demonstrations: object paths stay within millimetres to ~3 cm of the recorded ones
@@ -107,7 +135,7 @@ the simulator to 2e-7 m), and thin primitives: `move_ee` (both arms together, Is
 ## Crash recovery (standard mode, docs/STANDARD_MODE_2_2.md §13)
 Resume class `exact`: the resumed service is a fresh process whose journal replay is that process's first run, so the
 state hash at the last checkpoint must match exactly (else `resume_failed`, `infra_error`). `RCB_STARTUP_TIMEOUT_S = 900`.
-Acceptance test `scripts/yamlab/kill_test.sh` (Harbor oracle on `yamlab-put-pot-on-cooktop-i01-standard`, the service
+Acceptance test `scripts/yamlab/kill_test.sh` (Harbor oracle on `yamlab-put-pot-on-cooktop-i01-standard`, since removed, the service
 killed with SIGKILL in the middle of its 7th call, after 6 checkpointed calls / 180 control steps): the container restarted,
 the fresh service replayed the 180 journaled steps in 1.9 s, matched the checkpoint's state hash exactly (`68076b87…`),
 resumed the same episode after 49 s of downtime, the oracle continued from the reported step, and the episode was graded

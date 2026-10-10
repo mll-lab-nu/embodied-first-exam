@@ -738,7 +738,7 @@ verifier_min_memory_gb = 10.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "memory: sim p90 6.9 GB, privileged container p90 8.1 GB, verifier 4.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
 
-# yamlab, privileged: 50 task(s)
+# yamlab, privileged: 10 task(s)
 [[rule]]
 match = "^yamlab-.*-privileged$"
 min_cpus = 8.0
@@ -752,7 +752,7 @@ verifier_min_memory_gb = 9.0
 verifier_min_gpu_memory_gb = 5.0
 measured = "GPU 3.8-4.0 GB per trial, anon memory 11.1-11.8 GB, CPU p90 5.8-8.7 cores over 12 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); vram_profile peaks 5.5-6.5 GB on 24 GB cards; board 0048: about 11 GB RAM and 8 CPUs per simulator; verifier 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10)"
 
-# yamlab, standard: 50 task(s)
+# yamlab, standard: 10 task(s)
 [[rule]]
 match = "^yamlab-.*-standard$"
 min_cpus = 8.0

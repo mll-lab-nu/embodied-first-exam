@@ -5682,108 +5682,12 @@ name = "robot-coding-bench/robopaint-oil-wanderer-i01-standard"
 digest = "sha256:3998116d9df78c0efb02dc97eb648983eb5cca29d4775db7ce3059c063ce5187"
 
 [[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i00-privileged"
-digest = "sha256:0e2bec96e5109ebd18b5c7c9b27264f1e88f49c40aca85e1b6a6ee05c94562bd"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i00-standard"
-digest = "sha256:7427932e7c4a3744fe79afb19d2163aa77db5290db8bdd741f77ed8e0bb31b43"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i01-privileged"
-digest = "sha256:bd45fd14fd68cd82992eab79e24063effbbe44c722be856f00da3d40ae67c7ef"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i01-standard"
-digest = "sha256:f2981f5a2bfb55ed51bef870858dde38dddeb3517e009f440afa8935391a397e"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i02-privileged"
-digest = "sha256:37d4d4b906473f95dcfbe31c05883bbacb696b5bdc6954719176bfa48ba97fd0"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i02-standard"
-digest = "sha256:7727d135936ff36d5f3d6ef3d41f25d1bd3f13f0ba2c08f754f23e27a5dd45ab"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i03-privileged"
-digest = "sha256:9e5721ae6604d12b48b111fc5ca27aed6d9a971227f433e7f19215daa4bddfdb"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i03-standard"
-digest = "sha256:878ce3e8d339ae4fc65e85f5c79052e54d48c3ecf9df3416286008ddd9b88694"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i04-privileged"
-digest = "sha256:30f153480b01d783be9c48d49e990a7fd28e55f86aee285d7b2f9d566a47f9e4"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i04-standard"
-digest = "sha256:6d17b5ea0eaf9933c9ec0d01f608b352c8d0d27b6268acf2169e6bb8abe455e8"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i05-privileged"
-digest = "sha256:8a22925b890637ea6f66bf63e40b52190498c0650b8a653938aa7492b8f37a21"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i05-standard"
-digest = "sha256:a0225ca11e4d9cfdde80c043d10f3098c3e909f3b105f82d41cfaf843120da04"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i06-privileged"
-digest = "sha256:43f4ecb822c9af48372367024f3c5f49baa059a24f8f447600495165fb9206cf"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i06-standard"
-digest = "sha256:e1fc0ddbde6b070b1661db94eeb7bec174a44e98536ee74bb08f74c5863aa387"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i07-privileged"
-digest = "sha256:77e7635b1edb351e0d147e6213c6ec7532f252a6cf106852f16eb386981da186"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i07-standard"
-digest = "sha256:2cae02c440a3b6ae9ea9ae6674b3b8ed66cdef9981e21af0f0da6a70fb79eda3"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i08-privileged"
-digest = "sha256:287dd5de80dc607a428050275a88573248c849ffca966f0c3b46fb355f07628d"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i08-standard"
-digest = "sha256:e24360f1eb8b5e49bcd9885438d4dab9ed0d7509bca5da97e3b5a38f30bfd310"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i09-privileged"
-digest = "sha256:9070a45a3b3e39a49487ec65eb1fc57be8cce06c345933ef00c1c7f4602b4589"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i09-standard"
-digest = "sha256:4cfc7ebf7650394cefe06cf8673a594c61914e832f29c4fe92f742674c0e2118"
-
-[[tasks]]
 name = "robot-coding-bench/yamlab-hang-mug-on-tree-i10-privileged"
 digest = "sha256:8b86da9e387f9bca16b18e1665ba351b0afd822bf96d550fffdca3f0bdce0410"
 
 [[tasks]]
 name = "robot-coding-bench/yamlab-hang-mug-on-tree-i10-standard"
 digest = "sha256:163e92c6edb82ad831fd07ddefb72895da9c5794bb838550320fd2f1ec001108"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i11-privileged"
-digest = "sha256:c390188e6d3de76e2f70ef9e3bf6704f96bde563baf30adc9e86b76f12877f2a"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i11-standard"
-digest = "sha256:344b486a1a24499a17e8908f349985f1ead5efa64e99a49999e692e7097e7f9e"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i12-privileged"
-digest = "sha256:e877bd4f1ac10b94c6e31d1805d9c3571d7bc63dfacb7a8c83520776ae91dd5f"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i12-standard"
-digest = "sha256:5b250eeaf063eb926531c13d500af137652740da6505bc7b2d3fe5e31f61c9c5"
 
 [[tasks]]
 name = "robot-coding-bench/yamlab-hang-mug-on-tree-i13-privileged"
@@ -5794,52 +5698,12 @@ name = "robot-coding-bench/yamlab-hang-mug-on-tree-i13-standard"
 digest = "sha256:d72ab1ef36e3c4b7cb753a5028df5663d20b264a8effddeaf6b98c5fbfe0a2e7"
 
 [[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i14-privileged"
-digest = "sha256:9bba39f73307910f1320283c7849df692e048417a04b766bb67d69aa665b7927"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i14-standard"
-digest = "sha256:3a7a4f5a5ba60aea234b38c5e357045578101eb03b261cb7e168cb26da3ab245"
-
-[[tasks]]
 name = "robot-coding-bench/yamlab-hang-mug-on-tree-i15-privileged"
 digest = "sha256:f6351ed6afe738fe8e0660cb0047671b41f38812e6773cdf95cfb96af78da86a"
 
 [[tasks]]
 name = "robot-coding-bench/yamlab-hang-mug-on-tree-i15-standard"
 digest = "sha256:04fb28a77d7860b25c1a56d76559e472f7d5533a2338473e05cc248dcac20731"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i16-privileged"
-digest = "sha256:5d23e67b30287989ca40c600cf031e264b6e5d40429b4eb6356d067a2ee22d00"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i16-standard"
-digest = "sha256:5eecf67dcc26d695dcd67af45ee3cbdf39cff593f549e72f29fb3d6f165807af"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i17-privileged"
-digest = "sha256:45389db97eef756644a083512928342bec716aed4b8a7b7ddb5c423094ae23bd"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i17-standard"
-digest = "sha256:054a2b56f2507ac6a7881734c510abcb69cbf19eb5098635a1f1bbdbb6a115a4"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i18-privileged"
-digest = "sha256:f90c19785857f345777cc1de0dc9778cb1d7a7fa7cfdbe14021e147c06122bd2"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i18-standard"
-digest = "sha256:192a4756c95049772780c73d3defa9e7fedaf955fd049704348d04a152586f91"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i19-privileged"
-digest = "sha256:82b3bc7ba53986a781bf278da326f7aed662669cb420aa94ff4830683afe340c"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i19-standard"
-digest = "sha256:677a487b0cc860db86a2a4158f2b656f7861fcc3f949cb2e007dd5f5b84baac0"
 
 [[tasks]]
 name = "robot-coding-bench/yamlab-hang-mug-on-tree-i20-privileged"
@@ -5858,52 +5722,12 @@ name = "robot-coding-bench/yamlab-hang-mug-on-tree-i21-standard"
 digest = "sha256:8d7272aea4f829553d2cedaa4de4a3cafdd7a336ef17eea3eaaac7db6adc5919"
 
 [[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i22-privileged"
-digest = "sha256:d42bea74cf4c6b1cbb04eef985eb1339c6887ab062f7ad0291574bc4649f61ec"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i22-standard"
-digest = "sha256:8e3012b4339ef76ea5ad6c9d03097b52796935a52c56d37e24dc94fd40b9d3d6"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i23-privileged"
-digest = "sha256:400b93f82a8e6a8ca63e8974156b746f22553471d2556369f8cd098125a80714"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i23-standard"
-digest = "sha256:b9642b12e5b04028d9f64d3831189426469366473856d2f22e71b9f3b3738400"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i24-privileged"
-digest = "sha256:30b01ff946ba17736fa0fb206cd6557e1e6989e09ac83838f2b9486808e2fbf6"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i24-standard"
-digest = "sha256:4bc8ab6b200fffac5d2671c291dd02a9cedaffd16b9188c9fc6d09040974388a"
-
-[[tasks]]
 name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i00-privileged"
 digest = "sha256:47bde1ba3ea64e5a549ecb02905d5cab4fc5607bbd563486190bbee7529e4b46"
 
 [[tasks]]
 name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i00-standard"
 digest = "sha256:55053b24ae5b273f9725f8adc967f3a6d9c86cea23854f76b086cb85d3aeb05e"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i01-privileged"
-digest = "sha256:8da00c5261fe781f450bc5004078a662f038c2a6f25fbfdcb529a82949c23a22"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i01-standard"
-digest = "sha256:166dcbb43207e5797f6fb52143c8389db3ce87f962f5b7410a342ae055c66f3b"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i02-privileged"
-digest = "sha256:7cf9c566c065dc81d4b9ed1e866336c7ed43e9d8ef4ae87707f4f492ca0880d1"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i02-standard"
-digest = "sha256:c169b50623926eee9a0266084b3e058f15a99a61d69964a3088a569da63e0e16"
 
 [[tasks]]
 name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i03-privileged"
@@ -5922,22 +5746,6 @@ name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i04-standard"
 digest = "sha256:b6b02ad1e1722f0690dc1b0e3557795f7caff16aa956ffef79ab1c70da3534f1"
 
 [[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i05-privileged"
-digest = "sha256:d67fd92e2bc2b54b451d1504396b4e025e60df254c011f21e546aba624fd0178"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i05-standard"
-digest = "sha256:63e8436da402fceeb73fae34cb08d729b8bbadf0ba6259533b0ce6fe16f08176"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i06-privileged"
-digest = "sha256:47f443abd7ad342454c9ee078af396c326e44c42dbf6dba67923228a29c8340a"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i06-standard"
-digest = "sha256:c43e9530956717c4b2b5c5a82a539c93d93b83472795ef50de5455e43128ddab"
-
-[[tasks]]
 name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i07-privileged"
 digest = "sha256:e0ff1309c5f28098c31c3afd06838a22affcac60780f109fc47274bc997c900a"
 
@@ -5952,134 +5760,6 @@ digest = "sha256:3021258df7fd29fdfb01d64322a62d1d291062b6f09b9465daa7ce6d2f5d421
 [[tasks]]
 name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i08-standard"
 digest = "sha256:d42d790c0b27acc39fc8cf68fe72407696363c124d250ec3b00f490ea2ce4778"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i09-privileged"
-digest = "sha256:8a0761ae7caa551b6885d0470c6c99c886578818947f54e27ae19ff35f993a21"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i09-standard"
-digest = "sha256:43356aff97336260d39de5d54a87cb192fbe2446531f57708669d8f2cfb830b8"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i10-privileged"
-digest = "sha256:f8e1d82c8dc49191eea38fc30157a27473bbb905828b3f0d70908ec9c2ee7f10"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i10-standard"
-digest = "sha256:88710d131572e809f34adfbc27be6f97557004e6f91c7f0456f7e6fb155926e4"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i11-privileged"
-digest = "sha256:1d82671cb8b79be3baa99c58655f6eeaf5107efe21996462fef4021669dc39ef"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i11-standard"
-digest = "sha256:b2c0e9d5723a4908771db0cf19204d39f5c80f53b43f031695e5927f8c30a113"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i12-privileged"
-digest = "sha256:c7d8ee0dae940c2e5d80c7bfe9a3c94616481a586e3fd498247603a6ad2ed773"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i12-standard"
-digest = "sha256:7b262e20cc45a3d60a692bc3e4657ee156af08e930260badc6fd2e7384fdb753"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i13-privileged"
-digest = "sha256:60261632b72c5426c791c0d5371afe6c2b682c185ca3515398eb5a8c04bd4d83"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i13-standard"
-digest = "sha256:dc3d72ff0ad251a17e758da3580cea30d8685b3f0314bba4ad40a4b317f2dd3d"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i14-privileged"
-digest = "sha256:006b3b95f9ce22ba9e8b668e7e94b538e16c645cae9e821c0987e5ad07e86d9d"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i14-standard"
-digest = "sha256:5c30d852a48a283164a39c6e25c6a669356b90ece5059a958a26bbcfbc3aa1e6"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i15-privileged"
-digest = "sha256:1fd675da5f35d29772dbeabcdf481aab631ec4df9e62c99be8b6957333710fbd"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i15-standard"
-digest = "sha256:bb1e1ab7169f38ceb3be0ca425f6330683cb2f9d9d290fe116272614c1037bc0"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i16-privileged"
-digest = "sha256:15d801053438f80805e86218056bdc54f72cbd9612948c8ac97e78dd26751725"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i16-standard"
-digest = "sha256:1f7afb998c795e1bfd0b39321f13de86d155d18e2b9993fa767a1f5ab97a9da2"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i17-privileged"
-digest = "sha256:9ed54e8e49c095bf8ba008f15c04f055909a614394e2d463613a7049a923958f"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i17-standard"
-digest = "sha256:5ed837f1e456c6632c36984d795c25d24d2ca36eddd4ba74cf31dbada76e64d3"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i18-privileged"
-digest = "sha256:a6d6828e3d090310e4929f9e549e8d015c567e7fec668a169a29bf53073c3bd8"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i18-standard"
-digest = "sha256:be96fc4cd5981b002c5e23b1ebae6130b797f65b00f47ae589de1b70ec7782d2"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i19-privileged"
-digest = "sha256:1e81aff3f379e88bef1108ccc79826334d475eb7500b1e745d6fa20d75db1906"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i19-standard"
-digest = "sha256:ce3011a0b44e4d2fa79add6d2da9171a2f7984dc0957648042c87e17732327f7"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i20-privileged"
-digest = "sha256:e682515cb609ea03addc73bfd28d1c78c016f634452e4d72a5c22fef3279ddaa"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i20-standard"
-digest = "sha256:479a9355217906ea421015721fe2fafdc257dcd07a3df7ead9d12ba681e5bae0"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i21-privileged"
-digest = "sha256:8480fc745ca6c48984508a669116a4d0071bfb0658fe1f34460044f1186de84e"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i21-standard"
-digest = "sha256:9a87a4fcac7616ce6416ec861213a0e62a522e684afbbc416d9b0a8d0536b269"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i22-privileged"
-digest = "sha256:e1fc8d9dfd5469048d0079ed6d8a6ae3d284965953f78e0696d0ffd9c3c84674"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i22-standard"
-digest = "sha256:fd0118ad4ea020155c2d580f49625154a5d3297e8c9d4b13931ddf70f366fc61"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i23-privileged"
-digest = "sha256:fbc862ee6df1ddc4c3fd23a111e83a4ee5a0d671a32122ff4929fee838939851"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i23-standard"
-digest = "sha256:6097ed140c1a732f2d245bee739e872784b50e49a10304d47f04094b867dcaf5"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i24-privileged"
-digest = "sha256:347a0d5ffb2feb71fead6e9d80942500157c8c264da81cbc9ba84250d2ba9f35"
-
-[[tasks]]
-name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i24-standard"
-digest = "sha256:020cab22e6e0ccf79e0974bf167f306915d3465684fc98eef276a31b32dcbecb"
 
 [[tasks]]
 name = "robot-coding-bench/labutopia-heat-liquid-i00-privileged"
