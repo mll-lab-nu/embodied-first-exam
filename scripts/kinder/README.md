@@ -12,7 +12,6 @@ What they are and why: `docs/benchmarks/kinder.md`.
 | `shared/standard/` | standard mode (`eai-standard/2.1`): `rcb_service.py` (the simulator-agnostic service: endpoints, RCB1, episode, crash recovery, finalize), `server.py` (the adapters, one per robot: sensors, odometry frame, clipping), `rcb_client.py` and `rcb1.py` (the agent's client; its docstring is the API reference), `grade.py` (the verifier) |
 | `oracles/<family>/<mode>/` | a task's reference solution, where it has one (the `dynamo` fixture); `render` copies it to `solution/` |
 | `templates/`, `templates/standard/` | everything the tasks have in common, with `{{placeholders}}` |
-| `configs/codex-openrouter.yaml` | the Harbor job config the recorded runs use: Harbor's own Codex agent on OpenRouter |
 | `tests/test_standard_service.py` | the standard-mode service, client and verifier against a toy simulator (`python -m unittest discover -s scripts/kinder/tests`; numpy, requests) |
 
 ```bash

@@ -17,9 +17,9 @@ every task goes through the human review in PR #3.
   raise_platform, retrieve_cube, stack_bowls, stand_bulb, stand_pages. The positives are from earlier versions too (same
   frozen instance and predicate).
 
-**Pending: 11 families**, kept in the generator's table (`scripts/robowits/families.py`, status `pending`) so that a later PR
-can render them once each has a valid positive and a written success criterion. Their frozen instances are in dev/qineng
-9eb18edf (`mk_tasks.py --instance`).
+**Not in the repository: 11 families** without a valid positive. A later PR can add one (an entry in
+`scripts/robowits/families.py`, its predicate with `mk_tasks.py --extract-predicate`, a written success criterion) once it
+has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py --instance`).
 - No graded positive: balance_board, ball_into_jar, differentiate_cubes, pinch_card, place_book, retrieve_roll,
   round_dough_sheet, seal_colander, water_into_mug. place_book can pass only with the thin book stood on its edge: the book
   (22 x 19 cm) is larger than the mat (12 x 20 cm), so a flat book has at most about 57 % of its footprint over the mat,
@@ -87,12 +87,12 @@ can render them once each has a valid positive and a written success criterion. 
 ## Hosts: one CPU vendor
 Genesis' CPU backend is bit-exact only within one CPU vendor. The instances were frozen on Intel (the laptop). On AMD
 hosts (ws, ws3, lab) the rebuilt instance's state hash differs; the grader's tolerance check (every object and joint
-pose within tolerance) still accepts it, except for stand_bulb (and the pending differentiate_cubes and ball_into_jar),
+pose within tolerance) still accepts it, except for stand_bulb (and differentiate_cubes and ball_into_jar, which are not in the repository),
 which therefore run on Intel hosts only. A trajectory recorded on one vendor can fail on the other, so a positive is
 re-graded on the vendor it was graded on: the Intel laptop for every positive in the review table except stack_bowls,
 which was graded on ws (AMD, with `instance_exact = 1`).
 - **Machine-readable:** both stand_bulb tasks carry `host_cpu_vendor = "GenuineIntel"` in `[metadata]` of `task.toml`
-  (a RoboWits field, docs/TAXONOMY.md; `families.py` `host_cpu_vendor`, also set on the two pending families), and
+  (a RoboWits field, docs/TAXONOMY.md; `families.py` `host_cpu_vendor`), and
   their READMEs a `Host CPU` row. A scheduler runs such a task only on a host whose `/proc/cpuinfo` `vendor_id` equals
   the value; a task without the key runs on either vendor. The key is not in `[metadata.resources]`, whose fields are
   fixed by PROTOCOL §2.9.

@@ -6,7 +6,7 @@
     python3 scripts/vlabench/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
 Inputs: tasks.json (candidates, dropped, instruction restatements, oracle sources), frozen/<task>/{instance.json,
-oracle.npy} and frozen/report.json (import_pr4.py, freeze.sh), the
+oracle.npy}, imported from PR #4 (commit ad3c5109), and frozen/report.json (freeze.sh), the
 templates in templates/, the shared sources in shared/ (copied byte for byte) and the standard client's base image and
 pins (scripts/eai_standard/client.env, client-requirements.txt). Each task directory is written from scratch and
 finished with scripts/task_conventions.py (normalize, PROTOCOL v1.0.1); a vlabench-* directory this does not write is

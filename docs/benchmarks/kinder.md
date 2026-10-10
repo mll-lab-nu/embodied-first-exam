@@ -76,11 +76,10 @@ starts at the robot's start pose, and the goal is named by what the cameras see.
 ## Run
 
 ```bash
-harbor run -c scripts/kinder/configs/codex-openrouter.yaml --env-file .env -p tasks/kinder-scoop-pour-i00-standard
+harbor run -p tasks/kinder-scoop-pour-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
-`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
-`codex-gpt6_luna-medium`); `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
+Agent, provider and effort settings: docs/RUNNING.md. `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
 reported separately. Build the image: `docker build -f images/kinder/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
 
