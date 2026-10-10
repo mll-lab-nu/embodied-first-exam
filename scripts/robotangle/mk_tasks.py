@@ -107,9 +107,9 @@ def verifier_timeout(toml: str) -> float:
 def row_cap(base: str) -> int:
     """The longest trajectory the privileged verifier accepts: its two replays must fit [verifier] timeout_sec at 1.5 x
     the step time the instruction states (the second replay also renders the video), after BUILD_ALLOWANCE_S; rounded
-    down to 1000 rows, never above rcb_topogym's own guard. The loader accepted 200000 rows for every task, which
-    knot_untying (about 1.2 s per step) could not replay in 45000 s beyond about 18000 rows: the verifier was killed
-    without a reward."""
+    down to 1000 rows, never above rcb_topogym's own guard. The loader accepted 200000 rows for every task; by the
+    instructions' step times knot_untying (about 1.2 s per step) fits about 18000 rows twice into 45000 s, and a verifier
+    that runs out of time leaves no reward (arithmetic from the stated step times, not a measured run)."""
     up = PKG / f"{base}-privileged"
     budget = verifier_timeout((up / "task.toml").read_text()) - BUILD_ALLOWANCE_S
     cap = min(MAX_STEPS, int(budget / (3 * step_time((up / "instruction.md").read_text()))) // 1000 * 1000)
@@ -318,8 +318,8 @@ CHANGE_0067 = {
         "(2026-10-05: every replay may confirm within the hold; `strict_goal_reached` is reported, not required), and the "
         "texts now say so. New row cap: a trajectory may have at most the number of rows the instruction states "
         "(`RCB_MAX_STEPS` in both Dockerfiles; 200000 before, for every task), sized so that the verifier's two replays fit "
-        "its timeout; the verifier was killed without a reward on longer knot_untying trajectories, and a longer one is now "
-        "`bad_trajectory`. The grader skips the review-frame pass when its time is short (the verdict and the events are "
+        "its timeout (by the step time the instruction states; a verifier that runs out of time leaves no reward); a "
+        "longer trajectory is now `bad_trajectory`. The grader skips the review-frame pass when its time is short (the verdict and the events are "
         "committed before it), and an instance this host cannot reconstruct is `infra_error` 1 with `instance_mismatch` "
         "(it was a plain 0). The image, scene and frozen instance are unchanged, so the task keeps its name."),
     "standard": (

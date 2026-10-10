@@ -169,8 +169,9 @@ state the 6 h budget and are compared only with results under the same budget (D
 - a trajectory has at most `RCB_MAX_STEPS` rows, set per task in both Dockerfiles by the generator (`row_cap`):
   `min(200000, floor_1000((verifier timeout − 1800 s) / (3 × step time)))`, i.e. two replays at 1.5 × the step time the
   instruction states. knot_untying gets 11000–13000 rows (4.6–5.4 min of simulated time), blanket_flatten 34000–37000,
-  rope_threading 38000–41000, fiber_bundling hard 49000; 24 tasks keep 200000. A longer trajectory is `bad_trajectory`
-  (before 2026-10-10 the loader accepted 200000 rows everywhere and the 45000 s verifier was killed without a reward);
+  rope_threading 38000–41000, fiber_bundling hard 49000; 24 tasks keep 200000. A longer trajectory is `bad_trajectory`.
+  Before 2026-10-10 the loader accepted 200000 rows everywhere, more than the 45000 s verifier can replay twice for the
+  slow families by the instructions' step times (arithmetic, not a measured run; a verifier out of time leaves no reward);
 - the video is rendered during the second replay; the review-frame pass of a success held for review is skipped when
   the verifier's time left (`RCB_VERIFIER_BUDGET_S`) would not cover it.
 
