@@ -275,11 +275,11 @@ digest = "sha256:b73b9d3c6ff86d2b057db0b81a70f2eed3adb9c2dea804dd977d39b8553007e
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-privileged"
-digest = "sha256:f3b30424d506e21ff1e65f04c777b617c9a381e43ca138dc78ed730fc06146aa"
+digest = "sha256:493c95ae8cbdff8433bf83e7adfb4a612c08f0616db1201d87343774a8e9e7ff"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-standard"
-digest = "sha256:4f6c38cc9ae884869b3b7c2f0da2caadd92afdf7df31f5547f6f10e070238e17"
+digest = "sha256:7af2a654cf605ef7353730d3f53b8873be7d0e1c4624989006b6b5925b3cfc27"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00-privileged"
@@ -4775,7 +4775,7 @@ digest = "sha256:94250d845ae231a59fda8c96387d5771c8dfb736684bfda41a68fe1d6d047c4
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-standard-realtime"
-digest = "sha256:9111b4f3d4a01db9e8e770d3cc7fd6006dd1451835be05930c8671ea366d4735"
+digest = "sha256:1f03d9b8f16f8757952dba6d48bb9982c42f90a6122c0c7ae097d1991bc073ff"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-sit-simple-i00-standard-realtime"
