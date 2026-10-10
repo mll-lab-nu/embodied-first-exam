@@ -1,0 +1,53 @@
+{
+ "_doc": "RoboPaint lettering targets (臨摹 of engraved English round hand). targets: [slug, text, structure (word: a single (flourished) word | line: several words on one line)] (difficulty extreme). Each task's exemplar is its own file (--exemplar <slug>.exemplar.json), made by scripts/robopaint_lettering/lt_exemplar.py from a public-domain scan (spec: scripts/robopaint_lettering/exemplars.json): the scan's ink re-drawn with the task's pointed pen, its regions (at most 30 mm along the strokes) and one writing route per connected piece of ink (the contact cap). sources: the README's Sources text per slug (\"*\" = the default); licence: the exemplar record written into the graders' truth and target.png's PNG comment (licences[slug] overrides it); notices: the NOTICE-exemplar.md texts (agent's / graders' copies). Every text is checked by ci_checks/check-robopaint-leak.sh like every README sentence.",
+ "targets": [
+  [
+   "liberty",
+   "Liberty.",
+   "word"
+  ],
+  [
+   "virtue",
+   "Virtue.",
+   "word"
+  ],
+  [
+   "aim",
+   "Aim at improvement in every line.",
+   "line"
+  ],
+  [
+   "business",
+   "Business makes a Man respected.",
+   "line"
+  ],
+  [
+   "commendation",
+   "Commendation animates the mind.",
+   "line"
+  ],
+  [
+   "diligence",
+   "Diligence in youth is commendable.",
+   "line"
+  ]
+ ],
+ "sources": {
+  "liberty": "George Bickham, *The Universal Penman* (London, 1741), engraved plates of English round hand after the writing masters named on each plate; scan: Getty Research Institute, Internet Archive item gri_33125008538056 (https://archive.org/details/gri_33125008538056; possible-copyright-status NOT_IN_COPYRIGHT; the same book on Wikimedia Commons as a DjVu file under {{PD-scan}}). Public domain: the plates were engraved 1733-1741 (Bickham d. 1758) and the scan is a faithful reproduction of a public-domain two-dimensional work. This exemplar: the flourished heading 'Liberty.' of the plate numbered 4 that opens 'Liberty' (page n222 of the scan, G. Brooks scripsit), the word with all its flourishes, placed 205 mm wide on the sheet.",
+  "virtue": "George Bickham, *The Universal Penman* (London, 1741), engraved plates of English round hand after the writing masters named on each plate; scan: Getty Research Institute, Internet Archive item gri_33125008538056 (https://archive.org/details/gri_33125008538056; possible-copyright-status NOT_IN_COPYRIGHT; the same book on Wikimedia Commons as a DjVu file under {{PD-scan}}). Public domain: the plates were engraved 1733-1741 (Bickham d. 1758) and the scan is a faithful reproduction of a public-domain two-dimensional work. This exemplar: the flourished heading 'Virtue.' of the plate numbered 12 (page n54 of the scan), the word with all its flourishes, placed 205 mm wide on the sheet.",
+  "aim": "George Bickham, *The Universal Penman* (London, 1741), engraved plates of English round hand after the writing masters named on each plate; scan: Getty Research Institute, Internet Archive item gri_33125008538056 (https://archive.org/details/gri_33125008538056; possible-copyright-status NOT_IN_COPYRIGHT; the same book on Wikimedia Commons as a DjVu file under {{PD-scan}}). Public domain: the plates were engraved 1733-1741 (Bickham d. 1758) and the scan is a faithful reproduction of a public-domain two-dimensional work. This exemplar: the first copy line of the plate 'COPIES' (page n30 of the scan, W. Clark scripsit), placed 205 mm wide on the sheet.",
+  "business": "George Bickham, *The Universal Penman* (London, 1741), engraved plates of English round hand after the writing masters named on each plate; scan: Getty Research Institute, Internet Archive item gri_33125008538056 (https://archive.org/details/gri_33125008538056; possible-copyright-status NOT_IN_COPYRIGHT; the same book on Wikimedia Commons as a DjVu file under {{PD-scan}}). Public domain: the plates were engraved 1733-1741 (Bickham d. 1758) and the scan is a faithful reproduction of a public-domain two-dimensional work. This exemplar: the second copy line of the plate 'COPIES' (page n30 of the scan, W. Clark scripsit), placed 205 mm wide on the sheet.",
+  "commendation": "George Bickham, *The Universal Penman* (London, 1741), engraved plates of English round hand after the writing masters named on each plate; scan: Getty Research Institute, Internet Archive item gri_33125008538056 (https://archive.org/details/gri_33125008538056; possible-copyright-status NOT_IN_COPYRIGHT; the same book on Wikimedia Commons as a DjVu file under {{PD-scan}}). Public domain: the plates were engraved 1733-1741 (Bickham d. 1758) and the scan is a faithful reproduction of a public-domain two-dimensional work. This exemplar: the third copy line of the plate 'COPIES' (book page n30 of the scan, W. Clark scripsit), placed 205 mm wide on the sheet.",
+  "diligence": "George Bickham, *The Universal Penman* (London, 1741), engraved plates of English round hand after the writing masters named on each plate; scan: Getty Research Institute, Internet Archive item gri_33125008538056 (https://archive.org/details/gri_33125008538056; possible-copyright-status NOT_IN_COPYRIGHT; the same book on Wikimedia Commons as a DjVu file under {{PD-scan}}). Public domain: the plates were engraved 1733-1741 (Bickham d. 1758) and the scan is a faithful reproduction of a public-domain two-dimensional work. This exemplar: the fourth copy line of the plate 'COPIES' (page n30 of the scan, W. Clark scripsit), placed 205 mm wide on the sheet."
+ },
+ "licence": {
+  "source": "George Bickham, The Universal Penman (London, 1741); scan: Getty Research Institute, Internet Archive gri_33125008538056",
+  "license": "Public domain (engraved 1733-1741; Internet Archive: NOT_IN_COPYRIGHT; Wikimedia Commons: {{PD-scan}})",
+  "notice": "The exemplar was made by robot-coding-bench (RoboPaint) on 2026-10-09 from a public-domain scan (George Bickham, The Universal Penman, 1741; Getty Research Institute via the Internet Archive): the lettering was cropped, its ink re-drawn with the task's pointed pen (the pen's path and the spread of its tines at every point), divided into regions along its strokes and placed on the sheet; the picture (target.png) is the pen's rendering of it.",
+  "picture": "This picture renders engraved English round hand from a public-domain copybook (George Bickham, The Universal Penman, 1741), re-drawn with the task's pen by robot-coding-bench (RoboPaint), 2026-10-09."
+ },
+ "notices": {
+  "agent": "# The exemplar (licence notice)\n\nThe exemplar picture comes from a public-domain engraved copybook of English round hand (1741), re-drawn by robot-coding-bench (RoboPaint) with this task's pen.\n",
+  "graders": "# The exemplar (licence notice; graders' copy)\n\nThe exemplar is a public-domain engraved copybook plate (source and licence: see Sources in the task's README); RoboPaint re-drew its ink with the task's pointed pen, divided it into regions along its strokes and placed it on the sheet.\n"
+ }
+}

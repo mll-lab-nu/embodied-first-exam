@@ -19,10 +19,15 @@ position-controlled arm (PD lag ~0.1 s). The tooling gives only thin primitives;
 `s.brush_state()` are privileged feedback. The stroke cap rules out filling the exemplar with many thin strokes.
 
 ## Reference solution
-Generated once (the kaishu oracle, DESIGN §17), on the graders' copy: per region of the exemplar's ink (one brush contact each), a robot-free trajectory optimisation against the brush model
-(handle control points (x, y, press) initialised by inverting the trailing dynamics along the stroke, scipy least_squares on the
-rendered stroke), then executed on the robot with lag feed-forward and iterative learning control, a dip before every stroke, the
-arm parked at the end. The plan is frozen at generation time (`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
+Generated on the graders' copy (the calligraphy planner of 2026-10-09, `solution/opt_calli.py --profile print`; DESIGN §17): per
+brush contact (connected strokes of the exemplar, several regions of its ink each), a robot-free trajectory optimisation against
+the brush model: handle control points (x, y, press) about every 6 mm along a path through the contact's ink (several paths
+tried, the best kept; one of them follows each region's ink branch by branch, rings round and side branches out and back),
+initialised by inverting the trailing dynamics, scipy least_squares on the rendered contact against the exemplar with stray ink
+weighted up, under-covered regions optimised again. The brush enters the paper along the stroke and leaves it back onto its own
+root (回锋), with a minimum press so that every contact stays one. Then executed on the robot with lag feed-forward and
+iterative learning control, a dip before every contact, the arm parked at the end. The plan is frozen at generation time
+(`solution/oracle_qpos.npy`); `solution/solve.sh` replays it:
 ORACLE_STATS
 
 ## Verification

@@ -8,8 +8,8 @@ pre-v1.0 task (old field names, protocol spelling, README layout); renaming dire
     python3 scripts/task_conventions.py --check tasks/<task>   # exit 1 if normalizing would change anything
 
 What it does:
-- `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
-  for standard tasks (2.2 / 2.4 and realtime tasks' `eai-standard/2.3` are set by their generators), `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
+- `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-standard-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
+  for standard tasks (2.2 / 2.4 and standard-realtime tasks' `eai-standard/2.3` are set by their generators), `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - protocol spelling `rcb-limited/2.x` -> `eai-standard/2.x` and "limited mode" -> "standard mode" in the task's text and
   services; the client accepts both spellings.
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
@@ -47,13 +47,20 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robowits-", "RoboWits"), ("robopaint-", "RoboPaint"), ("robolab-", "RoboLab"),
     ("behavior-", "BEHAVIOR-1K"), ("maniguard-", "ManiGuard"),
     ("molmospaces-", "MolmoSpaces"), ("myosuite-", "MyoSuite"), ("dexjoco-", "DexJoCo"),
+    ("labutopia-", "LabUtopia"),
     ("autobio-", "AutoBio"),
     ("vlabench-", "VLABench"),
     ("robocasa-gr1-", "RoboCasa-GR1"),  # before "robocasa-": the first matching prefix wins
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
     ("libero-max-", "LIBERO-MAX"),
     ("robotangle-", "RoboTangle"),
+    ("roboolympics-", "RoboOlympics"),
+    ("bigym2-", "BiGym 2.0"),
+    ("yamlab-", "YAMLab"),
 ]
+# Documented per-benchmark exception (PROTOCOL §4b, owner 2026-10-08): standard-realtime tasks without a privileged twin
+# (the same list: ci_checks/check-instance-copies.sh NO_TWIN)
+NO_TWIN = {"roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)"}
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
                "Base image"}
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
@@ -69,20 +76,23 @@ def replace_words(s: str) -> str:
     return s
 
 
-MODES = ("privileged", "standard", "realtime")   # PROTOCOL D12: the three modes, each the suffix of its task directories
-SIDECAR_MODES = ("standard", "realtime")          # robot as a service: the simulator runs in the `sim` sidecar (§4, §4b)
+# PROTOCOL D12: the three modes, each the whole suffix of its task directories. A mode is recognised by its complete
+# suffix only: `-standard-realtime` is never `-standard` (it does not end in it), and `-standard` is never standard-realtime.
+MODES = ("privileged", "standard", "standard-realtime")
+SIDECAR_MODES = ("standard", "standard-realtime")   # robot as a service: the simulator runs in the `sim` sidecar (§4, §4b)
 
 
 def mode_of(task: Path) -> str:
-    for mode in MODES:
+    for mode in sorted(MODES, key=len, reverse=True):   # longest suffix first
         if task.name.endswith(f"-{mode}"):
             return mode
-    raise ValueError(f"{task.name}: task directories end in -privileged, -standard or -realtime (docs/PROTOCOL.md §2.2)")
+    raise ValueError(f"{task.name}: task directories end in -privileged, -standard or -standard-realtime "
+                     "(docs/PROTOCOL.md §2.2)")
 
 
 def base_of(task: Path) -> str:
-    """The name without its mode suffix (`-privileged`, `-standard`, `-realtime`; PROTOCOL §2.2)."""
-    return re.sub(r"-(privileged|standard|realtime)$", "", task.name)
+    """The name without its mode suffix (`-privileged`, `-standard`, `-standard-realtime`; PROTOCOL §2.2)."""
+    return re.sub(r"-(standard-realtime|privileged|standard)$", "", task.name)
 
 
 def bench_of(task: Path) -> str:
@@ -303,7 +313,9 @@ def render_readme(task: Path) -> str:
     head = [("Benchmark", bench_of(task) or "—"),
             ("Mode", mode + (f" (`{md['protocol']}`)" if mode in SIDECAR_MODES and md.get("protocol") else ""))]
     # a standard or realtime task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
-    head.append(("Twin", f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir() else "— (privileged only)"))
+    no_twin = next((v for p, v in NO_TWIN.items() if task.name.startswith(p)), None)
+    head.append(("Twin", no_twin or (f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir()
+                                     else "— (privileged only)")))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),
              ("Family / instance", f"`{md.get('family', '')}`" + (f" / seed {seed}" if seed is not None else "")),
              ("Oracle", f"`{oracle}`" + (f" — {ev}" if ev else "") if oracle else "—"),

@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-position-object-t02-i06-sensor_noise_onset-d0-p195",
+ "event": "sensor_noise_onset",
+ "suite": "libero_object",
+ "language": "Pick the salad dressing and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "salad_dressing_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "9081ece048ce32e8fd55c485bd39c4bcfc7fecfd0389fd5121fe496de1dc620c",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "salad_dressing_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "salad_dressing_1:placed",
+  "trace": [
+   "124:pick salad_dressing_1:retreat failed goal=[0.004, 0.256, 0.319] eef=[0.004, 0.256, 0.219] obj c=[0.005, 0.257, 0.12] half=[0.026, 0.073, 0.018] top=0.193 fingers=-1.57 contacts=[]",
+   "124:salad_dressing_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 124,
+  "event_fired": true,
+  "event_step": 5,
+  "steps_left": 156,
+  "state_sha": "058f781089f0d6bc3fab617b890cfbee035e955b7514cac608d814f2a9304323",
+  "initial_state_sha": "9081ece048ce32e8fd55c485bd39c4bcfc7fecfd0389fd5121fe496de1dc620c"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 124,
+   "event_fired": true,
+   "event_step": 5,
+   "steps_left": 156,
+   "state_sha": "058f781089f0d6bc3fab617b890cfbee035e955b7514cac608d814f2a9304323",
+   "initial_state_sha": "9081ece048ce32e8fd55c485bd39c4bcfc7fecfd0389fd5121fe496de1dc620c"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 124,
+   "event_fired": true,
+   "event_step": 5,
+   "steps_left": 156,
+   "state_sha": "058f781089f0d6bc3fab617b890cfbee035e955b7514cac608d814f2a9304323",
+   "initial_state_sha": "9081ece048ce32e8fd55c485bd39c4bcfc7fecfd0389fd5121fe496de1dc620c"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

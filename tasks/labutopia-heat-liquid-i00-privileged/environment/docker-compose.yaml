@@ -1,0 +1,14 @@
+# Isaac Sim needs an RTX-class NVIDIA GPU even headless (PhysX itself runs on the CPU). Harbor's local docker sandbox
+# rejects [environment].gpus; merging this onto the main service passes the device through. Kit keeps its caches
+# (the stage prepared for rendering, shaders) inside the container, so nothing of them is shared between trials or
+# with the verifier: the first Session with cameras in a container takes 5 to 15 minutes to start.
+services:
+  main:
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

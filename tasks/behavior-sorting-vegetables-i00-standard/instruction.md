@@ -5,8 +5,12 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 **Task:** Sort the vegetables in the kitchen. Two wicker baskets stand on the kitchen floor, one with three bok choy and three ears of sweet corn, the other with two broccoli, two leeks and three Vidalia onions; three mixing bowls stand on the countertop. Put the bok choy and the onions together into one mixing bowl, the leeks and the broccoli together into a second one, and the sweet corn into a third. Success means all of the following hold at the same time: (1) one mixing bowl holds all three bok choy and all three Vidalia onions; (2) one mixing bowl holds both leeks and both broccoli; (3) one mixing bowl holds all three ears of sweet corn. The three groups need not end up in three different bowls; the check asks for one bowl per group. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. The service checks the goal and the episode ends the moment it holds.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
-  simulator error. Whatever you knock over or push away stays where it ends up.
+- **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
+  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+- **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
+  when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
+  time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the
+  proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
 - Steps are unlimited; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time

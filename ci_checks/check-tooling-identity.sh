@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Shared-source rules (PROTOCOL §2.1, D9: copies of shared sources are byte-identical). Two parts:
-# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, RoboTangle and AutoBio: within one benchmark, both modes, every copy of a shared file is byte-identical
+# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, RoboTangle, BiGym 2.0, YAMLab, LabUtopia and AutoBio: within one benchmark, every mode, every copy of a shared file is byte-identical
 #    (the generators copy them from the benchmark's template task unchanged):
 #    - the tooling module rcb_<sim>.py wherever it sits (privileged environment/ and tests/, standard environment/sim/);
 #    - the standard agent side environment/rcb_client.py + rcb1.py and the sim service environment/sim/ (server.py,
 #      finalize.sh, run.sh, rcb1.py);
 #    - the graders, tests/grade.py (one version per mode).
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as check-robopaint-tooling.sh.
-# 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, AutoBio): the
+# 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, LabUtopia, AutoBio): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
 #    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE_2_2.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
@@ -22,7 +22,8 @@ import collections, hashlib, os, re, sys, tomllib
 tasks, src = sys.argv[1], sys.argv[2]
 MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits": "rcb_robowits.py", "maniguard": "rcb_maniguard.py",
           "molmospaces": "rcb_molmospaces.py", "myosuite": "rcb_myosuite.py",
-          "dexjoco": "rcb_dexjoco.py", "robotangle": "rcb_topogym.py", "autobio": "rcb_autobio.py"}
+          "dexjoco": "rcb_dexjoco.py", "robotangle": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py",
+          "labutopia": "rcb_labutopia.py", "autobio": "rcb_autobio.py"}
 SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py", "environment/sim/finalize.sh",
           "environment/sim/run.sh", "environment/sim/rcb1.py", "environment/sim/rcb_limited.py", "tests/grade.py"}
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",
@@ -77,7 +78,8 @@ for t in sorted(os.listdir(tasks)):
     if bench not in MODULE:
         continue
     dirs[bench] += 1
-    mode = "realtime" if t.endswith("-realtime") else "standard" if t.endswith(("-standard", "-limited")) else "privileged"
+    mode = ("standard-realtime" if t.endswith("-standard-realtime") else "standard" if t.endswith(("-standard", "-limited"))
+            else "privileged")
     for dp, dns, fns in os.walk(os.path.join(tasks, t)):
         dns[:] = [d for d in dns if d not in ("results", "__pycache__")]
         for f in fns:
@@ -94,6 +96,6 @@ if bad:
     if len(bad) > 60:
         print(f"  ... {len(bad) - 60} more")
     sys.exit(1)
-print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / RoboTangle / AutoBio tasks")
+print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / RoboTangle / BiGym 2.0 / YAMLab / LabUtopia / AutoBio tasks")
       + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs")
 PY

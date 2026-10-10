@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-task-object-t04-i00-camera_shift-d0-p195",
+ "event": "camera_shift",
+ "suite": "libero_object",
+ "language": "Pick the milk and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "milk_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "e4d83a77ef874615187647bbbd6c1e71dbd53dc3647c47c1fd8fa4a45c771c9e",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "milk_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "milk_1:placed",
+  "trace": [
+   "125:pick milk_1:retreat failed goal=[-0.014, 0.252, 0.306] eef=[-0.014, 0.252, 0.206] obj c=[-0.013, 0.253, 0.132] half=[0.027, 0.066, 0.026] top=0.199 fingers=-1.57 contacts=[]",
+   "125:milk_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 125,
+  "event_fired": true,
+  "event_step": 5,
+  "steps_left": 155,
+  "state_sha": "19c933ffa334b2da1317aa028e4d7578582872e02320807115191e7406705613",
+  "initial_state_sha": "e4d83a77ef874615187647bbbd6c1e71dbd53dc3647c47c1fd8fa4a45c771c9e"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 125,
+   "event_fired": true,
+   "event_step": 5,
+   "steps_left": 155,
+   "state_sha": "19c933ffa334b2da1317aa028e4d7578582872e02320807115191e7406705613",
+   "initial_state_sha": "e4d83a77ef874615187647bbbd6c1e71dbd53dc3647c47c1fd8fa4a45c771c9e"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 125,
+   "event_fired": true,
+   "event_step": 5,
+   "steps_left": 155,
+   "state_sha": "19c933ffa334b2da1317aa028e4d7578582872e02320807115191e7406705613",
+   "initial_state_sha": "e4d83a77ef874615187647bbbd6c1e71dbd53dc3647c47c1fd8fa4a45c771c9e"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

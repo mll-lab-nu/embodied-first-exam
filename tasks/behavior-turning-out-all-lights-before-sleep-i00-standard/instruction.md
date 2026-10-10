@@ -5,8 +5,12 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 **Task:** Turn out all the lights before sleep. Three light switches (in the kitchen, the utility room and the dining room) and two table lamps (one on the coffee table in the living room, one on the countertop in the utility room) are all switched on; switch every one of them off. Success means all of the following hold at the same time: (1) all three light switches are switched off; (2) both table lamps are switched off. How the simulator judges them: toggled_on(A): A's switch is on. It flips when a robot finger touches A's toggle button for 5 consecutive control steps; touch it again, after letting go, to flip it back. The service checks the goal and the episode ends the moment it holds.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
-  simulator error. Whatever you knock over or push away stays where it ends up.
+- **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
+  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+- **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
+  when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
+  time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the
+  proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
 - Steps are unlimited; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time

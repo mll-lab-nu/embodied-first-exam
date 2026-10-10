@@ -85,7 +85,7 @@ s.render_grid(); s.start_video(path); s.stop_video(); s.state_sha(); s.episode_d
 s.robot, s.env, s.get_object(name) # OmniGibson robot / environment / objects (with their object states) for closed-loop control
 s.step(action)                     # one low-level action (25 floats, below) = one control step; s.hold_action() holds the targets
 s.record_start(); ...; actions = s.record_stop()   # (T, 25) actions, one row per control step (30 Hz)
-s.status()                         # {'success': bool, 'q_score': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
+s.status()                         # {'success': bool, 'fallen': bool, 'q_score': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
 s.replay(actions)                  # resets, replays open-loop, returns status (the first replay in a process is exact)
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # tiled robot cameras while replaying (with cameras="tiny": 16x16 tiles, upscaled)
@@ -105,7 +105,10 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   position targets in the robot's own frame, re-applied every control step: a per-step displacement, 0 = stand still.
   `s.hold_action()` (the last command with the base at 0) is the no-op.
 - Control runs at 30 Hz with 120 Hz physics. Your wall-clock budget is 4 h (14400 s); there is no step budget. The
-  episode ends by itself the moment the goal holds. While the robot moves, the cameras' frames lag the physics by 2
+  episode ends by itself the moment the goal holds. It also ends, as a failure, when the robot has fallen over: its base
+  tilted more than 41.4° from upright (the z of its up axis below 0.75), or more than 3 cm below the floor, for 10 s of
+  simulated time in a row (OmniGibson's own Falling rule; `s.status()["fallen"]`, `s.episode_done`). `s.reset()` starts
+  again; the grader's replays end at the same step. While the robot moves, the cameras' frames lag the physics by 2
   control steps; `s.camera_info()` gives the pose they were rendered with.
 - Primitives that take an `arm` ("left" / "right") default to the left one.
 - Isaac Sim startup and scene loading take ~3 minutes per process and the simulator runs at ~7-11 steps/s: plan

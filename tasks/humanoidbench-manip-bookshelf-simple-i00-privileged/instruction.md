@@ -76,7 +76,7 @@ CLI equivalent:
 The trajectory is replayed **open-loop**, but nothing stops you from *generating* it closed-loop:
 MuJoCo on CPU is bit-exact, so an action sequence recorded from a feedback controller reproduces
 exactly when replayed. Use whatever you like — hand-tuned poses, a feedback controller,
-sampling-based search, optimisation. One 1000-step episode costs about 2.23 s of a single core and
+sampling-based search, optimisation. One 1000-step episode costs about 2.07 s of a single core and
 the container has 16, so large-scale search inside the container is affordable; `s.low.data` can be
 snapshotted and restored if you want to branch rollouts.
 

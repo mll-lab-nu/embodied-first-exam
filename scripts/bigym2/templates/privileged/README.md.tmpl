@@ -1,0 +1,25 @@
+# @@PRIV@@
+
+@@SENTENCE@@ (BiGym 2.0 `@@TASK@@`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)
+
+## Difficulty
+@@DIFFICULTY@@
+
+## Reference solution
+None. BiGym 2.0 has no scripted expert or planner; its human demonstrations and its coding agents' programs are public
+on the Hugging Face Hub and never reach the agent (no network but the model APIs; seed @@SEED@@ is none of their seeds).
+
+## Verification
+`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen instance in two fresh processes (`rcb_bigym2.py
+replay`: upstream's official env, one step per row until upstream ends the episode). Pass iff upstream's `is_success`
+holds in both (the task's success held for 1 s, no fall) and both end in the same state. Success condition: @@SUCCESS@@.
+@@FAIL_SENTENCE@@@@REVIEW@@
+
+## Details
+| | |
+|---|---|
+| Upstream | BiGym 2.0 (swirl-uk/BiGym2 at 93ad4b3, bigym 1.0.0, Apache-2.0), task `@@TASK@@` ("@@GROUP@@"), official configuration |
+| Instance | `environment/instance.json` = `tests/instance.json`: the task reset with seed @@SEED@@, t = 0 state hash `@@SHA@@` |
+| Horizon | @@HORIZON_STEPS@@ control steps (@@HORIZON_S@@ s at 50 Hz), upstream's budget for this task |
+| Action | @@DIM@@ floats per control step (`instance.json` `t0.layout`) |
+| Tooling | `environment/rcb_bigym2.py` = `tests/rcb_bigym2.py` (scripts/bigym2/shared/) |

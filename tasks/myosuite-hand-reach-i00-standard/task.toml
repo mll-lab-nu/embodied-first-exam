@@ -16,7 +16,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/myosuite-hand-reach-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite hand_reach (MyoHand, 39 muscles) on the same frozen instance as myosuite-hand-reach-i00-privileged: Move all five fingertips onto their targets: the norm of the stacked fingertip-to-target errors (5 tips x 3 coordinates) below 0.0625 m, for 50 consecutive control steps (1.0 s). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; one episode, no reset, no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite hand_reach (MyoHand, 39 muscles) on the same frozen instance as myosuite-hand-reach-i00-privileged: Move all five fingertips onto their targets: the norm of the stacked fingertip-to-target errors (5 tips x 3 coordinates) below 0.0625 m, for 50 consecutive control steps (1.0 s). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode, replays it in fresh processes and grades it."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "hand_reach", "standard-mode"]
 

@@ -5,8 +5,12 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 **Task:** Put the Halloween decorations away. Two pumpkins, three candles and a cauldron stand on the living-room floor. Put the pumpkins and the candles inside the living-room cabinets (any of them), close every living-room cabinet, and leave the cauldron next to a living-room table. Success means all of the following hold at the same time: (1) both pumpkins and all three candles are inside living-room cabinets; (2) the cauldron is next to a living-room table; (3) every living-room cabinet is closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. nextto(A, B): the gap between A's and B's axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions, and nothing lies between them along a horizontal axis. open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. The service checks the goal and the episode ends the moment it holds.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
-  simulator error. Whatever you knock over or push away stays where it ends up.
+- **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
+  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+- **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
+  when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
+  time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the
+  proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
 - Steps are unlimited; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time

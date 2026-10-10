@@ -38,25 +38,44 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # scripts/humanoidbench/rewards.json and are patched back only inside the verifier, which runs in a
 # container of its own once the agent's is gone. rcb_hb.py (the tooling every task ships) comes along because the scrub keeps the
 # helpers it calls: it is a reader of the package like any other.
+#
+# Physics fixes (the table, measurements and reasons: docs/benchmarks/humanoidbench.md, Physics); upstream's rewards,
+# success bars and terminations are untouched:
+# - MuJoCo 3.3.7, not upstream's 3.1.6 (the install layer below): 3.1.6's general convex collision gave wrong contacts.
+# - `box_feet.py apply`: box feet where the feet stand on a box (h1 and h1hand: stair, balance_simple, balance_hard).
+# - `upstream-fixes.patch`: room's reset (it wrote into the right hand) and powerlift's dumbbell mass.
 ARG HB_COMMIT=cb1189039151c8aadaaa987b442da54383c87fab
-COPY images/humanoidbench/no-torch.patch images/humanoidbench/scrub_oracles.py scripts/humanoidbench/shared/rcb_hb.py /tmp/
+COPY images/humanoidbench/no-torch.patch images/humanoidbench/upstream-fixes.patch images/humanoidbench/scrub_oracles.py \
+     images/humanoidbench/box_feet.py scripts/humanoidbench/shared/rcb_hb.py /tmp/
 RUN git clone https://github.com/carlosferrazza/humanoid-bench.git /opt/humanoid-bench && \
     git -C /opt/humanoid-bench checkout --detach ${HB_COMMIT} && \
-    git -C /opt/humanoid-bench apply /tmp/no-torch.patch && \
-    rm -rf /opt/humanoid-bench/.git /tmp/no-torch.patch && \
+    git -C /opt/humanoid-bench apply /tmp/no-torch.patch /tmp/upstream-fixes.patch && \
+    rm -rf /opt/humanoid-bench/.git /tmp/no-torch.patch /tmp/upstream-fixes.patch && \
+    python /tmp/box_feet.py apply /opt/humanoid-bench && \
     python /tmp/scrub_oracles.py delete
 
 # setup.py pins torch/brax/gymnax/mujoco-mjx alongside the real dependencies, so install the real ones
-# ourselves and register the package without its requirements. Versions are setup.py's own pins.
+# ourselves and register the package without its requirements. Versions are setup.py's own pins, except MuJoCo
+# (3.3.7, see above) and the dm_control that matches it (1.0.34, the last to accept 3.3.x). Upstream vendors
+# dm_control 1.0.20's generated table of MuJoCo's array shapes (dmc_deps/dmc_sizes.py, byte-identical to that
+# release's mjbindings/sizes.py), so it is swapped for the matching release's own; dmc_index.py needs no change.
 RUN pip install --no-cache-dir \
-      mujoco==3.1.6 dm_control==1.0.20 gymnasium==0.29.1 numpy==1.26.4 \
+      mujoco==3.3.7 dm_control==1.0.34 gymnasium==0.29.1 numpy==1.26.4 \
       imageio==2.34.2 imageio-ffmpeg==0.6.0 && \
-    pip install --no-cache-dir --no-deps -e /opt/humanoid-bench
+    pip install --no-cache-dir --no-deps -e /opt/humanoid-bench && \
+    cp "$(python -c 'import dm_control, os; print(os.path.dirname(dm_control.__file__))')/mujoco/wrapper/mjbindings/sizes.py" \
+       /opt/humanoid-bench/humanoid_bench/dmc_deps/dmc_sizes.py
 
 # The other half of the scrub: assert nothing survived and the package still steps. Separate from `delete`
 # because it imports the package, which needs the install above -- and a separate layer is fine here,
 # since by now there is nothing left to leak.
 RUN MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa python /tmp/scrub_oracles.py verify && rm /tmp/scrub_oracles.py /tmp/rcb_hb.py
+
+# The fixes must hold, or the image does not build: MuJoCo 3.3.7 with native convex collision; box feet that follow
+# the mesh on exactly the three box-standing families, on which a robot with every joint locked stands still on each
+# stair tread; room starts with every joint in range and no object in the floor; the dumbbell weighs 53.7 kg.
+COPY images/humanoidbench/check_fixes.py /tmp/
+RUN python /tmp/box_feet.py verify && python /tmp/check_fixes.py && rm /tmp/box_feet.py /tmp/check_fixes.py
 
 # libglvnd finds a vendor driver through an ICD manifest. The NVIDIA container toolkit injects
 # libEGL_nvidia.so.0 whenever NVIDIA_DRIVER_CAPABILITIES includes `graphics`, but on hosts whose driver

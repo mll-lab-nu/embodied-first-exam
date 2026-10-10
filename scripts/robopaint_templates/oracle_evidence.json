@@ -90,18 +90,7 @@
     "nun"
    ],
    "snapshot23": "ccb213d0",
-   "targets": [
-    "donum",
-    "inunum",
-    "minim",
-    "minimum",
-    "minium",
-    "moon",
-    "nimium",
-    "nun",
-    "omnium",
-    "unpin"
-   ]
+   "targets": []
   },
   "acrylic": {
    "release_commit": "a1643285",
@@ -145,6 +134,9 @@
     "temeraire",
     "wanderer"
    ]
+  },
+  "caoshu": {
+   "targets": []
   }
  },
  "later_tooling": "the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6), both adding tooling queries only",

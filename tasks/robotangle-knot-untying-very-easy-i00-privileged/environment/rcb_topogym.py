@@ -2734,6 +2734,232 @@ def strict_goal(statuses) -> tuple[int, int] | None:
     return None
 
 
+# --------------------------------------------------------------------------- libuipc build per GPU
+# The image holds two builds of one libuipc recipe (pyuipc 0.0.25+topogym.det1.cuda128: libuipc 292c98c3 plus the
+# determinism patches, nvcc 12.8; images/robotangle/Dockerfile). Both have the same version and source commit, which the
+# frozen IPC settled states hold, so either restores them. They differ only in their uipc-build.json, whose sha256 names
+# the build (scripts/robotangle/release.json and every runtime binding: uipc_builds):
+#   audited  the wheel of every evidence run, in site-packages (/opt/uipc-build.json): SASS sm_89 and sm_120, PTX compute_120;
+#   sm86     its own prefix /opt/uipc_sm86: SASS sm_86 (runs on 8.6 and 8.7), PTX compute_86 (JIT-compiled on 9.x and 10.x).
+# The rule: compute capability 8.9 or 12.x loads the audited wheel, any other GPU the sm86 build, no visible GPU the audited
+# wheel (no libuipc scene runs there). A Session applies it before anything imports uipc and refuses a choice that
+# contradicts it; installed_runtime() and the session's runtime_binding name the build in use.
+UIPC_BUILDS = {"audited": None, "sm86": "/opt/uipc_sm86"}   # build -> its prefix (site-packages/, uipc-build.json); None: site-packages
+DEFAULT_UIPC_BUILD = "/opt/uipc-build.json"
+_GPU_CAPABILITIES: list | None = None
+_UIPC_BUILD: dict | None = None
+
+
+def gpu_capabilities() -> list[tuple[int, int]]:
+    """Compute capabilities of the CUDA devices this process sees (CUDA_VISIBLE_DEVICES applies), from the CUDA driver API
+    through ctypes: no context, no torch. Empty without a driver or a visible device."""
+    global _GPU_CAPABILITIES
+    if _GPU_CAPABILITIES is None:
+        import ctypes
+        caps = []
+        try:
+            cuda = ctypes.CDLL("libcuda.so.1")
+        except OSError:
+            cuda = None
+        count = ctypes.c_int(0)
+        if cuda is not None and cuda.cuInit(0) == 0 and cuda.cuDeviceGetCount(ctypes.byref(count)) == 0:
+            for index in range(count.value):
+                device, major, minor = ctypes.c_int(), ctypes.c_int(), ctypes.c_int()
+                if (cuda.cuDeviceGet(ctypes.byref(device), index) != 0
+                        or cuda.cuDeviceGetAttribute(ctypes.byref(major), 75, device) != 0     # ..._COMPUTE_CAPABILITY_MAJOR
+                        or cuda.cuDeviceGetAttribute(ctypes.byref(minor), 76, device) != 0):   # ..._COMPUTE_CAPABILITY_MINOR
+                    raise RuntimeError(f"CUDA driver error while reading the compute capability of device {index}")
+                caps.append((major.value, minor.value))
+        _GPU_CAPABILITIES = caps
+    return list(_GPU_CAPABILITIES)
+
+
+def uipc_build_for(capabilities) -> str:
+    """The rule (above): the libuipc build for the visible GPUs. Mixed compute capabilities are refused: a process loads
+    one build, and a RoboTangle container sees exactly one GPU (Nyx needs one)."""
+    caps = sorted({tuple(c) for c in capabilities})
+    if len(caps) > 1:
+        raise RuntimeError("The visible GPUs have different compute capabilities ("
+                           + ", ".join(f"{a}.{b}" for a, b in caps) + "): a process loads one libuipc build. Give the "
+                           "container exactly one GPU, as RoboTangle needs, or GPUs of one model.")
+    if not caps:
+        return "audited"
+    major, minor = caps[0]
+    return "audited" if (major, minor) == (8, 9) or major == 12 else "sm86"
+
+
+def _sha256_file(path) -> str | None:
+    path = Path(path)
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+
+
+def select_uipc_build(capability: tuple[int, int] | None = None) -> dict:
+    """Choose this process's libuipc build by the rule, once and before uipc is imported: the sm86 prefix goes first on
+    sys.path when the rule picks it. `capability` stands in for the GPU's (tests); a Session refuses a choice that
+    contradicts the visible GPU (uipc_build_in_use). Returns the build in use: its name, the compute capability it was
+    chosen for, its uipc-build.json and that file's sha256, and the uipc package Python imports."""
+    global _UIPC_BUILD
+    if _UIPC_BUILD is not None:
+        return _UIPC_BUILD
+    import importlib
+    import importlib.util
+    caps = [tuple(capability)] if capability is not None else gpu_capabilities()
+    name = uipc_build_for(caps)
+    prefix = UIPC_BUILDS[name]
+    record = Path(prefix, "uipc-build.json") if prefix else Path(DEFAULT_UIPC_BUILD)
+    site = Path(prefix, "site-packages") if prefix else None
+    if site is not None:
+        loaded = sys.modules.get("uipc")
+        if loaded is not None and not Path(loaded.__file__).resolve().is_relative_to(site):
+            raise InstanceMismatch(f"uipc was imported from {loaded.__file__} before the Session chose the {name} build ({site})")
+        if not record.is_file():
+            raise InstanceMismatch(f"this image has no {name} libuipc build ({record})")
+        if str(site) not in sys.path:
+            sys.path.insert(0, str(site))
+            importlib.invalidate_caches()
+    spec = importlib.util.find_spec("uipc")
+    module = Path(spec.origin).resolve() if spec is not None and spec.origin else None
+    others = [Path(p, "site-packages") for n, p in UIPC_BUILDS.items() if p and n != name]
+    if module is not None and ((site is not None and not module.is_relative_to(site))
+                               or any(module.is_relative_to(o) for o in others)):
+        raise InstanceMismatch(f"uipc resolves to {module}, not to the {name} libuipc build")
+    _UIPC_BUILD = dict(build=name, capability=list(caps[0]) if caps else None, uipc_build=str(record),
+                       uipc_build_sha256=_sha256_file(record), module=str(module) if module else None)
+    return _UIPC_BUILD
+
+
+def uipc_build_in_use() -> dict:
+    """select_uipc_build(), refused when it contradicts the rule for the visible GPU (a forced choice)."""
+    chosen = select_uipc_build()
+    rule = uipc_build_for(gpu_capabilities())
+    if chosen["build"] != rule:
+        raise InstanceMismatch(f"libuipc build {chosen['build']} (chosen for compute capability {chosen['capability']}) "
+                               f"contradicts the rule for the visible GPU ({gpu_capabilities() or 'none'}: {rule})")
+    return chosen
+
+
+def installed_runtime(root=None) -> dict:
+    """topogym.simulator.frozen_binding.installed_runtime() for an image with two libuipc builds: uipc_builds = the builds
+    the rule chooses from (name -> its uipc-build.json sha256, None if absent), uipc_build_sha256 = the one this process
+    uses (select_uipc_build)."""
+    from topogym.simulator.frozen_binding import installed_runtime as image_runtime
+    runtime = image_runtime(root)
+    runtime["uipc_builds"] = {name: _sha256_file(Path(prefix, "uipc-build.json") if prefix else DEFAULT_UIPC_BUILD)
+                              for name, prefix in UIPC_BUILDS.items()}
+    runtime["uipc_build_sha256"] = select_uipc_build()["uipc_build_sha256"]
+    return runtime
+
+
+def check_runtime(lock: dict) -> dict:
+    """frozen_binding.check_runtime() for an image with two libuipc builds. The binding's runtime names the default
+    (audited) build and lock["uipc_builds"] both allowed ones: the image must hold exactly those, and this process must use
+    the one the rule chooses for the visible GPU."""
+    from topogym.simulator.frozen_binding import BindingMismatch, validate_lock
+    validate_lock(lock)
+    builds = lock.get("uipc_builds")
+    if (not isinstance(builds, dict) or set(builds) != set(UIPC_BUILDS)
+            or builds["audited"] != lock["runtime"].get("uipc_build_sha256")):
+        raise BindingMismatch(f"Runtime binding lacks the libuipc builds {sorted(UIPC_BUILDS)} (uipc_builds; audited = runtime's)")
+    chosen = uipc_build_in_use()
+    expected = dict(lock["runtime"], uipc_builds=builds, uipc_build_sha256=builds[chosen["build"]])
+    actual = installed_runtime()
+    if actual != expected:
+        raise BindingMismatch("Actual installed source/dependencies/libuipc builds differ from the bound runtime")
+    return actual
+
+
+# --------------------------------------------------------------------------- generated assets on another CPU class
+# The asset generators run on numpy and OpenBLAS, whose SIMD kernels depend on the CPU: a host of another instruction-set
+# class (AVX2 only vs AVX-512) writes the same asset files with other bytes from the same pinned generator (measured
+# 2026-10-08: floating-point noise <= 1e-8 m and face order; the rope volume meshes differ only in the last bit of their
+# spawn and elastic rest positions, with identical elements and faces). The frozen state archives record their scene's
+# identity, generated-asset sha256 included, and would refuse such a host for their own scene. Session.instance_realized
+# accepts the host for the instance; these hooks accept it for the archives, for exactly that difference.
+_REALIZED_IDENTITIES: list = []    # archives this process restored with its own asset bytes (Session.native_states_realized)
+
+
+def _same_files_other_bytes(stored, current) -> bool:
+    """Two scene identities that differ only in their generated assets' sha256, over the same files."""
+    if not isinstance(stored, dict) or not isinstance(current, dict):
+        return False
+    changed = {k for k in set(stored) | set(current) if stored.get(k) != current.get(k)}
+    a, b = stored.get("asset_sha256"), current.get("asset_sha256")
+    return changed == {"asset_sha256"} and isinstance(a, dict) and isinstance(b, dict) and set(a) == set(b)
+
+
+def _realized_identity(manifest_path, identity: dict) -> dict:
+    """`identity` with the archive's own asset sha256 when they are the only difference (same files); else unchanged."""
+    from topogym.world.initial_state import read_archive_manifest
+    stored = read_archive_manifest(Path(manifest_path))["metadata"].get("identity")
+    current = json.loads(json.dumps(identity))
+    if stored == current or not _same_files_other_bytes(stored, current):
+        return identity
+    _REALIZED_IDENTITIES.append(dict(archive=Path(manifest_path).parent.name, assets=sorted(
+        n for n in current["asset_sha256"] if stored["asset_sha256"][n] != current["asset_sha256"][n])))
+    return dict(identity, asset_sha256=dict(stored["asset_sha256"]))
+
+
+def _accept_realized_identities() -> None:
+    """Installed once a runtime binding (pinned generator source and dependencies) has been checked: the IPC settled state
+    and the stored PBD initial state accept this host's asset bytes; every other identity difference still refuses."""
+    import topogym.world.initial_state as pbd
+    import topogym.world.physics.ipc_settled_state as ipc
+    _REALIZED_IDENTITIES.clear()
+    if not getattr(ipc.restore_settled_state, "_rcb_realized", False):
+        restore_ipc = ipc.restore_settled_state
+
+        def restore_settled_state(world, manifest_path, *, scene_identity):
+            return restore_ipc(world, manifest_path, scene_identity=_realized_identity(manifest_path, scene_identity))
+        restore_settled_state._rcb_realized = True
+        ipc.restore_settled_state = restore_settled_state
+    if not getattr(pbd.restore_declared_initial_state, "_rcb_realized", False):
+        restore_pbd = pbd.restore_declared_initial_state
+
+        def restore_declared_initial_state(world, robot, declaration, *, identity):
+            return restore_pbd(world, robot, declaration,
+                               identity=_realized_identity(declaration.manifest_path, identity))
+        restore_declared_initial_state._rcb_realized = True
+        pbd.restore_declared_initial_state = restore_declared_initial_state
+
+
+# --------------------------------------------------------------------------- frozen generated assets (IPC ropes)
+# The IPC rope volume meshes (knot_untying, rope_threading) come from tetgen, whose interior points depend on the last bits of its input surface
+# (numpy SIMD rounding): on a CPU of another instruction-set class it inserts other interior points (measured
+# 2026-10-08, AVX2 vs AVX-512: knot medium 32212 vs 32280 vertices, hard 40769 vs 40747), and the frozen IPC settled
+# state, stored per vertex, no longer fits; other CPUs (the maintainers' AMD EPYC 7R13) may differ for rope_threading too. These
+# instances carry the mesh they were frozen with
+# (instance_assets/frozen_assets/rope_volume.npz, sha256 = the instance's asset_identity entry): it replaces the generated
+# file before the task reads it, so every CPU builds the frozen mesh.
+_FROZEN_ASSETS: dict = {}          # generated file name -> the active instance's frozen copy
+
+
+def _install_frozen_assets(instance_dir, identity: dict) -> None:
+    import shutil
+    _FROZEN_ASSETS.clear()
+    folder = Path(instance_dir) / "instance_assets" / "frozen_assets"
+    for path in sorted(folder.iterdir()) if folder.is_dir() else []:
+        if path.is_file():
+            if hashlib.sha256(path.read_bytes()).hexdigest() != identity.get(path.name):
+                raise InstanceMismatch(f"frozen asset {path.name} is not the generated asset this instance records")
+            _FROZEN_ASSETS[path.name] = path
+    if not _FROZEN_ASSETS:
+        return
+    import topogym.tasks.knot_untying.common as knot
+    import topogym.tasks.rope_threading.common as rope
+    for module in (knot, rope):
+        if getattr(module.load_centerline_map, "_rcb_frozen", False):
+            continue
+        load = module.load_centerline_map
+
+        def load_centerline_map(volume, *args, _load=load, **kwargs):   # declare(): after the volume is final
+            frozen = _FROZEN_ASSETS.get(Path(volume).name)
+            if frozen is not None:
+                shutil.copyfile(frozen, volume)
+            return _load(volume, *args, **kwargs)
+        load_centerline_map._rcb_frozen = True
+        module.load_centerline_map = load_centerline_map
+
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, eval_index: int | None = None,
                  variation_id: str | None = None, seed: int | None = None, task_parameters: dict | None = None,
@@ -2745,6 +2971,7 @@ class Session:
             raise ValueError("TopoGym sessions follow the GPU-backend rule; the physics device comes from the instance")
         self.task, self.spec = task, dict(TASKS[task])
         self.runtime_binding = None
+        self.uipc_build = uipc_build_in_use()     # the libuipc build, by the rule, before anything imports uipc
         inst = None
         if instance is not None:
             if gripper_space is not None:
@@ -2756,15 +2983,17 @@ class Session:
                 raise ValueError(f"instance task {inst.get('task')} != session task {task}")
             lock_path = Path(instance).resolve().parent / "runtime_binding.json"
             if lock_path.is_file():
-                from topogym.simulator.frozen_binding import check_inputs, check_runtime, binding_id
+                from topogym.simulator.frozen_binding import check_inputs, binding_id
                 try:
                     lock = json.loads(lock_path.read_text())
                     check_inputs(instance, __file__, lock)
-                    runtime = check_runtime(lock)
+                    runtime = check_runtime(lock)       # this tooling's: both libuipc builds and the one in use
                 except (OSError, ValueError, KeyError) as exc:
                     raise InstanceMismatch(f"Frozen runtime binding failed: {exc}") from exc
-                self.runtime_binding = dict(binding_id=binding_id(lock), runtime=runtime,
+                self.runtime_binding = dict(binding_id=binding_id(lock), runtime=runtime, uipc_build=self.uipc_build,
                                             creation_source=lock["creation_source"], image=lock["image"])
+                _accept_realized_identities()      # the binding pins the generator: archives accept this host's asset bytes
+                _install_frozen_assets(Path(instance).resolve().parent, inst.get("asset_identity") or {})
             eval_index = inst["eval_index"]
             cfg = dict(inst["simulator"])       # the frozen configuration: the task directory's own copy
             cfg["task_parameters"] = dict(cfg.get("task_parameters", {}))
@@ -2835,12 +3064,26 @@ class Session:
         expected = inst.get("state_sha") if inst else None
         self.instance_exact = expected is None or expected == self.instance_sha
         assets_match = inst is None or inst.get("asset_identity", self.asset_identity) == self.asset_identity
+        # The asset generators run on numpy / OpenBLAS, whose SIMD kernels depend on the CPU: a host without the instruction
+        # set the instance was frozen on (e.g. AVX2 only vs AVX-512) writes the same files with other bytes, from the same
+        # generator code (the runtime binding pins source and dependencies). Measured 2026-10-08: floating-point noise
+        # (<= 1e-8 m, mostly ~1e-16) and face order. Such a host realizes the frozen recipe (instance_realized): the same
+        # files, the frozen state exactly or within the pose tolerance; every process of the run (live episode, fresh
+        # replay) realizes it alike, so its state hash is this run's own.
+        self.assets_exact = assets_match
+        frozen_assets = (inst or {}).get("asset_identity") or {}
+        self.asset_differences = sorted(n for n in self.asset_identity if frozen_assets.get(n) != self.asset_identity[n])
+        realized_assets = (not assets_match and inst is not None and self.runtime_binding is not None
+                           and set(frozen_assets) == set(self.asset_identity))
+        assets_ok = assets_match or realized_assets
+        self.instance_realized = False
         if self.instance_generated:
             # The frozen evidence state (state_sha) was prepared on another GPU. The instance is its recipe, realized on
             # this GPU: the stored archive's scene identity and preparation equal the ones run here (recipe_match). Its
             # state hash is this run's own; every process of the run restores the same generated archive.
             gen = self.initial_state
-            self.instance_matches = assets_match and (expected is None or gen.get("recipe_match") is True)
+            self.instance_matches = assets_ok and (expected is None or gen.get("recipe_match") is True)
+            self.instance_realized = realized_assets and self.instance_matches
             msg = (f"initial state generated for {gen.get('resource_profile')} (cache {gen.get('cache')}; the frozen "
                    f"state {expected} belongs to {gen.get('stored_profile')}): state_sha {self.instance_sha}")
             if not self.instance_matches:
@@ -2851,8 +3094,17 @@ class Session:
             else:
                 _log(msg)
         else:
-            self.instance_matches = assets_match and (self.instance_exact or (inst is not None and self._poses_match(inst)))
-        if not self.instance_generated and (not self.instance_exact or not assets_match):
+            self.instance_matches = assets_ok and (self.instance_exact or (inst is not None and self._poses_match(inst)))
+            # With the binding checked and the same asset files, a state that differs from the frozen one only within the
+            # pose tolerance (quantities this host's kernels derive) is this host's realization too, like other asset bytes.
+            realizable = inst is not None and self.runtime_binding is not None and set(frozen_assets) == set(self.asset_identity)
+            self.instance_realized = realizable and self.instance_matches and (realized_assets or not self.instance_exact)
+        self.native_states_realized = list(_REALIZED_IDENTITIES)
+        if self.instance_realized:
+            _log(f"instance realized on this host: {len(self.asset_differences)} generated asset file(s) differ in bytes "
+                 f"from the frozen ones ({', '.join(self.asset_differences[:8])}); same files and pinned generator, state "
+                 + ("exact" if self.instance_exact else f"{self.instance_sha} within the pose tolerance of {expected}"))
+        if not self.instance_generated and not self.instance_realized and (not self.instance_exact or not assets_match):
             msg = f"instance state sha {self.instance_sha} != expected {expected}"
             if strict or self.runtime_binding is not None:
                 self.env.close()
@@ -3845,8 +4097,7 @@ def cmd_describe(a) -> None:
     """What the task generator writes into instruction.md / README.md: cameras, robot, kinematics, the success predicate's
     source, the table height; one JSON line."""
     import inspect
-    from topogym.simulator.frozen_binding import installed_runtime
-    runtime_identity = installed_runtime()
+    runtime_identity = installed_runtime()      # this tooling's: both libuipc builds and the one in use
     s = Session(a.task, instance=a.instance)
     t = s.env._task
     from topogym.tasks.goal_description import TASK_IDS, describe_goal

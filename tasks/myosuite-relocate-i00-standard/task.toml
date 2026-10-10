@@ -16,7 +16,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/myosuite-relocate-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite relocate (MyoArm, 63 muscles) on the same frozen instance as myosuite-relocate-i00-privileged: Pick up the object from the table and put it in the target receptacle: the object's position within 0.1 m of the target (rotation is ignored) for 100 consecutive control steps (1.0 s). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; one episode, no reset, no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite relocate (MyoArm, 63 muscles) on the same frozen instance as myosuite-relocate-i00-privileged: Pick up the object from the table and put it in the target receptacle: the object's position within 0.1 m of the target (rotation is ignored) for 100 consecutive control steps (1.0 s). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode, replays it in fresh processes and grades it."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myoarm", "code-as-policy", "trajectory", "relocate", "standard-mode"]
 

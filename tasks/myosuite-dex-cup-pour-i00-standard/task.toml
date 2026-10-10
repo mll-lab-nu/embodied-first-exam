@@ -16,7 +16,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/myosuite-dex-cup-pour-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite dex_cup_pour (MyoHand, 39 muscles) on the same frozen instance as myosuite-dex-cup-pour-i00-privileged: Move the cup along MyoDex's recorded pour (lift it and tilt it as if pouring) motion: a reference of the object's pose over 81 control steps (1.62 s), from GRAB motion capture (TCDM / MyoDex). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; one episode, no reset, no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite dex_cup_pour (MyoHand, 39 muscles) on the same frozen instance as myosuite-dex-cup-pour-i00-privileged: Move the cup along MyoDex's recorded pour (lift it and tilt it as if pouring) motion: a reference of the object's pose over 81 control steps (1.62 s), from GRAB motion capture (TCDM / MyoDex). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode, replays it in fresh processes and grades it."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "dex_cup_pour", "standard-mode"]
 

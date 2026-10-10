@@ -1,0 +1,110 @@
+{
+ "case_id": "pro-position-object-t08-i02-sensor_noise_onset-d0-p195",
+ "event": "sensor_noise_onset",
+ "suite": "libero_object",
+ "language": "Pick the chocolate pudding and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "chocolate_pudding_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "b7e7a8d6380f76d90bc58526fa2cf4f3898e23f6152f90fc12a3312a79568913",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "chocolate_pudding_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "chocolate_pudding_1:lower",
+  "trace": [
+   "145:pick chocolate_pudding_1:lower failed goal=[0.014, 0.255, 0.118] eef=[0.017, 0.254, 0.142] obj c=[0.016, 0.253, 0.136] half=[0.04, 0.023, 0.014] top=0.151 fingers=-1.57 contacts=['gripper0_finger1_collision>chocolate_pudding_1_g1', 'gripper0_finger1_pad_collision>chocolate_pudding_1_g1', 'gripper0_finger2_collision>chocolate_pudding_1_g1', 'gripper0_finger2_pad_collision>chocolate_pudding_1_g1']"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 145,
+  "event_fired": true,
+  "event_step": 13,
+  "steps_left": 135,
+  "state_sha": "469ac46fa05a55943c96ac4fa288ba97c265397fbb88b38c69d4bdf5d240b459",
+  "initial_state_sha": "b7e7a8d6380f76d90bc58526fa2cf4f3898e23f6152f90fc12a3312a79568913"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 145,
+   "event_fired": true,
+   "event_step": 13,
+   "steps_left": 135,
+   "state_sha": "469ac46fa05a55943c96ac4fa288ba97c265397fbb88b38c69d4bdf5d240b459",
+   "initial_state_sha": "b7e7a8d6380f76d90bc58526fa2cf4f3898e23f6152f90fc12a3312a79568913"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 145,
+   "event_fired": true,
+   "event_step": 13,
+   "steps_left": 135,
+   "state_sha": "469ac46fa05a55943c96ac4fa288ba97c265397fbb88b38c69d4bdf5d240b459",
+   "initial_state_sha": "b7e7a8d6380f76d90bc58526fa2cf4f3898e23f6152f90fc12a3312a79568913"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

@@ -1,0 +1,50 @@
+schema_version = "1.3"
+artifacts = ["/app/output/"]
+
+[task]
+name = "robot-coding-bench/robopaint-oil-bathers-i01-privileged"
+description = "RoboPaint oil painting from a reference: embodied robotic painting (ManiSkill 3.0.1 Franka Panda with an oil-paint brush; the paint is libmypaint 1.6.1 with the mypaint-brushes preset tanda/oil-03-paint made pointed, wet paint that smudges and blends): produce one replayable trajectory that paints the picture target.png (a square crop of Georges Seurat's Bathers at Asnières, 1884) onto the main sheet with 16 premixed paints, in at most 2496 strokes. Scored at a 1 mm scale against the picture (success iff mean CIELAB ΔE <= 5.5, p90 ΔE <= 9.0, SSIM of L* >= 0.8, edge correlation >= 0.74, paint IoU >= 0.96 (all after the best single shift of the sheet, at most 5 mm along each axis, inside the central area 8 mm in from the sheet's edges) and at most 2496 strokes; 1 - mean ΔE / 20 is the continuous score); the thresholds are the reference solution's robot execution with a margin. s.score() is served by a separate scoring container. Process rules: paint with brush strokes the way a person paints; colouring in or filling areas with a thin line, zigzag, serpentine or contour-offset fills fail; the brush tip's path pressed on the main sheet with paint is at most 63600 mm in total, and at most 10 % of it in strokes longer than 2.5 x the diagonal of their bounding box."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "robopaint", "maniskill", "sapien", "painting", "oil-painting", "mypaint", "brush", "paint-from-reference", "franka", "code-as-policy", "trajectory", "robopaint_oil_bathers"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the CPU) + libmypaint 1.6.1 (rcb_brush.py MyPaintPainter, CPU)
+robot = "franka-panda"            # PandaStick with a paint brush: rigid handle + 15 mm collision-free tuft, TCP = the tuft's tip
+family = "robopaint_oil_bathers"
+mode = "privileged"               # privileged (exact sheets, score, brush state) | standard (RGB only: the -standard twin)
+oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
+oracle_evidence = "Reference solution in solution/: the hi-res version's stroke program for the pointed brush, executed by the robot at generation time (2026-10-09; README Change Log). The verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, the eai-robopaint:0.2.0 runtime, 2026-10-09): path_mm 21192 of the 63600 mm budget; its strokes are sweeps. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Oil: the pointed brush)."
+instance_seed = 0                 # scene = environment/instance.json (sheets, brush preset, paint wells, start joints, instance_sha; the exemplar is target.png)
+expert_time_estimate_hours = 4.0
+difficulty = "extreme"          # RoboPaint tiers: acrylic stroke copy hard, oil paint-from-reference extreme
+medium = "mypaint"                # the brush model: calligraphy (Wang et al. 2020) | broad_nib | mypaint
+stroke_count = 1664               # difficulty axes: the reference solution's strokes, the stroke budget, paints, brush sizes, the picture
+stroke_budget = 2496
+palette_size = 16
+brush_sizes_mm = [11.0, 6.0, 3.6, 2.6, 2.1]
+picture_detail = 2.11          # mean |grad L*| per mm of the picture at the 1 mm judging scale
+palette_floor_de = 5.04          # mean ΔE of the picture to its nearest premixed paint (no blending)
+reference_de_mean = 4.92
+reference_ssim_L = 0.849
+source_image = "File:Baigneurs a Asnieres.jpg"
+source_license = "Public domain"
+source_artist = "Georges Seurat"
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+
+[agent]
+timeout_sec = 7200.0              # 2 h of wall clock (a replay of a few thousand control steps takes seconds)
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 8
+memory_mb = 16384
+
+[verifier.environment]
+build_timeout_sec = 1800.0

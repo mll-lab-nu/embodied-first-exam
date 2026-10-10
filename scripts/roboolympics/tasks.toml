@@ -1,0 +1,54 @@
+# RoboOlympics tasks (docs/benchmarks/roboolympics.md): one player against the sport's scripted opponent, standard-realtime
+# mode only (eai-standard/2.3, PROTOCOL §4b), rendered by gen_tasks.py:
+#     python3 scripts/roboolympics/gen_tasks.py render     write tasks/roboolympics-*
+#     python3 scripts/roboolympics/gen_tasks.py check      exit 1 if tasks/ differs from a fresh render (CI)
+# The simulator code under shared/ is RoboOlympics' (github.com/CHIGUI0/roboolympics, private; MIT), taken unchanged from
+# its upstream-export commit below, except renderers/presentation/assets.py (RO_LOD_DIR: the players' meshes come from
+# the eai-olympiad image). The instance is frozen: seed, opponent level and the official slowdown S = 10.
+#   sport, source      the RoboOlympics sport and the task it was exported from (sport.toml [[tasks]])
+#   name               roboolympics-<sport>-<format>-i<NN>-standard-realtime (docs/TAXONOMY.md)
+#   format             the sport's single-player format; action_level: high (strokes the service plans) or low
+#   seed, level        the frozen instance: the serves, the opponent's returns and the execution scatter; the opponent
+
+[defaults]
+upstream = "CHIGUI0/roboolympics 596d551a862c4236e74aea2beb25654b9783f9a7 (branch upstream-export, core 0.2.13)"
+image = "ghcr.io/mll-lab-nu/eai-olympiad:0.2.0"
+agent_timeout_sec = 7200        # uniform in the benchmark: a match plus its breaks takes 10-60 min of wall time at S = 10
+slowdown = 10                   # RoboOlympics' official slowdown (owner, 2026-10-08; PROTOCOL §4b exception)
+instance_tag = "00"
+
+[[tasks]]
+sport = "tabletennis"
+source = "tabletennis-match-wallclock-program-standard"
+name = "roboolympics-tabletennis-match-i00-standard-realtime"
+family = "tabletennis_match"
+robot = "franka-panda"
+format = "match"
+action_level = "high"
+seed = 101
+level = 1
+sim_cpus = 6
+
+[[tasks]]
+sport = "badminton"
+source = "badminton-match-wallclock-program-standard"
+name = "roboolympics-badminton-match-i00-standard-realtime"
+family = "badminton_match"
+robot = "franka-panda"
+format = "match-wallclock"
+action_level = "high"
+seed = 101
+level = 1
+sim_cpus = 6
+
+[[tasks]]
+sport = "airhockey"
+source = "airhockey-match-wallclock-program-standard"
+name = "roboolympics-airhockey-match-i00-standard-realtime"
+family = "airhockey_match"
+robot = "kuka-iiwa14"
+format = "match"
+action_level = "low"
+seed = 101
+level = 1
+sim_cpus = 4
