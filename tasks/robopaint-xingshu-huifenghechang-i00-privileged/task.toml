@@ -15,7 +15,7 @@ robot = "franka-panda"            # PandaStick with a Chinese brush: rigid handl
 family = "robopaint_xingshu_huifenghechang"
 mode = "privileged"               # privileged (exact sheets, brush state, reset, scoring service) | standard (RGB only: the -standard twin)
 oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
-oracle_evidence = "Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 2017 and mark_width_mm 3.85, against the colouring-in limits 6060 mm and 1.15 mm. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation)."
+oracle_evidence = "Reference solution in solution/, re-made on 2026-10-09 by the calligraphy planner of solution/README.md (README, Change Log; docs/benchmarks/robopaint.md, Targets). The verifier scores it 1 under the process rules (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 2483 and mark_width_mm 3.04, against the colouring-in limits 6060 mm and 1.15 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): docs/benchmarks/robopaint.md (Validation)."
 instance_seed = 0                 # scene = environment/instance.json (agent's copy: sheets, brush, ink stone, start joints, the rule, instance_sha)
 expert_time_estimate_hours = 4.0
 difficulty = "extreme"          # RoboPaint tiers: line easy; xingshu singles hard, works extreme

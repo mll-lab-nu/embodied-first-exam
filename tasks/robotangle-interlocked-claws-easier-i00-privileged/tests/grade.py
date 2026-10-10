@@ -84,8 +84,10 @@ def main() -> int:
         s = Session(a.family, instance=a.instance, strict=True)
         # A frozen PBD state prepared on another GPU is generated from the instance's recipe on this one (instance_generated)
         generated = bool(getattr(s, "instance_generated", False))
-        if not s.instance_matches or not (s.instance_exact or generated) or not s.runtime_binding:
-            raise InstanceMismatch("verifier requires the frozen instance (exact, or its recipe realized on this GPU) and a runtime binding")
+        # A CPU of another instruction-set class realizes the frozen recipe's assets with other bytes (instance_realized)
+        realized = bool(getattr(s, "instance_realized", False))
+        if not s.instance_matches or not (s.instance_exact or generated or realized) or not s.runtime_binding:
+            raise InstanceMismatch("verifier requires the frozen instance (exact, or its recipe realized on this GPU or CPU) and a runtime binding")
         t0 = time.time()
         outs, video_error = [], None
         while len(outs) < a.repeat:
@@ -117,7 +119,8 @@ def main() -> int:
                "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": 1,
                "infra_error": int(unstable), "simulator_instability": int(unstable),
                "instance_ok": int(bool(s.instance_matches)), "instance_exact": int(bool(s.instance_exact)),
-               "initial_state_generated": int(generated),
+               "initial_state_generated": int(generated), "instance_realized": int(realized),
+               "assets_exact": int(bool(getattr(s, "assets_exact", True))),
                "runtime_binding_ok": 1,
                "n_actions": int(grading[-1].get("rows", outs[-1]["sim_steps"])), "submitted_actions": int(len(acts)),
                "sim_steps": int(outs[-1]["sim_steps"]), "physics_steps": int(outs[-1].get("physics_steps", 0)),

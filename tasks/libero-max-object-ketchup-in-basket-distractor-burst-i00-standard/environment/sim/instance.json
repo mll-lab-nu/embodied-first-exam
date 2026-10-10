@@ -1,0 +1,158 @@
+{
+ "case": {
+  "case_id": "pro-view-occlusion-object-t04-i05-distractor_burst-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 5,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/view_occlusion/libero_object/task_4",
+   "change": {
+    "distractor_count": 5,
+    "operation": "insert_distractors",
+    "placements": [
+     {
+      "object": "cream_cheese_1",
+      "offset_m": [
+       0.05969151,
+       0.10682307,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "ketchup_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "bbq_sauce_1",
+      "offset_m": [
+       -0.10507949,
+       0.11345948,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "ketchup_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "salad_dressing_1",
+      "offset_m": [
+       -0.15223199,
+       -0.07035408,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "ketchup_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "alphabet_soup_1",
+      "offset_m": [
+       0.01500799,
+       -0.12578535,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "ketchup_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "milk_1",
+      "offset_m": [
+       0.15616679,
+       -0.03091042,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "ketchup_1",
+      "support_entity": "floor"
+     }
+    ]
+   },
+   "change_family": "CLUTTER",
+   "change_type": "distractor_burst",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3518589936
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-view-occlusion-object-t04-i05-distractor_burst-d1",
+   "seed": 3518589936,
+   "setup": [
+    {
+     "object": "cream_cheese_1",
+     "offworld_position_m": [
+      -2.0,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "bbq_sauce_1",
+     "offworld_position_m": [
+      -2.2,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "salad_dressing_1",
+     "offworld_position_m": [
+      -2.4,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "alphabet_soup_1",
+     "offworld_position_m": [
+      -2.6,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "milk_1",
+     "offworld_position_m": [
+      -2.8,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    }
+   ],
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "ketchup_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/view_occlusion",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "05_view_occlusion/bddl/libero_object/pick_up_the_ketchup_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "view_occlusion",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_ketchup_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object/pick_up_the_ketchup_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the ketchup and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 4,
+  "task_name": "pick_up_the_ketchup_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "7a9f0c9431e67c152f32ea2d937ac63023063d84d28015210515131d3fdcd572",
+ "instance_sha": "abd6c8a21d3ea10619ee8a4ea5d5c9e3b5d21e1c004834aee5926d60555fd8c2",
+ "schema": "eai-libero-max-instance/1"
+}

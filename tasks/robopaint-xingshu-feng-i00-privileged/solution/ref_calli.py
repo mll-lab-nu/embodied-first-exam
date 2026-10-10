@@ -3,7 +3,7 @@ time on the graders' full instance). Input: per-stroke handle plans from the rob
 (x, y, press z) per stroke, in the exemplar's stroke order). Execution on the robot:
   - before every stroke: dip in the ink stone (restores the brush), travel 15 mm above the paper to 4 mm behind the stroke start,
     settle, then the stroke segment = the same approach / touch-down / body / lift the optimiser simulated (StrokeOpt.path), with
-    the samples spaced for 2 cm/s;
+    the samples spaced for 2 cm/s (plans.json "entry" / "exit": how the brush meets and leaves the paper, opt_calli.stroke_path);
   - tracking: ManiSkill's pd_joint_pos (stiffness 1e3, damping 1e2, targets held for the 5 physics steps of a 20 Hz control step)
     lags a moving target by about D/K + half a control period = 0.125 s; each control step commands IK(desired tip at t + 0.125 s)
     (feed-forward), then iterative learning control: the realized tip path (the painter's 100 Hz samples) is compared with the
@@ -26,9 +26,9 @@ Z_TRAVEL = 0.015         # m above the paper
 HZ, CTRL = 100, 20
 
 
-def stroke_segment(P: np.ndarray, paper_z: float) -> np.ndarray:
+def stroke_segment(P: np.ndarray, paper_z: float, entry: str = "vertical", exit: str | None = None) -> np.ndarray:
     """Desired tip samples at 100 Hz for one stroke plan: the path the optimiser simulated (opt_calli.stroke_path), spaced for 2 cm/s."""
-    return stroke_path(P, paper_z, V_WRITE / HZ)
+    return stroke_path(P, paper_z, V_WRITE / HZ, entry, exit)
 
 
 class _TipLog:
@@ -66,13 +66,13 @@ def _run_segment(s, D: np.ndarray, corr: np.ndarray) -> tuple[int, int]:
     return n_ctrl + 10
 
 
-def paint(s, p, plans: list, ilc_passes: int = 3, verbose: bool = True) -> dict:
+def paint(s, p, plans: list, ilc_passes: int = 3, verbose: bool = True, entry: str = "vertical", exit: str | None = None) -> dict:
     """Write the character: plans = per-stroke (K, 3) control points in stroke order. Iterative learning control over the whole
     episode (reset between passes), then the final pass is the recording (the caller's record_start/record_stop wraps this call:
     everything before the final pass is erased by reset())."""
     paper_z = s.geo.z
     well = s.wells()[0]
-    D = [stroke_segment(np.asarray(P, np.float64), paper_z) for P in plans]
+    D = [stroke_segment(np.asarray(P, np.float64), paper_z, entry, exit) for P in plans]
     corr = [np.zeros_like(d) for d in D]
     hist = []
     recording = s._recording is not None               # run-oracle records; reset() stops a recording, so restart it for the final pass

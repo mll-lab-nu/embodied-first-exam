@@ -3,6 +3,8 @@
 # CPU only: MuJoCo physics and OSMesa rendering; no GPU reservation.
 # Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
+# Knobs: ${NAME:-default} takes NAME from the shell that runs harbor; the defaults are the standard configuration and
+# results under other settings are reported separately.
 services:
   main:
     depends_on: [sim]
@@ -21,3 +23,4 @@ services:
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-10}"   # MyoSuite standard: 10 resets (PROTOCOL §4.5); 0: one episode

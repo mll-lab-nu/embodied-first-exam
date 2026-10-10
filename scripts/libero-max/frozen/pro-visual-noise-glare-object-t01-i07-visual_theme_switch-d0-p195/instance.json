@@ -1,0 +1,63 @@
+{
+ "case": {
+  "case_id": "pro-visual-noise-glare-object-t01-i07-visual_theme_switch-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 7,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/visual_noise_glare/libero_object/task_1",
+   "change": {
+    "operation": "set_visual_theme",
+    "rgb_multiplier": [
+     0.7,
+     1.15,
+     1.3
+    ],
+    "rgb_permutation": [
+     2,
+     0,
+     1
+    ]
+   },
+   "change_family": "OBS",
+   "change_type": "visual_theme_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 2896733634
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-visual-noise-glare-object-t01-i07-visual_theme_switch-d0",
+   "seed": 2896733634,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "cream_cheese_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/visual_noise_glare",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "01_visual_noise_glare/bddl/libero_object/pick_up_the_cream_cheese_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "visual_noise_glare",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_cream_cheese_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object/pick_up_the_cream_cheese_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the cream cheese and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 1,
+  "task_name": "pick_up_the_cream_cheese_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "b53c79455fa3d75a3748699a63580bdcd7fae3a9e084439c83db6e0d8eaf4b22",
+ "instance_sha": "dacc24c534cdceb37599edb73cfe840182f219d50dad95906f46590631bb9374",
+ "schema": "eai-libero-max-instance/1"
+}

@@ -1,20 +1,28 @@
 # MyoSuite · chase_tag — STANDARD MODE (robot as a service, eai-standard/2.2)
 
 You control the **MyoLegs**, a free-standing musculoskeletal model of a human torso and both legs, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
-you cannot open. You get one client and one episode, and you act only through its actuators (80 muscles).
+you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (80 muscles).
 **Task:** Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Failure (the episode ends): the time limit, leaving the 13 x 13 m arena, or the pelvis below 0.5 m (fallen).
 
 A musculoskeletal body with two legs stands in a square arena; an opponent moves in it.
 
 ## Rules
-- **No reset.** The episode starts when the service comes up and ends on success (the challenge's own success event), on its failure conditions or its own time limit, when your time is up, or on a simulator
-  error.
+- **Episodes and resets.** The episode starts when the service comes up and ends on success (the challenge's own success event), on its failure conditions or its own time limit, when your time is up, or on
+  a simulator error. You have **10 resets** (`spec["budget"]["reset"]`, which is authoritative: if it says
+  0, there is no reset and the one episode is the run). A reset (`POST /reset`, below) puts the body and the scene back
+  on the same frozen starting state and starts a new episode, either abandoning the running one or after one has ended;
+  it takes no simulated time and returns the start's images and proprioception. Once an episode has ended, `submit`
+  raises `EpisodeOver` until you reset. **Only the last episode is graded**: an episode you reset away is never graded,
+  a success ends the run at once (no reset after it), and when your time is up the episode then running is the one
+  graded. The wall clock is the run's and never restarts; `meta["episode"]` and `meta["resets_left"]` count the
+  episodes (`meta["control_steps"]` is the current episode's).
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) and
   the body's own proprioception: joint positions, velocities and actuator torques, muscle activations and lengths and the pose and velocity of your free-standing root (the pelvis: `root_pose`, `root_vel`).
   No object, ball, opponent or goal poses, no success check: `meta["done"]` / `meta["reason"]` tell you when the episode
   is over and why.
 - Your wall-clock budget is 5400 s from your start (`meta["time_left_s"]`); steps are unlimited. Simulated time
-  only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early.
+  only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early: while
+  the episode runs, or a reset is left, the run can still pass.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
@@ -33,7 +41,8 @@ res = r.submit("muscle", rows, dt=0.01)          # rows: (T, 80) commands, one r
 res.meta["done"], res.meta["reason"], res.meta["control_steps_chunk"]; res.video[cam]; res.last[cam]; res.proprio
 obs = r.get_obs(seconds=1.0, video="mp4")      # hold the last command and watch for 1 s (max 30)
 r.fk(q)                                        # forward kinematics of the listed links (no physics)
-r.status()                                     # calls, control steps, done, reason, elapsed time
+r.status()                                     # calls, control steps, done, reason, elapsed time, episode, resets_left
+obs = r._post("/reset", {"cameras": ["topview"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
 ```
 Cameras: `topview`, `opponent_view`, `agent_view` (640x480; default `topview`). `spec["cameras"]` gives each camera's mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one) and intrinsics, and every response carries each frame's pose. Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a
 chunk fastest. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel` (`qd_<joint>`),

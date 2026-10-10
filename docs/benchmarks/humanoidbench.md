@@ -5,12 +5,12 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | | |
 |---|---|
 | upstream | [HumanoidBench](https://humanoid-bench.github.io/) (RSS 2024), pinned at `cb11890`; 32 registered tasks |
-| simulator | MuJoCo 3.1.6 + dm_control, CPU |
+| simulator | MuJoCo 3.3.7 + dm_control, CPU (upstream pins 3.1.6; see Physics) |
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
-| tasks | 10 × 3 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-realtime` (the realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
-| image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.1.6` (`images/humanoidbench/`) |
-| oracle | `sit_simple` (the fixture): full, all three modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml; realtime: approved by the owner in PR #83, 2026-10-08) |
+| tasks | 10 × 3 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (the standard-realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
+| image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0` (`images/humanoidbench/`) |
+| oracle | `sit_simple` (the fixture): full, all three modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml; standard-realtime: approved by the owner in PR #83, 2026-10-08) |
 
 ## Tasks: upstream's 32, ours ✅ (9 scored + the `sit_simple` fixture)
 
@@ -26,7 +26,7 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | | pole | h1 | ⬜ | holding still earns 71% of the bar |
 | C3 stabilisation | balance_simple | h1 | ⬜ | balance_hard is upstream's hard version |
 | | balance_hard | h1 | ✅ | same reward on a rolling cylinder |
-| | sit_simple | h1 | ✅ | fixture, the pipeline check: holding still earns 62% |
+| | sit_simple | h1 | ✅ | fixture, the pipeline check: holding still earns 77% |
 | C4 navigation | door | h1 | ✅ | moves 1 object (the door) |
 | | maze | h1 | ⬜ | moves no object |
 | C5 whole-body power | powerlift | h1hand | ✅ | moves 1 object, dexterous hands |
@@ -62,7 +62,7 @@ Why these (no model's results enter the choice):
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
 | standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, replayed in a fresh simulator |
-| realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (the realtime mode's default, PROTOCOL §4b) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
+| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's exception, PROTOCOL §4.5; the mode's default is 0) | the last episode: the targets the robot executed at each control step, replayed in a fresh simulator |
 
 ### Standard mode's reset budget: 50
 
@@ -93,14 +93,14 @@ D1's default of 0 (§4.5); results state the reset budget they ran under. What a
 grants N. Results under a budget other than 50 are reported separately, and HumanoidBench standard-mode results
 recorded before this change (budget 0) are a different configuration from today's.
 
-### Realtime mode: time does not stop
+### Standard-realtime mode: time does not stop
 
 In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
-chunks loses nothing. A real H1 does not wait. The realtime mode (PROTOCOL §4b, protocol v1.1;
-`tasks/humanoidbench-*-i00-realtime`, 10 tasks, one per family, `mode = "realtime"`) is standard mode with the same
-instance, sensors, success rule, reset budget (50, the realtime mode's default), wall clock (1 h) and client, on a
+chunks loses nothing. A real H1 does not wait. The standard-realtime mode (PROTOCOL §4b, protocol v1.1;
+`tasks/humanoidbench-*-i00-standard-realtime`, 10 tasks, one per family, `mode = "standard-realtime"`) is standard mode with the same
+instance, sensors, success rule, reset budget (50, HumanoidBench's exception to the mode's default of 0, PROTOCOL §4.5), wall clock (1 h) and client, on a
 clock that does not stop (`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which extends `rcb_service.py`; the
-wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMITED_MODE_PROTOCOL.md "Realtime mode"):
+wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMITED_MODE_PROTOCOL.md "Standard-realtime mode"):
 
 - **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
   at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every 20 ms of wall time
@@ -119,7 +119,7 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMI
   `ticks.f64` (each step's wall time and the call that planned it; -1 = held), `calls.jsonl`, `submitted.f64` (every
   row as sent), and in `final.json` `max_lag_s`, `stalls`, `held_steps`, `late_steps`.
 - **Timing guarantees.** The simulator thread runs a due control step before any waiting request; HumanoidBench's
-  physics takes 0.3–2.2 ms per control step (facts.json, `episode_seconds`) and a head-camera image about 0.5 ms on the
+  physics takes 0.4–2.1 ms per control step (facts.json, `episode_seconds`) and a head-camera image about 0.5 ms on the
   sidecar's GPU, against a 20 ms step. A service that falls behind runs the missed steps back to back; more than
   0.5 s behind, it drops the debt (a stall) instead of fast-forwarding the robot.
 - **Crashes.** A simulator crash is an infrastructure failure, not the agent's (owner, 2026-10-08): past
@@ -133,7 +133,7 @@ that reads proprioception and streams targets at the control rate through the cl
 `cameras=[]` costs a few ms over the shared network namespace), run in the background, and improved between episodes.
 The agent's code still runs only in its own container, never next to the simulator (standard mode's isolation is
 kept); the 50 resets are what make that loop of writing, running and revising a controller possible at all, which is
-why the realtime mode defaults to 50 resets rather than D1's 0.
+why HumanoidBench's standard-realtime tasks default to 50 resets rather than the mode's 0 (D1, PROTOCOL §4.5 and §4b).
 
 World-frame information (PROTOCOL D7): privileged mode gives the full state; standard mode gives none -- no root pose,
 no object or target pose; the room camera's pose is given in the robot's starting frame.
@@ -145,6 +145,26 @@ no object or target pose; the room camera's pose is given in the robot's startin
 | joint angles and velocities; pelvis IMU: gyro, gravity direction | any object's or target's pose |
 | `spec()`: servo ranges, joint axes and positions, link masses and centres of mass, feet boxes, IMU and camera frames, 50 Hz, the episode length (1000 control steps; 500 for cube), budget | contact forces, the simulator itself |
 
+## Physics: fixes to upstream (image 0.2.0)
+
+Rewards, success bars and terminations are upstream's; the physics is fixed where it was measurably wrong (the image
+build fails unless each fix holds).
+
+| scope | upstream bug | fix | measured |
+|---|---|---|---|
+| every task | MuJoCo 3.1.6 collides general convex shapes (mesh, cylinder) through libccd's MPR, which now and then reports a depth and normal unrelated to the geometry | MuJoCo 3.3.7 (native convex collision) and the matching dm_control's array-size table | hip self-contact normal off > 20° in 64% of 1008 logged contacts (up to 66°, kN forces) → p90 0.6°; forearm-door depth over-reported by up to 98 mm → never; flat ground statistically unchanged |
+| `balance_hard` (and `stair`, `balance_simple`, not shipped; `h1` and `h1hand`) | a mesh foot on a box gets one contact point: on 3.1.6 wrong depths (a robot with every joint locked slid off a stair tread in 9 of 10 placements), on 3.3.7 it never comes to rest | feet = four boxes that follow the hull, sole exact (`box_feet.py`) | locked robot on 9 stair placements: still (< 1 mm/s); foot-box depth exact in all 75,406 contacts of our logged episodes |
+| `room` | the reset loops over 7 objects in a scene of 6 and writes the 7th's x/y into the right little finger (1.4 kN on its own fingertip); headphones and a package start 5-8 cm inside the floor | write the 6 objects only (same draws, same placement); lift objects onto the floor (`upstream-fixes.patch`) | finger in range, no self-contact; objects on the floor |
+| `powerlift` | the plates' `density="500"` sits on geoms whose class sets `mass="0"`, so it never applied | the density on the visual plates (`upstream-fixes.patch`) | dumbbell 104.0 kg → 53.7 kg |
+
+Results on image 0.1.6 or earlier are other physics and are reported apart; none is comparable with the paper's
+numbers. The instances were drawn on MuJoCo 3.1.6 and load identically on 0.2.0, room's redrawn with its fix
+(`scripts/humanoidbench/README.md`). Known and not fixed: masses where upstream set no density (room's packages 24 and 40 kg) or chose one (the door, 160 kg at
+`density="600"`), the ±0.01 start noise on every `qpos` (feet start up to 18 mm in the floor), `sit_simple`'s chair box
+overlapping the heels by 19 mm (its mesh feet touch that box; it is a fixture), and `hurdle`'s hurdles, which upstream draws
+without collision geometry and its reward never reads (the robot runs through them; the task text says so since
+2026-10-08).
+
 ## Answer-key leakage
 
 A dense reward is the answer key: with it the task is to invert an expression, not to control a robot. So the image has
@@ -154,7 +174,7 @@ or `environment/sim/` (standard) -- and is patched back there (`shared/rcb_rewar
 reaches the model APIs and nothing else (`[agent]` allowlist, `scripts/set_agent_egress.py`), so it cannot fetch the
 public upstream back; instructions describe the scoring in words, with no tolerance or weight
 (`scripts/humanoidbench/subset.toml`, "HOW TO WRITE scoring_note"; `gen_tasks.py check` looks for formula fragments).
-Known gaps: the 0.1.6 image still holds `_WALK_SPEED` and `_RUN_SPEED`, which a class body references (the move
+Known gaps: the image still holds `_WALK_SPEED` and `_RUN_SPEED`, which a class body references (the move
 term's bound for walk, stair and hurdle; the instructions give the same order of magnitude), and a native agent holds
 its model-API key in its container, so it could call a search-enabled model through the allowed host.
 
@@ -163,8 +183,8 @@ its model-API key in its container, so it could call a search-enabled model thro
 ```bash
 harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-hurdle-i00-standard
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
-harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-walk-i00-realtime
-harbor run -p tasks/humanoidbench-loco-sit-simple-i00-realtime -a oracle   # streams the same 999 rows
+harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-walk-i00-standard-realtime
+harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard-realtime -a oracle   # streams the same 999 rows
 ```
 `codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
 `codex-gpt6_luna-medium`). Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
@@ -178,6 +198,6 @@ Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (ve
 `reward.json`, the replay's last frame and videos are published on the results site, keyed by run id. Standard-mode
 results state their reset budget: the standard configuration is 50 resets (since 2026-10-07); runs with 0 -- every
 HumanoidBench standard-mode run recorded before that date -- are reported separately, and runs recorded before
-protocol v1.0 are marked as such. Realtime results (`-realtime`) are their own mode and are never pooled with
+protocol v1.0 are marked as such. Standard-realtime results (`-standard-realtime`) are their own mode and are never pooled with
 standard ones; they state the reset budget and `slowdown`. Official runs use `slowdown` 1 (the default); results
 with `RCB_SLOWDOWN` ≠ 1 are reported separately from them (PROTOCOL §4b).

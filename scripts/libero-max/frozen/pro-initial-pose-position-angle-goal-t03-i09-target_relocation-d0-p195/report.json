@@ -1,0 +1,119 @@
+{
+ "case_id": "pro-initial-pose-position-angle-goal-t03-i09-target_relocation-d0-p195",
+ "event": "target_relocation",
+ "suite": "libero_goal",
+ "language": "Open the top layer of the drawer and put the bowl inside",
+ "goal": [
+  [
+   "in",
+   "akita_black_bowl_1",
+   "wooden_cabinet_1_top_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "1acda49848e52cd6dbb8edba6654a4540b2fcb44e83cf9b17419be3ec779aee8",
+ "robot_base": {
+  "pos": [
+   -0.66,
+   0.0,
+   0.912
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "open",
+    "wooden_cabinet_1_top_region"
+   ],
+   [
+    "in",
+    "akita_black_bowl_1",
+    "wooden_cabinet_1_top_region"
+   ]
+  ],
+  "trace": [
+   "27:open: above",
+   "38:open: at handle eef=[0.003, 0.004, 0.023]",
+   "69:open: pulled q=-0.161",
+   "83:wooden_cabinet_1_top_region:opened q=-0.159",
+   "247:pick akita_black_bowl_1:retreat failed goal=[0.059, -0.043, 1.296] eef=[0.059, -0.043, 1.196] obj c=[0.039, -0.083, 1.115] half=[0.054, 0.054, 0.025] top=1.150 fingers=1.05 contacts=[]",
+   "247:akita_black_bowl_1:placed"
+  ],
+  "phase": "akita_black_bowl_1:placed"
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 247,
+  "event_fired": true,
+  "event_step": 101,
+  "steps_left": 53,
+  "state_sha": "10545324b42e57a21c25721047bb644df3ac18b81e754ed7676d0f1345f339ae",
+  "initial_state_sha": "1acda49848e52cd6dbb8edba6654a4540b2fcb44e83cf9b17419be3ec779aee8"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 247,
+   "event_fired": true,
+   "event_step": 101,
+   "steps_left": 53,
+   "state_sha": "10545324b42e57a21c25721047bb644df3ac18b81e754ed7676d0f1345f339ae",
+   "initial_state_sha": "1acda49848e52cd6dbb8edba6654a4540b2fcb44e83cf9b17419be3ec779aee8"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 247,
+   "event_fired": true,
+   "event_step": 101,
+   "steps_left": 53,
+   "state_sha": "10545324b42e57a21c25721047bb644df3ac18b81e754ed7676d0f1345f339ae",
+   "initial_state_sha": "1acda49848e52cd6dbb8edba6654a4540b2fcb44e83cf9b17419be3ec779aee8"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}
