@@ -1,0 +1,14 @@
+{
+ "task_text": "Load a second 1.5 mL tube into the centrifuge's rotor, into the slot diametrically opposite the tube that is already in it (the rotor has 30 slots). The tube to load stands in the plate on the bench. Success the moment the tube is seated in that slot: within 5 mm of its seated position.",
+ "default_cameras": [
+  "table_cam_front",
+  "wrist_cam"
+ ],
+ "static": {
+  "inventory": [
+   "centrifuge (Eppendorf 5430 model), lid open, with a 30-slot rotor",
+   "two 1.5 mL tubes with screw caps (one in the rotor, one in the plate)",
+   "60-well plate, blue"
+  ]
+ }
+}

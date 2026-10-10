@@ -1,0 +1,42 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-autobio:<images/autobio/VERSION> is not pushed to a registry (docs/PROTOCOL.md §2.4,
+D5). Every evaluation host builds it locally; the AutoBio tasks reference that tag and Harbor finds it in the local
+Docker image store.
+
+Why
+  AutoBio's repository (github.com/autobio-bench/AutoBio, one commit, 0850421, 2025-05-28, "Preliminary version of
+  AutoBio") has no LICENSE file and no licence statement for its code or for its own assets: the digitized instruments,
+  tubes, racks and pipette, and two binaries without source (libmjlab.so.3.3.0, the thread and detent MuJoCo plugins,
+  and meshplane.so, the liquid-surface solver). The robot models it bundles keep their own licences (UR5e and Robotiq
+  2F-85: BSD, ROS-Industrial; ALOHA 2: BSD, Trossen Robotics; DexHand021: Apache-2.0; the display font: SIL OFL). The
+  "CC BY-NC-SA 4.0" on the paper's arXiv page is the paper's own licence; the recorded demonstrations on Hugging Face
+  (huggingface.co/autobio-bench) are tagged MIT, which covers those datasets, not the simulator. Without a licence
+  nothing gives us the right to redistribute the code or the assets, so:
+  - the image is built on each host from AutoBio's own public repository and never published;
+  - this repository contains none of AutoBio's files: the tasks' tooling imports AutoBio from the image, the frozen
+    instances are seeds and state hashes, and the reference solutions are control sequences recorded by running
+    AutoBio's experts (data produced by the program, like the authors' MIT-tagged datasets).
+  A licence from the authors that allows redistribution would let a maintainer delete this file; nothing else changes.
+
+What the builder accepts
+  Using AutoBio's unlicensed code and assets for research evaluation on their own machine, the licences of the robot
+  models and the font bundled with it (assets/robot/*/LICENSE, assets/common/font/LICENSE in the checkout), MuJoCo's
+  Apache-2.0 licence, and the licences of the pinned pip packages (images/autobio/requirements.txt). No account, key
+  or token is needed.
+
+Data
+  None beyond the image: the assets come with the clone (75 MB); nothing is mounted at run time. The frozen task
+  instances live in the task directories.
+
+Host
+  Linux x86_64 and Docker. No GPU: MuJoCo physics and OSMesa rendering on the CPU. Build: ~3 GB of free disk, network
+  access to github.com and pypi.org, a few minutes. Run: ~1 GB of RAM per simulator process.
+
+Build (from the repository root)
+  docker build -f images/autobio/Dockerfile -t ghcr.io/mll-lab-nu/eai-autobio:$(cat images/autobio/VERSION) .
+
+Check a build
+  Every load of a task checks the hashes of the compiled model and of the initial state in its instance.json and
+  refuses to grade if either differs, so a build whose physics differs shows up as grader_error, never as a silent
+  change. To check one task: harbor run -p tasks/autobio-pickup-i00-privileged -a oracle
+  That the experts are gone: docker run --rm <image> python - <<< "import os; os.chdir('/opt/AutoBio/autobio');
+  import pickup_centrifuge_tube as m; print(hasattr(m.Pickup, 'Expert'))" prints False.
