@@ -9,7 +9,7 @@
 | tasks | `tasks/robocasa365-<task>-i00-privileged` and `tasks/robocasa365-<task>-i00-standard`, 50 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"` (to be added to TAXONOMY), `family = "robocasa365/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
-| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` as in the HumanoidBench tasks |
+| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
 | generator | `scripts/robocasa365/` (`select_instances.py`, `import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
 
 ## Scope and selection rule
@@ -55,7 +55,9 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
   are hidden.
 
 ## Standard-mode service
-`images/robocasa365/standard/server_casa.py`, the same service as RoboCasa's (`docs/benchmarks/robocasa.md`).
+`images/robocasa365/standard/server_casa.py` and the collect hook `scripts/robocasa365/shared/finalize.sh`, the same
+service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: verdict final before the video, the
+hook's budget, request validation).
 
 ## Egress
 The demonstrations are public, so `task.toml` closes agent egress to the model APIs. The image contains no
