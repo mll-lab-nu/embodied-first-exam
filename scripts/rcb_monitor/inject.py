@@ -9,10 +9,13 @@ What it writes (every generated line ends in `# rcb-monitor`, or sits between th
 - environment/docker-compose.yaml (created when the task had none):
   - the `rcb_monitor` service (pid: host, cgroup: host, network_mode: none, CAP_SYS_PTRACE, the task's GPU reservation,
     its code read-only, RCB_LIMITS_ENFORCE from the run-time environment, default 0);
-  - the beacon volumes: `rcb_limits` read-only at /run/rcb-limits in every service the limits bind (privileged: all;
-    standard modes: main), `rcb_observe` at /run/rcb-observe in the ones only recorded (standard: the simulator sidecar);
+  - the beacon volumes: `rcb_limits` read-only at /run/rcb-limits in every service the limits bind (kind_of: main, and
+    in privileged mode every service the agent drives), `rcb_observe` at /run/rcb-observe in the ones only recorded
+    (the benchmark's own services: the simulator sidecar of standard modes, RoboPaint's privileged `scorer`);
   - the caps (`[metadata.resources.caps]`): pids_limit on main (Harbor writes main's cpus and memory from
-    [environment]); cpus, mem_limit and pids_limit on every other service, unless the service sets one itself.
+    [environment]; scripts/task_conventions.py sets [environment].memory_mb to caps.main.memory_gb); cpus, mem_limit and
+    pids_limit on every other service, unless the service sets one itself (ci_checks/check-resources.py then requires
+    the declared cap to be that value).
 - task.toml: the record as an artifact of service rcb_monitor, the first `[[verifier.collect]]` hook (seals the record
   before any other sidecar ends the episode), `[verifier.env] RCB_LIMITS_ENFORCE`.
 - tests/: rcb_limits.py and rcb_limits.json (the verifier's own copies), a COPY of both in tests/Dockerfile, and a
@@ -45,6 +48,9 @@ TRAP = ("trap 'p=$(command -v python3 || command -v python); \"$p\" /tests/rcb_l
 DOCKER_COPY = "# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) " + MARK + "\n" \
     "COPY rcb_limits.py rcb_limits.json /tests/"
 SIDECAR_MODES = ("standard", "standard-realtime")
+# Privileged mode: compose services that are the benchmark's own, not the agent's to drive (it cannot start, stop or
+# size them): recorded, never part of the scope the limits bind. Today RoboPaint's scoring service.
+BENCHMARK_SERVICES = ("scorer",)
 MONITOR_CAPS = {"cpus": 0.5, "mem": "256m", "pids": 64}
 
 
@@ -58,6 +64,17 @@ def mode_of(task: Path) -> str:
         if task.name.endswith("-" + m):
             return m
     raise ValueError(task.name)
+
+
+def kind_of(mode: str, name: str) -> str:
+    """"scope": the limits bind the service; "observe": it is recorded only (PROTOCOL §2.10). The agent's container
+    always counts. In standard modes every other service is the benchmark's (the simulator sidecar); in privileged mode
+    the agent drives the simulators itself, so every service counts except the benchmark's own (BENCHMARK_SERVICES)."""
+    if name == "main":
+        return "scope"
+    if mode in SIDECAR_MODES or name in BENCHMARK_SERVICES:
+        return "observe"
+    return "scope"
 
 
 def write_if_changed(p: Path, s: str | bytes) -> None:
@@ -81,6 +98,8 @@ def limits_json(task: Path, cfg: dict, gpu: bool) -> dict | None:
     out.setdefault("sustain_sec", 60.0)
     out.setdefault("window_sec", 2 * float(out["sustain_sec"]))
     out["caps"] = caps_of(task, cfg)
+    # the services the limits bind (the monitor sums their memory caps where it must stand in for the kernel's)
+    out["scope_services"] = [n for n in out["caps"] if n != "*" and kind_of(out["mode"], n) == "scope"]
     # gpu: NVML must work (a fatal record otherwise) when the limits count GPU memory
     out.update(tick_sec=TICK, disk_tick_sec=DISK_TICK, gpu=bool(gpu and float(out.get("max_gpu_memory_gb") or 0) > 0))
     return out
@@ -146,6 +165,40 @@ def has_key(lines: list[str], k0: int, k1: int, key: str) -> int | None:
     return None
 
 
+def service_names(text: str) -> list[str]:
+    """The compose services of a file, in order (a service line may end in a comment; other top-level tables' entries,
+    e.g. named volumes, are not services)."""
+    lines = text.splitlines(keepends=True)
+    try:
+        i, j = services_span(lines)
+    except ValueError:
+        return []
+    return [name for name, _, _ in service_blocks(lines, i, j)]
+
+
+def _mem_gb(v: str) -> float:
+    """A compose byte value (`8192m`, `8g`, `1073741824`) in GiB."""
+    m = re.fullmatch(r"([0-9.]+)\s*([bkmg]?)b?", v.strip().strip("'\"").lower())
+    if not m:
+        raise ValueError(f"mem_limit {v!r}")
+    return float(m.group(1)) * {"": 1.0, "b": 1.0, "k": 2.0 ** 10, "m": 2.0 ** 20, "g": 2.0 ** 30}[m.group(2)] / 2.0 ** 30
+
+
+def service_caps(text: str) -> dict[str, dict]:
+    """{service: {"cpus", "memory_gb", "pids"}} as the compose file sets them (None: not set there): the caps docker
+    really applies to every service but main, whose cpus and memory come from task.toml [environment] (Harbor)."""
+    lines = text.splitlines(keepends=True)
+    i, j = services_span(lines)
+    out = {}
+    for name, k0, k1 in service_blocks(lines, i, j):
+        got = {}
+        for key, field, conv in (("cpus", "cpus", float), ("mem_limit", "memory_gb", _mem_gb), ("pids_limit", "pids", int)):
+            k = has_key(lines, k0, k1, key)
+            got[field] = None if k is None else conv(lines[k].split(":", 1)[1].split("#", 1)[0].strip().strip("'\""))
+        out[name] = got
+    return out
+
+
 def monitor_block(gpu: bool, observe: bool) -> list[str]:
     b = [BEGIN + " (resource limits monitor, docs/PROTOCOL.md §2.10; generated by scripts/rcb_monitor/inject.py)",
          "  rcb_monitor:",
@@ -203,7 +256,7 @@ def render_compose(text: str | None, mode: str, caps: dict) -> str:
     observe_any = False
     # edit the blocks bottom-up, so earlier indices stay valid
     for name, k0, k1 in reversed(blocks):
-        kind = "scope" if mode not in SIDECAR_MODES or name == "main" else "observe"
+        kind = kind_of(mode, name)
         observe_any |= kind == "observe"
         beacon = "rcb_limits:/run/rcb-limits:ro" if kind == "scope" else "rcb_observe:/run/rcb-observe:ro"
         present = {key for key in ("cpus", "mem_limit", "pids_limit") if has_key(lines, k0, k1, key) is not None}

@@ -1,4 +1,4 @@
-# Robot Coding Bench — Task Protocol v1.1.5
+# Robot Coding Bench — Task Protocol v1.2-rc
 
 Status: **final** (2026-09-30; v1.0.1 2026-10-01: both modes carry a suffix, no results in the repository, standard
 task README; **v1.1 2026-10-08: a third mode (§4b), served by `eai-standard/2.3`; protocol-change issue #86; v1.1.1 2026-10-08: the third mode is named
@@ -8,7 +8,9 @@ default to a reset budget of 10, a per-benchmark exception (§4.5), #116; v1.1.4
 minimum compute it runs on, `[metadata.resources]` and a README section (§2.9), owner request (board 0061); v1.1.5
 2026-10-10: every task declares resource limits for the agent phase and docker caps per service, and shows the limits to
 the agent in `instruction.md`; from v1.2 a task-provided monitor and the verifier judge them inside the trial, and with
-`RCB_LIMITS_ENFORCE=1` a violation fails the trial (§2.10), owner request (board 0064)**).
+`RCB_LIMITS_ENFORCE=1` a violation fails the trial (§2.10), owner request (board 0064); v1.2-rc 2026-10-10: the monitor
+sidecar, the caps and the verifier step are in every task (#131; review fixes of board 0067, §7), enforcement off by
+default; v1.2 becomes final when the calibration batch has confirmed the limits**).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard mode is specified in
 [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`, and the standard-realtime mode's `eai-standard/2.3`);
 its 2.2 extension in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md), and the 2.4 operations capability in
@@ -197,8 +199,9 @@ Harbor builds the task images locally from the task directory on every run; only
 | `infra_error` | MUST (standard) / MAY | infrastructure failure, not the agent's |
 | `sim_error` | SHOULD (standard) | the episode ended with a simulator error (`reason = "error"`, §4.6) |
 | `grader_error`, `missing_trajectory` / `missing_log` | SHOULD | diagnosable failure modes |
-| `resource_enforced`, `limits_violation_observed`, `peak_gpu_memory_gb`, `peak_memory_gb`, `peak_processes`, `peak_disk_gb`, `resource_monitor_missing` | MUST (from v1.2) | the monitor's mode (`RCB_LIMITS_ENFORCE`), whether a limit was exceeded, the scope's peaks, a missing record (§2.10) |
+| `resource_enforced`, `limits_violation_observed`, `peak_gpu_memory_gb`, `peak_memory_gb`, `peak_processes`, `peak_disk_gb`, `resource_monitor_missing`, `resource_emergency_kills` | MUST (from v1.2) | the monitor's mode (`RCB_LIMITS_ENFORCE`), whether a limit was exceeded (`over_<metric> = 1` for each), the scope's peaks, a missing or unusable record, the processes the monitor killed to protect the host (§2.10). Written by the verifier step in `tests/test.sh`'s exit trap: a verifier killed at its timeout leaves them out, and such a trial has no verdict anyway |
 | `resource_limit_exceeded`, `success_before_limits` | MUST (from v1.2, enforcement on) | 1 iff an enforced limit was exceeded, then `success = 0`; the grader's verdict before it (§2.10) |
+| `resource_switch_error`, `resource_step_error` | MUST (from v1.2, when it happens) | `RCB_LIMITS_ENFORCE` was neither `0`/`1`/`true`/`false` (then `infra_error = 1`); the verifier's resource step itself failed (then `resource_monitor_missing = 1`, and `infra_error = 1` when enforcement was asked for) (§2.10) |
 | `n_actions`, `sim_steps` (or `control_steps`), `video_rendered` | SHOULD | size of the deliverable, simulation cost, video present |
 | `final_reward`, `progress`, `live_success`, `replay_success`, `live_video`, `live_frames`, `sim_startups`, `finalized`, `elapsed_s`, `agent_*` | MAY | when the concept exists |
 
@@ -229,7 +232,7 @@ example → nop result → predicate summary*. The reviewer checks:
 ### 2.8 Identity and immutability
 | Item | Level | Basis |
 |---|---|---|
-| Listed in `tasks/dataset.toml` (re-run `harbor add --scan` after any change) | MUST | [CI] |
+| Listed in `tasks/dataset.toml` with the digest of its current files (re-run `cd tasks && harbor add --scan .` after any change; `ci_checks/check-dataset-manifest.sh` recomputes every digest) | MUST | [CI] |
 | A published task's `environment/` and `tests/` inputs are immutable; a change is a new task | MUST | [current] |
 | Fixes to existing tasks add a Change Log entry to the task README with before/after runs | SHOULD | [new] |
 
@@ -279,7 +282,7 @@ every generator runs). A task that no rule matches keeps the block its generator
 its rule in its shared-files pull request (D6), or its generator writes the block itself. `ci_checks/check-resources.py`
 checks the fields, the consistency rules above and the README.
 
-### 2.10 Resource limits (v1.1.5; enforced from v1.2)
+### 2.10 Resource limits (v1.1.5; judged inside the trial from v1.2)
 
 A trial must not take more than its share of the machine: an agent that starts extra simulators until the GPU runs out of
 memory, fills the disk, or forks without end harms every other trial on the host. Every task therefore states **limits**,
@@ -293,7 +296,7 @@ GiB (`memory_mb / 1024`, `nvidia-smi` MiB / 1024).
 | `[metadata.resources.limits]` and `[metadata.resources.caps]` with every field below | MUST | [CI] (v1.1.5) |
 | `scope = "trial"` in privileged mode, `"agent"` in standard and standard-realtime modes | MUST | [CI] |
 | `instruction.md` ends with `## Resource limits`, equal to what `scripts/task_conventions.py` renders from the limits and `[environment].cpus` | MUST | [CI] |
-| Relations: memory `min ≤ limit` (scope trial) and GPU memory `min ≤ limit` (scope trial), `max_gpu_memory_gb > 0` only where the limited containers have a GPU; `trial_max_* ≥ min_*` and `≥` the limit (scope trial: equal); the scope's memory caps `≥ 1.2 × max_memory_gb` and `≥ max_memory_gb + 2`; `pids ≥ 8 × max_processes`; a cap for every compose service (cache helpers `rcb_*` aside); `caps.main.cpus = [environment].cpus`, `caps.main.memory_gb ≥ [environment].memory_mb / 1024`; scope agent: `max_memory_gb ≤ [environment].memory_mb / 1024` | MUST | [CI] |
+| Relations: memory `min ≤ limit` (scope trial) and GPU memory `min ≤ limit` (scope trial), `max_gpu_memory_gb > 0` only where the limited containers have a GPU; `trial_max_* ≥ min_*` and `≥` the limit (scope trial: equal, unless the task has a benchmark-owned, observe-only service); the scope's memory caps `≥ 1.2 × max_memory_gb` and `≥ max_memory_gb + 2`; `pids ≥ 8 × max_processes` for the services the limits bind; a cap for every compose service (cache helpers `rcb_*` aside); every declared cap is the cap docker applies: `caps.main.cpus = [environment].cpus`, `caps.main.memory_gb = [environment].memory_mb / 1024` (Harbor writes main's caps from `[environment]`), every other value equals the compose file's `cpus` / `mem_limit` / `pids_limit` of that service, and the relations are checked on those applied values; scope agent: `max_memory_gb ≤ [environment].memory_mb / 1024` | MUST | [CI] |
 | `measured` says what the values rest on; limits sit with a generous margin above measured peaks (e.g. `max(1.5 × peak, peak + 4 GiB)`), so that no past normal trial exceeds them; values without data say so | MUST / SHOULD | [new] |
 | The oracle passes within the limits | MUST | from v1.2 (checked by the calibration batch) |
 | Enforcement inside the Harbor trial (below): caps on every service, the monitor sidecar, the verifier's check, the switch | MUST | from v1.2 |
@@ -303,30 +306,51 @@ GiB (`memory_mb / 1024`, `nvidia-smi` MiB / 1024).
 
 | Field | Type | Meaning |
 |---|---|---|
-| `scope` | string | whom the limits bind: `"trial"` = every container of the trial except the monitor (privileged: the agent drives the simulators itself, so their use is the agent's; RoboPaint's `scorer` included); `"agent"` = the agent's container (`main`) only (standard modes: the `sim` sidecar is the benchmark's service, outside the agent's control; it is recorded, never a failure) |
+| `scope` | string | whom the limits bind: `"trial"` = every container the agent drives (privileged: `main` and any service it starts or controls; the agent drives the simulators itself, so their use is the agent's). A service that is the benchmark's own and outside the agent's control (today RoboPaint's `scorer`; the list is `BENCHMARK_SERVICES` in `scripts/rcb_monitor/inject.py`) is observed and recorded only, like the monitor never part of the scope; `"agent"` = the agent's container (`main`) only (standard modes: the `sim` sidecar is the benchmark's service, outside the agent's control; it is recorded, never a failure) |
 | `max_gpu_memory_gb` | float | GPU memory of the scope's processes, summed (NVML per process, compute and graphics; what a process reserves counts, e.g. JAX's preallocation); 0 = the scope has no GPU |
 | `max_memory_gb` | float | memory of the scope's containers, summed (cgroup `anon + shmem`; without a cgroup, PSS) |
-| `max_processes` | int | processes (thread groups, not threads; zombies count) in the scope |
-| `max_disk_gb` | float | growth of the files under `disk_paths` in the agent's container since the monitor first saw it |
-| `disk_paths`, `disk_exclude` | list of strings | absolute paths measured / skipped (today `["/app", "/tmp", "/root"]` / `[]`) |
-| `sustain_sec`, `window_sec` | float | a violation: above a limit for at least `sustain_sec` in total within any `window_sec` (60 / 120 s); disk: two samples in a row; gaps in the record never count against the agent |
-| `trial_max_gpu_memory_gb`, `trial_max_memory_gb` | float | expected peak of the whole trial, every container (sidecars too), declared in both modes for schedulers; not a failure condition |
+| `max_processes` | int | processes (thread groups, not threads) in the scope; a zombie counts in its parent's container, a process whose first thread has exited counts like any other |
+| `max_disk_gb` | float | growth of the files under `disk_paths` in the agent's container since the baseline: the monitor's first complete measurement after it first saw the container, i.e. before the harness installs the agent, so that install (a few hundred MB under `/root`) counts and the limits leave room for it |
+| `disk_paths`, `disk_exclude` | list of strings | absolute paths measured / skipped (today `["/app", "/tmp", "/root"]` / `[]`). Only these are measured: files written elsewhere in the container (`/opt`, `/var`, …) and other mounts are not counted; `/dev/shm` is memory (`shmem`) |
+| `sustain_sec`, `window_sec` | float | a violation: above a limit for at least `sustain_sec` in total within any `window_sec` (60 / 120 s); disk: two measurements in a row; gaps in the record never count against the agent |
+| `trial_max_gpu_memory_gb`, `trial_max_memory_gb` | float | expected peak of the whole trial, every container (sidecars and benchmark-owned services too), declared in both modes for schedulers; not a failure condition |
 | `measured` | string | provenance of the limits |
 
 `[metadata.resources.caps]`: one inline table per compose service, `{ cpus, memory_gb, pids }`, the docker caps
 (`cpus`, `mem_limit`, `pids_limit`) the v1.2 compose files apply; `main`'s CPU and memory caps are Harbor's
-`[environment]` values (v1.2 raises `memory_mb` to `caps.main.memory_gb`). CPU is never a limit, only a cap: it throttles
-and is stated in the paragraph. An out-of-memory kill of a container in scope is a violation.
+`[environment]` values, so `scripts/task_conventions.py` sets `[environment].memory_mb = caps.main.memory_gb × 1024`
+(v1.2: the kernel's cap sits above the limit, so that the monitor sees a violation before the OOM killer acts; a
+scheduler sizes a trial by §2.9's minimums and `trial_max_*`, not by this cap). A service that sets a cap itself keeps
+it, and the declared value is that one. CPU is never a limit, only a cap: it throttles and is stated in the paragraph.
+An out-of-memory kill by the kernel in a container in scope is a violation.
 
 **The switch.** `RCB_LIMITS_ENFORCE`, a run-time environment variable read by the monitor service (compose default
-`${RCB_LIMITS_ENFORCE:-0}`, so turning it on does not change the task digest):
-- `1` (hard): once the monitor confirms a violation, it kills the scope's processes in the agent's container (not its
-  PID 1) and the verifier fails the trial: `reward.txt` = 0, `success = 0`, `success_before_limits` = the grader's verdict,
+`${RCB_LIMITS_ENFORCE:-0}`, so turning it on does not change the task digest); `1` / `true` or `0` / `false`:
+- `1` (hard): once the monitor confirms a violation, it kills the scope's processes (not the containers' PID 1) and the
+  verifier fails the trial: `reward.txt` = 0, `success = 0`, `success_before_limits` = the grader's verdict,
   `resource_limit_exceeded = 1`; never retried.
-- `0` (default): the monitor observes and records only; the verifier reports the peaks and any violation
-  (`limits_violation_observed = 1`, details in `/logs/verifier/resource_limits.json`) and does not change the verdict.
+- `0` (default): the monitor observes and records only, and kills nothing; the verifier reports the peaks and any
+  violation (`limits_violation_observed = 1`, details in `/logs/verifier/resource_limits.json`) and does not change the
+  verdict. A missing or unusable record is then only reported (`resource_monitor_missing = 1`), not an infrastructure
+  error (owner: off means observe only), so a host whose runtime cannot run the monitor still produces results.
+- any other value is an error, never a silent "off": the monitor kills nothing and records a fatal event, and the
+  verifier reports `infra_error = 1`, `resource_switch_error = 1` (not a result).
 
 The monitor writes the mode it ran in into its record; the verifier takes it from there (`resource_enforced`).
+
+**What fails a trial** (enforcement on) is exactly: a limit exceeded for `sustain_sec` within `window_sec` (disk: two
+measurements in a row), or a kernel out-of-memory kill in the scope. Nothing else does, and nothing another trial does
+on the same host or card can.
+
+**Host protection** (enforcement on only). Two immediate actions keep a runaway trial from harming the machine before
+the sustained rule can act. Each is an `emergency_kill` event in the record, counted in `resource_emergency_kills`,
+shown to the agent in `usage.json`, and **never a violation by itself**: the trial goes on and fails only by the rule
+above. Both compare the trial's own use with its own declared values, never with the state of a card or host it shares.
+- GPU memory of the scope above 1.5 × `max_gpu_memory_gb` at one sample: the monitor kills the scope's process that
+  holds the most GPU memory (e.g. a JAX process that preallocated most of a large card; the agent can start it again
+  with a smaller reservation). The paragraph says so.
+- Where the container runtime applies no kernel memory cap (rootless podman without cgroups), the monitor stands in for
+  it: when the scope's memory exceeds the sum of its declared memory caps, it kills the scope's largest process.
 
 **Enforcement (required from v1.2).** Violations are judged by the Harbor trial itself, inside the task, so that every
 harness that runs the task applies the same rule, not by a scheduler or resource pool outside it. A trial that a pool
@@ -334,13 +358,25 @@ kills to protect its host is an operations abort (`killed_by_pool`, infrastructu
 - docker caps on every compose service (`[metadata.resources.caps]`);
 - a monitor sidecar `rcb_monitor`, provided by the task and outside the agent's container, samples GPU memory, memory,
   processes, disk and out-of-memory kills of the scope every few seconds into its own record (format `rcb-monitor/1`),
-  which the agent can neither reach nor alter, and seals it in the first collect hook;
+  which the agent can neither reach nor alter, and seals it in the first collect hook. It writes the current values to
+  `/run/rcb-limits/usage.json` in the agent's container;
 - the verifier recomputes violations from the raw samples with its own copy of the limits (`tests/`), writes the
-  `reward.json` fields of §2.6 and `/logs/verifier/resource_limits.json`; a missing, unsealed or fatal record is an
-  infrastructure error (`infra_error = 1`, `resource_monitor_missing = 1`).
+  `reward.json` fields of §2.6 and `/logs/verifier/resource_limits.json`. A missing, unsealed, fatal or mostly empty
+  record is reported as `resource_monitor_missing = 1`; with enforcement on it is also an infrastructure error
+  (`infra_error = 1`, not a result), with enforcement off it changes nothing else.
 
-v1.1.5 declares the limits and shows them to the agent; nothing judges them before v1.2, and the paragraph says
-"from protocol v1.2 on". The values live in `scripts/task_resources.toml` (`[[limit]]` and `[[cap]]` rules, matched like
+What the record can and cannot say:
+- gaps never count against the agent; more than 10 % of the agent phase unobserved makes the record unusable;
+- disk: only a complete walk of `disk_paths` is a measurement and only such a walk sets the baseline (kept across a
+  restart of the monitor). A walk that cannot finish (the container went away, or the tree is too large to read in
+  5 minutes) is a gap (`disk_partial` event); its partial sum is a lower bound, which can show that the limit is
+  exceeded but never that it is not;
+- GPU memory: when NVML does not report the per-process memory of processes in scope (MIG, vGPU), the sample is marked
+  `gpu_unmeasured`, never counted as a silent 0; more than 10 % such samples on a task with a GPU limit make the record
+  unusable (the GPU limit was not measured).
+
+v1.1.5 declared the limits and showed them to the agent; v1.2 judges them, and the paragraph says "from protocol v1.2
+on". The values live in `scripts/task_resources.toml` (`[[limit]]` and `[[cap]]` rules, matched like
 the minimums' `[[rule]]`s, with the derivation) and are written by `scripts/task_conventions.py`, which also renders the
 paragraph and a line of the README's `## Compute resources`; `ci_checks/check-resources.py` checks them.
 
@@ -352,8 +388,13 @@ only (the simulator in the `sim` service is the benchmark's and does not count)"
 > memory**, **24 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU
 > memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may
 > be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process
-> killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 8 cores for
-> your container; the cap only slows you down.
+> killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your
+> container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on
+> and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to
+> protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only
+> slows you down.
+
+(The sentence about 1.5 times the GPU-memory limit is rendered only where the limits include GPU memory.)
 
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 
@@ -385,7 +426,7 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 | rcb-limited/2.1 | 2026-09-27 | 82-column proprioception, optional depth noise; crash recovery added 2026-09-29 (no version bump) |
 | **eai-standard/2.1** | 2026-09-30 | rename only; identical to rcb-limited/2.1 including crash recovery. **Current.** |
 | eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md)) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, LabUtopia and AutoBio |
-| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench); standard tasks stay on 2.1 / 2.2. Issue #86 |
+| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md)): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
 Standard services report `eai-standard/2.1`, `eai-standard/2.2` or `eai-standard/2.4`, standard-realtime services `eai-standard/2.3`; the shipped clients
@@ -486,6 +527,7 @@ results must state the reset budget and are compared only with results under the
 | Item | Level | Basis |
 |---|---|---|
 | The sidecar writes `/data/episode.jsonl`, `/data/trajectory.npz` and `/data/final.json` (with `finalized`) | MUST | [current] |
+| The replay's verdict (`replay_success`, `deterministic`) is in `final.json` before any video is rendered, and stands from then on: a video never decides, delays or voids a verdict (a service restarted while rendering loses only the video) | SHOULD | [new] (2026-10-10: the `rcb_service` family, the MuJoCo and MetaWorld+ services; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md)) |
 | `/data/calls/NNNNNN/`, `replay.mp4`, `replay.last.png` | SHOULD | [current] |
 | `artifacts` declares the evidence from `service = "sim"` and keeps `"/app/output/"` | MUST | [current] |
 | `[[verifier.collect]]` waits for `server.pid`, sends SIGUSR1, waits for `finalized` | MUST | [current] |
@@ -620,7 +662,8 @@ Open:
 2. Pinned pip versions in the standard-mode client image and the MuJoCo image; one digest-pinned client image.
 3. The results pipeline publishes to the results site, and applies the token budget after the run for runs without the
    usage gateway (with it, the budget is enforced during the run, §5).
-4. Solvability: tasks whose `oracle_evidence` is "none known" (38 privileged/standard directories) and the 15
+4. Solvability: tasks whose `oracle_evidence` is "none known" (18 directories on 2026-10-10: six HumanoidBench
+   families in their three modes; KinDER's tasks all name a passing privileged trajectory since #134) and the 15
    DexToolBench `partial` pairs (whose reference policy reaches only part of the goals, so it scores 0) have no verified
    positive example. Until they get one, results report them separately from the tasks with a verified solution.
 5. Agent egress (owner, 2026-10-02: kept as it is): the per-benchmark settings stay; the harness's web search is off (§5).
@@ -630,8 +673,17 @@ Open:
    with the card (owner decision). Scenes, instances and success rules are unchanged; results obtained before stand and
    are not re-run (they carry the label "limits: none"). v1.2 (owner-approved exception to §2.8): the generators add the
    monitor sidecar, the caps and the verifier step to the `environment/` and `tests/` of every published task in one
-   migration, recorded here when it lands; RoboLab, YAMLab, ManiGuard and LabUtopia have no texture-budget knob in their
-   tooling yet, so their GPU limits rest on card-sized peaks until the calibration batch.
+   migration. It landed on 2026-10-10 (#131, v1.2-rc): every task's `environment/docker-compose.yaml` (the `rcb_monitor`
+   service, the beacon volumes, the caps), `environment/rcb_monitor/`, `task.toml` (the record as an artifact, the seal
+   hook, `[verifier.env]`), `tests/rcb_limits.py`, `tests/rcb_limits.json`, `tests/Dockerfile` and `tests/test.sh`
+   changed in place, enforcement off by default; task names, scenes, instances and success rules are unchanged and
+   earlier results stand. The review fixes of the same day (board 0067) changed the same files again and
+   `[environment].memory_mb` of the tasks whose declared cap for `main` was above it (the kernel's cap is now the
+   declared one, above the limit), the README's limits line and the prompt's paragraph (host protection), and took
+   RoboPaint's privileged `scorer` service, the benchmark's own, out of the limits' scope (recorded only; the memory
+   limit of those tasks is 16 GiB instead of 21, the whole trial's expected peak stays 21); with enforcement off none
+   of this changes a verdict. RoboLab, YAMLab, ManiGuard and LabUtopia have no texture-budget knob
+   in their tooling yet, so their GPU limits rest on card-sized peaks until the calibration batch.
    Findings: agents installed nothing and cloned nothing in 423 recorded trials; the one observed leak was the
    harness's web search (now off, §5); PyPI is not neutral (the `metaworld` wheel ships every task's scripted expert).
 

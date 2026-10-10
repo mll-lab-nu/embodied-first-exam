@@ -26,6 +26,9 @@
  "max_processes": 512,
  "mode": "standard-realtime",
  "scope": "agent",
+ "scope_services": [
+  "main"
+ ],
  "sustain_sec": 60.0,
  "task": "humanoidbench-manip-door-i00-standard-realtime",
  "tick_sec": 5,

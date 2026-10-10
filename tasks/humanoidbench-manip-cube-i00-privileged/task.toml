@@ -88,7 +88,7 @@ allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.
 build_timeout_sec = 1800.0
 # the deliverable is reachable by search; one episode is ~0.58 s of one core
 cpus = 16
-memory_mb = 16384
+memory_mb = 20480
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

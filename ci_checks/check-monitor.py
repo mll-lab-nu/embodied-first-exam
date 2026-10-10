@@ -4,6 +4,7 @@ step, wired exactly as scripts/rcb_monitor/inject.py writes them (task_conventio
 generator; this check catches a task the generator never ran on, and hand edits that break the safety properties).
 
     python3 ci_checks/check-monitor.py [task dirs]      # default: every task; also runs scripts/rcb_monitor/selftest.py
+                                                        # and test_monitor.py
 """
 import re
 import subprocess
@@ -50,11 +51,12 @@ def check(task: Path) -> list[str]:
     try:
         lines = text.splitlines(keepends=True)
         i, j = inject.services_span(lines)
-        sidecar = inject.mode_of(task) in inject.SIDECAR_MODES
+        mode = inject.mode_of(task)
         for name, k0, k1 in inject.service_blocks(lines, i, j):
             if name == "rcb_monitor":
                 continue
-            want = "rcb_limits:/run/rcb-limits:ro" if (not sidecar or name == "main") else "rcb_observe:/run/rcb-observe:ro"
+            want = ("rcb_limits:/run/rcb-limits:ro" if inject.kind_of(mode, name) == "scope"
+                    else "rcb_observe:/run/rcb-observe:ro")
             if not any(want in ln for ln in lines[k0:k1]):
                 err.append(f"service {name}: does not mount `{want}`")
             if any("/run/rcb-limits" in ln and ":ro" not in ln for ln in lines[k0:k1]):
@@ -79,10 +81,11 @@ def check(task: Path) -> list[str]:
 def main(argv):
     dirs = [Path(a) for a in argv if (Path(a) / "task.toml").is_file()] or sorted(p.parent for p in (ROOT / "tasks").glob("*/task.toml"))
     bad = 0
-    r = subprocess.run([sys.executable, str(SRC / "selftest.py")], capture_output=True, text=True)
-    if r.returncode != 0:
-        print("FAIL scripts/rcb_monitor/selftest.py:\n" + r.stdout + r.stderr)
-        bad = 1
+    for test in ("selftest.py", "test_monitor.py"):      # the violation rule and the verifier step; the monitor's own logic
+        r = subprocess.run([sys.executable, str(SRC / test)], capture_output=True, text=True)
+        if r.returncode != 0:
+            print(f"FAIL scripts/rcb_monitor/{test}:\n" + r.stdout + r.stderr)
+            bad = 1
     for d in dirs:
         for e in check(d):
             print(f"FAIL {d.name}: {e}")
