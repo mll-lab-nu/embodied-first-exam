@@ -33,6 +33,9 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
 - Compute resources (PROTOCOL §2.9): are the minimums measured (what does `measured` cite?) rather than copied from the
   `[environment]` caps? Does `gpu_class` match the simulator (Isaac Sim / Omniverse: `rtx`)? Would the oracle run on a
   machine with exactly these values?
+- Resource limits (PROTOCOL §2.10): would an honest agent stay inside them (one simulator at the task's defaults on the
+  largest card it runs on, the tooling's own replay checks, videos it is told to write)? Is the scope `trial` in
+  privileged mode and `agent` in standard modes, and does `instruction.md` end with the rendered paragraph?
 
 ## Human review (oracle `partial` or `none`)
 Review per family (same generator and predicate), at least two instances per family:

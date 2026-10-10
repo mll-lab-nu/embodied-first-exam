@@ -45,6 +45,18 @@ verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
 measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
 
+[metadata.resources.limits]
+# agent-phase limits; exceeding one fails the trial. scope: trial = every container, agent = the agent's container (docs/PROTOCOL.md §2.10)
+scope = "trial"
+max_gpu_memory_gb = 4.0
+max_memory_gb = 20.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 20.0
+
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then

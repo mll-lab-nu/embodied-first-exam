@@ -68,3 +68,6 @@ CLI equivalent of the grader:
 - Control runs at 50 Hz (10 physics substeps of 2 ms). DexJoCo's own episode cap and real-time pacing are lifted: there
   is no step budget, your wall-clock time is the limit (~350 control steps/s here). An episode ends at the
   first success or task failure; `s.step` then refuses further actions until `s.reset()`.
+
+## Resource limits
+These limits apply to the whole trial, summed over all its processes: at most **8 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. The task has no GPU. Simulators count with everything they use: end one before you start another if you would go past a limit. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

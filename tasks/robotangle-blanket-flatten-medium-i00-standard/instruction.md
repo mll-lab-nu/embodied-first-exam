@@ -118,3 +118,6 @@ the PD gains and the tool frames; `spec["world"]` the frame conventions.
 Grasping: assisted grasping (pbd_local_patch_v1): closing intent and bilateral finger proximity to a material patch of blanket must persist for 0.03 s, with penetration at most 2 mm and the TCP within 6 cm. The admitted patch follows through a local kinematic PBD attachment; the rest remains deformable. Opening by more than 0.2 % of gripper travel releases it. A hold is lost on excessive opening, material strain, invalid volume or follow error above 10 mm; a lost hand must open before reacquiring. Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets.
 
 Objects here: `blanket`.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

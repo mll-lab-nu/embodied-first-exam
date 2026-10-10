@@ -55,3 +55,6 @@ res = r.submit("joint_position", A, dt=0.1, cameras=["forward"], video="none")  
   table), z up; quaternions are w x y z. Each camera's `cam2world_gl` is its pose (OpenGL convention: it looks along
   its -z axis, +y up); `intrinsic_cv` its pinhole intrinsics in pixels.
 - Measured cost here: about 40 ms of simulation per control step, plus about 15 ms per camera image.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

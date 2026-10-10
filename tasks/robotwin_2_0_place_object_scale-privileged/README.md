@@ -39,6 +39,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: required, any NVIDIA GPU; recommended: RTX 4090 24GB / L4 24GB.
 - Measured: GPU 6.9 GB oracle peak on RTX 4090, 5.8 GB L4, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 3.2 GB, privileged agent container p90 6.4 GB, verifier 4.2 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; exceeding one fails the trial), every container of the trial: 18 GB GPU memory, 16 GB memory, 512 processes, 10 GB written under `/app`; sustained 60 s. Expected peak of the whole trial: 18 GB GPU memory, 16 GB memory.
 
 ## Details
 | | |

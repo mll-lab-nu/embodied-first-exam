@@ -127,3 +127,6 @@ The grader replays in two fresh processes, each exactly this CLI (a fresh proces
 - **Your wall-clock budget is 2 h (7200 s)**; there is no step budget. A runaway guard stops an episode at 72000 control steps
   (1 h of simulated time). Everything runs on the CPU except camera rendering.
 - The exemplar comes from a public-domain engraved copybook plate (1741): `/app/NOTICE-exemplar.md`.
+
+## Resource limits
+These limits apply to the whole trial, summed over all its processes, the `scorer` service included: at most **4 GB of GPU memory**, **20 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Simulators count with everything they use: end one before you start another if you would go past a limit. GPU memory counts what a process reserves (JAX, for example, reserves most of the card up front unless told not to). The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

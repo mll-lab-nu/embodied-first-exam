@@ -42,6 +42,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: not needed.
 - Measured: memory: sim p90 6.9 GB, privileged container p90 8.1 GB, verifier 4.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only; CPU author estimate
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; exceeding one fails the trial), the agent's container: no GPU, 16 GB memory, 512 processes, 10 GB written under `/app`; sustained 60 s. Expected peak of the whole trial: 0 GB GPU memory, 27 GB memory.
 
 ## Details
 | | |

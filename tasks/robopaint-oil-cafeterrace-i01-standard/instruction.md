@@ -113,3 +113,6 @@ view along the sheets that shows the brush's height).
   `meta["clipped"]` (limits in the spec).
 
 The picture is a public-domain painting, Vincent van Gogh, *Cafe Terrace at Night* (1888; Wikimedia Commons `File:Vincent Willem van Gogh - Cafe Terrace at Night (Yorck).jpg`, Public domain), cropped to a square and downscaled to the sheet.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

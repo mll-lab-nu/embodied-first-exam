@@ -114,3 +114,6 @@ view along the sheets that shows the brush's height).
   `meta["clipped"]` (limits in the spec).
 
 The exemplar is this robot's painting after Utagawa Hiroshige, *Plum Park in Kameido* (1857), a public-domain work (Wikimedia Commons `File:De pruimenboomgaard te Kameido-Rijksmuseum RP-P-1956-743.jpeg`, Public domain); the exemplar picture is CC0.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

@@ -64,3 +64,6 @@ Depth: pass `include_depth=True` for the head, front and wrist cameras (float16;
   (same convention as the `proprio` end-effector poses, so an observed pose is a valid target). At most 50 rows per submit.
 
 Table top at z ≈ 0.74 m. The scene's objects are what the cameras show.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

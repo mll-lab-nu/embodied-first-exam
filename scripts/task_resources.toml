@@ -765,3 +765,700 @@ verifier_min_cpus = 8.0
 verifier_min_memory_gb = 15.0
 verifier_min_gpu_memory_gb = 5.0
 measured = "GPU 3.8-4.0 GB per trial, anon memory 11.1-11.8 GB, CPU p90 5.8-8.7 cores over 12 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + mll-4090-1, 10-10); vram_profile peaks 5.5-6.5 GB on 24 GB cards; board 0048: about 11 GB RAM and 8 CPUs per simulator; verifier 7.2 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10)"
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Resource LIMITS (docs/PROTOCOL.md §2.10, v1.1.5): the most a trial may use during the agent phase. They are part of the
+# task contract: normalize writes them into [metadata.resources.limits] of task.toml and renders them into instruction.md
+# ("## Resource limits") and the README. Using more than a limit for longer than `sustain_sec` fails the trial (reward 0,
+# resource_limit_exceeded). Same matching as [[rule]] (every matching [[limit]] applies, in file order). Edit the values
+# here, not in task.toml. How they were chosen:
+# - scope: "trial" in privileged mode (every container of the trial: the agent drives the simulator itself); "agent" in the
+#   standard modes (the agent's container only: the `sim` sidecar is the benchmark's service, never a failure condition).
+# - max_gpu_memory_gb: 0 where the limited containers have no GPU (no standard task gives the agent's container one);
+#   else about twice the minimum, at least 4 GB (Isaac Sim 16 GB); BEHAVIOR-1K 32 / ManiGuard 24: Isaac's card-sized pools
+#   without RCB_TEXTURE_BUDGET reach 29.0 / 19.4 GB on 48 GB cards (batch_eval_live vram_profile, 10-10); RoboTwin
+#   privileged 18 = two simulators at 8.6 GB (L40S).
+# - max_memory_gb: the [environment] memory cap of the agent's container (memory_mb / 1024), plus, in privileged mode, the
+#   sidecar's minimum memory (RoboPaint's scorer).
+# - max_processes: 512 processes (not threads), a guard against runaway process trees.
+# - max_disk_gb / disk_paths: growth of the files under disk_paths (the agent's workspace; WORKDIR /app in every task)
+#   since the agent phase started; 10 GB (a trial writes trajectories, scripts and videos of well under 1 GB).
+# - sustain_sec: 60 s above a limit before it counts.
+# - trial_max_gpu_memory_gb / trial_max_memory_gb: the expected peak of the whole trial (every container, sidecars
+#   included), declared for schedulers in both modes and enforced in neither beyond the limits above: privileged = the
+#   limits; standard = the agent's limits plus the sidecar (GPU: as max_gpu_memory_gb above for one simulator; memory: its
+#   compose mem_limit where declared (RoboOlympics), else the task's minimum memory).
+# CPU is not limited here: the [environment] cpus cap throttles the agent's container and is never a failure.
+
+[[limit]]
+match = "^autobio-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+
+[[limit]]
+match = "^autobio-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^behavior-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 32.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 32.0
+trial_max_memory_gb = 24.0
+
+[[limit]]
+match = "^behavior-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 32.0
+trial_max_memory_gb = 40.0
+
+[[limit]]
+match = "^bigym2-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 4.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^bigym2-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 20.0
+
+[[limit]]
+match = "^bigym2-.*-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 20.0
+
+[[limit]]
+match = "^dexjoco-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+
+[[limit]]
+match = "^dexjoco-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 13.0
+
+[[limit]]
+match = "^dextoolbench_.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 4.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^dextoolbench_.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 20.0
+
+[[limit]]
+match = "^humanoidbench-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^humanoidbench-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 19.0
+
+[[limit]]
+match = "^humanoidbench-.*-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 19.0
+
+[[limit]]
+match = "^kinder-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^kinder-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 20.0
+
+[[limit]]
+match = "^labutopia-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 17.0
+max_memory_gb = 32.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 17.0
+trial_max_memory_gb = 32.0
+
+[[limit]]
+match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 17.0
+max_memory_gb = 32.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 17.0
+trial_max_memory_gb = 32.0
+
+[[limit]]
+match = "^labutopia-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 32.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 17.0
+trial_max_memory_gb = 55.0
+
+[[limit]]
+match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 32.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 17.0
+trial_max_memory_gb = 60.0
+
+[[limit]]
+match = "^libero-max-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+
+[[limit]]
+match = "^libero-max-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 13.0
+
+[[limit]]
+match = "^maniguard-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 24.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 24.0
+trial_max_memory_gb = 24.0
+
+[[limit]]
+match = "^maniguard-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 24.0
+trial_max_memory_gb = 47.0
+
+[[limit]]
+match = "^metaworldplus-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+
+[[limit]]
+match = "^metaworldplus-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 11.0
+
+[[limit]]
+match = "^molmospaces-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 7.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 7.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^molmospaces-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 7.0
+trial_max_memory_gb = 22.0
+
+[[limit]]
+match = "^mujoco_playground_.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+
+[[limit]]
+match = "^(mujoco_playground_aloha_hand_over|mujoco_playground_aloha_single_peg_insertion|mujoco_playground_panda_open_cabinet|mujoco_playground_panda_pick_cube_orientation)-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 4.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 8.0
+
+[[limit]]
+match = "^mujoco_playground_.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 11.0
+
+[[limit]]
+match = "^(mujoco_playground_aloha_hand_over|mujoco_playground_aloha_single_peg_insertion|mujoco_playground_panda_open_cabinet|mujoco_playground_panda_pick_cube_orientation)-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 19.0
+
+[[limit]]
+match = "^myosuite-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+
+[[limit]]
+match = "^myosuite-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 12.0
+
+[[limit]]
+match = "^robocasa-(?!gr1-).*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^robocasa-(?!gr1-).*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 30.0
+
+[[limit]]
+match = "^robocasa-gr1-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^robocasa-gr1-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 30.0
+
+[[limit]]
+match = "^robocasa365-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^robocasa365-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 25.0
+
+[[limit]]
+match = "^robolab-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 24.0
+
+[[limit]]
+match = "^robolab-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 38.0
+
+[[limit]]
+match = "^roboolympics-.*-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 4.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 12.0
+
+[[limit]]
+match = "^(roboolympics-airhockey-match-i00)-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 4.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 12.0
+
+[[limit]]
+match = "^robopaint-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 4.0
+max_memory_gb = 20.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 20.0
+
+[[limit]]
+match = "^robopaint-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 21.0
+
+[[limit]]
+match = "^robotangle-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 14.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 14.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^robotangle-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 14.0
+trial_max_memory_gb = 23.0
+
+[[limit]]
+match = "^robotwin_2_0_.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 18.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 18.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^robotwin_2_0_.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 23.0
+
+[[limit]]
+match = "^robowits-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 4.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^robowits-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 4.0
+trial_max_memory_gb = 24.0
+
+[[limit]]
+match = "^vlabench-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+
+[[limit]]
+match = "^vlabench-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 27.0
+
+[[limit]]
+match = "^yamlab-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 24.0
+
+[[limit]]
+match = "^yamlab-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 40.0
+

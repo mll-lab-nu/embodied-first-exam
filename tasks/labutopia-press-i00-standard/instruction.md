@@ -68,3 +68,6 @@ straight up and is moving towards its home pose (the targets in effect, `cmd_*` 
 e.g. with `r.get_obs(seconds=2)`, brings it there in about two seconds. There is no step budget: the
 one technical cap is `spec["max_control_steps"]`, 36000 (600 s of simulated time), at which the episode ends. A
 response carries at most 300 frames per camera (`video_fps` up to 30, default 10).
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **32 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

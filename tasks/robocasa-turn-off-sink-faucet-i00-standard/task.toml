@@ -40,6 +40,18 @@ verifier_min_memory_gb = 13.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
 
+[metadata.resources.limits]
+# agent-phase limits; exceeding one fails the trial. scope: trial = every container, agent = the agent's container (docs/PROTOCOL.md §2.10)
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 30.0
+
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"

@@ -53,3 +53,6 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
 - World frame: metres, z up. In the proprio, `eef_left_*` / `eef_right_*` are the grip sites' positions in the world
   frame; the action's pose targets and the `cmd_*` entries (the last command) are in the robot's base frame.
   The robot's base frame (body `robot0_base`, fixed in the world) has its origin at world (2.68282, -2.16303, 0.90053) m and is turned +90.0 deg about z (quaternion w x y z (0.70711, 0, 0, 0.70711)): `p_world = R @ p_base + t` with R = [[0, -1, 0], [1, 0, 0], [0, 0, 1]].
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

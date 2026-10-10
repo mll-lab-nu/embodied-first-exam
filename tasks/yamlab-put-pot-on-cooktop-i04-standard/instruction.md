@@ -82,3 +82,6 @@ each arm's wrist; they move: `res.extrinsic_cv[cam]` has their pose at every fra
   `link_6` along `link_6`'s +z (approach) axis, with `link_6`'s orientation. At the start both arms are at their home pose
   (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit.
 - Control runs at 30 Hz (simulated time; sim dt 1/120 s, decimation 4).
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **24 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

@@ -61,3 +61,6 @@ res = r.submit("ee_delta", A, dt=0.05, cameras=["agentview"], video="none")   # 
   left, z up; quaternions are w x y z. Each camera's `cam2world_gl` is its pose (OpenGL convention: it looks along its
   -z axis, +y up); `intrinsic_cv` its pinhole intrinsics in pixels (upright images).
 - Measured cost here: about 20 ms of simulation per control step, plus about 70 ms per camera image.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

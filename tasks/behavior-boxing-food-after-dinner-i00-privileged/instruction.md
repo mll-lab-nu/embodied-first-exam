@@ -90,3 +90,6 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - Primitives that take an `arm` ("left" / "right") default to the left one.
 - Isaac Sim startup and scene loading take ~3 minutes per process and the simulator runs at ~7-11 steps/s: plan
   experiments accordingly. Do not call `s.close()` until you have written every output (it terminates the process).
+
+## Resource limits
+These limits apply to the whole trial, summed over all its processes: at most **32 GB of GPU memory**, **24 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Simulators count with everything they use: end one before you start another if you would go past a limit. GPU memory counts what a process reserves (JAX, for example, reserves most of the card up front unless told not to). The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

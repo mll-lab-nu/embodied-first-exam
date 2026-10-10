@@ -15,8 +15,10 @@ What it does:
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
   `reward.json`.
 - no `results/` directory (results are published on the results site, not in the repository).
-- `[metadata.resources]` (docs/PROTOCOL.md §2.9, minimum compute) from `scripts/task_resources.toml` when a rule there
-  matches the task; a task no rule matches keeps the values its generator or author wrote.
+- `[metadata.resources]` (docs/PROTOCOL.md §2.9, minimum compute) and `[metadata.resources.limits]` (§2.10, the most a
+  trial may use) from `scripts/task_resources.toml` when a rule there matches the task; a task no rule matches keeps the
+  values its generator or author wrote.
+- `instruction.md` ends with `## Resource limits`, rendered from `[metadata.resources.limits]` (§2.10).
 - `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
   Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
 """
@@ -75,6 +77,13 @@ RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required 
     "recommended_gpu": str, "verifier_min_cpus": float, "verifier_min_memory_gb": float,
     "verifier_min_gpu_memory_gb": float, "measured": str,
 }
+# PROTOCOL §2.10: the most a trial may use in the agent phase, `[metadata.resources.limits]` (same list: check-resources.py)
+LIMIT_KEYS = {  # key -> type
+    "scope": str, "max_gpu_memory_gb": float, "max_memory_gb": float, "max_processes": int, "max_disk_gb": float,
+    "disk_paths": list, "sustain_sec": float, "trial_max_gpu_memory_gb": float, "trial_max_memory_gb": float,
+}
+LIMIT_SCOPES = {"privileged": "trial", "standard": "agent", "standard-realtime": "agent"}   # §2.10: who the limits bind
+LIMITS_HEADING = "## Resource limits"
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -178,19 +187,30 @@ def resources_for(task: Path) -> dict | None:
     if not RESOURCES_FILE.is_file():
         return None
     out: dict = {}
-    for rule in tomllib.loads(RESOURCES_FILE.read_text()).get("rule", []):
+    limits: dict = {}
+    rules = tomllib.loads(RESOURCES_FILE.read_text())
+    for rule in rules.get("rule", []):
         if re.search(rule["match"], task.name):
             out.update({k: v for k, v in rule.items() if k != "match"})
+    for rule in rules.get("limit", []):
+        if re.search(rule["match"], task.name):
+            limits.update({k: v for k, v in rule.items() if k != "match"})
     if not out:
         return None
-    unknown = set(out) - set(RESOURCE_KEYS)
+    unknown = (set(out) - set(RESOURCE_KEYS)) | (set(limits) - set(LIMIT_KEYS))
     missing = [k for k in RESOURCE_KEYS if k not in out and not (k == "recommended_gpu" and not out.get("gpu_required"))]
+    missing += [f"limits.{k}" for k in LIMIT_KEYS if k not in limits]
     if unknown or missing:
         raise RuntimeError(f"{task.name}: scripts/task_resources.toml gives unknown keys {sorted(unknown)} / misses {missing}")
+    out["limits"] = {k: LIMIT_KEYS[k](limits[k]) for k in LIMIT_KEYS}
+    if out["limits"]["scope"] != LIMIT_SCOPES[mode_of(task)]:
+        raise RuntimeError(f"{task.name}: limits scope must be {LIMIT_SCOPES[mode_of(task)]!r} (PROTOCOL §2.10)")
     return out
 
 
 def _toml_value(v) -> str:
+    if isinstance(v, list):
+        return "[" + ", ".join(_toml_value(x) for x in v) + "]"
     if isinstance(v, bool):
         return "true" if v else "false"
     if isinstance(v, (int, float)):
@@ -201,6 +221,12 @@ def _toml_value(v) -> str:
 def resources_block(r: dict) -> str:
     lines = ["[metadata.resources]", "# minimum compute to run this task (docs/PROTOCOL.md §2.9)"]
     lines += [f"{k} = {_toml_value(r[k])}" for k in RESOURCE_KEYS if k in r]
+    if isinstance(r.get("limits"), dict):
+        lines += ["", "[metadata.resources.limits]",
+                  "# agent-phase limits; exceeding one fails the trial. scope: trial = every container, agent = the agent's container "
+                  "(docs/PROTOCOL.md §2.10)"]
+        lines += [f"{k} = {r['limits'][k] if LIMIT_KEYS[k] is int else _toml_value(r['limits'][k])}"
+                  for k in LIMIT_KEYS if k in r["limits"]]
     return "\n".join(lines) + "\n"
 
 
@@ -212,7 +238,7 @@ def normalize_resources(task: Path) -> None:
         return
     p = task / "task.toml"
     s = p.read_text()
-    s = re.sub(r"(?ms)^\[metadata\.resources\]\n.*?(?=^\[|\Z)", "", s)
+    s = re.sub(r"(?ms)^\[metadata\.resources(?:\.limits)?\]\n.*?(?=^\[|\Z)", "", s)
     m = re.search(r"(?m)^\[metadata\]\n", s)
     if not m:
         raise RuntimeError(f"{task.name}: task.toml has no [metadata] table")
@@ -247,7 +273,67 @@ def render_resources(r: dict) -> list[str]:
             f"| CPU cores | {_num(r['min_cpus'])} | {_num(r['verifier_min_cpus'])} |",
             f"| Memory | {_num(r['min_memory_gb'])} GB | {_num(r['verifier_min_memory_gb'])} GB |",
             f"| GPU memory | {_num(r['min_gpu_memory_gb'])} GB | {_num(r['verifier_min_gpu_memory_gb'])} GB |",
-            "", f"- {gpu}", f"- Measured: {r.get('measured', '')}"]
+            "", f"- {gpu}", f"- Measured: {r.get('measured', '')}"] + (
+        [f"- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in "
+         f"`instruction.md`; exceeding one fails the trial), {limits_summary(r['limits'])}."]
+        if isinstance(r.get("limits"), dict) else [])
+
+
+def limits_summary(lim: dict) -> str:
+    who = "every container of the trial" if lim["scope"] == "trial" else "the agent's container"
+    gpu = f"{_num(lim['max_gpu_memory_gb'])} GB GPU memory" if float(lim["max_gpu_memory_gb"]) > 0 else "no GPU"
+    return (f"{who}: {gpu}, {_num(lim['max_memory_gb'])} GB memory, {int(lim['max_processes'])} processes, "
+            f"{_num(lim['max_disk_gb'])} GB written under {', '.join(f'`{d}`' for d in lim['disk_paths'])}; "
+            f"sustained {_num(lim['sustain_sec'])} s. Expected peak of the whole trial: "
+            f"{_num(lim['trial_max_gpu_memory_gb'])} GB GPU memory, {_num(lim['trial_max_memory_gb'])} GB memory")
+
+
+def sidecars_of(task: Path) -> list[str]:
+    """Compose services next to the agent's container (`main`), cache helpers (`rcb_*`) left out."""
+    c = read_text(task / "environment/docker-compose.yaml") or ""
+    return [s for s in re.findall(r"^  ([A-Za-z0-9_.-]+):\s*$", c, re.M) if s != "main" and not s.startswith("rcb_")]
+
+
+def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None = None) -> str:
+    """instruction.md's `## Resource limits` from `[metadata.resources.limits]` (PROTOCOL §2.10)."""
+    gpu_gb = float(lim["max_gpu_memory_gb"])
+    disk = " / ".join(f"`{d}`" for d in lim["disk_paths"])
+    rest = (f"**{_num(lim['max_memory_gb'])} GB of memory**, **{int(lim['max_processes'])} processes** and "
+            f"**{_num(lim['max_disk_gb'])} GB** of files written under {disk}")
+    if lim["scope"] == "agent":
+        gpu = f"**{_num(gpu_gb)} GB of GPU memory**, " if gpu_gb > 0 else ""
+        text = ("These limits apply to your agent environment, your own container (the simulator in the `sim` service "
+                f"is the benchmark's and does not count): at most {gpu}{rest}."
+                + ("" if gpu_gb > 0 else " Your container has no GPU."))
+    else:
+        gpu = f"**{_num(gpu_gb)} GB of GPU memory**, " if gpu_gb > 0 else ""
+        incl = (f", the `{sidecars[0]}` service included" if len(sidecars) == 1 else
+                ", the task's services included" if sidecars else "")
+        text = (f"These limits apply to the whole trial, summed over all its processes{incl}: at most {gpu}{rest}."
+                + ("" if gpu_gb > 0 else " The task has no GPU.") + " Simulators count with everything they use: "
+                "end one before you start another if you would go past a limit.")
+    if gpu_gb > 0:
+        text += (" GPU memory counts what a process reserves (JAX, for example, reserves most of the card up front "
+                 "unless told not to).")
+    text += (f" The harness monitors usage; exceeding any limit for more than {_num(lim['sustain_sec'])} s ends the "
+             "trial as a failure (reward 0), whatever the deliverable.")
+    if cpus:
+        text += f" Your container's CPU is capped at {_num(cpus)} cores (a cap that slows you down, never a failure)."
+    return LIMITS_HEADING + "\n" + text + "\n"
+
+
+def normalize_instruction(task: Path) -> None:
+    """instruction.md ends with `## Resource limits` rendered from `[metadata.resources.limits]` (replacing an earlier
+    one); without limits in task.toml it is left as it is."""
+    p = task / "instruction.md"
+    md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
+    lim = (md.get("resources") or {}).get("limits")
+    if not p.is_file() or not isinstance(lim, dict):
+        return
+    s = p.read_text(encoding="utf-8")
+    s = re.sub(rf"(?ms)^{re.escape(LIMITS_HEADING)}\n.*?(?=^## |\Z)", "", s).rstrip() + "\n"
+    env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
+    write_if_changed(p, s + "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus")))
 
 
 def _shared_sources() -> set[bytes]:
@@ -464,6 +550,7 @@ def normalize(task: Path) -> None:
     normalize_toml(task)
     normalize_resources(task)
     normalize_text_files(task)
+    normalize_instruction(task)
     normalize_test_sh(task)
     write_if_changed(task / "README.md", render_readme(task))
     assert_converted(task)

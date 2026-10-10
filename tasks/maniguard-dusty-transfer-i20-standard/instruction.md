@@ -76,3 +76,5 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 
 Objects here: a long steel commercial kitchen table; on it a red mixing bowl (about 29 x 26 cm, 14 cm deep) with 15 small dark dust specks on its inner bottom, a sponge (10.5 x 7 x 2 cm, blue) lying flat, and a green platter (26 cm across, 4 cm tall) with a potato (about 14 x 8 cm) on it. The sponge removes the dust it comes close to (within 2 cm of its bounding box); nothing else removes dust. Grasping is sticky: the gripper attaches an object as soon as a finger touches it when it closes, and releases it when it opens.
 
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **24 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

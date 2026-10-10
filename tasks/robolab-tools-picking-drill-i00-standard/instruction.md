@@ -67,3 +67,6 @@ Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table
   extend ~5.7 cm back from there). At the reset pose the gripper points straight down. At most 50 rows per submit.
 
 Objects here: two clamps, a cordless drill, a spring clamp, three bins, a black hammer, a wooden hammer, a red hammer and a blue hammer. Three dark grey bins stand side by side at the far edge of the table: the left one (on the robot's left, +y) holds the four hammers, the middle one the clamps, the right one (on the robot's right, -y) the cordless drill. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **24 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

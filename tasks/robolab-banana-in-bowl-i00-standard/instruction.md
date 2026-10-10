@@ -70,3 +70,6 @@ Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table
 
 Objects here: a yellow banana and a red bowl on the table.
 The Robotiq opens to 8.5 cm. The episode ends by itself the moment the banana rests in the bowl with the gripper open.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **24 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

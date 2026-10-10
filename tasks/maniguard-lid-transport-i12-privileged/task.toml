@@ -35,6 +35,18 @@ verifier_min_memory_gb = 21.0
 verifier_min_gpu_memory_gb = 10.5
 measured = "one standard trial: sim anon memory 17.5 GB, start-up CPU bursts to 29 cores, GPU 3.6 GB 15 min in, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + mll-4090-1, 10-10); GPU memory and CPU from BEHAVIOR-1K (same OmniGibson / Isaac Sim stack) until more trials are measured; verifier 15.8 GB docker memory, mem_guard (docker memory per container, mll-4090-1, 10-02..10)"
 
+[metadata.resources.limits]
+# agent-phase limits; exceeding one fails the trial. scope: trial = every container, agent = the agent's container (docs/PROTOCOL.md §2.10)
+scope = "trial"
+max_gpu_memory_gb = 24.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 24.0
+trial_max_memory_gb = 24.0
+
 [verifier]
 timeout_sec = 7200.0              # two fresh-process replays: Isaac Sim launch + scene load each, then the trajectory
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then

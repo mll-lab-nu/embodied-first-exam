@@ -92,3 +92,6 @@ whether that pose is stable under gravity and contact.
 Optional rendering: `Session("window", instance=..., enable_render=True)` then
 `s.render_video(actions, "/tmp/replay.mp4")`. It picks the GL backend for you — GPU if this
 container has one, CPU software rendering (~130 ms/frame) otherwise.
+
+## Resource limits
+These limits apply to the whole trial, summed over all its processes: at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. The task has no GPU. Simulators count with everything they use: end one before you start another if you would go past a limit. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 16 cores (a cap that slows you down, never a failure).

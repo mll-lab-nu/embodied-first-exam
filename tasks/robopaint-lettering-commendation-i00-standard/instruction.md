@@ -134,3 +134,6 @@ Wrist note: turning the pen far about the vertical can run joint 7 into its limi
 same orientation of the nib (the mark is the same for a pen turned by 180°).
 
 The exemplar comes from a public-domain engraved copybook plate (1741): `/app/NOTICE-exemplar.md`.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

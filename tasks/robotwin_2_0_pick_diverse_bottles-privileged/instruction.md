@@ -56,3 +56,6 @@ CLI equivalent of the grader:
 
 Coordinates are in the world frame (table centre at the origin, +z up, the robot at y = -0.65 facing +y);
 quaternions are WXYZ. Rendering (optional, slow): `Session(..., enable_render=True)` then `s.render_frame("head_camera")`.
+
+## Resource limits
+These limits apply to the whole trial, summed over all its processes: at most **18 GB of GPU memory**, **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Simulators count with everything they use: end one before you start another if you would go past a limit. GPU memory counts what a process reserves (JAX, for example, reserves most of the card up front unless told not to). The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

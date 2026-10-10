@@ -45,3 +45,6 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
 (the benchmark shows the controller the current goal, as SimToolReal's deployment does). The episode **ends** when every
 goal is reached or at the step limit (`spec["max_control_steps"]`); after that the service answers 409.
 `steps_left_on_goal` is null: no goal has a time limit here.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

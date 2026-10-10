@@ -97,3 +97,6 @@ The rule texts come from RoboOlympics' `sport.toml`. Where they name RoboOlympic
 
 Your robot: KUKA LBR iiwa 14 holding a mallet (the striker on two passive joints), its base at (-1.51, 0) beside your end. Everything else you need (the frame, the geometry and the rule constants) is in
 `spec()["rules"]`; the physics engine is MuJoCo.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **4 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 2 cores (a cap that slows you down, never a failure).

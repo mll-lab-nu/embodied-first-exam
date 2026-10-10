@@ -118,3 +118,6 @@ order). A target of −1 or +1 commands one end of that servo's range,
 `spec()["action_types"]["joint_position"]["range_rad"]` in radians, and the scale is linear, so 0 is
 mid-range, not 0 rad. A constant action commands joint *targets*, not a pose: whether the robot stays there
 depends on whether that pose is stable under gravity and contact.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

@@ -76,3 +76,5 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 
 Objects here: a desk with a black top; on it four blue-patterned bowls (about 19 cm across, 12-15 cm tall each) nested into one 31 cm tall stack; and the green goal sphere (radius 5.6 cm) beside the stack, which does not collide with anything. Grasping is sticky: the gripper attaches an object as soon as a finger touches it when it closes, and releases it when it opens.
 
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **24 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).

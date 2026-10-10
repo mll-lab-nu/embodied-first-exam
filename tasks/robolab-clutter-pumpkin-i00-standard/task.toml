@@ -45,6 +45,18 @@ verifier_min_memory_gb = 13.0
 verifier_min_gpu_memory_gb = 6.5
 measured = "GPU 4.0-5.5 GB per trial (one simulator), anon memory 7.6-10.3 GB, CPU p90 2.4-8 cores over 7 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + mll-4090-1, 10-10); vram_profile peaks 14.5-15.7 GB include agents' extra simulator processes and Isaac's card-sized pools; author: one Isaac simulator per 32 GB of host RAM"
 
+[metadata.resources.limits]
+# agent-phase limits; exceeding one fails the trial. scope: trial = every container, agent = the agent's container (docs/PROTOCOL.md §2.10)
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app"]
+sustain_sec = 60.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 38.0
+
 [verifier]
 timeout_sec = 1200.0
 environment_mode = "separate"

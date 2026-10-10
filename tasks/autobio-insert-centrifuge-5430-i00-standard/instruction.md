@@ -54,3 +54,6 @@ period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (def
 `"hold"`; the client sends them as float32. The control rate is 500 Hz (one physics step per control step). There is
 no step budget: the one technical cap is `spec["max_control_steps"]`, 600000 (1200 s of simulated time), at which the
 episode ends. A response carries at most 3000 frames per camera (`video_fps` up to 50, default 10).
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

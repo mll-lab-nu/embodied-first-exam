@@ -54,3 +54,6 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
   for `s` seconds; those control steps are part of the episode.
 - The cameras are mounted on the robot and move with it: use the calibration that comes with each response.
 - World frame: metres, z up.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **16 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 4 cores (a cap that slows you down, never a failure).

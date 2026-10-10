@@ -83,3 +83,6 @@ position + quaternion **XYZW**.
   world frame with `base_pose=` the 7 base proprio columns.
 
 For scale: the 2026 challenge's human teleoperators needed 476 s on average (14,275 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta["done"]`.
+
+## Resource limits
+These limits apply to your agent environment, your own container (the simulator in the `sim` service is the benchmark's and does not count): at most **24 GB of memory**, **512 processes** and **10 GB** of files written under `/app`. Your container has no GPU. The harness monitors usage; exceeding any limit for more than 60 s ends the trial as a failure (reward 0), whatever the deliverable. Your container's CPU is capped at 8 cores (a cap that slows you down, never a failure).
