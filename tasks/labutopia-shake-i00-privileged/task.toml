@@ -33,6 +33,26 @@ verifier_min_memory_gb = 26.0
 verifier_min_gpu_memory_gb = 8.5
 measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
 
+[metadata.resources.limits]
+# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 32.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 32.0
+measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 32 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
+
 [verifier]
 timeout_sec = 3600.0              # two replays of about a minute, then the video replay, whose renderer starts cold (5 to 15 minutes)
 environment_mode = "separate"

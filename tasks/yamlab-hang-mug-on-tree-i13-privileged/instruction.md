@@ -71,3 +71,6 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   container also compiles Isaac's shaders, ~10 min on a busy host). Physics is PhysX on the
   **CPU**; rendering (on the GPU) happens only when a frame is asked for and never moves anything. Stepping runs at about
   60-120 control steps/s. Do not call `s.close()` before writing every output.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of GPU memory**, **24 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 8 cores for your container; the cap only slows you down.

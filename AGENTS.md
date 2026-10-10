@@ -19,6 +19,10 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.1) and `CONTRIBUTING.md` 
 - Every task declares its minimum compute (PROTOCOL §2.9, v1.1.4): `[metadata.resources]` in `task.toml`, written by
   `task_conventions.normalize` from the rules in `scripts/task_resources.toml`, and the README's `## Compute resources`
   rendered from it; `ci_checks/check-resources.py` checks both.
+- Every task declares resource limits and docker caps (PROTOCOL §2.10, v1.1.5): `[metadata.resources.limits]` / `.caps` from
+  the `[[limit]]` / `[[cap]]` rules in the same file; `normalize` ends `instruction.md` with the `## Resource limits` paragraph
+  rendered from them (generator-owned: edit the rules, never the paragraph). From v1.2 a task-provided monitor and the
+  verifier judge them; with `RCB_LIMITS_ENFORCE=1` a violation fails the trial (default 0: recorded only).
 - `ci_checks/run_all.sh [task dirs]`: contract checks (incl. verifier isolation: `[verifier] environment_mode = "separate"`
   + `tests/Dockerfile`) and the protocol v1.0 check (`check-protocol-v1.py`: `legacy:` image rules warn, all other rules fail). New check =
   `check-<thing>.sh <task_dir>`, registered in `run_all.sh`.

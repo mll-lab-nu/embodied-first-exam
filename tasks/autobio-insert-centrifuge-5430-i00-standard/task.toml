@@ -46,6 +46,27 @@ verifier_min_memory_gb = 8.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "author (merged PR #94): CPU-only, 4 CPUs and 8 GB per trial, verifier the same"
 
+[metadata.resources.limits]
+# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 20.0
+measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 12 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 8.0, memory_gb = 15.0, pids = 8192 }
+
 [verifier]
 timeout_sec = 600.0
 environment_mode = "separate"

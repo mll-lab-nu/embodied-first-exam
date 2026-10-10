@@ -44,3 +44,6 @@ Rows are `dt` apart (a whole multiple of the 0.02 s control period, at most 0.5 
 `"hold"` between rows; a chunk covers at most 10 s; values outside the limits
 (`spec["action_types"]["joint_position"]["limits"]`) are clipped and listed in `res.meta["clipped"]`. Feedback control
 means short chunks: each response tells you where the robot is now.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 4 cores for your container; the cap only slows you down.

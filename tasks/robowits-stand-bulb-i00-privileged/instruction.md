@@ -226,3 +226,6 @@ CLI equivalent of the grader:
   direction; `p["top_down_quat"](yaw)` builds a vertical-approach orientation whose fingers close along `yaw`.
 - One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic CPU backend at
   ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every output.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **6 GiB of GPU memory**, **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 4 cores for your container; the cap only slows you down.

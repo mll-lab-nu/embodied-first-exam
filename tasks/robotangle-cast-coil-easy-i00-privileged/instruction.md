@@ -130,3 +130,6 @@ CLI equivalent of the grader:
   ends the simulated episode: later steps do not change the execution record or move the scene (`s.status()["episode_end"]`), and
   `s.reset()` starts over.
 - One `Session` per process (Genesis initialises once). Do not call `s.close()` before writing every output.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of GPU memory**, **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 4 cores for your container; the cap only slows you down.
