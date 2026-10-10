@@ -384,7 +384,10 @@ def check_live(rep: Report, url: str, task: Path | None, client_dir: Path, out: 
     # /status and the 404 surface
     st0 = r.status()
     rep.ok({"step", "calls", "done", "reason"} <= set(st0), "status.keys", json.dumps(st0))
+    resets = int((spec.get("budget") or {}).get("reset") or 0)   # POST /reset exists only with a reset budget (PROTOCOL §4.5)
     for m, p in (("GET", "/reset"), ("GET", "/state"), ("GET", "/success"), ("POST", "/reset"), ("GET", "/kinematics"), ("POST", "/step")):
+        if (m, p) == ("POST", "/reset") and resets:
+            continue                                            # never probed live: it would start a new episode
         code = requests.request(m, url + p, timeout=30).status_code
         rep.ok(code == 404, f"http.{m}{p}.404", str(code))
     # default observe: no depth

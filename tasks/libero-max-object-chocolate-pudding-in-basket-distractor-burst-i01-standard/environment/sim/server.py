@@ -3,7 +3,7 @@
 The simulator-specific half only: `LiberoMax` implements rcb_service.Sim for one frozen instance (lmx_tool.Session).
 The protocol, the episode, crash recovery and the finalize live in rcb_service.py (a byte copy of main's HumanoidBench /
 VLABench service), which imports no simulator. One simulator per process (lmx_tool): the fresh replay that grades the
-episode and the replay video each run in a new process.
+episode runs in a new process and records the replay video on the way (verify, render_video).
 Settings come from environment/docker-compose.yaml:
   RCB_INSTANCE            the frozen instance (the privileged twin's instance.json)
   RCB_TASK_TEXT           the task as the instruction states it, for /spec
@@ -17,8 +17,10 @@ Settings come from environment/docker-compose.yaml:
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 import tempfile
+import traceback
 
 import numpy as np
 
@@ -46,6 +48,7 @@ class LiberoMax:
         self.cameras = CAMERAS
         self.depth_cameras = CAMERAS
         self.raw_dim = lmx_tool.N
+        self._video: str | None = None  # the video the grading replay recorded (verify -> render_video)
         self.lower, self.upper = -np.ones(lmx_tool.N), np.ones(lmx_tool.N)
         self.out_max = ctl["output_max"]
         self.proprio_layout = (
@@ -143,7 +146,18 @@ class LiberoMax:
 
     # ---------------------------------------------------------------- grading and evidence
     def verify(self, rows: np.ndarray) -> dict:
-        r = lmx_tool.replay_fresh(rows, self.instance)
+        # The replay that grades the episode also records the video (render_video then only moves it into place).
+        # A second replay for the video used to start after the verdict, and finalize.sh stops waiting
+        # RCB_VIDEO_GRACE_S after the verdict: on a busy sidecar (~0.5 s per control step) every episode longer than
+        # ~1000 steps was graded without a video. Rendering reads the scene and never steps physics (the state hash is
+        # the same); if the video fails, the episode is replayed again without it -- the verdict never depends on it.
+        self._video = os.path.join(tempfile.mkdtemp(prefix="verdict-"), "replay.mp4")
+        try:
+            r = lmx_tool.replay_fresh(rows, self.instance, video=self._video)
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+            self._video = None
+            r = lmx_tool.replay_fresh(rows, self.instance)
         live = self.s.report()
         return {
             "success": r["success"] and "invalid" not in r,
@@ -162,6 +176,12 @@ class LiberoMax:
         np.savez(path, actions=np.asarray(rows, np.float64), meta=np.array(lmx_tool.canonical(meta)))
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
+        if self._video and os.path.exists(self._video):  # recorded by the replay that graded these rows (verify)
+            shutil.move(self._video, path)
+            png = self._video.removesuffix(".mp4") + ".last.png"
+            if os.path.exists(png):
+                shutil.move(png, path.removesuffix(".mp4") + ".last.png")
+            return
         lmx_tool.replay_fresh(rows, self.instance, video=path)
 
 
