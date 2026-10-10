@@ -48,3 +48,6 @@ to check yourself:
 - World frame of the house, z up, metres; quaternions **wxyz**.
 - One control step is 0.066 s of simulated time (MuJoCo steps of 2 ms); a row holds until the next one.
 - Physics is MuJoCo on the CPU: the same rows from the same start give the same result in every fresh process.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **7 GiB of GPU memory**, **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 8 cores for your container; the cap only slows you down.

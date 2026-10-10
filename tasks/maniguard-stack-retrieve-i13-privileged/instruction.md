@@ -90,3 +90,6 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - One `Session` per process: Isaac Sim launches once (a few minutes per process; plan your experiments accordingly). The
   first replay in a fresh process reproduces a live run; later in-process resets and replays can differ in the last
   digits. Do not call `s.close()` before writing every output (it ends the process).
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **30 GiB of GPU memory**, **25 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 8 cores for your container; the cap only slows you down.

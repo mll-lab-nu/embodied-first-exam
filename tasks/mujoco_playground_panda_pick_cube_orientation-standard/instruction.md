@@ -42,3 +42,6 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
   limits in the spec. A chunk covers at most 10 s.
 - `meta["task"]` = the task's target (`target_pos`, and `target_quat_wxyz` where it has one). The episode runs until your
 time is up; the **final state** is graded (so end in the pose you want graded, and keep it).
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 4 cores for your container; the cap only slows you down.

@@ -40,6 +40,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: required, any NVIDIA GPU; recommended: L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer).
 - Measured: GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; exceeding one fails the trial), every container of the trial: 16 GiB GPU memory, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 16 GiB GPU memory, 16 GiB memory. Limits measured: GPU: 10.3 GiB on a 48 GB card, 5.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 4.6 GiB over 1 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
