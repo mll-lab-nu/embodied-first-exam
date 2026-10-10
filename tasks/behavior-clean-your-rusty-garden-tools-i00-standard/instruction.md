@@ -5,8 +5,12 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 **Task:** Clean the rusty garden tools. A rusty trowel and a rusty scraper lie on the driveway in the garden, next to a toolbox with steel wool inside; remove all the rust from both tools, put them inside the toolbox and close it. Success means all of the following hold at the same time: (1) no rust is left on the trowel or on the scraper; (2) both tools are inside the toolbox; (3) the toolbox is closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
-  simulator error. Whatever you knock over or push away stays where it ends up.
+- **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
+  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+- **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
+  when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
+  time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the
+  proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
 - Steps are unlimited; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time

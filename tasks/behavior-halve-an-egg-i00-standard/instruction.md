@@ -5,8 +5,12 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 **Task:** Halve the egg. A hard-boiled egg is inside the kitchen refrigerator; a chopping board with a carving knife on it and a plate lie on the countertop, and there is a sink in the kitchen. Cut the egg in half, put both halves on the plate and put the carving knife into the sink. Success means all of the following hold at the same time: (1) both egg halves exist (the egg has been cut); (2) both halves are on top of the plate; (3) the carving knife is inside the sink. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. ontop(A, B): A touches B and B is directly below A (and not above it). real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
-  simulator error. Whatever you knock over or push away stays where it ends up.
+- **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
+  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+- **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
+  when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
+  time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the
+  proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
 - Steps are unlimited; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time
