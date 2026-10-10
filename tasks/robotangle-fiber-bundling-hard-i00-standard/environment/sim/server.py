@@ -219,12 +219,14 @@ SPEC = {
     "world": {"frame": WORLD_FRAME, "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes "
                              "(x right, y up, z backward)"},
-    # steps: no budget, but a runaway guard (rcb_topogym.MAX_STEPS): the episode ends (reason step_guard) at that many
-    # control steps, /observe watches included
-    "budget": {"reset": 0, "steps": int(S.max_steps), "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
+    # no step budget (budget.steps stays null: the wall clock is the budget), but a technical episode cap (PROTOCOL §4.5,
+    # max_control_steps): the tooling's runaway guard (rcb_topogym.MAX_STEPS) ends the episode (reason step_guard) at
+    # that many control steps, /observe watches included
+    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
+    "max_control_steps": int(S.max_steps),
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
                 "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, after "
-                f"{int(S.max_steps)} control steps (budget.steps, a runaway guard: reason step_guard, graded as it stands), or on a "
+                f"{int(S.max_steps)} control steps (max_control_steps, a technical cap: reason step_guard, graded as it stands), or on a "
                 "simulator error; a simulator "
                 f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
                 f"soft-body solver state, a rigid task contact deeper than {M.BREAKDOWN_PENETRATION_M * 1000:g} mm) ends it with "

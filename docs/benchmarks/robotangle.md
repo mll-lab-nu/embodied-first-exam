@@ -236,8 +236,8 @@ carry them or the generator's assertions fail.
 - Service (`server.py`): `dt`, `video_fps`, `seconds`, `note` and `cameras` are checked before anything executes (null or
   a wrong type was a 500 that ended the episode as an infrastructure error; a non-string `note` did so after the chunk
   had run, so an agent could void a failing trial). The startup `instance_mismatch` record is a final verdict
-  (`gave_up`, `deterministic`), so the collect hook returns at once. `/spec` `budget.steps` is the 200000-step runaway
-  guard (`step_guard`), and the instruction states it.
+  (`gave_up`, `deterministic`), so the collect hook returns at once. `/spec` `max_control_steps` (PROTOCOL §4.5) is the
+  200000-step runaway guard (`step_guard`), and the instruction states it.
 - Collect hook (`finalize.sh`): `final.json` is merged as soon as `replay.verdict.json` is committed and again when it
   changes, not only after the video is closed and the review frames are rendered.
 - Graders: `instance_mismatch` → `infra_error = 1`; standard: a live failure whose replay crashed is the agent's 0, not a

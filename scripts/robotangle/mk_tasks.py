@@ -190,7 +190,7 @@ def review_fixes(s: str, name: str, base: str, mode: str) -> str:
         assert step_time(s) == step, f"{base}: the two modes state different step times"
         s = swap(s, "steps are unlimited. Actions and\n  simulated time are reported as cost.",
                  f"there is no step budget, but the\n  episode ends after {MAX_STEPS} control steps, watches included ({MAX_STEPS / hz / 60:.0f} min "
-                 "of simulated time; a runaway guard:\n  `meta[\"reason\"]` is `step_guard`, and the episode is graded as it stands). "
+                 "of simulated time; a technical cap,\n  `spec[\"max_control_steps\"]`: `meta[\"reason\"]` is `step_guard`, and the episode is graded as it stands). "
                  "Actions and simulated time are reported as cost.", f"{base} step guard")
         m = re.search(r"(?ms)^## Time per call\n.*?(?=^## )", s)
         assert m and "the client gives up waiting after 1800 s" in m.group(0), f"{base}: Time per call"
@@ -334,7 +334,7 @@ CHANGE_0067 = {
         "replay's verdict is committed, before the video is closed and the review frames are rendered. A live failure "
         "whose replay crashed is the agent's 0, not a grader error. The instruction's \"Time per call\" describes 2.4 "
         "(`max_call_wall_s`, `r.operation_status()`, 408 / 409), and the 200000-step runaway guard (`step_guard`) is "
-        "stated there and in `/spec` (`budget.steps`). The image, scene and frozen instance are unchanged, so the task "
+        "stated there and in `/spec` (`max_control_steps`). The image, scene and frozen instance are unchanged, so the task "
         "keeps its name."),
 }
 

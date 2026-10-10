@@ -35,8 +35,8 @@ client and one episode. **Task:** Separate and place the entire silver keyhole p
   objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
   the task requirements above still apply in full.
 - **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); there is no step budget, but the
-  episode ends after 200000 control steps, watches included (83 min of simulated time; a runaway guard:
-  `meta["reason"]` is `step_guard`, and the episode is graded as it stands). Actions and simulated time are reported as cost. One control step takes about 0.048 s of wall clock here.
+  episode ends after 200000 control steps, watches included (83 min of simulated time; a technical cap,
+  `spec["max_control_steps"]`: `meta["reason"]` is `step_guard`, and the episode is graded as it stands). Actions and simulated time are reported as cost. One control step takes about 0.048 s of wall clock here.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
