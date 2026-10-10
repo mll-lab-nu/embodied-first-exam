@@ -127,7 +127,7 @@ unchanged), resume class `exact`:
   is a 400, no physics, the episode goes on; `null` for `dt`, `seconds`, `video_fps`, `cameras` or `note` is the
   default (what the 2.2 client sends for an argument left out). `scripts/labutopia/tests/test_server_validation.py`
   fuzzes these functions (13,068 requests, numpy only, no simulator).
-- `ci_checks/check-limited-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
+- `ci_checks/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
   WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
   (`resumes = 2`, exact hash) and the oracle still ends in success with `live_matches_replay`.
 

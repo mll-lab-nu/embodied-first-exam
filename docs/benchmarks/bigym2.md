@@ -91,7 +91,7 @@ RoboOlympics bug).
 
 Standard-realtime, since 2026-10-10 (review R2 M1, the shared 2.3 layer): the agent's requests cannot slow the clock --
 bodies are read, decoded and checked off the simulator's thread, waiting requests are served once the clock has caught
-up, the cameras are rendered once per control step (`docs/LIMITED_MODE_PROTOCOL.md`, "What a request can cost the
+up, the cameras are rendered once per control step (`docs/STANDARD_MODE.md`, "What a request can cost the
 clock") -- and `final.json` / `reward.json` carry the clock's record: `clock_s`, `max_lag_s` (now the true maximum),
 `stalls`, `stalled_s`, `stalled_share`, `held_steps`, `late_steps`, `requests_refused`, `request_busy_s`. They are
 evidence and decide no verdict. In both service modes a negative `Content-Length` is refused unread (400), and a

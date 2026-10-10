@@ -206,7 +206,7 @@ state the 6 h budget and are compared only with results under the same budget (D
 
 ## Standard mode: `eai-standard/2.4`
 
-The standard twins serve `eai-standard/2.4` ([`STANDARD_MODE_2_4.md`](../STANDARD_MODE_2_4.md), issue #89, PR #90), TopoGym's
+The standard twins serve `eai-standard/2.4` ([`STANDARD_MODE.md`](../STANDARD_MODE.md), issue #89, PR #90), TopoGym's
 documented hardening of 2.2. The release called it "2.3" (dev/jianwen docs/rcb/STANDARD_MODE_2_3.md); that number went to
 the realtime capability (#86), so it was registered as 2.4 = 2.3 + the operations capability (realtime stays optional; the
 RoboTangle service does not offer it). Requests, cameras, proprioception, RCB1 frames and the process model are those of 2.2.
@@ -274,7 +274,7 @@ hook's 27000 s can still end before the review-frame pass of a very long knot_un
 
 Standard texts never say where objects are. They give the robot (base pose included), camera calibration, part names,
 sizes, colours and the detailed goal; privileged texts may give world quantities. All 104 texts pass
-`check-limited-texts.sh`'s patterns.
+`check-standard-texts.sh`'s patterns.
 
 ## Network policy
 

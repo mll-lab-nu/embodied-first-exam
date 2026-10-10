@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for RoboTwin 2.0 (see docs/LIMITED_MODE_PROTOCOL.md, docs/LIMITED_MODE_V2_DESIGN.zh.md).
+"""eai-standard/2.1 sim service for RoboTwin 2.0 (see docs/STANDARD_MODE.md).
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end exports the recorded (T,34) trajectory, replays it for

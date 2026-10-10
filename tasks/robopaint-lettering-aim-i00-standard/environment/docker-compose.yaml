@@ -1,7 +1,7 @@
 # Standard mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # The GPU is reserved for the sidecar: SAPIEN needs a Vulkan device to build the scene and render the cameras (physics and the
-# brush model run on the CPU). Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes,
+# brush model run on the CPU). Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes,
 # compose restarts the same container (its /data record stays) and the service resumes the episode from its journal.
 services:
   main:

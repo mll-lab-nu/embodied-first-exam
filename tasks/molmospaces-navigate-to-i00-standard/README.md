@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `molmospaces-navigate-to-i00-privileged` (the same frozen MolmoSpaces episode): Navigate to any tablelamp (2 available). The agent gets only the
-`eai-standard/2.2` client (docs/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar
+`eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
 model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
 service exit, replays the trajectory in two fresh processes and writes `final.json`; the verifier grades those artifacts

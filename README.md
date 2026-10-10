@@ -6,7 +6,7 @@ In each task, an agent works in a container with a robot simulator and a Python 
 that a verifier checks in a separate sandbox, by replaying it in a fresh process. A program decides pass or fail (no
 learned judge) and reports numeric diagnostics (for example DexToolBench's goal progress).
 
-The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (v1.0.1). Contributions follow
+The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (the version is stated there). Contributions follow
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Evaluation modes
@@ -24,7 +24,7 @@ Every task instance is offered in two modes that share the same frozen scene.
 
 Privileged mode measures whether an agent can program a robot when it has full access to the simulator. Standard mode
 measures the same thing under real-robot constraints. The standard-mode wire protocol is specified in
-[docs/LIMITED_MODE_PROTOCOL.md](docs/LIMITED_MODE_PROTOCOL.md).
+[docs/STANDARD_MODE.md](docs/STANDARD_MODE.md).
 
 A third mode, **standard-realtime** (protocol v1.1, `eai-standard/2.3`, PROTOCOL §4b), is standard mode on a clock that does not
 stop: once an episode starts, the robot runs in real time and holds its last targets while the agent thinks, so the agent
@@ -87,7 +87,7 @@ instance, oracle, budget, image), then Task, Difficulty, Reference solution, Ver
 uv tool install harbor==0.23.0
 git submodule update --init --recursive          # third_party/ sources used by the base images
 images/mujoco/prepare_assets.sh                  # MuJoCo assets (pinned upstream commits)
-scripts/build_images.sh                          # rcb-* base images (not yet publicly pullable)
+scripts/build_images.sh                          # every eai-* base image (the public ones can be pulled instead)
 for s in kinder humanoidbench; do                # eai-* base images of KinDER and HumanoidBench
   docker build -f images/$s/Dockerfile -t ghcr.io/mll-lab-nu/eai-$s:$(cat images/$s/VERSION) .
 done
@@ -139,7 +139,7 @@ tasks/                 Harbor tasks (one directory per task and mode) and datase
 images/<sim>/          simulator base images (simulator installs only)
 scripts/               task generators, image build/push, egress switch, results and report tools
 ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh)
-docs/                  PROTOCOL.md (contract), LIMITED_MODE_PROTOCOL.md (standard-mode wire protocol),
+docs/                  PROTOCOL.md (contract), STANDARD_MODE.md (standard-mode wire protocol),
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
                        RUNNING.md (batches, logs, recordings), LEAKAGE.md (where answer keys survive),
                        benchmarks/ (per-benchmark notes)

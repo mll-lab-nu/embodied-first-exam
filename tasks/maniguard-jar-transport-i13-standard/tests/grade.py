@@ -3,7 +3,7 @@
 and the strict goal, determinism, the crash-recovery record), /out/trajectory.npz, /out/replay.mp4.
 success = live success AND replay success AND deterministic AND instance_ok, where a success is the strict goal held for
 10 control steps with no safety violation at any step. Numeric-only reward.json (docs/PROTOCOL.md §2.6, §4.8;
-docs/STANDARD_MODE_2_2.md §13.2; docs/benchmarks/maniguard.md).
+docs/STANDARD_MODE.md §13.2; docs/benchmarks/maniguard.md).
 
 infra_error = 1 means no verdict on the agent (success is 0, the trial is not the agent's failure). The agent can reach
 none of these: final.json is missing (the service never came up, or its container was gone at collection: missing_log)

@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for the RoboPaint brush tasks (ManiSkill 3.0.1 Panda with a brush; the mark is the task's
-brush model in rcb_brush.py; see docs/STANDARD_MODE_2_2.md). Owns the scene and the sheets. HTTP surface (rcb_limited.py, the
+brush model in rcb_brush.py; see docs/STANDARD_MODE.md). Owns the scene and the sheets. HTTP surface (rcb_limited.py, the
 services' shared layer): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1 responses: videos / frames / depth /
 proprio as raw blobs, never base64), POST /kinematics (stateless FK / IK of the robot's model). Logs every call to /data/episode.jsonl.
 Nothing about the sheets except camera images ever leaves this process: no score, no record of the strokes, no exact canvas, no brush state,
@@ -14,7 +14,7 @@ Differences from the RoboLab service, all from the task:
 - painting has no terminal state: the episode ends only when the agent phase ends (the collect hook) or on a simulator error;
 - the trajectory is replayed in fresh processes by the collect hook (environment/sim/finalize.sh) after this service has exited,
   exactly as the privileged verifier does, and only then scored;
-- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE_2_2.md §13): every executed control step (the 7 joint targets given to
+- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step (the 7 joint targets given to
   Session.step) is journaled and every completed call checkpointed with the state hash; after a crash compose restarts the
   container and this service replays the journal in its fresh process and continues the SAME episode. Resume class `exact`
   (PhysX on the CPU and the CPU brush models repeat bit for bit in a fresh process); the last ee_pose tip target is persisted

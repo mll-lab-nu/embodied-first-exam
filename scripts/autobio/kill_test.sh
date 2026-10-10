@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Crash-recovery acceptance test for one AutoBio standard task (docs/STANDARD_MODE_2_2.md §13; resume class exact),
+# Crash-recovery acceptance test for one AutoBio standard task (docs/STANDARD_MODE.md §13; resume class exact),
 # without an agent: run the task's sim service in a container of eai-autobio with the restart policy of its compose
 # file, stream the first part of the task's reference rows through the shared client, kill -9 the service between two
 # calls, check that it resumed the SAME episode, stream the rest, run the collect hook (finalize.sh) and check

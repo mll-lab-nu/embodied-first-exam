@@ -17,7 +17,7 @@
 - Resource limits (PROTOCOL §2.10, GiB): scope ___; ___ GPU memory / ___ memory / ___ processes / ___ disk; whole trial's expected peak ___ GPU / ___ memory; caps per service ___; measured from ___
 
 ## Checklist
-- [ ] `bash ci_checks/run_all.sh <tasks>` passes; no protocol warnings other than `legacy:` ones
+- [ ] `bash ci_checks/run_all.sh <tasks>` passes
 - [ ] Generated tasks: re-running the generator leaves `git diff tasks/` empty
 - [ ] Oracle and `nop` on a sample (≥ 2 tasks per mode), table below
 - [ ] New simulator or family: two fresh replays give the same state hash

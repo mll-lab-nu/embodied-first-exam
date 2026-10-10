@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/STANDARD_MODE_2_2.md): the RoboWits
+"""eai-standard/2.2 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/STANDARD_MODE.md): the RoboWits
 adapter of the shared layer rcb_limited.py (scripts/eai_standard/). Source: scripts/robowits/shared/server.py, copied
 unchanged into every RoboWits standard task as environment/sim/server.py by scripts/robowits/mk_tasks.py.
 Owns the scene. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1
@@ -8,7 +8,7 @@ current, and on episode end exports the recorded (T, 16) trajectory, replays it 
 backend restores the frozen snapshot exactly, so the in-process replay must reproduce the live final state bit for bit)
 and renders /data/replay.mp4. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE_2_2.md §13): every executed control step is journaled
+Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step is journaled
 (/data/journal.f64, the exact row handed to the simulator), every completed call checkpointed (rows, state hash, proprio
 row). After a crash, run.sh exits non-zero, compose restarts the container (`restart: on-failure:6`) and this service
 rebuilds the frozen scene, replays the journal up to the last checkpoint and continues the SAME episode, never a reset.

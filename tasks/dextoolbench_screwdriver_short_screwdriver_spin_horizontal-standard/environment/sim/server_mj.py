@@ -1,7 +1,7 @@
 """eai-standard/2.1 sim service for the MuJoCo tasks (DexToolBench, MuJoCo Playground): robot as a service.
 
 The sidecar owns the simulator (the task's tooling module, RCB_TOOL = rcb_dtb | rcb_aloha | rcb_panda, with the task's
-frozen instance) and serves the same wire protocol as the RoboTwin limited tasks (docs/LIMITED_MODE_PROTOCOL.md), so
+frozen instance) and serves the same wire protocol as the RoboTwin limited tasks (docs/STANDARD_MODE.md), so
 the agent uses the same client (rcb_client.py): GET /spec, GET /status, POST /observe, POST /submit, binary RCB1
 responses. What the agent gets: camera RGB (+ depth, with each camera's intrinsics and pose: the viewpoint the image is
 rendered from, recomputed for every response, and per frame for a camera that moves), the robot's own joint

@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for ManiGuard (BEHAVIOR-1K v3.7.2: OmniGibson on Isaac Sim 4.5; a fixed Franka Panda with
-long fin-ray fingers; see docs/STANDARD_MODE_2_2.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the
+long fin-ray fingers; see docs/STANDARD_MODE.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the
 scene. HTTP surface (rcb_limited.serve): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies and responses:
 videos / frames / depth / proprio as raw blobs, never base64), POST /kinematics. Logs every call to /out/episode.jsonl and
 keeps /out/final.json current. Nothing about objects, the goal sphere's position or the safety verdicts leaves this process.
@@ -22,7 +22,7 @@ Differences from the other 2.2 services, all from the simulator and the benchmar
 - the episode is NOT replayed here (one Isaac simulator per container): when it ends the service writes /out/trajectory.npz
   + /out/episode.json (live result and state hash); the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh
   replays the trajectory in two fresh processes and completes /out/final.json;
-- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE_2_2.md §13): every executed control step is journaled
+- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step is journaled
   (/out/journal.f64), every completed call checkpointed (rows, state hash, proprio row); after a crash compose restarts the
   container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume class
   `approx` (OmniGibson declares rollouts nondeterministic) until the determinism probe says otherwise

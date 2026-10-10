@@ -8,8 +8,7 @@
 # simulators keep a cache of generated code:
 # - tests/test.sh empties /logs/verifier before anything else (a planted reward.json must not survive a grader crash):
 #   `rm -rf /logs/verifier/*`, or `find /logs/verifier -mindepth 1 ... -exec rm ...` (the form that keeps Harbor's
-#   test-stdout.txt). A hard failure for tasks on protocol v1.0 (they declare `oracle` and no `tier`); tasks from before
-#   the migration (PROTOCOL §7) get the same rule as a warning from check-protocol-v1.py.
+#   test-stdout.txt). Every task.
 # - no writable volume crosses the trust boundary: named volumes mounted by a trusted container (the verifier, a
 #   standard task's sim sidecar) are *_trusted and never mounted by the agent's container. Every task.
 # The compose file is read without a YAML library, so the reader fails closed: a volumes entry or a service line it
@@ -46,12 +45,10 @@ if cf.is_file():
     for img in re.findall(r"^\s*image:\s*(\S+)", cf.read_text(), re.M):
         if not (re.match(r"^[\w.\-]+(:\d+)?/.+[:@].+", img) and not img.endswith(":latest")): fail(f"compose sidecar image {img!r} must be pinned")
 
-# test.sh clears /logs/verifier first (the same rule as check-protocol-v1.py)
-meta = d.get("metadata") or {}
-v1 = "oracle" in meta and "tier" not in meta
+# test.sh clears /logs/verifier first
 CLEAR_LOGS = re.compile(r"^(rm\s+-[rRf]+\s+/logs/verifier/\*|find\s+/logs/verifier\s+-mindepth\s+1\b.*(-delete|-exec\s+rm))")
 sh = t / "tests/test.sh"
-if v1 and sh.is_file():
+if sh.is_file():
     cmds = [ln.strip() for ln in sh.read_text().splitlines() if ln.strip() and not ln.strip().startswith("#")]
     cmds = [c for c in cmds if not re.match(r"(set\s|mkdir\s+-p\s+/logs/verifier\s*$)", c)]
     if not cmds or not CLEAR_LOGS.match(cmds[0]):

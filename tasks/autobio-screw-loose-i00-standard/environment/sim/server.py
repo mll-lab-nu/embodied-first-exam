@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the AutoBio tasks (docs/STANDARD_MODE_2_2.md): the adapter of the shared layer
+"""eai-standard/2.2 sim service for the AutoBio tasks (docs/STANDARD_MODE.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_autobio.Session (AutoBio on MuJoCo 3.3.0, CPU). HTTP surface: GET /spec,
 GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to /data/episode.jsonl.
 
