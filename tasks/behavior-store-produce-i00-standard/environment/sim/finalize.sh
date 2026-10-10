@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container.
-#   1. end the episode with the shared first half (rcb_limited.py end, docs/STANDARD_MODE_2_2.md §13.3): it waits through
+#   1. end the episode with the shared first half (rcb_limited.py end, docs/STANDARD_MODE.md §13.3): it waits through
 #      a resume after a crash (no PID file until the service is ready again), SIGUSR1s the process that wrote the newest
 #      startups.jsonl line, and returns 0 once the service has written trajectory.npz + episode.json (live result,
 #      final-state hash) and exited, releasing the simulator; 2 when final.json already holds the verdict (the service

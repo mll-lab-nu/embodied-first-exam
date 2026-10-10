@@ -1,22 +1,14 @@
 # Robot Coding Bench — Task Protocol v1.2-rc
 
-Status: **final** (2026-09-30; v1.0.1 2026-10-01: both modes carry a suffix, no results in the repository, standard
-task README; **v1.1 2026-10-08: a third mode (§4b), served by `eai-standard/2.3`; protocol-change issue #86; v1.1.1 2026-10-08: the third mode is named
-`standard-realtime`, issue #97; v1.1.2 2026-10-08: the standard-realtime mode's default reset budget is 0, as in standard
-mode, and HumanoidBench's 50 is a per-benchmark exception, issue #102; v1.1.3 2026-10-09: MyoSuite's standard tasks
-default to a reset budget of 10, a per-benchmark exception (§4.5), #116; v1.1.4 2026-10-10: every task declares the
-minimum compute it runs on, `[metadata.resources]` and a README section (§2.9), owner request (board 0061); v1.1.5
-2026-10-10: every task declares resource limits for the agent phase and docker caps per service, and shows the limits to
-the agent in `instruction.md`; from v1.2 a task-provided monitor and the verifier judge them inside the trial, and with
-`RCB_LIMITS_ENFORCE=1` a violation fails the trial (§2.10), owner request (board 0064); v1.2-rc 2026-10-10: the monitor
-sidecar, the caps and the verifier step are in every task (#131; review fixes of board 0067, §7; second review round:
-an out-of-memory kill is the agent's only at its container's own cap, a benchmark-owned service killed for memory is
-never the agent's 0, a CPU cap above the host's CPU count is clamped by the runner, §2.10), enforcement off by
-default; v1.2 becomes final when the calibration batch has confirmed the limits**).
-The tasks in the repository follow it except for the open items in §7. The wire format of standard mode is specified in
-[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`, and the standard-realtime mode's `eai-standard/2.3`);
-its 2.2 extension in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md), and the 2.4 operations capability in
-[`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md) (2026-10-08, issue #89).
+**Version: v1.2-rc** (2026-10-10). Changes in this version: the resource monitor sidecar, the docker caps and the
+verifier's limits step are in every task (§2.10; #131, with the review fixes of the same day: an out-of-memory kill is
+the agent's only at its container's own cap, a benchmark-owned service killed for memory is never the agent's 0, a CPU
+cap above the host's CPU count is clamped by the runner); enforcement is off by default, and v1.2 becomes final when
+the calibration batch has confirmed the limits. Earlier versions, whose rules are all part of this text: v1.0
+(2026-09-30: the two modes and their names), v1.1 (2026-10-08: the standard-realtime mode, §4b), v1.1.4 (compute
+resources, §2.9), v1.1.5 (resource limits, §2.10).
+The tasks in the repository follow it except for the open items in §7. The wire format of standard and
+standard-realtime mode (`eai-standard/2.x`) is specified in [`STANDARD_MODE.md`](STANDARD_MODE.md).
 
 > **Names.** v1.0 renamed the two modes (unlimited → **privileged**, limited → **standard**) and the standard-mode
 > protocol (`rcb-limited/2.x` → **`eai-standard/2.x`**); task directories end in `-privileged` or `-standard`. Base images
@@ -32,7 +24,7 @@ its 2.2 extension in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md), and the 2.4
 | **MAY** | Optional; left to the task or benchmark. If adopted, it is implemented as specified here. |
 
 Basis tags: **[CI]** enforced by `ci_checks/`; **[current]** what existing tasks already do (exceptions are named and
-listed in §7); **[new]** introduced by v1.0 — required for new work, partly enforced by `ci_checks/check-protocol-v1.py`,
+listed in §7); **[new]** introduced by v1.0 — required for new work, partly enforced by `ci_checks/check-protocol.py`,
 and applied to existing tasks by the migration (§7).
 
 **Principle.** The benchmark adds as little as possible on top of the Harbor task format. Anything not specified here
@@ -155,7 +147,7 @@ Harbor builds the task images locally from the task directory on every run; only
 
 | Item | Level | Basis |
 |---|---|---|
-| Base images at `ghcr.io/mll-lab-nu/eai-<name>:<ver>`, anonymously pullable, unless `BUILD_ONLY` | MUST | [new] (registry: `legacy:` warning in CI) |
+| Base images at `ghcr.io/mll-lab-nu/eai-<name>:<ver>`, anonymously pullable, unless `BUILD_ONLY` | MUST | [new] (registry: [CI]) |
 | Versions in `images/<name>/VERSION`; the global `images/VERSION` is not changed (removed after migration) | MUST | [new] |
 | Images that cannot be published (e.g. licensed simulators): `images/<name>/BUILD_ONLY` plus local build instructions (licences, data); never public, though maintainers may keep a private package for org members | MUST | [new] |
 | Every `FROM` and `image:` pinned to a tag or `@sha256` digest | MUST | [CI] |
@@ -450,22 +442,19 @@ only (the simulator in the `sim` service is the benchmark's and does not count)"
 ## 4. Standard mode (`mode = "standard"`): `eai-standard/2.x`
 
 Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are in
-[`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (2.1), [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md) (2.2) and
-[`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md) (2.4). This section lists what is required.
+[`STANDARD_MODE.md`](STANDARD_MODE.md), one part per version. This section lists what is required.
 
 ### 4.0 Versions
 | Version | Date | Content |
 |---|---|---|
-| rcb-limited/1.0 (retired) | 2026-09-22 | `POST /reset` with a budget, `POST /step` one action, base64 images |
-| rcb-limited/2.0 | 2026-09-24 | no reset; `/submit` action chunks, `/observe`; binary RCB1 responses |
-| rcb-limited/2.1 | 2026-09-27 | 82-column proprioception, optional depth noise; crash recovery added 2026-09-29 (no version bump) |
-| **eai-standard/2.1** | 2026-09-30 | rename only; identical to rcb-limited/2.1 including crash recovery. **Current.** |
-| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md)) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, LabUtopia, AutoBio, ManiGuard and MuJoCo Playground's quadruped tasks |
-| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0); standard tasks stay on 2.1 / 2.2. Issue #86 |
-| eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md)): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
+| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX and BiGym 2.0 |
+| eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, LabUtopia, AutoBio, ManiGuard and MuJoCo Playground's quadruped tasks |
+| eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0); standard tasks stay on 2.1 / 2.2. Issue #86 |
+| eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
 
 Standard services report `eai-standard/2.1`, `eai-standard/2.2` or `eai-standard/2.4`, standard-realtime services `eai-standard/2.3`; the shipped clients
-accept every 2.x version and the former `rcb-limited/2.x` spelling as well.
+accept every 2.x version and the former `rcb-limited/2.x` spelling as well. No task declares a version before 2.1
+(`rcb-limited/1.0`, with `/reset` and a single-action `/step`, is retired, §6; 2.0 had no measured proprioception).
 
 **Core rules.** The simulator runs in a sidecar the agent cannot open; four endpoints; RCB1 binary responses; no
 reset (unless the optional capability is enabled), no step limit, wall clock as the only hard budget; crash recovery
@@ -529,7 +518,7 @@ resumes the same episode; success is decided on a replay.
 
 **Per-benchmark reset defaults.** A benchmark's standard or standard-realtime tasks may default to a reset budget N > 0 only by owner
 decision, recorded here and in `docs/benchmarks/<bench>.md`; the capability is the one above (`POST /reset`, only the
-last episode graded, a success ends the trial: [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md)), the budget stays an override (`RCB_RESET_BUDGET`), and that benchmark's
+last episode graded, a success ends the trial: [`STANDARD_MODE.md`](STANDARD_MODE.md)), the budget stays an override (`RCB_RESET_BUDGET`), and that benchmark's
 results must state the reset budget and are compared only with results under the same budget.
 - **HumanoidBench** (owner, 2026-10-07; its standard-realtime tasks too, 2026-10-08): `budget.reset = 50`. The H1 falls within 1–3 s of robot time and the agent has
   no simulator to practise in, so a single episode is one blind attempt. `RCB_RESET_BUDGET=0` still runs one episode;
@@ -556,13 +545,13 @@ results must state the reset budget and are compared only with results under the
 | Crash recovery: every executed step journaled, a checkpoint (step count, state hash) per completed call; after a restart the journal is replayed, the hash checked and the same episode continues — never a reset | MUST | [current] |
 | At most 2 resumes (`RCB_MAX_RESUMES`); a third crash ends the episode with `sim_crashed_on_call` if every crash happened inside a call, else `sim_crashed` (`infra_error = 1`); a written verdict is never overwritten | SHOULD | [current] |
 | Startup watchdog and back-off before rebuilding | SHOULD | [current] |
-| Per-simulator resume rule: a simulator declared nondeterministic compares and records the hash, and a mismatch continues the same episode with `resume_state_mismatch` (unless the robot diverged grossly), as in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md) §13.1; the verdict still comes from fresh replays of the whole recorded trajectory | MAY | [new] (2.2) |
+| Per-simulator resume rule: a simulator declared nondeterministic compares and records the hash, and a mismatch continues the same episode with `resume_state_mismatch` (unless the robot diverged grossly), as in [`STANDARD_MODE.md`](STANDARD_MODE.md) §13.1; the verdict still comes from fresh replays of the whole recorded trajectory | MAY | [new] (2.2) |
 
 ### 4.8 Evidence and grading
 | Item | Level | Basis |
 |---|---|---|
 | The sidecar writes `/data/episode.jsonl`, `/data/trajectory.npz` and `/data/final.json` (with `finalized`) | MUST | [current] |
-| The replay's verdict (`replay_success`, `deterministic`) is in `final.json` before any video is rendered, and stands from then on: a video never decides, delays or voids a verdict (a service restarted while rendering loses only the video) | SHOULD | [new] (2026-10-10: the `rcb_service` family, the MuJoCo and MetaWorld+ services; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md)) |
+| The replay's verdict (`replay_success`, `deterministic`) is in `final.json` before any video is rendered, and stands from then on: a video never decides, delays or voids a verdict (a service restarted while rendering loses only the video) | SHOULD | [new] (2026-10-10: the `rcb_service` family, the MuJoCo and MetaWorld+ services; [`STANDARD_MODE.md`](STANDARD_MODE.md)) |
 | `/data/calls/NNNNNN/`, `replay.mp4`, `replay.last.png` | SHOULD | [current] |
 | `artifacts` declares the evidence from `service = "sim"` and keeps `"/app/output/"` | MUST | [current] |
 | `[[verifier.collect]]` waits for `server.pid`, sends SIGUSR1, waits for `finalized` | MUST | [current] |
@@ -580,7 +569,7 @@ affecting the verdict.
 
 Standard mode on a clock that does not stop (v1.1; owner, 2026-10-08; issue #86). Everything in §4 holds (sidecar
 topology, endpoints, RCB1, actions, privileged information, crash recovery, evidence, replay grading) except where this
-section says otherwise. Wire details: [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Standard-realtime mode". The time model
+section says otherwise. Wire details: [`STANDARD_MODE.md`](STANDARD_MODE.md), "Standard-realtime mode". The time model
 is the one proposed in #41 (the world runs at 1/S of real speed, a command takes effect at the next control step, all
 agent latency counts, the agent's own program may act), on the 2.x endpoints and without its proxy (D11).
 
@@ -642,20 +631,20 @@ applied after the run to Harbor's counts (`result.json`); that check is not impl
 | Removing a §4 MUST in a minor version | MUST NOT | [new] |
 | Protocol changes: a protocol-change issue, then a shared-files PR updating the document, the reference implementation, the CI allowlist and an example task together | MUST | [new] |
 
-**`eai-standard/2.2`** ([`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md); formerly `rcb-limited/2.2`). Depth `last` /
+**`eai-standard/2.2`** ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2; formerly `rcb-limited/2.2`). Depth `last` /
 `frames` (uint16 millimetres, zlib), `frame_step`, `frame_time_s`, per-frame `extrinsic_cv`, camera intrinsics and
 mounting, `robot_spec`, `world`, a stateless `POST /kinematics`, and a per-call wall-clock bound (`max_call_wall_s`,
 `meta.stopped`; the episode's only budget stays the wall clock) — all MAY capabilities. Its services implement the crash
 recovery of §4.7 (with the per-simulator resume rule); the shared implementation is `scripts/eai_standard/`.
 
-**`eai-standard/2.3`** (v1.1, 2026-10-08, issue #86; [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md), "Standard-realtime mode").
+**`eai-standard/2.3`** (v1.1, 2026-10-08, issue #86; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode").
 2.2 plus the realtime capability: `/spec.timing`, `/submit` with `at` answering at once, `cameras: []` for no images, the
 `meta` / `/status` fields `running`, `planned_steps`, `lag_s` (and `start_step`, `late_steps`, `plan_end_step` on a
 submit), and the evidence of §4b. Every 2.2 addition stays a MAY capability, so a 2.1 service with the realtime capability
 is a 2.3 service. Only standard-realtime tasks serve it (§4b); 2.x clients connect to it unchanged, and the timing semantics
 are declared in `/spec.timing` and the task's instruction.
 
-**`eai-standard/2.4`** (2026-10-08, issue #89; [`STANDARD_MODE_2_4.md`](STANDARD_MODE_2_4.md)). 2.3 plus the operations
+**`eai-standard/2.4`** (2026-10-08, issue #89; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4). 2.3 plus the operations
 capability: `meta.operation_id` and `meta.request_deadline_unix_s` on `/submit` and `/observe` (408 for an expired request,
 409 for an id already admitted: a call is never executed twice), `GET /operations/<id>` (`admitted`, `completed`, `error`,
 `interrupted` with `execution_uncertain` after a crash), a service-owned watchdog that ends a hung native call as an infra
@@ -669,29 +658,10 @@ served by RoboTangle, whose release named it "2.3" before that number went to th
 
 ## 7. Migration status
 
-Done (2026-10-01):
-1. Modes and names: every task ends in `-privileged` or `-standard`; `mode` set, `tier` removed;
-   `rcb-limited/2.1` → `eai-standard/2.1` in `task.toml`, the services' `/spec` and the instructions; `rcb_client.py`
-   accepts both spellings.
-2. `oracle` / `oracle_evidence` on every task (DexToolBench: full on 6, partial on 15; KinDER: full on 1, none on 10;
-   HumanoidBench: full on 1, none on 23 — the non-full ones need human review).
-3. `/logs/verifier` cleared at the start of every `tests/test.sh`.
-4. `reward.txt` is `success` (1/0) for DexToolBench and the MuJoCo standard tasks, with `progress` in `reward.json`; the
-   MuJoCo standard grader writes no string fields.
-5. The MuJoCo privileged tasks use the same image tag as their standard twins (`rcb-mujoco:0.1.2`: same physics and state
-   hashes as 0.1.1, plus GPU EGL rendering).
-6. No `results/` in any task and no batch reports under `docs/` (results live on the results site); every task README in
-   the standard layout.
-7. Services: a 500 ends the episode (`reason = "error"`), bodies over 64 MB get 413, RoboTwin's `/spec` states the end
-   condition (`episode`).
-8. CI: every rule of `check-protocol-v1.py` except the image registry (`legacy:`) fails a PR; `static-checks` also runs
-   `scripts/task_conventions.py --check` and the KinDER and HumanoidBench `gen_tasks.py check`.
-9. Generators (`scripts/robotwin_mk_*.py`, `dtb_mk_task.py`, `mj_mk_limited.py`, `scripts/{kinder,humanoidbench}/gen_tasks.py`)
-   emit the v1.0 names and finish with `scripts/task_conventions.py` (`normalize`), which applies the conventions above
-   (fields, protocol spelling, test.sh, graders, README layout, no `results/`); `--check` reports a task it would change.
-   Results tooling writes outside the repository (`write_task_results.py --out`).
-
-These edits change task digests but not scenes, instances or success rules; no separate re-run was made for them.
+The v1.0 migration of the existing tasks (mode names and suffixes, `oracle` fields, `/logs/verifier` cleared first,
+numeric rewards, one README layout, no `results/`, generators ending in `scripts/task_conventions.py`) was completed on
+2026-10-01; it changed task digests but no scene, instance or success rule. The open items keep their numbers: tasks
+and documents cite them.
 
 Open:
 1. ~~Images~~ done 2026-10-02: every base image is `ghcr.io/mll-lab-nu/eai-<name>`; public unless `BUILD_ONLY`

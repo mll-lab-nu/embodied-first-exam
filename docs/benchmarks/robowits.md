@@ -137,7 +137,7 @@ replays the episode on the agent's clock. Results are reported with this budget.
 ## Standard mode (eai-standard/2.2)
 `joint_position` (16) and `ee_pose` (16, right arm first, IK per row on RoboWits' pink/pinocchio IK, gripper-tip frame);
 cameras `ego` (static) and `wrist_right` / `wrist_left` (link-mounted); Genesis rasterizer depth; `/kinematics` on
-pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`episode`). STANDARD_MODE_2_2.md §16.
+pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`episode`). STANDARD_MODE.md §16.
 - Requests (PROTOCOL §4.6; 2026-10-10): the adapter checks the type and range of every field of a `/submit` header
   and an `/observe` body before it executes or counts anything, and answers 400: `type`, `dt` (a finite number in
   [1/30, 0.5] s and, for `joint_position`, a whole number of 1/30 s periods within 1e-6 of a period: never rounded),
@@ -147,7 +147,7 @@ pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`ep
   listed in `meta.clipped`, like out-of-limit joint targets; an IK result that is not finite counts as an IK failure
   (the arm holds). Before this date a null or mistyped field, a huge `video_fps` or a non-string `note` ended the
   episode with a 500 (some after the chunk had run), and a `dt` between two periods was rounded.
-- Crash recovery (STANDARD_MODE_2_2.md §13): `restart: on-failure:6`, `command: sh /srv/run.sh`; the adapter declares the
+- Crash recovery (STANDARD_MODE.md §13): `restart: on-failure:6`, `command: sh /srv/run.sh`; the adapter declares the
   resume class `exact` on the CPU backend and `approx` on the GPU backend. A smoke test of the sidecar outside Harbor
   (laptop, 2026-10-01, stack_cubes): the service killed between calls came back in 28 s, replayed its 90-row journal with
   the state hash matching, continued the same episode and was graded in-process (`deterministic` 1, `resumes` 1,
@@ -178,8 +178,8 @@ The tooling records (T, 16) JOINT_ABS rows (per arm 7 joints + gripper width) at
   replay, rendering (`render_frame` / `render_grid` / `render_video`) and thin wrappers of the low-level action (joint
   moves, IK moves without collision checking, gripper, hold). Task-level skills (grasp, place, navigate) are never added
   to it; reference solutions keep theirs under `solution/`.
-- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE_2_2.md §10,
-  `check-limited-texts.sh`): no object poses or positions, no world coordinates of workspace items. Their success
+- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+  `check-standard-texts.sh`): no object poses or positions, no world coordinates of workspace items. Their success
   criterion is stated in words and distances relative to the objects and the table top; the corners of the predicate's
   table-bounds rectangle and the goal line's coordinate are withheld. Given: object names, sizes and colours, the robot
   (its base pose included), the cameras' calibration, the world frame's convention. Privileged tasks give the privileged

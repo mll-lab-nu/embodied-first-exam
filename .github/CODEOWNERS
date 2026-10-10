@@ -1,6 +1,6 @@
 # Shared files need a review from one of these maintainers (enforced by branch protection on main).
 /docs/PROTOCOL.md               @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
-/docs/LIMITED_MODE_PROTOCOL.md  @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/docs/STANDARD_MODE.md           @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /docs/TAXONOMY.md               @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /docs/REVIEWING.md              @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /docs/LEAKAGE.md                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0

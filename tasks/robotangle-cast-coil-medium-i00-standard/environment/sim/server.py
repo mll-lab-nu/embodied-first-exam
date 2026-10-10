@@ -1,10 +1,10 @@
-"""eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/rcb/STANDARD_MODE_2_2.md): the TopoGym
+"""eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/STANDARD_MODE.md): the TopoGym
 adapter of the shared layer rcb_limited.py (scripts/eai_standard/, copied unchanged into every standard task). Adapted from
 robot_coding_bench's RoboWits service. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit
 (RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's own model). Logs every call to
 /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, STANDARD_MODE_2_2.md section 13, resume class `approx`: Genesis' GPU contact solver is
+Crash recovery (rcb_limited.Episode, STANDARD_MODE.md section 13, resume class `approx`: Genesis' GPU contact solver is
 not bit-deterministic): every executed control step is journaled (/data/journal.f64, the exact float32 row given to
 Session.step), every completed call checkpointed (rows, state hash, proprio row). After a crash run.sh exits non-zero,
 compose restarts the container (`restart: on-failure:6`) and this service rebuilds the frozen scene, replays the journal

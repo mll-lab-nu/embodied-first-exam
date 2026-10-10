@@ -87,7 +87,7 @@ success rate), load rotor 14.7 / 1.0.
   with every threshold relative ("lift it at least 9.5 cm", "within 15 mm of the slot's centre", "the row farther from
   the robot's base"), and never a world coordinate, an object pose or an instrument state; the robot's own base poses
   are in `/spec` (`robot_spec.base`). AutoBio's standard tasks join the declaration of eai-standard/2.2 §10 and are
-  checked by `ci_checks/check-limited-texts.sh`.
+  checked by `ci_checks/check-standard-texts.sh`.
 - **Texts.** The instructions describe each check in our own words and point to its source in the image
   (`/opt/AutoBio/autobio/<module>.py`); AutoBio's code is not quoted (no licence). The texts are in
   `scripts/autobio/families.json`.
@@ -181,7 +181,7 @@ they still succeed (the success step moves by at most 22 control steps).
   left finger; a grasp between both fingers satisfies it, and the instructions say so.
 - **AutoBio's own evaluator shows a frozen mixer display** after its first two frames (the helper described under
   Modes); frames rendered here follow the panel. Worth knowing when comparing with AutoBio's numbers for that task.
-- **`check-limited-protocol.py`** (the live conformance test) reports one false positive on the UR5e tasks:
+- **`check-standard-protocol.py`** (the live conformance test) reports one false positive on the UR5e tasks:
   `placeholder_limits`, because five UR5e joints share a +-2 pi range. That is their range in AutoBio's model, as on the
   real arm.
 - **No licence upstream**, hence `BUILD_ONLY`; a licence from the authors would change that and nothing else.
@@ -215,11 +215,11 @@ as committed (their digests in `tasks/dataset.toml`).
   the reference 0 (the mixer: score 0.2), the reference without its last 50 rows 0 (rule `first`), the reference
   reversed 0, 4 s of random targets 0, the initial targets held for 10 s 0, another family's reference 0; the
   reference 1.
-- **Crash recovery** (`scripts/autobio/kill_test.sh`, STANDARD_MODE_2_2 §13.5), on `pickup` and on `thermal_mixer`: the
+- **Crash recovery** (`scripts/autobio/kill_test.sh`, STANDARD_MODE.md §13.5), on `pickup` and on `thermal_mixer`: the
   service killed (`kill -9`) after the first half of the reference rows; the container restarted, the service resumed
   the same episode (`resumes` 1, exact hash), the client sent the rest (and `done` for the mixer), the collect hook
   graded it: success, `live_matches_replay` 1, the reference's final state.
-- **`ci_checks/check-limited-protocol.py --launch`** against live services: `pickup` (ALOHA) passes all 177 checks;
+- **`ci_checks/check-standard-protocol.py --launch`** against live services: `pickup` (ALOHA) passes all 177 checks;
   `thermal_mixer` and `pipette` (UR5e) pass 183 and 246 and fail one, the `placeholder_limits` heuristic described
   under Known limits. Among the passes: forward kinematics of the measured joints equals the measured tool pose,
   FK(parent link) x mount equals each wrist camera's pose, the IK round trip, and the tool frame projected through

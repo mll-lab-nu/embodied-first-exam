@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the LabUtopia tasks (docs/STANDARD_MODE_2_2.md): the adapter of the shared layer
+"""eai-standard/2.2 sim service for the LabUtopia tasks (docs/STANDARD_MODE.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_labutopia.Session (LabUtopia on Isaac Sim, PhysX on the CPU, RTX cameras). HTTP
 surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.

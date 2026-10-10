@@ -79,7 +79,7 @@ timeout_sec = 120
 [[verifier.collect]]
 service = "sim"
 # end the episode (SIGUSR1 to the live service, through a crash resume if one is under way), wait for the in-process
-# grade and the video (final.json video_done), then hand over the record (docs/STANDARD_MODE_2_2.md §13.3)
+# grade and the video (final.json video_done), then hand over the record (docs/STANDARD_MODE.md §13.3)
 command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout 2280; cat /data/final.json"
 timeout_sec = 2400                # service up (a resume replays the journal first), the grading replay, then the video
 

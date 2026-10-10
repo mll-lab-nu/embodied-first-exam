@@ -1,5 +1,5 @@
 """eai-standard/2.1 sim service: the simulator-agnostic half of a standard-mode sidecar (docs/PROTOCOL.md §4,
-docs/LIMITED_MODE_PROTOCOL.md).
+docs/STANDARD_MODE.md).
 
 The robot as a service: the agent reaches a simulator it cannot open over HTTP. GET /spec, GET /status, POST /observe
 and POST /submit; POST /reset exists only when the run grants resets (budget.reset > 0); everything else is 404.

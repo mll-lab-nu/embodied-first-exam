@@ -1,5 +1,5 @@
 """eai-standard/2.3, the standard-realtime mode's protocol: the sim service of HumanoidBench's `-standard-realtime` tasks
-(docs/PROTOCOL.md §4b, docs/LIMITED_MODE_PROTOCOL.md "Standard-realtime mode"; docs/benchmarks/humanoidbench.md). Entry
+(docs/PROTOCOL.md §4b, docs/STANDARD_MODE.md "Standard-realtime mode"; docs/benchmarks/humanoidbench.md). Entry
 point of the sidecar: `python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged). 2.3 is 2.2 plus the realtime
 capability, every 2.2 addition optional: this service is rcb_service's 2.1 service with the capability, and reports
 eai-standard/2.3.

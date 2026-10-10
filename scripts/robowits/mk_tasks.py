@@ -475,11 +475,11 @@ def std_readme(fam: str, f: dict) -> str:
                + (" The oracle scores 1 and `nop` scores 0." if f["oracle"] == "full" else ""))
     ver += review_line(f, ", with its privileged twin")
     cls = "exact" if f["backend"] == "cpu" else "approx"
-    rows = [("Protocol", f"`{PROTOCOL}` (docs/STANDARD_MODE_2_2.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control "
+    rows = [("Protocol", f"`{PROTOCOL}` (docs/STANDARD_MODE.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control "
                          "rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` frames or a watch window; stateless "
                          "`kinematics`; binary RCB1 responses"),
             ("Crash recovery", f"`restart: on-failure:6`; the service replays its journal and resumes the same episode (resume class "
-                               f"`{cls}`, docs/STANDARD_MODE_2_2.md §13)"),
+                               f"`{cls}`, docs/STANDARD_MODE.md §13)"),
             ("Agent and verifier image", f"`{CLIENT_IMAGE}` with the shared pins (`environment/{CLIENT_REQUIREMENTS}`)"),
             ("Instance", f"the privileged twin's frozen instance (`environment/sim/instance.json`): entry {f['eval_index']} of RoboWits' "
                          f"`eval_dataset_50/{num(f)}.json`")] + bk_detail(f, "into the `sim` sidecar") + host_detail(f)
@@ -591,7 +591,7 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 # end the episode (SIGUSR1 to the live service, through a crash resume if one is under way), wait for the in-process
-# grade and the video (final.json video_done), then hand over the record (docs/STANDARD_MODE_2_2.md §13.3)
+# grade and the video (final.json video_done), then hand over the record (docs/STANDARD_MODE.md §13.3)
 command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout {ct - 120}; cat /data/final.json"
 timeout_sec = {ct}                # service up (a resume replays the journal first), the grading replay, then the video
 
@@ -625,7 +625,7 @@ def std_compose(fam: str, f: dict) -> str:
              "# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).",
              ("# Genesis runs physics on the GPU here (particle-heavy scene, not bit-exact) and renders the cameras through EGL." if gpu else
               "# Genesis runs physics on the CPU (bit-deterministic) and needs the GPU only for EGL camera rendering."),
-             "# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the",
+             "# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the",
              "# container (same container, same /data) and the service replays its journal into the same episode, never a reset."]
     out = "\n".join(lines) + "\n" + (BK_NOTE if f["blenderkit"] else "")
     out += "services:\n  main:\n    depends_on: [sim]\n  sim:\n"

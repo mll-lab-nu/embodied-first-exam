@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Crash-recovery acceptance test for one MolmoSpaces standard task (docs/STANDARD_MODE_2_2.md §13; resume class exact),
+# Crash-recovery acceptance test for one MolmoSpaces standard task (docs/STANDARD_MODE.md §13; resume class exact),
 # without an agent: run the task's sim service in a container of eai-molmospaces with the restart policy of its compose
 # file, drive it with the shared client (a few joint_position chunks), kill -9 the service between two calls, check that
 # it resumed the SAME episode exactly, end it with `done`, run the collect hook (finalize.sh) and check final.json:
