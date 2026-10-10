@@ -29,7 +29,7 @@ stroke_count = {{N}}
 pen_control = "press depth (shades) + wrist yaw"
 
 [verifier]
-timeout_sec = 1800.0
+timeout_sec = 3600.0              # two fresh replays of at most 72,000 control steps (rcb_brush.MAX_STEPS) at 67-102 steps/s, plus two scene builds
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 [agent]

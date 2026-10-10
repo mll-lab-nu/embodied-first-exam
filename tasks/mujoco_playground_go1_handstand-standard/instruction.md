@@ -16,7 +16,8 @@ The robot starts standing at Playground's `home` pose with a random base velocit
 - **The episode ends** the moment the pose has been held for 100 control steps in a row (success), when the robot meets the termination rule (the trunk's up axis below -0.25 (z component of the IMU frame's z axis), or any part of a front leg other than its foot (thigh, calf, hip) touching the floor: a failure), after 500 control steps (`spec["max_control_steps"]`), when you submit `done`, or when your time is up.
 - **Success** is 100 control steps in a row (2 s) with the trunk's forward axis (the IMU frame's x axis) within 30 deg of straight down, the IMU at least 0.4 m above the floor, and the hind (RR, RL) feet off the ground, without a termination before; judged after every control step.
 - Your wall-clock budget is 3600 s from your start. Simulated time only advances with your commands (and
-  `get_obs(seconds=...)`, which holds the current targets).
+  `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is counted from your first call to
+  the service; approximate — the harness's own deadline is authoritative.
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.

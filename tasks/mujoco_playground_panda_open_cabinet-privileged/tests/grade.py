@@ -31,12 +31,15 @@ def cost() -> dict:
 def main() -> int:
     c = cost(); traj = "/app/output/trajectory.npz"
     if not os.path.isfile(traj):
-        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, **c}); return 0
+        write(False, {"success": 0, "deterministic": 0, "missing_trajectory": 1, "grader_error": 0, **c}); return 0
     try:
         import rcb_panda as ra
-        A = np.asarray(np.load(traj, allow_pickle=False)["actions"], dtype=np.float64)
-        if A.ndim != 2 or A.shape[1] != ra.N or len(A) > ra.MAX_STEPS or not np.all(np.isfinite(A)):
-            write(False, {"success": 0, "bad_trajectory": 1, "n_actions": int(A.shape[0]) if A.ndim == 2 else 0, "grader_error": 0, **c}); return 0
+        try:   # the agent's file: one that cannot be read as an npz with a numeric `actions` array is a bad trajectory, not a grader failure
+            A = np.asarray(np.load(traj, allow_pickle=False)["actions"], dtype=np.float64)
+        except Exception:
+            traceback.print_exc(file=sys.stderr); A = None
+        if A is None or A.ndim != 2 or A.shape[1] != ra.N or len(A) > ra.MAX_STEPS or not np.all(np.isfinite(A)):
+            write(False, {"success": 0, "deterministic": 0, "bad_trajectory": 1, "n_actions": int(A.shape[0]) if A is not None and A.ndim == 2 else 0, "grader_error": 0, **c}); return 0
         s = ra.Session("/tests/instance.json", enable_render=True)
         r1 = s.replay(A); r2 = s.replay(A); det = r1["state_sha"] == r2["state_sha"]; ok = bool(det and r1["success"])
         fields = {k: (int(v) if isinstance(v, bool) else v) for k, v in r1.items() if k not in ("success", "state_sha", "steps") and isinstance(v, (bool, int, float))}
@@ -63,7 +66,7 @@ def main() -> int:
         except Exception: traceback.print_exc(file=sys.stderr)
         write(ok, out)
     except Exception:
-        traceback.print_exc(file=sys.stderr); write(False, {"success": 0, "grader_error": 1, **c})
+        traceback.print_exc(file=sys.stderr); write(False, {"success": 0, "deterministic": 0, "grader_error": 1, **c})
     return 0
 
 

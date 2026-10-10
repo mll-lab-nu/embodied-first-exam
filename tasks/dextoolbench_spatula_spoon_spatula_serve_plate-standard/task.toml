@@ -75,7 +75,7 @@ timeout_sec = 120
 
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
+command = "t0=$(date +%s); left() { echo $(( 840 - $(date +%s) + t0 )); }; while [ ! -f /data/server.pid ] && [ $(left) -gt 660 ]; do sleep 2; done; i=0; while [ $(left) -gt 0 ]; do grep -q '\"video_done\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; i=$((i+1)); sleep 2; done; cat /data/final.json"
 timeout_sec = 900
 
 [agent]

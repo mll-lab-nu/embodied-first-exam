@@ -20,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "scripts"))
-from envs import GOALS  # noqa: E402
+from envs import GOALS, SUCCESS  # noqa: E402
 from task_conventions import normalize  # noqa: E402
 
 SHARED = HERE / "shared"
@@ -57,6 +57,59 @@ FRAME = (
 )
 
 
+# README Change Log (PROTOCOL §2.8: published tasks fixed in place; results before a change are not retested), oldest
+# first. An entry is (text, environments it applies to or None for all).
+_HIDDEN = ("stick-push", "stick-pull")
+_IMPRECISE = ("hammer", "lever-pull", "door-open", "disassemble")
+STD_CHANGES = [
+    (
+        "2026-10-10 (review 0067): the camera calibration in `meta[\"cameras\"]` now gives the pose of the viewpoint the "
+        "image is rendered from. Before, `cam2world_gl` held the position of MuJoCo's left-eye camera, 3.4 cm to the side "
+        "of it, so points back-projected from depth were off by that much. This changes what the agent observes: "
+        "standard-mode results from before this date are not strictly comparable.",
+        None,
+    ),
+    (
+        "2026-10-10 (review 0067): the instruction states this environment's success condition in full. Before, it said "
+        "only that the object is compared with the target point \"with a tolerance of a few centimetres\" and left out "
+        "that the stick must still be engaged in the final state, so an agent that finished the motion and then let the "
+        "stick go scored 0 without having been told. Results from before this date were obtained under the incomplete text.",
+        _HIDDEN,
+    ),
+    (
+        "2026-10-10 (review 0067): the instruction states this environment's success condition exactly (the generic "
+        "sentence about the object and the target point did not describe this check).",
+        _IMPRECISE,
+    ),
+    (
+        "2026-10-10 (review 0067): the instruction states this environment's success condition (what is compared with "
+        "the target point, in which axes, with which tolerance) instead of \"a tolerance of a few centimetres\".",
+        tuple(e for e in GOALS if e not in _HIDDEN + _IMPRECISE),
+    ),
+    (
+        "2026-10-10 (review 0067): a malformed request (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not "
+        "a list of names, actions that are not a numeric array) is answered 400 before any physics; before, some of them "
+        "(e.g. `dt = Infinity`) were a 500 that ended the episode. `meta[\"time_left_s\"]` counts from the agent's first "
+        "request, not from the service's start. `final.json` is finalized as soon as the verdict is in it (the video is "
+        "rendered after it and cannot delay or void it); a missing, unreadable or verdict-less `final.json` is graded "
+        "`infra_error = 1`, never a plain 0; the collect hook's wait fits inside its timeout.",
+        None,
+    ),
+]
+PRIV_CHANGES = [
+    (
+        "2026-10-10 (review 0067): the instruction states this environment's success condition in words (it already "
+        "pointed to `s.check()` and Meta-World's source, which this mode can read) and the limits on a hand-written "
+        "`trajectory.npz`. Nothing in the verifier changed.",
+        None,
+    ),
+]
+
+
+def change_log(changes: list, env: str) -> str:
+    return "".join(f"- {text}\n" for text, envs in changes if envs is None or env in envs)
+
+
 def box(rec: dict) -> str:
     lo, hi = rec["mocap_low"], rec["mocap_high"]
     return ", ".join(f"{a} ∈ [{lo[i]:g}, {hi[i]:g}]" for i, a in enumerate("xyz"))
@@ -80,13 +133,16 @@ The scene is one frozen instance of Meta-World's own randomization (object and g
 ## What you hand in
 `/app/output/trajectory.npz` with key `actions`: Meta-World's native actions, shape `(T, 4)` with 1 ≤ T ≤ {MAX_STEPS}
 (Meta-World's episode length), one row per control step (1/80 s). Write it with `s.save_trajectory()` so the format
-is right. Leave the script that produced it at `/app/output/gen.py`.
+is right: the verifier reads a plain `.npz` of at most 2 MB that holds arrays only (no pickled objects, at most 64
+members), and grades anything else as an invalid trajectory. Leave the script that produced it at `/app/output/gen.py`.
 
 ## Success
 The verifier replays your actions from the frozen start in a separate sandbox (twice, in fresh processes; MuJoCo on the
 CPU is bit-exact) and applies Meta-World's own success check for `{env}-v3` (`evaluate_state`) to the state **after
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` computes exactly this check on the current state.
+
+For `{env}-v3` the check is: {SUCCESS[env]} ("The target point" is `s.state()["target_pos"]`.)
 
 ## Tooling (`/opt/tools/mw_tool.py`, importable as `mw_tool`)
 ```python
@@ -127,7 +183,8 @@ client and one episode.
 - **No reset.** What you knock over stays knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration), the
   robot's own state and the task's target point. No object poses, no success signal.
-- Your wall-clock budget is 60 minutes (`meta["time_left_s"]`). There is nothing to hand in: the service records the
+- Your wall-clock budget is 60 minutes. `meta["time_left_s"]` is counted from your first request to the service;
+  approximate — the harness's own deadline is authoritative. There is nothing to hand in: the service records the
   episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
 - Do not use Meta-World's scripted policies or any published solution for this benchmark; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
@@ -136,8 +193,10 @@ client and one episode.
 The episode runs until your time is up. The service then replays the recorded episode in a fresh simulator and applies
 Meta-World's own success check for `{env}-v3` to the state **after the last executed control step**; it must hold in
 the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you want
-graded and stop submitting. The check measures the task's object (the hand, for reaching tasks) against
-`meta["task"]["target_pos"]`, with a tolerance of a few centimetres.
+graded and stop submitting.
+
+For `{env}-v3` the check is: {SUCCESS[env]} ("The target point" is `meta["task"]["target_pos"]`; everything the
+check needs to hold must hold in that final state.)
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
@@ -165,6 +224,9 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
   (0 closed … 1 open), `mocap_x/y/z` (the hand's target), the arm joints' positions and velocities, the finger joints'
   positions, and `cmd_*` (the last action).
 - {FRAME} The four cameras are fixed.
+- Calibration: `meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world,
+  OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from). Depth is the
+  distance along the viewing axis, in metres.
 """
 
 
@@ -199,9 +261,11 @@ not solved at the start.
 | source | [Meta-World](https://github.com/Farama-Foundation/Metaworld) @ 59fc34d (MIT) on MuJoCo 3.3.0; image `eai-metaworld:{VERSION}` |
 | instance | Meta-World's reset randomization with seed {rec["seed"]}; MuJoCo state, model arrays, env caches and RNG frozen in `instance.npz` (SHA-256 `{rec["instance_sha"][:12]}…`, checked on load) |
 | deliverable | `(T, 4)` native actions `[dx, dy, dz, grip]`, 1 ≤ T ≤ {MAX_STEPS} (Meta-World's `max_path_length`) |
-| success | Meta-World's own check (`evaluate_state`) on the state after the last action |
+| success | Meta-World's own check (`evaluate_state`) on the state after the last action. {SUCCESS[env]} |
 | actions | no `joint_position`: Meta-World's Sawyer has no arm actuators (the hand is a mocap body, the arm follows it) |
-"""
+
+## Change Log
+{change_log(PRIV_CHANGES, env)}"""
 
 
 def standard_readme(env: str, rec: dict) -> str:
@@ -231,7 +295,10 @@ reads its `final.json`: `success = replay_success ∧ deterministic ∧ live_suc
 | actions | `ee_delta` = Meta-World's native `[dx, dy, dz, grip]` (no `joint_position`: the Sawyer has no arm actuators) |
 | observations | four fixed cameras (RGB-D, calibration), proprioception, `meta.task.target_pos`; no object poses |
 | episode | no step limit; runs until the agent's time is up; the state after the last control step is graded |
-"""
+| success | Meta-World's own check (`evaluate_state`). {SUCCESS[env]} |
+
+## Change Log
+{change_log(STD_CHANGES, env)}"""
 
 
 def privileged_toml(env: str, rec: dict) -> str:
@@ -273,10 +340,15 @@ build_timeout_sec = 1800.0
 
 
 def standard_toml(env: str, rec: dict) -> str:
+    # The sim's collect hook: wait (at most 180 s) for the service's PID file, then send SIGUSR1 every 30 s until
+    # final.json says video_done (the verdict is `finalized` before the video is rendered; video_done follows), all
+    # inside one 840 s deadline, so the loop always ends before the hook's timeout_sec = 900. A hook that stops early
+    # leaves the verdict on disk as it is.
     collect = (
-        "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q "
-        "'\\\"finalized\\\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat "
-        "/data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
+        "t0=$(date +%s); left() { echo $(( 840 - $(date +%s) + t0 )); }; while [ ! -f /data/server.pid ] && "
+        "[ $(left) -gt 660 ]; do sleep 2; done; i=0; while [ $(left) -gt 0 ]; do grep -q "
+        "'\\\"video_done\\\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat "
+        "/data/server.pid) 2>/dev/null; i=$((i+1)); sleep 2; done; cat /data/final.json"
     )
     return f"""schema_version = "1.3"
 artifacts = [
