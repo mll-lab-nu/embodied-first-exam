@@ -141,9 +141,12 @@ except M.InstanceMismatch as exc:
     # This frozen instance is not evaluable. Do not restart it as a GPU crash
     # or wait for a trajectory that could never have been executed.
     EP.scene_built()  # cancel the startup watchdog before clean exit
+    # The record is final and complete: `gave_up` and `deterministic` make it a verdict for rcb_limited.final_verdict, so
+    # the collect hook's `rcb_limited.py end` returns at once instead of waiting out its timeout and overwriting the
+    # reason. This host cannot reconstruct the instance: an infrastructure error, not the agent's failure.
     M.atomic_json(os.path.join(DATA, "final.json"), {
-        "success": False, "replay_success": False, "done": True, "finalized": True,
-        "instance_mismatch": True, "infra_error": 0, "reason": "instance_mismatch",
+        "success": False, "replay_success": False, "deterministic": False, "done": True, "finalized": True, "gave_up": True,
+        "instance_mismatch": True, "infra_error": 1, "reason": "instance_mismatch",
         "error": str(exc), "task": TASK, "protocol": PROTOCOL, **EP.final_fields()})
     raise SystemExit(0)
 EP.scene_built()                        # the startup watchdog stands down: a long resume replay is not a hang
@@ -216,9 +219,12 @@ SPEC = {
     "world": {"frame": WORLD_FRAME, "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes "
                              "(x right, y up, z backward)"},
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
+    # steps: no budget, but a runaway guard (rcb_topogym.MAX_STEPS): the episode ends (reason step_guard) at that many
+    # control steps, /observe watches included
+    "budget": {"reset": 0, "steps": int(S.max_steps), "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
-                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, or on a "
+                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, after "
+                f"{int(S.max_steps)} control steps (budget.steps, a runaway guard: reason step_guard, graded as it stands), or on a "
                 "simulator error; a simulator "
                 f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
                 f"soft-body solver state, a rigid task contact deeper than {M.BREAKDOWN_PENETRATION_M * 1000:g} mm) ends it with "
@@ -394,10 +400,33 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
             if ctrl_step(a, rec, row_start=k == 1, notes=clipped, ri=ri): return
 
 
+def number(meta: dict, key: str, default: float) -> float:
+    """A request field that must be a finite number. A malformed request is a 400 (ValueError) and moves nothing
+    (PROTOCOL §4.6): null, a string or a non-finite value must never reach float() / int() as a 500, which would end the
+    one episode as an infrastructure error."""
+    v = meta.get(key, default)
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+        raise ValueError(f"{key} must be a finite number (got {v!r})")
+    return float(v)
+
+
+def request_fields(meta: dict) -> tuple[list, int, str]:
+    """The fields /submit and /observe share, checked before anything executes: cameras, video_fps, note."""
+    cams = meta.get("cameras")
+    if cams is not None and not (isinstance(cams, list) and all(isinstance(c, str) for c in cams)):
+        raise ValueError("cameras must be a list of camera names")
+    fps = number(meta, "video_fps", 10)
+    if fps != int(fps) or not 1 <= fps <= CTRL_HZ:
+        raise ValueError(f"video_fps must be an integer in [1, {CTRL_HZ:g}] (got {fps!r})")
+    note = meta.get("note")
+    if note is not None and not isinstance(note, str):
+        raise ValueError("note must be a string")
+    return [c for c in (cams or CAMS) if c in CAMS] or CAMS, int(fps), (note or "")[:500]
+
+
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    typ = meta.get("type"); dt = float(meta.get("dt", 1.0 / CTRL_HZ)); interp = meta.get("interpolate", "linear")
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    fps = int(meta.get("video_fps", 10)); video = meta.get("video", "mp4")
+    typ = meta.get("type"); dt = number(meta, "dt", 1.0 / CTRL_HZ); interp = meta.get("interpolate", "linear")
+    cams, fps, note = request_fields(meta); video = meta.get("video", "mp4")
     if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
     dim = SPEC["action_types"][typ]["dim"]
     if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
@@ -417,7 +446,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     succ = check_success(); E["success"] = E["success"] or succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": S.physics_steps - before_ticks, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": (meta.get("note") or "")[:500],
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     if succ: finish("success")
@@ -426,9 +455,9 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 
 
 def do_observe(meta: dict) -> tuple[dict, list]:
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    seconds = float(meta.get("seconds", 0)); fps = int(meta.get("video_fps", 10)); video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    cams, fps, _ = request_fields(meta)
+    seconds = number(meta, "seconds", 0); video = meta.get("video", "frames")
+    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     rec = recorder(cams, fps, meta); before = ctrl_steps(); before_ticks = S.physics_steps
     watch = seconds > 0 and not E["done"]

@@ -53,13 +53,14 @@ is the only GET this capability adds.
 |---|---|
 | A call's budget is `min(max_call_wall_s, request_deadline_unix_s − now)`. The service checks it, and a client disconnect, at control-step boundaries | MUST |
 | A native step cannot be pre-empted safely, so the service also owns a hard watchdog. A call that has not finished 60 s past its budget ends the process. The restart then ends the episode as an infra error, `call_watchdog` (`infra_error = 1`), and does not replay into the call that hung | MUST |
+| The restart ends the episode as `call_watchdog` only on evidence that the watchdog fired: the watchdog prints into its own file (`call-watchdog.trace`, emptied at every call), and its banner there is that evidence. `call-watchdog.json` alone, or its deadline having passed by the time the container is back, is not: any other crash during a call (a segfault, a CUDA error, an OOM kill) is resumed like every crash (PROTOCOL §4.7), and a resume removes both files | MUST |
 
 ## 5. Physics-tick ledger and durability
 
 | Item | Level |
 |---|---|
 | The journal can record, for each executed row, the physics ticks it actually took (`journal.ticks.i64`, int64, one per row). A step that ends early inside its control period records fewer ticks, and `sim_time_s` and `frame_time_s` follow the actual physics clock | MAY (MUST for a service whose steps can end mid-period) |
-| A resume replays each row with its recorded tick count. A missing or incomplete ledger ends the episode as an infra error, `resume_failed` | MUST if the ledger is kept |
+| A resume replays each row with its recorded tick count. A missing or incomplete ledger ends the episode as an infra error, `resume_failed`. The ledger is cut to the last checkpoint together with the journal, also when that checkpoint has no rows | MUST if the ledger is kept |
 | Journal rows, the tick ledger, checkpoints and operation records are fsynced, including their directory, before the call that counts them is reported complete | MUST |
 | `dt` must be an integer multiple of the control period within float tolerance; otherwise 400 (2.1 rule, restated) | MUST |
 
@@ -68,9 +69,12 @@ is the only GET this capability adds.
 As in 2.2 (`/data/episode.jsonl`, `trajectory.npz`, `final.json`, `calls/`), plus:
 - `/data/operations/<id>.json`;
 - `journal.ticks.i64`, when kept;
-- `call-watchdog.json`, while a call is running.
+- `call-watchdog.json`, while a call is running, and `call-watchdog.trace` (what the watchdog printed, if it fired).
 
 The verifier still grades `final.json` only (PROTOCOL §4.8).
+
+`python3 scripts/eai_standard/v2_4/selftest.py` tests the watchdog's evidence, the tick ledger and the 400 for malformed
+bodies on the CPU (numpy only, about 15 s).
 
 ## 7. Compatibility
 
