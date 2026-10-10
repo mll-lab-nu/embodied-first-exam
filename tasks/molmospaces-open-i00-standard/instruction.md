@@ -30,7 +30,8 @@ spec = r.spec()                                # action types, limits, cameras (
 obs = r.get_obs()                              # obs.last[cam] -> uint8 (H, W, 3); obs.meta["proprio"] {"layout", "now"}
 obs = r.get_obs(depth=True)                    # + obs.last_depth[cam] -> float32 (H, W) z-depth in m (0 = no reading)
 res = r.submit("joint_position", A, dt=0.066)   # A: (T, 8) rows dt apart; res.video[cam], res.proprio, res.meta
-obs = r.get_obs(seconds=2.0, video="mp4")      # hold the current targets and watch for 2 s (max 30)
+obs = r.get_obs(seconds=2.0, video="mp4")      # hold the current targets and watch for 2 s (max 30; whole control
+                                               # steps: obs.meta["seconds"] is what ran)
 r.fk(q); r.ik({"gripper": pose7}, seed=q)        # upstream's kinematic model, no physics: tcp poses <-> joint positions
 r.submit("done", [])                           # end the episode now
 r.status()                                     # calls, control steps, done, reason, elapsed time

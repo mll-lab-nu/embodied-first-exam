@@ -53,7 +53,10 @@ measured = "GPU: 10.4 GiB on a 48 GB card, 6.5 on 24 GB (batch_eval_live vram_pr
 main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
 
 [verifier]
-timeout_sec = 2400.0
+timeout_sec = 13000.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory
+                                  # (replay_timeout(100,000 rows) = 1200 s + rows / 20 = 6200 s each; the first Isaac start in
+                                  # the verifier compiles shaders, 629 s measured) + 600 s; a usual trajectory (up to 12,000
+                                  # rows) keeps the old 1800 s per replay
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image (images/yamlab/web_assets.txt)
 
