@@ -110,14 +110,17 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMI
   in 2.1 (rows `dt` apart, `linear` or `hold`) and writes it into the plan from control step `at` (default: the next
   one), replacing what was planned from there, and answers at once with the robot as it is now. A row whose step has
   already run when the request arrives is dropped (`late_steps`). When the plan runs out, the last target is held
-  (zero-order hold): a slow agent's robot keeps its last servo targets, as a position-controlled H1 would.
+  (zero-order hold): a slow agent's robot keeps its last servo targets, as a position-controlled H1 would. (The layer
+  is shared with BiGym 2.0 and RoboOlympics, whose plans mix action types: rows of different types are never combined,
+  fixed 2026-10-10; HumanoidBench has one type, a target, and its plan behaves as it always did.)
 - **Observations.** `get_obs()` is the robot now; `get_obs(seconds=s)` watches the next s seconds and returns what the
   cameras saw, without touching the plan. `cameras=[]` returns proprioception only (the controller's call).
 - **Grading.** Unchanged: the journal (`trajectory_live.f64`) holds the sim row the simulator applied at every control
   step, whatever was submitted, and the finalize replays the last episode's rows in a fresh simulator. The replay
   therefore equals the live run however late or early the agent was; `deterministic` checks it. Evidence beside it:
   `ticks.f64` (each step's wall time and the call that planned it; -1 = held), `calls.jsonl`, `submitted.f64` (every
-  row as sent), and in `final.json` `max_lag_s`, `stalls`, `held_steps`, `late_steps`.
+  row as sent), and in `final.json` `max_lag_s`, `stalls`, `held_steps`, `late_steps` (since 2026-10-10 they cover
+  the whole trial after a crash-resume, not only what followed the last restart). In both service modes `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict (2026-10-10).
 - **Timing guarantees.** The simulator thread runs a due control step before any waiting request; HumanoidBench's
   physics takes 0.4–2.1 ms per control step (facts.json, `episode_seconds`) and a head-camera image about 0.5 ms on the
   sidecar's GPU, against a 20 ms step. A service that falls behind runs the missed steps back to back; more than

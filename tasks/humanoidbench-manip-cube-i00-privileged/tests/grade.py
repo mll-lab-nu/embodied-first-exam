@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def write(ok: bool, out: dict, diagnostics: dict | None = None) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
+    out = {**out, "deterministic": int(out.get("deterministic", 0))}   # in every branch (PROTOCOL §2.6)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     if diagnostics:

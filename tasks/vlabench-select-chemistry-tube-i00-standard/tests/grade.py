@@ -5,6 +5,8 @@ success = live_success AND replay_success AND deterministic (the replay ends in 
 Writes /logs/verifier/reward.txt (1/0) and a numeric-only reward.json, and copies the evidence (replay video, last
 frame, trajectory, event log) next to them for humans; the evidence never decides the verdict.
 infra_error = 1: no verdict on the agent (the service crashed past its restarts, never finished, or failed to finalize).
+Every branch writes success, deterministic, infra_error and grader_error (PROTOCOL §2.6); sim_error = 1 when the graded
+episode ended on a simulator error (reason "error").
 """
 import json
 import os
@@ -27,11 +29,14 @@ def write(ok: bool, out: dict) -> None:
 def main() -> None:
     path = os.path.join(DATA, "final.json")
     if not os.path.exists(path):
-        write(False, {"success": 0, "missing_log": 1, "infra_error": 1, "grader_error": 0})
+        write(False, {"success": 0, "deterministic": 0, "missing_log": 1, "infra_error": 1, "sim_error": 0,
+                      "grader_error": 0})
         return
     try:
         with open(path) as f:
             d = json.load(f)
+        if not isinstance(d, dict):
+            raise ValueError("final.json is not a JSON object")
         live, replay, det = (bool(d.get(k)) for k in ("live_success", "replay_success", "deterministic"))
         failed_finalize = bool(d.get("finalize_error"))
         unfinished = not d.get("finalized")
@@ -39,7 +44,7 @@ def main() -> None:
         ok = live and replay and det and not infra
         out = {"success": int(ok), "live_success": int(live), "replay_success": int(replay), "deterministic": int(det),
                "finalized": int(not unfinished), "missing_log": 0, "infra_error": int(infra),
-               "grader_error": int(failed_finalize),
+               "grader_error": int(failed_finalize), "sim_error": int(d.get("reason") == "error"),
                "sim_crashed_on_call": int(d.get("reason") == "sim_crashed_on_call"),
                "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps_total") or 0),
                "calls": int(d.get("calls") or 0), "rows": int(d.get("rows") or 0), "resets": int(d.get("resets") or 0),
@@ -48,7 +53,8 @@ def main() -> None:
                "video_rendered": int(bool(d.get("video")))}
     except Exception:  # noqa: BLE001 -- an unreadable final.json is the grader's failure, not the agent's
         traceback.print_exc()
-        write(False, {"success": 0, "missing_log": 0, "infra_error": 1, "grader_error": 1})
+        write(False, {"success": 0, "deterministic": 0, "missing_log": 0, "infra_error": 1, "sim_error": 0,
+                      "grader_error": 1})
         return
     for name in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):
         try:

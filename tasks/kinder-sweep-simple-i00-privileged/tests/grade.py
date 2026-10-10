@@ -36,7 +36,7 @@ def main() -> int:
     ap.add_argument("--no-video", action="store_true")
     a = ap.parse_args()
     if not os.path.isfile(a.traj):
-        write(False, {"success": 0, "missing_trajectory": 1, "invalid_trajectory": 0, "grader_error": 0})
+        write(False, {"success": 0, "deterministic": 0, "missing_trajectory": 1, "invalid_trajectory": 0, "grader_error": 0})
         return 0
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -46,7 +46,7 @@ def main() -> int:
             acts = s.check_trajectory(s.load_trajectory(a.traj))
         except Exception as exc:  # noqa: BLE001 -- not an npz, missing keys, wrong instance, wrong shape, out of bounds
             traceback.print_exc(file=sys.stderr)
-            write(False, {"success": 0, "missing_trajectory": 0, "invalid_trajectory": 1, "grader_error": 0},
+            write(False, {"success": 0, "deterministic": 0, "missing_trajectory": 0, "invalid_trajectory": 1, "grader_error": 0},
                   {"invalid": str(exc)})
             return 0
         t0 = time.perf_counter()
@@ -70,7 +70,7 @@ def main() -> int:
                 traceback.print_exc(file=sys.stderr)
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
-        write(False, {"success": 0, "missing_trajectory": 0, "invalid_trajectory": 0, "grader_error": 1})
+        write(False, {"success": 0, "deterministic": 0, "missing_trajectory": 0, "invalid_trajectory": 0, "grader_error": 1})
     return 0
 
 

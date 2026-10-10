@@ -108,8 +108,10 @@ services:
       RCB_WALL_CLOCK_S: "3600.0"
       RCB_MAX_CONTROL_STEPS: "{MAX_CONTROL_STEPS}"
       RCB_IMAGE_HW: "{IMAGE_HW}"
-      # The default is the standard configuration (one episode, no reset); results with resets are reported separately.
-      RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-0}}"
+      # One episode, no reset, as instruction.md tells the agent: pinned, not a knob (a `${{RCB_RESET_BUDGET:-0}}` here
+      # would take the budget from the shell that runs harbor, and a host that exports it for another benchmark would
+      # hand this task resets its instruction rules out).
+      RCB_RESET_BUDGET: "0"
       PYTHONPATH: /srv:{PATH_ENV}
 """
 

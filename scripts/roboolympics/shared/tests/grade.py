@@ -55,11 +55,14 @@ def match_fields() -> dict:
 def main() -> None:
     path = os.path.join(DATA, "final.json")
     if not os.path.exists(path):
-        write(False, {"success": 0, "missing_log": 1, "infra_error": 1, "grader_error": 0})
+        write(False, {"success": 0, "deterministic": 0, "missing_log": 1, "infra_error": 1, "sim_error": 0,
+                      "grader_error": 0})
         return
     try:
         with open(path) as f:
             d = json.load(f)
+        if not isinstance(d, dict):
+            raise ValueError("final.json is not a JSON object")
         live, replay, det = (bool(d.get(k)) for k in ("live_success", "replay_success", "deterministic"))
         failed_finalize = bool(d.get("finalize_error"))
         unfinished = not d.get("finalized")
@@ -78,7 +81,8 @@ def main() -> None:
                "elapsed_s": num(d.get("elapsed_s")), "video_rendered": int(bool(d.get("video"))), **match_fields()}
     except Exception:  # noqa: BLE001 -- an unreadable final.json is the grader's failure, not the agent's
         traceback.print_exc()
-        write(False, {"success": 0, "missing_log": 0, "infra_error": 1, "grader_error": 1})
+        write(False, {"success": 0, "deterministic": 0, "missing_log": 0, "infra_error": 1, "sim_error": 0,
+                      "grader_error": 1})
         return
     for name in ("replay.mp4", "replay.last.png", "match.json", "episode.jsonl"):
         try:

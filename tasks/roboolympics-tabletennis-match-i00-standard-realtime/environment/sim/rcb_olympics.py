@@ -127,9 +127,10 @@ class _Profile:
         return rows, []
 
     def command(self, typ):
-        """The row a gap in the plan is filled with (rcb_realtime: a submit whose `at` lies ahead holds "the target in
-        force" until then; a row is also interpolated from it): for a command that is not a target, zeros, which
-        to_sim reads as no command. No agent row is all zeros after clip() (Olympics.clip)."""
+        """The command of this type in force (rcb_realtime: an interpolable target's chunk is interpolated from it, and
+        it is held through a gap before the chunk's `at`): for a command that is not a target there is none, zeros,
+        which to_sim reads as no command. No agent row is all zeros after clip() (Olympics.clip). The service never
+        interpolates or repeats a command that is not a target: a gap before one is held steps (hold())."""
         return np.zeros(int(self.types[typ]["dim"]))
 
     def proprio(self) -> list:
@@ -513,7 +514,7 @@ class Olympics:
     # ------------------------------------------------------------------ actions
     def clip(self, typ, rows):
         """The profile's limits; a one-value command (rest, stop, ready: the value is ignored) becomes 1, so that no
-        agent row is all zeros, the gap filler's row (command())."""
+        agent row is all zeros, which to_sim reads as no command (command())."""
         try:
             if int(self.profile.types.get(typ, {}).get("dim", 0)) == 1 and typ not in self.profile.interp:
                 return np.ones((len(rows), 1)), []
@@ -532,8 +533,9 @@ class Olympics:
 
     def to_sim(self, typ, row) -> np.ndarray:
         """At the step the row is planned for (rcb_service._step, right before step()): the row as a sim row. A
-        command is parsed, planned and lowered here, from this step's state, and enters the command table. An all-zero
-        row of a command type is no command: a gap the service filled with command() (clip() leaves no agent row so)."""
+        command is parsed, planned and lowered here, from this step's state, and enters the command table. A held step
+        (hold(): the plan ran out, or a gap in it) and an all-zero row of a command type (command(); clip() leaves no
+        agent row so) are no command."""
         if typ not in self.profile.interp and not np.any(np.asarray(row, dtype=np.float64)):
             return np.array([-1.0, 0.0])
         if typ == "ready":
