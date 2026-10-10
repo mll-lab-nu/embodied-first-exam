@@ -116,6 +116,8 @@ SIDECAR = (
     "(Isaac: only the first replay in a process is bit-exact, and two simulators do not fit in one container) and writes\n"
     "`final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.")
 # The README Change Log (PROTOCOL §2.8: published tasks fixed in place), per mode, oldest first.
+FALL = ("OmniGibson's own Falling rule (the base tilted more than 41.4° from upright, or more than 3 cm below the floor) "
+        "has held for 10 s of simulated time")                 # the tooling's FALL_* (docs/benchmarks/behavior.md, Falls)
 REPLAY_LIMIT = "min(4 h, max(3600 s, 1200 s + steps / 2))"      # tests/grade.py replay_timeout(), per fresh-process replay
 MEASURED = ("measured on an 8-vCPU L40S host (job #3137): the Isaac start took 626 s and a 10,475-step replay ran slower than "
             "3.5 control steps/s")
@@ -124,12 +126,21 @@ CHANGES = {
         f"2026-10-08: verifier time limits only. `tests/grade.py` gives each of the two fresh-process replays {REPLAY_LIMIT} "
         f"instead of a flat 3600 s, and `[verifier] timeout_sec` is 30600 s (was 5400 s), {MEASURED}, so long trajectories "
         "hit the old limit as a grader error. The scene, frozen instance and pass rule are unchanged, so the task keeps its "
-        "name; a trial graded before this date with `grader_error` = 1 can be regraded."],
+        "name; a trial graded before this date with `grader_error` = 1 can be regraded.",
+        f"2026-10-09: a fall ends the episode as a failure (owner decision): once {FALL}, the tooling Session's episode ends "
+        "(`status()['fallen']`; `s.reset()` starts again), and the verifier's replays end at the same control step (`reward.json` "
+        "`fallen`). The scene, frozen instance and BDDL goal are unchanged, so the task keeps its name; a trajectory in which "
+        "the robot falls over and stays down for 10 s scores 0, and results recorded before this change are reported "
+        "separately."],
     "standard": [
         "2026-10-08: collect-hook time limit only. `[[verifier.collect]] timeout_sec` is 37800 s (was 21600 s): the episode end "
         f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT}) "
         f"plus 30 min; {MEASURED}. The replays still have no limit of their own. The scene, frozen instance and pass rule are "
-        "unchanged, so the task keeps its name."],
+        "unchanged, so the task keeps its name.",
+        f"2026-10-09: a fall ends the episode as a failure (owner decision): once {FALL}, the service ends the episode with "
+        "reason \"failure: the robot fell over\"; `/spec` `episode` states the end conditions and `reward.json` adds "
+        "`task_failure`. The scene, frozen instance and BDDL goal are unchanged, so the task keeps its name; results recorded "
+        "before this change are reported separately."],
 }
 
 
