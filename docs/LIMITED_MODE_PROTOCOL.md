@@ -214,11 +214,35 @@ PROTOCOL §4b).
   episode's rows are replayed in a fresh simulator, so the replay equals the live run whatever the timing. Evidence
   added: `ticks.f64` (per journal row: wall time, the call whose chunk gave the row, -1 when held), `calls.jsonl` and
   `submitted.f64` (one line per call and every row as sent, instead of `calls/NNNNNN/`), and in `final.json`
-  `realtime`, `slowdown`, `max_lag_s`, `stalls`, `held_steps`, `late_steps`, `max_queue_wait_s` (checkpointed with the
-  episode: after a crash-resume they still cover the whole trial).
+  `realtime`, `slowdown`, `held_steps`, `late_steps`, `max_queue_wait_s`, the clock's record -- `clock_s` (wall seconds
+  the clock ran), `max_lag_s` (the furthest a control step ran behind its time; the true maximum), `stalls`,
+  `stalled_s` (the wall time the stalls dropped: the robot stood still that long while its clock should have run),
+  `stalled_share` = `stalled_s` / `clock_s` -- and what the requests cost: `requests_refused` (answered 4xx),
+  `request_mb` (bodies read), `request_busy_s` (simulator-thread time spent on requests). All are checkpointed with the
+  episode: after a crash-resume they still cover the whole trial. The graders repeat the clock's record,
+  `requests_refused` and `request_busy_s` in `reward.json` (numbers; a missing one is 0). None of it decides a verdict.
 - **Service.** The simulator's thread runs a due control step before any waiting request; behind the clock it runs the
-  missed steps back to back, and more than 0.5 s behind it drops the debt (a stall, counted) instead of fast-forwarding
-  the robot. Checkpoints every second of robot time while the clock runs; a crash resumes the same episode, paused.
+  missed steps back to back, and more than 0.5 s behind it drops the debt (a stall, counted, its seconds added to
+  `stalled_s`) instead of fast-forwarding the robot. Checkpoints every second of robot time while the clock runs; a
+  crash resumes the same episode, paused.
+- **What a request can cost the clock** (2026-10-10). A request's body is read, decoded and checked on its HTTP thread:
+  a request that is refused for what it says (404, 413, a malformed body, a wrong type / shape / `dt` / camera, a
+  chunk longer than `max_chunk_s`) never reaches the simulator's thread, and neither does `GET /spec`. JSON text is
+  parsed in the service's process only up to 1 MiB; a body with more of it (the client sends the rows as an RCB1 array
+  part, a few kB of JSON at most) is parsed by a child process, one at a time, and answered as any other -- the 64 MB
+  limit stands, and such a body costs the clock nothing whether it is accepted or refused. A negative `Content-Length`
+  is a 400, unread. Behind the clock, a waiting request is served once the clock has caught up (or, where the
+  simulator cannot keep up by itself, after four times the time the last request of its kind took): requests queue
+  behind each other, not into the clock, so `/observe` may take longer to answer under parallel load. A request that
+  renders and alone takes more than 0.5 s (a stall by itself: CPU rendering) makes the next rendering request wait
+  four times that long, clock on time or not; requests without images (`cameras: []`, `/status`) are not held back by
+  it. Requests can so take at most a fifth of the clock's time. The cameras are rendered (and the proprioception
+  read) at most once per control step: parallel observes and watches share that step's frames. What remains: a watch
+  (`seconds > 0`) renders inside the control steps it watches, so where one render of its cameras takes longer than
+  its frame interval the clock runs late and stalls while it lasts (GPU rendering takes about 0.5 ms a frame; CPU
+  rendering does not keep up) -- counted in `stalls` and `stalled_s`.
+  Refusals the episode's state decides (409; an `at` too far ahead; too many frames) are answered by the simulator's
+  thread, as before, and a 409 still comes before a 400 for a request's fields.
 - **Crashes are infrastructure.** No call spans a crash (`/submit` answers at once), so a crash is never put down to the
   agent: past `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed`, a failed resume `resume_failed`, and a simulator
   error that ends the graded episode (`reason = "error"`) is one too; `final.json` carries `infra_error = 1` in all three.

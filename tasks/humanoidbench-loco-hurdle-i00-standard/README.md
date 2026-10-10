@@ -75,6 +75,10 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   inside its timeout: a slow, hung or killed video render no longer turns a graded episode into `infra_error`.
   `reward.json` adds `sim_error` and carries `deterministic` in every branch. The scene, instance and pass
   rule are unchanged, so the task keeps its name; every verdict that was reached before is the same now.
+- 2026-10-10 (2; second review round): the sim service refuses a negative `Content-Length` unread (400; it
+  read until the client hung up), and a simulator that fails inside `POST /reset` ends the episode as `error`
+  (`sim_error = 1`), not `reset`. The scene, instance, pass rule and every verdict reached before are
+  unchanged, so the task keeps its name.
 - 2026-10-08: the task text no longer says the hurdles are solid and have to be cleared: upstream's model
   draws them without collision geometry and its reward never looks at them. The scene, instance, pass rule and
   verifier are unchanged, so the task keeps its name; runs recorded before this change were told otherwise and

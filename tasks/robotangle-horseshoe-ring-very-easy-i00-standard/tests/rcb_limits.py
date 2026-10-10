@@ -7,24 +7,41 @@ to scripts/rcb_monitor/rcb_limits.py (ci_checks/check-monitor.py). Python 3.8+, 
 benchmark verifier images.
 
     python3 /tests/rcb_limits.py verify      # test.sh runs it on exit (trap), after the grader
+    python3 /tests/rcb_limits.py sanitize /app/output    # test.sh runs it before the grader (see sanitize())
 
 The verifier step reads the monitor's sealed record (/var/rcb-monitor/, collected from the rcb_monitor sidecar, a
 channel the agent cannot write), recomputes every violation from the raw samples with its own copy of the limits
 (/tests/rcb_limits.json), and adds to /logs/verifier/reward.json:
   always:   resource_enforced, limits_violation_observed, resource_monitor_missing, peak_gpu_memory_gb, peak_memory_gb,
-            peak_processes, peak_disk_gb, resource_emergency_kills; over_<metric>=1 for every violation
+            peak_processes, peak_disk_gb, resource_emergency_kills; over_<metric>=1 for every violation; the kernel's
+            OOM kills in the record: resource_oom_kills (in the scope, at the container's own memory cap: the
+            violation), resource_host_oom_kills (in the scope, not at its cap: the host's OOM killer or an enclosing
+            cgroup's), resource_service_oom_kills (in a benchmark-owned service that is only recorded: the simulator
+            sidecar of standard modes, RoboPaint's scorer)
   enforced (the record's mode, RCB_LIMITS_ENFORCE=1) and violated: resource_limit_exceeded=1, success=0 (reward.txt 0),
             success_before_limits = the grader's success
   enforced and no usable record: infra_error=1 (not a result). Not enforced (the default): a missing or unusable
             record is only reported (resource_monitor_missing=1); the grader's verdict stands.
+  enforced, no violation, and a process in the scope was killed by an OOM killer that is not its own cap's:
+            infra_error=1, resource_host_oom=1 (not a result: another trial's or the host's doing, never the agent's)
   RCB_LIMITS_ENFORCE neither 0/1/true/false: infra_error=1, resource_switch_error=1 (nobody knows what was asked for)
+  in both modes: the kernel OOM-killed a benchmark-owned service and the grader's verdict is not a success:
+            infra_error=1, resource_service_oom=1 (PROTOCOL §2.10: such a service is recorded, never a failure; an
+            episode that ended without success after its simulator was killed for memory is not the agent's 0). A
+            success stands: the service recovered and the grader accepted the episode.
+Wherever this step says "not a result" (infra_error=1) it also sets success=0 and reward.txt 0 and keeps the grader's
+verdict in success_before_limits, so that no reader sees a success next to an infrastructure error.
+With the default (not enforced, a readable switch) the step changes nothing of the grader's verdict (reward.txt,
+success, reward) and sets infra_error only in the one case above (a benchmark-owned service OOM-killed, no success).
 A violation is a limit exceeded for sustain_sec within window_sec (disk: two measurements in a row), or a kernel OOM kill
-in the scope. The monitor's emergency kills (host protection) are counted, never violations by themselves.
+in the scope at the container's own memory cap (the monitor's `oom` event with cause "cap"). The monitor's emergency
+kills (host protection) are counted, never violations by themselves.
 The reasons, in words, go to /logs/verifier/resource_limits.json. If this step itself fails, it says so in reward.json
 (resource_step_error=1, resource_monitor_missing=1; infra_error=1 when the switch asks for enforcement).
 """
 import json
 import os
+import stat
 import sys
 
 FORMAT = "rcb-monitor/1"
@@ -111,7 +128,9 @@ def consecutive(series, limit, n=2):
 def violations(samples, limits, events=()):
     """Every violation in a record: [{metric, limit, at, peak}] (empty: none). samples: the record's sample dicts.
     A limit exceeded for sustain_sec within window_sec (disk: two measurements in a row), or a kernel OOM kill in the
-    scope. The monitor's own `emergency_kill` events protect the host and are not violations (PROTOCOL §2.10)."""
+    scope at the container's own memory cap (cause "cap": the cgroup's own `oom` counter rose with the kill). A kill
+    by the host's OOM killer (any other cause) is not the trial's doing and never a violation: oom_kills() counts it.
+    The monitor's own `emergency_kill` events protect the host and are not violations (PROTOCOL §2.10)."""
     tick = float(limits.get("tick_sec", 5))
     sustain = float(limits.get("sustain_sec", 60))
     window = float(limits.get("window_sec", 2 * sustain))
@@ -127,10 +146,24 @@ def violations(samples, limits, events=()):
             peak = max((v for _, v in ser if v is not None), default=None)
             out.append({"metric": m, "limit": lim, "at": round(at, 2), "peak": peak})
     for e in events:
-        if e.get("event") == "oom" and e.get("scope"):
+        if isinstance(e, dict) and e.get("event") == "oom" and e.get("scope") and e.get("cause") == "cap":
             out.append({"metric": "oom", "limit": None, "at": e.get("t"), "peak": e.get("count"),
                         "service": e.get("role")})
-    return sorted(out, key=lambda v: v["at"] or 0)
+    return sorted(out, key=lambda v: v["at"] if isinstance(v["at"], (int, float)) else 0)
+
+
+def oom_kills(events):
+    """The kernel's OOM kills in a record: {"cap": in the scope at the container's own memory cap (the violation),
+    "host": in the scope by another OOM killer (the host's, an enclosing cgroup's; also an event that does not say),
+    "service": in a benchmark-owned service that is only recorded (whatever the cause)}."""
+    out = {"cap": 0, "host": 0, "service": 0}
+    for e in events:
+        if not isinstance(e, dict) or e.get("event") != "oom":
+            continue
+        n = e.get("count")
+        n = int(n) if isinstance(n, (int, float)) and not isinstance(n, bool) and n == n and 1 <= n < 1e9 else 1
+        out["service" if not e.get("scope") else "cap" if e.get("cause") == "cap" else "host"] += n
+    return out
 
 
 def peaks(samples):
@@ -166,10 +199,11 @@ def read_json(path):
         return None
 
 
-def load_record(record=RECORD):
+def load_record(record=None):
     """(summary or None, samples, events)."""
+    record = record or os.environ.get("RCB_MONITOR_RECORD", RECORD)
     return (read_json(os.path.join(record, "summary.json")), read_jsonl(os.path.join(record, "samples.jsonl")),
-            read_jsonl(os.path.join(record, "events.jsonl")))
+            [e for e in read_jsonl(os.path.join(record, "events.jsonl")) if isinstance(e, dict)])
 
 
 def record_problems(summary, samples, events, limits):
@@ -210,10 +244,21 @@ def switch_of(summary):
     return parse_switch(os.environ.get("RCB_LIMITS_ENFORCE"))
 
 
+def not_a_result(reward, add):
+    """This step found that the trial is not a result (infra_error=1): no success is left beside it. The grader's
+    verdict stays readable in success_before_limits."""
+    add["infra_error"] = 1
+    add["success_before_limits"] = int(bool(reward.get("success", 0)))
+    add["success"] = 0
+    if "reward" in reward:
+        add["reward"] = 0
+
+
 def verify(argv=()):
     log = os.environ.get("RCB_VERIFIER_LOGS", "/logs/verifier")
     tests = os.path.dirname(os.path.abspath(__file__))
-    limits = read_json(os.path.join(tests, "rcb_limits.json")) or {}
+    limits_file = read_json(os.path.join(tests, "rcb_limits.json"))
+    limits = limits_file or {}
     summary, samples, events = load_record()
     enforce, switch_error = switch_of(summary)
     rj_path, rt_path = os.path.join(log, "reward.json"), os.path.join(log, "reward.txt")
@@ -221,30 +266,37 @@ def verify(argv=()):
     have_grade = isinstance(reward, dict)
     reward = reward if have_grade else {}
     problems = record_problems(summary, samples, events, limits)
+    if limits_file is None:
+        problems.append("the verifier's copy of the limits (tests/rcb_limits.json) is missing or unreadable")
     if switch_error and not any(switch_error in p for p in problems):
         problems.append(switch_error)
     viol = violations(samples, limits, events) if samples else []
     pk = peaks(samples)
     emergency = [e for e in events if e.get("event") == "emergency_kill"]
+    oom = oom_kills(events)
     detail = {"format": FORMAT, "enforced": enforce, "limits": {k: v for k, v in limits.items()},
               "peaks": pk, "violations": viol, "record_problems": problems, "emergency_kills": emergency,
+              "oom_kills": [e for e in events if e.get("event") == "oom"],
               "monitor": {k: (summary or {}).get(k) for k in ("started", "ended", "n_samples", "capabilities", "killed",
                                                                "restarts", "disk_baseline_gb", "disk_partial_walks")}}
     add = {"resource_enforced": enforce, "limits_violation_observed": int(bool(viol)),
            "resource_monitor_missing": int(bool(problems)),
            "peak_gpu_memory_gb": pk["gpu_memory_gb"], "peak_memory_gb": pk["memory_gb"],
            "peak_processes": pk["processes"], "peak_disk_gb": pk["disk_gb"],
-           "resource_emergency_kills": len(emergency)}
+           "resource_emergency_kills": len(emergency), "resource_oom_kills": oom["cap"],
+           "resource_host_oom_kills": oom["host"], "resource_service_oom_kills": oom["service"]}
     for v in viol:
         add["over_" + v["metric"]] = 1
+    failed = void = False             # void: this step says "not a result" (infra_error=1) and takes the success away
     if switch_error:
         # nobody knows whether enforcement was asked for: not a result in either mode
         add["resource_switch_error"] = 1
-        add["infra_error"] = 1
+        void = True
         detail["verdict"] = "not a result: " + switch_error
     elif enforce and viol:
         # a confirmed violation fails the trial whatever the deliverable (and wins over a grader's infra flag: the
         # agent's processes were stopped for it)
+        failed = True
         add["success_before_limits"] = int(reward.get("success", 0) or 0)
         add["resource_limit_exceeded"] = 1
         add["success"] = 0
@@ -255,14 +307,30 @@ def verify(argv=()):
             add["infra_error"] = 0
         detail["verdict"] = "failed: resource limit exceeded (" + ", ".join(v["metric"] for v in viol) + ")"
     elif enforce and problems:
-        add["infra_error"] = 1
+        void = True
         detail["verdict"] = "not a result: the resource monitor's record is not usable"
+    elif enforce and oom["host"]:
+        # a process the limits bind was killed for memory, but not at its container's own cap: the host ran out of
+        # memory (other trials), or an enclosing cgroup did. Never the agent's failure, and not a clean run either.
+        add["resource_host_oom"] = 1
+        void = True
+        detail["verdict"] = ("not a result: an out-of-memory killer other than the container's own cap (the host's) "
+                             f"killed {oom['host']} process(es) of the trial")
+    elif oom["service"] and have_grade and not reward.get("success"):
+        # in both modes: the kernel killed a benchmark-owned service (the simulator sidecar, a scorer) for memory and
+        # the episode did not end in a success. Such a service is recorded, never a failure (PROTOCOL §2.10): whatever
+        # the grader made of the crash, this is not the agent's 0.
+        add["resource_service_oom"] = 1
+        add["infra_error"] = 1
+        detail["verdict"] = (f"not a result: the kernel OOM-killed a benchmark-owned service ({oom['service']} kill(s)) "
+                             "and the episode did not end in a success")
     else:
         # not enforced: observe only. A missing or unusable record is reported (resource_monitor_missing), never infra.
         detail["verdict"] = ("observed only (RCB_LIMITS_ENFORCE=0): " + ", ".join(v["metric"] for v in viol)) if viol \
             else "within limits" if not problems else "observed only (RCB_LIMITS_ENFORCE=0): no usable record"
+    if void:
+        not_a_result(reward, add)
     os.makedirs(log, exist_ok=True)
-    failed = enforce and viol and not switch_error
     if have_grade or failed:
         reward.update(add)
         reward.setdefault("success", 0)
@@ -270,7 +338,7 @@ def verify(argv=()):
         with open(tmp, "w") as f:
             json.dump(reward, f, indent=1)
         os.replace(tmp, rj_path)
-        if failed:
+        if failed or void:
             with open(rt_path, "w") as f:
                 f.write("0\n")
     with open(os.path.join(log, "resource_limits.json"), "w") as f:
@@ -287,29 +355,103 @@ def step_failed(err):
     reward = read_json(rj_path)
     enforce, switch_error = parse_switch(os.environ.get("RCB_LIMITS_ENFORCE"))
     add = {"resource_step_error": 1, "resource_monitor_missing": 1, "resource_enforced": enforce}
-    if enforce or switch_error:
-        add["infra_error"] = 1
     if isinstance(reward, dict):
+        if enforce or switch_error:
+            not_a_result(reward, add)
         reward.update(add)
         tmp = rj_path + ".tmp"
         with open(tmp, "w") as f:
             json.dump(reward, f, indent=1)
         os.replace(tmp, rj_path)
+        if add.get("infra_error"):
+            with open(os.path.join(log, "reward.txt"), "w") as f:
+                f.write("0\n")
     with open(os.path.join(log, "resource_limits.json"), "w") as f:
         json.dump({"format": FORMAT, "enforced": enforce, "verdict": "the verifier's resource step failed: " + err,
                    "record_problems": [err]}, f, indent=1)
 
 
+MAX_SESSION_LOG = 64 * 2 ** 20     # bytes of /app/output/rcb_session_log.jsonl a grader is given to read
+
+
+def sanitize(roots=("/app/output",), max_log=MAX_SESSION_LOG):
+    """Before the grader: the files the agent left (PROTOCOL §2.6: collected from its container as they are, links and
+    all) are untrusted input, and a grader opens some of them by name. Remove what is not a file of the agent's own
+    under the root: a symbolic link that leaves it or does not end at a regular file (`rcb_session_log.jsonl ->
+    /dev/zero` made a grader read until the verifier ran out of memory or time: no verdict), and every FIFO, device and
+    socket (opening a FIFO blocks). A session log larger than `max_log` is cut there (graders read it line by line,
+    and one endless line is as bad). Regular files, directories and links to regular files inside the root stay as
+    they are: nothing a grader could have read safely changes. Returns what it removed or cut (also printed)."""
+    done = []
+    for root in roots:
+        real_root = os.path.realpath(root)
+        if not os.path.isdir(real_root) or os.path.islink(root):
+            if os.path.islink(root):                 # the root itself must be a directory of its own
+                try:
+                    os.unlink(root)
+                    done.append(f"removed {root}: a symbolic link")
+                except OSError:
+                    pass
+            continue
+        for dirpath, dirnames, filenames in os.walk(real_root, followlinks=False):
+            for name in list(dirnames) + filenames:
+                path = os.path.join(dirpath, name)
+                try:
+                    st = os.lstat(path)
+                    if stat.S_ISLNK(st.st_mode):
+                        target = os.path.realpath(path)
+                        inside = target.startswith(real_root + os.sep)
+                        if inside and stat.S_ISREG(os.stat(target).st_mode):
+                            continue
+                        why = "a symbolic link that leaves the directory or does not end at a regular file"
+                    elif stat.S_ISREG(st.st_mode) or stat.S_ISDIR(st.st_mode):
+                        continue
+                    else:
+                        why = "not a regular file (FIFO, device or socket)"
+                    os.unlink(path)
+                    if name in dirnames:
+                        dirnames.remove(name)
+                    done.append(f"removed {path}: {why}")
+                except OSError as e:                 # a dangling link, a file that is gone: remove what can be removed
+                    try:
+                        if stat.S_ISLNK(os.lstat(path).st_mode):
+                            os.unlink(path)
+                            done.append(f"removed {path}: a symbolic link that cannot be resolved ({type(e).__name__})")
+                    except OSError:
+                        pass
+        log = os.path.join(real_root, "rcb_session_log.jsonl")
+        try:
+            if os.path.isfile(log) and not os.path.islink(log) and os.path.getsize(log) > max_log:
+                os.truncate(log, max_log)
+                done.append(f"cut {log} to {max_log} bytes")
+        except OSError:
+            pass
+    for d in done:
+        print("verifier input: " + d, file=sys.stderr)
+    return done
+
+
+def run_step(argv=()):
+    """verify(), and whatever it raises reported instead of breaking the grader's own verdict. Always 0."""
+    try:
+        verify(argv)
+    except Exception as e:
+        msg = f"{type(e).__name__}: {e}"
+        print(f"resource limits: verifier step failed: {msg}", file=sys.stderr)
+        try:
+            step_failed(msg)
+        except Exception:
+            pass
+    return 0
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["verify"]:
+        sys.exit(run_step(sys.argv[2:]))
+    if sys.argv[1:2] == ["sanitize"]:
         try:
-            sys.exit(verify(sys.argv[2:]))
-        except Exception as e:                      # never break the grader's own verdict
-            msg = f"{type(e).__name__}: {e}"
-            print(f"resource limits: verifier step failed: {msg}", file=sys.stderr)
-            try:
-                step_failed(msg)
-            except Exception:
-                pass
-            sys.exit(0)
+            sanitize(sys.argv[2:] or ("/app/output",))
+        except Exception as e:                       # never keep the grader from running
+            print(f"verifier input: sanitize failed: {type(e).__name__}: {e}", file=sys.stderr)
+        sys.exit(0)
     print(__doc__)

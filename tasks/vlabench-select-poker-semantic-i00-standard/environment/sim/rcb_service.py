@@ -619,7 +619,18 @@ class Service:
         cams, fps, video, depth = self._reset_view(meta)
         if not self.done:
             self._end("reset")                       # the running episode is abandoned
-        self.sim.reset()
+        try:
+            self.sim.reset()
+        except Exception:
+            # The simulator failed to start the new episode: the trial ends on a simulator error, not on the episode
+            # the agent had every right to abandon (handle() answers 500; its _end("error") finds the episode ended).
+            self.done, self.reason, self.success = True, "error", False
+            try:
+                self._checkpoint("end", reset_failed=True)
+            except Exception as exc:  # noqa: BLE001 -- a broken simulator may not even hash
+                self.log("end", reason="error", reset_failed=True, checkpoint_error=repr(exc)[:300])
+                self._write_final()
+            raise
         self.resets += 1
         self.ep_start, self.episode = self.journal_rows, []
         self.done, self.reason, self.success, self.t_end = False, None, False, None
@@ -707,6 +718,9 @@ class Service:
                 try:
                     n = int(self.headers.get("Content-Length") or 0)
                 except ValueError:
+                    n = -1
+                if n < 0:                            # (read(-1) would read to the end of the stream, without a limit)
+                    self.close_connection = True
                     return self._send(*svc._reply_json(400, {"error": "bad Content-Length"}))
                 if n > MAX_BODY:                     # refused unread: drop the connection with it
                     self.close_connection = True

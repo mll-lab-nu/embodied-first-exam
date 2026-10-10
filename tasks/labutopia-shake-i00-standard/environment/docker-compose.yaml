@@ -14,7 +14,7 @@ services:
     depends_on: [sim]
   sim:
     cpus: 16   # rcb-monitor
-    mem_limit: 24576m   # rcb-monitor
+    mem_limit: 32768m   # rcb-monitor
     pids_limit: 16384   # rcb-monitor
     image: ghcr.io/mll-lab-nu/eai-labutopia:0.1.0
     volumes:

@@ -7,8 +7,9 @@
 Why a switch and not a fixed default: the reference solutions we scrub from the agent image are public upstream, so an
 agent with open egress *could* fetch them; when a run must rule that out, flip to `allowlist`. The host list below is
 what was measured to keep Codex (ChatGPT login), Claude Code and OpenRouter working while GitHub/PyPI are blocked
-(2026-09-24). Harbor has no run-time override for [agent].network_mode, so this rewrites task.toml (re-run
-`cd tasks && harbor add --scan .` afterwards; digests change)."""
+(2026-09-24). This rewrites task.toml, so that the task itself says what its agent may reach (re-run
+`cd tasks && harbor add --scan .` afterwards; digests change); for a single run Harbor can also add hosts at run time
+(`--allow-agent-host`). ci_checks/check-verifier-isolation.sh requires every allowlist in tasks/ to be exactly HOSTS."""
 import pathlib, re, sys, tomllib
 
 HOSTS = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com",

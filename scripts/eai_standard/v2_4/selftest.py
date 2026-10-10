@@ -166,7 +166,9 @@ def case_malformed_bodies_are_400():
                "an integer too large for a float": b'{"type": "joint_position", "actions": [[' + b"9" * 400 + b', 1]]}',
                "the body is a list": b'[1, 2]', "the body is not JSON": b'{"type": ',
                "a bad operation id": b'{"operation_id": 7, "actions": [[1, 2]]}',
-               "a bad deadline": b'{"request_deadline_unix_s": "soon", "actions": [[1, 2]]}'}
+               "a bad deadline": b'{"request_deadline_unix_s": "soon", "actions": [[1, 2]]}',
+               "a deadline beyond the float range": (b'{"type": "joint_position", "request_deadline_unix_s": 1' + b"0" * 400
+                                                     + b', "actions": [[1, 2]]}')}
         for what, body in bad.items():
             assert post("/submit", body) == 400, f"/submit where {what}: {post('/submit', body)}"
         frame = rcb1.encode({"type": "joint_position"}, [rcb1.array_part("actions", np.zeros((2, 2), np.float32))])

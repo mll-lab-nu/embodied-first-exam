@@ -94,6 +94,18 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   different action types (a RoboOlympics bug); this task has one action type, so its plan behaves as before.
   The scene, instance and pass rule are unchanged, so the task keeps its name; every verdict that was reached
   before is the same now.
+- 2026-10-10 (2; second review round, M1): the agent's requests can no longer slow the episode's clock.
+  Request bodies are read, decoded and checked off the simulator's thread (more than 1 MiB of JSON text by a
+  child process), a refused request never reaches it, waiting requests are served once the clock has caught
+  up, and the cameras are rendered at most once per control step however many requests ask (before: a flood of
+  refused 21 MB bodies left 3 control steps in 6 s instead of 300, and four parallel `/observe` loops slowed
+  the robot's time by a fifth). An `/observe` may therefore take longer to answer while the service is behind,
+  or after a render that alone took more than 0.5 s; what an accepted `/submit` does, and when, is unchanged.
+  `final.json` and `reward.json` add the clock's record (`clock_s`, `stalls`, `stalled_s`, `stalled_share`,
+  `max_lag_s`, now the true maximum, `requests_refused`, `request_mb`, `request_busy_s`): evidence, which
+  decides no verdict. A negative `Content-Length` is refused unread, and a simulator that fails inside
+  `POST /reset` ends the episode as `error` (`infra_error = 1`), not `reset`. The scene, instance and pass
+  rule are unchanged, so the task keeps its name.
 - 2026-10-08: the task text no longer says the hurdles are solid and have to be cleared: upstream's model
   draws them without collision geometry and its reward never looks at them. The scene, instance, pass rule and
   verifier are unchanged, so the task keeps its name; runs recorded before this change were told otherwise and

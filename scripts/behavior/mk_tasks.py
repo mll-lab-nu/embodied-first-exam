@@ -142,7 +142,14 @@ CHANGES = {
         "next to `grader_error`; every `reward.json` carries `deterministic` and `infra_error`. The tooling's "
         "`replay` CLI skips an extra npz entry it cannot read and never lets its video recorder's start or stop decide a "
         "replay. The instruction states the runaway guard (200,000 control steps), the trajectory format and the grader's "
-        "replay time limit. A trajectory that passed before still passes, so the task keeps its name."],
+        "replay time limit. A trajectory that passed before still passes, so the task keeps its name.",
+        "2026-10-10 (2): the GPU-memory limit of the agent phase is 24 GiB (was 16 GiB). This is a change of the limit "
+        "(`[metadata.resources.limits]`, the `## Resource limits` paragraph of `instruction.md`), not of the minimum the task "
+        "declares: the reference solution alone holds 15.1 GiB for most of the episode on a 48 GB card with "
+        "`RCB_TEXTURE_BUDGET=0.1` (three oracle runs, two tasks, two L40S hosts, the task's own monitor), which left 5 % under "
+        "the old limit; the new one is max(1.5 x peak, peak + 4) rounded up, as for the other Isaac Sim benchmarks. Limits are "
+        "still only recorded (enforcement is off), so no result changes; the scene, the pass rule and the verifier are "
+        "unchanged, and the task keeps its name."],
     "standard": [
         "2026-10-08: collect-hook time limit only. `[[verifier.collect]] timeout_sec` is 37800 s (was 21600 s): the episode end "
         f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT}) "

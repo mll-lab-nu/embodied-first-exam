@@ -369,7 +369,13 @@ def changes(mode: str) -> list[str]:
         "their frozen settled state does not fit. Nothing else in the image changes. The scene, frozen instance and pass rule are unchanged, so the task "
         "keeps its name.",
         CHANGE_0067[mode],
-    ]
+    ] + ([
+        "- 2026-10-10 (2): `tests/grade.py`: after a live success, a replay process that died without a result (e.g. CUDA out "
+        "of memory in the collect hook) is `infra_error` 1 together with `grader_error` 1; it was `grader_error` 1 with "
+        "`infra_error` 0, which a reader of `infra_error` alone (PROTOCOL §2.6) took for the agent's 0. A `final.json` that "
+        "is not a JSON object is `infra_error` 1 (it left no reward). Reward 0 in both cases, as before; the pass rule is "
+        "unchanged, so the task keeps its name.",
+    ] if mode == "standard" else [])
 
 
 def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:

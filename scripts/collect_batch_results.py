@@ -23,7 +23,7 @@ for mode, job in (("unlimited", ju), ("limited", jl)):
         for f in ("gen.py",):
             src=trial/"artifacts/app/output"/f
             if src.exists(): shutil.copy(src, d/f)
-        info={"success": rw.get("success"), "agent_s": span(r.get("agent_execution") or {}), "verifier_s": span(r.get("verifier") or {}),
+        info={"success": rw.get("success"), "infra_error": int(bool(rw.get("infra_error") or rw.get("grader_error"))), "agent_s": span(r.get("agent_execution") or {}), "verifier_s": span(r.get("verifier") or {}),
               "tokens_in": ar.get("n_input_tokens"), "tokens_out": ar.get("n_output_tokens"), "cost_usd_api_price": ar.get("cost_usd"),
               "n_actions": rw.get("n_actions"), "sim_steps": rw.get("sim_steps"), "steps": rw.get("steps"),
               "agent_resets": rw.get("agent_resets"), "agent_sim_steps": rw.get("agent_sim_steps"),
@@ -37,13 +37,14 @@ L=[f"# RoboTwin 2.0 × Codex (GPT-6 Luna, ChatGPT subscription) — unlimited vs
    "| task | unlimited | agent s | tokens in/out | actions | limited | agent s | tokens in/out | actions |","|---|---|---|---|---|---|---|---|---|"]
 def cell(i):
     if not i: return "—","","",""
-    s={1:"✅ 1",0:"❌ 0"}.get(i.get("success"), "⚠ err" if i.get("exception") else "?")
+    # infra_error / grader_error (PROTOCOL §2.6): not a result, neither a success nor the agent's 0, and not in the totals
+    s="⚠ infra" if i.get("infra_error") else {1:"✅ 1",0:"❌ 0"}.get(i.get("success"), "⚠ err" if i.get("exception") else "?")
     return s, str(i.get("agent_s") or ""), f"{(i.get('tokens_in') or 0)/1000:.0f}k / {(i.get('tokens_out') or 0)/1000:.1f}k", str(i.get("n_actions") or i.get("steps") or "")
 tot={"unlimited":[0,0],"limited":[0,0]}
 for name in sorted(rows):
     u,l=rows[name].get("unlimited"),rows[name].get("limited")
     for m,i in (("unlimited",u),("limited",l)):
-        if i: tot[m][1]+=1; tot[m][0]+=int(i.get("success")==1)
+        if i and not i.get("infra_error"): tot[m][1]+=1; tot[m][0]+=int(i.get("success")==1)
     cu,cl=cell(u),cell(l); L.append(f"| {name} | {cu[0]} | {cu[1]} | {cu[2]} | {cu[3]} | {cl[0]} | {cl[1]} | {cl[2]} | {cl[3]} |")
-L.append(f"\n**Totals:** unlimited {tot['unlimited'][0]}/{tot['unlimited'][1]} · limited {tot['limited'][0]}/{tot['limited'][1]}\n")
+L.append(f"\n**Totals:** unlimited {tot['unlimited'][0]}/{tot['unlimited'][1]} · limited {tot['limited'][0]}/{tot['limited'][1]} (trials with an infrastructure error are not results and are not counted)\n")
 (out/"summary.md").write_text("\n".join(L)); print("\n".join(L))
