@@ -79,6 +79,7 @@ if isinstance(a, dict):                  # a replay result (None: the replay pro
     out["deterministic"] = out["live_matches_replay"] = bool(a.get("state_sha")) and a.get("state_sha") == out.get("live_sha")
     out["replay_wall_s"] = r.get("wall_s"); out["instance_exact"] = r.get("instance_exact"); out["instance_matches"] = r.get("instance_matches")
     out["instance_generated"] = r.get("instance_generated"); out["initial_state"] = r.get("initial_state")   # a state generated from the recipe on this GPU
+    out["instance_realized"] = r.get("instance_realized"); out["assets_exact"] = r.get("assets_exact")       # assets realized on this CPU
     g = a.get("grading") or {}             # the grading replay's hold and replay tolerances (GPU families, tooling v16)
     out["replay_grading"] = g or None; out["replay_grading_policy"] = bool(r.get("grading_replay"))
     out["replay_hold_steps"] = int(g.get("hold_steps", 0)); out["replay_tolerance_needed"] = bool(g.get("tolerance_needed"))

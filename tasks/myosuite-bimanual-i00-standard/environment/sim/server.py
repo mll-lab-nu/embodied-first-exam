@@ -1,16 +1,19 @@
 """eai-standard/2.2 sim service for the MyoSuite tasks (docs/STANDARD_MODE_2_2.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_myosuite.Session (MyoSuite 2.12.2 on MuJoCo, CPU). HTTP surface: GET /spec,
-GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to /data/episode.jsonl.
+GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET,
+the optional reset capability of docs/LIMITED_MODE_PROTOCOL.md; MyoSuite's standard tasks default to 10 in their compose
+file, PROTOCOL §4.5). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's (environment/sim/instance.npz, the privileged twin's). The action is MyoSuite's own:
 one command per muscle (excitation u = 1 / (1 + exp(-5 (a - 0.5)))), one row per control step. The episode ends the
 moment the task's goal has held for its hold time (success), at the task's failure (object dropped, fingers off the key,
-...), or when the agent's time is over (the collect hook). Nothing about objects or goals leaves this process: the
-proprioception is the limb's own joints and muscles.
+...), or when the agent's time is over (the collect hook). With a reset budget, POST /reset abandons the running (or
+ended) episode and starts a new one from the frozen instance; only the last episode is graded, and a success ends the
+trial. Nothing about objects or goals leaves this process: the proprioception is the limb's own joints and muscles.
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
-every executed row is journaled; after a crash the service rebuilds the episode and replays the journal. When the
-episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
+every executed row is journaled; after a crash the service rebuilds the episode and replays the journal, resetting where
+the committed resets did (their journal rows are checkpointed, `persist`). When the episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
 and replays the trajectory in two fresh processes."""
 
 import json
@@ -31,6 +34,7 @@ INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(os.path.a
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose file's default: 10 (PROTOCOL §4.5)
 W, H = 640, 480
 LOCK = threading.Lock()
 PID_FILE = os.path.join(DATA, "server.pid")
@@ -43,6 +47,8 @@ E = {
     "success": False,
     "t0": time.time(),
     "error": None,
+    "resets": 0,  # resets done (the episode is resets + 1)
+    "reset_at": [],  # the journal row at which each reset happened: a resume resets there again
 }
 
 os.environ["RCB_SESSION_LOG"] = ""
@@ -53,7 +59,7 @@ M.SESSION_LOG = ""  # the sidecar's Session is not the agent's interaction log
 _INST = np.load(INSTANCE, allow_pickle=False)
 TASK = str(_INST["task"])
 NU = int(_INST["model__actuator_ctrlrange"].shape[0])  # the journal's row width, known before the scene is built
-EP = L.Episode(DATA, dim=NU, resume="exact")
+EP = L.Episode(DATA, dim=NU, resume="exact", persist=("resets", "reset_at"))
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = M.Session(TASK, instance=INSTANCE)
 assert S.nu == NU, (S.nu, NU)
@@ -268,12 +274,14 @@ def do_kinematics(req: dict) -> dict:
 
 # ------------------------------------------------------------------------------------------------- spec
 TASK_TEXT = TASK_INFO["task_text"]
+ONE = "one episode, no reset" if not RESET_BUDGET else (
+    f"an episode (with up to {RESET_BUDGET} resets: POST /reset starts a new one; only the last is graded)")
 EPISODE = {
-    "hold": f"one episode, no reset: it ends the moment the task's goal has held for {S.hold_steps} control steps in a row "
+    "hold": f"{ONE}: it ends the moment the task's goal has held for {S.hold_steps} control steps in a row "
     f"({round(S.hold_steps * DT, 3)} s; success), at the task's failure (see task_text), or when your time is over",
-    "event": "one episode, no reset: it ends at the challenge's success event (success), at its failure conditions or "
+    "event": f"{ONE}: it ends at the challenge's success event (success), at its failure conditions or "
     "its own time limit (see task_text), or when your time is over",
-    "track": f"one episode, no reset: it lasts {S.track_steps} control steps (the reference motion; then it is judged), "
+    "track": f"{ONE}: it lasts {S.track_steps} control steps (the reference motion; then it is judged), "
     "ends early at MyoDex's termination (failure), or when your time is over",
 }[S.rule]
 MUSCLE_TEXT = (
@@ -328,7 +336,7 @@ SPEC = {
         "quaternion_order": "wxyz",
         "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes",
     },
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
+    "budget": {"reset": RESET_BUDGET, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "episode": EPISODE,
     "robot_spec": {
         "name": ROBOT[0],
@@ -397,6 +405,15 @@ if TASK_INFO.get("reference"):  # MyoDex: the reference motion is the goal (rela
         "meaning": "the reference pose of the manipulated item per control step: its centre of mass relative to where "
         "it starts (world axes) and its orientation (world frame, wxyz)",
     }
+if RESET_BUDGET:
+    SPEC["reset"] = (
+        f"POST /reset (JSON or RCB1 {{cameras, video_fps, depth}}; no physics) abandons the running episode, or follows "
+        f"one that has ended, and starts a new one from the same frozen starting state, {RESET_BUDGET} times in all; it "
+        "returns the new episode's first frames and proprioception. Only the last episode is graded: an episode you "
+        "reset away is never graded, a success ends the trial (409 after it), and when your time is up the episode then "
+        "running is the one graded. The wall clock never restarts. /status and every meta add `episode`, `resets_left` "
+        "and `control_steps_total` (all episodes); `control_steps` counts the current episode's."
+    )
 L.check_spec(SPEC)  # a spec that misses a 2.2 field or names a forbidden one never starts the episode
 EP.scene_built()
 
@@ -407,7 +424,11 @@ def ctrl_steps() -> int:
 
 def proprio_row() -> np.ndarray:
     d = S.data
-    parts = [d.qpos[J_Q], d.qvel[J_V], d.act[ACT_ADR], d.actuator_length[MUS_IDX], d.qfrc_actuator[J_V]]
+    # joint_effort from the physics, not the mirror: MyoSuite steps its robot wrapper's own MjData and refreshes
+    # S.data (base.mj_data) from qpos / qvel / act only, then mj_forward with ctrl = 0. The mirror's qfrc_actuator was
+    # the force of a zero command: the wrist / pelvis / MPL position servos read kp * (0 - q) whatever was commanded.
+    phys = S.base.robot.mj_data
+    parts = [d.qpos[J_Q], d.qvel[J_V], d.act[ACT_ADR], d.actuator_length[MUS_IDX], phys.qfrc_actuator[J_V]]
     if ROOT is not None:
         parts += [d.qpos[MD.jnt_qposadr[ROOT]:MD.jnt_qposadr[ROOT] + 7], d.qvel[MD.jnt_dofadr[ROOT]:MD.jnt_dofadr[ROOT] + 6]]
     return np.concatenate(parts).astype(
@@ -452,6 +473,10 @@ def summary() -> dict:
         "task": TASK,
         "protocol": L.PROTOCOL,
         "n_actions": len(ROWS),
+        "episodes": E["resets"] + 1,
+        "resets": E["resets"],
+        "reset_budget": RESET_BUDGET,
+        "control_steps_total": EP.rows,
         **EP.final_fields(),
     }
 
@@ -466,7 +491,8 @@ def finish(reason: str) -> None:
     E["episode_control_steps"] = ctrl_steps()
     E["success"] = bool(S.success)
     EP.log(
-        {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])}
+        {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
+         "episode": E["resets"] + 1, "journal_rows": EP.rows}
     )
     dump()
 
@@ -534,6 +560,7 @@ def meta_common(cams) -> dict:
         "done": E["done"],
         "reason": E["reason"],
         "cameras": {c: camera_info(c) for c in cams},
+        **reset_counters(),
     }
 
 
@@ -647,6 +674,13 @@ def do_observe(meta: dict):
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
 
 
+def reset_counters() -> dict:
+    if not RESET_BUDGET:
+        return {}
+    left = 0 if (E["success"] or E.get("exiting")) else RESET_BUDGET - E["resets"]
+    return {"episode": E["resets"] + 1, "resets_left": left, "control_steps_total": EP.rows}
+
+
 def status() -> dict:
     return {
         "step": E["step"],
@@ -655,7 +689,41 @@ def status() -> dict:
         "done": E["done"],
         "reason": E["reason"],
         "elapsed_s": round(time.time() - E["t0"], 1),
+        **reset_counters(),
     }
+
+
+class Refused(Exception):
+    """A /reset the service turns down (409): nothing changes."""
+
+    def __init__(self, body: dict):
+        super().__init__(body.get("error"))
+        self.body = body
+
+
+def do_reset(meta: dict):
+    """POST /reset: a new episode from the frozen instance (the running one, if any, is abandoned, never graded)."""
+    cams, fps = cameras_of(meta), video_fps(meta)
+    L.depth_mode(meta)  # a bad depth value is a 400 before anything changes
+    if E["success"]:
+        raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
+    if E["resets"] >= RESET_BUDGET:
+        raise Refused({"error": "reset budget exhausted", "reason": "reset budget exhausted", "budget": RESET_BUDGET,
+                       "resets_left": 0})
+    abandoned = {"episode": E["resets"] + 1, "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"]}
+    S.reset()
+    ROWS.clear()
+    E["resets"] += 1
+    E["reset_at"] = list(E["reset_at"]) + [EP.rows]
+    E.update(done=False, reason=None, success=False, t_end=None, episode_control_steps=None, dumped=False)
+    EP._ck = None  # the state changed without a journal row: the checkpoint after this call must hash it anew
+    E["calls"] += 1
+    EP.log({"ev": "reset", "call": E["calls"], "episode": E["resets"] + 1, "journal_rows": EP.rows,
+            "abandoned": abandoned, "state_sha": S.state_sha()})
+    rec = recorder(cams, fps, meta, "frames")
+    rec.tick(force=True, last=True)
+    out = {**meta_common(cams), "reset_id": E["resets"], "ok": True}
+    return out, rec.parts("frames", fps)
 
 
 def end_from_signal() -> None:
@@ -672,21 +740,49 @@ def end_from_signal() -> None:
     os._exit(0)
 
 
+# A resume replays the journal from the frozen instance and resets where the committed resets did: their journal rows
+# are in the last checkpoint (`persist`), the one Episode.begin resumes from.
+_CPS = [e for e in EP.events() if e.get("ev") == "checkpoint"]
+RESUME = {"at": list((_CPS[-1].get("persist") or {}).get("reset_at") or []) if _CPS else [], "i": 0}
+
+
+def _resume_resets() -> None:
+    while RESUME["at"] and int(RESUME["at"][0]) <= RESUME["i"]:
+        RESUME["at"].pop(0)
+        S.reset()
+        ROWS.clear()
+
+
 def replay_row(row) -> None:
     """A journaled row during a resume."""
+    _resume_resets()
     S.step(row)
     ROWS.append(np.asarray(row, dtype=np.float64))
+    RESUME["i"] += 1
 
 
-EP.begin(
+def resume_sha() -> str:
+    _resume_resets()  # a reset after the last replayed row (or before the first)
+    return S.state_sha()
+
+
+RESUMED = EP.begin(
     state=E,
     step=replay_row,
-    state_sha=S.state_sha,
+    state_sha=resume_sha,
     proprio=proprio_row,
     spec=SPEC,
     on_end=end_from_signal,
     start_event={"task": TASK, "env": S.env_id, "cameras": CAMS},
 )
+if RESUMED and E["resets"]:  # Episode.begin looks for an "end" of any episode: only the current one's counts
+    _ends = [e for e in EP.events() if e.get("ev") == "end" and int(e.get("episode") or 1) == E["resets"] + 1
+             and int(e.get("journal_rows") or 0) <= EP.rows]
+    if _ends:
+        E.update(done=True, reason=_ends[-1].get("reason"), t_end=float(_ends[-1]["ts"]),
+                 episode_control_steps=int(_ends[-1].get("control_steps") or ctrl_steps()))
+    else:
+        E.update(done=False, reason=None, t_end=None, episode_control_steps=None)
 if E["done"]:
     dump()  # resumed after the episode had ended: the record is rewritten from the replay
 E["ready"] = True
@@ -695,8 +791,67 @@ open(PID_FILE, "w").write(str(os.getpid()))
 print(
     f"{L.PROTOCOL} MyoSuite sim ready ({TASK}: {S.env_id}; startup {EP.n_startups}, resumes {EP.resumes})", flush=True
 )
+
+
+def make_handler(svc: L.Service):
+    """The shared 2.2 handler, plus POST /reset when the run grants resets (the shared layer has no reset)."""
+    base = L.make_handler(svc)
+
+    class H(base):
+        def do_POST(self):
+            if self.path != "/reset" or not RESET_BUDGET:
+                return super().do_POST()
+            try:
+                meta, _ = self._body()
+            except Exception as exc:  # noqa: BLE001
+                return self._json(413 if "too large" in str(exc) else 400, {"error": str(exc)[:200]})
+            with LOCK:
+                if E.get("exiting"):
+                    return self._json(409, {"error": "trial finished: your time is up", "reason": E.get("reason"),
+                                            "resets_left": 0})
+                cid = EP.call_begin(self.path, self.connection)
+                out = blobs = err = None
+                try:
+                    out, blobs = do_reset(meta)
+                except Refused as exc:
+                    err = (409, exc.body)
+                except ValueError as exc:
+                    err = (400, {"error": str(exc)})
+                except Exception as exc:  # noqa: BLE001
+                    traceback.print_exc()
+                    E["error"] = repr(exc)
+                    EP.log({"ev": "error", "path": self.path, "error": repr(exc)})
+                    try:
+                        finish("error")
+                    except Exception:  # noqa: BLE001
+                        traceback.print_exc()
+                    err = (500, {"error": "simulator error", "detail": repr(exc)[:200]})
+                finally:
+                    if out is not None or (err and err[0] == 500):
+                        try:
+                            EP.checkpoint(E, S.state_sha, proprio_row)
+                        except Exception:  # noqa: BLE001
+                            traceback.print_exc()
+                    EP.call_end(cid, self.path)
+            if err is not None:
+                return self._json(*err)
+            return self._rcb1({**out, "stopped": None}, blobs)
+
+    return H
+
+
+def serve(svc: L.Service, port: int) -> None:
+    """L.serve with this service's handler (the same spec defaults and check)."""
+    from http.server import HTTPServer
+
+    svc.spec.setdefault("on_service_error", L.ON_SERVICE_ERROR)
+    svc.spec.setdefault("max_call_wall_s", EP.max_call_wall_s)
+    L.check_spec(svc.spec)
+    HTTPServer(("0.0.0.0", port), make_handler(svc)).serve_forever()
+
+
 try:
-    L.serve(
+    serve(
         L.Service(
             spec=SPEC,
             lock=LOCK,

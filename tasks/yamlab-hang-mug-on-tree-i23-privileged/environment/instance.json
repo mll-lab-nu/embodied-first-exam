@@ -1,0 +1,266 @@
+{
+ "task": "hang_mug_on_tree",
+ "yamlab_env": "HangMugOnTree-v0",
+ "assets": {
+  "mug": "Mug/mug_023",
+  "mug_tree": "MugTree/mug_tree_023"
+ },
+ "text": "Pick up the mug with the left arm, hand it over to the right arm (the right gripper takes it and the left one lets go while the mug stays lifted), and hang the mug on the mug tree, released by both grippers.",
+ "stages": [
+  "pick",
+  "handover",
+  "hang"
+ ],
+ "initial_state": {
+  "articulation": {
+   "left_arm": {
+    "joint_position": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     -0.04749999940395355,
+     -0.04749999940395355
+    ],
+    "joint_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_pose": [
+     0.2524999976158142,
+     0.3050000071525574,
+     0.7599999904632568,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "right_arm": {
+    "joint_position": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     -0.04749999940395355,
+     -0.04749999940395355
+    ],
+    "joint_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_pose": [
+     0.2524999976158142,
+     -0.3050000071525574,
+     0.7599999904632568,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "deformable_object": {},
+  "gripper": {},
+  "rigid_object": {
+   "mug": {
+    "root_pose": [
+     0.7254999876022339,
+     0.15000000596046448,
+     0.7885419726371765,
+     0.13052883744239807,
+     0.0,
+     0.0,
+     0.9914445281028748
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "mug_tree": {
+    "root_pose": [
+     0.7555000185966492,
+     -0.30000001192092896,
+     0.9444944858551025,
+     0.9914448857307434,
+     0.0,
+     0.0,
+     0.13052618503570557
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "state_sha": "7652b52a3c3e7d8c",
+ "action_dim": 14,
+ "control_hz": 30,
+ "sim_dt": 0.00833333333333,
+ "decimation": 4,
+ "physics": {
+  "device": "cpu"
+ },
+ "robot_joint_positions": {
+  "left": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   -0.0475
+  ],
+  "right": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   -0.0475
+  ]
+ },
+ "objects": {
+  "mug": {
+   "position": [
+    0.7255,
+    0.15,
+    0.78854
+   ],
+   "orientation_wxyz": [
+    0.130529,
+    0.0,
+    0.0,
+    0.991445
+   ],
+   "size": [
+    0.11514,
+    0.08868,
+    0.06368
+   ],
+   "bounds": [
+    [
+     0.65842,
+     0.09227,
+     0.7567
+    ],
+    [
+     0.79258,
+     0.20773,
+     0.82038
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "mug_tree": {
+   "position": [
+    0.7555,
+    -0.3,
+    0.94449
+   ],
+   "orientation_wxyz": [
+    0.991445,
+    0.0,
+    0.0,
+    0.130526
+   ],
+   "size": [
+    0.16175,
+    0.16261,
+    0.37559
+   ],
+   "bounds": [
+    [
+     0.65634,
+     -0.39947,
+     0.7567
+    ],
+    [
+     0.85466,
+     -0.20053,
+     1.13229
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "success_params": {
+  "table_z": 0.7517,
+  "mug_height": 0.06368,
+  "mug_rest_z": 0.78854,
+  "pick_lift_m": 0.05,
+  "pick_steps": 8,
+  "handover_lift_m": 0.05,
+  "handover_steps": 30,
+  "hang_xy_tol_m": 0.11468,
+  "hang_min_z": 0.83354,
+  "hang_z_stability_m": 0.03,
+  "hang_steps": 30
+ },
+ "table_top_z": 0.7517,
+ "source": {
+  "dataset": "yamlab/yamlab_datasets",
+  "file": "hangmug_023.hdf5",
+  "demo": 2,
+  "state": "initial_state",
+  "oracle": "30-step ramp from the home targets + the demo's 609 actions"
+ },
+ "versions": {
+  "isaaclab": "0.54.3",
+  "isaacsim": "",
+  "torch": "2.7.0+cu128",
+  "yamlab_commit": "ec0455d2b4ce",
+  "isaaclab_commit": "f4aa17f87e2e"
+ }
+}

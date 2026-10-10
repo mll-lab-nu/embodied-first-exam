@@ -1,0 +1,62 @@
+{
+ "case": {
+  "case_id": "pro-task-10-t05-i04-camera_shift-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 4,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/task/libero_10/task_5",
+   "change": {
+    "calibration": "fixed_global_viewpoint",
+    "camera": "agentview",
+    "delta_fovy_degrees": -12.0,
+    "delta_position_m": [
+     -0.06,
+     0.03,
+     0.0
+    ],
+    "operation": "shift_camera",
+    "yaw_degrees": -22.0
+   },
+   "change_family": "OBS",
+   "change_type": "camera_shift",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 4173875607
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-task-10-t05-i04-camera_shift-d1",
+   "seed": 4173875607,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "white_yellow_mug_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/task",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_10_task/STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "task",
+   "init_reference_bddl_file": "libero_10_task/STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy.bddl",
+   "init_states_file": "libero_10_task/STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy.pruned_init",
+   "language": "pick up the cup and place it in the back compartment of the caddy",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 5,
+  "task_name": "STUDY_SCENE1_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy",
+  "task_suite_name": "libero_10",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "4c4d8c06544571d9f38843336f7bb4ca321adf307fd9a9e5a9471173eb355a0c",
+ "instance_sha": "6605e4b83ab3e3235629985735510eeca6b98618d241f44dc1a10bbae6cad087",
+ "schema": "eai-libero-max-instance/1"
+}

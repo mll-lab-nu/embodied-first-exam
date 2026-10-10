@@ -4,7 +4,7 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-privileged"
-description = "HumanoidBench hurdle: produce one replayable trajectory that runs the Unitree H1 over a line of hurdles, frozen scene instance 00."
+description = "HumanoidBench hurdle: produce one replayable trajectory that runs the Unitree H1 down a walled track past a line of hurdles, frozen scene instance 00."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory", "h1", "locomotion", "hurdle"]
 
@@ -48,6 +48,6 @@ allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.
 
 [environment]
 build_timeout_sec = 1800.0
-# the deliverable is reachable by search; one episode is ~0.48 s of one core
+# the deliverable is reachable by search; one episode is ~0.52 s of one core
 cpus = 16
 memory_mb = 16384

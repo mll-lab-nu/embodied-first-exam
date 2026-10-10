@@ -6,8 +6,8 @@
 > before (plus parts and keys an old client ignores). Which parts are required is listed in PROTOCOL §4.
 
 **Who serves it.** The standard twins of nine benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces,
-MyoSuite, DexJoCo and AutoBio ([docs/benchmarks/](benchmarks/); MyoSuite and AutoBio: MuJoCo on the CPU, resume class `exact`), and MuJoCo Playground's
-quadruped tasks. The RoboTwin and the other MuJoCo standard tasks (DexToolBench, MuJoCo Playground's manipulation tasks) serve 2.1.
+MyoSuite, DexJoCo, YAMLab and AutoBio ([docs/benchmarks/](benchmarks/); MyoSuite and AutoBio: MuJoCo on the CPU, resume class `exact`; YAMLab: Isaac
+Lab with CPU PhysX, resume class `exact`), and MuJoCo Playground's quadruped tasks. The RoboTwin and the other MuJoCo standard tasks (DexToolBench, MuJoCo Playground's manipulation tasks) serve 2.1.
 
 **One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/), the D9 shared source of these six
 benchmarks: the service layer `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash
@@ -202,7 +202,7 @@ The resume check depends on the simulator's determinism class, which the adapter
 
 | class | rule | benchmarks |
 |---|---|---|
-| `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) | RoboWits on Genesis' CPU backend; RoboLab (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact); RoboPaint (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); MolmoSpaces (MuJoCo, CPU physics); AutoBio (MuJoCo 3.3, CPU physics; one control step is one physics step) |
+| `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) | RoboWits on Genesis' CPU backend; RoboLab (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact); RoboPaint (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); MolmoSpaces (MuJoCo, CPU physics); YAMLab (Isaac, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact); AutoBio (MuJoCo 3.3, CPU physics; one control step is one physics step) |
 | `approx` | the hash is compared and the result recorded; a mismatch does not end the episode: `resume_state_mismatch = 1`, and the robot's deviation from its checkpointed proprio is recorded (max \|Δ\| over `joint_pos`; the largest TCP position error from `tcp_pose`). Only a gross divergence, a TCP more than `RCB_RESUME_MAX_DEV_M` (0.05 m) from where it was, ends the episode as `resume_failed` (`infra_error = 1`) | simulators declared nondeterministic: RoboWits on the GPU backend (the particle families separate_marbles_and_sand and stabilize_bottle, `RCB_ROBOWITS_BACKEND=gpu`); BEHAVIOR-1K (OmniGibson declares rollouts nondeterministic; measured so far: live = fresh replay on every 2.2 run, so it normally resumes exactly); ManiGuard (OmniGibson 3.7.2; not measured yet) |
 
 This relaxes "the hash checked" of PROTOCOL §4.7 for declared-nondeterministic simulators only. It cannot raise a score:

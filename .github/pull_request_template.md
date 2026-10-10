@@ -9,7 +9,7 @@
 <!-- Written by you. For a fix: which agent behaviour it closes, with before/after runs. -->
 
 ## Contract
-- Mode(s): privileged / standard / realtime — protocol (standard: `eai-standard/2.1`/`2.2`; realtime: `eai-standard/2.3`): `eai-standard/2.__`
+- Mode(s): privileged / standard / standard-realtime — protocol (standard: `eai-standard/2.1`/`2.2`/`2.4`; standard-realtime: `eai-standard/2.3`): `eai-standard/2.__`
 - Oracle: full / partial / none — evidence: ___
 - Base image(s): `eai-<sim>:<ver>` (published / BUILD_ONLY)
 - Agent time budget: ___ s (default 3600; reason if longer)
@@ -21,7 +21,7 @@
 - [ ] New simulator or family: two fresh replays give the same state hash
 - [ ] Oracle `partial`/`none`: per-family table of positive examples (PROTOCOL §2.7)
 - [ ] Runs with Harbor's native agents (no custom runner, gateway or adapter)
-- [ ] Names `<base>-privileged` / `<base>-standard` / `<base>-realtime`; README in the standard layout; no `results/`
+- [ ] Names `<base>-privileged` / `<base>-standard` / `<base>-standard-realtime`; README in the standard layout; no `results/`
 - [ ] No credentials, personal paths or files > 2 MB; `tasks/dataset.toml` refreshed
 
 ## Evidence

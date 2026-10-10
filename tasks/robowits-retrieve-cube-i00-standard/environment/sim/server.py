@@ -72,10 +72,22 @@ def finalize() -> None:
         E["finalized"] = True; write_final()
         if acts is not None and len(acts):
             try:
-                S.start_video(os.path.join(DATA, "replay.mp4"), fps=15); S.replay(acts); S.stop_video(); E["video"] = True   # + replay.last.png
+                S.start_video(os.path.join(DATA, "replay.mp4"), fps=15); S.replay(acts); S.stop_video()   # + replay.last.png
+                E["video"] = video_ok(os.path.join(DATA, "replay.mp4"))
             except Exception:  # noqa
                 traceback.print_exc()
         E["video_done"] = True; write_final()
+
+
+def video_ok(path: str) -> bool:
+    """The video decodes (ffprobe reads at least one frame), not merely exists (board 0051)."""
+    import subprocess
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets", "-show_entries",
+                            "stream=nb_read_packets", "-of", "csv=p=0", path], capture_output=True, text=True, timeout=300)
+        return r.returncode == 0 and int((r.stdout.strip() or "0").split(",")[0]) > 0
+    except Exception:  # noqa
+        return False
 
 
 def start_finalize() -> None:
