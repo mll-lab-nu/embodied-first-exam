@@ -3,21 +3,28 @@
 The simulator-specific half only: `LiberoMax` implements rcb_service.Sim for one frozen instance (lmx_tool.Session).
 The protocol, the episode, crash recovery and the finalize live in rcb_service.py (a byte copy of main's HumanoidBench /
 VLABench service), which imports no simulator. One simulator per process (lmx_tool): the fresh replay that grades the
-episode runs in a new process and records the replay video on the way (verify, render_video).
+episode runs in a new process and records the replay video on the way. verify() returns the verdict the moment that
+process prints it (rcb_service writes it to final.json at once); the process then finishes the video on its own and
+render_video() only collects it. The video can neither change nor cost the verdict, and never causes a second replay
+(lmx_tool._ReplayVideo; the budget is in docs/benchmarks/libero-max.md, "Collect budget").
 Settings come from environment/docker-compose.yaml:
   RCB_INSTANCE            the frozen instance (the privileged twin's instance.json)
   RCB_TASK_TEXT           the task as the instruction states it, for /spec
   RCB_EPISODE             what ends an episode, for /spec (the instruction's words)
   RCB_MAX_CONTROL_STEPS   technical episode cap (9000 = 450 s of robot time): the fresh replay that grades the episode
-                          must finish inside the collect hook's timeout
+                          must finish inside the collect hook's wait (finalize.sh)
+  LMX_VIDEO_BUDGET_S, LMX_VIDEO_MAX_FRAMES   the replay video's bounds (lmx_tool: 240 s, 1200 frames)
   RCB_IMAGE_HW            the side of every camera's image in pixels (256)
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA   the service's own (rcb_service.main)
 """
 
 from __future__ import annotations
 
+import contextlib
+import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import traceback
@@ -29,6 +36,16 @@ import lmx_tool  # noqa: E402
 from rcb_service import main  # noqa: E402
 
 CAMERAS = ("agentview", "wrist")
+VIDEO_CLOSE_S = 120.0  # after the verdict: how long the replay process may take to finish its video (render_video)
+
+
+def _result(line: str) -> dict | None:
+    """A result line of `lmx_tool.py --replay` (JSON with the verdict), or None for anything else on its stdout."""
+    try:
+        r = json.loads(line)
+    except ValueError:
+        return None
+    return r if isinstance(r, dict) and "state_sha" in r and "success" in r else None
 
 
 class LiberoMax:
@@ -48,7 +65,7 @@ class LiberoMax:
         self.cameras = CAMERAS
         self.depth_cameras = CAMERAS
         self.raw_dim = lmx_tool.N
-        self._video: str | None = None  # the video the grading replay recorded (verify -> render_video)
+        self._replay: tuple | None = None  # the grading replay still finishing its video (verify -> render_video)
         self.lower, self.upper = -np.ones(lmx_tool.N), np.ones(lmx_tool.N)
         self.out_max = ctl["output_max"]
         self.proprio_layout = (
@@ -146,43 +163,105 @@ class LiberoMax:
 
     # ---------------------------------------------------------------- grading and evidence
     def verify(self, rows: np.ndarray) -> dict:
-        # The replay that grades the episode also records the video (render_video then only moves it into place).
-        # A second replay for the video used to start after the verdict, and finalize.sh stops waiting
-        # RCB_VIDEO_GRACE_S after the verdict: on a busy sidecar (~0.5 s per control step) every episode longer than
-        # ~1000 steps was graded without a video. Rendering reads the scene and never steps physics (the state hash is
-        # the same); if the video fails, the episode is replayed again without it -- the verdict never depends on it.
-        self._video = os.path.join(tempfile.mkdtemp(prefix="verdict-"), "replay.mp4")
-        try:
-            r = lmx_tool.replay_fresh(rows, self.instance, video=self._video)
-        except Exception:  # noqa: BLE001
-            traceback.print_exc()
-            self._video = None
-            r = lmx_tool.replay_fresh(rows, self.instance)
+        # The replay that grades the episode also records the video, in the same fresh process: a second replay for
+        # the video would start after the verdict and outlast the collect hook for every long episode. The verdict
+        # comes first: the process prints it when the last action is executed, verify() returns it at once, and
+        # rcb_service puts it on disk before render_video() waits for the video. Rendering reads the scene and never
+        # steps physics (the state hash is the same), a failing video only switches itself off inside that process,
+        # and its cost before the verdict is bounded (lmx_tool._ReplayVideo). Only a replay process that dies before
+        # its verdict (a crash in native code) is replayed again, without a video.
+        r = self._replay_with_video(rows)
+        if r is None:
+            try:
+                r = lmx_tool.replay_fresh(rows, self.instance)
+            except subprocess.CalledProcessError as exc:  # no verdict: say why in the sidecar's log, then fail
+                print(f"[verify] the replay failed (exit {exc.returncode}):\n{(exc.stderr or '')[-3000:]}",
+                      file=sys.stderr, flush=True)  # fmt: skip
+                raise
         live = self.s.report()
         return {
             "success": r["success"] and "invalid" not in r,
             "state_sha": r["state_sha"],
             # final.json evidence (rcb_service merges `extra` into the verdict): whether, and at which control step
-            # (1-based; null if never), the case's event fired in the live episode and in the fresh replay.
+            # (1-based; null if never), the case's event fired in the live episode and in the fresh replay; and how
+            # many control steps one frame of replay.mp4 stands for (2 = real time; more = a time-lapse).
             "extra": {
                 "event_fired": bool(live["event_fired"]),
                 "event_step": live["event_step"],
                 "replay_event_fired": bool(r.get("event_fired")),
                 "replay_event_step": r.get("event_step"),
+                "replay_video_stride": r.get("video_stride"),
             },
         }
+
+    def _replay_with_video(self, rows: np.ndarray) -> dict | None:
+        """Start the grading replay with a video in a fresh process and return its verdict as soon as it is printed;
+        the process is left running to finish the video (render_video). None if it ended without a verdict."""
+        self._drop_replay()
+        tmp = tempfile.mkdtemp(prefix="verdict-")
+        proc = None
+        try:
+            npy, video = os.path.join(tmp, "a.npy"), os.path.join(tmp, "replay.mp4")
+            np.save(npy, lmx_tool.as_actions(rows))
+            proc = subprocess.Popen(  # stderr: the service's own (the sidecar's log)
+                [sys.executable, os.path.abspath(lmx_tool.__file__), "--replay", str(self.instance), npy, video],
+                stdout=subprocess.PIPE, text=True,
+            )  # fmt: skip
+            while True:
+                line = proc.stdout.readline()
+                if not line:
+                    break
+                r = _result(line)
+                if r is not None:
+                    self._replay = (proc, tmp, video)
+                    return r
+            print(f"[verify] the replay with a video ended without a verdict (exit {proc.wait()}); replaying without "
+                  "one", file=sys.stderr, flush=True)  # fmt: skip
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
+        if proc is not None and proc.poll() is None:
+            proc.kill()
+            proc.wait()
+        shutil.rmtree(tmp, ignore_errors=True)
+        return None
+
+    def _drop_replay(self) -> None:
+        if self._replay is not None:
+            (proc, tmp, _), self._replay = self._replay, None
+            if proc.poll() is None:
+                proc.kill()
+                proc.wait()
+            shutil.rmtree(tmp, ignore_errors=True)
 
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         np.savez(path, actions=np.asarray(rows, np.float64), meta=np.array(lmx_tool.canonical(meta)))
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
-        if self._video and os.path.exists(self._video):  # recorded by the replay that graded these rows (verify)
-            shutil.move(self._video, path)
-            png = self._video.removesuffix(".mp4") + ".last.png"
+        """Called by rcb_service once the verdict is on disk: wait for the replay that graded these rows to finish its
+        video (the final frame and the encoder's flush: seconds) and move it into place. Raises when there is none
+        (rcb_service then records video = false and finalizes); the episode is never replayed again for a video."""
+        if self._replay is None:
+            raise RuntimeError("the grading replay recorded no video")
+        (proc, tmp, video), self._replay = self._replay, None
+        try:
+            try:
+                proc.wait(timeout=VIDEO_CLOSE_S)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait()
+                raise RuntimeError(f"the replay did not finish its video {VIDEO_CLOSE_S:g} s after its verdict") from None
+            # The last result line says whether the video is complete (the exit code may be a teardown's).
+            results = [r for r in map(_result, proc.stdout.read().splitlines()) if r is not None]
+            if not (results and results[-1].get("video") and os.path.exists(video)):
+                raise RuntimeError(f"the replay recorded no video (exit {proc.returncode})")
+            shutil.move(video, path)
+            png = video.removesuffix(".mp4") + ".last.png"
             if os.path.exists(png):
                 shutil.move(png, path.removesuffix(".mp4") + ".last.png")
-            return
-        lmx_tool.replay_fresh(rows, self.instance, video=path)
+        finally:
+            with contextlib.suppress(Exception):
+                proc.stdout.close()
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 def build() -> LiberoMax:

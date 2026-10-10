@@ -12,12 +12,33 @@ user 2026-09-26: the CPU backend needs 13-86 min per scene build) the physics is
 need not agree and the rebuilt scene need not match the frozen one exactly (both reported), but every replay must
 still complete the task. On the CPU backend the frozen scene rebuilt here from tests/instance.json must also match
 the recorded one (`instance_ok`: exact state hash, or every object / joint pose within tolerance on another host).
+
+Whose failure (reward.json always carries `infra_error` and `grader_error`, 0 or 1):
+- the agent's (`infra_error` 0, `grader_error` 0): no file (`missing_trajectory`), a file that cannot be read as the
+  tooling's .npz, has no `task` / `actions`, holds anything but finite (T, 16) numbers or more than MAX_STEPS rows
+  (`bad_trajectory`), another family's trajectory (`wrong_family`), or a trajectory that does not complete the task;
+- the infrastructure's (`infra_error` 1, never the agent's 0): the verifier cannot build the frozen scene
+  (`instance_build_failed`, with `grader_error` 1), or the scene it rebuilt does not match the frozen instance on the
+  CPU backend (`instance_ok` 0: another CPU vendor, asset or simulator drift; docs/benchmarks/robowits.md, Hosts): the
+  replay then ran on a different scene and says nothing about the trajectory;
+- the grader's (`grader_error` 1): anything else that raises.
 """
 from __future__ import annotations
 import argparse, json, os, sys, time, traceback
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
+MAX_MEMBER_BYTES = 256 * 1024 * 1024    # an .npz member larger than this is not a trajectory (MAX_STEPS float64 rows: 26 MB)
+
+
+def load_trajectory(path: str) -> tuple[str, np.ndarray]:
+    """(task, actions as float32) from the agent's file. Raises on anything that is not the tooling's .npz: every such
+    error is the agent's (the caller books it as bad_trajectory), so nothing but the file is touched here."""
+    with np.load(path, allow_pickle=False) as d:          # a pickled / object array raises ValueError; a plain .npy has no `with`
+        for key in ("task", "actions"):
+            if d.zip.getinfo(key + ".npy").file_size > MAX_MEMBER_BYTES:   # KeyError: the key is missing
+                raise ValueError(f"{key} is larger than {MAX_MEMBER_BYTES} bytes")
+        return str(d["task"]), np.asarray(d["actions"], dtype=np.float32)
 
 
 def write(ok: bool, out: dict) -> None:
@@ -54,18 +75,27 @@ def main() -> int:
         pass
     os.environ["RCB_SESSION_LOG"] = ""  # the verifier's own sessions must not be counted
     if not os.path.isfile(a.traj):
-        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, **cost}); return 0
+        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, "infra_error": 0, **cost}); return 0
     s = None
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # the verifier's own copy of the tooling
         from rcb_robowits import Session, MAX_STEPS
-        d = np.load(a.traj, allow_pickle=False)
-        if str(d["task"]) != a.family:
-            write(False, {"success": 0, "wrong_family": 1, "grader_error": 0, **cost}); return 0
-        acts = np.asarray(d["actions"], dtype=np.float32)
+        try:
+            task, acts = load_trajectory(a.traj)
+        except Exception as exc:  # noqa: BLE001 — the agent's file: unreadable, a key missing, pickled, not numbers
+            print(f"bad trajectory file: {exc!r}"[:500], file=sys.stderr)
+            write(False, {"success": 0, "bad_trajectory": 1, "n_actions": 0, "grader_error": 0, "infra_error": 0, **cost}); return 0
+        if task != a.family:
+            write(False, {"success": 0, "wrong_family": 1, "grader_error": 0, "infra_error": 0, **cost}); return 0
         if acts.ndim != 2 or acts.shape[1] != 16 or acts.shape[0] > MAX_STEPS or not np.all(np.isfinite(acts)):
-            write(False, {"success": 0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, **cost}); return 0
-        s = Session(a.family, instance=a.instance)
+            write(False, {"success": 0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0,
+                          "infra_error": 0, **cost}); return 0
+        try:
+            s = Session(a.family, instance=a.instance)
+        except Exception:  # noqa: BLE001 — the verifier's own inputs (tests/instance.json, the image, the host's GPU and
+            # BlenderKit folder): nothing the agent wrote is read here, so this is never the agent's 0
+            traceback.print_exc(file=sys.stderr)
+            write(False, {"success": 0, "grader_error": 1, "infra_error": 1, "instance_build_failed": 1, **cost}); return 0
         t0 = time.time()
         outs = [s.replay(acts) for _ in range(a.repeat)]
         all_success = all(o["success"] for o in outs)
@@ -75,7 +105,11 @@ def main() -> int:
         # reported); every replay must still complete the task.
         gpu = os.environ.get("RCB_ROBOWITS_BACKEND", "cpu") == "gpu"
         ok = all_success and (gpu or (deterministic and instance_ok))
+        # CPU backend, rebuilt scene out of tolerance: this host cannot reconstruct the frozen instance (another CPU vendor,
+        # asset or simulator drift), so the replays above ran on a different scene. Not a result: infra_error, success 0.
+        infra = not gpu and not instance_ok
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": int(gpu),
+               "infra_error": int(infra),
                "instance_ok": int(instance_ok), "instance_exact": int(bool(s.instance_exact)), "n_actions": int(len(acts)),
                "sim_steps": int(outs[0]["sim_steps"]), "final_reward": float(outs[-1].get("progress") or 0.0),
                "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "video_rendered": 0, **cost}
@@ -90,7 +124,7 @@ def main() -> int:
             write(ok, out)
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
-        write(False, {"success": 0, "grader_error": 1, **cost})
+        write(False, {"success": 0, "grader_error": 1, "infra_error": 0, **cost})
     finally:
         if s is not None:
             s.close()  # reward files are already written

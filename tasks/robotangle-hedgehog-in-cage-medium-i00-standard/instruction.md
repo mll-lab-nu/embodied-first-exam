@@ -34,8 +34,9 @@ client and one episode. **Task:** Separate and place the whole hedgehog ball, in
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
   the task requirements above still apply in full.
-- **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
-  simulated time are reported as cost. One control step takes about 0.038 s of wall clock here.
+- **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); there is no step budget, but the
+  episode ends after 200000 control steps, watches included (83 min of simulated time; a technical cap,
+  `spec["max_control_steps"]`: `meta["reason"]` is `step_guard`, and the episode is graded as it stands). Actions and simulated time are reported as cost. One control step takes about 0.038 s of wall clock here.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -60,8 +61,22 @@ client and one episode. **Task:** Separate and place the whole hedgehog ball, in
   running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
 
 ## Time per call
-- One control step takes about 0.038 s of wall clock here. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: a `submit` of the maximum 10 s chunk fits; any watch up to 30 s fits (both with a 2x margin).
-- If a request times out in the client anyway, the service still runs it to the end: do NOT send it again (it would run twice). Call `r.get_obs()` (repeat it if it also times out): it answers once the earlier request has finished and shows the state after it.
+- One control step takes about 0.038 s of wall clock here. A request returns when all of its steps have run, or
+  earlier: a call that has run for 900 s (`spec["max_call_wall_s"]`) is stopped by the service at the next control
+  step and returns what it executed (`res.stopped` is `"max_call_wall_s"`; `res.meta["executed_rows"]`, or
+  `res.meta["control_steps_watch"]` for a watch, says how far it got; the robot holds its last target). Check
+  `res.stopped` before you send the next rows. A `submit` of the maximum 10 s chunk takes about 15 s here, and any watch up to 30 s fits (both with a 2x margin).
+- The client waits longer than that (1800 s for `submit`, 1020 s for `get_obs`), so a client timeout or a connection
+  error means the connection or the service failed, not that the call is still on its way. Do NOT send the request
+  again blindly (it could run twice): `r.operation_status()` tells what became of the last one. Its `status` is
+  `completed` or `error` (with `rows_before` and `committed_rows`, the episode's control steps before and after it,
+  and `stopped`), `interrupted` (the service restarted during it and resumes the same episode in the state after the
+  last completed call: `spec["on_service_error"]`, `r.wait_ready()`), or `admitted` (not finished); an HTTP 404 error
+  there means the service never admitted the request, so nothing ran. The service answers one request at a time, so
+  this query waits while a call is running: repeat it if it times out. If your client hangs up, the service stops
+  the call at the next control step. A request that arrives after its deadline is refused (408), and one whose
+  operation id was already admitted is refused (409); neither moves the robot. A control step that hangs for more
+  than 60 s past the call's limit ends the episode as an infrastructure error, not as your failure.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.4`)
 ```python

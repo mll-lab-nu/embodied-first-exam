@@ -55,6 +55,7 @@ main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"       # the replay needs no download: assets in the image, Genesis' caches seeded from instance.json
 
 # Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]

@@ -7,8 +7,13 @@ success check (the task's BDDL goal). The episode ends the moment the check hold
 that is invalid; it may not be longer than the suite's step limit either.
 
 /logs/verifier/reward.txt: 1 iff both replays end in the same state (deterministic) and that state is a success.
-/logs/verifier/reward.json (numeric only): success, deterministic, missing_trajectory, invalid_trajectory,
-grader_error, n_actions, sim_steps, event_fired, video_rendered. Diagnostics go to diagnostics.json, replay-*.json/log.
+/logs/verifier/reward.json (numeric only, the same fields on every path): success, deterministic, missing_trajectory,
+invalid_trajectory, grader_error, infra_error, n_actions, sim_steps, event_fired, video_rendered. Diagnostics go to
+diagnostics.json, replay-*.json/log.
+grader_error = 1: the grader could not finish (a replay process failed or timed out, an unreadable instance).
+infra_error = 1 (with grader_error): no verdict on the agent, because this host did not rebuild the frozen start
+bit-exactly (its CPU's numeric kernels, docs/benchmarks/libero-max.md "Host CPUs"): the replay process says so with
+exit code lmx_tool.EXIT_REBUILD, before it executes any action. Rerun the trial on a supported host.
 """
 
 import json
@@ -23,6 +28,11 @@ HERE = Path(__file__).resolve().parent
 INSTANCE = HERE / "instance.json"
 TRAJ = Path("/app/output/trajectory.npz")
 LOG = Path("/logs/verifier")
+EXIT_REBUILD = 3  # lmx_tool.EXIT_REBUILD: the replay process could not rebuild the frozen start on this host
+
+
+class HostCannotRebuild(RuntimeError):
+    pass
 
 
 def write(out: dict, diag: dict) -> None:
@@ -38,6 +48,8 @@ def run_replay(npy: Path, tag: str, video: Path | None = None) -> dict:
     )
     with open(LOG / f"replay-{tag}.log", "w") as log:
         p = subprocess.run(args, stdout=subprocess.PIPE, stderr=log, text=True, env=env, cwd="/", timeout=3600)
+    if p.returncode == EXIT_REBUILD:
+        raise HostCannotRebuild(f"replay {tag}: the frozen start did not rebuild on this host; see replay-{tag}.log")
     if p.returncode:
         raise RuntimeError(f"replay {tag} failed (exit {p.returncode}); see replay-{tag}.log")
     r = json.loads(p.stdout.strip().splitlines()[-1])
@@ -49,7 +61,7 @@ def main() -> None:
     LOG.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     out = {"success": 0, "deterministic": 0, "missing_trajectory": 0, "invalid_trajectory": 0, "grader_error": 0,
-           "n_actions": 0, "sim_steps": 0, "event_fired": 0, "video_rendered": 0}  # fmt: skip
+           "infra_error": 0, "n_actions": 0, "sim_steps": 0, "event_fired": 0, "video_rendered": 0}  # fmt: skip
     diag = {}
     npy = Path("/tmp/lmx-actions.npy")
     try:
@@ -88,16 +100,15 @@ def main() -> None:
                     sim_steps=sum(r["control_steps"] for r in results),
                     event_fired=int(bool(results[0]["event_fired"])),
                 )
-    except Exception:  # noqa: BLE001
-        out["grader_error"] = 1
+    except Exception as exc:  # noqa: BLE001
+        out.update(success=0, deterministic=0, grader_error=1, infra_error=int(isinstance(exc, HostCannotRebuild)))
         diag["grader_error"] = traceback.format_exc()[-2000:]
     diag["verifier_wall_s"] = round(time.time() - t0, 2)
     write(out, diag)  # the verdict is on disk before the video is rendered; the video never changes it
     print(json.dumps(out), flush=True)
     if npy.exists() and not out["invalid_trajectory"] and not out["grader_error"]:
-        try:
-            run_replay(npy, "video", LOG / "replay.mp4")
-            out["video_rendered"] = 1
+        try:  # a third replay, for humans; it reports whether it finished its video (a failed video exits 0 too)
+            out["video_rendered"] = int(bool(run_replay(npy, "video", LOG / "replay.mp4").get("video")))
             write(out, diag)
         except Exception:  # noqa: BLE001
             traceback.print_exc()

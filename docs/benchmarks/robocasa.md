@@ -9,7 +9,7 @@ Omron mobile base), each on one frozen instance, in both modes: 58 tasks.
 | tasks | `tasks/robocasa-<task>-i00-privileged` and `tasks/robocasa-<task>-i00-standard`, 29 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa:0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
-| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` as in the HumanoidBench tasks |
+| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
 | generator | `scripts/robocasa/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
 
 ## Scope
@@ -70,6 +70,36 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences:
 4. The protocol is reported as `eai-standard/2.1`, with HumanoidBench's client (accepts both spellings); a simulator
    error (500) ends the episode with `reason = "error"`; a body over 64 MB gets 413; the grader writes numeric fields.
 5. A first collect hook stops every process in the agent's container before the episode is ended (as HumanoidBench).
+6. **The verdict is final before the video** (2026-10-10). At the end of the episode the service replays it in a fresh
+   simulator and writes the verdict together with `"finalized": true` in one atomic write of `final.json` (temporary
+   file + rename). Only then it renders `replay.mp4` / `replay.last.png` (a second replay, under a temporary name,
+   renamed when complete; `/data/video.pending` exists meanwhile): optional, it can add `"video": true` and nothing
+   else. An exception, a crash (the restarted service finds the verdict and idles: nothing is replayed or rewritten)
+   or the hook giving up on the video leave the verdict as it is. `_give_up` never overwrites a `final.json` that has
+   a verdict (`deterministic`), finalized or not.
+7. **Collect hook** `environment/sim/finalize.sh` (`scripts/robocasa/shared/finalize.sh`; `timeout_sec = 3600`). It
+   sends SIGUSR1 (again every 30 s) and waits for the verdict for up to 3450 s on the clock (`RCB_COLLECT_WAIT_S`),
+   then for the video for at most as long again as the verdict took + 120 s. Without any episode (the service never
+   became ready) it stops after 600 s. Budget: the verdict costs one scene build (20–60 s) and one replay at about
+   0.035 s per control step (oracle trials, 2026-10-02: both passes together 0.064–0.078 s per step; the live service
+   takes 0.047–0.062 s per step with its cameras), so 3450 s covers about 97,000 control steps, 48,000 on a host
+   twice as slow. Episodes have no step limit (D1), but the replay runs the episode's own physics once more without
+   its cameras, in the same container: it cannot take longer than the agent's hour did. Before, the hook waited
+   980 s of a 1500 s timeout for verdict and video together, which lost episodes over about 10,000 control steps.
+8. **Request validation.** A request is checked as a whole before any physics (`parse_submit` / `parse_observe`):
+   a `dt`, `seconds` or `video_fps` that is not a finite number in range, `cameras` that is not a list of names,
+   a `note` that is not a string, actions that are not a `(T, N)` array of finite numbers are a 400 and nothing ran
+   (PROTOCOL §4.6); `null` means "not given". Only an error while the simulator executes is a 500 and ends the
+   episode. Kept as it was: camera names the robot does not have are ignored, and an unknown `video` value means
+   "last frame only". `dt = 0` used to mean `control_dt` and is now a 400.
+9. `time_left_s` counts from the first start of the service's process (the first line of `startups.jsonl`). The
+   sidecar starts together with the agent's container, so this is the agent's own clock to within a second or two
+   (oracle trial: 1.1 s after it; earlier when the harness sets the agent up first). Before, it counted from the end
+   of the scene build (27 s later in that trial, more after a failed start) and overstated what was left by that
+   much. `time_s` and `elapsed_s` count from the episode's start (the service ready), as before.
+
+Synthetic tests of 6–8 (a stub in place of the simulator; no MuJoCo) were run for the change; they are not part of the
+repository's checks.
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs
