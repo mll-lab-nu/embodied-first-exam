@@ -1,0 +1,183 @@
+{
+ "slug": "siwushaonian",
+ "chars": "四五少年",
+ "contacts": [
+  [
+   [
+    0,
+    true
+   ],
+   [
+    1,
+    true
+   ],
+   [
+    2,
+    true
+   ],
+   [
+    3,
+    true
+   ]
+  ],
+  [
+   [
+    4,
+    true
+   ],
+   [
+    6,
+    true
+   ],
+   [
+    7,
+    true
+   ],
+   [
+    8,
+    true
+   ],
+   [
+    9,
+    true
+   ],
+   [
+    10,
+    true
+   ]
+  ],
+  [
+   [
+    5,
+    true
+   ]
+  ],
+  [
+   [
+    11,
+    true
+   ]
+  ],
+  [
+   [
+    12,
+    true
+   ],
+   [
+    13,
+    true
+   ]
+  ],
+  [
+   [
+    14,
+    true
+   ]
+  ],
+  [
+   [
+    15,
+    true
+   ]
+  ],
+  [
+   [
+    16,
+    true
+   ],
+   [
+    17,
+    true
+   ],
+   [
+    18,
+    true
+   ],
+   [
+    19,
+    true
+   ]
+  ]
+ ],
+ "stats": {
+  "slug": "siwushaonian",
+  "chars": "四五少年",
+  "n_regions": 20,
+  "n_contacts": 8,
+  "regions_per_char": [
+   6,
+   5,
+   4,
+   5
+  ],
+  "contact_regions": [
+   4,
+   6,
+   1,
+   1,
+   2,
+   1,
+   1,
+   4
+  ],
+  "contact_len_em": [
+   463.6,
+   759.9,
+   58.1,
+   124.0,
+   259.6,
+   88.3,
+   128.4,
+   468.5
+  ],
+  "skeleton_nodes": 17,
+  "skeleton_edges": 15,
+  "ink_px": 37648,
+  "polygon_iou_vs_mask": 0.9675,
+  "max_pts": 43,
+  "seg_em_used": 146.3,
+  "box_mm": 210.0,
+  "seg_mm": 30.0,
+  "source_crop": [
+   3160,
+   0,
+   3625,
+   1355
+  ],
+  "box": [
+   3240,
+   50,
+   3545,
+   1275
+  ],
+  "ink_v": 2,
+  "otsu_maxrgb": 124.0,
+  "scale_em_per_src_px": 0.82051,
+  "src_bbox_rc": [
+   75,
+   1245,
+   88,
+   388
+  ],
+  "side_em": 960.0,
+  "joints": 0,
+  "touches_edge": false,
+  "transform": [
+   [
+    0.820513,
+    0.0,
+    316.717957
+   ],
+   [
+    0.0,
+    0.820513,
+    -29.538462
+   ]
+  ],
+  "split_rows_em": [
+   216.6,
+   528.4,
+   733.5
+  ]
+ }
+}

@@ -1,0 +1,61 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-yamlab:<images/yamlab/VERSION> is never pushed to a public registry (docs/PROTOCOL.md §2.4,
+D5). Every evaluation host builds it locally; the YAMLab tasks reference that tag and Harbor finds it in the local Docker
+image store.
+
+Why
+  The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the pip wheels of the Isaac stack (from pypi.nvidia.com).
+  NVIDIA licenses them for use, not for redistribution, so the built image may not be published. Everything else in it may
+  be: YAMLab (github.com/ARISE-Initiative/yamlab @ ec0455d, MIT, including the I2RT YAM robot and workstation USDs), Isaac
+  Lab (github.com/isaac-sim/IsaacLab @ f4aa17f, BSD-3-Clause), YAMLab's LeRobot fork (github.com/RogerDAI1217/lerobot
+  @ 67031e9, Apache-2.0; YAMLab's recorder module imports it) and the two tasks' object assets (Hugging Face dataset
+  yamlab/yamlab_datasets @ fc6be973, tasks_data/{PutPotOnCooktop,HangMugOnTree}/objects, MIT).
+
+What the builder accepts
+  - the NVIDIA Isaac Sim / Omniverse license agreement (the image sets OMNI_KIT_ACCEPT_EULA=YES and ACCEPT_EULA=Y, and every
+    container that runs it accepts it again at launch);
+  - NVIDIA's terms for the isaacsim wheels on pypi.nvidia.com;
+  - the licences above (MIT, BSD-3-Clause, Apache-2.0).
+  No account, key or token is needed: everything is downloaded anonymously.
+
+Data
+  The two tasks' object assets (USD meshes and materials, ~3 GB) are baked in, under /opt/yamlab-data. So are the web
+  assets the scene would otherwise load from NVIDIA's asset bucket at run time (images/yamlab/web_assets.txt, each checked
+  against its sha256, under /opt/isaac-assets): Isaac Lab's default ground and the three MDL materials of YAMLab's
+  workstation (localize_assets.py rewrites the workstation USDs' URLs to the copies). A task container has no general
+  network access (the agent reaches only the model APIs, the verifiers none), and Isaac Sim starts and renders offline. YAMLab's
+  teleoperation demonstrations, its MimicGen-annotated demos and its generated LeRobot datasets are NOT in the image (they
+  solve the tasks; the reference solutions live in the task directories' solution/ only). The frozen task instances live in
+  the task directories.
+
+Host
+  Linux x86_64, Docker with the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 5.1 supports (Isaac
+  renders with RTX even headless; PhysX runs on the CPU). Checked on an RTX 4090 (AMD Ryzen 9 7950X, driver 580.159).
+  Build: ~60 GB of free disk during the build (the image is ~26.6 GB), network access to github.com, astral.sh,
+  pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co and omniverse-content-production.s3*.amazonaws.com,
+  about 25-40 min. Run: one Isaac simulator per ~16 GB of host RAM (a YAMLab process peaks at ~11 GB; the standard sidecar
+  and its replays run one at a time) and ~1-3 GB of GPU memory per simulator while it starts (the RTX renderer's
+  initialisation fails when the GPU runs out of memory: start fewer at once on a shared GPU).
+
+Build (from the repository root)
+  docker build -f images/yamlab/Dockerfile -t ghcr.io/mll-lab-nu/eai-yamlab:$(cat images/yamlab/VERSION) .
+  The build follows YAMLab's install.sh (torch 2.7.0+cu128, Isaac Sim 5.1.0, Isaac Lab at the commit YAMLab pins, LeRobot,
+  YAMLab), then sets every Python package to images/yamlab/requirements.lock (the reference build's `uv pip freeze`) without
+  resolving and fails unless the environment is exactly the lock.
+
+Check a build
+  The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of the reference trajectory
+  must succeed and end in its recorded hash. With a task directory at hand:
+    t=tasks/yamlab-put-pot-on-cooktop-i00-privileged
+    docker run --rm --gpus all --shm-size 8g -v $PWD/$t:/t ghcr.io/mll-lab-nu/eai-yamlab:$(cat images/yamlab/VERSION) bash -c \
+      "cd /tmp && cp /t/environment/rcb_yamlab.py . && python -c \"import json, numpy as np, rcb_yamlab as m; \
+         s = m.Session('put_pot_on_cooktop', instance='/t/environment/instance.json'); s.record_start(); \
+         [s.step(a) for a in np.load('/t/solution/oracle_actions.npy')]; s.save_trajectory(s.record_stop(), '/tmp/t.npz'); \
+         print(s.status())\" && python rcb_yamlab.py replay --task put_pot_on_cooktop --instance /t/environment/instance.json --traj /tmp/t.npz"
+  expects instance_exact true, success true and the same final state_sha from both runs as the task README's Verification
+  section (the oracle's hash). Or run `harbor run -p tasks/yamlab-put-pot-on-cooktop-i00-privileged -a oracle`.
+
+On a CI machine (maintainers)
+  A self-hosted runner with such a GPU builds the image with the command above when images/yamlab/ changes, runs the check,
+  and keeps the image in its local Docker store (or in a registry the organization keeps private), never on a public
+  registry. Hosts of the same organization may copy a built image among themselves (docker save ... | zstd, docker load); a
+  new VERSION means a rebuild on every host.

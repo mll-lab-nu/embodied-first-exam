@@ -13,8 +13,8 @@ measure is the per-task counterpart that records the same numbers against a FROZ
           and write no controller at all".
 
 `hold` is the number that decides whether a task is too easy: it is what any competent agent collects
-for free before writing a line of code. The two disagree a lot and in both directions -- sit_simple
-scores 637 on nop and 468 on hold, spoon scores 7 on nop and 375 on hold -- so a family is judged on
+for free before writing a line of code. The two disagree a lot and in both directions -- on MuJoCo 3.1.6
+sit_simple scored 637 on nop and 468 on hold, spoon 7 on nop and 375 on hold -- so a family is judged on
 max(nop, hold), and "how many steps it survived" is read alongside (`stand` holds only 8.4% of its bar
 AND falls at step 96, which is a very different task from one that coasts to 1000).
 

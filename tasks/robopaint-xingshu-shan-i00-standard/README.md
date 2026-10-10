@@ -7,7 +7,7 @@
 | Twin | `robopaint-xingshu-shan-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_xingshu_shan` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs (ws3, 2026-10-05): path_mm 399 and mark_width_mm 10.21, against the colouring-in limits 1200 mm and 3.06 mm. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
+| Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets), re-made on 2026-10-09 (README, Change Log; docs/benchmarks/robopaint.md, Targets). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs: path_mm 608 and mark_width_mm 6.75, against the colouring-in limits 1200 mm and 3.06 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): docs/benchmarks/robopaint.md (Validation). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
@@ -54,3 +54,6 @@ Wikimedia Commons, File:神龍蘭亭序全.JPG (https://commons.wikimedia.org/wi
 The exemplar is a public-domain rubbing/scan of a historical work of running-script calligraphy (Wikimedia Commons, PD-Art /
 PD-old; Sources above); licence notices: `environment/NOTICE-exemplar.md` (the agent's), `environment/sim/NOTICE-exemplar.md`
 (the graders').
+
+### Change Log
+- 2026-10-09: the reference solution only, re-made so that it copies the exemplar closely (the owner's request: every stroke, no blob where a stroke starts, no needle where it ends): the calligraphy planner of 2026-10-09 and its plan (the privileged twin's `solution/`, its `README.md` has the method) and the new trajectory (`solution/oracle_qpos.npy`, the same in both twins). The reference's verifier metrics went from IoU 0.939, boundary F 0.920, minimum stroke coverage 0.914, stray 0.0068 to 0.970, 0.966, 0.973, 0.0021; `path_mm` 399 -> 608 mm and `mark_width_mm` 10.21 -> 6.75 mm, far from colouring in. Harbor oracle 1 and nop 0 on both modes after the change (ws3, 2026-10-09). The instance, the picture, the pass rule and the process limits (set on the first reference) are unchanged, so the task keeps its name.

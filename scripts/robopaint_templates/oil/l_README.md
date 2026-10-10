@@ -29,3 +29,6 @@ Same scene, exemplar and rule as `{{NAME}}-privileged` (see its Difficulty), wit
 
 ### Licences
 {{SRC}}; libmypaint is ISC, the presets CC0: `environment/NOTICE-exemplar.md`.
+
+### Change Log
+{{CHANGELOG}}

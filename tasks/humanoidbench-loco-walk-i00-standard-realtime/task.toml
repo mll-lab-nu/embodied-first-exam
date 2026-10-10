@@ -32,7 +32,7 @@ protocol = "eai-standard/2.3"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 oracle = "none"
-oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (834.80 / 700), run `claude_code-claude_opus_5_5-medium` on the results site; today's privileged verifier scores it 1, and so does the standard service when it is sent through the client; published RL passes as well (SAC 854, FastTD3 928); in realtime, the same rows planned into the episode from step 0 (submit's `at`) run at the same control steps and are graded the same; human review in PR #83"
+oracle_evidence = "Claude Opus 5.5's privileged-mode trajectory (834.80 / 700 on image 0.1.6, MuJoCo 3.1.6), run `claude_code-claude_opus_5_5-medium` on the results site; it is open-loop, so it does not carry over to image 0.2.0's physics (51.46 / 700 there); published RL passes as well (SAC 854, FastTD3 928, on upstream's MuJoCo 3.1.6); in realtime, the same rows planned into the episode from step 0 (submit's `at`) run at the same control steps and are graded the same; human review in PR #83"
 
 [verifier]
 timeout_sec = 900.0

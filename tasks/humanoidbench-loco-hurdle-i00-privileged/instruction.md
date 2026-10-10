@@ -1,8 +1,8 @@
 # hurdle — instance 00
 
 You control a simulated Unitree H1 humanoid (HumanoidBench / MuJoCo) via Python. **Task:** run the
-robot forward down the walled track and over the hurdles, without touching the side or back walls
-and without falling.
+robot forward down the walled track, past the hurdles, without touching the side or back walls and
+without falling.
 
 This is a *fixed scene instance*: the hurdles and the robot's initial pose never change between
 resets. You may reset and retry as many times as you want. Your deliverable is **one replayable
@@ -16,8 +16,9 @@ vertical) and low actuator force, multiplied together — but the speed target i
 a walk, on the order of 5 m/s. On top of that, touching any barrier's collision geometry multiplies
 that entire step down to a small fraction of its value: contact is a gate to be respected, not a
 penalty to be traded off. Only the walls that line the track on both sides and behind the start
-count as barriers here; the hurdles themselves carry no such penalty, but they are solid and have to
-be cleared. The episode ends early if the pelvis drops near the ground.
+count as barriers here; the hurdles carry no such penalty, and in upstream's model they have no
+collision geometry at all (drawn, not solid): the robot runs through them. The episode ends early if
+the pelvis drops near the ground.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
@@ -74,7 +75,7 @@ CLI equivalent:
 The trajectory is replayed **open-loop**, but nothing stops you from *generating* it closed-loop:
 MuJoCo on CPU is bit-exact, so an action sequence recorded from a feedback controller reproduces
 exactly when replayed. Use whatever you like — hand-tuned poses, a feedback controller,
-sampling-based search, optimisation. One 1000-step episode costs about 0.48 s of a single core and
+sampling-based search, optimisation. One 1000-step episode costs about 0.52 s of a single core and
 the container has 16, so large-scale search inside the container is affordable; `s.low.data` can be
 snapshotted and restored if you want to branch rollouts.
 

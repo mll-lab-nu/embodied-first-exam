@@ -1022,6 +1022,33 @@ class _QueuePolicy:
         self.next = None
 
 
+
+# Videos are fragmented MP4: an index up front and a fragment per keyframe, so a file whose writer never closed (the
+# replay of an episode that crashed the simulator crashes again; a process killed at a timeout) still plays up to its
+# last fragment. A plain MP4 keeps its index at the end and is unplayable without it (board 0051, 10-09: 17 BEHAVIOR
+# replay videos had frames but no index).
+MP4_FRAGMENTED = "frag_keyframe+empty_moov+default_base_moof"
+
+
+def _fragmented_video_writer() -> None:
+    """Make the evaluator's recorder (start_video: omnigibson.eval.evaluator's PyAV writer) write fragmented MP4."""
+    import av
+    import omnigibson.eval.evaluator as ev_mod
+
+    def create(fpath, resolution, codec_name="libx264", rate=30, pix_fmt="yuv420p", stream_options=None,
+               context_options=None):
+        container = av.open(fpath, mode="w", options={"movflags": MP4_FRAGMENTED})
+        stream = container.add_stream(codec_name, rate=rate)
+        stream.height, stream.width = resolution[0], resolution[1]
+        stream.pix_fmt = pix_fmt
+        if stream_options is not None:
+            stream.options = stream_options
+        if context_options is not None:
+            stream.codec_context.options = context_options
+        return container, stream
+
+    ev_mod.create_video_writer = create
+
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, *, instance_id: int | None = None,
                  mode: str = "public_test", robot_config: str | Path | None = None, cameras: str = "default",
@@ -1038,6 +1065,7 @@ class Session:
         gm.HEADLESS = True
         from omnigibson.eval.utils.eval_utils import DEFAULT_EVAL_SEED, seed_everything
         from omnigibson.eval.evaluator import Evaluator, resolve_instance_ids
+        _fragmented_video_writer()
         self.th, self.og = th, og
 
         inst = None
@@ -1557,7 +1585,8 @@ class Session:
             if terminated or truncated:
                 break
         path = Path(path); path.parent.mkdir(parents=True, exist_ok=True)
-        with imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1) as w:
+        with imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1,
+                                output_params=["-movflags", MP4_FRAGMENTED]) as w:
             for f in frames:
                 w.append_data(f)
         imageio.imwrite(str(path.with_suffix(".last.png")), frames[-1])

@@ -1,7 +1,8 @@
 """Standard-mode verifier (MyoSuite): reads what the sim service (which the agent could not touch) wrote: /data/final.json
 (live success, two fresh-process replays of the recorded trajectory, determinism, crash-recovery fields),
-/data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic, the replays having
-started in the instance's recorded state. Numeric-only reward.json."""
+/data/trajectory.npz, /data/replay.mp4; with a reset budget, the record is the last episode's. success = live success AND
+replay success AND deterministic, the replays having started in the instance's recorded state. Numeric-only
+reward.json."""
 
 import json, os, shutil
 
@@ -41,6 +42,12 @@ write(
         "physics_steps": int(d.get("physics_steps") or 0),
         "steps": int(d.get("steps") or 0),
         "calls": int(d.get("calls") or 0),
+        # the reset budget (PROTOCOL §4.5; MyoSuite standard: 10): only the last episode is graded; results under
+        # different budgets are reported separately
+        "episodes": int(d.get("episodes") or 1),
+        "resets": int(d.get("resets") or 0),
+        "reset_budget": int(d.get("reset_budget") or 0),
+        "sim_steps_total": int(d.get("control_steps_total") or d.get("control_steps") or 0),
         "elapsed_s": float(d.get("elapsed_s") or 0),
         "video_rendered": int(bool(d.get("video"))),
         "task_failure": int(reason.startswith("failure")),

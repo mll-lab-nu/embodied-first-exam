@@ -311,6 +311,10 @@ TASKS: dict[str, dict] = {
 
 ACTION_DIM = 16
 CONTROL_HZ = 30
+# Videos are fragmented MP4 (index up front, a fragment per keyframe): a file whose writer never closed (a replay killed
+# at a timeout or crashing) still plays up to its last fragment; a plain MP4 is unplayable without its trailing index
+# (board 0051, 10-09).
+MP4_FRAGMENTED = "frag_keyframe+empty_moov+default_base_moof"
 MAX_STEPS = 200_000        # no step budget (the wall clock is); this only stops a runaway trajectory (~1.9 h of sim time)
 TABLE_Z = 0.76
 ACTION_LAYOUT = ("16 absolute joint-position targets (RoboWits JOINT_ABS): right arm Joint1-7_R (rad), right gripper width "
@@ -696,7 +700,8 @@ class Session:
         path = Path(path); path.parent.mkdir(parents=True, exist_ok=True)
         n = 0
         # frames go straight to the encoder: a long episode's frames would not fit in memory
-        with imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1) as w:
+        with imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1,
+                                output_params=["-movflags", MP4_FRAGMENTED]) as w:
             def grab() -> np.ndarray:
                 nonlocal n
                 f = self.render_grid(cameras, cols=cols, size=size); w.append_data(f); n += 1
@@ -717,7 +722,8 @@ class Session:
         every = every or max(1, CONTROL_HZ // fps)
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         # frames go straight to the encoder: a long episode's frames would not fit in memory
-        w = imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1)
+        w = imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1,
+                               output_params=["-movflags", MP4_FRAGMENTED])
         self._video = {"path": str(path), "every": every, "writer": w, "last": None}
         self._video_add()
 
