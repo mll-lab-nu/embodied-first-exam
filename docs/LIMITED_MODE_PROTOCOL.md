@@ -31,7 +31,7 @@ header = {"v": 1, "meta": {...}, "parts": [{"name","kind","len", ...}, ...]}    
 kinds: "mp4" (fps, n) · "array" (dtype, shape; C-order raw bytes) · "jpeg" · "json" · "bytes"
 ```
 Response parts: `video/<cam>` (mp4), `frames/<cam>` (uint8 [N,H,W,3]), `last/<cam>` (uint8 [H,W,3], always), `depth/<cam>`
-(float16 [N,H,W], if requested), `proprio` (float32 [N, len(proprio layout)], one row per video frame: 82 columns on RoboTwin, 3 x actuators on MuJoCo). Requests over 64 MB → 413 (the client refuses
+(float16 [N,H,W], if requested), `cam2world_gl/<cam>` (float64 [N,4,4], for a camera that moves: its pose at each returned frame), `proprio` (float32 [N, len(proprio layout)], one row per video frame: 82 columns on RoboTwin, 3 x actuators on MuJoCo). Requests over 64 MB → 413 (the client refuses
 to send one); a
 response over 256 MB drops `frames/`/`depth/` and says so in `meta.degraded`. `rcb1.py` (encode/decode, `python -m rcb1
 unpack f dir`) is shipped with the client.
@@ -39,7 +39,13 @@ unpack f dir`) is shipped with the client.
 ## `meta` (in every response)
 `step` (rows executed so far), `calls`, `physics_steps`, `sim_time_s`, `time_s`, `time_left_s`, `proprio` = `{"layout": [82 names], "now": [82 floats]}` (groups below), `cameras`
 (RoboTwin's per-camera `intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`; the whole key omitted when the task sets
-`RCB_OBS_CALIBRATION=0`), `done`, `reason`. `/submit` adds `chunk_id, type, executed_rows, physics_steps_chunk, clipped
+`RCB_OBS_CALIBRATION=0`), `done`, `reason`. `cameras` is computed for every response and is the calibration of the state
+the response ends in (the `last` frame, the final sample of `frames` / `depth`): static cameras never move, the wrist
+cameras move with the arms, and for each requested wrist camera the response carries the part `cam2world_gl/<cam>`
+(float64 [N,4,4], one pose per returned frame; `spec.camera_calibration`). Until 2026-10-10 the service sent the
+calibration of its start, which was wrong for the wrist cameras once an arm had moved. `time_s` / `time_left_s` count from the agent's first
+request to the service (any endpoint; `spec.budget.wall_clock_note`), not from the service's start, and are
+approximate: the harness's own deadline is authoritative. `/submit` adds `chunk_id, type, executed_rows, physics_steps_chunk, clipped
 [{row,index,reason}], n_clipped, plan [{row,left,right}] (ee_pose), ok`; `/observe` adds `obs_id, seconds, physics_steps_watch`.
 
 ## `/submit` semantics
@@ -66,7 +72,7 @@ the wall clock; the simulated time is recorded as cost.
 ## Errors (no physics executed)
 | code | when |
 |---|---|
-| 400 | wrong type/dim, NaN/inf, `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, 30], more than 3000 frames in one response (cameras × fps × seconds, depth counts double), malformed body |
+| 400 | wrong type/dim, a chunk with no rows, NaN/inf, a field of the wrong JSON type (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list), `dt` or `seconds` out of range or `dt` not a multiple of the physics step, chunk too long, bad interpolate/video value, `video_fps` outside [1, 30], more than 3000 frames in one response (cameras × fps × seconds, depth counts double), malformed body |
 | 409 | episode already finished (`done`); the trial is over |
 | 413 | body over 64 MB (`rcb_client.py` raises before sending such a body) |
 | 500 | simulator error; the episode ends with `reason = "error"` (the client raises `EpisodeOver`; the verifier reports `sim_error = 1`) |
@@ -81,16 +87,23 @@ restarts it (`restart: on-failure:6`) and it **resumes the same episode**: it re
 checks the state hash, and continues. The call that was in flight is lost as a whole (its caller got a connection error or
 5xx, not a result, so nothing is learned); `spec.on_service_error` tells the agent to check `GET /status` before continuing.
 More than 2 crashes end the episode: `reason = sim_crashed_on_call` if every crash happened while serving a call (counted as
-the agent's failure), else `sim_crashed` (`infra_error = 1`). A verdict already written is never overwritten. A crash before
+the agent's failure), else `sim_crashed` (`infra_error = 1`). A verdict already written is never overwritten: the replay's
+verdict (`replay_success`, `deterministic`) is in `final.json` before any video is rendered, and it stands from then on,
+also when the service is restarted while rendering. A crash before
 the service is ready is a plain restart; a scene build that hangs is killed by a startup watchdog (`RCB_STARTUP_TIMEOUT_S`,
-300 s) so compose retries it.
+300 s) so compose retries it. A host on which the frozen instance does not rebuild to its stored initial state (PROTOCOL §3)
+gets one retry and then `reason = instance_mismatch` with `infra_error = 1`.
 
 ## Evidence and grading (agent never sees this)
 `/data/episode.jsonl` (one record per call: type, rows, dt, cameras, note, clipped, plan, physics steps, success),
 `/data/calls/NNNNNN/` (meta + last frames per call), and on end: `trajectory.npz` (T, 34), a fresh replay
 (`replay_success`, `deterministic`), `replay.mp4` (six-view), `final.json`. The collect hook signals the service by PID
 after the agent container is stopped; a separate verifier grades `final.json`: `success = live ∧ replay ∧ deterministic`,
-reward fields as in PROTOCOL §2.6 and §4.8.
+reward fields as in PROTOCOL §2.6 and §4.8. `infra_error = 1` means there is no verdict on the agent: `final.json` is
+missing or unreadable, the replay's verdict is not in it (the service was still replaying when the collect hook gave up,
+or the replay itself failed: `finalize_error`), or the service reported `sim_crashed`, `resume_failed` or
+`instance_mismatch`. A verdict that is on disk is graded whether or not `finalized` (the videos) was reached.
+`sim_crashed_on_call` stays the agent's failure (`infra_error = 0`).
 
 ## Live recording (sidecar only; the agent sees none of it)
 - `live.mp4`: the episode as six views (world / observer / head · front / left wrist / right wrist, 213×160 tiles), each
@@ -136,7 +149,14 @@ Same endpoints and RCB1 frames, served by `images/mujoco/limited/server_mj.py`. 
 is a multiple of `control_dt` (1/60 s DexToolBench, 1/50 s Playground), hold or linear interpolation per control step.
 Actions are sent as **float64** (MuJoCo on CPU replays bit-exactly, and float32 rounding changes a chaotic tool swing).
 `meta.task` carries the task definition (DexToolBench: current goal pose and index; Playground: the target) and
-`meta.cameras` each camera's intrinsics and camera-to-world pose. DexToolBench's own eval gives each goal 10 s; here the
+`meta.cameras` each camera's intrinsics and camera-to-world pose: the viewpoint the image is rendered from, in the state
+the response ends in (`spec.camera_calibration`; until 2026-10-10 the position was MuJoCo's left-eye camera, 3.4 cm to
+the side, and the pose was the one at service start). Cameras carry `moving` (true for ALOHA's wrist cameras); for a
+requested moving camera the response also has the part `cam2world_gl/<cam>` (float64 [N,4,4], one pose per returned
+frame). `time_s` / `time_left_s` count from the agent's first request (`spec.budget.clock`). `final.json` is `finalized`
+as soon as the replay's verdict is in it; the video is rendered afterwards and sets `video_done`, which is what the
+collect hook waits for, so the video never decides or delays a verdict (the MetaWorld+ service,
+`images/metaworld/standard/server_mw.py`, follows the same rules; docs/benchmarks/metaworldplus.md). DexToolBench's own eval gives each goal 10 s; here the
 standard twins have **no per-goal limit** (one episode, no reset) and an episode cap of 360,000 control steps (100 min of
 robot time, `spec.max_control_steps`; the 60 min agent budget ends first), while the privileged tasks give each goal 30 s
 (replayed offline, free resets). DexToolBench episodes end when all goals are reached, at the cap, or when the agent's

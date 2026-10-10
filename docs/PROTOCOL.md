@@ -365,7 +365,7 @@ only (the simulator in the `sim` service is the benchmark's and does not count)"
 | ≥ 2 replays with matching final-state hashes, reported as `deterministic` | SHOULD (the field is MUST) | [current] |
 | Success judged on the state at the end of the replay ("success at any step" needs a stated reason) | SHOULD | [current] |
 | The frozen instance copied into both `environment/` and `tests/` with its expected initial-state hash, checked on rebuild | SHOULD | [current] |
-| A hash check before moving to new hardware. Reference hardware is an RTX 4090: `place_a2b_left`, `place_a2b_right`, `place_object_scale` and `place_object_stand` rebuild to a different state on an L40S, and grading there reports `grader_error` | SHOULD | [current] |
+| A hash check before moving to new hardware. Reference hardware is an RTX 4090: `place_a2b_left`, `place_a2b_right`, `place_object_scale` and `place_object_stand` rebuild to a different state on an L40S, and grading there reports `instance_mismatch` with `infra_error` (privileged: also when no trajectory was handed in; standard: the service's `reason`) | SHOULD | [current] |
 | Unlimited resets, privileged state, planning primitives, self-replay | MAY | [current] |
 | Tool API shape | task-defined | [current] (recommended: `Session` with `reset` / `replay` / `status` / `save_trajectory`) |
 | Self-reported cost (resets, simulation steps) in `agent_*` fields | SHOULD | [current] |

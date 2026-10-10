@@ -38,6 +38,9 @@ Same scene, exemplar and rule as `robopaint-oil-monalisa-i01-privileged` (see it
 `environment/sim/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
 `max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
 `success` = both fresh-process replays of the recorded episode meet the rule (mean CIELAB ΔE <= 5.2, p90 ΔE <= 8.5, SSIM of L* >= 0.82, edge correlation >= 0.7, paint IoU >= 0.96 (all after the best single shift of the sheet, at most 5 mm along each axis, inside the central area 8 mm in from the sheet's edges) and at most 2507 strokes) ∧ they agree exactly (computed in the sidecar after the agent is gone); every metric of the replayed sheet in `reward.json`; `/logs/verifier/replay.mp4`.
+A `final.json` that is missing, unreadable or without a verdict (the collect hook did not finish), and replays that could not
+run (`gpu_lost`, a replay process without a result), are an infrastructure failure (`infra_error = 1`), not the agent's 0;
+`sim_error = 1` marks an episode that a simulator error ended. The collect hook has 5400 s.
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -65,3 +68,4 @@ The picture is a public-domain painting, Leonardo da Vinci, *Mona Lisa* (c. 1503
 
 ### Change Log
 - 2026-10-09: the hi-res version (docs/benchmarks/robopaint.md, Oil: the pointed brush). The brush is `tanda/oil-03-paint` made pointed: a light press draws a 2-3 mm line (before, every mark was 5-11 mm wide). The reference solution is a new program of 1671 strokes (was 289); executed by the robot it scores mean ΔE 4.70, SSIM 0.863 and edge correlation 0.760 against the picture (was 6.43, 0.761, 0.571). The rule is recalibrated on it with the same margins, except SSIM - 0.04 (was - 0.03): mean ΔE <= 5.2 (was 7.1), p90 ΔE <= 8.5 (was 13.0), SSIM >= 0.82 (was 0.73), edge correlation >= 0.7 (was 0.52); at most 2507 strokes (was 434); a path of at most 69900 mm (was 33900 mm). The picture, the scene's geometry and the scoring code are unchanged; results before this date are not comparable with this version.
+- 2026-10-10: the verifier and the collect hook only (review of 2026-10-10, board 0067). A `final.json` that is missing, unreadable or without a verdict, and replays that could not run, are an infrastructure failure (`infra_error = 1`; a missing file was recorded as the agent's 0 with `infra_error = 0`); `reward.json` gains `sim_error` and always has `deterministic`; the hook writes `final.json` whole (temporary file + rename) and has 5400 s (was 3600 s). The verdict of an episode that was graded before is unchanged, and so are the instance, the picture and the rules: the task keeps its name.

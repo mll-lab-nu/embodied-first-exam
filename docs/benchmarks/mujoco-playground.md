@@ -124,6 +124,33 @@ The references' own margins (worst joystick segment, end pose):
 Outside Harbor, the standard service run on each reference (`std_local` check): live verdict success, and a
 fresh-process replay of its record ends in the live state hash. Generator: `python3 scripts/mujoco-playground/generate.py --check`.
 
+## Change log
+- 2026-10-10 (review 0067, findings M6, M9 and minors), quadruped standard tasks: `tests/grade.py` writes
+  `infra_error = 1` (no verdict on the agent) when `final.json` is missing, unreadable or was never finalized by the
+  collect hook (before: a missing one was a plain 0, an unfinalized one was graded as it stood); `finalize.sh` writes
+  `final.json` atomically; request fields of the wrong type (`dt` or `seconds` null, `cameras` not a list of names, a
+  `note` that is not a string, which failed after the physics had run) are a 400 before any physics instead of a 500
+  that ended the episode; `meta["time_left_s"]` counts from the agent's first call (kept through a crash by the
+  checkpoints), not from the service's start; Barkour's `/spec` gave the control period of `joint_position` as "1/50 s"
+  (it is 0.01 s, as `control_hz`, the `dt` check and the instruction say). Both modes: a `trajectory.npz` that cannot be
+  read is `bad_trajectory`, not `grader_error`, and every early exit of the graders writes `deterministic`. The
+  quadruped calibration (`data.cam_xpos` / `cam_xmat`, per frame) was already the rendered viewpoint and is unchanged.
+- 2026-10-10 (review 0067, findings M4, M6, M7, M9), the tasks served by `images/mujoco/limited/server_mj.py`
+  (`mujoco_playground_{aloha,panda}_*-standard` and the 21 `dextoolbench_*-standard` tasks). **Observation change:**
+  the calibration's `cam2world_gl` held the position of MuJoCo's left-eye camera (`scene.camera[0]`), 3.4 cm to the side
+  of the viewpoint the mono image is rendered from; it now gives that viewpoint, and it is recomputed for every
+  response instead of once at start-up, so ALOHA's two wrist cameras (which move with the arms; their pose used to stay
+  that of the home pose) are right, with one pose per returned frame in the part `cam2world_gl/<cam>`. Tolerances
+  here are 5 mm to 3 cm and the cameras are the only source of object positions, so **standard-mode results from before
+  this date are not strictly comparable** with later ones. Also: requests validated in full before any physics
+  (`dt = Infinity` and the like were a 500 that ended the episode), `final.json` atomic and `finalized` together with
+  the verdict (the video comes after it and sets `video_done`), `infra_error` for a missing / unreadable / verdict-less
+  `final.json`, the collect hook's loop inside its timeout (it could run 980 s against 900), the agent's clock counted
+  from its first request. The success rules, instances and oracles are unchanged. Each task README has the entries.
+  Their privileged twins (`tests/grade.py` only): a `trajectory.npz` that cannot be read as an npz with a numeric
+  `actions` array is `bad_trajectory`, not `grader_error`, and every early exit writes `deterministic`; the verdicts
+  are the same.
+
 ## Files
 | | |
 |---|---|

@@ -81,22 +81,26 @@ def main() -> int:
     a = ap.parse_args()
     cost = agent_cost()
     if not os.path.isfile(a.traj):
-        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, **cost})
+        write(False, {"success": 0, "deterministic": 0, "missing_trajectory": 1, "grader_error": 0, **cost})
         return 0
     try:
         horizon = int(json.load(open(a.instance))["horizon"])
-        d = np.load(a.traj, allow_pickle=False)
-        acts = np.asarray(d["actions"], dtype=np.float64) if "actions" in d.files else np.zeros((0, 0))
+        try:  # the agent's file: one that cannot be read as an npz with a numeric `actions` array is a bad trajectory,
+            d = np.load(a.traj, allow_pickle=False)  # not a grader failure
+            acts = np.asarray(d["actions"], dtype=np.float64) if "actions" in d.files else np.zeros((0, 0))
+        except Exception:  # noqa: BLE001
+            traceback.print_exc(file=sys.stderr)
+            acts = np.zeros((0, 0))
         if acts.ndim != 2 or acts.shape[1] != 12 or len(acts) > horizon or not np.all(np.isfinite(acts)):
-            write(False, {"success": 0, "bad_trajectory": 1, "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0,
-                          "grader_error": 0, **cost})
+            write(False, {"success": 0, "deterministic": 0, "bad_trajectory": 1,
+                          "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, **cost})
             return 0
         runs = [replay(a.instance, a.traj, None), replay(a.instance, a.traj, None)]
         if any("error" in r and not r.get("bad_trajectory") for r in runs):
-            write(False, {"success": 0, "grader_error": 1, **cost})
+            write(False, {"success": 0, "deterministic": 0, "grader_error": 1, **cost})
             return 0
         if not all(r.get("instance_ok") for r in runs):  # the image no longer builds the frozen start: not the agent's 0
-            write(False, {"success": 0, "grader_error": 1, "instance_mismatch": 1, **cost})
+            write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "instance_mismatch": 1, **cost})
             return 0
         all_success = all(bool(r.get("success")) for r in runs)
         deterministic = runs[0].get("state_sha") == runs[1].get("state_sha")
@@ -112,7 +116,7 @@ def main() -> int:
         write(ok, out)  # the verdict, before any video
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
-        write(False, {"success": 0, "grader_error": 1, **cost})
+        write(False, {"success": 0, "deterministic": 0, "grader_error": 1, **cost})
         return 0
     try:  # the video, for humans: it never changes the verdict
         if replay(a.instance, a.traj, os.path.join(LOG_DIR, "replay.mp4")).get("video"):
