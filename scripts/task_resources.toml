@@ -1,0 +1,1897 @@
+# Minimum compute per task (docs/PROTOCOL.md §2.9). scripts/task_conventions.py (`normalize`) writes the keys of every
+# rule whose `match` (a regular expression) finds the task directory name into [metadata.resources] of its task.toml, in
+# file order (a later rule overrides an earlier one), and renders the README's "## Compute resources" from them.
+# Agent phase = every container of the trial at once (standard modes: the agent's container + the sim sidecar);
+# verifier phase = after it (standard modes: the sidecar still holds the simulator while the collect hook replays).
+# Derivation: measured peaks x 1.2 (memory, rounded up to a GB), x 1.15 (GPU memory, rounded up to 0.5 GB), sustained
+# CPU rounded up; `measured` names the measurements. Edit these values here, not in task.toml.
+
+# autobio, privileged: 9 task(s)
+[[rule]]
+match = "^autobio-.*-privileged$"
+min_cpus = 4.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 8.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "author (merged PR #94): CPU-only, 4 CPUs and 8 GB per trial, verifier the same"
+
+# autobio, standard: 9 task(s)
+[[rule]]
+match = "^autobio-.*-standard$"
+min_cpus = 4.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 8.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "author (merged PR #94): CPU-only, 4 CPUs and 8 GB per trial, verifier the same"
+
+# behavior, privileged: 100 task(s)
+[[rule]]
+match = "^behavior-.*-privileged$"
+min_cpus = 6.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 10.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 6.0
+verifier_min_memory_gb = 16.0
+verifier_min_gpu_memory_gb = 10.5
+measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (batch_eval_live vram override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (board 0048, ps); author: 13-16 GB of RAM per Isaac process"
+
+# behavior, standard: 100 task(s)
+[[rule]]
+match = "^behavior-.*-standard$"
+min_cpus = 6.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 10.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 6.0
+verifier_min_memory_gb = 15.0
+verifier_min_gpu_memory_gb = 10.5
+measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (batch_eval_live vram override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (board 0048, ps); author: 13-16 GB of RAM per Isaac process"
+
+# bigym2, privileged: 13 task(s)
+[[rule]]
+match = "^bigym2-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)"
+
+# bigym2, standard: 13 task(s)
+[[rule]]
+match = "^bigym2-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)"
+
+# bigym2, standard-realtime: 13 task(s)
+[[rule]]
+match = "^bigym2-.*-standard-realtime$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)"
+
+# dexjoco, privileged: 11 task(s)
+[[rule]]
+match = "^dexjoco-.*-privileged$"
+min_cpus = 4.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPUs: 4, visible to each container that runs the simulator (cpuset / affinity, not a quota): OpenBLAS runs no more threads than that and DexJoCo's result differs below 4 (docs/benchmarks/dexjoco.md, Threads); with fewer there is no verdict (too_few_cpus, infra_error)"
+
+# dexjoco, standard: 11 task(s)
+[[rule]]
+match = "^dexjoco-.*-standard$"
+min_cpus = 4.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 4.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPUs: 4, visible to each container that runs the simulator (cpuset / affinity, not a quota): OpenBLAS runs no more threads than that and DexJoCo's result differs below 4 (docs/benchmarks/dexjoco.md, Threads); with fewer there is no verdict (too_few_cpus, infra_error)"
+
+# dextoolbench, privileged: 21 task(s)
+[[rule]]
+match = "^dextoolbench_.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 6.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "GPU 0.3-0.9 GB on 24 GB cards, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 0.9 GB, privileged container p90 4.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# dextoolbench, standard: 21 task(s)
+[[rule]]
+match = "^dextoolbench_.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "GPU 0.3-0.9 GB on 24 GB cards, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 0.9 GB, privileged container p90 4.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# humanoidbench, privileged: 10 task(s)
+[[rule]]
+match = "^humanoidbench-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# humanoidbench, standard: 10 task(s)
+[[rule]]
+match = "^humanoidbench-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 3.0
+min_gpu_memory_gb = 3.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 3.0
+measured = "GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# humanoidbench, standard-realtime: 10 task(s)
+[[rule]]
+match = "^humanoidbench-.*-standard-realtime$"
+min_cpus = 2.0
+min_memory_gb = 3.0
+min_gpu_memory_gb = 3.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 3.0
+measured = "GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# kinder, privileged: 5 task(s)
+[[rule]]
+match = "^kinder-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "GPU 1.2-1.3 GB (oracle 1.2 GB on RTX 4090), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.8 GB, sim 1.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# kinder, standard: 5 task(s)
+[[rule]]
+match = "^kinder-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 2.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 2.0
+measured = "GPU 1.2-1.3 GB (oracle 1.2 GB on RTX 4090), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.8 GB, sim 1.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# labutopia, privileged: 6 task(s)
+[[rule]]
+match = "^labutopia-.*-privileged$"
+min_cpus = 8.0
+min_memory_gb = 23.0
+min_gpu_memory_gb = 8.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "RTX 4090 24GB / L40S 48GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 21.0
+verifier_min_gpu_memory_gb = 8.5
+measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
+
+# labutopia, privileged: 3 task(s)
+[[rule]]
+match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-privileged$"
+min_cpus = 8.0
+min_memory_gb = 28.0
+min_gpu_memory_gb = 8.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "RTX 4090 24GB / L40S 48GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 26.0
+verifier_min_gpu_memory_gb = 8.5
+measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
+
+# labutopia, standard: 6 task(s)
+[[rule]]
+match = "^labutopia-.*-standard$"
+min_cpus = 8.0
+min_memory_gb = 23.0
+min_gpu_memory_gb = 8.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "RTX 4090 24GB / L40S 48GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 22.0
+verifier_min_gpu_memory_gb = 8.5
+measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
+
+# labutopia, standard: 3 task(s)
+[[rule]]
+match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-standard$"
+min_cpus = 8.0
+min_memory_gb = 28.0
+min_gpu_memory_gb = 8.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "RTX 4090 24GB / L40S 48GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 27.0
+verifier_min_gpu_memory_gb = 8.5
+measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
+
+# libero-max, privileged: 64 task(s)
+[[rule]]
+match = "^libero-max-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "verifier 1.6 GB, mem_guard (docker memory per container, ws-1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)"
+
+# libero-max, standard: 64 task(s)
+[[rule]]
+match = "^libero-max-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 4.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "verifier 1.6 GB, mem_guard (docker memory per container, ws-1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)"
+
+# maniguard, privileged: 30 task(s)
+[[rule]]
+match = "^maniguard-.*-privileged$"
+min_cpus = 6.0
+min_memory_gb = 23.0
+min_gpu_memory_gb = 10.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 6.0
+verifier_min_memory_gb = 21.0
+verifier_min_gpu_memory_gb = 10.5
+measured = "one standard trial: sim anon memory 17.5 GB, start-up CPU bursts to 29 cores, GPU 3.6 GB 15 min in, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); GPU memory and CPU from BEHAVIOR-1K (same OmniGibson / Isaac Sim stack) until more trials are measured; verifier 15.8 GB docker memory, mem_guard (docker memory per container, ws-1, 10-02..10)"
+
+# maniguard, standard: 30 task(s)
+[[rule]]
+match = "^maniguard-.*-standard$"
+min_cpus = 6.0
+min_memory_gb = 23.0
+min_gpu_memory_gb = 10.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 6.0
+verifier_min_memory_gb = 22.0
+verifier_min_gpu_memory_gb = 10.5
+measured = "one standard trial: sim anon memory 17.5 GB, start-up CPU bursts to 29 cores, GPU 3.6 GB 15 min in, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); GPU memory and CPU from BEHAVIOR-1K (same OmniGibson / Isaac Sim stack) until more trials are measured; verifier 15.8 GB docker memory, mem_guard (docker memory per container, ws-1, 10-02..10)"
+
+# metaworldplus, privileged: 50 task(s)
+[[rule]]
+match = "^metaworldplus-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: privileged container p90 2.7 GB, sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+
+# metaworldplus, standard: 50 task(s)
+[[rule]]
+match = "^metaworldplus-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 3.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: privileged container p90 2.7 GB, sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+
+# molmospaces, privileged: 8 task(s)
+[[rule]]
+match = "^molmospaces-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 6.0
+min_gpu_memory_gb = 3.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4 / L40S)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 4.0
+verifier_min_gpu_memory_gb = 3.5
+measured = "GPU 2.7 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory and CPU author estimate (MuJoCo, CPU physics, EGL rendering)"
+
+# molmospaces, standard: 8 task(s)
+[[rule]]
+match = "^molmospaces-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 6.0
+min_gpu_memory_gb = 3.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4 / L40S)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 3.5
+measured = "GPU 2.7 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory and CPU author estimate (MuJoCo, CPU physics, EGL rendering)"
+
+# mujoco_playground, privileged: 9 task(s)
+[[rule]]
+match = "^mujoco_playground_.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "GPU 1.0-1.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.6 GB, sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU p90 1.9 cores, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10)"
+
+# mujoco_playground, privileged: 4 task(s)
+[[rule]]
+match = "^(mujoco_playground_aloha_hand_over|mujoco_playground_aloha_single_peg_insertion|mujoco_playground_panda_open_cabinet|mujoco_playground_panda_pick_cube_orientation)-privileged$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "GPU 1.0-1.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.6 GB, sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU p90 1.9 cores, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10)"
+
+# mujoco_playground, standard: 9 task(s)
+[[rule]]
+match = "^mujoco_playground_.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 3.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "GPU 1.0-1.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.6 GB, sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU p90 1.9 cores, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10)"
+
+# mujoco_playground, standard: 4 task(s)
+[[rule]]
+match = "^(mujoco_playground_aloha_hand_over|mujoco_playground_aloha_single_peg_insertion|mujoco_playground_panda_open_cabinet|mujoco_playground_panda_pick_cube_orientation)-standard$"
+min_cpus = 2.0
+min_memory_gb = 3.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "GPU 1.0-1.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.6 GB, sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU p90 1.9 cores, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10)"
+
+# myosuite, privileged: 22 task(s)
+[[rule]]
+match = "^myosuite-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+
+# myosuite, standard: 22 task(s)
+[[rule]]
+match = "^myosuite-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+
+# robocasa, privileged: 29 task(s)
+[[rule]]
+match = "^robocasa-(?!gr1-).*-privileged$"
+min_cpus = 3.0
+min_memory_gb = 14.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+
+# robocasa, standard: 29 task(s)
+[[rule]]
+match = "^robocasa-(?!gr1-).*-standard$"
+min_cpus = 3.0
+min_memory_gb = 14.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 3.0
+verifier_min_memory_gb = 13.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+
+# robocasa-gr1, privileged: 24 task(s)
+[[rule]]
+match = "^robocasa-gr1-.*-privileged$"
+min_cpus = 3.0
+min_memory_gb = 14.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+
+# robocasa-gr1, standard: 24 task(s)
+[[rule]]
+match = "^robocasa-gr1-.*-standard$"
+min_cpus = 3.0
+min_memory_gb = 14.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 3.0
+verifier_min_memory_gb = 13.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+
+# robocasa365, privileged: 50 task(s)
+[[rule]]
+match = "^robocasa365-.*-privileged$"
+min_cpus = 3.0
+min_memory_gb = 9.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 7.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+
+# robocasa365, standard: 50 task(s)
+[[rule]]
+match = "^robocasa365-.*-standard$"
+min_cpus = 3.0
+min_memory_gb = 9.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 3.0
+verifier_min_memory_gb = 8.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+
+# robolab, privileged: 53 task(s)
+[[rule]]
+match = "^robolab-.*-privileged$"
+min_cpus = 4.0
+min_memory_gb = 13.0
+min_gpu_memory_gb = 6.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 13.0
+verifier_min_gpu_memory_gb = 6.5
+measured = "GPU 4.0-5.5 GB per trial (one simulator), anon memory 7.6-10.3 GB, CPU p90 2.4-8 cores over 7 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); vram_profile peaks 14.5-15.7 GB include agents' extra simulator processes and Isaac's card-sized pools; author: one Isaac simulator per 32 GB of host RAM"
+
+# robolab, standard: 53 task(s)
+[[rule]]
+match = "^robolab-.*-standard$"
+min_cpus = 4.0
+min_memory_gb = 14.0
+min_gpu_memory_gb = 6.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 13.0
+verifier_min_gpu_memory_gb = 6.5
+measured = "GPU 4.0-5.5 GB per trial (one simulator), anon memory 7.6-10.3 GB, CPU p90 2.4-8 cores over 7 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); vram_profile peaks 14.5-15.7 GB include agents' extra simulator processes and Isaac's card-sized pools; author: one Isaac simulator per 32 GB of host RAM"
+
+# roboolympics, standard-realtime: 2 task(s)
+[[rule]]
+match = "^roboolympics-.*-standard-realtime$"
+min_cpus = 8.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 7.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "author (docs/benchmarks/roboolympics.md): the sim takes up to 6 CPUs (air hockey 4), the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only, real time needs the cores"
+
+# roboolympics, standard-realtime: 1 task(s)
+[[rule]]
+match = "^(roboolympics-airhockey-match-i00)-standard-realtime$"
+min_cpus = 6.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 5.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "author (docs/benchmarks/roboolympics.md): the sim takes up to 6 CPUs (air hockey 4), the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only, real time needs the cores"
+
+# robopaint, privileged: 43 task(s)
+[[rule]]
+match = "^robopaint-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.0
+measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# robopaint, standard: 43 task(s)
+[[rule]]
+match = "^robopaint-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 1.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 4.0
+verifier_min_gpu_memory_gb = 1.0
+measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# robotangle, privileged: 52 task(s)
+[[rule]]
+match = "^robotangle-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 7.0
+min_gpu_memory_gb = 7.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 7.0
+measured = "GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# robotangle, standard: 52 task(s)
+[[rule]]
+match = "^robotangle-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 7.0
+min_gpu_memory_gb = 7.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 6.0
+verifier_min_gpu_memory_gb = 7.0
+measured = "GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# robotwin_2_0, privileged: 47 task(s)
+[[rule]]
+match = "^robotwin_2_0_.*-privileged$"
+min_cpus = 3.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 8.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "RTX 4090 24GB / L4 24GB"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 6.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "GPU 6.9 GB oracle peak on RTX 4090, 5.8 GB L4, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 3.2 GB, privileged agent container p90 6.4 GB, verifier 4.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# robotwin_2_0, standard: 47 task(s)
+[[rule]]
+match = "^robotwin_2_0_.*-standard$"
+min_cpus = 3.0
+min_memory_gb = 7.0
+min_gpu_memory_gb = 8.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "RTX 4090 24GB / L4 24GB"
+verifier_min_cpus = 3.0
+verifier_min_memory_gb = 6.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "GPU 6.9 GB oracle peak on RTX 4090, 5.8 GB L4, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 3.2 GB, privileged agent container p90 6.4 GB, verifier 4.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+# robowits, privileged: 15 task(s)
+[[rule]]
+match = "^robowits-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 6.0
+min_gpu_memory_gb = 2.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 2.0
+measured = "GPU 0.5-1.4 GB (physics on the CPU, GPU renders the cameras), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.5 GB, privileged container p90 4.7 GB, verifier 2.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (single-threaded Genesis CPU backend)"
+
+# robowits, standard: 15 task(s)
+[[rule]]
+match = "^robowits-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 2.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 7.0
+verifier_min_gpu_memory_gb = 2.0
+measured = "GPU 0.5-1.4 GB (physics on the CPU, GPU renders the cameras), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.5 GB, privileged container p90 4.7 GB, verifier 2.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (single-threaded Genesis CPU backend)"
+
+# vlabench, privileged: 36 task(s)
+[[rule]]
+match = "^vlabench-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 10.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 6.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: sim p90 6.9 GB, privileged container p90 8.1 GB, verifier 4.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+
+# vlabench, standard: 36 task(s)
+[[rule]]
+match = "^vlabench-.*-standard$"
+min_cpus = 2.0
+min_memory_gb = 11.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 10.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: sim p90 6.9 GB, privileged container p90 8.1 GB, verifier 4.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+
+# yamlab, privileged: 10 task(s)
+[[rule]]
+match = "^yamlab-.*-privileged$"
+min_cpus = 8.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 5.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 9.0
+verifier_min_gpu_memory_gb = 5.0
+measured = "GPU 3.8-4.0 GB per trial, anon memory 11.1-11.8 GB, CPU p90 5.8-8.7 cores over 12 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); vram_profile peaks 5.5-6.5 GB on 24 GB cards; board 0048: about 11 GB RAM and 8 CPUs per simulator; verifier 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10)"
+
+# yamlab, standard: 10 task(s)
+[[rule]]
+match = "^yamlab-.*-standard$"
+min_cpus = 8.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 5.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 15.0
+verifier_min_gpu_memory_gb = 5.0
+measured = "GPU 3.8-4.0 GB per trial, anon memory 11.1-11.8 GB, CPU p90 5.8-8.7 cores over 12 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); vram_profile peaks 5.5-6.5 GB on 24 GB cards; board 0048: about 11 GB RAM and 8 CPUs per simulator; verifier 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10)"
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Resource LIMITS and CAPS (docs/PROTOCOL.md §2.10, v1.1.5; enforced from v1.2). All sizes in GiB.
+# [[limit]] -> [metadata.resources.limits]: the most the agent phase may use. normalize writes it into task.toml and
+#   renders it into instruction.md ("## Resource limits") and the README. scope "trial" (privileged: every container the
+#   agent drives, i.e. all but a benchmark-owned service such as RoboPaint's scorer, scripts/rcb_monitor/inject.py
+#   BENCHMARK_SERVICES) or "agent" (standard modes: the agent's container only; the sim sidecar is the benchmark's and
+#   never counts).
+#   From v1.2 the task's monitor measures it and, with RCB_LIMITS_ENFORCE=1, a sustained violation (sustain_sec above a
+#   limit within any window_sec) or an out-of-memory kill fails the trial; with 0 (the default) it is only recorded.
+# [[cap]] -> [metadata.resources.caps]: docker caps per compose service (cpus, memory_gb, pids), applied by v1.2 and
+#   the caps docker really applies: normalize sets [environment].memory_mb = main.memory_gb x 1024 (Harbor writes main's
+#   memory and CPU caps from [environment]), scripts/rcb_monitor/inject.py writes the other values into the compose file
+#   unless a service sets one itself, and then the value here must be that one (ci_checks/check-resources.py compares).
+#   Memory caps sit above the limits (limit <= cap / 1.2 and <= cap - 2) so that the monitor sees a violation before the
+#   kernel's OOM killer; pids (threads) >= 8 x max_processes for the services the limits bind.
+#   A cap is never below what the task says it needs (ci_checks/check-resources.py): min_cpus <= the CPU caps of all
+#   services together, and where the verifier phase runs in a sidecar (a [[verifier.collect]] hook replays there),
+#   verifier_min_memory_gb <= the memory caps of those sidecars (a sidecar killed at a cap below its own declared
+#   minimum would be the benchmark's failure). A CPU cap above the host's CPU count means the host's count: docker
+#   refuses such a container ("range of CPUs is from 0.01 to N"), so a runner clamps the cap to the host's count before
+#   it starts the trial (PROTOCOL §2.10); the values here are not lowered for small hosts.
+# Same matching as [[rule]] (every matching rule applies, in file order). Edit the values here, not in task.toml.
+# How the values were set (owner, 10-10: from measured consumption, generous margins, so that no past trial exceeds them):
+# - GPU memory (simulator side): max(1.5 x peak, peak + 4) over batch_eval_live's vram_profile (per-trial peaks by card,
+#   10-03..10), at least 16 for Isaac Sim; BEHAVIOR-1K from its peak with RCB_TEXTURE_BUDGET=0.1, the tasks' default since
+#   v1.1.5. Privileged: the limit; standard: trial_max_gpu_memory_gb only (no standard agent container has a GPU).
+# - memory, privileged: the [environment] cap every past trial ran under (at least min + 2); RoboPaint's scorer service
+#   is the benchmark's own (recorded only): its 5 GiB margin is in trial_max_memory_gb, not in the limit; standard agent: max(1.5 x peak, peak + 4, 8) of the agent container's docker peak (mem_guard, 10-02..10),
+#   at most its [environment] cap; trial_max adds the sim sidecar's max(1.5 x peak, peak + 4) (RoboOlympics: its mem_limit).
+# - processes 512 and disk (10 GiB CPU-only privileged, 20 GiB Isaac and standard) under /app, /tmp and /root: not yet
+#   measured; the v1.2 calibration batch confirms or changes them. `measured` in each rule says what each value rests on.
+
+[[limit]]
+match = "^autobio-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 10.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 10.0
+measured = "memory: the [environment] cap 8 GiB, which every past trial ran under (no samples); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^autobio-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 20.0
+measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 12 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^behavior-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 24.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 24.0
+trial_max_memory_gb = 24.0
+measured = "GPU: 15.1 GiB held for most of the episode by the reference solution alone on a 48 GB card (L40S) with RCB_TEXTURE_BUDGET=0.1, the tasks' default (the tasks' own monitor, three oracle runs of two tasks on two hosts, 10-10: 15.14-15.15 GiB; the 9.0 GiB of the live sampler (nvidia-smi every 30 s, 13 AWS hosts + ws-1) was below that; uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile) -> max(1.5 x peak, peak + 4) rounded up to 24 (was 16: 5 % above the reference solution's own use); memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.8 GiB over 5 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^behavior-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 49.0
+measured = "GPU: 9.0 GiB with RCB_TEXTURE_BUDGET=0.1, now the tasks' default (live sampler (cgroup anon, 13 AWS hosts + ws-1, 10-10); uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container docker peak 2.5 GiB over 1 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 24 GiB cap; whole trial: + the sim service's 41 GiB (docker peak 27.0 GiB, 39 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^bigym2-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 6.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 1.2 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 1 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^bigym2-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 1.2 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 8 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^bigym2-.*-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 1.2 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 8 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dexjoco-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: the [environment] cap 8 GiB, which every past trial ran under (docker peak 2.1 GiB over 2 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dexjoco-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 14.0
+measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.9 GiB, 2 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dextoolbench_.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 7.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 7.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 2.1 GiB on a 48 GB card (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 13.1 GiB over 26 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^dextoolbench_.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 9.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 7.0
+trial_max_memory_gb = 14.0
+measured = "GPU: 2.1 GiB on a 48 GB card (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 4.4 GiB over 7 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.9 GiB, 7 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^humanoidbench-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 13.4 GiB over 27 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^humanoidbench-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 7.0
+trial_max_memory_gb = 13.0
+measured = "GPU: 2.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.3 GiB over 10 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^humanoidbench-.*-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 7.0
+trial_max_memory_gb = 15.0
+measured = "GPU: 2.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 7 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^kinder-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.7 GiB over 6 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^kinder-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 14.0
+measured = "GPU: 1.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.8 GiB over 11 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 6 GiB (docker peak 1.1 GiB, 1 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^labutopia-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 32.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 32.0
+measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 32 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 32.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 32.0
+measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 32 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^labutopia-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 28.0
+measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: no samples of the agent's container; floor 8 GiB (at most the 32 GiB cap); whole trial: + the sim service's 20 GiB (docker peak 12.7 GiB, 1 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 28.0
+measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: no samples of the agent's container; floor 8 GiB (at most the 32 GiB cap); whole trial: + the sim service's 20 GiB (docker peak 12.7 GiB, 1 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^libero-max-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: the [environment] cap 8 GiB, which every past trial ran under (no samples); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^libero-max-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 17.0
+measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 9 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^maniguard-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 30.0
+max_memory_gb = 25.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 30.0
+trial_max_memory_gb = 25.0
+measured = "GPU: 19.4 GiB on a 48 GB card, 18.1 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); no texture budget in its tooling) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^maniguard-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 30.0
+trial_max_memory_gb = 43.0
+measured = "GPU: 19.4 GiB on a 48 GB card, 18.1 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); no texture budget in its tooling) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: no samples of the agent's container; floor 8 GiB (at most the 24 GiB cap); whole trial: + the sim service's 35 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^metaworldplus-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: the [environment] cap 8 GiB, which every past trial ran under (docker peak 3.2 GiB over 20 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^metaworldplus-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 13.0
+measured = "memory: agent container docker peak 2.9 GiB over 13 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 8 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 7 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^molmospaces-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 7.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 7.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 2.7 GiB on a 48 GB card (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)); one trial on a 24 GB card peaked at 18.4 GiB and would exceed: calibrate -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (no samples); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^molmospaces-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 7.0
+trial_max_memory_gb = 18.0
+measured = "GPU: 2.7 GiB on a 48 GB card (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)); one trial on a 24 GB card peaked at 18.4 GiB and would exceed: calibrate -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 10 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^mujoco_playground_.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 8.0
+measured = "memory: the [environment] cap 8 GiB, which every past trial ran under (docker peak 4.8 GiB over 9 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^(mujoco_playground_aloha_hand_over|mujoco_playground_aloha_single_peg_insertion|mujoco_playground_panda_open_cabinet|mujoco_playground_panda_pick_cube_orientation)-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 6.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 8.0
+measured = "GPU: 1.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 8 GiB, which every past trial ran under (docker peak 4.8 GiB over 9 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^mujoco_playground_.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 13.0
+measured = "memory: agent container docker peak 2.5 GiB over 4 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 8 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^(mujoco_playground_aloha_hand_over|mujoco_playground_aloha_single_peg_insertion|mujoco_playground_panda_open_cabinet|mujoco_playground_panda_pick_cube_orientation)-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 13.0
+measured = "GPU: 1.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.5 GiB over 4 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^myosuite-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 10.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 10.0
+measured = "memory: the [environment] cap 8 GiB, which every past trial ran under (docker peak 8.0 GiB over 18 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^myosuite-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 14.0
+measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robocasa-(?!gr1-).*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 16.0 GiB over 3 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robocasa-(?!gr1-).*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 30.0
+measured = "memory: agent container docker peak 2.3 GiB over 9 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 22 GiB (docker peak 14.1 GiB, 14 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robocasa-gr1-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 15.8 GiB over 13 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robocasa-gr1-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 19.0
+measured = "memory: agent container docker peak 2.5 GiB over 3 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 11 GiB (docker peak 6.7 GiB, 10 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robocasa365-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 7.8 GiB over 7 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robocasa365-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 19.0
+measured = "memory: agent container docker peak 3.9 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 11 GiB (docker peak 6.4 GiB, 14 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robolab-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 24.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 24.0
+trial_max_memory_gb = 24.0
+measured = "GPU: 15.7 GiB on a 48 GB card, 15.3 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); includes agents' extra simulators) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.4 GiB over 4 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robolab-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 24.0
+trial_max_memory_gb = 27.0
+measured = "GPU: 15.7 GiB on a 48 GB card, 15.3 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); includes agents' extra simulators) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container docker peak 2.7 GiB over 1 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 24 GiB cap; whole trial: + the sim service's 19 GiB (docker peak 12.3 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^roboolympics-.*-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 4.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 12.0
+measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^(roboolympics-airhockey-match-i00)-standard-realtime$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 4.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 12.0
+measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robopaint-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 5.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 5.0
+trial_max_memory_gb = 21.0
+measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robopaint-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 9.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 5.0
+trial_max_memory_gb = 17.0
+measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 5.0 GiB over 83 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 3.4 GiB, 36 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robotangle-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 10.3 GiB on a 48 GB card, 5.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 4.6 GiB over 1 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robotangle-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 21.0
+measured = "GPU: 10.3 GiB on a 48 GB card, 5.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 13 GiB (docker peak 8.4 GiB, 47 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robotwin_2_0_.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 13.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 13.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 8.6 GiB on a 48 GB card, 6.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 7.7 GiB over 13 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robotwin_2_0_.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 13.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 8.6 GiB on a 48 GB card, 6.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 3.3 GiB over 15 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 4.0 GiB, 23 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robowits-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 6.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 1.4 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 5.1 GiB over 10 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^robowits-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 6.0
+trial_max_memory_gb = 17.0
+measured = "GPU: 1.4 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.5 GiB over 4 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 9 GiB (docker peak 4.5 GiB, 8 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^vlabench-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 16.0
+measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 9.0 GiB over 5 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^vlabench-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 20.0
+measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 12 GiB (docker peak 7.2 GiB, 16 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^yamlab-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 24.0
+measured = "GPU: 10.4 GiB on a 48 GB card, 6.5 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 16.0 GiB over 4 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[limit]]
+match = "^yamlab-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 27.0
+measured = "GPU: 10.4 GiB on a 48 GB card, 6.5 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container docker peak 1.5 GiB over 1 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 24 GiB cap; whole trial: + the sim service's 19 GiB (docker peak 12.4 GiB, 1 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[[cap]]
+match = "^autobio-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 12.0, pids = 8192 }
+
+[[cap]]
+match = "^autobio-.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 8.0, memory_gb = 15.0, pids = 8192 }
+
+[[cap]]
+match = "^behavior-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
+
+[[cap]]
+match = "^behavior-.*-standard$"
+main = { cpus = 8.0, memory_gb = 24.0, pids = 16384 }
+sim = { cpus = 12.0, memory_gb = 50.0, pids = 16384 }
+
+[[cap]]
+match = "^bigym2-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^bigym2-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^bigym2-.*-standard-realtime$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexjoco-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^dexjoco-.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^dextoolbench_.*-privileged$"
+main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^dextoolbench_.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 7.0, pids = 8192 }
+
+[[cap]]
+match = "^humanoidbench-.*-privileged$"
+main = { cpus = 16.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^humanoidbench-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 7.0, pids = 8192 }
+
+[[cap]]
+match = "^humanoidbench-.*-standard-realtime$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 9.0, pids = 8192 }
+
+[[cap]]
+match = "^kinder-.*-privileged$"
+main = { cpus = 16.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^kinder-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^labutopia-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
+
+[[cap]]
+match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-privileged$"
+main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
+
+[[cap]]
+match = "^labutopia-.*-standard$"
+main = { cpus = 8.0, memory_gb = 32.0, pids = 16384 }
+sim = { cpus = 16.0, memory_gb = 24.0, pids = 16384 }
+
+# lab_003 families: the sidecar needs more than the six lab_001 families (21 GB at the renderer's first start, measured
+# by the author; declared verifier minimum 27 GB). Its cap is max(1.5 x peak, peak + 4) = 32 GiB like every other sim
+# cap, never below the declared minimum (ci_checks/check-resources.py; before: 24 GiB, below its own minimum).
+[[cap]]
+match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-standard$"
+main = { cpus = 8.0, memory_gb = 32.0, pids = 16384 }
+sim = { cpus = 16.0, memory_gb = 32.0, pids = 16384 }
+
+[[cap]]
+match = "^libero-max-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^libero-max-.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 11.0, pids = 8192 }
+
+[[cap]]
+match = "^maniguard-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 30.0, pids = 16384 }
+
+[[cap]]
+match = "^maniguard-.*-standard$"
+main = { cpus = 8.0, memory_gb = 24.0, pids = 16384 }
+sim = { cpus = 12.0, memory_gb = 42.0, pids = 16384 }
+
+[[cap]]
+match = "^metaworldplus-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^metaworldplus-.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 7.0, pids = 8192 }
+
+[[cap]]
+match = "^molmospaces-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^molmospaces-.*-standard$"
+main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 12.0, pids = 8192 }
+
+[[cap]]
+match = "^mujoco_playground_.*-privileged$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^(mujoco_playground_aloha_hand_over|mujoco_playground_aloha_single_peg_insertion|mujoco_playground_panda_open_cabinet|mujoco_playground_panda_pick_cube_orientation)-privileged$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^mujoco_playground_.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 7.0, pids = 8192 }
+
+[[cap]]
+match = "^(mujoco_playground_aloha_hand_over|mujoco_playground_aloha_single_peg_insertion|mujoco_playground_panda_open_cabinet|mujoco_playground_panda_pick_cube_orientation)-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 7.0, pids = 8192 }
+
+[[cap]]
+match = "^myosuite-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 12.0, pids = 8192 }
+
+[[cap]]
+match = "^myosuite-.*-standard$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+
+[[cap]]
+match = "^robocasa-(?!gr1-).*-privileged$"
+main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^robocasa-(?!gr1-).*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 27.0, pids = 8192 }
+
+[[cap]]
+match = "^robocasa-gr1-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^robocasa-gr1-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 14.0, pids = 8192 }
+
+[[cap]]
+match = "^robocasa365-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^robocasa365-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 14.0, pids = 8192 }
+
+[[cap]]
+match = "^robolab-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
+
+[[cap]]
+match = "^robolab-.*-standard$"
+main = { cpus = 8.0, memory_gb = 24.0, pids = 16384 }
+sim = { cpus = 8.0, memory_gb = 23.0, pids = 16384 }
+
+[[cap]]
+match = "^roboolympics-.*-standard-realtime$"
+main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }   # the sim service's own pids_limit (scripts/roboolympics/templates/docker-compose.yaml)
+
+[[cap]]
+match = "^(roboolympics-airhockey-match-i00)-standard-realtime$"
+main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 256 }
+
+[[cap]]
+match = "^robopaint-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
+scorer = { cpus = 2.0, memory_gb = 7.0, pids = 8192 }
+
+[[cap]]
+match = "^robopaint-.*-standard$"
+main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^robotangle-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^robotangle-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+
+[[cap]]
+match = "^robotwin_2_0_.*-privileged$"
+main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^robotwin_2_0_.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 10.0, pids = 8192 }
+
+[[cap]]
+match = "^robowits-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^robowits-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 11.0, pids = 8192 }
+
+[[cap]]
+match = "^vlabench-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
+[[cap]]
+match = "^vlabench-.*-standard$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 15.0, pids = 8192 }
+
+[[cap]]
+match = "^yamlab-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
+
+[[cap]]
+match = "^yamlab-.*-standard$"
+main = { cpus = 8.0, memory_gb = 24.0, pids = 16384 }
+sim = { cpus = 16.0, memory_gb = 23.0, pids = 16384 }

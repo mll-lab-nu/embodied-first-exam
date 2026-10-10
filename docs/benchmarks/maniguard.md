@@ -139,7 +139,10 @@ touches a task object. Here:
 `first_divergence_step`, `instance_ok`, `instance_exact` and the cost fields.
 
 Upstream's horizon (1.5 × its longest scripted demo, e.g. 2000 steps for jar) is reported (`within_upstream_horizon`), not
-enforced: time is the budget, as for BEHAVIOR-1K; `MAX_STEPS` = 50,000 only stops a runaway trajectory.
+enforced: time is the budget, as for BEHAVIOR-1K. A technical cap (PROTOCOL §4.5): the tooling ends an episode after
+`MAX_STEPS` = 50,000 control steps (41.7 min of simulated time; `reason` = `runaway_guard`, a failure unless the goal held
+before), so a trajectory holds at most 50,000 rows (a longer file is `bad_trajectory` + `too_long`). Both instructions
+state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `budget.steps` stays null.
 
 ## Grading and determinism
 - Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` (the (T, 8) rows handed to `env.step`) in **two fresh
@@ -153,6 +156,20 @@ enforced: time is the budget, as for BEHAVIOR-1K; `MAX_STEPS` = 50,000 only stop
   two Kit extensions it used to fetch at a first launch). Not measured: whether another host
   (another GPU or driver) rebuilds it exactly. Until then `instance_ok` (tolerance) is the default rather than
   `--require-instance-exact` (families.json `require_instance_exact`), and the standard resume class stays `approx`.
+- What is not the agent's failure is flagged, and a reward is always written (2026-10-10):
+  - privileged `grader_error = 1` (and, since the second review of 2026-10-10, `infra_error = 1` with it): a replay process that died or printed no result, a replay over its time limit
+    (`replay_timed_out`), a frozen instance the replays did not rebuild (`instance_ok` 0), any other exception in the
+    grader. A file that is not a trajectory of the task (not an npz, no `task` / `actions`, a pickled or non-numeric
+    array, a wrong shape, NaN/inf, more than 50,000 rows) is the agent's: `bad_trajectory` (`wrong_task`).
+  - standard `infra_error = 1`: no `final.json` (`missing_log`), an unreadable one (also `grader_error`), an unfinished
+    one (`finalized` 0: the collect hook did not write its verdict), a service that gave up after crashes outside a call
+    or never ended the episode, replays that could not run (`replay_error`: a replay process that died, printed no result
+    or ran out of time, no `trajectory.npz`, the GPU lost) or did not rebuild the frozen instance. A give-up after
+    crashes during a call (`sim_crashed_on_call`) stays the agent's failure.
+- The video never decides: the second replay is filmed by the tooling's `start_video` / `stop_video`, which keep at most
+  3000 frames in memory as JPEG (past that every second frame is dropped and the stride doubles: a time-lapse; one raw
+  frame per control step used to be kept, 0.4 MB each) and never raise: a camera or encoder failure only ends the video
+  (`video` null, `video_error` in the replay's result; `video_rendered` 0), and the mp4 gets its name only once complete.
 
 ## Positive examples (the oracle)
 ManiGuard publishes 40 scripted demonstrations per task (`IDEAS-Lab-Northwestern/datagen-<family>-v1-joint-5cam`, LeRobot,
@@ -215,6 +232,20 @@ and OmniGibson's `torch.compile` kernels; then roughly 20 control steps per wall
 multi-phase manipulations. ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A Harbor
 oracle trial takes 6 min for jar 14 (747 rows; the verifier's two replays 331 s) and 9 min for cabinet 19 (2291 rows; 492 s).
 
+Tests without a simulator: `scripts/maniguard/tests/test_mg_*.py`, each run as a script (numpy, imageio with ffmpeg and
+Pillow): both graders and the whole `finalize.sh` on stand-in replays, the real `server.py` on the real shared layer with a
+stub Session, and the tooling's video path (failures never reach the rollout, the frame cap).
+
+Grading time (2026-10-10; arithmetic, not measured end to end): one replay may take `max(3600, 900 + 0.2 × rows)` s: an
+Isaac start (up to 12 min cold on a loaded host) and the rows at the slowest measured rate (0.2 s per control step without
+a CPU quota on a busy host; 0.05-0.09 s otherwise), i.e. 10,900 s for the 50,000 rows a trajectory may hold. The
+privileged verifier's `timeout_sec` is 23,400 s (two such replays + 1,600 s; was 7,200 s with 3,600 s per replay, which a
+trajectory beyond about 15,000-30,000 rows outran: Harbor ended the verifier without a reward); `tests/grade.py` ends a
+replay at its limit or at its own budget (22,800 s) and writes `grader_error` + `replay_timed_out` itself. The standard
+collect hook's `timeout_sec` is 30,000 s (the end of the episode, up to 7,200 s through a resume, + two replays + 1,000 s;
+was 14,400 s); `finalize.sh` ends a replay at its limit or at its own deadline (29,400 s) and records `replay_timed_out`
+with `infra_error`. These are upper bounds: the oracle trials above use minutes.
+
 ## Kit cache: one per trial
 As for BEHAVIOR-1K: every compose file names its cache volume without a fixed name (`rcb_maniguard_cache` for the agent,
 `rcb_maniguard_cache_trusted` for the verifier and the standard sidecar), so it belongs to the trial and Harbor's teardown
@@ -225,11 +256,16 @@ deletes it.
 `ee_pose` (8: fingertip-centre pose, world frame, xyzw + gripper; numpy IK per row, then joint-space interpolation); cameras
 `cam_opposite`, `cam_left`, `cam_right`, `cam_left_shoulder` (static) and `wrist` (on the hand), 256×256; OmniGibson
 `depth_linear`; `/kinematics` on a numpy model of the arm read from the simulator's articulation; 43 proprio columns. The
-episode ends when the goal has held for 10 control steps (`reason` = `goal_held`); the safety rules are checked after every
+episode ends when the goal has held for 10 control steps (`reason` = `goal_held`), or at the cap of 50,000 control steps
+(`runaway_guard`; `spec.max_control_steps`); the safety rules are checked after every
 step but never reported live (they are part of the success predicate). `/spec.static` has the goal sphere's radius and the
-floor convention only.
+floor convention only. A request is checked completely before anything moves (2026-10-10): a null or wrongly typed `dt`,
+`seconds`, `video_fps`, `cameras`, `note`, `interpolate`, `video` or `type`, and an `ee_pose` quaternion of zero norm, are
+a 400 (a null `dt` or `seconds` and a non-string `note` used to be a 500 that ended the episode); a missing field, or a
+null `video_fps`, `cameras` or `note`, means the default. `get_obs(seconds=...)` runs whole control steps and
+`meta["seconds"]` is what ran (fewer when the episode ended).
 
-Measured (laptop, 2026-10-03): `ci_checks/check-limited-protocol.py --launch` passes on both twins (193 checks, no
+Measured (laptop, 2026-10-03): `ci_checks/check-standard-protocol.py --launch` passes on both twins (193 checks, no
 failure: spec, cameras and depth, kinematics, projection). Harbor's oracle runs score 1: jar 14 in 7 min (the live episode
 ends at step 599), cabinet 19 in 11 min (step 2240); the live state equals the collect hook's two fresh replays
 (`live_matches_replay`); `nop` scores 0 (an empty episode). Three fixes came out of these runs: the sidecar's Isaac Sim
@@ -257,8 +293,8 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
 - **Tooling: thin wrappers only.** Joint targets (`move_joints`), the gripper, `hold`, an IK move (`ik`, `move_ee`: numpy
   IK then a joint-space line, no collision checking), `ee_pose`, state, cameras, recording, replay. No grasp, place, close
   or carry skills.
-- **World-frame information (D7).** Standard tasks never say where things are (STANDARD_MODE_2_2.md §10,
-  `check-limited-texts.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
+- **World-frame information (D7).** Standard tasks never say where things are (STANDARD_MODE.md §10,
+  `check-standard-texts.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
   base pose is in `robot_spec`. Privileged tasks give everything through the tooling.
 - **Reference solutions out of reach.** ManiGuard's 40 public demonstrations per task, its scripted data generator and its
   grasp annotations are not in the image or the task dirs, and agent egress is allowlisted to the model APIs by default in
@@ -299,8 +335,11 @@ image built from this recipe with the same locks:
   0.20 s per replayed control step; with an 8-CPU quota (the agent container's) about 420 threads, 4 cores and 0.09 s per
   step, with the identical final state, labels and checkpoints. The verifier and the standard sidecar have no CPU limit in
   the task files.
-- **Start-up.** A cold Isaac start took 8-12 minutes on that host under load (the laptop: about 4); the standard client's
-  `Robot()` waits 600 s by default.
+- **Start-up.** A cold Isaac start took 8-12 minutes on that host under load (the laptop: about 4), and 631-715 s on the
+  8-vCPU AWS L4 / L40S hosts (2026-10-10; more than 600 s in 13 of 56 archived standard trials). The standard client's
+  `Robot()` waited 600 s by default, so the reference solution and any script that did not retry ended with 0 control
+  steps there; since 2026-10-10 it waits 3600 s (longer than the service's 1800 s start-up watchdog) and reports its
+  progress.
 
 ## Open items
 - The other 18 shortlisted tasks: `make-instance`, a resampled demonstration through the verifier, Harbor oracle and `nop`.

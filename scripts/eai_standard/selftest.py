@@ -20,6 +20,12 @@ import rcb_client  # noqa: E402
 import rcb_limited as L  # noqa: E402
 
 ROOT = tempfile.mkdtemp(prefix="eai_standard_selftest_")
+# A directory whose `python` is this interpreter (a wrapper, not a link: a virtual environment's interpreter finds its
+# packages by where it is started from). Without it the selftest fails wherever the first `python` on PATH has no numpy.
+PYBIN = os.path.join(ROOT, "bin"); os.makedirs(PYBIN)
+with open(os.path.join(PYBIN, "python"), "w") as _f:
+    _f.write(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
+os.chmod(os.path.join(PYBIN, "python"), 0o755)
 
 
 def free_port() -> int:
@@ -33,8 +39,9 @@ class Compose:
     def __init__(self, name: str, restarts: int = 6, **env):
         self.data = os.path.join(ROOT, name); os.makedirs(self.data)
         self.port = free_port(); self.max = restarts; self.restarts = 0; self.stopped = False; self.rc = None
+        # run.sh starts `python`: the interpreter that runs this selftest (which has numpy), whatever PATH says first
         self.env = {**os.environ, "RCB_DATA": self.data, "RCB_SERVER": os.path.join(HERE, "toy_server.py"), "RCB_TOY_PORT": str(self.port),
-                    **{k: str(v) for k, v in env.items()}}
+                    "PATH": PYBIN + os.pathsep + os.environ.get("PATH", ""), **{k: str(v) for k, v in env.items()}}
         self.out = open(os.path.join(self.data, "container.log"), "ab")
         self.p = None; self._t = threading.Thread(target=self._loop, daemon=True); self._t.start()
         self.url = f"http://127.0.0.1:{self.port}"
@@ -352,6 +359,96 @@ def simulator_error_ends_the_episode():
         st = r.status()
         expect(st["done"] and st["reason"] == "error", f"the episode ended: {st}")
         expect(requests.post(c.url + "/submit", data=b"", timeout=10).status_code == 409, "409 afterwards")
+    finally:
+        c.down()
+
+
+@case
+def malformed_requests_are_400_and_change_nothing():
+    """PROTOCOL §4.6: a request the service cannot read is the caller's mistake (400): no physics, the episode goes on.
+    Raw JSON bodies, as an agent without the shipped client may send them."""
+    c = Compose("malformed")
+    try:
+        r = c.robot()
+        r.submit("joint_position", chunk(3, 0.1), note="before")
+        st0 = r.status()
+        big = "[[" + "9" * 400 + ", 0, 0]]"                                   # an integer too large for a float
+        bad = [
+            ("/submit", {"type": "joint_position", "actions": {"a": 1}}),      # TypeError in numpy, not ValueError
+            ("/submit", {"type": "joint_position", "actions": None}),
+            ("/submit", {"type": "joint_position", "actions": "abc"}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, {"x": 1}]]}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0], [0, 0, 0]]}),
+            ("/submit", '{"type": "joint_position", "actions": ' + big + "}"),
+            ("/submit", '{"type": "joint_position", "actions": [[NaN, 0, 0]]}'),
+            ("/submit", '{"type": "joint_position", "actions": [[1e999, 0, 0]]}'),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "dt": [0.05]}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "dt": "soon"}),
+            ("/submit", '{"type": "joint_position", "actions": [[0, 0, 0]], "dt": Infinity}'),
+            ("/submit", {"type": ["joint_position"], "actions": [[0, 0, 0]]}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "cameras": 5}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "video_fps": {"fps": 10}}),
+            ("/submit", [1, 2, 3]),
+            ("/observe", {"seconds": [1]}),
+            ("/observe", {"seconds": {"s": 1}}),
+            ("/observe", '{"seconds": NaN}'),
+            ("/observe", {"cameras": "top", "seconds": 0, "video": 3}),
+        ]
+        for path, body in bad:
+            data = body if isinstance(body, str) else json.dumps(body)
+            x = requests.post(c.url + path, data=data, headers={"Content-Type": "application/json"}, timeout=10)
+            expect(x.status_code == 400, f"400 for {path} {data[:60]} (got {x.status_code}: {x.text[:120]})")
+            st = r.status()
+            expect(not st["done"] and st["step"] == st0["step"] and st["control_steps"] == st0["control_steps"],
+                   f"nothing ran and the episode goes on after {data[:60]}: {st}")
+        expect(r.status()["calls"] == st0["calls"], "a refused request is not a call of the episode")
+        res = r.submit("joint_position", chunk(2, 0.2), note="after")
+        expect(res.meta["executed_rows"] == 2 and r.status()["step"] == st0["step"] + 2, "a good request still runs")
+        expect(not [e for e in c.events() if e.get("ev") == "error"], "no simulator error was logged")
+    finally:
+        c.down()
+
+
+@case
+def busy_port_is_waited_for_not_a_crash():
+    """Under Harbor's egress control the agent's container shares the sidecar's network namespace: a process of the
+    agent may listen on the service's port while the scene is built. The service waits for the port; it does not exit
+    (an exit is a crash, and three of them end the episode)."""
+    with socket.socket() as held:
+        held.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        held.bind(("0.0.0.0", 0)); held.listen(1)
+        port = held.getsockname()[1]
+        c = Compose("busy_port", RCB_TOY_PORT=port)
+        c.port, c.url = port, f"http://127.0.0.1:{port}"
+        try:
+            c.pid()                                              # the episode began (the PID file is the service's)
+            time.sleep(3.0)
+            expect(c.restarts == 0 and c.p.poll() is None, f"the service is still up while the port is taken (restarts {c.restarts})")
+            expect("waiting for it to be free" in open(os.path.join(c.data, "server.log")).read(), "and says what it waits for")
+            held.close()
+            r = c.robot()
+            res = r.submit("joint_position", chunk(2, 0.1))
+            expect(res.meta["executed_rows"] == 2 and c.restarts == 0, "once the port is free the service serves, never restarted")
+            expect(not [e for e in c.events() if e.get("ev") == "resuming"], "no crash, no resume")
+        finally:
+            c.down()
+
+
+@case
+def negative_content_length_is_refused_at_once():
+    """A negative Content-Length must not make the service read until the client hangs up (an unbounded read)."""
+    c = Compose("neg_content_length")
+    try:
+        r = c.robot()
+        st0 = r.status()
+        with socket.create_connection(("127.0.0.1", c.port), timeout=10) as k:
+            k.sendall(b"POST /submit HTTP/1.1\r\nHost: x\r\nContent-Type: application/json\r\nContent-Length: -1\r\n\r\n")
+            k.sendall(b"x" * 65536)                               # and keep the connection open: no EOF for the service
+            k.settimeout(5)
+            reply = k.recv(4096)
+        expect(reply.startswith(b"HTTP/1.0 400") or reply.startswith(b"HTTP/1.1 400"), f"400 within 5 s, got {reply[:60]!r}")
+        st = r.status()
+        expect(not st["done"] and st["calls"] == st0["calls"], f"the episode goes on: {st}")
     finally:
         c.down()
 

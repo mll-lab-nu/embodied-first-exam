@@ -1,5 +1,5 @@
 """eai-standard/2.2 (formerly rcb-limited/2.2): the HTTP layer, the protocol helpers and the crash recovery that every
-2.2 sim service shares (docs/STANDARD_MODE_2_2.md; the 2.1 base is docs/LIMITED_MODE_PROTOCOL.md).
+2.2 sim service shares (docs/STANDARD_MODE.md, Part 2; the 2.1 base is its Part 1).
 
 The source is scripts/eai_standard/rcb_limited.py; the generators copy it unchanged into every standard task's
 environment/sim/ (ci_checks/check-tooling-identity.sh). A service keeps its simulator to itself (scene, action
@@ -35,7 +35,7 @@ checkpointed (rows, state hash, the robot's proprio row); after a crash compose 
 replays the journal and continues the SAME episode, never a reset. `python rcb_limited.py end <data dir>` is the shared
 first half of a collect hook."""
 from __future__ import annotations
-import faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
+import errno, faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Callable
 
@@ -382,7 +382,7 @@ def check_spec(spec: dict) -> None:
         raise RuntimeError("default_cameras must be cameras")
 
 
-# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/STANDARD_MODE_2_2.md)
+# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/STANDARD_MODE.md)
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "900"))     # a task with a slower scene build sets more
 MAX_CALL_WALL_S = float(os.environ.get("RCB_MAX_CALL_WALL_S", "900"))         # < the client's 1800 s /submit read timeout
@@ -737,6 +737,44 @@ class Episode:
 
 
 # ---------------------------------------------------------------- the HTTP layer
+def _finite(v) -> bool:
+    try:
+        return math.isfinite(float(v))
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+
+def parse_request(path: str, meta, parts: dict):
+    """What every adapter needs checked before it touches the simulator (ValueError -> 400; PROTOCOL §4.6: a malformed
+    request steps no physics and never ends the episode, whatever is wrong with it: a JSON object where rows are
+    expected, a number too large for a float, NaN, a field of the wrong JSON type). Returns the action rows of a
+    /submit as a float64 array (shape and limits are the adapter's to check), None for /observe."""
+    if not isinstance(meta, dict):
+        raise ValueError("the request's meta must be a JSON object")
+    for k in ("dt", "seconds", "video_fps"):
+        if meta.get(k) is not None and not _finite(meta[k]):
+            raise ValueError(f"{k} must be a finite number (got {meta[k]!r:.60})")
+    for k in ("type", "interpolate", "video"):
+        if meta.get(k) is not None and not isinstance(meta[k], str):
+            raise ValueError(f"{k} must be a string (got {meta[k]!r:.60})")
+    cams = meta.get("cameras")
+    if cams is not None and not (isinstance(cams, (list, tuple)) and all(isinstance(c, str) for c in cams)):
+        raise ValueError("cameras must be a list of camera names")
+    if path != "/submit":
+        return None
+    try:
+        src = parts["actions"]["data"] if "actions" in parts else meta.get("actions", [])
+        if src is None or isinstance(src, (dict, str, bytes)):
+            raise TypeError(f"got {type(src).__name__}")
+        A = np.asarray(src, dtype=np.float64)
+    except (TypeError, ValueError, OverflowError, AttributeError, KeyError) as exc:
+        raise ValueError("actions must be an RCB1 array part `actions` or a JSON list of rows of numbers "
+                         f"({type(exc).__name__}: {str(exc)[:120]})") from None
+    if not np.all(np.isfinite(A)):
+        raise ValueError("actions contain NaN/inf")
+    return A
+
+
 class Service:
     """What a sim service hands to serve(): spec (dict), lock, state (the service's E dict: done, reason, exiting, error),
     submit(meta, actions) and observe(meta) -> (meta_out, rcb1 parts), kinematics(req) -> dict, status() -> dict,
@@ -774,6 +812,8 @@ def make_handler(svc: Service):
             try:
                 n = int(self.headers.get("Content-Length", 0))
             except ValueError:
+                raise ValueError("bad Content-Length")
+            if n < 0:                        # read(-1) would read until the client hangs up, without any bound
                 raise ValueError("bad Content-Length")
             if n > MAX_BODY:
                 raise ValueError("request too large")
@@ -821,8 +861,8 @@ def make_handler(svc: Service):
                 rows0 = ep.rows if ep else 0
                 out = blobs = err = None; stopped = None
                 try:
+                    A = parse_request(self.path, meta, parts)   # ValueError -> 400, before the adapter runs
                     if self.path == "/submit":
-                        A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
                         out, blobs = svc.submit(meta, A)
                     else:
                         out, blobs = svc.observe(meta)
@@ -856,7 +896,25 @@ def serve(svc: Service, port: int = 8000) -> None:
     if svc.episode is not None:
         svc.spec.setdefault("max_call_wall_s", svc.episode.max_call_wall_s)
     check_spec(svc.spec)
-    HTTPServer(("0.0.0.0", port), make_handler(svc)).serve_forever()
+    bind(port, make_handler(svc)).serve_forever()
+
+
+def bind(port: int, handler) -> HTTPServer:
+    """The listening server. Under Harbor's egress control the agent's container shares this network namespace, so a
+    process of the agent (`python -m http.server` listens on 8000 by default) may hold the port while the scene was
+    built. Wait for the port instead of failing: an exception here would count as a crash of the service, and three of
+    them end the episode. The time spent waiting is the agent's own (the collect hook's signal is still served)."""
+    said = False
+    while True:
+        try:
+            return HTTPServer(("0.0.0.0", port), handler)
+        except OSError as e:
+            if e.errno != errno.EADDRINUSE:
+                raise
+        if not said:
+            said = True
+            print(f"[sim] port {port} is in use (a process in the agent's container?): waiting for it to be free", flush=True)
+        time.sleep(1.0)
 
 
 # ---------------------------------------------------------------- the collect hook's first half

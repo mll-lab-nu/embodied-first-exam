@@ -1,9 +1,9 @@
 """eai-standard/2.2 sim service for NVIDIA RoboLab (Isaac Lab 2.3 / Isaac Sim 5.1, Franka + Robotiq 2F-85; see
-docs/STANDARD_MODE_2_2.md). Owns the scene. HTTP surface (rcb_limited): GET /spec, GET /status, POST /observe,
+docs/STANDARD_MODE.md). Owns the scene. HTTP surface (rcb_limited): GET /spec, GET /status, POST /observe,
 POST /submit, POST /kinematics (RCB1 bodies, RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64).
 Logs every call to /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE_2_2.md §13, resume class `exact`): every executed control step is
+Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13, resume class `exact`): every executed control step is
 journaled (the 8-D float32 row handed to Session.step), every completed call is checkpointed with the scene's state hash.
 After a crash compose restarts the container (`restart: on-failure:6`, run.sh exits non-zero) and this service, a fresh
 process, rebuilds the frozen scene, replays the journal up to the last checkpoint (its first replay: bit-exact with PhysX
@@ -23,6 +23,7 @@ Differences from the RoboTwin service, all from the simulator:
   environment/sim/finalize.sh replays the trajectory in two fresh processes and completes /data/final.json."""
 from __future__ import annotations
 import math, os, sys, threading, time, traceback
+from typing import Callable
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -155,8 +156,13 @@ SPEC = {
               "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes (x right, y up, z back)"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))},
+    # PROTOCOL §4.5: no step budget, but a technical cap is stated here. The tooling's runaway guard ends the episode after
+    # MAX_STEPS control steps (reason "step_guard"); at this service's 3-15 control steps/s the wall clock ends it first.
+    "max_control_steps": int(M.MAX_STEPS),
     "episode": "one episode, no reset: it ends at the first control step where RoboLab's success term holds (checked after every "
-               "control step), when your time is up, or on a simulator error",
+               f"control step), when your time is up, on a simulator error, or after {int(M.MAX_STEPS):,} control steps "
+               f"({M.MAX_STEPS / CTRL_HZ / 60:.0f} min of simulated time: a technical cap, reason \"step_guard\", "
+               "spec.max_control_steps; graded as it stands)",
     "robot_spec": S.robot_spec(),
     "kinematics": S.kinematics_spec(),
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -197,6 +203,59 @@ def video_fps(meta: dict) -> int:
     if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not (1 <= fps <= 30):
         raise ValueError("video_fps must be in [1, 30]")
     return int(fps)
+
+
+# ---------------------------------------------------------------- request fields
+# PROTOCOL §4.6: a malformed request is a 400 and executes nothing. Every field is read and checked by the functions below
+# BEFORE the first control step; a field that is absent or JSON null takes its default, a value of the wrong type or out
+# of range is a ValueError (the layer's 400). as_400() turns anything else a bad value can raise while it is being read
+# (TypeError, OverflowError, AttributeError, ...) into that 400 too: only an error while the simulator is stepping is a
+# simulator error (500, the episode ends).
+def number(meta: dict, key: str, default: float) -> float:
+    v = meta.get(key)
+    if v is None:
+        return float(default)
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+        raise ValueError(f"{key} must be a finite number")
+    return float(v)
+
+
+def choice(meta: dict, key: str, default: str, allowed: tuple) -> str:
+    v = meta.get(key)
+    if v is None:
+        return default
+    if not isinstance(v, str) or v not in allowed:
+        raise ValueError(f"{key} must be {'|'.join(allowed)}")
+    return v
+
+
+def cameras(meta: dict) -> list:
+    v = meta.get("cameras")
+    if v is None:
+        return list(CAMS)
+    if isinstance(v, str):
+        v = [v]
+    if not isinstance(v, (list, tuple)) or not all(isinstance(c, str) for c in v):
+        raise ValueError(f"cameras must be a list of camera names ({', '.join(CAMS)})")
+    return [c for c in v if c in CAMS] or list(CAMS)
+
+
+def note_text(meta: dict) -> str:
+    v = meta.get("note")
+    if v is None:
+        return ""
+    if not isinstance(v, str):
+        raise ValueError("note must be a string")
+    return v[:500]
+
+
+def as_400(parse: Callable, *args):
+    try:
+        return parse(*args)
+    except ValueError:
+        raise
+    except Exception as exc:  # noqa: BLE001 -- nothing has been executed yet: a bad request, not a simulator error
+        raise ValueError(f"malformed request: {exc!r}"[:300]) from None
 
 
 def recorder(cams, fps: int, meta: dict) -> L.Recorder:
@@ -280,21 +339,43 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
         if E["done"] or EP.stopping: return
 
 
-def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    typ = meta.get("type"); dt = float(meta.get("dt", 1.0 / CTRL_HZ)); interp = meta.get("interpolate", "linear")
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    fps = video_fps(meta); video = meta.get("video", "mp4")
-    if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
+EE_POS_MAX_M = 2.0       # an ee_pose target further than this from the robot's base on any axis is a 400 (the arm reaches < 1 m)
+
+
+def check_ee_rows(A: np.ndarray) -> None:
+    """ee_pose rows that cannot be meant (PROTOCOL §4.6: a 400, nothing executed): a position outside the +-EE_POS_MAX_M
+    box around the robot's base (a unit slip; such a row used to run thousands of control steps towards nowhere, and a
+    huge value ended the episode with a simulator error), or a quaternion of zero length."""
+    for ri, row in enumerate(A):
+        if float(np.max(np.abs(row[0:3]))) > EE_POS_MAX_M:
+            raise ValueError(f"ee_pose row {ri}: position {[round(float(v), 4) for v in row[0:3]]} is outside the +-{EE_POS_MAX_M} m box "
+                             f"around the robot's base (metres, the robot's root frame)")
+        if float(np.linalg.norm(row[3:7])) < 1e-6:
+            raise ValueError(f"ee_pose row {ri}: the quaternion (wxyz) has zero length")
+
+
+def parse_submit(meta: dict, A: np.ndarray) -> tuple:
+    """Every field of a /submit, checked; nothing is executed here."""
+    typ = meta.get("type")
+    if not isinstance(typ, str) or typ not in ("joint_position", "ee_pose"):
+        raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
+    dt = number(meta, "dt", 1.0 / CTRL_HZ); interp = choice(meta, "interpolate", "linear", ("hold", "linear"))
+    cams = cameras(meta); fps = video_fps(meta); video = choice(meta, "video", "mp4", ("mp4", "frames", "both", "none"))
+    note = note_text(meta); L.depth_mode(meta)
     dim = SPEC["action_types"][typ]["dim"]
     if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
-    if not math.isfinite(dt) or not (1.0 / CTRL_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, 0.5] s")
+    if not (1.0 / CTRL_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, 0.5] s")
     if abs(dt * CTRL_HZ - round(dt * CTRL_HZ)) > 1e-6:
         raise ValueError(f"dt must be a multiple of the 1/{CTRL_HZ} s control period (k/{CTRL_HZ} s, k = 1..{int(0.5 * CTRL_HZ)}); got {dt}")
     if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
     if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
-    if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+    if typ == "ee_pose": check_ee_rows(A)
+    return typ, dt, interp, cams, fps, video, note
+
+
+def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
+    typ, dt, interp, cams, fps, video, note = as_400(parse_submit, meta, A)       # a 400 before anything moves
     rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []
     E["calls"] += 1; step0 = E["step"]
     before = ctrl_steps(); rec.tick(force=True)
@@ -304,7 +385,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     succ = E["success"] or check_success(); E["success"] = succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": (meta.get("note") or "")[:500],
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "depth": rec.mode, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ,
          **({"stopped": EP.stop_reason} if EP.stopping else {})})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
@@ -313,11 +394,16 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     return out, rec.parts(video, fps)
 
 
+def parse_observe(meta: dict) -> tuple:
+    """Every field of an /observe, checked; nothing is executed here."""
+    cams = cameras(meta); seconds = number(meta, "seconds", 0.0); fps = video_fps(meta)
+    video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none")); L.depth_mode(meta)
+    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    return cams, seconds, fps, video
+
+
 def do_observe(meta: dict) -> tuple[dict, list]:
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    seconds = float(meta.get("seconds", 0)); fps = video_fps(meta); video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+    cams, seconds, fps, video = as_400(parse_observe, meta)                       # a 400 before anything moves
     rec = recorder(cams, fps, meta); before = ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)

@@ -19,6 +19,7 @@ MAX_BYTES = 64 << 20    # a trajectory of the longest horizon is ~1.5 MB
 
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
+    out = {**out, "deterministic": int(out.get("deterministic", 0))}   # in every branch (PROTOCOL §2.6)
     with open(os.path.join(LOG_DIR, "reward.txt"), "w") as f:
         f.write("1\n" if ok else "0\n")
     with open(os.path.join(LOG_DIR, "reward.json"), "w") as f:

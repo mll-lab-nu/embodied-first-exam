@@ -32,13 +32,52 @@ _ENV = dict(ln.split("=", 1) for ln in (LAYER / "client.env").read_text().splitl
 CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR = "Canyu Chen"
 # Longer than the protocol's default 3600 s (D8), uniform within the benchmark, as for the other Isaac Sim benchmarks:
-# the first simulator with its renderer in a container takes 5 to 15 minutes to start (Isaac Sim prepares the stage for
+# the first simulator with its renderer in a container takes 5 to 27 minutes to start (Isaac Sim prepares the stage for
 # rendering once), which a standard task pays before its service answers and a privileged agent pays if it looks at
 # the scene.
 AGENT_TIMEOUT = 5400
 STARTUP_TIMEOUT = 2400
-# The renderer's first start in a container, by laboratory stage (measured on eight idle cores: 299 s and 803 s).
-COLD = {"lab_001": "about 5 minutes", "lab_003": "about 15 minutes"}
+# The graders' time (docs/benchmarks/labutopia.md, "Time limits of the graders"). The longest episode (36000 rows) replays in
+# about 180 s after a start of under a minute (no renderer); a verdict replay may take REPLAY_TIMEOUT.
+REPLAY_TIMEOUT = 2400     # one verdict replay: shared/grade.py VERDICT_TIMEOUT_S, shared/standard/finalize.sh REPLAY_TIMEOUT_S
+VERIFIER_TIMEOUT = 5400   # privileged [verifier]: 2 x REPLAY_TIMEOUT + the video replay (what is left) + 300 s
+COLLECT_TIMEOUT = 9000    # standard collect hook: 2700 (episode end) + 2 x REPLAY_TIMEOUT + the video (what is left) + 300 s
+# The renderer's first start in a container, by laboratory stage: 299 s and 803 s measured on eight idle cores of an RTX
+# 4090 host (about 9 and 20-23 minutes with two simulators on those cores); lab_003 on an 8-vCPU AWS L40S host: 1538 s
+# (standard sidecar) and 1634 s (verifier), 2026-10-10 (docs/benchmarks/labutopia.md). lab_001 was not measured there.
+COLD = {"lab_001": "5 to 10 minutes", "lab_003": "13 to 27 minutes"}
+# README "Change Log" (PROTOCOL §2.8: fixes to published tasks change them in place and say so), by mode (std: True).
+CHANGE_LOG = {
+    True: (
+        "- 2026-10-10: how a trial that could not be graded is recorded, and request checks; the scene, the frozen instance "
+        "and the pass rule are unchanged, so the task keeps its name. `tests/grade.py`: a missing, unreadable or unfinished "
+        "`final.json` (the collect hook never wrote its verdict) is `infra_error = 1` (was the agent's 0, or no reward at "
+        "all); a reward is always written. `environment/sim/finalize.sh`: each verdict replay has a time limit "
+        f"({REPLAY_TIMEOUT} s; a replay without a result was and is `infra_error`), the video replay gets what is left, "
+        f"`final.json` is written atomically, and the collect hook's `timeout_sec` is {COLLECT_TIMEOUT} s (was 5400 s). "
+        "`environment/sim/server.py`: a malformed request field (null or a wrong type for `dt`, `seconds`, `cameras`, "
+        "`note`) is a 400 before anything is executed (was a 500 that ended the episode). A pass before this "
+        "change is a pass after it; results recorded before it may hold infrastructure failures counted as the agent's 0.\n"
+        "- 2026-10-10 (review round 2, board 0067): texts and the client only. The renderer's first start is stated as "
+        "measured (5 to 27 minutes by stage and host: 26-27 minutes for the `lab_003` stage on an 8-vCPU L40S host, where the "
+        "texts said about 15); `Robot()` waits up to 3600 s for the service (was 600 s, so the instruction said "
+        "`Robot(timeout=2400)`) and prints its progress once a minute; `cameras=\"name\"` (a string) is one camera, no longer "
+        "its characters. `pour` only: the instruction says that the last condition counts 84 control steps in all, not in "
+        "a row (what the rule always did). The service, the collect hook, the grader, the scene and the pass rule are unchanged."
+    ),
+    False: (
+        "- 2026-10-10: the grader's time limits and flags; the scene, the frozen instance and the pass rule are unchanged, so "
+        f"the task keeps its name. `tests/grade.py`: each verdict replay may take {REPLAY_TIMEOUT} s and the video replay gets "
+        f"what is left of the verifier's {VERIFIER_TIMEOUT} s (each of the three replays had 2400 s, together more than the verifier's 3600 s), so a reward is written "
+        "before Harbor's timeout whatever the trajectory's length; a replay without a result also sets `infra_error` "
+        "(with `grader_error`, as before), every `reward.json` carries `infra_error`, and an error inside the grader "
+        "still writes a reward (`grader_error = 1`). A trajectory that was graded before gets the same verdict.\n"
+        "- 2026-10-10 (review round 2, board 0067): texts only. The renderer's first start is stated as measured (5 to 27 "
+        "minutes by stage and host: 26-27 minutes for the `lab_003` stage on an 8-vCPU L40S host, where the texts said about "
+        "15), in the instruction and in the tooling's progress message. `pour` only: the instruction says that the last "
+        "condition counts 84 control steps in all, not in a row (what the rule always did). Nothing else changes."
+    ),
+}
 FAMILIES = {k: v for k, v in json.loads((HERE / "families.json").read_text()).items() if not k.startswith("_")}
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
@@ -67,7 +106,7 @@ WORKDIR /app
 PRIV_COMPOSE = f"""# Isaac Sim needs an RTX-class NVIDIA GPU even headless (PhysX itself runs on the CPU). Harbor's local docker sandbox
 # rejects [environment].gpus; merging this onto the main service passes the device through. Kit keeps its caches
 # (the stage prepared for rendering, shaders) inside the container, so nothing of them is shared between trials or
-# with the verifier: the first Session with cameras in a container takes 5 to 15 minutes to start.
+# with the verifier: the first Session with cameras in a container takes 5 to 27 minutes to start.
 services:
   main:
 {GPU}"""
@@ -104,7 +143,7 @@ STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the 
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # Isaac Sim needs an RTX-class NVIDIA GPU even headless (PhysX itself runs on the CPU). The sidecar is TRUSTED: Kit's
 # caches stay inside its own container, which the agent cannot reach.
-# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 # RCB_STARTUP_TIMEOUT_S: the startup watchdog, more than twice the slowest measured start with empty caches (the
 # service starts with the renderer and renders a first frame before it answers; docs/benchmarks/labutopia.md).
@@ -155,6 +194,17 @@ def toml_str(s: str) -> str:
 
 def cold(f: dict) -> str:
     return COLD[Path(f["upstream"]["stage"]).parent.name]
+
+
+def change_log(f: dict, std: bool) -> str:
+    """The README's Change Log lines of a task (the lab_003 standard tasks have one more: their sidecar's memory cap)."""
+    s = CHANGE_LOG[std]
+    if std and Path(f["upstream"]["stage"]).parent.name == "lab_003":
+        s += ("\n- 2026-10-10 (review round 2, shared framework): the `sim` sidecar's docker memory cap is 32 GiB (was 24 GiB, below the 27 GB this task "
+              "declares as the verifier phase's minimum: a simulator killed at that cap inside a call would have been "
+              "counted as the agent's failure). Nothing the agent sees or the grader decides changes "
+              "(`scripts/task_resources.toml`, `[metadata.resources.caps]`).")
+    return s
 
 
 def goal_std(f: dict, t: dict) -> str:
@@ -290,7 +340,7 @@ Sim) runs in a service you cannot open. You get one client and one episode.
   `meta["reason"]` tell you when the episode is over and why.
 - Your wall-clock budget is {AGENT_TIMEOUT} s from your start (`meta["time_left_s"]`); steps are unlimited. **The service
   needs {cold(f)} to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
-  `Robot(timeout=2400)` waits for it, and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
+  `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
@@ -300,7 +350,7 @@ Sim) runs in a service you cannot open. You get one client and one episode.
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot(timeout=2400)                        # connects; waits while the service starts ({cold(f)}; the default timeout is 600 s)
+r = Robot()                                    # connects; waits while the service starts ({cold(f)}; it gives up after 3600 s)
 spec = r.spec()                                # action layouts and limits, robot_spec, cameras (+ intrinsics, mounting), proprio layout, kinematics, budget
 obs = r.get_obs()                              # obs.last[cam] -> uint8 (512, 512, 3) (cameras: {", ".join(cams)})
 obs = r.get_obs(cameras=["{cams[0]}"], depth=True)   # + obs.last_depth[cam] -> float32 (512, 512), metres
@@ -389,11 +439,11 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 5400
-"""
+timeout_sec = {COLLECT_TIMEOUT}                # 2700 (episode end, through a resume) + 2 x 2400 (verdict replays, each limited) + the video (the rest) + 300: finalize.sh
+""".replace("{COLLECT_TIMEOUT}", str(COLLECT_TIMEOUT))
         if std
         else """[verifier]
-timeout_sec = 3600.0              # two replays of about a minute, then the video replay, whose renderer starts cold (5 to 15 minutes)
+timeout_sec = {VERIFIER_TIMEOUT}.0              # two replays of about a minute (each limited to 2400 s, as before), then the video replay (the rest), whose renderer starts cold (5 to 27 minutes); 300 s of margin: tests/grade.py
 environment_mode = "separate"
 network_mode = "no-network"
 
@@ -401,7 +451,7 @@ network_mode = "no-network"
 build_timeout_sec = 1800.0
 cpus = 8
 memory_mb = 32768
-"""
+""".replace("{VERIFIER_TIMEOUT}", str(VERIFIER_TIMEOUT))
     )
     return f"""# Generated by scripts/labutopia/generate.py -- edit the generator, the shared sources, families.json or the instance, not this.
 schema_version = "1.3"
@@ -427,7 +477,7 @@ expert_time_estimate_hours = {t["hours"] + (1.0 if std else 0.0)}
 
 {verifier}
 [agent]
-timeout_sec = {AGENT_TIMEOUT}.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 15 minutes to start
+timeout_sec = {AGENT_TIMEOUT}.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 27 minutes to start
 # LabUtopia's scripted controllers are in its public repository (and a standard-mode agent could rebuild the simulator
 # from it): the agent reaches the model APIs and nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
@@ -470,7 +520,9 @@ def readme(fam: str, f: dict, t: dict, std: bool) -> str:
             "The sim service judges the episode live and records every executed control step; the collect hook "
             "(`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes "
             "and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode "
-            "succeeded, both replays succeed, and they end in the same state. `nop`: the episode times out, reward 0."
+            "succeeded, both replays succeed, and they end in the same state. A missing or unfinished `final.json` "
+            "(the hook never wrote its verdict) and a replay that gave no result are `infra_error = 1`, never the "
+            "agent's 0. `nop`: the episode times out, reward 0."
         )
         details = [
             ("Service", "`environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` "
@@ -538,6 +590,9 @@ def readme(fam: str, f: dict, t: dict, std: bool) -> str:
 ### Provenance
 Generated by `scripts/labutopia/generate.py` from `scripts/labutopia/instances/{fam}.json` (`make_facts.py`),
 `scripts/labutopia/oracles/{fam}.npz` and `scripts/labutopia/families.json`; see `docs/benchmarks/labutopia.md`.
+
+### Change Log
+{change_log(f, std)}
 """
 
 
@@ -598,7 +653,22 @@ def make(fam: str, out: Path) -> tuple[Path, Path]:
     return p, s
 
 
+def limits_agree() -> None:
+    """The graders' time limits are the ones task.toml is written with (one statement of each, checked here)."""
+    fin, gr = (SHARED / "standard/finalize.sh").read_text(), (SHARED / "grade.py").read_text()
+    want = [
+        (fin, f"RCB_COLLECT_BUDGET_S:-{COLLECT_TIMEOUT}}}"),
+        (fin, f"RCB_REPLAY_TIMEOUT_S:-{REPLAY_TIMEOUT}}}"),
+        (gr, f"VERIFIER_TIMEOUT_S = {VERIFIER_TIMEOUT}\n"),
+        (gr, f"VERDICT_TIMEOUT_S = {REPLAY_TIMEOUT}\n"),
+    ]
+    missing = [w for text, w in want if w not in text]
+    if missing:
+        raise SystemExit(f"generate.py and the shared graders disagree on a time limit: {missing}")
+
+
 def render_all(out: Path) -> list[str]:
+    limits_agree()
     done = []
     for inst in sorted((HERE / "instances").glob("*.json")):
         done += [d.name for d in make(inst.stem, out)]

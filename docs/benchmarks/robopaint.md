@@ -526,7 +526,7 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
   reported.
 - The episode has no terminal state. It ends with the agent phase, a simulator error, or the 72000-control-step runaway
   guard.
-- Crash recovery (standard mode, docs/STANDARD_MODE_2_2.md §13):
+- Crash recovery (standard mode, docs/STANDARD_MODE.md §13):
   - Resume class `exact`: PhysX on the CPU and the CPU brush models repeat bit for bit in a fresh process, so a resumed
     episode must reach the checkpoint's state hash.
   - The journal rows are the 7 joint targets of each control step.
@@ -538,6 +538,38 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
 - The collect hook starts with `rcb_limited.py end`. A verdict the service already wrote (it gave up after crashes) is
   kept, and nothing is replayed. `reward.json` reports `sim_startups`, `resumes`, `resume_state_mismatch`, `gave_up` and
   `infra_error`.
+- No verdict is infrastructure, never the agent's 0 (standard mode, `tests/grade.py`, 2026-10-10): `infra_error = 1` when
+  `final.json` is missing, unreadable, or without a verdict (not `finalized`, or neither the replays' `deterministic`
+  nor a give-up after crashes), and when the replays could not run (`gpu_lost`, or a replay process without a result
+  although the episode had actions). `sim_error = 1` marks an episode that a simulator error ended. The hook writes
+  `final.json` whole (temporary file + rename).
+- Malformed requests (standard mode, `environment/sim/server.py`, second review of 2026-10-10): every field of `/submit`
+  and `/observe` is checked before anything is executed (`parse_submit` / `parse_observe`; `note` included, which was
+  read after the chunk had run), and whatever a malformed field raises is a 400 that leaves the episode alive. Before, a
+  non-string `note`, a null `dt` / `seconds` / `video_fps` and a negative or absurd `video_fps` were a 500 that ended the
+  episode (`sim_error = 1`, the agent's 0). Null is the default; `video_fps` is accepted in [0, 1000]. Test:
+  `scripts/robopaint_strict/tests/test_server_requests.py` (needs numpy; the checks are taken from `server.py` by `ast`).
+- Instance drift (privileged mode, `tests/grade.py`, second review of 2026-10-10): a frozen instance the verifier does
+  not rebuild (`instance_ok = 0`) is `grader_error = 1` + `infra_error = 1` (it was a plain 0), and `infra_error = 1`
+  goes with every `grader_error = 1`.
+- Verifier time (2026-10-10). A trajectory may have 72,000 control steps (`rcb_brush.MAX_STEPS`), and the oil references
+  already have 49.7k-62.0k. Two fresh replays at the 67-102 steps/s measured above take 24-36 min plus two scene builds:
+  - privileged: `[verifier] timeout_sec = 3600` (was 1800, which a 62k-step reference at 67 steps/s already exceeded: the
+    trial had no reward); each replay process gets 1650 s (`--replay-timeout-s`), and one that runs past it is
+    `grader_error = 1`. The two replays stay sequential: two sessions at once would not fit the verifier's declared
+    minimum (2 CPUs, 3 GB).
+  - standard: the collect hook has 5400 s (was 3600): up to 1500 s for a service that is resuming to end its episode,
+    then the same two replays.
+- Privileged deliverable: a file that is not a readable trajectory (not an npz, pickled or object arrays, no `actions`,
+  a wrong shape, NaN/inf, more than 72,000 rows) is `bad_trajectory = 1` (was `grader_error = 1` for the unreadable
+  ones); every `reward.json` has `deterministic`.
+- The privileged `scorer` service has `restart: on-failure:6` (2026-10-10). It keeps no state a request needs: after a
+  restart the next `s.score()` replays the posted actions from the reset. Known limit: the scorer is inside the trial's
+  resource scope (PROTOCOL §2.10: in privileged mode every service is; `scripts/task_resources.toml` adds 5 GiB for it
+  to the trial's memory limit and caps it at 7 GiB). With `RCB_LIMITS_ENFORCE=1` an out-of-memory kill inside the
+  scorer would therefore count against the agent, which cannot enter that container but does decide how many actions
+  it posts. Taking it out of the scope is a change to `scripts/rcb_monitor/inject.py` (the service class) and the
+  limit rule, not to the task.
 
 ## Tooling (file names)
 | main's convention | RoboPaint |
@@ -558,7 +590,7 @@ Every copy of the tooling is byte-identical within a family and across the six f
   sheets, rendering and replay. No stroke planner or painting skill is added to the agent's tooling; the reference
   solutions keep theirs under `solution/`.
 - **World-frame information (D7).** Standard tasks never say where things are in the world: no sheet heights or centres,
-  no well positions, no pixel-to-world formula (STANDARD_MODE_2_2.md §10, `check-limited-texts.sh`).
+  no well positions, no pixel-to-world formula (STANDARD_MODE.md §10, `check-standard-texts.sh`).
   - Accepted consequence: the calibrated `canvas_cam` above the main sheet tells roughly where the sheet is.
   - Privileged tasks give the sheets through the tooling.
 
@@ -571,7 +603,7 @@ Every copy of the tooling is byte-identical within a family and across the six f
 | `/kinematics` | SAPIEN's pinocchio model (7 joints) |
 | proprio | 28 columns |
 
-More in STANDARD_MODE_2_2.md §16.
+More in STANDARD_MODE.md §16.
 
 ## Results
 No task directory holds results (PROTOCOL §5); they are published on the results site

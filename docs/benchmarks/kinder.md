@@ -18,8 +18,8 @@ multi-object manipulation, geometric and dynamic constraints.
 | family | challenge | the robot must | positive example |
 |---|---|---|---|
 | dynamo | nonprehensile | drive into a floor square that three chairs block (fixture) | oracle, both modes; Luna, both |
-| sweep-into-drawer | nonprehensile, tool, dynamic | open a drawer, sweep five cubes into it | Luna, privileged only (2026-10-04) |
-| scoop-pour | nonprehensile, tool, dynamic | move 30 cubes between bins with a scoop | none known |
+| sweep-into-drawer | nonprehensile, tool, dynamic | open a drawer, sweep five cubes into it | Luna, privileged (2026-10-04); run `codex-gpt6_1_sol-high`, standard (2026-10-03, no reset) |
+| scoop-pour | nonprehensile, tool, dynamic | move 30 cubes between bins with a scoop | runs `codex-gpt6_astra-high` and `codex-gpt6_sol-high`, privileged only (2026-10-04); standard: none known |
 | constrained-cupboard | geometric | six identical rods, each into the compartment it is owed | Luna, privileged only |
 | sweep-simple | nonprehensile, tool | ten cubes into a box marked on the floor, with a wiper | Luna, privileged only (2026-10-04); Luna, standard (50 resets): both |
 
@@ -34,6 +34,27 @@ Positive examples are runs published on the results
 site; each scores 1 under today's privileged verifier, and "both" means it also passes when sent through the
 standard client. "privileged only": the trajectory moves the base diagonally by up to 0.14 m a step, which standard
 mode clips to a 0.1 m disc (the largest move that stays in upstream's per-axis bound after the odometry rotation).
+Scoop-pour's two are the graded trials of the runs named in the table (845 and 770 steps, two replays each, the same
+final state; the privileged verifier and the instance have not changed since): their base moves stay inside the disc,
+but they are privileged only for another reason, below.
+
+### Open: tasks without a positive example in their own mode (PROTOCOL §2.7, §7 Open 4)
+
+Every family has a positive example (human review, §2.7: per family, at least one), so the predicate and the instance
+are known to be solvable. Two standard twins have none of their own yet; until they do, their results are reported
+apart from the tasks with a verified solution (§7 Open 4):
+
+- `kinder-scoop-pour-i00-standard`. Astra's privileged rows were sent through the standard client on 2026-10-10
+  (board 0067): nothing was clipped, and the rows the simulator executed differ from the trajectory's by at most
+  7e-18 (the base moves are turned into the odometry frame by the sender and back by the service, and a chunk's
+  `linear` default adds its own last-bit arithmetic), yet the episode did not reach the goal: 30 cubes poured from a
+  scoop do not land the same way after a last-bit change. A standard-mode example therefore has to be an episode run
+  in standard mode, not a converted privileged one. This explanation is open: the second review of 2026-10-10 (board
+  0067, minor 13) sent 400 random rows through the same path and found that the tooling casts actions to float32, that
+  none of the 4,400 executed values differed after that cast and that the service's final-state hash equalled the
+  privileged replay's, so a difference of 7e-18 cannot be what made that conversion fail; its cause is not known, and a
+  converted privileged example may work when the conversion is redone.
+- `kinder-constrained-cupboard-i00-standard`. Its privileged example moves the base by up to 0.14 m a step.
 
 ## Modes
 
@@ -55,11 +76,10 @@ starts at the robot's start pose, and the goal is named by what the cameras see.
 ## Run
 
 ```bash
-harbor run -c scripts/kinder/configs/codex-openrouter.yaml --env-file .env -p tasks/kinder-scoop-pour-i00-standard
+harbor run -p tasks/kinder-scoop-pour-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
-`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
-`codex-gpt6_luna-medium`); `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
+Agent, provider and effort settings: docs/RUNNING.md. `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
 reported separately. Build the image: `docker build -f images/kinder/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
 

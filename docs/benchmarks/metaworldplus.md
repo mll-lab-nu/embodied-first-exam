@@ -23,7 +23,14 @@ each on one frozen instance, in both modes: 100 tasks.
   Sawyer in Meta-World has no arm actuators (`model.nu = 2`, the two fingers), so joint targets would mean changing
   the upstream robot model. In standard mode the type is called `ee_delta`.
 - **Success.** Meta-World's own check (`evaluate_state`) on the state after the last action (PROTOCOL §3): no
-  "success at any step". In three environments (handle-press, handle-pull-side, stick-pull) the success state does
+  "success at any step". The check differs per environment, and a standard-mode agent cannot read the source, so both
+  instructions state it in words (`scripts/metaworldplus/envs.py` `SUCCESS`, one sentence per environment, read from
+  the source at the pinned commit): what is compared with the target point, in which axes, with which tolerance, and
+  whatever else the final state must satisfy. Not every check is "the object near the target": stick-push also needs
+  the stick still grasped and lifted, stick-pull the stick still in the thermos's handle (so letting go of the stick
+  after the motion loses the success); hammer is the nail driven more than 9 cm in (the hammer's position is not
+  compared); lever-pull is the lever's angle; door-open, door-unlock and the two window tasks compare x only, the
+  button, handle-press / handle-pull and door-lock tasks one axis, disassemble the nut's height only. In three environments (handle-press, handle-pull-side, stick-pull) the success state does
   not persist by itself (holding still for 10 control steps after the oracle's last action loses it); their READMEs
   say so, and the instructions tell the agent that only the final state counts.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 500 actions (Meta-World's `max_path_length`; the MuJoCo
@@ -32,8 +39,10 @@ each on one frozen instance, in both modes: 100 tasks.
   Both instructions state it; the workspace box of the hand's target is given per task.
 - **Standard-mode observations.** Four fixed cameras (`front`, `left`, `right` and Meta-World's `topview`; RGB, depth,
   intrinsics and camera-to-world pose), proprioception (`tcp`, gripper opening, mocap target, arm and finger joints,
-  last command) and `meta["task"]["target_pos"]`, the point Meta-World's check measures against (as the MuJoCo
-  Playground standard tasks give their target). No object poses, no reward, no success signal. Meta-World's
+  last command) and `meta["task"]["target_pos"]`, Meta-World's `_target_pos` (as the MuJoCo Playground standard tasks
+  give their target): the point most checks measure against; for hammer and lever-pull it only marks where the nail's
+  head / the lever's end finishes, and the instruction says so. The calibration is the pose of the viewpoint the image
+  is rendered from (see the change log below). No object poses, no reward, no success signal. Meta-World's
   per-camera views `corner*` are left out: they render upside down.
 
 ## Standard-mode service (`images/metaworld/standard/server_mw.py`)
@@ -45,7 +54,9 @@ evidence, verdict before video). Differences:
 3. Cameras and proprioception come from the tool module (`CAMERA_VIEWS`, `PROPRIO_LAYOUT`); `meta.task` is the target.
 4. DexToolBench's goal logic is gone.
 5. As in the MuJoCo service after the migration (PROTOCOL §7): a simulator error (500) ends the episode with
-   `reason = "error"`, a body over 64 MB gets 413, non-numeric `dt` / `seconds` are a 400; `final.json` carries
+   `reason = "error"`, a body over 64 MB gets 413; a request is validated in full before any physics, and a malformed
+   one (`dt` / `seconds` / `video_fps` not a finite number, `cameras` not a list of names, actions that are not a
+   numeric array) is a 400 that changes nothing; `final.json` carries
    `replay_success` / `live_success` and the grader writes numeric fields only; `/status` and `meta` also carry
    `sim_steps`, submit responses `clipped`.
 
@@ -53,6 +64,39 @@ Protocol: `eai-standard/2.1` (`/spec`, `task.toml`, instructions). `generate.py`
 `scripts/task_conventions.py` `normalize` (README layout, no `results/`), and `--check` is clean on all 100.
 
 Agent results are not in the repository (PROTOCOL D3): they are published on the results site.
+
+## Verdict, video and the collect hook
+`final.json` is written atomically and is `finalized` as soon as the verification replay's verdict is in it. The replay
+video is rendered after that (to a temporary file, renamed when complete) and sets `video` and `video_done`; it cannot
+change, hide or delay the verdict. The collect hook waits for the PID file (at most 180 s), then for `video_done`,
+inside one 840 s deadline, so it always ends before its `timeout_sec = 900`; if it stops while the video is still
+rendering, the verdict on disk is graded. `tests/grade.py` writes `infra_error = 1` (no verdict on the agent) when
+`final.json` is missing, unreadable, carries `infra_error` / `finalize_error`, or was never finalized (the service did
+not reach a verdict before the hook gave up), and a plain 0 only for a verdict that says so. Episodes have no step limit
+(D1); the verification replay costs 0.2–0.9 ms per recorded control step (the stick and coffee environments are the
+slowest), so an episode of roughly a million control steps or more (over three hours of robot time, reachable only by
+stepping without video for many minutes) may not get its verdict inside the hook; it is then reported as `infra_error`,
+not as a failure. A technical step cap that would turn that
+case into a verdict (as DexToolBench's 360,000 steps do) is an open decision.
+
+`meta["time_s"]` / `meta["time_left_s"]` count from the agent's first request to the service (logged, so a crash
+resume keeps it), not from the service's start: the service is up before the harness has installed the agent.
+
+## Change log
+- 2026-10-10 (review 0067, findings M3, M4, M6, M7, M9). **Observation change, standard mode, all 50 tasks:** the
+  calibration's `cam2world_gl` held the position of MuJoCo's left-eye camera (`scene.camera[0]`), 3.4 cm to the side of
+  the viewpoint the mono image is rendered from (`vis.global.ipd` = 0.068); it now gives that viewpoint (a free
+  camera: the mean of the two eye cameras; `topview`: `data.cam_xpos` / `cam_xmat`). Points back-projected from depth
+  were off by 3.4 cm, against tolerances that start at 2 cm, so **standard-mode results from before this date are not strictly
+  comparable** with later ones. **Text change, both modes:** the instructions state each environment's success
+  condition (above); the earlier standard text ("the task's object against `target_pos`, with a tolerance of a few
+  centimetres") left out stick-push's and stick-pull's final-state conditions and did not describe hammer, lever-pull,
+  door-open and disassemble. Earlier stick-push / stick-pull standard results were obtained under the incomplete text.
+  **No change to what counts as success:** the check, instances and oracles are the same. Also: request validation
+  before physics (`dt = Infinity` and the like were a 500 that ended the episode), `finalized` set with the verdict
+  instead of after the video, `infra_error` for a missing / unreadable / verdict-less `final.json`, the collect hook's
+  loop inside its timeout (it could run 980 s against 900), the agent's clock, the limits on a hand-written
+  `trajectory.npz` stated in the privileged instruction. Each task README has the entries that apply to it.
 
 ## Egress
 Meta-World's scripted policies solve these tasks and are public (PyPI, GitHub), so `task.toml` closes agent egress to

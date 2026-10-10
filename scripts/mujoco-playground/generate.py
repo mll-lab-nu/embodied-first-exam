@@ -155,7 +155,7 @@ RUN chmod +x /tests/test.sh
 STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and rendering (EGL when a GPU is there, else OSMesa); no GPU reservation.
-# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 services:
   main:
@@ -410,10 +410,32 @@ def values(env: str, inst: dict) -> dict:
     return v
 
 
+# README Change Log of the standard tasks (PROTOCOL §2.8: published tasks fixed in place; results before a change are not
+# retested), oldest first.
+STD_CHANGES = [
+    "2026-10-10 (review 0067): a `final.json` that is missing, unreadable or was never finalized by the collect hook is "
+    "graded `infra_error = 1` (no verdict on the agent); before, a missing one was a plain 0 and an unfinalized one was "
+    "graded as it stood. The collect hook writes `final.json` atomically. A request field of the wrong type (`dt` or "
+    "`seconds` null, `cameras` not a list of names, a `note` that is not a string) is answered 400 before any physics "
+    "instead of ending the episode with a 500. `meta[\"time_left_s\"]` counts from the agent's first call, not from the "
+    "service's start.",
+]
+STD_CHANGES_BARKOUR = [
+    "2026-10-10 (review 0067): `/spec` gives the control period of the `joint_position` action as 0.01 s; its text said "
+    "\"one per control step (1/50 s)\", contradicting `control_hz = 100`, the `dt` check and the instruction.",
+]
+
+
+STD_CHANGES_R2 = [
+    "2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to 3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` outlasts the simulator's start (no effect on this benchmark, whose service is up within a minute); `cameras=\"name\"` (a string) is one camera, no longer its characters. The service, the collect hook, the grader, the scene and the pass rule are unchanged.",
+]
+
+
 def make(env: str, out: Path) -> tuple[Path, Path]:
     inst_path = HERE / "instances" / f"{env}.json"
     inst = json.loads(inst_path.read_text())
     v = values(env, inst)
+    v["change_log_std"] = "\n".join(f"- {c}" for c in STD_CHANGES + (STD_CHANGES_BARKOUR if "Barkour" in env else []) + STD_CHANGES_R2)
     oracle = HERE / "oracles" / f"{env}.npy"
 
     p = out / f"{v['name']}-privileged"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Write per-task agent results for the results site (not into the repository, PROTOCOL D3): <out>/<task>/<run id>/README.md
 (+ replay.mp4, replay.last.png). One folder per agent+model; the privileged and standard twins each get their own.
-usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir> [--analysis <make_two_mode_report_zh.py>]"""
+usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir> [--analysis <a Python file with ANALYSIS = {family: {"U": text, "L": text}}>]"""
 import json, pathlib, shutil, sys, re, glob, datetime as dt, ast
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_names import base, canonical, mode as mode_of  # noqa: E402
 jobs, job, slug, label = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
@@ -23,6 +23,7 @@ def last_msgs(trial, k=3):
         d = json.load(open(glob.glob(str(trial / "agent/trajectory.json"))[0]))
         return [s["message"].strip().replace("\n", " ") for s in d.get("steps", []) if s.get("source") == "agent" and (s.get("message") or "").strip()][-k:]
     except Exception: return []
+NOT_A_RESULT = "**not a result** — infrastructure error (`infra_error` / `grader_error` in the verifier line): run it again; it is not the agent's 0"
 n = 0
 for trial in sorted((jobs / job).glob("*__*")):
     if not (trial / "result.json").exists(): continue
@@ -36,12 +37,14 @@ for trial in sorted((jobs / job).glob("*__*")):
         if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)
     gw = json.load(open(trial / "gateway/totals.json")) if (trial / "gateway/totals.json").exists() else {}
     over = bool(gw.get("over_token_budget"))               # PROTOCOL §5: over the token budget = failed
-    ok = rw.get("success") == 1 and not over
+    # PROTOCOL §2.6: infra_error (or a grader error) = not a result, neither a success nor the agent's 0
+    infra = bool(rw.get("infra_error") or rw.get("grader_error"))
+    ok = rw.get("success") == 1 and not over and not infra
     an = analysis.get(fam, {}).get("L" if limited else "U", "")
     lines = [f"# {label} — {task}\n",
              f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{ {'standard': 'standard (robot as a service)', 'standard-realtime': 'standard-realtime (robot as a service, time does not stop)'}.get(mode, 'privileged')}**.\n",
              "| | |", "|---|---|",
-             f"| result | {'**1 (success)**' if ok else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
+             f"| result | {'**1 (success)**' if ok else NOT_A_RESULT if infra else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
              f"| agent time | {span(r.get('agent_execution') or {})} s |",
              f"| actions / physics steps | {rw.get('steps') or rw.get('n_actions') or '—'} / {rw.get('sim_steps') or '—'} |",
              f"| tokens in / out | {ar.get('n_input_tokens')} / {ar.get('n_output_tokens')} |",

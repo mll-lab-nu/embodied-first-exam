@@ -39,20 +39,6 @@
   "replay_success": true,
   "verified": true
  },
- "complex_seesaw_use": {
-  "task": "complex_seesaw_use",
-  "instance_sha": "e97fd914aef7443901ed4647c62dbd37e73e862bdafa277501420d4de024e526",
-  "seed": 0,
-  "instruction": "Get the pear out of container",
-  "control_dt": 0.1,
-  "initial_success": false,
-  "reset_exact": true,
-  "n_actions": 108,
-  "oracle_success": false,
-  "ends_at_success": false,
-  "live_state_sha": "76dbc187f3c97f7ad019cd667831b5ba09fe7119c68b5de399b36e4312b4c1ba",
-  "verified": false
- },
  "find_unseen_object": {
   "task": "find_unseen_object",
   "instance_sha": "eb3f176ada88c1169003f30af759cf9561117558ef787c60ccda97e988ec151d",
@@ -92,20 +78,6 @@
   "deterministic": true,
   "replay_success": true,
   "verified": true
- },
- "hammer_loose_nail": {
-  "task": "hammer_loose_nail",
-  "instance_sha": "0fa5a19449f4de489d1ba5a6bc463e987402fb8b620d809dc4eeffadeb69b542",
-  "seed": 0,
-  "instruction": "There is a loose nail on the wall, strenthen it.",
-  "control_dt": 0.1,
-  "initial_success": false,
-  "reset_exact": true,
-  "n_actions": 142,
-  "oracle_success": false,
-  "ends_at_success": false,
-  "live_state_sha": "be0d15e965efabdcf30b7d13342cef9062cdc33f24f50f5f959181f7bf7be8fd",
-  "verified": false
  },
  "hammer_nail_and_hang_picture": {
   "task": "hammer_nail_and_hang_picture",
@@ -327,26 +299,6 @@
   "replay_success": true,
   "verified": true
  },
- "select_book_semantic": {
-  "task": "select_book_semantic",
-  "instance_sha": "833c5c2db24b654e9b03e8deedcd75895e7f22621dbcf7172ec0279fa758db10",
-  "seed": 0,
-  "instruction": "I'm ... Could you recommend a book and take it out for me?",
-  "control_dt": 0.1,
-  "initial_success": false,
-  "reset_exact": true,
-  "n_actions": 77,
-  "oracle_success": true,
-  "ends_at_success": true,
-  "live_state_sha": "a742a7e7a65b74fc99118d635775096a86a6bda8a6f0924c346a9379a67eb39c",
-  "replay_state_sha": [
-   "a742a7e7a65b74fc99118d635775096a86a6bda8a6f0924c346a9379a67eb39c",
-   "a742a7e7a65b74fc99118d635775096a86a6bda8a6f0924c346a9379a67eb39c"
-  ],
-  "deterministic": true,
-  "replay_success": true,
-  "verified": true
- },
  "select_book_spatial": {
   "task": "select_book_spatial",
   "instance_sha": "3e599d6e9a446132b01e4471ee71c6d04f56cf2e53d83986419637a0cd29b601",
@@ -490,26 +442,6 @@
  "select_fruit_common_sense": {
   "task": "select_fruit_common_sense",
   "instance_sha": "572d6fd46851e11ae1c5979a5b40c1ede0790a2de461b0c597da0a86c1337b53",
-  "seed": 0,
-  "instruction": "tell some specifics of pear between ['pear', 'peach', 'mango', 'orange']",
-  "control_dt": 0.1,
-  "initial_success": false,
-  "reset_exact": true,
-  "n_actions": 145,
-  "oracle_success": true,
-  "ends_at_success": true,
-  "live_state_sha": "13ee5a5324ab4531f671d7c3c573e0319e80cfafbd57942eb71879359dff707c",
-  "replay_state_sha": [
-   "13ee5a5324ab4531f671d7c3c573e0319e80cfafbd57942eb71879359dff707c",
-   "13ee5a5324ab4531f671d7c3c573e0319e80cfafbd57942eb71879359dff707c"
-  ],
-  "deterministic": true,
-  "replay_success": true,
-  "verified": true
- },
- "select_fruit_semantic": {
-  "task": "select_fruit_semantic",
-  "instance_sha": "720d45073719b318febac4c68456c9848120874be5b52c91a8f7743b39878579",
   "seed": 0,
   "instruction": "tell some specifics of pear between ['pear', 'peach', 'mango', 'orange']",
   "control_dt": 0.1,
@@ -742,40 +674,6 @@
   "replay_state_sha": [
    "45a579fdf6029f8ddb730f7d4b5afabd037e592704bacae2a11b7e11db3dc916",
    "45a579fdf6029f8ddb730f7d4b5afabd037e592704bacae2a11b7e11db3dc916"
-  ],
-  "deterministic": true,
-  "replay_success": true,
-  "verified": true
- },
- "set_dining_table": {
-  "task": "set_dining_table",
-  "instance_sha": "3c4cc936ee13252c79cf602af979d9bb9c4cc1c21f1007a9b86a93c011b24b39",
-  "seed": 0,
-  "instruction": "set the dining table",
-  "control_dt": 0.1,
-  "initial_success": false,
-  "reset_exact": true,
-  "n_actions": 353,
-  "oracle_success": false,
-  "ends_at_success": false,
-  "live_state_sha": "72ddbc0905596b6b03c6b99233217f60c6aa0caf0c7ec8753d074bbe5b110e22",
-  "verified": false
- },
- "set_study_table": {
-  "task": "set_study_table",
-  "instance_sha": "d5294b1920009f041303d8ead1cb373a70f9bfbfedef437f10bc332e2c6499d2",
-  "seed": 0,
-  "instruction": "Today I want to review the content about ... Please help me to manage the study table before I come.",
-  "control_dt": 0.1,
-  "initial_success": false,
-  "reset_exact": true,
-  "n_actions": 242,
-  "oracle_success": true,
-  "ends_at_success": true,
-  "live_state_sha": "7b478c31b7497f55876263519507fcb6f204c0b029a71860c657a091627c25ad",
-  "replay_state_sha": [
-   "7b478c31b7497f55876263519507fcb6f204c0b029a71860c657a091627c25ad",
-   "7b478c31b7497f55876263519507fcb6f204c0b029a71860c657a091627c25ad"
   ],
   "deterministic": true,
   "replay_success": true,

@@ -46,7 +46,7 @@ process give the same final state) before it was built:
 | MyoChallenge 2025 | `table_tennis` | dynamic interception with a held tool and a whole torso: a served ball returned onto the opponent's half (P1; P0 is a fixed-serve warm-up of the same task) |
 | MyoChallenge 2024 | `bimanual` | two arms, two kinds of actuation: the MyoHand grasps, hands over to a motorized prosthesis, which places the object; the challenge's own contact-history check makes the hand-over mandatory |
 | MyoChallenge 2025 | `soccer` | whole-body locomotion with 290 muscles towards a ball and a kick past a goalkeeper (P1: fixed start, goalkeeper policy drawn once) |
-| MyoChallenge 2023 | `chase_tag` | locomotion against a moving opponent (P1: CHASE; the opponent's policy is drawn once and frozen) |
+| MyoChallenge 2023 | `chase_tag` | locomotion towards an opponent (P1: CHASE; the opponent's policy is drawn once and frozen: the frozen instance drew `stationary`, so it stands still, and since 2026-10-10 the task texts say so instead of "moves") |
 | MyoChallenge 2024 | `osl_run` | running with a powered knee-ankle prosthesis whose own controller drives it (Fixed: the flat track) |
 | MyoDex (object motions) | `dex_apple_lift` | lift (round object; position only) |
 | | `dex_cylinder_pass` | pass: raise and present a small cylinder for a hand-over (position only) |
@@ -107,20 +107,40 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
     controller drives it); nothing is clipped by the service; each non-muscle actuator's command is in `/spec`;
   - every camera of the scene, 640 x 480, depth on request, with its mount: static, fixed to a body (the hand close-ups
     `hand_top` / `hand_side_inter` sit on the forearm and turn with pronation), or a MuJoCo tracking camera;
+  - **scene cameras give images only** (since 2026-10-10, board 0067 R2 finding M4). A camera whose body (or target
+    body) is not the agent's own -- a mocap body, or a body behind a joint that is not one of the body's (`scene_camera`
+    in `server.py`, decided from the model, not by name; `make_facts.py` records the same list as `scene_cameras`) --
+    has no published mount, no `extrinsic_cv` / `cam2world_gl` (null in `meta["cameras"]`, NaN rows per frame) and its
+    body is not a `/kinematics` link: its pose is that body's position plus a constant, which PROTOCOL §4.5 forbids.
+    In the 22 families that is `opponent_view` (chase_tag, a `trackcom` camera on the mocap body `opponent`) and
+    `goalkeeper_view` (soccer, on `goalkeeper`); before, the first `get_obs` gave the opponent's / goalkeeper's world
+    position. The other 20 families' `/spec` and responses are unchanged (compared field by field, old server against
+    new). Not covered, left as it is: `side_view` / `front_view` are `trackcom` cameras on the world body, so their
+    position is the whole model's centre of mass plus a constant, and a scene body's motion moves them by its share of
+    the model's mass (measured: every non-agent body moved 0.1 m, the key turned 0.1 rad: 87 mm in bimanual, whose `start` / `goal` marker bodies weigh
+    154 kg each; 1.8 mm obj_reorient, 1.2 mm relocate, 0.1-0.3 mm baoding / die_reorient / obj_hold / pen_twirl,
+    5e-5 mm key_turn / sarc_key_turn; none in the other families). Decoding a position from it needs the model's masses
+    and the camera's offset, which a standard agent does not have; withholding these poses too would take the
+    calibrated third-person view from nine families (bimanual's default camera), an owner decision;
   - proprioception = the body's own joints (`q_`, `qd_`, `effort_`) and muscles (`act_`, `len_`), plus the pelvis pose and
     velocity of the free-standing bodies (`root_pose`, `root_vel`); never the key, pen, die, balls, objects, opponent or
     goalkeeper; MyoDex's reference motion (the goal, relative to the object's start) is in `/spec` `reference_motion`;
   - `/kinematics` = the fingertip sites and the camera mounts (world frame; the root's frame for free-standing bodies) and
     fingertip-position IK; crash recovery with resume class `exact` (MuJoCo on the CPU is bit-exact in a fresh process).
   The episode ends at success, at the task's failure or when the time is up; the collect hook replays the recorded
-  trajectory in two fresh processes.
+  trajectory in two fresh processes. Since 2026-10-10 a malformed request field (a null or non-numeric `dt` /
+  `seconds`, `cameras` that is not a list of names, a `note` that is not text) is a 400 before anything runs (it was a
+  500 that ended the episode; `note`, after the chunk had run), an absent or null `dt` / `seconds` is the default, and
+  the verifier books a missing, unreadable or never-finalized `final.json` as `infra_error = 1` (it was the agent's 0);
+  `finalize.sh` writes `final.json` atomically. One gap is left in the shared 2.2 layer (`scripts/eai_standard/
+  rcb_limited.py`, not MyoSuite's): JSON `actions` holding an object is a TypeError there, still a 500.
 - **Reset budget: 10** (owner, 2026-10-09; PROTOCOL §4.5, a per-benchmark exception to "no reset"). MyoSuite's own
   termination ends most standard episodes within one or two seconds of simulated time (measured in #116: a constant
   command held from the frozen instance ends dex_*, baoding, obj_hold, pen_twirl and obj_reorient after 12-71 control
   steps, chase_tag after 42-86), so one episode was one blind attempt at muscle-level control.
   The compose file sets `RCB_RESET_BUDGET` to 10 (`RCB_RESET_BUDGET=0` runs the old single episode). The shared 2.2
   layer has no reset, so the adapter adds `POST /reset` itself (`shared/standard/server.py`, the semantics of
-  [`LIMITED_MODE_PROTOCOL.md`](../LIMITED_MODE_PROTOCOL.md) "Optional reset capability"): it abandons the running
+  [`STANDARD_MODE.md`](../STANDARD_MODE.md) "Optional reset capability"): it abandons the running
   episode, or follows one that has ended, and restores the frozen instance (`Session.reset()`, the privileged mode's
   reset); only the last episode is graded (its rows are `trajectory.npz`), a success ends the trial (409 after it), the
   wall clock never restarts; `/status`, every `meta` and `final.json` count `episode`, `resets_left`,
@@ -223,10 +243,10 @@ that score 0; apple_lift's first (exploit) trajectory scores 0 under the final r
   `ok shared sources: ... myosuite 44 task dirs, 10 shared files`); the only failures are the RoboCasa, RoboCasa365 and
   RoboCasa-GR1 generator checks, which fail the same way on unchanged `main` in a checkout made with umask 0002.
 - `python3 scripts/task_conventions.py --check tasks/myosuite-*/` and `python3 scripts/myosuite/generate.py --check`: clean.
-- Crash recovery (STANDARD_MODE_2_2 §13.5): the key_turn service killed (`kill -9`) after the first 30 rows of the
+- Crash recovery (STANDARD_MODE.md §13.5): the key_turn service killed (`kill -9`) after the first 30 rows of the
   oracle stream; the container restarted, the service resumed the same episode (`resumes` 1, exact hash), the client
   sent the rest, and the collect hook graded it: success, `live_matches_replay` 1, final state `79c522457ad23180`.
-- `ci_checks/check-limited-protocol.py` (with the shared PR's `episode` key) against a live hand_reach service: every
+- `ci_checks/check-standard-protocol.py` (with the shared PR's `episode` key) against a live hand_reach service: every
   /spec, /status, /observe, 404 and 2.0/2.1 check passes; its live part assumes a `joint_position` action type, which a
   muscle-driven body does not have.
 - Determinism of set 3 before building: three replays in one process and one in a fresh process gave the same final

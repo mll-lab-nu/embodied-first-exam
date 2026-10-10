@@ -121,10 +121,10 @@ through the robot's joint targets alone, (b) whose success check can be stated w
   every quantity relative to where things start ("more than 10 cm above where it stood", "pushed in more than 5 mm",
   "along the forward axis of the arm's base") and never a world coordinate or an object pose; the arm's base pose is
   in `/spec` (`robot_spec.base`). LabUtopia's standard tasks join the declaration of eai-standard/2.2 §10 and are
-  checked by `ci_checks/check-limited-texts.sh`.
+  checked by `ci_checks/check-standard-texts.sh`.
 - **Texts** are in `scripts/labutopia/families.json` (goal in both wordings, scene, inventory).
 - **Budget: 5400 s** (D8), both modes, the same as RoboLab's (also on Isaac Sim): the first simulator with its
-  renderer in a container takes 5 to 15 minutes to start (below), which a standard task pays before its service
+  renderer in a container takes 5 to 27 minutes to start (below), which a standard task pays before its service
   answers.
 
 ## Simulator version: Isaac Sim 6.1.0
@@ -179,13 +179,39 @@ PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the im
     with the environment), and a clock started when the service is ready would overstate what is left by that much;
   - crash recovery with resume class `exact` (a resumed service is a fresh process). The collect hook replays the
     recorded trajectory in two fresh processes.
+  - a request is checked in full before anything is executed: a malformed field (null or a wrong type for `dt`,
+    `seconds`, `cameras`, `note`, `video`, `interpolate`, `depth`; a `dt` that is not finite or not a whole multiple of
+    1/60 s) is a 400 and the episode goes on. Null for `dt`, `seconds`, `video_fps`, `cameras` or `note` means the
+    default.
+- **Time limits of the graders** (2026-10-10). A verdict replay only simulates: under a minute to start, then at most
+  36000 rows at about 200 control steps/s (180 s); it may take 2400 s (the limit a replay always had in the privileged grader), and is killed at that limit.
+  Privileged: `[verifier] timeout_sec` 5400 (was 3600) = 2 x 2400 + the video replay, whose renderer starts cold (what is left,
+  at most 2400 s; skipped under 120 s) + 300 s, so `tests/grade.py` always writes a reward before Harbor's timeout
+  (before, each of the three replays had 2400 s, together more than the verifier's 3600 s). Standard: the collect hook's `timeout_sec` is 9000 (was 5400, with no
+  limit on a replay) = 2700 (the episode's end, through a resume) + 2 x 2400 + the video replay (what is left, at most
+  1800 s) + 300 s. The numbers are stated once in `generate.py` (`REPLAY_TIMEOUT`, `VERIFIER_TIMEOUT`,
+  `COLLECT_TIMEOUT`), which refuses to generate when `shared/grade.py` or `shared/standard/finalize.sh` say otherwise.
+- **What is not the agent's 0** (`infra_error = 1` in `reward.json`, PROTOCOL §2.6). Standard: `final.json` missing
+  (the service writes it as soon as its scene is up), unreadable, or without a verdict (the collect hook was killed
+  before it wrote one: `no_verdict`); the service never ending its episode for the hook; a give-up after crashes
+  between calls or a failed resume; the GPU refusing new processes in the sidecar (`gpu_lost`); a replay process that
+  gave no result or ran into its limit (`replay_failed`, `replay_timed_out`); replays that did not rebuild the
+  instance's placements (`instance_mismatch`); an unreadable `episode.json`. A crash inside a call
+  (`sim_crashed_on_call`) stays the agent's failure. `final.json` is written whole (temporary file, then rename).
+  Privileged: a replay without a result and an instance mismatch set `grader_error` and `infra_error`; a deliverable
+  that cannot be read (not an npz, no `actions`, object arrays, the wrong shape, more than 36000 rows) is the agent's 0
+  (`bad_trajectory`), never a grader error. A result a replay wrote counts whatever the process's exit status (Isaac
+  Sim may fail while it shuts down, after the result is on disk).
 - **Two kinds of Session.** With its RTX renderer, Isaac Sim prepares a whole stage for rendering when the stage is
   loaded (a shader pipeline for every material, textures and geometry into its derived-data cache). The first time
   in a container, on eight idle cores: 5 minutes for the stage of six families (`lab_001`: 299 s) and 13 minutes for
   the stage of `press`, `shake` and `heat_liquid` (`lab_003`: 803 s, 21 GB of RAM at the peak). The work is
   CPU-bound and uses every core, so it takes longer when simulators share them: two at a time on eight cores, about
   9 minutes each for `lab_001` and 20 to 23 minutes each for `lab_003`; with the host several times oversubscribed
-  (a load of 30 to 50 on eight cores), a `lab_003` service was not up within 30 minutes. The start-up watchdog of a
+  (a load of 30 to 50 on eight cores), a `lab_003` service was not up within 30 minutes. On an 8-vCPU AWS L40S host
+  (EPYC 7R13; oracle sweep of 2026-10-10, one trial at a time) the `lab_003` stage of `press` took 1538 s in the
+  standard sidecar and 1634 s in the privileged verifier, about 27 minutes: twice the figure above, with both trials
+  scoring 1 (agent phase 1660 of 5400 s, verifier 1820 of 5400 s). The start-up watchdog of a
   standard task is 2400 s: the number of trials at a time has to fit the cores. It is paid once per container: Kit's
   caches are inside its package directory, each container has its own, none is shared between an agent's container,
   the sim sidecar and the verifier. A process that only simulates does not need any of it, so `Session(...)` starts
@@ -249,8 +275,8 @@ through the client as `joint_position_velocity` chunks.
   was opened and released for a second (seed 4: that is how its rule is met while LabUtopia's script reports a
   failed opening).
 - **The first simulator with its renderer in a container takes minutes to start** (above): a standard agent waits for
-  its service that long, out of its own budget, and `Robot()`'s default 600 s is not always enough (the instruction
-  says `Robot(timeout=2400)`). Baking Kit's caches into the image would remove the wait, but they can only be made
+  its service that long, out of its own budget (`Robot()` waits up to 3600 s since 2026-10-10; its default was 600 s,
+  not always enough, and the instruction said `Robot(timeout=2400)`). Baking Kit's caches into the image would remove the wait, but they can only be made
   with a GPU, which `docker build` does not have; not done here.
 - **Isaac Sim 6.1.0, not LabUtopia's 5.1.0** (above): the controllers' success rates here are not LabUtopia's.
 - **Kit prints one start-up error** (`omni.physx.supportui`, "no running event loop") when LabUtopia's own extension
@@ -282,13 +308,22 @@ On the authoring host (Intel Xeon Platinum 8559C, 8 vCPUs, 62 GB of RAM; RTX PRO
   15 to 16 minutes, of which the service's scene took 277 to 304 s and 786 to 811 s to build.
 - **`harbor run -a nop`, all 18:** reward 0 on all. Privileged: no trajectory. Standard: the episode times out with no
   control step executed; its state, live and in both replays, is the instance's recorded start state.
-- **Protocol conformance** (`ci_checks/check-limited-protocol.py --launch`, against the live service):
+- **Protocol conformance** (`ci_checks/check-standard-protocol.py --launch`, against the live service):
   `labutopia-pick-i00-standard` and `labutopia-heat-liquid-i00-standard`, one per laboratory stage: both pass all 205
   checks.
 - **Crash recovery** (`scripts/labutopia/kill_test.sh`, `labutopia-pick-i00-standard`): the service, killed with
   `kill -9` after 239 of the reference's 478 control steps, restarts (about 20 s) and resumes the same episode; the
   rest is executed and graded: success, one resume counted, the live state equal to both fresh replays and to the
   reference's recorded state.
+- **2026-10-10, the graders' bookkeeping** (time limits, `infra_error`, request checks; "Modes" above), checked without
+  a simulator (the GPU was busy; no oracle run was repeated): the scripts are `scripts/labutopia/tests/test_*.py` (LabUtopia
+  and AutoBio together; numpy only, each run as a script): synthetic runs of both graders and of the collect hook
+  with stand-in replays (missing / corrupt / unfinished `final.json`, a replay that dies, hangs, or crashes after
+  writing its result, give-ups, unreadable deliverables: 114 cases over LabUtopia and AutoBio) and 13068 malformed
+  requests against the request checks taken from `server.py` (none raises anything but a 400); `server.py` itself on
+  the shared layer with a stand-in simulator, over HTTP: 32 malformed requests answered 400 with nothing executed, the
+  episode open and valid chunks running after them. The same hook and grader logic ran end to end on AutoBio's
+  `pickup` (CPU). Not re-run here: `harbor run`, `kill_test.sh`, the service itself on Isaac Sim.
 - **Static checks**: `bash ci_checks/run_all.sh tasks/labutopia-*` (checkout with umask 022): every check passes
   (`protocol v1.1: 18 task(s) conform`, `ok shared sources: ... labutopia 18 task dirs, 10 shared files`,
   `ok scripts/labutopia/generate.py: 18 task directories match`), and so does the run over the whole repository;

@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for MolmoSpaces (docs/STANDARD_MODE_2_2.md, docs/benchmarks/molmospaces.md): the adapter
+"""eai-standard/2.2 sim service for MolmoSpaces (docs/STANDARD_MODE.md, docs/benchmarks/molmospaces.md): the adapter
 of the shared layer rcb_limited.py; the simulator is rcb_molmospaces.Episode (upstream MolmoSpaces, MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl; nothing about objects ever leaves this process.
@@ -252,10 +252,31 @@ def video_fps(meta: dict) -> int:
 
 def cameras_of(meta: dict) -> list:
     cams = meta.get("cameras") or CAMS
+    if not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names; cameras: {CAMS}")
     bad = [c for c in cams if c not in CAMS]
     if bad:
         raise ValueError(f"unknown cameras {bad}; cameras: {CAMS}")
     return list(cams)
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A numeric request field: `default` when the request has no such field; a finite number otherwise, else a 400 (a
+    null, a string, a list, NaN/inf). Every field is checked before anything moves (PROTOCOL §4.6): a malformed request
+    never becomes an exception past the checks, which would end the episode."""
+    if key not in meta:
+        return float(default)
+    v = meta[key]
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+        raise ValueError(f"{key} must be a finite number, got {v!r:.80}")
+    return float(v)
+
+
+def note_of(meta: dict) -> str:
+    note = meta.get("note")
+    if note is not None and not isinstance(note, str):
+        raise ValueError("note must be a string")
+    return (note or "")[:500]
 
 
 def meta_common(cams) -> dict:
@@ -280,6 +301,8 @@ def meta_common(cams) -> dict:
 
 def do_submit(meta: dict, A: np.ndarray):
     typ = meta.get("type")
+    if not isinstance(typ, str):
+        raise ValueError(f"type must be joint_position or done (not yet: {SPEC['action_types']['not_yet']})")
     if typ == "done":
         rec = recorder(cameras_of(meta), 5, meta)
         rec.tick(force=True, last=True)  # every response carries the last frames
@@ -294,22 +317,22 @@ def do_submit(meta: dict, A: np.ndarray):
         }, rec.parts("none", 5)
     if typ != "joint_position":
         raise ValueError(f"type must be joint_position or done (not yet: {SPEC['action_types']['not_yet']})")
-    dt = float(meta.get("dt", S.dt))
+    dt = number(meta, "dt", S.dt)
     interp = meta.get("interpolate", "linear")
     video = meta.get("video", "mp4")
-    cams, fps = cameras_of(meta), video_fps(meta)
+    cams, fps, note = cameras_of(meta), video_fps(meta), note_of(meta)
     k = dt / S.dt
     if A.ndim != 2 or A.shape[1] != S.action_dim:
         raise ValueError(f"joint_position actions must be (T, {S.action_dim}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)):
         raise ValueError("actions contain NaN/inf")
-    if not (math.isfinite(dt) and dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
+    if not (dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
         raise ValueError(f"dt must be a whole multiple of the {S.dt:g} s control period and at most 0.5 s; got {dt}")
     if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
         raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
-    if interp not in ("hold", "linear"):
+    if not isinstance(interp, str) or interp not in ("hold", "linear"):
         raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"):
+    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     rec, clipped = recorder(cams, fps, meta), []
     E["calls"] += 1
@@ -356,7 +379,7 @@ def do_submit(meta: dict, A: np.ndarray):
             "cameras": cams,
             "control_steps": ctrl_steps() - before,
             "n_clipped": len(clipped),
-            "note": (meta.get("note") or "")[:500],
+            "note": note,
             **({"stopped": EP.stop_reason} if EP.stopping else {}),
         }
     )
@@ -365,11 +388,11 @@ def do_submit(meta: dict, A: np.ndarray):
 
 def do_observe(meta: dict):
     cams, fps = cameras_of(meta), video_fps(meta)
-    seconds = float(meta.get("seconds", 0))
+    seconds = number(meta, "seconds", 0.0)
     video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
+    if seconds < 0 or seconds > MAX_WATCH_S:
         raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"):
+    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     rec, before = recorder(cams, fps, meta), ctrl_steps()
     if seconds > 0 and not E["done"]:
@@ -380,10 +403,12 @@ def do_observe(meta: dict):
                 break
     rec.tick(force=True, last=True)
     E["calls"] += 1
+    # what was watched: whole control steps (the request rounded to the control period), fewer if the episode ended
+    ran = round((ctrl_steps() - before) * S.dt, 6)
     out = {
         **meta_common(cams),
         "obs_id": E["calls"],
-        "seconds": seconds,
+        "seconds": ran,
         "control_steps_watch": ctrl_steps() - before,
         "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS,
         "ok": True,
@@ -392,7 +417,8 @@ def do_observe(meta: dict):
         {
             "ev": "observe",
             "call": E["calls"],
-            "seconds": seconds,
+            "seconds": ran,
+            "seconds_requested": seconds,
             "cameras": cams,
             "control_steps": ctrl_steps() - before,
             **({"stopped": EP.stop_reason} if EP.stopping else {}),

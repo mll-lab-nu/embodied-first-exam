@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for DexJoCo (docs/STANDARD_MODE_2_2.md): the adapter of the shared layer rcb_limited.py;
+"""eai-standard/2.2 sim service for DexJoCo (docs/STANDARD_MODE.md): the adapter of the shared layer rcb_limited.py;
 the simulator is rcb_dexjoco.Session (DexJoCo on MuJoCo 3.4, CPU physics, OSMesa rendering).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
@@ -37,6 +37,7 @@ TASK_TEXT_FILE = os.environ.get("RCB_TASK_TEXT", os.path.join(os.path.dirname(os
 WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_FPS = 50
 CAM_W, CAM_H = 640, 480
 CTRL_HZ = 50.0
 DT = 1.0 / CTRL_HZ
@@ -54,6 +55,16 @@ BIM = TASK.startswith("bimanual_")
 ADIM = 46 if BIM else 23
 EP = L.Episode(DATA, dim=ADIM, resume="exact")
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
+# The simulation's result depends on OpenBLAS's thread count below 4 (docs/benchmarks/dexjoco.md, "Threads"), and the
+# count cannot exceed the CPUs this container may run on (its affinity; a `cpus:` quota does not change it). With fewer
+# than 4 the episode would run on other numerics than the references and the published results: no episode, no verdict
+# on the agent (an infrastructure failure: final.json too_few_cpus = 1, infra_error = 1; the verifier adds grader_error).
+THREADS = M.blas_threads()
+if not THREADS["threads_ok"]:
+    print(f"[dexjoco] {M.threads_message(THREADS)}: the service does not start an episode", flush=True)
+    if not L.final_verdict(DATA):
+        L._write_json(os.path.join(DATA, "final.json"), {**L._read_json(os.path.join(DATA, "final.json")), "too_few_cpus": 1, **THREADS})
+    EP.give_up("too_few_cpus", infra=True)   # writes the verdict (never overwrites one) and idles until the container ends
 S = M.Session(TASK, instance=INSTANCE, image_size=(CAM_H, CAM_W))
 MD, D = S.model, S.data
 ARMS = S.arms()
@@ -387,7 +398,7 @@ def summary() -> dict:
     return {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
             "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"],
             "task": TASK, "protocol": L.PROTOCOL, "n_actions": len(ROWS), "task_failure": int(str(E["reason"] or "").startswith("failure")),
-            **EP.final_fields()}
+            **THREADS, **EP.final_fields()}
 
 
 def write_final() -> None:
@@ -415,7 +426,7 @@ def dump() -> None:
     E["dumped"] = True
     E["live_sha"] = S.state_sha()
     S.save_trajectory(np.asarray(ROWS, dtype=np.float64).reshape(-1, ADIM), os.path.join(DATA, "trajectory.npz"),
-                      {"source": "standard-mode episode", "reason": E["reason"]})
+                      {"source": "standard-mode episode", "reason": E["reason"]}, max_rows=None)   # no hand-in cap here
     L._write_json(os.path.join(DATA, "episode.json"), {**summary(), "live_sha": E["live_sha"]})
     write_final()
 
@@ -437,19 +448,62 @@ def recorder(cams, fps: int, meta: dict) -> L.Recorder:
                       depth=L.depth_mode(meta), clock_hz=CTRL_HZ)
 
 
+def checked(parse):
+    """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any
+    other exception for a simulator error that ends the episode (PROTOCOL §4.6), so whatever a malformed field raises
+    while it is being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
+    def run(*args):
+        try:
+            return parse(*args)
+        except ValueError:
+            raise
+        except (TypeError, OverflowError, AttributeError, LookupError, ArithmeticError) as exc:
+            raise ValueError(f"malformed request: {exc!r}"[:300]) from exc
+    return run
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A request's number: absent or null is the default; anything but a finite number is a 400."""
+    v = meta.get(key)
+    if v is None:
+        return float(default)
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise ValueError(f"{key} must be a number, got {type(v).__name__}")
+    try:
+        v = float(v)
+    except OverflowError:
+        v = math.inf
+    if not math.isfinite(v):
+        raise ValueError(f"{key} must be finite")
+    return v
+
+
+def note_of(meta: dict) -> str:
+    """The call's free-text note for the log: checked with the other fields, before anything is executed."""
+    v = meta.get("note")
+    if v is None:
+        return ""
+    if not isinstance(v, str):
+        raise ValueError("note must be a string")
+    return v[:500]
+
+
 def video_fps(meta: dict) -> int:
     fps = meta.get("video_fps")
     if fps is None:
         return 10
-    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not (1 <= fps <= 50):
-        raise ValueError("video_fps must be in [1, 50]")
+    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not (1 <= fps <= MAX_FPS):
+        raise ValueError(f"video_fps must be in [1, {MAX_FPS}]")
     return int(fps)
 
 
 def cameras_of(meta: dict) -> list:
     cams = meta.get("cameras") or DEFAULT_CAMS
-    if not isinstance(cams, list) or any(c not in CAMS for c in cams):
-        raise ValueError(f"unknown cameras {cams}; cameras: {CAMS}")
+    if isinstance(cams, str) or not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names; cameras: {CAMS}")
+    bad = [c for c in cams if c not in CAMS]
+    if bad:
+        raise ValueError(f"unknown cameras {bad}; cameras: {CAMS}")
     return list(dict.fromkeys(cams))
 
 
@@ -493,7 +547,18 @@ def _native_from_joints(q: np.ndarray) -> np.ndarray:
     return np.concatenate(out)
 
 
-def _check_chunk(typ: str, A: np.ndarray, dt: float, interp: str, video: str) -> int:
+@checked
+def parse_submit(meta: dict, A: np.ndarray):
+    """Every field of a /submit request and the shape of its rows, checked; nothing is executed here."""
+    typ = meta.get("type")
+    if not isinstance(typ, str) or typ not in ("ee_pose", "joint_position"):
+        raise ValueError(f"type must be ee_pose or joint_position (not yet: {SPEC['action_types']['not_yet']})")
+    cams, note = cameras_of(meta), note_of(meta)
+    L.depth_mode(meta)  # a bad `depth` is a 400 here, not after the rows
+    dt = number(meta, "dt", DT)
+    interp = meta.get("interpolate", "linear")
+    video = meta.get("video", "mp4")
+    fps = video_fps(meta)
     k = dt / DT
     if A.ndim != 2 or A.shape[1] != ADIM:
         raise ValueError(f"{typ} actions must be (T, {ADIM}), got {list(A.shape)}")
@@ -505,22 +570,16 @@ def _check_chunk(typ: str, A: np.ndarray, dt: float, interp: str, video: str) ->
         raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
     if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
         raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
-    if interp not in ("hold", "linear"):
+    if not isinstance(interp, str) or interp not in ("hold", "linear"):
         raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"):
+    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
-    return int(round(k))
+    return typ, dt, interp, video, cams, fps, note
 
 
 def do_submit(meta: dict, A: np.ndarray):
-    typ = meta.get("type")
-    if typ not in ("ee_pose", "joint_position"):
-        raise ValueError(f"type must be ee_pose or joint_position (not yet: {SPEC['action_types']['not_yet']})")
-    dt = float(meta.get("dt", DT))
-    interp = meta.get("interpolate", "linear")
-    video = meta.get("video", "mp4")
-    cams, fps = cameras_of(meta), video_fps(meta)
-    n = _check_chunk(typ, A, dt, interp, video)
+    typ, dt, interp, video, cams, fps, note = parse_submit(meta, A)
+    n = int(round(dt / DT))
     clipped: list = []
     if typ == "ee_pose":
         A = np.stack([_native_from_ee(np.asarray(r, dtype=np.float64), i, clipped) for i, r in enumerate(A)])
@@ -559,18 +618,26 @@ def do_submit(meta: dict, A: np.ndarray):
            "clipped": clipped[:200], "n_clipped": len(clipped), "plan": [], "ok": True}
     EP.log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp,
             "cameras": cams, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped),
-            "note": (meta.get("note") or "")[:500], **({"stopped": EP.stop_reason} if EP.stopping else {})})
+            "note": note, **({"stopped": EP.stop_reason} if EP.stopping else {})})
     return out, rec.parts(video, fps)
 
 
-def do_observe(meta: dict):
+@checked
+def parse_observe(meta: dict):
+    """Every field of an /observe request, checked; nothing is executed here."""
     cams, fps = cameras_of(meta), video_fps(meta)
-    seconds = float(meta.get("seconds", 0))
+    seconds = number(meta, "seconds", 0.0)
     video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
+    if seconds < 0 or seconds > MAX_WATCH_S:
         raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"):
+    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
+    L.depth_mode(meta)  # a bad `depth` is a 400 here, not after the watch
+    return cams, fps, seconds, video
+
+
+def do_observe(meta: dict):
+    cams, fps, seconds, video = parse_observe(meta)
     rec, before = recorder(cams, fps, meta), ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)
@@ -613,7 +680,7 @@ def replay_row(row) -> None:
 
 
 EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
-         start_event={"task": TASK, "instance_sha": S.instance_sha, "instance_ok": bool(S.instance_exact), "cameras": CAMS})
+         start_event={"task": TASK, "instance_sha": S.instance_sha, "instance_ok": bool(S.instance_exact), "cameras": CAMS, **THREADS})
 if E["done"]:
     dump()  # resumed after the episode had ended: the record is rewritten from the replay
 E["ready"] = True

@@ -30,7 +30,8 @@ spec = r.spec()                                # action types, limits, cameras (
 obs = r.get_obs()                              # obs.last[cam] -> uint8 (H, W, 3); obs.meta["proprio"] {"layout", "now"}
 obs = r.get_obs(depth=True)                    # + obs.last_depth[cam] -> float32 (H, W) z-depth in m (0 = no reading)
 res = r.submit("joint_position", A, dt=0.1)   # A: (T, 25) rows dt apart; res.video[cam], res.proprio, res.meta
-obs = r.get_obs(seconds=2.0, video="mp4")      # hold the current targets and watch for 2 s (max 30)
+obs = r.get_obs(seconds=2.0, video="mp4")      # hold the current targets and watch for 2 s (max 30; whole control
+                                               # steps: obs.meta["seconds"] is what ran)
 r.fk(q); r.ik({"left_gripper": pose7}, seed=q)        # upstream's kinematic model, no physics: tcp poses <-> joint positions
 r.submit("done", [])                           # end the episode now
 r.status()                                     # calls, control steps, done, reason, elapsed time
@@ -46,3 +47,6 @@ most 10 s; values outside the limits (`spec["action_types"]["joint_position"]["l
 order (`["layout"]` names every entry); the gripper entries of a row are commands in the units above, not the measured
 openings. `q` for `r.fk` / `r.ik` follows `spec["kinematics"]["joint_names"]`; poses are x y z qw qx qy qz in the house's
 world frame (z up, metres).
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.

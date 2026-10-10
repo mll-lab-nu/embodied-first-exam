@@ -29,7 +29,7 @@ s = Session("move_playingcard_away", instance="/app/instance.json")   # rebuilds
 s.reset()                          # back to the frozen initial state (unlimited; each reset rebuilds the scene, a few seconds)
 env = s.env                        # the RoboTwin task env (envs/move_playingcard_away.py + envs/_base_task.py under /opt/RoboTwin)
 env.robot                          # Robot: get_left_tcp_pose(), get_left_arm_jointState(), left_plan_path(pose), ...
-s.record_start(); ...; actions = s.record_stop()   # actions: (T, 34) rows, one per physics step (1/250 s)
+s.record_start(); ...; actions = s.record_stop()   # actions: (T, 34) rows, one per physics step (1/250 s); at most 200,000 rows are graded
 s.status()                         # {'success': bool, 'sim_steps': int, 'resets': int, 'state_sha': str}
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
@@ -45,9 +45,18 @@ Every physics step these primitives take is recorded while recording is on; `env
 turns False when a plan fails (later moves are skipped). Low-level control: `s.step(row)` with a row in the
 recorded layout (`s.action_layout`: 16 joint drive position targets, 16 velocity targets, left/right gripper
 command 0 = closed / 1 = open).
+Gripper state: the success predicate's gripper clauses (RoboTwin's `is_*_gripper_open()` / `is_*_gripper_close()`) are
+evaluated on the **finger joints' drive targets**, not on the two gripper-command columns of a row:
+`s.gripper_opening("left")` returns the (least open, most open) finger in command units, and a gripper is open when
+its least open finger is above 0.8, closed when its most open finger is below 0.2. A hand-written row therefore opens
+a gripper only through its finger position targets (the 7th–8th and 15th–16th of the 16); `env.open_gripper`,
+`env.close_gripper` and the other primitives set fingers and command together.
 
 CLI equivalent of the grader:
 `python /opt/tools/rcb_traj.py replay --task move_playingcard_away --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 Coordinates are in the world frame (table centre at the origin, +z up, the robot at y = -0.65 facing +y);
 quaternions are WXYZ. Rendering (optional, slow): `Session(..., enable_render=True)` then `s.render_frame("head_camera")`.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **13 GiB of GPU memory**, **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 4 cores for your container; the cap only slows you down.

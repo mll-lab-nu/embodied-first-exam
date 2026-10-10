@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for the RoboPaint brush tasks (ManiSkill 3.0.1 Panda with a brush; the mark is the task's
-brush model in rcb_brush.py; see docs/STANDARD_MODE_2_2.md). Owns the scene and the sheets. HTTP surface (rcb_limited.py, the
+brush model in rcb_brush.py; see docs/STANDARD_MODE.md). Owns the scene and the sheets. HTTP surface (rcb_limited.py, the
 services' shared layer): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1 responses: videos / frames / depth /
 proprio as raw blobs, never base64), POST /kinematics (stateless FK / IK of the robot's model). Logs every call to /data/episode.jsonl.
 Nothing about the sheets except camera images ever leaves this process: no score, no record of the strokes, no exact canvas, no brush state,
@@ -14,7 +14,7 @@ Differences from the RoboLab service, all from the task:
 - painting has no terminal state: the episode ends only when the agent phase ends (the collect hook) or on a simulator error;
 - the trajectory is replayed in fresh processes by the collect hook (environment/sim/finalize.sh) after this service has exited,
   exactly as the privileged verifier does, and only then scored;
-- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE_2_2.md §13): every executed control step (the 7 joint targets given to
+- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step (the 7 joint targets given to
   Session.step) is journaled and every completed call checkpointed with the state hash; after a crash compose restarts the
   container and this service replays the journal in its fresh process and continues the SAME episode. Resume class `exact`
   (PhysX on the CPU and the CPU brush models repeat bit for bit in a fresh process); the last ee_pose tip target is persisted
@@ -33,6 +33,7 @@ OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 20; SUBSTEPS = 5
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 VIDEOS = ("mp4", "frames", "both", "none")
+MAX_VIDEO_FPS = 1000                   # the mp4 encoder's frame rate; the recorder keeps at most one frame per control step
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "t0": time.time(), "error": None}
 EP = L.Episode(DATA, dim=7, resume="exact", persist=("tip_target",))   # the journal rows are Session.step's 7 joint targets
@@ -330,10 +331,54 @@ def run_ee_pose(A: np.ndarray, dt: float, rec: L.Recorder, plan: list) -> None:
         plan.append({"row": ri, "steps": n, "ik_failures": fails, "slowed": n > n_dt})
 
 
-def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    typ = meta.get("type"); dt = float(meta.get("dt", 1.0 / CTRL_HZ)); interp = meta.get("interpolate", "linear")
+def checked(parse):
+    """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any other
+    exception for a simulator error that ends the episode (PROTOCOL §4.6), so whatever a malformed field raises while it is
+    being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
+    def run(*args):
+        try:
+            return parse(*args)
+        except ValueError:
+            raise
+        except (TypeError, OverflowError, AttributeError, LookupError, ArithmeticError) as exc:
+            raise ValueError(f"malformed request: {exc!r}"[:300]) from exc
+    return run
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A request's number: absent or null is the default; anything but a finite number is a 400."""
+    v = meta.get(key)
+    if v is None: return float(default)
+    if isinstance(v, bool) or not isinstance(v, (int, float)): raise ValueError(f"{key} must be a number, got {type(v).__name__}")
+    try: v = float(v)
+    except OverflowError: v = math.inf
+    if not math.isfinite(v): raise ValueError(f"{key} must be finite")
+    return v
+
+
+def note_of(meta: dict) -> str:
+    """The call's free-text note for the log: checked with the other fields, before anything is executed."""
+    v = meta.get("note")
+    if v is None: return ""
+    if not isinstance(v, str): raise ValueError("note must be a string")
+    return v[:500]
+
+
+def video_fps(meta: dict) -> int:
+    """Frames per second of the returned video (absent or null: 5). A rate the mp4 encoder cannot write (negative, or
+    beyond any real rate) is a 400 here: it used to fail after the chunk had run, which ended the episode."""
+    fps = number(meta, "video_fps", 5)
+    if not (0 <= fps <= MAX_VIDEO_FPS): raise ValueError(f"video_fps must be in [0, {MAX_VIDEO_FPS}]")
+    return int(fps)
+
+
+@checked
+def parse_submit(meta: dict, A: np.ndarray):
+    """Every field of a /submit request and its rows, checked; nothing is executed here."""
+    typ = meta.get("type"); dt = number(meta, "dt", 1.0 / CTRL_HZ); interp = meta.get("interpolate", "linear")
     cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    fps = int(meta.get("video_fps", 5)); video = meta.get("video", "mp4")
+    fps = video_fps(meta); video = meta.get("video", "mp4"); note = note_of(meta)
+    L.depth_mode(meta)                 # a bad `depth` is a 400 here, not after the rows
     if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
     dim = SPEC["action_types"][typ]["dim"]
     if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
@@ -344,6 +389,11 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if typ == "ee_pose" and A.shape[0] > 400: raise ValueError("ee_pose: at most 400 rows per submit")
     if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
     if video not in VIDEOS: raise ValueError("video must be mp4|frames|both|none")
+    return typ, dt, interp, cams, fps, video, note
+
+
+def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
+    typ, dt, interp, cams, fps, video, note = parse_submit(meta, A)
     rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []
     E["calls"] += 1; step0 = E["step"]
     before = ctrl_steps(); rec.tick(force=True)
@@ -354,17 +404,25 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan[:400],
            "rejected": None, "ok": True}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams,
-         "note": (meta.get("note") or "")[:500], "control_steps": ctrl_steps() - before, "n_clipped": len(clipped),
+         "note": note, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped),
          "ik_failures": int(sum(p.get("ik_failures", 0) for p in plan)), "depth": rec.mode})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     return out, rec.parts(video, fps)
 
 
-def do_observe(meta: dict) -> tuple[dict, list]:
+@checked
+def parse_observe(meta: dict):
+    """Every field of an /observe request, checked; nothing is executed here."""
     cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    seconds = float(meta.get("seconds", 0)); fps = int(meta.get("video_fps", 5)); video = meta.get("video", "frames")
+    seconds = number(meta, "seconds", 0.0); fps = video_fps(meta); video = meta.get("video", "frames")
+    L.depth_mode(meta)
     if not (0 <= seconds <= MAX_WATCH_S): raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     if video not in VIDEOS: raise ValueError("video must be mp4|frames|both|none")
+    return cams, seconds, fps, video
+
+
+def do_observe(meta: dict) -> tuple[dict, list]:
+    cams, seconds, fps, video = parse_observe(meta)
     rec = recorder(cams, fps, meta); before = ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)

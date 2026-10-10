@@ -1,7 +1,7 @@
-"""eai-standard/2.2 sim service for the MyoSuite tasks (docs/STANDARD_MODE_2_2.md): the adapter of the shared layer
+"""eai-standard/2.2 sim service for the MyoSuite tasks (docs/STANDARD_MODE.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_myosuite.Session (MyoSuite 2.12.2 on MuJoCo, CPU). HTTP surface: GET /spec,
 GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET,
-the optional reset capability of docs/LIMITED_MODE_PROTOCOL.md; MyoSuite's standard tasks default to 10 in their compose
+the optional reset capability of docs/STANDARD_MODE.md; MyoSuite's standard tasks default to 10 in their compose
 file, PROTOCOL §4.5). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's (environment/sim/instance.npz, the privileged twin's). The action is MyoSuite's own:
@@ -9,13 +9,16 @@ one command per muscle (excitation u = 1 / (1 + exp(-5 (a - 0.5)))), one row per
 moment the task's goal has held for its hold time (success), at the task's failure (object dropped, fingers off the key,
 ...), or when the agent's time is over (the collect hook). With a reset budget, POST /reset abandons the running (or
 ended) episode and starts a new one from the frozen instance; only the last episode is graded, and a success ends the
-trial. Nothing about objects or goals leaves this process: the proprioception is the limb's own joints and muscles.
+trial. Nothing about objects or goals leaves this process: the proprioception is the limb's own joints and muscles,
+and a camera that rides on a body of the scene (ChaseTag's `opponent_view`, soccer's `goalkeeper_view`) gives images only:
+its pose would be that body's position (SCENE_CAMS).
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
 every executed row is journaled; after a crash the service rebuilds the episode and replays the journal, resetting where
 the committed resets did (their journal rows are checkpointed, `persist`). When the episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
 and replays the trajectory in two fresh processes."""
 
+import contextlib
 import json
 import math
 import os
@@ -99,6 +102,36 @@ J_SLIDE = [int(MD.jnt_type[j]) == 2 for j in J_ID]
 ROOT = MD.joint("root").id if mujoco.mj_name2id(MD, mujoco.mjtObj.mjOBJ_JOINT, "root") >= 0 else None
 if ROOT is not None and int(MD.jnt_type[ROOT]) != 0:
     ROOT = None
+OWN_JOINTS = set(J_ID) | ({ROOT} if ROOT is not None else set())  # what moves the body itself: all of it is proprioception
+
+
+def own_body(b: int) -> bool:
+    """Whether the MuJoCo body `b` is fixed in the world or moved by the body's own joints alone. A mocap body (the
+    opponent, the goalkeeper, goal markers) or a body behind any other joint (objects, balls, the key) is scene state:
+    where it is must never leave this process (PROTOCOL §4.5)."""
+    while b > 0:
+        if int(MD.body_mocapid[b]) >= 0:
+            return False
+        first = int(MD.body_jntadr[b])
+        if any(j not in OWN_JOINTS for j in range(first, first + int(MD.body_jntnum[b]))):
+            return False
+        b = int(MD.body_parentid[b])
+    return True
+
+
+def scene_camera(cam: str) -> bool:
+    """A camera that is mounted on, tracks or is aimed at a body of the scene that is not the agent's own: its pose
+    is that body's position plus a constant, so the service gives its images (and depth) and never its pose."""
+    i = MD.camera(cam).id
+    bodies = [int(MD.cam_bodyid[i])]
+    if int(MD.cam_mode[i]) in (3, 4):  # targetbody, targetbodycom: the orientation follows the target
+        bodies.append(int(MD.cam_targetbodyid[i]))
+    return not all(own_body(b) for b in bodies if b >= 0)
+
+
+SCENE_CAMS = [c for c in CAMS if scene_camera(c)]
+NO_POSE = ("not published: this camera rides on a body of the scene that is not yours, so its pose would be that body's "
+           "position; it gives images and depth (camera frame) only")
 GROUPS = [
     ("joint_pos", [f"q_{n}" for n in J_NAMES], "joint positions of the body (rad; m for sliding joints)"),
     ("joint_vel", [f"qd_{n}" for n in J_NAMES], "joint velocities (rad/s; m/s)"),
@@ -145,7 +178,10 @@ GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])
 
 
 def camera_info(cam: str) -> dict:
-    """World -> camera (OpenCV axes) and camera -> world (OpenGL axes) at the current state."""
+    """World -> camera (OpenCV axes) and camera -> world (OpenGL axes) at the current state; none of a scene camera."""
+    if cam in SCENE_CAMS:
+        return {"intrinsic_cv": _intrinsic(cam), "extrinsic_cv": None, "cam2world_gl": None, "image_size": [W, H],
+                "pose": NO_POSE}
     c2w = _cam_T_gl(S.data, cam)
     ext = np.linalg.inv(c2w @ GL2CV)[:3, :]
     return {
@@ -163,6 +199,10 @@ def _mount(cam: str) -> dict:
     i = MD.camera(cam).id
     body = MD.body(int(MD.cam_bodyid[i])).name
     mode = int(MD.cam_mode[i])
+    if cam in SCENE_CAMS:   # neither the body it rides on nor an offset: either would place that body
+        return {"type": "link", "parent_link": None, "pose": NO_POSE,
+                "note": "it moves with a body of the scene; extrinsic_cv and cam2world_gl are null in meta[\"cameras\"] "
+                "and the per-frame extrinsic_cv rows are NaN"}
     if mode != 0:       # MuJoCo tracking cameras follow a body (or the model's centre of mass) at a fixed offset
         return {"type": "link", "parent_link": body, "tracking": CAM_MODES.get(mode, str(mode)),
                 "note": "a MuJoCo tracking camera: it follows its body's position (or the centre of mass of its "
@@ -180,6 +220,8 @@ def _mount(cam: str) -> dict:
 
 def _mounted(cam: str) -> str:
     m = _mount(cam)
+    if cam in SCENE_CAMS:
+        return "on a body of the scene that is not yours (it moves with it): images and depth only, no pose"
     if m["type"] == "static":
         return "static"
     if "tracking" in m:
@@ -199,7 +241,7 @@ KIN_FRAME = "base" if ROOT is not None else "world"
 TIPS = [
     n for n in ("THtip", "IFtip", "MFtip", "RFtip", "LFtip") if mujoco.mj_name2id(MD, mujoco.mjtObj.mjOBJ_SITE, n) >= 0
 ]
-MOUNT_LINKS = sorted({MD.body(int(MD.cam_bodyid[MD.camera(c).id])).name for c in CAMS} - {"world"})
+MOUNT_LINKS = sorted({MD.body(int(MD.cam_bodyid[MD.camera(c).id])).name for c in CAMS if c not in SCENE_CAMS} - {"world"})
 LINKS = TIPS + MOUNT_LINKS
 _rb = int(MD.jnt_bodyid[J_ID[0]])
 while int(MD.body_parentid[_rb]) != 0:
@@ -334,7 +376,8 @@ SPEC = {
         "up": "+z",
         "units": {"length": "m", "angle": "rad", "time": "s"},
         "quaternion_order": "wxyz",
-        "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes",
+        "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes"
+        + (f"; no pose of {', '.join(SCENE_CAMS)} ({NO_POSE})" if SCENE_CAMS else ""),
     },
     "budget": {"reset": RESET_BUDGET, "steps": None, "wall_clock_s": WALL_CLOCK_S},
     "episode": EPISODE,
@@ -450,7 +493,8 @@ def grab(cams, want_depth: bool):
 
 
 def extrinsics(cams) -> dict:
-    return {c: np.asarray(camera_info(c)["extrinsic_cv"], dtype=np.float64) for c in cams}
+    """Per frame; a scene camera has none (the recorder writes NaN rows for a camera that is not in the dict)."""
+    return {c: np.asarray(camera_info(c)["extrinsic_cv"], dtype=np.float64) for c in cams if c not in SCENE_CAMS}
 
 
 def write_final() -> None:
@@ -522,6 +566,41 @@ def ctrl_step(a, rec) -> bool:
     return E["done"] or stop
 
 
+@contextlib.contextmanager
+def checking():
+    """Checking a request, before anything runs: a field of the wrong type is the request's fault -- a ValueError, which
+    the shared handler answers with 400 and nothing changed -- never a simulator error that ends the episode (PROTOCOL
+    §4.6: malformed -> 400, no physics)."""
+    try:
+        yield
+    except ValueError:
+        raise
+    except (TypeError, AttributeError, KeyError, IndexError, OverflowError) as exc:
+        raise ValueError(f"malformed request: {exc!r}"[:300]) from None
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A numeric field in seconds; absent or null is the default. Not a finite number: ValueError (400)."""
+    v = meta.get(key)
+    if v is None:
+        return float(default)
+    try:
+        if isinstance(v, bool):
+            raise TypeError
+        x = float(v)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError(f"{key} must be a number of seconds, got {v!r}"[:200]) from None
+    if not math.isfinite(x):
+        raise ValueError(f"{key} must be finite")
+    return x
+
+
+def note_of(meta: dict) -> str:
+    """The call's free-text note for the log, read before anything runs (a note of another type is logged as text)."""
+    note = meta.get("note")
+    return "" if note is None else str(note)[:500]
+
+
 def recorder(cams, fps: int, meta: dict, video: str) -> L.Recorder:
     every = max(1, int(round(CTRL_HZ / max(1, fps)))) if video != "none" else 10**9  # no video: first and last frame
     return L.Recorder(
@@ -540,6 +619,8 @@ def video_fps(meta: dict) -> int:
 
 def cameras_of(meta: dict) -> list:
     cams = meta.get("cameras") or DEFAULT_CAMS
+    if not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names; cameras: {CAMS}")
     bad = [c for c in cams if c not in CAMS]
     if bad:
         raise ValueError(f"unknown cameras {bad}; cameras: {CAMS}")
@@ -569,27 +650,28 @@ def last_command() -> np.ndarray:
 
 
 def do_submit(meta: dict, A: np.ndarray):
-    typ = meta.get("type")
-    if typ != ATYPE:
-        raise ValueError(f"type must be {ATYPE} (not yet: {SPEC['action_types']['not_yet']})")
-    dt = float(meta.get("dt", DT))
-    interp = meta.get("interpolate", "linear")
-    video = meta.get("video", "mp4")
-    cams, fps = cameras_of(meta), video_fps(meta)
-    k = dt / DT
-    if A.ndim != 2 or A.shape[1] != NU:
-        raise ValueError(f"{ATYPE} actions must be (T, {NU}), got {list(A.shape)}")
-    if not np.all(np.isfinite(A)):
-        raise ValueError("actions contain NaN/inf")
-    if not (math.isfinite(dt) and dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
-        raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
-    if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
-        raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
-    if interp not in ("hold", "linear"):
-        raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"):
-        raise ValueError("video must be mp4|frames|both|none")
-    rec = recorder(cams, fps, meta, video)
+    with checking():  # every field, before a single control step runs
+        typ = meta.get("type")
+        if typ != ATYPE:
+            raise ValueError(f"type must be {ATYPE} (not yet: {SPEC['action_types']['not_yet']})")
+        dt = number(meta, "dt", DT)
+        interp = meta.get("interpolate", "linear")
+        video = meta.get("video", "mp4")
+        cams, fps, note = cameras_of(meta), video_fps(meta), note_of(meta)
+        k = dt / DT
+        if A.ndim != 2 or A.shape[1] != NU:
+            raise ValueError(f"{ATYPE} actions must be (T, {NU}), got {list(A.shape)}")
+        if not np.all(np.isfinite(A)):
+            raise ValueError("actions contain NaN/inf")
+        if not (dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
+            raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
+        if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
+            raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
+        if not isinstance(interp, str) or interp not in ("hold", "linear"):
+            raise ValueError("interpolate must be hold|linear")
+        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
+            raise ValueError("video must be mp4|frames|both|none")
+        rec = recorder(cams, fps, meta, video)
     E["calls"] += 1
     step0, before = E["step"], ctrl_steps()
     rec.tick(force=True)
@@ -629,7 +711,7 @@ def do_submit(meta: dict, A: np.ndarray):
             "interpolate": interp,
             "cameras": cams,
             "control_steps": ctrl_steps() - before,
-            "note": (meta.get("note") or "")[:500],
+            "note": note,
             **({"stopped": EP.stop_reason} if EP.stopping else {}),
         }
     )
@@ -637,14 +719,15 @@ def do_submit(meta: dict, A: np.ndarray):
 
 
 def do_observe(meta: dict):
-    cams, fps = cameras_of(meta), video_fps(meta)
-    seconds = float(meta.get("seconds", 0))
-    video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"):
-        raise ValueError("video must be mp4|frames|both|none")
-    rec, before = recorder(cams, fps, meta, video), ctrl_steps()
+    with checking():  # every field, before a single control step runs
+        cams, fps = cameras_of(meta), video_fps(meta)
+        seconds = number(meta, "seconds", 0.0)
+        video = meta.get("video", "frames")
+        if seconds < 0 or seconds > MAX_WATCH_S:
+            raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
+            raise ValueError("video must be mp4|frames|both|none")
+        rec, before = recorder(cams, fps, meta, video), ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)
         hold = last_command()
@@ -703,8 +786,9 @@ class Refused(Exception):
 
 def do_reset(meta: dict):
     """POST /reset: a new episode from the frozen instance (the running one, if any, is abandoned, never graded)."""
-    cams, fps = cameras_of(meta), video_fps(meta)
-    L.depth_mode(meta)  # a bad depth value is a 400 before anything changes
+    with checking():
+        cams, fps = cameras_of(meta), video_fps(meta)
+        L.depth_mode(meta)  # a bad depth value is a 400 before anything changes
     if E["success"]:
         raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:

@@ -10,14 +10,14 @@ keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajec
 [metadata]
 author_name = "jianwen"
 tooling_version = "18"
-task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
 simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CPU float64 physics, Nyx RGB)
 robot = "aloha"
 family = "interlocked_claws"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
 oracle = "none"
 oracle_evidence = "No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. Solvable: model trial topogym-interlocked-claws-easy-i__pi2X7Xe was graded success=1 by the separate verifier, on an earlier version of this task (the same frozen instance and predicate). Human review per family (protocol \u00a72.7)."
-difficulty = "easy"               # the variation's tier (docs/rcb/TAXONOMY.md)
+difficulty = "easy"               # the variation's tier (docs/TAXONOMY.md)
 grasp = "assisted (his contact_weld_v1 pre-weld: the grippers start closed on piece_0, piece_1)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision claws_separation_v1_grasp_contact_2mm)"
 instance_seed = 0                 # scene = environment/instance.json (variation interlocked_claws_easy, eval index None); identity = dataset.toml digest

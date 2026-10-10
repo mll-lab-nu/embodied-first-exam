@@ -6,8 +6,8 @@
     python3 scripts/<bench>/generate.py --check    # render into a temporary directory and compare with tasks/
 
 Inputs: envs.py, frozen/<slug>/{instance,oracle}.npz and frozen/report.json (import_references.sh), the shared sources
-in shared/ and the standard-mode service images/<bench>/standard/server_casa.py. Every task directory is rewritten;
-shared files are copied byte for byte. Re-running reproduces the tasks exactly.
+in shared/ (with the collect hook finalize.sh) and the standard-mode service images/<bench>/standard/server_casa.py.
+Every task directory is rewritten; shared files are copied byte for byte. Re-running reproduces the tasks exactly.
 """
 
 import json
@@ -69,6 +69,25 @@ network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py);
 allowed_hosts = {ALLOWED_HOSTS}
 """
 ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
+# Standard mode, the sim service's collect hook (shared/finalize.sh): its timeout, and how long it waits for the verdict
+# (the script's default RCB_COLLECT_WAIT_S; main() checks that the two agree).
+COLLECT_TIMEOUT_S = 3600
+COLLECT_WAIT_S = 3450
+# README Change Log of the standard tasks (PROTOCOL §2.8: published tasks are fixed in place), oldest first.
+CHANGES_STANDARD = [
+    "2026-10-10: the sim service writes its verdict together with `finalized` in one atomic step and renders the "
+    "replay video only afterwards (the video is optional and can no longer turn a verdict into `infra_error`; a "
+    "restart never rewrites a written verdict); the collect hook (`environment/sim/finalize.sh`) waits for that "
+    f"verdict for up to {COLLECT_WAIT_S} s of a {COLLECT_TIMEOUT_S} s timeout (before: 980 s of 1500 s, video "
+    "included, which lost episodes longer than about 10,000 control steps); a malformed request field (`dt`, "
+    "`seconds` or `video_fps` that is not a finite number, `cameras` or `note` of the wrong type, `dt` = 0, ...) is "
+    "answered with 400 before any physics instead of 500 and the end of the episode; `time_left_s` counts from the "
+    "start of the service's container, not from when its scene was built; the client's docstring describes this "
+    "service. The scene, the instance, the success check and the pass rule are unchanged, so the task keeps its name.",
+    "2026-10-10 (review round 2, board 0067): `tests/grade.py` only. A `final.json` that cannot be read as a JSON object "
+    "(truncated, not JSON, not an object) is graded `infra_error = 1` and `grader_error = 1`; before, the grader raised "
+    "and the trial had no reward file. Nothing else changes: a readable `final.json` is graded as before.",
+]
 
 
 def action_text(dim: int) -> str:
@@ -306,16 +325,18 @@ def standard_readme(rec: dict) -> str:
         "control step." + hold_note(rec).replace("\n", " ").rstrip()
     )
     verification = (
-        "The sim service replays the recorded episode in a fresh simulator; `tests/grade.py` (separate sandbox, no "
-        "network) reads its `final.json`: `success = replay_success ∧ deterministic ∧ live_success`."
+        "The sim service replays the recorded episode in a fresh simulator and writes the verdict, final at once; "
+        "`tests/grade.py` (separate sandbox, no network) reads its `final.json`: `success = replay_success ∧ "
+        "deterministic ∧ live_success`. The replay video is rendered after the verdict and never decides it."
     )
     details = [
         ("Action type", f"`{ACTION_TYPE[rec['action_dim']]}` ({rec['action_dim']} channels, `control_dt` 0.05 s)"),
         ("Cameras", ", ".join(f"`{c}`" for c in rec["cameras"]) + " (robot-mounted; calibration in every response)"),
     ]
-    return readme(
+    text = readme(
         readme_head(rec, "standard"), task, DIFFICULTY_STANDARD.replace("\n", " "), reference, verification, details
     )
+    return text + "\n### Change Log\n" + "".join(f"- {c}\n" for c in CHANGES_STANDARD)
 
 
 def privileged_toml(rec: dict) -> str:
@@ -358,11 +379,6 @@ memory_mb = 16384
 
 
 def standard_toml(rec: dict) -> str:
-    collect = (
-        "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q "
-        "'\\\"finalized\\\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat "
-        "/data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
-    )
     return f"""schema_version = "1.3"
 artifacts = [
   {{ source = "/data/final.json", service = "sim" }},
@@ -404,11 +420,15 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it.
+# Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
+# restarting), which replays the episode in a fresh simulator and writes the verdict with "finalized": true. The hook
+# waits for that verdict (up to {COLLECT_WAIT_S} s), then, bounded, for the optional replay video, which decides nothing.
+# timeout_sec = the agent's budget: the replay runs the episode's own physics once more, without its cameras, so it
+# cannot take longer than the episode did (about 0.035 s per control step + one scene build; finalize.sh has the sums).
 [[verifier.collect]]
 service = "sim"
-command = "{collect}"
-timeout_sec = 1500
+command = "sh /srv/finalize.sh"
+timeout_sec = {COLLECT_TIMEOUT_S}
 
 {AGENT}
 [environment]
@@ -516,6 +536,7 @@ def make(rec: dict, out: Path = ROOT / "tasks") -> None:
     put(s / "environment/rcb_client.py", src=SHARED / "rcb_client.py")
     put(s / "environment/rcb1.py", src=SHARED / "rcb1.py")
     put(s / "environment/sim/server_casa.py", src=SERVER)
+    put(s / "environment/sim/finalize.sh", src=SHARED / "finalize.sh")
     put(s / "environment/sim/casa_tool.py", src=SHARED / "casa_tool.py")
     put(s / "environment/sim/rcb1.py", src=SHARED / "rcb1.py")
     put(s / "environment/sim/instance.npz", src=fz / "instance.npz")
@@ -540,6 +561,9 @@ def files(d: Path) -> dict[str, tuple[bytes, int]]:
 
 def main(envs: list[str], check: bool = False) -> None:
     report = json.loads((FROZEN / "report.json").read_text())
+    hook = (SHARED / "finalize.sh").read_text()
+    if f'WAIT_S="${{RCB_COLLECT_WAIT_S:-{COLLECT_WAIT_S}}}"' not in hook or COLLECT_WAIT_S >= COLLECT_TIMEOUT_S:
+        raise SystemExit("shared/finalize.sh: RCB_COLLECT_WAIT_S's default must be COLLECT_WAIT_S, below COLLECT_TIMEOUT_S")
     out = Path(tempfile.mkdtemp(prefix=f"{BENCH}-check-")) if check else ROOT / "tasks"
     n = 0
     for env in envs:

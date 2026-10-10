@@ -14,13 +14,15 @@ after every control step but never tells you their state: watch your robot and t
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends when the goal has held for 10 consecutive control
-  steps (0.5 s; `meta["reason"]` = `goal_held`), when your time is up, or on a simulator error. Whatever you knock over or
-  push away stays where it ends up.
+  steps (0.5 s; `meta["reason"]` = `goal_held`), when your time is up, on a simulator error, or after 50,000 control
+  steps (`spec["max_control_steps"]`: 41.7 min of simulated time; `meta["reason"]` = `runaway_guard`, a failure).
+  Whatever you knock over or push away stays where it ends up.
 - **No privileged state.** You see what the cameras see (RGB; depth on request) plus the robot's own proprioception
   (joints, gripper opening and command, end-effector and fingertip poses, velocities, drive efforts). No object poses, no
   goal position, no success or safety predicate.
-- Steps are unlimited; your wall-clock budget is 120 min (7200 s; `meta["time_left_s"]`). Actions and
-  simulated time are reported as cost.
+- There is no step budget: your wall-clock budget is 120 min (7200 s; `meta["time_left_s"]`), and the
+  only step limit is the cap above (`meta["control_steps"]` counts towards it; holding and watching with
+  `get_obs(seconds=...)` count too: 20 control steps per second). Actions and simulated time are reported as cost.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up.
 - **If the service crashes** (a connection error or a 5xx answer), it restarts and resumes the SAME episode (never a
@@ -33,7 +35,8 @@ after every control step but never tells you their state: watch your robot and t
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (waits while Isaac Sim starts and loads the task, a few minutes)
+r = Robot()                                   # connects: waits while Isaac Sim starts and loads the task (4-12 min measured; on your
+                                              # clock, progress on stderr; it gives up after 3600 s, Robot(timeout=...))
 spec = r.spec()                               # actions, cameras, robot_spec, world, kinematics, budget, static facts
 
 obs = r.get_obs()                             # current frames: obs.last[cam] -> uint8 (256,256,3) for spec["default_cameras"]
@@ -41,6 +44,7 @@ obs = r.get_obs(cameras=list(spec["cameras"]), depth=True)   # every camera, wit
 obs.meta["proprio"]                           # {"layout": [...], "now": [...]}: named columns (spec["proprio_groups"])
 obs.meta["cameras"]                           # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl of the LAST frame
 obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+                                              # (whole control steps; obs.meta["seconds"] is what ran)
 
 res = r.submit("joint_position", A, dt=0.1)   # A: (T, 8) rows dt seconds apart; streamed at 20 Hz
 res = r.submit("ee_pose", P)                  # P: (T, 8) fingertip-centre targets x y z qx qy qz qw gripper; IK per row
@@ -76,3 +80,5 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 
 Objects here: a long steel commercial kitchen table; on it a red mixing bowl (about 29 x 26 cm, 14 cm deep) with 15 small dark dust specks on its inner bottom, a sponge (10.5 x 7 x 2 cm, blue) lying flat, and a green platter (26 cm across, 4 cm tall) with a potato (about 14 x 8 cm) on it. The sponge removes the dust it comes close to (within 2 cm of its bounding box); nothing else removes dust. Grasping is sticky: the gripper attaches an object as soon as a finger touches it when it closes, and releases it when it opens.
 
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.

@@ -2,11 +2,16 @@
 (live success, two fresh-process replays of the recorded trajectory, determinism, crash-recovery fields),
 /data/trajectory.npz, /data/replay.mp4; with a reset budget, the record is the last episode's. success = live success AND
 replay success AND deterministic, the replays having started in the instance's recorded state. Numeric-only
-reward.json."""
+reward.json.
 
-import json, os, shutil
+infra_error = 1 (no verdict on the agent, PROTOCOL §2.6) also when there is no final.json, when it cannot be read, and
+when it was never finalized (the collect hook ran out of time or died before its replays' verdict was written): none of
+them is the agent's 0. Every branch writes success, deterministic, infra_error and grader_error."""
 
-LOG = "/logs/verifier"
+import json, os, shutil, traceback
+
+DATA = os.environ.get("RCB_DATA", "/data")  # the sim sidecar's artifacts (the variables are for the tests)
+LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 os.makedirs(LOG, exist_ok=True)
 
 
@@ -16,16 +21,29 @@ def write(ok, out):
     print(out)
 
 
-p = "/data/final.json"
-if not os.path.exists(p):
-    write(False, {"success": 0, "missing_log": 1, "grader_error": 0, "infra_error": 0})
+p = f"{DATA}/final.json"
+if not os.path.exists(p):  # the service never wrote one (it never came up): infrastructure, not the agent's 0
+    write(False, {"success": 0, "deterministic": 0, "missing_log": 1, "finalized": 0, "grader_error": 0, "infra_error": 1})
     raise SystemExit
-d = json.load(open(p))
+try:
+    with open(p) as fh:
+        d = json.load(fh)
+    if not isinstance(d, dict):
+        raise ValueError("final.json is not a JSON object")
+except Exception:  # noqa: BLE001 -- cut short or corrupt: no verdict to read
+    traceback.print_exc()
+    write(False, {"success": 0, "deterministic": 0, "missing_log": 0, "finalized": 0, "grader_error": 1, "infra_error": 1})
+    raise SystemExit
 for f in ("replay.mp4", "trajectory.npz", "episode.jsonl"):
-    if os.path.exists(f"/data/{f}"):
-        shutil.copy(f"/data/{f}", f"{LOG}/{f}")
+    try:
+        if os.path.exists(f"{DATA}/{f}"):
+            shutil.copy(f"{DATA}/{f}", f"{LOG}/{f}")
+    except OSError:  # evidence for humans: it never decides the verdict
+        traceback.print_exc()
+unfinished = not d.get("finalized")  # the live summary only: the replays' verdict never reached final.json
+infra = bool(d.get("infra_error")) or unfinished
 ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic"))
-ok = ok and not d.get("instance_mismatch")
+ok = ok and not d.get("instance_mismatch") and not infra
 num = lambda k: float(d.get(k) or 0)  # noqa: E731
 reason = str(d.get("reason") or "")
 write(
@@ -36,7 +54,8 @@ write(
         "replay_success": int(bool(d.get("replay_success"))),
         "deterministic": int(bool(d.get("deterministic"))),
         "live_matches_replay": int(bool(d.get("live_matches_replay"))),
-        "finalized": int(bool(d.get("finalized"))),
+        "finalized": int(not unfinished),
+        "missing_log": 0,
         "n_actions": int(d.get("n_actions") or 0),
         "sim_steps": int(d.get("control_steps") or 0),
         "physics_steps": int(d.get("physics_steps") or 0),
@@ -56,9 +75,10 @@ write(
         "grader_error": int(bool(d.get("replay_failed") or d.get("instance_mismatch"))),
         "instance_mismatch": int(bool(d.get("instance_mismatch"))),
         # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
-        # resume (docs/STANDARD_MODE_2_2.md §13), the service not ending its episode for the collect hook, a replay
-        # process that gave no result, replays that did not start in the instance's recorded state
-        "infra_error": int(bool(d.get("infra_error"))),
+        # resume (docs/STANDARD_MODE.md §13), the service not ending its episode for the collect hook, a replay
+        # process that gave no result, replays that did not start in the instance's recorded state, a final.json the
+        # collect hook never finalized
+        "infra_error": int(infra),
         "gave_up": int(bool(d.get("gave_up"))),
         "sim_error": int(reason == "error"),
         "sim_startups": int(d.get("sim_startups") or 0),

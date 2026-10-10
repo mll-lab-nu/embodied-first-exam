@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for ManiGuard (BEHAVIOR-1K v3.7.2: OmniGibson on Isaac Sim 4.5; a fixed Franka Panda with
-long fin-ray fingers; see docs/STANDARD_MODE_2_2.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the
+long fin-ray fingers; see docs/STANDARD_MODE.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the
 scene. HTTP surface (rcb_limited.serve): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies and responses:
 videos / frames / depth / proprio as raw blobs, never base64), POST /kinematics. Logs every call to /out/episode.jsonl and
 keeps /out/final.json current. Nothing about objects, the goal sphere's position or the safety verdicts leaves this process.
@@ -14,11 +14,15 @@ Differences from the other 2.2 services, all from the simulator and the benchmar
   and the robot's wrist camera; depth is OmniGibson's depth_linear (z-depth), attached before the episode starts;
 - the episode ends when the task's goal has held for 10 consecutive control steps (reason "goal_held"); whether it counts
   also depends on the task's safety specification, which is evaluated after every control step but never reported live
-  (it is part of the success predicate, PROTOCOL §4.5): the verdict comes from the collect hook's replays;
+  (it is part of the success predicate, PROTOCOL §4.5): the verdict comes from the collect hook's replays. A technical
+  cap (PROTOCOL §4.5, `spec.max_control_steps`): the tooling ends an episode after MAX_STEPS = 50,000 control steps
+  (reason "runaway_guard"); the instruction and /spec say so;
+- a request is checked completely before anything moves (PROTOCOL §4.6): a missing, null or wrongly typed field is a 400
+  (ValueError), never an exception after the action ran;
 - the episode is NOT replayed here (one Isaac simulator per container): when it ends the service writes /out/trajectory.npz
   + /out/episode.json (live result and state hash); the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh
   replays the trajectory in two fresh processes and completes /out/final.json;
-- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE_2_2.md §13): every executed control step is journaled
+- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step is journaled
   (/out/journal.f64), every completed call checkpointed (rows, state hash, proprio row); after a crash compose restarts the
   container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume class
   `approx` (OmniGibson declares rollouts nondeterministic) until the determinism probe says otherwise
@@ -163,6 +167,11 @@ SPEC = {
                        "robot_spec.base.pose", "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "xyzw",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV (x right, y down, z forward); cam2world_gl: OpenGL (x right, y up, z backward)"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "7200"))},
+    # not a budget but a technical cap (PROTOCOL §4.5): the tooling ends an episode there, whatever its state
+    "max_control_steps": int(M.MAX_STEPS),
+    "episode": f"one episode, no reset: it ends when the goal has held for 10 consecutive control steps (reason goal_held), after "
+               f"{int(M.MAX_STEPS)} control steps ({M.MAX_STEPS / CTRL_HZ / 60:.1f} min of simulated time; reason runaway_guard, a "
+               "failure), when your time is over (timeout), or on a simulator error (error, or nonfinite: a non-finite robot state)",
     "robot_spec": RSPEC,
     "kinematics": KSPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -196,6 +205,41 @@ def video_fps(meta: dict) -> int:
     if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not (1 <= fps <= CTRL_HZ):
         raise ValueError(f"video_fps must be in [1, {CTRL_HZ}]")
     return int(fps)
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A numeric request field: `default` when the request has no such field; a finite number otherwise, else a 400 (a
+    null, a string, a list, NaN/inf: never an exception past the checks)."""
+    if key not in meta:
+        return float(default)
+    v = meta[key]
+    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+        raise ValueError(f"{key} must be a finite number, got {v!r:.80}")
+    return float(v)
+
+
+def choice(meta: dict, key: str, default: str, allowed: tuple) -> str:
+    v = meta.get(key, default)
+    if not isinstance(v, str) or v not in allowed:
+        raise ValueError(f"{key} must be {'|'.join(allowed)}")
+    return v
+
+
+def cameras_of(meta: dict) -> list:
+    """The request's cameras (names this task does not have are ignored, as before); none given = the default pair."""
+    cams = meta.get("cameras")
+    if cams is None:
+        return list(SPEC["default_cameras"])
+    if not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names ({', '.join(CAMS)})")
+    return [c for c in cams if c in CAMS] or list(SPEC["default_cameras"])
+
+
+def note_of(meta: dict) -> str:
+    note = meta.get("note")
+    if note is not None and not isinstance(note, str):
+        raise ValueError("note must be a string")
+    return (note or "")[:500]
 
 
 def recorder(cams, fps: int, meta: dict) -> L.Recorder:
@@ -278,20 +322,21 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
 
 
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    typ = meta.get("type"); dt = float(meta.get("dt", 1.0 / CTRL_HZ)); interp = meta.get("interpolate", "linear")
-    cams = [c for c in (meta.get("cameras") or SPEC["default_cameras"]) if c in CAMS] or SPEC["default_cameras"]
-    fps = video_fps(meta); video = meta.get("video", "mp4")
-    if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
+    # every check before anything moves (recorder() checks `depth`): nothing after it may fail on what the request says
+    typ = meta.get("type"); dt = number(meta, "dt", 1.0 / CTRL_HZ); interp = choice(meta, "interpolate", "linear", ("hold", "linear"))
+    cams = cameras_of(meta); note = note_of(meta)
+    fps = video_fps(meta); video = choice(meta, "video", "mp4", ("mp4", "frames", "both", "none"))
+    if not isinstance(typ, str) or typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
     dim = SPEC["action_types"][typ]["dim"]
     if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
-    if not math.isfinite(dt) or not (1.0 / CTRL_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, 0.5] s")
+    if not (1.0 / CTRL_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, 0.5] s")
     if abs(dt * CTRL_HZ - round(dt * CTRL_HZ)) > 1e-6:
         raise ValueError(f"dt must be a multiple of the 1/{CTRL_HZ} s control period (k/{CTRL_HZ} s, k = 1..{int(0.5 * CTRL_HZ)}); got {dt}")
     if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
     if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
-    if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+    if typ == "ee_pose" and A.shape[0] and float(np.min(np.linalg.norm(A[:, 3:7], axis=1))) < 1e-6:
+        raise ValueError("ee_pose: a quaternion (columns 3..6, xyzw) has zero norm")
     rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []
     E["calls"] += 1; step0 = E["step"]
     before = ctrl_steps(); rec.tick(force=True)
@@ -300,7 +345,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     rec.tick(force=True, last=True)
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": (meta.get("note") or "")[:500],
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "depth": rec.mode, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "done": E["done"],
          **({"stopped": EP.stop_reason} if EP.stopping else {})})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
@@ -309,10 +354,9 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 
 
 def do_observe(meta: dict) -> tuple[dict, list]:
-    cams = [c for c in (meta.get("cameras") or SPEC["default_cameras"]) if c in CAMS] or SPEC["default_cameras"]
-    seconds = float(meta.get("seconds", 0)); fps = video_fps(meta); video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+    cams = cameras_of(meta)             # every check before anything moves, as in do_submit
+    seconds = number(meta, "seconds", 0.0); fps = video_fps(meta); video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none"))
+    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     rec = recorder(cams, fps, meta); before = ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)
@@ -323,9 +367,10 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     else:
         rec.tick(force=True, last=True)                    # the current frames: no physics
     E["calls"] += 1
-    out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
+    ran = round((ctrl_steps() - before) / CTRL_HZ, 6)     # what was watched: whole control steps, fewer if the episode ended
+    out = {**meta_common(cams), "obs_id": E["calls"], "seconds": ran, "control_steps_watch": ctrl_steps() - before,
            "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True}
-    log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "depth": rec.mode, "control_steps": ctrl_steps() - before,
+    log({"ev": "observe", "call": E["calls"], "seconds": ran, "seconds_requested": seconds, "cameras": cams, "depth": rec.mode, "control_steps": ctrl_steps() - before,
          **({"stopped": EP.stop_reason} if EP.stopping else {})})
     if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)

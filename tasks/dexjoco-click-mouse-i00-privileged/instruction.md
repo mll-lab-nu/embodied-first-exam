@@ -44,8 +44,9 @@ general policy.
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
 open-loop from the same initial state in a fresh process and scored 1 if its episode ends in success, else 0. Also
-leave the script that produced it at `/app/output/gen.py`. You have 90 minutes of wall clock: save a
-first trajectory early, improve it, and do not stop before the task is solved.
+leave the script that produced it at `/app/output/gen.py`. A trajectory may have at most 50,000 rows
+(1000 s of robot time): `save_trajectory` refuses a longer one and the verifier scores it 0. You have
+90 minutes of wall clock: save a first trajectory early, improve it, and do not stop before the task is solved.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -83,6 +84,14 @@ CLI equivalent of the grader:
   spread, 1-3 = flexion from the knuckle out; thumb 12 = opposition).
   Target ranges (rad, same for every finger slot, thumb last): low [-0.47, -0.2, -0.17, -0.23, -0.47, -0.2, -0.17, -0.23, -0.47, -0.2, -0.17, -0.23, 0.26, -0.1, -0.19, -0.16], high [0.47, 1.61, 1.71, 1.62, 0.47, 1.61, 1.71, 1.62, 0.47, 1.61, 1.71, 1.62, 1.4, 1.16, 1.64, 1.72]; the simulator clamps
   targets to them.
-- Control runs at 50 Hz (10 physics substeps of 2 ms). DexJoCo's own episode cap and real-time pacing are lifted: there
-  is no step budget, your wall-clock time is the limit (~330 control steps/s here). An episode ends at the
-  first success or task failure; `s.step` then refuses further actions until `s.reset()`.
+- Control runs at 50 Hz (10 physics substeps of 2 ms). DexJoCo's own episode cap and real-time pacing are lifted: your
+  sessions have no step budget, your wall-clock time is the limit (~330 control steps/s here); only the
+  trajectory you hand in is capped (50,000 rows). An episode ends at the first success or task failure; `s.step`
+  then refuses further actions until `s.reset()`.
+- The simulation repeats bit for bit, for one OpenBLAS thread count: the controller's linear algebra gives slightly
+  different results on 1, on 2-3 and on 4 or more threads. This container sets `OPENBLAS_NUM_THREADS=4`, as the verifier's
+  does; leave it as it is, or your replays will not match the verifier's. (OpenBLAS runs no more threads than the CPUs
+  a process may use: if the tooling warns that it runs fewer than 4, your replays here are not the verifier's.)
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **8 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

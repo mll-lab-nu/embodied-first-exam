@@ -1,9 +1,10 @@
-"""eai-standard/2.2 sim service for MuJoCo Playground's quadruped tasks (docs/STANDARD_MODE_2_2.md): the adapter of the
+"""eai-standard/2.2 sim service for MuJoCo Playground's quadruped tasks (docs/STANDARD_MODE.md): the adapter of the
 shared layer rcb_limited.py; the simulator is rcb_quadruped.Session (plain MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
 
-The episode is the frozen instance's: one control step = 1/50 s. A joystick episode ends after the whole command schedule
+The episode is the frozen instance's: one control step = the instance's control period (Go1, Spot: 1/50 s; Barkour:
+1/100 s). A joystick episode ends after the whole command schedule
 (the horizon), when the robot meets Playground's termination rule (it falls over: a failure), when the agent submits
 `done`, or when its time is over; success = the task's check on the steps executed. A getup episode ends the moment the
 check holds (success), after the horizon, on `done` or on timeout.
@@ -33,14 +34,15 @@ MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 CAM_W, CAM_H = 320, 240
 LOCK = threading.Lock()
 PID_FILE = os.path.join(DATA, "server.pid")
-E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
+E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None,
+     "t_first": None}   # t_first: the agent's first call (its clock starts there; kept through a crash by the checkpoints)
 
 os.environ["RCB_SESSION_LOG"] = ""
 os.environ["RCB_AGENT_TRACE_DIR"] = ""
 import rcb_quadruped as Q  # noqa: E402  (first: it picks the rendering backend before mujoco loads)
 import mujoco  # noqa: E402
 
-EP = L.Episode(DATA, dim=Q.N, resume="exact")
+EP = L.Episode(DATA, dim=Q.N, resume="exact", persist=("t_first",))
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = Q.Session(INSTANCE)
 ROWS: list = []  # every executed row (a resume replays them first): trajectory.npz
@@ -117,6 +119,7 @@ def _foot_pose(f: str) -> list:
 def do_kinematics(req: dict) -> dict:
     """Feet in the trunk frame (the trunk body's origin and axes; x forward, y left, z up). IK solves positions only, one
     leg (3 joints) per foot target, damped least squares within the joint ranges; a foot's orientation is ignored."""
+    _touch()
     if req["op"] == "fk":
         _fk_kd(np.asarray(req["q"]))
         return L.fk_response({f: _foot_pose(f) for f in req["links"]}, "trunk")
@@ -188,7 +191,7 @@ SPEC = {
             "layout": S.joint_names,
             "limits": dict(zip(S.joint_names, LIMITS.tolist())),
             "units": "rad",
-            "semantics": "absolute targets of the 12 joint position actuators, one per control step (1/50 s); rows `dt` "
+            "semantics": f"absolute targets of the 12 joint position actuators, one per control step ({DT:g} s); rows `dt` "
                          "apart (a multiple of the control period, at most 0.5 s), `hold` or `linear` between rows; values "
                          "outside the limits are clipped and reported",
         },
@@ -201,7 +204,9 @@ SPEC = {
     "world": {"frame": "z up; the robot starts where the episode puts it (no world coordinates are given)", "up": "+z",
               "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes"},
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S},
+    "budget": {"reset": 0, "steps": None, "wall_clock_s": WALL_CLOCK_S,
+               "clock": "meta time_s / time_left_s are counted from your first call to the service (observe, submit, kinematics "
+                        "or status); approximate - the harness's own deadline is authoritative"},
     "max_control_steps": S.horizon,
     "episode": TASK_EPISODE,
     "command_schedule": schedule_text(),
@@ -341,17 +346,49 @@ def video_fps(meta: dict) -> int:
 
 def cameras_of(meta: dict) -> list:
     cams = meta.get("cameras") or ["track"]
+    if not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names: {CAMS}")
     bad = [c for c in cams if c not in CAMS]
     if bad:
         raise ValueError(f"unknown cameras {bad}; cameras: {CAMS}")
     return list(cams)
 
 
+def _touch() -> None:
+    """Every call passes here: the first one starts the agent's clock. The simulator is up before the agent starts (the
+    harness installs the agent first), so the service's own start is not that moment."""
+    if E.get("t_first") is None:
+        E["t_first"] = time.time()
+
+
+def _agent_time() -> float:
+    return 0.0 if E.get("t_first") is None else time.time() - float(E["t_first"])
+
+
+def _num(meta: dict, key: str, default: float) -> float:
+    """A finite numeric request field; anything else (null, a string, NaN, Infinity) is the caller's mistake: a 400
+    before any physics, never a simulator error."""
+    try:
+        v = float(meta.get(key, default))
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError(f"{key} must be a number") from None
+    if not math.isfinite(v):
+        raise ValueError(f"{key} must be a finite number")
+    return v
+
+
+def _request(meta) -> dict:
+    if not isinstance(meta, dict):
+        raise ValueError("the request's meta must be a JSON object")
+    _touch()
+    return meta
+
+
 def meta_common(cams) -> dict:
     n = ctrl_steps()
     out = {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
-           "sim_time_s": round(n * DT, 3), "time_s": round(time.time() - E["t0"], 2),
-           "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - E["t0"]), 1)),
+           "sim_time_s": round(n * DT, 3), "time_s": round(_agent_time(), 2),
+           "time_left_s": max(0.0, round(WALL_CLOCK_S - _agent_time(), 1)),
            "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
            "cameras": {c: camera_info(c) for c in cams}}
     if S.kind == "joystick":
@@ -360,6 +397,7 @@ def meta_common(cams) -> dict:
 
 
 def do_submit(meta: dict, A: np.ndarray):
+    meta = _request(meta)
     typ = meta.get("type")
     if typ == "done":
         rec = recorder(cameras_of(meta), 5, meta)
@@ -369,7 +407,7 @@ def do_submit(meta: dict, A: np.ndarray):
         return {**meta_common(cameras_of(meta)), "chunk_id": E["calls"], "type": typ, "executed_rows": 0, "ok": True}, rec.parts("none", 5)
     if typ != "joint_position":
         raise ValueError(f"type must be joint_position or done (not yet: {SPEC['action_types']['not_yet']})")
-    dt = float(meta.get("dt", DT))
+    dt = _num(meta, "dt", DT)
     interp = meta.get("interpolate", "linear")
     video = meta.get("video", "mp4")
     cams, fps = cameras_of(meta), video_fps(meta)
@@ -378,7 +416,7 @@ def do_submit(meta: dict, A: np.ndarray):
         raise ValueError(f"joint_position actions must be (T, {Q.N}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)):
         raise ValueError("actions contain NaN/inf")
-    if not (math.isfinite(dt) and dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
+    if not (math.isfinite(dt) and 0 < dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
         raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
     if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
         raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
@@ -386,6 +424,7 @@ def do_submit(meta: dict, A: np.ndarray):
         raise ValueError("interpolate must be hold|linear")
     if video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
+    note = str(meta.get("note") or "")[:500]     # read before any physics: a note of any type is not an error
     rec, clipped = recorder(cams, fps, meta), []
     E["calls"] += 1
     step0, before = E["step"], ctrl_steps()
@@ -411,14 +450,15 @@ def do_submit(meta: dict, A: np.ndarray):
            "control_steps_chunk": ctrl_steps() - before, "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS,
            "clipped": clipped[:200], "n_clipped": len(clipped), "plan": [], "ok": True}
     EP.log({"ev": "submit", "call": E["calls"], "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams,
-            "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "note": (meta.get("note") or "")[:500],
+            "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "note": note,
             **({"stopped": EP.stop_reason} if EP.stopping else {})})
     return out, rec.parts(video, fps)
 
 
 def do_observe(meta: dict):
+    meta = _request(meta)
     cams, fps = cameras_of(meta), video_fps(meta)
-    seconds = float(meta.get("seconds", 0))
+    seconds = _num(meta, "seconds", 0)
     video = meta.get("video", "frames")
     if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
         raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
@@ -441,6 +481,7 @@ def do_observe(meta: dict):
 
 
 def status() -> dict:
+    _touch()
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
             "elapsed_s": round(time.time() - E["t0"], 1)}
 

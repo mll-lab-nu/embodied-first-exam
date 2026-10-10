@@ -6,7 +6,10 @@
 The twin: the agent container has only Python and the client (rcb_client.py + rcb1.py, the RoboTwin limited ones);
 the simulator runs in a `sim` sidecar (rcb-mujoco image) serving images/mujoco/limited/server_mj.py with the task's
 own tooling and frozen instance. The oracle replays the unlimited oracle's targets through the client; the verifier
-grades the sidecar's final.json (a fresh replay of the recorded episode)."""
+grades the sidecar's final.json (a fresh replay of the recorded episode).
+
+Run it on the tasks whose standard twin serves server_mj.py (DexToolBench, Playground ALOHA and Panda); the Playground
+quadrupeds are written by scripts/mujoco-playground/generate.py, so `--all` skips them."""
 import json, pathlib, re, shutil, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_conventions import normalize  # noqa: E402
 
@@ -14,6 +17,35 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 RT = ROOT / "tasks/robotwin_2_0_stack_blocks_two-standard"
 SERVER = ROOT / "images/mujoco/limited/server_mj.py"
 IMAGE = "ghcr.io/mll-lab-nu/eai-mujoco:0.1.2"
+# The sim's collect hook: wait (at most 180 s) for the service's PID file, then send SIGUSR1 every 30 s until final.json says
+# video_done (the verdict is `finalized` before the video is rendered; video_done follows), all inside one 840 s deadline, so
+# the loop always ends before the hook's timeout_sec = 900. A hook that stops early leaves the verdict on disk as it is.
+COLLECT = ("t0=$(date +%s); left() { echo $(( 840 - $(date +%s) + t0 )); }; while [ ! -f /data/server.pid ] && [ $(left) -gt 660 ]; do sleep 2; done; "
+           "i=0; while [ $(left) -gt 0 ]; do grep -q '\\\"video_done\\\": true' /data/final.json 2>/dev/null && break; "
+           "[ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; i=$((i+1)); sleep 2; done; cat /data/final.json")
+# README Change Log (PROTOCOL §2.8: published tasks fixed in place; results before a change are not retested), oldest first.
+CHANGES = [
+    "2026-10-10 (review 0067): the camera calibration in `meta[\"cameras\"]` now gives the pose of the viewpoint the image is "
+    "rendered from. Before, `cam2world_gl` held the position of MuJoCo's left-eye camera, 3.4 cm to the side of it, so points "
+    "back-projected from depth were off by that much. This changes what the agent observes: standard-mode results from "
+    "before this date are not strictly comparable.",
+    "2026-10-10 (review 0067): a malformed request (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list of "
+    "names, actions that are not a numeric array) is answered 400 before any physics; before, some of them (e.g. `dt = "
+    "Infinity`) were a 500 that ended the episode. `meta[\"time_left_s\"]` counts from the agent's first request, not from "
+    "the service's start. `final.json` is finalized as soon as the verdict is in it (the video is rendered after it and cannot "
+    "delay or void it); a missing, unreadable or verdict-less `final.json` is graded `infra_error = 1`, never a plain 0; the "
+    "collect hook's wait fits inside its timeout.",
+    "2026-10-10 (review round 2, board 0067): crash recovery only. A service killed inside the call that ended the episode "
+    "(after the end was logged, before the call's own record) resumed in the state before that call but kept the episode "
+    "ended, so every later call was a 409 and the rolled-back state was graded (a 0 without `infra_error`); the resume now "
+    "ignores an end that belongs to the lost call, and the episode continues from the last completed call, as the "
+    "instruction says. An episode without a crash is unaffected.",
+]
+CHANGES_ALOHA = [
+    "2026-10-10 (review 0067): the calibration is recomputed for every response. Before, it was computed once at start-up, so "
+    "the wrist cameras' poses were those of the home pose however the arms had moved; a response with several frames now "
+    "also carries the wrist cameras' pose for every frame (`cam2world_gl/<cam>`).",
+]
 ALLOW = 'network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4\nallowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]'
 
 
@@ -76,26 +108,42 @@ services:
     shutil.copy(RT / "tests/test.sh", dst / "tests/test.sh")
     (dst / "tests/grade.py").write_text('''"""Limited-mode verifier for the MuJoCo tasks: reads what the sim service (which the agent could not touch) wrote.
 /data/final.json holds a fresh replay's verdict of the recorded episode (deterministic = the replay ends in the live
-episode's final state). DexToolBench: reward = task progress (goals reached / goals); Playground: reward = success."""
-import json, os, shutil
+episode's final state). DexToolBench: reward = task progress (goals reached / goals); Playground: reward = success.
+infra_error = 1: no verdict on the agent (final.json missing, unreadable or without a verdict: the service never got
+that far, crashed past its restarts, or its verification replay failed). The replay video never decides anything."""
+import json, os, shutil, traceback
 LOG = "/logs/verifier"; os.makedirs(LOG, exist_ok=True)
 def write(reward, out):
     open(f"{LOG}/reward.txt", "w").write(f"{reward:.4f}\\n"); json.dump(out, open(f"{LOG}/reward.json", "w")); print(out)
 p = "/data/final.json"
 if not os.path.exists(p):
-    write(0.0, {"success": 0, "missing_log": 1, "infra_error": 1, "grader_error": 0}); raise SystemExit
-d = json.load(open(p))
+    write(0.0, {"success": 0, "deterministic": 0, "missing_log": 1, "infra_error": 1, "sim_error": 0, "grader_error": 0}); raise SystemExit
+try:
+    d = json.load(open(p))
+    if not isinstance(d, dict): raise ValueError("final.json is not a JSON object")
+except Exception:   # cut short or garbled: not the agent's 0
+    traceback.print_exc()
+    write(0.0, {"success": 0, "deterministic": 0, "missing_log": 0, "bad_log": 1, "infra_error": 1, "sim_error": 0, "grader_error": 1}); raise SystemExit
 for f in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):
-    if os.path.exists(f"/data/{f}"): shutil.copy(f"/data/{f}", f"{LOG}/{f}")
-det = bool(d.get("deterministic")); ok = bool(d.get("success")) and det
+    try:
+        if os.path.exists(f"/data/{f}"): shutil.copy(f"/data/{f}", f"{LOG}/{f}")
+    except OSError: traceback.print_exc()
+det = bool(d.get("deterministic"))
+# No verdict on the agent: the service crashed (restart refused), its verification replay failed, or it never got as far as
+# a verdict (not finalized: the collect hook gave up, or never ran). A verdict on disk is graded whether or not the video
+# was rendered after it.
+no_verdict = not d.get("finalized") and "deterministic" not in d
+infra = bool(d.get("infra_error") or d.get("finalize_error") or no_verdict)
+ok = bool(d.get("success")) and det and not infra
 out = {"success": int(ok), "deterministic": int(det), "finalized": int(bool(d.get("finalized"))), "control_steps": int(d.get("control_steps") or 0),
-       "calls": int(d.get("calls") or 0), "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))), "grader_error": 0}
-# no verdict on the agent: the service crashed (restart refused) or its verification replay failed
+       "calls": int(d.get("calls") or 0), "elapsed_s": float(d.get("elapsed_s") or 0), "video_rendered": int(bool(d.get("video"))),
+       "infra_error": int(infra), "grader_error": int(bool(d.get("finalize_error"))), "no_verdict": int(no_verdict)}
 out["sim_error"] = int(d.get("reason") == "error")   # the simulator failed during a call (the episode ended there)
-if d.get("infra_error") or d.get("finalize_error"):
-    out.update(infra_error=1, grader_error=int(bool(d.get("finalize_error"))), reason=str(d.get("reason") or ""), finalize_error=str(d.get("finalize_error") or "")[:300])
+if infra:   # reward.json: numbers only
+    json.dump({"reason": str(d.get("reason") or ""), "finalize_error": str(d.get("finalize_error") or "")[:300], "finalized": bool(d.get("finalized"))},
+              open(f"{LOG}/infra_error.json", "w"))
 if "progress" in d:
-    out.update(progress=float(d.get("progress") or 0.0) if det else 0.0, goals_reached=int(d.get("goals_reached") or 0), n_goals=int(d.get("n_goals") or 0),
+    out.update(progress=float(d.get("progress") or 0.0) if det and not infra else 0.0, goals_reached=int(d.get("goals_reached") or 0), n_goals=int(d.get("n_goals") or 0),
                failed_on_timeout=int(bool(d.get("failed_on_timeout"))))
     reward = out["progress"]
 else:
@@ -158,7 +206,7 @@ network_mode = "no-network"
 
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q '\\"finalized\\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
+command = "{COLLECT}"
 timeout_sec = 900
 
 [agent]
@@ -177,7 +225,8 @@ build_timeout_sec = 600.0
     (dst / "README.md").write_text(f"# {base}-standard\n\nStandard-mode twin of `{name}` (see its README): the same scene, instance and scoring, served as a robot service "
                                    f"(`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `{tool}`). The agent sees camera RGB-D and proprioception only.\n\n"
                                    "| | |\n|---|---|\n| oracle | `solution/`: the privileged-mode oracle's recorded targets submitted through the client (one row per control step) |\n"
-                                   "| grading | the sidecar replays the recorded episode in a fresh simulator; `deterministic` = same final state as the live episode |\n")
+                                   "| grading | the sidecar replays the recorded episode in a fresh simulator; `deterministic` = same final state as the live episode |\n"
+                                   "\n## Change Log\n" + "".join(f"- {c}\n" for c in CHANGES + (CHANGES_ALOHA if tool == "rcb_aloha" else [])))
     normalize(dst); normalize(src)   # protocol v1.0 conventions; the privileged twin's README gets its Twin row
     return dst
 
@@ -199,9 +248,13 @@ def instruction(src, inst, tool) -> str:
                     "goal is reached or at the step limit (`spec[\"max_control_steps\"]`); after that the service answers 409.\n"
                     "`steps_left_on_goal` is null: no goal has a time limit here.")
         dims = "29: `joint1..joint7` (iiwa), then the 22 Sharpa hand joints (names in `spec[\"action_types\"][\"joint_position\"][\"layout\"]`)"
+        cam_note = "The four cameras are fixed."
     else:
         task_obs = ('`meta["task"]` = the task\'s target (`target_pos`, and `target_quat_wxyz` where it has one). The episode runs until your\n'
                     "time is up; the **final state** is graded (so end in the pose you want graded, and keep it).")
+        cam_note = ("The overhead and teleoperator cameras are fixed. The two wrist cameras move with the arms (`spec[\"cameras\"][cam][\"moving\"]`):\n"
+                    "  for them a response with several frames also carries one pose per frame, `res.raw[\"cam2world_gl/<cam>\"][\"data\"]`,\n"
+                    "  float64 `(n_frames, 4, 4)`." if tool == "rcb_aloha" else "The four cameras are fixed.")
         dims = f"{'14: per arm `waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate, gripper`' if tool == 'rcb_aloha' else '8: `actuator1..7` joint targets (rad), `actuator8` finger opening (0..0.04 m)'}"
     return f"""{title}
 
@@ -214,7 +267,8 @@ client and one episode.
 - **No reset.** Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
   robot's own joint positions, velocities and targets. No object poses, no success predicate.
-- Your wall-clock budget is 60 minutes (`meta["time_left_s"]`). There is nothing to hand in: the service records the
+- Your wall-clock budget is 60 minutes. `meta["time_left_s"]` is counted from your first request to the service;
+  approximate — the harness's own deadline is authoritative. There is nothing to hand in: the service records the
   episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
 - Do not use pretrained manipulation policies or any published solution for this benchmark; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
@@ -241,10 +295,15 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
   (`interpolate="hold"`) or ramped from the previous row (`"linear"`, default) over its control steps; clipped to the
   limits in the spec. A chunk covers at most 10 s.
 - {task_obs}
+- Calibration: `meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world,
+  OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from), for the state at the
+  **end** of that call (the `last` image and the last frame of every stack). Depth is the distance along the viewing
+  axis, in metres. {cam_note}
 """
 
 
 if __name__ == "__main__":
     args = sys.argv[1:]
-    srcs = [p for p in sorted((ROOT / "tasks").glob("*")) if (p.name.startswith("dextoolbench_") or p.name.startswith("mujoco_playground_")) and p.name.endswith("-privileged")] if args == ["--all"] else [pathlib.Path(a) for a in args]
+    quadruped = lambda p: (p / "environment/rcb_quadruped.py").exists()   # noqa: E731  (scripts/mujoco-playground/generate.py writes those)
+    srcs = [p for p in sorted((ROOT / "tasks").glob("*")) if (p.name.startswith("dextoolbench_") or p.name.startswith("mujoco_playground_")) and p.name.endswith("-privileged") and not quadruped(p)] if args == ["--all"] else [pathlib.Path(a) for a in args]
     for s in srcs: print(make(s).name)

@@ -15,8 +15,14 @@ What it does:
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
   `reward.json`.
 - no `results/` directory (results are published on the results site, not in the repository).
+- `[metadata.resources]` (docs/PROTOCOL.md §2.9, minimum compute) and `[metadata.resources.limits]` (§2.10, the most a
+  trial may use) from `scripts/task_resources.toml` when a rule there matches the task; a task no rule matches keeps the
+  values its generator or author wrote.
+- `[environment].memory_mb` = `[metadata.resources.caps].main.memory_gb` x 1024 (§2.10: Harbor writes main's kernel
+  memory cap from it, and the cap sits above the limit so that the monitor sees a violation before the OOM killer).
+- `instruction.md` ends with `## Resource limits`, rendered from `[metadata.resources.limits]` (§2.10).
 - `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
-  Verification, and Details for everything else.
+  Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
 """
 from __future__ import annotations
 
@@ -26,6 +32,9 @@ import sys
 import tempfile
 import tomllib
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rcb_monitor import inject as rcb_monitor_inject  # noqa: E402
 
 CLIENT_ASSERT_OLD = 'assert str(self._spec.get("protocol", "")).startswith("rcb-limited/2."), self._spec.get("protocol")'
 CLIENT_ASSERT_NEW = ('assert str(self._spec.get("protocol", "")).startswith(("eai-standard/2.", "rcb-limited/2.")), '
@@ -66,6 +75,24 @@ HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / insta
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
              "task type / mode"}
 CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
+# PROTOCOL §2.9: the minimum compute a task needs, `[metadata.resources]` in task.toml (same list: ci_checks/check-resources.py)
+RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
+RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
+    "min_cpus": float, "min_memory_gb": float, "min_gpu_memory_gb": float, "gpu_required": bool, "gpu_class": str,
+    "recommended_gpu": str, "verifier_min_cpus": float, "verifier_min_memory_gb": float,
+    "verifier_min_gpu_memory_gb": float, "measured": str,
+}
+# PROTOCOL §2.10: the most a trial may use in the agent phase, `[metadata.resources.limits]` (same list: check-resources.py)
+LIMIT_KEYS = {  # key -> type (sizes in GiB)
+    "scope": str, "max_gpu_memory_gb": float, "max_memory_gb": float, "max_processes": int, "max_disk_gb": float,
+    "disk_paths": list, "disk_exclude": list, "sustain_sec": float, "window_sec": float,
+    "trial_max_gpu_memory_gb": float, "trial_max_memory_gb": float, "measured": str,
+}
+CAP_KEYS = {"cpus": float, "memory_gb": float, "pids": int}   # [metadata.resources.caps] per compose service (§2.10)
+ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §2.10: run-time switch (compose default 0 = record only; 1 = a violation fails)
+EMERGENCY_GPU_FACTOR = 1.5           # §2.10: host protection in enforced runs (the same value: rcb_monitor/monitor.py)
+LIMIT_SCOPES = {"privileged": "trial", "standard": "agent", "standard-realtime": "agent"}   # §2.10: who the limits bind
+LIMITS_HEADING = "## Resource limits"
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -162,12 +189,230 @@ def normalize_toml(task: Path) -> None:
     write_if_changed(p, s)
 
 
+def resources_for(task: Path) -> dict | None:
+    """`[metadata.resources]` for a task from scripts/task_resources.toml: every rule whose `match` (a regular expression)
+    finds the task directory name applies, in file order, a later rule overriding an earlier one's keys. None: no rule
+    matches (the task keeps what its task.toml says)."""
+    if not RESOURCES_FILE.is_file():
+        return None
+    out: dict = {}
+    limits: dict = {}
+    caps: dict = {}
+    rules = tomllib.loads(RESOURCES_FILE.read_text())
+    for rule in rules.get("rule", []):
+        if re.search(rule["match"], task.name):
+            out.update({k: v for k, v in rule.items() if k != "match"})
+    for rule in rules.get("limit", []):
+        if re.search(rule["match"], task.name):
+            limits.update({k: v for k, v in rule.items() if k != "match"})
+    for rule in rules.get("cap", []):
+        if re.search(rule["match"], task.name):
+            caps.update({k: v for k, v in rule.items() if k != "match"})
+    if not out:
+        return None
+    unknown = (set(out) - set(RESOURCE_KEYS)) | (set(limits) - set(LIMIT_KEYS))
+    missing = [k for k in RESOURCE_KEYS if k not in out and not (k == "recommended_gpu" and not out.get("gpu_required"))]
+    missing += [f"limits.{k}" for k in LIMIT_KEYS if k not in limits]
+    missing += ["caps.main"] if "main" not in caps else []
+    unknown |= {f"caps.{s}.{k}" for s, c in caps.items() for k in set(c) - set(CAP_KEYS)}
+    missing += [f"caps.{s}.{k}" for s, c in caps.items() for k in CAP_KEYS if k not in c]
+    if unknown or missing:
+        raise RuntimeError(f"{task.name}: scripts/task_resources.toml gives unknown keys {sorted(unknown)} / misses {missing}")
+    out["limits"] = {k: LIMIT_KEYS[k](limits[k]) for k in LIMIT_KEYS}
+    out["caps"] = {svc: {k: CAP_KEYS[k](c[k]) for k in CAP_KEYS} for svc, c in caps.items()}
+    if out["limits"]["scope"] != LIMIT_SCOPES[mode_of(task)]:
+        raise RuntimeError(f"{task.name}: limits scope must be {LIMIT_SCOPES[mode_of(task)]!r} (PROTOCOL §2.10)")
+    return out
+
+
+def _toml_value(v) -> str:
+    if isinstance(v, list):
+        return "[" + ", ".join(_toml_value(x) for x in v) + "]"
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, (int, float)):
+        return repr(float(v))
+    return '"' + str(v).replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def resources_block(r: dict) -> str:
+    lines = ["[metadata.resources]", "# minimum compute to run this task (docs/PROTOCOL.md §2.9)"]
+    lines += [f"{k} = {_toml_value(r[k])}" for k in RESOURCE_KEYS if k in r]
+    if isinstance(r.get("limits"), dict):
+        lines += ["", "[metadata.resources.limits]",
+                  "# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;"
+                  "", f"# enforced from protocol v1.2 when {ENFORCE_ENV}=1 (a violation fails the trial), otherwise recorded only"]
+        lines += [f"{k} = {r['limits'][k] if LIMIT_KEYS[k] is int else _toml_value(r['limits'][k])}"
+                  for k in LIMIT_KEYS if k in r["limits"]]
+    if isinstance(r.get("caps"), dict):
+        lines += ["", "[metadata.resources.caps]",
+                  "# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)"]
+        lines += [f"{svc} = {{ " + ", ".join(f"{k} = {c[k] if CAP_KEYS[k] is int else _toml_value(c[k])}" for k in CAP_KEYS)
+                  + " }" for svc, c in r["caps"].items()]
+    return "\n".join(lines) + "\n"
+
+
+def normalize_main_cap(task: Path) -> None:
+    """`[environment].memory_mb` = `[metadata.resources.caps].main.memory_gb` x 1024 (PROTOCOL §2.10). Harbor writes the
+    agent container's kernel memory cap (`mem_limit`) from `memory_mb`; the monitor can only see a memory violation
+    before the kernel's OOM killer acts when that real cap is the declared one, above the limit. A task without
+    declared caps keeps its value."""
+    p = task / "task.toml"
+    s = p.read_text()
+    main = ((tomllib.loads(s).get("metadata", {}).get("resources") or {}).get("caps") or {}).get("main")
+    if not isinstance(main, dict) or not main.get("memory_gb"):
+        return
+    want = int(round(float(main["memory_gb"]) * 1024))
+    m = re.search(r"(?ms)^\[environment\]\n(.*?)(?=^\[|\Z)", s)
+    if not m:
+        raise RuntimeError(f"{task.name}: task.toml has no [environment] table")
+    body = m.group(1)
+    if re.search(r"(?m)^memory_mb\s*=", body):
+        new = re.sub(r"(?m)^memory_mb\s*=\s*[0-9.]+", f"memory_mb = {want}", body, count=1)
+    else:
+        new = body.rstrip("\n") + f"\nmemory_mb = {want}\n" + ("\n" if body.endswith("\n\n") else "")
+    write_if_changed(p, s[:m.start(1)] + new + s[m.end(1):])
+
+
+def normalize_resources(task: Path) -> None:
+    """Writes `[metadata.resources]` right after the `[metadata]` keys (replacing an earlier block) when
+    scripts/task_resources.toml has a rule for the task."""
+    r = resources_for(task)
+    if r is None:
+        return
+    p = task / "task.toml"
+    s = p.read_text()
+    s = re.sub(r"(?ms)^\[metadata\.resources(?:\.limits|\.caps)?\]\n.*?(?=^\[|\Z)", "", s)
+    m = re.search(r"(?m)^\[metadata\]\n", s)
+    if not m:
+        raise RuntimeError(f"{task.name}: task.toml has no [metadata] table")
+    nxt = re.search(r"(?m)^\[", s[m.end():])
+    at = m.end() + nxt.start() if nxt else len(s)
+    head = s[:at].rstrip("\n") + "\n\n"
+    s = head + resources_block(r) + ("\n" + s[at:] if at < len(s) else "")
+    write_if_changed(p, s)
+
+
+def _num(v) -> str:
+    v = float(v)
+    return str(int(v)) if v == int(v) else f"{v:g}"
+
+
+def render_resources(r: dict, observed: list[str] | tuple = ()) -> list[str]:
+    """README "## Compute resources" from `[metadata.resources]` (PROTOCOL §2.9); `observed`: observed_of(task)."""
+    if r.get("gpu_required"):
+        cls = {"rtx": "an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering)",
+               "any": "any NVIDIA GPU"}.get(r.get("gpu_class", ""), f"an NVIDIA GPU of class `{r.get('gpu_class', '')}`")
+        rec = r.get("recommended_gpu")
+        rec = " / ".join(rec) if isinstance(rec, list) else rec
+        gpu = f"GPU: required, {cls}" + (f"; recommended: {rec}." if rec else ".")
+    else:
+        gpu = "GPU: not needed" + (" by the agent phase; the verifier needs one." if float(r.get("verifier_min_gpu_memory_gb", 0)) > 0
+                                   else ".")
+    return ["## Compute resources",
+            "Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent "
+            "phase counts every container of the trial at once (the agent's, and in standard modes the simulator "
+            "sidecar); the verifier phase runs after it.",
+            "", "| | Agent phase | Verifier |", "|---|---|---|",
+            f"| CPU cores | {_num(r['min_cpus'])} | {_num(r['verifier_min_cpus'])} |",
+            f"| Memory | {_num(r['min_memory_gb'])} GB | {_num(r['verifier_min_memory_gb'])} GB |",
+            f"| GPU memory | {_num(r['min_gpu_memory_gb'])} GB | {_num(r['verifier_min_gpu_memory_gb'])} GB |",
+            "", f"- {gpu}", f"- Measured: {r.get('measured', '')}"] + (
+        [f"- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in "
+         f"`instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets "
+         f"`{ENFORCE_ENV}=1`), {limits_summary(r['limits'], observed)}."]
+        if isinstance(r.get("limits"), dict) else [])
+
+
+def observed_of(task: Path) -> list[str]:
+    """The task's services that are recorded only although the limits' scope is the trial (privileged mode: the
+    benchmark's own services, PROTOCOL §2.10)."""
+    mode = mode_of(task)
+    return [s for s in sidecars_of(task) if mode not in SIDECAR_MODES and rcb_monitor_inject.kind_of(mode, s) == "observe"]
+
+
+def limits_summary(lim: dict, observed: list[str] | tuple = ()) -> str:
+    who = "every container of the trial" if lim["scope"] == "trial" else "the agent's container"
+    if lim["scope"] == "trial" and observed:
+        who += (" the agent drives (the benchmark's own " + ", ".join(f"`{s}`" for s in observed)
+                + f" service{'s are' if len(observed) > 1 else ' is'} recorded only)")
+    gpu = f"{_num(lim['max_gpu_memory_gb'])} GiB GPU memory" if float(lim["max_gpu_memory_gb"]) > 0 else "no GPU"
+    return (f"{who}: {gpu}, {_num(lim['max_memory_gb'])} GiB memory, {int(lim['max_processes'])} processes, "
+            f"{_num(lim['max_disk_gb'])} GiB of new files under {', '.join(f'`{d}`' for d in lim['disk_paths'])}; "
+            f"{_num(lim['sustain_sec'])} s within {_num(lim['window_sec'])} s. Expected peak of the whole trial: "
+            f"{_num(lim['trial_max_gpu_memory_gb'])} GiB GPU memory, {_num(lim['trial_max_memory_gb'])} GiB memory. "
+            f"Limits measured: {lim['measured']}")
+
+
+def sidecars_of(task: Path) -> list[str]:
+    """Compose services next to the agent's container (`main`), cache helpers (`rcb_*`) left out."""
+    c = read_text(task / "environment/docker-compose.yaml") or ""
+    return [s for s in rcb_monitor_inject.service_names(c) if s != "main" and not s.startswith("rcb_")]
+
+
+def _paths(ps: list[str]) -> str:
+    q = [f"`{p}`" for p in ps]
+    return q[0] if len(q) == 1 else ", ".join(q[:-1]) + " and " + q[-1]
+
+
+def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None = None) -> str:
+    """instruction.md's `## Resource limits` from `[metadata.resources.limits]` (PROTOCOL §2.10)."""
+    gpu_gb = float(lim["max_gpu_memory_gb"])
+    gpu = f"**{_num(gpu_gb)} GiB of GPU memory**, " if gpu_gb > 0 else ""
+    amounts = (f"at most {gpu}**{_num(lim['max_memory_gb'])} GiB of memory**, **{int(lim['max_processes'])} processes** "
+               f"and **{_num(lim['max_disk_gb'])} GiB** of new files under {_paths(lim['disk_paths'])}")
+    if lim["scope"] == "agent":
+        text = ("Limits for your agent environment, your own container only (the simulator in the `sim` service is the "
+                f"benchmark's and does not count): {amounts}; your container has no GPU." if gpu_gb == 0 else
+                "Limits for your agent environment, your own container only (the simulator in the `sim` service is the "
+                f"benchmark's and does not count): {amounts}.")
+    else:
+        owned = [s for s in sidecars if rcb_monitor_inject.kind_of(mode, s) == "observe"]   # the benchmark's own
+        sidecars = [s for s in sidecars if s not in owned]
+        incl = (f"every simulator you start and the `{sidecars[0]}` service included" if len(sidecars) == 1 else
+                "every simulator you start and the task's services included" if sidecars else "every simulator you start included")
+        if owned:
+            incl += ("; the " + " and ".join(f"`{s}`" for s in owned)
+                     + (" service is the benchmark's and does" if len(owned) == 1 else " services are the benchmark's and do")
+                     + " not count")
+        text = (f"Limits for the whole trial, all its processes together ({incl}): {amounts}"
+                + ("." if gpu_gb > 0 else "; the task has no GPU."))
+    if gpu_gb > 0:
+        text += " GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to)."
+    text += (f" These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for "
+             f"{_num(lim['sustain_sec'])} s within any {_num(lim['window_sec'] / 60)} minutes, or a process killed for lack of "
+             "memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container "
+             "measures every few seconds; the current values are in `/run/rcb-limits/usage.json`.")
+    if gpu_gb > 0:
+        text += (f" When enforcement is on and GPU memory goes above {_num(EMERGENCY_GPU_FACTOR)} times its limit, the "
+                 "monitor also kills the process holding the most of it at once, to protect the machine; that alone does "
+                 "not fail the trial.")
+    if cpus:
+        text += f" CPU is capped at {_num(cpus)} cores for your container; the cap only slows you down."
+    return LIMITS_HEADING + "\n" + text + "\n"
+
+
+def normalize_instruction(task: Path) -> None:
+    """instruction.md ends with `## Resource limits` rendered from `[metadata.resources.limits]` (replacing an earlier
+    one); without limits in task.toml it is left as it is."""
+    p = task / "instruction.md"
+    md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
+    lim = (md.get("resources") or {}).get("limits")
+    if not p.is_file() or not isinstance(lim, dict):
+        return
+    s = p.read_text(encoding="utf-8")
+    s = re.sub(rf"(?ms)^{re.escape(LIMITS_HEADING)}\n.*?(?=^## |\Z)", "", s).rstrip() + "\n"
+    env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
+    write_if_changed(p, s + "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus")))
+
+
 def _shared_sources() -> set[bytes]:
     """Contents of the files generators copy unchanged from scripts/eai_standard/ (the eai-standard/2.2 layer, and the 2.4
     layer in v2_4/; D9): their copies must stay byte-identical to the source (check-tooling-identity.sh), so normalize never
     rewrites them."""
     src = Path(__file__).resolve().parent / "eai_standard"
-    return {p.read_bytes() for p in src.rglob("*") if p.is_file() and "__pycache__" not in p.parts} if src.is_dir() else set()
+    shared = {p.read_bytes() for p in src.rglob("*") if p.is_file() and "__pycache__" not in p.parts} if src.is_dir() else set()
+    return shared | rcb_monitor_inject.generated_sources()     # the resource monitor's copies (scripts/rcb_monitor/)
 
 
 def normalize_text_files(task: Path) -> None:
@@ -240,6 +485,8 @@ def parse_readme(s: str) -> tuple[str, list[tuple[str, str]], list[tuple[str, st
     out: list[tuple[str, str]] = []
     intro = ""
     for title, body in sections:
+        if title == "Compute resources":   # rendered from task.toml (render_resources), never carried over
+            continue
         text = "\n".join(body)
         body_rows, rest = [], []
         for ln in body:
@@ -340,6 +587,8 @@ def render_readme(task: Path) -> str:
     out = [f"# {task.name}", "", "| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in head]
     out += ["", "## Task", task_text.strip(), "", "## Difficulty", difficulty.strip(), "",
             "## Reference solution", ref.strip(), "", "## Verification", ver.strip()]
+    if isinstance(md.get("resources"), dict):
+        out += [""] + render_resources(md["resources"], observed_of(task))
     if extra_rows or extra_secs:
         out += ["", "## Details"]
         if extra_rows:
@@ -370,9 +619,13 @@ def normalize(task: Path) -> None:
     if (task / "results").exists():
         shutil.rmtree(task / "results")
     normalize_toml(task)
+    normalize_resources(task)
+    normalize_main_cap(task)
     normalize_text_files(task)
+    normalize_instruction(task)
     normalize_test_sh(task)
     write_if_changed(task / "README.md", render_readme(task))
+    rcb_monitor_inject.apply(task)   # PROTOCOL §2.10 (v1.2): the resource monitor sidecar, caps, verifier step
     assert_converted(task)
 
 

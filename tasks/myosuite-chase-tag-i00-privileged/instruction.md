@@ -4,7 +4,7 @@ You control the **MyoLegs**, a free-standing musculoskeletal model of a human to
 muscles: there is no joint-level controller.
 **Task:** Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Failure (the episode ends): the time limit, leaving the 13 x 13 m arena, or the pelvis below 0.5 m (fallen).
 
-A musculoskeletal body with two legs stands in a square arena; an opponent moves in it. `s.state()` gives the task's observation dict (privileged): `internal_qpos`, `internal_qvel`, `grf`, `torso_angle`, `muscle_length`, `muscle_velocity`, `muscle_force`, `act`, `opponent_pose`, `opponent_vel`, `model_root_pos`, `model_root_vel`, `task`.
+A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move). `s.state()` gives the task's observation dict (privileged): `internal_qpos`, `internal_qvel`, `grf`, `torso_angle`, `muscle_length`, `muscle_velocity`, `muscle_force`, `act`, `opponent_pose`, `opponent_vel`, `model_root_pos`, `model_root_vel`, `task`.
 MyoSuite's reward code (from `/usr/local/lib/python3.11/site-packages/myosuite/envs/myo/myochallenge/chasetag_v0.py`; `solved` is the goal test,
 `done` the failure test):
 ```python
@@ -108,3 +108,6 @@ CLI equivalent of the grader:
 - Control step 10 ms (10 physics substeps). There is no step budget: your wall-clock time is the limit
   (~1200 control steps/s here). An episode ends at success or failure; `s.step` then refuses further
   actions until `s.reset()`.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **10 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

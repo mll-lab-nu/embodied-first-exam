@@ -42,7 +42,9 @@ retry as many times as you want. Your deliverable is **one replayable trajectory
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
 open-loop from the same initial state in two fresh processes and scored 1 if, in both replays, the goal holds for 10
 consecutive control steps (the replay stops there; later rows are never executed), no safety rule is broken at any step,
-and both replays end in the same state; else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a
+and both replays end in the same state; else 0. A trajectory holds at most **50,000 rows** (an episode ends after
+50,000 control steps, 41.7 min of simulated time, with `s.status()["reason"]` = `runaway_guard`): a longer file is
+rejected. Also leave the script that produced it at `/app/output/gen.py`. Save a
 working trajectory as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time
 is up is graded.
 
@@ -65,7 +67,7 @@ s.step(a8)                         # one low-level action = one control step (1/
 s.record_start(); ...; actions = s.record_stop()   # (T, 8) actions, one row per control step
 s.replay(actions)                  # resets, replays open-loop, returns status (approximate in-process)
 s.save_trajectory(actions, "/app/output/trajectory.npz")
-s.render_video(actions, "/app/output/check.mp4")   # replays and films cam_left + the wrist camera
+s.render_video(actions, "/app/output/check.mp4")   # replays and films cam_left + the wrist camera (a long one is thinned)
 s.env, s.robot, s.get_object(name) # OmniGibson's environment, robot and objects (with their object states)
 ```
 The primitives are deliberately thin (joint moves, the gripper, an IK move): grasping, placing, closing, and moving
@@ -83,7 +85,11 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - End-effector frames: `eef` is OmniGibson's end-effector link (+z along the fingers, the fingers close along +y); `tcp`
   is the fingertip centre, further along +z by the long fingers' length (`s.robot_spec()["tcp"]`).
 - Control runs at 20 Hz with 120 Hz physics (PhysX on the CPU). Your wall-clock budget is 120 min (7200 s);
-  there is no step budget (ManiGuard's own evaluator would stop at 1100 steps; here that is reported, not enforced).
+  there is no step budget (ManiGuard's own evaluator would stop at 1100 steps; here that is reported, not
+  enforced), only the cap of 50,000 control steps per episode above.
 - One `Session` per process: Isaac Sim launches once (a few minutes per process; plan your experiments accordingly). The
   first replay in a fresh process reproduces a live run; later in-process resets and replays can differ in the last
   digits. Do not call `s.close()` before writing every output (it ends the process).
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **30 GiB of GPU memory**, **25 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.

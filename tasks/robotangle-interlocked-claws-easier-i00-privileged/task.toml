@@ -1,5 +1,5 @@
 schema_version = "1.3"
-artifacts = ["/app/output/"]
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
 
 [task]
 name = "robot-coding-bench/robotangle-interlocked-claws-easier-i00-privileged"
@@ -22,10 +22,49 @@ success_rule = "task-native success (goal_complete True; frozen parameters; term
 instance_seed = 0                 # scene = environment/instance.json (variation easier, eval index None); identity = dataset.toml digest
 expert_time_estimate_hours = 2.0
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 2.0
+min_memory_gb = 7.0
+min_gpu_memory_gb = 7.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 7.0
+measured = "GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
+[metadata.resources.limits]
+# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 16.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 16.0
+measured = "GPU: 10.3 GiB on a 48 GB card, 5.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 4.6 GiB over 1 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+
+[metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
+
 [verifier]
 timeout_sec = 45000.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"
+
+# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
 
 [agent]
 timeout_sec = 21600.0             # Agent wall-clock budget; verifier has its own budget
@@ -34,7 +73,10 @@ timeout_sec = 21600.0             # Agent wall-clock budget; verifier has its ow
 [environment]
 build_timeout_sec = 3600.0
 cpus = 4
-memory_mb = 16384
+memory_mb = 20480
 
 [verifier.environment]
 build_timeout_sec = 1800.0
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

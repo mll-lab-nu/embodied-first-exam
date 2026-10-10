@@ -5,9 +5,9 @@ tasks/robowits-<family>-i00-standard (eai-standard/2.2), on the same frozen inst
 usage: python3 scripts/robowits/mk_tasks.py [--check] [--list] [--instance PATH] [family ...]
   no family     every family whose status is "pr" in families.py
   --check       write nothing; exit 1 if a task would change (re-running the generator must give no diff)
-  --list        print the family table (status, oracle, why a family is pending or dropped)
-  --instance    the frozen instance of a family that has no task directory yet (one family only), e.g. a pending
-                family's tasks/robowits-<family>-i00/environment/instance.json from dev/qineng 9eb18edf. A new family's
+  --list        print the family table (status, oracle, why a family was dropped)
+  --instance    the frozen instance of a family that has no task directory yet (one family only), e.g.
+                tasks/robowits-<family>-i00/environment/instance.json from dev/qineng 9eb18edf. A new family's
                 instance is made in the image:
                   docker run --rm --gpus all -v $PWD:/w <IMAGE> bash -c "cd /tmp && python /w/scripts/robowits/shared/rcb_robowits.py \\
                     make-instance --task <family> --eval-index <i> --out /w/<dir>/instance.json"
@@ -53,6 +53,47 @@ BK_NOTE = ("# The BlenderKit models this task loads may not be redistributed, so
            "# from the host's folder $RCB_ROBOWITS_BLENDERKIT (images/robowits/NOTICE).\n")
 EXEC = 0o755
 FILE = 0o644
+# The tooling's technical cap of one episode / trajectory (rcb_robowits.MAX_STEPS: Session's runaway guard, the standard
+# service's `step_guard` end and /spec max_control_steps, the longest trajectory the privileged grader accepts). Read from
+# the source, which this generator cannot import (numpy), so that the instructions always state the value that is enforced.
+MAX_STEPS = int(re.search(r"^MAX_STEPS = ([\d_]+)", (SHARED / "rcb_robowits.py").read_text(), re.M).group(1).replace("_", ""))
+MAX_STEPS_H = f"{MAX_STEPS / 30 / 3600:.2f}"       # hours of simulated time at the 30 Hz control rate
+# Fixes to the published tasks (PROTOCOL §2.8): one README Change Log entry per mode, newest last.
+CHANGE_LOG = {
+    "priv": [
+        "2026-10-10 (review of board 0067; findings RW-1, RW-5, RW-6, RW-7): the verifier reports an infrastructure error "
+        "(`infra_error = 1`) instead of the agent's 0 when it cannot build the frozen scene or the scene it rebuilt does not match "
+        "the frozen instance on its host (`instance_ok = 0`: another CPU vendor, docs/benchmarks/robowits.md, Hosts); a "
+        "`trajectory.npz` that cannot be read or lacks `task` / `actions` is `bad_trajectory`, no longer `grader_error`; "
+        "`reward.json` always carries `infra_error`; the verifier runs without network (`network_mode = \"no-network\"`); the "
+        f"instruction states the tooling's cap of {MAX_STEPS} control steps per trajectory instead of leaving it unsaid. The "
+        "pass rule, the frozen instance, the tooling and the predicate are unchanged; validated with synthetic tests of the "
+        "grader, not re-run in the simulator.",
+        "2026-10-10 (review round 2, board 0067; minor 2): `tests/grade.py` time-boxes the replay video, which it renders after "
+        "the verdict is on disk: it is skipped or stopped (`video_timed_out = 1`) 180 s before the verifier's `timeout_sec` "
+        "(`tests/test.sh` passes it as `--budget`). Before, the video replay of a very long trajectory could run into "
+        "Harbor's verifier timeout, which discards the verdict already written. The verdict, the pass rule, the frozen "
+        "instance and the tooling are unchanged; validated with a synthetic test of the grader, not re-run in the simulator.",
+    ],
+    "std": [
+        "2026-10-10 (review of board 0067; findings RW-1, RW-2, RW-3, RW-4, RW-7, RW-8): the service checks every request "
+        "field before it executes anything and answers 400 (before: a null or mistyped `dt` / `seconds` / `video_fps`, a "
+        "`video_fps` outside 1..30 or a non-string `note` ended the episode with a 500, some of them after the chunk had run); "
+        "a `joint_position` `dt` that is not a whole number of 1/30 s periods is answered 400 (before: rounded silently); `ee_pose` "
+        "gripper widths outside the limits are listed in `meta[\"clipped\"]`; a frozen instance that the host cannot rebuild "
+        "(reason `instance_mismatch`) and a grading replay that fails after a normal episode end as `infra_error = 1` with a "
+        "complete record, at once and without waiting out the collect hook; a service that died while rendering the video keeps "
+        f"its verdict; `/spec` (`max_control_steps`) and the instruction state the cap of {MAX_STEPS} control steps per "
+        "episode; `reward.json` adds `sim_error`, `instance_mismatch`, `instance_exact`. The pass rule, the frozen instance, "
+        "the tooling and the predicate are unchanged; validated with synthetic tests of the service and the grader, not "
+        "re-run in the simulator.",
+        '2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to '
+        '3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` '
+        "outlasts the simulator's start (no effect on a scene that builds in about a minute); "
+        '`cameras="name"` (a string) is one camera, no longer its characters. The '
+        'service, the collect hook, the grader, the scene and the pass rule are unchanged.',
+    ],
+}
 
 
 def slug(fam: str) -> str:
@@ -207,6 +248,9 @@ CLI equivalent of the grader:
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
 - Control runs at 30 Hz (@SUBSTEPS@). There is no step budget; your wall-clock budget is 90 min (5400 s).
+  One technical cap: a trajectory, and a `Session` between two resets, has at most @MAXSTEPS@ control steps (about
+  @MAXHOURS@ h of simulated time). `s.step` returns `True` on the step that reaches it and raises after it until
+  `s.reset()`; the grader scores a trajectory with more rows 0 (`bad_trajectory`).
 @GRIPPER@- One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic CPU backend at
   ~700 control steps/s; the GPU only renders camera images. Do not call `s.close()` before writing every output.
 """
@@ -220,15 +264,17 @@ STD_INSTRUCTION = """# RoboWits · @FAM@ — STANDARD MODE (robot as a service, 
 
 @NOTE@@CRITERION@
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
-  simulator error. Knocked-over objects stay knocked over.
+- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, on a
+  simulator error, or at the technical step cap below. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
   (`meta["done"]`, `reason` "success") the first time it holds.
-- **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
-  simulated time are reported as cost. Use the time: ending your session before the task is done ends the episode as
-  a failure.
+- **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down). There is no step budget; actions
+  and simulated time are reported as cost. One technical cap: the episode has at most @MAXSTEPS@ control steps (about
+  @MAXHOURS@ h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
+  that watches counts too). The call that reaches it stops there, the episode ends (`reason` "step_guard") and is graded
+  as it stands. Use the time: ending your session before the task is done ends the episode as a failure.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -276,14 +322,19 @@ gains and the tool frames; `spec["world"]` the frame conventions.
 ### Action types
 - `joint_position` (16): `Joint1_R..Joint7_R, right_gripper, Joint1_L..Joint7_L, left_gripper`; radians, gripper =
   opening width in metres, 0 = closed .. 0.1 = open. Absolute targets tracked by PD controllers. Rows are `dt` apart
-  (`1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period); a chunk may cover at most 10 s; out-of-limit values are
-  clipped and listed in `meta["clipped"]` (limits in the spec). Use `obs.meta["proprio"]["now"][:16]` as the starting
-  row to move smoothly.
+  (`1/30 ≤ dt ≤ 0.5` s, a whole number of 1/30 s control periods: `2/30`, not `0.067`; any other `dt` is refused, never
+  rounded); a chunk may cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in
+  the spec). Use `obs.meta["proprio"]["now"][:16]` as the starting row to move smoothly.
 - `ee_pose` (16): right `x y z qw qx qy qz gripper`, left same; world frame (robot base at (0, 0, 1.08), x away from the
   robot, y to its left, +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and
   driven to in joint space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is the **gripper tip**
   frame: +z is the approach direction, +x the direction the fingers close along (same convention as the `proprio`
-  end-effector poses, so an observed pose is a valid target). At most 50 rows per submit.
+  end-effector poses, so an observed pose is a valid target). At most 50 rows per submit; `dt` is ignored; a gripper
+  width outside 0 .. 0.1 is clipped and listed in `meta["clipped"]`.
+- A request with a field of the wrong type or out of range (`dt`, `seconds` outside 0 .. 30, `video_fps` not a whole
+  number in 1 .. 30, `video`, `interpolate`, `cameras` not a list of names, `note` not a string, actions that are not
+  finite (T, 16) numbers) is answered 400 before anything is executed: the client raises `ValueError`, nothing has
+  moved and the episode goes on.
 
 @OBJECTS@
 
@@ -300,7 +351,7 @@ def priv_instruction(fam: str, f: dict) -> str:
             "@OBJECTS@": ", ".join(f"`{o}`" for o in f["objects"]), "@FILE@": f"{num(f)}_{fam}.py", "@PREDICATE@": pred,
             "@CRITERION@": criterion_section(fam, f, "priv"), "@BUILD@": f.get("build_note") or "~60 s",
             "@SUBSTEPS@": f"{f['substeps']} physics substeps per control step in this scene" if f.get("substeps") else "4 physics substeps",
-            "@GRIPPER@": f.get("priv_gripper_note") or GRIPPER_DEFAULT}
+            "@GRIPPER@": f.get("priv_gripper_note") or GRIPPER_DEFAULT, "@MAXSTEPS@": str(MAX_STEPS), "@MAXHOURS@": MAX_STEPS_H}
     s = PRIV_INSTRUCTION
     for k, v in subs.items():
         s = s.replace(k, v)
@@ -315,7 +366,8 @@ def std_instruction(fam: str, f: dict) -> str:
     intro = ("You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**: "
              f"the simulator runs in a service you cannot open. You get one client and one episode. **Task:** {f.get('std_goal') or f_text(fam)}")
     subs = {"@FAM@": fam, "@INTRO@": wrap(intro), "@NOTE@": (f["std_note"] + "\n\n") if f.get("std_note") else "",
-            "@CRITERION@": criterion_section(fam, f, "std"), "@ROBOT@": robot, "@OBJECTS@": f["std_objects"]}
+            "@CRITERION@": criterion_section(fam, f, "std"), "@ROBOT@": robot, "@OBJECTS@": f["std_objects"],
+            "@MAXSTEPS@": str(MAX_STEPS), "@MAXHOURS@": MAX_STEPS_H}
     s = STD_INSTRUCTION
     for k, v in subs.items():
         s = s.replace(k, v)
@@ -353,13 +405,29 @@ def reference_text(fam: str, f: dict, mode: str) -> str:
                 "published on the results site).")
 
 
-def readme(title: str, rows: list[tuple[str, str]], task: str, difficulty: str, reference: str, verification: str) -> str:
+def readme(title: str, rows: list[tuple[str, str]], task: str, difficulty: str, reference: str, verification: str, mode: str) -> str:
     """README content in the standard layout (PROTOCOL §2.1). normalize() (scripts/task_conventions.py) then writes the key
     table (benchmark, mode, twin, simulator / robot, family / instance, oracle, budget, base image) from task.toml and the
-    Dockerfiles, and moves these extra rows into ## Details."""
+    Dockerfiles, and moves these extra rows and the Change Log (PROTOCOL §2.8) into ## Details."""
     table = "\n".join(["| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in rows])
+    log = "\n".join(f"- {e}" for e in CHANGE_LOG[mode])
     return (f"# {title}\n\n{table}\n\n## Task\n{task}\n\n## Difficulty\n{difficulty}\n\n## Reference solution\n{reference}\n\n"
-            f"## Verification\n{verification}\n")
+            f"## Verification\n{verification}\n\n## Change Log\n{log}\n")
+
+
+def host_detail(f: dict) -> list[tuple[str, str]]:
+    """The host constraint of a family whose frozen instance only one CPU vendor rebuilds (families.py `host_cpu_vendor`)."""
+    v = f.get("host_cpu_vendor")
+    return [("Host CPU", f"`{v}` only (`[metadata].host_cpu_vendor` in `task.toml`: the `vendor_id` of `/proc/cpuinfo`). On another "
+                         "vendor's CPU the frozen instance rebuilt by Genesis' CPU backend is out of tolerance, and the trial ends as "
+                         "an infrastructure error (`infra_error = 1`), never as a result (docs/benchmarks/robowits.md, Hosts)")] if v else []
+
+
+def host_toml(f: dict) -> str:
+    """The machine-readable host constraint ([metadata], a benchmark-specific field: docs/TAXONOMY.md), or nothing."""
+    v = f.get("host_cpu_vendor")
+    return (f"host_cpu_vendor = {toml_str(v)}   # run on hosts whose /proc/cpuinfo vendor_id is this: elsewhere the frozen instance "
+            "is out of tolerance (infra_error)\n") if v else ""
 
 
 def bk_detail(f: dict, where: str) -> list[tuple[str, str]]:
@@ -379,7 +447,8 @@ def review_line(f: dict, twin: str = "") -> str:
 def priv_readme(fam: str, f: dict) -> str:
     ver = (f"Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff\n"
            f"RoboWits' `_check_success` holds after every replay, the final-state hashes agree and the rebuilt frozen scene matches\n"
-           f"the recorded one (`tests/grade.py`), plus `/logs/verifier/replay.mp4`. What the predicate checks, in words:\n"
+           f"the recorded one (`tests/grade.py`; a scene that does not match is the host's failure, `infra_error = 1`, never the\n"
+           f"agent's 0), plus `/logs/verifier/replay.mp4`. What the predicate checks, in words:\n"
            f"`instruction.md`, \"Success criterion (as graded)\". The trajectory is the per-control-step JOINT_ABS record (T, 16);\n"
            f"Genesis' CPU backend restores the frozen snapshot exactly, so in-process repeats and fresh processes agree bit for bit\n"
            f"on one CPU vendor (docs/benchmarks/robowits.md).")
@@ -390,11 +459,11 @@ def priv_readme(fam: str, f: dict) -> str:
             ("Instance", f"entry {f['eval_index']} of RoboWits' `eval_dataset_50/{num(f)}.json`; object poses and the expected state hash in "
                          "`environment/instance.json` (the verifier's copy in `tests/`)"),
             ("Robot", "Marvin bimanual: 2 × 7-DoF arms with Pika parallel grippers; JOINT_ABS actions (T, 16) at 30 Hz"),
-            ("GPU", "EGL camera rendering only (`environment/docker-compose.yaml`, `tests/docker-compose.yaml`)")] + bk_detail(f, "")
+            ("GPU", "EGL camera rendering only (`environment/docker-compose.yaml`, `tests/docker-compose.yaml`)")] + bk_detail(f, "") + host_detail(f)
     task = wrap(f"{f_text(fam)} One replayable trajectory from the frozen instance (evaluation scene {f['eval_index']} of RoboWits task "
                 f"{int(num(f))}), with the privileged tooling (`rcb_robowits.py`: the scene's state, resets, thin primitives, replay); the "
                 "success criterion as graded is in `instruction.md`.")
-    return readme(priv_dir(fam), rows, task, wrap(f["difficulty"]), reference_text(fam, f, "priv"), ver)
+    return readme(priv_dir(fam), rows, task, wrap(f["difficulty"]), reference_text(fam, f, "priv"), ver, "priv")
 
 
 def std_readme(fam: str, f: dict) -> str:
@@ -406,14 +475,14 @@ def std_readme(fam: str, f: dict) -> str:
                + (" The oracle scores 1 and `nop` scores 0." if f["oracle"] == "full" else ""))
     ver += review_line(f, ", with its privileged twin")
     cls = "exact" if f["backend"] == "cpu" else "approx"
-    rows = [("Protocol", f"`{PROTOCOL}` (docs/STANDARD_MODE_2_2.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control "
+    rows = [("Protocol", f"`{PROTOCOL}` (docs/STANDARD_MODE.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control "
                          "rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` frames or a watch window; stateless "
                          "`kinematics`; binary RCB1 responses"),
             ("Crash recovery", f"`restart: on-failure:6`; the service replays its journal and resumes the same episode (resume class "
-                               f"`{cls}`, docs/STANDARD_MODE_2_2.md §13)"),
+                               f"`{cls}`, docs/STANDARD_MODE.md §13)"),
             ("Agent and verifier image", f"`{CLIENT_IMAGE}` with the shared pins (`environment/{CLIENT_REQUIREMENTS}`)"),
             ("Instance", f"the privileged twin's frozen instance (`environment/sim/instance.json`): entry {f['eval_index']} of RoboWits' "
-                         f"`eval_dataset_50/{num(f)}.json`")] + bk_detail(f, "into the `sim` sidecar")
+                         f"`eval_dataset_50/{num(f)}.json`")] + bk_detail(f, "into the `sim` sidecar") + host_detail(f)
     task = wrap(f"{f_text(fam)} The same frozen instance as `{priv_dir(fam)}`, as a robot service (`{PROTOCOL}`): the simulator runs "
                 "in the `sim` sidecar, which the agent cannot open; the agent gets one episode, no reset and no privileged state, only the "
                 "client (calibrated RGB-D cameras, proprioception, `joint_position` / `ee_pose` chunks, stateless kinematics). The sidecar "
@@ -422,7 +491,7 @@ def std_readme(fam: str, f: dict) -> str:
     diff = wrap(f"That of `{priv_dir(fam)}` (its Difficulty), without resets, privileged state or the tooling's primitives: the agent "
                 "perceives the scene through calibrated RGB-D cameras and its own proprioception, and every action it sends is part of "
                 "the one graded episode.")
-    return readme(std_dir(fam), rows, task, diff, reference_text(fam, f, "std"), ver)
+    return readme(std_dir(fam), rows, task, diff, reference_text(fam, f, "std"), ver, "std")
 
 
 def toml_str(s: str) -> str:
@@ -454,11 +523,12 @@ family = "{fam}"
 mode = "privileged"
 {oracle}
 instance_seed = {f['eval_index']}                 # scene = environment/instance.json (entry {f['eval_index']} of RoboWits' eval_dataset_50/{num(f)}.json + expected state hash); identity = dataset.toml digest
-expert_time_estimate_hours = 1.0
+{host_toml(f)}expert_time_estimate_hours = 1.0
 
 [verifier]
 timeout_sec = {float(vt)}
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"       # the replay needs no download: assets in the image, Genesis' caches seeded from instance.json
 
 [agent]
 timeout_sec = {float(BUDGET_S)}             # RoboWits budget: 1.5 h of wall clock (docs/benchmarks/robowits.md)
@@ -511,7 +581,7 @@ mode = "standard"                  # RGB + proprioception only; no object poses,
 protocol = "{PROTOCOL}"
 {oracle}
 instance_seed = {f['eval_index']}
-expert_time_estimate_hours = 2.0
+{host_toml(f)}expert_time_estimate_hours = 2.0
 
 [verifier]
 timeout_sec = 1200.0
@@ -521,7 +591,7 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 # end the episode (SIGUSR1 to the live service, through a crash resume if one is under way), wait for the in-process
-# grade and the video (final.json video_done), then hand over the record (docs/STANDARD_MODE_2_2.md §13.3)
+# grade and the video (final.json video_done), then hand over the record (docs/STANDARD_MODE.md §13.3)
 command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout {ct - 120}; cat /data/final.json"
 timeout_sec = {ct}                # service up (a resume replays the journal first), the grading replay, then the video
 
@@ -555,7 +625,7 @@ def std_compose(fam: str, f: dict) -> str:
              "# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).",
              ("# Genesis runs physics on the GPU here (particle-heavy scene, not bit-exact) and renders the cameras through EGL." if gpu else
               "# Genesis runs physics on the CPU (bit-deterministic) and needs the GPU only for EGL camera rendering."),
-             "# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the",
+             "# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the",
              "# container (same container, same /data) and the service replays its journal into the same episode, never a reset."]
     out = "\n".join(lines) + "\n" + (BK_NOTE if f["blenderkit"] else "")
     out += "services:\n  main:\n    depends_on: [sim]\n  sim:\n"
@@ -598,7 +668,7 @@ def priv_test_sh(fam: str) -> str:
     return ("#!/bin/bash\n# Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in a fresh process.\n"
             "# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/PROTOCOL.md).\n" + CLEAR_LOGS +
             f"python /tests/grade.py --family {fam} --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \\\n"
-            "  2> /logs/verifier/grade.log\n")
+            f"  --budget {FM.FAMILIES[fam].get('verifier_timeout_s') or 1800} 2> /logs/verifier/grade.log\n")
 
 
 def std_test_sh() -> str:

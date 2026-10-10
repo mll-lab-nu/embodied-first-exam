@@ -13,8 +13,11 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
   proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
-- Steps are unlimited; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time
-  are reported as cost.
+- There is no step budget; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time
+  are reported as cost. Only a runaway guard bounds the episode: it ends at 200,000 control steps (1.85 h of simulated
+  time; `spec["max_control_steps"]`, reason `step_guard`).
+- **A malformed request is refused with a 400 and nothing is executed** (a wrong type or shape, a value out of range,
+  a `dt` that is not a whole number of control periods, `video_fps` outside 1-30): fix it and send it again.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -28,7 +31,8 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (waits while Isaac Sim starts and loads the scene, ~3-5 min)
+r = Robot()                                   # connects: waits while Isaac Sim starts and loads the scene (3-12 min measured; the
+                                              # wait is on your clock, progress on stderr; it gives up after 3600 s, Robot(timeout=...))
 spec = r.spec()                               # actions, cameras, robot_spec, world, kinematics, budget, static facts
 
 obs = r.get_obs()                             # current frames from the robot's 3 cameras: obs.last[cam] -> uint8 (224,224,3)
@@ -50,8 +54,8 @@ position + quaternion **XYZW**.
 ### Action types
 - `joint_position` (25), in the blocks `spec["action_types"]["joint_position"]["blocks"]` lists: base (3), trunk (4),
   left arm (7), left gripper (2), right arm (7), right gripper (2). Rows are `dt` apart (`1/30 ≤ dt ≤ 0.5` s, a multiple
-  of the 30 Hz control period); a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
-  `meta["clipped"]`.
+  of the 30 Hz control period: `k/30` s, e.g. 0.1 or 0.2; any other `dt` is a 400, it is never rounded); a chunk may
+  cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]`.
   - Trunk and arm entries are absolute joint targets (rad), linearly interpolated between rows (or held, `interpolate="hold"`).
   - **The three base entries are different**: they are position targets in the *robot's own frame* (x, y in m, yaw in
     rad), re-applied on every control step, so they act as a per-step displacement: a row held for N control steps drives
@@ -83,3 +87,6 @@ position + quaternion **XYZW**.
   world frame with `base_pose=` the 7 base proprio columns.
 
 For scale: the 2026 challenge's human teleoperators needed 355 s on average (10,638 control steps) for this task, and the simulator runs at ~7-11 control steps/s. Budget your time, drive before you reach, and check `meta["done"]`.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.

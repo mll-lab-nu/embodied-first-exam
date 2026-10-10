@@ -13,6 +13,11 @@ trajectory : the per-physics-step control record (T, 34) = for the 16 active joi
              Every `scene.step()` that RoboTwin's primitives take goes through a hook that (a) applies gravity
              compensation, (b) records this row. Replaying the rows open-loop from the same instance must
              reproduce the outcome (PhysX CPU is deterministic on the same build).
+gripper    : RoboTwin's success clauses is_{left,right}_gripper_{open,close}() read a number that Robot.set_gripper()
+             stores next to the finger drive targets it sets. A row carries both (the finger targets in the joint
+             columns, the stored number in the last two), so the two can disagree. Here the clauses read the FINGERS:
+             the opening each finger joint's drive target commands (0 = closed, 1 = open), with RoboTwin's thresholds
+             (`Session.gripper_opening`). A gripper counts as open only when its finger targets are open.
 
 CLI
 ---
@@ -144,7 +149,14 @@ class _SceneProxy:
 # --------------------------------------------------------------------------- session
 class Session:
     def __init__(self, task: str, instance: str | Path | None = None, seed: int = 0,
-                 embodiment: str | None = None, enable_render: bool = False, render_shader: str = "default"):
+                 embodiment: str | None = None, enable_render: bool = False, render_shader: str = "default",
+                 gripper_state: str = "fingers"):
+        """`gripper_state`: what RoboTwin's gripper clauses (is_*_gripper_open / _open_half / _close) read. "fingers"
+        (default; the verifier's setting): the finger joints' drive targets, see `gripper_opening`. "command":
+        RoboTwin's own stored command value (the standard-mode service, whose rows only ever come from set_gripper)."""
+        if gripper_state not in ("fingers", "command"):
+            raise ValueError(f"gripper_state must be 'fingers' or 'command', got {gripper_state!r}")
+        self.gripper_state = gripper_state
         if not os.path.isfile(os.path.join(ROBOTWIN_ROOT, "envs", f"{task}.py")):
             raise KeyError(f"unknown RoboTwin task {task!r} (no envs/{task}.py)")
         self.task = task
@@ -205,6 +217,8 @@ class Session:
         self._joints = list(r.left_arm_joints) + [g[0] for g in r.left_gripper] + \
             list(r.right_arm_joints) + [g[0] for g in r.right_gripper]
         self._entities = [r.left_entity] + ([r.right_entity] if r.right_entity is not r.left_entity else [])
+        if self.gripper_state == "fingers":
+            self._install_gripper_predicates()
         self._total_steps += self._sim_steps
         _slog("reset", task=self.task, n=self._resets + 1, sim_steps_before=self._sim_steps)
         self._sim_steps = 0
@@ -235,6 +249,40 @@ class Session:
             j.set_drive_target(float(p)); j.set_drive_velocity_target(float(v))
         self.env.robot.left_gripper_val = float(row[2 * n]); self.env.robot.right_gripper_val = float(row[2 * n + 1])
 
+    # ---- gripper state read by the success predicate
+    # RoboTwin: is_*_gripper_open() = gripper value > 0.8, _open_half() = > 0.45, _close() = < 0.2 (envs/robot/robot.py),
+    # on Robot.{left,right}_gripper_val, which only records the last command. A trajectory row sets that value and the
+    # finger drive targets separately, so a row can say "open" while its finger targets stay closed on the object.
+    GRIPPER_OPEN, GRIPPER_OPEN_HALF, GRIPPER_CLOSE = 0.8, 0.45, 0.2
+
+    def gripper_opening(self, side: str) -> tuple[float, float]:
+        """(least open, most open) finger of the `side` ("left" | "right") gripper, read from the finger joints' DRIVE
+        TARGETS in the gripper command's units (0 = closed, 1 = open): the inverse of Robot.set_gripper, which sets
+        target = (scale[0] + value * (scale[1] - scale[0])) * multiplier + bias on every finger joint. With
+        gripper_state="fingers" the success clauses use it: open needs the least open finger above 0.8, closed the
+        most open finger below 0.2. Targets, not measured positions: a gripper closed on an object still reads closed."""
+        r = self.env.robot
+        fingers = r.left_gripper if side == "left" else r.right_gripper
+        lo, hi = [float(x) for x in (r.left_gripper_scale if side == "left" else r.right_gripper_scale)[:2]]
+        vals = []
+        for joint, mult, bias in fingers:
+            if not mult or hi == lo:
+                continue
+            target = float(np.asarray(joint.get_drive_target()).reshape(-1)[0])
+            vals.append(((target - float(bias)) / float(mult) - lo) / (hi - lo))
+        if not vals:   # no finger joint to read: fall back to the stored command
+            vals = [float(r.left_gripper_val if side == "left" else r.right_gripper_val)]
+        return float(np.clip(min(vals), 0.0, 1.0)), float(np.clip(max(vals), 0.0, 1.0))
+
+    def _install_gripper_predicates(self) -> None:
+        """Point the robot's gripper clauses at the fingers (instance attributes; RoboTwin's task classes and
+        Base_Task call them through `self.robot`)."""
+        r = self.env.robot
+        for side in ("left", "right"):
+            setattr(r, f"is_{side}_gripper_open", lambda s=side: self.gripper_opening(s)[0] > self.GRIPPER_OPEN)
+            setattr(r, f"is_{side}_gripper_open_half", lambda s=side: self.gripper_opening(s)[0] > self.GRIPPER_OPEN_HALF)
+            setattr(r, f"is_{side}_gripper_close", lambda s=side: self.gripper_opening(s)[1] < self.GRIPPER_CLOSE)
+
     @property
     def action_dim(self) -> int:
         return 2 * len(self._joints) + 2
@@ -244,7 +292,9 @@ class Session:
         n = len(self._joints)
         names = [j.get_name() for j in self._joints]
         return (f"one row per physics step (1/250 s): {n} joint drive position targets (rad/m) {names}, "
-                f"then {n} drive velocity targets, then the left and right gripper commands (0 = closed, 1 = open)")
+                f"then {n} drive velocity targets, then the left and right gripper commands (0 = closed, 1 = open). "
+                f"The success check reads the gripper state from the finger joints' position targets (the last two "
+                f"of each arm's eight), not from the two command columns: see Session.gripper_opening")
 
     def step(self, row: np.ndarray | None = None) -> None:
         """Advance one physics step; `row` (action_dim,) sets the drive targets first. Records if recording."""

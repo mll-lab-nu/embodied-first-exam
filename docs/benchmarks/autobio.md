@@ -66,7 +66,8 @@ success rate), load rotor 14.7 / 1.0.
     stated in the instructions and in `/spec` (`max_control_steps`). It is meant never to bind: the busiest episode of
     the sample model trial used 287425 steps in its hour.
   - A MuJoCo physics warning (an unstable state) ends the episode as a failure, as AutoBio's evaluator does. The
-    renderer's own warning (`VGEOMFULL`) is not counted, so that looking never changes a verdict.
+    renderer's own warning (`VGEOMFULL`) is not counted, so that looking never changes a verdict. Both instructions
+    and the standard service's `/spec` (`episode`) say so (the standard ones since 2026-10-10; the rule did not change).
 - **The checks, in words** (thresholds are AutoBio's):
 
   | family | success |
@@ -86,7 +87,7 @@ success rate), load rotor 14.7 / 1.0.
   with every threshold relative ("lift it at least 9.5 cm", "within 15 mm of the slot's centre", "the row farther from
   the robot's base"), and never a world coordinate, an object pose or an instrument state; the robot's own base poses
   are in `/spec` (`robot_spec.base`). AutoBio's standard tasks join the declaration of eai-standard/2.2 §10 and are
-  checked by `ci_checks/check-limited-texts.sh`.
+  checked by `ci_checks/check-standard-texts.sh`.
 - **Texts.** The instructions describe each check in our own words and point to its source in the image
   (`/opt/AutoBio/autobio/<module>.py`); AutoBio's code is not quoted (no licence). The texts are in
   `scripts/autobio/families.json`.
@@ -115,6 +116,27 @@ success rate), load rotor 14.7 / 1.0.
     base poses, joint limits, drive gains and gripper commands;
   - crash recovery with resume class `exact` (MuJoCo on the CPU is bit-exact in a fresh process). The collect hook
     replays the recorded trajectory in two fresh processes.
+  - a request is checked in full before anything is executed: a malformed field (null or a wrong type for `dt`,
+    `seconds`, `cameras`, `note`, `video`, `interpolate`, `depth`; a `dt` that is not finite or not a whole multiple of
+    2 ms) is a 400 and the episode goes on. Null for `dt`, `seconds`, `video_fps`, `cameras` or `note` means the
+    default.
+- **Time limits of the graders** (2026-10-10). The longest episode, 600000 rows, replays in 1000 s in the slowest
+  family (`insert_centrifuge_5430`, 600 control steps/s); a verdict replay may take 2400 s, 2.4 times that, and is
+  killed at that limit. Privileged: `[verifier] timeout_sec` 5400 = 2 x 2400 + the video replay (what is left, at most
+  1800 s; skipped under 120 s) + 300 s, so `tests/grade.py` always writes a reward before Harbor's timeout. Standard:
+  the collect hook's `timeout_sec` is 7200 (was 5400) = 900 (the episode's end, through a resume) + 2 x 2400 + the video
+  replay (what is left) + 300 s. The numbers are stated once in `generate.py` (`REPLAY_TIMEOUT`, `VERIFIER_TIMEOUT`,
+  `COLLECT_TIMEOUT`), which refuses to generate when `shared/grade.py` or `shared/standard/finalize.sh` say otherwise.
+- **What is not the agent's 0** (`infra_error = 1` in `reward.json`, PROTOCOL §2.6). Standard: `final.json` missing
+  (the service writes it as soon as its scene is up), unreadable, or without a verdict (the collect hook was killed
+  before it wrote one: `no_verdict`); the service never ending its episode for the hook; a give-up after crashes
+  between calls or a failed resume; a replay process that gave no result or ran into its limit (`replay_failed`,
+  `replay_timed_out`); replays that did not start in the instance's recorded state (`instance_mismatch`); an
+  unreadable `episode.json`. A crash inside a call (`sim_crashed_on_call`) stays the agent's failure. `final.json` is
+  written whole (temporary file, then rename). Privileged: a replay without a result and an instance mismatch set
+  `grader_error` and `infra_error`; a deliverable that cannot be read (not an npz, no `actions`, object arrays, the
+  wrong shape, more than 600000 rows) is the agent's 0 (`bad_trajectory`), never a grader error. A result a replay
+  wrote counts whatever the process's exit status.
 - **Looking never changes the physics.** Observations (rendering, camera poses, tool poses) are computed on a scratch
   copy of the state; nothing calls `mj_forward` on the live data (that would change the solver's warm start and with
   it the trajectory). A replay with rendering ends in the same state as one without.
@@ -159,7 +181,7 @@ they still succeed (the success step moves by at most 22 control steps).
   left finger; a grasp between both fingers satisfies it, and the instructions say so.
 - **AutoBio's own evaluator shows a frozen mixer display** after its first two frames (the helper described under
   Modes); frames rendered here follow the panel. Worth knowing when comparing with AutoBio's numbers for that task.
-- **`check-limited-protocol.py`** (the live conformance test) reports one false positive on the UR5e tasks:
+- **`check-standard-protocol.py`** (the live conformance test) reports one false positive on the UR5e tasks:
   `placeholder_limits`, because five UR5e joints share a +-2 pi range. That is their range in AutoBio's model, as on the
   real arm.
 - **No licence upstream**, hence `BUILD_ONLY`; a licence from the authors would change that and nothing else.
@@ -193,11 +215,11 @@ as committed (their digests in `tasks/dataset.toml`).
   the reference 0 (the mixer: score 0.2), the reference without its last 50 rows 0 (rule `first`), the reference
   reversed 0, 4 s of random targets 0, the initial targets held for 10 s 0, another family's reference 0; the
   reference 1.
-- **Crash recovery** (`scripts/autobio/kill_test.sh`, STANDARD_MODE_2_2 §13.5), on `pickup` and on `thermal_mixer`: the
+- **Crash recovery** (`scripts/autobio/kill_test.sh`, STANDARD_MODE.md §13.5), on `pickup` and on `thermal_mixer`: the
   service killed (`kill -9`) after the first half of the reference rows; the container restarted, the service resumed
   the same episode (`resumes` 1, exact hash), the client sent the rest (and `done` for the mixer), the collect hook
   graded it: success, `live_matches_replay` 1, the reference's final state.
-- **`ci_checks/check-limited-protocol.py --launch`** against live services: `pickup` (ALOHA) passes all 177 checks;
+- **`ci_checks/check-standard-protocol.py --launch`** against live services: `pickup` (ALOHA) passes all 177 checks;
   `thermal_mixer` and `pipette` (UR5e) pass 183 and 246 and fail one, the `placeholder_limits` heuristic described
   under Known limits. Among the passes: forward kinematics of the measured joints equals the measured tool pose,
   FK(parent link) x mount equals each wrist camera's pose, the IK round trip, and the tool frame projected through
@@ -208,6 +230,15 @@ as committed (their digests in `tasks/dataset.toml`).
   passes (`protocol v1.1: 18 task(s) conform`, `ok shared sources: autobio 18 task dirs, 10 shared files`,
   `ok scripts/autobio/generate.py: 18 task directories match`), and so does the run over the whole repository;
   `python3 scripts/task_conventions.py --check tasks/*/`: clean.
+- **2026-10-10, the graders' bookkeeping** (time limits, `infra_error`, request checks; "Modes" above), checked without
+  Harbor: the scripts are `scripts/labutopia/tests/test_*.py` (AutoBio and LabUtopia together) and
+  `scripts/labutopia/tests/e2e_autobio.sh` (the image, on the CPU): synthetic runs of both graders and of the collect hook with stand-in replays (missing / corrupt / unfinished
+  `final.json`, a replay that dies, hangs, or crashes after writing its result, give-ups, unreadable deliverables: 114
+  cases over AutoBio and LabUtopia), 13068 malformed requests per service against the request checks taken from
+  `server.py` (none raises anything but a 400), and on `pickup` in the image, on the CPU: 29 malformed requests over
+  HTTP answered 400 with nothing executed, then the reference with a `kill -9` half way, the hook (44 s) and
+  `tests/grade.py`: reward 1, `infra_error` 0, one resume; the service's own unfinished `final.json` before the hook:
+  reward 0, `infra_error` 1; the privileged grader on the reference: reward 1. No `harbor run` was repeated.
 - **The image:** `pip freeze` in the image equals `images/autobio/requirements.txt` (41 packages); no class
   `...Expert` is left in it (`strip_experts.py --check`, part of the build). The raw start states of `pickup` and
   `thermal_mixer` hash the same in a plain `pip` environment outside the image.

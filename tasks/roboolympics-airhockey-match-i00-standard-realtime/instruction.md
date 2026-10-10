@@ -46,7 +46,7 @@ r.submit("ready", [[0]], note="WHY ... PLAN ...")       # during a break: resume
   next step by default; `meta["control_steps"]` is the next step's number), replacing whatever was planned from there.
   A row takes effect at its step: the command is checked and planned there, from the state of that step. Rows for
   steps that are already gone when the request arrives are dropped (`meta["late_steps"]`); out-of-range values are
-  clipped (`meta["clipped"]`); a command the rules refuse at its step (e.g. a mallet target while the match stands still) changes nothing and
+  clipped (`meta["clipped"]`); a command the rules refuse at its step (e.g. a mallet target at a step where the rally is already over; a row planned for a step inside a break is dropped and does not count) changes nothing and
   counts in the proprio column `commands_refused`.
 - `res.meta`: `control_steps`, `sim_time_s`, `time_left_s`, `done`, `reason`, `running`, `lag_s`, and `proprio`
   (`layout`, `now`). `EpisodeOver` is raised once the match is over.
@@ -97,3 +97,6 @@ The rule texts come from RoboOlympics' `sport.toml`. Where they name RoboOlympic
 
 Your robot: KUKA LBR iiwa 14 holding a mallet (the striker on two passive joints), its base at (-1.51, 0) beside your end. Everything else you need (the frame, the geometry and the rule constants) is in
 `spec()["rules"]`; the physics engine is MuJoCo.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **4 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 2 cores for your container; the cap only slows you down.

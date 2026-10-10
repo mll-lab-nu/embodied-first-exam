@@ -1,5 +1,5 @@
 """eai-standard/2.1 sim service: the simulator-agnostic half of a standard-mode sidecar (docs/PROTOCOL.md §4,
-docs/LIMITED_MODE_PROTOCOL.md).
+docs/STANDARD_MODE.md).
 
 The robot as a service: the agent reaches a simulator it cannot open over HTTP. GET /spec, GET /status, POST /observe
 and POST /submit; POST /reset exists only when the run grants resets (budget.reset > 0); everything else is 404.
@@ -692,6 +692,9 @@ class Service:
                 try:
                     n = int(self.headers.get("Content-Length") or 0)
                 except ValueError:
+                    n = -1
+                if n < 0:                            # (read(-1) would read to the end of the stream, without a limit)
+                    self.close_connection = True
                     return self._send(*svc._reply_json(400, {"error": "bad Content-Length"}))
                 if n > MAX_BODY:                     # refused unread: drop the connection with it
                     self.close_connection = True

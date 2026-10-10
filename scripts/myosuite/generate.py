@@ -73,9 +73,14 @@ def default_camera(fam: str, f: dict) -> str:
 def cameras_text(fam: str, f: dict) -> str:
     cams = ", ".join(f"`{c}`" for c in f["cameras"])
     hand = CAMERAS_STD + "; " if "hand_top" in f["cameras"] else ""
+    scene = f.get("scene_cameras") or []   # cameras that ride on a body of the scene (make_facts.py): images only
+    names = " and ".join(f"`{c}`" for c in scene)
+    no_pose = (f" (except {names}, which ride{'s' if len(scene) == 1 else ''} on a body of the scene that is not yours: "
+               "images and depth only, no mount and no pose -- `extrinsic_cv` / `cam2world_gl` are null in "
+               "`meta[\"cameras\"]` and NaN per frame -- because the pose would be that body's position)" if scene else "")
     return (f"{cams} (640x480; default `{default_camera(fam, f)}`). {hand}`spec[\"cameras\"]` gives each camera's "
             "mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one) and intrinsics, and every "
-            "response carries each frame's pose")
+            f"response carries each frame's pose{no_pose}")
 
 
 def actuation(f: dict) -> str:
@@ -177,7 +182,7 @@ RUN chmod +x /tests/test.sh
 STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and OSMesa rendering; no GPU reservation.
-# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 # Knobs: ${{NAME:-default}} takes NAME from the shell that runs harbor; the defaults are the standard configuration and
 # results under other settings are reported separately.
@@ -495,13 +500,54 @@ memory_mb = 8192
 """
 
 
-CHANGE_LOG = f"""
+CHANGE_LOG_HEAD = """
 ### Change Log
+"""
+CHASE_TAG_TEXT = (
+    "- 2026-10-10 (board 0067, R2): the scene text said \"an opponent moves in it\"; in this frozen instance the opponent's\n"
+    "  policy is `stationary` (MyoChallenge draws it once), so the text now says that it stands still. Only the text\n"
+    "  changed: the instance, the tooling and the pass rule are the same.\n"
+)
+
+
+def change_log(fam: str, f: dict, std: bool) -> str:
+    """The README's Change Log: the standard service's history, plus what changed for this family alone."""
+    out = CHANGE_LOG if std else ""
+    scene = f.get("scene_cameras") or []
+    if std:
+        names = " and ".join(f"`{c}`" for c in scene)
+        out += (
+            "- 2026-10-10 (board 0067, R2): the service no longer publishes the pose of a camera that rides on a body of the\n"
+            "  scene that is not the agent's own (decided from the model: the camera's body is a mocap body or sits behind a\n"
+            "  joint that is not the body's). "
+            + (f"Here that is {names}: it still gives images and depth, but no mount, no\n"
+               "  `extrinsic_cv` / `cam2world_gl` (null in `meta[\"cameras\"]`, NaN per frame), and its body is no longer a\n"
+               "  `/kinematics` link. Before, its pose was that body's position plus a constant, which standard mode must not\n"
+               "  give (PROTOCOL §4.5); runs recorded before this date could read it and are reported with that note. The\n"
+               "  scene, instance and pass rule are unchanged, so the task keeps its name.\n" if scene else
+               "This family has no such camera: nothing a run sees changes.\n")
+            + "  The client (`environment/rcb_client.py`): `Robot()` waits up to 3600 s for the service (was 600 s; no effect\n"
+            "  here, the service is up in seconds) and prints its progress, and `cameras=\"name\"` (a string) is one camera,\n"
+            "  no longer its characters.\n"
+        )
+    if fam == "chase_tag":
+        out += CHASE_TAG_TEXT
+    if out and not std:
+        out = CHANGE_LOG_HEAD + out
+    return out
+
+
+CHANGE_LOG = CHANGE_LOG_HEAD + f"""\
 - 2026-10-09: the standard service's `effort_<joint>` proprioception (`joint_effort`) reads the force the physics
   applied (MyoSuite's robot data), not the mirror's zero-command force; and `RCB_RESET_BUDGET`'s default 0 ->
   {RESET_BUDGET} (owner decision; PROTOCOL §4.5, docs/benchmarks/myosuite.md), with `POST /reset` in the service. The
   scene, instance and pass rule are unchanged, so the task keeps its name; runs recorded before this date saw the wrong
   efforts and had no reset, and are reported separately.
+- 2026-10-10: a malformed request field (a null or non-numeric `dt` / `seconds`, `cameras` that is not a list of names,
+  a `note` that is not text) is answered with 400 before anything runs; before, it was a 500 that ended the episode
+  (for `note`, after the chunk had run). `tests/grade.py` books a missing, unreadable or never-finalized `final.json`
+  as `infra_error = 1` instead of the agent's 0, and `finalize.sh` writes `final.json` atomically. The scene, instance
+  and pass rule are unchanged, so the task keeps its name; every verdict that was reached before is the same now.
 """
 
 
@@ -626,7 +672,7 @@ def readme(fam: str, f: dict, std: bool) -> str:
 ### Provenance
 Generated by `scripts/myosuite/generate.py` from `scripts/myosuite/instances/{fam}.npz` and `{fam}.json`
 (`make_facts.py`){f" and `scripts/myosuite/oracles/{fam}.npy`" if oracle == "full" else ""}; see `docs/benchmarks/myosuite.md`.
-{CHANGE_LOG if std else ""}"""
+{change_log(fam, f, std)}"""
 
 
 def make(fam: str, out: Path) -> tuple[Path, Path]:

@@ -113,7 +113,7 @@ def _in_root():
 
 def _start_app(render: bool = False):
     """Isaac Sim, headless, once per process. Without `render` the application gets no Vulkan device, so its RTX
-    renderer never starts: it would prepare the whole stage for rendering when the stage is loaded (5 to 15 minutes
+    renderer never starts: it would prepare the whole stage for rendering when the stage is loaded (5 to 27 minutes
     the first time in a container), which a process that only steps physics does not need. PhysX is not affected:
     the same rows end in the same state either way."""
     global _APP, _RENDER
@@ -690,7 +690,7 @@ class Arm:
 class Session:
     def __init__(self, family: str | None = None, instance: str = "/app/instance.json", cameras: bool = False):
         """`cameras=True` starts Isaac Sim with its RTX renderer and makes the task's cameras: needed for render_frame,
-        and slow the first time in a container (the renderer prepares the whole stage once: 5 to 15 minutes). Without
+        and slow the first time in a container (the renderer prepares the whole stage once: 5 to 27 minutes). Without
         it the Session only simulates, and starts in about a minute the first time, about 20 s later."""
         global _SESSION
         if _SESSION is not None:
@@ -1133,7 +1133,7 @@ class Session:
             if now - told > 60:
                 told = now
                 print(f"rcb_labutopia: waiting for the renderer's first frames ({now - t0:.0f} s; the first time in a "
-                      "container takes 5 to 15 minutes)", file=sys.stderr, flush=True)
+                      "container takes 5 to 27 minutes)", file=sys.stderr, flush=True)
             time.sleep(0.05)
         for _ in range(RENDERS):
             self.world.render()

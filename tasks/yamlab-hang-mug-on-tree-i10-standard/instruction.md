@@ -18,8 +18,10 @@ stay counted once reached. The episode **ends by itself** at the first control s
   your time is up, or on a simulator error. A dropped or knocked-over object stays that way.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
   (joints, grippers, tool-frame poses, velocities, drive efforts). No object poses, no success signal.
-- Steps are unlimited; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time are
-  reported as cost.
+- There is no step budget; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time
+  are reported as cost. One technical cap: the episode ends after **100,000 control steps** (55.6 min of simulated time;
+  `spec["max_control_steps"]`, reason `step_guard`) and is graded as it stands. The service steps faster than real time
+  (60-120 control steps/s), so long watches and far-away `ee_pose` targets can reach it: `meta["control_steps"]` counts.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it has
   succeeded.
@@ -49,9 +51,9 @@ res.frames["left_wrist"]                      # uint8 (N,H,W,3) at video_fps if 
 res.last["right_wrist"]; res.proprio          # last frame per camera; float32 (N, 58) proprio at each video frame
 res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
 ```
-The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min. It gives up after
-`Robot(timeout=600)` seconds with `RuntimeError("sim service unavailable ...")`: then call it again (nothing has
-happened in the episode yet; your wall clock runs from the start of the trial).
+The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min (it prints its progress to
+stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with `RuntimeError("sim service unavailable ...")`:
+then call it again (nothing has happened in the episode yet; your wall clock runs from the start of the trial).
 
 Cameras (640×480 each): `top` (static, above the table looking down at the workspace), `left_wrist` and `right_wrist` (on
 each arm's wrist; they move: `res.extrinsic_cv[cam]` has their pose at every frame).
@@ -81,5 +83,10 @@ each arm's wrist; they move: `res.extrinsic_cv[cam]` has their pose at every fra
   their targets together by differential IK in closed loop (at most 0.25 m/s); an arm that does not converge within 6 mm is
   reported in `meta["plan"]`. The tool frame `<arm>_tcp` is the midpoint of that gripper's two fingertips, 0.1426 m from
   `link_6` along `link_6`'s +z (approach) axis, with `link_6`'s orientation. At the start both arms are at their home pose
-  (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit.
+  (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit; a position more than 3 m from
+  the world origin on any axis, or a zero quaternion, is rejected (400), nothing moves.
+- A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
 - Control runs at 30 Hz (simulated time; sim dt 1/120 s, decimation 4).
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.

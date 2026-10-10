@@ -61,3 +61,6 @@ The grader runs exactly this CLI in two fresh processes, so run it to check your
   the control step 0.02 s (5 physics steps); a row holds until the next one.
 - World frame z up, metres; quaternions **wxyz**. The IMU frame is the trunk's: x forward, y left, z up.
 - Physics is MuJoCo on the CPU: the same rows from the same start give the same result in every fresh process.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **8 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

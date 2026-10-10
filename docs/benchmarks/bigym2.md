@@ -84,6 +84,19 @@ video instead, which a task here cannot ship), the action table, and upstream's 
 the point between each gripper's pads, camera mounts. Reset budget 0 in every mode but privileged (the robot does not
 fall: 15 adversarial command patterns of 12 s each, no fall).
 
+Since 2026-10-10, in both service modes `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict; `reward.json` carries `deterministic` in
+every branch and `sim_error`. The realtime plan is unchanged for BiGym 2.0's one action type (a gap before `at` is still
+the plan's last row, walking velocity included); the shared layer stopped combining rows of different action types (a
+RoboOlympics bug).
+
+Standard-realtime, since 2026-10-10 (review R2 M1, the shared 2.3 layer): the agent's requests cannot slow the clock --
+bodies are read, decoded and checked off the simulator's thread, waiting requests are served once the clock has caught
+up, the cameras are rendered once per control step (`docs/STANDARD_MODE.md`, "What a request can cost the
+clock") -- and `final.json` / `reward.json` carry the clock's record: `clock_s`, `max_lag_s` (now the true maximum),
+`stalls`, `stalled_s`, `stalled_share`, `held_steps`, `late_steps`, `requests_refused`, `request_busy_s`. They are
+evidence and decide no verdict. In both service modes a negative `Content-Length` is refused unread (400), and a
+simulator that fails inside `POST /reset` ends the episode `error` (in realtime: `infra_error = 1`), not `reset`.
+
 The success check stays visible in privileged mode (PROTOCOL, owner 2026-10-02): it is sparse, and every instruction
 states its thresholds. Upstream's reward shaping for the plate tasks (`event_progress`) is off by default and never
 graded.
@@ -115,7 +128,7 @@ docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/eai-bigym2:$(cat 
 docker run --rm --gpus all --network none -e NVIDIA_DRIVER_CAPABILITIES=all -v "$PWD/scripts/bigym2:/w" -w /w \
   ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) python make_instances.py --check   # instances/ rebuild
 python3 scripts/bigym2/gen_tasks.py check          # tasks/ is what the generator writes (`render` rewrites it)
-harbor run -c scripts/bigym2/configs/codex-openrouter.yaml --env-file .env -p tasks/bigym2-flip-cup-i00-standard
+harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/RUNNING.md
 ```
 
 ## Measured (2026-10-08, RTX 4090, host load ~25 on 32 cores)

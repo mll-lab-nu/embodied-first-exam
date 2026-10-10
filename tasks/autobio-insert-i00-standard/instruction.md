@@ -8,7 +8,8 @@ On the bench: two 10-slot tube racks (2 rows of 5 each) side by side, with one c
 
 ## Rules
 - **No reset.** The episode starts when the service comes up and ends the moment the goal is reached (success), when your time is up, or on a simulator
-  error.
+  error. A MuJoCo physics warning (an unstable simulation, for instance after the robot was driven hard into
+  something) also ends it at once, as a failure: `meta["reason"]` is then `"failure: simulator warning (unstable state)"`.
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) and
   the robot's own proprioception: joint positions, velocities and drive efforts, gripper openings, the
   poses of its tool frames and the targets in effect. No poses of tubes, racks or instruments, no instrument state, no
@@ -54,3 +55,6 @@ period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (def
 `"hold"`; the client sends them as float32. The control rate is 500 Hz (one physics step per control step). There is
 no step budget: the one technical cap is `spec["max_control_steps"]`, 600000 (1200 s of simulated time), at which the
 episode ends. A response carries at most 3000 frames per camera (`video_fps` up to 50, default 10).
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

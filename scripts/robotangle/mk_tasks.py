@@ -11,17 +11,19 @@ usage: python3 scripts/robotangle/mk_tasks.py [--check] [--list] [--assets <dir>
 
 Inputs, all in the repository (Python standard library only, plus scripts/task_conventions.normalize):
   release.json   the release (dev/jianwen commit, public simulator source, runtime) and, per base, where its frozen
-                 instance comes from and which recorded oracle runs are its evidence (scripts/robotangle/import_evidence.py)
-  shared/        the release's task templates (harbor_templates/topogym at release.json template_commit), verbatim:
-                 the tooling rcb_topogym.py, the graders, the sim service adapter (server.py, replay.py, finalize.sh),
-                 the standard oracle player
+                 instance comes from and which recorded oracle runs are its evidence
+  shared/        the release's task templates (harbor_templates/topogym at release.json template_commit): the tooling
+                 rcb_topogym.py verbatim; the graders, the sim service adapter (server.py, finalize.sh) and the 2.4
+                 layer with the fixes of the 2026-10-10 review (docs/benchmarks/robotangle.md, "Fixes applied on main");
+                 replay.py and the standard oracle player verbatim
   scripts/eai_standard/v2_4/ + scripts/eai_standard/
-                 the eai-standard/2.4 layer (docs/STANDARD_MODE_2_4.md, issue #89): rcb_limited.py and rcb_client.py
+                 the eai-standard/2.4 layer (docs/STANDARD_MODE.md, issue #89): rcb_limited.py and rcb_client.py
                  from v2_4/, rcb1.py, run.sh and the client pins from scripts/eai_standard/. The release called its
                  layer "2.3"; that number went to the realtime capability (#86), so the layer and the texts say 2.4
   packages/      per task, the upstream texts of the graded package (task.toml, README.md, instruction.md, Dockerfiles,
-                 compose files, test.sh) and its upstream runtime binding; the generator applies the RoboTangle rename
-                 (user-facing names only), the image name and the evidence wording to them
+                 compose files, test.sh; document paths point at this repository's docs/) and its upstream runtime binding; the generator applies the RoboTangle rename
+                 (user-facing names only), the image name and the evidence wording to them, and the text fixes of
+                 the 2026-10-10 review (review_fixes: the R-hold rule, the row cap, the 2.4 call semantics)
   oracles/       the recorded oracle trajectories of the evidence runs (privileged deliverable; standard episode)
   assets.json    the frozen instances (instance.json + instance_assets/, up to 20 MB per file) are not in git: they are
                  in the private HF dataset eai-v2-internal/robotangle-assets, pinned here by commit and sha256
@@ -49,9 +51,6 @@ VERSION = (ROOT / "images/robotangle/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-robotangle:{VERSION}"
 ROBOT = {"aloha": "aloha-2", "panda_robotiq": "franka-robotiq-2f85"}
 ROBOT_WORDS = {"(aloha, Genesis)": "(ALOHA 2, Genesis)", "(panda_robotiq, Genesis)": "(Franka Panda + Robotiq 2F-85, Genesis)"}
-DOCS = [("docs/rcb/STANDARD_MODE_2_3.md", "docs/STANDARD_MODE_2_4.md"), ("docs/rcb/STANDARD_MODE_2_2.md", "docs/STANDARD_MODE_2_2.md"),
-        ("docs/rcb/benchmarks/topogym.md", "docs/benchmarks/robotangle.md"), ("docs/rcb/PROTOCOL.md", "docs/PROTOCOL.md"),
-        ("docs/rcb/TAXONOMY.md", "docs/TAXONOMY.md"), ("docs/rcb/LIMITED_MODE_PROTOCOL.md", "docs/LIMITED_MODE_PROTOCOL.md")]
 IMAGE_RX = re.compile(r"(?:[\w.-]+/)+rcb-topogym:[\w.-]+")
 EAI = ROOT / "scripts/eai_standard"
 LAYER = {"environment/rcb_client.py": EAI / "v2_4/rcb_client.py", "environment/rcb1.py": EAI / "rcb1.py",
@@ -67,16 +66,144 @@ def dash(s: str) -> str:
 
 
 def text(s: str) -> str:
-    """User-facing rename and paths (README, instruction, task.toml); code identifiers (topogym, rcb_topogym) stay."""
+    """User-facing rename (README, instruction, task.toml); code identifiers (topogym, rcb_topogym) stay."""
     s = re.sub(r"\btopogym-([a-z0-9-]+-i\d\d-(?:privileged|standard))\b", r"robotangle-\1", s)
     s = IMAGE_RX.sub(IMAGE, s)
-    for a, b in DOCS:
-        s = s.replace(a, b)
     for a, b in ROBOT_WORDS.items():
         s = s.replace(a, b)
     s = s.replace("TopoGym", "RoboTangle").replace(*PROTO)
     s = re.sub(r"\bhis (?=[a-z]+(?:_[a-z0-9]+)*_v\d)", "the ", s)
     return s.replace("his qualification record", "the author's qualification record")
+
+
+# ---------------------------------------------------------------- fixes of the 2026-10-10 review (board 0067)
+# Applied here, on top of the release's texts and Dockerfiles, until dev/jianwen carries them (docs/benchmarks/robotangle.md,
+# "Fixes applied on main"). Every replacement asserts that its source text is still there: a new release that rewords
+# it fails the render instead of silently losing the fix.
+MAX_STEPS = 200000        # rcb_topogym.MAX_STEPS (RCB_MAX_STEPS): the runaway guard on an episode's / a trajectory's length
+MAX_CALL_WALL_S = 900     # v2_4/rcb_limited.MAX_CALL_WALL_S (RCB_MAX_CALL_WALL_S): no compose file overrides it
+CHUNK_S, WATCH_S = 10, 30  # the sim service's RCB_MAX_CHUNK_S / RCB_MAX_WATCH_S defaults
+BUILD_ALLOWANCE_S = 1800  # scene build, kernel compilation and video encoding inside the verifier's timeout
+
+
+def swap(s: str, old: str, new: str, what: str, count: int = 1) -> str:
+    assert s.count(old) == count, f"{what}: expected {count} x {old[:60]!r}, found {s.count(old)}"
+    return s.replace(old, new)
+
+
+def step_time(instruction: str) -> float:
+    return float(re.search(r"One control step takes about ([0-9.]+) s of wall clock", instruction).group(1))
+
+
+def verifier_timeout(toml: str) -> float:
+    return float(re.search(r"(?ms)^\[verifier\]\n.*?^timeout_sec = ([0-9.]+)", toml).group(1))
+
+
+def row_cap(base: str) -> int:
+    """The longest trajectory the privileged verifier accepts: its two replays must fit [verifier] timeout_sec at 1.5 x
+    the step time the instruction states (the second replay also renders the video), after BUILD_ALLOWANCE_S; rounded
+    down to 1000 rows, never above rcb_topogym's own guard. The loader accepted 200000 rows for every task; by the
+    instructions' step times knot_untying (about 1.2 s per step) fits about 18000 rows twice into 45000 s, and a verifier
+    that runs out of time leaves no reward (arithmetic from the stated step times, not a measured run)."""
+    up = PKG / f"{base}-privileged"
+    budget = verifier_timeout((up / "task.toml").read_text()) - BUILD_ALLOWANCE_S
+    cap = min(MAX_STEPS, int(budget / (3 * step_time((up / "instruction.md").read_text()))) // 1000 * 1000)
+    traj = ORC / base / "privileged.npz"
+    if traj.is_file():      # the reference trajectory must fit, with room
+        with zipfile.ZipFile(traj) as z, z.open("actions.npy") as f:
+            f.read(8); n = int.from_bytes(f.read(2), "little"); header = f.read(n).decode("latin1")
+        rows = int(re.search(r"'shape': \((\d+),", header).group(1))
+        assert 1.5 * rows <= cap, f"{base}: the reference trajectory has {rows} rows, the cap is {cap}"
+    return cap
+
+
+R_HOLD_OLD = ("Success needs both replays to succeed AND at least one of them to reach the goal with the thresholds above "
+              "within your own rows (not only in the hold).")
+R_HOLD_NEW = ("Success needs both replays to succeed; each of them may complete its confirmation within that hold (whether "
+              "one reached the goal with the thresholds above within your own rows is recorded, `strict_goal_reached`, not "
+              "required).")
+ROWS_OLD = ("so a replay whose confirmation ends a few ticks later needs more rows: you may append copies of the final row "
+            "(holding still) before saving.")
+ROWS_NEW = ("so a replay whose confirmation ends a few ticks later completes it in that hold; copies of the final row "
+            "(holding still) appended before saving give it more room.")
+VERIFY_OLD = ("at least one replay must\nreach the goal with the instance's own thresholds within the trajectory's rows.")
+VERIFY_NEW = ("every replay may confirm\nwithin that hold (R-hold, 2026-10-05). Whether one reached the goal with the "
+              "instance's own thresholds within the\ntrajectory's rows is reported (`strict_goal_reached`), not required.")
+
+
+def time_per_call(step: float, hz: int) -> str:
+    """The standard instruction's "Time per call" for eai-standard/2.4 (v2_4/rcb_limited.py call_begin / poll_stop / the
+    operations endpoints, v2_4/rcb_client.py _post). The release's paragraph described 2.2's client timeouts."""
+    chunk = CHUNK_S * hz * step
+    fit = f"A `submit` of the maximum {CHUNK_S} s chunk takes about {chunk:.0f} s here"
+    if 2 * chunk > MAX_CALL_WALL_S:
+        fit += " (close to that limit on a slower host)"
+    if 2 * WATCH_S * hz * step <= MAX_CALL_WALL_S:
+        fit += f", and any watch up to {WATCH_S} s fits (both with a 2x margin)."
+    else:
+        n = int(MAX_CALL_WALL_S / (2 * step))
+        fit += (f"; a `get_obs(seconds=...)` watch fits up to about {n} control steps ({n / hz:.2f} s, a 2x margin), and a "
+                "longer one is cut short the same way.")
+    return (
+        "## Time per call\n"
+        f"- One control step takes about {step:g} s of wall clock here. A request returns when all of its steps have run, or\n"
+        f"  earlier: a call that has run for {MAX_CALL_WALL_S} s (`spec[\"max_call_wall_s\"]`) is stopped by the service at the next control\n"
+        "  step and returns what it executed (`res.stopped` is `\"max_call_wall_s\"`; `res.meta[\"executed_rows\"]`, or\n"
+        "  `res.meta[\"control_steps_watch\"]` for a watch, says how far it got; the robot holds its last target). Check\n"
+        f"  `res.stopped` before you send the next rows. {fit}\n"
+        "- The client waits longer than that (1800 s for `submit`, 1020 s for `get_obs`), so a client timeout or a connection\n"
+        "  error means the connection or the service failed, not that the call is still on its way. Do NOT send the request\n"
+        "  again blindly (it could run twice): `r.operation_status()` tells what became of the last one. Its `status` is\n"
+        "  `completed` or `error` (with `rows_before` and `committed_rows`, the episode's control steps before and after it,\n"
+        "  and `stopped`), `interrupted` (the service restarted during it and resumes the same episode in the state after the\n"
+        "  last completed call: `spec[\"on_service_error\"]`, `r.wait_ready()`), or `admitted` (not finished); an HTTP 404 error\n"
+        "  there means the service never admitted the request, so nothing ran. The service answers one request at a time, so\n"
+        "  this query waits while a call is running: repeat it if it times out. If your client hangs up, the service stops\n"
+        "  the call at the next control step. A request that arrives after its deadline is refused (408), and one whose\n"
+        "  operation id was already admitted is refused (409); neither moves the robot. A control step that hangs for more\n"
+        "  than 60 s past the call's limit ends the episode as an infrastructure error, not as your failure.\n")
+
+
+def review_fixes(s: str, name: str, base: str, mode: str) -> str:
+    """The text fixes for one rendered file (name: instruction.md | README.md)."""
+    up = PKG / f"{base}-privileged" / "instruction.md"
+    step = step_time(up.read_text()); hz = int(re.search(r"Control runs at (\d+) Hz", up.read_text()).group(1))
+    if mode == "privileged":
+        if R_HOLD_OLD in s:        # the GPU families (a tolerant hold): the grader's rule since tooling v16 is R-hold
+            s = swap(swap(s, R_HOLD_OLD, R_HOLD_NEW, f"{base} {name} R-hold"), ROWS_OLD, ROWS_NEW, f"{base} {name} R-hold rows")
+        if name == "README.md" and VERIFY_OLD in s:
+            s = swap(s, VERIFY_OLD, VERIFY_NEW, f"{base} README Verification")
+        assert "within your own rows (not only in the hold)" not in s and "at least one replay must" not in s, f"{base} {name}"
+        if name == "instruction.md":
+            cap = row_cap(base)
+            s = swap(s, "There is no step budget; your\n  wall-clock budget is",
+                     f"There is no step budget, but a trajectory may have at most\n  {cap} rows ({cap / hz / 60:.1f} min of simulated time): "
+                     "the verifier has to replay it twice within its own time limit, so `s.step` stops\n  after that many control steps "
+                     "since the last reset, and a longer trajectory is rejected as invalid (reward 0). Your\n  wall-clock budget is",
+                     f"{base} step budget")
+    elif name == "instruction.md":
+        assert step_time(s) == step, f"{base}: the two modes state different step times"
+        s = swap(s, "steps are unlimited. Actions and\n  simulated time are reported as cost.",
+                 f"there is no step budget, but the\n  episode ends after {MAX_STEPS} control steps, watches included ({MAX_STEPS / hz / 60:.0f} min "
+                 "of simulated time; a technical cap,\n  `spec[\"max_control_steps\"]`: `meta[\"reason\"]` is `step_guard`, and the episode is graded as it stands). "
+                 "Actions and simulated time are reported as cost.", f"{base} step guard")
+        m = re.search(r"(?ms)^## Time per call\n.*?(?=^## )", s)
+        assert m and "the client gives up waiting after 1800 s" in m.group(0), f"{base}: Time per call"
+        s = s[:m.start()] + time_per_call(step, hz) + "\n" + s[m.end():]
+    return s
+
+
+def limits_env(name: str, s: str, base: str, mode: str) -> str:
+    """Privileged Dockerfiles: the row cap for the agent's tooling and the verifier (rcb_topogym reads RCB_MAX_STEPS),
+    and the verifier's own timeout for its grader (it skips the review-frame pass when the time left would not cover it)."""
+    if mode != "privileged" or name not in ("environment/Dockerfile", "tests/Dockerfile"):
+        return s
+    env = f"ENV RCB_MAX_STEPS={row_cap(base)}"
+    if name == "tests/Dockerfile":
+        env += f" RCB_VERIFIER_BUDGET_S={verifier_timeout((PKG / f'{base}-privileged' / 'task.toml').read_text()):.0f}"
+    line = "ENV PYTHONPATH=/opt/tools:/opt/topogym\n" if name == "environment/Dockerfile" else "ENV PYTHONPATH=/tests:/opt/topogym\n"
+    return swap(s, line, line + "# the longest trajectory the verifier replays within its timeout (scripts/robotangle/mk_tasks.py row_cap)\n" + env + "\n",
+                f"{base} {name}")
 
 
 def toml_str(s: str) -> str:
@@ -178,6 +305,35 @@ def rewrite_toml(s: str, base: str, rec: dict) -> str:
     return s
 
 
+CHANGE_0067 = {
+    "privileged": (
+        "- 2026-10-10 (review fixes): texts and limits; the pass rule is unchanged. For the families graded with a tolerant "
+        "hold (blanket_flatten, knot_untying, lock_picking, rope_threading) the instruction and this README said that one "
+        "replay had to reach the goal within the trajectory's own rows; the grader has applied R-hold since tooling v16 "
+        "(2026-10-05: every replay may confirm within the hold; `strict_goal_reached` is reported, not required), and the "
+        "texts now say so. New row cap: a trajectory may have at most the number of rows the instruction states "
+        "(`RCB_MAX_STEPS` in both Dockerfiles; 200000 before, for every task), sized so that the verifier's two replays fit "
+        "its timeout (by the step time the instruction states; a verifier that runs out of time leaves no reward); a "
+        "longer trajectory is now `bad_trajectory`. The grader skips the review-frame pass when its time is short (the verdict and the events are "
+        "committed before it), and an instance this host cannot reconstruct is `infra_error` 1 with `instance_mismatch` "
+        "(it was a plain 0). The image, scene and frozen instance are unchanged, so the task keeps its name."),
+    "standard": (
+        "- 2026-10-10 (review fixes): the sim service and its 2.4 layer; the pass rule is unchanged. Malformed request "
+        "fields (null or non-numeric `dt`, `video_fps`, `seconds`; a non-string `note`; `cameras` that is not a list of "
+        "names) get a 400 before anything executes; they ended the episode with a 500 booked as an infrastructure error, a "
+        "bad `note` after its chunk had run. A crash during a call is resumed like any other crash; the restart ended the "
+        "episode as `call_watchdog` whenever it came back after the call's deadline, and now does so only when the "
+        "watchdog's own output shows that it fired. After a crash in the first call the tick ledger is cut with the "
+        "journal. An instance this host cannot reconstruct is `infra_error` 1 (startup record, replay, grader), and the "
+        "startup record is final at once instead of after the collect hook's timeout. final.json is written as soon as the "
+        "replay's verdict is committed, before the video is closed and the review frames are rendered. A live failure "
+        "whose replay crashed is the agent's 0, not a grader error. The instruction's \"Time per call\" describes 2.4 "
+        "(`max_call_wall_s`, `r.operation_status()`, 408 / 409), and the 200000-step runaway guard (`step_guard`) is "
+        "stated there and in `/spec` (`max_control_steps`). The image, scene and frozen instance are unchanged, so the task "
+        "keeps its name."),
+}
+
+
 def changes(mode: str) -> list[str]:
     """The README Change Log (PROTOCOL §2.8: published tasks fixed in place)."""
     grader = ("The standard grader counts a fresh replay that crashed without writing its verdict (e.g. CUDA out of memory) "
@@ -207,7 +363,14 @@ def changes(mode: str) -> list[str]:
         "the CPU's floating-point rounding, and on CPUs without AVX-512 knot_untying medium and hard got another mesh, which "
         "their frozen settled state does not fit. Nothing else in the image changes. The scene, frozen instance and pass rule are unchanged, so the task "
         "keeps its name.",
-    ]
+        CHANGE_0067[mode],
+    ] + ([
+        "- 2026-10-10 (2): `tests/grade.py`: after a live success, a replay process that died without a result (e.g. CUDA out "
+        "of memory in the collect hook) is `infra_error` 1 together with `grader_error` 1; it was `grader_error` 1 with "
+        "`infra_error` 0, which a reader of `infra_error` alone (PROTOCOL §2.6) took for the agent's 0. A `final.json` that "
+        "is not a JSON object is `infra_error` 1 (it left no reward). Reward 0 in both cases, as before; the pass rule is "
+        "unchanged, so the task keeps its name.",
+    ] if mode == "standard" else [])
 
 
 def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
@@ -215,8 +378,76 @@ def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
                         "checked against `tests/runtime_binding.json`)")
     s = re.sub(r"(?ms)^## Reference solution\n.*?(?=^## )", "## Reference solution\n" + ref_solution(mode, rec) + "\n\n", s)
     nop = nop_words(base, mode, rec)
-    s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + "\n\n" + nop + "\n\n", s)
-    return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n" + "\n".join(changes(mode)) + "\n"
+    s = review_fixes(s, "README.md", base, mode)
+    cap = (f"\nA trajectory may have at most {row_cap(base)} rows (`RCB_MAX_STEPS`: two replays must fit the verifier's "
+           "timeout; a longer one is\n`bad_trajectory`)." if mode == "privileged" else "")
+    s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + cap + "\n\n" + nop + "\n\n", s)
+    return (s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n"
+            + "\n".join(changes(mode) + change_r2(base, mode)) + "\n")
+
+
+# ---------------------------------------------------------------- fixes of the round-2 review (2026-10-10, board 0067 R2)
+# Text fixes on top of review_fixes, with the same rule: every replacement asserts that its source text is still there.
+GRIP_OLD = "native drive target (m, limits 0 .. 0.8; open/closed targets in robot_spec)"
+GRIP_NEW = ("native drive target (rad, limits 0 .. 0.8: 0 = open, 0.8 = closed, the Robotiq 2F-85's driver joint; "
+            "open/closed targets in robot_spec)")
+EXPOSED_OLD = ("The success implementation and internal measurements are not exposed;\n"
+               "  the task requirements above still apply in full.")
+EXPOSED_NEW = ("The success implementation is not exposed, and of the simulator's internal\n"
+               "  measurements only the safety readings of `meta[\"safety\"]` are (listed under Action types, below); the task\n"
+               "  requirements above still apply in full.")
+WAIT_S = 3600             # v2_4/rcb_client.Robot.__init__'s default timeout (600 s until 2026-10-10)
+WAIT_OLD = ("(default connection budget: 600 seconds,", "(default timeout 600 s)")
+WAIT_NEW = (f"(default connection budget: {WAIT_S} seconds,", f"(default timeout {WAIT_S} s)")
+OPENING_NEW = ("\n  The proprio group `gripper_opening` (`res.group(\"gripper_opening\")`) is the measured gap between each gripper's finger\n"
+               "  pads in metres (0 = the pads touch); the gripper entries of `joint_pos` are in the unit of the gripper command above.")
+
+
+def panda(base: str) -> bool:
+    return 'robot = "panda_robotiq"' in (PKG / f"{base}-privileged" / "task.toml").read_text()
+
+
+def native(base: str) -> bool:
+    return "_native_gripper" in (PKG / f"{base}-standard" / "instruction.md").read_text()
+
+
+def review_fixes_r2(s: str, base: str, mode: str) -> str:
+    """Round-2 text fixes of an instruction.md. The Robotiq 2F-85's native drive coordinate is its driver joint angle
+    (topogym/robot/panda_robotiq: gripper_position_rad, limits 0 .. 0.8 rad, GraspDescription open 0 / closed 0.8); the
+    release's texts gave it in metres. ALOHA's native coordinate is the finger rail in metres, as its texts say."""
+    assert (GRIP_OLD in s) == (panda(base) and native(base)), f"{base} {mode}: the gripper unit text and the robot disagree"
+    if GRIP_OLD in s:
+        s = swap(s, GRIP_OLD, GRIP_NEW, f"{base} {mode} Robotiq unit")
+    if mode == "standard":
+        s = swap(s, EXPOSED_OLD, EXPOSED_NEW, f"{base} safety readings")
+        for a, b in zip(WAIT_OLD, WAIT_NEW):
+            s = swap(s, a, b, f"{base} Robot() wait")
+        s = swap(s, "`meta[\"clipped\"]` says so.\n- `ee_pose`", "`meta[\"clipped\"]` says so." + OPENING_NEW + "\n- `ee_pose`",
+                 f"{base} gripper_opening")
+    return s
+
+
+def change_r2(base: str, mode: str) -> list[str]:
+    """The round-2 Change Log entry; none for a task whose files did not change (privileged tasks of the ALOHA families)."""
+    unit = ("The instruction gave the Robotiq gripper's native drive target in metres; it is the driver joint angle in "
+            "rad (0 = open, 0.8 = closed). ") if panda(base) and native(base) else ""
+    if mode == "privileged":
+        return [f"- 2026-10-10 (review round 2): text only. {unit}Nothing else changes, so the task keeps its name."] if unit else []
+    opening = ("The proprio group `gripper_opening` is now the measured gap between the finger pads in metres "
+               "(`Session.gripper_width`); it repeated the gripper's native drive coordinate "
+               + ("(rad, 0 = open .. 0.8 = closed)" if panda(base) else "(the finger rail position, m)") +
+               " under a description that called it an opening. `/spec` now describes the gripper entries of `joint_pos` "
+               "and `joint_vel` as that drive coordinate. " if native(base) else
+               "The proprio group `gripper_opening` is unchanged here (this instance commands opening widths); its `/spec` "
+               "description is more precise. ")
+    return ["- 2026-10-10 (review round 2): the sim service, the client and the texts; the pass rule is unchanged. A request "
+            "field holding a JSON integer beyond the float range (`dt`, `video_fps`, `seconds`) gets a 400 and moves nothing; "
+            "it ended the episode with a 500 booked as an infrastructure error. " + opening + unit +
+            "The Rules said that internal measurements are not exposed, while the instruction documents the safety "
+            "readings of `meta[\"safety\"]`; the sentence now says so (what is exposed is unchanged). The client's `Robot()` "
+            f"waits up to {WAIT_S} s for the service (600 s before) and prints its progress, and `cameras=\"name\"` is one "
+            "camera, not its characters. The image, scene, frozen instance, tooling and grader are unchanged, so the task "
+            "keeps its name."]
 
 
 def binding(base: str, inst_dir: pathlib.Path | None = None) -> bytes:
@@ -317,10 +548,12 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None) -
         rd = lambda n: (up / n).read_text()  # noqa: E731
         put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
         put(t / "README.md", rewrite_readme(rd("README.md"), base, mode, rec).encode())
-        put(t / "instruction.md", text(rd("instruction.md")).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1).encode())
+        ins = text(rd("instruction.md")).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
+        put(t / "instruction.md", review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
-                put(t / n, staged(n, gpu_lines(n, image_lines(rd(n))), base).encode())
+                assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"
+                put(t / n, limits_env(n, staged(n, gpu_lines(n, image_lines(rd(n))), base), base, mode).encode())
         put(t / "tests/test.sh", (up / "tests/test.sh").read_bytes(), exe=True)
         lock = binding(base, inst_src)
         tool = (SHARED / "rcb_topogym.py").read_bytes()

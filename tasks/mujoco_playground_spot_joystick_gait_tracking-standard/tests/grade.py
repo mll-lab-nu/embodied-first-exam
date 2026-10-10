@@ -1,9 +1,12 @@
 """Standard-mode verifier (MuJoCo Playground quadrupeds): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (live success, two fresh-process replays of the recorded trajectory, determinism, crash-recovery
 fields), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic, the
-replays having started in the instance's t = 0 state. Numeric-only reward.json."""
+replays having started in the instance's t = 0 state. Numeric-only reward.json.
+infra_error = 1: there is no verdict on the agent (final.json missing or unreadable; not finalized: the collect hook
+never ran or was cut short before it wrote the verdict; the service gave up after crashes between calls; a replay
+process gave no result): such a trial is not the agent's 0."""
 
-import json, os, shutil
+import json, os, shutil, traceback
 
 LOG = "/logs/verifier"
 os.makedirs(LOG, exist_ok=True)
@@ -16,15 +19,28 @@ def write(ok, out):
 
 
 p = "/data/final.json"
-if not os.path.exists(p):
-    write(False, {"success": 0, "missing_log": 1, "grader_error": 0, "infra_error": 0})
+if not os.path.exists(p):  # the service never wrote anything (it never started): infrastructure, not the agent
+    write(False, {"success": 0, "deterministic": 0, "missing_log": 1, "sim_error": 0, "grader_error": 0, "infra_error": 1})
     raise SystemExit
-d = json.load(open(p))
+try:
+    d = json.load(open(p))
+    if not isinstance(d, dict):
+        raise ValueError("final.json is not a JSON object")
+except Exception:  # noqa: BLE001 -- cut short or garbled: not the agent's 0
+    traceback.print_exc()
+    write(False, {"success": 0, "deterministic": 0, "missing_log": 0, "bad_log": 1, "sim_error": 0, "grader_error": 1, "infra_error": 1})
+    raise SystemExit
 for f in ("replay.mp4", "trajectory.npz", "episode.jsonl"):
-    if os.path.exists(f"/data/{f}"):
-        shutil.copy(f"/data/{f}", f"{LOG}/{f}")
+    try:
+        if os.path.exists(f"/data/{f}"):
+            shutil.copy(f"/data/{f}", f"{LOG}/{f}")
+    except OSError:
+        traceback.print_exc()
+# not finalized: the service's own final.json (live outcome only), never completed by the collect hook's replays
+unfinished = not d.get("finalized")
+infra = bool(d.get("infra_error")) or unfinished
 ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic"))
-ok = ok and not d.get("instance_mismatch")
+ok = ok and not d.get("instance_mismatch") and not infra
 num = lambda k: float(d.get(k) or 0)  # noqa: E731
 write(
     ok,
@@ -51,9 +67,12 @@ write(
         "grader_error": int(bool(d.get("replay_failed") or d.get("instance_mismatch"))),
         "instance_mismatch": int(bool(d.get("instance_mismatch"))),
         # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
-        # resume (docs/STANDARD_MODE_2_2.md §13), the service not ending its episode for the collect hook, a replay
-        # process that gave no result, replays that did not start in the instance's t = 0 state
-        "infra_error": int(bool(d.get("infra_error"))),
+        # resume (docs/STANDARD_MODE.md §13), the service not ending its episode for the collect hook, a replay
+        # process that gave no result, replays that did not start in the instance's t = 0 state, a final.json the collect
+        # hook never finalized
+        "infra_error": int(infra),
+        "no_verdict": int(unfinished),
+        "missing_log": 0,
         "gave_up": int(bool(d.get("gave_up"))),
         "sim_error": int(d.get("reason") == "error"),
         "sim_startups": int(d.get("sim_startups") or 0),

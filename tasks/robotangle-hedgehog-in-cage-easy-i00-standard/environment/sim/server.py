@@ -1,10 +1,10 @@
-"""eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/rcb/STANDARD_MODE_2_2.md): the TopoGym
+"""eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/STANDARD_MODE.md): the TopoGym
 adapter of the shared layer rcb_limited.py (scripts/eai_standard/, copied unchanged into every standard task). Adapted from
 robot_coding_bench's RoboWits service. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit
 (RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's own model). Logs every call to
 /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, STANDARD_MODE_2_2.md section 13, resume class `approx`: Genesis' GPU contact solver is
+Crash recovery (rcb_limited.Episode, STANDARD_MODE.md section 13, resume class `approx`: Genesis' GPU contact solver is
 not bit-deterministic): every executed control step is journaled (/data/journal.f64, the exact float32 row given to
 Session.step), every completed call checkpointed (rows, state hash, proprio row). After a crash run.sh exits non-zero,
 compose restarts the container (`restart: on-failure:6`) and this service rebuilds the frozen scene, replays the journal
@@ -141,9 +141,12 @@ except M.InstanceMismatch as exc:
     # This frozen instance is not evaluable. Do not restart it as a GPU crash
     # or wait for a trajectory that could never have been executed.
     EP.scene_built()  # cancel the startup watchdog before clean exit
+    # The record is final and complete: `gave_up` and `deterministic` make it a verdict for rcb_limited.final_verdict, so
+    # the collect hook's `rcb_limited.py end` returns at once instead of waiting out its timeout and overwriting the
+    # reason. This host cannot reconstruct the instance: an infrastructure error, not the agent's failure.
     M.atomic_json(os.path.join(DATA, "final.json"), {
-        "success": False, "replay_success": False, "done": True, "finalized": True,
-        "instance_mismatch": True, "infra_error": 0, "reason": "instance_mismatch",
+        "success": False, "replay_success": False, "deterministic": False, "done": True, "finalized": True, "gave_up": True,
+        "instance_mismatch": True, "infra_error": 1, "reason": "instance_mismatch",
         "error": str(exc), "task": TASK, "protocol": PROTOCOL, **EP.final_fields()})
     raise SystemExit(0)
 EP.scene_built()                        # the startup watchdog stands down: a long resume replay is not a hang
@@ -166,14 +169,29 @@ EE = [f"{a}_{k}" for a in ARMS for k in ("x", "y", "z", "qw", "qx", "qy", "qz")]
 N = len(LAYOUT)
 PROPRIO_LAYOUT = (LAYOUT + EE + [f"{n}_cmd" for n in LAYOUT] + [f"{n}_vel" for n in LAYOUT]
                   + [f"{a}_gripper_opening_m" for a in ARMS] + [f"{n}_effort" for n in LAYOUT])
+# The gripper entries of joint_pos / joint_cmd / joint_vel are in the gripper's COMMAND space (the frozen instance's
+# gripper_space): an opening width in metres, or the native drive coordinate (ALOHA: the finger rail, m; Robotiq 2F-85: the
+# driver joint, rad, 0 = open .. 0.8 = closed), so a measured row is a valid joint_position row. The gripper_opening group
+# is the measured pad gap in metres in both spaces (Session.gripper_width; review 2026-10-10 R2 M7: in the native space it
+# repeated the drive coordinate under a description that called it an opening).
+NATIVE = S.gripper_space == "native"
+GRIP_WORDS = "; ".join(f"{LAYOUT[ARM[a][1]]}: {g['command_unit']}, {g['open_target']:g} = open .. {g['closed_target']:g} = closed"
+                       for a, g in ((a, R_SPEC["grippers"][a]) for a in ARMS)) if NATIVE else ""
 PROPRIO_GROUPS = {   # name: [first column, count, meaning]
-    "joint_pos": [0, N, "measured joint positions in the joint_position layout: per arm its arm joints (rad) + its gripper opening (m)"],
+    "joint_pos": [0, N, "measured joint positions in the joint_position layout: per arm its arm joints (rad) + "
+                        + (f"its gripper's native drive coordinate, in the unit and direction of the gripper command ({GRIP_WORDS}; "
+                           "robot_spec.grippers). It is a drive coordinate, not an opening width: see the gripper_opening group"
+                           if NATIVE else "its gripper opening (m)")],
     "tcp_pose": [N, 7 * len(ARMS), "measured tool-frame (TCP) pose per arm, in the order of the arms: x y z (m) + qw qx qy qz, world frame; "
                                    f"the ee_pose action's frame (kinematics tcp_frames {K_SPEC['tcp_frames']})"],
     "joint_cmd": [N + 7 * len(ARMS), N, "the commanded joint targets being tracked (joint_position layout): the last streamed row step"],
-    "joint_vel": [2 * N + 7 * len(ARMS), N, "measured joint velocities (rad/s; the gripper entries: opening rate, m/s)"],
-    "gripper_opening": [3 * N + 7 * len(ARMS), len(ARMS), "measured opening of each gripper (m): the gap between the finger pads; a "
-                                                          "gripper closed on an object stops above 0"],
+    "joint_vel": [2 * N + 7 * len(ARMS), N, "measured joint velocities (rad/s; the gripper entries: "
+                                            + ("the rate of the native drive coordinate, in its unit per second)" if NATIVE else "opening rate, m/s)")],
+    "gripper_opening": [3 * N + 7 * len(ARMS), len(ARMS), "measured opening of each gripper (m), in the order of the arms: the gap "
+                                                          "between the two finger pads as they are now (0 = the pads touch; fully open "
+                                                          "is about robot_spec.grippers[arm].opening_m[1]); a gripper closed on an "
+                                                          "object stops above 0"
+                                                          + (". Always metres, whatever the unit of the gripper command" if NATIVE else "")],
     "joint_effort": [3 * N + 8 * len(ARMS), N, "the force each PD drive applied (N m; gripper entries: the actuated finger drive): a "
                                                "motor-current analogue that rises when the arm pushes against something"],
 }
@@ -216,9 +234,14 @@ SPEC = {
     "world": {"frame": WORLD_FRAME, "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes "
                              "(x right, y up, z backward)"},
+    # no step budget (budget.steps stays null: the wall clock is the budget), but a technical episode cap (PROTOCOL §4.5,
+    # max_control_steps): the tooling's runaway guard (rcb_topogym.MAX_STEPS) ends the episode (reason step_guard) at
+    # that many control steps, /observe watches included
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800"))},
+    "max_control_steps": int(S.max_steps),
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
-                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, or on a "
+                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up, after "
+                f"{int(S.max_steps)} control steps (max_control_steps, a technical cap: reason step_guard, graded as it stands), or on a "
                 "simulator error; a simulator "
                 f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
                 f"soft-body solver state, a rigid task contact deeper than {M.BREAKDOWN_PENETRATION_M * 1000:g} mm) ends it with "
@@ -245,7 +268,10 @@ def check_success() -> bool:
 def proprio_row() -> np.ndarray:
     q = S.joint_positions()
     ep = [np.concatenate(S.ee_pose(a)) for a in ARMS]
-    return np.concatenate([q, *ep, S.hold_action(), S.joint_velocities(), [q[ARM[a][1]] for a in ARMS], S.joint_efforts()]).astype(np.float32)
+    # gripper_opening: the measured pad gap (m) in both gripper spaces. Session.gripper_width only reads the finger links'
+    # collision vertices (topogym.robot.grasp_geometry: "never issue robot commands"); q's gripper entry is that gap only in
+    # the width space, and the native drive coordinate otherwise
+    return np.concatenate([q, *ep, S.hold_action(), S.joint_velocities(), [S.gripper_width(a) for a in ARMS], S.joint_efforts()]).astype(np.float32)
 
 
 def grab(cameras: list[str], want_depth: bool) -> tuple[dict, dict]:
@@ -394,10 +420,37 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
             if ctrl_step(a, rec, row_start=k == 1, notes=clipped, ri=ri): return
 
 
+def number(meta: dict, key: str, default: float) -> float:
+    """A request field that must be a finite number. A malformed request is a 400 (ValueError) and moves nothing
+    (PROTOCOL §4.6): null, a string, a non-finite value or a JSON integer beyond the float range (math.isfinite and
+    float() raise OverflowError on it) must never reach float() / int() as a 500, which would end the one episode as an
+    infrastructure error."""
+    v = meta.get(key, default)
+    try:
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            raise OverflowError
+        return float(v)
+    except OverflowError:
+        raise ValueError(f"{key} must be a finite number (got {repr(v)[:60]})") from None
+
+
+def request_fields(meta: dict) -> tuple[list, int, str]:
+    """The fields /submit and /observe share, checked before anything executes: cameras, video_fps, note."""
+    cams = meta.get("cameras")
+    if cams is not None and not (isinstance(cams, list) and all(isinstance(c, str) for c in cams)):
+        raise ValueError("cameras must be a list of camera names")
+    fps = number(meta, "video_fps", 10)
+    if fps != int(fps) or not 1 <= fps <= CTRL_HZ:
+        raise ValueError(f"video_fps must be an integer in [1, {CTRL_HZ:g}] (got {fps!r})")
+    note = meta.get("note")
+    if note is not None and not isinstance(note, str):
+        raise ValueError("note must be a string")
+    return [c for c in (cams or CAMS) if c in CAMS] or CAMS, int(fps), (note or "")[:500]
+
+
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    typ = meta.get("type"); dt = float(meta.get("dt", 1.0 / CTRL_HZ)); interp = meta.get("interpolate", "linear")
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    fps = int(meta.get("video_fps", 10)); video = meta.get("video", "mp4")
+    typ = meta.get("type"); dt = number(meta, "dt", 1.0 / CTRL_HZ); interp = meta.get("interpolate", "linear")
+    cams, fps, note = request_fields(meta); video = meta.get("video", "mp4")
     if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
     dim = SPEC["action_types"][typ]["dim"]
     if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
@@ -417,7 +470,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     succ = check_success(); E["success"] = E["success"] or succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": S.physics_steps - before_ticks, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": (meta.get("note") or "")[:500],
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     if succ: finish("success")
@@ -426,9 +479,9 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 
 
 def do_observe(meta: dict) -> tuple[dict, list]:
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    seconds = float(meta.get("seconds", 0)); fps = int(meta.get("video_fps", 10)); video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    cams, fps, _ = request_fields(meta)
+    seconds = number(meta, "seconds", 0); video = meta.get("video", "frames")
+    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     rec = recorder(cams, fps, meta); before = ctrl_steps(); before_ticks = S.physics_steps
     watch = seconds > 0 and not E["done"]

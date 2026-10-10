@@ -20,7 +20,10 @@ oracle = "full"
 expert_time_estimate_hours = 1.5
 
 [verifier]
-timeout_sec = 2400.0
+timeout_sec = 13000.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory
+                                  # (replay_timeout(100,000 rows) = 1200 s + rows / 20 = 6200 s each; the first Isaac start in
+                                  # the verifier compiles shaders, 629 s measured) + 600 s; a usual trajectory (up to 12,000
+                                  # rows) keeps the old 1800 s per replay
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image (images/yamlab/web_assets.txt)
 

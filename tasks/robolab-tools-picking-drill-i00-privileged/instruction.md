@@ -25,7 +25,10 @@ It is replayed open-loop from the same initial state in two fresh processes and 
 holds in both replays (the predicate is checked after every control step and the first step where it holds ends the
 episode: later rows are never executed) and both end in the same state, else 0. Also leave the script that produced it at
 `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as you improve it: whatever is in
-`/app/output/` when the time is up is graded.
+`/app/output/` when the time is up is graded. The file holds `task` and `actions`, a (T, 8) float array of at most
+**100,000 rows** (one per control step, 1.9 h of robot time); anything else (another shape, NaN, more rows, a file that is
+not such an npz) scores 0. Each replay has max(1800 s, 900 s + 1 s per 7.5 rows) of wall clock, about twice what a replay
+takes here.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -65,8 +68,9 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - Action (8): panda_joint1..7 absolute joint-position targets (rad, PD-tracked) + gripper command (0 = open, 1 = close; the
   Robotiq action is binary). `s.hold_action()` is the no-op.
 - Control runs at 15 Hz (sim dt 1/120 s, decimation 8). Your wall-clock budget is 90 min (5400 s); there is no step
-  budget. The episode **ends by itself the moment the success predicate holds**: after that `s.step` raises and the
-  primitives become no-ops, so stop recording there.
+  budget (a runaway guard ends an episode after 100,000 control steps, the most a trajectory may hold). The episode
+  **ends by itself the moment the success predicate holds**: after that `s.step` raises and the primitives become
+  no-ops, so stop recording there.
 - `s.ee_pose()` and every primitive use the **fingertip-centre tool frame**: RoboLab's `eef_frame` (the gripper flange,
   `s.eef_frame_pose()`) moved 0.162 m along the approach axis to the ends of the closed fingertips (the pads extend ~5.7 cm
   back from there, so for a low object the frame goes almost down to the table). `p["top_down_quat"](yaw)` is its
@@ -76,3 +80,6 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - One `Session` per process (Isaac Sim launches once, ~70 s; the scene ~30 s more). Physics is PhysX on the **CPU**
   (a live run, the first `s.replay()` in a process and a fresh-process replay of the same actions end in the same state;
   later in-process replays can differ in the last digits), rendering on the GPU; ~15 control steps/s. Do not call `s.close()` before writing every output.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **24 GiB of GPU memory**, **24 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.

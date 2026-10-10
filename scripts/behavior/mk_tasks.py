@@ -103,13 +103,16 @@ VERIFY_PRIVILEGED = (
     "Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff the BDDL goal\n"
     "holds after every replay, the final-state hashes agree and the rebuilt frozen instance matches the recorded one\n"
     "(`tests/grade.py`), plus `/logs/verifier/replay.mp4`. A fresh process reproduces the live run bit for bit (the replay\n"
-    "starts from the loaded state, no reset); an in-process reset is only approximate, hence two fresh processes.")
+    "starts from the loaded state, no reset); an in-process reset is only approximate, hence two fresh processes. A file the\n"
+    "grader cannot read or with the wrong shape is `bad_trajectory`; a replay that dies or runs out of time, and a frozen\n"
+    "instance that does not rebuild in the verifier (`instance_ok` 0), are `grader_error` + `infra_error` (no verdict on the agent).")
 VERIFY_STANDARD = (
     "`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays agree), computed in the sidecar;\n"
     "`live_matches_replay` is reported separately, and so are the crash-recovery fields (`sim_startups`, `resumes`,\n"
-    "`resume_state_mismatch`, `infra_error`); `/logs/verifier/replay.mp4`.")
+    "`resume_state_mismatch`, `infra_error`); `/logs/verifier/replay.mp4`. `infra_error` = 1 (no verdict on the agent) also\n"
+    "when `final.json` is missing, unreadable or not finalized, or a replay did not run to its result (`replay_error`).")
 SIDECAR = (
-    "The agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar\n"
+    "The agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar\n"
     "(`environment/docker-compose.yaml`: GPU on the sidecar, the licensed dataset mounted read-only at `/data`, the service's own\n"
     "record in `/out`), which owns the scene and records the episode as a (T, 25) trajectory. The collect hook\n"
     "(`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes\n"
@@ -131,7 +134,22 @@ CHANGES = {
         "(`status()['fallen']`; `s.reset()` starts again), and the verifier's replays end at the same control step (`reward.json` "
         "`fallen`). The scene, frozen instance and BDDL goal are unchanged, so the task keeps its name; a trajectory in which "
         "the robot falls over and stays down for 10 s scores 0, and results recorded before this change are reported "
-        "separately."],
+        "separately.",
+        "2026-10-10: whose failure a 0 is (review of board 0067; the pass rule is unchanged). `tests/grade.py`: a file the "
+        "agent wrote that cannot be graded (not an npz, object arrays, no `task` or `actions` entry) is `bad_trajectory` "
+        "(was `grader_error`); a frozen scene that does not rebuild to the recorded one in the verifier (`instance_ok` 0) "
+        "sets `infra_error` and `grader_error` (was a plain 0), and a replay that died or ran out of time sets `infra_error` "
+        "next to `grader_error`; every `reward.json` carries `deterministic` and `infra_error`. The tooling's "
+        "`replay` CLI skips an extra npz entry it cannot read and never lets its video recorder's start or stop decide a "
+        "replay. The instruction states the runaway guard (200,000 control steps), the trajectory format and the grader's "
+        "replay time limit. A trajectory that passed before still passes, so the task keeps its name.",
+        "2026-10-10 (2): the GPU-memory limit of the agent phase is 24 GiB (was 16 GiB). This is a change of the limit "
+        "(`[metadata.resources.limits]`, the `## Resource limits` paragraph of `instruction.md`), not of the minimum the task "
+        "declares: the reference solution alone holds 15.1 GiB for most of the episode on a 48 GB card with "
+        "`RCB_TEXTURE_BUDGET=0.1` (three oracle runs, two tasks, two L40S hosts, the task's own monitor), which left 5 % under "
+        "the old limit; the new one is max(1.5 x peak, peak + 4) rounded up, as for the other Isaac Sim benchmarks. Limits are "
+        "still only recorded (enforcement is off), so no result changes; the scene, the pass rule and the verifier are "
+        "unchanged, and the task keeps its name."],
     "standard": [
         "2026-10-08: collect-hook time limit only. `[[verifier.collect]] timeout_sec` is 37800 s (was 21600 s): the episode end "
         f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT}) "
@@ -140,7 +158,25 @@ CHANGES = {
         f"2026-10-09: a fall ends the episode as a failure (owner decision): once {FALL}, the service ends the episode with "
         "reason \"failure: the robot fell over\"; `/spec` `episode` states the end conditions and `reward.json` adds "
         "`task_failure`. The scene, frozen instance and BDDL goal are unchanged, so the task keeps its name; results recorded "
-        "before this change are reported separately."],
+        "before this change are reported separately.",
+        "2026-10-10: infrastructure failures are no longer booked as the agent's 0, and malformed requests no longer end the "
+        "episode (review of board 0067; the pass rule is unchanged). `tests/grade.py`: a missing, unreadable or unfinalized "
+        "`final.json` and a fresh-process replay that died, printed no result or ran out of time give `infra_error` = 1 "
+        "(`replay_error`), and a reward is always written. `environment/sim/finalize.sh`: each replay's exit code is "
+        "recorded and each replay may run until the hook's own deadline (it was killed with the hook before). "
+        "`environment/sim/server.py`: every field of `/submit` and `/observe` is checked before anything is executed (a null "
+        "or wrong-type `dt`, `seconds`, `video_fps`, `cameras` or `note`, `video_fps` outside 1-30, a zero quaternion: 400, "
+        "they ended the episode as a simulator error before); a `dt` that is not a whole number of control periods is a 400 "
+        "(it was rounded: 0.25 s ran as 0.267 s); a resume whose replayed episode ends before the logged one no longer "
+        "crashes every restart; `/spec` states the runaway guard (`max_control_steps` 200,000, in the instruction too). A "
+        "trial that passed before still passes, so the task keeps its name; a trial scored 0 before this date whose "
+        "`final.json` was unfinalized or missing was an infrastructure failure.",
+        "2026-10-10 (review round 2, board 0067): the client only. `Robot()` waits up to 3600 s for the service (was 600 s) "
+        "and prints its progress once a minute: Isaac Sim took 620-715 s to start on the 8-vCPU evaluation hosts (more than "
+        "600 s in 38 of 60 archived trials), so the first `Robot()` raised \"sim service unavailable\" and a script that did "
+        "not retry ended with 0 control steps. `cameras=\"name\"` (a string) is one camera, no longer its characters. The "
+        "service, the collect hook, the grader, the scene and the pass rule are unchanged; a trial scored 0 with 0 control "
+        "steps before this date may have been this wait."],
 }
 
 
@@ -303,7 +339,7 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                              "entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` "
                              "frames or a watch window; binary RCB1 responses"),
             ("Crash recovery", "`restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same "
-                               "episode after a crash (resume class `approx`, docs/STANDARD_MODE_2_2.md §13.1); startup watchdog "
+                               "episode after a crash (resume class `approx`, docs/STANDARD_MODE.md §13.1); startup watchdog "
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
             ("Budget", "14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md)"),

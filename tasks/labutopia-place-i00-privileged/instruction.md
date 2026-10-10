@@ -28,7 +28,7 @@ from rcb_labutopia import Session
 s = Session(instance="/app/instance.json")   # ONE per process. Simulation only (no renderer): about a minute the first
                                    # time in this container, then about 20 s
 # s = Session(instance="/app/instance.json", cameras=True)   # with the renderer and the task's cameras: the first such
-                                   # Session in this container takes about 5 minutes (Isaac Sim prepares the stage
+                                   # Session in this container takes 5 to 10 minutes (Isaac Sim prepares the stage
                                    # for rendering once; longer on a busy host), later ones about 30 s. The physics
                                    # is the same either way
 s.reset()                          # back to the initial state (unlimited; see "Fresh processes" below)
@@ -91,3 +91,6 @@ trajectory in fresh processes, so check the final one the same way before you st
 - World frame: z up, metres; poses are x y z + wxyz quaternion; angles in rad. The arm's base is at
   `s.robot_spec()["base"]["pose"]`.
 - Only the rows are replayed: anything else you change in the scene is lost in the grader's fresh process.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of GPU memory**, **32 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.

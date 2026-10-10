@@ -45,6 +45,33 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 - **Episode.** As in DexJoCo's evaluation: it ends at the first success or task failure. DexJoCo's episode cap, its
   real-time pacing, its per-step camera rendering and hanoi's wall-clock auto-reset are lifted (`rcb_dexjoco.py`):
   the wall clock is the only budget.
+- **Threads.** The replay is bit-exact for one OpenBLAS thread count. DexJoCo's operational-space controller does its
+  linear algebra in numpy, and OpenBLAS splits a product differently on 1 thread, on 2-3 threads and on 4 or more: three
+  different final-state hashes, and the references of `bimanual_assembly` and `fold_glasses` fail on fewer than 4
+  (measured in the image on a 32-thread host, 2026-10-10: 4, 8, 16, 32 and 64 threads agree on all 11 references, which
+  were made with the default, one thread per core). Every container that runs the simulator therefore sets
+  `OPENBLAS_NUM_THREADS=4` (the sim sidecar: service, resume and the hook's replays; the privileged agent container and
+  verifier): the references' numerics on any host that lets the container run on 4 CPUs. It also stops the default
+  from spinning against the containers' 4-CPU quota: `bimanual_hanoi` ran at 35 control steps/s that way on the
+  32-thread host, 150 with 4 threads (the `steps_per_s` of `facts.json` are without a quota).
+  - **4 visible CPUs are the minimum** (`min_cpus = verifier_min_cpus = 4`, `scripts/task_resources.toml`). The
+    variable is an upper bound only: OpenBLAS never runs more threads than the CPUs the process may run on (its
+    affinity, `os.sched_getaffinity`). A cpuset narrows that (`docker --cpuset-cpus`, `taskset`, a Slurm allocation of
+    2 CPUs); a CFS quota does not (the tasks' `cpus: 4` caps, `docker --cpus 2`: the process still sees every host CPU
+    and OpenBLAS still runs 4 threads, only slower). Measured in the image, 2026-10-10 (`openblas_get_num_threads64_`
+    of numpy's own library): `--cpuset-cpus 0,1` with `OPENBLAS_NUM_THREADS=4` runs 2 threads, `--cpuset-cpus 0-2`
+    runs 3, `--cpus 2` runs 4, and the `fold_glasses` reference fails on 2 (final-state hash `0abf8081…` instead of
+    `fd58ca0b…`), with `deterministic = 1` and the instance exact: it would read as the agent's failure.
+  - **The guard.** `rcb_dexjoco.blas_threads()` asks the loaded OpenBLAS for its thread count (if that cannot be
+    read: min(visible CPUs, `OPENBLAS_NUM_THREADS`)). With fewer than 4 no verdict on the agent is produced:
+    the privileged verifier replays nothing and writes `too_few_cpus = 1`, `grader_error = 1`, `infra_error = 1`
+    (a missing or malformed file is still the agent's 0: that needs no simulation); the standard service starts no
+    episode (`final.json`: `reason = "too_few_cpus"`, `gave_up`, `infra_error = 1`; the port never opens, so the
+    agent's client times out), the collect hook checks the count of each of its replay processes, and `tests/grade.py`
+    reports `too_few_cpus = 1` with `grader_error = 1` and `infra_error = 1`. `visible_cpus` and `blas_threads` are in
+    every `reward.json` that had a simulation. In the privileged agent's container the tooling only warns (stderr): the
+    agent's own runs are the agent's business, the verdict is the verifier's.
+  - Regenerating (`make_instances.py`) needs 4 visible CPUs too.
 - **water_plant.** Upstream's zone + trigger test passes with the bottle lying on the table and spraying away from the
   plant (two Opus 5.5 runs did exactly that). The task also requires the spray direction (the bottle's local +z) within
   45 deg of the nozzle-to-plant line, held with the rest for 30 steps; the demonstration sprays 33 deg off.
@@ -54,6 +81,16 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 dict, thin primitives (tcp-target moves, hand-joint interpolation, hold), rendering, recording and self-replay. The
 deliverable is `/app/output/trajectory.npz`; the verifier replays it twice in a fresh process from its own copy of the
 instance: success = both replays succeed ∧ same final-state hash ∧ the instance rebuilt exactly.
+- **Hand-in cap.** A trajectory has at most 50,000 rows (`rcb_dexjoco.MAX_TRAJECTORY_ROWS`: 1000 s of robot time; the
+  longest reference has 1085). `save_trajectory` refuses a longer one and the verifier scores it 0 (`bad_trajectory`).
+  The cap is what the verifier can replay: the slowest family (`bimanual_hanoi`) runs about 140 control steps/s, so two
+  replays of 50,000 rows take 12 min of the verifier's 3600 s on an idle host. The agent's own sessions have no step
+  budget.
+- **What is the agent's 0 and what is not.** A file that is not a readable trajectory (not an npz, pickled or object
+  arrays, no `task` or `actions`, a wrong shape, NaN/inf, over the cap) is `bad_trajectory = 1`; `grader_error = 1` is
+  left for the verifier's own failures and comes with `infra_error = 1` (an exception in the grader, or fewer than 4
+  OpenBLAS threads: `too_few_cpus`, Threads above). The verdict is written before `replay.mp4` is rendered, and the
+  video stops 2700 s after the grader started.
 
 ## Standard mode (`eai-standard/2.2`)
 The 2.2 adapter `scripts/dexjoco/shared/standard/server.py` on the shared layer (`scripts/eai_standard/`, copied
@@ -71,7 +108,26 @@ unchanged), resume class `exact`:
   the hand drives' gains, the tcp definition (DexJoCo's `attachment_site`, the flange), the arm bases.
 - **evidence and grading:** the collect hook (`finalize.sh`) ends the service, replays the recorded trajectory in two
   fresh processes and renders `replay.mp4` in a third; success = live ∧ both replays ∧ deterministic.
-- `ci_checks/check-limited-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
+- **the hook's time:** the recorded episode has no step cap; a replay steps the physics the live episode stepped,
+  without rendering or the agent's thinking time. The hook has 7200 s (`[[verifier.collect]] timeout_sec`, passed to
+  `finalize.sh` as `RCB_COLLECT_BUDGET_S`), about 3500 s per replay: more than the service can have spent stepping
+  unless the agent drove it for two thirds of its 5400 s without a pause. A replay still running a minute before the
+  end is stopped and the trial is an infrastructure failure. The replays run one after the other (side by side they are
+  no faster on the sidecar's 4 CPUs). The video gets what is left (at most 1200 s) and never changes the verdict, which
+  is on disk (`finalized`) before it starts. `final.json` is written whole (temporary file + rename).
+- **no verdict is infrastructure:** `tests/grade.py` reports `infra_error = 1` (never the agent's 0) when `final.json` is
+  missing, unreadable, or without a verdict (not `finalized`, or neither the replays' `deterministic` nor a give-up
+  after crashes), when a replay gave no result or ran out of the hook's time, and when the sidecar ran fewer than 4
+  OpenBLAS threads (`too_few_cpus`, with `grader_error = 1`; Threads above). An episode that a simulator error
+  ended (`reason = "error"`) is reported as `sim_error = 1` and stays the trial's result: `eai-standard/2.2` has no
+  rule that makes it an infrastructure failure (that rule is standard-realtime's, PROTOCOL §4b).
+- **malformed requests:** a request is checked in full before anything is executed (`parse_submit` / `parse_observe`
+  under `checked`, as AutoBio's adapter): a field of the wrong JSON type (a number or an object as `note`, a string or
+  a list as `dt` / `seconds` / `video_fps`, a string as `cameras`), a number too large for a float, NaN, a bad `depth`
+  is a 400, no physics, the episode goes on; `null` for `dt`, `seconds`, `video_fps`, `cameras` or `note` is the
+  default (what the 2.2 client sends for an argument left out). `scripts/labutopia/tests/test_server_validation.py`
+  fuzzes these functions (13,068 requests, numpy only, no simulator).
+- `ci_checks/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
   WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
   (`resumes = 2`, exact hash) and the oracle still ends in success with `live_matches_replay`.
 
@@ -95,3 +151,37 @@ docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp -v $PWD:/repo -w /repo ghc
     python scripts/dexjoco/make_instances.py --all                     # check the instances and oracles, refresh facts.json
 python3 scripts/dexjoco/generate.py && python3 scripts/dexjoco/generate.py --check
 ```
+
+## Change log
+- 2026-10-10 (review of 2026-10-10, board 0067; verifiers, the collect hook and the tooling's hand-in checks only: the
+  instances, the success checks and the reference trajectories are unchanged, so the tasks keep their names):
+  - standard: `final.json` missing / unreadable / without a verdict is `infra_error = 1` (a missing file used to be the
+    agent's 0 with `infra_error = 0`, an unreadable one left no reward at all); the collect hook has 7200 s (was 3600 s),
+    stops a replay that would run past it (infrastructure, not the agent's 0), time-boxes the video and writes
+    `final.json` atomically.
+  - privileged: the 50,000-row hand-in cap (the tooling accepted 10,000,000 rows, which the verifier could not replay
+    in its timeout: no reward); the verifier's timeout is 3600 s (was 1800 s); the verdict is written before the video;
+    a malformed file is `bad_trajectory` (was `grader_error`); every `reward.json` has `deterministic`.
+  - both modes: `OPENBLAS_NUM_THREADS=4` wherever the simulator runs (Threads, above). On a host with 4 or more cores
+    the numerics are the ones every earlier run had; the simulator is faster under the CPU quota (up to 4x on the
+    bimanual tasks), so an agent gets more simulated steps out of the same wall clock than before.
+  - Past results: a privileged trajectory of more than 50,000 rows that passed before would now score 0; none is known
+    (the references have 202-1085 rows). Nothing else changes a verdict that was reached before.
+- 2026-10-10, second review (board 0067, R2: M2, M3; the instances, the success checks and the references are
+  unchanged, so the tasks keep their names):
+  - both modes: the minimum is 4 CPUs visible to every container that runs the simulator (`min_cpus` and
+    `verifier_min_cpus` were 2), and a grading process that runs fewer than 4 OpenBLAS threads gives no verdict
+    (`too_few_cpus`, `grader_error`, `infra_error`; Threads above). `OPENBLAS_NUM_THREADS=4` alone did not guarantee
+    the references' numerics under a 2-3 CPU cpuset. Privileged `reward.json` now carries `infra_error` (1 next to
+    every `grader_error`), `visible_cpus` and `blas_threads`; standard `reward.json` carries `too_few_cpus`,
+    `visible_cpus`, `blas_threads`.
+  - standard: a malformed request field is a 400 before anything is executed. Before, a non-string `note` ran the
+    chunk and then ended the episode with a 500 (`reason = "error"`, `sim_error = 1`, the agent's 0), and `null` for
+    `dt` / `seconds` ended it before any step; `null` is now the default. The client (`environment/rcb_client.py`, the
+    shared eai-standard/2.2 one): `Robot()` waits up to 3600 s for the service (was 600 s; no effect here, the service
+    is up in seconds) and `cameras="name"` (a string) is one camera, no longer its characters.
+  - Past results: on a host whose containers saw 4 or more CPUs (every pool host: docker without a cpuset) nothing
+    changes. A past trial whose verifier or sim sidecar was confined to 2-3 CPUs (a Slurm cpuset) was replayed on other
+    numerics: a 0 there with `deterministic = 1` may be a false failure, and such a trial would now be
+    `infra_error = 1`. A past standard trial that ended with `sim_error = 1` after a non-string `note` or a `null`
+    field would now go on (it could score 1).

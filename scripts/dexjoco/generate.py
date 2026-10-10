@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import filecmp
 import json
+import re
 import shutil
 import stat
 import sys
@@ -31,6 +32,26 @@ IMAGE = "ghcr.io/mll-lab-nu/eai-dexjoco:" + (ROOT / "images" / "dexjoco" / "VERS
 CLIENT_ENV = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
 AGENT_TIMEOUT = 5400        # 1.5 h for the whole benchmark (PROTOCOL D8): dexterous control of a 16-DoF hand per arm
+# Privileged hand-in cap (rows of trajectory.npz), read from the tooling: its one source.
+MAX_ROWS = int(re.search(r"^MAX_TRAJECTORY_ROWS = ([\d_]+)", (SHARED / "rcb_dexjoco.py").read_text(), re.M).group(1))
+# Privileged verifier: two replays of at most MAX_ROWS rows in one fresh process, then the video. The slowest family
+# (bimanual_hanoi) runs ~140 control steps/s on an idle host: 2 x 50,000 / 140 = 12 min, so 60 min leaves a host four
+# times slower its verdict. The video stops PRIV_VIDEO_DEADLINE s after the grader started (the verdict is on disk by then).
+PRIV_VERIFIER_TIMEOUT = 3600
+PRIV_VIDEO_DEADLINE = PRIV_VERIFIER_TIMEOUT - 900
+# Standard collect hook (finalize.sh): the recorded episode has no step cap; a replay steps the physics the live episode
+# stepped, without rendering or the agent's thinking time, and the hook runs two of them, then the video. 7200 s lets
+# each replay take 3500 s: more than the service can have spent stepping unless the agent drove it for two thirds of its
+# 5400 s without a pause. Beyond that a replay is stopped and the trial is an infrastructure failure (infra_error = 1),
+# not the agent's 0. finalize.sh reads the budget as RCB_COLLECT_BUDGET_S.
+COLLECT_TIMEOUT = 7200
+# OpenBLAS threads in every container that runs the simulator (the sim sidecar, the privileged agent container and
+# verifier). DexJoCo's controller does its linear algebra in numpy, and OpenBLAS's result depends on how many threads
+# split a product: 1 thread, 2-3 threads and 4 or more give three different final states (two references fail on fewer
+# than 4). The instances and references were made with 4 or more (measured: 4, 8, 16, 32, 64 threads agree bit for bit
+# on all 11 references). Fixing 4 keeps that on any host, and stops the default (one thread per host core) from spinning
+# against the containers' 4-CPU quota: bimanual_hanoi ran at 35 control steps/s that way on a 32-thread host, 150 with 4.
+BLAS_THREADS = 4
 ALLOWED_HOSTS = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
                  "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
 
@@ -191,8 +212,9 @@ general policy.
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
 open-loop from the same initial state in a fresh process and scored 1 if its episode ends in success, else 0. Also
-leave the script that produced it at `/app/output/gen.py`. You have {AGENT_TIMEOUT // 60} minutes of wall clock: save a
-first trajectory early, improve it, and do not stop before the task is solved.
+leave the script that produced it at `/app/output/gen.py`. A trajectory may have at most {MAX_ROWS:,} rows
+({MAX_ROWS // 50} s of robot time): `save_trajectory` refuses a longer one and the verifier scores it 0. You have
+{AGENT_TIMEOUT // 60} minutes of wall clock: save a first trajectory early, improve it, and do not stop before the task is solved.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -230,9 +252,14 @@ CLI equivalent of the grader:
   spread, 1-3 = flexion from the knuckle out; thumb 12 = opposition).{" The LEFT hand's 16 values are mirrored: ring 0-3, middle 4-7, index 8-11, thumb 12-15." if bim else ""}
   Target ranges (rad, same for every finger slot, thumb last): low {F["hand_lo"]}, high {F["hand_hi"]}; the simulator clamps
   targets to them.
-- Control runs at 50 Hz (10 physics substeps of 2 ms). DexJoCo's own episode cap and real-time pacing are lifted: there
-  is no step budget, your wall-clock time is the limit (~{F["steps_per_s"]} control steps/s here). An episode ends at the
-  first success or task failure; `s.step` then refuses further actions until `s.reset()`.
+- Control runs at 50 Hz (10 physics substeps of 2 ms). DexJoCo's own episode cap and real-time pacing are lifted: your
+  sessions have no step budget, your wall-clock time is the limit (~{F["steps_per_s"]} control steps/s here); only the
+  trajectory you hand in is capped ({MAX_ROWS:,} rows). An episode ends at the first success or task failure; `s.step`
+  then refuses further actions until `s.reset()`.
+- The simulation repeats bit for bit, for one OpenBLAS thread count: the controller's linear algebra gives slightly
+  different results on 1, on 2-3 and on 4 or more threads. This container sets `OPENBLAS_NUM_THREADS={BLAS_THREADS}`, as the verifier's
+  does; leave it as it is, or your replays will not match the verifier's. (OpenBLAS runs no more threads than the CPUs
+  a process may use: if the tooling warns that it runs fewer than 4, your replays here are not the verifier's.)
 """
 
 
@@ -259,14 +286,19 @@ limited to the model APIs.
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.npz`, twice in a fresh process in the verifier's own
 sandbox (no network); pass iff both episodes end in success, their final-state hashes agree and the rebuilt instance
-matches its recorded hash (`tests/grade.py`); plus `/logs/verifier/replay.mp4`. Oracle: success after {F["oracle_rows"]} control steps.
+matches its recorded hash (`tests/grade.py`); plus `/logs/verifier/replay.mp4`, rendered after the verdict is written.
+A file that is not a readable trajectory (not an npz, no `task` / `actions`, a wrong shape, NaN) or has more than
+{MAX_ROWS:,} rows scores 0 as `bad_trajectory`: the cap is what two replays of the slowest family fit into the verifier's
+{PRIV_VERIFIER_TIMEOUT} s. A verifier that runs fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to it) replays
+nothing and gives no verdict: `too_few_cpus`, `grader_error` and `infra_error` = 1, not the agent's 0.
+Oracle: success after {F["oracle_rows"]} control steps.
 
 ## Details
 | | |
 |---|---|
 | Upstream | DexJoCo @ 8d23b0f (brave-eai/dexjoco, MIT) on MuJoCo 3.4.0; CPU physics, OSMesa rendering, no GPU |
 | Instance | the initial state of the human demonstration `{F["demo"]}` (DexJoCo-Datasets-Raw), restored with DexJoCo's own state restorer; instance sha `{F["instance_sha"]}` |
-| Resources | 4 CPUs, 8 GB, no GPU |
+| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS={BLAS_THREADS}` in the agent's container and the verifier's (the simulation's result depends on the thread count below 4: docs/benchmarks/dexjoco.md). The 4 CPUs must be visible to the container (its cpuset / affinity; a `cpus:` quota does not matter): OpenBLAS runs no more threads than that |
 
 ### Tooling notes
 DexJoCo's reset samples object poses from the global RNG and its state restorer edits the MuJoCo model (table height,
@@ -302,7 +334,7 @@ oracle = "full"
 expert_time_estimate_hours = {f["hours"]}
 
 [verifier]
-timeout_sec = 1800.0
+timeout_sec = {float(PRIV_VERIFIER_TIMEOUT)}              # two replays of at most {MAX_ROWS} rows (the hand-in cap), then the video
 environment_mode = "separate"     # the verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"
 
@@ -326,6 +358,8 @@ FROM {IMAGE}
 COPY instance.npz /app/instance.npz
 COPY rcb_dexjoco.py /opt/tools/rcb_dexjoco.py
 ENV PYTHONPATH=/opt/tools
+# the simulation's result depends on OpenBLAS's thread count below 4; 4 is what the verifier runs with (docs/benchmarks/dexjoco.md)
+ENV OPENBLAS_NUM_THREADS={BLAS_THREADS}
 RUN mkdir -p /app/output
 WORKDIR /app
 """
@@ -337,6 +371,9 @@ FROM {IMAGE}
 COPY grade.py instance.npz rcb_dexjoco.py test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
+# the thread count the instances and references were made with; it needs 4 CPUs visible to this container, which
+# grade.py checks before it replays (docs/benchmarks/dexjoco.md, Threads)
+ENV OPENBLAS_NUM_THREADS={BLAS_THREADS}
 WORKDIR /tests
 """
 
@@ -350,7 +387,7 @@ def priv_test_sh(fam: str) -> str:
 rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)
 mkdir -p /logs/verifier
 python /tests/grade.py --family {fam} --instance /tests/instance.npz --traj /app/output/trajectory.npz --repeat 2 \\
-  2> /logs/verifier/grade.log
+  --video-deadline-s {PRIV_VIDEO_DEADLINE} 2> /logs/verifier/grade.log
 """
 
 
@@ -476,9 +513,13 @@ trajectory is then exactly the privileged reference, and the episode ends with s
 
 ## Verification
 The sim service judges the episode live and records every executed control step; the collect hook
-(`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes and writes
-`final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live check succeeded, both replays succeed,
-and they end in the same state. Oracle: success after {F["oracle_rows"]} control steps.
+(`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes
+and writes `final.json`, then renders `replay.mp4` in the time it has left; `tests/grade.py` (separate sandbox, no
+network) passes iff the live check succeeded, both replays succeed, and they end in the same state. A `final.json` that
+is missing, unreadable or without a verdict (the hook did not finish, a replay gave no result) is an infrastructure
+failure (`infra_error = 1`), not the agent's 0. So is a sim sidecar that runs fewer than 4 OpenBLAS threads (fewer than
+4 CPUs visible to it): the service starts no episode (`too_few_cpus`, `grader_error` and `infra_error` = 1).
+Oracle: success after {F["oracle_rows"]} control steps.
 
 ## Details
 | | |
@@ -486,7 +527,7 @@ and they end in the same state. Oracle: success after {F["oracle_rows"]} control
 | Upstream | DexJoCo @ 8d23b0f (brave-eai/dexjoco, MIT) on MuJoCo 3.4.0; CPU physics, OSMesa rendering, no GPU |
 | Instance | the initial state of the human demonstration `{F["demo"]}` (DexJoCo-Datasets-Raw); instance sha `{F["instance_sha"]}` |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); action types `ee_pose` and `joint_position`; cameras {", ".join(f"`{c}`" for c in F["cameras"])} (640 x 480); `/kinematics` for the arm links, the hand mount and the tcp; crash recovery class `exact` |
-| Resources | 4 CPUs, 8 GB, no GPU |
+| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS={BLAS_THREADS}` in the sim sidecar (the service, a resume and the collect hook's replays: the simulation's result depends on the thread count below 4, docs/benchmarks/dexjoco.md). The 4 CPUs must be visible to the sidecar (its cpuset / affinity; a `cpus:` quota does not matter): OpenBLAS runs no more threads than that |
 
 ### Provenance
 Generated by `scripts/dexjoco/generate.py`, as its privileged twin.
@@ -536,7 +577,7 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 3600
+timeout_sec = {COLLECT_TIMEOUT}                # two replays of an episode without a step cap, then the video (finalize.sh: RCB_COLLECT_BUDGET_S)
 
 [agent]
 timeout_sec = {float(AGENT_TIMEOUT)}
@@ -554,7 +595,7 @@ def std_compose(fam: str) -> str:
     return f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and OSMesa rendering; no GPU reservation.
-# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 services:
   main:
@@ -572,6 +613,8 @@ services:
       RCB_TOOL: /srv/rcb_dexjoco.py
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "{AGENT_TIMEOUT}"
+      RCB_COLLECT_BUDGET_S: "{COLLECT_TIMEOUT}"   # the collect hook's timeout_sec (task.toml): finalize.sh fits its replays and video in
+      OPENBLAS_NUM_THREADS: "{BLAS_THREADS}"       # the service, a resume and the collect hook's replays: one thread count (the result depends on it below 4; with fewer than 4 CPUs visible the service starts no episode: too_few_cpus)
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log

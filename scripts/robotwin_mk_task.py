@@ -95,7 +95,7 @@ s = Session("{task}", instance="/app/instance.json")   # rebuilds the scene, loa
 s.reset()                          # back to the frozen initial state (unlimited; each reset rebuilds the scene, a few seconds)
 env = s.env                        # the RoboTwin task env (envs/{task}.py + envs/_base_task.py under /opt/RoboTwin)
 env.robot                          # Robot: get_left_tcp_pose(), get_left_arm_jointState(), left_plan_path(pose), ...
-s.record_start(); ...; actions = s.record_stop()   # actions: (T, 34) rows, one per physics step (1/250 s)
+s.record_start(); ...; actions = s.record_stop()   # actions: (T, 34) rows, one per physics step (1/250 s); at most 200,000 rows are graded
 s.status()                         # {{'success': bool, 'sim_steps': int, 'resets': int, 'state_sha': str}}
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")
@@ -111,6 +111,12 @@ Every physics step these primitives take is recorded while recording is on; `env
 turns False when a plan fails (later moves are skipped). Low-level control: `s.step(row)` with a row in the
 recorded layout (`s.action_layout`: 16 joint drive position targets, 16 velocity targets, left/right gripper
 command 0 = closed / 1 = open).
+Gripper state: the success predicate's gripper clauses (RoboTwin's `is_*_gripper_open()` / `is_*_gripper_close()`) are
+evaluated on the **finger joints' drive targets**, not on the two gripper-command columns of a row:
+`s.gripper_opening("left")` returns the (least open, most open) finger in command units, and a gripper is open when
+its least open finger is above 0.8, closed when its most open finger is below 0.2. A hand-written row therefore opens
+a gripper only through its finger position targets (the 7th–8th and 15th–16th of the 16); `env.open_gripper`,
+`env.close_gripper` and the other primitives set fingers and command together.
 
 CLI equivalent of the grader:
 `python /opt/tools/rcb_traj.py replay --task {task} --instance /app/instance.json --traj /app/output/trajectory.npz`

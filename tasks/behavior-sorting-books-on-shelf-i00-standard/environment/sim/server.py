@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for BEHAVIOR-1K v3.9.2 (OmniGibson on Isaac Sim, the 2026 challenge stack; R1Pro; see
-docs/STANDARD_MODE_2_2.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface
+docs/STANDARD_MODE.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface
 (rcb_limited.serve): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies and responses: videos / frames /
 depth / proprio as raw blobs, never base64), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
 /out/final.json current. Nothing about objects ever leaves this process.
@@ -19,8 +19,13 @@ Differences from the RoboTwin service, all from the simulator:
   environment/sim/finalize.sh replays the trajectory in two fresh processes and completes /out/final.json;
 - the episode ends when the BDDL goal holds (success), when the robot has fallen over (the tooling's fall rule,
   OmniGibson's Falling held for 10 s of simulated time: reason "failure: the robot fell over"), on the collect hook's
-  signal (timeout) or on a simulator error; /spec "episode" says so;
-- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE_2_2.md §13): every executed control step goes to
+  signal (timeout), on a simulator error, or at the tooling's runaway guard (MAX_STEPS control steps, reason
+  "step_guard"; /spec max_control_steps); /spec "episode" says so;
+- a malformed request is a 400 before anything is executed (PROTOCOL §4.6): every field of /submit and /observe is
+  checked first (request_number, request_cameras, request_note, video_fps; dt must be a whole number of control
+  periods, it is never rounded), so a wrong type, a null or an out-of-range value never reaches the simulator and never
+  ends the episode;
+- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step goes to
   /out/journal.f64, every completed call is checkpointed (rows, state hash, proprio row); after a crash compose restarts
   the container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume
   class `approx`: OmniGibson declares rollouts nondeterministic, so a hash mismatch after the replay is recorded
@@ -40,6 +45,7 @@ TASK = os.environ.get("RCB_TASK", "picking_up_trash"); INSTANCE = os.environ.get
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 30; SUBSTEPS = 4
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+EE_POS_MAX_M = 1000.0                   # ee_pose positions beyond this are a 400 (a units slip; float32-safe for the IK)
 LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 DIM = 25                                # the R1Pro's action with the task's robot config (asserted once the scene exists)
@@ -148,6 +154,7 @@ def cam_spec(c: str) -> dict:
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "behavior-1k 3.9.2 (OmniGibson / Isaac Sim)", "robot": "r1pro", "task_text": S.spec["text"],
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
+    "max_control_steps": int(M.MAX_STEPS),   # the tooling's runaway guard (PROTOCOL §4.5): the episode ends there, reason "step_guard"
     "cameras": {c: cam_spec(c) for c in CAMS},
     "default_cameras": [c for c in S.VIDEO_CAMERAS if c in CAMS],   # the 2.0 client's default: head, left wrist, right wrist
     "action_types": {
@@ -182,7 +189,9 @@ SPEC = {
                 f"base has been tilted more than {math.degrees(math.acos(M.FALL_TILT_TOLERANCE)):.1f} degrees from upright (the z of its up "
                 f"axis below {M.FALL_TILT_TOLERANCE}: cos(rx) * cos(ry) of base_footprint_rx_joint / _ry_joint) or more than "
                 f"{M.FALL_HEIGHT_M:g} m below the floor for {M.FALL_HOLD_STEPS / CTRL_HZ:g} s of simulated time in a row "
-                f"({M.FALL_HOLD_STEPS} control steps; reason \"{M.FALL_REASON}\"); when your time is up (timeout); or on a simulator error (error)"),
+                f"({M.FALL_HOLD_STEPS} control steps; reason \"{M.FALL_REASON}\"); when your time is up (timeout); on a simulator error (error); "
+                f"or at the runaway guard of {M.MAX_STEPS} control steps ({M.MAX_STEPS / CTRL_HZ / 3600:.2f} h of simulated time; step_guard). "
+                "There is no step budget otherwise"),
     "robot_spec": RSPEC,
     "kinematics": KSPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -211,6 +220,49 @@ def extrinsics(cams) -> dict:
 
 def calib(cams) -> dict:
     return {c: {k: v for k, v in i.items() if k in ("intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size")} for c, i in S.camera_info(list(cams)).items()}
+
+
+# ---------------------------------------------------------------- request fields: checked before anything is executed
+def request_number(meta: dict, key: str, default: float) -> float:
+    """A field that must be a finite number. Absent or null: the default (the client drops None). Anything else that is
+    not a finite int / float is a 400 (ValueError), never a TypeError / OverflowError that would end the episode."""
+    v = meta.get(key)
+    if v is None:
+        return float(default)
+    try:
+        f = float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+    except OverflowError:
+        f = None
+    if f is None or not math.isfinite(f):
+        raise ValueError(f"{key} must be a finite number, got {str(v)[:60]!r}")
+    return f
+
+
+def video_fps(meta: dict) -> int:
+    """The request's frame rate (default 5): outside [1, 30] it is a 400, never a failed encode that would end the
+    episode after the chunk ran."""
+    if meta.get("video_fps") is None:
+        return 5
+    fps = request_number(meta, "video_fps", 5)
+    if not (1 <= fps <= 30):
+        raise ValueError("video_fps must be in [1, 30]")
+    return int(fps)
+
+
+def request_cameras(meta: dict) -> list:
+    c = meta.get("cameras")
+    if c is None:
+        return CAMS
+    if not isinstance(c, (list, tuple)) or not all(isinstance(x, str) for x in c):
+        raise ValueError("cameras must be a list of camera names (spec['cameras'])")
+    return [x for x in c if x in CAMS] or CAMS
+
+
+def request_note(meta: dict) -> str:
+    n = meta.get("note")
+    if n is not None and not isinstance(n, str):
+        raise ValueError("note must be a string")
+    return (n or "")[:500]
 
 
 def recorder(cams, fps: int, meta: dict) -> L.Recorder:
@@ -284,6 +336,8 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
             sol, st = S.ik(tg), None
         except Exception as exc:  # noqa: BLE001
             sol, st = None, f"failed: IK error {repr(exc)[:120]}"; traceback.print_exc()
+        if sol is not None and not all(np.all(np.isfinite(v)) for v in sol.values()):
+            sol, st = None, "failed: the IK returned a non-finite solution (nothing moved)"
         if sol is not None:
             for part, key in (("trunk", "trunk"), ("left", "arm_left"), ("right", "arm_right")):
                 goal[np.asarray(idx[key])] = sol[part]
@@ -300,16 +354,22 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
 
 
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    typ = meta.get("type"); dt = float(meta.get("dt", 1.0 / CTRL_HZ)); interp = meta.get("interpolate", "linear")
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    fps = int(meta.get("video_fps", 5)); video = meta.get("video", "mp4")
+    # everything about the request is checked here, before the first control step: a bad field is a 400, nothing ran
+    typ = meta.get("type"); dt = request_number(meta, "dt", 1.0 / CTRL_HZ); interp = meta.get("interpolate", "linear")
+    cams = request_cameras(meta); fps = video_fps(meta); video = meta.get("video", "mp4"); note = request_note(meta)
     if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
     dim = SPEC["action_types"][typ]["dim"]
     if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
     if not (1.0 / CTRL_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, 0.5] s")
+    if abs(dt * CTRL_HZ - round(dt * CTRL_HZ)) > 1e-6:      # never rounded: 0.25 s would silently run 8 steps (0.267 s)
+        raise ValueError(f"dt must be a multiple of the 1/{CTRL_HZ} s control period (k/{CTRL_HZ} s, k = 1..{int(0.5 * CTRL_HZ)}); got {dt}")
     if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
     if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
+    if typ == "ee_pose":
+        if np.any(np.abs(A[:, [0, 1, 2, 8, 9, 10]]) > EE_POS_MAX_M): raise ValueError(f"ee_pose positions must be within {EE_POS_MAX_M:g} m of the world origin")
+        if np.any(np.linalg.norm(A[:, 3:7], axis=1) < 1e-6) or np.any(np.linalg.norm(A[:, 11:15], axis=1) < 1e-6):
+            raise ValueError("ee_pose quaternions (xyzw) must not be zero")
     if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []
@@ -321,7 +381,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     succ = E["success"] or check_success(); E["success"] = succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": (meta.get("note") or "")[:500],
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "depth": rec.mode, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     if succ: finish("success")
@@ -330,8 +390,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 
 
 def do_observe(meta: dict) -> tuple[dict, list]:
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    seconds = float(meta.get("seconds", 0)); fps = int(meta.get("video_fps", 5)); video = meta.get("video", "frames")
+    cams = request_cameras(meta)
+    seconds = request_number(meta, "seconds", 0.0); fps = video_fps(meta); video = meta.get("video", "frames")
     if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
     if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
     rec = recorder(cams, fps, meta); before = ctrl_steps()
@@ -372,11 +432,36 @@ def _end_from_signal():
     os._exit(0)          # frees the GPU and the memory: finalize.sh starts the replays once this process is gone
 
 
+REPLAY = {"skipped": 0}
+
+
+def replay_row(row) -> None:
+    """One journaled row during a resume. OmniGibson's rollouts are not bit-exact (resume class `approx`), so the replayed
+    episode can end (the goal holds, the robot has fallen over) a few rows before the logged one did: the rows the scene
+    can no longer take are skipped instead of raising, which would crash every resume the same way until the service
+    gives up. What that means for the episode is decided right after the replay (below)."""
+    if S.episode_done:
+        REPLAY["skipped"] += 1
+    else:
+        S.step(row)
+
+
 L.check_spec(SPEC)                      # before the episode starts: a bad /spec must not cost a resume
 EP.scene_built()                        # the scene and everything the service needs exist: the startup watchdog stands down
 S.record_start()                        # the trajectory: a resume's journal replay is recorded too
-resumed = EP.begin(state=E, step=S.step, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC,
+resumed = EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC,
                    start_event={"task": TASK, "instance_id": S.instance_id, "cameras": CAMS}, on_end=_end_from_signal)
+if resumed and S.episode_done and not E["done"]:
+    # the replayed episode ended although the logged one had not: with the goal holding it is a success like any other
+    # (the two fresh replays of the recorded trajectory still decide); anything else (a fall the live run did not have)
+    # is the resume's divergence, not the agent's: no verdict on the agent (resume_failed, infra_error = 1)
+    log({"ev": "resume_ended_early", "skipped_rows": REPLAY["skipped"], "end_reason": S.end_reason, "success": check_success()})
+    if check_success():
+        E["ready"] = True
+        with LOCK: finish("success")
+        E["ready"] = False
+    else:
+        EP.give_up(f"resume_failed: the replayed episode ended ({S.end_reason or 'step_guard'}) before the logged one did", infra=True)
 E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)

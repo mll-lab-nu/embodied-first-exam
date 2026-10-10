@@ -4,10 +4,14 @@ instance is entry `eval_index` of RoboWits' eval_dataset_50/<NN>.json, frozen wi
 
 status
   "pr"       generated and committed (a full oracle, or a graded positive that the human review can check, PROTOCOL §2.7)
-  "pending"  not in the repository yet: no valid positive. The entry stays so that a later PR can regenerate the family
-             (`mk_tasks.py --instance <its instance.json> <family>`; the frozen instances are in dev/qineng 9eb18edf) once it
-             has a positive and a written `criterion`.
+Every family here has tasks. Eleven further families without a valid positive are not in the repository
+(docs/benchmarks/robowits.md, Families); one comes back as a new entry here once it has a positive and a written
+`criterion` (`mk_tasks.py --instance <its instance.json> <family>`).
 DROPPED lists the families that are not coming back, with the reason.
+
+host_cpu_vendor (optional): the family's frozen instance is rebuilt within tolerance only on CPUs of this vendor (the
+`vendor_id` of /proc/cpuinfo; docs/benchmarks/robowits.md, Hosts). mk_tasks.py writes it to `[metadata].host_cpu_vendor`
+of both tasks and to their READMEs, for a scheduler to read; on another vendor's host the trial ends as infra_error = 1.
 
 criterion (required to render a family): the instruction's "Success criterion (as graded)" section, written from the
 predicate (scripts/robowits/predicates/<NN>_<family>.py = RoboWits' `_check_success`, verbatim; `predicate_sha` pins the
@@ -16,7 +20,7 @@ mode gives poses); "std" never says where things are (docs/benchmarks/robowits.m
 are a string or {"priv": ..., "std": ...}. Terms used: footprint, not held, table bounds (defined in mk_tasks.py).
 
 Measured scene builds (`build_s`, standard-mode episode start minus the end of Harbor's environment setup, laptop
-2.0 / 2.2 rounds) set RCB_STARTUP_TIMEOUT_S = max(900, 2 x the slowest build across hosts) (STANDARD_MODE_2_2.md §13.3);
+2.0 / 2.2 rounds) set RCB_STARTUP_TIMEOUT_S = max(900, 2 x the slowest build across hosts) (STANDARD_MODE.md §13.3);
 the RoboWits CPU-backend builds measured 47-234 s across 94 trials on every host, so 900 s holds for every "pr" family."""
 
 TABLE = "the table bounds"   # a term of the criterion texts, defined once per instruction (mk_tasks.CRITERION_TERMS)
@@ -268,6 +272,7 @@ FAMILIES = {
     ),
     "stand_bulb": dict(
         status="pr", rid="16-stand-bulb", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
+        host_cpu_vendor="GenuineIntel",   # the instance was frozen on Intel; on AMD the rebuilt scene is out of tolerance
         objects=["target patch", "stabilizing ring", "tall object with curved bottom"],
         std_objects="Objects here: target patch, stabilizing ring, tall object with curved bottom.",
         difficulty="Stand a tall object with curved bottom stably within a target area. A tall object with curved bottom is prone to tipping due to a curved base. A surrounding ring provides lateral support and increases the effective base, using geometry for stability. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
@@ -308,96 +313,6 @@ FAMILIES = {
                  "  it is not held."],
             unchecked="the stabilizing bar and any connection between the pages (the hinge), and any speed",
             text_vs_code="The hinge is not checked: two pages standing upright on the table and released at the end pass, with or without the bar through their eyelets."),
-    ),
-
-    # ------------------------------------------------------------------ pending: no valid positive yet (11)
-    "balance_board": dict(
-        status="pending", pending="no graded positive", rid="29-balance-board", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["small wall", "board", "support cube"],
-        std_objects="Objects here: small wall, board, support cube.",
-        difficulty="Balance a board on a narrow wall support. The goal requires balancing a board on a narrow support. The key insight is to recognize that the board must be placed with its center of mass directly above the wall to maintain equilibrium. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[50.7, 53.1], predicate_sha=None, criterion=None,
-    ),
-    "ball_into_jar": dict(
-        status="pending", pending="no graded positive; Intel hosts only (the frozen instance is out of tolerance on AMD)", rid="20-ball-into-jar",
-        eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["glass jar", "foam ball"],
-        std_objects="Objects here: glass jar, foam ball.",
-        difficulty="Put the foam ball fully into the jar. The foam ball is larger than the glass jar mouth when undeformed. The task leverages the elasticity and compressibility of the foam to change its shape and pass through the restriction. The scene contains non-rigid material (MPM / SPH / PBD particles). The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[81.6, 114.8], collect_timeout_s=13200, predicate_sha=None, criterion=None,
-    ),
-    "differentiate_cubes": dict(
-        status="pending", pending="no graded positive; Intel hosts only (the frozen instance is out of tolerance on AMD)", rid="30-differentiate-cubes",
-        eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["mug", "wooden cube", "metal cube", "water pitcher", "water", "target area"],
-        std_objects="Objects here: mug, wooden cube, metal cube, water pitcher, water, target area.",
-        difficulty="Differentiate wooden and metal cubes using buoyancy. The robot must differentiate two similar-looking objects with different material properties. By exploiting buoyancy (wood floats, metal sinks), the robot can identify which cube is wooden. The scene contains non-rigid material (MPM / SPH / PBD particles). The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[100.2, 118.6], collect_timeout_s=13200, predicate_sha=None, criterion=None,
-    ),
-    "pinch_card": dict(
-        status="pending", pending="no graded positive", rid="04-pinch-card", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["bank card", "eraser", "small table", "target cube", "target area"],
-        std_objects="Objects here: bank card, eraser, small table, target cube, target area.",
-        difficulty="Pick up a bank card from a small table surface using an eraser. The bank card is too thin and slippery for a standard gripper to push directly on a flat surface. The robot must utilize the friction and deformability of the eraser to create enough lateral force to move the card to a position where it can be grasped. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[52.5, 60.1], predicate_sha=None, criterion=None,
-    ),
-    "place_book": dict(
-        status="pending", pending="no graded positive; the predicate passes only with the book stood on its edge (docs/benchmarks/robowits.md)",
-        rid="23-place-book", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["thin book", "heavy block", "blue target mat", "pry board"],
-        std_objects="Objects here: thin book, heavy block, blue target mat, pry board.",
-        difficulty="Move the thin book onto the blue target mat without disturbing the heavy block. This is a practical tabletop retrieval scenario: a book is pinned under a heavy object and must be pulled out without disturbing the weight. The pry board acts as a shim to get under the book edge. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[54.1, 54.8], predicate_sha=None, criterion=None,
-    ),
-    "place_tall_box": dict(
-        status="pending", pending="its only positive exploits a missing height check (the box stood on the beam plank above the target); needs a positive that does what the text says",
-        rid="11-place-tall-box", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["tall cardboard box", "support block left", "support block right", "beam plank", "target area"],
-        std_objects="Objects here: tall cardboard box, support block left, support block right, beam plank, target area.",
-        difficulty="Move a tall box onto a target area under a beam obstacle. The obstacle enforces a geometric clearance constraint. The beam cannot be moved or raised. The solution relies on changing orientation to reduce the effective height, exploiting the different cross-sectional dimensions of the box to fit under the low beam. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[58.4, 64.0], predicate_sha=None, criterion=None,
-    ),
-    "retrieve_roll": dict(
-        status="pending", pending="no graded positive", rid="27-retrieve-roll", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["green target area", "long rod", "hollow roll"],
-        std_objects="Objects here: green target area, long rod, hollow roll.",
-        difficulty="Retrieve an out-of-reach roll using a long rod. The roll is placed beyond the robot's direct reach. By using the rod as a tool extension, the robot can extend its effective reach. Inserting the rod into the hollow part of the roll creates a mechanical coupling. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[52.5, 58.1], predicate_sha=None, criterion=None,
-    ),
-    "round_dough_sheet": dict(
-        status="pending", pending="no graded positive", rid="08-round-dough-sheet", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["dough ball", "large flat board", "round cutter"],
-        std_objects="Objects here: dough ball, large flat board, round cutter.",
-        difficulty="Flatten a dough ball and make a perfect round sheet. The task requires creating a precise round shape. The robot uses the planar surface of the board to distribute pressure and the circular symmetry of the round cutter to achieve the shape. Note: This environment uses MPM (Material Point Method) for the dough simulation, which is a particle-based soft body simulation. The scene contains non-rigid material (MPM / SPH / PBD particles). The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[92.8, 100.2], predicate_sha=None, criterion=None,
-    ),
-    "seal_colander": dict(
-        status="pending", pending="no graded positive", rid="21-seal-colander", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["perforated container", "pitcher", "curved holder", "water"],
-        std_objects="Objects here: perforated container, pitcher, curved holder, water.",
-        difficulty="Make a perforated container hold water. The perforations of the perforated container prevent it from holding liquid. By placing the curved holder onto the perforated container, the robot can pour the water from the pitcher into the curved holder onto the perforated container and verify it holds. The scene contains non-rigid material (MPM / SPH / PBD particles). The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[92.0, 106.9], collect_timeout_s=13200, predicate_sha=None, criterion=None,
-    ),
-    "stabilize_bottle": dict(
-        status="pending", pending="its only positive is nondeterministic (GPU backend, deterministic = 0) and the predicate has no release check (the tube was still between the fingers)",
-        rid="22-stabilize-bottle", eval_index=0, blenderkit=True, backend="gpu", oracle="none",
-        objects=["bowl", "tube", "sand_container", "dry_sand"],
-        std_objects="Objects here: bowl, tube, sand_container, dry_sand.",
-        priv_note="**This scene runs on the GPU.** Every control step simulates MPM sand with 2 mm particles (200 physics substeps per control step). On the CPU physics backend one scene build took 84-86 minutes, so this task uses Genesis' GPU backend (`RCB_ROBOWITS_BACKEND=gpu`, already set): a scene build takes about 2.3 minutes and a control step about 0.9 s (our measurements). GPU physics is not bit-exact: the same actions end in slightly different states from run to run. So the verifier does not require its replays to end in identical states, nor the rebuilt scene to match the frozen one exactly; but each of its two fresh replays of your trajectory must complete the task, so make the trajectory robust to small variations. The verifier has 3 hours for one build and three replays (two graded, one for the video). The GPU is shared with other jobs: keep to one simulator session at a time (a second concurrent one may fail with CUDA out of memory).",
-        std_note="**This scene runs on the GPU.** Every control step simulates MPM sand with 2 mm particles (200 physics substeps per control step). On the CPU physics backend one scene build took 84-86 minutes, so this task uses Genesis' GPU backend (`RCB_ROBOWITS_BACKEND=gpu`, already set): the service's scene build takes about 2.3 minutes and a control step about 0.9 s (our measurements). GPU physics is not bit-exact: the same actions end in slightly different states from run to run. So after your episode the service's replay of your recorded actions will not end in exactly the state your episode did: success needs the task done both in your live episode and in that replay, and their final states need not agree.",
-        build_note="~2.3 min here (GPU, see below)", substeps=200, difficulty="Stabilize a tube using dry sand in a bowl. The narrow base of the tube makes it unstable. Granular packing of the dry sand around the base provides distributed support and friction, stabilizing the tube without direct clamping by the gripper. The scene contains non-rigid material (MPM / SPH / PBD particles). The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[147.4], verifier_timeout_s=10800, collect_timeout_s=15000, predicate_sha=None, criterion=None,
-    ),
-    "water_into_mug": dict(
-        status="pending", pending="no graded positive", rid="25-water-into-mug", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
-        objects=["pitcher", "mug", "heavy_large_object", "water"],
-        std_objects="Objects here: pitcher, mug, heavy_large_object, water.",
-        priv_note="**This scene is slow to simulate.** Every control step simulates SPH water (100 physics substeps per control step) on the CPU physics backend. Building the scene took 13-22 minutes in our measurements (the build itself runs 20 control steps to settle the scene), so expect up to about 1.1 minutes per control step and plan for very few builds and short trajectories. The verifier builds the scene once and replays your trajectory three times (twice to grade it, once for the video) within 3 hours, so your trajectory must replay in well under an hour.",
-        std_note="**This scene is slow to simulate.** Every control step simulates SPH water (100 physics substeps per control step) on the CPU physics backend. The service's scene build took 13-22 minutes in our measurements (the build itself runs 20 control steps to settle the scene), so expect up to about 1.1 minutes per control step and plan for a short episode. The service answers only once its build is done, so connect with `Robot(timeout=3600)` (the default waits 10 minutes), and keep each `submit` short: the client waits at most 30 minutes for one. Your 1.5-hour budget started with your session and includes the build: `meta[\"time_left_s\"]` counts only from the moment the service came up, so it overstates your remaining time by as long as the build took.",
-        build_note="~13-22 min here (see below)", substeps=100, robot_timeout=3600,
-        difficulty="Collect water in the mug using displacement. The pitcher is fixed and cannot be tilted to pour water directly. By dropping the heavy large object into the pitcher, the robot exploits Archimedes' principle of water displacement to raise the water level and cause overflow into the mug. The scene contains non-rigid material (MPM / SPH / PBD particles). The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
-        build_s=[780.0, 1320.0], startup_timeout_s=3600, verifier_timeout_s=10800, memory_mb=32768, collect_timeout_s=11400,
-        predicate_sha=None, criterion=None,
     ),
 }
 

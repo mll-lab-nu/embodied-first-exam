@@ -174,9 +174,10 @@ per replay ran out, i.e. it ran slower than 3.5 control steps/s (AWS L40S/L4 and
   20 min for the Isaac start plus a worst case of 2 control steps/s, never less than the old 3600 s, at most 4 h (enough for
   26,400 steps at 2 steps/s, ~46,000 at 3.5). A replay over its limit is a grader error (`grader_error` = 1,
   `replay_timed_out` = 1), as before. `[verifier] timeout_sec` = 30600 s: two capped replays plus 30 min.
-- **Standard.** The collect hook (`environment/sim/finalize.sh`) replays with the same tooling CLI and has no per-replay limit;
+- **Standard.** The collect hook (`environment/sim/finalize.sh`) replays with the same tooling CLI;
   its `[[verifier.collect]] timeout_sec` = 37800 s (was 6 h): the episode end (up to 2 h through a resume) plus two 4 h
-  replays plus 30 min.
+  replays plus 30 min. Since 2026-10-10 the hook stops a replay itself 10 minutes before that deadline (`BUDGET_S` in
+  `finalize.sh` is the same 37800 s) and records it, instead of being killed with the replay (below).
 
 ## Kit cache: one per trial
 Isaac keeps shaders and generated Python in its Kit cache (`/cache`). Every compose file names its cache volume without a
@@ -209,6 +210,27 @@ container, outside Harbor's lifecycle. A cache can reach ~10 GB (one probe volum
   hook's signal; the hook replays it in two fresh processes (`environment/sim/finalize.sh`); `success = live ∧ replay ∧
   deterministic`, `live_matches_replay` reported separately. OmniGibson declares rollouts nondeterministic; measured so
   far, a live run and its fresh replay agree.
+
+### Whose failure a 0 is (2026-10-10, review of board 0067)
+The pass rules are unchanged; what changed is how a 0 that is not the agent's is reported (`reward.json`).
+- **Standard.** `final.json` is the trusted sidecar's own file, so `tests/grade.py` reports `infra_error` = 1 (no verdict on
+  the agent) when it is missing (`missing_log`: the service never came up, or its container was gone), unreadable
+  (`grader_error` too), not finalized (the collect hook did not finish; the file is the service's own copy without the
+  replays), or says a fresh-process replay did not run to its result (`replay_error`: the process died, printed no result
+  or ran out of time; `finalize.sh` records each replay's exit code). A reward is written in every case. The layer's
+  give-ups keep their meaning: `sim_crashed_on_call` is the agent's 0, `sim_crashed` and `resume_failed` are `infra_error`.
+- **Privileged.** A file the agent wrote that cannot be graded (not an npz, pickled or object arrays, no `task` or
+  `actions` entry, a wrong shape, non-finite values, more than 200,000 rows) is `bad_trajectory` (it was `grader_error`
+  for the unreadable ones); a replay process that dies or runs out of time stays `grader_error` and now also sets
+  `infra_error` (`replay_failed`, `replay_timed_out`); `instance_ok` = 0 (the frozen scene did not rebuild to the recorded
+  one in the verifier, decided before the first action) sets both too (it was a plain 0). The tooling's `replay` CLI skips an extra npz entry it cannot read, and a failure of
+  its video recorder to start or stop is only reported (`video_error`), it never decides a replay.
+- **Runaway guard.** The tooling ends an episode at `MAX_STEPS` = 200,000 control steps (1.85 h of simulated time; the
+  challenge's timeout termination lifted that far). It is not a step budget, but it exists, so both instructions state it
+  and the standard `/spec` carries it as `max_control_steps` (reason `step_guard`).
+- Tests without a simulator: `python3 -m unittest discover -s scripts/behavior/tests` (`test_grading.py`: both graders and
+  the whole `finalize.sh` on synthetic records; `test_standard_service.py`: the real service and shared layer on a stub
+  simulator over HTTP).
 
 ## Falls (2026-10-09, owner decision)
 The episode ends, as a failure, when the robot has fallen over: OmniGibson's own `Falling` termination condition
@@ -245,13 +267,22 @@ on the same step stands.
 `joint_position` (25: base per-step targets in the robot frame, trunk, arms, grippers; base and grippers switch at the
 row) and `ee_pose` (16, left first, xyzw, cuRobo IK for both end effectors per row, base still); the head camera and two
 wrist cameras (link-mounted, 224×224); OmniGibson `depth_linear`; `/kinematics` on a numpy model of the articulation
-(trunk + arms, cuRobo fallback; base frame unless `base_pose` is given); 121 proprio columns. STANDARD_MODE_2_2.md §16.
+(trunk + arms, cuRobo fallback; base frame unless `base_pose` is given); 121 proprio columns. STANDARD_MODE.md §16.
 
-Crash recovery (STANDARD_MODE_2_2.md §13): the adapter `environment/sim/server.py` journals every executed control step
+Requests are checked before anything is executed (PROTOCOL §4.6; 2026-10-10): a null is the default, and a wrong type or
+an out-of-range value of `dt`, `seconds`, `video_fps` (1-30), `cameras`, `note`, `interpolate`, `video`, `depth`, a zero
+`ee_pose` quaternion or a position beyond 1000 m is a 400 and nothing runs; before, several of these raised inside the
+service and ended the one episode as a simulator error (`video_fps` = 0 and a non-string `note` only after the chunk had
+run). `dt` must be a whole number of 1/30 s control periods: it used to be rounded (0.25 s ran as 8 steps, 0.267 s).
+
+Crash recovery (STANDARD_MODE.md §13): the adapter `environment/sim/server.py` journals every executed control step
 (`journal.f64`), checkpoints every completed call with the full simulator state hash (`og.sim.dump_state`) and the robot's
 proprio row, and resumes the same episode after compose's `restart: on-failure:6`. Resume class **`approx`**: a hash
 mismatch after the journal replay is recorded (`resume_state_mismatch`) and the episode continues unless a TCP is more
-than 0.05 m from its checkpoint. `RCB_STARTUP_TIMEOUT_S` = 1800 s: scene builds measured 130-404 s on a warm cache
+than 0.05 m from its checkpoint. A replayed episode that ends before the logged rows are done (the rollouts are not
+bit-exact) no longer raises on the next row, which crashed every restart the same way: the remaining rows are skipped, and
+the episode ends as a success if the goal holds (the fresh replays still decide), otherwise the resume is refused
+(`resume_failed`, `infra_error`: a fall only the replay had is not the agent's). `RCB_STARTUP_TIMEOUT_S` = 1800 s: scene builds measured 130-404 s on a warm cache
 (laptop trials) and 433-519 s cold on a loaded lab, plus the trial's cold-cache shader compile (~4 min); 1800 s is at
 least twice every measured build. A resume replays the episode at ~14-20 steps/s (a 50k-step episode: 45-60 min of
 downtime on the agent's wall clock). Artifacts: `final.json`, `episode.jsonl`, `trajectory.npz`, `journal.f64`,
@@ -273,8 +304,8 @@ sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh
 - **Tooling: thin wrappers only.** Joint moves, a straight-line base drive, cuRobo IK moves, gripper commands and the
   robot's cameras. Task-level skills (grasp, place, navigate) are never added to the agent's tooling; the reference
   solutions keep theirs in `solution/rcb_behavior_ref.py`.
-- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE_2_2.md §10,
-  `check-limited-texts.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
+- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+  `check-standard-texts.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
   Privileged tasks give the privileged state through the tooling.
 
 ## Licences

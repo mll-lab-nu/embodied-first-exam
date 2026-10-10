@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/STANDARD_MODE_2_2.md): the RoboWits
+"""eai-standard/2.2 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/STANDARD_MODE.md): the RoboWits
 adapter of the shared layer rcb_limited.py (scripts/eai_standard/). Source: scripts/robowits/shared/server.py, copied
 unchanged into every RoboWits standard task as environment/sim/server.py by scripts/robowits/mk_tasks.py.
 Owns the scene. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1
@@ -8,12 +8,22 @@ current, and on episode end exports the recorded (T, 16) trajectory, replays it 
 backend restores the frozen snapshot exactly, so the in-process replay must reproduce the live final state bit for bit)
 and renders /data/replay.mp4. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE_2_2.md §13): every executed control step is journaled
+Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step is journaled
 (/data/journal.f64, the exact row handed to the simulator), every completed call checkpointed (rows, state hash, proprio
 row). After a crash, run.sh exits non-zero, compose restarts the container (`restart: on-failure:6`) and this service
 rebuilds the frozen scene, replays the journal up to the last checkpoint and continues the SAME episode, never a reset.
 Determinism class: `exact` on Genesis' CPU backend (bit-exact in a fresh process on one host), `approx` on the GPU backend
 (RCB_ROBOWITS_BACKEND=gpu, the particle families: Genesis declares it nondeterministic).
+
+Not the agent's failures (infra_error = 1 in the verifier's reward.json): a frozen instance that this host cannot rebuild
+within tolerance (another CPU vendor, asset or simulator drift) ends the trial at once with a give-up record (reason
+"instance_mismatch") instead of crashing into every restart; a grading replay that raises after an episode that ended
+normally is recorded as `grade_error` with a complete verdict (`deterministic` false, never null), so the collect hook
+does not wait for one. A restart that finds the verdict on disk (the service died while it rendered the video) keeps it,
+marks the video as over and idles without rebuilding the scene.
+Requests (PROTOCOL §4.6): every field of a /submit header and an /observe body is checked for type and range before
+anything is executed (ValueError -> 400, no physics); a `joint_position` dt that is not a whole number of control periods
+is refused, never rounded.
 
 Differences from the RoboTwin service, all from the simulator: rows are streamed at the 30 Hz CONTROL rate (the recorded
 step; 4 physics substeps each), the joint action is RoboWits' own JOINT_ABS layout (per arm 7 joints + gripper width),
@@ -40,6 +50,15 @@ E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "succ
 EP = L.Episode(DATA, dim=16, resume="approx" if BACKEND == "gpu" else "exact")
 EP.startup()
 log = EP.log
+_fin = L.final_verdict(DATA)
+if _fin is not None:
+    # Restarted with the verdict on disk: the service died while it rendered the video (after `finalized`), or the
+    # container was restarted after a give-up. The verdict stands and is not touched; after a grade only `video_done` is
+    # set, so that the collect hook (`end --wait-key video_done`) does not wait its whole timeout for a video that will
+    # not come. Then idle without rebuilding the scene (Episode.begin would refuse this restart too, after the build).
+    if not _fin.get("gave_up") and not _fin.get("video_done"):
+        _fin["video_done"] = True; L._write_json(os.path.join(DATA, "final.json"), _fin)
+    EP.give_up("restarted after finalize", infra=False)     # never returns; writes nothing over a verdict
 
 
 def ctrl_steps() -> int:
@@ -53,11 +72,16 @@ def write_final() -> None:
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
         "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
         "deterministic": E.get("deterministic"), "live_sha": E.get("live_sha"), "replay_sha": E.get("replay_sha"), "video": bool(E.get("video")),
-        "video_done": bool(E.get("video_done")), "backend": BACKEND, **EP.final_fields()})
+        "video_done": bool(E.get("video_done")), "backend": BACKEND, "grade_error": bool(E.get("grade_error")),
+        "instance_exact": E.get("instance_exact"), **EP.final_fields()})
+
+
+VERDICT_KEYS = ("success", "replay_success", "deterministic", "grade_error", "n_actions", "live_sha", "replay_sha", "reason")
 
 
 def finalize() -> None:
     with LOCK:
+        acts = None
         try:
             acts = S.record_stop(); live_sha = S.state_sha()
             S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
@@ -66,16 +90,22 @@ def finalize() -> None:
             rep = S.replay(acts); E["replay_success"] = bool(rep["success"]); E["replay_sha"] = rep["state_sha"]; E["deterministic"] = rep["state_sha"] == live_sha
             log({"ev": "replay", "n_actions": int(len(acts)), "replay_success": E["replay_success"], "deterministic": E["deterministic"]})
         except Exception as exc:  # noqa
+            # The episode was not graded. The record is a complete verdict all the same (`deterministic` False, never None:
+            # rcb_limited.final_verdict and the collect hook wait for one), flagged `grade_error`: the verifier reports it
+            # as an infrastructure error (grade_standard.py), unless the live episode itself ended with a simulator error.
             traceback.print_exc(); log({"ev": "finalize_error", "error": repr(exc)})
+            E["replay_success"] = False; E["deterministic"] = False; E["grade_error"] = True
             acts = None
         # the grading record is complete before the video, whose rendering grows with the episode (~N/60 s for N steps)
         E["finalized"] = True; write_final()
+        verdict = {k: E.get(k) for k in VERDICT_KEYS}
         if acts is not None and len(acts):
             try:
                 S.start_video(os.path.join(DATA, "replay.mp4"), fps=15); S.replay(acts); S.stop_video()   # + replay.last.png
                 E["video"] = video_ok(os.path.join(DATA, "replay.mp4"))
             except Exception:  # noqa
                 traceback.print_exc()
+        E.update(verdict)                # whatever the video did, the verdict written above is the one that stays
         E["video_done"] = True; write_final()
 
 
@@ -107,8 +137,15 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 import rcb_robowits as M  # noqa: E402
-S = M.Session(TASK, instance=INSTANCE, strict=True)
+S = M.Session(TASK, instance=INSTANCE)  # not strict: an instance this host cannot rebuild is reported below, not raised
 EP.scene_built()                        # the startup watchdog stands down: a long resume replay is not a hang
+if not S.instance_matches:
+    # The frozen scene rebuilt here is out of tolerance (another CPU vendor: docs/benchmarks/robowits.md, Hosts; or asset /
+    # simulator drift). It would be the same at every restart, and it is not the agent's failure: give up at once with a
+    # record (final.json: finalized, gave_up, reason, infra_error = 1) instead of raising into six restarts without one.
+    log({"ev": "instance_mismatch", "task": TASK, "state_sha": S.instance_sha, "backend": BACKEND})
+    EP.give_up("instance_mismatch: the frozen instance rebuilt on this host is out of tolerance", infra=True)   # never returns
+E["instance_exact"] = bool(S.instance_exact)
 E["ready"] = True                       # S exists: ctrl_steps() counts its control steps (a resume replay included)
 ROBOT = S.robot
 CAMS = ["ego", "wrist_right", "wrist_left"]
@@ -152,6 +189,9 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "robowits (Genesis 0.4.7)", "robot": "marvin-bimanual", "task_text": S.spec["text"],
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
+    # not a step budget (budget.steps stays null: the wall clock is the budget) but the technical cap of one episode
+    # (PROTOCOL §4.5, `max_control_steps`): the tooling's runaway guard, also the longest trajectory the graders accept
+    "max_control_steps": int(S.max_steps),
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
                     "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": CAM_INFO[c]["mount"],
                     "depth_range_m": [float(S.env._cameras[c]._options.near), min(float(S.env._cameras[c]._options.far), L.DEPTH_MAX_M)]} for c in CAMS},
@@ -184,7 +224,8 @@ SPEC = {
               "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE,
               "source": "Genesis rasterizer depth of the same camera (the distance along the optical axis)"},
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
-                "when the wall-clock budget is used up, or on a simulator error; the recorded trajectory is then replayed and graded"),
+                "when the wall-clock budget is used up, on a simulator error, or after max_control_steps control steps (a technical "
+                "cap, reason \"step_guard\": the call in progress stops there); the recorded trajectory is then replayed and graded"),
 }
 L.check_spec(SPEC)                      # refuse to start with an incomplete spec or a forbidden field
 
@@ -266,7 +307,7 @@ def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: L.Recorder, c
         q_prev = target
 
 
-def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
+def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> None:
     for ri, row in enumerate(A):
         E["step"] += 1
         cur = np.asarray(S.hold_action(), dtype=np.float64); goal = cur.copy(); st = {"row": ri}
@@ -275,41 +316,102 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list) -> None:
             q = row[off + 3:off + 7]; q = q / max(1e-9, float(np.linalg.norm(q)))
             try:
                 q7, ep, er = S.ik(arm, row[off:off + 3], q)
-                if ep > 0.02 or er > 0.35:
+                if not (ep <= 0.02 and er <= 0.35 and np.all(np.isfinite(q7))):    # written so that a NaN residual fails too
                     raise ValueError(f"no IK solution within 2 cm / 20 deg (residual {ep * 1000:.0f} mm / {math.degrees(er):.0f} deg)")
                 goal[sl] = np.clip(q7, LIM_ARR[sl, 0], LIM_ARR[sl, 1]); st[arm] = "Success"
             except Exception as exc:  # noqa: BLE001
                 st[arm] = f"failed: {str(exc)[:90]}"
-            goal[gi] = float(np.clip(row[off + 7], 0.0, GRIP_MAX))
+            w = float(row[off + 7])
+            if w < 0.0 or w > GRIP_MAX:  # clipped and reported, as clip_joint_row does (index: the column of the ee_pose row)
+                clipped.append({"row": ri, "index": int(off + 7), "reason": f"{arm}_gripper limit [{0.0:.3f},{GRIP_MAX:.3f}]"})
+            goal[gi] = float(np.clip(w, 0.0, GRIP_MAX))
         plan.append(st)
         n = int(np.clip(math.ceil(float(np.max(np.abs(goal - cur))) / 0.04), 4, 400))   # at most ~0.04 rad per control step
         for k in range(1, n + 1):
             if ctrl_step(cur + (goal - cur) * (k / n), rec): return
 
 
+# ---------------------------------------------------------------- request fields (PROTOCOL §4.6: 400, nothing executed)
+# Every field is checked for type and range BEFORE anything is executed or counted. The shared layer answers a ValueError
+# with 400; any other exception is a 500 that ends the episode, so nothing here may raise anything else on a bad request.
+VIDEO_MODES = ("mp4", "frames", "both", "none")
+MAX_VIDEO_FPS = CTRL_HZ            # one frame per control step at most
+MAX_DT_S = 0.5
+
+
+def req_dict(meta) -> dict:
+    if not isinstance(meta, dict): raise ValueError("the request header / body must be a JSON object")
+    return meta
+
+
+def req_number(meta: dict, key: str, default: float) -> float:
+    """A finite JSON number (not null, a string or a boolean); the default when the field is absent."""
+    if key not in meta: return float(default)
+    v = meta[key]
+    if isinstance(v, bool) or not isinstance(v, (int, float)): raise ValueError(f"{key} must be a number, got {v!r:.60}")
+    try: f = float(v)
+    except OverflowError: f = math.inf
+    if not math.isfinite(f): raise ValueError(f"{key} must be a finite number, got {v!r:.60}")
+    return f
+
+
+def req_choice(meta: dict, key: str, default: str, allowed: tuple) -> str:
+    v = meta.get(key, default)
+    if not isinstance(v, str) or v not in allowed: raise ValueError(f"{key} must be one of {'|'.join(allowed)}, got {v!r:.60}")
+    return v
+
+
+def req_cameras(meta: dict) -> list:
+    """`cameras`: absent, null or a list of names. Names that are not cameras are ignored (as before); none left = every camera."""
+    v = meta.get("cameras")
+    if v is None: return list(CAMS)
+    if not isinstance(v, (list, tuple)) or not all(isinstance(c, str) for c in v):
+        raise ValueError(f"cameras must be a list of camera names from {CAMS}")
+    return list(dict.fromkeys(c for c in v if c in CAMS)) or list(CAMS)
+
+
+def req_fps(meta: dict) -> int:
+    f = req_number(meta, "video_fps", 10)
+    if f != int(f) or not (1 <= f <= MAX_VIDEO_FPS): raise ValueError(f"video_fps must be an integer in [1, {MAX_VIDEO_FPS}], got {meta.get('video_fps')!r:.60}")
+    return int(f)
+
+
+def req_note(meta: dict) -> str:
+    v = meta.get("note")
+    if v is None: return ""
+    if not isinstance(v, str): raise ValueError("note must be a string")
+    return v[:500]
+
+
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    typ = meta.get("type"); dt = float(meta.get("dt", 1.0 / CTRL_HZ)); interp = meta.get("interpolate", "linear")
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    fps = int(meta.get("video_fps", 10)); video = meta.get("video", "mp4")
-    if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
+    meta = req_dict(meta)
+    typ = meta.get("type")
+    if not isinstance(typ, str) or typ not in ("joint_position", "ee_pose"):
+        raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
+    dt = req_number(meta, "dt", 1.0 / CTRL_HZ); interp = req_choice(meta, "interpolate", "linear", ("hold", "linear"))
+    cams = req_cameras(meta); fps = req_fps(meta); video = req_choice(meta, "video", "mp4", VIDEO_MODES); note = req_note(meta)
     dim = SPEC["action_types"][typ]["dim"]
-    if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
+    if not isinstance(A, np.ndarray) or A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(np.shape(A))}")
     if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
-    if not (1.0 / CTRL_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, 0.5] s")
+    if not (1.0 / CTRL_HZ - 1e-9 <= dt <= MAX_DT_S): raise ValueError(f"dt must be in [{1.0 / CTRL_HZ:.4f}, {MAX_DT_S}] s")
+    periods = dt * CTRL_HZ
+    if typ == "joint_position" and abs(periods - round(periods)) > 1e-6:     # never rounded (PROTOCOL §4.4); ee_pose ignores dt
+        k = max(1, int(round(periods)))
+        raise ValueError(f"dt must be a whole number of control periods (k/{CTRL_HZ} s, k = 1..{int(MAX_DT_S * CTRL_HZ)}): {dt} s is "
+                         f"{periods:.4f} periods; the nearest is {k}/{CTRL_HZ} = {k / CTRL_HZ!r}")
     if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
     if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
-    if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
-    rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []
+    rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []      # (the depth mode is checked here: ValueError)
+    # ---- the request is valid: from here on the chunk is executed
     E["calls"] += 1; step0 = E["step"]
     before = ctrl_steps(); rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
-    else: run_ee_pose(A, rec, plan)
+    else: run_ee_pose(A, rec, plan, clipped)
     rec.tick(force=True, last=True)
     succ = check_success(); E["success"] = E["success"] or succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": (meta.get("note") or "")[:500],
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     if succ: finish("success")
@@ -318,11 +420,11 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 
 
 def do_observe(meta: dict) -> tuple[dict, list]:
-    cams = [c for c in (meta.get("cameras") or CAMS) if c in CAMS] or CAMS
-    seconds = float(meta.get("seconds", 0)); fps = int(meta.get("video_fps", 10)); video = meta.get("video", "frames")
+    meta = req_dict(meta)
+    cams = req_cameras(meta); seconds = req_number(meta, "seconds", 0); fps = req_fps(meta); video = req_choice(meta, "video", "frames", VIDEO_MODES)
     if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
-    rec = recorder(cams, fps, meta); before = ctrl_steps()
+    rec = recorder(cams, fps, meta); before = ctrl_steps()                     # (the depth mode is checked here: ValueError)
+    # ---- the request is valid
     watch = seconds > 0 and not E["done"]
     rec.tick(force=True, last=not watch)
     if watch:

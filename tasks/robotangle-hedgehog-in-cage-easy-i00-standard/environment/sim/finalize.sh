@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container.
-#   1. `rcb_limited.py end` (the shared first half, docs/rcb/STANDARD_MODE_2_2.md §13.3): SIGUSR1 to the service, which ends
+#   1. `rcb_limited.py end` (the shared first half, docs/STANDARD_MODE.md §13.3): SIGUSR1 to the service, which ends
 #      the episode, writes trajectory.npz + episode.json (live result, final-state hash, live_rows) and exits, releasing its
 #      GPU. It waits through a crash-recovery resume (no PID file until the service is ready again), signals only the newest
 #      service process, resends every 30 s, and exits 2 when final.json already holds the verdict (the service gave up after
@@ -12,7 +12,10 @@
 #      sidecar's GPU after the live service has exited, so it takes the place of the live simulator there (Nyx renders
 #      only in a container that sees one GPU: a second GPU in the sidecar segfaults it, 2026-10-01).
 #   3. merge everything into final.json, the only thing the verifier sandbox grades. TopoGym's GPU physics is not
-#      bit-deterministic: `deterministic` (= live_matches_replay) is reported, not required.
+#      bit-deterministic: `deterministic` (= live_matches_replay) is reported, not required. The merge runs as soon as the
+#      replay has committed its verdict (replay.verdict.json), and again whenever that record changes: the replay still has
+#      to close the video and, for a success held for review, to render the review frames in one more pass, and a hook
+#      that runs out of time in those must leave the graded episode in final.json, not an unfinalized one.
 set -u
 DATA="${RCB_DATA:-/data}"; TASK="${RCB_TASK:?}"; INSTANCE="${RCB_INSTANCE:?}"
 python /srv/rcb_limited.py end "$DATA" --timeout "${RCB_COLLECT_END_TIMEOUT_S:-3600}"; rc=$?
@@ -36,23 +39,7 @@ PY
     exit 0
 fi
 echo "[finalize] episode dumped; one fresh-process replay with the video"
-# A host systemd reload while this long-running container is up (a snap or apt update, with Docker's systemd cgroup
-# driver) makes the GPU refuse processes started afterwards: record that as an infrastructure failure, not the agent's 0.
-if python - <<'PY'
-import os, sys
-for dev in ("/dev/nvidiactl", "/dev/nvidia0"):
-    if os.path.exists(dev):
-        try:
-            open(dev, "rb").close()
-        except OSError as exc:
-            print(f"[finalize] cannot open {dev}: {exc}", file=sys.stderr); sys.exit(1)
-PY
-then
-    python /srv/replay.py --data "$DATA" --task "$TASK" --instance "$INSTANCE" --video "$DATA/replay.mp4" > "$DATA/replay.json" 2> "$DATA/replay.log"
-    echo "[finalize] replay exit $?"
-else
-    echo '{"gpu_lost": true}' > "$DATA/replay.json"
-fi
+merge() {   # episode.json + the replay's record (replay.verdict.json, else replay.json) -> final.json; safe to repeat
 python - <<'PY'
 import json, os
 d = os.environ.get("RCB_DATA", "/data")
@@ -71,6 +58,8 @@ except Exception as exc:
     out["error"] = f"no episode.json: {exc!r}"
 r = last_json("replay.verdict.json") or last_json("replay.json")
 out["instance_mismatch"] = bool(r.get("instance_mismatch"))
+if out["instance_mismatch"]:              # this host could not reconstruct the frozen instance: not evaluable here, not the agent's 0
+    out["infra_error"] = 1
 out["media_status"] = r.get("media_status", "incomplete")
 a = (r.get("replays") or [None])[0]
 if isinstance(a, dict):                  # a replay result (None: the replay process failed -> grader_error, not the agent's 0)
@@ -107,3 +96,33 @@ from rcb_topogym import atomic_json
 atomic_json(os.path.join(d, "final.json"), out)
 print(json.dumps(out))
 PY
+}
+# A host systemd reload while this long-running container is up (a snap or apt update, with Docker's systemd cgroup
+# driver) makes the GPU refuse processes started afterwards: record that as an infrastructure failure, not the agent's 0.
+if python - <<'PY'
+import os, sys
+for dev in ("/dev/nvidiactl", "/dev/nvidia0"):
+    if os.path.exists(dev):
+        try:
+            open(dev, "rb").close()
+        except OSError as exc:
+            print(f"[finalize] cannot open {dev}: {exc}", file=sys.stderr); sys.exit(1)
+PY
+then
+    rm -f "$DATA/.replay_rc"
+    { python /srv/replay.py --data "$DATA" --task "$TASK" --instance "$INSTANCE" --video "$DATA/replay.mp4" > "$DATA/replay.json" 2> "$DATA/replay.log"
+      echo "$?" > "$DATA/.replay_rc"; } &
+    seen=""
+    while [ ! -f "$DATA/.replay_rc" ]; do
+        now="$(cksum "$DATA/replay.verdict.json" 2>/dev/null)"
+        if [ -n "$now" ] && [ "$now" != "$seen" ]; then
+            seen="$now"; merge > /dev/null && echo "[finalize] the replay's verdict is committed: final.json written"
+        fi
+        sleep 2
+    done
+    wait
+    echo "[finalize] replay exit $(cat "$DATA/.replay_rc" 2>/dev/null)"
+else
+    echo '{"gpu_lost": true}' > "$DATA/replay.json"
+fi
+merge

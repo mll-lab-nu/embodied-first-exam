@@ -12,7 +12,8 @@ client and one episode.
 - **No reset.** Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
   robot's own joint positions, velocities and targets. No object poses, no success predicate.
-- Your wall-clock budget is 60 minutes (`meta["time_left_s"]`). There is nothing to hand in: the service records the
+- Your wall-clock budget is 60 minutes. `meta["time_left_s"]` is counted from your first request to the service;
+  approximate — the harness's own deadline is authoritative. There is nothing to hand in: the service records the
   episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
 - Do not use pretrained manipulation policies or any published solution for this benchmark; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
@@ -45,3 +46,10 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
 (the benchmark shows the controller the current goal, as SimToolReal's deployment does). The episode **ends** when every
 goal is reached or at the step limit (`spec["max_control_steps"]`); after that the service answers 409.
 `steps_left_on_goal` is null: no goal has a time limit here.
+- Calibration: `meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world,
+  OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from), for the state at the
+  **end** of that call (the `last` image and the last frame of every stack). Depth is the distance along the viewing
+  axis, in metres. The four cameras are fixed.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **9 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

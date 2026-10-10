@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container.
-#   1. `rcb_limited.py end` (docs/STANDARD_MODE_2_2.md §13.3): SIGUSR1 to the service, which ends the episode if the
+#   1. `rcb_limited.py end` (docs/STANDARD_MODE.md §13.3): SIGUSR1 to the service, which ends the episode if the
 #      agent had not (reason "timeout"), writes trajectory.npz + episode.json (live verdict, final-state hash) and exits.
 #      It exits 2 when final.json already holds the verdict (the service gave up after crashes): that verdict stays.
 #   2. replay the trajectory from the frozen instance in TWO fresh processes (`rcb_quadruped.py replay`, the privileged
@@ -22,9 +22,13 @@ try:
     out = json.load(open(p))
 except Exception:
     out = {}
+if not isinstance(out, dict):
+    out = {}
 out.update({"finalized": True, "success": False, "replay_success": False, "deterministic": False, "infra_error": 1,
             "error": "collect hook: the sim service did not end and dump the episode in time"})
-json.dump(out, open(p, "w"))
+with open(p + ".tmp", "w") as f:  # atomic: the verifier never reads a half-written final.json
+    json.dump(out, f)
+os.replace(p + ".tmp", p)
 print(json.dumps(out))
 PY
     exit 0
@@ -64,7 +68,10 @@ if not (a.get("state_sha") and b.get("state_sha")):  # a replay process died (it
 elif not (a.get("instance_ok") and b.get("instance_ok")):  # the image no longer builds the frozen start: not the agent's 0
     out.update({"instance_mismatch": 1, "infra_error": 1, "error": "a replay did not start in the instance's t = 0 state"})
 out["finalized"] = True
-json.dump(out, open(os.path.join(d, "final.json"), "w"))
+p = os.path.join(d, "final.json")
+with open(p + ".tmp", "w") as f:  # atomic: the verifier never reads a half-written final.json
+    json.dump(out, f)
+os.replace(p + ".tmp", p)
 print(json.dumps(out))
 PY
 replay 3 --video "$DATA/replay.mp4"
@@ -75,6 +82,9 @@ try:
     shown = json.load(open(os.path.join(d, "replay3.json"))).get("video")
 except (OSError, ValueError):
     shown = False
-if shown:
-    p = os.path.join(d, "final.json"); out = json.load(open(p)); out["video"] = True; json.dump(out, open(p, "w"))
+if shown:  # the verdict is already on disk; this only adds the flag (atomically: a failure here leaves the verdict as it is)
+    p = os.path.join(d, "final.json"); out = json.load(open(p)); out["video"] = True
+    with open(p + ".tmp", "w") as f:
+        json.dump(out, f)
+    os.replace(p + ".tmp", p)
 PY

@@ -32,6 +32,34 @@ _ENV = dict(ln.split("=", 1) for ln in (LAYER / "client.env").read_text().splitl
 CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR = "Canyu Chen"
 AGENT_TIMEOUT = 3600  # the protocol's default (D8), uniform within the benchmark
+# The graders' time (docs/benchmarks/autobio.md, "Time limits of the graders"). The longest episode (600000 rows) replays in
+# 1000 s in the slowest family (insert_centrifuge_5430, 600 control steps/s); a verdict replay may take REPLAY_TIMEOUT.
+REPLAY_TIMEOUT = 2400     # one verdict replay: shared/grade.py VERDICT_TIMEOUT_S, shared/standard/finalize.sh REPLAY_TIMEOUT_S
+VERIFIER_TIMEOUT = 5400   # privileged [verifier]: 2 x REPLAY_TIMEOUT + the video replay (what is left) + 300 s
+COLLECT_TIMEOUT = 7200    # standard collect hook: 900 (episode end) + 2 x REPLAY_TIMEOUT + the video (what is left) + 300 s
+# README "Change Log" (PROTOCOL §2.8: fixes to published tasks change them in place and say so), by mode (std: True).
+CHANGE_LOG = {
+    True: (
+        "- 2026-10-10: how a trial that could not be graded is recorded, and request checks; the scene, the frozen instance "
+        "and the pass rule are unchanged, so the task keeps its name. `tests/grade.py`: a missing, unreadable or unfinished "
+        "`final.json` (the collect hook never wrote its verdict) is `infra_error = 1` (was the agent's 0, or no reward at "
+        "all); a reward is always written. `environment/sim/finalize.sh`: each verdict replay has a time limit "
+        f"({REPLAY_TIMEOUT} s; a replay without a result was and is `infra_error`), the video replay gets what is left, "
+        f"`final.json` is written atomically, and the collect hook's `timeout_sec` is {COLLECT_TIMEOUT} s (was 5400 s). "
+        "`environment/sim/server.py`: a malformed request field (null or a wrong type for `dt`, `seconds`, `cameras`, "
+        "`note`) is a 400 before anything is executed (was a 500 that ended the episode). The instruction and `/spec` `episode` now state that a MuJoCo physics warning (an unstable simulation) ends the episode as a failure; the rule itself is unchanged (AutoBio's evaluator's, in force since the task was added). A pass before this "
+        "change is a pass after it; results recorded before it may hold infrastructure failures counted as the agent's 0.\n"
+        "- 2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to 3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` outlasts the simulator's start (no effect on this benchmark, whose service is up within a minute); `cameras=\"name\"` (a string) is one camera, no longer its characters. The service, the collect hook, the grader, the scene and the pass rule are unchanged."
+    ),
+    False: (
+        "- 2026-10-10: the grader's time limits and flags; the scene, the frozen instance and the pass rule are unchanged, so "
+        f"the task keeps its name. `tests/grade.py`: each verdict replay may take {REPLAY_TIMEOUT} s and the video replay gets "
+        f"what is left of the verifier's {VERIFIER_TIMEOUT} s (every replay had 1700 s), so a reward is written "
+        "before Harbor's timeout whatever the trajectory's length; a replay without a result also sets `infra_error` "
+        "(with `grader_error`, as before), every `reward.json` carries `infra_error`, and an error inside the grader "
+        "still writes a reward (`grader_error = 1`). A trajectory that was graded before gets the same verdict."
+    ),
+}
 FAMILIES = {k: v for k, v in json.loads((HERE / "families.json").read_text()).items() if not k.startswith("_")}
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
@@ -86,7 +114,7 @@ RUN chmod +x /tests/test.sh
 STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and OSMesa rendering; no GPU reservation.
-# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 services:
   main:
@@ -245,7 +273,8 @@ in a service you cannot open. You get one client and one episode.
 
 ## Rules
 - **No reset.** The episode starts when the service comes up and ends {end}, when your time is up, or on a simulator
-  error.
+  error. A MuJoCo physics warning (an unstable simulation, for instance after the robot was driven hard into
+  something) also ends it at once, as a failure: `meta["reason"]` is then `"failure: simulator warning (unstable state)"`.
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) and
   the robot's own proprioception: joint positions, velocities and drive efforts{", gripper openings" if grip else ""}, the
   poses of its tool frames and the targets in effect. No poses of tubes, racks or instruments, no instrument state, no
@@ -336,11 +365,11 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 5400
-"""
+timeout_sec = {COLLECT_TIMEOUT}                # 900 (episode end) + 2 x 2400 (verdict replays, each limited) + the video (the rest) + 300: finalize.sh
+""".replace("{COLLECT_TIMEOUT}", str(COLLECT_TIMEOUT))
         if std
         else """[verifier]
-timeout_sec = 5400.0
+timeout_sec = {VERIFIER_TIMEOUT}.0               # 2 x 2400 (verdict replays, each limited) + the video (the rest) + 300: tests/grade.py
 environment_mode = "separate"
 network_mode = "no-network"
 
@@ -348,7 +377,7 @@ network_mode = "no-network"
 build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 8192
-"""
+""".replace("{VERIFIER_TIMEOUT}", str(VERIFIER_TIMEOUT))
     )
     return f"""# Generated by scripts/autobio/generate.py -- edit the generator, the shared sources, families.json or the instance, not this.
 schema_version = "1.3"
@@ -418,7 +447,9 @@ def readme(fam: str, f: dict, t: dict, std: bool) -> str:
             "The sim service judges the episode live and records every executed control step; the collect hook "
             "(`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes "
             "and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode "
-            "succeeded, both replays succeed, and they end in the same state. `nop`: the episode times out, reward 0."
+            "succeeded, both replays succeed, and they end in the same state. A missing or unfinished `final.json` "
+            "(the hook never wrote its verdict) and a replay that gave no result are `infra_error = 1`, never the "
+            "agent's 0. `nop`: the episode times out, reward 0."
         )
         details = [
             ("Service", "`environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` "
@@ -483,6 +514,9 @@ def readme(fam: str, f: dict, t: dict, std: bool) -> str:
 ### Provenance
 Generated by `scripts/autobio/generate.py` from `scripts/autobio/instances/{fam}.json` (`make_facts.py`),
 `scripts/autobio/oracles/{fam}.npz` and `scripts/autobio/families.json`; see `docs/benchmarks/autobio.md`.
+
+### Change Log
+{CHANGE_LOG[std]}
 """
 
 
@@ -541,7 +575,22 @@ def make(fam: str, out: Path) -> tuple[Path, Path]:
     return p, s
 
 
+def limits_agree() -> None:
+    """The graders' time limits are the ones task.toml is written with (one statement of each, checked here)."""
+    fin, gr = (SHARED / "standard/finalize.sh").read_text(), (SHARED / "grade.py").read_text()
+    want = [
+        (fin, f"RCB_COLLECT_BUDGET_S:-{COLLECT_TIMEOUT}}}"),
+        (fin, f"RCB_REPLAY_TIMEOUT_S:-{REPLAY_TIMEOUT}}}"),
+        (gr, f"VERIFIER_TIMEOUT_S = {VERIFIER_TIMEOUT}\n"),
+        (gr, f"VERDICT_TIMEOUT_S = {REPLAY_TIMEOUT}\n"),
+    ]
+    missing = [w for text, w in want if w not in text]
+    if missing:
+        raise SystemExit(f"generate.py and the shared graders disagree on a time limit: {missing}")
+
+
 def render_all(out: Path) -> list[str]:
+    limits_agree()
     done = []
     for inst in sorted((HERE / "instances").glob("*.json")):
         done += [d.name for d in make(inst.stem, out)]

@@ -8,8 +8,8 @@ cannot open. You get one client and one episode. **Task:** Use the robotic arm t
   simulator error. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth) plus the robot's own joint positions,
   gripper state and end-effector poses. No object poses, no success predicate.
-- Steps are unlimited; your wall-clock budget is the limit (`meta["time_left_s"]`). Actions and simulated time are
-  reported as cost.
+- Steps are unlimited; your wall-clock budget is the limit (`meta["time_left_s"]`, counted from your first request to
+  the service; approximate: the harness's own deadline is authoritative). Actions and simulated time are reported as cost.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -23,7 +23,7 @@ spec = r.spec()                               # action types, dims, joint limits
 
 obs = r.get_obs()                             # current frames from 4 cameras: obs.last[cam] -> uint8 (240,320,3)
 obs.meta["proprio"]                           # {"layout": [...82 names], "now": [...]}: see "Proprioception" below
-obs.meta.get("cameras")                       # per-camera intrinsic_cv / cam2world_gl (RoboTwin's own calibration)
+obs.meta.get("cameras")                       # per-camera intrinsic_cv / extrinsic_cv / cam2world_gl for the state this response ends in
 obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
 
 res = r.submit("joint_position", A, dt=0.05)  # A: (T, 14) rows dt seconds apart; streamed at 250 Hz with linear interpolation
@@ -49,7 +49,11 @@ Cameras: `head_camera` (static, above the table), `front_camera` (static, facing
 | 70–81 | `joint_effort` | drive-effort estimate per arm joint; rises when the arm pushes against something |
 
 Depth: pass `include_depth=True` for the head, front and wrist cameras (float16; with the calibration in
-`meta["cameras"]` you can back-project to a point cloud).
+`meta["cameras"]` you can back-project to a point cloud). The calibration in a response is that of the state the
+response ends in: the `last` frame and the final sample of `frames` / `depth`. The static cameras never move; the wrist
+cameras move with the arms, so frames taken earlier in the same call were seen from other wrist poses: for each wrist
+camera you request, `res.raw["cam2world_gl/<cam>"]["data"]` is a float64 `(n_frames, 4, 4)` array with the camera's pose
+at every returned frame.
 
 ### Action types
 - `joint_position` (14): `fl_joint1..6, left_gripper, fr_joint1..6, right_gripper`; radians, gripper 0 = closed, 1 = open.
@@ -64,3 +68,6 @@ Depth: pass `include_depth=True` for the head, front and wrist cameras (float16;
   (same convention as the `proprio` end-effector poses, so an observed pose is a valid target). At most 50 rows per submit.
 
 Table top at z ≈ 0.74 m. The scene's objects are what the cameras show.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

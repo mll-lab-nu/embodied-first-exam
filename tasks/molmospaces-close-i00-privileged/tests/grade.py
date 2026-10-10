@@ -6,6 +6,12 @@ Two replays, each in its own fresh process (`rcb_molmospaces.py replay`: upstrea
 upstream ends the episode, upstream's judge_success on the final state). success = both replays succeed and end in the
 same state. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders
 replay.mp4, after the verdict is on disk (it never changes it).
+
+What is whose failure (success is 0 in every case): the agent's is a missing file (missing_trajectory), a file that is not
+a trajectory of this task (bad_trajectory: not an npz, no `actions`, a pickled or non-numeric array, a wrong shape,
+NaN/inf; wrong_family) and a trajectory upstream judges a failure; the grader's (grader_error = 1 and infra_error = 1,
+no verdict on the agent) is a replay process that died or ran out of time, a frozen start the image no longer builds (instance_mismatch),
+any other exception here.
 """
 
 import argparse, json, os, subprocess, sys, tempfile, traceback
@@ -18,6 +24,7 @@ REPLAY_TIMEOUT_S = 500  # three replays fit the verifier's 1800 s (a replay take
 
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
+    out.setdefault("infra_error", int(bool(out.get("grader_error"))))   # every grader_error here is the host's, never the agent's (PROTOCOL §2.6)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     print(json.dumps(out), flush=True)
@@ -82,15 +89,21 @@ def main() -> int:
     a = ap.parse_args()
     cost = agent_cost()
     if not os.path.isfile(a.traj):
-        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, **cost})
+        write(False, {"success": 0, "missing_trajectory": 1, "deterministic": 0, "grader_error": 0, **cost})
         return 0
     try:
         inst = json.load(open(a.instance))
-        d = np.load(a.traj, allow_pickle=False)
-        acts = np.asarray(d["actions"], dtype=np.float64) if "actions" in d.files else np.zeros((0, 0))
         dim = int(inst["t0"]["action_dim"])
-        if "family" in d.files and str(d["family"]) != inst["family"]:
-            write(False, {"success": 0, "wrong_family": 1, "grader_error": 0, **cost})
+        try:  # the agent's file: whatever is wrong with it is its failure, not the grader's (nothing is unpickled)
+            d = np.load(a.traj, allow_pickle=False)
+            acts = np.asarray(d["actions"], dtype=np.float64) if "actions" in d.files else np.zeros((0, 0))
+            family = str(d["family"]) if "family" in d.files else None
+        except Exception:  # noqa: BLE001 -- not an npz, a truncated one, a pickled / object / non-numeric array
+            traceback.print_exc(file=sys.stderr)
+            write(False, {"success": 0, "bad_trajectory": 1, "deterministic": 0, "grader_error": 0, **cost})
+            return 0
+        if family is not None and family != inst["family"]:
+            write(False, {"success": 0, "wrong_family": 1, "deterministic": 0, "grader_error": 0, **cost})
             return 0
         if acts.ndim != 2 or acts.shape[1] != dim or not np.all(np.isfinite(acts)):
             write(
@@ -99,6 +112,7 @@ def main() -> int:
                     "success": 0,
                     "bad_trajectory": 1,
                     "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0,
+                    "deterministic": 0,
                     "grader_error": 0,
                     **cost,
                 },
@@ -106,10 +120,11 @@ def main() -> int:
             return 0
         runs = [replay(a.instance, a.traj, None), replay(a.instance, a.traj, None)]
         if any("error" in r for r in runs):
-            write(False, {"success": 0, "grader_error": 1, **cost})
+            timed_out = int(any("took over" in str(r.get("error")) for r in runs))
+            write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "replay_timed_out": timed_out, **cost})
             return 0
         if not all(r["instance_ok"] for r in runs):  # the image no longer builds the frozen start: not the agent's 0
-            write(False, {"success": 0, "grader_error": 1, "instance_mismatch": 1, **cost})
+            write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "instance_mismatch": 1, **cost})
             return 0
         all_success = all(r["success"] for r in runs)
         deterministic = runs[0]["state_sha"] == runs[1]["state_sha"]
@@ -130,7 +145,7 @@ def main() -> int:
         write(ok, out)  # the verdict, before any video
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
-        write(False, {"success": 0, "grader_error": 1, **cost})
+        write(False, {"success": 0, "deterministic": 0, "grader_error": 1, **cost})
         return 0
     try:  # the video, for humans: it never changes the verdict
         if replay(a.instance, a.traj, os.path.join(LOG_DIR, "replay.mp4")).get("video"):

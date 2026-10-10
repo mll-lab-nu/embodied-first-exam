@@ -14,8 +14,8 @@ On the bench in front of the arm: one small glass beaker, about 6.5 cm across an
   tool frame and the targets in effect. No poses of the objects or instruments, no success check: `meta["done"]` /
   `meta["reason"]` tell you when the episode is over and why.
 - Your wall-clock budget is 5400 s from your start (`meta["time_left_s"]`); steps are unlimited. **The service
-  needs about 15 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
-  `Robot(timeout=2400)` waits for it, and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
+  needs 13 to 27 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
+  `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
@@ -25,7 +25,7 @@ On the bench in front of the arm: one small glass beaker, about 6.5 cm across an
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot(timeout=2400)                        # connects; waits while the service starts (about 15 minutes; the default timeout is 600 s)
+r = Robot()                                    # connects; waits while the service starts (13 to 27 minutes; it gives up after 3600 s)
 spec = r.spec()                                # action layouts and limits, robot_spec, cameras (+ intrinsics, mounting), proprio layout, kinematics, budget
 obs = r.get_obs()                              # obs.last[cam] -> uint8 (512, 512, 3) (cameras: camera_1, camera_2, wrist_cam)
 obs = r.get_obs(cameras=["camera_1"], depth=True)   # + obs.last_depth[cam] -> float32 (512, 512), metres
@@ -68,3 +68,6 @@ straight up and is moving towards its home pose (the targets in effect, `cmd_*` 
 e.g. with `r.get_obs(seconds=2)`, brings it there in about two seconds. There is no step budget: the
 one technical cap is `spec["max_control_steps"]`, 36000 (600 s of simulated time), at which the episode ends. A
 response carries at most 300 frames per camera (`video_fps` up to 30, default 10).
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.

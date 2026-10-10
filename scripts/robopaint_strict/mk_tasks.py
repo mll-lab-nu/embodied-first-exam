@@ -23,7 +23,8 @@ Two stages, the second on the output of the first:
   - the texts: the rules from texts/rules_<group>_<mode>.md in instruction.md (after "Target and score"), texts/readme_<mode>.md
     in README.md, a sentence in the task.toml description, the oracle evidence (rules.json: oracle_evidence, or the family's own
     entry in oracle_evidence_family, or the pair's own entry in oracle_evidence_pairs), and the pair's change log (rules.json
-    change_log: README "Change Log").
+    change_log: README "Change Log", followed by change_log_all's entries for the mode: changes to the code every pair shares);
+    texts/readme_verification_end_<mode>.md ends the README's Verification section.
 The limits stay those of the reference solution they were set on (reference_path_mm, reference_mark_width_mm); a pair whose
 reference solution was re-made since has its current one's path and mark width in rules.json current_reference (the evidence).
 Every task ends with scripts/task_conventions.py's normalize(); a task dir holds exactly what the generator writes.
@@ -51,6 +52,28 @@ SRC_RE = re.compile(r"^robopaint-(kaishu|xingshu|caoshu|lettering|acrylic|oil)-(
 # the instance keys of the rules (= rcb_brush_strict.RULE_KEYS)
 RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm")
 PLACES = {"privileged": ("tests/", "environment/scorer/"), "standard": ("environment/sim/",)}  # the graders' copies of MODULE
+# README "Change Log" entries of every pair, by mode, written after rules.json's change_log_all: the second review of board 0067
+# (kept here, next to the code they describe; rules.json holds the earlier ones).
+CODE_CHANGES = {
+    "privileged": [
+        "2026-10-10 (review round 2, board 0067): `tests/grade.py` only. A frozen instance that the verifier's host does not "
+        "rebuild (`instance_ok = 0`) is `grader_error = 1` and `infra_error = 1` (it was a plain 0 without a flag: the replays "
+        "ran on another scene and say nothing about the trajectory), and every `grader_error = 1` (a replay process without a "
+        "result or past its time limit) now has `infra_error = 1` next to it; every `reward.json` carries `infra_error`. The "
+        "reward is 0 in these cases, as before; the pass rule, the frozen instance and the tooling are unchanged.",
+    ],
+    "standard": [
+        "2026-10-10 (review round 2, board 0067): the service's request checks and the client. `environment/sim/server.py` "
+        "checks every field of `/submit` and `/observe` before anything is executed and answers 400: a `note` that is not a "
+        "string (for example a number) ended the episode with a 500 after the chunk had run, a null `dt`, `seconds` or "
+        "`video_fps` ended it before anything ran, and a negative or absurd `video_fps` ended it when the video was encoded; "
+        "null now means the default, `video_fps` must be in [0, 1000], and a numeric field sent as a string or a boolean is a "
+        "400 too. `environment/rcb_client.py`: `Robot()` waits up to 3600 s for the service (was 600 s; no effect here, the "
+        "scene builds in under a minute) and `cameras=\"name\"` (a string) is one camera, no longer its characters. The "
+        "collect hook, the grader, the scene and the pass rule are unchanged; a trial that ended with reason `error` "
+        "(`sim_error = 1`) right after such a request before this date was not a simulator fault.",
+    ],
+}
 WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code
     "privileged": (
         ("tests/grade.py", MODULE),
@@ -218,6 +241,13 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
             "\n## Verification\n" + texts[f"readme_verification_{mode}.md"].strip() + "\n",
             "README.md",
         )
+        # the verifier's own conditions (no verdict, a file that is not a trajectory, its time), at the end of the section
+        rd = sub_re1(
+            rd,
+            r"(?s)(\n## Verification\n.*?)(?=\n## )",
+            lambda mm: mm.group(1).rstrip("\n") + "\n" + texts[f"readme_verification_end_{mode}.md"].strip() + "\n",
+            "README.md",
+        )
         rd = sub1(
             rd,
             "\n## Task\n",
@@ -228,9 +258,20 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
             + "\n\n",
             "README.md",
         )
-        log = cfg.get("change_log", {}).get(base)
+        # the pair's own entries (change_log), then the entries of every pair of this mode (change_log_all)
+        log = (list(cfg.get("change_log", {}).get(base) or []) + list(cfg.get("change_log_all", {}).get(mode) or [])
+               + CODE_CHANGES[mode])
         if log:  # normalize() files it under Details as "### Change Log"
-            rd = rd.rstrip("\n") + "\n\n## Change Log\n" + "\n".join(f"- {e}" for e in log) + "\n"
+            entries = "\n".join(f"- {e}" for e in log) + "\n"
+            if "\n### Change Log\n" in rd:  # the family's template has the section (oil): its entries first
+                rd = sub_re1(
+                    rd,
+                    r"(?s)(\n### Change Log\n.*?)(?=\n#{2,3} |\Z)",
+                    lambda mm: mm.group(1).rstrip("\n") + "\n" + entries,
+                    "README.md",
+                )
+            else:
+                rd = rd.rstrip("\n") + "\n\n## Change Log\n" + entries
         files["README.md"][0] = rd.encode()
         tt = files["task.toml"][0].decode()
         sentence = render(texts[f"toml_{GROUP[fam]}.md"], v).strip().replace('"', '\\"')

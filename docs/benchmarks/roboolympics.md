@@ -36,6 +36,11 @@ what it heard, the serve); never the ball's or the opponent's state, nor the see
   state and lowers it to a low-level command, which `Match.apply()` installs before the step runs (RoboOlympics'
   realtime effect boundary). Out-of-range values are clipped (`meta.clipped`); a command the rules refuse at its step
   (a toss when it is not the agent's serve) changes nothing and is counted (`commands_refused`).
+- **A plan of several action types.** RoboOlympics is the one benchmark whose plan mixes types (a toss and the stroke
+  that follows; `stop`, then a `mallet` target). The realtime layer never combines rows of different types: a command
+  that is no target (`stroke`, `toss`, `rest`, `stop`, `ready`) is its row, issued once at its step, and a gap before a
+  row's `at` is held steps (no command); only an interpolable target (`mallet`) is interpolated, from the mallet target
+  in force, and held through a gap of its own.
 - **Breaks between points.** RoboOlympics froze the world after every unit until the agent sent a review. Here the
   clock never stops: after every unit (a point, a rally) the match stands still for **12 s of game time (120 s of wall
   time at S = 10)** while the clock runs on (control steps, wall time, the agent's plan), nothing moves and nothing
@@ -52,7 +57,11 @@ what it heard, the serve); never the ball's or the opponent's state, nor the see
   past `RCB_MAX_RESUMES` it is an infrastructure failure (`infra_error = 1`).
 - **Timing.** The service renders the images and plans the strokes on its own thread between control steps; a long
   plan (badminton) makes it run late and catch up (`max_lag_s`, `stalls` in `final.json`), never changes what happens
-  in the match.
+  in the match. `final.json` and `reward.json` also carry `clock_s`, `stalled_s` and `stalled_share` (the wall time the
+  clock ran, the time its stalls dropped, their ratio), `held_steps`, `requests_refused` and `request_busy_s`: evidence,
+  which decides no verdict. The agent's requests cannot slow the clock (the shared 2.3 layer, since 2026-10-10: bodies
+  are read, decoded and checked off the simulator's thread, waiting requests are served once the clock has caught up,
+  the cameras are rendered once per control step; `docs/STANDARD_MODE.md`).
 
 ## Per-benchmark exceptions (owner, 2026-10-08; PROTOCOL §4b)
 | | PROTOCOL §4b | RoboOlympics | why |
@@ -90,6 +99,35 @@ Harbor 0.23.0, S = 10, CPU only, on a shared 32-core host (load 30-70), image 0.
 
 Every replay was deterministic. Badminton's reference player is the weakest of the three: its matches are close
 (this loop also won 6:4 locally; an earlier version of the loop, which re-planned its stroke at every step, lost 3:5).
+
+## Changes in place
+- **2026-10-10 (board 0067, review finding C1).** Until this date the realtime layer took whatever row the plan held
+  as the start of a chunk's interpolation and as the filler of the gap before its `at`, whatever its action type. A
+  toss followed by a stroke sent before the toss's step had run (or the stroke first, as the instruction allows) was a
+  500 (4 values against 10), and `stop` or `ready` followed by a `mallet` target a few steps ahead put a one-value row
+  under the `mallet` type, which broke the simulator at its step. Either way the match ended `reason = "error"` with
+  `infra_error = 1`: a legal sequence of commands, booked as an infrastructure failure. A command planned ahead of
+  another of its type was also issued again at every step of the gap between them (a stroke restarted five times; a
+  `rest` or `stop` fired at once instead of at its step). Fixed in `rcb_realtime.py` (tests:
+  `scripts/humanoidbench/tests/test_realtime_service.py` on a stub simulator with these action types;
+  `scripts/roboolympics/tests/test_adapter.py` `test_mixed_plan` on the three sports in the image). **A RoboOlympics
+  trial recorded before this date that ended `error` / `infra_error = 1` may be this bug, not a simulator fault**:
+  `episode.jsonl` shows it (an `error` event whose text is a numpy broadcast error or an IndexError); such trials are
+  to be rerun, and a match the agent played around the bug (one command per call, waiting for each to take effect, as
+  the oracle does) is unaffected.
+- **2026-10-10.** `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict. `reward.json` writes `deterministic` and `sim_error` in every branch; a refused
+  `/reset` no longer answers a pending `get_obs(seconds=...)` early, and `final.json`'s realtime counters survive a
+  crash-resume.
+- **2026-10-10 (board 0067, review R2 finding M1).** The shared 2.3 layer no longer lets the agent's requests slow the
+  clock: bodies are read, decoded and checked off the simulator's thread (more than 1 MiB of JSON text by a child
+  process), waiting requests are served once the clock has caught up, and the cameras are rendered once per control
+  step. On a stub simulator at 50 Hz, four threads of refused 21 MB bodies used to leave 3 control steps in 6 s, four
+  threads of `/observe` with a 25 ms render 234 of 300; both now keep every step
+  (`scripts/humanoidbench/tests/test_realtime_load.py`). `final.json` and `reward.json` add `clock_s`, `stalled_s`,
+  `stalled_share`, `held_steps`, `requests_refused` and `request_busy_s`, and `max_lag_s` is the true maximum (it never
+  passed 0.5). The match, the commands that take effect and the verdict rule are unchanged. **A trial recorded before
+  this date whose `final.json` shows `stalls` > 0 ran on a clock that was slower than S for part of the match** (how
+  much is not recorded there: each stall dropped more than 0.5 s); whether such a trial counts is an owner decision.
 
 ## Attribution
 - RoboOlympics (simulators, referees, opponents, reference players): CHIGUI0 and contributors, MIT.

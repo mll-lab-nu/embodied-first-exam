@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for RoboTwin 2.0 (see docs/LIMITED_MODE_PROTOCOL.md, docs/LIMITED_MODE_V2_DESIGN.zh.md).
+"""eai-standard/2.1 sim service for RoboTwin 2.0 (see docs/STANDARD_MODE.md).
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end exports the recorded (T,34) trajectory, replays it for
@@ -16,7 +16,7 @@ import rcb1  # noqa: E402
 import rcb_live  # noqa: E402
 
 PROTOCOL = "eai-standard/2.1"
-DATA = "/data"; os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
+DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)   # RCB_DATA / RCB_PORT: test hooks (never set in tasks)
 TASK = os.environ.get("RCB_TASK", "stack_blocks_two"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 TASK_TEXT = json.load(open(INSTANCE)).get("text", TASK)
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
@@ -51,15 +51,29 @@ def _events() -> list:
     except OSError: return []
 
 
+def _dump_final(d: dict) -> None:
+    """final.json is replaced atomically: a reader (the collect hook's copy, the verifier) never sees half a file."""
+    tmp = os.path.join(DATA, ".final.json.tmp")
+    with open(tmp, "w") as f: json.dump(d, f)
+    os.replace(tmp, os.path.join(DATA, "final.json"))
+
+
+def _verdict_on_disk(d: dict) -> bool:
+    """The replay's verdict (replay_success + deterministic) is written before any video; from then on it stands."""
+    return isinstance(d, dict) and d.get("replay_success") is not None and d.get("deterministic") is not None
+
+
 def _give_up(reason: str, infra: bool) -> None:
-    """End the trial's episode without a new one: mark it failed (a verdict already on disk is kept), keep the PID file
-    for the collect hook, and idle."""
+    """End the trial's episode without a new one: mark it failed (a verdict already on disk is kept, whether or not its
+    videos were finished), keep the PID file for the collect hook, and idle."""
+    faulthandler.cancel_dump_traceback_later()   # this process idles from here on: the startup watchdog must not end it
     with open(os.path.join(DATA, "episode.jsonl"), "a") as f: f.write(json.dumps({"ts": time.time(), "ev": "restart_refused", "reason": reason}) + "\n")
     try: prev = json.load(open(os.path.join(DATA, "final.json")))
     except Exception: prev = {}  # noqa
-    if not (prev.get("finalized") and prev.get("deterministic") is not None):
-        prev.update({"success": False, "done": True, "reason": reason, "finalized": True, "protocol": PROTOCOL, **({"infra_error": 1} if infra else {})})
-        json.dump(prev, open(os.path.join(DATA, "final.json"), "w"))
+    if not isinstance(prev, dict): prev = {}
+    if _verdict_on_disk(prev): prev["finalized"] = True      # the verdict stands; only a video may be missing
+    else: prev.update({"success": False, "done": True, "reason": reason, "finalized": True, "protocol": PROTOCOL, **({"infra_error": 1} if infra else {})})
+    _dump_final(prev)
     open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
     signal.signal(signal.SIGUSR1, lambda *_: None); print(f"restart refused: {reason}", flush=True)
     while True: time.sleep(3600)
@@ -79,12 +93,13 @@ def log(ev: dict) -> None:
 
 
 def write_final() -> None:
-    json.dump({"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "physics_steps": int(E.get("episode_physics_steps") or (int(S._sim_steps) if E["ready"] else 0)),
-               "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
-               "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
-               "deterministic": E.get("deterministic"), "video": bool(E.get("video")),
-               **{k: E[k] for k in ("live_video", "live_frames", "live_skipped", "live_mode", "live_fps", "live_error", "live_truncated") if k in E}},
-              open(os.path.join(DATA, "final.json"), "w"))
+    _dump_final({"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "physics_steps": int(E.get("episode_physics_steps") or (int(S._sim_steps) if E["ready"] else 0)),
+                 "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
+                 "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
+                 "deterministic": E.get("deterministic"), "video": bool(E.get("video")),
+                 # the verification replay itself failed (not the agent's episode): no verdict, an infrastructure error
+                 **({"finalize_error": 1, "infra_error": 1} if E.get("finalize_error") else {}),
+                 **{k: E[k] for k in ("live_video", "live_frames", "live_skipped", "live_mode", "live_fps", "live_error", "live_truncated") if k in E}})
 
 
 def finalize() -> None:
@@ -107,6 +122,7 @@ def finalize() -> None:
             except Exception as exc: E["live_error"] = repr(exc)  # noqa
         except Exception as exc:  # noqa
             traceback.print_exc(); log({"ev": "finalize_error", "error": repr(exc)})
+            if E.get("deterministic") is None: E["finalize_error"] = repr(exc)   # no verdict was reached: the grader reports infra_error
         E["finalized"] = True; write_final()
 
 
@@ -127,12 +143,23 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 from rcb_traj import Session  # noqa: E402
-S = Session(TASK, instance=INSTANCE, enable_render=True)
+try:
+    # gripper_state="command": RoboTwin's own rule (the gripper value Robot.set_gripper stores). The service drives the
+    # fingers only through set_gripper, so the value cannot be set apart from them (the privileged verifier, which
+    # replays rows an agent wrote, reads the finger targets instead: rcb_traj.Session.gripper_opening).
+    S = Session(TASK, instance=INSTANCE, enable_render=True, gripper_state="command")
+except RuntimeError as _exc:
+    # This host does not rebuild the frozen instance (PROTOCOL §3: seen for four tasks on L40S cards). No episode has
+    # begun, so after one retry say so in final.json (infra_error) instead of crash-looping until compose gives up.
+    if "instance state hash" in str(_exc) and _n_starts >= 2 and not any(e.get("ev") == "start" for e in _events()):
+        traceback.print_exc(); _give_up(f"instance_mismatch: {_exc}"[:300], infra=True)
+    raise
 E["built"] = True; faulthandler.cancel_dump_traceback_later()    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)
 ENV = S.env; ROBOT = ENV.robot
 ENV.step_lim = None; ENV.eval_video_path = None; ENV.take_action_cnt = 0; ENV.eval_success = False; ENV.now_obs = {}
 L_ARM = [j.get_name() for j in ROBOT.left_arm_joints]; R_ARM = [j.get_name() for j in ROBOT.right_arm_joints]
 ALL_CAMS = ["head_camera", "front_camera", "left_camera", "right_camera", "observer_camera", "world_camera1"]
+WRIST_CAMS = ("left_camera", "right_camera")     # mounted on the arms: their extrinsics change with every motion
 
 
 def joint_limits() -> dict:
@@ -167,6 +194,11 @@ SPEC = {
                          "(never a reset): the state is the one after the last call that completed on the service, which you may "
                          "not have received; check GET /status before continuing"), "cameras": {c: {"rgb": True, "depth": c in ("head_camera", "front_camera", "left_camera", "right_camera"),
              "mounted": {"left_camera": "left wrist", "right_camera": "right wrist"}.get(c, "static"), "calibration_in_obs": OBS_CALIBRATION} for c in ALL_CAMS},
+    "camera_calibration": ("meta['cameras'][name] of every response = that camera's intrinsic_cv / extrinsic_cv / cam2world_gl in the state the "
+                           "response ends in (the `last` frame, and the final sample of frames / depth). Static cameras never move. The wrist "
+                           "cameras move with the arms: for each requested wrist camera the response also carries the part `cam2world_gl/<cam>`, "
+                           "float64 (n_frames, 4, 4), one camera-to-world pose (OpenGL axes) per returned frame of that camera "
+                           "(client: res.raw['cam2world_gl/<cam>']['data'])"),
     "action_types": {
         "joint_position": {"dim": 14, "optional_dim": 28, "layout": L_ARM + ["left_gripper"] + R_ARM + ["right_gripper"], "units": "rad; gripper in [0,1], 0 = closed, 1 = open",
                            "limits": LIMITS, "limits_note": "null = continuous joint (no limit, never clipped)",
@@ -181,7 +213,8 @@ SPEC = {
         "not_yet": ["joint_delta", "joint_velocity", "ee_delta", "joint_torque"]},
     "proprio_layout": PROPRIO_LAYOUT,
     "proprio_groups": PROPRIO_GROUPS,
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
+    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600")),
+               "wall_clock_note": "meta['time_left_s'] is counted from your first request to the service; approximate: the harness's own deadline is authoritative"},
     "episode": "one episode, no reset: it ends at the first success (RoboTwin's check_success), when your time is up, or on a simulator error",
 }
 
@@ -230,11 +263,13 @@ def proprio_row() -> np.ndarray:
 
 
 def calib() -> dict:
+    """Every camera's intrinsic_cv / extrinsic_cv / cam2world_gl in the CURRENT state. Computed for every response: the
+    wrist cameras ride on the arms, so their extrinsics change whenever an arm moves (the static cameras' never do)."""
     ENV._update_render(); ENV.cameras.update_picture(); out = {}
     for k, v in ENV.cameras.get_config().items():
         out[k] = {kk: (np.asarray(vv).tolist() if hasattr(vv, "shape") or isinstance(vv, (list, tuple)) else vv) for kk, vv in v.items()}
     return out
-CALIB = calib() if OBS_CALIBRATION else {}
+if OBS_CALIBRATION: calib()   # fail at startup, not in the first response, if the cameras cannot be read
 
 
 DEPTH_NOISE = os.environ.get("RCB_DEPTH_NOISE", "off").strip().lower()   # off | realsense
@@ -269,12 +304,16 @@ class Recorder:
     def __init__(self, cameras, fps, depth):
         self.cams = cameras; self.every = max(1, int(round(PHYS_HZ / max(1, fps)))); self.depth = depth
         self.frames = {c: [] for c in cameras}; self.dep = {c: [] for c in cameras}; self.prop = []; self.n = 0
+        self.pose = {c: [] for c in cameras if c in WRIST_CAMS} if OBS_CALIBRATION else {}   # a wrist camera: its pose with every frame
     def tick(self, force=False):
         if force or self.n % self.every == 0:
             imgs, dep = grab(self.cams, self.depth)
             for c in self.cams:
                 self.frames[c].append(imgs[c][..., :3])
                 if c in dep: self.dep[c].append(dep[c])
+            if self.pose:   # grab() has just updated the render scene: the wrist cameras are where the frame was taken from
+                cfg = ENV.cameras.get_config()
+                for c in self.pose: self.pose[c].append(np.asarray(cfg[c]["cam2world_gl"], dtype=np.float64))
             self.prop.append(proprio_row())
         self.n += 1
     def parts(self, video: str, fps: int):
@@ -297,15 +336,28 @@ class Recorder:
                 out.append(rcb1.array_part(f"frames/{c}", fr))
             if len(fr): out.append(rcb1.array_part(f"last/{c}", fr[-1]))
             if self.dep[c]: out.append(rcb1.array_part(f"depth/{c}", np.stack(self.dep[c])))
+            if self.pose.get(c): out.append(rcb1.array_part(f"cam2world_gl/{c}", np.stack(self.pose[c])))
         out.append(rcb1.array_part("proprio", np.stack(self.prop) if self.prop else np.zeros((0, len(PROPRIO_LAYOUT)), np.float32)))
         return out
 
 
+def touch_clock() -> None:
+    """The agent's clock starts at its first request to the service (any endpoint), not when the simulator came up
+    (which is before the agent's session begins). Logged, so a resumed service keeps the same origin."""
+    if E.get("t_agent0") is None:
+        E["t_agent0"] = time.time(); log({"ev": "first_request"})
+
+
+def agent_time_s() -> float:
+    return 0.0 if E.get("t_agent0") is None else time.time() - E["t_agent0"]
+
+
 def meta_common() -> dict:
+    t = agent_time_s()
     return {"step": E["step"], "calls": E["calls"], "physics_steps": int(S._sim_steps), "sim_time_s": round(int(S._sim_steps) / PHYS_HZ, 3),
-            "time_s": round(time.time() - E["t0"], 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"]), 1)),
+            "time_s": round(t, 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - t, 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
-            **({"cameras": CALIB} if OBS_CALIBRATION else {})}
+            **({"cameras": calib()} if OBS_CALIBRATION else {})}   # the calibration of the state this response ends in
 
 
 def save_call_evidence(idx: int, meta: dict, rec: Recorder) -> None:
@@ -394,7 +446,7 @@ def flush_traj() -> None:
 
 def _fps(meta: dict) -> int:
     try: fps = int(meta.get("video_fps", 10))
-    except (TypeError, ValueError): raise ValueError("video_fps must be an integer")
+    except (TypeError, ValueError, OverflowError): raise ValueError("video_fps must be an integer") from None
     if not 1 <= fps <= MAX_VIDEO_FPS: raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     return fps
 
@@ -402,9 +454,24 @@ def _fps(meta: dict) -> int:
 def _num(meta: dict, key: str, default: float) -> float:
     """A numeric request field; anything else is the caller's mistake (400), never a simulator error."""
     try:
-        return float(meta.get(key, default))
-    except (TypeError, ValueError):
+        v = float(meta.get(key, default))
+    except (TypeError, ValueError, OverflowError):
         raise ValueError(f"{key} must be a number") from None
+    if not math.isfinite(v): raise ValueError(f"{key} must be a finite number")
+    return v
+
+
+def _cams(meta: dict, default: list) -> list:
+    c = meta.get("cameras")
+    if not c: return [x for x in default if x in ALL_CAMS] or ["head_camera"]
+    if isinstance(c, str): c = [c]
+    if not isinstance(c, (list, tuple)): raise ValueError("cameras must be a list of camera names")
+    return [x for x in c if isinstance(x, str) and x in ALL_CAMS] or ["head_camera"]   # unknown names are ignored
+
+
+def _bad_request(exc: Exception) -> ValueError:
+    """A field of the wrong type that slipped past the explicit checks is still the caller's mistake: 400, no physics."""
+    return ValueError(f"malformed request: {exc!r}"[:200])
 
 
 def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
@@ -414,22 +481,27 @@ def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
 
 
 def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
-    typ = meta.get("type"); dt = _num(meta, "dt", 0.02); interp = meta.get("interpolate", "linear")
-    cams = [c for c in (meta.get("cameras") or ["head_camera"]) if c in ALL_CAMS] or ["head_camera"]
-    fps = _fps(meta); video = meta.get("video", "mp4"); depth = bool(meta.get("include_depth", False))
-    if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
-    dim = SPEC["action_types"][typ]["dim"]; dims = (dim, SPEC["action_types"][typ].get("optional_dim", dim))
-    if A.ndim != 2 or A.shape[1] not in dims: raise ValueError(f"{typ} actions must be (T, {dim}) or (T, {dims[1]}), got {list(A.shape)}")
-    if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
-    if not (1.0 / PHYS_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0/PHYS_HZ:.4f}, 0.5] s")
-    if typ == "joint_position" and abs(dt * PHYS_HZ - round(dt * PHYS_HZ)) > 1e-6: raise ValueError(f"dt must be a multiple of the physics step 1/{PHYS_HZ} s (e.g. 0.004, 0.008, 0.02)")
-    _frame_budget(cams, fps, (A.shape[0] * dt) if typ == "joint_position" else 10.0, depth)
-    if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
-    if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
-    if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+    try:   # validation only: nothing below this block runs unless the whole request is well-formed
+        typ = meta.get("type"); dt = _num(meta, "dt", 0.02); interp = meta.get("interpolate", "linear")
+        cams = _cams(meta, ["head_camera"])
+        fps = _fps(meta); video = meta.get("video", "mp4"); depth = bool(meta.get("include_depth", False))
+        if not isinstance(typ, str) or typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
+        dim = SPEC["action_types"][typ]["dim"]; dims = (dim, SPEC["action_types"][typ].get("optional_dim", dim))
+        if A.ndim != 2 or A.shape[1] not in dims: raise ValueError(f"{typ} actions must be (T, {dim}) or (T, {dims[1]}), got {list(A.shape)}")
+        if A.shape[0] < 1: raise ValueError(f"{typ} actions must have at least one row, got {list(A.shape)}")
+        if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
+        if not (1.0 / PHYS_HZ - 1e-9 <= dt <= 0.5): raise ValueError(f"dt must be in [{1.0/PHYS_HZ:.4f}, 0.5] s")
+        if typ == "joint_position" and abs(dt * PHYS_HZ - round(dt * PHYS_HZ)) > 1e-6: raise ValueError(f"dt must be a multiple of the physics step 1/{PHYS_HZ} s (e.g. 0.004, 0.008, 0.02)")
+        _frame_budget(cams, fps, (A.shape[0] * dt) if typ == "joint_position" else 10.0, depth)
+        if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
+        if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
+        if not isinstance(interp, str) or interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
+        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+        note_full = "" if meta.get("note") is None else str(meta.get("note"))
+    except (TypeError, OverflowError, AttributeError, KeyError) as exc:
+        raise _bad_request(exc) from None
     rec = Recorder(cams, fps, depth); clipped: list = []; plan: list = []
-    note = str(meta.get("note") or "").replace("\n", " ")[:40]
+    note = note_full.replace("\n", " ")[:40]
     LIVE.set_label(E["calls"] + 1, f"submit {typ} x{A.shape[0]}" + (f" dt={dt:g}" if typ == "joint_position" else "") + (f"  [{note}]" if note else ""))
     before = int(S._sim_steps); rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
@@ -439,7 +511,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     succ = bool(ENV.check_success()); E["success"] = E["success"] or succ
     out = {**meta_common(), "chunk_id": E["calls"], "type": typ, "executed_rows": int(A.shape[0]), "physics_steps_chunk": int(S._sim_steps) - before,
            "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
-    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams, "note": (meta.get("note") or "")[:500],
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": int(A.shape[0]), "dt": dt, "interpolate": interp, "cameras": cams, "note": note_full[:500],
          "physics_steps": int(S._sim_steps) - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     try: np.save(os.path.join(DATA, "calls", f"{E['calls']:06d}", "actions.npy"), A.astype(np.float32))
@@ -451,10 +523,13 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 
 
 def do_observe(meta: dict) -> tuple[dict, list]:
-    cams = [c for c in (meta.get("cameras") or ALL_CAMS[:4]) if c in ALL_CAMS] or ["head_camera"]
-    seconds = _num(meta, "seconds", 0); fps = _fps(meta); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
-    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    _frame_budget(cams, fps, seconds, depth)
+    try:   # validation only (as in do_submit)
+        cams = _cams(meta, ALL_CAMS[:4])
+        seconds = _num(meta, "seconds", 0); fps = _fps(meta); video = meta.get("video", "frames"); depth = bool(meta.get("include_depth", False))
+        if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+        _frame_budget(cams, fps, seconds, depth)
+    except (TypeError, OverflowError, AttributeError, KeyError) as exc:
+        raise _bad_request(exc) from None
     rec = Recorder(cams, fps, depth); before = int(S._sim_steps); rec.tick(force=True)
     if seconds > 0 and not E["done"]:
         LIVE.set_label(E["calls"] + 1, f"observe watch {seconds:g}s")
@@ -487,11 +562,14 @@ class H(BaseHTTPRequestHandler):
         if n > MAX_BODY: raise ValueError("request too large")
         raw = self.rfile.read(n) if n else b""
         if raw[:4] == rcb1.MAGIC:
-            meta, parts = rcb1.decode(raw); return meta, parts
+            meta, parts = rcb1.decode(raw)
+            if not isinstance(meta, dict) or not isinstance(parts, dict): raise ValueError("RCB1 frame: the header must be a JSON object")
+            return meta, parts
         body = json.loads(raw or b"{}")
         if not isinstance(body, dict): raise ValueError("body must be a JSON object or an RCB1 frame")
         return body, {}
     def do_GET(self):
+        if self.path in ("/spec", "/status"): touch_clock()
         if self.path == "/spec": return self._json(200, SPEC)
         if self.path == "/status": return self._json(200, {"step": E["step"], "calls": E["calls"], "physics_steps": int(S._sim_steps), "done": E["done"], "reason": E["reason"], "elapsed_s": round(time.time() - E["t0"], 1)})
         return self._json(404, {"error": "no such endpoint"})
@@ -500,6 +578,7 @@ class H(BaseHTTPRequestHandler):
         try: meta, parts = self._body()
         except Exception as exc: return self._json(413 if str(exc) == "request too large" else 400, {"error": str(exc)[:200]})
         with LOCK:
+            touch_clock()
             log({"ev": "call_begin", "path": self.path, "call": E["calls"] + 1})
             try: return self._serve(meta, parts)
             finally: log({"ev": "call_end", "path": self.path})
@@ -509,7 +588,7 @@ class H(BaseHTTPRequestHandler):
             if self.path == "/submit":
                 if E["done"]: return self._json(409, {"error": "episode finished", "reason": E["reason"]})
                 try: A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
-                except (TypeError, ValueError, KeyError) as exc: return self._json(400, {"error": f"actions: {exc}"[:200]})
+                except (TypeError, ValueError, KeyError, OverflowError, AttributeError) as exc: return self._json(400, {"error": f"actions: {exc}"[:200]})
                 try:
                     out, blobs = do_submit(meta, A)
                 except ValueError as exc:
@@ -553,7 +632,7 @@ def _resume_or_start() -> None:
         E["t0"] = time.time(); return
     try: fin = json.load(open(os.path.join(DATA, "final.json")))
     except Exception: fin = {}  # noqa
-    if fin.get("finalized") and fin.get("deterministic") is not None: _give_up("restarted after finalize", infra=False)
+    if _verdict_on_disk(fin): _give_up("restarted after finalize", infra=False)   # the verdict stands (a video may be missing)
     resumes = [e for e in ev if e.get("ev") == "resumed"]
     in_call = bool(ev) and ev[-1].get("ev") == "call_begin"
     crashes_in_calls = sum(1 for e in resumes if e.get("crashed_in_call")) + int(in_call)
@@ -571,6 +650,8 @@ def _resume_or_start() -> None:
     if S.state_sha() != last["state_sha"]: _give_up("resume_failed: replayed state differs from the logged one", infra=True)
     R.tofile(TRAJ_LIVE); E["flushed"] = n
     E["calls"] = int(last.get("call", 0)); E["step"] = int(last.get("step", 0)); E["success"] = bool(last.get("success")); E["t0"] = float(starts[0]["ts"])
+    _first = [e for e in ev if e.get("ev") == "first_request"]
+    if _first: E["t_agent0"] = float(_first[0]["ts"])
     ended = [e for e in ev if e.get("ev") == "end"]
     if ended: E["done"] = True; E["reason"] = ended[-1].get("reason"); E["t_end"] = float(ended[-1]["ts"]); E["episode_physics_steps"] = int(ended[-1].get("physics_steps") or n)
     log({"ev": "resumed", "rows": n, "calls": E["calls"], "state_sha": S.state_sha(), "crashed_in_call": in_call, "downtime_s": round(time.time() - float(ev[-1]["ts"]), 1)})
@@ -584,4 +665,4 @@ E["ready"] = True
 LIVE = rcb_live.LiveRecorder(S, DATA, t0=E["t0"]); LIVE.open()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready", flush=True)
-HTTPServer(("0.0.0.0", 8000), H).serve_forever()
+HTTPServer(("0.0.0.0", int(os.environ.get("RCB_PORT", "8000"))), H).serve_forever()

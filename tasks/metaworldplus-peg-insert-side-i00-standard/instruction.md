@@ -10,7 +10,8 @@ client and one episode.
 - **No reset.** What you knock over stays knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration), the
   robot's own state and the task's target point. No object poses, no success signal.
-- Your wall-clock budget is 60 minutes (`meta["time_left_s"]`). There is nothing to hand in: the service records the
+- Your wall-clock budget is 60 minutes. `meta["time_left_s"]` is counted from your first request to the service;
+  approximate — the harness's own deadline is authoritative. There is nothing to hand in: the service records the
   episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
 - Do not use Meta-World's scripted policies or any published solution for this benchmark; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
@@ -19,8 +20,10 @@ client and one episode.
 The episode runs until your time is up. The service then replays the recorded episode in a fresh simulator and applies
 Meta-World's own success check for `peg-insert-side-v3` to the state **after the last executed control step**; it must hold in
 the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you want
-graded and stop submitting. The check measures the task's object (the hand, for reaching tasks) against
-`meta["task"]["target_pos"]`, with a tolerance of a few centimetres.
+graded and stop submitting.
+
+For `peg-insert-side-v3` the check is: The peg's head is within 7 cm of the target point, with the y and z differences counted double. ("The target point" is `meta["task"]["target_pos"]`; everything the
+check needs to hold must hold in that final state.)
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python
@@ -48,3 +51,9 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
   (0 closed … 1 open), `mocap_x/y/z` (the hand's target), the arm joints' positions and velocities, the finger joints'
   positions, and `cmd_*` (the last action).
 - World frame: metres; x to the robot's right, y forward (away from the robot's base), z up; the table top is at z = 0. Quaternions are w x y z. The four cameras are fixed.
+- Calibration: `meta["cameras"][cam]` holds `intrinsic_cv` (pinhole, pixels) and `cam2world_gl` (4x4 camera-to-world,
+  OpenGL axes: x right, y up, the camera looks along -z; the viewpoint the image is rendered from). Depth is the
+  distance along the viewing axis, in metres.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

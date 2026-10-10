@@ -32,16 +32,17 @@ Renaming them would change the hashes every task is bound to.
 
 `python3 scripts/robotangle/mk_tasks.py [--check]` renders every task from:
 - release.json;
-- shared/: the release's task templates, verbatim;
-- packages/: the upstream per-task texts;
+- shared/: the release's task templates (the tooling `rcb_topogym.py` verbatim; the graders and the sim service with the
+  fixes listed under "Fixes applied on main");
+- packages/: the upstream per-task texts (the generator applies the text fixes of the same list, `review_fixes`);
 - oracles/: the recorded oracle trajectories;
 - the eai-standard/2.4 layer in `scripts/eai_standard/v2_4/` (+ 2.2's `rcb1.py`, `run.sh`, client pins), copied unchanged;
 - `assets.json`: the pins of the frozen instances (below). With `--assets <dir>` (a local copy, `scripts/robotangle/assets.py
   fetch <dir>`) it also checks every instance's bytes against the bindings; without it, against the pinned hashes.
 
 It needs only the Python standard library and `scripts/task_conventions.py`. `--check` re-renders into a temporary
-directory and fails on any byte or mode difference. `scripts/robotangle/import_evidence.py` is the one-off importer that
-made those inputs from the graded TopoGym packages; CI never runs it.
+directory and fails on any byte or mode difference. The inputs were imported once from the graded TopoGym
+packages and oracle runs of the release that `release.json` names (the dev/jianwen commit and the evidence runs).
 
 Each task carries copies of the tooling (`rcb_topogym.py`), the graders and the standard sim service (D9). Its
 `runtime_binding.json` binds:
@@ -157,10 +158,23 @@ state the 6 h budget and are compared only with results under the same budget (D
 ## Grading and determinism
 
 **Privileged mode:**
-- two open-loop replays of `/app/output/trajectory.npz` from the frozen instance, in fresh processes in the separate
-  verifier sandbox (GPU reservation in `tests/docker-compose.yaml`);
+- two open-loop replays of `/app/output/trajectory.npz` from the frozen instance in the separate verifier sandbox (GPU
+  reservation in `tests/docker-compose.yaml`): one fresh verifier process builds one Session and replays twice in it,
+  each replay after a reset to the frozen instance (`shared/privileged/grade.py`; not two processes);
 - success requires the task's native predicate after the replay, with release and clearance checks;
-- the video is rendered during the second replay.
+- for the families with a tolerant hold (blanket_flatten, knot_untying, lock_picking, rope_threading) the rule is R-hold
+  (the owner's decision, 2026-10-05, dev/jianwen `4c5ece239`): every replay may confirm within the hold of up to 2 s
+  after the last row; whether a replay reached the goal within the trajectory's own rows is reported
+  (`strict_goal_reached`, `strict_replay_required = 0`), not required. The task texts said "at least one replay within
+  your own rows" until 2026-10-10; the grader never required it in this repository, so no result changes;
+- a trajectory has at most `RCB_MAX_STEPS` rows, set per task in both Dockerfiles by the generator (`row_cap`):
+  `min(200000, floor_1000((verifier timeout − 1800 s) / (3 × step time)))`, i.e. two replays at 1.5 × the step time the
+  instruction states. knot_untying gets 11000–13000 rows (4.6–5.4 min of simulated time), blanket_flatten 34000–37000,
+  rope_threading 38000–41000, fiber_bundling hard 49000; 24 tasks keep 200000. A longer trajectory is `bad_trajectory`.
+  Before 2026-10-10 the loader accepted 200000 rows everywhere, more than the 45000 s verifier can replay twice for the
+  slow families by the instructions' step times (arithmetic, not a measured run; a verifier out of time leaves no reward);
+- the video is rendered during the second replay; the review-frame pass of a success held for review is skipped when
+  the verifier's time left (`RCB_VERIFIER_BUDGET_S`) would not cover it.
 
 **Standard mode:**
 - the sidecar journals every executed control step and resumes crashes without a reset;
@@ -170,6 +184,8 @@ state the 6 h budget and are compared only with results under the same budget (D
 **Rules for all families:**
 - a physical-validity policy: contact-penetration limits, joint-torque caps and a table guard;
 - a breakdown of the simulator is an infrastructure error, not a failure (`simulator_instability`, `infra_error`);
+- an instance the host cannot reconstruct (`instance_mismatch`: the service's startup check, the fresh replay, the
+  graders' binding check) is not evaluable there: `infra_error = 1` in both modes, never the agent's 0;
 - CPU families replay bit-exactly on one host;
 - CPU instruction-set class: the asset generators run on numpy and OpenBLAS, whose SIMD kernels depend on the CPU.
   On a host without the class an instance was frozen on (AVX2 only vs AVX-512), the pinned generator writes the same
@@ -190,8 +206,8 @@ state the 6 h budget and are compared only with results under the same budget (D
 
 ## Standard mode: `eai-standard/2.4`
 
-The standard twins serve `eai-standard/2.4` ([`STANDARD_MODE_2_4.md`](../STANDARD_MODE_2_4.md), issue #89, PR #90), TopoGym's
-documented hardening of 2.2. The release called it "2.3" (dev/jianwen docs/rcb/STANDARD_MODE_2_3.md); that number went to
+The standard twins serve `eai-standard/2.4` ([`STANDARD_MODE.md`](../STANDARD_MODE.md), issue #89, PR #90), TopoGym's
+documented hardening of 2.2. The release called it "2.3" (in dev/jianwen's own protocol document); that number went to
 the realtime capability (#86), so it was registered as 2.4 = 2.3 + the operations capability (realtime stays optional; the
 RoboTangle service does not offer it). Requests, cameras, proprioception, RCB1 frames and the process model are those of 2.2.
 2.4 adds:
@@ -202,15 +218,63 @@ RoboTangle service does not offer it). Requests, cameras, proprioception, RCB1 f
 - instance qualification before grading (`instance_mismatch` → not evaluable).
 
 The layer (`environment/rcb_client.py`, `environment/sim/rcb_limited.py`) is the reference implementation in
-`scripts/eai_standard/v2_4/`: the release's files with the version string 2.3 → 2.4 and 2.4 module headers, nothing else.
+`scripts/eai_standard/v2_4/`: the release's files with the version string 2.3 → 2.4 and 2.4 module headers, plus the
+fixes below (`python3 scripts/eai_standard/v2_4/selftest.py` tests them on the CPU in about 15 s).
 `check-tooling-identity.sh` keeps every copy byte-identical, and `task_conventions.normalize` leaves it alone (a shared
 source). The generator respells "eai-standard/2.3" to 2.4 in the task texts as well.
+
+### Fixes applied on main (2026-10-10 review; to be taken upstream on dev/jianwen)
+
+These live in `scripts/robotangle/shared/`, `scripts/robotangle/mk_tasks.py` and `scripts/eai_standard/v2_4/`; the
+release's templates on dev/jianwen (`harbor_templates/topogym`) do not have them yet, so the next release import must
+carry them or the generator's assertions fail.
+
+- Layer, call watchdog: the restart ended the episode as `call_watchdog` whenever `call-watchdog.json` existed and its
+  deadline had passed, which is true after any crash during a call once the container takes long enough to come back.
+  The watchdog now prints into `call-watchdog.trace` (emptied at every call), only its banner there counts, and a resume
+  removes both files. Layer, tick ledger: cut with the journal also when the last checkpoint has no rows. Layer, bodies:
+  wrong-typed `actions`, a non-object meta and wrong-typed `/kinematics` fields are a 400.
+- Service (`server.py`): `dt`, `video_fps`, `seconds`, `note` and `cameras` are checked before anything executes (null or
+  a wrong type was a 500 that ended the episode as an infrastructure error; a non-string `note` did so after the chunk
+  had run, so an agent could void a failing trial). The startup `instance_mismatch` record is a final verdict
+  (`gave_up`, `deterministic`), so the collect hook returns at once. `/spec` `max_control_steps` (PROTOCOL §4.5) is the
+  200000-step runaway guard (`step_guard`), and the instruction states it.
+- Collect hook (`finalize.sh`): `final.json` is merged as soon as `replay.verdict.json` is committed and again when it
+  changes, not only after the video is closed and the review frames are rendered.
+- Graders: `instance_mismatch` → `infra_error = 1`; standard: a live failure whose replay crashed is the agent's 0, not a
+  grader error; privileged: the row cap, the budget-aware review pass, the replay Session's guard above the cap.
+- Texts (`review_fixes`): R-hold in the 17 privileged instructions and READMEs that named the old rule; the row cap; the
+  standard instruction's "Time per call" for 2.4 (`max_call_wall_s`, `r.operation_status()`, 408 / 409).
+
+Round 2 of that review (2026-10-10, board 0067 R2; `python3 scripts/robotangle/tests/test_server_requests.py` runs the
+real `server.py` on the real 2.4 layer with a stub Session, numpy only, about 20 s):
+- Service (`server.py`, `number()`): a JSON integer beyond the float range in `dt`, `video_fps` or `seconds` is a 400
+  that moves nothing. `math.isfinite` raises `OverflowError` on it, which was a 500 that ended the episode with
+  `reason = "error"`, an infrastructure error here: one hand-written request turned a failing trial into a void one.
+- Service, proprio group `gripper_opening`: the measured gap between the finger pads in metres for every gripper
+  (`Session.gripper_width`, i.e. `_Robot.opening`: the finger links' collision vertices read through
+  `topogym.robot.grasp_geometry`, the reader every Session start already runs for every arm; it issues no command and
+  nothing graded reads the column). In the native gripper space (47 of the 52 standard tasks) the column repeated
+  `joint_pos`'s gripper entry, the drive coordinate: the Robotiq 2F-85's driver joint in rad, 0 = open .. 0.8 = closed
+  (`topogym/robot/panda_robotiq`, image 0.2.22), i.e. the opposite direction of an opening, and ALOHA's finger rail
+  position in m. `/spec` describes the gripper entries of `joint_pos` and `joint_vel` per gripper space. The five
+  width-space tasks (knot_untying) are unchanged. Not run on a GPU for this fix: the Robotiq value was checked against
+  the 0.2.22 sources and the stub, not on a live scene.
+- Texts (`review_fixes_r2`): the 20 Panda tasks' instructions (both modes) gave the native drive target in metres; it
+  is rad (0 = open, 0.8 = closed). The standard Rules said "internal measurements are not exposed" while the same
+  instruction documents `meta["safety"]`; the sentence now names that exception (what is exposed is unchanged: whether
+  the contact readings of `meta["safety"]` stay in standard mode is an open owner decision, PROTOCOL §4.5). The
+  instruction states the client's new `Robot()` wait (3600 s; 600 s before) and what `gripper_opening` is.
+
+Not changed: a resume replay at collect time still has the fixed 3600 s `RCB_COLLECT_END_TIMEOUT_S`, and the collect
+hook's 27000 s can still end before the review-frame pass of a very long knot_untying episode; the verdict is in
+`final.json` by then.
 
 ## World-frame information (D7)
 
 Standard texts never say where objects are. They give the robot (base pose included), camera calibration, part names,
 sizes, colours and the detailed goal; privileged texts may give world quantities. All 104 texts pass
-`check-limited-texts.sh`'s patterns.
+`check-standard-texts.sh`'s patterns.
 
 ## Network policy
 

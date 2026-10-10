@@ -30,15 +30,17 @@ a fixed rectangle slightly inside the edges of the table top (its corners are wo
 not give: keeping clear of the table's edges satisfies it).
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
-  simulator error. Knocked-over objects stay knocked over.
+- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, on a
+  simulator error, or at the technical step cap below. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
   (`meta["done"]`, `reason` "success") the first time it holds.
-- **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
-  simulated time are reported as cost. Use the time: ending your session before the task is done ends the episode as
-  a failure.
+- **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down). There is no step budget; actions
+  and simulated time are reported as cost. One technical cap: the episode has at most 200000 control steps (about
+  1.85 h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
+  that watches counts too). The call that reaches it stops there, the episode ends (`reason` "step_guard") and is graded
+  as it stands. Use the time: ending your session before the task is done ends the episode as a failure.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
@@ -86,16 +88,24 @@ gains and the tool frames; `spec["world"]` the frame conventions.
 ### Action types
 - `joint_position` (16): `Joint1_R..Joint7_R, right_gripper, Joint1_L..Joint7_L, left_gripper`; radians, gripper =
   opening width in metres, 0 = closed .. 0.1 = open. Absolute targets tracked by PD controllers. Rows are `dt` apart
-  (`1/30 ≤ dt ≤ 0.5` s, a multiple of the 30 Hz control period); a chunk may cover at most 10 s; out-of-limit values are
-  clipped and listed in `meta["clipped"]` (limits in the spec). Use `obs.meta["proprio"]["now"][:16]` as the starting
-  row to move smoothly.
+  (`1/30 ≤ dt ≤ 0.5` s, a whole number of 1/30 s control periods: `2/30`, not `0.067`; any other `dt` is refused, never
+  rounded); a chunk may cover at most 10 s; out-of-limit values are clipped and listed in `meta["clipped"]` (limits in
+  the spec). Use `obs.meta["proprio"]["now"][:16]` as the starting row to move smoothly.
 - `ee_pose` (16): right `x y z qw qx qy qz gripper`, left same; world frame (robot base at (0, 0, 1.08), x away from the
   robot, y to its left, +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and
   driven to in joint space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is the **gripper tip**
   frame: +z is the approach direction, +x the direction the fingers close along (same convention as the `proprio`
-  end-effector poses, so an observed pose is a valid target). At most 50 rows per submit.
+  end-effector poses, so an observed pose is a valid target). At most 50 rows per submit; `dt` is ignored; a gripper
+  width outside 0 .. 0.1 is clipped and listed in `meta["clipped"]`.
+- A request with a field of the wrong type or out of range (`dt`, `seconds` outside 0 .. 30, `video_fps` not a whole
+  number in 1 .. 30, `video`, `interpolate`, `cameras` not a list of names, `note` not a string, actions that are not
+  finite (T, 16) numbers) is answered 400 before anything is executed: the client raises `ValueError`, nothing has
+  moved and the episode goes on.
 
 Objects here: red bottle, funnel, ball container, small ball.
 
 The wrist joints are limited to ±60°, so a vertical approach only works for finger-closing directions within about ±60°
 of the world y axis.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

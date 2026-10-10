@@ -4,7 +4,7 @@ You control the **MyoLegs**, a free-standing musculoskeletal model of a human to
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (80 muscles).
 **Task:** Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Failure (the episode ends): the time limit, leaving the 13 x 13 m arena, or the pelvis below 0.5 m (fallen).
 
-A musculoskeletal body with two legs stands in a square arena; an opponent moves in it.
+A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move).
 
 ## Rules
 - **Episodes and resets.** The episode starts when the service comes up and ends on success (the challenge's own success event), on its failure conditions or its own time limit, when your time is up, or on
@@ -44,7 +44,7 @@ r.fk(q)                                        # forward kinematics of the liste
 r.status()                                     # calls, control steps, done, reason, elapsed time, episode, resets_left
 obs = r._post("/reset", {"cameras": ["topview"]}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
 ```
-Cameras: `topview`, `opponent_view`, `agent_view` (640x480; default `topview`). `spec["cameras"]` gives each camera's mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one) and intrinsics, and every response carries each frame's pose. Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a
+Cameras: `topview`, `opponent_view`, `agent_view` (640x480; default `topview`). `spec["cameras"]` gives each camera's mounting (static, fixed to a body, or a MuJoCo tracking camera that follows one) and intrinsics, and every response carries each frame's pose (except `opponent_view`, which rides on a body of the scene that is not yours: images and depth only, no mount and no pose -- `extrinsic_cv` / `cam2world_gl` are null in `meta["cameras"]` and NaN per frame -- because the pose would be that body's position). Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a
 chunk fastest. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel` (`qd_<joint>`),
 `muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m), `joint_effort` (`effort_<joint>`, the
 actuators' generalized force on each joint), `root_pose`, `root_vel`. `/kinematics` gives the camera mounts for any joint positions.
@@ -54,3 +54,6 @@ actuators' generalized force on each joint), `root_pose`, `root_vel`. `/kinemati
 10 ms control period, at most 0.5 s; a chunk covers at most 10 s), `interpolate="linear"` (default, from the
 previous command) or `"hold"`; the client sends them as float32. The control rate is 100 Hz (10 physics
 substeps); there is no step budget.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

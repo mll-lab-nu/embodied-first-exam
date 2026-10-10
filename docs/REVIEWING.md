@@ -6,8 +6,7 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
 ## Order of work
 1. **Scope.** One benchmark per pull request; shared files (protocol, taxonomy, CI, shared scripts, README) only in a
    separate pull request. Ask for a split otherwise.
-2. **Static checks.** `bash ci_checks/run_all.sh` must pass. Read the protocol warnings: until the migration
-   (PROTOCOL §7) new tasks may only carry the ones marked `legacy:`.
+2. **Static checks.** `bash ci_checks/run_all.sh` must pass.
 3. **Generator.** For generated tasks, read the generator and the shared sources, not 500 copies. Re-run it and check
    that `git diff tasks/` is empty.
 4. **Sample tasks.** Read at least two tasks per mode in this order: `instruction.md` → `tests/` → `solution/` →
@@ -30,6 +29,13 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   the recording-only usage gateway (PROTOCOL D11)?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
 - Names end in their mode, `-privileged` / `-standard` / `-standard-realtime`; README in the standard layout; no `results/` in task directories.
+- Compute resources (PROTOCOL §2.9): are the minimums measured (what does `measured` cite?) rather than copied from the
+  `[environment]` caps? Does `gpu_class` match the simulator (Isaac Sim / Omniverse: `rtx`)? Would the oracle run on a
+  machine with exactly these values?
+- Resource limits (PROTOCOL §2.10): would an honest agent stay inside them (one simulator at the task's defaults on the
+  largest card it runs on, the tooling's own replay checks, videos it is told to write)? Is the scope `trial` in
+  privileged mode and `agent` in standard modes, and does `instruction.md` end with the rendered paragraph? Does
+  `measured` cite real peaks (and say where there are none)? Do the caps leave the margin of §2.10 above the limits?
 
 ## Human review (oracle `partial` or `none`)
 Review per family (same generator and predicate), at least two instances per family:

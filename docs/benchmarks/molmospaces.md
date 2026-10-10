@@ -66,10 +66,27 @@ ProcTHOR-10k one misses objects on 0.2.9's scene version).
 | privileged | `Session`: full state (`s.state()`, `s.model` / `s.data`), any camera, upstream's kinematics, reward and success code | unlimited | `tests/grade.py`: `trajectory.npz` replayed in two fresh processes; both succeed with equal final hashes |
 | standard | `joint_position` (Franka 8, RB-Y1 25) and `done`; the robot's cameras (not the third-person follower), proprioception, `/kinematics` | none (D1) | `finalize.sh` replays the recorded rows twice; success = live ∧ replay ∧ deterministic |
 
-Standard mode's texts name objects and the goal only (D7, `ci_checks/check-limited-texts.sh`); the robot's pose and
+Standard mode's texts name objects and the goal only (D7, `ci_checks/check-standard-texts.sh`); the robot's pose and
 camera calibration come from the service, object poses never. Both graders check that each replay starts in the
-instance's t = 0 state (else `grader_error`); a third replay renders `replay.mp4` after the verdict. Crash recovery:
+instance's t = 0 state (else `grader_error`, with `infra_error`); a third replay renders `replay.mp4` after the verdict. Crash recovery:
 resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: 3600 s, no step limit beyond the horizon.
+
+Tests without a simulator: `scripts/molmospaces/tests/test_ms.py` (run as a script; numpy): both graders, `finalize.sh` with
+stand-in replays and the real `server.py` on the real shared layer with a stub Session.
+
+What is not the agent's failure is flagged, and a reward is always written (2026-10-10). Standard `infra_error = 1`: no
+`final.json` (`missing_log`), an unreadable one (also `grader_error`), an unfinished one (`finalized` 0: the collect hook
+did not write its verdict; these three used to be the agent's 0 or no reward at all), a give-up after crashes between
+calls or a failed resume, a service that did not end its episode for the hook, a replay process without a result
+(`replay_failed`), replays that did not start in the t = 0 state (`instance_mismatch`); a give-up after crashes during a
+call stays the agent's failure. `finalize.sh` writes `final.json` whole and renames it into place, and ends a replay at
+500 s or at the hook's own deadline (1740 s of its 1800 s), whichever comes first. Privileged: a file that cannot be read
+as a trajectory (not an npz, a pickled or non-numeric `actions`) is `bad_trajectory` (was `grader_error`). The service
+checks a request completely before anything moves: a null or wrongly typed `dt`, `seconds`, `cameras`, `note`, `video`,
+`interpolate` or `type` is a 400 (a null `dt` or `seconds` and a non-string `note` used to be a 500 that ended the
+episode). `get_obs(seconds=...)` runs whole control steps (the request rounded to the control period, 66 ms for the
+Franka tasks) and `meta["seconds"]` is what ran, not what was asked for. The only step limit is upstream's horizon, which
+the instruction and `/spec` (`max_control_steps`, `episode`) state.
 
 ## Image and generator
 - `images/molmospaces/prepare_assets.sh`, then the image build: the measured environment (`requirements.txt`,
@@ -84,9 +101,8 @@ resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: 3600 s, no st
 ## Run
 
 ```bash
-harbor run -c scripts/molmospaces/configs/codex-openrouter.yaml --env-file .env -p tasks/molmospaces-pick-i00-standard
+harbor run -p tasks/molmospaces-pick-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/molmospaces-pick-i00-privileged -a nop      # scores 0
 ```
-`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
-`codex-gpt6_luna-medium`). Results are not kept in this repository (PROTOCOL D3): runs, videos and per-run READMEs are on
+Agent, provider and effort settings: docs/RUNNING.md. Results are not kept in this repository (PROTOCOL D3): runs, videos and per-run READMEs are on
 the results site.

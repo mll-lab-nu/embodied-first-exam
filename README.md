@@ -6,7 +6,7 @@ In each task, an agent works in a container with a robot simulator and a Python 
 that a verifier checks in a separate sandbox, by replaying it in a fresh process. A program decides pass or fail (no
 learned judge) and reports numeric diagnostics (for example DexToolBench's goal progress).
 
-The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (v1.0.1). Contributions follow
+The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (the version is stated there). Contributions follow
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Evaluation modes
@@ -24,7 +24,7 @@ Every task instance is offered in two modes that share the same frozen scene.
 
 Privileged mode measures whether an agent can program a robot when it has full access to the simulator. Standard mode
 measures the same thing under real-robot constraints. The standard-mode wire protocol is specified in
-[docs/LIMITED_MODE_PROTOCOL.md](docs/LIMITED_MODE_PROTOCOL.md).
+[docs/STANDARD_MODE.md](docs/STANDARD_MODE.md).
 
 A third mode, **standard-realtime** (protocol v1.1, `eai-standard/2.3`, PROTOCOL §4b), is standard mode on a clock that does not
 stop: once an episode starts, the robot runs in real time and holds its last targets while the agent thinks, so the agent
@@ -42,13 +42,13 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | RoboTwin 2.0 (`robotwin_2_0_<task>`) | SAPIEN 3 + CuRobo · ALOHA-AgileX dual arm | 47 of 50 | full (upstream expert) |
 | DexToolBench (`dextoolbench_<cat>_<obj>_<task>`) | MuJoCo 3.3.7 · KUKA iiwa14 + Sharpa HA4 hand | 21 of 24 | full on 6, partial on 15 |
 | MuJoCo Playground (`mujoco_playground_<env>`) | MuJoCo · ALOHA, Franka Panda; quadrupeds: Unitree Go1, Boston Dynamics Spot, Google Barkour vB | 4 manipulation + 9 quadruped | full (manipulation: scripted IK; quadrupeds: Playground's Go1 policy or policies trained on its rewards) |
-| KinDER (`kinder-<family>-i00`) | MuJoCo 3.3 / PyBullet · TidyBot++ mobile manipulator | 11 | full on 1, none on 10 (human review) |
-| HumanoidBench (`humanoidbench-<family>-i00`) | MuJoCo · Unitree H1 humanoid | 24; + 10 standard-realtime (`-standard-realtime`: time does not stop) | full on 1, none on 23 (human review); standard-realtime: full on 1, none on 9 |
+| KinDER (`kinder-<family>-i00`) | MuJoCo 3.3 / PyBullet · TidyBot++ mobile manipulator | 5 | full on 1, none on 4 (human review) |
+| HumanoidBench (`humanoidbench-<family>-i00`) | MuJoCo · Unitree H1 humanoid | 10 (+ 10 standard-realtime, `-standard-realtime`: time does not stop) | full on 1, none on 9 (human review), in each mode |
 | MetaWorld+ (`metaworldplus-<env>-i00`) | MuJoCo (Meta-World v3) · Rethink Sawyer | 50 | full |
 | RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
 | RoboPaint (`robopaint-<style>-<target>-i<NN>`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 43 | partial |
-| RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 53 | full on 2, none on 51 (human review) |
-| YAMLab (`yamlab-<family>-iNN`) | Isaac Lab / Isaac Sim (YAMLab) · two I2RT YAM arms with parallel grippers | 50 (2 families × 25 object pairs) | full (upstream human demonstrations) |
+| RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 53 | full on 2 (standard mode: partial), none on 51 (human review) |
+| YAMLab (`yamlab-<family>-iNN`) | Isaac Lab / Isaac Sim (YAMLab) · two I2RT YAM arms with parallel grippers | 10 (2 families × 5 object pairs) | full (upstream human demonstrations) |
 | LabUtopia (`labutopia-<family>-i00`) | LabUtopia on Isaac Sim 6.1 · Franka Panda; a chemistry laboratory: glassware (pick, place, pour, shake), a heater with a button, an instrument panel, a drying oven's door, a cabinet's drawer | 9 | full (LabUtopia's scripted controllers) |
 | BEHAVIOR-1K (`behavior-<activity>-i00`) | OmniGibson / Isaac Sim · Galaxea R1 Pro | 100 | partial on 2, none on 98 (human review; 89 supplementary tasks without a verified positive yet) |
 | VLABench (`vlabench-<task>-i00`) | MuJoCo + dm_control · Franka Panda | 36 | full |
@@ -61,6 +61,9 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | RoboTangle (`robotangle-<family>-<tier>-i00`; formerly TopoGym) | Genesis 1.2.1 (rigid bodies on CPU float64 or GPU fp32, libuipc IPC and PBD deformables), Nyx RGB · ALOHA 2 bimanual; Franka Panda + Robotiq 2F-85 | 52 (11 families × up to 5 tiers) | full |
 | BiGym 2.0 (`bigym2-<family>-i00`) | MuJoCo 3.8.1 + NVIDIA GR00T-WBC (CPU; EGL rendering) · Unitree G1 humanoid with Dex1-1 grippers, legs and waist driven by the whole-body controller | 13 (+ 13 standard-realtime) | none (human review) |
 | RoboOlympics (`roboolympics-<sport>-<format>-i00`) | MuJoCo 3.3.7 (CPU, OSMesa) · Franka Panda with a paddle (table tennis) or with a racket on an x-y base (badminton); KUKA iiwa 14 with a mallet (air hockey) | 3, standard-realtime only (real-time sports against a scripted opponent; S = 10 and no privileged twin, PROTOCOL §4b exceptions) | full (RoboOlympics' reference players, camera images only) |
+| LIBERO-MAX (`libero-max-<suite>-<task>-<event>-iNN`) | robosuite 1.4 (MuJoCo 3.2.6, CPU) · Franka Panda; LIBERO tasks with one change in mid-task (a target, receptacle or obstacle moves, the camera, lighting or scene theme changes, sensor noise sets in, distractors appear) | 64 | full |
+| ManiGuard (`maniguard-<family>-iNN`) | BEHAVIOR-1K 3.7.2 (OmniGibson on Isaac Sim 4.5) · Franka Panda with long fin-ray fingers; tabletop tasks with a safety specification checked at every control step | 30 (6 families × 5) | full on 14, none on 16 (human review) |
+| MolmoSpaces (`molmospaces-<family>-i00`) | Ai2 MolmoSpaces on MuJoCo 3.5 (CPU physics) · Franka FR3 + Robotiq 2F-85 on a fixed base; Rainbow RB-Y1 mobile manipulator | 8 | none (human review) |
 
 Each task directory carries a README in one layout: a key table (benchmark, mode, twin, simulator and robot, family and
 instance, oracle, budget, image), then Task, Difficulty, Reference solution, Verification and Details.
@@ -75,7 +78,7 @@ instance, oracle, budget, image), then Task, Difficulty, Reference solution, Ver
 - **DexToolBench generators:** `scripts/dtb_mk_task.py`, `dtb_mk_oracle.py`.
 - **MuJoCo standard-mode twins:** generated by `scripts/mj_mk_limited.py`.
 - **KinDER, HumanoidBench:** both modes (HumanoidBench: also standard-realtime) rendered by `scripts/kinder/gen_tasks.py` and `scripts/humanoidbench/gen_tasks.py` (`render`, `check`).
-- **Other benchmarks:** each has its generator under `scripts/<bench>/` (RoboWits, RoboLab, BEHAVIOR-1K, RoboTangle, YAMLab: `mk_tasks.py --check`; VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1: `generate.py --check`; MyoSuite: `scripts/myosuite/generate.py --check`; LabUtopia: `scripts/labutopia/generate.py --check`; AutoBio: `scripts/autobio/generate.py --check`; MetaWorld+: `generate.py`; RoboPaint: `scripts/robopaint_strict/mk_tasks.py --check`, which runs `scripts/robopaint_brush_mk_task.py --refresh` and adds the process rules). CI runs every check mode (`ci_checks/check-generated-tasks.sh`). Per-benchmark notes: [docs/benchmarks/](docs/benchmarks/).
+- **Other benchmarks:** each has its generator under `scripts/<bench>/` (RoboWits, RoboLab, BEHAVIOR-1K, RoboTangle, YAMLab, ManiGuard, MolmoSpaces: `mk_tasks.py --check`; VLABench, RoboCasa, RoboCasa365, RoboCasa-GR1, LIBERO-MAX, DexJoCo, MuJoCo Playground's quadrupeds: `generate.py --check`; BiGym 2.0: `gen_tasks.py check`; MyoSuite: `scripts/myosuite/generate.py --check`; LabUtopia: `scripts/labutopia/generate.py --check`; AutoBio: `scripts/autobio/generate.py --check`; MetaWorld+: `generate.py`; RoboPaint: `scripts/robopaint_strict/mk_tasks.py --check`, which runs `scripts/robopaint_brush_mk_task.py --refresh` and adds the process rules). CI runs every check mode (`ci_checks/check-generated-tasks.sh`). Per-benchmark notes: [docs/benchmarks/](docs/benchmarks/).
 - **RoboOlympics:** `scripts/roboolympics/gen_tasks.py` (`render`, `check`) from RoboOlympics' simulator code
   (`scripts/roboolympics/shared/`); notes in [docs/benchmarks/roboolympics.md](docs/benchmarks/roboolympics.md).
 - **Conventions:** every generator ends with `scripts/task_conventions.py` (`--check` reports a task it would change).
@@ -87,10 +90,7 @@ instance, oracle, budget, image), then Task, Difficulty, Reference solution, Ver
 uv tool install harbor==0.23.0
 git submodule update --init --recursive          # third_party/ sources used by the base images
 images/mujoco/prepare_assets.sh                  # MuJoCo assets (pinned upstream commits)
-scripts/build_images.sh                          # rcb-* base images (not yet publicly pullable)
-for s in kinder humanoidbench; do                # eai-* base images of KinDER and HumanoidBench
-  docker build -f images/$s/Dockerfile -t ghcr.io/mll-lab-nu/eai-$s:$(cat images/$s/VERSION) .
-done
+scripts/build_images.sh                          # every eai-* base image (the public ones can be pulled instead)
 cp .env.example .env                             # API keys, or a Claude / ChatGPT subscription login
 
 # one task, locally
@@ -108,7 +108,7 @@ harbor view jobs
 - An NVIDIA GPU with `nvidia-container-toolkit` for RoboTwin (CuRobo, Vulkan) and for MuJoCo rendering. KinDER's physics runs on CPU.
 - GPUs are passed through by `environment/docker-compose.yaml`, because Harbor's local Docker sandbox does not support `[environment].gpus`.
 - Reference hardware is an RTX 4090. Four RoboTwin instances rebuild to a different state on other GPUs (e.g. L40S) and are then reported as `grader_error` (PROTOCOL §3).
-- Disk space for the base images (the RoboTwin image is about 22 GB). They are built locally until they are published.
+- Disk space for the base images (the RoboTwin image is about 22 GB). Public images can be pulled; `BUILD_ONLY` ones are built on the host.
 
 **Running official results:**
 - Use Harbor's native agents, with the harness's web search off: Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (the default of `scripts/run_agent_batch.sh`; PROTOCOL §5). The search runs at the model provider, so no egress allowlist stops it.
@@ -125,11 +125,11 @@ harbor view jobs
 - **Recorded evidence in standard mode.** The simulator service records the episode, replays it in a fresh simulator,
   and writes the verdict inputs. The agent never holds the simulator.
 - **Network policy.** DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, MyoSuite, LabUtopia, AutoBio, the three
-  RoboCasa benchmarks, DexJoCo, YAMLab and MuJoCo Playground's quadruped tasks restrict agent egress to model APIs by default, because their reference policies, demonstrations or
-  baselines are public. RoboTwin, MuJoCo Playground's manipulation tasks, RoboWits, RoboLab and BEHAVIOR-1K use Harbor's default
+  RoboCasa benchmarks, DexJoCo, YAMLab, LIBERO-MAX, ManiGuard, MolmoSpaces, BiGym 2.0, RoboOlympics and MuJoCo Playground's quadruped tasks restrict agent egress to model APIs by default, because their reference policies, demonstrations or
+  baselines are public. RoboTwin, MuJoCo Playground's manipulation tasks, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle use Harbor's default
   (public) and can be switched with `scripts/set_agent_egress.py allowlist`. Separately, the harness's own web search is
   off by default in batch runs (it runs at the model provider, past any allowlist).
-- **Reproducibility.** Base images are pinned by tag (pinning every pip dependency is part of the migration). A task's identity is its digest in `tasks/dataset.toml`,
+- **Reproducibility.** Base images are pinned by tag (pinning every pip dependency: PROTOCOL §7, open item 2). A task's identity is its digest in `tasks/dataset.toml`,
   and published task inputs never change.
 
 ## Repository layout
@@ -139,7 +139,7 @@ tasks/                 Harbor tasks (one directory per task and mode) and datase
 images/<sim>/          simulator base images (simulator installs only)
 scripts/               task generators, image build/push, egress switch, results and report tools
 ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh)
-docs/                  PROTOCOL.md (contract), LIMITED_MODE_PROTOCOL.md (standard-mode wire protocol),
+docs/                  PROTOCOL.md (contract), STANDARD_MODE.md (standard-mode wire protocol),
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
                        RUNNING.md (batches, logs, recordings), LEAKAGE.md (where answer keys survive),
                        benchmarks/ (per-benchmark notes)

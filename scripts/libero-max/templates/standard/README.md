@@ -21,6 +21,8 @@ through the client; the episode ends with `reason = "success"` at the last of th
 The sim service ends the episode at LIBERO's success (or at the {{std_cap}}-step technical cap, when the agent's time
 is up, or on a simulator error), replays the recorded episode in a fresh process and writes `/data/final.json`;
 `tests/grade.py` (separate sandbox, no network) grades it: `success = live_success ∧ replay_success ∧ deterministic`.
+The replay records `replay.mp4` on the way; the verdict is written the moment the replay has executed the last action,
+and the video can neither change nor cost it (`docs/benchmarks/libero-max.md`, "Collect budget").
 
 ## Details
 | | |
@@ -36,3 +38,20 @@ is up, or on a simulator error), replays the recorded episode in a fresh process
   does not know that CPU and fell back to its generic Prescott kernels, while the instances were frozen with its Zen
   kernels (AMD 7950X). 0.1.1 pins the Zen kernels; same Python packages and sources. `scripts/libero-max/rebuild_check.sh`
   (start-state hash and reference replay of all 64 instances): 8488C 0/64 with 0.1.0, 64/64 with 0.1.1; 7950X 64/64.
+- 2026-10-10: the replay video can no longer cost a verdict (`environment/sim/lmx_tool.py`, `server.py`, `finalize.sh`);
+  the instance, the reference solution and the pass rule are unchanged, so the task keeps its name.
+  - Before: the grading replay printed its verdict only after encoding the video, so an encoder failure threw the verdict
+    away and the whole episode was replayed again; and the video's frames were rendered inside a wait sized without
+    them (3,000 s), so a long live success on a busy host could end without a replay verdict (`infra_error = 1`).
+  - Now: the verdict is in `final.json` the moment the replay has executed the last action; the final frame and the
+    encoder's flush come after it; a video failure only means `video = false`, never a second replay. The video's
+    cost before the verdict is capped at 240 s (one frame per `replay_video_stride` control steps: 2 up to 2,400
+    steps, a time-lapse of at most 1,200 frames beyond; frames are skipped when the host is slower than that).
+  - The collect hook waits up to 5,400 s for the verdict (timeout 5,700 s): {{std_cap}} steps × 0.5 s on a busy host
+    + 180 s to build the scene + 240 s of video = 4,920 s.
+  - `tests/grade.py` writes every `reward.json` field (`deterministic` among them) also when `final.json` is missing or
+    unreadable; the verdict rule is the same.
+  - Checked with a stubbed simulator (encoder, render and disk failures, a crash and a hang after the verdict, the
+    budget) and one reference replay in the real simulator (same final state hash with the video as without).
+- 2026-10-10 (2): the sim service (`environment/sim/rcb_service.py`) refuses a negative `Content-Length` unread (400; it
+  read until the client hung up). Nothing else changes; the task keeps its name.

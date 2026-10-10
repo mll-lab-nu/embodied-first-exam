@@ -43,7 +43,10 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end the episode (waits through a resume), replay twice in fresh processes, write final.json
-timeout_sec = 14400               # 4 h: a 2 h episode at 20 Hz records up to ~144k control steps, replayed twice
+timeout_sec = 30000               # the end of the episode (up to 7200 s through a resume) + two replays, each at most
+                                  # max(3600, 900 + 0.2 x rows) s (an Isaac start, then the rows at the slowest measured rate):
+                                  # 2 x 10900 s for the 50,000 control steps an episode may have (the tooling's cap) + 1000 s;
+                                  # finalize.sh ends a replay that would run past it and records that (replay_timed_out)
 
 [agent]
 timeout_sec = @@BUDGET@@.0             # ManiGuard budget, both modes (docs/benchmarks/maniguard.md)

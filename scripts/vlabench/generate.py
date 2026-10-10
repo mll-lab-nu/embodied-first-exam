@@ -6,7 +6,7 @@
     python3 scripts/vlabench/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
 Inputs: tasks.json (candidates, dropped, instruction restatements, oracle sources), frozen/<task>/{instance.json,
-oracle.npy} and frozen/report.json (import_pr4.py, freeze.sh), the
+oracle.npy}, imported from PR #4 (commit ad3c5109), and frozen/report.json (freeze.sh), the
 templates in templates/, the shared sources in shared/ (copied byte for byte) and the standard client's base image and
 pins (scripts/eai_standard/client.env, client-requirements.txt). Each task directory is written from scratch and
 finished with scripts/task_conventions.py (normalize, PROTOCOL v1.0.1); a vlabench-* directory this does not write is
@@ -108,8 +108,10 @@ services:
       RCB_WALL_CLOCK_S: "3600.0"
       RCB_MAX_CONTROL_STEPS: "{MAX_CONTROL_STEPS}"
       RCB_IMAGE_HW: "{IMAGE_HW}"
-      # The default is the standard configuration (one episode, no reset); results with resets are reported separately.
-      RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-0}}"
+      # One episode, no reset, as instruction.md tells the agent: pinned, not a knob (a `${{RCB_RESET_BUDGET:-0}}` here
+      # would take the budget from the shell that runs harbor, and a host that exports it for another benchmark would
+      # hand this task resets its instruction rules out).
+      RCB_RESET_BUDGET: "0"
       PYTHONPATH: /srv:{PATH_ENV}
 """
 

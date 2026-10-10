@@ -4,3 +4,5 @@ COPY test.sh /tests/test.sh
 COPY grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh
 COPY runtime_binding.json /tests/runtime_binding.json
+# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+COPY rcb_limits.py rcb_limits.json /tests/

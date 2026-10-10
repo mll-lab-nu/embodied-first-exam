@@ -28,7 +28,7 @@ body:
     validations: {required: true}
   - type: textarea
     id: images
-    attributes: {label: Images and resources, description: "Base image size, GPU / VRAM, whether the image can be published (licences, data), expected wall time of an oracle run."}
+    attributes: {label: Images and resources, description: "Base image size, minimum compute per trial (CPU cores, memory, GPU memory, GPU class; PROTOCOL §2.9), proposed resource limits (GPU memory, memory, processes, disk; §2.10), whether the image can be published (licences, data), expected wall time of an oracle run."}
     validations: {required: true}
   - type: input
     id: size

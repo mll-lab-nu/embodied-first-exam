@@ -21,7 +21,9 @@ episode    : as in DexJoCo's own evaluation, an episode ends at the first step w
              it reports a task failure (e.g. water_plant: trigger pulled away from the plant; bimanual_hanoi: an
              illegal tower). `success` = the episode ended in success. Replay stops at that step.
 budget     : there is no step budget: the agent's wall clock is the limit. DexJoCo's 1000-1500-step episode caps and its
-             real-time pacing (a sleep to 30 Hz in every step) are lifted; MAX_STEPS only stops runaway trajectories.
+             real-time pacing (a sleep to 30 Hz in every step) are lifted; MAX_STEPS only stops runaway episodes.
+             A trajectory handed in (privileged mode) has at most MAX_TRAJECTORY_ROWS rows: what the verifier can
+             replay twice inside its timeout on the slowest family. `save_trajectory` refuses a longer one.
 
 CLI
 ---
@@ -60,6 +62,64 @@ from typing import Any, Callable
 import numpy as np
 
 MAX_STEPS = 10_000_000          # runaway guard only; the wall clock is the budget
+# Privileged hand-in cap: rows of /app/output/trajectory.npz (1000 s of robot time at 50 Hz; the longest reference has
+# 1085 rows). The verifier replays a trajectory twice inside its timeout; the slowest family runs ~140 control steps/s.
+# The verifier scores a longer file 0 (bad_trajectory). The standard service's recorded episode has no such cap.
+MAX_TRAJECTORY_ROWS = 50_000
+# Threads (docs/benchmarks/dexjoco.md, "Threads"): DexJoCo's operational-space controller does its linear algebra in numpy,
+# and OpenBLAS gives one result on 4 or more threads (the references' and every published result's numerics), others on
+# 1 and on 2-3. Every container sets OPENBLAS_NUM_THREADS=4, but OpenBLAS never runs more threads than the CPUs the
+# process may run on (its affinity: a cpuset, taskset, a Slurm allocation; a docker `cpus:` quota does not change it).
+# So a grading process checks the count it really runs with: below MIN_BLAS_THREADS it gives no verdict.
+MIN_BLAS_THREADS = 4
+
+
+def blas_threads() -> dict[str, Any]:
+    """The thread count numpy's OpenBLAS runs with in this process, and what bounds it (all numeric, for reward.json):
+    visible_cpus (the process's CPU affinity), openblas_num_threads_env (OPENBLAS_NUM_THREADS, 0 = not set),
+    blas_threads (asked of the loaded OpenBLAS itself; if that fails, min(visible_cpus, the environment's setting)),
+    threads_ok (1 iff blas_threads >= MIN_BLAS_THREADS)."""
+    try:
+        visible = len(os.sched_getaffinity(0))
+    except (AttributeError, OSError):
+        visible = int(os.cpu_count() or 1)
+    env = 0
+    for k in ("OPENBLAS_NUM_THREADS", "GOTO_NUM_THREADS", "OMP_NUM_THREADS"):   # OpenBLAS's own order
+        try:
+            env = int(os.environ.get(k, "") or 0)
+        except ValueError:
+            env = 0
+        if env > 0:
+            break
+    n = 0
+    try:
+        import ctypes
+        np.linalg.inv(np.eye(2))                                             # numpy's BLAS is loaded and initialised
+        with open("/proc/self/maps") as f:
+            libs = sorted({line.split()[-1] for line in f if "openblas" in line.rsplit("/", 1)[-1].lower()})
+        for lib in libs:
+            h = ctypes.CDLL(lib)
+            for sym in ("openblas_get_num_threads64_", "openblas_get_num_threads", "scipy_openblas_get_num_threads64_",
+                        "scipy_openblas_get_num_threads"):
+                fn = getattr(h, sym, None)
+                if fn is not None:
+                    fn.restype = ctypes.c_int
+                    n = max(n, int(fn()))
+                    break
+    except Exception:  # noqa: BLE001 -- no /proc, another BLAS, a stripped library: fall back to what bounds the count
+        n = 0
+    if n <= 0:
+        n = min(visible, env) if env > 0 else visible
+    return {"visible_cpus": int(visible), "openblas_num_threads_env": int(max(env, 0)), "blas_threads": int(n),
+            "threads_ok": int(n >= MIN_BLAS_THREADS)}
+
+
+def threads_message(t: dict) -> str:
+    return (f"OpenBLAS runs {t['blas_threads']} thread(s) here ({t['visible_cpus']} CPU(s) visible to this process, "
+            f"OPENBLAS_NUM_THREADS={t['openblas_num_threads_env'] or 'unset'}); DexJoCo's simulation gives the references' "
+            f"numerics only on {MIN_BLAS_THREADS} or more (docs/benchmarks/dexjoco.md, Threads)")
+
+
 # Order of the 16 hand values in an action row (and in the measured joints) per arm. DexJoCo's bimanual envs list the
 # LEFT hand's fingers mirrored: ring, middle, index, thumb.
 HAND_ORDER = {"right": ["index_0", "index_1", "index_2", "index_3", "middle_0", "middle_1", "middle_2", "middle_3",
@@ -247,6 +307,10 @@ class Session:
             self._snapshot = self.snapshot()
         self._episode_reset()
         self._total_steps = 0
+        self.threads = blas_threads()
+        if not self.threads["threads_ok"]:     # the agent's own runs go on; a grading process gives no verdict like this
+            _log("WARNING: " + threads_message(self.threads) + ". Results here can differ from the verifier's replay, "
+                 "which runs on 4 threads: give this container at least 4 CPUs and OPENBLAS_NUM_THREADS=4.")
         _slog("session_start", task=task)
         import atexit
         atexit.register(lambda: _slog("session_end", task=task, resets=self.resets, sim_steps=self._total_steps + self.steps))
@@ -381,10 +445,16 @@ class Session:
         _slog("record", task=self.task, n_actions=len(rec), success=bool(self.success))
         return np.asarray(rec, dtype=np.float64).reshape(-1, self.action_dim)
 
-    def save_trajectory(self, actions, path: str | Path, meta: dict | None = None) -> None:
+    def save_trajectory(self, actions, path: str | Path, meta: dict | None = None, *,
+                        max_rows: int | None = MAX_TRAJECTORY_ROWS) -> None:
+        """Write the trajectory file. More than `max_rows` rows are refused (the privileged verifier's hand-in cap,
+        MAX_TRAJECTORY_ROWS); the standard service records its own episode with max_rows=None."""
         A = np.asarray(actions, dtype=np.float64)
         if A.ndim != 2 or A.shape[1] != self.action_dim:
             raise ValueError(f"trajectory must be (T, {self.action_dim}), got {A.shape}")
+        if max_rows is not None and len(A) > max_rows:
+            raise ValueError(f"trajectory has {len(A)} rows, more than the hand-in cap of {max_rows} "
+                             "(the verifier scores a longer file 0)")
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         np.savez(path, actions=A, task=self.task, instance_sha=getattr(self, "instance_sha", ""),
                  action_layout=ACTION_LAYOUT[self.action_dim], meta=json.dumps(meta or {}))
@@ -514,7 +584,9 @@ class Session:
         return np.concatenate(rows, axis=0)
 
     def render_video(self, actions, path: str | Path, *, cameras: list[str] | None = None, every: int = 2, fps: int = 25,
-                     size: tuple[int, int] = (240, 320)) -> dict[str, Any]:
+                     size: tuple[int, int] = (240, 320), deadline: float | None = None) -> dict[str, Any]:
+        """Replay `actions` from the frozen state into an mp4. `deadline` (a time.time() value): stop there and keep
+        the frames written so far (the verifier's time box; a video never decides a verdict)."""
         import imageio.v2 as imageio
         A = np.asarray(actions, dtype=np.float64)
         self.reset()
@@ -526,7 +598,7 @@ class Session:
                 running = self.step(row)
                 if i % every == 0 or not running:
                     w.append_data(np.concatenate([self.render_frame(c, size) for c in cams], axis=1))
-                if not running:
+                if not running or (deadline is not None and time.time() > deadline):
                     break
         finally:
             w.close()
@@ -746,7 +818,9 @@ def cmd_make_instance(a) -> None:
 def cmd_replay(a) -> None:
     """Replay a trajectory from the frozen instance, `--repeat` times (each in a new Session). `--out` writes the result
     as JSON (the standard-mode collect hook runs one replay per fresh process); `--video` renders the first replay
-    (at most ~1500 frames, after the verdict fields are known; it never changes them)."""
+    (at most ~1500 frames, after the verdict fields are known; it never changes them) and stops
+    `--video-deadline-s` seconds after this process started, keeping the frames written so far."""
+    t_start = time.time()
     A = _load_traj(a.traj)
     runs, instance_ok, video = [], True, False
     for i in range(a.repeat):
@@ -757,7 +831,8 @@ def cmd_replay(a) -> None:
         if a.video and i == 0:
             try:
                 n = int(st["replayed_rows"])
-                s.render_video(A[:n], a.video, cameras=s.video_cameras(), every=max(2, -(-n // 1500)))
+                s.render_video(A[:n], a.video, cameras=s.video_cameras(), every=max(2, -(-n // 1500)),
+                               deadline=(t_start + a.video_deadline_s) if a.video_deadline_s else None)
                 video = os.path.isfile(a.video)
             except Exception:  # noqa: BLE001
                 import traceback
@@ -766,7 +841,9 @@ def cmd_replay(a) -> None:
     out = {"n_actions": int(len(A)), "replays": runs, "all_success": all(r["success"] for r in runs),
            "deterministic": len({r["state_sha"] for r in runs}) == 1, "success": bool(runs[0]["success"]),
            "state_sha": runs[0]["state_sha"], "reason": runs[0]["reason"], "steps": runs[0]["steps"],
-           "instance_ok": instance_ok, "video": video}
+           "instance_ok": instance_ok, "video": video, **blas_threads()}
+    if not out["threads_ok"]:
+        _log("WARNING: " + threads_message(out) + ": this replay is not the references' numerics")
     print(json.dumps(out))
     if a.out:
         with open(a.out, "w") as f:
@@ -786,6 +863,7 @@ def main() -> None:
     r = sub.add_parser("replay"); r.add_argument("--task", required=True); r.add_argument("--instance", required=True)
     r.add_argument("--traj", required=True); r.add_argument("--repeat", type=int, default=2); r.add_argument("--video")
     r.add_argument("--out", help="also write the result to this JSON file")
+    r.add_argument("--video-deadline-s", type=float, default=0.0, help="stop the video this long after the start (0: never)")
     v = sub.add_parser("render"); v.add_argument("--task", required=True); v.add_argument("--instance", required=True)
     v.add_argument("--traj", required=True); v.add_argument("--out", required=True); v.add_argument("--every", type=int, default=2)
     a = ap.parse_args()

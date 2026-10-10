@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for the AutoBio tasks (docs/STANDARD_MODE_2_2.md): the adapter of the shared layer
+"""eai-standard/2.2 sim service for the AutoBio tasks (docs/STANDARD_MODE.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_autobio.Session (AutoBio on MuJoCo 3.3.0, CPU). HTTP surface: GET /spec,
 GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to /data/episode.jsonl.
 
@@ -106,11 +106,15 @@ def do_kinematics(req: dict) -> dict:
 # ------------------------------------------------------------------------------------------------- spec
 TASK_TEXT = TASK_INFO["task_text"]
 CAP = f"{M.MAX_STEPS} control steps ({M.MAX_STEPS * M.CONTROL_DT:g} s of simulated time)"
+WARNING_END = (
+    "; a MuJoCo physics warning (an unstable simulation, e.g. after the robot was driven hard into something) ends it at "
+    'once as a failure (reason "failure: simulator warning (unstable state)"), and so does a simulator error (reason "error")'
+)
 EPISODE = {
     "first": f"one episode, no reset: it ends the moment the goal is reached (success), when your time is over, or after {CAP}",
     "final": 'one episode, no reset: it is judged in the state in which it ends, when you end it with r.submit("done", []), '
     f"when your time is over, or after {CAP}",
-}[S.rule]
+}[S.rule] + WARNING_END
 ROBOT_SPEC = S.robot_spec()
 SPEC = {
     "protocol": L.PROTOCOL,
@@ -297,6 +301,48 @@ def recorder(cams, fps: int, meta: dict, video: str) -> L.Recorder:
     )
 
 
+def checked(parse):
+    """A request is checked in full before anything is executed. The layer answers a ValueError with 400 and takes any
+    other exception for a simulator error that ends the episode (PROTOCOL §4.6), so whatever a malformed field raises
+    while it is being checked (null, a list where a number belongs, a number too large for a float) is a ValueError."""
+
+    def run(*args):
+        try:
+            return parse(*args)
+        except ValueError:
+            raise
+        except (TypeError, OverflowError, AttributeError, LookupError, ArithmeticError) as exc:
+            raise ValueError(f"malformed request: {exc!r}"[:300]) from exc
+
+    return run
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A request's number: absent or null is the default; anything but a finite number is a 400."""
+    v = meta.get(key)
+    if v is None:
+        return float(default)
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        raise ValueError(f"{key} must be a number, got {type(v).__name__}")
+    try:
+        v = float(v)
+    except OverflowError:
+        v = math.inf
+    if not math.isfinite(v):
+        raise ValueError(f"{key} must be finite")
+    return v
+
+
+def note_of(meta: dict) -> str:
+    """The call's free-text note for the log: checked with the other fields, before anything is executed."""
+    v = meta.get("note")
+    if v is None:
+        return ""
+    if not isinstance(v, str):
+        raise ValueError("note must be a string")
+    return v[:500]
+
+
 def video_fps(meta: dict) -> int:
     fps = meta.get("video_fps")
     if fps is None:
@@ -313,6 +359,8 @@ def frames_ok(seconds: float, fps: int, video: str) -> None:
 
 def cameras_of(meta: dict) -> list:
     cams = meta.get("cameras") or DEFAULT_CAMS
+    if isinstance(cams, str) or not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names; cameras: {CAMS}")
     bad = [c for c in cams if c not in CAMS]
     if bad:
         raise ValueError(f"unknown cameras {bad}; cameras: {CAMS}")
@@ -336,22 +384,20 @@ def meta_common(cams) -> dict:
     }
 
 
-def do_submit(meta: dict, A: np.ndarray):
+@checked
+def parse_submit(meta: dict, A: np.ndarray):
+    """Every field of a /submit request and its rows, checked; nothing is executed here."""
     typ = meta.get("type")
-    if typ == "done":
-        cams = cameras_of(meta)
-        rec = recorder(cams, 10, meta, "none")
-        rec.tick(force=True, last=True)  # every response carries the last frames
-        E["calls"] += 1
-        finish("done")
-        EP.log({"ev": "submit", "call": E["calls"], "type": "done", "note": (meta.get("note") or "")[:500]})
-        return {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": 0, "ok": True}, rec.parts("none", 10)
-    if typ != "joint_position":
+    if not isinstance(typ, str) or typ not in ("joint_position", "done"):
         raise ValueError(f"type must be joint_position or done (not yet: {SPEC['action_types']['not_yet']})")
-    dt = float(meta.get("dt", DT))
+    cams, note = cameras_of(meta), note_of(meta)
+    L.depth_mode(meta)  # a bad `depth` is a 400 here, not after the rows
+    if typ == "done":
+        return typ, DT, "hold", "none", cams, 10, note
+    dt = number(meta, "dt", DT)
     interp = meta.get("interpolate", "linear")
     video = meta.get("video", "mp4")
-    cams, fps = cameras_of(meta), video_fps(meta)
+    fps = video_fps(meta)
     k = dt / DT
     if A.ndim != 2 or A.shape[1] != NA:
         raise ValueError(f"joint_position actions must be (T, {NA}), got {list(A.shape)}")
@@ -361,11 +407,24 @@ def do_submit(meta: dict, A: np.ndarray):
         raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
     if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
         raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
-    if interp not in ("hold", "linear"):
+    if not isinstance(interp, str) or interp not in ("hold", "linear"):
         raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"):
+    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     frames_ok(A.shape[0] * dt, fps, video)
+    return typ, dt, interp, video, cams, fps, note
+
+
+def do_submit(meta: dict, A: np.ndarray):
+    typ, dt, interp, video, cams, fps, note = parse_submit(meta, A)
+    if typ == "done":
+        rec = recorder(cams, 10, meta, "none")
+        rec.tick(force=True, last=True)  # every response carries the last frames
+        E["calls"] += 1
+        finish("done")
+        EP.log({"ev": "submit", "call": E["calls"], "type": "done", "note": note})
+        return {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": 0, "ok": True}, rec.parts("none", 10)
+    k = dt / DT
     rec, clipped = recorder(cams, fps, meta, video), []
     E["calls"] += 1
     step0, before = E["step"], ctrl_steps()
@@ -410,22 +469,30 @@ def do_submit(meta: dict, A: np.ndarray):
             "cameras": cams,
             "control_steps": ctrl_steps() - before,
             "n_clipped": len(clipped),
-            "note": (meta.get("note") or "")[:500],
+            "note": note,
             **({"stopped": EP.stop_reason} if EP.stopping else {}),
         }
     )
     return out, rec.parts(video, fps)
 
 
-def do_observe(meta: dict):
+@checked
+def parse_observe(meta: dict):
+    """Every field of an /observe request, checked; nothing is executed here."""
     cams, fps = cameras_of(meta), video_fps(meta)
-    seconds = float(meta.get("seconds", 0))
+    seconds = number(meta, "seconds", 0.0)
     video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
+    if seconds < 0 or seconds > MAX_WATCH_S:
         raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"):
+    if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     frames_ok(seconds, fps, video)
+    L.depth_mode(meta)  # a bad `depth` is a 400 here, not after the watch
+    return cams, fps, seconds, video
+
+
+def do_observe(meta: dict):
+    cams, fps, seconds, video = parse_observe(meta)
     rec, before = recorder(cams, fps, meta, video), ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)

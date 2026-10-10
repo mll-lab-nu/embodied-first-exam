@@ -1,7 +1,7 @@
 # Running evaluations
 
 Operational notes for running batches and reading results. The contract is [PROTOCOL.md](PROTOCOL.md); the
-standard-mode wire protocol is [LIMITED_MODE_PROTOCOL.md](LIMITED_MODE_PROTOCOL.md). Task directories end in `-privileged`,
+standard-mode wire protocol is [STANDARD_MODE.md](STANDARD_MODE.md). Task directories end in `-privileged`,
 `-standard` or `-standard-realtime` (PROTOCOL §4b: standard-realtime results state the reset budget and the slowdown `RCB_SLOWDOWN`, default
 1; results with another slowdown are reported separately).
 
@@ -16,7 +16,7 @@ reasoning summaries, tool calls, images and token use with the robot service's l
 - **Standard mode (RoboTwin):** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
   each stamped with the agent's call and wall/sim time; rendered from the deterministic trajectory at episode end, so it
   costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
-  and a crash-safe trajectory. Details: `docs/LIMITED_MODE_PROTOCOL.md` (Live recording). Protocol 2.1 also gives the
+  and a crash-safe trajectory. Details: `docs/STANDARD_MODE.md` (Live recording). Protocol 2.1 also gives the
   agent measured proprioception (encoders, gripper opening, TCP pose, drive effort) and optional depth noise.
 - **Privileged mode:** the agent owns the simulator, so nothing it produces is evidence. `rcb_traj.Session` still dumps every
   rollout's per-step drive targets to `/app/output/rcb_trace/` (`RCB_AGENT_TRACE_DIR`, capped at 300 files / 400 MB),
@@ -28,9 +28,8 @@ reasoning summaries, tool calls, images and token use with the robot service's l
 ```bash
 harbor run -p tasks -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
 harbor run -p tasks -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-std>
-scripts/regrade_trials.sh exps/jobs/<job-priv>          # re-run the same grader for trials with a grader error / missing video
-scripts/collect_batch_results.py exps/jobs <job-priv> <job-std> <out_dir>   # videos, rewards, cost, summary.md
-scripts/make_two_mode_report_zh.py exps/jobs <job-priv> <job-std> <report_dir> [batch_plan.json]   # internal report (Chinese), GIF previews + mp4
+harbor trial regrade --help                             # re-run the verifier of a recorded trial (a grader error, a missing video)
+scripts/write_task_results.py exps/jobs <job> <run-id> "<agent label>" --out <dir outside the repository>   # per-task results (README, video, cost)
 ```
 `CODEX_FORCE_AUTH_JSON=1` uses a ChatGPT-subscription login (`codex login --device-auth`) instead of an API key.
 Use an absolute `-o` (compose cp is noisy otherwise); 3 concurrent trials fit one RTX 4090 with headroom for the
@@ -45,7 +44,7 @@ checked. Configuration is Harbor's own:
 | what | how |
 |---|---|
 | agent, model, effort | `AGENT=codex` or `claude-code`, `MODEL`, `EFFORT` (`--ak reasoning_effort`), more options in `AK` |
-| OpenRouter | Codex: `OPENAI_API_KEY=<OpenRouter key> OPENAI_BASE_URL=https://openrouter.ai/api/v1`; Claude Code: `ANTHROPIC_BASE_URL=https://openrouter.ai/api` with the key in `ANTHROPIC_API_KEY` |
+| OpenRouter | Codex: `OPENAI_API_KEY=<OpenRouter key> OPENAI_BASE_URL=https://openrouter.ai/api/v1`; for long runs declare OpenRouter as a provider of its own in the `AGENT_CONFIG` file (`model_provider = "openrouter"`, its `base_url`, `env_key = "OPENAI_API_KEY"`, `wire_api = "responses"`, `supports_websockets = false`): as "OpenAI", Codex compacts a full context through an endpoint OpenRouter does not serve and the run stops ("Error running remote compact task"). Claude Code: `ANTHROPIC_BASE_URL=https://openrouter.ai/api` with the key in `ANTHROPIC_API_KEY` |
 | ChatGPT login (Codex) | `CODEX_FORCE_AUTH_JSON=1` (Harbor uploads `~/.codex/auth.json` into each trial) |
 | Claude subscription | `CLAUDE_FORCE_OAUTH=1` and `CLAUDE_CODE_OAUTH_TOKEN` (`claude setup-token`) |
 | Azure OpenAI, retries | a Codex `config.toml` passed as `AGENT_CONFIG` (`--ak config=<file>`): the Azure provider, and `request_max_retries` / `stream_max_retries` for transient upstream failures |

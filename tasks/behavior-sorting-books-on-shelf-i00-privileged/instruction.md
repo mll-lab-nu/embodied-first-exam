@@ -105,8 +105,13 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   finger targets, 0 = closed; assisted grasping holds what a closing gripper touches). The base entries are x, y, yaw
   position targets in the robot's own frame, re-applied every control step: a per-step displacement, 0 = stand still.
   `s.hold_action()` (the last command with the base at 0) is the no-op.
-- Control runs at 30 Hz with 120 Hz physics. Your wall-clock budget is 4 h (14400 s); there is no step budget. The
-  episode ends by itself the moment the goal holds. It also ends, as a failure, when the robot has fallen over: its base
+- Control runs at 30 Hz with 120 Hz physics. Your wall-clock budget is 4 h (14400 s); there is no step budget. Only a
+  runaway guard bounds an episode: it ends after 200,000 control steps (1.85 h of simulated time), and a trajectory
+  with more rows than that is rejected (`bad_trajectory`, score 0). The trajectory must be the file
+  `s.save_trajectory()` writes (an `.npz` with `actions` (T, 25) and `task`): a file the grader cannot read, or with
+  the wrong shape, is `bad_trajectory` too. The grader replays it twice at the simulator's own speed, each replay
+  within min(4 h, max(1 h, 20 min + 0.5 s per row)); a replay that runs out of time is reported as a grader error.
+  The episode ends by itself the moment the goal holds. It also ends, as a failure, when the robot has fallen over: its base
   tilted more than 41.4° from upright (the z of its up axis below 0.75), or more than 3 cm below the floor, for 10 s of
   simulated time in a row (OmniGibson's own Falling rule; `s.status()["fallen"]`, `s.episode_done`). `s.reset()` starts
   again; the grader's replays end at the same step. While the robot moves, the cameras' frames lag the physics by 2
@@ -114,3 +119,6 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - Primitives that take an `arm` ("left" / "right") default to the left one.
 - Isaac Sim startup and scene loading take ~3 minutes per process and the simulator runs at ~7-11 steps/s: plan
   experiments accordingly. Do not call `s.close()` until you have written every output (it terminates the process).
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **24 GiB of GPU memory**, **24 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.

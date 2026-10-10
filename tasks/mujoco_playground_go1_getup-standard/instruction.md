@@ -16,7 +16,8 @@ The robot was dropped from 0.5 m in a random orientation with random joint angle
 - **The episode ends** the moment the robot has been upright for 25 control steps in a row (success), after 300 control steps (`spec["max_control_steps"]`, counted by `meta["control_steps"]`), when you submit `done`, or when your time is up.
 - **Success** is 25 control steps in a row with the trunk within 10 deg of upright and the IMU at least 0.22 m above the floor (the Go1 stands at 0.255-0.26 m), judged after every control step; when the episode ends otherwise, it is judged on its last control steps.
 - Your wall-clock budget is 3600 s from your start. Simulated time only advances with your commands (and
-  `get_obs(seconds=...)`, which holds the current targets).
+  `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is counted from your first call to
+  the service; approximate — the harness's own deadline is authoritative.
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.
@@ -44,3 +45,6 @@ Rows are `dt` apart (a whole multiple of the 0.02 s control period, at most 0.5 
 `"hold"` between rows; a chunk covers at most 10 s; values outside the limits
 (`spec["action_types"]["joint_position"]["limits"]`) are clipped and listed in `res.meta["clipped"]`. Feedback control
 means short chunks: each response tells you where the robot is now.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.

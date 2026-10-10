@@ -58,3 +58,6 @@ you like -- scripted motions, feedback control, search, optimisation. One 1000-s
 18 s of one core and the container has 16. `s.env.unwrapped.set_state()` restores KinDER's
 object-centric state, not everything the physics carries, so a rollout continued from it can drift from the same actions
 replayed from the start: check the final trajectory with `s.replay`.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 16 cores for your container; the cap only slows you down.

@@ -1,7 +1,7 @@
 # @@STD@@
 
 Standard-mode twin of `@@PRIV@@` (the same frozen MolmoSpaces episode): @@GOAL@@ The agent gets only the
-`eai-standard/2.2` client (docs/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar
+`eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
 model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
 service exit, replays the trajectory in two fresh processes and writes `final.json`; the verifier grades those artifacts
@@ -19,7 +19,9 @@ None is shipped (see `@@PRIV@@`).
 `Task.step` per executed row; it ends at upstream's `is_done()` (@@HORIZON_STEPS@@ control steps), at the agent's `done`,
 or when the agent's time is up; then upstream's `judge_success()` on the final state: @@SUCCESS@@. The two fresh-process
 replays of the recorded rows (`rcb_molmospaces.py replay`) must succeed and end in the same state; `replay.mp4` is
-rendered after the verdict. No oracle; human review in PR #@@REVIEW_PR@@ (PROTOCOL §2.7: per family, this task
+rendered after the verdict. `infra_error = 1` (no verdict on the agent): no, an unreadable or an unfinished `final.json`,
+a service that gave up after crashes between calls or never ended the episode, a replay process without a result, a
+frozen start the image no longer builds. No oracle; human review in PR #@@REVIEW_PR@@ (PROTOCOL §2.7: per family, this task
 and its twin, a positive example and the `nop` result).
 
 ## Details
@@ -28,3 +30,7 @@ and its twin, a positive example and the `nop` result).
 | Upstream | molmo-spaces 0.2.9, benchmark `@@BENCHMARK@@`, package `@@PACKAGE@@` (@@UPSTREAM@@), episode @@EPISODE_INDEX@@ |
 | World-frame information | none in the texts: object names and the goal only; the robot's own pose and the camera calibration come from the service (docs/benchmarks/molmospaces.md) |
 | Generator | `scripts/molmospaces/mk_tasks.py`; docs/benchmarks/molmospaces.md |
+
+### Change Log
+- 2026-10-10: how a trial that could not be graded is recorded, and request checks; the frozen episode, upstream's success rule and the pass rule are unchanged, so the task keeps its name. `tests/grade.py`: a missing, unreadable or unfinished `final.json` (the collect hook never wrote its verdict) is `infra_error = 1` (was the agent's 0, or no reward at all); a reward is always written. `environment/sim/finalize.sh`: `final.json` is written whole and renamed into place, and a replay is ended at its limit (500 s, never past the hook's deadline; a replay without a result was and is `infra_error`). `environment/sim/server.py`: a null or wrongly typed request field (`dt`, `seconds`, `cameras`, `note`) is a 400 before anything moves (was a 500 that ended the episode); `get_obs(seconds=...)` reports the seconds it ran (whole control steps), not the seconds asked for. A pass before this change is a pass after it; results recorded before it may hold infrastructure failures counted as the agent's 0.
+- 2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to 3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` outlasts the simulator's start (no effect on this benchmark, whose service is up within a minute); `cameras="name"` (a string) is one camera, no longer its characters. The service, the collect hook, the grader, the scene and the pass rule are unchanged.

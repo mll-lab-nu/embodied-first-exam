@@ -7,7 +7,7 @@ eai-standard/2.2) for every frozen instance in scripts/yamlab/instances.json (do
 Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 3 (no simulator).
 
 Inputs, all in the repository:
-  scripts/yamlab/instances.json          per family: the frozen instances in order (iNN), each with its YAMLab teleoperation
+  scripts/yamlab/instances.json          per family: the frozen instances (id NN = task iNN), each with its YAMLab teleoperation
                                          source, its assets and the hashes of its oracle runs (scripts/yamlab/freeze.py writes it
                                          from the selection, scripts/yamlab/select_instances.py)
   scripts/yamlab/frozen/<family>-iNN/    instance.json (the frozen scene: assets + full state + hash + success thresholds) and
@@ -233,7 +233,8 @@ def main() -> int:
     normalize = normalizer()
     diffs, made = [], set()
     for fam in FAMILIES:
-        for i, R in enumerate(inst[fam]):
+        for R in inst[fam]:
+            i = R["id"]                  # the instance keeps its index (the 2026-10-10 prune left gaps; PROTOCOL §2.8)
             for name, files in normalized(plan_instance(fam, i, R, version), normalize).items():
                 made.add(name); diffs += sync(ROOT / "tasks" / name, files, a.check)
     for t in sorted((ROOT / "tasks").glob("yamlab-*")):

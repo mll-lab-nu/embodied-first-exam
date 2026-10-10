@@ -25,13 +25,13 @@ structure = "{{STRUCTURE}}"              # single (独体) | left-right (左右)
 characters = {{NCHARS}}
 
 [verifier]
-timeout_sec = 1800.0
+timeout_sec = 3600.0              # two fresh replays of at most 72,000 control steps (rcb_brush.MAX_STEPS) at 67-102 steps/s, plus two scene builds
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 [agent]
 timeout_sec = 7200.0              # 2 h of wall clock (a replay of a few thousand control steps takes seconds)
 network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4
-allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai"]
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
 
 [environment]
 build_timeout_sec = 1800.0

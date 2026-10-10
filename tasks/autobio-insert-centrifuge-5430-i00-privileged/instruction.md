@@ -55,3 +55,6 @@ CLI equivalent of the grader:
   time). A MuJoCo physics warning (an unstable simulation) ends the episode as a failure.
 - World frame: z up, metres; poses are x y z + wxyz quaternion; angles in rad.
 - Only the rows are replayed: anything else you change in `s.model` or `s.data` is lost in the grader's fresh process.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **10 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
