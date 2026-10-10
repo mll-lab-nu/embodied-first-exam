@@ -1,0 +1,157 @@
+{
+ "benchmark": "labutopia",
+ "family": "shake",
+ "seed": 0,
+ "rule": "first",
+ "upstream": {
+  "repo": "Rui-li023/LabUtopia",
+  "commit": "8df72784265c375a327ffa3f0a0cf8c676f229a7",
+  "config": "level1_shake",
+  "task_type": "shake",
+  "controller_type": "shake",
+  "stage": "assets/chemistry_lab/lab_003/lab_003.usd"
+ },
+ "control_dt": 0.016666666666666666,
+ "placement_sha": "7b35fdf9cf30147c",
+ "init_sha": "536512837f73b9e1",
+ "n_action": 18,
+ "dof_names": [
+  "panda_joint1",
+  "panda_joint2",
+  "panda_joint3",
+  "panda_joint4",
+  "panda_joint5",
+  "panda_joint6",
+  "panda_joint7",
+  "panda_finger_joint1",
+  "panda_finger_joint2"
+ ],
+ "action_limits": [
+  [
+   -2.9973000049591065,
+   2.9973000049591065
+  ],
+  [
+   -1.8627999782562257,
+   1.8627999782562257
+  ],
+  [
+   -2.9973000049591065,
+   2.9973000049591065
+  ],
+  [
+   -3.1717999935150147,
+   0.030200003087520605
+  ],
+  [
+   -2.9973000049591065,
+   2.9973000049591065
+  ],
+  [
+   -0.11750000007450581,
+   3.852500057220459
+  ],
+  [
+   -2.9973000049591065,
+   2.9973000049591065
+  ],
+  [
+   -0.1,
+   0.1
+  ],
+  [
+   -0.1,
+   0.1
+  ],
+  [
+   -10.0,
+   10.0
+  ],
+  [
+   -10.0,
+   10.0
+  ],
+  [
+   -10.0,
+   10.0
+  ],
+  [
+   -10.0,
+   10.0
+  ],
+  [
+   -10.0,
+   10.0
+  ],
+  [
+   -10.0,
+   10.0
+  ],
+  [
+   -10.0,
+   10.0
+  ],
+  [
+   -10.0,
+   10.0
+  ],
+  [
+   -10.0,
+   10.0
+  ]
+ ],
+ "cameras": [
+  "camera_1",
+  "camera_2",
+  "wrist_cam"
+ ],
+ "initial_command": [
+  0.012000000104308128,
+  -0.5700000524520874,
+  0.0,
+  -2.809999942779541,
+  0.0,
+  3.0369999408721924,
+  0.7409999966621399,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "initial_joint_positions": [
+  0.004444141406565905,
+  -0.22532685101032257,
+  4.658401303458959e-05,
+  -0.22903233766555786,
+  -0.0005410049925558269,
+  0.30275994539260864,
+  0.2972480356693268,
+  5.563470949709881e-06,
+  9.529889211989939e-05
+ ],
+ "rule_class": "ShakeRule",
+ "rule_text": "counted only while the beaker's centre is at least 0.05 m above where it started: five times in a row the centre moves 0.05 m or more (horizontally) from where it was when that count began; after the fifth, the centre stays within 0.01 m in x and in y over 60 control steps (1 s)",
+ "rule_values": {
+  "beaker": "/World/beaker_2",
+  "lift_m": 0.0,
+  "moves_counted": 0,
+  "still_steps": 0
+ },
+ "rigid_bodies": 28,
+ "reference_rows": 1087,
+ "controller_rows": 1133,
+ "held_rows": 0,
+ "steps_per_s": 300,
+ "reference_steps": 1087,
+ "reference_sha": "414553814ad9c8b4",
+ "controller_done_step": 1133,
+ "velocity_mode_rows": 0,
+ "reference_source": "LabUtopia's scripted controller (shake, config level1_shake @ 8df7278), seed 0"
+}

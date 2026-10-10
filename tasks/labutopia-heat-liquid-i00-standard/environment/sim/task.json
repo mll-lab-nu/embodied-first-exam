@@ -1,0 +1,14 @@
+{
+ "task_text": "Put the glass beaker on the heater's plate and press the heater's round red button. Success the moment the third of these is met: (1) the beaker's centre has been more than 5.9 cm above where it stood; (2) after that, the beaker has stood on the plate: its centre within 5 cm, in each horizontal direction, of the plate's centre and no more than 9.9 cm above where it stood at the start; (3) after that, with the beaker on the plate as in (2), the button is pressed down more than 10 mm.",
+ "default_cameras": [
+  "camera_1",
+  "camera_2",
+  "wrist_cam"
+ ],
+ "static": {
+  "inventory": [
+   "small glass beaker, about 6.5 cm across and 10 cm tall",
+   "heater (white hot plate, about 25 x 18 x 9 cm) with a square plate, a display and a round red button"
+  ]
+ }
+}

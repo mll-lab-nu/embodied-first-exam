@@ -1,0 +1,14 @@
+{
+ "task_text": "Pick up the small glass beaker, pour it out over the large glass beaker and bring it back upright. There is no liquid in the simulation: the pour is judged by where the small beaker is and how far it is turned. Success the moment the last of these is met: (1) the small beaker's centre has been more than 12 cm above where it stood; then, counted only while its centre is within about 8 cm (horizontally) of the large beaker's centre, (2) it has been turned more than 50 degrees from its orientation right after (1), (3) then turned back to within 30 degrees of that orientation, and (4) then stays more than 5 cm above where it stood for 84 control steps (1.4 s).",
+ "default_cameras": [
+  "camera_1",
+  "camera_2",
+  "wrist_cam"
+ ],
+ "static": {
+  "inventory": [
+   "small glass beaker, about 11 cm across and 9.5 cm tall (the one to pour)",
+   "large glass beaker, about 15.5 cm across and 13 cm tall (the target)"
+  ]
+ }
+}
