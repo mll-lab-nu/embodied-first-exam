@@ -20,6 +20,8 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "rep
            "finalized": int(bool(d.get("finalized"))), "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps") or 0),
            "physics_steps": int(d.get("physics_steps") or 0), "steps": int(d.get("steps") or 0), "elapsed_s": num("elapsed_s"),
            "video_rendered": int(bool(d.get("video"))), "gpu_lost": int(bool(d.get("gpu_lost"))),
+           # the episode ended by the task's failure rule: the robot fell over (reason "failure: the robot fell over")
+           "task_failure": int(str(d.get("reason") or "").startswith("failure")),
            "q_score": num("q_score"),   # progress (the challenge's q_score of the replays), 2026-09-27
            # crash recovery (eai-standard/2.2): service starts, resumes, whether a resumed state differed and by how much,
            # and a give-up after too many crashes
