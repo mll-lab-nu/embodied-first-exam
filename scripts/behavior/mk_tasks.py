@@ -163,7 +163,13 @@ CHANGES = {
         "(it was rounded: 0.25 s ran as 0.267 s); a resume whose replayed episode ends before the logged one no longer "
         "crashes every restart; `/spec` states the runaway guard (`max_control_steps` 200,000, in the instruction too). A "
         "trial that passed before still passes, so the task keeps its name; a trial scored 0 before this date whose "
-        "`final.json` was unfinalized or missing was an infrastructure failure."],
+        "`final.json` was unfinalized or missing was an infrastructure failure.",
+        "2026-10-10 (review round 2, board 0067): the client only. `Robot()` waits up to 3600 s for the service (was 600 s) "
+        "and prints its progress once a minute: Isaac Sim took 620-715 s to start on the 8-vCPU evaluation hosts (more than "
+        "600 s in 38 of 60 archived trials), so the first `Robot()` raised \"sim service unavailable\" and a script that did "
+        "not retry ended with 0 control steps. `cameras=\"name\"` (a string) is one camera, no longer its characters. The "
+        "service, the collect hook, the grader, the scene and the pass rule are unchanged; a trial scored 0 with 0 control "
+        "steps before this date may have been this wait."],
 }
 
 

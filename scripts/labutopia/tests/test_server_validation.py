@@ -1,4 +1,4 @@
-"""Synthetic test of the request checks of the LabUtopia and AutoBio sim services: the checking functions are taken
+"""Synthetic test of the request checks of the LabUtopia, AutoBio and DexJoCo sim services: the checking functions are taken
 from server.py's own source (ast), run without a simulator. A malformed field must raise ValueError (the layer's 400)
 and nothing else (anything else is a 500 that ends the episode), before anything is executed."""
 import ast, itertools, math, os, sys
@@ -12,15 +12,16 @@ BAD = [None, True, False, [], [1], {}, {"a": 1}, "x", "0.02", "", float("nan"), 
        10 ** 400, -10 ** 400, 1e308, [None], [["a"]], ["cam_a"], ["nope"], "cam_a", 5, 3.7, "mp4", "hold", "frames", "none", "last"]
 FIELDS = ("type", "dt", "seconds", "video_fps", "cameras", "note", "interpolate", "video", "depth", "include_depth", "actions")
 bad = 0
-for bench, dim, types in (("labutopia", 9, ("joint_position", "joint_position_velocity")), ("autobio", 7, ("joint_position", "done"))):
+for bench, dim, types in (("labutopia", 9, ("joint_position", "joint_position_velocity")), ("autobio", 7, ("joint_position", "done")),
+                          ("dexjoco", 23, ("ee_pose", "joint_position"))):   # DexJoCo: no frame limit per call (no frames_ok)
     path = os.path.join(ROOT, "scripts", bench, "shared/standard/server.py")
     tree = ast.parse(open(path).read())
     fns = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in WANT]
-    assert {f.name for f in fns} == set(WANT), {f.name for f in fns}
-    DT = 1 / 60 if bench == "labutopia" else 0.002
+    assert {f.name for f in fns} == set(WANT) - ({"frames_ok"} if bench == "dexjoco" else set()), {f.name for f in fns}
+    DT = 1 / 60 if bench == "labutopia" else 0.02 if bench == "dexjoco" else 0.002
     ns = {"math": math, "np": np, "L": L, "DT": DT, "PERIOD": "1/60 s", "MAX_CHUNK_S": 10.0, "MAX_WATCH_S": 30.0,
           "MAX_FPS": 30 if bench == "labutopia" else 50, "MAX_FRAMES": 300 if bench == "labutopia" else 3000,
-          "CAMS": ["cam_a", "cam_b"], "DEFAULT_CAMS": ["cam_a"], "ND": 9, "NA": 7, "SPEC": {"action_types": {"not_yet": ["ee_pose"]}}}
+          "CAMS": ["cam_a", "cam_b"], "DEFAULT_CAMS": ["cam_a"], "ND": 9, "NA": 7, "ADIM": 23, "SPEC": {"action_types": {"not_yet": ["ee_pose"]}}}
     exec(compile(ast.Module(body=fns, type_ignores=[]), path, "exec"), ns)
     ps, po = ns["parse_submit"], ns["parse_observe"]
     A = np.zeros((5, dim))
@@ -58,7 +59,7 @@ for bench, dim, types in (("labutopia", 9, ("joint_position", "joint_position_ve
                        ("seconds -1", {"seconds": -1}), ("seconds 31", {"seconds": 31}), ("seconds huge", {"seconds": 10 ** 400}), ("seconds dict", {"seconds": {}}),
                        ("cameras int", {"cameras": 5}), ("video_fps 0", {"video_fps": 0}), ("video list", {"video": []}), ("depth dict", {"depth": {"a": 1}})):
         expect(f"observe {what}", call(po, meta), "400")
-    for what, meta, arr in (("type null", {}, A), ("type list", {"type": ["joint_position"]}, A), ("type dict", {"type": {}}, A), ("type other", {"type": "ee_pose"}, A),
+    for what, meta, arr in (("type null", {}, A), ("type list", {"type": ["joint_position"]}, A), ("type dict", {"type": {}}, A), ("type other", {"type": "joint_velocity" if bench == "dexjoco" else "ee_pose"}, A),
                             ("rows 1-D", {"type": "joint_position"}, np.zeros(dim)), ("rows 0-D", {"type": "joint_position"}, np.asarray(np.nan)),
                             ("rows wrong width", {"type": "joint_position"}, np.zeros((5, dim + 1))), ("rows nan", {"type": "joint_position"}, np.full((5, dim), np.nan)),
                             ("rows inf", {"type": "joint_position"}, np.full((5, dim), np.inf)), ("rows 3-D", {"type": "joint_position"}, np.zeros((2, 5, dim))),

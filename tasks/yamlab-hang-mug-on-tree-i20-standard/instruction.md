@@ -51,9 +51,9 @@ res.frames["left_wrist"]                      # uint8 (N,H,W,3) at video_fps if 
 res.last["right_wrist"]; res.proprio          # last frame per camera; float32 (N, 58) proprio at each video frame
 res.save("/app/runs/003")                     # meta.json, <cam>.mp4, frames/<cam>/NNN.jpg, last/<cam>.jpg, proprio.npy
 ```
-The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min. It gives up after
-`Robot(timeout=600)` seconds with `RuntimeError("sim service unavailable ...")`: then call it again (nothing has
-happened in the episode yet; your wall clock runs from the start of the trial).
+The service's first start in a trial compiles Isaac's shaders: `Robot()` can wait ~2-12 min (it prints its progress to
+stderr once a minute). It gives up after 3600 s (`Robot(timeout=...)`) with `RuntimeError("sim service unavailable ...")`:
+then call it again (nothing has happened in the episode yet; your wall clock runs from the start of the trial).
 
 Cameras (640×480 each): `top` (static, above the table looking down at the workspace), `left_wrist` and `right_wrist` (on
 each arm's wrist; they move: `res.extrinsic_cv[cam]` has their pose at every frame).

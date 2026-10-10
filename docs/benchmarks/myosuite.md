@@ -46,7 +46,7 @@ process give the same final state) before it was built:
 | MyoChallenge 2025 | `table_tennis` | dynamic interception with a held tool and a whole torso: a served ball returned onto the opponent's half (P1; P0 is a fixed-serve warm-up of the same task) |
 | MyoChallenge 2024 | `bimanual` | two arms, two kinds of actuation: the MyoHand grasps, hands over to a motorized prosthesis, which places the object; the challenge's own contact-history check makes the hand-over mandatory |
 | MyoChallenge 2025 | `soccer` | whole-body locomotion with 290 muscles towards a ball and a kick past a goalkeeper (P1: fixed start, goalkeeper policy drawn once) |
-| MyoChallenge 2023 | `chase_tag` | locomotion against a moving opponent (P1: CHASE; the opponent's policy is drawn once and frozen) |
+| MyoChallenge 2023 | `chase_tag` | locomotion towards an opponent (P1: CHASE; the opponent's policy is drawn once and frozen: the frozen instance drew `stationary`, so it stands still, and since 2026-10-10 the task texts say so instead of "moves") |
 | MyoChallenge 2024 | `osl_run` | running with a powered knee-ankle prosthesis whose own controller drives it (Fixed: the flat track) |
 | MyoDex (object motions) | `dex_apple_lift` | lift (round object; position only) |
 | | `dex_cylinder_pass` | pass: raise and present a small cylinder for a hand-over (position only) |
@@ -107,6 +107,21 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
     controller drives it); nothing is clipped by the service; each non-muscle actuator's command is in `/spec`;
   - every camera of the scene, 640 x 480, depth on request, with its mount: static, fixed to a body (the hand close-ups
     `hand_top` / `hand_side_inter` sit on the forearm and turn with pronation), or a MuJoCo tracking camera;
+  - **scene cameras give images only** (since 2026-10-10, board 0067 R2 finding M4). A camera whose body (or target
+    body) is not the agent's own -- a mocap body, or a body behind a joint that is not one of the body's (`scene_camera`
+    in `server.py`, decided from the model, not by name; `make_facts.py` records the same list as `scene_cameras`) --
+    has no published mount, no `extrinsic_cv` / `cam2world_gl` (null in `meta["cameras"]`, NaN rows per frame) and its
+    body is not a `/kinematics` link: its pose is that body's position plus a constant, which PROTOCOL §4.5 forbids.
+    In the 22 families that is `opponent_view` (chase_tag, a `trackcom` camera on the mocap body `opponent`) and
+    `goalkeeper_view` (soccer, on `goalkeeper`); before, the first `get_obs` gave the opponent's / goalkeeper's world
+    position. The other 20 families' `/spec` and responses are unchanged (compared field by field, old server against
+    new). Not covered, left as it is: `side_view` / `front_view` are `trackcom` cameras on the world body, so their
+    position is the whole model's centre of mass plus a constant, and a scene body's motion moves them by its share of
+    the model's mass (measured: every non-agent body moved 0.1 m, the key turned 0.1 rad: 87 mm in bimanual, whose `start` / `goal` marker bodies weigh
+    154 kg each; 1.8 mm obj_reorient, 1.2 mm relocate, 0.1-0.3 mm baoding / die_reorient / obj_hold / pen_twirl,
+    5e-5 mm key_turn / sarc_key_turn; none in the other families). Decoding a position from it needs the model's masses
+    and the camera's offset, which a standard agent does not have; withholding these poses too would take the
+    calibrated third-person view from nine families (bimanual's default camera), an owner decision;
   - proprioception = the body's own joints (`q_`, `qd_`, `effort_`) and muscles (`act_`, `len_`), plus the pelvis pose and
     velocity of the free-standing bodies (`root_pose`, `root_vel`); never the key, pen, die, balls, objects, opponent or
     goalkeeper; MyoDex's reference motion (the goal, relative to the object's start) is in `/spec` `reference_motion`;

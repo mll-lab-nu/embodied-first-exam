@@ -49,7 +49,11 @@ apart from the tasks with a verified solution (§7 Open 4):
   7e-18 (the base moves are turned into the odometry frame by the sender and back by the service, and a chunk's
   `linear` default adds its own last-bit arithmetic), yet the episode did not reach the goal: 30 cubes poured from a
   scoop do not land the same way after a last-bit change. A standard-mode example therefore has to be an episode run
-  in standard mode, not a converted privileged one.
+  in standard mode, not a converted privileged one. This explanation is open: the second review of 2026-10-10 (board
+  0067, minor 13) sent 400 random rows through the same path and found that the tooling casts actions to float32, that
+  none of the 4,400 executed values differed after that cast and that the service's final-state hash equalled the
+  privileged replay's, so a difference of 7e-18 cannot be what made that conversion fail; its cause is not known, and a
+  converted privileged example may work when the conversion is redone.
 - `kinder-constrained-cupboard-i00-standard`. Its privileged example moves the base by up to 0.14 m a step.
 
 ## Modes

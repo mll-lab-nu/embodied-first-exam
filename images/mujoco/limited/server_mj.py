@@ -565,7 +565,7 @@ def _resume_or_start() -> None:
     E["calls"] = int(last.get("call", 0)); E["rows"] = int(last.get("rows_total", 0)); E["t0"] = float(starts[0]["ts"])
     first = [e for e in ev if e.get("ev") == "first_request"]
     if first: E["t_first"] = float(first[0]["ts"])       # the agent's clock keeps running through a crash
-    ended = [e for e in ev if e.get("ev") == "end"]
+    ended = [e for e in ev if e.get("ev") == "end" and int(e.get("control_steps") or 0) <= n]   # not the lost call's
     if ended: E["done"] = True; E["reason"] = ended[-1].get("reason"); E["t_end"] = float(ended[-1]["ts"])
     log({"ev": "resumed", "control_steps": n, "calls": E["calls"], "state_sha": S.state_sha(), "crashed_in_call": in_call,
          "downtime_s": round(time.time() - float(ev[-1]["ts"]), 1)})

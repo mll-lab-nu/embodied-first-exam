@@ -23,7 +23,7 @@ What is whose failure (success is 0 in every case):
 - the agent's: no file (missing_trajectory), a file that is not a trajectory of this task (bad_trajectory: not an npz, no
   `task` / `actions` entry, a pickled or non-numeric array, a wrong shape, NaN/inf, more than MAX_STEPS = 50,000 rows:
   also too_long; wrong_task), a trajectory that does not reach the goal or breaks a rule;
-- the grader's (grader_error = 1, no verdict on the agent): a replay process that died or printed no result, a replay
+- the grader's (grader_error = 1 and infra_error = 1, no verdict on the agent): a replay process that died or printed no result, a replay
   that ran out of time (replay_timed_out), a frozen instance this host does not rebuild (instance_ok 0), any other
   exception here.
 
@@ -111,6 +111,7 @@ def load_trajectory(path: str, task: str, action_dim: int, max_steps: int):
 
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
+    out.setdefault("infra_error", int(bool(out.get("grader_error"))))   # every grader_error here is the host's, never the agent's (PROTOCOL §2.6)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     print(json.dumps(out), flush=True)

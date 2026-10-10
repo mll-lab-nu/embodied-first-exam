@@ -32,8 +32,9 @@ client and one episode. **Task:** Separate and place the entire silver keyhole p
   knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
-  objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
-  the task requirements above still apply in full.
+  objects are (no object poses or positions). The success implementation is not exposed, and of the simulator's internal
+  measurements only the safety readings of `meta["safety"]` are (listed under Action types, below); the task
+  requirements above still apply in full.
 - **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); there is no step budget, but the
   episode ends after 200000 control steps, watches included (83 min of simulated time; a technical cap,
   `spec["max_control_steps"]`: `meta["reason"]` is `step_guard`, and the episode is graded as it stands). Actions and simulated time are reported as cost. One control step takes about 0.043 s of wall clock here.
@@ -55,7 +56,7 @@ client and one episode. **Task:** Separate and place the entire silver keyhole p
 - Do not rerun a command just because its first wait returned partial logs. Confirm the original process has exited
   before starting a replacement; if cancellation is necessary, stop only your own identified process and confirm exit.
 - Keep the task's simulator and sensor configuration. Waiting does not extend the actual agent wall-clock budget.
-- Connect with `Robot()` and let its retry loop wait for the existing service (default connection budget: 600 seconds,
+- Connect with `Robot()` and let its retry loop wait for the existing service (default connection budget: 3600 seconds,
   still subject to the actual agent deadline). Do not try to start or rebuild a simulator yourself.
 - Reconnecting a client accesses the same episode; it does not reset the world. While an action request is still
   running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
@@ -81,7 +82,7 @@ client and one episode. **Task:** Separate and place the entire silver keyhole p
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.4`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects to the existing service; retries until ready (default timeout 600 s)
+r = Robot()                                   # connects to the existing service; retries until ready (default timeout 3600 s)
 spec = r.spec()                               # actions, cameras (intrinsics, mounting), robot_spec, world, kinematics, budget
 
 obs = r.get_obs()                             # current frames from 4 cameras: obs.last[cam] -> uint8 (480,848,3)
@@ -117,6 +118,8 @@ the PD gains and the tool frames; `spec["world"]` the frame conventions.
   row. Use `obs.meta["proprio"]["now"][:14]` as the starting row to move smoothly. An arm joint target moves at most
   0.04 rad per control step (1.6 rad/s, the same speed as `ee_pose` rows): a row that asks for more takes
   the control steps it needs, and `meta["clipped"]` says so.
+  The proprio group `gripper_opening` (`res.group("gripper_opening")`) is the measured gap between each gripper's finger
+  pads in metres (0 = the pads touch); the gripper entries of `joint_pos` are in the unit of the gripper command above.
 - `ee_pose` (16): per arm (in the order ['left', 'right']) `x y z qw qx qy qz gripper`; world frame (robot base at (-0.136, 0.000, 0.920),
   +z up); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and driven to in joint
   space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is each gripper's **tool frame** (TCP;

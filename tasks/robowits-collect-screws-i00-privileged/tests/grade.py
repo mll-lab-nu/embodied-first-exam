@@ -24,11 +24,17 @@ Whose failure (reward.json always carries `infra_error` and `grader_error`, 0 or
 - the grader's (`grader_error` 1): anything else that raises.
 """
 from __future__ import annotations
-import argparse, json, os, sys, time, traceback
+import argparse, json, os, signal, sys, time, traceback
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 MAX_MEMBER_BYTES = 256 * 1024 * 1024    # an .npz member larger than this is not a trajectory (MAX_STEPS float64 rows: 26 MB)
+T_START = time.time()
+VIDEO_MARGIN_S = 180.0                  # kept for closing the video, test.sh's limits check and Harbor's own bookkeeping
+
+
+class VideoTimeBox(Exception):
+    """The replay video (rendered after the verdict is on disk) does not fit what is left of the verifier's time."""
 
 
 def load_trajectory(path: str) -> tuple[str, np.ndarray]:
@@ -53,6 +59,8 @@ def main() -> int:
     ap.add_argument("--family", required=True); ap.add_argument("--instance", required=True)
     ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
     ap.add_argument("--no-video", action="store_true"); ap.add_argument("--video-fps", type=int, default=15)
+    ap.add_argument("--budget", type=float, default=0.0, help="the verifier's timeout_sec (task.toml): the video replay, which "
+                    "runs after the verdict is written, is skipped or stopped before it (0: no limit)")
     a = ap.parse_args()
     # Agent interaction cost from the tooling's append-only log (whole debugging history, not just the deliverable).
     # The log lives in the agent's container, so these fields are SELF-REPORTED cost accounting, not evidence
@@ -115,10 +123,24 @@ def main() -> int:
                "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "video_rendered": 0, **cost}
         write(ok, out)                  # the verdict is on disk before the video is rendered (PROTOCOL §2.6)
         # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
+        # It is time-boxed: a verifier that Harbor stops at its timeout_sec loses the verdict that is already on disk.
         if not a.no_video:
+            left = a.budget - VIDEO_MARGIN_S - (time.time() - T_START) if a.budget > 0 else None
             try:
-                s.start_video(os.path.join(LOG_DIR, "replay.mp4"), fps=a.video_fps); s.replay(acts); s.stop_video()
+                if left is not None and left < 30:
+                    raise VideoTimeBox("skipped: no verifier time left for the video replay")
+                if left is not None:
+                    def _stop(*_):
+                        raise VideoTimeBox("stopped: the video replay reached the verifier's time limit")
+                    signal.signal(signal.SIGALRM, _stop); signal.setitimer(signal.ITIMER_REAL, left)
+                try:
+                    s.start_video(os.path.join(LOG_DIR, "replay.mp4"), fps=a.video_fps); s.replay(acts)
+                finally:
+                    signal.setitimer(signal.ITIMER_REAL, 0)
+                    s.stop_video()          # closes what was filmed so far
                 out["video_rendered"] = int(os.path.isfile(os.path.join(LOG_DIR, "replay.mp4")))
+            except VideoTimeBox as exc:
+                print(f"replay video {exc}", file=sys.stderr); out["video_timed_out"] = 1
             except Exception:  # noqa: BLE001
                 traceback.print_exc(file=sys.stderr)
             write(ok, out)
