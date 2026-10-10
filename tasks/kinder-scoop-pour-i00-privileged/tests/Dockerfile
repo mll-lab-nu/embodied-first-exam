@@ -6,3 +6,5 @@ FROM ghcr.io/mll-lab-nu/eai-kinder:0.1.6
 COPY grade.py instance.json rcb_kinder.py test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 WORKDIR /tests
+# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+COPY rcb_limits.py rcb_limits.json /tests/

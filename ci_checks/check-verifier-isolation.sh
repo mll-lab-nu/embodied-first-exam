@@ -62,9 +62,13 @@ def named_volumes(compose: pathlib.Path) -> dict:
 
 
 env_c, test_c = t / "environment/docker-compose.yaml", t / "tests/docker-compose.yaml"
+# The resource monitor's beacons (PROTOCOL §2.10): written only by the trusted rcb_monitor service, mounted read-only in
+# the services it watches (ci_checks/check-monitor.py checks the read-only mounts); no write crosses the boundary.
+BEACONS = {"rcb_limits", "rcb_observe"}
 if env_c.is_file():
     for svc, vols in named_volumes(env_c).items():
         for v in vols:
+            if v in BEACONS: continue
             if svc == "main" and v.endswith("_trusted"): fail(f"the agent container mounts trusted volume {v}")
             if svc != "main" and not v.endswith("_trusted"): fail(f"sidecar {svc} mounts {v}, which is not a *_trusted volume")
 if test_c.is_file():
