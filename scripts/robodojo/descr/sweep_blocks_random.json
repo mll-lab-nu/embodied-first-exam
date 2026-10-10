@@ -1,0 +1,26 @@
+{
+ "task": "sweep_blocks_random",
+ "goal": "Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep all the small objects (bricks, earbuds, paper balls) into the dustpan, then return the arm(s) to the start pose.",
+ "instruction_templates": [
+  "Pick up the broom, hand it over to the right hand, then use the dustpan to sweep the objects."
+ ],
+ "success": [
+  "is_A_on_B_left(label_A=broom_shovel, label_B=broom, x_threshold=0.1): broom ROOT x minus dustpan ROOT x is greater than 0.1 m (i.e. the dustpan root is more than 0.1 m to the -x side of the broom root in the environment frame).",
+  "is_not_lift(broom_shovel, z_threshold=0.01): the dustpan root z is not more than 0.01 m above its initial z (the dustpan stays on the table).",
+  "is_axis_up(broom_shovel, axis [0,0,1], threshold 5): the dustpan's local +z axis is within 5 degrees (strictly less) of world up (not tipped over).",
+  "EITHER (OR, see notes) every target_1/target_2/target_3-prefixed objects has its root XY within the radius of one of the dustpan's passive support circle(s) ('broom_shovel/0' support tag; centre(s) and radius come from asset metadata, XY distance < radius), OR every such object has its root XY point inside the XY quadrilateral formed by the dustpan's passive functional points tagged 'handle' (4 points; point-in-polygon with tolerance 1e-6 m).",
+  "all_robot_back_to_origin: every target arm's end-effector pose is within 0.15 m per axis (|dx|,|dy|,|dz| each <= 0.15 m) and within 20 degrees (quaternion angular distance) of its start-of-episode pose (the arms must be returned to roughly their starting pose)."
+ ],
+ "evaluation": "Success conditions form ONE stage: after every action (once all simulation sub-steps of that action are done) the reward manager evaluates all conditions; the episode succeeds as soon as ALL hold simultaneously at the same moment (reward 1 -> episode ends with success). Conditions are not latched or ordered. Otherwise the episode ends as a failure after step_lim=1000 actions (the check made after the last action still counts). No early-fail rule exists apart from the environment being flagged invalid (e.g. a required label missing / physics broken).",
+ "step_lim": 1000,
+ "objects": [
+  "broom_shovel: rigid dustpan ('broom_shovel', model index chosen randomly from 0, 1, 4), 1 total, Table-relative x in [-0.35,0.0], y in [-0.20,0.10], yaw in [135,225] deg, margin 0.01 m (left half of table). In the instruction this is the 'dustpan'.",
+  "broom: rigid broom ('broom'), 1 total, x in [-0.35,0.0], y in [-0.20,0.10], yaw in [-90,30] deg (left half of table)",
+  "targets (labels with prefix 'target', i.e. target_1*, target_2*, target_3*): small objects to sweep, three DIFFERENT categories chosen at random from brick (indices 0-2), earbuds (0-2) and paper_ball (0-2) (all three used), with 1 to 2 instances per category (select_instance_nums [1,2], unique) -> roughly 3 to 6 objects in total; right-ish part of the table x in [0.04,0.35], y in [-0.15,0.05], yaw up to +-45 deg. The exact labels and count are only known at runtime."
+ ],
+ "scene_dynamics": "none (nothing moves without the agent)",
+ "needs_memory_or_language": "none (fixed instruction)",
+ "end_requirements": "All target (controlled) arms must be back near their start pose when success is evaluated (it is one of the success conditions, see success list): every target arm's end-effector position within 0.15 m on EACH of x, y, z (per-axis, not Euclidean) and orientation within 20 degrees of its pose at the start of the episode (pose recorded right after the robot is set to its initial state). Gripper opening is NOT checked by the success test.",
+ "physics_kind": "rigid (broom, dustpan and small objects incl. paper balls)",
+ "notes": "Bimanual hand-over is described in the instruction but not itself checked; only the final state is. The dustpan must stay (almost) in place and upright during the whole sweep at success time (z within 0.01 m of start, tilt < 5 deg) and end up more than 0.1 m left (-x) of the broom, so the broom must finish on the +x side of the dustpan. IMPORTANT oddity: the two region tests are written as a list [circle_test, bbox_test] in one check slot, which the reward manager evaluates as OR, not AND; the 'handle' functional quad of the dustpan is unusual and its exact location cannot be determined statically (the support circle likely marks the dustpan's collection pan). All swept objects must satisfy the same test (all-quantifier within each test). Objects that fell off the table or remain outside will make the test fail. No gripper-open requirement in success. Success is evaluated on object root poses/points, not on gripper contact. Object geometry sizes/asset dimensions are not in the source and cannot be determined statically."
+}

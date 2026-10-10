@@ -1,0 +1,26 @@
+{
+  "task": "press_by_number",
+  "goal": "Read the two number cards, press the first red button as many times as the first card says, then press the blue button, then press the second red button as many times as the second card says, then press the blue button again, and bring the arms home.",
+  "instruction_templates": [
+    "Press the two red buttons the required number of times according to the number cards, then press the blue button to confirm."
+  ],
+  "success": [
+    "Staged sequence (in this exact order, each stage is one condition on the spring buttons' joint position ratio r = (position - lower)/(upper - lower), tag 'press'): N0 times [button0 pressed: r < 0.5, then button0 released: r > 0.9], where N0 = model index of card num0 (1..9, the digit on the card); then 1 time [button2 (blue) r < 0.5, then r > 0.9]; then N1 times [button1 r < 0.5, then r > 0.9], N1 = model index of card num1; then [button2 r < 0.5]; then [button2 r > 0.9 AND both target arms back at origin: all target arms (left_arm and right_arm; the support arm is not counted) have their end-effector pose within 0.15 m on EACH axis (|dx|,|dy|,|dz| all <= 0.15 m) and within 20 degrees (quaternion angle) of the pose they had at the start of the episode (recorded after the scene settled)].",
+    "Exact press counts (queries, aim values; counted as transitions of the ratio from above 0.95 to below 0.5, each transition counted once): button0 pressed exactly N0 times, button1 exactly N1 times, button2 (blue) exactly 2 times, at the end of the episode (reward requires current count == aim for each; ending with fewer than required also gives reward 0).",
+    "Going over the count for any button (count > aim) immediately fails the episode."
+  ],
+  "evaluation": "Sequential stages (about 2*N0 + 2 + 2*N1 + 2 stages) evaluated after every action, one stage removed per action at most. The reward manager is evaluated only once per action (after the sim sub-steps of that action are finished), never between sub-steps. In each evaluation the FIRST pending stage of the check list is tested (every condition in it, all at that same moment; a condition that is a nested list is an OR); when it passes it is removed permanently (never re-verified later) and the next stage becomes pending; at most one stage is removed per action. In parallel, three counters (queries) are evaluated after every action: whenever a button's ratio goes from >0.95 ('above') to <0.5 ('below') the counter of that button increases by one (the transition detector needs the button to have been seen above 0.95 before the next fall below 0.5; ratios between the thresholds keep the previous state). If any counter exceeds its aim value (N0, N1, 2) the environment is flagged failed and the episode ends immediately as a failure. Reward is 1.0 only when all stages are removed AND every counter equals its aim exactly; so success is declared at the action where the last stage passes (blue button released >0.9 with the arms home) provided the counts are exact. Otherwise the episode ends at step_lim as a failure.",
+  "step_lim": 700,
+  "objects": [
+    "num0: number card (Geometry, 'number_card' model index 1..9 chosen at random, tilted card, z=0.04), fixed at table-frame x=-0.15, y=-0.05, behind button0",
+    "num1: number card (same category, random index 1..9, may equal num0), fixed at x=0.0, y=-0.05, behind button1",
+    "button0: red spring button (Articulation 'SpringButton' model 2), fixed at x=-0.15, y=-0.17",
+    "button1: red spring button (model 2), fixed at x=0.0, y=-0.17",
+    "button2: blue confirm spring button (model 3), fixed at x=0.15, y=-0.17"
+  ],
+  "scene_dynamics": "none (the buttons are springs and return to their rest position on release)",
+  "needs_memory_or_language": "Yes: the agent must read the digits N0 and N1 on the two number cards (the card's digit is assumed to equal its model index 1..9; the digit-to-index relation cannot be verified from the source) and keep count of the presses per button; the order is red0 x N0, blue, red1 x N1, blue, home.",
+  "end_requirements": "After the final blue-button press is released (ratio > 0.9), both target arms must be within 0.15 m per axis and 20 deg of their start pose, at the same action.",
+  "physics_kind": "articulated (prismatic spring buttons) with rigid robot contact",
+  "notes": "The blue button must be pressed exactly twice in total (once between the two red groups, once at the end); pressing it extra at any time fails. Pressing a red button too many times fails immediately and cannot be undone; pressing too few and moving on makes the stage order wait forever. Pressing in a different order than the stages (e.g. button1 before button0 is done) breaks the exact count/sequence. Because states are only sampled once per action, a press-release cycle that happens entirely within one action is invisible; the button must be seen below 0.5 and above 0.9 (and for the count, above 0.95 before the next press) at action boundaries. Which direction is 'pressed' is inferred from the thresholds (r<0.5 = pressed down); the exact joint limits are in the asset metadata."
+}

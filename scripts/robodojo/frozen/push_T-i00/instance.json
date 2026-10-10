@@ -1,0 +1,430 @@
+{
+ "task": "push_T",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/push_T_0.json",
+ "layout_sha256": "5d6c4c37b2715479cb6a16f6d1200c5de740f1fbbaa216640b3b8828295f0b07",
+ "layout": {
+  "Rigid": {
+   "t": [
+    {
+     "category": "t",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      -0.1
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 360,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "t",
+     "default_pos": [
+      -0.41749571445048334,
+      -0.11693272251755801,
+      0.7725
+     ],
+     "default_ori": [
+      -0.9894193365550858,
+      0.0,
+      0.0,
+      -0.14508403237742568
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.35,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "t_cushion": [
+    {
+     "category": "t_cushion",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      -0.1
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 360,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "target_t",
+     "default_pos": [
+      -0.11133503448175883,
+      -0.19408636138063962,
+      0.765
+     ],
+     "default_ori": [
+      0.37255282262781525,
+      0.0,
+      0.0,
+      0.9280109882711776
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.45,
+      "friction": 0.25,
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "d27b7da33f62db43",
+ "step_lim": 600,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Push the T-shaped block to align it precisely with the gray T-shaped pad.",
+ "labels": [
+  "t",
+  "target_t",
+  "camera_stand"
+ ],
+ "objects": {
+  "t": {
+   "position": [
+    -0.4175,
+    -0.11693,
+    0.7725
+   ],
+   "orientation_wxyz": [
+    0.98942,
+    -0.0,
+    0.0,
+    0.14508
+   ],
+   "bbox_corners": [
+    [
+     -0.04,
+     -0.03,
+     0.0075
+    ],
+    [
+     0.04,
+     -0.03,
+     0.0075
+    ],
+    [
+     -0.04,
+     0.03,
+     0.0075
+    ],
+    [
+     0.04,
+     0.03,
+     0.0075
+    ],
+    [
+     -0.04,
+     -0.03,
+     -0.0075
+    ],
+    [
+     0.04,
+     -0.03,
+     -0.0075
+    ],
+    [
+     -0.04,
+     0.03,
+     -0.0075
+    ],
+    [
+     0.04,
+     0.03,
+     -0.0075
+    ]
+   ]
+  },
+  "target_t": {
+   "position": [
+    -0.11134,
+    -0.19409,
+    0.765
+   ],
+   "orientation_wxyz": [
+    0.37255,
+    0.0,
+    0.0,
+    0.92801
+   ],
+   "bbox_corners": [
+    [
+     0.042,
+     0.034,
+     0.0
+    ],
+    [
+     -0.042,
+     0.034,
+     0.0
+    ],
+    [
+     0.042,
+     -0.034,
+     0.0
+    ],
+    [
+     -0.042,
+     -0.034,
+     0.0
+    ],
+    [
+     0.042,
+     0.034,
+     -0.0
+    ],
+    [
+     -0.042,
+     0.034,
+     -0.0
+    ],
+    [
+     0.042,
+     -0.034,
+     -0.0
+    ],
+    [
+     -0.042,
+     -0.034,
+     -0.0
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {}
+}

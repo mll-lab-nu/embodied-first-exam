@@ -1,0 +1,14 @@
+{
+ "_doc": "Model trials on the frozen i00 instances (Codex + GPT-6 Luna, effort xhigh, web search off, ChatGPT login, 90 min, run codex-gpt6_luna-xhigh, 2026-10-10), graded by the task's own verifier (privileged: two fresh-process replays; standard: live episode + two fresh-process replays). mk_tasks.py writes oracle_evidence from it; review_pr is the tasks pull request that holds the human review (PROTOCOL §2.7).",
+ "review_pr": 142,
+ "run": "codex-gpt6_luna-xhigh",
+ "date": "2026-10-10",
+ "trials": {
+  "general_pickup": {"privileged": {"success": true, "actions": 67}, "standard": {"success": true, "actions": 1131}},
+  "deposit_coin": {"privileged": {"success": true, "actions": 491}},
+  "match_and_pick_from_conveyor": {"privileged": {"success": true, "actions": 307}},
+  "stack_blocks_by_language": {"privileged": {"success": true, "actions": 1616}},
+  "stack_bowls": {"privileged": {"success": false}},
+  "classify_objects": {"privileged": {"success": false}}
+ }
+}
