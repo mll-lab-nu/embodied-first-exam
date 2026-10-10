@@ -9,6 +9,10 @@ status
              has a positive and a written `criterion`.
 DROPPED lists the families that are not coming back, with the reason.
 
+host_cpu_vendor (optional): the family's frozen instance is rebuilt within tolerance only on CPUs of this vendor (the
+`vendor_id` of /proc/cpuinfo; docs/benchmarks/robowits.md, Hosts). mk_tasks.py writes it to `[metadata].host_cpu_vendor`
+of both tasks and to their READMEs, for a scheduler to read; on another vendor's host the trial ends as infra_error = 1.
+
 criterion (required to render a family): the instruction's "Success criterion (as graded)" section, written from the
 predicate (scripts/robowits/predicates/<NN>_<family>.py = RoboWits' `_check_success`, verbatim; `predicate_sha` pins the
 text to it: mk_tasks.py refuses to render when the predicate changed). "priv" may give world coordinates (privileged
@@ -268,6 +272,7 @@ FAMILIES = {
     ),
     "stand_bulb": dict(
         status="pr", rid="16-stand-bulb", eval_index=0, blenderkit=True, backend="cpu", oracle="none",
+        host_cpu_vendor="GenuineIntel",   # the instance was frozen on Intel; on AMD the rebuilt scene is out of tolerance
         objects=["target patch", "stabilizing ring", "tall object with curved bottom"],
         std_objects="Objects here: target patch, stabilizing ring, tall object with curved bottom.",
         difficulty="Stand a tall object with curved bottom stably within a target area. A tall object with curved bottom is prone to tipping due to a curved base. A surrounding ring provides lateral support and increases the effective base, using geometry for stability. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
@@ -321,6 +326,7 @@ FAMILIES = {
     "ball_into_jar": dict(
         status="pending", pending="no graded positive; Intel hosts only (the frozen instance is out of tolerance on AMD)", rid="20-ball-into-jar",
         eval_index=0, blenderkit=True, backend="cpu", oracle="none",
+        host_cpu_vendor="GenuineIntel",
         objects=["glass jar", "foam ball"],
         std_objects="Objects here: glass jar, foam ball.",
         difficulty="Put the foam ball fully into the jar. The foam ball is larger than the glass jar mouth when undeformed. The task leverages the elasticity and compressibility of the foam to change its shape and pass through the restriction. The scene contains non-rigid material (MPM / SPH / PBD particles). The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
@@ -329,6 +335,7 @@ FAMILIES = {
     "differentiate_cubes": dict(
         status="pending", pending="no graded positive; Intel hosts only (the frozen instance is out of tolerance on AMD)", rid="30-differentiate-cubes",
         eval_index=0, blenderkit=True, backend="cpu", oracle="none",
+        host_cpu_vendor="GenuineIntel",
         objects=["mug", "wooden cube", "metal cube", "water pitcher", "water", "target area"],
         std_objects="Objects here: mug, wooden cube, metal cube, water pitcher, water, target area.",
         difficulty="Differentiate wooden and metal cubes using buoyancy. The robot must differentiate two similar-looking objects with different material properties. By exploiting buoyancy (wood floats, metal sinks), the robot can identify which cube is wooden. The scene contains non-rigid material (MPM / SPH / PBD particles). The tooling's primitives are thin (IK moves, joint moves, gripper, hold).",
