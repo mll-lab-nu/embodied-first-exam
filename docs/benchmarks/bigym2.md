@@ -89,6 +89,14 @@ every branch and `sim_error`. The realtime plan is unchanged for BiGym 2.0's one
 the plan's last row, walking velocity included); the shared layer stopped combining rows of different action types (a
 RoboOlympics bug).
 
+Standard-realtime, since 2026-10-10 (review R2 M1, the shared 2.3 layer): the agent's requests cannot slow the clock --
+bodies are read, decoded and checked off the simulator's thread, waiting requests are served once the clock has caught
+up, the cameras are rendered once per control step (`docs/LIMITED_MODE_PROTOCOL.md`, "What a request can cost the
+clock") -- and `final.json` / `reward.json` carry the clock's record: `clock_s`, `max_lag_s` (now the true maximum),
+`stalls`, `stalled_s`, `stalled_share`, `held_steps`, `late_steps`, `requests_refused`, `request_busy_s`. They are
+evidence and decide no verdict. In both service modes a negative `Content-Length` is refused unread (400), and a
+simulator that fails inside `POST /reset` ends the episode `error` (in realtime: `infra_error = 1`), not `reset`.
+
 The success check stays visible in privileged mode (PROTOCOL, owner 2026-10-02): it is sparse, and every instruction
 states its thresholds. Upstream's reward shaping for the plate tasks (`event_progress`) is off by default and never
 graded.

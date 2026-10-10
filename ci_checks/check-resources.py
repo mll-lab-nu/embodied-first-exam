@@ -216,7 +216,8 @@ def check_caps(task: Path, r: dict, lim: dict, services: list[str]) -> list[str]
     equal to the cap docker really applies (main's memory and CPU: `[environment]`, written by Harbor; everything else:
     environment/docker-compose.yaml), and the relation chain on those real caps: the limited memory <= (sum of the
     scope's memory caps) / 1.2 and <= that sum - 2 GiB, so that the monitor sees a violation before the OOM killer;
-    pids >= 8 x max_processes for the services the limits bind."""
+    pids >= 8 x max_processes for the services the limits bind; no cap below the task's own minimums (min_cpus <= the
+    CPU caps together; verifier_min_memory_gb <= the memory caps of the sidecars a collect hook replays in)."""
     caps = r.get("caps")
     if not isinstance(caps, dict):
         return ["[metadata.resources.caps] missing (PROTOCOL §2.10)"]
@@ -267,6 +268,22 @@ def check_caps(task: Path, r: dict, lim: dict, services: list[str]) -> list[str]
                             "(scripts/task_resources.toml), or apply the declared one")
     if errs:
         return errs
+    # a cap is never below what the task itself says it needs (§2.10): the trial's CPU minimum fits under the CPU caps
+    # of all its services together (so that a runner that clamps a cap to the host's CPU count, on a host that has
+    # min_cpus, never leaves the trial with less than its minimum), and a sidecar that holds the simulator in the
+    # verifier phase (it replays in a [[verifier.collect]] hook) is not capped below the verifier phase's minimum
+    d = tomllib.loads((task / "task.toml").read_text())
+    cpus = sum(real[s]["cpus"] for s in caps)
+    if r["min_cpus"] > cpus + 1e-9:
+        errs.append(f"min_cpus {r['min_cpus']} > the CPU caps of all services together {cpus:g}: the declared minimum could never be used")
+    hooked = sorted({h.get("service") for h in d.get("verifier", {}).get("collect") or [] if isinstance(h, dict)}
+                    & (set(caps) - {"main"}))
+    if hooked:
+        side = sum(real[s]["memory_gb"] for s in hooked)
+        if r["verifier_min_memory_gb"] > side + 1e-9:
+            errs.append(f"verifier_min_memory_gb {r['verifier_min_memory_gb']} > the memory cap of the sidecar(s) the verifier phase "
+                        f"runs in ({', '.join(hooked)}: {side:g} GiB): the kernel would kill the service at a cap below its own "
+                        "declared minimum (scripts/task_resources.toml: raise the [[cap]])")
     total = sum(real[s]["memory_gb"] for s in scope)
     if lim["max_memory_gb"] > total / 1.2 + 1e-9 or lim["max_memory_gb"] > total - 2 + 1e-9:
         errs.append(f"max_memory_gb {lim['max_memory_gb']} must be <= the scope's memory caps {total:g} / 1.2 and <= {total:g} - 2")

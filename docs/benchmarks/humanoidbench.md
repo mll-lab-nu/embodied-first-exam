@@ -120,11 +120,19 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMI
   therefore equals the live run however late or early the agent was; `deterministic` checks it. Evidence beside it:
   `ticks.f64` (each step's wall time and the call that planned it; -1 = held), `calls.jsonl`, `submitted.f64` (every
   row as sent), and in `final.json` `max_lag_s`, `stalls`, `held_steps`, `late_steps` (since 2026-10-10 they cover
-  the whole trial after a crash-resume, not only what followed the last restart). In both service modes `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict (2026-10-10).
+  the whole trial after a crash-resume, not only what followed the last restart), with `clock_s`, `stalled_s` and
+  `stalled_share` (the wall time the clock ran, the time its stalls dropped, and their ratio), `requests_refused` and
+  `request_busy_s`; `reward.json` repeats them (review R2 M1: before, `reward.json` had none of them and `max_lag_s`
+  never passed 0.5). They are evidence: a stalled trial is flagged, not failed. In both service modes `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict (2026-10-10).
 - **Timing guarantees.** The simulator thread runs a due control step before any waiting request; HumanoidBench's
   physics takes 0.4–2.1 ms per control step (facts.json, `episode_seconds`) and a head-camera image about 0.5 ms on the
   sidecar's GPU, against a 20 ms step. A service that falls behind runs the missed steps back to back; more than
-  0.5 s behind, it drops the debt (a stall) instead of fast-forwarding the robot.
+  0.5 s behind, it drops the debt (a stall) instead of fast-forwarding the robot. Requests cannot slow the clock
+  (review R2 M1; before, four threads of refused 21 MB bodies left 3 control steps in 6 s, and four threads of
+  `/observe` with a 25 ms render 234 of 300): a request is read, decoded and checked off the simulator's thread (large
+  JSON bodies by a child process), waiting requests are served once the clock has caught up, and the cameras are
+  rendered once per control step for everyone who asks (`docs/LIMITED_MODE_PROTOCOL.md`, "What a request can cost the
+  clock"; `scripts/humanoidbench/tests/test_realtime_load.py` measures it on a stub simulator).
 - **Crashes.** A simulator crash is an infrastructure failure, not the agent's (owner, 2026-10-08): past
   `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed`, a failed resume `resume_failed`, and a simulator error that
   ends the graded episode (`reason = "error"`) counts too; `final.json` and `reward.json` carry `infra_error = 1`.

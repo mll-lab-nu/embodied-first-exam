@@ -781,6 +781,12 @@ measured = "GPU 3.8-4.0 GB per trial, anon memory 11.1-11.8 GB, CPU p90 5.8-8.7 
 #   unless a service sets one itself, and then the value here must be that one (ci_checks/check-resources.py compares).
 #   Memory caps sit above the limits (limit <= cap / 1.2 and <= cap - 2) so that the monitor sees a violation before the
 #   kernel's OOM killer; pids (threads) >= 8 x max_processes for the services the limits bind.
+#   A cap is never below what the task says it needs (ci_checks/check-resources.py): min_cpus <= the CPU caps of all
+#   services together, and where the verifier phase runs in a sidecar (a [[verifier.collect]] hook replays there),
+#   verifier_min_memory_gb <= the memory caps of those sidecars (a sidecar killed at a cap below its own declared
+#   minimum would be the benchmark's failure). A CPU cap above the host's CPU count means the host's count: docker
+#   refuses such a container ("range of CPUs is from 0.01 to N"), so a runner clamps the cap to the host's count before
+#   it starts the trial (PROTOCOL §2.10); the values here are not lowered for small hosts.
 # Same matching as [[rule]] (every matching rule applies, in file order). Edit the values here, not in task.toml.
 # How the values were set (owner, 10-10: from measured consumption, generous margins, so that no past trial exceeds them):
 # - GPU memory (simulator side): max(1.5 x peak, peak + 4) over batch_eval_live's vram_profile (per-trial peaks by card,
@@ -825,7 +831,7 @@ measured = "memory: no samples of the agent's container; floor 8 GiB (at most th
 [[limit]]
 match = "^behavior-.*-privileged$"
 scope = "trial"
-max_gpu_memory_gb = 16.0
+max_gpu_memory_gb = 24.0
 max_memory_gb = 24.0
 max_processes = 512
 max_disk_gb = 20.0
@@ -833,9 +839,9 @@ disk_paths = ["/app", "/tmp", "/root"]
 disk_exclude = []
 sustain_sec = 60.0
 window_sec = 120.0
-trial_max_gpu_memory_gb = 16.0
+trial_max_gpu_memory_gb = 24.0
 trial_max_memory_gb = 24.0
-measured = "GPU: 9.0 GiB with RCB_TEXTURE_BUDGET=0.1, now the tasks' default (live sampler (cgroup anon, 13 AWS hosts + ws-1, 10-10); uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.8 GiB over 5 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 15.1 GiB held for most of the episode by the reference solution alone on a 48 GB card (L40S) with RCB_TEXTURE_BUDGET=0.1, the tasks' default (the tasks' own monitor, three oracle runs of two tasks on two hosts, 10-10: 15.14-15.15 GiB; the 9.0 GiB of the live sampler (nvidia-smi every 30 s, 13 AWS hosts + ws-1) was below that; uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile) -> max(1.5 x peak, peak + 4) rounded up to 24 (was 16: 5 % above the reference solution's own use); memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.8 GiB over 5 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [[limit]]
 match = "^behavior-.*-standard$"
@@ -1718,10 +1724,13 @@ match = "^labutopia-.*-standard$"
 main = { cpus = 8.0, memory_gb = 32.0, pids = 16384 }
 sim = { cpus = 16.0, memory_gb = 24.0, pids = 16384 }
 
+# lab_003 families: the sidecar needs more than the six lab_001 families (21 GB at the renderer's first start, measured
+# by the author; declared verifier minimum 27 GB). Its cap is max(1.5 x peak, peak + 4) = 32 GiB like every other sim
+# cap, never below the declared minimum (ci_checks/check-resources.py; before: 24 GiB, below its own minimum).
 [[cap]]
 match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-standard$"
 main = { cpus = 8.0, memory_gb = 32.0, pids = 16384 }
-sim = { cpus = 16.0, memory_gb = 24.0, pids = 16384 }
+sim = { cpus = 16.0, memory_gb = 32.0, pids = 16384 }
 
 [[cap]]
 match = "^libero-max-.*-privileged$"

@@ -132,7 +132,12 @@ def trial_state(t: pathlib.Path, job: dict, ri: int, root: pathlib.Path, plan_ru
     agent_files = list(agent_dir.glob("*.txt")) if agent_dir.is_dir() else []
     now = time.time()
     a0, a1 = ts(ae.get("started_at")), ts(ae.get("finished_at"))
-    if r.get("finished_at"):
+    rj = jload(t / "verifier" / "reward.json")
+    # PROTOCOL §2.6: infra_error (or a grader error) = not a result: shown as aborted, never as the agent's failure or success
+    infra = bool(isinstance(rj, dict) and (rj.get("infra_error") or rj.get("grader_error")))
+    if r.get("finished_at") and infra:
+        state = "aborted"
+    elif r.get("finished_at"):
         state = "success" if reward is not None and reward >= 1 and not gw.get("over_token_budget") else "failed"
     elif job.get("finished_at"):
         state = "aborted"
@@ -157,7 +162,7 @@ def trial_state(t: pathlib.Path, job: dict, ri: int, root: pathlib.Path, plan_ru
         "id": f"{ri}:{t.relative_to(root)}", "task": task, "bench": info["bench"],
         "mode": next((m for m in ("standard-realtime", "standard") if task.endswith(f"-{m}")), "privileged"),
         "run": plan_run or run_id((cfg.get("agent") or {})), "job": job.get("job_name") or t.parent.name,
-        "trial": t.name, "state": state, "reward": reward, "exception": exc,
+        "trial": t.name, "state": state, "reward": reward, "infra": infra, "exception": exc,
         "agent_start": a0, "agent_end": a1 or (now if state == "running" else None), "timeout": info["timeout"],
         "tok_in": tok_in, "tok_out": tok_out, "requests": gw.get("requests"), "gateway": bool(gw),
         "over_budget": bool(gw.get("over_token_budget")),
@@ -302,7 +307,7 @@ function table(){const rows=filt().sort((a,b)=>ORDER.indexOf(a.state)-ORDER.inde
   $("table").innerHTML=`<table class="mx"><tr><th>task</th>${runs.map(r=>`<th>${esc(r)}</th>`).join("")}</tr>`+tasks.map(k=>`<tr><td>${esc(k)}</td>${runs.map(r=>{const t=cell[k+"|"+r];
   return `<td>${t?`<span class="${t.id?"row":""}" data-id="${esc(t.id||"")}" style="cursor:${t.id?"pointer":"default"}">${st(t.state)}</span>`:""}</td>`}).join("")}</tr>`).join("")+"</table>"}
  else $("table").innerHTML=`<table><tr><th>state</th><th>task</th><th>benchmark</th><th>mode</th><th>run</th><th>agent time</th><th class="num">input tok</th><th class="num">output tok</th><th class="num">requests</th><th class="num">reward</th><th>exception</th></tr>`+
-  rows.map(t=>`<tr class="${t.id?"row":""}" data-id="${esc(t.id||"")}"><td>${st(t.state)}${t.over_budget?' <span class="st failed">over budget</span>':""}</td><td>${esc(t.task)}</td><td>${esc(t.bench)}</td><td>${esc(t.mode)}</td><td class="mut">${esc(t.run)}</td>
+  rows.map(t=>`<tr class="${t.id?"row":""}" data-id="${esc(t.id||"")}"><td>${st(t.state)}${t.over_budget?' <span class="st failed">over budget</span>':""}${t.infra?' <span class="st setup">infra error</span>':""}</td><td>${esc(t.task)}</td><td>${esc(t.bench)}</td><td>${esc(t.mode)}</td><td class="mut">${esc(t.run)}</td>
   <td>${elapsed(t)}</td><td class="num">${fmtT(t.tok_in)}</td><td class="num">${fmtT(t.tok_out)}</td><td class="num">${t.requests??""}</td><td class="num">${t.reward??""}</td><td class="mut">${esc((t.exception||"").replace(/Error$/,""))}</td></tr>`).join("")+"</table>";
  for(const el of document.querySelectorAll("[data-id]"))if(el.dataset.id)el.onclick=()=>show(el.dataset.id)}
 async function show(id){open=id;const t=S.trials.find(x=>x.id===id);if(!t)return;

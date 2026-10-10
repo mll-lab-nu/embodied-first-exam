@@ -24,10 +24,16 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
   rendered from them (generator-owned: edit the rules, never the paragraph). From v1.2 a task-provided monitor
   (`scripts/rcb_monitor/`, copied into every task by `normalize`; `ci_checks/check-monitor.py` runs its tests) and the
   verifier judge them; with `RCB_LIMITS_ENFORCE=1` a violation fails the trial (default 0: recorded only). Declared caps
-  are the applied ones: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb`.
+  are the applied ones: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb`. A CPU cap above the
+  host's CPU count is the runner's to clamp (docker refuses it); the values in `scripts/task_resources.toml` stay.
+  The same step's `sanitize` line in every `tests/test.sh` removes links and special files from `/app/output` before
+  the grader reads the agent's files.
 - `ci_checks/run_all.sh [task dirs]`: contract checks (incl. verifier isolation: `[verifier] environment_mode = "separate"`
   + `tests/Dockerfile`) and the protocol v1.0 check (`check-protocol-v1.py`: `legacy:` image rules warn, all other rules fail). New check =
-  `check-<thing>.sh <task_dir>`, registered in `run_all.sh`.
+  `check-<thing>.sh <task_dir>`, registered in `run_all.sh`; a rule that guards the trust boundary or the caps also gets a
+  mutation in `ci_checks/check-ci-selftest.py` (a real task broken that way must fail the rule). Run the checks from a
+  checkout made with `umask 022` (`run_all.sh` sets it for itself). `ci_checks/check-unit-tests.sh --all` runs the
+  service-layer tests that need numpy + requests (CI job `unit-tests`).
 - `tasks/dataset.toml`: task manifest with a digest per task; refresh with `cd tasks && harbor add --scan .` after any
   change to a task (`ci_checks/check-dataset-manifest.sh` recomputes the digests).
 - Local docker sandbox has no `[environment].gpus`. RoboTwin and MuJoCo tasks pass a GPU through
