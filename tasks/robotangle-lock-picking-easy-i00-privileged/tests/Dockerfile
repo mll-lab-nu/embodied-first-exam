@@ -9,3 +9,5 @@ RUN python /opt/robotangle/stage_instance.py lock-picking-easy-i00 /tests --purg
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests:/opt/topogym
 WORKDIR /tests
+# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+COPY rcb_limits.py rcb_limits.json /tests/

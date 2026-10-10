@@ -4,6 +4,7 @@
 # Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent
 # left there (a planted reward, a symlink) can count. rm never follows symlinks.
 rm -rf /logs/verifier/*
+trap 'p=$(command -v python3 || command -v python); "$p" /tests/rcb_limits.py verify' EXIT   # resource limits, after the grader (docs/PROTOCOL.md §2.10)
 mkdir -p /logs/verifier
 python /tests/grade.py --instance /tests/instance.npz --traj /app/output/trajectory.npz \
   2> /logs/verifier/grade.log

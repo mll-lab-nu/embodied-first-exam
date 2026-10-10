@@ -1,5 +1,5 @@
 schema_version = "1.3"
-artifacts = [
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
   { source = "/data/final.json", service = "sim" },
   { source = "/data/episode.jsonl", service = "sim" },
   { source = "/data/trajectory.npz", service = "sim" },
@@ -78,6 +78,12 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
+# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, one fresh-process replay with the video, write final.json
@@ -91,3 +97,6 @@ timeout_sec = 21600.0             # Agent wall-clock budget
 build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 16384
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

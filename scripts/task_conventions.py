@@ -31,6 +31,9 @@ import tempfile
 import tomllib
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from rcb_monitor import inject as rcb_monitor_inject  # noqa: E402
+
 CLIENT_ASSERT_OLD = 'assert str(self._spec.get("protocol", "")).startswith("rcb-limited/2."), self._spec.get("protocol")'
 CLIENT_ASSERT_NEW = ('assert str(self._spec.get("protocol", "")).startswith(("eai-standard/2.", "rcb-limited/2.")), '
                      'self._spec.get("protocol")')
@@ -336,7 +339,8 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
         text += " GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to)."
     text += (f" These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for "
              f"{_num(lim['sustain_sec'])} s within any {_num(lim['window_sec'] / 60)} minutes, or a process killed for lack of "
-             "memory, ends the trial as a failure (reward 0), whatever the deliverable.")
+             "memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container "
+             "measures every few seconds; the current values are in `/run/rcb-limits/usage.json`.")
     if cpus:
         text += f" CPU is capped at {_num(cpus)} cores for your container; the cap only slows you down."
     return LIMITS_HEADING + "\n" + text + "\n"
@@ -361,7 +365,8 @@ def _shared_sources() -> set[bytes]:
     layer in v2_4/; D9): their copies must stay byte-identical to the source (check-tooling-identity.sh), so normalize never
     rewrites them."""
     src = Path(__file__).resolve().parent / "eai_standard"
-    return {p.read_bytes() for p in src.rglob("*") if p.is_file() and "__pycache__" not in p.parts} if src.is_dir() else set()
+    shared = {p.read_bytes() for p in src.rglob("*") if p.is_file() and "__pycache__" not in p.parts} if src.is_dir() else set()
+    return shared | rcb_monitor_inject.generated_sources()     # the resource monitor's copies (scripts/rcb_monitor/)
 
 
 def normalize_text_files(task: Path) -> None:
@@ -573,6 +578,7 @@ def normalize(task: Path) -> None:
     normalize_instruction(task)
     normalize_test_sh(task)
     write_if_changed(task / "README.md", render_readme(task))
+    rcb_monitor_inject.apply(task)   # PROTOCOL §2.10 (v1.2): the resource monitor sidecar, caps, verifier step
     assert_converted(task)
 
 
