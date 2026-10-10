@@ -35,6 +35,18 @@ both wrist cameras). Oracle: 650 control steps, every stage latched at the last 
 fresh-process replays end in the same state (hash `6abc1ae0ef6db88e`). `nop`: no trajectory, reward 0; no stage holds at
 the start.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 8 | 4 |
+| Memory | 16 GB | 9 GB |
+| GPU memory | 5 GB | 5 GB |
+
+- GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: L40S 48GB / L4 24GB / RTX 4090 24GB.
+- Measured: GPU 3.8-4.0 GB per trial, anon memory 11.1-11.8 GB, CPU p90 5.8-8.7 cores over 12 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); vram_profile peaks 5.5-6.5 GB on 24 GB cards; board 0048: about 11 GB RAM and 8 CPUs per simulator; verifier 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10)
+
 ## Details
 | | |
 |---|---|

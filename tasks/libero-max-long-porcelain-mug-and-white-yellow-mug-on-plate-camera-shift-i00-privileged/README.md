@@ -36,6 +36,18 @@ end in the same state (`deterministic`) and LIBERO's success check holds at the 
 trajectory invalid). Oracle: the replays end in the live state (hash `2a0afa399761…`) and succeed. `nop`: no trajectory,
 reward 0; the instance is not solved at the start.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 5 GB | 2 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: verifier 1.6 GB, mem_guard (docker memory per container, ws-1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)
+
 ## Details
 | | |
 |---|---|

@@ -24,7 +24,8 @@ Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
 - **isolatable** — the verifier can recompute the result in its own sandbox from the declared artifacts;
 - **scrubbable** — upstream reference solutions can be removed from everything the agent can reach.
 
-It also states the oracle source (§2.7 of the protocol), GPU and image size, whether the images can be published, and
+It also states the oracle source (§2.7 of the protocol), the minimum compute per trial (CPU cores, memory, GPU memory
+and GPU class, §2.9), image size, whether the images can be published, and
 the expected size of the pull request.
 
 ## Authoring a task
@@ -33,16 +34,22 @@ the expected size of the pull request.
    the README in the standard layout (§2.1); there is no `results/` directory.
 2. Fill in `task.toml` (PROTOCOL §2.3), `instruction.md` (§2.5, written by a human), the verifier under `tests/`
    (§2.6, separate sandbox) and `solution/` (§2.7).
-3. Base images: `images/<sim>/Dockerfile`, versioned in `images/<sim>/VERSION`, built and pushed with
+3. State the minimum compute (PROTOCOL §2.9): CPU cores, memory and GPU memory of the agent phase and the verifier
+   phase, the GPU class and a recommended GPU, derived from measured peaks (oracle or agent trials; `docker stats` /
+   cgroup `memory.stat` and `nvidia-smi` while they run). Add a rule to `scripts/task_resources.toml` (or have the
+   generator write `[metadata.resources]`); `scripts/task_conventions.py` writes it into `task.toml` and renders the
+   README's `## Compute resources`.
+4. Base images: `images/<sim>/Dockerfile`, versioned in `images/<sim>/VERSION`, built and pushed with
    `scripts/build_images.sh` / `scripts/push_images.sh`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
    and build instructions.
-4. Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`, …). No adapters, and no gateway that
+5. Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`, …). No adapters, and no gateway that
    holds credentials or changes requests; the optional usage gateway that only records token usage is allowed (PROTOCOL D11).
 
 ## Before opening the pull request
 ```bash
 bash ci_checks/run_all.sh tasks/<your tasks>      # must pass; only `legacy:` (image registry) warnings are accepted (§7)
 python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the v1.0 layout
+python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + README Compute resources (§2.9)
 python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
 #   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)
 #   and check that `git diff --exit-code tasks/` is empty

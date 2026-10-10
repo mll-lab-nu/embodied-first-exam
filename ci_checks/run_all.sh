@@ -18,6 +18,9 @@ bash "$root/ci_checks/check-generated-tasks.sh" || rc=1              # generator
 bash "$root/ci_checks/check-robopaint-tooling.sh" || rc=1            # RoboPaint: tooling byte-identical within a family / stack
 bash "$root/ci_checks/check-tooling-identity.sh" || rc=1             # D9 shared sources; the eai-standard/2.2 layer = scripts/eai_standard/
 bash "$root/ci_checks/check-standard-client.sh" || rc=1              # standard agent + verifier images: the pinned client base and pins
+# PROTOCOL §2.9 (v1.1.4): [metadata.resources] (minimum compute) in every task.toml, consistent with the GPU reservations and
+# caps, and the README's Compute resources section rendered from it
+if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-resources.py" || rc=1; else python3 "$root/ci_checks/check-resources.py" "$@" || rc=1; fi
 # Protocol v1.0: `legacy:` rules (image move, docs/PROTOCOL.md §7) warn; all other rules fail. RCB_PROTOCOL_STRICT=1 fails on legacy too.
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-protocol-v1.py" || rc=1; else python3 "$root/ci_checks/check-protocol-v1.py" "$@" || rc=1; fi
 [ $rc -eq 0 ] && echo "all checks passed"; exit $rc

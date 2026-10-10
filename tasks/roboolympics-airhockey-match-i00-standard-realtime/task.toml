@@ -42,6 +42,18 @@ expert_time_estimate_hours = 0.5
 oracle = "full"
 oracle_evidence = "solution/: the sport's RoboOlympics reference player (camera images, proprio and /spec only) through the agent's client; it wins this instance (PR #106)"
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 6.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 5.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "author (docs/benchmarks/roboolympics.md): the sim takes up to 6 CPUs (air hockey 4), the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only, real time needs the cores"
+
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"

@@ -30,6 +30,19 @@ expert_time_estimate_hours = 3.0
 oracle = "none"
 oracle_evidence = "no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-wall-cupboard-open-i00-pr__mcuR6nu (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #123"
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)"
+
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"

@@ -22,6 +22,19 @@ success_rule = "task-native success (goal_complete True; frozen parameters; term
 instance_seed = 0                 # scene = environment/instance.json (variation fiber_bundling_hard, eval index None); identity = dataset.toml digest
 expert_time_estimate_hours = 2.0
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 2.0
+min_memory_gb = 7.0
+min_gpu_memory_gb = 7.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 7.0
+measured = "GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+
 [verifier]
 timeout_sec = 45000.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then

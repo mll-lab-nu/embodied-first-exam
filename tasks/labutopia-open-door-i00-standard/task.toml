@@ -33,6 +33,19 @@ level = 1                         # LabUtopia's own level for the task (config l
 instance_seed = 4                 # numpy's and Python's random generators before LabUtopia's reset
 expert_time_estimate_hours = 2.5
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 8.0
+min_memory_gb = 23.0
+min_gpu_memory_gb = 8.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "RTX 4090 24GB / L40S 48GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 22.0
+verifier_min_gpu_memory_gb = 8.5
+measured = "oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)"
+
 [verifier]
 timeout_sec = 600.0
 environment_mode = "separate"

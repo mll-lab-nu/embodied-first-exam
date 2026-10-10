@@ -27,6 +27,18 @@ As `bigym2-wall-cupboard-open-i00-standard`: the sidecar judges the live episode
 simulator executed in a fresh simulator; `tests/grade.py` reads `/data/final.json`. Success condition: both doors of the wall cabinet are open to within 10% of their travel (within about 9 degrees of fully open), at the same time.
 No oracle; human review in PR #123 (PROTOCOL §2.7).
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 4 GB | 3 GB |
+| GPU memory | 1.5 GB | 1.5 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
+- Measured: GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)
+
 ## Details
 | | |
 |---|---|

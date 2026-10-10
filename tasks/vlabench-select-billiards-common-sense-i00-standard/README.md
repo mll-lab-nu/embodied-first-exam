@@ -31,6 +31,18 @@ The sim service ends the episode at the task's success (or at the 9000-step tech
 time is up, or on a simulator error), replays the recorded episode in a fresh simulator and writes `/data/final.json`;
 `tests/grade.py` (separate sandbox, no network) grades it: `success = live_success ∧ replay_success ∧ deterministic`.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 11 GB | 10 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: memory: sim p90 6.9 GB, privileged container p90 8.1 GB, verifier 4.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate
+
 ## Details
 | | |
 |---|---|

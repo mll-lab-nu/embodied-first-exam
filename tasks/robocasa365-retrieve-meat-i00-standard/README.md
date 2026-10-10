@@ -23,6 +23,18 @@ The agent has to find the fixtures and objects in the robot's camera images, dri
 ## Verification
 The sim service replays the recorded episode in a fresh simulator; `tests/grade.py` (separate sandbox, no network) reads its `final.json`: `success = replay_success ∧ deterministic ∧ live_success`.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 3 | 3 |
+| Memory | 9 GB | 8 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate
+
 ## Details
 | | |
 |---|---|

@@ -23,6 +23,18 @@ PR #4's reference for this frozen instance (an official demonstration's initial 
 ## Verification
 `tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of the instance; `success = deterministic ∧ success on the final state ∧ not solved at the start`. Reference: two fresh-process replays end in the live run's state (hash `e83ba997d65f…`) and succeed. `nop`: no trajectory, reward 0; the instance is not solved at the start.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 3 | 2 |
+| Memory | 9 GB | 7 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate
+
 ## Details
 | | |
 |---|---|

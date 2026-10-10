@@ -1,10 +1,11 @@
-# Robot Coding Bench — Task Protocol v1.1.3
+# Robot Coding Bench — Task Protocol v1.1.4
 
 Status: **final** (2026-09-30; v1.0.1 2026-10-01: both modes carry a suffix, no results in the repository, standard
 task README; **v1.1 2026-10-08: a third mode (§4b), served by `eai-standard/2.3`; protocol-change issue #86; v1.1.1 2026-10-08: the third mode is named
 `standard-realtime`, issue #97; v1.1.2 2026-10-08: the standard-realtime mode's default reset budget is 0, as in standard
 mode, and HumanoidBench's 50 is a per-benchmark exception, issue #102; v1.1.3 2026-10-09: MyoSuite's standard tasks
-default to a reset budget of 10, a per-benchmark exception (§4.5), #116**).
+default to a reset budget of 10, a per-benchmark exception (§4.5), #116; v1.1.4 2026-10-10: every task declares the
+minimum compute it runs on, `[metadata.resources]` and a README section (§2.9), owner request (board 0061)**).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard mode is specified in
 [`LIMITED_MODE_PROTOCOL.md`](LIMITED_MODE_PROTOCOL.md) (`eai-standard/2.1`, and the standard-realtime mode's `eai-standard/2.3`);
 its 2.2 extension in [`STANDARD_MODE_2_2.md`](STANDARD_MODE_2_2.md), and the 2.4 operations capability in
@@ -80,6 +81,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 14. `README.md` in the standard layout (§2.1). [CI] (sections and key rows; `scripts/task_conventions.py --check` for the rest)
 15. Runs with Harbor's native agents; no custom runner or adapter, and no gateway beyond the recording-only usage gateway (D11). [new]
 16. Standard-mode tasks also satisfy every MUST in §4; standard-realtime tasks every MUST in §4 and §4b.
+17. `[metadata.resources]` states the minimum CPU cores, memory and GPU memory of the agent phase and the verifier
+    phase, the GPU class and a recommended GPU; the README's `## Compute resources` shows the same values (§2.9). [CI] (v1.1.4)
 
 ## 2. Task contract
 
@@ -93,7 +96,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | At run time, importing repository code from outside the task directory (packages under `scripts/`, a package at the repository root, a `PYTHONPATH` into the repository). Pinned third-party pip packages are fine. | MUST NOT | [current] — a task's identity is its directory digest, and Harbor builds from the task directory alone |
 | Shared sources under `scripts/<bench>/shared/`, copied into each task by the generator; copies byte-identical within a benchmark | MAY (if used, identical) | [new] |
 | Generated tasks come with their generator (under `scripts/<bench>/` for new benchmarks; existing generators are in `scripts/`); re-running it reproduces the committed tasks (`git diff` is empty) | SHOULD | [current] / [new] |
-| `README.md` in the standard layout: `# <directory name>`; a key table with Benchmark, Mode, Twin, Simulator / robot, Family / instance, Oracle, Agent time budget, Base image; then `## Task`, `## Difficulty`, `## Reference solution`, `## Verification`, and `## Details` for anything else (extra rows, notes, provenance). No results in the README | MUST | [CI] |
+| `README.md` in the standard layout: `# <directory name>`; a key table with Benchmark, Mode, Twin, Simulator / robot, Family / instance, Oracle, Agent time budget, Base image; then `## Task`, `## Difficulty`, `## Reference solution`, `## Verification`, `## Compute resources` (§2.9), and `## Details` for anything else (extra rows, notes, provenance). No results in the README | MUST | [CI] |
 
 ### 2.2 Naming
 | Item | Level | Basis |
@@ -118,6 +121,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | `[agent].timeout_sec` set, ≤ 14400 (per-benchmark exceptions below); 3600 unless justified (uniform within a benchmark) | MUST / SHOULD | [CI] / [new] |
 | `[verifier].environment_mode = "separate"` | MUST | [CI] |
 | `[verifier].timeout_sec`, `[environment]` `cpus` / `memory_mb` / `build_timeout_sec` | SHOULD | [current] |
+| `[metadata.resources]`: the minimum compute (§2.9) | MUST | [CI] (v1.1.4) |
 | `[environment].gpus` (unsupported by Harbor's local Docker sandbox; see §2.4) | MUST NOT | [current] |
 
 **Per-benchmark agent budget exceptions.** A benchmark's tasks may set `[agent].timeout_sec` above 14400 s only by owner
@@ -218,6 +222,52 @@ example → nop result → predicate summary*. The reviewer checks:
 | Listed in `tasks/dataset.toml` (re-run `harbor add --scan` after any change) | MUST | [CI] |
 | A published task's `environment/` and `tests/` inputs are immutable; a change is a new task | MUST | [current] |
 | Fixes to existing tasks add a Change Log entry to the task README with before/after runs | SHOULD | [new] |
+
+### 2.9 Compute resources (v1.1.4)
+
+Every task states the smallest allocation it runs on, so that a scheduler can pack trials onto machines and a
+contributor knows what hardware a task needs. The values live in `task.toml` under `[metadata.resources]` (Harbor keeps
+`[metadata]` free-form); the README's `## Compute resources` table is rendered from them by
+`scripts/task_conventions.py`.
+
+| Item | Level | Basis |
+|---|---|---|
+| `[metadata.resources]` with every field below (`recommended_gpu` may be left out when `gpu_required = false`) | MUST | [CI] |
+| README `## Compute resources`, after `## Verification`, equal to what `scripts/task_conventions.py` renders from `[metadata.resources]` | MUST | [CI] |
+| `gpu_required = true` exactly when `environment/docker-compose.yaml` reserves an NVIDIA GPU (§2.4); then `min_gpu_memory_gb > 0` and `gpu_class` is not `"none"`; with `gpu_required = false`, `min_gpu_memory_gb = 0` and `gpu_class = "none"` | MUST | [CI] |
+| `verifier_min_gpu_memory_gb > 0` exactly when a GPU reaches the verifier phase (`tests/docker-compose.yaml`, or a `[[verifier.collect]]` hook on a GPU sidecar) | MUST | [CI] |
+| A minimum never exceeds a cap that bounds the whole phase: `[environment]` `cpus` / `memory_mb` for a task without a sidecar, `[verifier.environment]` for a verifier without a collect hook | MUST | [CI] |
+| Values derived from measured peaks as below; `measured` says from what (trials, hosts, dates), or `"author estimate"` until measured | SHOULD | [new] |
+| Values uniform within a benchmark, or within a family where its families differ (e.g. particle simulation, two cameras) | SHOULD | [new] |
+
+| Field | Type | Meaning |
+|---|---|---|
+| `min_cpus` | float | CPU cores the agent phase needs at once: every container of the trial (privileged: the agent's container with the simulator and its helpers; standard modes: the agent's container plus the `sim` sidecar(s)) |
+| `min_memory_gb` | float | memory (GB) the agent phase needs at its peak, same scope |
+| `min_gpu_memory_gb` | float | GPU memory (GB) the agent phase holds at its peak; 0 without a GPU |
+| `gpu_required` | bool | the task does not start without an NVIDIA GPU |
+| `gpu_class` | string | `"none"`; `"any"` (any CUDA GPU with EGL / Vulkan: MuJoCo, SAPIEN, ManiSkill, Genesis rendering); `"rtx"` (an RTX-class GPU with ray-tracing cores: Isaac Sim / Omniverse; data-centre cards without them, such as A100 or H100, do not run it) |
+| `recommended_gpu` | string or list | a card the task is known to run well on, e.g. `"L40S 48GB"`, `"RTX 4090 24GB / L4 24GB"` |
+| `verifier_min_cpus`, `verifier_min_memory_gb`, `verifier_min_gpu_memory_gb` | float | the same for the verifier phase, which runs after the agent phase: the verifier's container plus, in standard modes, the replay the collect hook runs in the sidecar |
+| `measured` | string | provenance of the values |
+
+**Minimum** means the smallest allocation on which one trial, alone on the machine, runs correctly: no out-of-memory
+kill, no start-up watchdog or timeout caused by CPU starvation, the same verdict. It is not the `[environment]` cap
+(an upper bound, often much larger), and not what makes a trial fast; an agent that starts extra simulator processes
+needs more, and a scheduler adds its own margin. How to derive it:
+- **memory**: the largest sum over the phase's containers of their cgroup `anon + shmem` (or `docker stats` usage, which
+  also counts page cache and so overstates), × 1.2, rounded up to a whole GB;
+- **GPU memory**: the largest sum over the phase's processes in `nvidia-smi`, × 1.15, rounded up to 0.5 GB. Isaac Sim
+  sizes its pools to the card, so its value is the peak on the smallest card class the task ran on (24 GB);
+- **CPU**: the sustained use (the 90th percentile of 30-second samples) summed over the containers, in cores, rounded up,
+  and at least one core per simulator process plus one for the agent;
+- over several trials (oracle or agent) where there are any; `measured` names them.
+
+Values come from `scripts/task_resources.toml`: rules matched against the task directory name, applied in order (a later
+rule overrides an earlier one's keys), written into `task.toml` by `scripts/task_conventions.py` (`normalize`, which
+every generator runs). A task that no rule matches keeps the block its generator or author wrote. A new benchmark adds
+its rule in its shared-files pull request (D6), or its generator writes the block itself. `ci_checks/check-resources.py`
+checks the fields, the consistency rules above and the README.
 
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 

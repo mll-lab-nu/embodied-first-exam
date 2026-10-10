@@ -29,6 +29,18 @@ fresh-process replays succeed and end in the same state.
 copy of the instance (`tests/instance.json`; the start state is checked against its hash on every load); pass iff both
 succeed and end in the same state (`deterministic`). Oracle: success, worst segment errors 0.079 m/s and 0.114 rad/s. `nop`: no trajectory, reward 0.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 4 GB | 3 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: GPU 1.0-1.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.6 GB, sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU p90 1.9 cores, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10)
+
 ## Details
 | | |
 |---|---|

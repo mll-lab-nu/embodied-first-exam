@@ -30,6 +30,18 @@ See `tests/grade.py`.
 
 `nop`: no valid run yet. On the build of 6b6804ae4 an RTX 4090 (compute capability 8.9) refused this task's frozen PBD state, which was prepared on an RTX PRO 6000 Blackwell (compute capability 12.0, 188 SMs). This build generates a state from the instance's recipe on other GPUs; it has not been run there. Pending (docs/benchmarks/robotangle.md, GPU portability).
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 7 GB | 6 GB |
+| GPU memory | 7 GB | 7 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: L40S 48GB / RTX 4090 24GB / L4 24GB (sm_86 or newer).
+- Measured: GPU 5.9 GB on L4, 10.3 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.0 GB, privileged container 4.6 GB, verifier p90 3.9 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate
+
 ## Details
 
 ### Goal

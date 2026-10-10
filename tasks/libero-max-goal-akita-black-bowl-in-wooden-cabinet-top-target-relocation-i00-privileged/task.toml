@@ -20,6 +20,18 @@ oracle = "full"
 instance_seed = 195             # LIBERO-MAX's policy seed for the case (the scene is the frozen LIBERO-PRO initial state)
 expert_time_estimate_hours = 1.0
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 2.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "verifier 1.6 GB, mem_guard (docker memory per container, ws-1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)"
+
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"
