@@ -38,7 +38,8 @@ These rules forbid only tipping and dropping: pushing the bottle of cocoa or the
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot()                                   # connects (waits while Isaac Sim starts and loads the task, a few minutes)
+r = Robot()                                   # connects: waits while Isaac Sim starts and loads the task (4-12 min measured; on your
+                                              # clock, progress on stderr; it gives up after 3600 s, Robot(timeout=...))
 spec = r.spec()                               # actions, cameras, robot_spec, world, kinematics, budget, static facts
 
 obs = r.get_obs()                             # current frames: obs.last[cam] -> uint8 (256,256,3) for spec["default_cameras"]

@@ -54,7 +54,7 @@ measured = "GPU: about 7 GiB, oracle on an RTX 4090 (author); no trial data -> m
 main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
 
 [verifier]
-timeout_sec = 5400.0              # two replays of about a minute (each limited to 2400 s, as before), then the video replay (the rest), whose renderer starts cold (5 to 15 minutes); 300 s of margin: tests/grade.py
+timeout_sec = 5400.0              # two replays of about a minute (each limited to 2400 s, as before), then the video replay (the rest), whose renderer starts cold (5 to 27 minutes); 300 s of margin: tests/grade.py
 environment_mode = "separate"
 network_mode = "no-network"
 
@@ -70,7 +70,7 @@ cpus = 8
 memory_mb = 32768
 
 [agent]
-timeout_sec = 5400.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 15 minutes to start
+timeout_sec = 5400.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 27 minutes to start
 # LabUtopia's scripted controllers are in its public repository (and a standard-mode agent could rebuild the simulator
 # from it): the agent reaches the model APIs and nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"

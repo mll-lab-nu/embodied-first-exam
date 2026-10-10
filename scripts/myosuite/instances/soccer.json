@@ -46,6 +46,9 @@
   "agent_eye",
   "agent_view"
  ],
+ "scene_cameras": [
+  "goalkeeper_view"
+ ],
  "steps_per_s": 400,
  "rest_reason": "failure: fallen, or the time limit passed without a goal"
 }

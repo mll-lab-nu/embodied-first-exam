@@ -5,7 +5,8 @@ episode: deterministic = the replay ends in the live episode's final state; succ
 environment's success check holds on that state both live and in the replay (and not already at the start).
 
 /logs/verifier/reward.txt: 1 or 0. /logs/verifier/reward.json: numeric fields only. infra_error = 1: no verdict on the
-agent (the service crashed past its restarts, never finished, or failed to finalize).
+agent (the service crashed past its restarts, never finished, or failed to finalize; a final.json that is missing, or
+that cannot be read as a JSON object: then grader_error = 1 too).
 """
 
 import json
@@ -28,7 +29,14 @@ def main() -> None:
     if not os.path.exists(path):
         write({"success": 0, "deterministic": 0, "missing_log": 1, "infra_error": 1, "grader_error": 0})
         return
-    d = json.load(open(path))
+    try:
+        d = json.load(open(path))
+        if not isinstance(d, dict):
+            raise ValueError(f"final.json is not a JSON object: {type(d).__name__}")
+    except (OSError, ValueError) as exc:  # truncated, not JSON, not an object: the service's record is broken, no verdict
+        print(f"unreadable final.json: {exc!r}"[:300])
+        write({"success": 0, "deterministic": 0, "missing_log": 0, "infra_error": 1, "grader_error": 1})
+        return
     for f in ("replay.mp4", "replay.last.png", "trajectory.npz", "episode.jsonl"):
         if os.path.exists(f"{DATA}/{f}"):
             shutil.copy(f"{DATA}/{f}", f"{LOG}/{f}")

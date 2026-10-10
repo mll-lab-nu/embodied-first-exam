@@ -66,6 +66,60 @@ MAX_STEPS = 10_000_000          # runaway guard only; the wall clock is the budg
 # 1085 rows). The verifier replays a trajectory twice inside its timeout; the slowest family runs ~140 control steps/s.
 # The verifier scores a longer file 0 (bad_trajectory). The standard service's recorded episode has no such cap.
 MAX_TRAJECTORY_ROWS = 50_000
+# Threads (docs/benchmarks/dexjoco.md, "Threads"): DexJoCo's operational-space controller does its linear algebra in numpy,
+# and OpenBLAS gives one result on 4 or more threads (the references' and every published result's numerics), others on
+# 1 and on 2-3. Every container sets OPENBLAS_NUM_THREADS=4, but OpenBLAS never runs more threads than the CPUs the
+# process may run on (its affinity: a cpuset, taskset, a Slurm allocation; a docker `cpus:` quota does not change it).
+# So a grading process checks the count it really runs with: below MIN_BLAS_THREADS it gives no verdict.
+MIN_BLAS_THREADS = 4
+
+
+def blas_threads() -> dict[str, Any]:
+    """The thread count numpy's OpenBLAS runs with in this process, and what bounds it (all numeric, for reward.json):
+    visible_cpus (the process's CPU affinity), openblas_num_threads_env (OPENBLAS_NUM_THREADS, 0 = not set),
+    blas_threads (asked of the loaded OpenBLAS itself; if that fails, min(visible_cpus, the environment's setting)),
+    threads_ok (1 iff blas_threads >= MIN_BLAS_THREADS)."""
+    try:
+        visible = len(os.sched_getaffinity(0))
+    except (AttributeError, OSError):
+        visible = int(os.cpu_count() or 1)
+    env = 0
+    for k in ("OPENBLAS_NUM_THREADS", "GOTO_NUM_THREADS", "OMP_NUM_THREADS"):   # OpenBLAS's own order
+        try:
+            env = int(os.environ.get(k, "") or 0)
+        except ValueError:
+            env = 0
+        if env > 0:
+            break
+    n = 0
+    try:
+        import ctypes
+        np.linalg.inv(np.eye(2))                                             # numpy's BLAS is loaded and initialised
+        with open("/proc/self/maps") as f:
+            libs = sorted({line.split()[-1] for line in f if "openblas" in line.rsplit("/", 1)[-1].lower()})
+        for lib in libs:
+            h = ctypes.CDLL(lib)
+            for sym in ("openblas_get_num_threads64_", "openblas_get_num_threads", "scipy_openblas_get_num_threads64_",
+                        "scipy_openblas_get_num_threads"):
+                fn = getattr(h, sym, None)
+                if fn is not None:
+                    fn.restype = ctypes.c_int
+                    n = max(n, int(fn()))
+                    break
+    except Exception:  # noqa: BLE001 -- no /proc, another BLAS, a stripped library: fall back to what bounds the count
+        n = 0
+    if n <= 0:
+        n = min(visible, env) if env > 0 else visible
+    return {"visible_cpus": int(visible), "openblas_num_threads_env": int(max(env, 0)), "blas_threads": int(n),
+            "threads_ok": int(n >= MIN_BLAS_THREADS)}
+
+
+def threads_message(t: dict) -> str:
+    return (f"OpenBLAS runs {t['blas_threads']} thread(s) here ({t['visible_cpus']} CPU(s) visible to this process, "
+            f"OPENBLAS_NUM_THREADS={t['openblas_num_threads_env'] or 'unset'}); DexJoCo's simulation gives the references' "
+            f"numerics only on {MIN_BLAS_THREADS} or more (docs/benchmarks/dexjoco.md, Threads)")
+
+
 # Order of the 16 hand values in an action row (and in the measured joints) per arm. DexJoCo's bimanual envs list the
 # LEFT hand's fingers mirrored: ring, middle, index, thumb.
 HAND_ORDER = {"right": ["index_0", "index_1", "index_2", "index_3", "middle_0", "middle_1", "middle_2", "middle_3",
@@ -253,6 +307,10 @@ class Session:
             self._snapshot = self.snapshot()
         self._episode_reset()
         self._total_steps = 0
+        self.threads = blas_threads()
+        if not self.threads["threads_ok"]:     # the agent's own runs go on; a grading process gives no verdict like this
+            _log("WARNING: " + threads_message(self.threads) + ". Results here can differ from the verifier's replay, "
+                 "which runs on 4 threads: give this container at least 4 CPUs and OPENBLAS_NUM_THREADS=4.")
         _slog("session_start", task=task)
         import atexit
         atexit.register(lambda: _slog("session_end", task=task, resets=self.resets, sim_steps=self._total_steps + self.steps))
@@ -783,7 +841,9 @@ def cmd_replay(a) -> None:
     out = {"n_actions": int(len(A)), "replays": runs, "all_success": all(r["success"] for r in runs),
            "deterministic": len({r["state_sha"] for r in runs}) == 1, "success": bool(runs[0]["success"]),
            "state_sha": runs[0]["state_sha"], "reason": runs[0]["reason"], "steps": runs[0]["steps"],
-           "instance_ok": instance_ok, "video": video}
+           "instance_ok": instance_ok, "video": video, **blas_threads()}
+    if not out["threads_ok"]:
+        _log("WARNING: " + threads_message(out) + ": this replay is not the references' numerics")
     print(json.dumps(out))
     if a.out:
         with open(a.out, "w") as f:

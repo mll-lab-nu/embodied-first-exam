@@ -52,6 +52,28 @@ SRC_RE = re.compile(r"^robopaint-(kaishu|xingshu|caoshu|lettering|acrylic|oil)-(
 # the instance keys of the rules (= rcb_brush_strict.RULE_KEYS)
 RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm")
 PLACES = {"privileged": ("tests/", "environment/scorer/"), "standard": ("environment/sim/",)}  # the graders' copies of MODULE
+# README "Change Log" entries of every pair, by mode, written after rules.json's change_log_all: the second review of board 0067
+# (kept here, next to the code they describe; rules.json holds the earlier ones).
+CODE_CHANGES = {
+    "privileged": [
+        "2026-10-10 (review round 2, board 0067): `tests/grade.py` only. A frozen instance that the verifier's host does not "
+        "rebuild (`instance_ok = 0`) is `grader_error = 1` and `infra_error = 1` (it was a plain 0 without a flag: the replays "
+        "ran on another scene and say nothing about the trajectory), and every `grader_error = 1` (a replay process without a "
+        "result or past its time limit) now has `infra_error = 1` next to it; every `reward.json` carries `infra_error`. The "
+        "reward is 0 in these cases, as before; the pass rule, the frozen instance and the tooling are unchanged.",
+    ],
+    "standard": [
+        "2026-10-10 (review round 2, board 0067): the service's request checks and the client. `environment/sim/server.py` "
+        "checks every field of `/submit` and `/observe` before anything is executed and answers 400: a `note` that is not a "
+        "string (for example a number) ended the episode with a 500 after the chunk had run, a null `dt`, `seconds` or "
+        "`video_fps` ended it before anything ran, and a negative or absurd `video_fps` ended it when the video was encoded; "
+        "null now means the default, `video_fps` must be in [0, 1000], and a numeric field sent as a string or a boolean is a "
+        "400 too. `environment/rcb_client.py`: `Robot()` waits up to 3600 s for the service (was 600 s; no effect here, the "
+        "scene builds in under a minute) and `cameras=\"name\"` (a string) is one camera, no longer its characters. The "
+        "collect hook, the grader, the scene and the pass rule are unchanged; a trial that ended with reason `error` "
+        "(`sim_error = 1`) right after such a request before this date was not a simulator fault.",
+    ],
+}
 WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code
     "privileged": (
         ("tests/grade.py", MODULE),
@@ -237,7 +259,8 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
             "README.md",
         )
         # the pair's own entries (change_log), then the entries of every pair of this mode (change_log_all)
-        log = list(cfg.get("change_log", {}).get(base) or []) + list(cfg.get("change_log_all", {}).get(mode) or [])
+        log = (list(cfg.get("change_log", {}).get(base) or []) + list(cfg.get("change_log_all", {}).get(mode) or [])
+               + CODE_CHANGES[mode])
         if log:  # normalize() files it under Details as "### Change Log"
             entries = "\n".join(f"- {e}" for e in log) + "\n"
             if "\n### Change Log\n" in rd:  # the family's template has the section (oil): its entries first

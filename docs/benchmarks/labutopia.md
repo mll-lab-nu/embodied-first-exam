@@ -124,7 +124,7 @@ through the robot's joint targets alone, (b) whose success check can be stated w
   checked by `ci_checks/check-limited-texts.sh`.
 - **Texts** are in `scripts/labutopia/families.json` (goal in both wordings, scene, inventory).
 - **Budget: 5400 s** (D8), both modes, the same as RoboLab's (also on Isaac Sim): the first simulator with its
-  renderer in a container takes 5 to 15 minutes to start (below), which a standard task pays before its service
+  renderer in a container takes 5 to 27 minutes to start (below), which a standard task pays before its service
   answers.
 
 ## Simulator version: Isaac Sim 6.1.0
@@ -208,7 +208,10 @@ PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the im
   the stage of `press`, `shake` and `heat_liquid` (`lab_003`: 803 s, 21 GB of RAM at the peak). The work is
   CPU-bound and uses every core, so it takes longer when simulators share them: two at a time on eight cores, about
   9 minutes each for `lab_001` and 20 to 23 minutes each for `lab_003`; with the host several times oversubscribed
-  (a load of 30 to 50 on eight cores), a `lab_003` service was not up within 30 minutes. The start-up watchdog of a
+  (a load of 30 to 50 on eight cores), a `lab_003` service was not up within 30 minutes. On an 8-vCPU AWS L40S host
+  (EPYC 7R13; oracle sweep of 2026-10-10, one trial at a time) the `lab_003` stage of `press` took 1538 s in the
+  standard sidecar and 1634 s in the privileged verifier, about 27 minutes: twice the figure above, with both trials
+  scoring 1 (agent phase 1660 of 5400 s, verifier 1820 of 5400 s). The start-up watchdog of a
   standard task is 2400 s: the number of trials at a time has to fit the cores. It is paid once per container: Kit's
   caches are inside its package directory, each container has its own, none is shared between an agent's container,
   the sim sidecar and the verifier. A process that only simulates does not need any of it, so `Session(...)` starts
@@ -272,8 +275,8 @@ through the client as `joint_position_velocity` chunks.
   was opened and released for a second (seed 4: that is how its rule is met while LabUtopia's script reports a
   failed opening).
 - **The first simulator with its renderer in a container takes minutes to start** (above): a standard agent waits for
-  its service that long, out of its own budget, and `Robot()`'s default 600 s is not always enough (the instruction
-  says `Robot(timeout=2400)`). Baking Kit's caches into the image would remove the wait, but they can only be made
+  its service that long, out of its own budget (`Robot()` waits up to 3600 s since 2026-10-10; its default was 600 s,
+  not always enough, and the instruction said `Robot(timeout=2400)`). Baking Kit's caches into the image would remove the wait, but they can only be made
   with a GPU, which `docker build` does not have; not done here.
 - **Isaac Sim 6.1.0, not LabUtopia's 5.1.0** (above): the controllers' success rates here are not LabUtopia's.
 - **Kit prints one start-up error** (`omni.physx.supportui`, "no running event loop") when LabUtopia's own extension

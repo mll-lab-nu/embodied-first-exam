@@ -14,8 +14,8 @@ On the bench in front of the arm: one glass conical (Erlenmeyer) flask, about 9.
   tool frame and the targets in effect. No poses of the objects or instruments, no success check: `meta["done"]` /
   `meta["reason"]` tell you when the episode is over and why.
 - Your wall-clock budget is 5400 s from your start (`meta["time_left_s"]`); steps are unlimited. **The service
-  needs about 5 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
-  `Robot(timeout=2400)` waits for it, and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
+  needs 5 to 10 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
+  `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
@@ -25,7 +25,7 @@ On the bench in front of the arm: one glass conical (Erlenmeyer) flask, about 9.
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot(timeout=2400)                        # connects; waits while the service starts (about 5 minutes; the default timeout is 600 s)
+r = Robot()                                    # connects; waits while the service starts (5 to 10 minutes; it gives up after 3600 s)
 spec = r.spec()                                # action layouts and limits, robot_spec, cameras (+ intrinsics, mounting), proprio layout, kinematics, budget
 obs = r.get_obs()                              # obs.last[cam] -> uint8 (512, 512, 3) (cameras: camera_1, camera_2, wrist_cam)
 obs = r.get_obs(cameras=["camera_1"], depth=True)   # + obs.last_depth[cam] -> float32 (512, 512), metres

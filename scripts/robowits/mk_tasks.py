@@ -69,6 +69,11 @@ CHANGE_LOG = {
         f"instruction states the tooling's cap of {MAX_STEPS} control steps per trajectory instead of leaving it unsaid. The "
         "pass rule, the frozen instance, the tooling and the predicate are unchanged; validated with synthetic tests of the "
         "grader, not re-run in the simulator.",
+        "2026-10-10 (review round 2, board 0067; minor 2): `tests/grade.py` time-boxes the replay video, which it renders after "
+        "the verdict is on disk: it is skipped or stopped (`video_timed_out = 1`) 180 s before the verifier's `timeout_sec` "
+        "(`tests/test.sh` passes it as `--budget`). Before, the video replay of a very long trajectory could run into "
+        "Harbor's verifier timeout, which discards the verdict already written. The verdict, the pass rule, the frozen "
+        "instance and the tooling are unchanged; validated with a synthetic test of the grader, not re-run in the simulator.",
     ],
     "std": [
         "2026-10-10 (review of board 0067; findings RW-1, RW-2, RW-3, RW-4, RW-7, RW-8): the service checks every request "
@@ -82,6 +87,11 @@ CHANGE_LOG = {
         "episode; `reward.json` adds `sim_error`, `instance_mismatch`, `instance_exact`. The pass rule, the frozen instance, "
         "the tooling and the predicate are unchanged; validated with synthetic tests of the service and the grader, not "
         "re-run in the simulator.",
+        '2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to '
+        '3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` '
+        "outlasts the simulator's start (no effect on a scene that builds in about a minute); "
+        '`cameras="name"` (a string) is one camera, no longer its characters. The '
+        'service, the collect hook, the grader, the scene and the pass rule are unchanged.',
     ],
 }
 
@@ -658,7 +668,7 @@ def priv_test_sh(fam: str) -> str:
     return ("#!/bin/bash\n# Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in a fresh process.\n"
             "# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/PROTOCOL.md).\n" + CLEAR_LOGS +
             f"python /tests/grade.py --family {fam} --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \\\n"
-            "  2> /logs/verifier/grade.log\n")
+            f"  --budget {FM.FAMILIES[fam].get('verifier_timeout_s') or 1800} 2> /logs/verifier/grade.log\n")
 
 
 def std_test_sh() -> str:

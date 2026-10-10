@@ -16,7 +16,7 @@
  "free_root": true,
  "track_steps": null,
  "reference": null,
- "scene": "A musculoskeletal body with two legs stands in a square arena; an opponent moves in it.",
+ "scene": "A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move).",
  "difficulty": "hard",
  "hours": 5.0,
  "reward_path": "myosuite/envs/myo/myochallenge/chasetag_v0.py",
@@ -40,6 +40,9 @@
   "topview",
   "opponent_view",
   "agent_view"
+ ],
+ "scene_cameras": [
+  "opponent_view"
  ],
  "steps_per_s": 1200,
  "rest_reason": "failure: the opponent was not tagged in time, out of bounds or fallen"

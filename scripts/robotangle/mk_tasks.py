@@ -381,7 +381,72 @@ def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
     cap = (f"\nA trajectory may have at most {row_cap(base)} rows (`RCB_MAX_STEPS`: two replays must fit the verifier's "
            "timeout; a longer one is\n`bad_trajectory`)." if mode == "privileged" else "")
     s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + cap + "\n\n" + nop + "\n\n", s)
-    return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n" + "\n".join(changes(mode)) + "\n"
+    return (s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n"
+            + "\n".join(changes(mode) + change_r2(base, mode)) + "\n")
+
+
+# ---------------------------------------------------------------- fixes of the round-2 review (2026-10-10, board 0067 R2)
+# Text fixes on top of review_fixes, with the same rule: every replacement asserts that its source text is still there.
+GRIP_OLD = "native drive target (m, limits 0 .. 0.8; open/closed targets in robot_spec)"
+GRIP_NEW = ("native drive target (rad, limits 0 .. 0.8: 0 = open, 0.8 = closed, the Robotiq 2F-85's driver joint; "
+            "open/closed targets in robot_spec)")
+EXPOSED_OLD = ("The success implementation and internal measurements are not exposed;\n"
+               "  the task requirements above still apply in full.")
+EXPOSED_NEW = ("The success implementation is not exposed, and of the simulator's internal\n"
+               "  measurements only the safety readings of `meta[\"safety\"]` are (listed under Action types, below); the task\n"
+               "  requirements above still apply in full.")
+WAIT_S = 3600             # v2_4/rcb_client.Robot.__init__'s default timeout (600 s until 2026-10-10)
+WAIT_OLD = ("(default connection budget: 600 seconds,", "(default timeout 600 s)")
+WAIT_NEW = (f"(default connection budget: {WAIT_S} seconds,", f"(default timeout {WAIT_S} s)")
+OPENING_NEW = ("\n  The proprio group `gripper_opening` (`res.group(\"gripper_opening\")`) is the measured gap between each gripper's finger\n"
+               "  pads in metres (0 = the pads touch); the gripper entries of `joint_pos` are in the unit of the gripper command above.")
+
+
+def panda(base: str) -> bool:
+    return 'robot = "panda_robotiq"' in (PKG / f"{base}-privileged" / "task.toml").read_text()
+
+
+def native(base: str) -> bool:
+    return "_native_gripper" in (PKG / f"{base}-standard" / "instruction.md").read_text()
+
+
+def review_fixes_r2(s: str, base: str, mode: str) -> str:
+    """Round-2 text fixes of an instruction.md. The Robotiq 2F-85's native drive coordinate is its driver joint angle
+    (topogym/robot/panda_robotiq: gripper_position_rad, limits 0 .. 0.8 rad, GraspDescription open 0 / closed 0.8); the
+    release's texts gave it in metres. ALOHA's native coordinate is the finger rail in metres, as its texts say."""
+    assert (GRIP_OLD in s) == (panda(base) and native(base)), f"{base} {mode}: the gripper unit text and the robot disagree"
+    if GRIP_OLD in s:
+        s = swap(s, GRIP_OLD, GRIP_NEW, f"{base} {mode} Robotiq unit")
+    if mode == "standard":
+        s = swap(s, EXPOSED_OLD, EXPOSED_NEW, f"{base} safety readings")
+        for a, b in zip(WAIT_OLD, WAIT_NEW):
+            s = swap(s, a, b, f"{base} Robot() wait")
+        s = swap(s, "`meta[\"clipped\"]` says so.\n- `ee_pose`", "`meta[\"clipped\"]` says so." + OPENING_NEW + "\n- `ee_pose`",
+                 f"{base} gripper_opening")
+    return s
+
+
+def change_r2(base: str, mode: str) -> list[str]:
+    """The round-2 Change Log entry; none for a task whose files did not change (privileged tasks of the ALOHA families)."""
+    unit = ("The instruction gave the Robotiq gripper's native drive target in metres; it is the driver joint angle in "
+            "rad (0 = open, 0.8 = closed). ") if panda(base) and native(base) else ""
+    if mode == "privileged":
+        return [f"- 2026-10-10 (review round 2): text only. {unit}Nothing else changes, so the task keeps its name."] if unit else []
+    opening = ("The proprio group `gripper_opening` is now the measured gap between the finger pads in metres "
+               "(`Session.gripper_width`); it repeated the gripper's native drive coordinate "
+               + ("(rad, 0 = open .. 0.8 = closed)" if panda(base) else "(the finger rail position, m)") +
+               " under a description that called it an opening. `/spec` now describes the gripper entries of `joint_pos` "
+               "and `joint_vel` as that drive coordinate. " if native(base) else
+               "The proprio group `gripper_opening` is unchanged here (this instance commands opening widths); its `/spec` "
+               "description is more precise. ")
+    return ["- 2026-10-10 (review round 2): the sim service, the client and the texts; the pass rule is unchanged. A request "
+            "field holding a JSON integer beyond the float range (`dt`, `video_fps`, `seconds`) gets a 400 and moves nothing; "
+            "it ended the episode with a 500 booked as an infrastructure error. " + opening + unit +
+            "The Rules said that internal measurements are not exposed, while the instruction documents the safety "
+            "readings of `meta[\"safety\"]`; the sentence now says so (what is exposed is unchanged). The client's `Robot()` "
+            f"waits up to {WAIT_S} s for the service (600 s before) and prints its progress, and `cameras=\"name\"` is one "
+            "camera, not its characters. The image, scene, frozen instance, tooling and grader are unchanged, so the task "
+            "keeps its name."]
 
 
 def binding(base: str, inst_dir: pathlib.Path | None = None) -> bytes:
@@ -483,7 +548,7 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None) -
         put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
         put(t / "README.md", rewrite_readme(rd("README.md"), base, mode, rec).encode())
         ins = text(rd("instruction.md")).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
-        put(t / "instruction.md", review_fixes(ins, "instruction.md", base, mode).encode())
+        put(t / "instruction.md", review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
                 assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"

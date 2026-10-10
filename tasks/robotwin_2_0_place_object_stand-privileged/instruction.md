@@ -29,7 +29,7 @@ s = Session("place_object_stand", instance="/app/instance.json")   # rebuilds th
 s.reset()                          # back to the frozen initial state (unlimited; each reset rebuilds the scene, a few seconds)
 env = s.env                        # the RoboTwin task env (envs/place_object_stand.py + envs/_base_task.py under /opt/RoboTwin)
 env.robot                          # Robot: get_left_tcp_pose(), get_left_arm_jointState(), left_plan_path(pose), ...
-s.record_start(); ...; actions = s.record_stop()   # actions: (T, 34) rows, one per physics step (1/250 s)
+s.record_start(); ...; actions = s.record_stop()   # actions: (T, 34) rows, one per physics step (1/250 s); at most 200,000 rows are graded
 s.status()                         # {'success': bool, 'sim_steps': int, 'resets': int, 'state_sha': str}
 s.replay(actions)                  # resets, replays open-loop, returns status  -> use this to self-check
 s.save_trajectory(actions, "/app/output/trajectory.npz")

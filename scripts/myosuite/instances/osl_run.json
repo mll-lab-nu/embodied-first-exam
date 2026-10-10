@@ -64,6 +64,7 @@
   "side_view",
   "agent_view"
  ],
+ "scene_cameras": [],
  "steps_per_s": 600,
  "rest_reason": "failure: fallen, off the track or out of time"
 }
