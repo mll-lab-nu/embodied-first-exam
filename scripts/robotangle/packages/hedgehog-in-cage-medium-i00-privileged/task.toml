@@ -10,14 +10,14 @@ keywords = ["robotics", "topogym", "genesis", "panda_robotiq", "code-as-policy",
 [metadata]
 author_name = "jianwen"
 tooling_version = "18"
-task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
 simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CPU float64 physics, Nyx RGB)
 robot = "panda_robotiq"
 family = "hedgehog_in_cage"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
 oracle = "none"
 oracle_evidence = "No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol \u00a72.7)."
-difficulty = "medium"               # the variation's tier (docs/rcb/TAXONOMY.md)
+difficulty = "medium"               # the variation's tier (docs/TAXONOMY.md)
 grasp = "assisted (his contact_weld_v1 grasp regions on hedgehog_ball)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision hedgehog_placement_v4_grasp_contact_2mm); his qualification record for this variation matches, as metadata only (record profile: Panda/Robotiq JOINT_ABS, CPU float64, 25 ms World tick / 40 substeps, bilateral-contact contact_weld_v1; medium default parameters, seed 0 only; no scene-variation qualification); this instance runs CPU 2.5 ms ticks x 4 substeps with joint-position actions and frozen contact_weld_v1 grasp assistance, which the record does not cover"
 instance_seed = 0                 # scene = environment/instance.json (variation hedgehog_in_cage_medium, eval index None); identity = dataset.toml digest

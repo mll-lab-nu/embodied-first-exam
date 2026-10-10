@@ -10,14 +10,14 @@ keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajec
 [metadata]
 author_name = "jianwen"
 tooling_version = "18"
-task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
 simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CUDA physics, Nyx RGB)
 robot = "aloha"
 family = "knot_untying"
 mode = "privileged"               # privileged (state-based tooling, resets) | standard (robot as a service)
 oracle = "none"
 oracle_evidence = "No reference solution (no solution/). The frozen instance was validated by the build: it builds in a fresh process (seed < 2^31) and holds still under hold checks in a fresh container, and a verifier replay grades without a grader error. No graded positive yet. Human review per family (protocol \u00a72.7)."
-difficulty = "easy"               # the variation's tier (docs/rcb/TAXONOMY.md)
+difficulty = "easy"               # the variation's tier (docs/TAXONOMY.md)
 grasp = "physical (no assisted grasping)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision terminal_v5_fixed_contact_active_clearance_1mm)"
 instance_seed = 0                 # scene = environment/instance.json (variation knot_untying_easy, eval index None); identity = dataset.toml digest

@@ -1,12 +1,10 @@
 {
- "_comment": "VLABench tasks: the native tasks (VLABench @ cf588fe) with a recorded expert on a frozen instance. candidates: imported from PR #4 (import_pr4.py) and re-verified by freeze.py; a candidate that fails re-verification is listed in frozen/report.json and left out. dropped: candidates that verify but are left out after review, and why. excluded: never candidates, and why. instructions: where VLABench's instruction does not say what its success check requires, the text the task states instead (text, why; the upstream wording stays in the instance); kind overrides the generated description of the instruction. oracle_source: where each reference came from.",
+ "_comment": "VLABench tasks: the native tasks (VLABench @ cf588fe) with a recorded expert on a frozen instance. candidates: the tasks generated here; their instances and references were imported from PR #4 (commit ad3c5109, refs/pull/4/head) and re-verified by freeze.py (frozen/report.json). dropped: tasks PR #4 also froze that are left out, and why (their frozen inputs are not kept). excluded: never candidates, and why. instructions: where VLABench's instruction does not say what its success check requires, the text the task states instead (text, why; the upstream wording stays in the instance); kind overrides the generated description of the instruction. oracle_source: where each reference came from.",
  "candidates": [
   "add_condiment",
   "book_rearrange",
-  "complex_seesaw_use",
   "find_unseen_object",
   "friction_qa",
-  "hammer_loose_nail",
   "hammer_nail_and_hang_picture",
   "heat_food",
   "insert_bloom_flower",
@@ -18,7 +16,6 @@
   "select_billiards",
   "select_billiards_common_sense",
   "select_billiards_spatial",
-  "select_book_semantic",
   "select_book_spatial",
   "select_chemistry_tube",
   "select_chemistry_tube_common_sense",
@@ -27,7 +24,6 @@
   "select_drink",
   "select_fruit",
   "select_fruit_common_sense",
-  "select_fruit_semantic",
   "select_mahjong",
   "select_mahjong_semantic",
   "select_mahjong_spatial",
@@ -39,15 +35,16 @@
   "select_specific_type_book",
   "select_toy",
   "select_unique_type_mahjong",
-  "set_dining_table",
-  "set_study_table",
   "take_out_cool_drink",
   "texas_holdem"
  ],
  "dropped": {
   "select_fruit_semantic": "duplicate of select_fruit_common_sense: the same scene (identical model and initial-state hashes), the same reference control steps, the same instruction (\"tell some specifics of pear between [...]\") and the same success check (pear in plate_seen); VLABench's semantic variant has no instruction of its own",
   "select_book_semantic": "the instruction is VLABench's unfilled template (\"I'm ... Could you recommend a book and take it out for me?\"): the literal \"...\" leaves out what identifies the target book (the_story_of_american_freedom), so the task cannot be inferred",
-  "set_study_table": "the instruction is VLABench's unfilled template (\"Today I want to review the content about ... Please help me to manage the study table before I come.\"): the literal \"...\" leaves out the subject that identifies the target book (the_story_of_american_freedom), so the task cannot be inferred"
+  "set_study_table": "the instruction is VLABench's unfilled template (\"Today I want to review the content about ... Please help me to manage the study table before I come.\"): the literal \"...\" leaves out the subject that identifies the target book (the_story_of_american_freedom), so the task cannot be inferred",
+  "complex_seesaw_use": "PR #4's reference is a recorded failure: replayed on the frozen instance it does not end in success (freeze.py, 2026-10)",
+  "hammer_loose_nail": "PR #4's reference is a recorded failure: replayed on the frozen instance it does not end in success (freeze.py, 2026-10)",
+  "set_dining_table": "PR #4's reference is a recorded failure: replayed on the frozen instance it does not end in success (freeze.py, 2026-10)"
  },
  "excluded": {
   "add_condiment_common_sense": "no reference solution: VLABench's own expert sequence does not reach the task's success on the frozen instance (PR #4 authoring)",
@@ -216,10 +213,8 @@
  "oracle_source": {
   "add_condiment": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "book_rearrange": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
-  "complex_seesaw_use": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "find_unseen_object": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "friction_qa": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
-  "hammer_loose_nail": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "hammer_nail_and_hang_picture": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "heat_food": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "insert_bloom_flower": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
@@ -231,7 +226,6 @@
   "select_billiards": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_billiards_common_sense": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_billiards_spatial": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
-  "select_book_semantic": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_book_spatial": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_chemistry_tube": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_chemistry_tube_common_sense": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
@@ -240,7 +234,6 @@
   "select_drink": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_fruit": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_fruit_common_sense": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
-  "select_fruit_semantic": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_mahjong": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_mahjong_semantic": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_mahjong_spatial": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
@@ -252,8 +245,6 @@
   "select_specific_type_book": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_toy": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "select_unique_type_mahjong": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
-  "set_dining_table": "PR #4's first-author reference: VLABench's general skills driven by VLABench's expert sequence or by a skill sequence the PR #4 author wrote, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
-  "set_study_table": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "take_out_cool_drink": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)",
   "texas_holdem": "VLABench's own expert (get_expert_skill_sequence) driving its general skills, recorded as control steps during PR #4's authoring; only the recorded steps were committed (PR #4 @ ad3c510, refs/pull/4/head)"
  }
