@@ -46,16 +46,25 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only; CPU author estimate"
 
 [metadata.resources.limits]
-# agent-phase limits; exceeding one fails the trial. scope: trial = every container, agent = the agent's container (docs/PROTOCOL.md §2.10)
+# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
 max_processes = 512
-max_disk_gb = 10.0
-disk_paths = ["/app"]
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
 sustain_sec = 60.0
+window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
-trial_max_memory_gb = 12.0
+trial_max_memory_gb = 14.0
+measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
 [verifier]
 timeout_sec = 600.0

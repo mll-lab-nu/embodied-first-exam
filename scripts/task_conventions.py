@@ -78,10 +78,13 @@ RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required 
     "verifier_min_gpu_memory_gb": float, "measured": str,
 }
 # PROTOCOL §2.10: the most a trial may use in the agent phase, `[metadata.resources.limits]` (same list: check-resources.py)
-LIMIT_KEYS = {  # key -> type
+LIMIT_KEYS = {  # key -> type (sizes in GiB)
     "scope": str, "max_gpu_memory_gb": float, "max_memory_gb": float, "max_processes": int, "max_disk_gb": float,
-    "disk_paths": list, "sustain_sec": float, "trial_max_gpu_memory_gb": float, "trial_max_memory_gb": float,
+    "disk_paths": list, "disk_exclude": list, "sustain_sec": float, "window_sec": float,
+    "trial_max_gpu_memory_gb": float, "trial_max_memory_gb": float, "measured": str,
 }
+CAP_KEYS = {"cpus": float, "memory_gb": float, "pids": int}   # [metadata.resources.caps] per compose service (§2.10)
+ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §2.10: run-time switch (compose default 0 = record only; 1 = a violation fails)
 LIMIT_SCOPES = {"privileged": "trial", "standard": "agent", "standard-realtime": "agent"}   # §2.10: who the limits bind
 LIMITS_HEADING = "## Resource limits"
 
@@ -188,6 +191,7 @@ def resources_for(task: Path) -> dict | None:
         return None
     out: dict = {}
     limits: dict = {}
+    caps: dict = {}
     rules = tomllib.loads(RESOURCES_FILE.read_text())
     for rule in rules.get("rule", []):
         if re.search(rule["match"], task.name):
@@ -195,14 +199,21 @@ def resources_for(task: Path) -> dict | None:
     for rule in rules.get("limit", []):
         if re.search(rule["match"], task.name):
             limits.update({k: v for k, v in rule.items() if k != "match"})
+    for rule in rules.get("cap", []):
+        if re.search(rule["match"], task.name):
+            caps.update({k: v for k, v in rule.items() if k != "match"})
     if not out:
         return None
     unknown = (set(out) - set(RESOURCE_KEYS)) | (set(limits) - set(LIMIT_KEYS))
     missing = [k for k in RESOURCE_KEYS if k not in out and not (k == "recommended_gpu" and not out.get("gpu_required"))]
     missing += [f"limits.{k}" for k in LIMIT_KEYS if k not in limits]
+    missing += ["caps.main"] if "main" not in caps else []
+    unknown |= {f"caps.{s}.{k}" for s, c in caps.items() for k in set(c) - set(CAP_KEYS)}
+    missing += [f"caps.{s}.{k}" for s, c in caps.items() for k in CAP_KEYS if k not in c]
     if unknown or missing:
         raise RuntimeError(f"{task.name}: scripts/task_resources.toml gives unknown keys {sorted(unknown)} / misses {missing}")
     out["limits"] = {k: LIMIT_KEYS[k](limits[k]) for k in LIMIT_KEYS}
+    out["caps"] = {svc: {k: CAP_KEYS[k](c[k]) for k in CAP_KEYS} for svc, c in caps.items()}
     if out["limits"]["scope"] != LIMIT_SCOPES[mode_of(task)]:
         raise RuntimeError(f"{task.name}: limits scope must be {LIMIT_SCOPES[mode_of(task)]!r} (PROTOCOL §2.10)")
     return out
@@ -223,10 +234,15 @@ def resources_block(r: dict) -> str:
     lines += [f"{k} = {_toml_value(r[k])}" for k in RESOURCE_KEYS if k in r]
     if isinstance(r.get("limits"), dict):
         lines += ["", "[metadata.resources.limits]",
-                  "# agent-phase limits; exceeding one fails the trial. scope: trial = every container, agent = the agent's container "
-                  "(docs/PROTOCOL.md §2.10)"]
+                  "# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;"
+                  "", f"# enforced from protocol v1.2 when {ENFORCE_ENV}=1 (a violation fails the trial), otherwise recorded only"]
         lines += [f"{k} = {r['limits'][k] if LIMIT_KEYS[k] is int else _toml_value(r['limits'][k])}"
                   for k in LIMIT_KEYS if k in r["limits"]]
+    if isinstance(r.get("caps"), dict):
+        lines += ["", "[metadata.resources.caps]",
+                  "# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)"]
+        lines += [f"{svc} = {{ " + ", ".join(f"{k} = {c[k] if CAP_KEYS[k] is int else _toml_value(c[k])}" for k in CAP_KEYS)
+                  + " }" for svc, c in r["caps"].items()]
     return "\n".join(lines) + "\n"
 
 
@@ -238,7 +254,7 @@ def normalize_resources(task: Path) -> None:
         return
     p = task / "task.toml"
     s = p.read_text()
-    s = re.sub(r"(?ms)^\[metadata\.resources(?:\.limits)?\]\n.*?(?=^\[|\Z)", "", s)
+    s = re.sub(r"(?ms)^\[metadata\.resources(?:\.limits|\.caps)?\]\n.*?(?=^\[|\Z)", "", s)
     m = re.search(r"(?m)^\[metadata\]\n", s)
     if not m:
         raise RuntimeError(f"{task.name}: task.toml has no [metadata] table")
@@ -281,11 +297,12 @@ def render_resources(r: dict) -> list[str]:
 
 def limits_summary(lim: dict) -> str:
     who = "every container of the trial" if lim["scope"] == "trial" else "the agent's container"
-    gpu = f"{_num(lim['max_gpu_memory_gb'])} GB GPU memory" if float(lim["max_gpu_memory_gb"]) > 0 else "no GPU"
-    return (f"{who}: {gpu}, {_num(lim['max_memory_gb'])} GB memory, {int(lim['max_processes'])} processes, "
-            f"{_num(lim['max_disk_gb'])} GB written under {', '.join(f'`{d}`' for d in lim['disk_paths'])}; "
-            f"sustained {_num(lim['sustain_sec'])} s. Expected peak of the whole trial: "
-            f"{_num(lim['trial_max_gpu_memory_gb'])} GB GPU memory, {_num(lim['trial_max_memory_gb'])} GB memory")
+    gpu = f"{_num(lim['max_gpu_memory_gb'])} GiB GPU memory" if float(lim["max_gpu_memory_gb"]) > 0 else "no GPU"
+    return (f"{who}: {gpu}, {_num(lim['max_memory_gb'])} GiB memory, {int(lim['max_processes'])} processes, "
+            f"{_num(lim['max_disk_gb'])} GiB of new files under {', '.join(f'`{d}`' for d in lim['disk_paths'])}; "
+            f"{_num(lim['sustain_sec'])} s within {_num(lim['window_sec'])} s. Expected peak of the whole trial: "
+            f"{_num(lim['trial_max_gpu_memory_gb'])} GiB GPU memory, {_num(lim['trial_max_memory_gb'])} GiB memory. "
+            f"Limits measured: {lim['measured']}")
 
 
 def sidecars_of(task: Path) -> list[str]:
@@ -294,31 +311,34 @@ def sidecars_of(task: Path) -> list[str]:
     return [s for s in re.findall(r"^  ([A-Za-z0-9_.-]+):\s*$", c, re.M) if s != "main" and not s.startswith("rcb_")]
 
 
+def _paths(ps: list[str]) -> str:
+    q = [f"`{p}`" for p in ps]
+    return q[0] if len(q) == 1 else ", ".join(q[:-1]) + " and " + q[-1]
+
+
 def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None = None) -> str:
     """instruction.md's `## Resource limits` from `[metadata.resources.limits]` (PROTOCOL §2.10)."""
     gpu_gb = float(lim["max_gpu_memory_gb"])
-    disk = " / ".join(f"`{d}`" for d in lim["disk_paths"])
-    rest = (f"**{_num(lim['max_memory_gb'])} GB of memory**, **{int(lim['max_processes'])} processes** and "
-            f"**{_num(lim['max_disk_gb'])} GB** of files written under {disk}")
+    gpu = f"**{_num(gpu_gb)} GiB of GPU memory**, " if gpu_gb > 0 else ""
+    amounts = (f"at most {gpu}**{_num(lim['max_memory_gb'])} GiB of memory**, **{int(lim['max_processes'])} processes** "
+               f"and **{_num(lim['max_disk_gb'])} GiB** of new files under {_paths(lim['disk_paths'])}")
     if lim["scope"] == "agent":
-        gpu = f"**{_num(gpu_gb)} GB of GPU memory**, " if gpu_gb > 0 else ""
-        text = ("These limits apply to your agent environment, your own container (the simulator in the `sim` service "
-                f"is the benchmark's and does not count): at most {gpu}{rest}."
-                + ("" if gpu_gb > 0 else " Your container has no GPU."))
+        text = ("Limits for your agent environment, your own container only (the simulator in the `sim` service is the "
+                f"benchmark's and does not count): {amounts}; your container has no GPU." if gpu_gb == 0 else
+                "Limits for your agent environment, your own container only (the simulator in the `sim` service is the "
+                f"benchmark's and does not count): {amounts}.")
     else:
-        gpu = f"**{_num(gpu_gb)} GB of GPU memory**, " if gpu_gb > 0 else ""
-        incl = (f", the `{sidecars[0]}` service included" if len(sidecars) == 1 else
-                ", the task's services included" if sidecars else "")
-        text = (f"These limits apply to the whole trial, summed over all its processes{incl}: at most {gpu}{rest}."
-                + ("" if gpu_gb > 0 else " The task has no GPU.") + " Simulators count with everything they use: "
-                "end one before you start another if you would go past a limit.")
+        incl = (f"every simulator you start and the `{sidecars[0]}` service included" if len(sidecars) == 1 else
+                "every simulator you start and the task's services included" if sidecars else "every simulator you start included")
+        text = (f"Limits for the whole trial, all its processes together ({incl}): {amounts}"
+                + ("." if gpu_gb > 0 else "; the task has no GPU."))
     if gpu_gb > 0:
-        text += (" GPU memory counts what a process reserves (JAX, for example, reserves most of the card up front "
-                 "unless told not to).")
-    text += (f" The harness monitors usage; exceeding any limit for more than {_num(lim['sustain_sec'])} s ends the "
-             "trial as a failure (reward 0), whatever the deliverable.")
+        text += " GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to)."
+    text += (f" These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for "
+             f"{_num(lim['sustain_sec'])} s within any {_num(lim['window_sec'] / 60)} minutes, or a process killed for lack of "
+             "memory, ends the trial as a failure (reward 0), whatever the deliverable.")
     if cpus:
-        text += f" Your container's CPU is capped at {_num(cpus)} cores (a cap that slows you down, never a failure)."
+        text += f" CPU is capped at {_num(cpus)} cores for your container; the cap only slows you down."
     return LIMITS_HEADING + "\n" + text + "\n"
 
 

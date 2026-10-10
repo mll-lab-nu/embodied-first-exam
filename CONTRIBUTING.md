@@ -39,10 +39,12 @@ the expected size of the pull request.
    cgroup `memory.stat` and `nvidia-smi` while they run). Add a rule to `scripts/task_resources.toml` (or have the
    generator write `[metadata.resources]`); `scripts/task_conventions.py` writes it into `task.toml` and renders the
    README's `## Compute resources`.
-   Add the resource limits too (PROTOCOL §2.10): a `[[limit]]` rule in the same file (scope `trial` for privileged
-   tasks, `agent` for standard ones; GPU memory, memory, processes, disk, and the whole trial's expected peak).
-   `normalize` writes `[metadata.resources.limits]` and ends `instruction.md` with the `## Resource limits` paragraph the
-   agent reads; exceeding a limit fails the trial, so set them from measured peaks with room for honest work.
+   Add the resource limits and caps too (PROTOCOL §2.10): a `[[limit]]` and a `[[cap]]` rule in the same file (scope
+   `trial` for privileged tasks, `agent` for standard ones; GPU memory, memory, processes, disk in GiB, the whole trial's
+   expected peak, `measured`; docker caps per compose service). `normalize` writes `[metadata.resources.limits]` /
+   `.caps` and ends `instruction.md` with the `## Resource limits` paragraph the agent reads. With enforcement on
+   (`RCB_LIMITS_ENFORCE=1`, v1.2) exceeding a limit fails the trial, so set them a generous margin above measured peaks
+   (e.g. `max(1.5 x peak, peak + 4 GiB)`) and make sure the oracle stays inside them.
 4. Base images: `images/<sim>/Dockerfile`, versioned in `images/<sim>/VERSION`, built and pushed with
    `scripts/build_images.sh` / `scripts/push_images.sh`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
    and build instructions.

@@ -35,7 +35,8 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   machine with exactly these values?
 - Resource limits (PROTOCOL §2.10): would an honest agent stay inside them (one simulator at the task's defaults on the
   largest card it runs on, the tooling's own replay checks, videos it is told to write)? Is the scope `trial` in
-  privileged mode and `agent` in standard modes, and does `instruction.md` end with the rendered paragraph?
+  privileged mode and `agent` in standard modes, and does `instruction.md` end with the rendered paragraph? Does
+  `measured` cite real peaks (and say where there are none)? Do the caps leave the margin of §2.10 above the limits?
 
 ## Human review (oracle `partial` or `none`)
 Review per family (same generator and predicate), at least two instances per family:

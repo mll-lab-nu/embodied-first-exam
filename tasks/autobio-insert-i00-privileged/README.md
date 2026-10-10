@@ -35,7 +35,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: not needed.
 - Measured: author (merged PR #94): CPU-only, 4 CPUs and 8 GB per trial, verifier the same
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; exceeding one fails the trial), every container of the trial: no GPU, 8 GB memory, 512 processes, 10 GB written under `/app`; sustained 60 s. Expected peak of the whole trial: 0 GB GPU memory, 8 GB memory.
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; exceeding one fails the trial), every container of the trial: no GPU, 10 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 10 GiB memory. Limits measured: memory: the [environment] cap 8 GiB, which every past trial ran under (no samples); processes 512 and disk 10 GiB: design defaults, not yet measured.
 
 ## Details
 | | |

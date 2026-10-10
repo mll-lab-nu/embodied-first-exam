@@ -34,7 +34,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: not needed.
 - Measured: memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; exceeding one fails the trial), the agent's container: no GPU, 16 GB memory, 512 processes, 10 GB written under `/app`; sustained 60 s. Expected peak of the whole trial: 0 GB GPU memory, 30 GB memory.
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; exceeding one fails the trial), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 30 GiB memory. Limits measured: memory: agent container docker peak 2.3 GiB over 9 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 22 GiB (docker peak 14.1 GiB, 14 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
