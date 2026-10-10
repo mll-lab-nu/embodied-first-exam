@@ -37,7 +37,7 @@ checkpointed (rows, state hash, the robot's proprio row); after a crash compose 
 replays the journal and continues the SAME episode, never a reset. `python rcb_limited.py end <data dir>` is the shared
 first half of a collect hook."""
 from __future__ import annotations
-import faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
+import errno, faulthandler, json, math, os, re, select, signal, socket, sys, tempfile, threading, time, traceback, zlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Callable
 
@@ -950,7 +950,11 @@ def make_handler(svc: Service):
             deadline = meta.get("request_deadline_unix_s")
             if operation is not None and (not isinstance(operation, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", operation)):
                 return self._json(400, {"error": "invalid operation ID"})
-            if deadline is not None and (not isinstance(deadline, (int, float)) or not math.isfinite(deadline)):
+            try:                             # (math.isfinite raises on a JSON integer beyond the float range)
+                bad_deadline = deadline is not None and (not isinstance(deadline, (int, float)) or not math.isfinite(deadline))
+            except OverflowError:
+                bad_deadline = True
+            if bad_deadline:
                 return self._json(400, {"error": "invalid request deadline"})
             with svc.lock:
                 if deadline is not None and time.time() >= deadline:
@@ -1020,7 +1024,25 @@ def serve(svc: Service, port: int = 8000) -> None:
     if svc.episode is not None:
         svc.spec.setdefault("max_call_wall_s", svc.episode.max_call_wall_s)
     check_spec(svc.spec)
-    HTTPServer(("0.0.0.0", port), make_handler(svc)).serve_forever()
+    bind(port, make_handler(svc)).serve_forever()
+
+
+def bind(port: int, handler) -> HTTPServer:
+    """The listening server. Under Harbor's egress control the agent's container shares this network namespace, so a
+    process of the agent (`python -m http.server` listens on 8000 by default) may hold the port while the scene was
+    built. Wait for the port instead of failing: an exception here would count as a crash of the service, and three of
+    them end the episode. The time spent waiting is the agent's own (the collect hook's signal is still served)."""
+    said = False
+    while True:
+        try:
+            return HTTPServer(("0.0.0.0", port), handler)
+        except OSError as e:
+            if e.errno != errno.EADDRINUSE:
+                raise
+        if not said:
+            said = True
+            print(f"[sim] port {port} is in use (a process in the agent's container?): waiting for it to be free", flush=True)
+        time.sleep(1.0)
 
 
 # ---------------------------------------------------------------- the collect hook's first half

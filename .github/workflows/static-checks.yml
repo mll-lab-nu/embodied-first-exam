@@ -19,3 +19,17 @@ jobs:
         run: bash ci_checks/run_all.sh
       - name: Task conventions (README, task.toml, test.sh are what scripts/task_conventions.py writes)
         run: python3 scripts/task_conventions.py --check tasks/*/
+  # The shared service layers and the benchmarks' service / grader tests on stub simulators (numpy + requests; no
+  # simulator, no image, no GPU): ci_checks/check-unit-tests.sh, second tier. A job of its own, so that the static
+  # checks above do not wait for it.
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: numpy and requests
+        run: python3 -m pip install --quiet numpy requests
+      - name: Unit tests (both tiers)
+        run: bash ci_checks/check-unit-tests.sh --all

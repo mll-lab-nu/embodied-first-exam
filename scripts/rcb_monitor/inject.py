@@ -18,8 +18,9 @@ What it writes (every generated line ends in `# rcb-monitor`, or sits between th
     the declared cap to be that value).
 - task.toml: the record as an artifact of service rcb_monitor, the first `[[verifier.collect]]` hook (seals the record
   before any other sidecar ends the episode), `[verifier.env] RCB_LIMITS_ENFORCE`.
-- tests/: rcb_limits.py and rcb_limits.json (the verifier's own copies), a COPY of both in tests/Dockerfile, and a
-  `trap` in tests/test.sh that runs the verifier step after the grader, whatever the grader does.
+- tests/: rcb_limits.py and rcb_limits.json (the verifier's own copies), a COPY of both in tests/Dockerfile, a
+  `trap` in tests/test.sh that runs the verifier step after the grader, whatever the grader does, and before the grader
+  the line that removes links and special files from the agent's /app/output (rcb_limits.py sanitize).
 """
 from __future__ import annotations
 
@@ -45,6 +46,9 @@ HOOK = ('# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor\'s record
         'timeout_sec = 120\n')
 TRAP = ("trap 'p=$(command -v python3 || command -v python); \"$p\" /tests/rcb_limits.py verify' EXIT   "
         "# resource limits, after the grader (docs/PROTOCOL.md §2.10)")
+# Before the grader: what the agent left under /app/output is untrusted input (rcb_limits.sanitize).
+GUARD = ("p=$(command -v python3 || command -v python); \"$p\" /tests/rcb_limits.py sanitize /app/output || true   "
+         "# the agent's files are untrusted input: no link out of /app/output, no FIFO or device (docs/PROTOCOL.md §2.6)")
 DOCKER_COPY = "# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) " + MARK + "\n" \
     "COPY rcb_limits.py rcb_limits.json /tests/"
 SIDECAR_MODES = ("standard", "standard-realtime")
@@ -318,11 +322,12 @@ def render_toml(s: str) -> str:
 
 
 def render_test_sh(s: str) -> str:
-    lines = [ln for ln in s.splitlines(keepends=True) if "/tests/rcb_limits.py verify" not in ln]
+    lines = [ln for ln in s.splitlines(keepends=True)
+             if "/tests/rcb_limits.py verify" not in ln and "/tests/rcb_limits.py sanitize" not in ln]
     k = next((n for n, ln in enumerate(lines) if re.match(r"\s*rm\s+-[rRf]+\s+/logs/verifier/\*", ln)), None)
     if k is None:
         k = next((n for n, ln in enumerate(lines) if ln.strip() and not ln.lstrip().startswith("#")), len(lines)) - 1
-    lines.insert(k + 1, TRAP + "\n")
+    lines[k + 1:k + 1] = [TRAP + "\n", GUARD + "\n"]
     return "".join(lines)
 
 

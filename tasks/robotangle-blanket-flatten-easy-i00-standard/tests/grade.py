@@ -3,7 +3,8 @@
 crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. Adapted from robot_coding_bench's RoboWits standard
 grader. success = live success AND replay success, and no infrastructure failure; TopoGym's physics runs on the GPU (the
 RoboWits GPU-backend rule): the live and replayed states need not agree bit for bit, so `deterministic` is reported, not
-required. After a live success, a replay that produced no result is a grader error, not the agent's 0; after a live
+required. After a live success, a replay that produced no result is a grader error, not the agent's 0: grader_error = 1
+and infra_error = 1 (PROTOCOL §2.6: infra_error is the field that says "not the agent's failure"); after a live
 failure it changes nothing (a live failure is final). An instance this host could not reconstruct (the service's startup
 check, the replay's, or the binding check here) is an infrastructure error. Numeric-only reward.json. After a live
 success the replay is a grading replay (tooling v16): for the GPU families, if the episode has not ended after the last
@@ -29,7 +30,8 @@ if not os.path.exists(p):
     write(False, {"success": 0, "missing_log": 1, "infra_error": 1, "grader_error": 0}); raise SystemExit   # the service never started
 try:
     d = json.loads(Path(p).read_text())
-except ValueError:
+    if not isinstance(d, dict): raise ValueError("final.json is not an object")
+except (OSError, ValueError):
     write(False, {"success": 0, "missing_log": 1, "infra_error": 1, "grader_error": 1}); raise SystemExit
 gpu = True  # CUDA physics: determinism reported, not required
 # infrastructure: the service gave up after crashes it caused (sim_crashed, resume_failed), the GPU was lost, the simulation
@@ -97,7 +99,9 @@ write(credited, {"success": int(credited), "success_pending_review": int(pending
            "sim_steps": num("control_steps"), "physics_steps": num("physics_steps"), "steps": num("steps"), "elapsed_s": num("elapsed_s", float),
            "replay_wall_s": num("replay_wall_s", float), "video_rendered": int(bool(d.get("video"))), "gpu_lost": int(bool(d.get("gpu_lost"))),
            "replay_hold_steps": num("replay_hold_steps"), "replay_tolerance_needed": int(bool(d.get("replay_tolerance_needed"))),
-           "infra_error": int(infra), "simulator_instability": int(bool(d.get("simulator_instability"))),
+           # a grader error (the replay after a live success left no result) is not the agent's failure either:
+           # infra_error is the field every reader of a standard result looks at (PROTOCOL §2.6)
+           "infra_error": int(infra or grader_error), "simulator_instability": int(bool(d.get("simulator_instability"))),
            "gave_up": int(bool(d.get("gave_up"))), "sim_startups": num("sim_startups"), "resumes": num("resumes"),
            "resume_state_mismatch": num("resume_state_mismatch"), "resume_max_tcp_dev_m": num("resume_max_tcp_dev_m", float),
            "resume_max_joint_dev": num("resume_max_joint_dev", float), "instance_mismatch": int(mismatch),

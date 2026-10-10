@@ -53,3 +53,5 @@ and the video can neither change nor cost it (`docs/benchmarks/libero-max.md`, "
     unreadable; the verdict rule is the same.
   - Checked with a stubbed simulator (encoder, render and disk failures, a crash and a hang after the verdict, the
     budget) and one reference replay in the real simulator (same final state hash with the video as without).
+- 2026-10-10 (2): the sim service (`environment/sim/rcb_service.py`) refuses a negative `Content-Length` unread (400; it
+  read until the client hung up). Nothing else changes; the task keeps its name.
