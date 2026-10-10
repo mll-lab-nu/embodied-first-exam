@@ -1,0 +1,34 @@
+# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# Isaac Sim needs an RTX-class NVIDIA GPU even headless (PhysX itself runs on the CPU). The sidecar is TRUSTED: Kit's
+# caches stay inside its own container, which the agent cannot reach.
+# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# container (same container, same /data) and the service replays its journal into the same episode, never a reset.
+# RCB_STARTUP_TIMEOUT_S: the startup watchdog, more than twice the slowest measured start with empty caches (the
+# service starts with the renderer and renders a first frame before it answers; docs/benchmarks/labutopia.md).
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/mll-lab-nu/eai-labutopia:0.1.0
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /tmp
+    command: sh /srv/run.sh
+    restart: on-failure:6          # N >= 3 (PROTOCOL §4.1); a resume continues the episode
+    environment:
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TOOL: /srv/rcb_labutopia.py
+      RCB_DATA: /data
+      RCB_WALL_CLOCK_S: "5400"
+      RCB_STARTUP_TIMEOUT_S: "2400"
+      PYTHONPATH: /srv
+      RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

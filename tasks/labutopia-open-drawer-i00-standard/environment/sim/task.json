@@ -1,0 +1,15 @@
+{
+ "task_text": "Open the top drawer of the cabinet (the upper of its two drawers) and let go of it. Success the moment the drawer's handle has been more than 12 cm from where it started, with the gripper more than 4 cm away from the handle (measured from the point between the fingertips to the handle's centre), for one second (60 control steps in a row).",
+ "default_cameras": [
+  "camera_1",
+  "camera_2",
+  "wrist_cam"
+ ],
+ "static": {
+  "inventory": [
+   "grey cabinet with a white top, about 67 x 76 x 79 cm",
+   "two drawers with bar handles (the upper one is the target)",
+   "two doors below the drawers"
+  ]
+ }
+}
