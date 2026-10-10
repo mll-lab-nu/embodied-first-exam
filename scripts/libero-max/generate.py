@@ -48,7 +48,14 @@ HOSTS = [
 ]  # fmt: skip
 SUITE_MAX_STEPS = {"libero_spatial": 220, "libero_object": 280, "libero_goal": 300, "libero_10": 520}
 SUITE_SHORT = {"libero_spatial": "spatial", "libero_object": "object", "libero_goal": "goal", "libero_10": "long"}
-STD_CAP = 9000  # standard: technical episode cap (the grading replay must fit the collect hook's timeout)
+STD_CAP = 9000  # standard: technical episode cap (the grading replay must fit the collect hook's wait)
+# The collect hook's wait for the grading replay's verdict (finalize.sh RCB_COLLECT_WAIT_S; "Collect budget" in
+# docs/benchmarks/libero-max.md): STD_CAP steps x 0.5 s on a busy host + 180 s to build the scene + 240 s of video
+# (lmx_tool.VIDEO_BUDGET_S) = 4920 s, 480 s to spare. The hook's timeout adds 180 s (the PID file) and 120 s.
+COLLECT_WAIT_S = 5400
+COLLECT_TIMEOUT_S = 180 + COLLECT_WAIT_S + 120
+if f"RCB_COLLECT_WAIT_S:-{COLLECT_WAIT_S}}}" not in (SHARED / "standard/finalize.sh").read_text():
+    raise SystemExit("shared/standard/finalize.sh: RCB_COLLECT_WAIT_S's default differs from COLLECT_WAIT_S")
 IMAGE_HW = 256
 MS_STEP, MS_FRAME = 20, 70  # measured in eai-libero-max on the reference machine (docs/benchmarks/libero-max.md)
 
@@ -313,6 +320,8 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
         "rot_scale": f"{ctl['output_max'][3]:g}",
         "max_steps": SUITE_MAX_STEPS[case["task_suite_name"]],
         "std_cap": STD_CAP,
+        "collect_wait": COLLECT_WAIT_S,
+        "collect_timeout": COLLECT_TIMEOUT_S,
         "robot_seconds": round(STD_CAP / ctl["control_freq"]),
         "seed": case["policy_seed"],
         "image": IMAGE,

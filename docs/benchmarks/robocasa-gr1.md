@@ -10,7 +10,7 @@ RoboCasa's [GR1 tabletop tasks](https://github.com/robocasa/robocasa-gr1-tableto
 | tasks | `tasks/robocasa-gr1-<task>-i00-privileged` and `tasks/robocasa-gr1-<task>-i00-standard`, 24 each |
 | metadata | `simulator = "robosuite"`, `robot = "fourier-gr1"` (to be added to TAXONOMY), `family = "robocasa-gr1/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa-gr1:0.1.0` (`images/robocasa-gr1/`), CPU only, ~24 GB |
-| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py` as in the HumanoidBench tasks |
+| standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
 | generator | `scripts/robocasa-gr1/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
 
 ## Scope
@@ -53,7 +53,9 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
 
 ## Standard-mode service
 `images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's (PR #22, not merged
-yet): derived from `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks.
+yet): derived from `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect
+hook is `scripts/robocasa-gr1/shared/finalize.sh`; both files are RoboCasa's byte for byte
+(`docs/benchmarks/robocasa.md`: verdict final before the video, the hook's budget, request validation).
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs. The image

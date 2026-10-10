@@ -21,12 +21,29 @@ Task-contact penetration is evidence, not a verdict (tooling v16): a success dur
 `success_pending_review` 1, the events in verdict.json `evidence.review` and frames around them in review_frames/ (one more
 replay, after the verdict and the video); a clean success is credited. Forcing (rcb_topogym.FORCING, each replay's status
 "forcing") is evidence only: verdict.json `evidence.forcing`, `forcing_events`, and frames around it when a success is held.
+Limits (2026-10-10): a trajectory has at most rcb_topogym.MAX_STEPS rows (RCB_MAX_STEPS, set per task in tests/Dockerfile
+and environment/Dockerfile so that two replays fit the verifier's timeout; a longer one is bad_trajectory); the replay
+Session's own runaway guard sits above that, so the hold after the last row always has room. The review-frame pass is
+skipped when the verifier's time (RCB_VERIFIER_BUDGET_S, the task's [verifier] timeout_sec) would not cover it: the
+verdict is committed by then, and the events stay in verdict.json. An instance this host cannot reconstruct
+(instance_mismatch) is an infrastructure error (infra_error 1), not the agent's 0.
 """
 from __future__ import annotations
 import argparse, json, os, sys, time, traceback
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
+T_START = time.time()
+try:      # the task's [verifier] timeout_sec (tests/Dockerfile); 0: unknown, nothing is skipped
+    BUDGET_S = float(os.environ.get("RCB_VERIFIER_BUDGET_S") or 0)
+except ValueError:
+    BUDGET_S = 0.0
+HOLD_ROOM = 1000     # control steps of room above MAX_STEPS for the grading hold (2 s: at most 80)
+
+
+def review_pass_fits(one_pass_s: float) -> bool:
+    """Whether one more replay pass (the review frames) fits what is left of the verifier's time, with a margin."""
+    return not BUDGET_S or (time.time() - T_START) + 1.25 * one_pass_s + 300 <= BUDGET_S
 
 
 def write(ok: bool, out: dict, *, evidence=None) -> None:
@@ -66,9 +83,9 @@ def main() -> int:
         pass
     os.environ["RCB_SESSION_LOG"] = ""  # the verifier's own sessions must not be counted
     if not os.path.isfile(a.traj):
-        write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0, **cost}); return 0
+        write(False, {"success": 0, "missing_trajectory": 1, "infra_error": 0, "grader_error": 0, **cost}); return 0
     s = None
-    from rcb_topogym import Session, InvalidTrajectory, InstanceMismatch, load_trajectory, atomic_json, strict_goal
+    from rcb_topogym import Session, InvalidTrajectory, InstanceMismatch, load_trajectory, atomic_json, strict_goal, MAX_STEPS
     try:
         inst = json.load(open(a.instance))  # trusted input failure remains infrastructure failure
         if type(inst.get("action_dim")) is not int or not 0 < inst["action_dim"] <= 1024:
@@ -77,11 +94,11 @@ def main() -> int:
             acts, _ = load_trajectory(a.traj, a.family, int(inst["action_dim"]), layout=inst["action_layout"])
         except InvalidTrajectory as exc:
             atomic_json(os.path.join(LOG_DIR, "submission_error.json"), {"error": str(exc)})
-            write(False, {"success": 0, "bad_trajectory": 1, "grader_error": 0, **cost})
+            write(False, {"success": 0, "bad_trajectory": 1, "infra_error": 0, "grader_error": 0, **cost})
             return 0
         if a.repeat < 2:
             raise ValueError("grading requires at least two replays")
-        s = Session(a.family, instance=a.instance, strict=True)
+        s = Session(a.family, instance=a.instance, strict=True, max_steps=MAX_STEPS + HOLD_ROOM)
         # A frozen PBD state prepared on another GPU is generated from the instance's recipe on this one (instance_generated)
         generated = bool(getattr(s, "instance_generated", False))
         # A CPU of another instruction-set class realizes the frozen recipe's assets with other bytes (instance_realized)
@@ -151,6 +168,8 @@ def main() -> int:
             write(credited, out, evidence=evidence)
         if pending:      # frames around the review and forcing events, for the reviewer (one more replay; the verdict is committed)
             try:
+                if not review_pass_fits(out["replay_wall_s"] / len(outs)):
+                    raise TimeoutError("skipped: not enough verifier time left for one more replay pass")
                 k = next(i for i, r in enumerate(reviews) if r)
                 events = reviews[k]["events"] + ((forcing[k] or {}).get("events") or [])
                 files = s.render_review_frames(acts, events, os.path.join(LOG_DIR, "review_frames"))
@@ -160,7 +179,8 @@ def main() -> int:
             write(credited, out, evidence=evidence)
     except InstanceMismatch as exc:
         atomic_json(os.path.join(LOG_DIR, "instance_error.json"), {"error": str(exc)})
-        write(False, {"success": 0, "instance_mismatch": 1, "grader_error": 0, **cost})
+        # this host cannot reconstruct the frozen instance: not evaluable here, an infrastructure error, never the agent's 0
+        write(False, {"success": 0, "instance_mismatch": 1, "infra_error": 1, "grader_error": 0, **cost})
     except Exception:
         traceback.print_exc(file=sys.stderr)
         # Never overwrite a committed verdict because compatibility/media publication failed.
