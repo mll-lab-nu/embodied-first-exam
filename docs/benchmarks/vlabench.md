@@ -11,13 +11,12 @@ on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 | image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
 | standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + `scripts/vlabench/shared/standard/server.py` |
 | standard client | the shared client base and exact pins of `scripts/eai_standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
-| generator | `scripts/vlabench/` (`import_pr4.py` → `frozen/`, `freeze.sh` → `frozen/report.json`, `generate.py` → `tasks/`, finished with `scripts/task_conventions.py`; `generate.py --check`) |
+| generator | `scripts/vlabench/` (`frozen/`: the instances and references, imported from PR #4 @ ad3c510; `freeze.sh` → `frozen/report.json`, `generate.py` → `tasks/`, finished with `scripts/task_conventions.py`; `generate.py --check`) |
 
 ## Scope
 VLABench @ cf588fe has 96 native tasks that PR #4 surveyed. A task is in when it has a reference solution that this
 benchmark re-verifies on its frozen instance (`scripts/vlabench/freeze.sh`) and whose instruction identifies the task:
-36 tasks. Left out, with the reason per task in `scripts/vlabench/tasks.json` (`excluded`, `dropped`) and
-`scripts/vlabench/frozen/report.json`:
+36 tasks. Left out, with the reason per task in `scripts/vlabench/tasks.json` (`excluded`, `dropped`):
 - 41 with no reference: VLABench's own expert sequence does not reach the task's success on the frozen instance;
 - 13 that could not be frozen (the scene does not build or does not reset bit-exactly);
 - 3 whose PR #4 "reference" is a recorded failure (complex_seesaw_use, hammer_loose_nail, set_dining_table);
@@ -98,8 +97,6 @@ client and the verifier (`grade.py`: `success = live_success ∧ replay_success 
 ```bash
 docker build -t ghcr.io/mll-lab-nu/eai-vlabench:$(cat images/vlabench/VERSION) \
     -f images/vlabench/Dockerfile .                  # from the repository root; ~15 GB
-git fetch origin refs/pull/4/head                 # PR #4 was closed without merging; GitHub keeps its head ad3c510
-python3 scripts/vlabench/import_pr4.py            # one-off: instances and references from PR #4 @ ad3c510
 bash scripts/vlabench/freeze.sh                   # re-verify them in the image -> scripts/vlabench/frozen/report.json
 python3 scripts/vlabench/generate.py              # -> tasks/vlabench-* (normalized); removes stale vlabench-* dirs
 python3 scripts/vlabench/generate.py --check      # tasks/ is exactly what it writes
@@ -109,11 +106,11 @@ bash ci_checks/run_all.sh tasks/vlabench-*
 ```
 
 ## Evidence
-`scripts/vlabench/frozen/report.json` (written by `freeze.sh`), for all 39 verified candidates (the 36 tasks and the 3
-dropped in review): the instance rebuilds with matching
+`scripts/vlabench/frozen/report.json` (written by `freeze.sh`), for the 36 tasks: the instance rebuilds with matching
 model and initial-state hashes and is not solved at the start; `reset()` is bit-exact; the reference ends with the
 task's success at its last step; two replays in fresh processes end in the live state's hash and succeed. The 3
-candidates that failed (their PR #4 references are recorded failures) are in the same file.
+tasks dropped in review verified the same way; the 3 whose PR #4 references are recorded failures did not (their
+frozen inputs and report entries are not kept, `tasks.json` `dropped`).
 
 Harbor runs on the digests before the review fixes (PROTOCOL v1.0.1 names and README layout; AMD Ryzen 9 7950X,
 Docker, no GPU; the fixes since change only the instruction text, the READMEs, the `task.toml` descriptions, the

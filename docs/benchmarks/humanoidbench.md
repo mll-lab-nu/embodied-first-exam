@@ -192,13 +192,12 @@ its model-API key in its container, so it could call a search-enabled model thro
 ## Run
 
 ```bash
-harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-hurdle-i00-standard
+harbor run -p tasks/humanoidbench-loco-hurdle-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
-harbor run -c scripts/humanoidbench/configs/codex-openrouter.yaml --env-file .env -p tasks/humanoidbench-loco-walk-i00-standard-realtime
+harbor run -p tasks/humanoidbench-loco-walk-i00-standard-realtime -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard-realtime -a oracle   # streams the same 999 rows
 ```
-`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
-`codex-gpt6_luna-medium`). Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
+Agent, provider and effort settings: docs/RUNNING.md. Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
 with none (one episode), whose results are reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-humanoidbench:$(cat images/humanoidbench/VERSION) .` (from the
 repository root).

@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `topogym-fiber-bundling-hard-i00-privileged` (same frozen instance): the agent gets only the `eai-standard/2.3` client
-(docs/rcb/STANDARD_MODE_2_2.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
+(docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the
 sidecar), which owns the scene and records the episode as a (T, 8) trajectory; its collect hook
 (`environment/sim/finalize.sh`) replays the trajectory once in a fresh process for success, rendering the video during
 that replay. The verifier runs in a separate sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against

@@ -5,9 +5,9 @@ tasks/robowits-<family>-i00-standard (eai-standard/2.2), on the same frozen inst
 usage: python3 scripts/robowits/mk_tasks.py [--check] [--list] [--instance PATH] [family ...]
   no family     every family whose status is "pr" in families.py
   --check       write nothing; exit 1 if a task would change (re-running the generator must give no diff)
-  --list        print the family table (status, oracle, why a family is pending or dropped)
-  --instance    the frozen instance of a family that has no task directory yet (one family only), e.g. a pending
-                family's tasks/robowits-<family>-i00/environment/instance.json from dev/qineng 9eb18edf. A new family's
+  --list        print the family table (status, oracle, why a family was dropped)
+  --instance    the frozen instance of a family that has no task directory yet (one family only), e.g.
+                tasks/robowits-<family>-i00/environment/instance.json from dev/qineng 9eb18edf. A new family's
                 instance is made in the image:
                   docker run --rm --gpus all -v $PWD:/w <IMAGE> bash -c "cd /tmp && python /w/scripts/robowits/shared/rcb_robowits.py \\
                     make-instance --task <family> --eval-index <i> --out /w/<dir>/instance.json"

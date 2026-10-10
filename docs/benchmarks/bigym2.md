@@ -128,7 +128,7 @@ docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/eai-bigym2:$(cat 
 docker run --rm --gpus all --network none -e NVIDIA_DRIVER_CAPABILITIES=all -v "$PWD/scripts/bigym2:/w" -w /w \
   ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) python make_instances.py --check   # instances/ rebuild
 python3 scripts/bigym2/gen_tasks.py check          # tasks/ is what the generator writes (`render` rewrites it)
-harbor run -c scripts/bigym2/configs/codex-openrouter.yaml --env-file .env -p tasks/bigym2-flip-cup-i00-standard
+harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/RUNNING.md
 ```
 
 ## Measured (2026-10-08, RTX 4090, host load ~25 on 32 cores)

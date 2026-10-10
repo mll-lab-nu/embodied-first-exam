@@ -16,9 +16,9 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
   `rm -rf /logs/verifier/*` first in `test.sh`, no `results/`) and then synced into `tasks/`. Re-running it leaves
   `git diff tasks/` empty; `--check` only compares.
 - A family is RoboLab's benchmark task of that name, its success predicate RoboLab's own `success` termination term.
-  `families.json` holds 88 frozen families; 53 have tasks (`tasks: true`): the 2 with a reference solution and the 51 with
-  a graded positive example. The other 35 have no positive yet (PROTOCOL §2.7 needs one before review) and stay out
-  until they do; their entries and instances are kept.
+  `families.json` holds the 53 families that have tasks: the 2 with a reference solution and the 51 with
+  a graded positive example. 35 further RoboLab tasks were frozen but have no positive yet (PROTOCOL §2.7 needs one
+  before review); their entries and instances are not kept here (repository history, 9621e47d1).
 - The frozen instance is the full scene state after RoboLab's canonical seeded reset (`env.reset()` twice, as RoboLab's
   evaluation loop does), with its state hash, made in the image by `rcb_robolab.py make-instance --task <f> --seed 0`;
   the tasks carry it in `environment/` and `tests/` (privileged) and `environment/sim/` (standard). Each instance was
@@ -136,7 +136,7 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
 
 The tooling records (T, 8) actions (7 joint targets + the binary gripper command) at 15 Hz. Every copy of the tooling and
 of the standard sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh`); the tooling's TASKS
-registry lists all 88 frozen families, so adding a family later does not change existing tasks.
+registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 without a positive), so adding a family later does not change existing tasks.
 
 ## Declarations
 - **Tooling: thin wrappers only.** Differential-IK moves, joint moves, gripper, hold, plus the frozen instance, state,

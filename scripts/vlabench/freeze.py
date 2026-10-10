@@ -1,6 +1,6 @@
 """Verify the VLABench frozen instances and oracles (trusted authoring step; run it through freeze.sh).
 
-For every candidate in tasks.json (frozen/<task>/instance.json and oracle.npy, imported by import_pr4.py), in the
+For every candidate in tasks.json (frozen/<task>/instance.json and oracle.npy, imported from PR #4, commit ad3c5109), in the
 eai-vlabench image:
 1. the instance rebuilds: the compiled model's and the initial state's hashes match the instance (vlb_tool.Session);
 2. it is not solved at the start, and reset() is bit-exact (a step, then reset, gives the initial state again);
