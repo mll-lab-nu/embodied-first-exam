@@ -38,4 +38,12 @@ if [ -f "$root/scripts/bigym2/gen_tasks.py" ]; then   # BiGym 2.0 (its tasks pul
   if out=$(python3 "$root/scripts/bigym2/gen_tasks.py" check 2>&1); then echo "ok scripts/bigym2/gen_tasks.py: ${out##*$'\n'}"
   else echo "FAIL scripts/bigym2/gen_tasks.py check:"; echo "$out" | tail -n 40; rc=1; fi
 fi
+if [ -f "$root/scripts/labutopia/generate.py" ]; then   # LabUtopia (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/labutopia/generate.py" --check 2>&1); then echo "ok scripts/labutopia/generate.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/labutopia/generate.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
+if [ -f "$root/scripts/autobio/generate.py" ]; then   # AutoBio (its tasks pull request adds the generator)
+  if out=$(python3 "$root/scripts/autobio/generate.py" --check 2>&1); then echo "ok scripts/autobio/generate.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/autobio/generate.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
 exit $rc

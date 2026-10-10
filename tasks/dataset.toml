@@ -6081,3 +6081,147 @@ digest = "sha256:10d880d18b447094a4275f90cd599e6104adf8afe7acb9a2cb3e4405447f20e
 name = "robot-coding-bench/yamlab-put-pot-on-cooktop-i24-standard"
 digest = "sha256:9bf843a16113c2552df17107576ef3b518d67355959691e099de75512d90b3fd"
 
+[[tasks]]
+name = "robot-coding-bench/labutopia-heat-liquid-i00-privileged"
+digest = "sha256:af7aefb70fc9b7de5389dcad3d76c615417b2e27cdd4e923b9a4b0d63aba4164"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-heat-liquid-i00-standard"
+digest = "sha256:165c5e9f5368026de050117e640c6960584dfceaf5b6f43bb6808f3ca1909d19"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-open-close-i00-privileged"
+digest = "sha256:a15806d85ab0049715f74b376700a55733152f8c26958109225c7fc50213e0b2"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-open-close-i00-standard"
+digest = "sha256:4c6dc92c431524cb0ea9acbddcdd9b5d936fd740f37db1d6ec0682618b64d214"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-open-door-i00-privileged"
+digest = "sha256:d01e1bb393f3ca8e2069b81ba0dd0a856312065d9757ef9a5046d8a3835ebcf8"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-open-door-i00-standard"
+digest = "sha256:3a6a87ffe7a813cd86cf254c7734cb611429efdfd942e724ca9224ea6d096b9b"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-open-drawer-i00-privileged"
+digest = "sha256:3ff211be4987bb366d6e272851e46f7af4f7e19c1d0aeaab6466a3fd351e8f4a"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-open-drawer-i00-standard"
+digest = "sha256:b452e02cadf77106a899dc9ab7a6541f9d61ce5a96fd9fb5bd6329b1ff0ddd02"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-pick-i00-privileged"
+digest = "sha256:7cb490f443fef80956254f78525fdff4bb3c1f7086f354c3546948c21fe261f3"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-pick-i00-standard"
+digest = "sha256:02d7195a2434b131affef552170cde31516b2e288e995fac9f7b0aa29a9d030e"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-place-i00-privileged"
+digest = "sha256:b8d11a6841143a636d88570464a7f1d478f63337fa636eb5e47c1bedadf0f3b8"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-place-i00-standard"
+digest = "sha256:8e71fd983fdca64f62d476636874234475ede6a7191b841433ed0619be8c5ee2"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-pour-i00-privileged"
+digest = "sha256:c6be768b91fb40d313b6df67198626c408c6dcbb8b4461e8758d0ed3b2219690"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-pour-i00-standard"
+digest = "sha256:75357a13eeb755ae74031eb8e5cc610ab99f7041009e2d8d84ec7fff1ca88545"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-press-i00-privileged"
+digest = "sha256:0bea43f47f146bb321fd0a2b54eebc5b00ae670f92fe9c54eaba4a501259a569"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-press-i00-standard"
+digest = "sha256:fa2cb33b9ab28acbefa239e57b5ba9c1dba4d482a488225b83c988368890f88b"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-shake-i00-privileged"
+digest = "sha256:bbc8f897d44222371e0dbb6782f611317a4554a646ba5d53023fb32c117a48c1"
+
+[[tasks]]
+name = "robot-coding-bench/labutopia-shake-i00-standard"
+digest = "sha256:2b86294d8ab267b72faa970f4c6e61c4eec0be8b29adf15928ee011fee212c74"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-insert-centrifuge-5430-i00-privileged"
+digest = "sha256:1a2ae0fc73a1876e89853c29d1199b9a5150cc45c895cb48ff35c973f09eff2f"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-insert-centrifuge-5430-i00-standard"
+digest = "sha256:b674fa05cddcdf223ae6bc977f33b16815c8e87e426ae16b743453142f2d5a8a"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-insert-i00-privileged"
+digest = "sha256:e5062226f63e38bb86af4c758a7167fe7685986966118598e1dc7c33bb7e7280"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-insert-i00-standard"
+digest = "sha256:08a722bfbf3437d3920c09c46ac762c989e04b873eb8d31e0867bfab0a2e990d"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-pickup-i00-privileged"
+digest = "sha256:c0dbc3718b4da5fa1731dedb5885cf6e1d4a4586f2b5e9f5c428c63976227995"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-pickup-i00-standard"
+digest = "sha256:bd23162ba2763e9d65a9cb7f327d8245c91768af6df56311f1281c0af50bbe69"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-pipette-i00-privileged"
+digest = "sha256:eb82fe39670d39215bf1a8485b9144a5691938ef3bdb1d5a552430f66b9e0388"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-pipette-i00-standard"
+digest = "sha256:ac922aeef0b5c5123b38a80c12b54dee423a7750a2cd61e1d3d5ea02bacc71be"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-screw-loose-i00-privileged"
+digest = "sha256:f1f839acc90b46588d71924bddc492fef8decae32d235794abcef27d335dd4a8"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-screw-loose-i00-standard"
+digest = "sha256:464b47a53a382fc0b5ea9149c613fcfc6e14ea0124d679af25230bdcbd6c40bd"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-screw-tighten-i00-privileged"
+digest = "sha256:d0edd80c424f56867f978ad6703ec15ad41bce061a4716bbfbe75421ef449bf8"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-screw-tighten-i00-standard"
+digest = "sha256:6efe5f6d2eaf4e7488b11fb37b7d8898ba560830b63a2c60d9116a9a25164ad6"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-cycler-close-i00-privileged"
+digest = "sha256:fa84274d62a50cf4816673d0a854c6e034b91523e3fe375a1c0c7b202bf86fa1"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-cycler-close-i00-standard"
+digest = "sha256:0df22bb6b44963786c7533734184482ad1c3ec38a9db5ee09febf4408e04a133"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-cycler-open-i00-privileged"
+digest = "sha256:cbc834c978c8d779f0e5e9bb43a768d69f2b2db8757d8224790aadd7b7167ea4"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-cycler-open-i00-standard"
+digest = "sha256:f51a5bfe9f49ed93c5926b3f69bba9fadce4e1547df967974f24ae971cfda2bf"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-mixer-i00-privileged"
+digest = "sha256:a3852ae175321fe7130f85419a745363b3272d78bdbc331a9777befa4c98145d"
+
+[[tasks]]
+name = "robot-coding-bench/autobio-thermal-mixer-i00-standard"
+digest = "sha256:68f1cefd6354d4c4ecaac7e717e36152bea84c99eb2175b1dc0dfccf101c7aa0"
+

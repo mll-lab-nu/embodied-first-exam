@@ -47,6 +47,8 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robowits-", "RoboWits"), ("robopaint-", "RoboPaint"), ("robolab-", "RoboLab"),
     ("behavior-", "BEHAVIOR-1K"), ("maniguard-", "ManiGuard"),
     ("molmospaces-", "MolmoSpaces"), ("myosuite-", "MyoSuite"), ("dexjoco-", "DexJoCo"),
+    ("labutopia-", "LabUtopia"),
+    ("autobio-", "AutoBio"),
     ("vlabench-", "VLABench"),
     ("robocasa-gr1-", "RoboCasa-GR1"),  # before "robocasa-": the first matching prefix wins
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
