@@ -37,6 +37,18 @@ and writes the reward fields (the safety fields, upstream's own verdicts, `infra
 
 No oracle; human review in the pull request that adds this task (PROTOCOL §2.7: per task, this task and its twin, a positive example and the `nop` result).
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 6 | 6 |
+| Memory | 23 GB | 22 GB |
+| GPU memory | 10.5 GB | 10.5 GB |
+
+- GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: L40S 48GB / L4 24GB / RTX 4090 24GB.
+- Measured: one standard trial: sim anon memory 17.5 GB, start-up CPU bursts to 29 cores, GPU 3.6 GB 15 min in, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + mll-4090-1, 10-10); GPU memory and CPU from BEHAVIOR-1K (same OmniGibson / Isaac Sim stack) until more trials are measured; verifier 15.8 GB docker memory, mem_guard (docker memory per container, mll-4090-1, 10-02..10)
+
 ## Details
 | | |
 |---|---|

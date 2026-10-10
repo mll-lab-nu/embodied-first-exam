@@ -31,6 +31,18 @@ on the final state: for the one of the 2 target objects nearest to the robot bas
 the verdict. No oracle; human review in PR #47 (PROTOCOL §2.7: per family, this task and its twin, a
 positive example and the `nop` result).
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 6 GB | 4 GB |
+| GPU memory | 3.5 GB | 3.5 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4 / L40S).
+- Measured: GPU 2.7 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory and CPU author estimate (MuJoCo, CPU physics, EGL rendering)
+
 ## Details
 | | |
 |---|---|

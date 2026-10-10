@@ -34,6 +34,18 @@ success_rule = "first"
 instance_seed = 0                 # AutoBio's reset(seed=0) of Pickup
 expert_time_estimate_hours = 2.0
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 4.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 8.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "author (merged PR #94): CPU-only, 4 CPUs and 8 GB per trial, verifier the same"
+
 [verifier]
 timeout_sec = 600.0
 environment_mode = "separate"

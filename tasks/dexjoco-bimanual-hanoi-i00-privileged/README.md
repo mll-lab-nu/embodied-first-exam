@@ -32,6 +32,18 @@ Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.npz`, twic
 sandbox (no network); pass iff both episodes end in success, their final-state hashes agree and the rebuilt instance
 matches its recorded hash (`tests/grade.py`); plus `/logs/verifier/replay.mp4`. Oracle: success after 1085 control steps.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 4 GB | 3 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only; CPU author estimate
+
 ## Details
 | | |
 |---|---|

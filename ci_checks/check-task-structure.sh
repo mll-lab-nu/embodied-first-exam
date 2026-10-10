@@ -13,7 +13,7 @@ if [ "$oracle" != "none" ]; then
 fi
 # No agent results in the repository (docs/PROTOCOL.md D3): they are published on the results site.
 [ -e "$t/results" ] && { echo "FAIL $t: results/ does not belong in the repository (PROTOCOL D3)"; rc=1; }
-# README in the standard layout (docs/PROTOCOL.md §2.1).
+# README in the standard layout (docs/PROTOCOL.md §2.1, §2.9).
 python3 - "$t" <<'PY' || rc=1
 import re, sys, pathlib
 t = pathlib.Path(sys.argv[1]); s = (t / "README.md").read_text() if (t / "README.md").is_file() else ""
@@ -21,8 +21,10 @@ bad = []
 if not s.startswith(f"# {t.name}\n"): bad.append(f"first line must be '# {t.name}'")
 for k in ("Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget", "Base image"):
     if not re.search(rf"^\| {re.escape(k)} \| ", s, re.M): bad.append(f"key table row '{k}' missing")
-pos = [s.find(f"\n## {h}\n") for h in ("Task", "Difficulty", "Reference solution", "Verification")]
-if -1 in pos or pos != sorted(pos): bad.append("sections ## Task, ## Difficulty, ## Reference solution, ## Verification (in this order) required")
+pos = [s.find(f"\n## {h}\n") for h in ("Task", "Difficulty", "Reference solution", "Verification", "Compute resources")]
+if -1 in pos or pos != sorted(pos):
+    bad.append("sections ## Task, ## Difficulty, ## Reference solution, ## Verification, ## Compute resources (in this order) "
+               "required (Compute resources: PROTOCOL §2.9, v1.1.4)")
 for b in bad: print(f"FAIL {t}: README.md: {b}")
 sys.exit(1 if bad else 0)
 PY

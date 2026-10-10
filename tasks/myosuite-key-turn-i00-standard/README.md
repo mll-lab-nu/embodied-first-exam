@@ -24,6 +24,18 @@ Same instance and success rule as `myosuite-key-turn-i00-privileged` (first-pass
 ## Verification
 The sim service judges the episode live and records every executed control step; the collect hook (`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, both replays succeed, and they end in the same state. `nop`: the episode times out, reward 0.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 4 GB | 3 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only; CPU author estimate
+
 ## Details
 | | |
 |---|---|
