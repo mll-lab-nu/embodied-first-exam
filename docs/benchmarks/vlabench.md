@@ -51,7 +51,8 @@ benchmark re-verifies on its frozen instance (`scripts/vlabench/freeze.sh`) and 
   placemat or plate; `select_poker*` say grasp and lift. The checks themselves are unchanged.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 4000 control steps (400 s of robot time; PR #4's bound). Standard
   episodes have a technical cap of 9000 control steps (`spec.max_control_steps`, PROTOCOL §4.5 MAY): the fresh replay
-  that grades the episode (~40 ms a step) must fit the collect hook's 900 s.
+  that grades the episode (~40 ms a step, about 360 s at the cap, plus a scene build) must fit the collect hook, which
+  gives the verdict until 1440 s of its 1500 s and then waits for the video (a second replay) until 1470 s.
 - **World frame.** Metres; the robot's base at (0, -0.4, 0.78) facing +y (VLABench's default; (0, -0.4, 0.6) for
   `select_billiards*` and (0, -0.7, 0.7) for `find_unseen_object`, from VLABench's per-series robot configuration): x
   to the robot's right, y forward (across the table), z up; quaternions w x y z. Stated in both instructions and in
@@ -84,6 +85,11 @@ whose physics differs shows up as `grader_error`, never as a silent change.
 `environment/sim/rcb_service.py` is a byte copy of main's `scripts/humanoidbench/shared/standard/rcb_service.py`
 (protocol `eai-standard/2.1`: four endpoints, RCB1, no reset unless `budget.reset > 0`, journal + checkpoints with at
 most two resumes, startup watchdog, SIGUSR1 collect hook, `/data` evidence, verdict before video, 413 / 500 handling).
+Since 2026-10-10 `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict: before, `finalized` came after the video, a second full replay, so
+the longest episodes needed two replays and two scene builds (750-800 s) inside the hook's 800 s of waiting, and one
+that missed it was graded `infra_error` although its verdict was on disk. The hook's timeout went from 900 to 1500 s
+with that change. The reset budget is pinned to 0 in the compose file (the instruction says one episode, no reset; it
+used to be a `${RCB_RESET_BUDGET:-0}` knob that a host exporting the variable for another benchmark would have switched on).
 `server.py` is VLABench's adapter (the `Sim` contract): cameras, proprioception, `joint_position` clipping into the
 actuators' bounds, holding the last targets while watching, and the fresh replay (`vlb_tool.Session`). The agent's
 client and the verifier (`grade.py`: `success = live_success ∧ replay_success ∧ deterministic`) are main's copies too.
@@ -141,10 +147,10 @@ Final-state hashes of some references (live = replay 1 = replay 2):
 | texas_holdem | 0 | 660 | `c77b7967d5b4788f…` |
 
 ## Open questions
-- **The standard episode cap.** 9000 control steps (900 s of robot time) keeps the grading replay inside the collect
-  hook's 900 s. In the sample model trial one standard episode (insert_flower) reached it after 53 minutes of the
-  agent's 60, so the cap, not the wall clock, ended it. Raising it needs a longer collect timeout (the replay costs
-  ~40 ms a step).
+- **The standard episode cap.** 9000 control steps (900 s of robot time) keeps the grading replay well inside the
+  collect hook (1500 s since 2026-10-10; the replay costs ~40 ms a step: these are the timings of the first trials on
+  a 7950X, not measured again). In the sample model trial one standard episode (insert_flower) reached the cap after
+  53 minutes of the agent's 60, so the cap, not the wall clock, ended it. Raising it needs a longer collect timeout.
 - **Tasks without a reference.** The 57 tasks left out could come in later with `oracle = "none"` and human review
   (PROTOCOL §2.7).
 - **Privileged difficulty.** With VLABench's skills as planning primitives the privileged mode is largely solved

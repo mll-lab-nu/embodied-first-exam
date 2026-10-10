@@ -113,7 +113,12 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   - `/kinematics` = the fingertip sites and the camera mounts (world frame; the root's frame for free-standing bodies) and
     fingertip-position IK; crash recovery with resume class `exact` (MuJoCo on the CPU is bit-exact in a fresh process).
   The episode ends at success, at the task's failure or when the time is up; the collect hook replays the recorded
-  trajectory in two fresh processes.
+  trajectory in two fresh processes. Since 2026-10-10 a malformed request field (a null or non-numeric `dt` /
+  `seconds`, `cameras` that is not a list of names, a `note` that is not text) is a 400 before anything runs (it was a
+  500 that ended the episode; `note`, after the chunk had run), an absent or null `dt` / `seconds` is the default, and
+  the verifier books a missing, unreadable or never-finalized `final.json` as `infra_error = 1` (it was the agent's 0);
+  `finalize.sh` writes `final.json` atomically. One gap is left in the shared 2.2 layer (`scripts/eai_standard/
+  rcb_limited.py`, not MyoSuite's): JSON `actions` holding an object is a TypeError there, still a 500.
 - **Reset budget: 10** (owner, 2026-10-09; PROTOCOL §4.5, a per-benchmark exception to "no reset"). MyoSuite's own
   termination ends most standard episodes within one or two seconds of simulated time (measured in #116: a constant
   command held from the frozen instance ends dex_*, baoding, obj_hold, pen_twirl and obj_reorient after 12-71 control

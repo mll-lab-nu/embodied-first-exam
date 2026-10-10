@@ -458,7 +458,7 @@ def probe_standard(inst: Path, work: Path, images: Path) -> dict:
         proc.send_signal(signal.SIGUSR1)        # what the verifier's collect hook does
         for _ in range(300):
             final = json.loads((data / "final.json").read_text())
-            if final.get("finalized"):
+            if final.get("finalized") and not final.get("video_pending"):   # the verdict, then the video
                 break
             time.sleep(1)
         # iterate, not list(): the reader reports its length as infinite, and list() would preallocate for it

@@ -16,6 +16,7 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 the committed resets did (their journal rows are checkpointed, `persist`). When the episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
 and replays the trajectory in two fresh processes."""
 
+import contextlib
 import json
 import math
 import os
@@ -522,6 +523,41 @@ def ctrl_step(a, rec) -> bool:
     return E["done"] or stop
 
 
+@contextlib.contextmanager
+def checking():
+    """Checking a request, before anything runs: a field of the wrong type is the request's fault -- a ValueError, which
+    the shared handler answers with 400 and nothing changed -- never a simulator error that ends the episode (PROTOCOL
+    §4.6: malformed -> 400, no physics)."""
+    try:
+        yield
+    except ValueError:
+        raise
+    except (TypeError, AttributeError, KeyError, IndexError, OverflowError) as exc:
+        raise ValueError(f"malformed request: {exc!r}"[:300]) from None
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A numeric field in seconds; absent or null is the default. Not a finite number: ValueError (400)."""
+    v = meta.get(key)
+    if v is None:
+        return float(default)
+    try:
+        if isinstance(v, bool):
+            raise TypeError
+        x = float(v)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError(f"{key} must be a number of seconds, got {v!r}"[:200]) from None
+    if not math.isfinite(x):
+        raise ValueError(f"{key} must be finite")
+    return x
+
+
+def note_of(meta: dict) -> str:
+    """The call's free-text note for the log, read before anything runs (a note of another type is logged as text)."""
+    note = meta.get("note")
+    return "" if note is None else str(note)[:500]
+
+
 def recorder(cams, fps: int, meta: dict, video: str) -> L.Recorder:
     every = max(1, int(round(CTRL_HZ / max(1, fps)))) if video != "none" else 10**9  # no video: first and last frame
     return L.Recorder(
@@ -540,6 +576,8 @@ def video_fps(meta: dict) -> int:
 
 def cameras_of(meta: dict) -> list:
     cams = meta.get("cameras") or DEFAULT_CAMS
+    if not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names; cameras: {CAMS}")
     bad = [c for c in cams if c not in CAMS]
     if bad:
         raise ValueError(f"unknown cameras {bad}; cameras: {CAMS}")
@@ -569,27 +607,28 @@ def last_command() -> np.ndarray:
 
 
 def do_submit(meta: dict, A: np.ndarray):
-    typ = meta.get("type")
-    if typ != ATYPE:
-        raise ValueError(f"type must be {ATYPE} (not yet: {SPEC['action_types']['not_yet']})")
-    dt = float(meta.get("dt", DT))
-    interp = meta.get("interpolate", "linear")
-    video = meta.get("video", "mp4")
-    cams, fps = cameras_of(meta), video_fps(meta)
-    k = dt / DT
-    if A.ndim != 2 or A.shape[1] != NU:
-        raise ValueError(f"{ATYPE} actions must be (T, {NU}), got {list(A.shape)}")
-    if not np.all(np.isfinite(A)):
-        raise ValueError("actions contain NaN/inf")
-    if not (math.isfinite(dt) and dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
-        raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
-    if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
-        raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
-    if interp not in ("hold", "linear"):
-        raise ValueError("interpolate must be hold|linear")
-    if video not in ("mp4", "frames", "both", "none"):
-        raise ValueError("video must be mp4|frames|both|none")
-    rec = recorder(cams, fps, meta, video)
+    with checking():  # every field, before a single control step runs
+        typ = meta.get("type")
+        if typ != ATYPE:
+            raise ValueError(f"type must be {ATYPE} (not yet: {SPEC['action_types']['not_yet']})")
+        dt = number(meta, "dt", DT)
+        interp = meta.get("interpolate", "linear")
+        video = meta.get("video", "mp4")
+        cams, fps, note = cameras_of(meta), video_fps(meta), note_of(meta)
+        k = dt / DT
+        if A.ndim != 2 or A.shape[1] != NU:
+            raise ValueError(f"{ATYPE} actions must be (T, {NU}), got {list(A.shape)}")
+        if not np.all(np.isfinite(A)):
+            raise ValueError("actions contain NaN/inf")
+        if not (dt <= 0.5 + 1e-9 and round(k) >= 1 and abs(k - round(k)) < 1e-6):
+            raise ValueError(f"dt must be a whole multiple of the {DT:g} s control period and at most 0.5 s; got {dt}")
+        if A.shape[0] * dt > MAX_CHUNK_S + 1e-9:
+            raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
+        if not isinstance(interp, str) or interp not in ("hold", "linear"):
+            raise ValueError("interpolate must be hold|linear")
+        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
+            raise ValueError("video must be mp4|frames|both|none")
+        rec = recorder(cams, fps, meta, video)
     E["calls"] += 1
     step0, before = E["step"], ctrl_steps()
     rec.tick(force=True)
@@ -629,7 +668,7 @@ def do_submit(meta: dict, A: np.ndarray):
             "interpolate": interp,
             "cameras": cams,
             "control_steps": ctrl_steps() - before,
-            "note": (meta.get("note") or "")[:500],
+            "note": note,
             **({"stopped": EP.stop_reason} if EP.stopping else {}),
         }
     )
@@ -637,14 +676,15 @@ def do_submit(meta: dict, A: np.ndarray):
 
 
 def do_observe(meta: dict):
-    cams, fps = cameras_of(meta), video_fps(meta)
-    seconds = float(meta.get("seconds", 0))
-    video = meta.get("video", "frames")
-    if not math.isfinite(seconds) or seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    if video not in ("mp4", "frames", "both", "none"):
-        raise ValueError("video must be mp4|frames|both|none")
-    rec, before = recorder(cams, fps, meta, video), ctrl_steps()
+    with checking():  # every field, before a single control step runs
+        cams, fps = cameras_of(meta), video_fps(meta)
+        seconds = number(meta, "seconds", 0.0)
+        video = meta.get("video", "frames")
+        if seconds < 0 or seconds > MAX_WATCH_S:
+            raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+        if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
+            raise ValueError("video must be mp4|frames|both|none")
+        rec, before = recorder(cams, fps, meta, video), ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)
         hold = last_command()
@@ -703,8 +743,9 @@ class Refused(Exception):
 
 def do_reset(meta: dict):
     """POST /reset: a new episode from the frozen instance (the running one, if any, is abandoned, never graded)."""
-    cams, fps = cameras_of(meta), video_fps(meta)
-    L.depth_mode(meta)  # a bad depth value is a 400 before anything changes
+    with checking():
+        cams, fps = cameras_of(meta), video_fps(meta)
+        L.depth_mode(meta)  # a bad depth value is a 400 before anything changes
     if E["success"]:
         raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:

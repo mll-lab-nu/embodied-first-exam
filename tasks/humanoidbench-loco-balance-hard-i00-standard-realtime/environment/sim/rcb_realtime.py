@@ -16,6 +16,12 @@ and finalize. Only the time model differs. In standard mode time moves only insi
   next one), replacing whatever was planned from there on, and answers at once. A chunk that arrives after its `at`
   loses the rows whose steps are gone (`late_steps`). When the plan runs out the last target is held (zero-order
   hold): a slow agent's robot keeps its last servo targets.
+- A simulator may have several action types (RoboOlympics: `stroke`, `toss`, `mallet`, `stop`, ...), and a plan may
+  mix them. A row is only ever combined with a row of its own type: a chunk interpolates from the target of ITS type
+  in force before `at` (the simulator's current command of that type when the plan holds another type there), and a
+  gap before `at` is filled with held steps (the simulator's hold row, as when the plan has run out) unless the type
+  is an interpolable target that is itself in force there (then that target, held). A command that is not a target
+  (not interpolable: one row is one control step) is never interpolated and never repeated into a gap.
 - /observe with seconds = 0 answers at once; with seconds > 0 it watches the running episode that long (robot time)
   and returns what the cameras saw. It never changes the plan.
 - `cameras = []` asks for no images at all (in 2.1 an empty list means every camera): a controller's proprio-only call.
@@ -62,6 +68,7 @@ from rcb_service import MAX_BODY, Recorder, Refused, Service, bad_request
 PROTOCOL = "eai-standard/2.3"   # the standard-realtime mode's protocol (PROTOCOL §4b); rcb_service.py itself serves 2.1
 MAX_LAG_S = 0.5          # behind the clock by more than this: drop the debt (a stall) instead of catching up
 CHECKPOINT_S = 1.0       # robot time between checkpoints while the clock runs (the most a crash loses)
+HELD = (None, None, -1)  # a plan entry for a step with nothing planned: the simulator's hold row, taken at that step
 
 
 class _Job:
@@ -95,7 +102,7 @@ class RealtimeService(Service):
             raise ValueError("RCB_SLOWDOWN must be > 0")
         self.wall_dt = sim.control_dt * self.slowdown
         self.max_ahead = int(round(float(kw.get("max_chunk_s", 10.0)) / sim.control_dt))   # how far ahead `at` may be
-        self.plan: collections.deque = collections.deque()   # (type, row, call id) for each coming control step
+        self.plan: collections.deque = collections.deque()   # (type, row, call id) per coming control step, or HELD
         self.running = False
         self.anchor_t = self.anchor_n = 0                  # the clock: control step anchor_n was due at anchor_t
         self.watches: list[_Watch] = []
@@ -155,7 +162,9 @@ class RealtimeService(Service):
             with open(self.ticks_path, "ab") as f:
                 f.write(np.asarray(self._ticks, dtype=np.float64).tobytes())
             self._ticks = []
-        super()._checkpoint(ev, **kw)
+        super()._checkpoint(ev, **kw, timing={"max_lag_s": self.max_lag, "stalls": self.stalls,
+                                              "held_steps": self.held_steps, "late_steps": self.late_steps,
+                                              "max_queue_wait_s": self.max_queue_wait})
 
     def _save_call(self, meta: dict, actions: np.ndarray | None) -> None:
         keep = ("type", "n_rows", "dt", "interpolate", "at", "start_step", "late_steps", "planned_steps", "seconds",
@@ -178,6 +187,17 @@ class RealtimeService(Service):
         elif rows.size < 2 * n:                      # (an older tick log, short of the journal: pad it as unknown)
             np.concatenate([rows, np.full(2 * n - rows.size, np.nan)]).tofile(self.ticks_path)
         self.running = False                         # a resumed episode waits, paused, for the agent's next call
+
+    def _resume(self, ev: list[dict]) -> None:
+        """Service._resume, with the realtime counters as of the checkpoint the episode resumes from (what the lost
+        steps had added goes with them): final.json's stalls, held_steps, late_steps, max_lag_s and max_queue_wait_s
+        cover the whole trial, not only the part after the last restart."""
+        cp = next((e for e in reversed(ev) if "state_sha" in e and "journal_rows" in e), {})
+        t = cp.get("timing") if isinstance(cp.get("timing"), dict) else {}
+        self.stalls, self.held_steps, self.late_steps = (int(t.get(k) or 0)
+                                                         for k in ("stalls", "held_steps", "late_steps"))
+        self.max_lag, self.max_queue_wait = float(t.get("max_lag_s") or 0.0), float(t.get("max_queue_wait_s") or 0.0)
+        super()._resume(ev)
 
     def _start_clock(self) -> None:
         if not self.running and not self.done and not self.stopping:
@@ -209,10 +229,9 @@ class RealtimeService(Service):
             self.log("stall", behind_s=round(lag, 3), control_steps=len(self.episode))
             self.anchor_t, self.anchor_n, lag = now, len(self.episode), 0.0
         self.lag, self.max_lag = max(lag, 0.0), max(self.max_lag, lag)
-        if self.plan:
-            typ, row, src = self.plan.popleft()
-        else:
-            (typ, row), src = self.sim.hold(), -1
+        typ, row, src = self.plan.popleft() if self.plan else HELD
+        if typ is None:                              # nothing planned for this step (the plan ran out, or a gap in it)
+            typ, row = self.sim.hold()
             self.held_steps += 1
         before = self.journal_rows
         self._ticks.append((time.time(), float(src)))
@@ -275,13 +294,17 @@ class RealtimeService(Service):
         cams, fps, video, depth = self._view(meta, default_video)
         return ([], fps, "none", False) if none else (cams, fps, video, depth)
 
-    def _planned(self, step: int, nxt: int, typ: str) -> np.ndarray:
-        """The target in force at control step `step` (>= nxt - 1) as things stand: the plan's row for it, else the
-        plan's last row (held), else -- nothing planned, or a step already run -- the current command."""
-        i = step - nxt
-        if i < 0 or not self.plan:
-            return np.asarray(self.sim.command(typ), dtype=np.float64)
-        return np.asarray(self.plan[min(i, len(self.plan) - 1)][1], dtype=np.float64)
+    def _in_force(self, step: int, nxt: int, typ: str) -> np.ndarray | None:
+        """The `typ` row in force at control step `step` (>= nxt - 1) as things stand: the plan's row for it, else the
+        plan's last row before it (held); with nothing planned up to there, or a step already run, the simulator's
+        current command of that type. None when the row in force there is of ANOTHER action type: rows of different
+        types have different layouts and are never combined, and what that row leaves in force for `typ` is not
+        known before it runs."""
+        for i in range(min(step - nxt, len(self.plan) - 1), -1, -1):
+            t, row, _ = self.plan[i]
+            if t is not None:                        # (a held step leaves in force what was before it)
+                return np.asarray(row, dtype=np.float64) if t == typ else None
+        return np.asarray(self.sim.command(typ), dtype=np.float64)
 
     def _rt_submit(self, meta: dict, parts: dict, job: _Job) -> None:
         if self.done or self.stopping:
@@ -329,20 +352,38 @@ class RealtimeService(Service):
             at = nxt if at is None else at
             cams, fps, video, depth = self._view_rt(meta, "none")
         rows, clipped = self.sim.clip(typ, A)
-        prev = self._planned(at - 1, nxt, typ)     # linear starts from the target in force just before `at`
-        steps = []
-        for row in rows:
-            for j in range(1, k + 1):
-                steps.append(row if interp == "hold" else prev + (row - prev) * (j / k))
-            prev = row
         late = max(0, nxt - at)
         keep = at - nxt if at > nxt else 0
+        try:
+            with bad_request():                      # planning runs nothing: whatever fails here changed nothing (400)
+                rows = np.asarray(rows, dtype=np.float64)
+                target = bool(self.sim.interpolable(typ))   # a target can be interpolated and held; a command cannot
+                held = self._in_force(at - 1, nxt, typ) if target else None
+                if held is not None and held.shape != rows.shape[1:]:
+                    held = None                      # (an adapter whose command() has not the type's layout)
+                if target and interp == "linear":    # linear starts from the target in force just before `at`
+                    prev = np.asarray(self.sim.command(typ), dtype=np.float64) if held is None else held
+                    if rows.ndim != 2 or prev.shape != rows.shape[1:]:
+                        raise ValueError(f"{typ}: cannot interpolate rows of shape {list(rows.shape[1:])} from the "
+                                         f"command in force, of shape {list(prev.shape)}; send interpolate='hold'")
+                    steps = []
+                    for row in rows:
+                        steps += [prev + (row - prev) * (j / k) for j in range(1, k + 1)]
+                        prev = row
+                else:                                # hold; and a command stands for itself, one row one control step
+                    steps = [row for row in rows for _ in range(k)]
+                head = list(self.plan)[:keep]
+                if len(head) < keep:
+                    # A gap before `at`. A target of this type in force there is held through it (rows of call -1).
+                    # Anything else -- a command (repeating it would issue it again at every step of the gap), or a
+                    # plan that holds another action type there -- leaves the gap to the simulator's hold row, as
+                    # when the plan has run out.
+                    head += [HELD if held is None else (typ, held, -1)] * (keep - len(head))
+        except Refused as exc:                       # the request itself passed its checks: keep it on the record
+            self.log("plan_refused", type=typ, at=at, error=str(exc)[:300])
+            raise
         self.calls += 1
         self.rows += len(A)
-        head = list(self.plan)[:keep]
-        if len(head) < keep:                         # a gap before `at`: the target in force then is held through it
-            fill = self._planned(at - 1, nxt, typ)
-            head += [(typ, fill, -1)] * (keep - len(head))
         self.plan = collections.deque(head + [(typ, s, self.calls) for s in steps[late:]])
         self.late_steps += min(late, len(steps))
         self._start_clock()
@@ -391,8 +432,9 @@ class RealtimeService(Service):
             self._complete_watch(w)
 
     def _rt_reset(self, meta: dict, parts: dict, job: _Job) -> None:
+        self._reset_view(meta)                       # a refused reset (409, 400) changes nothing: the watches go on
         self._release_watches()
-        out, prts = self._reset(meta, parts)         # 2.1's reset: checks, abandons the episode, a new one (paused)
+        out, prts = self._reset(meta, parts)         # 2.1's reset: abandons the episode, a new one (paused)
         self._stop_clock("reset")
         job.finish("rcb1", {**out, **self._realtime_counters()}, prts)
 

@@ -3,6 +3,7 @@
 ```bash
 python3 scripts/myosuite/generate.py            # render tasks/myosuite-*-i00-{privileged,standard} (standard library only)
 python3 scripts/myosuite/generate.py --check    # exit 1 if tasks/ differs from a fresh render
+python3 -m unittest discover -s scripts/myosuite/tests   # the standard verifier on synthetic final.json files
 # in the image (re-reads MyoSuite's code and parameters, re-checks every instance hash and reference):
 docker run --rm --network none --user $(id -u):$(id -g) -e HOME=/tmp -v $PWD:/repo -w /repo \
     ghcr.io/mll-lab-nu/eai-myosuite:$(cat images/myosuite/VERSION) python scripts/myosuite/make_facts.py --oracles

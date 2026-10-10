@@ -199,7 +199,7 @@ try:
     srv.send_signal(signal.SIGUSR1)                         # what the verifier's collect hook does
     for _ in range(120):
         fin = json.load(open(f"{hdata}/final.json"))
-        if fin.get("finalized"):
+        if fin.get("finalized") and not fin.get("video_pending"):   # the verdict, then the video
             break
         time.sleep(1)
     check("finalize", bool(fin.get("deterministic")) and fin.get("sim_startups") == 2, final=fin)

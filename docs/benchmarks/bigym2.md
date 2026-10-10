@@ -84,6 +84,11 @@ video instead, which a task here cannot ship), the action table, and upstream's 
 the point between each gripper's pads, camera mounts. Reset budget 0 in every mode but privileged (the robot does not
 fall: 15 adversarial command patterns of 12 s each, no fall).
 
+Since 2026-10-10, in both service modes `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict; `reward.json` carries `deterministic` in
+every branch and `sim_error`. The realtime plan is unchanged for BiGym 2.0's one action type (a gap before `at` is still
+the plan's last row, walking velocity included); the shared layer stopped combining rows of different action types (a
+RoboOlympics bug).
+
 The success check stays visible in privileged mode (PROTOCOL, owner 2026-10-02): it is sparse, and every instruction
 states its thresholds. Upstream's reward shaping for the plate tasks (`event_progress`) is off by default and never
 graded.
