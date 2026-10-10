@@ -17,7 +17,7 @@ episode.)
 
 ## Difficulty
 Bimanual transport of two thin plates between racks, each re-seated upright in a slot within 5 cm and 20 degrees and released; a dropped plate ends the episode. In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets one episode with no reset.
+start) and proprioception, acts through the client, and gets 10 resets (only the last episode is graded).
 
 ## Reference solution
 None (as `bigym2-move-two-plates-i00-privileged`).

@@ -17,7 +17,7 @@ episode.)
 
 ## Difficulty
 In-hand reorientation: an upside-down cup turned 180 degrees and set down within 5 degrees of upright, the tightest orientation tolerance in the suite. In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets one episode with no reset.
+start) and proprioception, acts through the client, and gets 10 resets (only the last episode is graded).
 
 ## Reference solution
 None (as `bigym2-flip-cup-i00-privileged`).

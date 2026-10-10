@@ -15,7 +15,7 @@
 Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-dynamo-i00-privileged`: the same KinDER instance (`kinder/Dynamo3D-o3-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. One episode, no reset.
+never the scene's state or the goal check. 10 resets; only the last episode is graded.
 
 Task: drive the robot into the translucent green square marked on the floor; three chairs stand in the way and can be pushed. The task succeeds the moment the centre of the robot's base is inside the square. (The red, blue and yellow squares only mark where the chairs started.)
 

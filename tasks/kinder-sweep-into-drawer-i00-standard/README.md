@@ -15,7 +15,7 @@
 Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-into-drawer-i00-privileged`: the same KinDER instance (`kinder/SweepIntoDrawer3D-o5-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. One episode, no reset.
+never the scene's state or the goal check. 10 resets; only the last episode is graded.
 
 Task: get the five small dark-red cubes on top of the kitchen island into the middle drawer of the island's upper row of drawers, which starts closed; a wiper lies next to the cubes. The task succeeds the moment all five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls.
 

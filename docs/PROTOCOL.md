@@ -544,6 +544,17 @@ results must state the reset budget and are compared only with results under the
   simulator to practise in, so a single episode is one blind attempt at muscle-level control. `RCB_RESET_BUDGET=0` still
   runs one episode; MyoSuite standard results recorded before 2026-10-09 ran with 0 (and saw the wrong `joint_effort`)
   and are reported separately ([`benchmarks/myosuite.md`](benchmarks/myosuite.md)).
+- **BiGym2** and **KinDER** (proposed 2026-10-10, pending the owner's decision; standard tasks): `budget.reset = 10`.
+  The task's horizon (BiGym2: twice the longest human demonstration; KinDER: its 1000 control steps) bounds each
+  episode, and with no reset the agent's practice and its graded attempt share it: of GPT-6 Astra's 16 standard runs,
+  12 failed, 10 of them with the steps spent and 2 on an object on the floor, the hour mostly unused. Ten, as
+  MyoSuite, not HumanoidBench's 50: an episode here is long. Steered call by call, one took Astra 6–50 min (median
+  19), so ten resets leave the wall clock the only limit; a script that only replays actions ends one in about a minute
+  (BiGym2 pick-box's 4400 steps in 75 s, KinDER sweep-simple's 1000 in 64 s, a reset about 1 s; RTX 4090,
+  2026-10-10), so with 50 it could spend the hour on some 50 tries, and any success ends the trial.
+  `RCB_RESET_BUDGET=0` still runs one episode; standard results recorded before this change ran with 0 and are
+  reported separately ([`benchmarks/bigym2.md`](benchmarks/bigym2.md), [`benchmarks/kinder.md`](benchmarks/kinder.md)).
+  BiGym2's standard-realtime tasks keep 0.
 
 ### 4.6 Errors (no physics executed)
 `400` invalid input (type, dimension, NaN/inf, `dt`/`seconds` invalid, chunk too long, frame limit, malformed body)

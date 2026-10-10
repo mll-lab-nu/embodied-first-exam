@@ -17,7 +17,7 @@ episode.)
 
 ## Difficulty
 Both arms at once, each to its own 5 cm ball, while the controller balances the body; the shortest task (14 s). In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets one episode with no reset.
+start) and proprioception, acts through the client, and gets 10 resets (only the last episode is graded).
 
 ## Reference solution
 None (as `bigym2-reach-target-dual-i00-privileged`).

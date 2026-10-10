@@ -2,7 +2,7 @@
 
 Standard mode (robot as a service, `eai-standard/2.1`) of `{{twin_dir}}`: the same KinDER instance (`{{env_id}}`, seed
 {{seed}}) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- {{sensors_short}} -- and
-never the scene's state or the goal check. One episode, no reset.
+never the scene's state or the goal check. {{reset_budget}} resets; only the last episode is graded.
 
 Task: {{task_statement}}
 

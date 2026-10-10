@@ -17,7 +17,7 @@ episode.)
 
 ## Difficulty
 Three articulated joints low in front of the robot (two racks and a door), pushed fully closed to within 5% of their travel, which takes squatting and leaning. In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets one episode with no reset.
+start) and proprioception, acts through the client, and gets 10 resets (only the last episode is graded).
 
 ## Reference solution
 None (as `bigym2-dishwasher-close-i00-privileged`).

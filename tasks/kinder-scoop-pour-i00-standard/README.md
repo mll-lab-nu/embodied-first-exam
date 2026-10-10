@@ -15,7 +15,7 @@
 Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-scoop-pour-i00-privileged`: the same KinDER instance (`kinder/ScoopPour3D-o30-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. One episode, no reset.
+never the scene's state or the goal check. 10 resets; only the last episode is graded.
 
 Task: move all 30 small dark-red cubes from the yellow bin into the green bin; a scoop is in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
 

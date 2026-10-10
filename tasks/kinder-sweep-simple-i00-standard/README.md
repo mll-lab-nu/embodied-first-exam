@@ -15,7 +15,7 @@
 Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-simple-i00-privileged`: the same KinDER instance (`kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitchen_island-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. One episode, no reset.
+never the scene's state or the goal check. 10 resets; only the last episode is graded.
 
 Task: get the ten small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the floor next to the cubes. The task succeeds the moment all ten cubes' centres are inside that box.
 

@@ -17,7 +17,7 @@ episode.)
 
 ## Difficulty
 Grasp a drawer handle and pull the drawer at least 90% open while the controller keeps the robot standing against the pull. In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets one episode with no reset.
+start) and proprioception, acts through the client, and gets 10 resets (only the last episode is graded).
 
 ## Reference solution
 None (as `bigym2-drawer-top-open-i00-privileged`).

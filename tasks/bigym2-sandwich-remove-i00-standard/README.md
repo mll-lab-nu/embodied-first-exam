@@ -17,7 +17,7 @@ episode.)
 
 ## Difficulty
 Tool use: the sandwich may only be moved with the spatula (a gripper on it fails the episode), and must end flat on the board. In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets one episode with no reset.
+start) and proprioception, acts through the client, and gets 10 resets (only the last episode is graded).
 
 ## Reference solution
 None (as `bigym2-sandwich-remove-i00-privileged`).
