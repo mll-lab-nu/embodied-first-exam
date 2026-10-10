@@ -1,0 +1,13 @@
+{
+ "task_text": "Move the 50 mL centrifuge tube (orange screw cap) from the rack it stands in to the other rack, into the slot AutoBio calls row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row the end slot on the side of the first rack. Success the moment the tube stands in that slot: within 15 mm of the slot's centre and seated at the height at which a tube stands in a slot (within 1 mm).",
+ "default_cameras": [
+  "table_cam_front",
+  "wrist_cam"
+ ],
+ "static": {
+  "inventory": [
+   "50 mL centrifuge tube with an orange screw cap",
+   "two 10-slot tube racks (2 rows of 5 each), blue"
+  ]
+ }
+}
