@@ -415,7 +415,7 @@ def dump() -> None:
     E["dumped"] = True
     E["live_sha"] = S.state_sha()
     S.save_trajectory(np.asarray(ROWS, dtype=np.float64).reshape(-1, ADIM), os.path.join(DATA, "trajectory.npz"),
-                      {"source": "standard-mode episode", "reason": E["reason"]})
+                      {"source": "standard-mode episode", "reason": E["reason"]}, max_rows=None)   # no hand-in cap here
     L._write_json(os.path.join(DATA, "episode.json"), {**summary(), "live_sha": E["live_sha"]})
     write_final()
 

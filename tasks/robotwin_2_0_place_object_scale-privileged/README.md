@@ -48,3 +48,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 ### Goal
 Use one arm to grab the object and put it on the scale.
+
+### Change Log
+- 2026-10-10 (review board 0067): the success predicate's gripper clauses (`is_*_gripper_open` / `_close`) are evaluated on the finger joints' drive targets (`Session.gripper_opening`), not on the row's two gripper-command columns: a row whose command said open while its finger targets stayed closed used to pass "gripper open" (31 of the 47 tasks have such a clause). Trajectories recorded from RoboTwin's primitives are graded as before; privileged results from before this date were graded with the old rule. Also: a malformed deliverable (not an npz, a missing key, a wrong width) is `bad_trajectory`, not `grader_error`; a host that cannot rebuild the frozen instance is `instance_mismatch` + `infra_error` even when no trajectory was handed in (the verifier rebuilds the instance once); every `reward.json` has `deterministic`; the videos stop 300 s before the verifier timeout.

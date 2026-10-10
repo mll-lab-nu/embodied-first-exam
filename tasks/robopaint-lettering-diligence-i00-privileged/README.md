@@ -57,6 +57,10 @@ rebuilt frozen instance matches the recorded one (target picture and scoring dat
 runs in float64 on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit
 (`rcb_brush.py selftest`); camera rendering does not change it. `/logs/verifier/replay.mp4` and `canvas.png` never affect the
 verdict.
+A file that is not a readable trajectory (not an npz, no `actions`, a wrong shape, NaN, more than 72,000 rows) scores 0 as
+`bad_trajectory`; `grader_error` is left for the verifier's own failures (a replay process without a result or past its 1650 s).
+The verifier has 3600 s: two replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured
+67-102 steps/s (docs/benchmarks/robopaint.md).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -91,3 +95,6 @@ The exemplar is a public-domain engraved copybook plate, re-drawn by RoboPaint w
 
 ### Sources
 George Bickham, *The Universal Penman* (London, 1741), engraved plates of English round hand after the writing masters named on each plate; scan: Getty Research Institute, Internet Archive item gri_33125008538056 (https://archive.org/details/gri_33125008538056; possible-copyright-status NOT_IN_COPYRIGHT; the same book on Wikimedia Commons as a DjVu file under {{PD-scan}}). Public domain: the plates were engraved 1733-1741 (Bickham d. 1758) and the scan is a faithful reproduction of a public-domain two-dimensional work. This exemplar: the fourth copy line of the plate 'COPIES' (page n30 of the scan, W. Clark scripsit), placed 205 mm wide on the sheet.
+
+### Change Log
+- 2026-10-10: the verifier and the scoring service only (review of 2026-10-10, board 0067). The verifier's timeout is 3600 s (was 1800 s): two fresh replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured 67-102 steps/s, so a long painting timed the verifier out and the trial had no reward. A file that is not a readable trajectory (not an npz, pickled arrays, no `actions`) scores 0 as `bad_trajectory` (was `grader_error`); every `reward.json` has `deterministic`. The `scorer` service restarts if its process dies (`restart: on-failure`). The verdict of a trajectory the verifier could replay before is unchanged, and so are the instance, the picture and the rules: the task keeps its name.

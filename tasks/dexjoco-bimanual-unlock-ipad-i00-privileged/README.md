@@ -30,7 +30,10 @@ limited to the model APIs.
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.npz`, twice in a fresh process in the verifier's own
 sandbox (no network); pass iff both episodes end in success, their final-state hashes agree and the rebuilt instance
-matches its recorded hash (`tests/grade.py`); plus `/logs/verifier/replay.mp4`. Oracle: success after 392 control steps.
+matches its recorded hash (`tests/grade.py`); plus `/logs/verifier/replay.mp4`, rendered after the verdict is written.
+A file that is not a readable trajectory (not an npz, no `task` / `actions`, a wrong shape, NaN) or has more than
+50,000 rows scores 0 as `bad_trajectory`: the cap is what two replays of the slowest family fit into the verifier's
+3600 s. Oracle: success after 392 control steps.
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -50,7 +53,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 |---|---|
 | Upstream | DexJoCo @ 8d23b0f (brave-eai/dexjoco, MIT) on MuJoCo 3.4.0; CPU physics, OSMesa rendering, no GPU |
 | Instance | the initial state of the human demonstration `ipad_unlock_demo_10_2026-03-22_13-59-49_595064` (DexJoCo-Datasets-Raw), restored with DexJoCo's own state restorer; instance sha `d38c827ac3bb030e` |
-| Resources | 4 CPUs, 8 GB, no GPU |
+| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS=4` in the agent's container and the verifier's (the simulation's result depends on the thread count below 4: docs/benchmarks/dexjoco.md) |
 
 ### Tooling notes
 DexJoCo's reset samples object poses from the global RNG and its state restorer edits the MuJoCo model (table height,

@@ -25,6 +25,7 @@ services:
       - ./scorer:/srv:ro
     working_dir: /tmp
     command: sh /srv/run.sh
+    restart: on-failure:6          # the service keeps no state a request needs: a restarted one replays the next request from the reset
     environment:
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL_MODULE: rcb_brush_strict   # the scores with the process rules (rcb_brush_strict.py)

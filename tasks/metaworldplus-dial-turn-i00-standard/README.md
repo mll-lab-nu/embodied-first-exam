@@ -48,3 +48,9 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | actions | `ee_delta` = Meta-World's native `[dx, dy, dz, grip]` (no `joint_position`: the Sawyer has no arm actuators) |
 | observations | four fixed cameras (RGB-D, calibration), proprioception, `meta.task.target_pos`; no object poses |
 | episode | no step limit; runs until the agent's time is up; the state after the last control step is graded |
+| success | Meta-World's own check (`evaluate_state`). The dial's marker point (on its rim, 5 cm from the dial's axis, turning with the dial) is within 7 cm of the target point. |
+
+### Change Log
+- 2026-10-10 (review 0067): the camera calibration in `meta["cameras"]` now gives the pose of the viewpoint the image is rendered from. Before, `cam2world_gl` held the position of MuJoCo's left-eye camera, 3.4 cm to the side of it, so points back-projected from depth were off by that much. This changes what the agent observes: standard-mode results from before this date are not strictly comparable.
+- 2026-10-10 (review 0067): the instruction states this environment's success condition (what is compared with the target point, in which axes, with which tolerance) instead of "a tolerance of a few centimetres".
+- 2026-10-10 (review 0067): a malformed request (`dt`, `seconds` or `video_fps` not a finite number, `cameras` not a list of names, actions that are not a numeric array) is answered 400 before any physics; before, some of them (e.g. `dt = Infinity`) were a 500 that ended the episode. `meta["time_left_s"]` counts from the agent's first request, not from the service's start. `final.json` is finalized as soon as the verdict is in it (the video is rendered after it and cannot delay or void it); a missing, unreadable or verdict-less `final.json` is graded `infra_error = 1`, never a plain 0; the collect hook's wait fits inside its timeout.
