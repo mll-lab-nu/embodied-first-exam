@@ -11,91 +11,91 @@ keywords = [ "robotics", "manipulation", "humanoid", "code-as-policy", "harbor",
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-up-broken-glass-i00-privileged"
-digest = "sha256:35938ff2affb4757fce475ec418f8af4a7c89ebb66ea9e9a5f917a3b414d2d32"
+digest = "sha256:d14eb8647ede73a6eeff82254b1a85dddbb878a2d0ed126a59fdfa8a617d910f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-up-broken-glass-i00-standard"
-digest = "sha256:e3936e36b11a3ddc5caf14bb42e6aba402812fc6c1750481dbd2290773a96679"
+digest = "sha256:17e6a1f1f1001df3cdaf77fac735d7c2adc1a656fb6ea6e796b577bde5e3bbec"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-collecting-aluminum-cans-i00-privileged"
-digest = "sha256:3e375e0253e7fd554a5917f71d9f1d3fa8f5808727675e71038a82cf1ece72d4"
+digest = "sha256:29f28f03d5e0b571eed9f9f2a91089dd463a46ca51a1ef9792366720be3ff98b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-collecting-aluminum-cans-i00-standard"
-digest = "sha256:9d277b4a0f8eb3cd2951e924fa04a897741e09fbaf65c0cb82fa117d2273273d"
+digest = "sha256:3b9070dbc779315ab044a17aea9b024bcd7282227e70c319a72880c07bb12a0a"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-composting-waste-i00-privileged"
-digest = "sha256:80deb86f185fa98ad1ba277b0fefa83807be378b19d406cd25705daae1266647"
+digest = "sha256:70571357978f64d1f42f6681335001c0c600c5b4c25ec98c82b43beb34766168"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-composting-waste-i00-standard"
-digest = "sha256:196c141987803b3612fc3439676105bad5310f40040270305634e073e3213c07"
+digest = "sha256:feb8e1da4678c37a7510c92d0880842157d69bc25ccd88b2060d6ab14ae24d53"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-dispose-of-glass-i00-privileged"
-digest = "sha256:0ee1ae448826b563c6ff9242cbf8a9252d92ab457513da713590c592e5a284fe"
+digest = "sha256:3c44b9d0cb934d5d9ee702cbf54798f22a1330fbb0e2a03c86af842e023ab32f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-dispose-of-glass-i00-standard"
-digest = "sha256:e47db4379b2eeac959699b9e5d005c9ce5e03258b6f5df97ab0b7cf7f2d5efaf"
+digest = "sha256:2e4db0b6f23c682b307ac4a213d5e26f4b50ac96014f7d5587bbb327cb55434d"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-hiding-Easter-eggs-i00-privileged"
-digest = "sha256:711b7ca63fa97bae47eef7a87733d0e9c1f6fecdfadb7f085fce4136b453851e"
+digest = "sha256:d313eb22007e39e319a150b870394239d7cfa971d4442c0df0702a65b2b89fcc"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-hiding-Easter-eggs-i00-standard"
-digest = "sha256:5b7bd769caf40ef25578633fc0fa7a60d1d3e4360826d9bad47321e65348317b"
+digest = "sha256:b6957d6652d594f413416d7a8b11b6507b081b13ec1334a6989b78ff2d100906"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-installing-a-scanner-i00-privileged"
-digest = "sha256:a67111ab8c9d5ef22d1919c7d48fa8e7d7556481ae95042ad595c5b400d6f63c"
+digest = "sha256:19299a400d1893cc20f3a4066eab8ae1694029fc7eb8db2c05c08642cb86c9f0"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-installing-a-scanner-i00-standard"
-digest = "sha256:e853d14694a00494d15e10c0173e9d041d4ff562cbd057c77f722226aa65ee8d"
+digest = "sha256:0226e18f9506ce0e9d7f557952a715b71c12f0d7f1f5524b3749336a265bbd60"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-picking-up-trash-i00-privileged"
-digest = "sha256:7ac59797dd6a8764d3d2a8c23ddbe88ddcf5707cece97ea8a4298d3cad1dcd3d"
+digest = "sha256:f64b2573384a6ad4caad533b67bb8ef77a0eb64d8b83fa1c66a313cbe41236c6"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-picking-up-trash-i00-standard"
-digest = "sha256:9da02592bd2f87ecb3b63afafed99b4fa528b9948c9ba76e779e392b45126639"
+digest = "sha256:a996b7f383e333e6a2279e234219c912ed5275a55f6052b289f200c6bfd1a790"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-shoes-on-rack-i00-privileged"
-digest = "sha256:7e1980cf3c66c16b7dd4a080382e54a4320d7a3a9bc83ce827c1cdf945747d68"
+digest = "sha256:4200785d42a95637cb2abb5317452b157b3effd25d32cfd19555517e22cd7707"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-shoes-on-rack-i00-standard"
-digest = "sha256:06c1c935cb2aeae841ea3c3b3258be7c517db06b217c36f9eab49c44546234dd"
+digest = "sha256:852fc428c4734c07efca5ceaa00e4d4b6be7313cdeb89e045d58eea5d0f5fdb4"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-stacking-wood-i00-privileged"
-digest = "sha256:e780f5a86192b975bb085f7ab31d15ce82826155d4e0b8911c91dec881108137"
+digest = "sha256:9ac88a61be7dc55023c08b175f397d40162d36962694a5bcf73f16dfef75a7e0"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-stacking-wood-i00-standard"
-digest = "sha256:b1bf313df6048f1db223e3757168d0025763a0d42f1600614b0762223907a3b3"
+digest = "sha256:f733d7530848012ddb4da387a9c3df10b4d60d93cc52d56dc086dd38c44d3b24"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-tidying-bedroom-i00-privileged"
-digest = "sha256:02b34a6777591691c907a5ce077bbe46a7dad775adc7ecb29aa7f7a923f10728"
+digest = "sha256:15e62dfbb3ef1a902ab45df6119fbd29fb0dae5dd2f0b163d50ee9311863d1a0"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-tidying-bedroom-i00-standard"
-digest = "sha256:eb1cb3136117338d5bef3b9c2806045c6099f60c27dfdaff099d59d14f10e0d6"
+digest = "sha256:6fc97560bf3d8c8a4efa0050e88895ee205ebc258883c57e3fb11a8da572a8a9"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-turning-on-radio-i00-privileged"
-digest = "sha256:51e6e438de93731d4c071c799ea9041d20a912099631de09bf3acadc57698b17"
+digest = "sha256:16ab6f721654a147cf665cee9d8d22ba8a011144bbb0c35ad0fd58ad4a330bfe"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-turning-on-radio-i00-standard"
-digest = "sha256:fe6d3a05bcc0f1dec1887c035dd14c4936ff535e068dfebe33f1407b5b9e0804"
+digest = "sha256:92056e926364fbd6bc79a85769cf5f44b07e8709463a5195f2f98caf0c780c3f"
 
 [[tasks]]
 name = "robot-coding-bench/dextoolbench_brush_blue_brush_sweep_forward-privileged"
@@ -3211,403 +3211,403 @@ digest = "sha256:a3b6b9ddedf9ceb86626c113816523c3454b486c106c41d18b504a9a41d6be3
 
 [[tasks]]
 name = "robot-coding-bench/behavior-bringing-paper-to-recycling-i00-privileged"
-digest = "sha256:7218cbf9f0545488fdb52e645b2bcb654faac208cc5c00199c99f7f4038d43e6"
+digest = "sha256:9970faed6f36f6da0717d048ac13acc13a201e7903597af45fc5f7c9c8392a02"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-bringing-paper-to-recycling-i00-standard"
-digest = "sha256:0b6af56f4102ef4836b6810097100bcfd4d58a122d249b045d95a6375a2ccf04"
+digest = "sha256:aa702bc1c28fb253eafdca2620060a9f04b8ee91f307443643029242c34a4437"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-can-meat-i00-privileged"
-digest = "sha256:0ae955217e4db3446618ac130f589a7b3e8d4e66d936f0c501143428ab3878f3"
+digest = "sha256:3e10e147eb615378b40f42928debd03937dae42c779e32979e40771e7b834094"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-can-meat-i00-standard"
-digest = "sha256:4eeb46a1e297498dc488d479b344b185856c887f8bd2a5840283d64e0a74fb04"
+digest = "sha256:c3953ee4276ab0066ae2b2c8e261869383aec4a099cba0b92245c959d99759c0"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-carrying-in-groceries-i00-privileged"
-digest = "sha256:1556a20e66af12dcd56f325194ea9a72a1e2c94e3f641c88fb87222368e0c760"
+digest = "sha256:273bbf7d3a2c2d931f49809063e62aa3ce2b3e848bd7c41f310e88ac52564d26"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-carrying-in-groceries-i00-standard"
-digest = "sha256:bbeba7b3e0774fe71bbce5d9fece8297e73177e9191b92a46e3989ff12faa0f6"
+digest = "sha256:af67a41bf3e547dde8baea48da7d1a93c01345748dfb794fe6c6b6f47f0d82d0"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-carrying-out-garden-furniture-i00-privileged"
-digest = "sha256:199e25677ee0226cfed4e6fadf44eb2b255766af700913bd52466b07a77158b2"
+digest = "sha256:9c85d86c485ddf25c07cc466b0390191ab8ead56b77a0f8ea2e1a7f36c97d8b9"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-carrying-out-garden-furniture-i00-standard"
-digest = "sha256:7d85676494b835be2d16148c969e7a4e99e29a5b74fb520df5b69fed8e6992b5"
+digest = "sha256:c10268f0f7129492df5d6a04d168a32a9d9ef44444f591b7d8455d67250aacca"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cleaning-up-branches-and-twigs-i00-privileged"
-digest = "sha256:fbc3e9a20debb63d22fdda2cf9679dee67264550c211a11261d11682698595b2"
+digest = "sha256:0ec5e038c234bb4151a95dc540390db333eb0cd9917e15f887a320e799ad4d31"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cleaning-up-branches-and-twigs-i00-standard"
-digest = "sha256:a765f518cc1c672b7e6447685c1f9b4e9d3c25c3575715eaaae497dd2ca170d0"
+digest = "sha256:e203d306be8d7dde21b48acd850b805c417d96cf76a22f5033696fe8f7edb146"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clearing-food-from-table-into-fridge-i00-privileged"
-digest = "sha256:8a0e6583eb9999653b734a5ec11ff40a006495403f9e3f998d29985d955c1833"
+digest = "sha256:03754b895c1fb47a85f28db26b203185ab43d6f37fd0016fcc41f44655fa31ff"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clearing-food-from-table-into-fridge-i00-standard"
-digest = "sha256:12237016c5a7ce796788a42e876e0424b82698906ec52dd656f301ae7c760caf"
+digest = "sha256:5ed5aaf345c683866c3101d8fd76b7c62b94dd96fcd9bfbeabf1447180027d0b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-dispose-of-batteries-i00-privileged"
-digest = "sha256:2956f440440fc14244bfaf00d9b0724b05b4cd8ef6253117df7dcf1e7941e867"
+digest = "sha256:3eb6f085f6934738896b5f7d9d91429c150bd60458c1ff6e42a19d1b4ed51d55"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-dispose-of-batteries-i00-standard"
-digest = "sha256:c9f458d554419067c45341eedc5bcc6fb040a31d28ef637558b700b88630b8ba"
+digest = "sha256:f4c1c0808088e0c5c631c4816667921ab227181e69d818e655e146a1f2534ab6"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-laying-tile-floors-i00-privileged"
-digest = "sha256:72005c34a2343e89ff73ee5fa1018ef36cd240e434b41ab750c11160f3877ff4"
+digest = "sha256:3c251cfc61d42fcfc6642a506d770991023e3f0643a680bb729faab085e0ef59"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-laying-tile-floors-i00-standard"
-digest = "sha256:7714f6fd5d4bcd315c91f79dc8b4bc747e0f03089c0ac21b65df4bfdf1b13bc4"
+digest = "sha256:04c6eeff9177d939b1db730690b945262fa9ed37aa2facb333122c50564e7db1"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-outfit-a-basic-toolbox-i00-privileged"
-digest = "sha256:185f5ee30af580776caf7a0582b9b449d15981e8ebc8d26a41fcb4efa82f6956"
+digest = "sha256:f2dc03cfab4c3633a35ca499f4e908dcea6d01ebf7646452f8dd97c2cf33ea25"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-outfit-a-basic-toolbox-i00-standard"
-digest = "sha256:191631377b609a2f45693dbdb5f8aff83aeba106dc0405752955f32322f20557"
+digest = "sha256:8b956cc666f35461a396c6bd63f9210f7f708228b13ee461d089a580d97a853b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-put-together-a-basic-pruning-kit-i00-privileged"
-digest = "sha256:607b956ea99e4882f97a7369b36e3fdca28497f033047945c156e7d054dd2abe"
+digest = "sha256:546bcaa65a3886c8c89766db254987b346311e2b0526eccce922e96c1ccba735"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-put-together-a-basic-pruning-kit-i00-standard"
-digest = "sha256:abf53033f8b21bdf424add71c325416f28b4ada1ec1e8d0e7fbbd6cedb51c68d"
+digest = "sha256:dce341842503534e88acd30d393d7464440487d6a0029c3f687cb497b580c3a0"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-dirty-dishes-in-sink-i00-privileged"
-digest = "sha256:326971e370afcf02819d17ff4d8b693dd233c1d94df365889759f6d959e58480"
+digest = "sha256:e229b20485673a13236072ef5c9bab5856f1e05f99a7b37c7b20fceb237d2b76"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-dirty-dishes-in-sink-i00-standard"
-digest = "sha256:cd7d3e3af42d2c73e72adcb36e3fbb51df8bee6cca96d92f3902cf06dbe1115e"
+digest = "sha256:4d5784b0e3fe042f2dc006f7270ddd33d4fa74a31bf47f8c9061d96a9f74ed65"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-dishes-away-after-cleaning-i00-privileged"
-digest = "sha256:6a68a096568f9c8acf2a3758c86cc173ccc46f1b64a51edd347318d9dbee20d0"
+digest = "sha256:5085efd3539920a67715afe4acaa7a452befaa97bbc09a05da04a088674d6a95"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-dishes-away-after-cleaning-i00-standard"
-digest = "sha256:30ca3b6c5df4121380c7ba6503b92ec01f575ecad1e0aa732f89b9f5ef3cc68c"
+digest = "sha256:d866bb1c6455959beaf55cfa83ba58ffe788f39758e329cd102d2a0492cb8320"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-up-Christmas-decorations-inside-i00-privileged"
-digest = "sha256:2e7986d3cc892f5cfd8858ed56e079a1ee9f36da5c414fcb5a68c2bf1394c7e6"
+digest = "sha256:89672788727b94eac47d01fadb105152bdbafcb6f1b293d0e2ff2f845d8c512d"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-up-Christmas-decorations-inside-i00-standard"
-digest = "sha256:1d30bab705bd146dd45188e26695275510e67e45db6ea3c0924be76eab824324"
+digest = "sha256:00f991319484b6d948d71e63ad35c5d5b8b1b5718de0f0c57ca9988fb037ff4e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-rearrange-your-room-i00-privileged"
-digest = "sha256:fa2526bea7740f99669838ada7beb648d94ebdbb304a8a17d29e1fd79398ba9b"
+digest = "sha256:35b94560026b60ea8299f91e7ef386e4e9c63c2d65d05579481753cd58a18da2"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-rearrange-your-room-i00-standard"
-digest = "sha256:ffcbc78c22b75ce838cde97e962d20de6026edee41958b14834d0d1f5dd6b6d2"
+digest = "sha256:7de02a8e3508baf866d2b51122f141e743b121d86a43628a2b4da6cbb04d7bff"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-setting-mousetraps-i00-privileged"
-digest = "sha256:46cb23749de9e01864e61b4e0f897dd83c230f4d57be0b250f06806cb169c926"
+digest = "sha256:96e4a6ba37f26068fece1c0214547dfdd506a0cc328da70010c1f36e8de7882b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-setting-mousetraps-i00-standard"
-digest = "sha256:593c7424f0bbf8f6dec2fc1a3108be60a689f2ecc69c6e31d0856be68c16d490"
+digest = "sha256:acf6cc3a36567635bfae92f700a3e80bb67a32370c9e99456589906381d50991"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-setting-the-fire-i00-privileged"
-digest = "sha256:f6cdc5a9d6ab5ac643a7dc3f5648f4ff20ff2726b75a5cfaf45691336d5dd8c2"
+digest = "sha256:a716911aadd06c939835885cf0aed60e2a951c0a4dec39229a833c0ce5baf2bc"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-setting-the-fire-i00-standard"
-digest = "sha256:a7eedc4cdb0d1ee5b5ca281d2faff614e3ad006da2ea21ab235cda7143cbca61"
+digest = "sha256:18945067c43fab7ec9ff529784d6e96ec8ab5fe12056ebd5383e91132db26fb2"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-setting-the-table-i00-privileged"
-digest = "sha256:c6067752f8f074fb7461983e190b80af10e04738c15137eb8cfdb4b47a9b45c4"
+digest = "sha256:64ef62ae4b8c99e138cce85b3112be9c71c24b442c9e4efd6d64f1cf60573d17"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-setting-the-table-i00-standard"
-digest = "sha256:fb6ce07862b8fe76bee07c0fee43821f39663c047f6109dca364e747f18eb40a"
+digest = "sha256:112102708137f7f7b54332a14dc9f6e9cab39ddecb005498ff1b643c19792ddf"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-setup-a-bar-for-a-cocktail-party-i00-privileged"
-digest = "sha256:819212f5c4363779370c5a598a209793ef0e3e49584e2e57b44974ae25c176a2"
+digest = "sha256:875e01d3e811b8e787d5f23b2137204afb03e83009c9e301f840bcaef1204d13"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-setup-a-bar-for-a-cocktail-party-i00-standard"
-digest = "sha256:0bbdaa694af24ad59e1cd66060d6d9d50a0a0a0728f576f3940a9de9ba289ee3"
+digest = "sha256:eadeeb424196b75e90da7dd945096e1d667b5b834d8c093867669d9a93ee16b3"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-thawing-frozen-food-i00-privileged"
-digest = "sha256:e937af4da80eca5317853b2ae7d8b86e8ed8f1dcb29aed4f4cb5c6670bb7332b"
+digest = "sha256:5f38a221a8d743c3669a6a72e3a3e53aa4d396422ea608a8eafbaa46f9bd1a2d"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-thawing-frozen-food-i00-standard"
-digest = "sha256:c9d9432d028bd5b009981749a57a15f831b346fb09b7f26175f2f86c167c74a8"
+digest = "sha256:72b8e852b9e2b5e02c49bf0348e84bb6b737c92fff6c59563ccc9f214af399a1"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-tidying-bathroom-i00-privileged"
-digest = "sha256:b97be4c07d6ba29fcde01c167a759fa0942b29178ceac724742815e7260b1f98"
+digest = "sha256:316c7f927b43cab2fa53bf73f24c89049b47faa96179d65a61d9e6472a3c1f50"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-tidying-bathroom-i00-standard"
-digest = "sha256:a7195b5c973699859d25090877030ab5b3d391014a2165e01d9c25b31d922ed1"
+digest = "sha256:71cd7642676ca1dc9b8952ba34bfa2637f1fb9367d5ac16791abbf7ad4dce5c4"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-tidying-living-room-i00-privileged"
-digest = "sha256:1a37288bba20975643a64c053ddb566ffd11d32d51b95482eb3aa4f663eb3dbd"
+digest = "sha256:005de7269325ad5fbfea8ebe4b9f9feab43e0e5ca24cbe832fdd0ee210370f2e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-tidying-living-room-i00-standard"
-digest = "sha256:c8f604908a5f516cfebcd9e7ad98a961bfe91fcd492cb2debdb37d4e7ec78ae1"
+digest = "sha256:769a1144c3b843977abe916bae589519dd54c4f3ea4b7cccc5744d780762520e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-unloading-the-car-i00-privileged"
-digest = "sha256:06a57e0feb7b466e58a8fe084a90d8f8865301f3e1c2851c68e3c54f48785805"
+digest = "sha256:1edd64539a01f62a372f029b1f0215b7bf103b1e6ad3694baa5110feae2055c8"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-unloading-the-car-i00-standard"
-digest = "sha256:72b7eb6656ad9ba9e5f7561b7fa3a65f28a5c397d3d617c4d77b2b333c7d48e0"
+digest = "sha256:923d77cb8908b9f81ce4df0816a59ccba7139bfdc7e2fe6ea12d8f6894a6c29b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-assembling-gift-baskets-i00-privileged"
-digest = "sha256:b0a3d9999364f5ef922a666247a77ecffcd91ee9b3c99b1c19a56f0664034403"
+digest = "sha256:136fc9c90daa3cfb6524412786aefc279509f7665b98cae8c729b253910e283a"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-assembling-gift-baskets-i00-standard"
-digest = "sha256:a30ad23ba4e446a6a149a8115c17af2589aaf146ede3a553876c84b2a7053b04"
+digest = "sha256:245cb3f1e9446bebb196a6cd0fcc35d667e00b499d2f84fcf1165159af6acbca"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-boxing-books-up-for-storage-i00-privileged"
-digest = "sha256:bae196f3310ec39bc249d54084f8eeeb6209fe07b9bdf52cb0974357339c84d4"
+digest = "sha256:56c31c999a8ceee00e3c62e24ec57707aaa0d04c0e5e50b3c3dde0bdd67a4c93"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-boxing-books-up-for-storage-i00-standard"
-digest = "sha256:24a94a7135ef7a5e17843dd6d06537cf77f4b21393c4370e9d5787f68060e77b"
+digest = "sha256:593013611c090dded0deb821f944da4865b16346f803d3c404ca7e7fdf20dde1"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-canning-food-i00-privileged"
-digest = "sha256:b110686f963adda071dcef2fbb9bfc90e76525ca58e2ae62a7b71e6ec394365e"
+digest = "sha256:3efe2422889a86b8caccdd889912ccdf956128641563121c9e894a9d2841ccdf"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-canning-food-i00-standard"
-digest = "sha256:41e5b525c9336170de200616aa8a6619159fcee252a80f40b8749b5e12169a1b"
+digest = "sha256:3e4f4a1fe4e1e1bd5c65d94c5812d35a3712b73e2370c9c8b9f3212818486771"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-up-your-desk-i00-privileged"
-digest = "sha256:9aa72e6686da8ab5db06a82e5b922154e1d5b1aa9cdc09440dc1e91c9c9a1899"
+digest = "sha256:e3c5144ba005b6ef496b6657c971fb6df5cabdd5621e1e889614981c5167cc62"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-up-your-desk-i00-standard"
-digest = "sha256:268afe9b9212a06b15275328e524bf1c51c12db7aacd8e1dd5ebfb7d69c6c4a3"
+digest = "sha256:a0b1b9955ff52dff39610de3a718354a2e6235dc908fffc4a045a2da40813e01"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-collecting-childrens-toys-i00-privileged"
-digest = "sha256:b9d4de4128088a1ec0367d5af6e7089c127405f63832fc81a28b8be27b063835"
+digest = "sha256:07d8518cb107f90a2b351e38b604cb86b4ba5d6bcd1b4f50a82f29049946d1b1"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-collecting-childrens-toys-i00-standard"
-digest = "sha256:443170602071046a7ffa8aa80054111704c1e2ae945a6d2a59f2c5195de5d98b"
+digest = "sha256:83309bed2e2810e627301ccc32fd0abb33d22d1954fe42d36c268e565535cd69"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-brussels-sprouts-i00-privileged"
-digest = "sha256:1b48997f404fd3004b02208e13f29126ad60fc232c65155b9c6270b2ad92ae4f"
+digest = "sha256:6ffed6b35ee4f91e509e4476a76cc3dc81d2b5e4b80a5cc496b755c922b11766"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-brussels-sprouts-i00-standard"
-digest = "sha256:0468e42d7082248c390699bc102a5e2f1d9848c13ccfc07f40e26233edad962c"
+digest = "sha256:324eebb6863fb730d66f1a275999dbefb369393354305b75c06d4d6e3a3cb21d"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-getting-organized-for-work-i00-privileged"
-digest = "sha256:8574ddcbe385a987dd1105a70ce9dd093ff6f747d23575bb847fc928751529cd"
+digest = "sha256:44953d1c03a2c87f581fe91ab42bef3a9d6ff9b47806b1890ab0e82c9703fa3f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-getting-organized-for-work-i00-standard"
-digest = "sha256:06a57e5bddbd58f377fb61858d294a21553f42299c0b502971d8ed3786669420"
+digest = "sha256:0123484bc2bb28e6628bab261a0d4f775b582d7b71feec9b0a5114618d94858c"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-loading-the-car-i00-privileged"
-digest = "sha256:52c9199408b2025e4c9f30b999d239a9cc6abb6ebe1a9224f7e809ae1ca07555"
+digest = "sha256:742f1792dab3e085de7160982180afc08565a1274ced919eb8572e4b89f2726c"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-loading-the-car-i00-standard"
-digest = "sha256:47d16721a597bdf6975a23f334358141460223b65e4f9c0abe7547ee5900f3e7"
+digest = "sha256:7b1b07eef83f8174a5969e4c3efb0d672e930188728f60e250e4275dcd2aabc1"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-pizza-i00-privileged"
-digest = "sha256:94bd7a86a3093a3a7565a06ac77701ac6f5c0444852d93147b72c23a2dc2f584"
+digest = "sha256:f52e4ca080bc63a331aca6039ec7e5a82dbde0cf6b1bdf1a78a2e033eee26f26"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-pizza-i00-standard"
-digest = "sha256:b484f203301dcaa9f17d256e18f5b68d91c62be46e945c4d7188648371139897"
+digest = "sha256:f96fc311c8c1a4894b4d6c3c2823ced9a13191fe8390dd032d710afa3bbc1c64"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-picking-up-toys-i00-privileged"
-digest = "sha256:502bc371af4bb12cbbdde4a676ce16f2fae8be1f736cf65d5a886706425fa88b"
+digest = "sha256:8af311d4d38a1876d1f96d831ac6186aadcb06b3d424bee81a7f503f8181bdfb"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-picking-up-toys-i00-standard"
-digest = "sha256:fb5d1a37be4423c4155a211b8540d6eb5ddb44a26cbc7b46d71b841b51c5aba8"
+digest = "sha256:a55240379f87399e8d6c06d35493a93c48fe39b610183257b4772ed3f2df01a1"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sorting-household-items-i00-privileged"
-digest = "sha256:dddd6eee75b9be28af3d4f6b570cdf3cf3ad3572cf3ec60763869e3c600befdf"
+digest = "sha256:57311457419e088deed91b156995791c18e6524e15c7c993946981817bae3450"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sorting-household-items-i00-standard"
-digest = "sha256:7c4ff2d3af6e4a13cce38ac8e2ee68bdce2e0963b131572f848c7ad05bfa5311"
+digest = "sha256:ca8c3910c104a7a4a82bf822dc65f7ad72678344cdd6597df709f1ccc4be7e2e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-storing-food-i00-privileged"
-digest = "sha256:fd34e47dc1d76b172ba542fa5120aa00c35ebd21f011adb565c9bc360e1a0491"
+digest = "sha256:9c061ab2800249fc08f0f10d425a3ece032c4dbd37de7a2a0c7359b0a6fc20cd"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-storing-food-i00-standard"
-digest = "sha256:4a50f8c563b8b3dbcba20ce977600e3b9417be18d49ad7008f60433e30bf1439"
+digest = "sha256:b7be1c05b17dd63b24c41a476dac695d31170d134ea32ed9dcc614a6191213e0"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-bringing-in-wood-i00-privileged"
-digest = "sha256:90a7d390a867d21be0b9a56f58b1ffad7049cb786a31f0834d35b4bdbeb05d51"
+digest = "sha256:9e749ea77a335ec080c343212389d50861f2fbf0a92b526350e8ccd24cfb5df9"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-bringing-in-wood-i00-standard"
-digest = "sha256:0939aaae91bdcacfcc2d5e49a3b9b6321bc1d9023903502f243f54e61287827c"
+digest = "sha256:3cae43fea60fcc2bc4fc8620953b1298d025cab4bac78436f163aff30a1d0d8f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-chopping-wood-i00-privileged"
-digest = "sha256:92e0a0d1b5de4c09341950e914aa96697c591e15f99b9e68ca25bf6165baba16"
+digest = "sha256:8d7e009ee857d7e72dd50a3325bd0664beec921af281aa51da3866bd8614da1e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-chopping-wood-i00-standard"
-digest = "sha256:e1e362e3edbec0a49dd43668504f483b906cb4201c41122fd967e76a6c052342"
+digest = "sha256:57f879fb374f9910a3c92aa98c8261c19bd675ed59e46048dfce9b8ebc293a7c"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-a-patio-i00-privileged"
-digest = "sha256:46923f66d8f3c63afd0c80f390783ed237f0510466df25599941ad232cc1067d"
+digest = "sha256:349c8622a206e4d73d4675a291af19df6c3873c4ca0088d9b1632f5f36ba0b2c"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-a-patio-i00-standard"
-digest = "sha256:21766919d50cb9ad73fa50c814361978a1165567d2d35db25f777692fd74143c"
+digest = "sha256:de8cbbee819100d52076889812cedb786ea6c56570b42c82d68cc9896fdbac3b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-your-rusty-garden-tools-i00-privileged"
-digest = "sha256:81ce71b2bf83e09f6a9397ba52d3121db5232382bb698190a646360b626a8c28"
+digest = "sha256:7df2ddcd562913b76b281c73cd4ac0a7bce4cd76d9d9665f161e15dfaab4bfd3"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-your-rusty-garden-tools-i00-standard"
-digest = "sha256:90c265ee65293911281b903296008ab3e4c83872517061e22f4b6a3fbae9794a"
+digest = "sha256:e9b3cfd15841acf716ab2643bb4572377224e6d4e2179639951a8dcb8488b613"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cleaning-up-plates-and-food-i00-privileged"
-digest = "sha256:d1ad3b818d152afaeb288482a541406a5523a6d9c7a727a343ccde5ad2aa063d"
+digest = "sha256:c25fc0dbceb567b33eb107e99fc5f3bd9cb0432face42d0d81978c3f440ae22e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cleaning-up-plates-and-food-i00-standard"
-digest = "sha256:14a1319d028c888d8849ff5a9a0551fb804b94976c11b0eedab256af8a34c6bc"
+digest = "sha256:15a576919bd83e46a8f65b2db62c63d810c3e02b02dfe7a2569644cf0543e2a3"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-cabbage-i00-privileged"
-digest = "sha256:9f3facffa1bbb36e4bdcf0556b14b990bca0e1eeb79995827795c52c2b38a2e2"
+digest = "sha256:bb10c48441b255ebf3bcda9f545e7cb15ff03b6bf1d9520aaa608a5af34d4d8e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-cabbage-i00-standard"
-digest = "sha256:a8aeed542534b45e4e9c930f9e67f2c5dcb5dca2b745e314014aa1392e204bee"
+digest = "sha256:c6b24dbed27eea6ef394cc8b81259ac236b5961b73c77584321b5b4864373f98"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-freeze-fruit-i00-privileged"
-digest = "sha256:6354c92dc7ee4b1ac00d5dace6711f4babe1f1b1fea9f408e63524d931d67ca8"
+digest = "sha256:fbf9626a5965e19da9732e825c8aa1f60f4229c0b5b6ce35573a971a80dc8385"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-freeze-fruit-i00-standard"
-digest = "sha256:ea848ffe9304705a11955c5ec044e9a6b84c43a6269c9f1d5f0b9e5d0d1b2220"
+digest = "sha256:594aae99e4d7ef7ff8fe05b825849cf4b0699b0c6c0f326a9ea652062a2456b7"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-freeze-pies-i00-privileged"
-digest = "sha256:73f499a3879d815728bb0e195cfdacd2c69d17b89fb51f59e479d9c4afdf8c9b"
+digest = "sha256:c8e8f18c83df59728b26bdecf711a391b578a252bf13eb959aeaf9eaf6b8611a"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-freeze-pies-i00-standard"
-digest = "sha256:3abd2b24db9b0880a9272d536c3a16c6ce064bed773cd8a205a9108b806b0268"
+digest = "sha256:29f90ebaece545dd77790f4c8e668394337fb43252bedd6bfa17b7d445959bd3"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-moving-boxes-to-storage-i00-privileged"
-digest = "sha256:c5f2e3355cdaa8d82681bb3fc710bb54ed6129c1c9f16ddd6b4187f10d2eaac9"
+digest = "sha256:47a543cd70daf6f7a2f20cdcb2d5785701cee00cfb30b189c1270796624f74cd"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-moving-boxes-to-storage-i00-standard"
-digest = "sha256:959bf7e0165c7b3be2ee4624e73099fcfaf54c00305be6368308a9b627ac77d2"
+digest = "sha256:29beb905789e4895c65e4300644bf03c003f55980ce4ab93411c6db42135a38f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-organizing-school-stuff-i00-privileged"
-digest = "sha256:cce0ebf5804646ee7958ec48cc8dfb9d31be656f122e5e0e728eaac23b5156ee"
+digest = "sha256:136e6bc8f757f9d4b710c18ac55e65ca97c8e9c4c46167a526e2b9cd3b25ddb8"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-organizing-school-stuff-i00-standard"
-digest = "sha256:e7e681eda2367842df7d01694f97429d64f2c3c2850d6f76b0f9c75ca87a12c4"
+digest = "sha256:509c7372ff65b81a69787f8ce831e924206b42a8832fea1f655df554dbe7e5cf"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-polishing-shoes-i00-privileged"
-digest = "sha256:4e43bf5f22407f8d4d06798d3cb616dc8e3caea6453b4950581d6ee3459cd37f"
+digest = "sha256:d12bd1ada903c6131a317c1a71366f4733fc6004636a8f91683411285a0cd007"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-polishing-shoes-i00-standard"
-digest = "sha256:c44ad5a1b0763d5b1cb97f6f22f891f673a7494a29be10063e4d5abd96c80bad"
+digest = "sha256:303503450fcdce9e98c99eb1139548c36eaa4768a5f23052c02daf8fb469d9fe"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-away-Halloween-decorations-i00-privileged"
-digest = "sha256:256967eb4511fb91ea53ed35eaba7e88648299332bef46021e8b125072671cb6"
+digest = "sha256:1e3d88e84e7f8e37d9df9b7b459b6143978f76fc42d45ca054d40bc45603586c"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-away-Halloween-decorations-i00-standard"
-digest = "sha256:d44b637638101eb0ab131b7351db7abd120a088682774b772936082ac6aa7dc8"
+digest = "sha256:a2fc1260c34773596fa8cc021a9ce1adc2c714507bf1eae31d2918fe5e2b196e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-away-toys-i00-privileged"
-digest = "sha256:f7e41eb566ad89dec324b317c7d087557bded4e3872048342aace08531c848b9"
+digest = "sha256:c4b54e821dc795d680a48ddc2d2632efee55faba40c36272b65a06580dc6f53c"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-putting-away-toys-i00-standard"
-digest = "sha256:3f3d2f17b00359c702af69968eff73cfba2b2ebf91fa58321188fc261254cf15"
+digest = "sha256:a5002eeb840f47a4a0a4924ec9ed5f4ad2b9391966c0786d06f4df2b8618dc81"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-slicing-vegetables-i00-privileged"
-digest = "sha256:2a8f382f7ce484b7233c98e146f5fb82d798fe805970281a9faeb3005b85fd6c"
+digest = "sha256:14194db97fd4b4db704a6ab6a2a8c6f47efb12f4be75d267d23ac80ec503e4b6"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-slicing-vegetables-i00-standard"
-digest = "sha256:f158c2e1da42bc31d61771512d9bf6c9eb44fd02ac22ebcbdcf8b9ae82231203"
+digest = "sha256:1a3d4234f439e2b222ca3a9a64111187ab6e149c157b957e316c440590411bb3"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sorting-vegetables-i00-privileged"
-digest = "sha256:76ee0772924fe36d606e75aa6625461fedac92ace1322bc3d5608fa34f47759c"
+digest = "sha256:0aca3833e80df48cea05a7957e870c0faa9aae7d6a29c85f825a0cd28d36ae3f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sorting-vegetables-i00-standard"
-digest = "sha256:822373752048fbf8749b61b54343282c92ffbb7c41a19590e1af1fc91edaa17a"
+digest = "sha256:945097fbc77f8fbdbe225206bc112b421e2c06bba3708b7094fb6d545624635e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-wash-dog-toys-i00-privileged"
-digest = "sha256:996e3bc2815cf489883f3eba8e73a072edfd5acb8c85351d6fbe9ef6b0a4f9d4"
+digest = "sha256:2b78a7e84bc7f2062f5dd0b7f6b834a9675c9fa778c42be80377ba10cd9d370f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-wash-dog-toys-i00-standard"
-digest = "sha256:fa891fc3bac2b1ce80f851d7716f8379bb47644ff068229477d96d665827a62a"
+digest = "sha256:218813c61652ce44edf0b8ad4afacf6ed22d0bb3380dc1c35019f262c15a3b3d"
 
 [[tasks]]
 name = "robot-coding-bench/humanoidbench-loco-walk-i00-privileged"
@@ -4043,315 +4043,315 @@ digest = "sha256:a515e9a6868f5745811e349340a399ae48c1123e568aab35d1882451d79ad6a
 
 [[tasks]]
 name = "robot-coding-bench/behavior-boxing-food-after-dinner-i00-privileged"
-digest = "sha256:ae53100e7be9b6fc1a3d93d68d868d0b5743f567baad41568c9e77c70911678e"
+digest = "sha256:760e846b929b3bef623a416aae5489d003825d93ddd8d02581c1d2590465e2e1"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-boxing-food-after-dinner-i00-standard"
-digest = "sha256:af0dc4f759d801cec4e39cdf76ac3e8b226b2db1f47e212e6ecc82002615b2ef"
+digest = "sha256:244043df9ee91688c43ec84c66c54ffea3c1f10c1dc3f9e217c1fb7b996d1d1d"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-bringing-water-i00-privileged"
-digest = "sha256:8116324bc2eb96d4013bed7f29b56566d7324012f23a8c62e55d5553091e849d"
+digest = "sha256:5d943b88151ee1b4d484a480a979137566448fdd7f1efb59ca207b733024cbe6"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-bringing-water-i00-standard"
-digest = "sha256:ffd32ba7bbc3ff09da70a126e808e1cc33f72ce5d4b9256251cbb04048068f01"
+digest = "sha256:3b099f0681fec2caed0c51bc0f1ec4f5dd3080f60522b956ec8b9ea1c80fd7df"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-a-brisket-i00-privileged"
-digest = "sha256:d680a70a8724c089196df400a9358da33deefb7804ab30b28ccbcb8bc6040746"
+digest = "sha256:0105a41b9cb00c9f97270cadb101a1d26f9f959901074454e8a8ae37ff6b44cd"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-a-brisket-i00-standard"
-digest = "sha256:a5a41d2f7949dcd8fc04b1d7b10fadd87ec1a74d4d85896eedd813a9ddb22a8c"
+digest = "sha256:d73716386702e220ace720ecc2e6ad816e1edd0a95b62d8be4bdebdb7a39bd82"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-broccolini-i00-privileged"
-digest = "sha256:4e60d7813db75e69c7e80f49f0a7803c9b94f21509b85937e785a59a29f6bf79"
+digest = "sha256:c1a0e4c67c4fb5b3fa00be1fc4275798dc84074644f6ad92fafc3a4828a44295"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-broccolini-i00-standard"
-digest = "sha256:854113bc518a108d4c4348402f3e05338457b17f8e4c57a31d7dba94138099fb"
+digest = "sha256:729fcaf9073d196f7941048984bc3acd1bdc84de7ed607c0d444a0d63882ddb2"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-hanging-pictures-i00-privileged"
-digest = "sha256:b4f218be5d49dce0894e8e30201200da2ef07e6189c8fe57b24ec85c08159a02"
+digest = "sha256:2479288278b5613b8feb1760d93ca05ea52cc54013be9476b7ac971589087fcd"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-hanging-pictures-i00-standard"
-digest = "sha256:6eafd809b881f3de128e982ff39b5b06c19867ba935808ef7fbad3d68d41e9dc"
+digest = "sha256:a5c4d5473729b95dd6f7fe6c5bcf70c20437faa9c609359cad539d6f50e17173"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-gift-bags-for-baby-showers-i00-privileged"
-digest = "sha256:b8e4be50f930340a095620c7e65a19e29db9325cd29b420c5da10fc9f8cdd799"
+digest = "sha256:69f46b0575eb9cb0e1206ed7da8b97c7686d0a73cc0c65b545739d1571491a8f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-gift-bags-for-baby-showers-i00-standard"
-digest = "sha256:eefe7ae0554f0d5d646c8a768125b0743a893a97d361f2c0879ab9616b1b41e4"
+digest = "sha256:82e07df674f42ad4f090776e35a84000a3188d145e609b3018321396671e1195"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-rose-centerpieces-i00-privileged"
-digest = "sha256:51b46f1523da7ddeec4f4ea3fa42b641cb22040d14daa6390c99c8cf3d906c8d"
+digest = "sha256:9d42d169eda1ff3667b11e8bc3987619dfc6241d31cc3203bcc7f9d25f5e2fe7"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-rose-centerpieces-i00-standard"
-digest = "sha256:557684dcf8c86cf065a1ab695361671e25d9968381c04cdb4a591cb1e1a2a188"
+digest = "sha256:cfb3c34670a1463c486969d69623186bed7d7cc10223f0d53965f0310c57edbe"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-organizing-art-supplies-i00-privileged"
-digest = "sha256:ae926e0b180b40c29bacbd7c4c2f4dc070d8b7f13b506caf88b554407fea7fde"
+digest = "sha256:80adab82134ec87571045315aaf8d687dc385047b9e728702828a4d945b11921"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-organizing-art-supplies-i00-standard"
-digest = "sha256:045f90cd619bc5a2d18a737498a68a2a57a0e0f59c354174a6c6c861a43c0e05"
+digest = "sha256:81275e771505354b0ac283f0c2b9e94bb9c44491eccaaac06a496801ef087cbd"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-packing-meal-for-delivery-i00-privileged"
-digest = "sha256:c95e9f92678f081e6148636a93c7ddeb5f98d764a654e98ae2b2424b1e03a0f1"
+digest = "sha256:814fc2b03622c61275135ef446f66822eab1b168ccb3f194c522f2d4a00ef8ce"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-packing-meal-for-delivery-i00-standard"
-digest = "sha256:9608eca730070ba6fb564fc215b95d7a631fb5ae97dc8a6689fdf1db41ec8d05"
+digest = "sha256:52e25dedf5d4262becaa73e36b35723021c5a27f21f958f6cb77610258b056d5"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-preparing-lunch-box-i00-privileged"
-digest = "sha256:e26a52c648f767dda1cdeee93176c2e68b923f37c1bacc6c76ddbff5aa89cf86"
+digest = "sha256:eb1a91e8fe79b66df9c2fb60fb172437c2a1b21c6d27cd916f0fc76aba42aebf"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-preparing-lunch-box-i00-standard"
-digest = "sha256:72565c113f5aff2ebfa76052da7b272c2ad669a72b05a757b5351f4e943d7a39"
+digest = "sha256:a5f6bb39dabbba787ca7c3d3b9792affcd48ef8b9dddec48764118e651c3f8c5"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-rearranging-kitchen-furniture-i00-privileged"
-digest = "sha256:e4476b199ed05992e0f5f6c2563755d12e40f7d9e4914a8b79229d6210c3929b"
+digest = "sha256:dbc969281aacaeec43ac99ba55c042ede86c3751ad5d2f06b2e34844f502cdd3"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-rearranging-kitchen-furniture-i00-standard"
-digest = "sha256:562d9fae5aa7557a84d878725613b7fe4ce78c8ccdd2ac1c528d0b5be5e40b6a"
+digest = "sha256:0cd4377f7c9d3fbcd2c5a08df0bb0d71e4e63e98ba3f6953068214675944d46d"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-set-up-a-coffee-station-in-your-kitchen-i00-privileged"
-digest = "sha256:ed4e9528f4da9900447ba053882fa2d7a6c4ee4655f19c240de373113cc47405"
+digest = "sha256:4d4cc57f7b55aefa428773a1ff428b561ff0b00f661b9557e49a9f9a6e176ec8"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-set-up-a-coffee-station-in-your-kitchen-i00-standard"
-digest = "sha256:79da237530a6833c2089c06253e9de647c1924a0eec0b0a301a769b025d805e1"
+digest = "sha256:da36f0966e7b13d4532c044e244927e8b5d3e6a05bf609e3a324378182aa3add"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sorting-books-on-shelf-i00-privileged"
-digest = "sha256:a5cc313014481022372684b551b56da90414416bfb21d4dd4b5b5f63577781a4"
+digest = "sha256:1c328fb8e62fae895a39ee9a492e6462ee895e2b8ceb62d1edad6f826c973da9"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sorting-books-on-shelf-i00-standard"
-digest = "sha256:e10186d5c7a246e2392f54ac61c1a2e4e14140712dab06c9ece0be77a3d90605"
+digest = "sha256:1daadc8c8bcd4884dfe6e594046c1e6db32265e5ea0a1096232019dc444da057"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-store-honey-i00-privileged"
-digest = "sha256:8891f6d098b0c6e6ae71c7267c4e35c5a9e1e81b6ed0078de9dd32068062ae84"
+digest = "sha256:896fa64268b05da36384dae2553564ce94429c6a71cf51c49fe1edbf9f1ae30d"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-store-honey-i00-standard"
-digest = "sha256:9083d49d44eb5f4c2d779a155ccab154aab7fba1c6d4e9f64ddb5dc055e1c187"
+digest = "sha256:0506581f7ec20ba5e01f19939f81f0542b503a6af920f8352cae6144de6b4c9c"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-store-produce-i00-privileged"
-digest = "sha256:268b7f9d761564c82013f70f3e96b81f5fec854871e33e5541fe89324b7e892f"
+digest = "sha256:7d8d8eafff191f2f899fc29703d62cd0a666f72a310f9c6cc212f10e13d70a1b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-store-produce-i00-standard"
-digest = "sha256:5344f8c6e5670f02d33ce6cd15d3cecad17d80141eb293fae231f2614057e296"
+digest = "sha256:3a4ba4d9d4725bb3b61743a72fade7a016c6e69a908fcaddbbb080594f00b1c3"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-vacuuming-floors-i00-privileged"
-digest = "sha256:13d327307b26eead50dae8ffe2850311edf5bd9b49d589edab23bcf818c537e1"
+digest = "sha256:63484d925af27cdfc69f32cfd86f3ed4d161c92038dd6fde0f1c865dc041bbec"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-vacuuming-floors-i00-standard"
-digest = "sha256:b87eccd25ed736e6d31c64639cd56cff132fb9e2c29e4d3745e729eb92d2f250"
+digest = "sha256:f9e26cc558b49bb27e6deacaadab37fc317c54ccb916159bf47d7553236ebf75"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-attach-a-camera-to-a-tripod-i00-privileged"
-digest = "sha256:f1261f78fd2f0d2f2157f5682069c0dfae8c6c96ad16ef9ce7ee91ed268c90fc"
+digest = "sha256:fa46846a845a48d656d4bac1db685de78ffee009b582da09f4f1e3f39ed02948"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-attach-a-camera-to-a-tripod-i00-standard"
-digest = "sha256:f29f3b6562c4a07111d6c259e850ad0e3d14249ea809c00e9642aa0bfd51ddef"
+digest = "sha256:b7df609a93b8b1a6ea3959844ff0d451256940d6d47c12598274a87ae17ec098"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-chop-an-onion-i00-privileged"
-digest = "sha256:6ad16cf23a48bea3ab7d49a6f13a548775852d8309e99e5e4bb420d11fe0cc1f"
+digest = "sha256:7405c9ee8f45fae64c0043787fe269457f2e257ff66f7fbe39f510e3d2207238"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-chop-an-onion-i00-standard"
-digest = "sha256:a81ec6b9054c15e3034cab9c91aaae22a66034d3e1730c7e34ad544c13c248ca"
+digest = "sha256:134914635d3328ea5ec1d78461c111b80c13f169572eff4161e17fafdd8284db"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-a-keyboard-i00-privileged"
-digest = "sha256:f23fb668079e2ccf5055c2c8c4940344e09134c189eb1520a6a182a26940edf7"
+digest = "sha256:90b8f956c6d1c514e25178114b079944f40579942bdd5df2f2abc13c5006258e"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-a-keyboard-i00-standard"
-digest = "sha256:1a2511b80ddef0d713b778f3578bf908925c76f45d2698bc5294bc7cba149c1f"
+digest = "sha256:c10e40c2b81f99dc79dbb323d2b009fb75442828b0e993d2cf5dd5a4f6fbb567"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-a-trumpet-i00-privileged"
-digest = "sha256:cbb151a5372ff1e913e04ed8b7ea0aebd72b5514bbf8f1eee5debeb0c615fe80"
+digest = "sha256:9dc57bd8ceea0870a3a03ecce153bdc715f61d5fe880510b86eca3324f86b86b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-a-trumpet-i00-standard"
-digest = "sha256:c4912ba7e68664de17bfb751f884126d2661db43fa74874c4429dbfce3e95cb6"
+digest = "sha256:0ec0554938e3cfb874e5fbb3eda6ac7a9bcd6345cba96cd26a336ee0d83a0e63"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-boxing-gloves-i00-privileged"
-digest = "sha256:c55339e8939b8b9530fb41a774fdd0c7c8d902ac6e33db1930b48873c0d10ce7"
+digest = "sha256:d4e79756982c0c95ac41a6e0963cbfe01a8db71ac2b951eac4dfcadf43f04b74"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-clean-boxing-gloves-i00-standard"
-digest = "sha256:4190ee2f084e877ef5a213c1bbe6ca24e405cdfb703fb30b56befe3b0dbc5a1b"
+digest = "sha256:c47311d29b12ea9987229a141663eedd5c8d87fb2a74f3fc749ebc841214577b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-a-frozen-pie-i00-privileged"
-digest = "sha256:7ea2173b29d86d35aa37a7b9633db24a2b53295b0ebf4df301da8d647f254eac"
+digest = "sha256:e63f4a2f2c5e87e57785f2fef0c6d14db1f6725b189320c557589b07c35ca239"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-a-frozen-pie-i00-standard"
-digest = "sha256:f118ea4e3bc4c01b4166cfe78b6060e1c63ce6afe244cfb573d0a2de1fc258d1"
+digest = "sha256:76e7c734a6e205aec9406a6ba327f7abf099e78d9b1187ea5b6216b23fe3efab"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-bacon-i00-privileged"
-digest = "sha256:c7c7dd47e2965c06943296c5a0077362e45a6d22ae311de18cfcd56687985b8e"
+digest = "sha256:c0ff85248f9d850a2ae7343d3e0df078862acd076fa0e5230561b8105481ccf8"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-bacon-i00-standard"
-digest = "sha256:95acd252996405701d620f24fdce495704dd31a537781b8f2c9f5c4fa084fbd1"
+digest = "sha256:51f584b53f2450c60d4b4ca2b1b48d0350be94451304a4344b6203534b4ef3c1"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-hot-dogs-i00-privileged"
-digest = "sha256:d11b0a343503d4afbe10ae20dc562a83e549c6162756a2d7a59d77700e16d4d6"
+digest = "sha256:a74f2653df563f10371253fdcd9fa93dd707224a026982acd9ef3d4f208cfa68"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-cook-hot-dogs-i00-standard"
-digest = "sha256:3e8182a63d4fb9b0fab740f158f28d958abb416990351f0b6469b2c2f0405839"
+digest = "sha256:864d982b5f71e555f907537524d59e6bd9f8f12e36beaa7673a90b938f830c38"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-halve-an-egg-i00-privileged"
-digest = "sha256:b2fd3a92ff40520c6dca10b5cd9b54d847d6230c06595477eb45630017069fa3"
+digest = "sha256:a09ad40508f1d7d2315954b6b71c9a5940ab6751dddb323440bbb10fc3338a45"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-halve-an-egg-i00-standard"
-digest = "sha256:dd203186d8f955939f22ca51e4aabd3ca1eceff5e8456a75499f00ef27ec7f93"
+digest = "sha256:97e263738128beeb040a7c8a752605f00146e18176673d6a7fb9cc2d948f4e1c"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-installing-a-fax-machine-i00-privileged"
-digest = "sha256:24f18f100454e33eb78ec712204648d292cc819f0dc6c54566722942b86ee3f2"
+digest = "sha256:f8c6721770998736fdb30e279636a3ec529f4e91dbe4cb9df5f1278645913ca6"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-installing-a-fax-machine-i00-standard"
-digest = "sha256:ee883370654a5a5319f6c298e392e9ec98156cdc971fb1218781fa85ccfc7f6f"
+digest = "sha256:a3fd13976eb35dda8991e9a3b6a4bf99ae4e3160cbd8677a147fd408bb089687"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-installing-a-modem-i00-privileged"
-digest = "sha256:d767e80c5741f60959e7501963236b0228d1ae09a5f9f02f7dcdcb8964193ef8"
+digest = "sha256:78835e9905c2cd4dead512f54683a6347cb0c0db6fa4f0e7a31732a8da9e9787"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-installing-a-modem-i00-standard"
-digest = "sha256:2e09ba990dde5435d64d6e2d3bf93a37efe30e56b62cf866d995a0c6f52ac5be"
+digest = "sha256:1ba61489919b53d6bbd29d8f10175fb3a1f2eb198709b09ba7e5f19fda9d093c"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-installing-smoke-detectors-i00-privileged"
-digest = "sha256:25298d53e900a75c622cca00f928b11063c7b503bac0456e81ffbfbcdbfb4dbd"
+digest = "sha256:1930cf2a3707c0fca7f5e62f2a2470a62eb36f4b924338fea23508502380257f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-installing-smoke-detectors-i00-standard"
-digest = "sha256:95fa607011e9f29be1505634c99a2cb2c5b2fe501eff8bae518cfe1c69ee7d98"
+digest = "sha256:5f5efa5c196749aa7a67e0ff73a99459ee65f3aab17169d3510f3db9d1317d4b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-cabinet-doors-i00-privileged"
-digest = "sha256:856f4688f2b2c3fa6826eba927fb55188cea62c6f69ad66ea9a335e5a8e5d666"
+digest = "sha256:ba2cc0c518bfd9ebefbeeed159797cbe7a00e075ed37d415b704cd2d78c83984"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-cabinet-doors-i00-standard"
-digest = "sha256:cda0ac38f161cd1342de172859b14f6888ffffa7e147c955a5297840bf0fa4cc"
+digest = "sha256:c3aaf8ae92642df6d18795fb65aecc7379808e142ae1ee23c8711b1113a99bcf"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-microwave-popcorn-i00-privileged"
-digest = "sha256:b3c497c2e61254e30a20ed244896d1d0dd7765967aa76b25135cae7e15f1506c"
+digest = "sha256:91be37aa92e560e7022c13143f9271345532eb32805738d49684049cb58ff602"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-make-microwave-popcorn-i00-standard"
-digest = "sha256:35b6768cf3274307cb4401e2859b8efd7e2649b262afb1170a4e8c264c6c2723"
+digest = "sha256:6fc0b162e193fdd8242b9a213891a3837b5fc6cb0b94af19865eb27f45fe5509"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-re-shelving-library-books-i00-privileged"
-digest = "sha256:1daf03431f6c68deb3d38ba050af4b9a6293c1ce2a9219ac21398bde7dc5c7ab"
+digest = "sha256:cab6ec1e1956285e513235eaab9636155d296aeb052e949b35e4338b6b64d18f"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-re-shelving-library-books-i00-standard"
-digest = "sha256:f52d900878a619042819137e250f9e7043836fe84c758def2f87bca05f89c7e8"
+digest = "sha256:e38a80b160227e8d9d9d827f162aedca297aead4c0bf8410869e7c675911e4d5"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-scrubbing-bathroom-floor-i00-privileged"
-digest = "sha256:08cfcfa2b5e77debd35592a6dd4acf8a354cfbb97eed0aa088699426ecebdf1d"
+digest = "sha256:bf9a7c142bd917c439e75f9ff6444f5d57e40e5f08cf80b06a55a1c052e0cec4"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-scrubbing-bathroom-floor-i00-standard"
-digest = "sha256:cb1661fc8b595215d4b47e4bd28166b19e892049524b250333a4f9fceb16310a"
+digest = "sha256:08334a96c7ac62f851fb1309dd121d96ba607c8bffd4ccf44a4c31bc5f8534b2"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sorting-bottles-cans-and-paper-i00-privileged"
-digest = "sha256:3392ea910359add4c854bbeda2757859269466ca9826acca721151704bf35993"
+digest = "sha256:0df2aa5971777a34e1f4644ecb82a4b9369711506fd8084d177d02b05b54f59b"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sorting-bottles-cans-and-paper-i00-standard"
-digest = "sha256:3a096bfb3c9da14457e54aca282966f7d18d608c98660dffedfc3b4477642495"
+digest = "sha256:1505aefac10c04af105e14995d78240b09363d585d8e961401fcb77531247508"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-spraying-for-bugs-i00-privileged"
-digest = "sha256:698e3e5dca42575c00918d04e982a2c85d7ca71048529dc4fe6bf52f39730c05"
+digest = "sha256:8e756e3850e795f51a9f4d54d7abe8786f48781c606eead4b80fbd8bc12d0b40"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-spraying-for-bugs-i00-standard"
-digest = "sha256:ad91e46d0c1dd9d774170cbfdc589d1c68ef91f2f8347859d61698efaa554abe"
+digest = "sha256:ad262dfe6e6617c028ec50d67ae753fc2bcae20763db5c2f0e73b2dbbfe934bb"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-spraying-fruit-trees-i00-privileged"
-digest = "sha256:9742f108afd6437323cde0cad425230d57910cc385bf89777f0476e12b350ed8"
+digest = "sha256:f7f03ef46c1341307c9609cc1284bf7ce8164b495ddc618ab26a5feee020a631"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-spraying-fruit-trees-i00-standard"
-digest = "sha256:8b3e4fe262730e5aa864c87ed319d2f0958616cfa5965e84810aca904d2ded27"
+digest = "sha256:bc6da2ffccd555cd7d27e5095caeadc695c07c72aefb0886002aaa843d6491d9"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-store-batteries-i00-privileged"
-digest = "sha256:57e61444f5d8f4cd3c564a01f87a5b932c94461942236c50f124a3c57a09b98a"
+digest = "sha256:a21a3da6ab3a84851c6ff3ed2be17906ede06da0b281ee8625b7ed4632ddc561"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-store-batteries-i00-standard"
-digest = "sha256:40c28a5393fdc5fb0b9e331f518d80fa4ab60a37604ce394342f2df7773d4434"
+digest = "sha256:1698063b1f825f96d25c60788a0f9c6c6fb92ff8ef3e4a3a8afa48b04d4988b1"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sweeping-garage-i00-privileged"
-digest = "sha256:2f2335ff72a4888a9a8ab95070f8fca611fac768ae0d70557079d23072566794"
+digest = "sha256:fa66aaf965cbd768c99e9ef7cf94110cd8f8d52c07b333c4df1128476daab5d8"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-sweeping-garage-i00-standard"
-digest = "sha256:35de71b6f525f5231d9c36de6590e21b19c9796a33c80b5a60c99e86ecd808b1"
+digest = "sha256:67f043f0b0ffa13a310ce069c5cf09f3620257b7df3fc5bec8a56063f3996d03"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-turning-out-all-lights-before-sleep-i00-privileged"
-digest = "sha256:7ab65c93becc3318429f044a6640d63fd30c7494113f8b08e7399bf8dfd347ce"
+digest = "sha256:b6162489befe2ac898a1843bcbb5ba471b16d7103915a8737579566919c72c46"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-turning-out-all-lights-before-sleep-i00-standard"
-digest = "sha256:c920f7ca5f4d2ee008262467f6bc98eb8d9037c9137781358fd7bd4f3706e722"
+digest = "sha256:bb52a4a79ef1417ab28609b8316fa14eb65c053ebe3393f8e9d6c0e5ab834510"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-wash-a-baseball-cap-i00-privileged"
-digest = "sha256:0330c91d8e815c792ff41289d6fdb84e62cabfb89f7cf7dfc0aac85af4c4d01b"
+digest = "sha256:2e4377f83f72374d59e423b6103a7d7535902e89e5b1976f7257310d78bc85f8"
 
 [[tasks]]
 name = "robot-coding-bench/behavior-wash-a-baseball-cap-i00-standard"
-digest = "sha256:d0c4e2129725fcaa5b8a356a632f742eeb944c143c0bbb804640d1fc0db5c054"
+digest = "sha256:3b7e09a5602ad55490df5ccc3e5fe82be4d56d2dafc898438e59f20f711cae0f"
 
 [[tasks]]
 name = "robot-coding-bench/robotangle-blanket-flatten-easy-i00-privileged"

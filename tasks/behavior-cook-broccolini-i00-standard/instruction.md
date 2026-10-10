@@ -5,8 +5,12 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 **Task:** Cook the broccolini with garlic. Three broccolini and two garlic cloves lie on a plate on the kitchen countertop, next to a frying pan; put all of them into the frying pan, put the pan on the stove, and cook them. Success means all of the following hold at the same time: (1) both cloves are on top of the frying pan and cooked; (2) all three broccolini are on top of the frying pan and cooked; (3) the frying pan is on top of the stove. How the simulator judges them: ontop(A, B): A touches B and B is directly below A (and not above it). cooked(A): the highest temperature A has ever reached is at least its cooking temperature (70 °C by default). Heat comes from a heat source that is on (a stove burner, an oven: 200 °C) within 0.2 m of A; once cooked, A stays cooked. The service checks the goal and the episode ends the moment it holds.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
-  simulator error. Whatever you knock over or push away stays where it ends up.
+- **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
+  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+- **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
+  when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
+  time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the
+  proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
 - Steps are unlimited; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time

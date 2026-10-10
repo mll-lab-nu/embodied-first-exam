@@ -5,8 +5,12 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
 **Task:** Wash the dog toys. Two teddy bears, a tennis ball and a softball are inside the cabinet in the utility room: one teddy is dirty and the other dusty, the tennis ball is covered with debris and the softball with dirt. Clean all four; a washing machine stands in the utility room. Success means all of the following hold at the same time: (1) neither teddy bear has any dirt or dust on it; (2) the tennis ball has no debris on it; (3) the softball has no dirt on it. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.
 
 ## Rules (real-robot rules)
-- **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
-  simulator error. Whatever you knock over or push away stays where it ends up.
+- **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
+  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+- **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
+  when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
+  time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the
+  proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
 - Steps are unlimited; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time
