@@ -106,9 +106,13 @@ class Result:
 
 
 class Robot:
-    def __init__(self, base: str | None = None, timeout: float = 600.0):
+    def __init__(self, base: str | None = None, timeout: float = 3600.0):
+        """Connect to the sim service and wait until it answers GET /spec. `timeout` (seconds) is how long to wait for a
+        service that is still starting: the default outlasts every task's start-up watchdog (the longest is 2400 s; an
+        Isaac Sim start on a busy host takes 10-30 minutes), so the first Robot() returns when the simulator is up. The
+        wait is part of your wall-clock budget; progress is printed to stderr once a minute."""
         cands = [base or os.environ.get("SIM_URL"), "http://sim:8000", "http://localhost:8000"]
-        t0 = time.time(); last = None
+        t0 = time.time(); last = None; told = t0
         while time.time() - t0 < timeout:
             for b in [c for c in cands if c]:
                 try:
@@ -120,8 +124,13 @@ class Robot:
                     return
                 except requests.exceptions.RequestException as e:
                     last = e
+            if time.time() - told >= 60:
+                told = time.time()
+                print(f"[rcb_client] still waiting for the sim service to start ({told - t0:.0f} s of at most {timeout:.0f} s; "
+                      f"last answer: {str(last)[:200]})", file=sys.stderr, flush=True)
             time.sleep(2)
-        raise RuntimeError(f"sim service unavailable: {last}")
+        raise RuntimeError(f"sim service unavailable after {time.time() - t0:.0f} s (Robot(timeout={timeout:.0f}); last answer: {last}). "
+                           "If the simulator is still starting, call Robot() again: nothing has been executed.")
 
     def spec(self) -> dict:
         return self._spec
@@ -138,6 +147,7 @@ class Robot:
         m, p = rcb1.decode(r.content); return Result(m, p, self._spec)
 
     def _common(self, cameras, video_fps, depth, include_depth) -> dict:
+        if isinstance(cameras, str): cameras = [cameras]      # one camera name, not its characters
         cams = list(cameras) if cameras is not None else self._spec.get("default_cameras")
         if depth is None or depth is False: depth = "frames" if include_depth else "none"
         elif depth is True: depth = "last"

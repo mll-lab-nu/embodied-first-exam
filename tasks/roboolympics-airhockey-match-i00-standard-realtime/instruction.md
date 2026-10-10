@@ -46,7 +46,7 @@ r.submit("ready", [[0]], note="WHY ... PLAN ...")       # during a break: resume
   next step by default; `meta["control_steps"]` is the next step's number), replacing whatever was planned from there.
   A row takes effect at its step: the command is checked and planned there, from the state of that step. Rows for
   steps that are already gone when the request arrives are dropped (`meta["late_steps"]`); out-of-range values are
-  clipped (`meta["clipped"]`); a command the rules refuse at its step (e.g. a mallet target while the match stands still) changes nothing and
+  clipped (`meta["clipped"]`); a command the rules refuse at its step (e.g. a mallet target at a step where the rally is already over; a row planned for a step inside a break is dropped and does not count) changes nothing and
   counts in the proprio column `commands_refused`.
 - `res.meta`: `control_steps`, `sim_time_s`, `time_left_s`, `done`, `reason`, `running`, `lag_s`, and `proprio`
   (`layout`, `now`). `EpisodeOver` is raised once the match is over.

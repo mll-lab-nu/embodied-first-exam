@@ -143,7 +143,8 @@ def context(t: dict, defaults: dict, sports: dict, facts: dict) -> dict:
         "robot_text": s["robot"], "rules": rules_md(sport_toml, facts, facts["names"][t["sport"]]),
         "refused_example": {"tabletennis": "a stroke whose contact time has already passed",
                             "badminton": "a toss when it is not your serve",
-                            "airhockey": "a mallet target while the match stands still"}[t["sport"]],
+                            "airhockey": "a mallet target at a step where the rally is already over; a row planned for a step "
+                                         "inside a break is dropped and does not count"}[t["sport"]],
         "revision": sport_toml["sport"]["revision"], "slowdown": slowdown,
         "wall_s_per_step": f"{0.01 * slowdown:g}", "break_s": f"{break_s:g}", "break_wall_s": f"{break_s * slowdown:g}",
         "agent_timeout_sec": int(defaults["agent_timeout_sec"]), "image": defaults["image"],

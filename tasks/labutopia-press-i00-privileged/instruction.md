@@ -28,7 +28,7 @@ from rcb_labutopia import Session
 s = Session(instance="/app/instance.json")   # ONE per process. Simulation only (no renderer): about a minute the first
                                    # time in this container, then about 20 s
 # s = Session(instance="/app/instance.json", cameras=True)   # with the renderer and the task's cameras: the first such
-                                   # Session in this container takes about 15 minutes (Isaac Sim prepares the stage
+                                   # Session in this container takes 13 to 27 minutes (Isaac Sim prepares the stage
                                    # for rendering once; longer on a busy host), later ones about 30 s. The physics
                                    # is the same either way
 s.reset()                          # back to the initial state (unlimited; see "Fresh processes" below)

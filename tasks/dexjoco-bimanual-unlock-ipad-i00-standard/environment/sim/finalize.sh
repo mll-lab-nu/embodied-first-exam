@@ -14,7 +14,8 @@
 # count the service ran with, which the result depends on). A replay still running a minute before the budget ends is
 # stopped: a replay without a result is an infrastructure failure (infra_error = 1), never the agent's 0. The video
 # gets what is left, at most RCB_COLLECT_VIDEO_MAX_S, and is stopped at that. final.json is always written whole
-# (temporary file + rename).
+# (temporary file + rename). A replay that ran fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to the sidecar;
+# the service itself refuses to start an episode like that) is no verdict either: too_few_cpus = 1, infra_error = 1.
 set -u
 DATA="${RCB_DATA:-/data}"; TOOL="${RCB_TOOL:?}"; INSTANCE="${RCB_INSTANCE:?}"; TASK="${RCB_TASK:?}"
 RCB_HOOK_T0="$(date +%s)"; export RCB_HOOK_T0
@@ -106,6 +107,10 @@ if not (a.get("state_sha") and b.get("state_sha")):  # a replay process died (it
                           else "a replay process gave no result (replay1.log / replay2.log)")})
 elif not (a.get("instance_ok") and b.get("instance_ok")):  # the image no longer builds the frozen start: not the agent's 0
     out.update({"instance_mismatch": 1, "infra_error": 1, "error": "a replay did not start in the instance's t = 0 state"})
+if not (a.get("threads_ok", 1) and b.get("threads_ok", 1)) or out.get("threads_ok", 1) == 0:
+    # the live episode or a replay ran fewer than 4 OpenBLAS threads: other numerics than the references', no verdict
+    out.update({"too_few_cpus": 1, "infra_error": 1, "replay_blas_threads": [a.get("blas_threads"), b.get("blas_threads")],
+                "error": "fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to the sim sidecar)"})
 if not ep:  # the service's own record of the live episode is unreadable: no verdict on the agent
     out["infra_error"] = 1
 out["finalized"] = True

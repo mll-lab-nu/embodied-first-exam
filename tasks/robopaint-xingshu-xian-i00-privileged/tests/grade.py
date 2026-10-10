@@ -11,8 +11,9 @@ matches the recorded one (instance_exact). final_reward = the worst replay's fin
 
 A file the agent got wrong is the agent's 0, `bad_trajectory` (not `grader_error`): not an npz, pickled or object arrays, no
 `actions` entry, a wrong shape, NaN/inf, more than rcb_brush.MAX_STEPS rows. `grader_error` is left for failures of the verifier
-itself (a replay process that gave no result or ran past --replay-timeout-s). Every reward.json carries success, final_reward,
-deterministic, grader_error, missing_trajectory and bad_trajectory. Time: two replays of at most MAX_STEPS (72,000) control steps
+itself (a replay process that gave no result or ran past --replay-timeout-s, a frozen instance that does not rebuild here:
+`instance_ok` 0), and `infra_error` = 1 goes with it: no verdict on the agent. Every reward.json carries success, final_reward,
+deterministic, grader_error, infra_error, missing_trajectory and bad_trajectory. Time: two replays of at most MAX_STEPS (72,000) control steps
 at the 67-102 steps/s measured (docs/benchmarks/robopaint.md) take up to 36 min plus two scene builds; [verifier] timeout_sec is
 3600 s and each replay process gets --replay-timeout-s (1650 s).
 """
@@ -24,12 +25,13 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 
 
 # PROTOCOL §2.6: every exit writes these (numeric only)
-BASE = {"success": 0, "final_reward": 0.0, "deterministic": 0, "grader_error": 0, "missing_trajectory": 0, "bad_trajectory": 0}
+BASE = {"success": 0, "final_reward": 0.0, "deterministic": 0, "grader_error": 0, "infra_error": 0, "missing_trajectory": 0, "bad_trajectory": 0}
 
 
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
     out = {**BASE, **out}
+    if out["grader_error"]: out["infra_error"] = 1     # the verifier's failure, never the agent's 0 (PROTOCOL §2.6)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     print(json.dumps(out), flush=True)
@@ -125,7 +127,8 @@ def main() -> int:
         out = {**numeric(o), "success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                "instance_ok": int(instance_ok), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)),
                "n_actions": int(len(acts)), "final_reward": round(min(float(x.get("final_reward") or 0.0) for x in outs), 6),
-               "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "missing_trajectory": 0,
+               # the frozen instance was not rebuilt on this host: the replays say nothing about the agent's trajectory
+               "replay_wall_s": round(time.time() - t0, 1), "grader_error": int(not instance_ok), "missing_trajectory": 0,
                "video_rendered": int(os.path.isfile(os.path.join(LOG_DIR, "replay.mp4")) and not o.get("video_error")), **cost}
         write(ok, out)
     except Exception:  # noqa: BLE001

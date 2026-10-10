@@ -157,7 +157,7 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
   (another GPU or driver) rebuilds it exactly. Until then `instance_ok` (tolerance) is the default rather than
   `--require-instance-exact` (families.json `require_instance_exact`), and the standard resume class stays `approx`.
 - What is not the agent's failure is flagged, and a reward is always written (2026-10-10):
-  - privileged `grader_error = 1`: a replay process that died or printed no result, a replay over its time limit
+  - privileged `grader_error = 1` (and, since the second review of 2026-10-10, `infra_error = 1` with it): a replay process that died or printed no result, a replay over its time limit
     (`replay_timed_out`), a frozen instance the replays did not rebuild (`instance_ok` 0), any other exception in the
     grader. A file that is not a trajectory of the task (not an npz, no `task` / `actions`, a pickled or non-numeric
     array, a wrong shape, NaN/inf, more than 50,000 rows) is the agent's: `bad_trajectory` (`wrong_task`).
@@ -335,8 +335,11 @@ image built from this recipe with the same locks:
   0.20 s per replayed control step; with an 8-CPU quota (the agent container's) about 420 threads, 4 cores and 0.09 s per
   step, with the identical final state, labels and checkpoints. The verifier and the standard sidecar have no CPU limit in
   the task files.
-- **Start-up.** A cold Isaac start took 8-12 minutes on that host under load (the laptop: about 4); the standard client's
-  `Robot()` waits 600 s by default.
+- **Start-up.** A cold Isaac start took 8-12 minutes on that host under load (the laptop: about 4), and 631-715 s on the
+  8-vCPU AWS L4 / L40S hosts (2026-10-10; more than 600 s in 13 of 56 archived standard trials). The standard client's
+  `Robot()` waited 600 s by default, so the reference solution and any script that did not retry ended with 0 control
+  steps there; since 2026-10-10 it waits 3600 s (longer than the service's 1800 s start-up watchdog) and reports its
+  progress.
 
 ## Open items
 - The other 18 shortlisted tasks: `make-instance`, a resampled demonstration through the verifier, Harbor oracle and `nop`.

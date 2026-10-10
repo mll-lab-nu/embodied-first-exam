@@ -938,6 +938,7 @@
   "hand_side_exter",
   "plam_lookat"
  ],
+ "scene_cameras": [],
  "steps_per_s": 400,
  "rest_reason": "failure: object more than 0.25 m from the reference (or from the wrist)"
 }

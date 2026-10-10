@@ -69,3 +69,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   moves (some ended the episode with a simulator error); `/spec` states the 100,000-step cap (`max_control_steps`). The
   replay video of an episode longer than 9,000 control steps is a time lapse (at most 9,000 frames). A trial
   recorded before this date with reward 0 and one of these conditions was an infrastructure failure.
+- 2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to 3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` outlasts the simulator's start (about 2 minutes here; longer than 600 s only on an overloaded host); `cameras="name"` (a string) is one camera, no longer its characters. The service, the collect hook, the grader, the scene and the pass rule are unchanged.

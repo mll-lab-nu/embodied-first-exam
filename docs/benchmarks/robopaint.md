@@ -543,6 +543,15 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
   nor a give-up after crashes), and when the replays could not run (`gpu_lost`, or a replay process without a result
   although the episode had actions). `sim_error = 1` marks an episode that a simulator error ended. The hook writes
   `final.json` whole (temporary file + rename).
+- Malformed requests (standard mode, `environment/sim/server.py`, second review of 2026-10-10): every field of `/submit`
+  and `/observe` is checked before anything is executed (`parse_submit` / `parse_observe`; `note` included, which was
+  read after the chunk had run), and whatever a malformed field raises is a 400 that leaves the episode alive. Before, a
+  non-string `note`, a null `dt` / `seconds` / `video_fps` and a negative or absurd `video_fps` were a 500 that ended the
+  episode (`sim_error = 1`, the agent's 0). Null is the default; `video_fps` is accepted in [0, 1000]. Test:
+  `scripts/robopaint_strict/tests/test_server_requests.py` (needs numpy; the checks are taken from `server.py` by `ast`).
+- Instance drift (privileged mode, `tests/grade.py`, second review of 2026-10-10): a frozen instance the verifier does
+  not rebuild (`instance_ok = 0`) is `grader_error = 1` + `infra_error = 1` (it was a plain 0), and `infra_error = 1`
+  goes with every `grader_error = 1`.
 - Verifier time (2026-10-10). A trajectory may have 72,000 control steps (`rcb_brush.MAX_STEPS`), and the oil references
   already have 49.7k-62.0k. Two fresh replays at the 67-102 steps/s measured above take 24-36 min plus two scene builds:
   - privileged: `[verifier] timeout_sec = 3600` (was 1800, which a 62k-step reference at 67 steps/s already exceeded: the

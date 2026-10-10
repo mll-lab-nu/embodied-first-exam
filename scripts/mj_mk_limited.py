@@ -35,6 +35,11 @@ CHANGES = [
     "the service's start. `final.json` is finalized as soon as the verdict is in it (the video is rendered after it and cannot "
     "delay or void it); a missing, unreadable or verdict-less `final.json` is graded `infra_error = 1`, never a plain 0; the "
     "collect hook's wait fits inside its timeout.",
+    "2026-10-10 (review round 2, board 0067): crash recovery only. A service killed inside the call that ended the episode "
+    "(after the end was logged, before the call's own record) resumed in the state before that call but kept the episode "
+    "ended, so every later call was a 409 and the rolled-back state was graded (a 0 without `infra_error`); the resume now "
+    "ignores an end that belongs to the lost call, and the episode continues from the last completed call, as the "
+    "instruction says. An episode without a crash is unaffected.",
 ]
 CHANGES_ALOHA = [
     "2026-10-10 (review 0067): the calibration is recomputed for every response. Before, it was computed once at start-up, so "

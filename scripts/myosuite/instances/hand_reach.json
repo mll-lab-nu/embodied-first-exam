@@ -38,6 +38,7 @@
   "hand_side_exter",
   "plam_lookat"
  ],
+ "scene_cameras": [],
  "steps_per_s": 1400,
  "rest_reason": "failure: fingertips too far from their targets"
 }

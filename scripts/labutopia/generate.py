@@ -32,7 +32,7 @@ _ENV = dict(ln.split("=", 1) for ln in (LAYER / "client.env").read_text().splitl
 CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR = "Canyu Chen"
 # Longer than the protocol's default 3600 s (D8), uniform within the benchmark, as for the other Isaac Sim benchmarks:
-# the first simulator with its renderer in a container takes 5 to 15 minutes to start (Isaac Sim prepares the stage for
+# the first simulator with its renderer in a container takes 5 to 27 minutes to start (Isaac Sim prepares the stage for
 # rendering once), which a standard task pays before its service answers and a privileged agent pays if it looks at
 # the scene.
 AGENT_TIMEOUT = 5400
@@ -42,8 +42,10 @@ STARTUP_TIMEOUT = 2400
 REPLAY_TIMEOUT = 2400     # one verdict replay: shared/grade.py VERDICT_TIMEOUT_S, shared/standard/finalize.sh REPLAY_TIMEOUT_S
 VERIFIER_TIMEOUT = 5400   # privileged [verifier]: 2 x REPLAY_TIMEOUT + the video replay (what is left) + 300 s
 COLLECT_TIMEOUT = 9000    # standard collect hook: 2700 (episode end) + 2 x REPLAY_TIMEOUT + the video (what is left) + 300 s
-# The renderer's first start in a container, by laboratory stage (measured on eight idle cores: 299 s and 803 s).
-COLD = {"lab_001": "about 5 minutes", "lab_003": "about 15 minutes"}
+# The renderer's first start in a container, by laboratory stage: 299 s and 803 s measured on eight idle cores of an RTX
+# 4090 host (about 9 and 20-23 minutes with two simulators on those cores); lab_003 on an 8-vCPU AWS L40S host: 1538 s
+# (standard sidecar) and 1634 s (verifier), 2026-10-10 (docs/benchmarks/labutopia.md). lab_001 was not measured there.
+COLD = {"lab_001": "5 to 10 minutes", "lab_003": "13 to 27 minutes"}
 # README "Change Log" (PROTOCOL §2.8: fixes to published tasks change them in place and say so), by mode (std: True).
 CHANGE_LOG = {
     True: (
@@ -55,7 +57,13 @@ CHANGE_LOG = {
         f"`final.json` is written atomically, and the collect hook's `timeout_sec` is {COLLECT_TIMEOUT} s (was 5400 s). "
         "`environment/sim/server.py`: a malformed request field (null or a wrong type for `dt`, `seconds`, `cameras`, "
         "`note`) is a 400 before anything is executed (was a 500 that ended the episode). A pass before this "
-        "change is a pass after it; results recorded before it may hold infrastructure failures counted as the agent's 0."
+        "change is a pass after it; results recorded before it may hold infrastructure failures counted as the agent's 0.\n"
+        "- 2026-10-10 (review round 2, board 0067): texts and the client only. The renderer's first start is stated as "
+        "measured (5 to 27 minutes by stage and host: 26-27 minutes for the `lab_003` stage on an 8-vCPU L40S host, where the "
+        "texts said about 15); `Robot()` waits up to 3600 s for the service (was 600 s, so the instruction said "
+        "`Robot(timeout=2400)`) and prints its progress once a minute; `cameras=\"name\"` (a string) is one camera, no longer "
+        "its characters. `pour` only: the instruction says that the last condition counts 84 control steps in all, not in "
+        "a row (what the rule always did). The service, the collect hook, the grader, the scene and the pass rule are unchanged."
     ),
     False: (
         "- 2026-10-10: the grader's time limits and flags; the scene, the frozen instance and the pass rule are unchanged, so "
@@ -63,7 +71,11 @@ CHANGE_LOG = {
         f"what is left of the verifier's {VERIFIER_TIMEOUT} s (each of the three replays had 2400 s, together more than the verifier's 3600 s), so a reward is written "
         "before Harbor's timeout whatever the trajectory's length; a replay without a result also sets `infra_error` "
         "(with `grader_error`, as before), every `reward.json` carries `infra_error`, and an error inside the grader "
-        "still writes a reward (`grader_error = 1`). A trajectory that was graded before gets the same verdict."
+        "still writes a reward (`grader_error = 1`). A trajectory that was graded before gets the same verdict.\n"
+        "- 2026-10-10 (review round 2, board 0067): texts only. The renderer's first start is stated as measured (5 to 27 "
+        "minutes by stage and host: 26-27 minutes for the `lab_003` stage on an 8-vCPU L40S host, where the texts said about "
+        "15), in the instruction and in the tooling's progress message. `pour` only: the instruction says that the last "
+        "condition counts 84 control steps in all, not in a row (what the rule always did). Nothing else changes."
     ),
 }
 FAMILIES = {k: v for k, v in json.loads((HERE / "families.json").read_text()).items() if not k.startswith("_")}
@@ -94,7 +106,7 @@ WORKDIR /app
 PRIV_COMPOSE = f"""# Isaac Sim needs an RTX-class NVIDIA GPU even headless (PhysX itself runs on the CPU). Harbor's local docker sandbox
 # rejects [environment].gpus; merging this onto the main service passes the device through. Kit keeps its caches
 # (the stage prepared for rendering, shaders) inside the container, so nothing of them is shared between trials or
-# with the verifier: the first Session with cameras in a container takes 5 to 15 minutes to start.
+# with the verifier: the first Session with cameras in a container takes 5 to 27 minutes to start.
 services:
   main:
 {GPU}"""
@@ -317,7 +329,7 @@ Sim) runs in a service you cannot open. You get one client and one episode.
   `meta["reason"]` tell you when the episode is over and why.
 - Your wall-clock budget is {AGENT_TIMEOUT} s from your start (`meta["time_left_s"]`); steps are unlimited. **The service
   needs {cold(f)} to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
-  `Robot(timeout=2400)` waits for it, and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
+  `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
@@ -327,7 +339,7 @@ Sim) runs in a service you cannot open. You get one client and one episode.
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)
 ```python
 from rcb_client import Robot
-r = Robot(timeout=2400)                        # connects; waits while the service starts ({cold(f)}; the default timeout is 600 s)
+r = Robot()                                    # connects; waits while the service starts ({cold(f)}; it gives up after 3600 s)
 spec = r.spec()                                # action layouts and limits, robot_spec, cameras (+ intrinsics, mounting), proprio layout, kinematics, budget
 obs = r.get_obs()                              # obs.last[cam] -> uint8 (512, 512, 3) (cameras: {", ".join(cams)})
 obs = r.get_obs(cameras=["{cams[0]}"], depth=True)   # + obs.last_depth[cam] -> float32 (512, 512), metres
@@ -420,7 +432,7 @@ timeout_sec = {COLLECT_TIMEOUT}                # 2700 (episode end, through a re
 """.replace("{COLLECT_TIMEOUT}", str(COLLECT_TIMEOUT))
         if std
         else """[verifier]
-timeout_sec = {VERIFIER_TIMEOUT}.0              # two replays of about a minute (each limited to 2400 s, as before), then the video replay (the rest), whose renderer starts cold (5 to 15 minutes); 300 s of margin: tests/grade.py
+timeout_sec = {VERIFIER_TIMEOUT}.0              # two replays of about a minute (each limited to 2400 s, as before), then the video replay (the rest), whose renderer starts cold (5 to 27 minutes); 300 s of margin: tests/grade.py
 environment_mode = "separate"
 network_mode = "no-network"
 
@@ -454,7 +466,7 @@ expert_time_estimate_hours = {t["hours"] + (1.0 if std else 0.0)}
 
 {verifier}
 [agent]
-timeout_sec = {AGENT_TIMEOUT}.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 15 minutes to start
+timeout_sec = {AGENT_TIMEOUT}.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 27 minutes to start
 # LabUtopia's scripted controllers are in its public repository (and a standard-mode agent could rebuild the simulator
 # from it): the agent reaches the model APIs and nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"

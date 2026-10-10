@@ -6,7 +6,10 @@ started in the instance's frozen state. Numeric-only reward.json.
 No verdict on the agent is an infrastructure failure, never the agent's 0 (PROTOCOL §2.6, infra_error = 1):
 final.json missing (the service or its collect hook never wrote one), unreadable (grader_error = 1 too), or without a
 verdict (the collect hook did not finish: not `finalized`, or neither the replays' `deterministic` nor a give-up after
-crashes). The verdict is on disk before the hook renders replay.mp4, so a video that did not finish changes nothing.
+crashes), or the sim sidecar ran fewer than 4 OpenBLAS threads (`too_few_cpus`, with grader_error = 1: the
+simulation's result depends on the thread count below 4, docs/benchmarks/dexjoco.md "Threads"; the service then starts
+no episode, and replays that ran like that are no verdict). The verdict is on disk before the hook renders replay.mp4,
+so a video that did not finish changes nothing.
 Every reward.json carries success, deterministic, infra_error, sim_error, grader_error and missing_log."""
 
 import json, os, shutil, traceback
@@ -26,7 +29,7 @@ def write(ok, out):
 
 def verdict(d):
     ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic"))
-    ok = ok and not d.get("instance_mismatch")
+    ok = ok and not d.get("instance_mismatch") and not d.get("too_few_cpus")
     # a verdict = the collect hook's replays (finalized, with `deterministic`) or the service's give-up after crashes
     no_verdict = not d.get("finalized") or not (d.get("gave_up") or d.get("deterministic") is not None)
     ok = ok and not no_verdict
@@ -48,13 +51,17 @@ def verdict(d):
         "elapsed_s": float(d.get("elapsed_s") or 0),
         "video_rendered": int(bool(d.get("video"))),
         # a replay process gave no result, or the image no longer builds the frozen start: not the agent's 0
-        "grader_error": int(bool(d.get("replay_failed") or d.get("instance_mismatch"))),
+        "grader_error": int(bool(d.get("replay_failed") or d.get("instance_mismatch") or d.get("too_few_cpus"))),
         "instance_mismatch": int(bool(d.get("instance_mismatch"))),
+        # the sidecar ran fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to it): not the references' numerics
+        "too_few_cpus": int(bool(d.get("too_few_cpus"))),
+        "visible_cpus": int(num("visible_cpus")),
+        "blas_threads": int(num("blas_threads")),
         # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
         # resume (docs/STANDARD_MODE_2_2.md §13), the service not ending its episode for the collect hook, a replay
         # process that gave no result or ran out of the hook's time, replays that did not start in the instance's
         # frozen state, a collect hook that left no verdict
-        "infra_error": int(bool(d.get("infra_error")) or no_verdict),
+        "infra_error": int(bool(d.get("infra_error")) or no_verdict or bool(d.get("too_few_cpus"))),
         "gave_up": int(bool(d.get("gave_up"))),
         "sim_error": int(d.get("reason") == "error"),
         "sim_startups": int(d.get("sim_startups") or 0),

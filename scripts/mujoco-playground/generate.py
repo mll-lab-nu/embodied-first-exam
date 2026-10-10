@@ -426,11 +426,16 @@ STD_CHANGES_BARKOUR = [
 ]
 
 
+STD_CHANGES_R2 = [
+    "2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to 3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` outlasts the simulator's start (no effect on this benchmark, whose service is up within a minute); `cameras=\"name\"` (a string) is one camera, no longer its characters. The service, the collect hook, the grader, the scene and the pass rule are unchanged.",
+]
+
+
 def make(env: str, out: Path) -> tuple[Path, Path]:
     inst_path = HERE / "instances" / f"{env}.json"
     inst = json.loads(inst_path.read_text())
     v = values(env, inst)
-    v["change_log_std"] = "\n".join(f"- {c}" for c in STD_CHANGES + (STD_CHANGES_BARKOUR if "Barkour" in env else []))
+    v["change_log_std"] = "\n".join(f"- {c}" for c in STD_CHANGES + (STD_CHANGES_BARKOUR if "Barkour" in env else []) + STD_CHANGES_R2)
     oracle = HERE / "oracles" / f"{env}.npy"
 
     p = out / f"{v['name']}-privileged"
