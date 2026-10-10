@@ -35,6 +35,18 @@ the last action (VLABench's termination condition; actions after it make the tra
 end in the live state (hash `438d3eec290b…`) and succeed. `nop`: no trajectory, reward 0; the instance is not solved at
 the start (checked on every load).
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 10 GB | 6 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: memory: sim p90 6.9 GB, privileged container p90 8.1 GB, verifier 4.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only; CPU author estimate
+
 ## Details
 | | |
 |---|---|

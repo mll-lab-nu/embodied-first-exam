@@ -23,6 +23,18 @@ expert_time_estimate_hours = 4.0
 oracle = "none"
 oracle_evidence = "none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800) with upstream's 104 kg dumbbell (53.7 kg since image 0.2.0); human review in PR #9"
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
+
 [verifier]
 timeout_sec = 900.0
 # grade.py runs in its own container, built from tests/Dockerfile (docs/PROTOCOL.md §2.6): the agent's container,

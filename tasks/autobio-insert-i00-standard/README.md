@@ -24,6 +24,18 @@ Same instance and success rule as `autobio-insert-i00-privileged` (AutoBio's lev
 ## Verification
 The sim service judges the episode live and records every executed control step; the collect hook (`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, both replays succeed, and they end in the same state. `nop`: the episode times out, reward 0.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 4 | 4 |
+| Memory | 8 GB | 8 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: author (merged PR #94): CPU-only, 4 CPUs and 8 GB per trial, verifier the same
+
 ## Details
 | | |
 |---|---|

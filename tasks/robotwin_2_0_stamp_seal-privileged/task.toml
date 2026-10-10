@@ -18,6 +18,19 @@ oracle = "full"
 instance_seed = 91573             # scene = environment/instance.json (RoboTwin seed + expected initial-state hash); identity = dataset.toml digest
 expert_time_estimate_hours = 0.5
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 3.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 8.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "RTX 4090 24GB / L4 24GB"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 6.0
+verifier_min_gpu_memory_gb = 8.0
+measured = "GPU 6.9 GB oracle peak on RTX 4090, 5.8 GB L4, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 3.2 GB, privileged agent container p90 6.4 GB, verifier 4.2 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
+
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then

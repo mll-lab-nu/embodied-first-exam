@@ -28,6 +28,18 @@ Same scene, instance and success rule as `robotwin_2_0_blocks_ranking_size-privi
 ## Verification
 `success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4`
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 3 | 3 |
+| Memory | 7 GB | 6 GB |
+| GPU memory | 8 GB | 8 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: RTX 4090 24GB / L4 24GB.
+- Measured: GPU 6.9 GB oracle peak on RTX 4090, 5.8 GB L4, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 3.2 GB, privileged agent container p90 6.4 GB, verifier 4.2 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate
+
 ## Details
 | | |
 |---|---|

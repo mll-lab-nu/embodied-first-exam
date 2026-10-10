@@ -27,6 +27,18 @@ As `bigym2-dishwasher-close-i00-standard`: the sidecar judges the live episode w
 simulator executed in a fresh simulator; `tests/grade.py` reads `/data/final.json`. Success condition: the door and both racks are closed to within 5% of their travel: the door within about 4.5 degrees of shut, the lower rack within 0.025 m and the upper rack within 0.0225 m of fully in.
 No oracle; human review in PR #123 (PROTOCOL §2.7).
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 4 GB | 3 GB |
+| GPU memory | 1.5 GB | 1.5 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
+- Measured: GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)
+
 ## Details
 | | |
 |---|---|

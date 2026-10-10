@@ -15,8 +15,10 @@ What it does:
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
   `reward.json`.
 - no `results/` directory (results are published on the results site, not in the repository).
+- `[metadata.resources]` (docs/PROTOCOL.md §2.9, minimum compute) from `scripts/task_resources.toml` when a rule there
+  matches the task; a task no rule matches keeps the values its generator or author wrote.
 - `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
-  Verification, and Details for everything else.
+  Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
 """
 from __future__ import annotations
 
@@ -66,6 +68,13 @@ HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / insta
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
              "task type / mode"}
 CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
+# PROTOCOL §2.9: the minimum compute a task needs, `[metadata.resources]` in task.toml (same list: ci_checks/check-resources.py)
+RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
+RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
+    "min_cpus": float, "min_memory_gb": float, "min_gpu_memory_gb": float, "gpu_required": bool, "gpu_class": str,
+    "recommended_gpu": str, "verifier_min_cpus": float, "verifier_min_memory_gb": float,
+    "verifier_min_gpu_memory_gb": float, "measured": str,
+}
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -162,6 +171,85 @@ def normalize_toml(task: Path) -> None:
     write_if_changed(p, s)
 
 
+def resources_for(task: Path) -> dict | None:
+    """`[metadata.resources]` for a task from scripts/task_resources.toml: every rule whose `match` (a regular expression)
+    finds the task directory name applies, in file order, a later rule overriding an earlier one's keys. None: no rule
+    matches (the task keeps what its task.toml says)."""
+    if not RESOURCES_FILE.is_file():
+        return None
+    out: dict = {}
+    for rule in tomllib.loads(RESOURCES_FILE.read_text()).get("rule", []):
+        if re.search(rule["match"], task.name):
+            out.update({k: v for k, v in rule.items() if k != "match"})
+    if not out:
+        return None
+    unknown = set(out) - set(RESOURCE_KEYS)
+    missing = [k for k in RESOURCE_KEYS if k not in out and not (k == "recommended_gpu" and not out.get("gpu_required"))]
+    if unknown or missing:
+        raise RuntimeError(f"{task.name}: scripts/task_resources.toml gives unknown keys {sorted(unknown)} / misses {missing}")
+    return out
+
+
+def _toml_value(v) -> str:
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, (int, float)):
+        return repr(float(v))
+    return '"' + str(v).replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def resources_block(r: dict) -> str:
+    lines = ["[metadata.resources]", "# minimum compute to run this task (docs/PROTOCOL.md §2.9)"]
+    lines += [f"{k} = {_toml_value(r[k])}" for k in RESOURCE_KEYS if k in r]
+    return "\n".join(lines) + "\n"
+
+
+def normalize_resources(task: Path) -> None:
+    """Writes `[metadata.resources]` right after the `[metadata]` keys (replacing an earlier block) when
+    scripts/task_resources.toml has a rule for the task."""
+    r = resources_for(task)
+    if r is None:
+        return
+    p = task / "task.toml"
+    s = p.read_text()
+    s = re.sub(r"(?ms)^\[metadata\.resources\]\n.*?(?=^\[|\Z)", "", s)
+    m = re.search(r"(?m)^\[metadata\]\n", s)
+    if not m:
+        raise RuntimeError(f"{task.name}: task.toml has no [metadata] table")
+    nxt = re.search(r"(?m)^\[", s[m.end():])
+    at = m.end() + nxt.start() if nxt else len(s)
+    head = s[:at].rstrip("\n") + "\n\n"
+    s = head + resources_block(r) + ("\n" + s[at:] if at < len(s) else "")
+    write_if_changed(p, s)
+
+
+def _num(v) -> str:
+    v = float(v)
+    return str(int(v)) if v == int(v) else f"{v:g}"
+
+
+def render_resources(r: dict) -> list[str]:
+    """README "## Compute resources" from `[metadata.resources]` (PROTOCOL §2.9)."""
+    if r.get("gpu_required"):
+        cls = {"rtx": "an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering)",
+               "any": "any NVIDIA GPU"}.get(r.get("gpu_class", ""), f"an NVIDIA GPU of class `{r.get('gpu_class', '')}`")
+        rec = r.get("recommended_gpu")
+        rec = " / ".join(rec) if isinstance(rec, list) else rec
+        gpu = f"GPU: required, {cls}" + (f"; recommended: {rec}." if rec else ".")
+    else:
+        gpu = "GPU: not needed" + (" by the agent phase; the verifier needs one." if float(r.get("verifier_min_gpu_memory_gb", 0)) > 0
+                                   else ".")
+    return ["## Compute resources",
+            "Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent "
+            "phase counts every container of the trial at once (the agent's, and in standard modes the simulator "
+            "sidecar); the verifier phase runs after it.",
+            "", "| | Agent phase | Verifier |", "|---|---|---|",
+            f"| CPU cores | {_num(r['min_cpus'])} | {_num(r['verifier_min_cpus'])} |",
+            f"| Memory | {_num(r['min_memory_gb'])} GB | {_num(r['verifier_min_memory_gb'])} GB |",
+            f"| GPU memory | {_num(r['min_gpu_memory_gb'])} GB | {_num(r['verifier_min_gpu_memory_gb'])} GB |",
+            "", f"- {gpu}", f"- Measured: {r.get('measured', '')}"]
+
+
 def _shared_sources() -> set[bytes]:
     """Contents of the files generators copy unchanged from scripts/eai_standard/ (the eai-standard/2.2 layer, and the 2.4
     layer in v2_4/; D9): their copies must stay byte-identical to the source (check-tooling-identity.sh), so normalize never
@@ -240,6 +328,8 @@ def parse_readme(s: str) -> tuple[str, list[tuple[str, str]], list[tuple[str, st
     out: list[tuple[str, str]] = []
     intro = ""
     for title, body in sections:
+        if title == "Compute resources":   # rendered from task.toml (render_resources), never carried over
+            continue
         text = "\n".join(body)
         body_rows, rest = [], []
         for ln in body:
@@ -340,6 +430,8 @@ def render_readme(task: Path) -> str:
     out = [f"# {task.name}", "", "| | |", "|---|---|"] + [f"| {k} | {v} |" for k, v in head]
     out += ["", "## Task", task_text.strip(), "", "## Difficulty", difficulty.strip(), "",
             "## Reference solution", ref.strip(), "", "## Verification", ver.strip()]
+    if isinstance(md.get("resources"), dict):
+        out += [""] + render_resources(md["resources"])
     if extra_rows or extra_secs:
         out += ["", "## Details"]
         if extra_rows:
@@ -370,6 +462,7 @@ def normalize(task: Path) -> None:
     if (task / "results").exists():
         shutil.rmtree(task / "results")
     normalize_toml(task)
+    normalize_resources(task)
     normalize_text_files(task)
     normalize_test_sh(task)
     write_if_changed(task / "README.md", render_readme(task))

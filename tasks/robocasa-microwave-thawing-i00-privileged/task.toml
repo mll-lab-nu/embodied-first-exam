@@ -18,6 +18,18 @@ mode = "privileged"
 oracle = "full"
 expert_time_estimate_hours = 2.0
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 3.0
+min_memory_gb = 14.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"

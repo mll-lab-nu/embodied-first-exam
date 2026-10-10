@@ -32,3 +32,15 @@ Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a
 pass iff RoboTwin's `check_success` holds after every replay and the final-state hashes agree (`tests/grade.py`).
 The trajectory is the per-physics-step drive-target record (T, 34) captured by hooking `scene.step()`; the
 instance is rebuilt from the RoboTwin seed and checked against the stored initial-state hash on every reset.
+
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 3 | 2 |
+| Memory | 8 GB | 6 GB |
+| GPU memory | 8 GB | 8 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: RTX 4090 24GB / L4 24GB.
+- Measured: GPU 6.9 GB oracle peak on RTX 4090, 5.8 GB L4, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 3.2 GB, privileged agent container p90 6.4 GB, verifier 4.2 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate
