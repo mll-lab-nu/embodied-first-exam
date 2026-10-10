@@ -229,6 +229,9 @@ CLI equivalent of the grader:
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
 - Control runs at 30 Hz (4 physics substeps). There is no step budget; your wall-clock budget is 90 min (5400 s).
+  One technical cap: a trajectory, and a `Session` between two resets, has at most 200000 control steps (about
+  1.85 h of simulated time). `s.step` returns `True` on the step that reaches it and raises after it until
+  `s.reset()`; the grader scores a trajectory with more rows 0 (`bad_trajectory`).
 - Grippers open to 10 cm. The gripper tip frame's +z axis is the approach direction and +x the finger-closing
   direction; `p["top_down_quat"](yaw)` builds a vertical-approach orientation whose fingers close along `yaw`.
 - One `Session` per process (Genesis initialises once). The physics runs on Genesis' bit-deterministic CPU backend at

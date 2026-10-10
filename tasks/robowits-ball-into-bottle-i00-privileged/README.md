@@ -29,7 +29,8 @@ is published on the results site).
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff
 RoboWits' `_check_success` holds after every replay, the final-state hashes agree and the rebuilt frozen scene matches
-the recorded one (`tests/grade.py`), plus `/logs/verifier/replay.mp4`. What the predicate checks, in words:
+the recorded one (`tests/grade.py`; a scene that does not match is the host's failure, `infra_error = 1`, never the
+agent's 0), plus `/logs/verifier/replay.mp4`. What the predicate checks, in words:
 `instruction.md`, "Success criterion (as graded)". The trajectory is the per-control-step JOINT_ABS record (T, 16);
 Genesis' CPU backend restores the frozen snapshot exactly, so in-process repeats and fresh processes agree bit for bit
 on one CPU vendor (docs/benchmarks/robowits.md).
@@ -58,3 +59,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Robot | Marvin bimanual: 2 × 7-DoF arms with Pika parallel grippers; JOINT_ABS actions (T, 16) at 30 Hz |
 | GPU | EGL camera rendering only (`environment/docker-compose.yaml`, `tests/docker-compose.yaml`) |
 | BlenderKit models | not redistributable, so not in the image: mounted read-only from `$RCB_ROBOWITS_BLENDERKIT` (how to obtain them: `images/robowits/NOTICE`) |
+
+### Change Log
+- 2026-10-10 (review of board 0067; findings RW-1, RW-5, RW-6, RW-7): the verifier reports an infrastructure error (`infra_error = 1`) instead of the agent's 0 when it cannot build the frozen scene or the scene it rebuilt does not match the frozen instance on its host (`instance_ok = 0`: another CPU vendor, docs/benchmarks/robowits.md, Hosts); a `trajectory.npz` that cannot be read or lacks `task` / `actions` is `bad_trajectory`, no longer `grader_error`; `reward.json` always carries `infra_error`; the verifier runs without network (`network_mode = "no-network"`); the instruction states the tooling's cap of 200000 control steps per trajectory instead of leaving it unsaid. The pass rule, the frozen instance, the tooling and the predicate are unchanged; validated with synthetic tests of the grader, not re-run in the simulator.

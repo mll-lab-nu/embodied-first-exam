@@ -78,11 +78,15 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it.
+# Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
+# restarting), which replays the episode in a fresh simulator and writes the verdict with "finalized": true. The hook
+# waits for that verdict (up to 3450 s), then, bounded, for the optional replay video, which decides nothing.
+# timeout_sec = the agent's budget: the replay runs the episode's own physics once more, without its cameras, so it
+# cannot take longer than the episode did (about 0.035 s per control step + one scene build; finalize.sh has the sums).
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; for i in $(seq 1 400); do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 1 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; sleep 2; done; cat /data/final.json"
-timeout_sec = 1500
+command = "sh /srv/finalize.sh"
+timeout_sec = 3600
 
 [agent]
 timeout_sec = 3600.0

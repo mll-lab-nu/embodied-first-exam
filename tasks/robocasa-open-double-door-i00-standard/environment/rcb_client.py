@@ -3,51 +3,64 @@
     from rcb_client import Robot, EpisodeOver
     r = Robot()            # finds the service (SIM_URL, http://sim:8000, http://localhost:8000), waits until it is ready
 
+This docstring describes the RoboCasa-series service (RoboCasa, RoboCasa365, RoboCasa-GR1); spec() is the authority.
+
 Calls (each is one HTTP request; every answer that carries data is an RCB1 frame, decoded into a Result):
-    r.spec()                                 GET /spec, fetched when connecting: the robot's facts. "action_types"
-                                             ("joint_position": dim, layout (actuator order), lower/upper, range_rad,
-                                             units, semantics), "control_dt" (0.02 s), "max_control_steps" (the
-                                             episode), "cameras" {name: rgb, depth, hw, fovy_deg, pose, mounted},
-                                             "proprio_layout" and "proprio" (joints, axes, positions), "imu", "links"
-                                             (masses, centres of mass, the feet's boxes), "depth", "budget" {"reset",
-                                             "wall_clock_s"}, "episode" (what ends it)
-    r.status()                               GET /status: calls, rows, control_steps, done, reason, elapsed_s
+    r.spec()                                 GET /spec, fetched when connecting: the robot's facts. "control_dt"
+                                             (0.05 s, one control step), "action_types" (one type per task, e.g.
+                                             "ee_delta" or "ee_pose": dim, layout (channel order), lower/upper, units,
+                                             kinds (delta | absolute | grip | mode), parts, frame, semantics, rows;
+                                             "not_yet" lists the types this robot does not offer), "max_chunk_s",
+                                             "max_watch_s",
+                                             "max_control_steps" (null: no step limit), "max_video_fps",
+                                             "max_frames_per_call", "cameras" {name: rgb, depth, size [W, H]},
+                                             "proprio_layout", "frames" (the world frame), "task_text", "budget"
+                                             {"reset": 0, "wall_clock_s"}, "episode" (what ends it), "on_service_error"
+    r.status()                               GET /status: calls, rows, control_steps, sim_steps, done, reason, elapsed_s
     r.get_obs(cameras=None, seconds=0.0, video_fps=10, include_depth=False, video="frames")
-                                             POST /observe. seconds=0: the current frames, free (no time passes).
-                                             seconds>0 (at most spec()["max_watch_s"]): holds the last servo targets and
-                                             lets the episode run that long, returning what the cameras saw
-    r.submit("joint_position", actions, dt=None, interpolate="linear", cameras=None, video_fps=10, video="mp4",
+                                             POST /observe. seconds=0: the current frame, free (no time passes).
+                                             seconds>0 (at most spec()["max_watch_s"]): the robot holds still (delta
+                                             channels zero; targets, grip and mode kept) while the episode runs that
+                                             long, returning what the cameras saw; those control steps count
+    r.submit(action_type, actions, dt=None, interpolate="linear", cameras=None, video_fps=10, video="mp4",
              include_depth=False, note="")   POST /submit: run a chunk, actions (T, dim): rows dt apart (a multiple of
                                              control_dt, which is the default; T x dt at most spec()["max_chunk_s"]);
-                                             each control step's targets are the row (interpolate="hold") or a straight
-                                             line from the previous row's ("linear")
-    r.reset(cameras=None, include_depth=False)
-                                             POST /reset, only when spec()["budget"]["reset"] > 0: abandons the
-                                             running episode and starts a new one from the same starting state; only
-                                             the last episode is graded, and a success ends the trial
+                                             each control step's command is the row (interpolate="hold") or a straight
+                                             line from the previous row to it ("linear"); with dt = control_dt the two
+                                             are the same: one row = one native command. Values outside [lower, upper]
+                                             are clipped, not refused. note (a string) goes into the episode log
+    r.reset(...)                             not offered by this service (spec()["budget"]["reset"] is 0; the call is
+                                             answered with 404 -> RuntimeError): there is one episode
 
-cameras=None means every camera in spec()["cameras"]; ask for fewer to save time. video: "mp4" (one H.264 file per
-camera), "frames" (the images as arrays), "both" or "none" (only the last frame: the fastest). include_depth adds depth
-for the cameras that have it.
+cameras: a list of names from spec()["cameras"] (or one name). cameras=None means every camera for get_obs, and only the
+first camera for submit; ask for few to save time. A name the robot does not have is left out without an error (if none
+is left, the call's default is used), so check the keys of what comes back. video: "mp4" (one H.264 file per camera),
+"frames" (the images as arrays), "both"; anything else, e.g. "none", returns only the last frame (the fastest); for
+get_obs with seconds=0, "mp4" means "frames". include_depth adds depth for the requested cameras. A call may return at
+most spec()["max_frames_per_call"] frames: (seconds x video_fps + 2) x cameras, depth counting double.
 
-Result (what get_obs / submit / reset return):
-    res.meta                 dict: calls, rows, control_steps (this episode), sim_time_s, time_s, time_left_s,
-                             proprio {"layout", "now"}, done, reason ("success" | "failed" | "timeout" | "error";
-                             None while the episode runs), and per call: executed_rows, control_steps_chunk,
-                             clipped [{row, index, reason}] (values outside [-1, 1] are clipped, not refused);
-                             with a reset budget also episode, resets_left
+Result (what get_obs / submit return):
+    res.meta                 dict: calls, rows, control_steps (this episode), sim_time_s, time_s (since the episode
+                             started), time_left_s (spec()["budget"]["wall_clock_s"] minus the time since the service's
+                             container started, which it does together with yours: your clock to within a few
+                             seconds; keep a margin), proprio {"layout", "now"}, task {"instruction"}, cameras
+                             {name: intrinsic_cv, cam2world_gl, width, height, fovy_deg} (current: they move), done,
+                             reason (None while the episode runs; "timeout", "error", "step limit"); submit adds
+                             chunk_id, type, executed_rows and clipped = n_clipped_rows (the number of rows that had a
+                             value outside [lower, upper]); get_obs adds obs_id, seconds
     res.last[cam]            uint8 H x W x 3: the last frame, always
     res.frames[cam]          uint8 N x H x W x 3 (video="frames"/"both")     res.video[cam]   mp4 bytes
-    res.depth[cam]           float16 N x H x W, metres, 0 = nothing in range (include_depth)
-    res.proprio              float32 rows of spec()["proprio_layout"]: one at the call's start, one every 1/video_fps s,
-                             one at its end
+    res.depth[cam]           float16 N x H x W, metres (include_depth)
+    res.proprio              float32 rows of spec()["proprio_layout"], one per recorded frame: at the call's start,
+                             about every 1/video_fps s, and at its end
     res.done                 the episode is over
     res.save(dir)            meta.json, <cam>.mp4, last/<cam>.jpg, frames/<cam>/NNN.jpg, depth_<cam>.npy, proprio.npy
 
-Errors: ValueError -- refused, nothing ran (400: wrong type or shape, NaN, a bad dt, too many frames, an unknown
-camera; or a request over 64 MB, refused before it is sent); EpisodeOver -- the episode, or the trial, is over (409);
-RuntimeError -- the service failed (5xx: see spec()["on_service_error"]) or the endpoint does not exist in this run
-(404).
+Errors: ValueError -- refused, nothing ran and the episode goes on (400: a wrong type or shape, NaN or inf, a dt that is
+not a positive multiple of control_dt, seconds or video_fps out of range, a field of the wrong type, a chunk that is
+too long, too many frames; or a request over 64 MB, refused before it is sent); EpisodeOver -- the episode is over
+(409); RuntimeError -- the service failed (5xx: a simulator error ends the episode with reason "error"; see
+spec()["on_service_error"]) or the endpoint does not exist in this run (404).
 """
 from __future__ import annotations
 

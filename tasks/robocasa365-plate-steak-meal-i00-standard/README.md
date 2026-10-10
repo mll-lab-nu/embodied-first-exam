@@ -21,7 +21,7 @@ The agent has to find the fixtures and objects in the robot's camera images, dri
 `solution/`: the privileged reference's 441 actions submitted through the client, one row per control step. In this environment the success state does not persist on its own: after the reference's last action, holding still for 10 control steps loses it. Graded on the final state, a trajectory must end at that moment.
 
 ## Verification
-The sim service replays the recorded episode in a fresh simulator; `tests/grade.py` (separate sandbox, no network) reads its `final.json`: `success = replay_success ∧ deterministic ∧ live_success`.
+The sim service replays the recorded episode in a fresh simulator and writes the verdict, final at once; `tests/grade.py` (separate sandbox, no network) reads its `final.json`: `success = replay_success ∧ deterministic ∧ live_success`. The replay video is rendered after the verdict and never decides it.
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -41,3 +41,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 |---|---|
 | Action type | `joint_position` (13 channels, `control_dt` 0.05 s) |
 | Cameras | `robot0_agentview_center`, `robot0_agentview_left`, `robot0_agentview_right`, `robot0_eye_in_hand` (robot-mounted; calibration in every response) |
+
+### Change Log
+- 2026-10-10: the sim service writes its verdict together with `finalized` in one atomic step and renders the replay video only afterwards (the video is optional and can no longer turn a verdict into `infra_error`; a restart never rewrites a written verdict); the collect hook (`environment/sim/finalize.sh`) waits for that verdict for up to 3450 s of a 3600 s timeout (before: 980 s of 1500 s, video included, which lost episodes longer than about 10,000 control steps); a malformed request field (`dt`, `seconds` or `video_fps` that is not a finite number, `cameras` or `note` of the wrong type, `dt` = 0, ...) is answered with 400 before any physics instead of 500 and the end of the episode; `time_left_s` counts from the start of the service's container, not from when its scene was built; the client's docstring describes this service. The scene, the instance, the success check and the pass rule are unchanged, so the task keeps its name.

@@ -21,11 +21,15 @@ a second Session in one process is refused (start a new process to start over; r
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
+import math
 import os
 import subprocess
 import sys
+import time
+import traceback
 from pathlib import Path
 
 import mujoco
@@ -40,6 +44,16 @@ CAMERAS = {"agentview": "agentview", "wrist": "robot0_eye_in_hand"}
 HORIZON = 1_000_000
 OBS_RES = 128  # resolution of LIBERO's own camera observations (only used by LIBERO-MAX's internal render checks)
 _BUILT = {"n": 0}
+# The replay video (`--replay ... <video>`): evidence for humans, never part of a verdict. What it may add to a replay
+# before the verdict is out is bounded (docs/benchmarks/libero-max.md, "Collect budget").
+VIDEO_FPS = 10  # one frame per 2 control steps is real time
+VIDEO_MAX_FRAMES = 1200  # frames at most: longer episodes get one frame per ceil(steps / 1200) control steps
+VIDEO_BUDGET_S = 240.0  # seconds at most that rendering and encoding may take before the verdict is printed
+EXIT_REBUILD = 3  # `--replay` exit code: this host did not rebuild the frozen start (infrastructure, not the trajectory)
+
+
+class RebuildMismatch(RuntimeError):
+    """The frozen instance did not rebuild bit-exactly in this process (the host's numeric kernels, not the agent)."""
 
 
 def canonical(obj) -> str:
@@ -170,7 +184,7 @@ class Session:
         self.sim = self.env.sim
         self.initial_state_sha = _integration_sha(self.sim)
         if check and self.initial_state_sha != self.inst.get("initial_state_sha"):
-            raise RuntimeError(
+            raise RebuildMismatch(
                 "the frozen instance did not rebuild bit-exactly (different simulator, assets, versions or CPU "
                 f"numeric kernels): {self.initial_state_sha[:12]} != {str(self.inst.get('initial_state_sha'))[:12]}; "
                 f"numerics here: {canonical(numerics())} (frozen with OpenBLAS Zen kernels and numpy AVX-512 loops)"
@@ -342,7 +356,8 @@ class Session:
 
 
 def replay_fresh(actions, instance="/app/instance.json", video: str | None = None) -> dict:
-    """Replay `actions` in a new Python process from the frozen instance (what the verifier does)."""
+    """Replay `actions` in a new Python process from the frozen instance (what the verifier does). With `video`, the
+    replay also records <video> and <video minus .mp4>.last.png; the result then says whether it did (`video`)."""
     import tempfile
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -355,33 +370,118 @@ def replay_fresh(actions, instance="/app/instance.json", video: str | None = Non
         return json.loads(out.stdout.strip().splitlines()[-1])
 
 
+def video_stride(n_steps: int, max_frames: int = VIDEO_MAX_FRAMES) -> int:
+    """Control steps per video frame: 2 (real time at VIDEO_FPS) up to 2 x max_frames steps, more for longer episodes
+    (the video is then a time-lapse of at most max_frames frames)."""
+    return max(2, math.ceil(int(n_steps) / max(1, int(max_frames))))
+
+
+class _ReplayVideo:
+    """The video of a replay (agentview, 256x256), recorded while the replay runs: frames go straight to the encoder,
+    none are kept. It is evidence for humans and can neither change nor cost the verdict:
+    - rendering reads the scene and never steps physics (the state hash is the same with and without it);
+    - any failure in here (a render, the encoder, the disk) only switches the video off (`video: false`);
+    - its cost before the verdict is bounded: one frame per `stride` control steps, and a frame is skipped whenever the
+      time spent on the video so far exceeds budget_s x (the fraction of the episode replayed), so the whole video adds
+      at most budget_s (plus one frame) however slow the host is, and what is skipped is spread over the episode;
+    - the final state's frame, the encoder's flush and replay.last.png happen in close(), after the verdict is printed.
+    The file is written as <video>.part.mp4 and renamed when complete: a killed replay leaves no truncated replay.mp4."""
+
+    def __init__(self, session, path, n_steps: int, budget_s: float = VIDEO_BUDGET_S, max_frames: int = VIDEO_MAX_FRAMES):
+        self.s, self.path = session, str(path)
+        self.part = self.path.removesuffix(".mp4") + ".part.mp4"
+        self.n = max(1, int(n_steps))
+        self.stride = video_stride(self.n, max_frames)
+        self.budget = float(budget_s)
+        self.spent = 0.0  # seconds spent rendering and encoding so far
+        self.frames = self.skipped = 0
+        self.error: str | None = None
+        self.writer = self.last = None
+        self.at = -1  # control steps executed when the last frame was taken
+        self._frame(0)  # the start
+
+    def _frame(self, steps: int) -> None:
+        if self.error:
+            return
+        t = time.monotonic()
+        try:
+            img = self.s.render("agentview", 256)
+            if self.writer is None:
+                import imageio.v2 as imageio
+
+                self.writer = imageio.get_writer(self.part, fps=VIDEO_FPS, codec="libx264", macro_block_size=1)
+            self.writer.append_data(img)
+            self.last, self.at = img, steps
+            self.frames += 1
+        except Exception as exc:  # noqa: BLE001 -- the video is for humans; the replay goes on without it
+            traceback.print_exc()
+            self.error = repr(exc)[:300]
+        self.spent += time.monotonic() - t
+
+    def step(self, steps: int) -> None:
+        """After control step number `steps` (1-based) of the replay."""
+        if self.error or steps % self.stride:
+            return
+        if self.spent > self.budget * steps / self.n:
+            self.skipped += 1
+            return
+        self._frame(steps)
+
+    def close(self, steps: int) -> dict:
+        """After the verdict is printed: the final state's frame, the encoder's flush, replay.last.png, the rename."""
+        try:
+            if self.at != steps:
+                self._frame(steps)
+            if self.writer is not None:
+                w, self.writer = self.writer, None
+                w.close()
+            if not self.error:
+                from PIL import Image
+
+                Image.fromarray(self.last).save(self.path.removesuffix(".mp4") + ".last.png")
+                os.replace(self.part, self.path)
+        except Exception as exc:  # noqa: BLE001
+            traceback.print_exc()
+            self.error = self.error or repr(exc)[:300]
+        if self.error:
+            with contextlib.suppress(OSError):
+                os.remove(self.part)
+        return {"video": not self.error, "video_frames": self.frames, "video_skipped": self.skipped,
+                "video_s": round(self.spent, 1)}  # fmt: skip
+
+
 def _replay_main(instance, actions_path, video=None) -> None:
+    """`--replay <instance> <actions.npy> [<video.mp4>]`: stdout's LAST line is the result (JSON). With a video the
+    verdict is printed (and flushed) as soon as the last action is executed, before the video is finished, and printed
+    again with the video's outcome (`video`, `video_frames`, ...) once it is: a reader that takes the first result line
+    has the verdict early, and a video that fails or is killed never costs it."""
     s = Session(instance)
     a = np.load(actions_path)
-    frames = []
+    rec = None
     if video:
-        frames.append(s.render("agentview", 256))
+        rec = _ReplayVideo(s, video, len(a), budget_s=float(os.environ.get("LMX_VIDEO_BUDGET_S") or VIDEO_BUDGET_S),
+                           max_frames=int(os.environ.get("LMX_VIDEO_MAX_FRAMES") or VIDEO_MAX_FRAMES))  # fmt: skip
     r = None
     for i, row in enumerate(a):
         if s.done:
             r = {**s.result(), "invalid": f"{len(a) - i} actions after the episode ended (success)"}
             break
         s.step(row)
-        if video and (i % 2 == 1 or i == len(a) - 1):
-            frames.append(s.render("agentview", 256))
+        if rec:
+            rec.step(i + 1)
     r = r or s.result()
-    if video:
-        import imageio.v2 as imageio
-        from PIL import Image
-
-        with imageio.get_writer(video, fps=10, codec="libx264", macro_block_size=1) as w:
-            for f in frames:
-                w.append_data(f)
-        Image.fromarray(frames[-1]).save(str(video).removesuffix(".mp4") + ".last.png")
-        r["video"] = True
-    print(json.dumps(r))
+    if rec:
+        r["video_stride"] = rec.stride  # control steps per video frame (the video plays VIDEO_FPS frames per second)
+    print(json.dumps(r), flush=True)  # the verdict: out before anything else is done for the video
+    if rec:
+        r.update(rec.close(len(s.actions)))
+        print(json.dumps(r), flush=True)
 
 
 if __name__ == "__main__":
     if len(sys.argv) >= 4 and sys.argv[1] == "--replay":
-        _replay_main(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else None)
+        try:
+            _replay_main(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else None)
+        except RebuildMismatch:
+            traceback.print_exc()
+            sys.exit(EXIT_REBUILD)

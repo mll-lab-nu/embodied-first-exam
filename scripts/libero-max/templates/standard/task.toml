@@ -43,12 +43,14 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
-# restarting), which ends the episode, replays it in a fresh simulator (the verdict) and renders the video. The replay of a
-# long episode on a busy host takes many minutes; the hook waits for the verdict, not for the video.
+# restarting), which ends the episode and replays it in a fresh simulator (the verdict; the video is recorded on the way
+# and can neither change nor cost it). The replay of a long episode on a busy host takes over an hour: the hook waits up
+# to {{collect_wait}} s for the verdict ({{std_cap}} steps at 0.5 s + 180 s to build the scene + 240 s of video = 4920 s);
+# timeout_sec = 180 s for the service's PID file + {{collect_wait}} s + 120 s (docs/benchmarks/libero-max.md, "Collect budget").
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"
-timeout_sec = 3300
+timeout_sec = {{collect_timeout}}
 
 [agent]
 timeout_sec = 3600.0

@@ -91,6 +91,17 @@ pose within tolerance) still accepts it, except for stand_bulb (and the pending 
 which therefore run on Intel hosts only. A trajectory recorded on one vendor can fail on the other, so a positive is
 re-graded on the vendor it was graded on: the Intel laptop for every positive in the review table except stack_bowls,
 which was graded on ws (AMD, with `instance_exact = 1`).
+- **Machine-readable:** both stand_bulb tasks carry `host_cpu_vendor = "GenuineIntel"` in `[metadata]` of `task.toml`
+  (a RoboWits field, docs/TAXONOMY.md; `families.py` `host_cpu_vendor`, also set on the two pending families), and
+  their READMEs a `Host CPU` row. A scheduler runs such a task only on a host whose `/proc/cpuinfo` `vendor_id` equals
+  the value; a task without the key runs on either vendor. The key is not in `[metadata.resources]`, whose fields are
+  fixed by PROTOCOL §2.9.
+- **A host that cannot rebuild the instance is an infrastructure error, never a result** (2026-10-10). Privileged: the
+  verifier writes `success = 0`, `instance_ok = 0`, `infra_error = 1` (and `instance_build_failed = 1` with
+  `grader_error = 1` when the scene does not build at all). Standard: the service checks the rebuilt instance once, at
+  its first start, and gives up at once with a record (`final.json`: `finalized`, `gave_up`, `reason =
+  "instance_mismatch: ..."`, `infra_error = 1`) instead of raising into six restarts; the agent's client then never
+  gets a service, and `reward.json` has `infra_error = 1`, `instance_mismatch = 1`.
 
 ## Time budget (D8)
 5400 s for every task of both modes, longer than the 3600 s default: the families are bimanual physical puzzles that
@@ -103,6 +114,22 @@ replays the episode on the agent's clock. Results are reported with this budget.
   replays the trajectory twice in a fresh process and compares the final-state hashes and the rebuilt frozen scene; it
   writes the verdict before it renders the video. The standard service grades in-process (its replay of the recorded
   episode must end in the live final state); the separate verifier reads `final.json`.
+- Whose failure (2026-10-10; `reward.json` always has `infra_error` and `grader_error`). The agent's: no trajectory
+  (`missing_trajectory`), a file that is not the tooling's `.npz` or has no finite (T, 16) `actions` of at most
+  200000 rows (`bad_trajectory`), another family's file (`wrong_family`), a trajectory that does not complete the
+  task; in standard mode also an episode that ended with a simulator error (`sim_error = 1`). The infrastructure's
+  (`infra_error = 1`, not a result): an instance the host cannot rebuild (Hosts, above), a service that gave up after
+  crashes it caused or never finished grading, and a grading replay that raised after an episode that ended normally
+  (`final.json` `grade_error`, `grader_error = 1`: the record is still a complete verdict, `deterministic` false, so
+  the collect hook does not wait its timeout for one). A video that fails, or a service that dies while it renders
+  the video, never changes a written verdict: the restarted service sets `video_done` and idles.
+- Both verifiers run without network (`network_mode = "no-network"`): every asset is in the image or the mounted
+  BlenderKit folder, RoboWits resolves assets from local paths only, and Genesis' convex-decomposition and particle
+  caches are seeded from `instance.json`.
+- The technical cap: 200000 control steps per episode or trajectory (`rcb_robowits.MAX_STEPS`, about 1.85 h of
+  simulated time at 30 Hz), stated in both instructions and, in standard mode, in `/spec` as `max_control_steps`
+  (PROTOCOL §4.5; `budget.steps` stays null: the wall clock is the budget). A standard episode ends there (reason
+  `step_guard`) and is graded as it stands; the privileged grader scores a longer trajectory 0 (`bad_trajectory`).
 - The GPU backend (`RCB_ROBOWITS_BACKEND=gpu`, the particle families stabilize_bottle and the dropped
   separate_marbles_and_sand: their CPU-backend builds take 39-86 min) is not bit-exact: their graders report determinism
   without requiring it. None of them is in the repository.
@@ -111,6 +138,15 @@ replays the episode on the agent's clock. Results are reported with this budget.
 `joint_position` (16) and `ee_pose` (16, right arm first, IK per row on RoboWits' pink/pinocchio IK, gripper-tip frame);
 cameras `ego` (static) and `wrist_right` / `wrist_left` (link-mounted); Genesis rasterizer depth; `/kinematics` on
 pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`episode`). STANDARD_MODE_2_2.md §16.
+- Requests (PROTOCOL §4.6; 2026-10-10): the adapter checks the type and range of every field of a `/submit` header
+  and an `/observe` body before it executes or counts anything, and answers 400: `type`, `dt` (a finite number in
+  [1/30, 0.5] s and, for `joint_position`, a whole number of 1/30 s periods within 1e-6 of a period: never rounded),
+  `interpolate`, `video`, `video_fps` (a whole number in 1..30), `seconds` (a finite number in [0, 30]), `cameras`
+  (null or a list of names; names that are not cameras are ignored), `note` (null or a string), `depth`, the actions
+  (finite, (T, 16), at most 10 s or 50 `ee_pose` rows). `ee_pose` gripper widths outside 0 .. 0.1 are clipped and
+  listed in `meta.clipped`, like out-of-limit joint targets; an IK result that is not finite counts as an IK failure
+  (the arm holds). Before this date a null or mistyped field, a huge `video_fps` or a non-string `note` ended the
+  episode with a 500 (some after the chunk had run), and a `dt` between two periods was rounded.
 - Crash recovery (STANDARD_MODE_2_2.md §13): `restart: on-failure:6`, `command: sh /srv/run.sh`; the adapter declares the
   resume class `exact` on the CPU backend and `approx` on the GPU backend. A smoke test of the sidecar outside Harbor
   (laptop, 2026-10-01, stack_cubes): the service killed between calls came back in 28 s, replayed its 90-row journal with
@@ -162,6 +198,12 @@ RoboWits: MIT (declared in its pyproject.toml); Genesis: Apache-2.0; RoboWits' a
 licensed to whoever downloads them, never in the image or the repository (`images/robowits/NOTICE`).
 
 ## Known issues
+- A JSON `/submit` body (not RCB1) whose `actions` is an object, or an RCB1 header whose `meta` is not an object with
+  no `actions` part, fails in the shared layer before the adapter sees it (`rcb_limited.py`: 500, the episode ends).
+  The official client always sends an RCB1 `actions` array, so only a hand-written request can do this.
+- The response of one call is built in memory: a long `ee_pose` chunk (up to 50 rows of up to 400 control steps) with
+  per-frame video or depth of three cameras can exhaust the sidecar's memory, which is a crash inside a call (the
+  agent's failure after three, PROTOCOL §4.7). The adapter has no frame limit per response yet.
 - During the standard service's in-process grading replay, a late `/status` reports the replay's counter.
 - The predicates are RoboWits' own and some are looser than their task text (the criterion sections say where); the
   review checks each family's predicate (PROTOCOL §2.7).
