@@ -17,6 +17,9 @@ Differences from the RoboTwin service, all from the simulator:
   simulator in this container would not fit next to the live one. So when the episode ends the service writes
   /out/trajectory.npz + /out/episode.json (live result and state hash); the collect hook's SIGUSR1 makes it exit, and
   environment/sim/finalize.sh replays the trajectory in two fresh processes and completes /out/final.json;
+- the episode ends when the BDDL goal holds (success), when the robot has fallen over (the tooling's fall rule,
+  OmniGibson's Falling held for 10 s of simulated time: reason "failure: the robot fell over"), on the collect hook's
+  signal (timeout) or on a simulator error; /spec "episode" says so;
 - crash recovery (rcb_limited.Episode, docs/STANDARD_MODE_2_2.md §13): every executed control step goes to
   /out/journal.f64, every completed call is checkpointed (rows, state hash, proprio row); after a crash compose restarts
   the container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume
@@ -175,6 +178,11 @@ SPEC = {
                                "moves; its extrinsic_cv is the camera pose it was rendered with, so pixels, depth and pose agree; proprio "
                                "is the state at frame_step"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "14400"))},
+    "episode": ("one episode, no reset: it ends the moment the task's goal holds (success); when the robot has fallen over, i.e. its "
+                f"base has been tilted more than {math.degrees(math.acos(M.FALL_TILT_TOLERANCE)):.1f} degrees from upright (the z of its up "
+                f"axis below {M.FALL_TILT_TOLERANCE}: cos(rx) * cos(ry) of base_footprint_rx_joint / _ry_joint) or more than "
+                f"{M.FALL_HEIGHT_M:g} m below the floor for {M.FALL_HOLD_STEPS / CTRL_HZ:g} s of simulated time in a row "
+                f"({M.FALL_HOLD_STEPS} control steps; reason \"{M.FALL_REASON}\"); when your time is up (timeout); or on a simulator error (error)"),
     "robot_spec": RSPEC,
     "kinematics": KSPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -244,7 +252,7 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded and journaled control step. True when the call must stop: the episode is over (the BDDL goal holding
     also terminates it), or the layer stops the call (max_call_wall_s, the client hung up)."""
     term, trunc = S.step(a); stop = EP.journal(a); rec.tick()
-    if term or trunc: finish("success" if check_success() else "step_guard")
+    if term or trunc: finish("success" if check_success() else (S.end_reason or "step_guard"))
     return E["done"] or stop
 
 

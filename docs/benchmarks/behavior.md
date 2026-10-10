@@ -37,7 +37,8 @@ supplementary tasks for harder testing (50 on 2026-10-04, 16 and 23 on 2026-10-0
   `scripts/behavior/goal.py` words each BDDL predicate a goal uses, with OmniGibson's thresholds. Agent results are not
   in the repository (PROTOCOL D3): the positives are cited by trial id, results-site log and Hugging Face replay.
 - The predicate is the task's official BDDL goal (OmniGibson object states), checked at every control step; the episode
-  ends the moment it holds. The challenge's timeout is lifted to a runaway guard (time is the budget, not steps).
+  ends the moment it holds, and as a failure when the robot has fallen over (§ Falls). The challenge's timeout is lifted to
+  a runaway guard (time is the budget, not steps).
 - Frozen instance: the full simulator state after the challenge's own instance load (`Evaluator.load_task_instance`) and
   its hash, in `environment/`, `tests/` and the standard sidecar. Another host may rebuild it within the pose tolerance but
   not bit-exactly (`instance_exact = 0`, `instance_ok = 1`); grading needs `instance_ok`.
@@ -208,6 +209,37 @@ container, outside Harbor's lifecycle. A cache can reach ~10 GB (one probe volum
   hook's signal; the hook replays it in two fresh processes (`environment/sim/finalize.sh`); `success = live ∧ replay ∧
   deterministic`, `live_matches_replay` reported separately. OmniGibson declares rollouts nondeterministic; measured so
   far, a live run and its fresh replay agree.
+
+## Falls (2026-10-09, owner decision)
+The episode ends, as a failure, when the robot has fallen over: OmniGibson's own `Falling` termination condition
+(`omnigibson/termination_conditions/falling.py`; OmniGibson's navigation tasks use it, `BehaviorTask` has only `Timeout`
+and `PredicateGoal`) with its defaults, on the pose it reads (`robot.get_position_orientation()`, the R1Pro's `base_link`):
+the base more than 0.03 m below the floor, or its up axis tilted more than 41.4° from vertical (z < 0.75), holding for 300
+consecutive control steps (10 s of simulated time). It runs inside the tooling's `Session.step()` (`FALL_*`, `FallWatch`),
+so the privileged session, the standard service and every fresh-process replay apply it at the same control step; a success
+on the same step stands.
+- **Standard:** `reason` "failure: the robot fell over"; `/spec` `episode` states the end conditions; `reward.json`
+  `task_failure`. **Privileged:** `Session.status()["fallen"]` and `s.episode_done` (`s.reset()` starts again); the
+  verifier's replays end at the same step (`reward.json` `fallen`).
+- The R1Pro's base hangs from an upright world-fixed root through six virtual joints (x, y, z, rx, ry, rz; rx and ry
+  undriven), so the up axis's z is also cos(rx)·cos(ry) of `base_footprint_rx_joint` / `_ry_joint`, columns the standard
+  proprioception always had (checked against the `base_link` quaternion to 1e-6 on 16,973 logged rows).
+- **Why the hold:** a short topple that is over within seconds (driving, bumping into furniture) never counts; the longest
+  recorded lasted 4.3 s.
+- **What it decides:** in OmniGibson a toppled R1Pro can sometimes be righted. In the eight recorded standard-mode runs
+  with the robot's proprioception (saved or printed by the agent; rcb-limited/2.0 and 2.2, 2026-09-25..30) five toppled
+  past 41°, 14 times: 12 topples ended upright again (up to 145°): eight within 4.3 s of simulated time, four after the
+  agent levered the robot up with an arm against the floor over 32-114 s; two lasted until the 4 h limit. None of the eight
+  runs succeeded; with the rule three of them would have ended 2.3-3.4 h early, two of them after a topple the agent later
+  recovered from. The rule is the benchmark's decision that a robot which has fallen over has failed, as in OmniGibson's
+  navigation tasks and on the real robot, not a claim that recovery is impossible in the simulator. The scene, the frozen
+  instances and the BDDL goals are unchanged, so the tasks keep their names (owner decision, as for HumanoidBench's and
+  MyoSuite's reset budgets); results recorded before this change are reported separately.
+- Measured on ws (RTX 4090, 2026-10-09) through the task's own Session, with OmniGibson's `Falling._step` evaluated on the
+  same state at every step (12,036 control steps, all in agreement): a standard agent's recorded rows that toppled the robot
+  ended the episode exactly 300 control steps after the topple began (on its side, 94.7°); the reference rows never came
+  near the threshold (putting_shoes_on_rack at most 21.7°, p99.9 17.3°; picking_up_trash at most 7.5°); the rule costs
+  0.06 ms of a 47-60 ms control step.
 
 ## Standard mode (eai-standard/2.2)
 `joint_position` (25: base per-step targets in the robot frame, trunk, arms, grippers; base and grippers switch at the
