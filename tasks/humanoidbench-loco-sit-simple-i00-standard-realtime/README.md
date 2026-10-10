@@ -85,3 +85,13 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   each control step it catches up on (before, a request waited until the next stall re-anchored the clock: up
   to MAX_LAG_S, 0.5 s, here, and seconds on a slower simulator such as BiGym 2.0's); final.json adds
   `max_queue_wait_s`. The robot's episode, the pass rule and the verifier are unchanged.
+- 2026-10-10: the sim service marks `final.json` `finalized` the moment the verdict is written, before the
+  replay video is rendered (`video_pending` while it renders), and the collect hook's waits run on the clock,
+  inside its timeout: a slow, hung or killed video render no longer turns a graded episode into `infra_error`.
+  `reward.json` adds `sim_error` and carries `deterministic` in every branch. In this mode also: a refused
+  `/reset` (budget used up, bad request) no longer answers a pending `get_obs(seconds=...)` early, and
+  `final.json`'s realtime counters (`stalls`, `held_steps`, `late_steps`, `max_lag_s`, `max_queue_wait_s`)
+  cover the whole trial after a crash-resume. The shared realtime layer no longer combines plan rows of
+  different action types (a RoboOlympics bug); this task has one action type, so its plan behaves as before.
+  The scene, instance and pass rule are unchanged, so the task keeps its name; every verdict that was reached
+  before is the same now.

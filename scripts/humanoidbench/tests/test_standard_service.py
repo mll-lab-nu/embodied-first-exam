@@ -382,6 +382,40 @@ class EndOfTrial(Base):
         svc.poll()
         f = final(self.data)
         self.assertEqual((f["finalized"], f["deterministic"], f["video"]), (True, True, False))
+        self.assertEqual((f["success"], f["video_pending"]), (True, False))
+        self.assertIn("video_error", [e["ev"] for e in events(self.data)])
+
+    def test_the_verdict_is_finalized_before_the_video_is_rendered(self):
+        """What the collect hook and the verifier key on ("finalized": true) is on disk with the verdict, so a video
+        that is slow, hangs or is killed with the hook costs the video, never the verdict."""
+        seen = {}
+        sim = FakeSim()
+        render = sim.render_video
+
+        def slow_video(actions, path):
+            seen.update(final(self.data))                    # final.json while the video renders
+            render(actions, path)
+        sim.render_video = slow_video
+        svc = self.service(sim)
+        self.submit(svc, [[1.0]] * 10)
+        svc.on_sigusr1()
+        svc.poll()
+        self.assertEqual((seen["finalized"], seen["success"], seen["deterministic"], seen["replay_success"]),
+                         (True, True, True, True))
+        self.assertEqual((seen["video"], seen["video_pending"]), (False, True))
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["success"], f["video"], f["video_pending"]), (True, True, True, False))
+        self.assertEqual({k: f[k] for k in seen if k not in ("video", "video_pending")},
+                         {k: seen[k] for k in seen if k not in ("video", "video_pending")})   # nothing else moved
+
+    def test_a_failed_finalize_waits_for_no_video(self):
+        svc = self.service(FakeSim(verify_raises=RuntimeError("replay broke")))
+        self.submit(svc, [[1.0]] * 3)
+        svc.on_sigusr1()
+        svc.poll()
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["video_pending"]), (True, False))
+        self.assertFalse(os.path.exists(os.path.join(self.data, "replay.mp4")))
 
     def test_a_failing_finalize_is_recorded_not_raised(self):
         svc = self.service(FakeSim(verify_raises=RuntimeError("replay broke")))
@@ -513,12 +547,28 @@ class CrashRecovery(Base):
         svc.on_sigusr1()
         with self.assertRaises(Crash):
             svc.poll()
+        f = final(self.data)                                 # the process is dead: the verdict is there, finalized
+        self.assertEqual((f["finalized"], f["success"], f["video_pending"]), (True, True, True))
         with self.assertRaises(GiveUp):
             self.service()
         f = final(self.data)
         self.assertEqual((f["finalized"], f["success"], f["live_success"], f["replay_success"], f["deterministic"],
                           f["video"]), (True, True, True, True, True, False))
+        self.assertFalse(f["video_pending"])                 # the restarted service: no video is coming, do not wait
         self.assertNotIn("infra_error", f)
+
+    def test_a_verdict_of_an_older_service_without_finalized_is_kept(self):
+        """A final.json with the verdict but "finalized": false (written before finalized moved ahead of the video)."""
+        svc = self.service()
+        self.submit(svc, [[1.0]] * 10)
+        svc.on_sigusr1()
+        svc.poll()
+        fin = {k: v for k, v in final(self.data).items() if k != "video_pending"}
+        Path(self.data, "final.json").write_text(json.dumps({**fin, "finalized": False, "video": False}))
+        with self.assertRaises(GiveUp):
+            self.service()
+        f = final(self.data)
+        self.assertEqual((f["finalized"], f["success"], f["deterministic"], f["video"]), (True, True, True, False))
 
     def test_a_timeout_survives_a_crash_during_finalize(self):
         svc = self.service(FakeSim(goal=99, verify_raises=Crash()))
@@ -595,6 +645,19 @@ class ResetCapability(Base):
         self.assertEqual((st["control_steps"], st["resets_left"], st["episode"]), (2, 1, 2))
 
 
+class ResetChecks(Base):
+    def test_a_refused_reset_changes_nothing(self):
+        svc = self.service(reset_budget=1)
+        self.submit(svc, [[0.1]] * 2)
+        code, body, _ = call(svc, "POST", "/reset", {"cameras": ["nope"]})
+        self.assertEqual(code, 400)
+        code, st, _ = call(svc, "GET", "/status")
+        self.assertEqual((st["control_steps"], st["done"], st["resets_left"]), (2, False, 1))
+        self.assertEqual(call(svc, "POST", "/reset", {})[0], 200)
+        code, body, _ = call(svc, "POST", "/reset", {})
+        self.assertEqual((code, body["error"]), (409, "reset budget exhausted"))
+
+
 class Grade(Base):
     def grade(self, fin: dict | None) -> tuple[str, dict]:
         logs = os.path.join(self.data, "logs")
@@ -618,6 +681,29 @@ class Grade(Base):
     def test_a_missing_log_is_infrastructure(self):
         txt, r = self.grade(None)
         self.assertEqual((txt, r["success"], r["missing_log"], r["infra_error"]), ("0", 0, 1, 1))
+        self.assertEqual((r["deterministic"], r["sim_error"], r["grader_error"]), (0, 0, 0))
+
+    def test_an_unreadable_log_is_infrastructure(self):
+        for text in ('{"finalized": true, "live_succ', "[1, 2]", "null", ""):
+            Path(self.data, "final.json").write_text(text)
+            txt, r = self.grade(None)
+            self.assertEqual((txt, r["success"], r["deterministic"], r["infra_error"], r["grader_error"]),
+                             ("0", 0, 0, 1, 1), text)
+
+    def test_a_simulator_error_is_reported(self):
+        txt, r = self.grade({"finalized": True, "live_success": False, "replay_success": False, "deterministic": True,
+                             "reason": "error"})
+        self.assertEqual((r["success"], r["sim_error"], r["deterministic"]), (0, 1, 1))
+        txt, r = self.grade({"finalized": True, "live_success": False, "replay_success": False, "deterministic": True,
+                             "reason": "failed"})
+        self.assertEqual(r["sim_error"], 0)
+
+    def test_a_verdict_whose_video_never_came_stands(self):
+        """The collect hook ran out of time while the video rendered: finalized, video_pending still true."""
+        txt, r = self.grade({"finalized": True, "live_success": True, "replay_success": True, "deterministic": True,
+                             "video": False, "video_pending": True, "reason": "success"})
+        self.assertEqual((txt, r["success"], r["infra_error"], r["video_rendered"]), ("1", 1, 0, 0))
+        self.assertTrue(all(isinstance(v, (int, float)) for v in r.values()))
 
     def test_a_crashed_service_or_failed_finalize_is_not_the_agents(self):
         txt, r = self.grade({"finalized": True, "success": False, "reason": "sim_crashed", "infra_error": 1})

@@ -182,6 +182,11 @@ PROTOCOL §4b).
   in force just before `at`. Rows for steps that have run when the request arrives are dropped. When the plan runs out,
   the last target is held (zero-order hold). `meta` adds `start_step`, `late_steps`, `plan_end_step`; every `meta` and
   `/status` add `running`, `planned_steps`, `lag_s`. The answer carries the frames and proprioception of now, no video.
+  A service with several action types never combines rows of different types: a chunk interpolates from the target of
+  its own type (the simulator's current one when the plan holds another type just before `at`), a type that is not
+  interpolable (a command: one row, one control step) is never interpolated, and a gap left before `at` is held steps
+  (the simulator's hold row, as after the plan's end) unless the chunk's type is an interpolable target in force there,
+  which is then held through the gap. A request the plan cannot take is a 400 and changes nothing.
 - **`/observe`** with `seconds = 0` answers at once; with `seconds > 0` it waits while that much robot time runs and
   returns what the cameras saw (2.1's video, frames, proprio rows); it never changes the plan. `cameras: []` asks for
   no images, only proprioception.
@@ -189,7 +194,8 @@ PROTOCOL §4b).
   episode's rows are replayed in a fresh simulator, so the replay equals the live run whatever the timing. Evidence
   added: `ticks.f64` (per journal row: wall time, the call whose chunk gave the row, -1 when held), `calls.jsonl` and
   `submitted.f64` (one line per call and every row as sent, instead of `calls/NNNNNN/`), and in `final.json`
-  `realtime`, `slowdown`, `max_lag_s`, `stalls`, `held_steps`, `late_steps`.
+  `realtime`, `slowdown`, `max_lag_s`, `stalls`, `held_steps`, `late_steps`, `max_queue_wait_s` (checkpointed with the
+  episode: after a crash-resume they still cover the whole trial).
 - **Service.** The simulator's thread runs a due control step before any waiting request; behind the clock it runs the
   missed steps back to back, and more than 0.5 s behind it drops the debt (a stall, counted) instead of fast-forwarding
   the robot. Checkpoints every second of robot time while the clock runs; a crash resumes the same episode, paused.

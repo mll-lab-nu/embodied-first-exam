@@ -70,3 +70,8 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6
   (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its
   name; results recorded on 0.1.6 are other physics and are reported separately.
+- 2026-10-10: the sim service marks `final.json` `finalized` the moment the verdict is written, before the
+  replay video is rendered (`video_pending` while it renders), and the collect hook's waits run on the clock,
+  inside its timeout: a slow, hung or killed video render no longer turns a graded episode into `infra_error`.
+  `reward.json` adds `sim_error` and carries `deterministic` in every branch. The scene, instance and pass
+  rule are unchanged, so the task keeps its name; every verdict that was reached before is the same now.

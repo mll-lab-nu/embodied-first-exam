@@ -20,7 +20,7 @@ mode = "privileged"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 oracle = "none"
-oracle_evidence = "none known: GPT-6 Luna failed both modes, and no rollout of this instance is published; human review in PR #8"
+oracle_evidence = "the privileged-mode trajectories of runs `codex-gpt6_astra-high` (845 steps) and `codex-gpt6_sol-high` (770 steps) of 2026-10-04, each scored 1 by the privileged verifier (two replays, the same final state; verifier and instance unchanged since); no standard-mode example is known yet (docs/benchmarks/kinder.md, Open); human review in PR #8"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
