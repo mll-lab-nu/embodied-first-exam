@@ -78,3 +78,5 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 
 Objects here: a desk with a white, marble-like top on black legs; on it, in one pack, a clear cocktail glass (13 cm across, 16 cm tall; a wide bowl on a thin stem) and a tall vase (25 cm), a wineglass, a mug, a teacup, a bowl and a small plate; and the green goal sphere (radius 3.9 cm), which does not collide with anything. Grasping is assisted: the gripper attaches an object that is between its finger pads when it closes, and releases it when it opens.
 
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 8 cores for your container; the cap only slows you down.

@@ -2,6 +2,9 @@
 """Compute resources (docs/PROTOCOL.md §2.9, protocol v1.1.4): every task.toml has `[metadata.resources]` with the
 required keys and sane values, consistent with the task's GPU reservations and `[environment]` caps, and the README's
 `## Compute resources` section shows the same values (it is rendered by scripts/task_conventions.py).
+Resource limits (§2.10, v1.1.5): `[metadata.resources.limits]` with every key, the scope of the task's mode, limits no
+lower than the minimums and no higher than the docker caps that bound them, and instruction.md ending in the
+`## Resource limits` paragraph rendered from them.
 
 Usage: check-resources.py [task dirs...]   (default: every task under tasks/)
 """
@@ -13,7 +16,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import RESOURCE_KEYS, render_resources  # noqa: E402  (one list of keys, one README renderer)
+from task_conventions import (  # noqa: E402  (one list of keys, one README / instruction renderer)
+    CAP_KEYS, LIMIT_KEYS, LIMIT_SCOPES, RESOURCE_KEYS, mode_of, render_limits, render_resources, sidecars_of)
 
 GPU_CLASSES = {"none", "any", "rtx"}
 LIMITS = {
@@ -54,7 +58,7 @@ def check(task: Path) -> list[str]:
                 errs.append("[metadata.resources].recommended_gpu must be a non-empty string or list of strings")
         elif typ is str and not (isinstance(v, str) and v.strip()):
             errs.append(f"[metadata.resources].{k} must be a non-empty string")
-    for k in sorted(set(r) - set(RESOURCE_KEYS)):
+    for k in sorted(set(r) - set(RESOURCE_KEYS) - {"limits", "caps"}):
         errs.append(f"[metadata.resources].{k}: unknown key")
     if errs:
         return errs
@@ -111,6 +115,10 @@ def check(task: Path) -> list[str]:
                 f"{venv['memory_mb']} / 1024"
             )
 
+    lim_errs = check_limits(task, d, r, env_gpu, services)
+    if lim_errs:   # the README renders the limits too: compare it only once they are well-formed
+        return errs + lim_errs
+
     # README: the section scripts/task_conventions.py renders from these values
     readme = (task / "README.md").read_text() if (task / "README.md").is_file() else ""
     want = "\n".join(render_resources(r))
@@ -120,6 +128,123 @@ def check(task: Path) -> list[str]:
             f"(run python3 scripts/task_conventions.py {task.relative_to(ROOT) if task.is_relative_to(ROOT) else task})"
         )
     return errs
+
+
+def check_limits(task: Path, d: dict, r: dict, env_gpu: bool, services: list[str]) -> list[str]:
+    """[metadata.resources.limits] (PROTOCOL §2.10)."""
+    lim = r.get("limits")
+    if not isinstance(lim, dict):
+        return ["[metadata.resources.limits] missing (PROTOCOL §2.10)"]
+    errs = []
+    for k, typ in LIMIT_KEYS.items():
+        v = lim.get(k)
+        if v is None:
+            errs.append(f"[metadata.resources.limits].{k} missing")
+        elif typ is int and not (isinstance(v, int) and not isinstance(v, bool)):
+            errs.append(f"[metadata.resources.limits].{k} must be an integer")
+        elif typ is float and not is_num(v):
+            errs.append(f"[metadata.resources.limits].{k} must be a number")
+        elif typ is str and not (isinstance(v, str) and v):
+            errs.append(f"[metadata.resources.limits].{k} must be a non-empty string")
+        elif typ is list and not (isinstance(v, list) and (v or k == "disk_exclude")
+                                  and all(isinstance(x, str) and x.startswith("/") for x in v)):
+            errs.append(f"[metadata.resources.limits].{k} must be a list of absolute paths"
+                        + (" (not empty)" if k == "disk_paths" else ""))
+    for k in sorted(set(lim) - set(LIMIT_KEYS)):
+        errs.append(f"[metadata.resources.limits].{k}: unknown key")
+    if errs:
+        return errs
+    mode = mode_of(task)
+    if lim["scope"] != LIMIT_SCOPES[mode]:
+        errs.append(f"[metadata.resources.limits].scope must be {LIMIT_SCOPES[mode]!r} in {mode} mode (PROTOCOL §2.10)")
+    if lim["max_processes"] < 16 or lim["sustain_sec"] <= 0 or lim["max_disk_gb"] <= 0 or lim["max_memory_gb"] <= 0:
+        errs.append("[metadata.resources.limits]: max_processes >= 16, max_memory_gb, max_disk_gb and sustain_sec > 0")
+    if not lim["sustain_sec"] < lim["window_sec"] <= 4 * lim["sustain_sec"]:
+        errs.append("[metadata.resources.limits]: sustain_sec < window_sec <= 4 x sustain_sec")
+    if not lim["measured"].strip():
+        errs.append("[metadata.resources.limits].measured: say what the limits rest on")
+    errs += check_caps(task, r, lim, services)
+    # the whole trial's expected peak covers the minimum, and the limits never exceed it
+    for k in ("gpu_memory_gb", "memory_gb"):
+        if lim[f"trial_max_{k}"] < r[f"min_{k}"]:
+            errs.append(f"trial_max_{k} {lim[f'trial_max_{k}']} < min_{k} {r[f'min_{k}']}")
+        if lim[f"max_{k}"] > lim[f"trial_max_{k}"]:
+            errs.append(f"max_{k} {lim[f'max_{k}']} > trial_max_{k} {lim[f'trial_max_{k}']}")
+    env = d.get("environment", {})
+    if lim["scope"] == "trial":
+        # privileged: the limits bind every container, so they are at least the trial's minimums
+        for k in ("gpu_memory_gb", "memory_gb"):
+            if lim[f"max_{k}"] < r[f"min_{k}"]:
+                errs.append(f"max_{k} {lim[f'max_{k}']} < min_{k} {r[f'min_{k}']} (scope trial)")
+        if (lim["max_gpu_memory_gb"] > 0) != r["gpu_required"]:
+            errs.append("scope trial: max_gpu_memory_gb > 0 exactly when the task has a GPU (gpu_required)")
+    else:
+        # standard modes: the agent's container only, bounded by its own docker cap
+        if env.get("memory_mb") and lim["max_memory_gb"] > env["memory_mb"] / 1024:
+            errs.append(f"max_memory_gb {lim['max_memory_gb']} > [environment].memory_mb {env['memory_mb']} / 1024")
+        main_gpu = main_has_gpu(task)
+        if lim["max_gpu_memory_gb"] > 0 and not main_gpu:
+            errs.append("scope agent: max_gpu_memory_gb > 0 but the agent's container (main) has no GPU")
+        if (lim["trial_max_gpu_memory_gb"] > 0) != r["gpu_required"]:
+            errs.append("trial_max_gpu_memory_gb > 0 exactly when the task has a GPU (gpu_required)")
+    if lim["scope"] == "trial" and lim["trial_max_gpu_memory_gb"] != lim["max_gpu_memory_gb"]:
+        errs.append("scope trial: trial_max_gpu_memory_gb equals max_gpu_memory_gb (the limits bind the whole trial)")
+    if lim["scope"] == "trial" and lim["trial_max_memory_gb"] != lim["max_memory_gb"]:
+        errs.append("scope trial: trial_max_memory_gb equals max_memory_gb (the limits bind the whole trial)")
+    # instruction.md ends with the paragraph rendered from these values
+    ins = (task / "instruction.md").read_text() if (task / "instruction.md").is_file() else ""
+    want = render_limits(lim, mode, sidecars_of(task), env.get("cpus"))
+    if not ins.endswith("\n" + want):
+        errs.append(
+            "instruction.md does not end with the `## Resource limits` paragraph rendered from [metadata.resources.limits] "
+            f"(run python3 scripts/task_conventions.py {task.relative_to(ROOT) if task.is_relative_to(ROOT) else task})"
+        )
+    return errs
+
+
+def check_caps(task: Path, r: dict, lim: dict, services: list[str]) -> list[str]:
+    """[metadata.resources.caps] (§2.10): one entry per compose service (cache helpers rcb_* aside, main always), and the
+    relation chain: the limited memory <= (sum of the scope's memory caps) / 1.2 and <= that sum - 2 GiB, so that the
+    monitor sees a violation before the OOM killer; pids >= 8 x max_processes; main's caps never below [environment]."""
+    caps = r.get("caps")
+    if not isinstance(caps, dict):
+        return ["[metadata.resources.caps] missing (PROTOCOL §2.10)"]
+    errs = []
+    want = {"main"} | {s for s in services if s != "main" and not s.startswith("rcb_")}
+    if set(caps) != want:
+        errs.append(f"[metadata.resources.caps] services {sorted(caps)} != compose services {sorted(want)}")
+    for svc, c in caps.items():
+        if not isinstance(c, dict) or set(c) != set(CAP_KEYS):
+            errs.append(f"[metadata.resources.caps].{svc} needs exactly {sorted(CAP_KEYS)}")
+            continue
+        if not (is_num(c["cpus"]) and c["cpus"] > 0 and is_num(c["memory_gb"]) and c["memory_gb"] > 0
+                and isinstance(c["pids"], int) and not isinstance(c["pids"], bool)):
+            errs.append(f"[metadata.resources.caps].{svc}: cpus and memory_gb > 0, pids an integer")
+            continue
+        if c["pids"] < 8 * lim["max_processes"]:
+            errs.append(f"caps.{svc}.pids {c['pids']} < 8 x max_processes {lim['max_processes']}")
+    if errs:
+        return errs
+    scope = list(caps) if lim["scope"] == "trial" else ["main"]
+    total = sum(caps[s]["memory_gb"] for s in scope)
+    if lim["max_memory_gb"] > total / 1.2 + 1e-9 or lim["max_memory_gb"] > total - 2 + 1e-9:
+        errs.append(f"max_memory_gb {lim['max_memory_gb']} must be <= the scope's memory caps {total:g} / 1.2 and <= {total:g} - 2")
+    if sum(c["memory_gb"] for c in caps.values()) < lim["trial_max_memory_gb"]:
+        errs.append("the memory caps of all services together are below trial_max_memory_gb")
+    env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
+    if env.get("memory_mb") and caps["main"]["memory_gb"] < env["memory_mb"] / 1024:
+        errs.append(f"caps.main.memory_gb {caps['main']['memory_gb']} < [environment].memory_mb / 1024")
+    if env.get("cpus") and caps["main"]["cpus"] != float(env["cpus"]):
+        errs.append(f"caps.main.cpus {caps['main']['cpus']} != [environment].cpus {env['cpus']} (Harbor sets main's CPU cap)")
+    return errs
+
+
+def main_has_gpu(task: Path) -> bool:
+    c = task / "environment/docker-compose.yaml"
+    if not c.is_file():
+        return False
+    m = re.search(r"^  main:\s*\n((?:    .*\n|\s*\n)*)", c.read_text(), re.M)
+    return bool(m and NVIDIA.search(m.group(1)))
 
 
 def main(argv: list[str]) -> int:
@@ -136,7 +261,7 @@ def main(argv: list[str]) -> int:
             print(f"FAIL {t.name}: {e}")
             rc = 1
     if rc == 0:
-        print(f"resources: {n} task(s) declare their minimum compute (PROTOCOL §2.9)")
+        print(f"resources: {n} task(s) declare their minimum compute (PROTOCOL §2.9) and their limits (§2.10)")
     return rc
 
 

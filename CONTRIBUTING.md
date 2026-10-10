@@ -39,6 +39,12 @@ the expected size of the pull request.
    cgroup `memory.stat` and `nvidia-smi` while they run). Add a rule to `scripts/task_resources.toml` (or have the
    generator write `[metadata.resources]`); `scripts/task_conventions.py` writes it into `task.toml` and renders the
    README's `## Compute resources`.
+   Add the resource limits and caps too (PROTOCOL §2.10): a `[[limit]]` and a `[[cap]]` rule in the same file (scope
+   `trial` for privileged tasks, `agent` for standard ones; GPU memory, memory, processes, disk in GiB, the whole trial's
+   expected peak, `measured`; docker caps per compose service). `normalize` writes `[metadata.resources.limits]` /
+   `.caps` and ends `instruction.md` with the `## Resource limits` paragraph the agent reads. With enforcement on
+   (`RCB_LIMITS_ENFORCE=1`, v1.2) exceeding a limit fails the trial, so set them a generous margin above measured peaks
+   (e.g. `max(1.5 x peak, peak + 4 GiB)`) and make sure the oracle stays inside them.
 4. Base images: `images/<sim>/Dockerfile`, versioned in `images/<sim>/VERSION`, built and pushed with
    `scripts/build_images.sh` / `scripts/push_images.sh`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
    and build instructions.
@@ -49,7 +55,7 @@ the expected size of the pull request.
 ```bash
 bash ci_checks/run_all.sh tasks/<your tasks>      # must pass; only `legacy:` (image registry) warnings are accepted (§7)
 python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the v1.0 layout
-python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + README Compute resources (§2.9)
+python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (§2.9, §2.10)
 python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
 #   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)
 #   and check that `git diff --exit-code tasks/` is empty

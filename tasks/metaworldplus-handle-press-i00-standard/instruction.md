@@ -48,3 +48,6 @@ res.video[cam]; res.frames[cam]; res.last[cam]; res.proprio; res.save("/app/runs
   (0 closed … 1 open), `mocap_x/y/z` (the hand's target), the arm joints' positions and velocities, the finger joints'
   positions, and `cmd_*` (the last action).
 - World frame: metres; x to the robot's right, y forward (away from the robot's base), z up; the table top is at z = 0. Quaternions are w x y z. The four cameras are fixed.
+
+## Resource limits
+Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. CPU is capped at 4 cores for your container; the cap only slows you down.
