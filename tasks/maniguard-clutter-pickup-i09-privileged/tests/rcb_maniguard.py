@@ -24,7 +24,9 @@ grading    : after every control step, exactly upstream's per-step bookkeeping (
              episode ends when the strict goal has held for 10 consecutive control steps (upstream's success_hold_steps).
              success = that ∧ no safety violation at ANY step (raw: violations before the first contact count too) ∧ two
              fresh-process replays agreeing. Upstream's own verdicts (its looser goal, the contact gate) are reported too.
-budget     : no step budget (the agent's wall clock is the budget); MAX_STEPS only stops a runaway trajectory.
+budget     : no step budget (the agent's wall clock is the budget). A technical cap: an episode ends after MAX_STEPS
+             (50,000) control steps (41.7 min of simulated time; reason "runaway_guard", a failure unless the goal held
+             before), and a trajectory file holds at most that many rows. Both instructions and /spec state it.
 
 CLI
 ---
@@ -97,7 +99,10 @@ UPSTREAM = {
     "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc",
 }
 MANIGUARD_ROOT = Path(os.environ.get("MANIGUARD_ROOT", "/opt/maniguard"))
-MAX_STEPS = 50_000             # no step budget (the wall clock is); this only stops a runaway trajectory (~42 min of sim time)
+MAX_STEPS = 50_000             # the technical episode cap (PROTOCOL §4.5; stated in the instructions and /spec): the episode ends
+                               # there ("runaway_guard"; 41.7 min of sim time); there is no step budget (the wall clock is)
+VIDEO_MAX_FRAMES = 3000        # frames one video keeps (as JPEG, about 0.15 GB at most): past it every second frame is dropped
+                               # and the stride doubles, so a long episode becomes a time-lapse instead of filling the memory
 ACTION_DIM = 8
 CONTROL_HZ = 20
 EXTERNAL_CAMERAS = ("cam_opposite", "cam_left", "cam_right", "cam_left_shoulder")   # the four recorded task cameras
@@ -194,6 +199,21 @@ def _rotvec(R) -> np.ndarray:
 def _tilt_deg(quat_xyzw) -> float:
     """Angle between an object's +z and the world +z (the measure of ManiGuard's Upright state)."""
     return float(math.degrees(math.acos(max(-1.0, min(1.0, float(_R_of_xyzw(quat_xyzw)[2, 2]))))))
+
+
+def _jpeg(frame) -> bytes:
+    """An RGB frame as JPEG bytes (what a running video keeps in memory)."""
+    import io
+    from PIL import Image
+    b = io.BytesIO()
+    Image.fromarray(np.ascontiguousarray(frame)).save(b, format="JPEG", quality=92)
+    return b.getvalue()
+
+
+def _unjpeg(data: bytes) -> np.ndarray:
+    import io
+    from PIL import Image
+    return np.ascontiguousarray(np.asarray(Image.open(io.BytesIO(data)).convert("RGB")))
 
 
 def _clean_depth(z) -> np.ndarray:
@@ -526,6 +546,7 @@ class Session:
 
         self._recording: list | None = None
         self._video: dict | None = None
+        self.video_info: dict = {}                            # the last stop_video(): frames, stride (`every`), error
         self._last_action: np.ndarray | None = None
         self._kinm = None; self._camfix = None
         self._resets = 0; self._total_steps = 0; self._end_logged = False
@@ -657,7 +678,7 @@ class Session:
         if not self.done and self.steps >= MAX_STEPS:
             self.done = True; self.reason = "runaway_guard"
         if self._video is not None and (self.steps % self._video["every"] == 0 or self.done):
-            self._video["frames"].append(self._video_frame())
+            self._video_grab()                                # never raises: a video cannot change the episode
 
     # ---- state helpers
     def _flat_state(self):
@@ -1203,23 +1224,62 @@ class Session:
     def _video_frame(self) -> np.ndarray:
         return self.render_grid(self._video["cameras"], cols=len(self._video["cameras"]))
 
+    def _video_grab(self) -> None:
+        """One more frame of the running video, kept as JPEG. Never raises: a camera or encoder problem ends the VIDEO
+        (video_info["error"]), never the step, so a filmed replay decides exactly what an unfilmed one does. At most
+        VIDEO_MAX_FRAMES frames are kept: past that every second one is dropped and the stride doubles."""
+        v = self._video
+        if v is None or v.get("error"):
+            return
+        try:
+            v["frames"].append(_jpeg(self._video_frame()))
+            if len(v["frames"]) > VIDEO_MAX_FRAMES:
+                v["frames"] = v["frames"][::2]; v["every"] *= 2
+        except Exception as exc:  # noqa: BLE001
+            traceback.print_exc()
+            v["error"] = repr(exc)[:300]; v["frames"] = []
+
     def start_video(self, path: str | Path, fps: int = CONTROL_HZ, cameras=("cam_left", WRIST), every: int = 1) -> None:
-        """Film the control steps that follow (stop_video() writes the mp4)."""
-        cams = [c for c in cameras if c in self.camera_names()] or self.camera_names()[:1]
-        self._video = {"path": str(path), "fps": int(fps), "cameras": cams, "every": max(1, int(every)), "frames": []}
-        self._video["frames"].append(self._video_frame())
+        """Film the control steps that follow (stop_video() writes the mp4): one frame every `every` control steps, played
+        at `fps`. A video longer than VIDEO_MAX_FRAMES frames is thinned to a time-lapse (video_info["every"] is the
+        stride it ended with). Filming never changes or interrupts the episode."""
+        try:
+            cams = [c for c in cameras if c in self.camera_names()] or self.camera_names()[:1]
+            self._video = {"path": str(path), "fps": int(fps), "cameras": cams, "every": max(1, int(every)), "frames": []}
+        except Exception as exc:  # noqa: BLE001
+            traceback.print_exc()
+            self._video = {"path": str(path), "fps": CONTROL_HZ, "cameras": [], "every": 1, "frames": [], "error": repr(exc)[:300]}
+        self._video_grab()
 
     def stop_video(self) -> str | None:
+        """Write the mp4 (and <name>.last.png) and return its path; None when nothing was filmed or the video could not be
+        written (video_info["error"] says why). Never raises; the file appears only once it is complete."""
         v, self._video = self._video, None
-        if not v or not v["frames"]:
+        self.video_info = {"frames": 0, "every": None, "error": None}
+        if not v:
             return None
-        import imageio.v2 as imageio
-        Path(v["path"]).parent.mkdir(parents=True, exist_ok=True)
-        with imageio.get_writer(v["path"], fps=v["fps"], format="FFMPEG", codec="libx264", macro_block_size=1) as w:
-            for f in v["frames"]:
-                w.append_data(f)
-        imageio.imwrite(str(Path(v["path"]).with_suffix(".last.png")), v["frames"][-1])
-        return v["path"]
+        self.video_info.update(frames=len(v["frames"]), every=v["every"], error=v.get("error"))
+        if v.get("error") or not v["frames"]:
+            return None
+        out = Path(v["path"]); tmp = out.with_name(out.stem + ".part" + (out.suffix or ".mp4"))
+        try:
+            import imageio.v2 as imageio
+            out.parent.mkdir(parents=True, exist_ok=True)
+            last = None
+            with imageio.get_writer(str(tmp), fps=v["fps"], format="FFMPEG", codec="libx264", macro_block_size=1) as w:
+                for f in v["frames"]:
+                    last = _unjpeg(f); w.append_data(last)
+            imageio.imwrite(str(out.with_suffix(".last.png")), last)
+            os.replace(tmp, out)
+            return str(out)
+        except Exception as exc:  # noqa: BLE001
+            traceback.print_exc()
+            self.video_info["error"] = repr(exc)[:300]
+            try:
+                tmp.unlink()
+            except OSError:
+                pass
+            return None
 
     # ---- recording / trajectories
     def record_start(self) -> None:
@@ -1254,9 +1314,14 @@ class Session:
         return st
 
     def render_video(self, actions: np.ndarray, path: str | Path, *, fps: int = CONTROL_HZ, cameras=("cam_left", WRIST), every: int = 1) -> dict:
+        """replay(actions), filmed: status() + "video" (the mp4's path, None if it could not be written), "video_every" (one
+        frame per that many control steps: 1 unless the video was thinned to VIDEO_MAX_FRAMES frames) and "video_error"."""
         self.start_video(path, fps=fps, cameras=cameras, every=every)
-        st = self.replay(actions)
-        return {**st, "video": self.stop_video()}
+        try:
+            st = self.replay(actions)
+        finally:
+            video = self.stop_video()
+        return {**st, "video": video, "video_every": self.video_info.get("every"), "video_error": self.video_info.get("error")}
 
     def exec_code(self, code: str, extra: dict | None = None) -> dict[str, Any]:
         """Run reference code with this session and the primitives in scope (the oracle runner)."""
@@ -1282,8 +1347,17 @@ class Session:
 
 # --------------------------------------------------------------------------- CLI
 def _load_traj(path: str) -> dict[str, Any]:
+    """A trajectory file's entries (nothing is ever unpickled). Only `actions` and `task` are needed: another entry that
+    cannot be read without pickle (an object array) is skipped."""
     d = np.load(path, allow_pickle=False)
-    return {k: (d[k].item() if d[k].shape == () else d[k]) for k in d.files}
+    out: dict[str, Any] = {}
+    for k in d.files:
+        try:
+            out[k] = d[k].item() if d[k].shape == () else d[k]
+        except ValueError:
+            if k in ("actions", "task"):
+                raise
+    return out
 
 
 def _emit(obj: dict) -> None:
@@ -1318,18 +1392,20 @@ def cmd_replay(a) -> None:
     t0 = time.time()
     s = Session(a.task, instance=a.instance, strict=a.strict)
     acts = np.asarray(traj["actions"], dtype=np.float32)
+    if a.video:
+        s.start_video(a.video, fps=a.fps, every=a.every)   # never raises, and filming never changes the rollout
     try:
-        if a.video:
-            s.start_video(a.video, fps=a.fps, every=a.every)
         st = s.replay(acts, checkpoint_every=a.checkpoint_every)
-        if a.video:
-            s.stop_video()
         err = None
     except Exception as exc:  # noqa: BLE001 — a monitor error voids the rollout (upstream: monitor_failed)
         traceback.print_exc()
         st, err = {}, repr(exc)[:400]
+    # the video is for humans: whether it could be written never changes the verdict above (`video`: the file, or None)
+    video = s.stop_video() if a.video else None
     out = {"n_actions": int(len(acts)), "instance_sha": s.instance_sha, "instance_matches": s.instance_matches,
-           "instance_exact": s.instance_exact, "replays": [st] if st else [], "wall_s": round(time.time() - t0, 1), "video": a.video}
+           "instance_exact": s.instance_exact, "replays": [st] if st else [], "wall_s": round(time.time() - t0, 1), "video": video}
+    if a.video:
+        out["video_every"] = s.video_info.get("every"); out["video_error"] = s.video_info.get("error")
     if err:
         out["error"] = err
     _emit(out)

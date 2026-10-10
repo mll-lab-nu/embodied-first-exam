@@ -17,8 +17,10 @@ stay counted once reached. The episode **ends by itself** at the first control s
   your time is up, or on a simulator error. A dropped or knocked-over object stays that way.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
   (joints, grippers, tool-frame poses, velocities, drive efforts). No object poses, no success signal.
-- Steps are unlimited; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time are
-  reported as cost.
+- There is no step budget; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time
+  are reported as cost. One technical cap: the episode ends after **100,000 control steps** (55.6 min of simulated time;
+  `spec["max_control_steps"]`, reason `step_guard`) and is graded as it stands. The service steps faster than real time
+  (60-120 control steps/s), so long watches and far-away `ee_pose` targets can reach it: `meta["control_steps"]` counts.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it has
   succeeded.
@@ -80,7 +82,9 @@ each arm's wrist; they move: `res.extrinsic_cv[cam]` has their pose at every fra
   their targets together by differential IK in closed loop (at most 0.25 m/s); an arm that does not converge within 6 mm is
   reported in `meta["plan"]`. The tool frame `<arm>_tcp` is the midpoint of that gripper's two fingertips, 0.1426 m from
   `link_6` along `link_6`'s +z (approach) axis, with `link_6`'s orientation. At the start both arms are at their home pose
-  (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit.
+  (all joints 0, grippers open), tool frames pointing forward. At most 50 rows per submit; a position more than 3 m from
+  the world origin on any axis, or a zero quaternion, is rejected (400), nothing moves.
+- A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
 - Control runs at 30 Hz (simulated time; sim dt 1/120 s, decimation 4).
 
 ## Resource limits

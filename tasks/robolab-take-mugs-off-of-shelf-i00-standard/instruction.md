@@ -8,8 +8,10 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
   success condition holds), when your time is up, or on a simulator error. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own
   proprioception (joints, gripper, end-effector pose, velocities, drive efforts). No object poses, no success predicate.
-- Steps are unlimited; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time
-  are reported as cost.
+- There is no step budget; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time
+  are reported as cost. One technical cap: the episode ends after 100,000 control steps (1.9 h of simulated time;
+  `spec["max_control_steps"]`, reason `step_guard`) and is graded as it stands; at this service's speed (3-15 control
+  steps/s) your time runs out long before.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it
   has succeeded.
@@ -64,7 +66,9 @@ Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table
   forward towards the table, z up); quaternions wxyz. Each row is driven to by differential IK in closed loop (at most
   0.25 m/s); a row that does not converge within 6 mm is reported in `meta["plan"]`. The pose is the **fingertip-centre
   tool frame**: the gripper flange moved 0.162 m along the approach axis to the ends of the closed fingertips (the pads
-  extend ~5.7 cm back from there). At the reset pose the gripper points straight down. At most 50 rows per submit.
+  extend ~5.7 cm back from there). At the reset pose the gripper points straight down. At most 50 rows per submit; a
+  position more than 2 m from the robot's base on any axis, or a zero quaternion, is rejected (400), nothing moves.
+- A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
 
 Objects here: a ceramic mug, a mug, a shelf, a serving bowl and a utility jug. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the success condition above holds.
 

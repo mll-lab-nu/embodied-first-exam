@@ -53,8 +53,19 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ## Details
 | | |
 |---|---|
-| Episode | one episode, no reset, no step limit: it ends at the first control step where RoboLab's success term holds, when the agent's time is up, or on a simulator error; the wall clock is the only budget |
+| Episode | one episode, no reset, no step budget: it ends at the first control step where RoboLab's success term holds, when the agent's time is up, on a simulator error, or at the technical cap of 100,000 control steps (`spec.max_control_steps`, reason `step_guard`; out of reach at 3-15 control steps/s); the wall clock is the only budget |
 | Action space | `submit` chunks of `joint_position` (8, streamed at the 15 Hz control rate with the agent's `dt`, a multiple of 1/15 s) or `ee_pose` (8, differential IK per row); `observe` frames or a watch window; `/kinematics` (FK / IK, stateless); binary RCB1 responses |
 | Images | the `sim` sidecar runs eai-robolab (BUILD_ONLY, `images/robolab/BUILD_ONLY`); the agent container and the verifier run the shared client image with its pip pins (`scripts/eai_standard/client.env`) |
 | Crash recovery | resume class `exact`: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode (docs/STANDARD_MODE_2_2.md §13) |
 | Generator | `scripts/robolab/mk_tasks.py` (`scripts/robolab/families.json`, `template/standard/`, `shared/`, `scripts/eai_standard/`); docs/benchmarks/robolab.md |
+
+### Change Log
+- 2026-10-10: grading robustness and time limits; the scene, the frozen instance and the pass rule
+  (live ∧ replay ∧ deterministic) are unchanged, so the task keeps its name. `tests/grade.py`: a missing, unreadable or
+  unfinalized `final.json`, or a replay process that ended without a result, is `infra_error` = 1 (it was the agent's 0, or
+  no reward at all). `finalize.sh`: `final.json` replaced atomically, each replay time-boxed inside the hook and retried
+  once when it dies; `[[verifier.collect]] timeout_sec` 15000 s (was 5400 s). Service: malformed requests (null or
+  wrong-type fields, an `ee_pose` position more than 2 m from the base, a zero quaternion) are answered 400 before anything
+  moves (some ended the episode with a simulator error); `/spec` states the 100,000-step cap (`max_control_steps`). The
+  replay video of an episode longer than 9,000 control steps is a time lapse (at most 9,000 frames). A trial
+  recorded before this date with reward 0 and one of these conditions was an infrastructure failure.

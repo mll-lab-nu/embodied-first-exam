@@ -81,7 +81,7 @@ timeout_sec = 120
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 5400
+timeout_sec = 9000                # 2700 (episode end, through a resume) + 2 x 2400 (verdict replays, each limited) + the video (the rest) + 300: finalize.sh
 
 [agent]
 timeout_sec = 5400.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 15 minutes to start

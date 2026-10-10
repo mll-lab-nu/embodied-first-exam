@@ -23,7 +23,10 @@ skill = "@@SKILL@@"
 grasping = "@@GRASPING@@"
 
 [verifier]
-timeout_sec = 7200.0              # two fresh-process replays: Isaac Sim launch + scene load each, then the trajectory
+timeout_sec = 23400.0             # two fresh-process replays, each at most max(3600, 900 + 0.2 x rows) s (tests/grade.py: an
+                                  # Isaac Sim launch + scene load, then the rows at the slowest measured rate, 0.2 s; usually
+                                  # 0.05-0.09 s): 2 x 10900 s for the 50,000 rows a trajectory may hold, + 1600 s; the grader
+                                  # ends a replay that would run past it and writes the reward itself (replay_timed_out)
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 [agent]
