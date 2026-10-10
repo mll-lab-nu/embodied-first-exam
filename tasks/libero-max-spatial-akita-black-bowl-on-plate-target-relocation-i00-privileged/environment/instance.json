@@ -1,0 +1,66 @@
+{
+ "case": {
+  "case_id": "pro-initial-pose-position-angle-spatial-t06-i01-target_relocation-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 1,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/initial_pose_position_angle/libero_spatial/task_6",
+   "change": {
+    "calibration": "deterministic_candidate_requires_preflight",
+    "delta_position_m": [
+     -0.04242641,
+     0.04242641,
+     0.0
+    ],
+    "direction_xy": [
+     -0.70710678,
+     0.70710678
+    ],
+    "distance_m": 0.06,
+    "object": "akita_black_bowl_1",
+    "operation": "move_object",
+    "support_entity": "main_table"
+   },
+   "change_family": "GEO",
+   "change_type": "target_relocation",
+   "expected_response_mode": "replan",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1497169823
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-initial-pose-position-angle-spatial-t06-i01-target_relocation-d0",
+   "seed": 1497169823,
+   "severity": "medium",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "akita_black_bowl_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/initial_pose_position_angle",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "07_initial_pose_position_angle/bddl/libero_spatial/pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "initial_pose_position_angle",
+   "init_reference_bddl_file": "libero_spatial_lan/pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate.bddl",
+   "init_states_file": "libero_spatial/pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate.pruned_init",
+   "language": "Pick the akita black bowl next to the cookies box and place it on the plate",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 6,
+  "task_name": "pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate",
+  "task_suite_name": "libero_spatial",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "817d82a3b6b76d9facbf474b822ba6cb0b4823ad573b713597c085b33bb1558f",
+ "instance_sha": "796ddbab4a4b1de2ee6397f1647eaa324d702435f123fd6aa675366caa943abf",
+ "schema": "eai-libero-max-instance/1"
+}

@@ -1,4 +1,4 @@
-# Realtime-mode task of {{task_dir}} (docs/PROTOCOL.md §4b). Generated from scripts/humanoidbench/templates/realtime/task.toml -- edit
+# Standard-realtime task of {{task_dir}} (docs/PROTOCOL.md §4b). Generated from scripts/humanoidbench/templates/realtime/task.toml -- edit
 # subset.toml or the template, not this.
 schema_version = "1.3"
 artifacts = [
@@ -16,10 +16,10 @@ artifacts = [
 ]
 
 [task]
-name = "robot-coding-bench/{{base_dir}}-realtime"
-description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3): HumanoidBench {{family}} on the same frozen instance as {{task_dir}}. Time does not stop: once an episode starts, the robot runs at {{control_hz}} Hz in real time and holds its last targets while the agent thinks, so the agent streams joint-position targets from a controller program of its own through the client (/observe, /submit with a plan from step `at`, /reset; head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera). Up to {{reset_budget}} resets, no privileged state, no reward; the sim service records every executed control step, replays the last episode in a fresh simulator and grades it."
+name = "robot-coding-bench/{{base_dir}}-standard-realtime"
+description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3): HumanoidBench {{family}} on the same frozen instance as {{task_dir}}. Time does not stop: once an episode starts, the robot runs at {{control_hz}} Hz in real time and holds its last targets while the agent thinks, so the agent streams joint-position targets from a controller program of its own through the client (/observe, /submit with a plan from step `at`, /reset; head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera). Up to {{reset_budget}} resets, no privileged state, no reward; the sim service records every executed control step, replays the last episode in a fresh simulator and grades it."
 authors = [{ name = "pingyue" }]
-keywords = ["robotics", "humanoidbench", "mujoco", "{{robot}}", "{{paper_category_long}}", "realtime-mode", "trajectory", "{{family}}"]
+keywords = ["robotics", "humanoidbench", "mujoco", "{{robot}}", "{{paper_category_long}}", "standard-realtime-mode", "trajectory", "{{family}}"]
 
 [metadata]
 author_name = "pingyue"
@@ -27,7 +27,7 @@ task_type = "trajectory"
 simulator = "humanoidbench"
 robot = "{{robot_slug}}"
 family = "{{family}}"
-mode = "realtime"
+mode = "standard-realtime"
 protocol = "eai-standard/2.3"
 instance_seed = {{seed}}
 expert_time_estimate_hours = {{standard_expert_hours}}

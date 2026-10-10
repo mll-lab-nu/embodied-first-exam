@@ -1,0 +1,31 @@
+# Standard mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
+# The GPU is reserved for the sidecar: SAPIEN needs a Vulkan device to build the scene and render the cameras (physics and the
+# brush model run on the CPU). Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes,
+# compose restarts the same container (its /data record stays) and the service resumes the episode from its journal.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: ghcr.io/mll-lab-nu/eai-robopaint:0.2.0
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /tmp
+    command: sh /srv/run.sh
+    restart: on-failure:6
+    environment:
+      RCB_TASK: robopaint_lettering_commendation
+      RCB_INSTANCE: /srv/instance.json
+      RCB_TOOL: /srv/rcb_brush_strict.py   # the collect hook's replays score with the process rules
+      RCB_DATA: /data
+      RCB_WALL_CLOCK_S: "7200"
+      RCB_STARTUP_TIMEOUT_S: "600"     # startup watchdog: >= 4x the slowest measured start (126 s; docs/benchmarks/robopaint.md)
+      PYTHONPATH: /srv
+      RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

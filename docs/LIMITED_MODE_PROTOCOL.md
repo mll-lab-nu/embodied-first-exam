@@ -153,23 +153,26 @@ camera poses are in the robot's starting frame); see [docs/benchmarks/](benchmar
 tables. A request body over 64 MB gets 413 before it is decoded.
 
 ## Optional reset capability
-Off by default (`budget.reset = 0`): one trial is one episode. Exception, by owner decision (PROTOCOL §4.5): HumanoidBench's
-standard tasks default to `budget.reset = 50` (2026-10-07). A run may set `RCB_RESET_BUDGET=N` on the service
-(implemented by the KinDER and HumanoidBench services). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
+Off by default (`budget.reset = 0`): one trial is one episode, in standard and standard-realtime mode alike. Exception, by
+owner decision (PROTOCOL §4.5): HumanoidBench's standard tasks (2026-10-07) and standard-realtime tasks (2026-10-08) default
+to `budget.reset = 50`, MyoSuite's standard tasks (2026-10-09) to `budget.reset = 10`. A run may set `RCB_RESET_BUDGET=N`
+on the service (implemented by the KinDER, HumanoidBench and MyoSuite services; MyoSuite's 2.2 client has no `reset()`,
+so its instruction calls `POST /reset` through `Robot._post`). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
 `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running episode and starts a new one from the
 same frozen state, `N` times in all; `/status` and `meta` add `episode`, `resets_left` and `control_steps_total`. After a
 success or once the agent's time is up, `/reset` returns 409, as it does when the budget is spent. Only the last
 episode is graded. Results with `N > 0` are reported separately and never ranked with `N = 0` (PROTOCOL D1, §4.5).
 
-## Realtime mode: `eai-standard/2.3`
-Time does not stop. The wire protocol of the realtime mode (PROTOCOL §4b, v1.1; protocol-change issue #86), served by
-realtime tasks only (`<base>-realtime`, `mode = "realtime"`, `protocol = "eai-standard/2.3"`; implemented by HumanoidBench's,
-`scripts/humanoidbench/shared/realtime/rcb_realtime.py`). 2.3 is 2.2 plus the realtime capability below; every 2.2
+## Standard-realtime mode: `eai-standard/2.3`
+Time does not stop. The wire protocol of the standard-realtime mode (PROTOCOL §4b, v1.1; protocol-change issue #86), served by
+standard-realtime tasks only (`<base>-standard-realtime`, `mode = "standard-realtime"`, `protocol = "eai-standard/2.3"`; implemented by HumanoidBench's,
+`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which RoboOlympics' tasks use unchanged). 2.3 is 2.2 plus the realtime capability below; every 2.2
 addition stays a MAY, so a 2.1 service with this capability is a 2.3 service. Same endpoints, RCB1 frames, crash
 recovery and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S (`RCB_SLOWDOWN`, default 1 = real
 time; results with S ≠ 1 are reported separately from S = 1), `control_dt`, `wall_s_per_control_step`, `max_ahead_steps`.
-Defaults of the mode (owner, 2026-10-08): `budget.reset = 50` (the reset capability above; `RCB_RESET_BUDGET` overrides
-it), S = 1.
+Defaults of the mode: `budget.reset = 0`, as in standard mode (the reset capability above; `RCB_RESET_BUDGET` overrides it;
+HumanoidBench's per-benchmark exception is 50, PROTOCOL §4.5), and S = 1 (RoboOlympics' per-benchmark exception is 10,
+PROTOCOL §4b).
 - **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` or `/observe`
   with `seconds > 0` (after a reset, and after a crash recovery, the episode is paused again) and runs one control step
   every `control_dt` × S seconds of wall time, whatever the agent does, until the episode ends.
@@ -202,4 +205,4 @@ agent latency counts, the agent's own program may act) and uses its `slowdown` n
 `/act`, `/wait`, `/ready`, seats, reviews or metering proxy; native agents only (PROTOCOL D11).
 
 ## Versioning
-`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise + crash recovery; `eai-standard/2.1` is the v1.0 name of 2.1. Minor versions only add; the 2.x client accepts every 2.x version under both spellings. Accepted, pending: `eai-standard/2.2` (PROTOCOL §6). `eai-standard/2.3` (2026-10-08) = 2.2 + the realtime capability, the realtime mode's protocol (above). `eai-standard/2.4` (2026-10-08) = 2.3 + the operations capability (operation ids, request deadlines, `GET /operations/<id>`, call watchdog, tick ledger; [STANDARD_MODE_2_4.md](STANDARD_MODE_2_4.md)), for standard tasks.
+`protocol` in `/spec`. 1.0 (`/step` with one action and base64 images) is retired; 2.0 = `/submit` + `/observe` + RCB1; 2.1 = 2.0 + measured proprioception (82 columns) + optional depth noise + crash recovery; `eai-standard/2.1` is the v1.0 name of 2.1. Minor versions only add; the 2.x client accepts every 2.x version under both spellings. Accepted, pending: `eai-standard/2.2` (PROTOCOL §6). `eai-standard/2.3` (2026-10-08) = 2.2 + the realtime capability, the standard-realtime mode's protocol (above). `eai-standard/2.4` (2026-10-08) = 2.3 + the operations capability (operation ids, request deadlines, `GET /operations/<id>`, call watchdog, tick ledger; [STANDARD_MODE_2_4.md](STANDARD_MODE_2_4.md)), for standard tasks.

@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-task-object-t04-i01-illumination_switch-d0-p195",
+ "event": "illumination_switch",
+ "suite": "libero_object",
+ "language": "Pick the milk and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "milk_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "b8eebded21c5be35b01c525242697230459337dc64b929ac6662a1983870589c",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "milk_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "milk_1:placed",
+  "trace": [
+   "125:pick milk_1:retreat failed goal=[-0.012, 0.249, 0.305] eef=[-0.012, 0.249, 0.205] obj c=[-0.011, 0.249, 0.132] half=[0.027, 0.066, 0.026] top=0.199 fingers=-1.57 contacts=[]",
+   "125:milk_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 125,
+  "event_fired": true,
+  "event_step": 5,
+  "steps_left": 155,
+  "state_sha": "213ff50a65c8dd43a5df4c3efdcf4ce959d89dc9f80023a823f6fad5f5119c15",
+  "initial_state_sha": "b8eebded21c5be35b01c525242697230459337dc64b929ac6662a1983870589c"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 125,
+   "event_fired": true,
+   "event_step": 5,
+   "steps_left": 155,
+   "state_sha": "213ff50a65c8dd43a5df4c3efdcf4ce959d89dc9f80023a823f6fad5f5119c15",
+   "initial_state_sha": "b8eebded21c5be35b01c525242697230459337dc64b929ac6662a1983870589c"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 125,
+   "event_fired": true,
+   "event_step": 5,
+   "steps_left": 155,
+   "state_sha": "213ff50a65c8dd43a5df4c3efdcf4ce959d89dc9f80023a823f6fad5f5119c15",
+   "initial_state_sha": "b8eebded21c5be35b01c525242697230459337dc64b929ac6662a1983870589c"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

@@ -74,7 +74,16 @@ out["q_score"] = b.get("q_score") if b.get("q_score") is not None else a.get("q_
 out["replay_sha"], out["replay_sha2"] = a.get("state_sha"), b.get("state_sha")
 out["deterministic"] = bool(a.get("state_sha")) and a.get("state_sha") == b.get("state_sha")
 out["live_matches_replay"] = bool(a.get("state_sha")) and a.get("state_sha") == out.get("live_sha")
-out["video"] = os.path.exists(os.path.join(d, "replay.mp4"))
+# a video counts when it decodes, not when the file exists: a replay that crashes leaves a file behind (board 0051)
+def playable(p):
+    import subprocess
+    try:
+        r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets", "-show_entries",
+                            "stream=nb_read_packets", "-of", "csv=p=0", p], capture_output=True, text=True, timeout=300)
+        return r.returncode == 0 and int((r.stdout.strip() or "0").split(",")[0]) > 0
+    except Exception:
+        return False
+out["video"] = os.path.exists(os.path.join(d, "replay.mp4")) and playable(os.path.join(d, "replay.mp4"))
 if r1.get("gpu_lost"):
     out["gpu_lost"] = True; out["infra_error"] = 1
     out["error"] = "infrastructure: the GPU was not accessible to new processes in the sim sidecar, so the episode could not be replayed"

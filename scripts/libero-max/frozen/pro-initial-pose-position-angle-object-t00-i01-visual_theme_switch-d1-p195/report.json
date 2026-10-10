@@ -1,0 +1,111 @@
+{
+ "case_id": "pro-initial-pose-position-angle-object-t00-i01-visual_theme_switch-d1-p195",
+ "event": "visual_theme_switch",
+ "suite": "libero_object",
+ "language": "Pick the alphabet soup and place it in the basket",
+ "goal": [
+  [
+   "in",
+   "alphabet_soup_1",
+   "basket_1_contain_region"
+  ]
+ ],
+ "initial_success": false,
+ "initial_state_sha": "1c6c975f22a094aa01a0af1b1e3b95207aeeb932f67815ae1fc569b89c12da2f",
+ "robot_base": {
+  "pos": [
+   -0.6,
+   0.0,
+   0.0
+  ],
+  "quat_wxyz": [
+   1.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "controller": {
+  "output_max": [
+   0.05,
+   0.05,
+   0.05,
+   0.5,
+   0.5,
+   0.5
+  ],
+  "output_min": [
+   -0.05,
+   -0.05,
+   -0.05,
+   -0.5,
+   -0.5,
+   -0.5
+  ],
+  "input_max": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "input_min": [
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0,
+   -1.0
+  ],
+  "control_freq": 20.0
+ },
+ "plan": {
+  "goals": [
+   [
+    "in",
+    "alphabet_soup_1",
+    "basket_1_contain_region"
+   ]
+  ],
+  "phase": "alphabet_soup_1:placed",
+  "trace": [
+   "163:pick alphabet_soup_1:retreat failed goal=[0.016, 0.257, 0.24] eef=[0.016, 0.257, 0.14] obj c=[0.015, 0.258, 0.116] half=[0.031, 0.038, 0.031] top=0.148 fingers=-2.36 contacts=[]",
+   "163:alphabet_soup_1:placed"
+  ]
+ },
+ "live": {
+  "success": true,
+  "done": true,
+  "control_steps": 163,
+  "event_fired": true,
+  "event_step": 12,
+  "steps_left": 117,
+  "state_sha": "6c4bd97b758133d6796d1ecb988cf9590ce956868013dfc794206bd3ef1cefe5",
+  "initial_state_sha": "1c6c975f22a094aa01a0af1b1e3b95207aeeb932f67815ae1fc569b89c12da2f"
+ },
+ "replays": [
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 163,
+   "event_fired": true,
+   "event_step": 12,
+   "steps_left": 117,
+   "state_sha": "6c4bd97b758133d6796d1ecb988cf9590ce956868013dfc794206bd3ef1cefe5",
+   "initial_state_sha": "1c6c975f22a094aa01a0af1b1e3b95207aeeb932f67815ae1fc569b89c12da2f"
+  },
+  {
+   "success": true,
+   "done": true,
+   "control_steps": 163,
+   "event_fired": true,
+   "event_step": 12,
+   "steps_left": 117,
+   "state_sha": "6c4bd97b758133d6796d1ecb988cf9590ce956868013dfc794206bd3ef1cefe5",
+   "initial_state_sha": "1c6c975f22a094aa01a0af1b1e3b95207aeeb932f67815ae1fc569b89c12da2f"
+  }
+ ],
+ "ok": true,
+ "why": ""
+}

@@ -30,7 +30,7 @@ protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800); human review in PR #9"
+oracle_evidence = "none known: no run has passed it, and published RL reaches 41% of the bar (paper 286, FastTD3 325, bar 800) with upstream's 104 kg dumbbell (53.7 kg since image 0.2.0); human review in PR #9"
 
 [verifier]
 timeout_sec = 900.0

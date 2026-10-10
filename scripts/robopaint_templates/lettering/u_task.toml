@@ -3,27 +3,30 @@ artifacts = ["/app/output/"]
 
 [task]
 name = "robot-coding-bench/{{NAME}}-privileged"
-description = "RoboPaint lettering: embodied robotic lettering (ManiSkill 3.0.1 Franka Panda holding a broad-edge (chisel) dip pen; the mark is the chisel edge swept along the path it takes): produce one replayable trajectory that copies the lettering shown in the picture target.png onto the main sheet with pen and ink, in at most {{N}} strokes. Scored against the picture (after the best single shift of the sheet, at most 5 mm along each axis: success iff IoU >= {{IOU}}, boundary F within 1 mm >= 0.80, every stroke of the exemplar covered >= 0.75, stray ink <= 0.04 of its inked area and at most {{N}} strokes; the IoU is the continuous score). s.score() is served by a separate scoring container."
+description = "RoboPaint lettering: embodied robotic lettering (ManiSkill 3.0.1 Franka Panda holding a pointed flexible dip pen; the mark is the ink laid between the two tines, whose spread follows the press depth): produce one replayable trajectory that copies {{TASK_PLAIN}}, shown in the picture target.png, onto the main sheet with pen and ink, in at most {{N}} strokes. Scored against the picture (after the best single shift of the sheet, at most 5 mm along each axis: success iff IoU >= {{IOU}}, boundary F within 1 mm >= 0.80, every region of the exemplar (at most 30 mm each along its strokes) covered >= 0.75, stray ink <= 0.04 of its inked area and at most {{N}} strokes; the IoU is the continuous score). s.score() is served by a separate scoring container."
 authors = [{ name = "qineng" }]
-keywords = ["robotics", "robopaint", "maniskill", "sapien", "lettering", "calligraphy", "broad-edge", "{{HAND}}", "franka", "code-as-policy", "trajectory", "{{FAMILY}}"]
+keywords = ["robotics", "robopaint", "maniskill", "sapien", "lettering", "calligraphy", "pointed-pen", "copperplate", "round-hand", "franka", "code-as-policy", "trajectory", "{{FAMILY}}"]
 
 [metadata]
 author_name = "qineng"
 task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
-simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the CPU) + the broad-edge nib model (rcb_brush.py, CPU)
-robot = "franka-panda"            # PandaStick with a dip pen: rigid holder + a collision-free 6 mm 4 mm chisel nib; TCP = the middle of the edge
+simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the CPU) + the pointed-pen model (rcb_brush.py, CPU)
+robot = "franka-panda"            # PandaStick with a dip pen: rigid holder + a collision-free 6 mm flexible point; TCP = the point
 family = "{{FAMILY}}"
 mode = "privileged"               # privileged (exact sheets, pen state, reset, scoring service) | standard (RGB only: the -standard twin)
 oracle = "{{ORACLE}}"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
 oracle_evidence = "{{ORACLE_EVIDENCE_U}}"
 instance_seed = 0                 # scene = environment/instance.json (agent's copy: sheets, pen, ink well, start joints, the rule, instance_sha)
 expert_time_estimate_hours = 3.0
-difficulty = "{{DIFFICULTY}}"          # RoboPaint tiers: line easy; lettering medium (one short word, broad edge) / hard / extreme (pointed pen, long words)
-medium = "broad_nib"           # the pen model: broad_nib | pointed_pen (rcb_brush.py)
-hand = "{{HAND}}"               # difficulty axes: hand, letters, strokes (= the stroke cap), pen control
+difficulty = "{{DIFFICULTY}}"          # RoboPaint tiers: line easy; lettering extreme (臨摹 of engraved round hand: long connected contacts, shades, loops)
+medium = "pointed_pen"           # the pen model: broad_nib | pointed_pen (rcb_brush.py)
+hand = "{{HAND}}"               # difficulty axes: hand, structure, letters, words, strokes (= the contact cap), regions, pen control
+structure = "{{STRUCTURE}}"
+words = {{NWORDS}}
+regions = {{NREG}}
 letters = {{NLETTERS}}
 stroke_count = {{N}}
-pen_control = "wrist yaw (pen angle)"
+pen_control = "press depth (shades) + wrist yaw"
 
 [verifier]
 timeout_sec = 1800.0

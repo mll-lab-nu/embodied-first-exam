@@ -1,0 +1,12 @@
+# The verifier replays in MuJoCo and renders like the agent's environment (environment/docker-compose.yaml).
+services:
+  main:
+    environment:
+      NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

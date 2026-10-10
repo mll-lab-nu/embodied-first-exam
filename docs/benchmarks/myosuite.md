@@ -114,6 +114,24 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
     fingertip-position IK; crash recovery with resume class `exact` (MuJoCo on the CPU is bit-exact in a fresh process).
   The episode ends at success, at the task's failure or when the time is up; the collect hook replays the recorded
   trajectory in two fresh processes.
+- **Reset budget: 10** (owner, 2026-10-09; PROTOCOL §4.5, a per-benchmark exception to "no reset"). MyoSuite's own
+  termination ends most standard episodes within one or two seconds of simulated time (measured in #116: a constant
+  command held from the frozen instance ends dex_*, baoding, obj_hold, pen_twirl and obj_reorient after 12-71 control
+  steps, chase_tag after 42-86), so one episode was one blind attempt at muscle-level control.
+  The compose file sets `RCB_RESET_BUDGET` to 10 (`RCB_RESET_BUDGET=0` runs the old single episode). The shared 2.2
+  layer has no reset, so the adapter adds `POST /reset` itself (`shared/standard/server.py`, the semantics of
+  [`LIMITED_MODE_PROTOCOL.md`](../LIMITED_MODE_PROTOCOL.md) "Optional reset capability"): it abandons the running
+  episode, or follows one that has ended, and restores the frozen instance (`Session.reset()`, the privileged mode's
+  reset); only the last episode is graded (its rows are `trajectory.npz`), a success ends the trial (409 after it), the
+  wall clock never restarts; `/status`, every `meta` and `final.json` count `episode`, `resets_left`,
+  `control_steps_total`, and `reward.json` adds `episodes`, `resets`, `reset_budget` and `sim_steps_total`. Crash
+  recovery replays the whole journal and resets at the journal rows where the committed resets happened (they are
+  checkpointed), so a resume after a reset is exact. The 2.2 client has no `reset()`: the instruction calls
+  `r._post("/reset", {...}, [], 900)`. Checked against a live key_turn service (budget 3): a failed episode, a reset, an
+  abandoned one, a reset, then the oracle's first 30 rows, a `kill -9` of the service (resumed exact, episode 3 at
+  step 30), the rest of the oracle: success, 409 on a further reset; the collect hook graded episode 3 only (72 rows,
+  live = both replays = `79c522457ad23180`, the oracle's final state); a crash right after a reset also resumes exact.
+  Results with 0 resets (every MyoSuite standard run before 2026-10-09) are reported separately.
 
 ## Reference solutions and oracle levels
 - **full (key_turn, obj_hold, arm_reach):** MyoSuite's own NPG baseline policies (`myosuite/agents/baslines_NPG/`, in
@@ -139,7 +157,10 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   by `reset(seed=0)`, so a second episode differed from the first until the session restored all of them.
 - The robot wrapper trap: MyoSuite steps the physics in its robot wrapper's own MjData (`base.robot.mj_data`);
   `base.mj_data` is a mirror. Snapshots and the state hash use the robot's data, and a restore writes it back to every
-  copy; without that, mid-episode restores silently diverged.
+  copy; without that, mid-episode restores silently diverged. The mirror is refreshed from `qpos`, `qvel` and `act`
+  only and then `mj_forward`ed with `ctrl = 0`, so its `qfrc_actuator` is the force of a zero command: the standard
+  service's `effort_<joint>` proprioception read it until 2026-10-09 (the MyoDex wrist servos reported `kp * (0 - q)`
+  whatever was commanded; muscle-driven joints were off too). It now reads the robot's data.
 
 ## Human review (oracle = none): family → positive example → nop → predicate
 Positive examples are successful model trials on the privileged tasks (the same frozen instances): Claude Code + Claude
