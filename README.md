@@ -48,7 +48,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 | RoboWits (`robowits-<family>-i00`) | Genesis · Marvin bimanual | 15 | partial on 2, none on 13 (human review) |
 | RoboPaint (`robopaint-<style>-<target>-i<NN>`) | ManiSkill 3 / SAPIEN + libmypaint · Franka Panda with a brush; the picture is written or painted with strokes, not coloured in (process rules) | 43 | partial |
 | RoboLab (`robolab-<family>-i00`) | Isaac Lab / Isaac Sim · Franka + Robotiq 2F-85 | 53 | full on 2, none on 51 (human review) |
-| YAMLab (`yamlab-<family>-iNN`) | Isaac Lab / Isaac Sim (YAMLab) · two I2RT YAM arms with parallel grippers | 50 (2 families × 25 object pairs) | full (upstream human demonstrations) |
+| YAMLab (`yamlab-<family>-iNN`) | Isaac Lab / Isaac Sim (YAMLab) · two I2RT YAM arms with parallel grippers | 10 (2 families × 5 object pairs) | full (upstream human demonstrations) |
 | LabUtopia (`labutopia-<family>-i00`) | LabUtopia on Isaac Sim 6.1 · Franka Panda; a chemistry laboratory: glassware (pick, place, pour, shake), a heater with a button, an instrument panel, a drying oven's door, a cabinet's drawer | 9 | full (LabUtopia's scripted controllers) |
 | BEHAVIOR-1K (`behavior-<activity>-i00`) | OmniGibson / Isaac Sim · Galaxea R1 Pro | 100 | partial on 2, none on 98 (human review; 89 supplementary tasks without a verified positive yet) |
 | VLABench (`vlabench-<task>-i00`) | MuJoCo + dm_control · Franka Panda | 36 | full |
