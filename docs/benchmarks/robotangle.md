@@ -158,8 +158,9 @@ state the 6 h budget and are compared only with results under the same budget (D
 ## Grading and determinism
 
 **Privileged mode:**
-- two open-loop replays of `/app/output/trajectory.npz` from the frozen instance, in fresh processes in the separate
-  verifier sandbox (GPU reservation in `tests/docker-compose.yaml`);
+- two open-loop replays of `/app/output/trajectory.npz` from the frozen instance in the separate verifier sandbox (GPU
+  reservation in `tests/docker-compose.yaml`): one fresh verifier process builds one Session and replays twice in it,
+  each replay after a reset to the frozen instance (`shared/privileged/grade.py`; not two processes);
 - success requires the task's native predicate after the replay, with release and clearance checks;
 - for the families with a tolerant hold (blanket_flatten, knot_untying, lock_picking, rope_threading) the rule is R-hold
   (the owner's decision, 2026-10-05, dev/jianwen `4c5ece239`): every replay may confirm within the hold of up to 2 s
@@ -244,6 +245,26 @@ carry them or the generator's assertions fail.
   grader error; privileged: the row cap, the budget-aware review pass, the replay Session's guard above the cap.
 - Texts (`review_fixes`): R-hold in the 17 privileged instructions and READMEs that named the old rule; the row cap; the
   standard instruction's "Time per call" for 2.4 (`max_call_wall_s`, `r.operation_status()`, 408 / 409).
+
+Round 2 of that review (2026-10-10, board 0067 R2; `python3 scripts/robotangle/tests/test_server_requests.py` runs the
+real `server.py` on the real 2.4 layer with a stub Session, numpy only, about 20 s):
+- Service (`server.py`, `number()`): a JSON integer beyond the float range in `dt`, `video_fps` or `seconds` is a 400
+  that moves nothing. `math.isfinite` raises `OverflowError` on it, which was a 500 that ended the episode with
+  `reason = "error"`, an infrastructure error here: one hand-written request turned a failing trial into a void one.
+- Service, proprio group `gripper_opening`: the measured gap between the finger pads in metres for every gripper
+  (`Session.gripper_width`, i.e. `_Robot.opening`: the finger links' collision vertices read through
+  `topogym.robot.grasp_geometry`, the reader every Session start already runs for every arm; it issues no command and
+  nothing graded reads the column). In the native gripper space (47 of the 52 standard tasks) the column repeated
+  `joint_pos`'s gripper entry, the drive coordinate: the Robotiq 2F-85's driver joint in rad, 0 = open .. 0.8 = closed
+  (`topogym/robot/panda_robotiq`, image 0.2.22), i.e. the opposite direction of an opening, and ALOHA's finger rail
+  position in m. `/spec` describes the gripper entries of `joint_pos` and `joint_vel` per gripper space. The five
+  width-space tasks (knot_untying) are unchanged. Not run on a GPU for this fix: the Robotiq value was checked against
+  the 0.2.22 sources and the stub, not on a live scene.
+- Texts (`review_fixes_r2`): the 20 Panda tasks' instructions (both modes) gave the native drive target in metres; it
+  is rad (0 = open, 0.8 = closed). The standard Rules said "internal measurements are not exposed" while the same
+  instruction documents `meta["safety"]`; the sentence now names that exception (what is exposed is unchanged: whether
+  the contact readings of `meta["safety"]` stay in standard mode is an open owner decision, PROTOCOL §4.5). The
+  instruction states the client's new `Robot()` wait (3600 s; 600 s before) and what `gripper_opening` is.
 
 Not changed: a resume replay at collect time still has the fixed 3600 s `RCB_COLLECT_END_TIMEOUT_S`, and the collect
 hook's 27000 s can still end before the review-frame pass of a very long knot_untying episode; the verdict is in

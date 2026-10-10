@@ -12,8 +12,13 @@ instance rebuilt here from tests/instance.npz must match its recorded hash.
 A file the agent got wrong is the agent's 0, `bad_trajectory` (not `grader_error`): not an npz, pickled or object
 arrays, no `task` or `actions` entry, a wrong shape, NaN/inf, or more than rcb_dexjoco.MAX_TRAJECTORY_ROWS rows (the
 hand-in cap: what two replays of the slowest family fit into this verifier's timeout). `grader_error` is left for
-failures of the verifier itself. Every reward.json carries success, deterministic, grader_error, missing_trajectory and
-bad_trajectory. The verdict is on disk before the video is rendered, and the video stops at `--video-deadline-s`.
+failures of the verifier itself, and comes with `infra_error` = 1 (no verdict on the agent). One of them is checked
+before the first replay: the simulation's result depends on OpenBLAS's thread count below 4
+(docs/benchmarks/dexjoco.md, "Threads"), so a verifier whose process runs fewer than 4 OpenBLAS threads (fewer than 4
+CPUs visible to it, or OPENBLAS_NUM_THREADS below 4) replays nothing and reports `too_few_cpus`, `grader_error` and
+`infra_error` = 1 with `visible_cpus` and `blas_threads`. Every reward.json carries success, deterministic,
+grader_error, infra_error, missing_trajectory and bad_trajectory. The verdict is on disk before the video is rendered,
+and the video stops at `--video-deadline-s`.
 """
 from __future__ import annotations
 import argparse, json, os, sys, time, traceback, zipfile
@@ -24,7 +29,7 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 
 T_START = time.time()
 # PROTOCOL §2.6: every exit writes these (numeric only)
-BASE = {"success": 0, "deterministic": 0, "grader_error": 0, "missing_trajectory": 0, "bad_trajectory": 0}
+BASE = {"success": 0, "deterministic": 0, "grader_error": 0, "infra_error": 0, "missing_trajectory": 0, "bad_trajectory": 0}
 
 
 def write(ok: bool, out: dict) -> None:
@@ -109,6 +114,10 @@ def main() -> int:
         n_rows = int(acts.shape[0]) if acts.ndim == 2 else 0
         if acts.ndim != 2 or n_rows > MAX_TRAJECTORY_ROWS or not np.all(np.isfinite(acts)):
             write(False, {"bad_trajectory": 1, "too_many_rows": int(n_rows > MAX_TRAJECTORY_ROWS), "n_actions": n_rows, **cost}); return 0
+        threads = rcb_dexjoco.blas_threads()
+        if not threads["threads_ok"]:  # other numerics than the references': no replay, no verdict on the agent
+            print("too few CPUs: " + rcb_dexjoco.threads_message(threads), file=sys.stderr)
+            write(False, {"grader_error": 1, "infra_error": 1, "too_few_cpus": 1, "n_actions": n_rows, **threads, **cost}); return 0
         s = Session(a.family, instance=a.instance)
         if acts.shape[1] != s.action_dim:
             write(False, {"bad_trajectory": 1, "n_actions": n_rows, **cost}); return 0
@@ -126,7 +135,7 @@ def main() -> int:
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                "instance_ok": int(instance_ok), "n_actions": int(len(acts)), "sim_steps": int(outs[0]["steps"]),
                "task_failure": int(bool(outs[0]["reason"]) and not outs[0]["success"]),
-               "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "video_rendered": 0, **cost}
+               "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "video_rendered": 0, **threads, **cost}
         write(ok, out)  # the verdict is on disk before the video; the video only adds video_rendered
         deadline = T_START + a.video_deadline_s
         if not a.no_video and time.time() < deadline:  # human-viewable replay (never affects the verdict)
@@ -142,7 +151,7 @@ def main() -> int:
                 traceback.print_exc(file=sys.stderr)
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)
-        write(False, {"grader_error": 1, **cost})
+        write(False, {"grader_error": 1, "infra_error": 1, **cost})
     finally:
         if s is not None:
             s.close()

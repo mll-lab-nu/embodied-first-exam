@@ -179,7 +179,7 @@ CLI equivalent of the grader:
 
 ## Conventions
 - World frame: robot base at (-0.570, 0.000, 0.920), table top at z = 0.920, +z up. Quaternions are **WXYZ**.
-- Action (8): arm `arm`: 7 joint targets (rad), then `arm_native_gripper` = native drive target (m, limits 0 .. 0.8; open/closed targets in robot_spec); absolute position targets tracked by PD controllers, out-of-limit
+- Action (8): arm `arm`: 7 joint targets (rad), then `arm_native_gripper` = native drive target (rad, limits 0 .. 0.8: 0 = open, 0.8 = closed, the Robotiq 2F-85's driver joint; open/closed targets in robot_spec); absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget, but a trajectory may have at most
   177000 rows (73.8 min of simulated time): the verifier has to replay it twice within its own time limit, so `s.step` stops

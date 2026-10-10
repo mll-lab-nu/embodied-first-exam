@@ -9,8 +9,8 @@ replay.mp4, after the verdict is on disk (it never changes it).
 
 What is whose failure (success is 0 in every case): the agent's is a missing file (missing_trajectory), a file that is not
 a trajectory of this task (bad_trajectory: not an npz, no `actions`, a pickled or non-numeric array, a wrong shape,
-NaN/inf; wrong_family) and a trajectory upstream judges a failure; the grader's (grader_error = 1, no verdict on the
-agent) is a replay process that died or ran out of time, a frozen start the image no longer builds (instance_mismatch),
+NaN/inf; wrong_family) and a trajectory upstream judges a failure; the grader's (grader_error = 1 and infra_error = 1,
+no verdict on the agent) is a replay process that died or ran out of time, a frozen start the image no longer builds (instance_mismatch),
 any other exception here.
 """
 
@@ -24,6 +24,7 @@ REPLAY_TIMEOUT_S = 500  # three replays fit the verifier's 1800 s (a replay take
 
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
+    out.setdefault("infra_error", int(bool(out.get("grader_error"))))   # every grader_error here is the host's, never the agent's (PROTOCOL §2.6)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
     print(json.dumps(out), flush=True)

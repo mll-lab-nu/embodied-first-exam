@@ -149,7 +149,8 @@ FAMILIES: dict[str, dict] = {
                      difficulty="hard", hours=4.0),
     "soccer": dict(goal="", scene="A musculoskeletal body with two legs stands on a soccer pitch; a ball lies in front of it and a goalkeeper guards the goal.",
                    difficulty="hard", hours=5.0),
-    "chase_tag": dict(goal="", scene="A musculoskeletal body with two legs stands in a square arena; an opponent moves in it.",
+    # the frozen instance drew the opponent policy `stationary` (MyoChallenge draws it once per environment): it stands still
+    "chase_tag": dict(goal="", scene="A musculoskeletal body with two legs stands in a square arena; an opponent stands somewhere in it (in this frozen instance it does not move).",
                       difficulty="hard", hours=5.0),
     "osl_run": dict(goal="", scene="A musculoskeletal body whose left leg is an Open-Source Leg prosthesis (knee and ankle motors driven by its own controller) stands at the start of a straight, flat running track.",
                     difficulty="hard", hours=5.0),
@@ -255,6 +256,32 @@ def reference_rel(s) -> list:
     return out
 
 
+def scene_cameras(s) -> list:
+    """Cameras that are mounted on, track or are aimed at a body of the scene that is not the agent's own (a mocap body
+    such as the opponent or the goalkeeper, or a body behind a joint that is not the body's): their pose is that body's
+    position plus a constant, so the standard service gives their images only. The rule of shared/standard/server.py
+    (`scene_camera`), repeated here for the task texts."""
+    m = s.model
+    own = {int(m.joint(j["name"]).id) for j in s.joints() if j["name"] != "keyjoint" and not j["name"].startswith("OBJ")}
+    own |= {j for j in range(m.njnt) if int(m.jnt_type[j]) == 0 and m.joint(j).name == "root"}
+
+    def own_body(b: int) -> bool:
+        while b > 0:
+            first = int(m.body_jntadr[b])
+            if int(m.body_mocapid[b]) >= 0 or any(j not in own for j in range(first, first + int(m.body_jntnum[b]))):
+                return False
+            b = int(m.body_parentid[b])
+        return True
+
+    out = []
+    for c in s.cameras():
+        i = m.camera(c).id
+        bodies = [int(m.cam_bodyid[i])] + ([int(m.cam_targetbodyid[i])] if int(m.cam_mode[i]) in (3, 4) else [])
+        if not all(own_body(b) for b in bodies if b >= 0):
+            out.append(c)
+    return out
+
+
 def facts(fam: str) -> dict:
     inst = HERE / "instances" / f"{fam}.npz"
     if not inst.exists():                      # a new family: freeze its instance (seed(0), reset(seed=0))
@@ -295,6 +322,7 @@ def facts(fam: str) -> dict:
         "reward_src": textwrap.dedent(inspect.getsource(cls.get_reward_dict)).rstrip(),
         "obs_keys": [k for k in s.base.obs_dict if k != "time"],
         "cameras": s.cameras(),
+        "scene_cameras": scene_cameras(s),
         "steps_per_s": int(round(rate, -2)),
         "rest_reason": st["reason"],
     }

@@ -5,4 +5,4 @@ rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/PRO
 trap 'p=$(command -v python3 || command -v python); "$p" /tests/rcb_limits.py verify' EXIT   # resource limits, after the grader (docs/PROTOCOL.md §2.10)
 mkdir -p /logs/verifier
 python /tests/grade.py --family retrieve_cube --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \
-  2> /logs/verifier/grade.log
+  --budget 1800 2> /logs/verifier/grade.log

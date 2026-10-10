@@ -169,14 +169,29 @@ EE = [f"{a}_{k}" for a in ARMS for k in ("x", "y", "z", "qw", "qx", "qy", "qz")]
 N = len(LAYOUT)
 PROPRIO_LAYOUT = (LAYOUT + EE + [f"{n}_cmd" for n in LAYOUT] + [f"{n}_vel" for n in LAYOUT]
                   + [f"{a}_gripper_opening_m" for a in ARMS] + [f"{n}_effort" for n in LAYOUT])
+# The gripper entries of joint_pos / joint_cmd / joint_vel are in the gripper's COMMAND space (the frozen instance's
+# gripper_space): an opening width in metres, or the native drive coordinate (ALOHA: the finger rail, m; Robotiq 2F-85: the
+# driver joint, rad, 0 = open .. 0.8 = closed), so a measured row is a valid joint_position row. The gripper_opening group
+# is the measured pad gap in metres in both spaces (Session.gripper_width; review 2026-10-10 R2 M7: in the native space it
+# repeated the drive coordinate under a description that called it an opening).
+NATIVE = S.gripper_space == "native"
+GRIP_WORDS = "; ".join(f"{LAYOUT[ARM[a][1]]}: {g['command_unit']}, {g['open_target']:g} = open .. {g['closed_target']:g} = closed"
+                       for a, g in ((a, R_SPEC["grippers"][a]) for a in ARMS)) if NATIVE else ""
 PROPRIO_GROUPS = {   # name: [first column, count, meaning]
-    "joint_pos": [0, N, "measured joint positions in the joint_position layout: per arm its arm joints (rad) + its gripper opening (m)"],
+    "joint_pos": [0, N, "measured joint positions in the joint_position layout: per arm its arm joints (rad) + "
+                        + (f"its gripper's native drive coordinate, in the unit and direction of the gripper command ({GRIP_WORDS}; "
+                           "robot_spec.grippers). It is a drive coordinate, not an opening width: see the gripper_opening group"
+                           if NATIVE else "its gripper opening (m)")],
     "tcp_pose": [N, 7 * len(ARMS), "measured tool-frame (TCP) pose per arm, in the order of the arms: x y z (m) + qw qx qy qz, world frame; "
                                    f"the ee_pose action's frame (kinematics tcp_frames {K_SPEC['tcp_frames']})"],
     "joint_cmd": [N + 7 * len(ARMS), N, "the commanded joint targets being tracked (joint_position layout): the last streamed row step"],
-    "joint_vel": [2 * N + 7 * len(ARMS), N, "measured joint velocities (rad/s; the gripper entries: opening rate, m/s)"],
-    "gripper_opening": [3 * N + 7 * len(ARMS), len(ARMS), "measured opening of each gripper (m): the gap between the finger pads; a "
-                                                          "gripper closed on an object stops above 0"],
+    "joint_vel": [2 * N + 7 * len(ARMS), N, "measured joint velocities (rad/s; the gripper entries: "
+                                            + ("the rate of the native drive coordinate, in its unit per second)" if NATIVE else "opening rate, m/s)")],
+    "gripper_opening": [3 * N + 7 * len(ARMS), len(ARMS), "measured opening of each gripper (m), in the order of the arms: the gap "
+                                                          "between the two finger pads as they are now (0 = the pads touch; fully open "
+                                                          "is about robot_spec.grippers[arm].opening_m[1]); a gripper closed on an "
+                                                          "object stops above 0"
+                                                          + (". Always metres, whatever the unit of the gripper command" if NATIVE else "")],
     "joint_effort": [3 * N + 8 * len(ARMS), N, "the force each PD drive applied (N m; gripper entries: the actuated finger drive): a "
                                                "motor-current analogue that rises when the arm pushes against something"],
 }
@@ -253,7 +268,10 @@ def check_success() -> bool:
 def proprio_row() -> np.ndarray:
     q = S.joint_positions()
     ep = [np.concatenate(S.ee_pose(a)) for a in ARMS]
-    return np.concatenate([q, *ep, S.hold_action(), S.joint_velocities(), [q[ARM[a][1]] for a in ARMS], S.joint_efforts()]).astype(np.float32)
+    # gripper_opening: the measured pad gap (m) in both gripper spaces. Session.gripper_width only reads the finger links'
+    # collision vertices (topogym.robot.grasp_geometry: "never issue robot commands"); q's gripper entry is that gap only in
+    # the width space, and the native drive coordinate otherwise
+    return np.concatenate([q, *ep, S.hold_action(), S.joint_velocities(), [S.gripper_width(a) for a in ARMS], S.joint_efforts()]).astype(np.float32)
 
 
 def grab(cameras: list[str], want_depth: bool) -> tuple[dict, dict]:
@@ -404,12 +422,16 @@ def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> No
 
 def number(meta: dict, key: str, default: float) -> float:
     """A request field that must be a finite number. A malformed request is a 400 (ValueError) and moves nothing
-    (PROTOCOL §4.6): null, a string or a non-finite value must never reach float() / int() as a 500, which would end the
-    one episode as an infrastructure error."""
+    (PROTOCOL §4.6): null, a string, a non-finite value or a JSON integer beyond the float range (math.isfinite and
+    float() raise OverflowError on it) must never reach float() / int() as a 500, which would end the one episode as an
+    infrastructure error."""
     v = meta.get(key, default)
-    if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
-        raise ValueError(f"{key} must be a finite number (got {v!r})")
-    return float(v)
+    try:
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            raise OverflowError
+        return float(v)
+    except OverflowError:
+        raise ValueError(f"{key} must be a finite number (got {repr(v)[:60]})") from None
 
 
 def request_fields(meta: dict) -> tuple[list, int, str]:

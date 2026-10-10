@@ -105,28 +105,28 @@ measured = "GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 1
 # dexjoco, privileged: 11 task(s)
 [[rule]]
 match = "^dexjoco-.*-privileged$"
-min_cpus = 2.0
+min_cpus = 4.0
 min_memory_gb = 4.0
 min_gpu_memory_gb = 0.0
 gpu_required = false
 gpu_class = "none"
-verifier_min_cpus = 2.0
+verifier_min_cpus = 4.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPUs: 4, visible to each container that runs the simulator (cpuset / affinity, not a quota): OpenBLAS runs no more threads than that and DexJoCo's result differs below 4 (docs/benchmarks/dexjoco.md, Threads); with fewer there is no verdict (too_few_cpus, infra_error)"
 
 # dexjoco, standard: 11 task(s)
 [[rule]]
 match = "^dexjoco-.*-standard$"
-min_cpus = 2.0
+min_cpus = 4.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 0.0
 gpu_required = false
 gpu_class = "none"
-verifier_min_cpus = 2.0
+verifier_min_cpus = 4.0
 verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPUs: 4, visible to each container that runs the simulator (cpuset / affinity, not a quota): OpenBLAS runs no more threads than that and DexJoCo's result differs below 4 (docs/benchmarks/dexjoco.md, Threads); with fewer there is no verdict (too_few_cpus, infra_error)"
 
 # dextoolbench, privileged: 21 task(s)
 [[rule]]

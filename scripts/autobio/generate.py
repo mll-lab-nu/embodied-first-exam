@@ -48,7 +48,8 @@ CHANGE_LOG = {
         f"`final.json` is written atomically, and the collect hook's `timeout_sec` is {COLLECT_TIMEOUT} s (was 5400 s). "
         "`environment/sim/server.py`: a malformed request field (null or a wrong type for `dt`, `seconds`, `cameras`, "
         "`note`) is a 400 before anything is executed (was a 500 that ended the episode). The instruction and `/spec` `episode` now state that a MuJoCo physics warning (an unstable simulation) ends the episode as a failure; the rule itself is unchanged (AutoBio's evaluator's, in force since the task was added). A pass before this "
-        "change is a pass after it; results recorded before it may hold infrastructure failures counted as the agent's 0."
+        "change is a pass after it; results recorded before it may hold infrastructure failures counted as the agent's 0.\n"
+        "- 2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to 3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` outlasts the simulator's start (no effect on this benchmark, whose service is up within a minute); `cameras=\"name\"` (a string) is one camera, no longer its characters. The service, the collect hook, the grader, the scene and the pass rule are unchanged."
     ),
     False: (
         "- 2026-10-10: the grader's time limits and flags; the scene, the frozen instance and the pass rule are unchanged, so "

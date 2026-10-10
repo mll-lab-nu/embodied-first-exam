@@ -258,7 +258,8 @@ CLI equivalent of the grader:
   then refuses further actions until `s.reset()`.
 - The simulation repeats bit for bit, for one OpenBLAS thread count: the controller's linear algebra gives slightly
   different results on 1, on 2-3 and on 4 or more threads. This container sets `OPENBLAS_NUM_THREADS={BLAS_THREADS}`, as the verifier's
-  does; leave it as it is, or your replays will not match the verifier's.
+  does; leave it as it is, or your replays will not match the verifier's. (OpenBLAS runs no more threads than the CPUs
+  a process may use: if the tooling warns that it runs fewer than 4, your replays here are not the verifier's.)
 """
 
 
@@ -288,14 +289,16 @@ sandbox (no network); pass iff both episodes end in success, their final-state h
 matches its recorded hash (`tests/grade.py`); plus `/logs/verifier/replay.mp4`, rendered after the verdict is written.
 A file that is not a readable trajectory (not an npz, no `task` / `actions`, a wrong shape, NaN) or has more than
 {MAX_ROWS:,} rows scores 0 as `bad_trajectory`: the cap is what two replays of the slowest family fit into the verifier's
-{PRIV_VERIFIER_TIMEOUT} s. Oracle: success after {F["oracle_rows"]} control steps.
+{PRIV_VERIFIER_TIMEOUT} s. A verifier that runs fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to it) replays
+nothing and gives no verdict: `too_few_cpus`, `grader_error` and `infra_error` = 1, not the agent's 0.
+Oracle: success after {F["oracle_rows"]} control steps.
 
 ## Details
 | | |
 |---|---|
 | Upstream | DexJoCo @ 8d23b0f (brave-eai/dexjoco, MIT) on MuJoCo 3.4.0; CPU physics, OSMesa rendering, no GPU |
 | Instance | the initial state of the human demonstration `{F["demo"]}` (DexJoCo-Datasets-Raw), restored with DexJoCo's own state restorer; instance sha `{F["instance_sha"]}` |
-| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS={BLAS_THREADS}` in the agent's container and the verifier's (the simulation's result depends on the thread count below 4: docs/benchmarks/dexjoco.md) |
+| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS={BLAS_THREADS}` in the agent's container and the verifier's (the simulation's result depends on the thread count below 4: docs/benchmarks/dexjoco.md). The 4 CPUs must be visible to the container (its cpuset / affinity; a `cpus:` quota does not matter): OpenBLAS runs no more threads than that |
 
 ### Tooling notes
 DexJoCo's reset samples object poses from the global RNG and its state restorer edits the MuJoCo model (table height,
@@ -368,7 +371,8 @@ FROM {IMAGE}
 COPY grade.py instance.npz rcb_dexjoco.py test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
-# the thread count the instances and references were made with, on any host (docs/benchmarks/dexjoco.md)
+# the thread count the instances and references were made with; it needs 4 CPUs visible to this container, which
+# grade.py checks before it replays (docs/benchmarks/dexjoco.md, Threads)
 ENV OPENBLAS_NUM_THREADS={BLAS_THREADS}
 WORKDIR /tests
 """
@@ -513,7 +517,9 @@ The sim service judges the episode live and records every executed control step;
 and writes `final.json`, then renders `replay.mp4` in the time it has left; `tests/grade.py` (separate sandbox, no
 network) passes iff the live check succeeded, both replays succeed, and they end in the same state. A `final.json` that
 is missing, unreadable or without a verdict (the hook did not finish, a replay gave no result) is an infrastructure
-failure (`infra_error = 1`), not the agent's 0. Oracle: success after {F["oracle_rows"]} control steps.
+failure (`infra_error = 1`), not the agent's 0. So is a sim sidecar that runs fewer than 4 OpenBLAS threads (fewer than
+4 CPUs visible to it): the service starts no episode (`too_few_cpus`, `grader_error` and `infra_error` = 1).
+Oracle: success after {F["oracle_rows"]} control steps.
 
 ## Details
 | | |
@@ -521,7 +527,7 @@ failure (`infra_error = 1`), not the agent's 0. Oracle: success after {F["oracle
 | Upstream | DexJoCo @ 8d23b0f (brave-eai/dexjoco, MIT) on MuJoCo 3.4.0; CPU physics, OSMesa rendering, no GPU |
 | Instance | the initial state of the human demonstration `{F["demo"]}` (DexJoCo-Datasets-Raw); instance sha `{F["instance_sha"]}` |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); action types `ee_pose` and `joint_position`; cameras {", ".join(f"`{c}`" for c in F["cameras"])} (640 x 480); `/kinematics` for the arm links, the hand mount and the tcp; crash recovery class `exact` |
-| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS={BLAS_THREADS}` in the sim sidecar (the service, a resume and the collect hook's replays: the simulation's result depends on the thread count below 4, docs/benchmarks/dexjoco.md) |
+| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS={BLAS_THREADS}` in the sim sidecar (the service, a resume and the collect hook's replays: the simulation's result depends on the thread count below 4, docs/benchmarks/dexjoco.md). The 4 CPUs must be visible to the sidecar (its cpuset / affinity; a `cpus:` quota does not matter): OpenBLAS runs no more threads than that |
 
 ### Provenance
 Generated by `scripts/dexjoco/generate.py`, as its privileged twin.
@@ -608,7 +614,7 @@ services:
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "{AGENT_TIMEOUT}"
       RCB_COLLECT_BUDGET_S: "{COLLECT_TIMEOUT}"   # the collect hook's timeout_sec (task.toml): finalize.sh fits its replays and video in
-      OPENBLAS_NUM_THREADS: "{BLAS_THREADS}"       # the service, a resume and the collect hook's replays: one thread count (the result depends on it below 4)
+      OPENBLAS_NUM_THREADS: "{BLAS_THREADS}"       # the service, a resume and the collect hook's replays: one thread count (the result depends on it below 4; with fewer than 4 CPUs visible the service starts no episode: too_few_cpus)
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log

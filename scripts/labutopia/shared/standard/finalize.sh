@@ -21,7 +21,7 @@ DATA="${RCB_DATA:-/data}"; TOOL="${RCB_TOOL:-/srv/rcb_labutopia.py}"; INSTANCE="
 HOOK_BUDGET_S="${RCB_COLLECT_BUDGET_S:-9000}"; REPLAY_TIMEOUT_S="${RCB_REPLAY_TIMEOUT_S:-2400}"
 VIDEO_TIMEOUT_S="${RCB_VIDEO_TIMEOUT_S:-1800}"; MARGIN_S=300
 T0=$(date +%s)
-# The service may still be starting (its first start prepares the scene, 5 to 15 minutes) or resuming after a crash.
+# The service may still be starting (its first start prepares the scene, 5 to 27 minutes) or resuming after a crash.
 python /srv/rcb_limited.py end "$DATA" --timeout "${RCB_COLLECT_END_TIMEOUT_S:-2700}"; rc=$?
 if [ "$rc" = 2 ]; then
     echo "[finalize] final.json already holds the verdict; no replay"; exit 0

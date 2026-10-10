@@ -58,7 +58,8 @@ runs in float64 on the CPU: a live run, in-process replays and fresh-process rep
 (`rcb_brush.py selftest`); camera rendering does not change it. `/logs/verifier/replay.mp4` and `canvas.png` never affect the
 verdict.
 A file that is not a readable trajectory (not an npz, no `actions`, a wrong shape, NaN, more than 72,000 rows) scores 0 as
-`bad_trajectory`; `grader_error` is left for the verifier's own failures (a replay process without a result or past its 1650 s).
+`bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
+or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
 The verifier has 3600 s: two replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured
 67-102 steps/s (docs/benchmarks/robopaint.md).
 
@@ -98,3 +99,4 @@ George Bickham, *The Universal Penman* (London, 1741), engraved plates of Englis
 
 ### Change Log
 - 2026-10-10: the verifier and the scoring service only (review of 2026-10-10, board 0067). The verifier's timeout is 3600 s (was 1800 s): two fresh replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured 67-102 steps/s, so a long painting timed the verifier out and the trial had no reward. A file that is not a readable trajectory (not an npz, pickled arrays, no `actions`) scores 0 as `bad_trajectory` (was `grader_error`); every `reward.json` has `deterministic`. The `scorer` service restarts if its process dies (`restart: on-failure`). The verdict of a trajectory the verifier could replay before is unchanged, and so are the instance, the picture and the rules: the task keeps its name.
+- 2026-10-10 (review round 2, board 0067): `tests/grade.py` only. A frozen instance that the verifier's host does not rebuild (`instance_ok = 0`) is `grader_error = 1` and `infra_error = 1` (it was a plain 0 without a flag: the replays ran on another scene and say nothing about the trajectory), and every `grader_error = 1` (a replay process without a result or past its time limit) now has `infra_error = 1` next to it; every `reward.json` carries `infra_error`. The reward is 0 in these cases, as before; the pass rule, the frozen instance and the tooling are unchanged.
