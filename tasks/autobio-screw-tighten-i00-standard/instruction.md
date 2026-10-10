@@ -8,7 +8,8 @@ On the bench: a rack with an open 50 mL tube standing in it, and the tube's scre
 
 ## Rules
 - **No reset.** The episode starts when the service comes up and ends the moment the goal is reached (success), when your time is up, or on a simulator
-  error.
+  error. A MuJoCo physics warning (an unstable simulation, for instance after the robot was driven hard into
+  something) also ends it at once, as a failure: `meta["reason"]` is then `"failure: simulator warning (unstable state)"`.
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) and
   the robot's own proprioception: joint positions, velocities and drive efforts, gripper openings, the
   poses of its tool frames and the targets in effect. No poses of tubes, racks or instruments, no instrument state, no

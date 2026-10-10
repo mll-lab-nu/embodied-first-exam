@@ -39,7 +39,10 @@ network_mode = "no-network"
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json
-timeout_sec = 5400                # = the agent budget: a 1.5 h episode can record ~22-45k steps, replayed twice at ~20 steps/s
+timeout_sec = 15000               # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
+                                  # resume) + two fresh-process replays of up to 5700 s each (an Isaac start + an episode that
+                                  # stepped for the whole 5400 s agent budget, replayed at the live rate) + 900 s; finalize.sh
+                                  # ends a replay that would pass this deadline and records it (replay_error, infra_error)
 
 [agent]
 timeout_sec = 5400.0              # RoboLab budget, both modes (docs/benchmarks/robolab.md)

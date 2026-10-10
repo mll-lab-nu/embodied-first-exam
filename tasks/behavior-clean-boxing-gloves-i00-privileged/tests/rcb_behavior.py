@@ -2014,8 +2014,17 @@ class Session:
 
 # --------------------------------------------------------------------------- CLI
 def _load_traj(path: str) -> dict[str, Any]:
-    d = np.load(path, allow_pickle=False)
-    return {k: (d[k].item() if d[k].shape == () else d[k]) for k in d.files}
+    """The entries a replay needs (`actions`, `task`) plus whatever else loads: an extra entry that cannot be read
+    without pickle (an object array someone added) is skipped, it must not stop the replay."""
+    out = {}
+    with np.load(path, allow_pickle=False) as d:
+        for k in d.files:
+            try:
+                out[k] = d[k].item() if d[k].shape == () else d[k]
+            except Exception:  # noqa: BLE001
+                if k in ("actions", "task"):
+                    raise
+    return out
 
 
 def cmd_make_instance(a) -> None:
@@ -2052,15 +2061,25 @@ def cmd_replay(a) -> None:
     acts = np.asarray(traj["actions"], dtype=np.float32)
     t0 = time.time()
     outs = []
+    video_error = None        # the video never decides the replay's result: a recorder failure is only reported
     for i in range(a.repeat):
+        recording = False
         if a.video and i == 0:
-            s.start_video(a.video, fps=a.fps)   # the video shows the first (fresh-process-exact) replay
+            try:
+                s.start_video(a.video, fps=a.fps)   # the video shows the first (fresh-process-exact) replay
+                recording = True
+            except Exception as exc:  # noqa: BLE001
+                video_error = f"start: {exc!r}"[:300]; _log("replay: video recorder failed to start:", repr(exc))
         outs.append(s.replay(acts))
-        if a.video and i == 0:
-            s.stop_video()
+        if recording:
+            try:
+                s.stop_video()
+            except Exception as exc:  # noqa: BLE001
+                video_error = f"stop: {exc!r}"[:300]; _log("replay: video recorder failed to stop:", repr(exc))
     out = {"n_actions": int(len(acts)), "instance_sha": s.instance_sha, "instance_matches": s.instance_matches,
            "instance_exact": s.instance_exact, "replays": outs, "all_success": all(o["success"] for o in outs),
-           "deterministic": len({o["state_sha"] for o in outs}) == 1, "wall_s": round(time.time() - t0, 1), "video": a.video}
+           "deterministic": len({o["state_sha"] for o in outs}) == 1, "wall_s": round(time.time() - t0, 1), "video": a.video,
+           **({"video_error": video_error} if video_error else {})}
     print(json.dumps(out), flush=True)
     s.close()
 

@@ -19,7 +19,9 @@ oracle = "@@ORACLE@@"
 expert_time_estimate_hours = 1.0
 
 [verifier]
-timeout_sec = 2400.0
+timeout_sec = 29100.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory
+                                  # (replay_timeout(100,000 rows) = 900 s + rows / 7.5 = 14,234 s each) + 600 s; a usual
+                                  # trajectory (up to 6,750 rows) keeps the old 1800 s per replay
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 [agent]

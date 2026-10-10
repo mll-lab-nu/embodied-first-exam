@@ -84,6 +84,30 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
 - The privileged verifier keeps Harbor's default network (PROTOCOL §2.6 recommends no-network): it starts Isaac Sim, and
   an offline Kit start (extension registry, asset resolvers) has not been tested on our hosts. Grading downloads nothing:
   RoboLab's assets and every package are in the image.
+- Whose failure a 0 is (2026-10-10). Standard: `tests/grade.py` writes a reward whatever it finds; a missing, unreadable
+  or unfinalized `final.json` (the service never came up, the collect hook was killed), a lost GPU, or a replay process
+  that ended without a result (`replay_error`: Isaac died, its time limit) is `infra_error = 1`, never the agent's 0.
+  `finalize.sh` replaces `final.json` atomically, retries a replay that died once, and counts a replay as done when its
+  result line was printed (Isaac crashing at shutdown afterwards does not matter). Privileged: a deliverable that is not a
+  readable trajectory (not an npz, no `task` / `actions`, object arrays, wrong shape, NaN, more than 100,000 rows) is
+  `bad_trajectory` (the agent's 0); a replay process without a result, a replay time-out (`replay_timed_out`) and
+  `instance_ok = 0` (the rebuilt scene differs on this host) set `grader_error = infra_error = 1`.
+- Time limits (2026-10-10; rates from this file: Isaac start + scene ~2 min, replays 15-20 control steps/s). Privileged:
+  each replay has max(1800 s, 900 s + rows / 7.5) (half the nominal rate), and `[verifier] timeout_sec = 29100` fits two
+  replays of the longest accepted trajectory (100,000 rows: 14,234 s each) plus 600 s; before, the 2400 s verifier limit
+  was shorter than two 1800 s replays. Standard: `[[verifier.collect]] timeout_sec = 15000` = the episode end (up to
+  2700 s through a resume) + two replays of up to 5700 s (an Isaac start + an episode stepped for the whole 5400 s budget)
+  + 900 s; `finalize.sh` (`HOOK_BUDGET_S`, the same number) gives each replay what is left before that deadline minus
+  300 s, shared between the replays still to run, so a slow replay is recorded (`replay_error`, `infra_error`) instead of
+  Harbor killing the hook. None of this was measured on a GPU host for this change (static + synthetic tests only).
+- Tests without a simulator (numpy only): `scripts/robolab/tests/test_*.py`, each run as a script (RoboLab and YAMLab
+  together): both graders on synthetic records, the whole `finalize.sh` with stand-in replays (dies, hangs, crashes after
+  its result, retry), the tooling's replay CLI with a failing video, and the real `server.py` on the real shared layer with
+  a stub simulator over HTTP (malformed requests, the step cap).
+- The replay video never decides a replay: the tooling catches a writer that cannot open, a frame that cannot be rendered
+  or written and an encoder that fails at close (`video_ok` false in the replay's result; `stop_video()` returns None),
+  and the frames go straight to the encoder. A trajectory longer than 9,000 control steps is filmed as a time lapse (at
+  most 9,000 frames, `MAX_VIDEO_FRAMES`).
 - `scripts/robolab/regrade.sh <task> <trial> <out>` re-grades a finished trial with the current task version in two fresh
   processes (the review's determinism check), on the host the trial ran on.
 
@@ -129,9 +153,19 @@ is a 400) and `ee_pose` (8, closed-loop differential IK, at most 0.25 m/s, finge
 `distance_to_image_plane` depth; `/kinematics` from a numpy model of the USD joints (7); 32 proprio columns.
 STANDARD_MODE_2_2.md §16.
 
+Requests are checked completely before the first control step (PROTOCOL §4.6): a field of the wrong type (`dt`, `seconds`,
+`video_fps`, `note`, `cameras`, `interpolate`, `video`, `type`, `depth`), a value out of range, an `ee_pose` position more
+than 2 m from the robot's base on any axis or a zero quaternion is a 400 that executes nothing; an absent or null field
+takes its default. Before 2026-10-10 some of these raised a TypeError / OverflowError, which the layer answers 500 and
+which ends the episode (`reason = "error"`), and a non-string `note` failed after the chunk had run. One case is left in
+the shared layer (`scripts/eai_standard/rcb_limited.py`): `actions` sent as a JSON object is converted before the adapter
+sees it and still ends the episode with a 500.
+
 ## Known issues
-- The tooling stops a runaway trajectory at 100,000 control steps (`step_guard`); the live service runs 3-15 steps/s, so
-  the 5400 s budget ends an episode long before (it is not in `/spec`).
+- The tooling stops a runaway trajectory at 100,000 control steps (`step_guard`, 1.9 h of simulated time); the live
+  service runs 3-15 steps/s, so the 5400 s budget ends an episode long before. Stated since 2026-10-10 in `/spec`
+  (`max_control_steps`, `episode`) and in both instructions (PROTOCOL §4.5: a technical cap, not a step budget); a
+  privileged trajectory may hold at most that many rows.
 - An `ee_pose` submit has no frame cap: a long one at a high `video_fps` keeps many frames in memory (the client's
   defaults, 5 fps and mp4, stay small).
 
