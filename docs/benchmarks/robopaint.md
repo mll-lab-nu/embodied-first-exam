@@ -526,7 +526,7 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
   reported.
 - The episode has no terminal state. It ends with the agent phase, a simulator error, or the 72000-control-step runaway
   guard.
-- Crash recovery (standard mode, docs/STANDARD_MODE_2_2.md §13):
+- Crash recovery (standard mode, docs/STANDARD_MODE.md §13):
   - Resume class `exact`: PhysX on the CPU and the CPU brush models repeat bit for bit in a fresh process, so a resumed
     episode must reach the checkpoint's state hash.
   - The journal rows are the 7 joint targets of each control step.
@@ -590,7 +590,7 @@ Every copy of the tooling is byte-identical within a family and across the six f
   sheets, rendering and replay. No stroke planner or painting skill is added to the agent's tooling; the reference
   solutions keep theirs under `solution/`.
 - **World-frame information (D7).** Standard tasks never say where things are in the world: no sheet heights or centres,
-  no well positions, no pixel-to-world formula (STANDARD_MODE_2_2.md §10, `check-limited-texts.sh`).
+  no well positions, no pixel-to-world formula (STANDARD_MODE.md §10, `check-standard-texts.sh`).
   - Accepted consequence: the calibrated `canvas_cam` above the main sheet tells roughly where the sheet is.
   - Privileged tasks give the sheets through the tooling.
 
@@ -603,7 +603,7 @@ Every copy of the tooling is byte-identical within a family and across the six f
 | `/kinematics` | SAPIEN's pinocchio model (7 joints) |
 | proprio | 28 columns |
 
-More in STANDARD_MODE_2_2.md §16.
+More in STANDARD_MODE.md §16.
 
 ## Results
 No task directory holds results (PROTOCOL §5); they are published on the results site

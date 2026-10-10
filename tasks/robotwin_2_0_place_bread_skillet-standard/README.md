@@ -13,7 +13,7 @@
 
 ## Task
 Standard-mode twin of `robotwin_2_0_place_bread_skillet-privileged` (same frozen instance, RoboTwin seed 28831): the agent gets
-only the `eai-standard/2.1` client (docs/LIMITED_MODE_PROTOCOL.md); the simulator runs in the `sim` sidecar
+only the `eai-standard/2.1` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, records the episode as a (T, 34)
 trajectory, replays it in a fresh process for success + determinism, and renders the six-view video. The verifier
 runs in a separate sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against the privileged task to

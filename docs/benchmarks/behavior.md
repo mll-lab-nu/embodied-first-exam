@@ -267,7 +267,7 @@ on the same step stands.
 `joint_position` (25: base per-step targets in the robot frame, trunk, arms, grippers; base and grippers switch at the
 row) and `ee_pose` (16, left first, xyzw, cuRobo IK for both end effectors per row, base still); the head camera and two
 wrist cameras (link-mounted, 224×224); OmniGibson `depth_linear`; `/kinematics` on a numpy model of the articulation
-(trunk + arms, cuRobo fallback; base frame unless `base_pose` is given); 121 proprio columns. STANDARD_MODE_2_2.md §16.
+(trunk + arms, cuRobo fallback; base frame unless `base_pose` is given); 121 proprio columns. STANDARD_MODE.md §16.
 
 Requests are checked before anything is executed (PROTOCOL §4.6; 2026-10-10): a null is the default, and a wrong type or
 an out-of-range value of `dt`, `seconds`, `video_fps` (1-30), `cameras`, `note`, `interpolate`, `video`, `depth`, a zero
@@ -275,7 +275,7 @@ an out-of-range value of `dt`, `seconds`, `video_fps` (1-30), `cameras`, `note`,
 service and ended the one episode as a simulator error (`video_fps` = 0 and a non-string `note` only after the chunk had
 run). `dt` must be a whole number of 1/30 s control periods: it used to be rounded (0.25 s ran as 8 steps, 0.267 s).
 
-Crash recovery (STANDARD_MODE_2_2.md §13): the adapter `environment/sim/server.py` journals every executed control step
+Crash recovery (STANDARD_MODE.md §13): the adapter `environment/sim/server.py` journals every executed control step
 (`journal.f64`), checkpoints every completed call with the full simulator state hash (`og.sim.dump_state`) and the robot's
 proprio row, and resumes the same episode after compose's `restart: on-failure:6`. Resume class **`approx`**: a hash
 mismatch after the journal replay is recorded (`resume_state_mismatch`) and the episode continues unless a TCP is more
@@ -304,8 +304,8 @@ sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh
 - **Tooling: thin wrappers only.** Joint moves, a straight-line base drive, cuRobo IK moves, gripper commands and the
   robot's cameras. Task-level skills (grasp, place, navigate) are never added to the agent's tooling; the reference
   solutions keep theirs in `solution/rcb_behavior_ref.py`.
-- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE_2_2.md §10,
-  `check-limited-texts.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
+- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+  `check-standard-texts.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
   Privileged tasks give the privileged state through the tooling.
 
 ## Licences

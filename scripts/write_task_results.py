@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Write per-task agent results for the results site (not into the repository, PROTOCOL D3): <out>/<task>/<run id>/README.md
 (+ replay.mp4, replay.last.png). One folder per agent+model; the privileged and standard twins each get their own.
-usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir> [--analysis <make_two_mode_report_zh.py>]"""
+usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir> [--analysis <a Python file with ANALYSIS = {family: {"U": text, "L": text}}>]"""
 import json, pathlib, shutil, sys, re, glob, datetime as dt, ast
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_names import base, canonical, mode as mode_of  # noqa: E402
 jobs, job, slug, label = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]

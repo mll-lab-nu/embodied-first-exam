@@ -15,7 +15,7 @@ for t in "${tasks[@]}"; do
   done
   bash "$root/ci_checks/check-robopaint-leak.sh" "$t" || rc=1     # RoboPaint tasks only (the script skips others)
   bash "$root/ci_checks/check-maniguard-leak.sh" "$t" || rc=1     # ManiGuard tasks only (the script skips others)
-  bash "$root/ci_checks/check-limited-texts.sh" "$t" || rc=1      # D7, declared by BEHAVIOR, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, RoboTangle, YAMLab, LabUtopia, AutoBio: no world coordinates
+  bash "$root/ci_checks/check-standard-texts.sh" "$t" || rc=1      # D7, declared by BEHAVIOR, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, RoboTangle, YAMLab, LabUtopia, AutoBio: no world coordinates
 done
 bash "$root/ci_checks/check-dataset-manifest.sh" || rc=1
 bash "$root/ci_checks/check-generated-tasks.sh" || rc=1              # generators with a check mode: tasks/ is what they write
@@ -27,8 +27,8 @@ bash "$root/ci_checks/check-standard-client.sh" || rc=1              # standard 
 # PROTOCOL §2.9 (v1.1.4): [metadata.resources] (minimum compute) in every task.toml, consistent with the GPU reservations and
 # caps, and the README's Compute resources section rendered from it
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-resources.py" || rc=1; else python3 "$root/ci_checks/check-resources.py" "$@" || rc=1; fi
-# The task protocol (docs/PROTOCOL.md): `legacy:` rules (image move, §7) warn; all other rules fail. RCB_PROTOCOL_STRICT=1 fails on legacy too.
-if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-protocol-v1.py" || rc=1; else python3 "$root/ci_checks/check-protocol-v1.py" "$@" || rc=1; fi
+# The task protocol (docs/PROTOCOL.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths
+if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-protocol.py" || rc=1; else python3 "$root/ci_checks/check-protocol.py" "$@" || rc=1; fi
 # PROTOCOL §2.10 (v1.2): the resource monitor sidecar and the verifier step, wired by scripts/rcb_monitor/inject.py
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-monitor.py" || rc=1; else python3 "$root/ci_checks/check-monitor.py" "$@" || rc=1; fi
 [ $rc -eq 0 ] && echo "all checks passed"; exit $rc

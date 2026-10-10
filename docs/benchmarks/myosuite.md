@@ -140,7 +140,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   steps, chase_tag after 42-86), so one episode was one blind attempt at muscle-level control.
   The compose file sets `RCB_RESET_BUDGET` to 10 (`RCB_RESET_BUDGET=0` runs the old single episode). The shared 2.2
   layer has no reset, so the adapter adds `POST /reset` itself (`shared/standard/server.py`, the semantics of
-  [`LIMITED_MODE_PROTOCOL.md`](../LIMITED_MODE_PROTOCOL.md) "Optional reset capability"): it abandons the running
+  [`STANDARD_MODE.md`](../STANDARD_MODE.md) "Optional reset capability"): it abandons the running
   episode, or follows one that has ended, and restores the frozen instance (`Session.reset()`, the privileged mode's
   reset); only the last episode is graded (its rows are `trajectory.npz`), a success ends the trial (409 after it), the
   wall clock never restarts; `/status`, every `meta` and `final.json` count `episode`, `resets_left`,
@@ -243,10 +243,10 @@ that score 0; apple_lift's first (exploit) trajectory scores 0 under the final r
   `ok shared sources: ... myosuite 44 task dirs, 10 shared files`); the only failures are the RoboCasa, RoboCasa365 and
   RoboCasa-GR1 generator checks, which fail the same way on unchanged `main` in a checkout made with umask 0002.
 - `python3 scripts/task_conventions.py --check tasks/myosuite-*/` and `python3 scripts/myosuite/generate.py --check`: clean.
-- Crash recovery (STANDARD_MODE_2_2 §13.5): the key_turn service killed (`kill -9`) after the first 30 rows of the
+- Crash recovery (STANDARD_MODE.md §13.5): the key_turn service killed (`kill -9`) after the first 30 rows of the
   oracle stream; the container restarted, the service resumed the same episode (`resumes` 1, exact hash), the client
   sent the rest, and the collect hook graded it: success, `live_matches_replay` 1, final state `79c522457ad23180`.
-- `ci_checks/check-limited-protocol.py` (with the shared PR's `episode` key) against a live hand_reach service: every
+- `ci_checks/check-standard-protocol.py` (with the shared PR's `episode` key) against a live hand_reach service: every
   /spec, /status, /observe, 404 and 2.0/2.1 check passes; its live part assumes a `joint_position` action type, which a
   muscle-driven body does not have.
 - Determinism of set 3 before building: three replays in one process and one in a fresh process gave the same final

@@ -265,7 +265,7 @@ a 400 (a null `dt` or `seconds` and a non-string `note` used to be a 500 that en
 null `video_fps`, `cameras` or `note`, means the default. `get_obs(seconds=...)` runs whole control steps and
 `meta["seconds"]` is what ran (fewer when the episode ended).
 
-Measured (laptop, 2026-10-03): `ci_checks/check-limited-protocol.py --launch` passes on both twins (193 checks, no
+Measured (laptop, 2026-10-03): `ci_checks/check-standard-protocol.py --launch` passes on both twins (193 checks, no
 failure: spec, cameras and depth, kinematics, projection). Harbor's oracle runs score 1: jar 14 in 7 min (the live episode
 ends at step 599), cabinet 19 in 11 min (step 2240); the live state equals the collect hook's two fresh replays
 (`live_matches_replay`); `nop` scores 0 (an empty episode). Three fixes came out of these runs: the sidecar's Isaac Sim
@@ -293,8 +293,8 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
 - **Tooling: thin wrappers only.** Joint targets (`move_joints`), the gripper, `hold`, an IK move (`ik`, `move_ee`: numpy
   IK then a joint-space line, no collision checking), `ee_pose`, state, cameras, recording, replay. No grasp, place, close
   or carry skills.
-- **World-frame information (D7).** Standard tasks never say where things are (STANDARD_MODE_2_2.md §10,
-  `check-limited-texts.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
+- **World-frame information (D7).** Standard tasks never say where things are (STANDARD_MODE.md §10,
+  `check-standard-texts.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
   base pose is in `robot_spec`. Privileged tasks give everything through the tooling.
 - **Reference solutions out of reach.** ManiGuard's 40 public demonstrations per task, its scripted data generator and its
   grasp annotations are not in the image or the task dirs, and agent egress is allowlisted to the model APIs by default in

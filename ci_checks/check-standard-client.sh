@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # PROTOCOL §2.4: the agent container and the verifier of every standard task share ONE client base image, pinned by
 # digest, and pinned pip versions. The image and the pins are scripts/eai_standard/client.env (CLIENT_IMAGE) and
-# scripts/eai_standard/client-requirements.txt. For each standard or standard-realtime task (mode standard / limited /
-# standard-realtime, or a -standard / -limited / -standard-realtime name), environment/Dockerfile and tests/Dockerfile:
+# scripts/eai_standard/client-requirements.txt. For each standard or standard-realtime task (mode standard /
+# standard-realtime, or a -standard / -standard-realtime name), environment/Dockerfile and tests/Dockerfile:
 #   - every FROM is CLIENT_IMAGE;
 #   - every `pip install` installs the pins: `-r <file>` with a byte-identical copy of client-requirements.txt in the
 #     build context, or the full pin list inline (name==version for every pin, nothing else).
@@ -75,7 +75,7 @@ for t in sorted(os.listdir(tasks)):
     if not os.path.isfile(tt):
         continue
     meta = tomllib.load(open(tt, "rb")).get("metadata", {})
-    if not (meta.get("mode") in ("standard", "limited", "standard-realtime") or t.endswith(("-standard", "-limited", "-standard-realtime"))):
+    if not (meta.get("mode") in ("standard", "standard-realtime") or t.endswith(("-standard", "-standard-realtime"))):
         continue
     probs, froms = [], []
     for sub in ("environment", "tests"):
@@ -83,7 +83,7 @@ for t in sorted(os.listdir(tasks)):
         if os.path.isfile(df):
             probs += [f"{sub}/Dockerfile: {p}" for p in pip_problems(df, os.path.join(tasks, t, sub))]
             froms += re.findall(r"^\s*FROM\s+(\S+)", re.sub(r"\\\n", " ", open(df).read()), re.M | re.I)
-    is22 = bool(re.fullmatch(r"(eai-standard|rcb-limited)/2\.2|eai-standard/2\.4", str(meta.get("protocol", ""))))   # 2.2 and 2.4 layers
+    is22 = bool(re.fullmatch(r"eai-standard/2\.[24]", str(meta.get("protocol", ""))))   # 2.2 and 2.4 layers
     n22 += is22
     v1 += 1
     if any(f != IMAGE for f in froms):

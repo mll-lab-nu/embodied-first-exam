@@ -6,7 +6,7 @@ replays having started in the instance's t = 0 state. Numeric-only reward.json; 
 infra_error = 1 means no verdict on the agent (success is 0, the trial is not the agent's failure). The agent can reach
 none of these: final.json is missing (the service never came up or its record was not collected: missing_log) or
 unreadable (also grader_error); the collect hook did not finish (`finalized` false: only the service's own running copy
-is there); a give-up after crashes between calls or a failed resume (docs/STANDARD_MODE_2_2.md §13); the service not
+is there); a give-up after crashes between calls or a failed resume (docs/STANDARD_MODE.md §13); the service not
 ending its episode for the collect hook; a replay process that gave no result; replays that did not start in the
 instance's t = 0 state. A give-up after crashes during a call is finalized by the service and stays the agent's failure."""
 

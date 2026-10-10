@@ -10,7 +10,7 @@ this page explains how a contribution gets from an idea to `main`. Reviewers fol
 | **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md`, `tasks/dataset.toml` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
 | **Tasks for an existing benchmark** | the same, without `images/` | — |
 | **Task fix** | the affected task directories and their generator | describe the agent behaviour it closes; include before/after runs |
-| **Shared files / protocol** | `docs/PROTOCOL.md`, `docs/LIMITED_MODE_PROTOCOL.md`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
+| **Shared files / protocol** | `docs/PROTOCOL.md`, `docs/STANDARD_MODE.md`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
 
 One benchmark per pull request. A pull request that adds tasks **and** changes shared files is split before review.
 
@@ -55,8 +55,8 @@ the expected size of the pull request.
 
 ## Before opening the pull request
 ```bash
-bash ci_checks/run_all.sh tasks/<your tasks>      # must pass; only `legacy:` (image registry) warnings are accepted (§7)
-python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the v1.0 layout
+bash ci_checks/run_all.sh tasks/<your tasks>      # must pass
+python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the standard layout
 python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (§2.9, §2.10)
 python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
 #   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)

@@ -111,7 +111,7 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
 - `scripts/robolab/regrade.sh <task> <trial> <out>` re-grades a finished trial with the current task version in two fresh
   processes (the review's determinism check), on the host the trial ran on.
 
-## Crash recovery (standard mode, docs/STANDARD_MODE_2_2.md §13)
+## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
 - Resume class `exact`: the resumed service is a fresh process, and replaying the journal is that process's first replay,
   so the state hash at the last checkpoint must match exactly (else the episode ends `resume_failed`, `infra_error`).
 - The journal holds the float32 row handed to `Session.step` for every control step; a checkpoint (state hash = sha1 of
@@ -142,8 +142,8 @@ registry lists all 88 frozen families, so adding a family later does not change 
 - **Tooling: thin wrappers only.** Differential-IK moves, joint moves, gripper, hold, plus the frozen instance, state,
   recording, replay and rendering. Task-level skills (grasp, place, navigate) are never added to the agent's tooling;
   reference solutions keep theirs under `solution/`.
-- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE_2_2.md §10,
-  `check-limited-texts.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
+- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+  `check-standard-texts.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
   give the privileged state through the tooling.
 
 ## Standard mode (eai-standard/2.2)
@@ -151,7 +151,7 @@ registry lists all 88 frozen families, so adding a family later does not change 
 is a 400) and `ee_pose` (8, closed-loop differential IK, at most 0.25 m/s, fingertip-centre frame); cameras
 `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static) and `wrist_cam` (on the Robotiq base link); Isaac
 `distance_to_image_plane` depth; `/kinematics` from a numpy model of the USD joints (7); 32 proprio columns.
-STANDARD_MODE_2_2.md §16.
+STANDARD_MODE.md §16.
 
 Requests are checked completely before the first control step (PROTOCOL §4.6): a field of the wrong type (`dt`, `seconds`,
 `video_fps`, `note`, `cameras`, `interpolate`, `video`, `type`, `depth`), a value out of range, an `ee_pose` position more

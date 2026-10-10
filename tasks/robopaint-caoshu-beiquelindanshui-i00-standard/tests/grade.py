@@ -2,7 +2,7 @@
 /data/final.json (the recorded episode replayed twice in fresh processes by the collect hook, the replayed main sheet scored against
 the exemplar, determinism), plus the replay video and sheet pictures. success = both replays meet the task's rule AND they agree
 exactly. Numeric-only reward.json; every metric of the replayed sheet is reported (final_reward = the replay's final_reward), with
-the crash-recovery evidence (sim_startups, resumes, resume_state_mismatch, ...; docs/STANDARD_MODE_2_2.md §13.2) and infra_error
+the crash-recovery evidence (sim_startups, resumes, resume_state_mismatch, ...; docs/STANDARD_MODE.md §13.2) and infra_error
 (the service gave up after crashes that were not the agent's, or never dumped its episode).
 
 No verdict on the agent is an infrastructure failure, never the agent's 0 (PROTOCOL §2.6, infra_error = 1): final.json missing (the

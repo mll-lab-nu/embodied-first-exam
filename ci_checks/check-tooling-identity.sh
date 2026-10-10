@@ -9,14 +9,14 @@
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as check-robopaint-tooling.sh.
 # 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, LabUtopia, AutoBio): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
-#    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE_2_2.md), and the sidecar is
+#    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
 #    `restart: on-failure:N` with N >= 3 (PROTOCOL §4.1, §4.7).
 #    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboTangle) is held to the same rules, with rcb_limited.py and
-#    rcb_client.py from scripts/eai_standard/v2_4/ (docs/STANDARD_MODE_2_4.md) and 2.2's rcb1.py and run.sh.
+#    rcb_client.py from scripts/eai_standard/v2_4/ (docs/STANDARD_MODE.md) and 2.2's rcb1.py and run.sh.
 # 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, RoboOlympics, BiGym 2.0
 #    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
-#    byte-identical to their one source, scripts/humanoidbench/shared/realtime/ (docs/LIMITED_MODE_PROTOCOL.md,
+#    byte-identical to their one source, scripts/humanoidbench/shared/realtime/ (docs/STANDARD_MODE.md,
 #    "Standard-realtime mode"), and so is every other copy of that source under scripts/*/shared/realtime/.
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
@@ -82,7 +82,7 @@ for t in sorted(os.listdir(tasks)):
                 bad.append(f"{t}: {rel} missing (eai-standard/2.3 layer, scripts/humanoidbench/shared/realtime/{f})")
             elif sha(p) != rt_canon.get(f):
                 bad.append(f"{t}: {rel} differs from scripts/humanoidbench/shared/realtime/{f} (regenerate the task)")
-    if v24 or re.fullmatch(r"(eai-standard|rcb-limited)/2\.2", proto):
+    if v24 or proto == "eai-standard/2.2":
         n_layer += 1
         ver, ref = ("2.4", canon24) if v24 else ("2.2", canon)
         for rel, f in sorted(LAYER.items()):
@@ -102,7 +102,7 @@ for t in sorted(os.listdir(tasks)):
     if bench not in MODULE:
         continue
     dirs[bench] += 1
-    mode = ("standard-realtime" if t.endswith("-standard-realtime") else "standard" if t.endswith(("-standard", "-limited"))
+    mode = ("standard-realtime" if t.endswith("-standard-realtime") else "standard" if t.endswith("-standard")
             else "privileged")
     for dp, dns, fns in os.walk(os.path.join(tasks, t)):
         dns[:] = [d for d in dns if d not in ("results", "__pycache__")]

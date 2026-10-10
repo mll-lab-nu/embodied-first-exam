@@ -100,7 +100,7 @@ chunks loses nothing. A real H1 does not wait. The standard-realtime mode (PROTO
 `tasks/humanoidbench-*-i00-standard-realtime`, 10 tasks, one per family, `mode = "standard-realtime"`) is standard mode with the same
 instance, sensors, success rule, reset budget (50, HumanoidBench's exception to the mode's default of 0, PROTOCOL §4.5), wall clock (1 h) and client, on a
 clock that does not stop (`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which extends `rcb_service.py`; the
-wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMITED_MODE_PROTOCOL.md "Standard-realtime mode"):
+wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/STANDARD_MODE.md "Standard-realtime mode"):
 
 - **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
   at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every 20 ms of wall time
@@ -131,7 +131,7 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/LIMI
   (review R2 M1; before, four threads of refused 21 MB bodies left 3 control steps in 6 s, and four threads of
   `/observe` with a 25 ms render 234 of 300): a request is read, decoded and checked off the simulator's thread (large
   JSON bodies by a child process), waiting requests are served once the clock has caught up, and the cameras are
-  rendered once per control step for everyone who asks (`docs/LIMITED_MODE_PROTOCOL.md`, "What a request can cost the
+  rendered once per control step for everyone who asks (`docs/STANDARD_MODE.md`, "What a request can cost the
   clock"; `scripts/humanoidbench/tests/test_realtime_load.py` measures it on a stub simulator).
 - **Crashes.** A simulator crash is an infrastructure failure, not the agent's (owner, 2026-10-08): past
   `RCB_MAX_RESUMES` restarts the trial ends `sim_crashed`, a failed resume `resume_failed`, and a simulator error that

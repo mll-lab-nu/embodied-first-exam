@@ -6,8 +6,7 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
 ## Order of work
 1. **Scope.** One benchmark per pull request; shared files (protocol, taxonomy, CI, shared scripts, README) only in a
    separate pull request. Ask for a split otherwise.
-2. **Static checks.** `bash ci_checks/run_all.sh` must pass. Read the protocol warnings: until the migration
-   (PROTOCOL §7) new tasks may only carry the ones marked `legacy:`.
+2. **Static checks.** `bash ci_checks/run_all.sh` must pass.
 3. **Generator.** For generated tasks, read the generator and the shared sources, not 500 copies. Re-run it and check
    that `git diff tasks/` is empty.
 4. **Sample tasks.** Read at least two tasks per mode in this order: `instruction.md` → `tests/` → `solution/` →
