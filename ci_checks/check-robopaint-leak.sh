@@ -18,10 +18,11 @@ t = sys.argv[1]; name = os.path.basename(t); env = os.path.join(t, "environment"
 ALLOWED = {"Dockerfile", "docker-compose.yaml", "instance.json", "target.png", "rcb_paint.py", "rcb_brush.py", "rcb_client.py", "rcb1.py",
            "client-requirements.txt", "NOTICE-exemplar.md", "ARPHICPL.TXT"}
 SIDECARS = {"sim", "scorer"}
+MONITOR = "rcb_monitor"   # the resource monitor sidecar's code, mounted only into it (check-monitor.py)
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)
     if os.path.isdir(p):
-        if f not in SIDECARS:
+        if f not in SIDECARS and f != MONITOR:
             bad.append(f"environment/{f}/: unexpected directory")
     elif f not in ALLOWED:
         bad.append(f"environment/{f}: not an allowed agent-side file")

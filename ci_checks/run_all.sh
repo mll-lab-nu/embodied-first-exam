@@ -23,4 +23,6 @@ bash "$root/ci_checks/check-standard-client.sh" || rc=1              # standard 
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-resources.py" || rc=1; else python3 "$root/ci_checks/check-resources.py" "$@" || rc=1; fi
 # Protocol v1.0: `legacy:` rules (image move, docs/PROTOCOL.md §7) warn; all other rules fail. RCB_PROTOCOL_STRICT=1 fails on legacy too.
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-protocol-v1.py" || rc=1; else python3 "$root/ci_checks/check-protocol-v1.py" "$@" || rc=1; fi
+# PROTOCOL §2.10 (v1.2): the resource monitor sidecar and the verifier step, wired by scripts/rcb_monitor/inject.py
+if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-monitor.py" || rc=1; else python3 "$root/ci_checks/check-monitor.py" "$@" || rc=1; fi
 [ $rc -eq 0 ] && echo "all checks passed"; exit $rc
