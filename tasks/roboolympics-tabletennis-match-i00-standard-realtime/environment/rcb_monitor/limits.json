@@ -8,7 +8,7 @@
   "sim": {
    "cpus": 6.0,
    "memory_gb": 8.0,
-   "pids": 8192
+   "pids": 256
   }
  },
  "disk_exclude": [],
@@ -26,6 +26,9 @@
  "max_processes": 512,
  "mode": "standard-realtime",
  "scope": "agent",
+ "scope_services": [
+  "main"
+ ],
  "sustain_sec": 60.0,
  "task": "roboolympics-tabletennis-match-i00-standard-realtime",
  "tick_sec": 5,

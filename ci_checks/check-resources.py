@@ -4,7 +4,9 @@ required keys and sane values, consistent with the task's GPU reservations and `
 `## Compute resources` section shows the same values (it is rendered by scripts/task_conventions.py).
 Resource limits (§2.10, v1.1.5): `[metadata.resources.limits]` with every key, the scope of the task's mode, limits no
 lower than the minimums and no higher than the docker caps that bound them, and instruction.md ending in the
-`## Resource limits` paragraph rendered from them.
+`## Resource limits` paragraph rendered from them. The caps are checked as docker really applies them (v1.2): main's
+memory and CPU from `[environment]` (Harbor writes them), every other value from environment/docker-compose.yaml, each
+equal to its `[metadata.resources.caps]` entry.
 
 Usage: check-resources.py [task dirs...]   (default: every task under tasks/)
 """
@@ -17,7 +19,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from task_conventions import (  # noqa: E402  (one list of keys, one README / instruction renderer)
-    CAP_KEYS, LIMIT_KEYS, LIMIT_SCOPES, RESOURCE_KEYS, mode_of, render_limits, render_resources, sidecars_of)
+    CAP_KEYS, LIMIT_KEYS, LIMIT_SCOPES, RESOURCE_KEYS, mode_of, observed_of, render_limits, render_resources, sidecars_of)
+from rcb_monitor import inject  # noqa: E402  (one reader of the compose file's services and caps)
 
 GPU_CLASSES = {"none", "any", "rtx"}
 LIMITS = {
@@ -82,7 +85,10 @@ def check(task: Path) -> list[str]:
     tst_c = task / "tests/docker-compose.yaml"
     env_gpu = env_c.is_file() and bool(NVIDIA.search(env_c.read_text()))
     tst_gpu = tst_c.is_file() and bool(NVIDIA.search(tst_c.read_text()))
-    collect = bool(d.get("verifier", {}).get("collect"))  # standard modes: the sidecar replays in [[verifier.collect]]
+    # standard modes: the sidecar replays in [[verifier.collect]]. The resource monitor's own hook (service rcb_monitor,
+    # in every task since v1.2) only seals its record: it is not a verifier phase on a sidecar.
+    collect = any(isinstance(h, dict) and h.get("service") != "rcb_monitor"
+                  for h in d.get("verifier", {}).get("collect") or [])
     if env_gpu != r["gpu_required"]:
         errs.append(
             f"gpu_required = {str(r['gpu_required']).lower()} but environment/docker-compose.yaml "
@@ -98,7 +104,7 @@ def check(task: Path) -> list[str]:
 
     # a minimum never exceeds a cap that bounds the whole phase
     env = d.get("environment", {})
-    services = re.findall(r"^  ([A-Za-z0-9_.-]+):\s*$", env_c.read_text(), re.M) if env_c.is_file() else []
+    services = inject.service_names(env_c.read_text()) if env_c.is_file() else []
     sidecar = any(s not in ("main",) and not s.startswith("rcb_") for s in services)  # rcb_*: cache helpers
     if not sidecar:
         if env.get("cpus") and r["min_cpus"] > env["cpus"]:
@@ -121,7 +127,7 @@ def check(task: Path) -> list[str]:
 
     # README: the section scripts/task_conventions.py renders from these values
     readme = (task / "README.md").read_text() if (task / "README.md").is_file() else ""
-    want = "\n".join(render_resources(r))
+    want = "\n".join(render_resources(r, observed_of(task)))
     if want not in readme:
         errs.append(
             "README.md `## Compute resources` does not match [metadata.resources] "
@@ -187,9 +193,12 @@ def check_limits(task: Path, d: dict, r: dict, env_gpu: bool, services: list[str
             errs.append("scope agent: max_gpu_memory_gb > 0 but the agent's container (main) has no GPU")
         if (lim["trial_max_gpu_memory_gb"] > 0) != r["gpu_required"]:
             errs.append("trial_max_gpu_memory_gb > 0 exactly when the task has a GPU (gpu_required)")
-    if lim["scope"] == "trial" and lim["trial_max_gpu_memory_gb"] != lim["max_gpu_memory_gb"]:
+    # scope trial: the limits bind the whole trial, so its expected peak is the limit -- unless the task has a service
+    # of the benchmark's own (recorded only), whose share the whole trial's peak adds
+    whole = lim["scope"] == "trial" and not observed_of(task)
+    if whole and lim["trial_max_gpu_memory_gb"] != lim["max_gpu_memory_gb"]:
         errs.append("scope trial: trial_max_gpu_memory_gb equals max_gpu_memory_gb (the limits bind the whole trial)")
-    if lim["scope"] == "trial" and lim["trial_max_memory_gb"] != lim["max_memory_gb"]:
+    if whole and lim["trial_max_memory_gb"] != lim["max_memory_gb"]:
         errs.append("scope trial: trial_max_memory_gb equals max_memory_gb (the limits bind the whole trial)")
     # instruction.md ends with the paragraph rendered from these values
     ins = (task / "instruction.md").read_text() if (task / "instruction.md").is_file() else ""
@@ -203,9 +212,11 @@ def check_limits(task: Path, d: dict, r: dict, env_gpu: bool, services: list[str
 
 
 def check_caps(task: Path, r: dict, lim: dict, services: list[str]) -> list[str]:
-    """[metadata.resources.caps] (§2.10): one entry per compose service (cache helpers rcb_* aside, main always), and the
-    relation chain: the limited memory <= (sum of the scope's memory caps) / 1.2 and <= that sum - 2 GiB, so that the
-    monitor sees a violation before the OOM killer; pids >= 8 x max_processes; main's caps never below [environment]."""
+    """[metadata.resources.caps] (§2.10): one entry per compose service (cache helpers rcb_* aside, main always), each
+    equal to the cap docker really applies (main's memory and CPU: `[environment]`, written by Harbor; everything else:
+    environment/docker-compose.yaml), and the relation chain on those real caps: the limited memory <= (sum of the
+    scope's memory caps) / 1.2 and <= that sum - 2 GiB, so that the monitor sees a violation before the OOM killer;
+    pids >= 8 x max_processes for the services the limits bind."""
     caps = r.get("caps")
     if not isinstance(caps, dict):
         return ["[metadata.resources.caps] missing (PROTOCOL §2.10)"]
@@ -213,29 +224,54 @@ def check_caps(task: Path, r: dict, lim: dict, services: list[str]) -> list[str]
     want = {"main"} | {s for s in services if s != "main" and not s.startswith("rcb_")}
     if set(caps) != want:
         errs.append(f"[metadata.resources.caps] services {sorted(caps)} != compose services {sorted(want)}")
+    mode = mode_of(task)
+    scope = [s for s in caps if inject.kind_of(mode, s) == "scope"]   # the services the limits bind
     for svc, c in caps.items():
         if not isinstance(c, dict) or set(c) != set(CAP_KEYS):
             errs.append(f"[metadata.resources.caps].{svc} needs exactly {sorted(CAP_KEYS)}")
             continue
         if not (is_num(c["cpus"]) and c["cpus"] > 0 and is_num(c["memory_gb"]) and c["memory_gb"] > 0
-                and isinstance(c["pids"], int) and not isinstance(c["pids"], bool)):
-            errs.append(f"[metadata.resources.caps].{svc}: cpus and memory_gb > 0, pids an integer")
+                and isinstance(c["pids"], int) and not isinstance(c["pids"], bool) and c["pids"] > 0):
+            errs.append(f"[metadata.resources.caps].{svc}: cpus, memory_gb and pids (an integer) > 0")
             continue
-        if c["pids"] < 8 * lim["max_processes"]:
+        if svc in scope and c["pids"] < 8 * lim["max_processes"]:
             errs.append(f"caps.{svc}.pids {c['pids']} < 8 x max_processes {lim['max_processes']}")
     if errs:
         return errs
-    scope = list(caps) if lim["scope"] == "trial" else ["main"]
-    total = sum(caps[s]["memory_gb"] for s in scope)
+    # the caps docker really applies, service by service: they are the declared ones
+    env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
+    comp = task / "environment/docker-compose.yaml"
+    try:
+        real = inject.service_caps(comp.read_text()) if comp.is_file() else {}
+    except ValueError as e:
+        return [f"environment/docker-compose.yaml: {e}"]
+    main = real.get("main", {})
+    if is_num(env.get("memory_mb")):
+        if main.get("memory_gb") is not None and abs(main["memory_gb"] - env["memory_mb"] / 1024) > 1e-6:
+            errs.append("service main: mem_limit in docker-compose.yaml differs from [environment].memory_mb (Harbor sets it)")
+        real.setdefault("main", {})["memory_gb"] = env["memory_mb"] / 1024
+    if is_num(env.get("cpus")):
+        if main.get("cpus") is not None and main["cpus"] != float(env["cpus"]):
+            errs.append("service main: cpus in docker-compose.yaml differs from [environment].cpus (Harbor sets it)")
+        real.setdefault("main", {})["cpus"] = float(env["cpus"])
+    src = {"cpus": "cpus", "memory_gb": "mem_limit", "pids": "pids_limit"}
+    for svc, c in caps.items():
+        for k in CAP_KEYS:
+            got = (real.get(svc) or {}).get(k)
+            where = (f"[environment].{'memory_mb / 1024' if k == 'memory_gb' else 'cpus'}" if svc == "main" and k != "pids"
+                     else f"docker-compose.yaml `{src[k]}` of service {svc}")
+            if got is None:
+                errs.append(f"caps.{svc}.{k} = {c[k]} is declared, but {where} is not set: no such cap is applied")
+            elif abs(float(got) - float(c[k])) > 1e-6:
+                errs.append(f"caps.{svc}.{k} = {c[k]} but {where} is {got:g}: declare the cap that is applied "
+                            "(scripts/task_resources.toml), or apply the declared one")
+    if errs:
+        return errs
+    total = sum(real[s]["memory_gb"] for s in scope)
     if lim["max_memory_gb"] > total / 1.2 + 1e-9 or lim["max_memory_gb"] > total - 2 + 1e-9:
         errs.append(f"max_memory_gb {lim['max_memory_gb']} must be <= the scope's memory caps {total:g} / 1.2 and <= {total:g} - 2")
-    if sum(c["memory_gb"] for c in caps.values()) < lim["trial_max_memory_gb"]:
+    if sum(real[s]["memory_gb"] for s in caps) < lim["trial_max_memory_gb"]:
         errs.append("the memory caps of all services together are below trial_max_memory_gb")
-    env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
-    if env.get("memory_mb") and caps["main"]["memory_gb"] < env["memory_mb"] / 1024:
-        errs.append(f"caps.main.memory_gb {caps['main']['memory_gb']} < [environment].memory_mb / 1024")
-    if env.get("cpus") and caps["main"]["cpus"] != float(env["cpus"]):
-        errs.append(f"caps.main.cpus {caps['main']['cpus']} != [environment].cpus {env['cpus']} (Harbor sets main's CPU cap)")
     return errs
 
 
@@ -243,8 +279,12 @@ def main_has_gpu(task: Path) -> bool:
     c = task / "environment/docker-compose.yaml"
     if not c.is_file():
         return False
-    m = re.search(r"^  main:\s*\n((?:    .*\n|\s*\n)*)", c.read_text(), re.M)
-    return bool(m and NVIDIA.search(m.group(1)))
+    lines = c.read_text().splitlines(keepends=True)
+    try:
+        i, j = inject.services_span(lines)
+    except ValueError:
+        return False
+    return any(name == "main" and NVIDIA.search("".join(lines[k0:k1])) for name, k0, k1 in inject.service_blocks(lines, i, j))
 
 
 def main(argv: list[str]) -> int:

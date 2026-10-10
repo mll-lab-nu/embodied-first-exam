@@ -44,6 +44,10 @@ if [ -f "$root/scripts/labutopia/generate.py" ]; then   # LabUtopia (its tasks p
   if out=$(python3 "$root/scripts/labutopia/generate.py" --check 2>&1); then echo "ok scripts/labutopia/generate.py: ${out##*$'\n'}"
   else echo "FAIL scripts/labutopia/generate.py --check:"; echo "$out" | tail -n 40; rc=1; fi
 fi
+if [ -f "$root/scripts/molmospaces/mk_tasks.py" ]; then   # MolmoSpaces
+  if out=$(python3 "$root/scripts/molmospaces/mk_tasks.py" --check 2>&1); then echo "ok scripts/molmospaces/mk_tasks.py: ${out##*$'\n'}"
+  else echo "FAIL scripts/molmospaces/mk_tasks.py --check:"; echo "$out" | tail -n 40; rc=1; fi
+fi
 if [ -f "$root/scripts/autobio/generate.py" ]; then   # AutoBio (its tasks pull request adds the generator)
   if out=$(python3 "$root/scripts/autobio/generate.py" --check 2>&1); then echo "ok scripts/autobio/generate.py: ${out##*$'\n'}"
   else echo "FAIL scripts/autobio/generate.py --check:"; echo "$out" | tail -n 40; rc=1; fi

@@ -1,6 +1,6 @@
 # AGENTS.md — map for coding agents working in this repo
 
-Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.1) and `CONTRIBUTING.md` first.
+Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.md` first.
 
 - Terminology (protocol v1.0): **privileged** mode (formerly unlimited) and **standard** mode (formerly limited,
   wire protocol `eai-standard/2.x`, formerly `rcb-limited/2.x`); v1.1 adds a third mode, **standard-realtime** (standard mode on a
@@ -21,12 +21,15 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.1) and `CONTRIBUTING.md` 
   rendered from it; `ci_checks/check-resources.py` checks both.
 - Every task declares resource limits and docker caps (PROTOCOL §2.10, v1.1.5): `[metadata.resources.limits]` / `.caps` from
   the `[[limit]]` / `[[cap]]` rules in the same file; `normalize` ends `instruction.md` with the `## Resource limits` paragraph
-  rendered from them (generator-owned: edit the rules, never the paragraph). From v1.2 a task-provided monitor and the
-  verifier judge them; with `RCB_LIMITS_ENFORCE=1` a violation fails the trial (default 0: recorded only).
+  rendered from them (generator-owned: edit the rules, never the paragraph). From v1.2 a task-provided monitor
+  (`scripts/rcb_monitor/`, copied into every task by `normalize`; `ci_checks/check-monitor.py` runs its tests) and the
+  verifier judge them; with `RCB_LIMITS_ENFORCE=1` a violation fails the trial (default 0: recorded only). Declared caps
+  are the applied ones: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb`.
 - `ci_checks/run_all.sh [task dirs]`: contract checks (incl. verifier isolation: `[verifier] environment_mode = "separate"`
   + `tests/Dockerfile`) and the protocol v1.0 check (`check-protocol-v1.py`: `legacy:` image rules warn, all other rules fail). New check =
   `check-<thing>.sh <task_dir>`, registered in `run_all.sh`.
-- `tasks/dataset.toml`: task manifest; refresh with `cd tasks && harbor add --scan .`.
+- `tasks/dataset.toml`: task manifest with a digest per task; refresh with `cd tasks && harbor add --scan .` after any
+  change to a task (`ci_checks/check-dataset-manifest.sh` recomputes the digests).
 - Local docker sandbox has no `[environment].gpus`. RoboTwin and MuJoCo tasks pass a GPU through
   with `environment/docker-compose.yaml` (service `main`, nvidia device reservation; `sim` in standard mode) — copy it
   from `tasks/robotwin_2_0_stack_blocks_two-privileged/`.

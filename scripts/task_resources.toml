@@ -769,20 +769,25 @@ measured = "GPU 3.8-4.0 GB per trial, anon memory 11.1-11.8 GB, CPU p90 5.8-8.7 
 # ---------------------------------------------------------------------------------------------------------------------
 # Resource LIMITS and CAPS (docs/PROTOCOL.md §2.10, v1.1.5; enforced from v1.2). All sizes in GiB.
 # [[limit]] -> [metadata.resources.limits]: the most the agent phase may use. normalize writes it into task.toml and
-#   renders it into instruction.md ("## Resource limits") and the README. scope "trial" (privileged: every container of
-#   the trial) or "agent" (standard modes: the agent's container only; the sim sidecar is the benchmark's and never counts).
+#   renders it into instruction.md ("## Resource limits") and the README. scope "trial" (privileged: every container the
+#   agent drives, i.e. all but a benchmark-owned service such as RoboPaint's scorer, scripts/rcb_monitor/inject.py
+#   BENCHMARK_SERVICES) or "agent" (standard modes: the agent's container only; the sim sidecar is the benchmark's and
+#   never counts).
 #   From v1.2 the task's monitor measures it and, with RCB_LIMITS_ENFORCE=1, a sustained violation (sustain_sec above a
 #   limit within any window_sec) or an out-of-memory kill fails the trial; with 0 (the default) it is only recorded.
-# [[cap]] -> [metadata.resources.caps]: docker caps per compose service (cpus, memory_gb, pids), applied by v1.2.
+# [[cap]] -> [metadata.resources.caps]: docker caps per compose service (cpus, memory_gb, pids), applied by v1.2 and
+#   the caps docker really applies: normalize sets [environment].memory_mb = main.memory_gb x 1024 (Harbor writes main's
+#   memory and CPU caps from [environment]), scripts/rcb_monitor/inject.py writes the other values into the compose file
+#   unless a service sets one itself, and then the value here must be that one (ci_checks/check-resources.py compares).
 #   Memory caps sit above the limits (limit <= cap / 1.2 and <= cap - 2) so that the monitor sees a violation before the
-#   kernel's OOM killer; pids (threads) >= 8 x max_processes; caps never go below today's [environment] values.
+#   kernel's OOM killer; pids (threads) >= 8 x max_processes for the services the limits bind.
 # Same matching as [[rule]] (every matching rule applies, in file order). Edit the values here, not in task.toml.
 # How the values were set (owner, 10-10: from measured consumption, generous margins, so that no past trial exceeds them):
 # - GPU memory (simulator side): max(1.5 x peak, peak + 4) over batch_eval_live's vram_profile (per-trial peaks by card,
 #   10-03..10), at least 16 for Isaac Sim; BEHAVIOR-1K from its peak with RCB_TEXTURE_BUDGET=0.1, the tasks' default since
 #   v1.1.5. Privileged: the limit; standard: trial_max_gpu_memory_gb only (no standard agent container has a GPU).
-# - memory, privileged: the [environment] cap every past trial ran under (at least min + 2), + the scorer's margin for
-#   RoboPaint; standard agent: max(1.5 x peak, peak + 4, 8) of the agent container's docker peak (mem_guard, 10-02..10),
+# - memory, privileged: the [environment] cap every past trial ran under (at least min + 2); RoboPaint's scorer service
+#   is the benchmark's own (recorded only): its 5 GiB margin is in trial_max_memory_gb, not in the limit; standard agent: max(1.5 x peak, peak + 4, 8) of the agent container's docker peak (mem_guard, 10-02..10),
 #   at most its [environment] cap; trial_max adds the sim sidecar's max(1.5 x peak, peak + 4) (RoboOlympics: its mem_limit).
 # - processes 512 and disk (10 GiB CPU-only privileged, 20 GiB Isaac and standard) under /app, /tmp and /root: not yet
 #   measured; the v1.2 calibration batch confirms or changes them. `measured` in each rule says what each value rests on.
@@ -1451,7 +1456,7 @@ measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guar
 match = "^robopaint-.*-privileged$"
 scope = "trial"
 max_gpu_memory_gb = 5.0
-max_memory_gb = 21.0
+max_memory_gb = 16.0
 max_processes = 512
 max_disk_gb = 10.0
 disk_paths = ["/app", "/tmp", "/root"]
@@ -1460,7 +1465,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 5.0
 trial_max_memory_gb = 21.0
-measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)), + 5 GiB for the scorer service; processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [[limit]]
 match = "^robopaint-.*-standard$"
@@ -1820,12 +1825,12 @@ sim = { cpus = 8.0, memory_gb = 23.0, pids = 16384 }
 [[cap]]
 match = "^roboolympics-.*-standard-realtime$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
-sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }   # the sim service's own pids_limit (scripts/roboolympics/templates/docker-compose.yaml)
 
 [[cap]]
 match = "^(roboolympics-airhockey-match-i00)-standard-realtime$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
-sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 256 }
 
 [[cap]]
 match = "^robopaint-.*-privileged$"

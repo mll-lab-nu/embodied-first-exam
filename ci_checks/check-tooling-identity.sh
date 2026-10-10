@@ -14,6 +14,10 @@
 #    `restart: on-failure:N` with N >= 3 (PROTOCOL §4.1, §4.7).
 #    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboTangle) is held to the same rules, with rcb_limited.py and
 #    rcb_client.py from scripts/eai_standard/v2_4/ (docs/STANDARD_MODE_2_4.md) and 2.2's rcb1.py and run.sh.
+# 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, RoboOlympics, BiGym 2.0
+#    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
+#    byte-identical to their one source, scripts/humanoidbench/shared/realtime/ (docs/LIMITED_MODE_PROTOCOL.md,
+#    "Standard-realtime mode"), and so is every other copy of that source under scripts/*/shared/realtime/.
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -35,6 +39,18 @@ canon24 = {f: sha(os.path.join(src, "v2_4" if f in V24 else "", f)) for f in set
            if os.path.isfile(os.path.join(src, "v2_4" if f in V24 else "", f))}
 seen = collections.defaultdict(lambda: collections.defaultdict(dict))   # benchmark -> role -> {sha: first copy}
 dirs = collections.Counter(); bad = []; n_layer = 0
+# the 2.3 realtime layer: one source, copied unchanged
+RT_SRC = os.path.join(os.path.dirname(src), "humanoidbench", "shared", "realtime")
+RT_LAYER = {"environment/sim/rcb_realtime.py": "rcb_realtime.py", "environment/rcb_client.py": "rcb_client.py"}
+rt_canon = {f: sha(os.path.join(RT_SRC, f)) for f in set(RT_LAYER.values()) if os.path.isfile(os.path.join(RT_SRC, f))}
+n_rt = 0
+scripts_dir = os.path.dirname(src)
+for b in sorted(os.listdir(scripts_dir)):
+    for f in sorted(rt_canon):
+        p = os.path.join(scripts_dir, b, "shared", "realtime", f)
+        if os.path.isfile(p) and sha(p) != rt_canon[f]:
+            bad.append(f"scripts/{b}/shared/realtime/{f} differs from scripts/humanoidbench/shared/realtime/{f} "
+                       "(the eai-standard/2.3 layer has one source)")
 
 
 def sim_service(compose: str) -> str:
@@ -58,6 +74,14 @@ for t in sorted(os.listdir(tasks)):
     bench = t.split("-")[0]
     proto = str(tomllib.load(open(tt, "rb")).get("metadata", {}).get("protocol", ""))
     v24 = proto == "eai-standard/2.4"
+    if proto == "eai-standard/2.3":
+        n_rt += 1
+        for rel, f in sorted(RT_LAYER.items()):
+            p = os.path.join(tasks, t, rel)
+            if not os.path.isfile(p):
+                bad.append(f"{t}: {rel} missing (eai-standard/2.3 layer, scripts/humanoidbench/shared/realtime/{f})")
+            elif sha(p) != rt_canon.get(f):
+                bad.append(f"{t}: {rel} differs from scripts/humanoidbench/shared/realtime/{f} (regenerate the task)")
     if v24 or re.fullmatch(r"(eai-standard|rcb-limited)/2\.2", proto):
         n_layer += 1
         ver, ref = ("2.4", canon24) if v24 else ("2.2", canon)
@@ -90,12 +114,12 @@ for t in sorted(os.listdir(tasks)):
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for b, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 if bad:
-    print("FAIL shared sources (byte-identical copies; the 2.2 / 2.4 layers as in scripts/eai_standard/):")
+    print("FAIL shared sources (byte-identical copies; the 2.2 / 2.4 layers as in scripts/eai_standard/, the 2.3 layer as in scripts/humanoidbench/shared/realtime/):")
     for b in bad[:60]:
         print("  -", b)
     if len(bad) > 60:
         print(f"  ... {len(bad) - 60} more")
     sys.exit(1)
 print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / RoboTangle / BiGym 2.0 / YAMLab / LabUtopia / AutoBio tasks")
-      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs")
+      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs; the eai-standard/2.3 realtime layer in {n_rt}")
 PY

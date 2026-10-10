@@ -737,6 +737,44 @@ class Episode:
 
 
 # ---------------------------------------------------------------- the HTTP layer
+def _finite(v) -> bool:
+    try:
+        return math.isfinite(float(v))
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+
+def parse_request(path: str, meta, parts: dict):
+    """What every adapter needs checked before it touches the simulator (ValueError -> 400; PROTOCOL §4.6: a malformed
+    request steps no physics and never ends the episode, whatever is wrong with it: a JSON object where rows are
+    expected, a number too large for a float, NaN, a field of the wrong JSON type). Returns the action rows of a
+    /submit as a float64 array (shape and limits are the adapter's to check), None for /observe."""
+    if not isinstance(meta, dict):
+        raise ValueError("the request's meta must be a JSON object")
+    for k in ("dt", "seconds", "video_fps"):
+        if meta.get(k) is not None and not _finite(meta[k]):
+            raise ValueError(f"{k} must be a finite number (got {meta[k]!r:.60})")
+    for k in ("type", "interpolate", "video"):
+        if meta.get(k) is not None and not isinstance(meta[k], str):
+            raise ValueError(f"{k} must be a string (got {meta[k]!r:.60})")
+    cams = meta.get("cameras")
+    if cams is not None and not (isinstance(cams, (list, tuple)) and all(isinstance(c, str) for c in cams)):
+        raise ValueError("cameras must be a list of camera names")
+    if path != "/submit":
+        return None
+    try:
+        src = parts["actions"]["data"] if "actions" in parts else meta.get("actions", [])
+        if src is None or isinstance(src, (dict, str, bytes)):
+            raise TypeError(f"got {type(src).__name__}")
+        A = np.asarray(src, dtype=np.float64)
+    except (TypeError, ValueError, OverflowError, AttributeError, KeyError) as exc:
+        raise ValueError("actions must be an RCB1 array part `actions` or a JSON list of rows of numbers "
+                         f"({type(exc).__name__}: {str(exc)[:120]})") from None
+    if not np.all(np.isfinite(A)):
+        raise ValueError("actions contain NaN/inf")
+    return A
+
+
 class Service:
     """What a sim service hands to serve(): spec (dict), lock, state (the service's E dict: done, reason, exiting, error),
     submit(meta, actions) and observe(meta) -> (meta_out, rcb1 parts), kinematics(req) -> dict, status() -> dict,
@@ -821,8 +859,8 @@ def make_handler(svc: Service):
                 rows0 = ep.rows if ep else 0
                 out = blobs = err = None; stopped = None
                 try:
+                    A = parse_request(self.path, meta, parts)   # ValueError -> 400, before the adapter runs
                     if self.path == "/submit":
-                        A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), dtype=np.float64)
                         out, blobs = svc.submit(meta, A)
                     else:
                         out, blobs = svc.observe(meta)

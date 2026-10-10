@@ -21,7 +21,7 @@ services:
     pids_limit: 8192   # rcb-monitor
     image: ghcr.io/mll-lab-nu/eai-robopaint:0.2.0
     volumes:
-      - rcb_limits:/run/rcb-limits:ro   # rcb-monitor
+      - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./scorer:/srv:ro
     working_dir: /tmp
     command: sh /srv/run.sh
@@ -54,6 +54,7 @@ services:
     volumes:
       - ./rcb_monitor:/opt/rcb_monitor:ro
       - rcb_limits:/run/rcb-limits
+      - rcb_observe:/run/rcb-observe
     environment:
       RCB_LIMITS_ENFORCE: ${RCB_LIMITS_ENFORCE:-0}   # 1: stop the agent at a confirmed violation, and fail the trial
     command: ["python3", "/opt/rcb_monitor/monitor.py", "run"]
@@ -67,3 +68,4 @@ services:
   # <<< rcb_monitor
 volumes:   # rcb-monitor
   rcb_limits:   # rcb-monitor
+  rcb_observe:   # rcb-monitor

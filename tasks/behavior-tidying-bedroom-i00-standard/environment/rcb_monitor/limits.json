@@ -26,6 +26,9 @@
  "max_processes": 512,
  "mode": "standard",
  "scope": "agent",
+ "scope_services": [
+  "main"
+ ],
  "sustain_sec": 60.0,
  "task": "behavior-tidying-bedroom-i00-standard",
  "tick_sec": 5,
