@@ -41,8 +41,8 @@ Renaming them would change the hashes every task is bound to.
   fetch <dir>`) it also checks every instance's bytes against the bindings; without it, against the pinned hashes.
 
 It needs only the Python standard library and `scripts/task_conventions.py`. `--check` re-renders into a temporary
-directory and fails on any byte or mode difference. `scripts/robotangle/import_evidence.py` is the one-off importer that
-made those inputs from the graded TopoGym packages; CI never runs it.
+directory and fails on any byte or mode difference. The inputs were imported once from the graded TopoGym
+packages and oracle runs of the release that `release.json` names (the dev/jianwen commit and the evidence runs).
 
 Each task carries copies of the tooling (`rcb_topogym.py`), the graders and the standard sim service (D9). Its
 `runtime_binding.json` binds:
@@ -207,7 +207,7 @@ state the 6 h budget and are compared only with results under the same budget (D
 ## Standard mode: `eai-standard/2.4`
 
 The standard twins serve `eai-standard/2.4` ([`STANDARD_MODE.md`](../STANDARD_MODE.md), issue #89, PR #90), TopoGym's
-documented hardening of 2.2. The release called it "2.3" (dev/jianwen docs/rcb/STANDARD_MODE_2_3.md); that number went to
+documented hardening of 2.2. The release called it "2.3" (in dev/jianwen's own protocol document); that number went to
 the realtime capability (#86), so it was registered as 2.4 = 2.3 + the operations capability (realtime stays optional; the
 RoboTangle service does not offer it). Requests, cameras, proprioception, RCB1 frames and the process model are those of 2.2.
 2.4 adds:

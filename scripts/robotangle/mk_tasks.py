@@ -11,7 +11,7 @@ usage: python3 scripts/robotangle/mk_tasks.py [--check] [--list] [--assets <dir>
 
 Inputs, all in the repository (Python standard library only, plus scripts/task_conventions.normalize):
   release.json   the release (dev/jianwen commit, public simulator source, runtime) and, per base, where its frozen
-                 instance comes from and which recorded oracle runs are its evidence (scripts/robotangle/import_evidence.py)
+                 instance comes from and which recorded oracle runs are its evidence
   shared/        the release's task templates (harbor_templates/topogym at release.json template_commit): the tooling
                  rcb_topogym.py verbatim; the graders, the sim service adapter (server.py, finalize.sh) and the 2.4
                  layer with the fixes of the 2026-10-10 review (docs/benchmarks/robotangle.md, "Fixes applied on main");
@@ -21,7 +21,7 @@ Inputs, all in the repository (Python standard library only, plus scripts/task_c
                  from v2_4/, rcb1.py, run.sh and the client pins from scripts/eai_standard/. The release called its
                  layer "2.3"; that number went to the realtime capability (#86), so the layer and the texts say 2.4
   packages/      per task, the upstream texts of the graded package (task.toml, README.md, instruction.md, Dockerfiles,
-                 compose files, test.sh) and its upstream runtime binding; the generator applies the RoboTangle rename
+                 compose files, test.sh; document paths point at this repository's docs/) and its upstream runtime binding; the generator applies the RoboTangle rename
                  (user-facing names only), the image name and the evidence wording to them, and the text fixes of
                  the 2026-10-10 review (review_fixes: the R-hold rule, the row cap, the 2.4 call semantics)
   oracles/       the recorded oracle trajectories of the evidence runs (privileged deliverable; standard episode)
@@ -51,9 +51,6 @@ VERSION = (ROOT / "images/robotangle/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-robotangle:{VERSION}"
 ROBOT = {"aloha": "aloha-2", "panda_robotiq": "franka-robotiq-2f85"}
 ROBOT_WORDS = {"(aloha, Genesis)": "(ALOHA 2, Genesis)", "(panda_robotiq, Genesis)": "(Franka Panda + Robotiq 2F-85, Genesis)"}
-DOCS = [("docs/rcb/STANDARD_MODE_2_3.md", "docs/STANDARD_MODE.md"), ("docs/rcb/STANDARD_MODE_2_2.md", "docs/STANDARD_MODE.md"),
-        ("docs/rcb/benchmarks/topogym.md", "docs/benchmarks/robotangle.md"), ("docs/rcb/PROTOCOL.md", "docs/PROTOCOL.md"),
-        ("docs/rcb/TAXONOMY.md", "docs/TAXONOMY.md"), ("docs/rcb/LIMITED_MODE_PROTOCOL.md", "docs/STANDARD_MODE.md")]
 IMAGE_RX = re.compile(r"(?:[\w.-]+/)+rcb-topogym:[\w.-]+")
 EAI = ROOT / "scripts/eai_standard"
 LAYER = {"environment/rcb_client.py": EAI / "v2_4/rcb_client.py", "environment/rcb1.py": EAI / "rcb1.py",
@@ -69,11 +66,9 @@ def dash(s: str) -> str:
 
 
 def text(s: str) -> str:
-    """User-facing rename and paths (README, instruction, task.toml); code identifiers (topogym, rcb_topogym) stay."""
+    """User-facing rename (README, instruction, task.toml); code identifiers (topogym, rcb_topogym) stay."""
     s = re.sub(r"\btopogym-([a-z0-9-]+-i\d\d-(?:privileged|standard))\b", r"robotangle-\1", s)
     s = IMAGE_RX.sub(IMAGE, s)
-    for a, b in DOCS:
-        s = s.replace(a, b)
     for a, b in ROBOT_WORDS.items():
         s = s.replace(a, b)
     s = s.replace("TopoGym", "RoboTangle").replace(*PROTO)

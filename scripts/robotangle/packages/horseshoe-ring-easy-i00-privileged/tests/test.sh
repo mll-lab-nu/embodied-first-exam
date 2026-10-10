@@ -1,9 +1,9 @@
 #!/bin/bash
 # Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in a fresh process.
-# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/rcb/PROTOCOL.md).
+# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/PROTOCOL.md).
 # Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent
 # left there (a planted reward, a symlink) can count. rm never follows symlinks.
-rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/rcb/PROTOCOL.md §2.6)
+rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)
 mkdir -p /logs/verifier
 python /tests/grade.py --family horseshoe_ring --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \
   2> /logs/verifier/grade.log

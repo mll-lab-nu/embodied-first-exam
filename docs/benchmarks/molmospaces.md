@@ -101,9 +101,8 @@ the instruction and `/spec` (`max_control_steps`, `episode`) state.
 ## Run
 
 ```bash
-harbor run -c scripts/molmospaces/configs/codex-openrouter.yaml --env-file .env -p tasks/molmospaces-pick-i00-standard
+harbor run -p tasks/molmospaces-pick-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/molmospaces-pick-i00-privileged -a nop      # scores 0
 ```
-`codex-openrouter.yaml` is Harbor's own Codex agent with OpenRouter as its model provider (run id
-`codex-gpt6_luna-medium`). Results are not kept in this repository (PROTOCOL D3): runs, videos and per-run READMEs are on
+Agent, provider and effort settings: docs/RUNNING.md. Results are not kept in this repository (PROTOCOL D3): runs, videos and per-run READMEs are on
 the results site.
