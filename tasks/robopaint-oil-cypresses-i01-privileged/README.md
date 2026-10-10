@@ -39,6 +39,10 @@ both replayed main sheets meet the rule, the final-state hashes (paint layers of
 agree and the rebuilt frozen instance matches the recorded one. PhysX and libmypaint (single-threaded, with the image's
 determinism patch) run on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit
 (`rcb_brush.py selftest`); camera rendering does not change it. `/logs/verifier/replay.mp4` and `canvas.png` never affect the verdict.
+A file that is not a readable trajectory (not an npz, no `actions`, a wrong shape, NaN, more than 72,000 rows) scores 0 as
+`bad_trajectory`; `grader_error` is left for the verifier's own failures (a replay process without a result or past its 1650 s).
+The verifier has 3600 s: two replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured
+67-102 steps/s (docs/benchmarks/robopaint.md).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -61,3 +65,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 ### Change Log
 - 2026-10-09: the hi-res version (docs/benchmarks/robopaint.md, Oil: the pointed brush). The brush is `tanda/oil-03-paint` made pointed: a light press draws a 2-3 mm line (before, every mark was 5-11 mm wide). The reference solution is a new program of 1669 strokes (was 279); executed by the robot it scores mean ΔE 6.76, SSIM 0.727 and edge correlation 0.708 against the picture (was 8.77, 0.598, 0.489). The rule is recalibrated on it with the same margins, except SSIM - 0.04 (was - 0.03): mean ΔE <= 7.5 (was 9.7), p90 ΔE <= 12.5 (was 17.5), SSIM >= 0.68 (was 0.56), edge correlation >= 0.65 (was 0.43); at most 2504 strokes (was 419); a path of at most 51600 mm (was 28200 mm). The picture, the scene's geometry and the scoring code are unchanged; results before this date are not comparable with this version.
+- 2026-10-10: the verifier and the scoring service only (review of 2026-10-10, board 0067). The verifier's timeout is 3600 s (was 1800 s): two fresh replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured 67-102 steps/s, so a long painting timed the verifier out and the trial had no reward. A file that is not a readable trajectory (not an npz, pickled arrays, no `actions`) scores 0 as `bad_trajectory` (was `grader_error`); every `reward.json` has `deterministic`. The `scorer` service restarts if its process dies (`restart: on-failure`). The verdict of a trajectory the verifier could replay before is unchanged, and so are the instance, the picture and the rules: the task keeps its name.

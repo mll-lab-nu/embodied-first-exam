@@ -23,7 +23,8 @@ Two stages, the second on the output of the first:
   - the texts: the rules from texts/rules_<group>_<mode>.md in instruction.md (after "Target and score"), texts/readme_<mode>.md
     in README.md, a sentence in the task.toml description, the oracle evidence (rules.json: oracle_evidence, or the family's own
     entry in oracle_evidence_family, or the pair's own entry in oracle_evidence_pairs), and the pair's change log (rules.json
-    change_log: README "Change Log").
+    change_log: README "Change Log", followed by change_log_all's entries for the mode: changes to the code every pair shares);
+    texts/readme_verification_end_<mode>.md ends the README's Verification section.
 The limits stay those of the reference solution they were set on (reference_path_mm, reference_mark_width_mm); a pair whose
 reference solution was re-made since has its current one's path and mark width in rules.json current_reference (the evidence).
 Every task ends with scripts/task_conventions.py's normalize(); a task dir holds exactly what the generator writes.
@@ -218,6 +219,13 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
             "\n## Verification\n" + texts[f"readme_verification_{mode}.md"].strip() + "\n",
             "README.md",
         )
+        # the verifier's own conditions (no verdict, a file that is not a trajectory, its time), at the end of the section
+        rd = sub_re1(
+            rd,
+            r"(?s)(\n## Verification\n.*?)(?=\n## )",
+            lambda mm: mm.group(1).rstrip("\n") + "\n" + texts[f"readme_verification_end_{mode}.md"].strip() + "\n",
+            "README.md",
+        )
         rd = sub1(
             rd,
             "\n## Task\n",
@@ -228,9 +236,19 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
             + "\n\n",
             "README.md",
         )
-        log = cfg.get("change_log", {}).get(base)
+        # the pair's own entries (change_log), then the entries of every pair of this mode (change_log_all)
+        log = list(cfg.get("change_log", {}).get(base) or []) + list(cfg.get("change_log_all", {}).get(mode) or [])
         if log:  # normalize() files it under Details as "### Change Log"
-            rd = rd.rstrip("\n") + "\n\n## Change Log\n" + "\n".join(f"- {e}" for e in log) + "\n"
+            entries = "\n".join(f"- {e}" for e in log) + "\n"
+            if "\n### Change Log\n" in rd:  # the family's template has the section (oil): its entries first
+                rd = sub_re1(
+                    rd,
+                    r"(?s)(\n### Change Log\n.*?)(?=\n#{2,3} |\Z)",
+                    lambda mm: mm.group(1).rstrip("\n") + "\n" + entries,
+                    "README.md",
+                )
+            else:
+                rd = rd.rstrip("\n") + "\n\n## Change Log\n" + entries
         files["README.md"][0] = rd.encode()
         tt = files["task.toml"][0].decode()
         sentence = render(texts[f"toml_{GROUP[fam]}.md"], v).strip().replace('"', '\\"')

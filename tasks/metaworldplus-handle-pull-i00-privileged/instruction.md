@@ -6,13 +6,16 @@ The scene is one frozen instance of Meta-World's own randomization (object and g
 ## What you hand in
 `/app/output/trajectory.npz` with key `actions`: Meta-World's native actions, shape `(T, 4)` with 1 ≤ T ≤ 500
 (Meta-World's episode length), one row per control step (1/80 s). Write it with `s.save_trajectory()` so the format
-is right. Leave the script that produced it at `/app/output/gen.py`.
+is right: the verifier reads a plain `.npz` of at most 2 MB that holds arrays only (no pickled objects, at most 64
+members), and grades anything else as an invalid trajectory. Leave the script that produced it at `/app/output/gen.py`.
 
 ## Success
 The verifier replays your actions from the frozen start in a separate sandbox (twice, in fresh processes; MuJoCo on the
 CPU is bit-exact) and applies Meta-World's own success check for `handle-pull-v3` (`evaluate_state`) to the state **after
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` computes exactly this check on the current state.
+
+For `handle-pull-v3` the check is: The handle's grip is within 5 cm of the target point in height; only z is compared. ("The target point" is `s.state()["target_pos"]`.)
 
 ## Tooling (`/opt/tools/mw_tool.py`, importable as `mw_tool`)
 ```python

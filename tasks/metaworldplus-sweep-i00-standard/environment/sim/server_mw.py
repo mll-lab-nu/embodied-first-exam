@@ -9,7 +9,14 @@ episode, /data evidence. Differences, all from Meta-World:
 - watching (/observe with seconds > 0) holds the hand still (S.hold_targets()), since actions are deltas;
 - cameras and proprioception come from the tool module (mw_tool.CAMERA_VIEWS, mw_tool.PROPRIO_LAYOUT);
 - like the MuJoCo service since the migration (docs/PROTOCOL.md §7): a simulator error (500) ends the episode with
-  reason "error", an oversized body is answered with 413, non-numeric `dt` / `seconds` are a 400.
+  reason "error", an oversized body is answered with 413. Requests are validated in full before any physics runs: a
+  malformed one (`dt` / `seconds` / `video_fps` not a finite number, `cameras` not a list of names, ...) is a 400 that
+  changes nothing.
+- final.json is `finalized` as soon as the verdict is in it; the video is rendered after that and never changes or
+  delays the verdict (`video_done` tells the collect hook that nothing more comes).
+- `time_s` / `time_left_s` count from the agent's first request to the service, not from the service's start.
+- camera calibration: the pose is that of the viewpoint the image is rendered from (a free camera's is the mean of the
+  scene's two eye cameras; scene.camera[0] alone is the left eye, 3.4 cm to the side).
 
 What the agent gets: camera RGB (+ depth) with each camera's calibration, the robot's own state (hand position, gripper
 opening, mocap target, arm and finger joints, last command) and the task's target point. Never an object's pose.
@@ -25,6 +32,7 @@ from __future__ import annotations
 import faulthandler
 import importlib
 import json
+import math
 import os
 import signal
 import sys
@@ -54,6 +62,7 @@ MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024
 LOCK = threading.Lock()
 E = {"ready": False, "calls": 0, "rows": 0, "done": False, "reason": None, "t0": time.time(), "finalized": False}
+E.update({"t_first": None, "video_done": False})  # t_first: the agent's first request (its clock starts there)
 
 # SIGUSR1 (the collect hook's "episode over") may arrive before the service is ready, e.g. during a resume replay; its
 # default action would kill the process. Until the real handler is installed, only remember it.
@@ -76,6 +85,16 @@ def _events() -> list:
         return []
 
 
+def _write_json(path: str, obj: dict) -> None:
+    """Atomic: a reader (the collect hook, the verifier) never sees a half-written file."""
+    tmp = f"{path}.{os.getpid()}.tmp"
+    with open(tmp, "w") as f:
+        json.dump(obj, f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
+
+
 def _give_up(reason: str, infra: bool) -> None:
     """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and idle."""
     log({"ev": "restart_refused", "reason": reason})
@@ -83,11 +102,14 @@ def _give_up(reason: str, infra: bool) -> None:
         prev = json.load(open(os.path.join(DATA, "final.json")))
     except Exception:  # noqa: BLE001
         prev = {}
+    if not isinstance(prev, dict):
+        prev = {}
     if not (prev.get("finalized") and "deterministic" in prev):  # a verdict already on disk is kept as it is
         prev.update({"success": False, "done": True, "reason": reason, "finalized": True, "protocol": PROTOCOL})
         if infra:
             prev["infra_error"] = 1
-        json.dump(prev, open(os.path.join(DATA, "final.json"), "w"))
+    prev["video_done"] = True  # nothing more will be written: the collect hook stops waiting
+    _write_json(os.path.join(DATA, "final.json"), prev)
     open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
     signal.signal(signal.SIGUSR1, lambda *_: None)
     print(f"restart refused: {reason}", flush=True)
@@ -163,26 +185,59 @@ def grab(cams, depth: bool):
     return imgs, dep
 
 
+def _moving(cam: str) -> bool:
+    """True for a camera whose pose can change during the episode: a tracking / targeting camera, or one on a body that a
+    joint or a mocap pose moves. Free cameras and cameras fixed to the world never move (all four MetaWorld+ views)."""
+    cid, _ = CAMS[cam]
+    if cid is None:
+        return False
+    m = S.model
+    if int(m.cam_mode[cid]) != 0:
+        return True
+    b = int(m.cam_bodyid[cid])
+    while b > 0:
+        if int(m.body_jntnum[b]) > 0 or int(m.body_mocapid[b]) >= 0:
+            return True
+        b = int(m.body_parentid[b])
+    return False
+
+
+MOVING = {c: _moving(c) for c in CAMS}
+
+
+def cam2world(cam: str) -> np.ndarray:
+    """Camera-to-world pose (4x4, OpenGL convention: x right, y up, looks along -z) of the viewpoint the mono RGB / depth
+    image is rendered from, in the current state. A model camera: data.cam_xpos / data.cam_xmat, which is what the
+    renderer reads. A free camera: the scene's two eye cameras share their axes and sit ipd/2 to either side of the
+    viewpoint, so the viewpoint is their mean (scene.camera[0] alone is the LEFT eye, 3.4 cm off)."""
+    cid, _ = CAMS[cam]
+    if cid is not None:
+        R = np.array(S.data.cam_xmat[cid], float).reshape(3, 3)
+        pos = np.array(S.data.cam_xpos[cid], float)
+    else:
+        r = _renderer(False)
+        _update(r, cam)
+        a, b = r.scene.camera[0], r.scene.camera[1]
+        fwd = np.array(a.forward, float)
+        up = np.array(a.up, float)
+        pos = 0.5 * (np.array(a.pos, float) + np.array(b.pos, float))
+        R = np.column_stack([np.cross(fwd, up), up, -fwd])
+    return np.vstack([np.column_stack([R, pos]), [0.0, 0.0, 0.0, 1.0]])
+
+
 def calib() -> dict:
-    """Per camera: pinhole intrinsics and camera-to-world pose (OpenGL convention: looks along -z, +y up)."""
+    """Per camera: pinhole intrinsics and the camera-to-world pose in the current state (see cam2world)."""
     out = {}
-    r = _renderer(False)
     for c in CAMS:
-        _update(r, c)
-        gl = r.scene.camera[0]
-        fwd = np.array(gl.forward, float)
-        up = np.array(gl.up, float)
-        pos = np.array(gl.pos, float)
-        right = np.cross(fwd, up)
-        R = np.column_stack([right, up, -fwd])
         fovy = float(S.model.cam_fovy[CAMS[c][0]]) if CAMS[c][0] is not None else float(S.model.vis.global_.fovy)
         f = 0.5 * H / np.tan(np.deg2rad(fovy) / 2)
         out[c] = {
             "intrinsic_cv": [[f, 0, W / 2], [0, f, H / 2], [0, 0, 1]],
-            "cam2world_gl": np.vstack([np.column_stack([R, pos]), [0, 0, 0, 1]]).tolist(),
+            "cam2world_gl": cam2world(c).tolist(),
             "width": W,
             "height": H,
             "fovy_deg": fovy,
+            "moving": MOVING[c],
         }
     return out
 
@@ -210,7 +265,12 @@ SPEC = {
         "episode (never a reset): the state is the one after the last call that completed on the service, "
         "which you may not have received; check GET /status (control_steps) before continuing"
     ),
-    "cameras": {c: {"rgb": True, "depth": True, "size": [W, H]} for c in CAMS},
+    "cameras": {c: {"rgb": True, "depth": True, "size": [W, H], "moving": MOVING[c]} for c in CAMS},
+    "camera_calibration": (
+        'meta["cameras"][cam] of every response: intrinsic_cv (pinhole, pixels) and cam2world_gl (4x4, OpenGL axes: x '
+        "right, y up, the camera looks along -z; the viewpoint the image is rendered from). The cameras are fixed "
+        "(moving = false): the calibration is the same in every response."
+    ),
     "action_types": {
         ACTION_NAME: {
             "dim": N,
@@ -228,9 +288,29 @@ SPEC = {
     },
     "proprio_layout": PROPRIO_LAYOUT,
     "frames": "world frame: x to the robot's right, y forward (away from the robot base), z up; metres",
-    "budget": {"reset": 0, "wall_clock_s": WALL_CLOCK_S},
+    "budget": {
+        "reset": 0,
+        "wall_clock_s": WALL_CLOCK_S,
+        "clock": (
+            "meta time_s / time_left_s are counted from your first request to the service; approximate - the harness's "
+            "own deadline is authoritative"
+        ),
+    },
     "episode": "runs until your time is up; the state after the last executed control step is graded",
 }
+
+
+def _agent_time() -> float:
+    """Seconds since the agent's first request to the service (0 before it): the agent's clock. The simulator is up
+    before the agent starts (the harness installs the agent first), so the service's own start is not that moment."""
+    return 0.0 if E["t_first"] is None else time.time() - E["t_first"]
+
+
+def _touch() -> None:
+    """Every request passes here: the first one starts the agent's clock (logged, so a resume keeps it)."""
+    if E["t_first"] is None:
+        E["t_first"] = time.time()
+        log({"ev": "first_request", "ts": E["t_first"]})
 
 
 def meta_common() -> dict:
@@ -240,11 +320,11 @@ def meta_common() -> dict:
         "control_steps": len(RECORD),
         "sim_steps": len(RECORD),
         "sim_time_s": round(len(RECORD) * CTRL_DT, 4),
-        "time_s": round(time.time() - E["t0"], 2),
-        "time_left_s": max(0.0, round(WALL_CLOCK_S - (time.time() - E["t0"]), 1)),
+        "time_s": round(_agent_time(), 2),
+        "time_left_s": max(0.0, round(WALL_CLOCK_S - _agent_time(), 1)),
         "proprio": {"layout": PROPRIO_LAYOUT, "now": proprio().tolist()},
         "task": task_info(),
-        "cameras": CALIB,
+        "cameras": calib(),
         "done": E["done"],
         "reason": E["reason"],
     }
@@ -266,10 +346,11 @@ def write_final(extra: dict | None = None) -> None:
         "done": E["done"],
         "reason": E["reason"],
         "finalized": E["finalized"],
+        "video_done": E["video_done"],
     }
     d.update(E.get("verdict") or {})
     d.update(extra or {})
-    json.dump(d, open(os.path.join(DATA, "final.json"), "w"))
+    _write_json(os.path.join(DATA, "final.json"), d)
 
 
 class Recorder:
@@ -344,14 +425,49 @@ def _ctrl_step(tg, rec) -> bool:
     return False
 
 
+# ---- request parsing: everything here runs BEFORE any physics. A malformed request is the caller's mistake: it raises
+# ValueError (answered 400, nothing executed), never a simulator error (500, which ends the episode; PROTOCOL §4.6).
+VIDEO_MODES = ("mp4", "frames", "both", "none")
+
+
 def _fps(meta: dict) -> int:
     try:
         fps = int(meta.get("video_fps", 10))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         raise ValueError("video_fps must be an integer") from None
     if not 1 <= fps <= MAX_VIDEO_FPS:
         raise ValueError(f"video_fps must be in [1, {MAX_VIDEO_FPS}]")
     return fps
+
+
+def _num(meta: dict, key: str, default: float) -> float:
+    """A finite numeric request field; anything else (null, a string, NaN, Infinity) is a 400."""
+    try:
+        v = float(meta.get(key, default))
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError(f"{key} must be a number") from None
+    if not math.isfinite(v):
+        raise ValueError(f"{key} must be a finite number")
+    return v
+
+
+def _cameras(meta: dict, default: list) -> list:
+    """The requested cameras (unknown names are ignored; none left = the default)."""
+    cams = meta.get("cameras")
+    if cams is None:
+        return list(default)
+    if not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
+        raise ValueError(f"cameras must be a list of camera names: {list(CAMS)}")
+    return [c for c in cams if c in CAMS] or list(default)
+
+
+def _video(meta: dict, default: str) -> str:
+    v = meta.get("video", default)
+    if v is None:
+        return default
+    if not isinstance(v, str) or v not in VIDEO_MODES:
+        raise ValueError("video must be mp4|frames|both|none")
+    return v
 
 
 def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
@@ -363,22 +479,22 @@ def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
         )
 
 
-def _num(meta: dict, key: str, default: float) -> float:
-    """A numeric request field; anything else is the caller's mistake (400), never a simulator error."""
-    try:
-        return float(meta.get(key, default))
-    except (TypeError, ValueError):
-        raise ValueError(f"{key} must be a number") from None
-
-
-def do_submit(meta: dict, A: np.ndarray):
+def parse_submit(meta: dict, parts: dict) -> dict:
+    """Validate a /submit request completely; returns what do_submit executes. No physics, no state change."""
     if meta.get("type", ACTION_NAME) != ACTION_NAME:
         raise ValueError(f"type must be {ACTION_NAME} (see /spec action_types)")
+    raw = parts["actions"].get("data") if isinstance(parts.get("actions"), dict) else meta.get("actions", [])
+    try:
+        A = np.asarray(raw, dtype=np.float64)
+    except (TypeError, ValueError, OverflowError):
+        raise ValueError(f"actions must be a numeric array (T, {N})") from None
     if A.ndim != 2 or A.shape[1] != N:
         raise ValueError(f"{ACTION_NAME} actions must be (T, {N}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)):
         raise ValueError("actions contain NaN/inf")
     dt = _num(meta, "dt", CTRL_DT)
+    if not 0 < dt <= 1e6:
+        raise ValueError(f"dt must be a positive multiple of control_dt={CTRL_DT}")
     k = int(round(dt / CTRL_DT))
     if k < 1 or abs(k * CTRL_DT - dt) > 1e-6:
         raise ValueError(f"dt must be a positive multiple of control_dt={CTRL_DT}")
@@ -387,11 +503,30 @@ def do_submit(meta: dict, A: np.ndarray):
     interp = meta.get("interpolate", "linear")
     if interp not in ("hold", "linear"):
         raise ValueError("interpolate must be hold|linear")
-    cams = [c for c in (meta.get("cameras") or list(CAMS)[:1]) if c in CAMS] or list(CAMS)[:1]
+    cams = _cameras(meta, list(CAMS)[:1])
     fps = _fps(meta)
-    video = meta.get("video", "mp4")
+    video = _video(meta, "mp4")
     depth = bool(meta.get("include_depth", False))
     _frame_budget(cams, fps, A.shape[0] * dt, depth)
+    note = str(meta.get("note") or "")[:500]
+    return {"A": A, "dt": dt, "k": k, "interp": interp, "cams": cams, "fps": fps, "video": video, "depth": depth, "note": note}
+
+
+def parse_observe(meta: dict) -> dict:
+    """Validate an /observe request completely; returns what do_observe executes."""
+    cams = _cameras(meta, list(CAMS))
+    seconds = _num(meta, "seconds", 0)
+    fps = _fps(meta)
+    video = _video(meta, "frames")
+    depth = bool(meta.get("include_depth", False))
+    if seconds < 0 or seconds > MAX_WATCH_S:
+        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    _frame_budget(cams, fps, seconds, depth)
+    return {"cams": cams, "seconds": seconds, "fps": fps, "video": video, "depth": depth}
+
+
+def do_submit(q: dict):
+    A, dt, k, interp, cams, fps, video, depth = (q[x] for x in ("A", "dt", "k", "interp", "cams", "fps", "video", "depth"))
     rec = Recorder(cams, fps, depth)
     rec.tick(force=True)
     prev = np.asarray(S.targets, float).copy()
@@ -430,7 +565,7 @@ def do_submit(meta: dict, A: np.ndarray):
             "dt": dt,
             "interpolate": interp,
             "cameras": cams,
-            "note": str(meta.get("note") or "")[:500],
+            "note": q["note"],
             "control_steps": len(RECORD),
             "n_clipped_rows": n_clip,
             "task": task_info(),
@@ -444,15 +579,8 @@ def do_submit(meta: dict, A: np.ndarray):
     return out, rec.parts(video, fps)
 
 
-def do_observe(meta: dict):
-    cams = [c for c in (meta.get("cameras") or list(CAMS)) if c in CAMS] or list(CAMS)
-    seconds = _num(meta, "seconds", 0)
-    fps = _fps(meta)
-    video = meta.get("video", "frames")
-    depth = bool(meta.get("include_depth", False))
-    if seconds < 0 or seconds > MAX_WATCH_S:
-        raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    _frame_budget(cams, fps, seconds, depth)
+def do_observe(q: dict):
+    cams, seconds, fps, video, depth = (q[x] for x in ("cams", "seconds", "fps", "video", "depth"))
     rec = Recorder(cams, fps, depth)
     rec.tick(force=True)
     if seconds > 0 and not E["done"]:
@@ -501,19 +629,31 @@ def finalize() -> None:
                 "success": bool(det and r1["success"] and live["success"]),
                 "final_reward": float(r1["final_reward"]),
             }
+            # The verdict is final and on disk (finalized) before any video is rendered: the video never changes, hides
+            # or delays it (a slow or failing render, or a collect hook that stops waiting, leaves the verdict as it is).
             E["verdict"] = v
-            write_final()  # the verdict is on disk before any video is rendered
+            E["finalized"] = True
+            write_final()
             try:
-                ver.render_video(A, os.path.join(DATA, "replay.mp4"), every=max(2, len(A) // 600), fps=25)
+                tmp = os.path.join(DATA, "replay.tmp.mp4")  # rendered aside: a half-written replay.mp4 is never collected
+                ver.render_video(A, tmp, every=max(2, len(A) // 600), fps=25)
+                os.replace(tmp, os.path.join(DATA, "replay.mp4"))
+                if os.path.exists(os.path.join(DATA, "replay.tmp.last.png")):
+                    os.replace(os.path.join(DATA, "replay.tmp.last.png"), os.path.join(DATA, "replay.last.png"))
                 E["verdict"]["video"] = True
             except Exception:  # noqa: BLE001
                 traceback.print_exc()
         except Exception as exc:  # noqa: BLE001
             traceback.print_exc()
-            log({"ev": "finalize_error", "error": repr(exc)})
-            E["verdict"] = {"finalize_error": repr(exc)[:300]}
+            if not E["finalized"]:  # no verdict was reached: the verification itself failed
+                log({"ev": "finalize_error", "error": repr(exc)})
+                E["verdict"] = {"finalize_error": repr(exc)[:300]}
         E["finalized"] = True
-        write_final()
+        E["video_done"] = True
+        try:
+            write_final()
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
 
 
 def finish(reason: str) -> None:
@@ -567,6 +707,7 @@ class Hd(BaseHTTPRequestHandler):
         return b, {}
 
     def do_GET(self):
+        _touch()
         if self.path == "/spec":
             return self._json(200, SPEC)
         if self.path == "/status":
@@ -585,6 +726,7 @@ class Hd(BaseHTTPRequestHandler):
         return self._json(404, {"error": "no such endpoint"})
 
     def do_POST(self):
+        _touch()
         if self.path not in ("/submit", "/observe"):
             return self._json(404, {"error": "no such endpoint"})
         try:
@@ -606,16 +748,16 @@ class Hd(BaseHTTPRequestHandler):
 
     def _serve(self):
         meta, parts = self._req
+        if self.path == "/submit" and E["done"]:
+            return self._json(409, {"error": "episode finished", "reason": E["reason"]})
+        try:  # the whole request is checked before any physics: whatever is wrong with it is a 400 and changes nothing
+            if not isinstance(meta, dict) or not isinstance(parts, dict):
+                raise ValueError("the request's meta must be a JSON object")
+            q = parse_submit(meta, parts) if self.path == "/submit" else parse_observe(meta)
+        except (ValueError, TypeError, OverflowError, AttributeError, KeyError, IndexError) as exc:
+            return self._json(400, {"error": (str(exc) or type(exc).__name__)[:300]})
         try:
-            if self.path == "/submit":
-                if E["done"]:
-                    return self._json(409, {"error": "episode finished", "reason": E["reason"]})
-                A = np.asarray(parts["actions"]["data"] if "actions" in parts else meta.get("actions", []), np.float64)
-                out, blobs = do_submit(meta, A)
-            else:
-                out, blobs = do_observe(meta)
-        except ValueError as exc:
-            return self._json(400, {"error": str(exc)})
+            out, blobs = do_submit(q) if self.path == "/submit" else do_observe(q)
         except Exception as exc:  # noqa: BLE001
             traceback.print_exc()
             log({"ev": "error", "error": repr(exc)})
@@ -629,9 +771,6 @@ def _end_from_signal():
         if not E["done"]:
             finish("timeout")
     start_finalize()
-
-
-CALIB = calib()
 
 
 def _resume_or_start() -> None:
@@ -683,6 +822,9 @@ def _resume_or_start() -> None:
     E["calls"] = int(last.get("call", 0))
     E["rows"] = int(last.get("rows_total", 0))
     E["t0"] = float(starts[0]["ts"])
+    first = [e for e in ev if e.get("ev") == "first_request"]
+    if first:
+        E["t_first"] = float(first[0]["ts"])  # the agent's clock keeps running through a crash
     ended = [e for e in ev if e.get("ev") == "end"]
     if ended:
         E["done"] = True

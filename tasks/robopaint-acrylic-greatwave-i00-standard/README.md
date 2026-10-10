@@ -38,6 +38,9 @@ Same scene, exemplar and rule as `robopaint-acrylic-greatwave-i00-privileged` (s
 `environment/sim/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
 `max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
 `success` = both fresh-process replays of the recorded episode meet the rule (after the best single shift of the sheet, at most 5 mm along each axis, mean CIELAB ΔE <= 2.0, p90 ΔE <= 6.0, SSIM of L* >= 0.92, edge correlation >= 0.8, paint IoU >= 0.95 and at most 376 strokes) ∧ they agree exactly (computed in the sidecar after the agent is gone); every metric of the replayed sheet in `reward.json`; `/logs/verifier/replay.mp4`.
+A `final.json` that is missing, unreadable or without a verdict (the collect hook did not finish), and replays that could not
+run (`gpu_lost`, a replay process without a result), are an infrastructure failure (`infra_error = 1`), not the agent's 0;
+`sim_error = 1` marks an episode that a simulator error ended. The collect hook has 5400 s.
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -62,3 +65,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 ### Licences
 The exemplar is this robot's painting after Katsushika Hokusai, *The Great Wave off Kanagawa* (c. 1830-32), a public-domain work (Wikimedia Commons `File:Great Wave off Kanagawa2.jpg`, Public domain); the exemplar picture is CC0; libmypaint is ISC, the presets CC0: `environment/NOTICE-exemplar.md`.
+
+### Change Log
+- 2026-10-10: the verifier and the collect hook only (review of 2026-10-10, board 0067). A `final.json` that is missing, unreadable or without a verdict, and replays that could not run, are an infrastructure failure (`infra_error = 1`; a missing file was recorded as the agent's 0 with `infra_error = 0`); `reward.json` gains `sim_error` and always has `deterministic`; the hook writes `final.json` whole (temporary file + rename) and has 5400 s (was 3600 s). The verdict of an episode that was graded before is unchanged, and so are the instance, the picture and the rules: the task keeps its name.

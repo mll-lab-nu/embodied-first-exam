@@ -538,6 +538,29 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
 - The collect hook starts with `rcb_limited.py end`. A verdict the service already wrote (it gave up after crashes) is
   kept, and nothing is replayed. `reward.json` reports `sim_startups`, `resumes`, `resume_state_mismatch`, `gave_up` and
   `infra_error`.
+- No verdict is infrastructure, never the agent's 0 (standard mode, `tests/grade.py`, 2026-10-10): `infra_error = 1` when
+  `final.json` is missing, unreadable, or without a verdict (not `finalized`, or neither the replays' `deterministic`
+  nor a give-up after crashes), and when the replays could not run (`gpu_lost`, or a replay process without a result
+  although the episode had actions). `sim_error = 1` marks an episode that a simulator error ended. The hook writes
+  `final.json` whole (temporary file + rename).
+- Verifier time (2026-10-10). A trajectory may have 72,000 control steps (`rcb_brush.MAX_STEPS`), and the oil references
+  already have 49.7k-62.0k. Two fresh replays at the 67-102 steps/s measured above take 24-36 min plus two scene builds:
+  - privileged: `[verifier] timeout_sec = 3600` (was 1800, which a 62k-step reference at 67 steps/s already exceeded: the
+    trial had no reward); each replay process gets 1650 s (`--replay-timeout-s`), and one that runs past it is
+    `grader_error = 1`. The two replays stay sequential: two sessions at once would not fit the verifier's declared
+    minimum (2 CPUs, 3 GB).
+  - standard: the collect hook has 5400 s (was 3600): up to 1500 s for a service that is resuming to end its episode,
+    then the same two replays.
+- Privileged deliverable: a file that is not a readable trajectory (not an npz, pickled or object arrays, no `actions`,
+  a wrong shape, NaN/inf, more than 72,000 rows) is `bad_trajectory = 1` (was `grader_error = 1` for the unreadable
+  ones); every `reward.json` has `deterministic`.
+- The privileged `scorer` service has `restart: on-failure:6` (2026-10-10). It keeps no state a request needs: after a
+  restart the next `s.score()` replays the posted actions from the reset. Known limit: the scorer is inside the trial's
+  resource scope (PROTOCOL §2.10: in privileged mode every service is; `scripts/task_resources.toml` adds 5 GiB for it
+  to the trial's memory limit and caps it at 7 GiB). With `RCB_LIMITS_ENFORCE=1` an out-of-memory kill inside the
+  scorer would therefore count against the agent, which cannot enter that container but does decide how many actions
+  it posts. Taking it out of the scope is a change to `scripts/rcb_monitor/inject.py` (the service class) and the
+  limit rule, not to the task.
 
 ## Tooling (file names)
 | main's convention | RoboPaint |

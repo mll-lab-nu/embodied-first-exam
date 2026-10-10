@@ -46,6 +46,12 @@ Every physics step these primitives take is recorded while recording is on; `env
 turns False when a plan fails (later moves are skipped). Low-level control: `s.step(row)` with a row in the
 recorded layout (`s.action_layout`: 16 joint drive position targets, 16 velocity targets, left/right gripper
 command 0 = closed / 1 = open).
+Gripper state: the success predicate's gripper clauses (RoboTwin's `is_*_gripper_open()` / `is_*_gripper_close()`) are
+evaluated on the **finger joints' drive targets**, not on the two gripper-command columns of a row:
+`s.gripper_opening("left")` returns the (least open, most open) finger in command units, and a gripper is open when
+its least open finger is above 0.8, closed when its most open finger is below 0.2. A hand-written row therefore opens
+a gripper only through its finger position targets (the 7th–8th and 15th–16th of the 16); `env.open_gripper`,
+`env.close_gripper` and the other primitives set fingers and command together.
 
 CLI equivalent of the grader:
 `python /opt/tools/rcb_traj.py replay --task stamp_seal --instance /app/instance.json --traj /app/output/trajectory.npz`

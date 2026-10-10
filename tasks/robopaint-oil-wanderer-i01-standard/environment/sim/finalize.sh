@@ -8,7 +8,8 @@
 #      verifier's check) and score the replayed canvas; determinism = fresh process == fresh process, `live_matches_replay`
 #      compares the live episode with the replay.
 #   3. merge everything into final.json, the only thing the verifier sandbox grades. The score is computed only here: the agent
-#      never sees it.
+#      never sees it. final.json is always written whole (temporary file + rename): the verifier never reads half of one, and a
+#      final.json that is missing or has no verdict is graded as an infrastructure failure, not as the agent's 0.
 set -u
 DATA="${RCB_DATA:-/data}"; TOOL="${RCB_TOOL:?}"; TASK="${RCB_TASK:?}"; INSTANCE="${RCB_INSTANCE:?}"
 python /srv/rcb_limited.py end "$DATA" --timeout 1500; rc=$?
@@ -26,7 +27,9 @@ except Exception:  # noqa: BLE001
     out = {}
 out.update({"finalized": True, "replay_success": False, "deterministic": False, "infra_error": 1,
             "error": "infrastructure: the sim service did not end and dump the episode for the collect hook"})
-json.dump(out, open(p, "w")); print(json.dumps(out))
+with open(p + ".hook.tmp", "w") as f:
+    json.dump(out, f)
+os.replace(p + ".hook.tmp", p); print(json.dumps(out))
 PY
     exit 0
 fi
@@ -82,6 +85,9 @@ if r1.get("gpu_lost"):
     out["gpu_lost"] = True
     out["error"] = "infrastructure: the GPU was not accessible to new processes in the sim sidecar, so the episode could not be replayed"
 out["finalized"] = True
-json.dump(out, open(os.path.join(d, "final.json"), "w"))
+p = os.path.join(d, "final.json")
+with open(p + ".hook.tmp", "w") as f:
+    json.dump(out, f)
+os.replace(p + ".hook.tmp", p)
 print(json.dumps(out))
 PY

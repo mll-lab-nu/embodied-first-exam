@@ -64,7 +64,7 @@ main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
 scorer = { cpus = 2.0, memory_gb = 7.0, pids = 8192 }
 
 [verifier]
-timeout_sec = 1800.0
+timeout_sec = 3600.0              # two fresh replays of at most 72,000 control steps (rcb_brush.MAX_STEPS) at 67-102 steps/s, plus two scene builds
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 # Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.

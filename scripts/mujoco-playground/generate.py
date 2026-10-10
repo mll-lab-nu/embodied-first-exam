@@ -410,10 +410,27 @@ def values(env: str, inst: dict) -> dict:
     return v
 
 
+# README Change Log of the standard tasks (PROTOCOL §2.8: published tasks fixed in place; results before a change are not
+# retested), oldest first.
+STD_CHANGES = [
+    "2026-10-10 (review 0067): a `final.json` that is missing, unreadable or was never finalized by the collect hook is "
+    "graded `infra_error = 1` (no verdict on the agent); before, a missing one was a plain 0 and an unfinalized one was "
+    "graded as it stood. The collect hook writes `final.json` atomically. A request field of the wrong type (`dt` or "
+    "`seconds` null, `cameras` not a list of names, a `note` that is not a string) is answered 400 before any physics "
+    "instead of ending the episode with a 500. `meta[\"time_left_s\"]` counts from the agent's first call, not from the "
+    "service's start.",
+]
+STD_CHANGES_BARKOUR = [
+    "2026-10-10 (review 0067): `/spec` gives the control period of the `joint_position` action as 0.01 s; its text said "
+    "\"one per control step (1/50 s)\", contradicting `control_hz = 100`, the `dt` check and the instruction.",
+]
+
+
 def make(env: str, out: Path) -> tuple[Path, Path]:
     inst_path = HERE / "instances" / f"{env}.json"
     inst = json.loads(inst_path.read_text())
     v = values(env, inst)
+    v["change_log_std"] = "\n".join(f"- {c}" for c in STD_CHANGES + (STD_CHANGES_BARKOUR if "Barkour" in env else []))
     oracle = HERE / "oracles" / f"{env}.npy"
 
     p = out / f"{v['name']}-privileged"
