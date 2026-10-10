@@ -21,6 +21,9 @@
  "max_processes": 512,
  "mode": "privileged",
  "scope": "trial",
+ "scope_services": [
+  "main"
+ ],
  "sustain_sec": 60.0,
  "task": "behavior-set-up-a-coffee-station-in-your-kitchen-i00-privileged",
  "tick_sec": 5,

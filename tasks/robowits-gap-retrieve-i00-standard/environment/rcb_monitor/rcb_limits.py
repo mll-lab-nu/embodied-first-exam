@@ -12,11 +12,16 @@ The verifier step reads the monitor's sealed record (/var/rcb-monitor/, collecte
 channel the agent cannot write), recomputes every violation from the raw samples with its own copy of the limits
 (/tests/rcb_limits.json), and adds to /logs/verifier/reward.json:
   always:   resource_enforced, limits_violation_observed, resource_monitor_missing, peak_gpu_memory_gb, peak_memory_gb,
-            peak_processes, peak_disk_gb
+            peak_processes, peak_disk_gb, resource_emergency_kills; over_<metric>=1 for every violation
   enforced (the record's mode, RCB_LIMITS_ENFORCE=1) and violated: resource_limit_exceeded=1, success=0 (reward.txt 0),
-            success_before_limits = the grader's success, over_<metric>=1
-  enforced and no usable record: infra_error=1 (not a result)
-The reasons, in words, go to /logs/verifier/resource_limits.json.
+            success_before_limits = the grader's success
+  enforced and no usable record: infra_error=1 (not a result). Not enforced (the default): a missing or unusable
+            record is only reported (resource_monitor_missing=1); the grader's verdict stands.
+  RCB_LIMITS_ENFORCE neither 0/1/true/false: infra_error=1, resource_switch_error=1 (nobody knows what was asked for)
+A violation is a limit exceeded for sustain_sec within window_sec (disk: two measurements in a row), or a kernel OOM kill
+in the scope. The monitor's emergency kills (host protection) are counted, never violations by themselves.
+The reasons, in words, go to /logs/verifier/resource_limits.json. If this step itself fails, it says so in reward.json
+(resource_step_error=1, resource_monitor_missing=1; infra_error=1 when the switch asks for enforcement).
 """
 import json
 import os
@@ -28,6 +33,16 @@ METRICS = ("gpu_memory_gb", "memory_gb", "processes", "disk_gb")
 LIMIT_KEY = {"gpu_memory_gb": "max_gpu_memory_gb", "memory_gb": "max_memory_gb", "processes": "max_processes",
              "disk_gb": "max_disk_gb"}
 MAX_GAP_FRACTION = 0.10      # more of the agent phase than this unobserved: the record is not usable
+
+
+def parse_switch(value):
+    """RCB_LIMITS_ENFORCE -> (1 or 0, None), or (0, why) for a value that is neither on nor off (never a silent off)."""
+    s = str("" if value is None else value).strip().lower()
+    if s in ("", "0", "false"):
+        return 0, None
+    if s in ("1", "true"):
+        return 1, None
+    return 0, f"RCB_LIMITS_ENFORCE={value!r} is not one of 0, 1, true, false"
 
 
 def sustained(series, limit, sustain_sec, window_sec, tick_sec):
@@ -94,7 +109,9 @@ def consecutive(series, limit, n=2):
 
 
 def violations(samples, limits, events=()):
-    """Every violation in a record: [{metric, limit, at, peak}] (empty: none). samples: the record's sample dicts."""
+    """Every violation in a record: [{metric, limit, at, peak}] (empty: none). samples: the record's sample dicts.
+    A limit exceeded for sustain_sec within window_sec (disk: two measurements in a row), or a kernel OOM kill in the
+    scope. The monitor's own `emergency_kill` events protect the host and are not violations (PROTOCOL §2.10)."""
     tick = float(limits.get("tick_sec", 5))
     sustain = float(limits.get("sustain_sec", 60))
     window = float(limits.get("window_sec", 2 * sustain))
@@ -113,9 +130,6 @@ def violations(samples, limits, events=()):
         if e.get("event") == "oom" and e.get("scope"):
             out.append({"metric": "oom", "limit": None, "at": e.get("t"), "peak": e.get("count"),
                         "service": e.get("role")})
-        if e.get("event") == "emergency_kill":
-            out.append({"metric": "emergency_" + str(e.get("why", "")), "limit": e.get("limit"), "at": e.get("t"),
-                        "peak": e.get("observed")})
     return sorted(out, key=lambda v: v["at"] or 0)
 
 
@@ -172,6 +186,11 @@ def record_problems(summary, samples, events, limits):
         why.append("monitor fatal: " + "; ".join(str(e.get("why")) for e in fatal)[:300])
     if samples and summary and not summary.get("scope_seen"):
         why.append("the monitor never found the containers it watches (no beacon seen)")
+    if float(limits.get("max_gpu_memory_gb") or 0) > 0 and samples:
+        blind = sum(1 for s in samples if (s.get("scope") or {}).get("gpu_unmeasured"))
+        if blind / len(samples) > MAX_GAP_FRACTION:
+            why.append(f"NVML did not tell the GPU memory of processes in scope in {blind} of {len(samples)} samples "
+                       "(MIG / vGPU?): the GPU-memory limit was not measured")
     if len(samples) >= 2:
         tick = float(limits.get("tick_sec", 5))
         span = samples[-1]["t"] - samples[0]["t"]
@@ -181,29 +200,49 @@ def record_problems(summary, samples, events, limits):
     return why
 
 
+def switch_of(summary):
+    """(enforce, why the switch cannot be read or None): the record's mode when there is a record, else this step's
+    own environment (the same run-time variable, task.toml [verifier.env])."""
+    if summary and summary.get("switch_error"):
+        return 0, str(summary["switch_error"])
+    if summary and "enforce" in summary:
+        return parse_switch(summary.get("enforce"))
+    return parse_switch(os.environ.get("RCB_LIMITS_ENFORCE"))
+
+
 def verify(argv=()):
     log = os.environ.get("RCB_VERIFIER_LOGS", "/logs/verifier")
     tests = os.path.dirname(os.path.abspath(__file__))
     limits = read_json(os.path.join(tests, "rcb_limits.json")) or {}
     summary, samples, events = load_record()
-    enforce = int(bool(int((summary or {}).get("enforce", os.environ.get("RCB_LIMITS_ENFORCE", "0")) or 0)))
+    enforce, switch_error = switch_of(summary)
     rj_path, rt_path = os.path.join(log, "reward.json"), os.path.join(log, "reward.txt")
     reward = read_json(rj_path)
     have_grade = isinstance(reward, dict)
     reward = reward if have_grade else {}
     problems = record_problems(summary, samples, events, limits)
+    if switch_error and not any(switch_error in p for p in problems):
+        problems.append(switch_error)
     viol = violations(samples, limits, events) if samples else []
     pk = peaks(samples)
+    emergency = [e for e in events if e.get("event") == "emergency_kill"]
     detail = {"format": FORMAT, "enforced": enforce, "limits": {k: v for k, v in limits.items()},
-              "peaks": pk, "violations": viol, "record_problems": problems,
-              "monitor": {k: (summary or {}).get(k) for k in ("started", "ended", "n_samples", "capabilities", "killed")}}
+              "peaks": pk, "violations": viol, "record_problems": problems, "emergency_kills": emergency,
+              "monitor": {k: (summary or {}).get(k) for k in ("started", "ended", "n_samples", "capabilities", "killed",
+                                                               "restarts", "disk_baseline_gb", "disk_partial_walks")}}
     add = {"resource_enforced": enforce, "limits_violation_observed": int(bool(viol)),
            "resource_monitor_missing": int(bool(problems)),
            "peak_gpu_memory_gb": pk["gpu_memory_gb"], "peak_memory_gb": pk["memory_gb"],
-           "peak_processes": pk["processes"], "peak_disk_gb": pk["disk_gb"]}
+           "peak_processes": pk["processes"], "peak_disk_gb": pk["disk_gb"],
+           "resource_emergency_kills": len(emergency)}
     for v in viol:
         add["over_" + v["metric"]] = 1
-    if enforce and viol:
+    if switch_error:
+        # nobody knows whether enforcement was asked for: not a result in either mode
+        add["resource_switch_error"] = 1
+        add["infra_error"] = 1
+        detail["verdict"] = "not a result: " + switch_error
+    elif enforce and viol:
         # a confirmed violation fails the trial whatever the deliverable (and wins over a grader's infra flag: the
         # agent's processes were stopped for it)
         add["success_before_limits"] = int(reward.get("success", 0) or 0)
@@ -219,17 +258,19 @@ def verify(argv=()):
         add["infra_error"] = 1
         detail["verdict"] = "not a result: the resource monitor's record is not usable"
     else:
+        # not enforced: observe only. A missing or unusable record is reported (resource_monitor_missing), never infra.
         detail["verdict"] = ("observed only (RCB_LIMITS_ENFORCE=0): " + ", ".join(v["metric"] for v in viol)) if viol \
-            else "within limits"
+            else "within limits" if not problems else "observed only (RCB_LIMITS_ENFORCE=0): no usable record"
     os.makedirs(log, exist_ok=True)
-    if have_grade or (enforce and viol):
+    failed = enforce and viol and not switch_error
+    if have_grade or failed:
         reward.update(add)
         reward.setdefault("success", 0)
         tmp = rj_path + ".tmp"
         with open(tmp, "w") as f:
             json.dump(reward, f, indent=1)
         os.replace(tmp, rj_path)
-        if enforce and viol:
+        if failed:
             with open(rt_path, "w") as f:
                 f.write("0\n")
     with open(os.path.join(log, "resource_limits.json"), "w") as f:
@@ -238,11 +279,37 @@ def verify(argv=()):
     return 0
 
 
+def step_failed(err):
+    """This step raised: say so in the grader's reward.json instead of leaving the trial without its resource fields
+    (and, when the switch asks for enforcement or cannot be read, as an infrastructure error: nothing was judged)."""
+    log = os.environ.get("RCB_VERIFIER_LOGS", "/logs/verifier")
+    rj_path = os.path.join(log, "reward.json")
+    reward = read_json(rj_path)
+    enforce, switch_error = parse_switch(os.environ.get("RCB_LIMITS_ENFORCE"))
+    add = {"resource_step_error": 1, "resource_monitor_missing": 1, "resource_enforced": enforce}
+    if enforce or switch_error:
+        add["infra_error"] = 1
+    if isinstance(reward, dict):
+        reward.update(add)
+        tmp = rj_path + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(reward, f, indent=1)
+        os.replace(tmp, rj_path)
+    with open(os.path.join(log, "resource_limits.json"), "w") as f:
+        json.dump({"format": FORMAT, "enforced": enforce, "verdict": "the verifier's resource step failed: " + err,
+                   "record_problems": [err]}, f, indent=1)
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["verify"]:
         try:
             sys.exit(verify(sys.argv[2:]))
         except Exception as e:                      # never break the grader's own verdict
-            print(f"resource limits: verifier step failed: {type(e).__name__}: {e}", file=sys.stderr)
+            msg = f"{type(e).__name__}: {e}"
+            print(f"resource limits: verifier step failed: {msg}", file=sys.stderr)
+            try:
+                step_failed(msg)
+            except Exception:
+                pass
             sys.exit(0)
     print(__doc__)

@@ -22,10 +22,13 @@
  "gpu": true,
  "max_disk_gb": 10.0,
  "max_gpu_memory_gb": 5.0,
- "max_memory_gb": 21.0,
+ "max_memory_gb": 16.0,
  "max_processes": 512,
  "mode": "privileged",
  "scope": "trial",
+ "scope_services": [
+  "main"
+ ],
  "sustain_sec": 60.0,
  "task": "robopaint-xingshu-huifenghechang-i00-privileged",
  "tick_sec": 5,

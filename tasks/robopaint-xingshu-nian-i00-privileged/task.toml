@@ -42,7 +42,7 @@ measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "trial"
 max_gpu_memory_gb = 5.0
-max_memory_gb = 21.0
+max_memory_gb = 16.0
 max_processes = 512
 max_disk_gb = 10.0
 disk_paths = ["/app", "/tmp", "/root"]
@@ -51,7 +51,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 5.0
 trial_max_memory_gb = 21.0
-measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)), + 5 GiB for the scorer service; processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, mll-4090-1, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
@@ -76,7 +76,7 @@ allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.
 [environment]
 build_timeout_sec = 1800.0
 cpus = 8
-memory_mb = 16384
+memory_mb = 20480
 
 [verifier.environment]
 build_timeout_sec = 1800.0

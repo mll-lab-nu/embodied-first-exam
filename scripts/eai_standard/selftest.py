@@ -357,6 +357,52 @@ def simulator_error_ends_the_episode():
 
 
 @case
+def malformed_requests_are_400_and_change_nothing():
+    """PROTOCOL §4.6: a request the service cannot read is the caller's mistake (400): no physics, the episode goes on.
+    Raw JSON bodies, as an agent without the shipped client may send them."""
+    c = Compose("malformed")
+    try:
+        r = c.robot()
+        r.submit("joint_position", chunk(3, 0.1), note="before")
+        st0 = r.status()
+        big = "[[" + "9" * 400 + ", 0, 0]]"                                   # an integer too large for a float
+        bad = [
+            ("/submit", {"type": "joint_position", "actions": {"a": 1}}),      # TypeError in numpy, not ValueError
+            ("/submit", {"type": "joint_position", "actions": None}),
+            ("/submit", {"type": "joint_position", "actions": "abc"}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, {"x": 1}]]}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0], [0, 0, 0]]}),
+            ("/submit", '{"type": "joint_position", "actions": ' + big + "}"),
+            ("/submit", '{"type": "joint_position", "actions": [[NaN, 0, 0]]}'),
+            ("/submit", '{"type": "joint_position", "actions": [[1e999, 0, 0]]}'),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "dt": [0.05]}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "dt": "soon"}),
+            ("/submit", '{"type": "joint_position", "actions": [[0, 0, 0]], "dt": Infinity}'),
+            ("/submit", {"type": ["joint_position"], "actions": [[0, 0, 0]]}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "cameras": 5}),
+            ("/submit", {"type": "joint_position", "actions": [[0, 0, 0]], "video_fps": {"fps": 10}}),
+            ("/submit", [1, 2, 3]),
+            ("/observe", {"seconds": [1]}),
+            ("/observe", {"seconds": {"s": 1}}),
+            ("/observe", '{"seconds": NaN}'),
+            ("/observe", {"cameras": "top", "seconds": 0, "video": 3}),
+        ]
+        for path, body in bad:
+            data = body if isinstance(body, str) else json.dumps(body)
+            x = requests.post(c.url + path, data=data, headers={"Content-Type": "application/json"}, timeout=10)
+            expect(x.status_code == 400, f"400 for {path} {data[:60]} (got {x.status_code}: {x.text[:120]})")
+            st = r.status()
+            expect(not st["done"] and st["step"] == st0["step"] and st["control_steps"] == st0["control_steps"],
+                   f"nothing ran and the episode goes on after {data[:60]}: {st}")
+        expect(r.status()["calls"] == st0["calls"], "a refused request is not a call of the episode")
+        res = r.submit("joint_position", chunk(2, 0.2), note="after")
+        expect(res.meta["executed_rows"] == 2 and r.status()["step"] == st0["step"] + 2, "a good request still runs")
+        expect(not [e for e in c.events() if e.get("ev") == "error"], "no simulator error was logged")
+    finally:
+        c.down()
+
+
+@case
 def client_accepts_both_names():
     for p, ok in (("eai-standard/2.2", True), ("eai-standard/2.1", True), ("rcb-limited/2.1", True), ("rcb-limited/1.0", False), ("x/2.2", False)):
         expect(p.startswith(rcb_client.ACCEPTED) == ok, p)

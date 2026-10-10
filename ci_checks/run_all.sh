@@ -15,6 +15,7 @@ for t in "${tasks[@]}"; do
 done
 bash "$root/ci_checks/check-dataset-manifest.sh" || rc=1
 bash "$root/ci_checks/check-generated-tasks.sh" || rc=1              # generators with a check mode: tasks/ is what they write
+bash "$root/ci_checks/check-unit-tests.sh" || rc=1                   # graders / collect hooks: the tests that need only the standard library
 bash "$root/ci_checks/check-robopaint-tooling.sh" || rc=1            # RoboPaint: tooling byte-identical within a family / stack
 bash "$root/ci_checks/check-tooling-identity.sh" || rc=1             # D9 shared sources; the eai-standard/2.2 layer = scripts/eai_standard/
 bash "$root/ci_checks/check-standard-client.sh" || rc=1              # standard agent + verifier images: the pinned client base and pins
