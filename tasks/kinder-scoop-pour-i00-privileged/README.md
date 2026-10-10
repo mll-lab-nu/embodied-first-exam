@@ -7,7 +7,7 @@
 | Twin | `kinder-scoop-pour-i00-standard` |
 | Simulator / robot | `kinder` / `tidybot-plus-plus` |
 | Family / instance | `scoop-pour` / seed 0 |
-| Oracle | `none` — none known: GPT-6 Luna failed both modes, and no rollout of this instance is published; human review in PR #8 |
+| Oracle | `none` — the privileged-mode trajectories of runs `codex-gpt6_astra-high` (845 steps) and `codex-gpt6_sol-high` (770 steps) of 2026-10-04, each scored 1 by the privileged verifier (two replays, the same final state; verifier and instance unchanged since); no standard-mode example is known yet (docs/benchmarks/kinder.md, Open); human review in PR #8 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
 
