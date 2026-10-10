@@ -61,7 +61,7 @@ what it heard, the serve); never the ball's or the opponent's state, nor the see
   clock ran, the time its stalls dropped, their ratio), `held_steps`, `requests_refused` and `request_busy_s`: evidence,
   which decides no verdict. The agent's requests cannot slow the clock (the shared 2.3 layer, since 2026-10-10: bodies
   are read, decoded and checked off the simulator's thread, waiting requests are served once the clock has caught up,
-  the cameras are rendered once per control step; `docs/LIMITED_MODE_PROTOCOL.md`).
+  the cameras are rendered once per control step; `docs/STANDARD_MODE.md`).
 
 ## Per-benchmark exceptions (owner, 2026-10-08; PROTOCOL §4b)
 | | PROTOCOL §4b | RoboOlympics | why |

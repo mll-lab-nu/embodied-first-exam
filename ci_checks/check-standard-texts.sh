@@ -2,21 +2,19 @@
 # World-frame information in standard-mode texts (PROTOCOL §2.5, D7: decided per benchmark, consistent within it). This
 # check enforces the declaration of ten benchmarks only: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, RoboTangle,
 # YAMLab, LabUtopia and AutoBio
-# (docs/benchmarks/<bench>.md, "World-frame information"; eai-standard/2.2 § Never provided). Their standard tasks never
+# (docs/benchmarks/<bench>.md, "World-frame information"; docs/STANDARD_MODE.md §10, Never provided). Their standard tasks never
 # say WHERE things are in the world: no object poses or positions and no world coordinates of workspace items (table /
 # sheet heights, sheet or well centres, a pixel-to-world formula, a camera's distance to the scene), in anything that
 # describes the task: instruction.md, README.md, the task.toml description. Names, inventories, categories, sizes,
 # colours and a detailed goal are provided; so are the robot (its base pose included), camera calibration and world
 # conventions (BEHAVIOR's "the floor is the plane z = 0" defines its world frame and stays). Only what a pattern can see
 # is checked; a review covers the rest. Every other benchmark decides for itself and is not checked here; privileged
-# tasks are privileged by design; the RoboPaint line family (excluded from the benchmark, still 2.0) is not checked.
-# Task dirs: <bench>-...-standard (legacy spelling: -limited). Usage: check-limited-texts.sh tasks/<task-dir>
+# tasks are privileged by design.
+# Task dirs: <bench>-...-standard. Usage: check-standard-texts.sh tasks/<task-dir>
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"
 case "$n" in
-  robopaint-line-*) exit 0 ;;
   behavior-*-standard|robolab-*-standard|robowits-*-standard|robopaint-*-standard|maniguard-*-standard|molmospaces-*-standard|robotangle-*-standard|yamlab-*-standard|labutopia-*-standard|autobio-*-standard) ;;
-  behavior-*-limited|robolab-*-limited|robowits-*-limited|robopaint-*-limited) ;;
   *) exit 0 ;;
 esac
 python3 - "$t" <<'PY'

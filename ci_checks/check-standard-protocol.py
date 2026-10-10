@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""eai-standard/2.2 (formerly rcb-limited/2.2) conformance test, run against a LIVE sim service (docs/STANDARD_MODE_2_2.md).
+"""eai-standard/2.2 (formerly rcb-limited/2.2) conformance test, run against a LIVE sim service (docs/STANDARD_MODE.md).
 
-    check-limited-protocol.py --url http://127.0.0.1:8000 [--task tasks/<t>-standard] [--out DIR] [--watch 0.5]
-    check-limited-protocol.py --launch tasks/<t>-standard [--port 18000] [--out DIR]   # compose up the task's sidecar, test, down
+    check-standard-protocol.py --url http://127.0.0.1:8000 [--task tasks/<t>-standard] [--out DIR] [--watch 0.5]
+    check-standard-protocol.py --launch tasks/<t>-standard [--port 18000] [--out DIR]   # compose up the task's sidecar, test, down
 
 It drives the service through the task's own shipped client (environment/rcb_client.py) where the protocol allows, and
 through raw HTTP for the protocol-level cases (404s, 2.0/2.1 requests, malformed bodies). Checked:
   /spec     2.2 keys and nothing unknown; cameras (intrinsics, mounting), robot_spec (joints with real limits, grippers,
             controller gains, TCP), world, kinematics, depth, proprio groups; budget == the task's [agent].timeout_sec;
   never     no forbidden field anywhere (segmentation, object poses, physical parameters); nothing in `static` or the limited
-            texts says where things are (positions, heights, centres, world coordinates: check-limited-texts.sh), while names,
+            texts says where things are (positions, heights, centres, world coordinates: check-standard-texts.sh), while names,
             sizes and colours may stay (listed as INFO); response parts and meta keys from the allowed sets;
   frames    one frame axis: proprio rows = frame_step = frame_time_s = extrinsic_cv/<cam> = depth_frames/<cam> frames;
             time = step / control_hz; meta.cameras = the last frame's pose; static cameras never move;
@@ -198,7 +198,7 @@ def check_spec(rep: Report, spec: dict, task: Path | None) -> None:
     for path, v in leaves(st, "static"):
         rep.add("INFO", "spec.static (scene fact, no position)", f"{path} = {json.dumps(v)[:160]}")
     if task is not None:
-        tx = subprocess.run(["bash", str(Path(__file__).resolve().parent / "check-limited-texts.sh"), str(task)], capture_output=True, text=True)
+        tx = subprocess.run(["bash", str(Path(__file__).resolve().parent / "check-standard-texts.sh"), str(task)], capture_output=True, text=True)
         rep.ok(tx.returncode == 0, "task.limited_texts", (tx.stdout.strip() or "no inventories, sizes or workspace parameters in the texts")[:1500])
     # cameras
     cams = spec.get("cameras") or {}

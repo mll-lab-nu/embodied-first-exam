@@ -3,7 +3,7 @@
 # Isaac Sim needs an RTX-class GPU even headless (PhysX itself runs on the CPU). The sidecar is TRUSTED: its Kit cache is
 # the trusted volume, never mounted where agent code runs (Isaac keeps generated Python there that Kit imports); it has no
 # fixed name, so every trial's compose project gets its own (Harbor's teardown deletes it).
-# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes and compose restarts the
+# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes and compose restarts the
 # same container (its /data kept); the service resumes the episode from its journal. RCB_STARTUP_TIMEOUT_S: the startup
 # watchdog, at least twice the slowest measured scene build (99-217 s, docs/benchmarks/robolab.md).
 services:

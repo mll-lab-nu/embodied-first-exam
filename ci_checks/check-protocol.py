@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""Protocol v1.x conformance report (docs/PROTOCOL.md; v1.1 added the realtime mode). Prints one summary line per rule with a count and
-a few examples. Rules tagged `legacy:` (the base-image registry move, §7) are warnings; every other rule fails the check.
-Set RCB_PROTOCOL_STRICT=1 to fail on `legacy:` too.
+"""Task-protocol conformance report (docs/PROTOCOL.md): the protocol version each mode may declare, the `oracle` fields,
+no placeholder solve.sh, base images from the one registry, no results/ in the repository, no personal paths. Prints
+one summary line per rule with a count and a few examples; every rule fails the check. Names, modes and the other
+task.toml fields are check-task-fields.sh's; that test.sh clears /logs/verifier first is check-verifier-isolation.sh's.
 
-Rules tagged "legacy" are the ones expected until the migration lands (old names, old registry); every other rule must
-be clean for new tasks.
-
-Usage: check-protocol-v1.py [task dirs...]   (default: every task under tasks/ plus repository-wide checks)
+Usage: check-protocol.py [task dirs...]   (default: every task under tasks/ plus repository-wide checks)
 """
 import os
 import re
@@ -20,11 +18,8 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = "ghcr.io/mll-lab-nu/eai-"
 PROTOCOLS = {"eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"}   # standard mode (2.4: the operations capability, issue #89)
 REALTIME_PROTOCOLS = {"eai-standard/2.3"}                # standard-realtime mode (PROTOCOL §4b): 2.3 = the realtime capability
-LEGACY_PROTOCOLS = {"rcb-limited/2.1"}
 PERSONAL_PATH = re.compile(rb"/(home|Users)/[A-Za-z0-9_.-]+/")
 TEXT_SUFFIXES = {".md", ".toml", ".py", ".sh", ".yaml", ".yml", ".json", ".jsonl", ".txt", ".cfg", ".xml", ".urdf", ""}
-# `test.sh` must clear the verifier log directory before anything else (first non-comment command after `set`/`mkdir`).
-CLEAR_LOGS = re.compile(r"^(rm\s+-[rRf]+\s+/logs/verifier/\*|find\s+/logs/verifier\s+-mindepth\s+1\b.*(-delete|-exec\s+rm))")
 
 hits: dict[str, list[str]] = defaultdict(list)
 
@@ -57,21 +52,15 @@ def check_task(task: Path) -> None:
     name = task.name
     meta = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
     mode = meta.get("mode")
-    if name.endswith("-limited") or mode == "limited":
-        warn("mode name `limited` / `-limited` (use `standard` / `-standard`)", name)
     if mode is None:
         warn("missing `mode` (privileged | standard | standard-realtime)", name)
-    if "tier" in meta:
-        warn("deprecated `tier` field (use `mode`)", name)
     # whole suffixes only: `-standard-realtime` does not end in `-standard`, and `mode` is compared exactly
     realtime = mode == "standard-realtime" or name.endswith("-standard-realtime")
-    standard = not realtime and (mode in ("standard", "limited") or name.endswith(("-limited", "-standard")))
+    standard = not realtime and (mode == "standard" or name.endswith("-standard"))
     if name.endswith("-realtime") and not name.endswith("-standard-realtime") or mode == "realtime":
         warn("mode name `realtime` / `-realtime` (the third mode is `standard-realtime`, PROTOCOL D12)", name)
     proto = meta.get("protocol")
-    if standard and proto in LEGACY_PROTOCOLS:
-        warn("protocol spelled `rcb-limited/2.1` (use `eai-standard/2.1`)", name)
-    elif standard and proto not in PROTOCOLS:
+    if standard and proto not in PROTOCOLS:
         warn(f"standard-mode `protocol` not in {sorted(PROTOCOLS)}", f"{name} ({proto})")
     if realtime and proto not in REALTIME_PROTOCOLS:
         warn(f"standard-realtime `protocol` not in {sorted(REALTIME_PROTOCOLS)}", f"{name} ({proto})")
@@ -95,12 +84,6 @@ def check_task(task: Path) -> None:
         if ref.startswith("ghcr.io/") and not ref.startswith(REGISTRY):
             warn("base image outside the registry (`ghcr.io/mll-lab-nu/eai-<name>`, PROTOCOL §2.4)", f"{name}: {ref}")
 
-    test_sh = task / "tests/test.sh"
-    if test_sh.is_file():
-        cmds = [c for c in commands(test_sh) if not re.match(r"(set\s|mkdir\s+-p\s+/logs/verifier\s*$)", c)]
-        if not cmds or not CLEAR_LOGS.match(cmds[0]):
-            warn("`tests/test.sh` does not clear /logs/verifier first (`rm -rf /logs/verifier/*`)", name)
-
     if (task / "results").exists():
         warn("results/ in a task directory (results are published on the results site, PROTOCOL D3)", name)
 
@@ -116,7 +99,7 @@ def check_repository() -> None:
         p = ROOT / f
         if f.startswith("third_party/") or not p.is_file() or p.suffix not in TEXT_SUFFIXES or p.stat().st_size > 5_000_000:
             continue
-        if f.startswith("ci_checks/check-protocol-v1.py"):
+        if f == "ci_checks/check-protocol.py":
             continue
         if PERSONAL_PATH.search(p.read_bytes()):
             warn("personal absolute path (/home/<user>/ or /Users/<user>/)", f)
@@ -133,14 +116,11 @@ def main() -> int:
     if not hits:
         print(f"protocol v1.2-rc: {len(tasks)} task(s) conform")
         return 0
-    strict = os.environ.get("RCB_PROTOCOL_STRICT") == "1"
-    hard = {r: w for r, w in hits.items() if not r.startswith("legacy")}
-    print(f"protocol v1.2-rc: {'violations' if hard or strict else 'warnings'} "
-          "(`legacy:` rules are accepted until the image move, docs/PROTOCOL.md §7; all others fail):")
-    for rule, where in sorted(hits.items(), key=lambda kv: (not kv[0].startswith("legacy"), -len(kv[1]))):
+    print("protocol v1.2-rc: violations (docs/PROTOCOL.md):")
+    for rule, where in sorted(hits.items(), key=lambda kv: -len(kv[1])):
         examples = ", ".join(where[:3]) + (", ..." if len(where) > 3 else "")
-        print(f"  {'WARN' if rule.startswith('legacy') else 'FAIL'} {len(where):4d}  {rule}: {examples}")
-    return 1 if hard or strict else 0
+        print(f"  FAIL {len(where):4d}  {rule}: {examples}")
+    return 1
 
 
 if __name__ == "__main__":

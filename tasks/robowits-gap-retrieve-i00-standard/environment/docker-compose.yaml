@@ -1,7 +1,7 @@
 # Standard mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # Genesis runs physics on the CPU (bit-deterministic) and needs the GPU only for EGL camera rendering.
-# Crash recovery (docs/STANDARD_MODE_2_2.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 # The BlenderKit models this task loads may not be redistributed, so they are not in the image: they come read-only
 # from the host's folder $RCB_ROBOWITS_BLENDERKIT (images/robowits/NOTICE).

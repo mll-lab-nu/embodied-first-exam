@@ -121,7 +121,7 @@ through the robot's joint targets alone, (b) whose success check can be stated w
   every quantity relative to where things start ("more than 10 cm above where it stood", "pushed in more than 5 mm",
   "along the forward axis of the arm's base") and never a world coordinate or an object pose; the arm's base pose is
   in `/spec` (`robot_spec.base`). LabUtopia's standard tasks join the declaration of eai-standard/2.2 §10 and are
-  checked by `ci_checks/check-limited-texts.sh`.
+  checked by `ci_checks/check-standard-texts.sh`.
 - **Texts** are in `scripts/labutopia/families.json` (goal in both wordings, scene, inventory).
 - **Budget: 5400 s** (D8), both modes, the same as RoboLab's (also on Isaac Sim): the first simulator with its
   renderer in a container takes 5 to 27 minutes to start (below), which a standard task pays before its service
@@ -308,7 +308,7 @@ On the authoring host (Intel Xeon Platinum 8559C, 8 vCPUs, 62 GB of RAM; RTX PRO
   15 to 16 minutes, of which the service's scene took 277 to 304 s and 786 to 811 s to build.
 - **`harbor run -a nop`, all 18:** reward 0 on all. Privileged: no trajectory. Standard: the episode times out with no
   control step executed; its state, live and in both replays, is the instance's recorded start state.
-- **Protocol conformance** (`ci_checks/check-limited-protocol.py --launch`, against the live service):
+- **Protocol conformance** (`ci_checks/check-standard-protocol.py --launch`, against the live service):
   `labutopia-pick-i00-standard` and `labutopia-heat-liquid-i00-standard`, one per laboratory stage: both pass all 205
   checks.
 - **Crash recovery** (`scripts/labutopia/kill_test.sh`, `labutopia-pick-i00-standard`): the service, killed with

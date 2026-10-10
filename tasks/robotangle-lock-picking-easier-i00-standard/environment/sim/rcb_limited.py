@@ -1,5 +1,5 @@
-"""eai-standard/2.4: the 2.2 layer (the HTTP layer, the protocol helpers and the crash recovery; docs/STANDARD_MODE_2_2.md,
-the 2.1 base is docs/LIMITED_MODE_PROTOCOL.md) plus the operations capability of docs/STANDARD_MODE_2_4.md: operation ids
+"""eai-standard/2.4: the 2.2 layer (the HTTP layer, the protocol helpers and the crash recovery; docs/STANDARD_MODE.md Part 2,
+the 2.1 base is its Part 1) plus the operations capability of its Part 4: operation ids
 and request deadlines (408 / 409), GET /operations/<id>, the service-owned call watchdog, the physics-tick ledger
 (journal.ticks.i64) and fsynced journals. First served by RoboTangle (whose release called it 2.3).
 
@@ -407,7 +407,7 @@ def check_spec(spec: dict) -> None:
         raise RuntimeError("default_cameras must be cameras")
 
 
-# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/STANDARD_MODE_2_2.md)
+# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/STANDARD_MODE.md)
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "900"))     # a task with a slower scene build sets more
 MAX_CALL_WALL_S = float(os.environ.get("RCB_MAX_CALL_WALL_S", "900"))         # < the client's 1800 s /submit read timeout

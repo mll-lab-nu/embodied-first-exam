@@ -1,7 +1,7 @@
 """Standard-mode verifier: reads what the sim service (which the agent could not touch) wrote:
 /out/final.json (live success, two fresh-process replays of the recorded trajectory, determinism, the crash-recovery
 record), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic.
-Numeric-only reward.json (docs/PROTOCOL.md §2.6, §4.8; docs/STANDARD_MODE_2_2.md §13.2).
+Numeric-only reward.json (docs/PROTOCOL.md §2.6, §4.8; docs/STANDARD_MODE.md §13.2).
 
 infra_error = 1 means no verdict on the agent (2026-10-10): final.json is the trusted sidecar's own file, so when it is
 missing (the service never came up, or its container was gone), unreadable, not finalized (the collect hook did not

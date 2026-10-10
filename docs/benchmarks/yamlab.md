@@ -140,7 +140,7 @@ the simulator to 2e-7 m), and thin primitives: `move_ee` (both arms together, Is
   USDs' URLs rewritten to the copies by `images/yamlab/localize_assets.py`). Measured offline with a cold Kit cache: no
   asset error, the same scene and final-state hashes as online, frames within renderer noise of the online ones.
 
-## Crash recovery (standard mode, docs/STANDARD_MODE_2_2.md §13)
+## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
 Resume class `exact`: the resumed service is a fresh process whose journal replay is that process's first run, so the
 state hash at the last checkpoint must match exactly (else `resume_failed`, `infra_error`). `RCB_STARTUP_TIMEOUT_S = 1800`
 (the compose file's value; see Time budget).
@@ -175,7 +175,7 @@ budget); a privileged trajectory may hold at most that many rows.
 and `ee_pose` (16: both tool frames + both gripper targets per row, closed-loop differential IK, at most 0.25 m/s); cameras
 `top`, `left_wrist`, `right_wrist` (640×480, z-depth); `/kinematics` from numpy models of both arms (`q` = left joint1..6,
 right joint1..6); 58 proprio columns (joints and fingers, both tool poses, gripper targets, velocities, gripper openings,
-arm efforts). STANDARD_MODE_2_2.md §16. Requests are checked completely before the first control step, as RoboLab's
+arm efforts). STANDARD_MODE.md §16. Requests are checked completely before the first control step, as RoboLab's
 (docs/benchmarks/robolab.md, Standard mode): wrong types, out-of-range values, an `ee_pose` position more than 3 m from
 the world origin on any axis or a zero quaternion are 400s that execute nothing.
 
@@ -183,8 +183,8 @@ the world origin on any axis or a zero quaternion are 400s that execute nothing.
 - **Tooling: thin wrappers only.** IK moves, joint moves, gripper commands, hold, plus the frozen instance, state, stage
   flags, recording, replay and rendering. Task-level skills (grasp, lift, handover, place, hang) are never added to the
   agent's tooling.
-- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE_2_2.md §10,
-  `check-limited-texts.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
+- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+  `check-standard-texts.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
   privileged state through the tooling and the world heights of the success check in the instruction.
 
 ## Image and host

@@ -17,7 +17,7 @@ Inputs, all in the repository (Python standard library only, plus scripts/task_c
                  layer with the fixes of the 2026-10-10 review (docs/benchmarks/robotangle.md, "Fixes applied on main");
                  replay.py and the standard oracle player verbatim
   scripts/eai_standard/v2_4/ + scripts/eai_standard/
-                 the eai-standard/2.4 layer (docs/STANDARD_MODE_2_4.md, issue #89): rcb_limited.py and rcb_client.py
+                 the eai-standard/2.4 layer (docs/STANDARD_MODE.md, issue #89): rcb_limited.py and rcb_client.py
                  from v2_4/, rcb1.py, run.sh and the client pins from scripts/eai_standard/. The release called its
                  layer "2.3"; that number went to the realtime capability (#86), so the layer and the texts say 2.4
   packages/      per task, the upstream texts of the graded package (task.toml, README.md, instruction.md, Dockerfiles,
@@ -51,9 +51,9 @@ VERSION = (ROOT / "images/robotangle/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-robotangle:{VERSION}"
 ROBOT = {"aloha": "aloha-2", "panda_robotiq": "franka-robotiq-2f85"}
 ROBOT_WORDS = {"(aloha, Genesis)": "(ALOHA 2, Genesis)", "(panda_robotiq, Genesis)": "(Franka Panda + Robotiq 2F-85, Genesis)"}
-DOCS = [("docs/rcb/STANDARD_MODE_2_3.md", "docs/STANDARD_MODE_2_4.md"), ("docs/rcb/STANDARD_MODE_2_2.md", "docs/STANDARD_MODE_2_2.md"),
+DOCS = [("docs/rcb/STANDARD_MODE_2_3.md", "docs/STANDARD_MODE.md"), ("docs/rcb/STANDARD_MODE_2_2.md", "docs/STANDARD_MODE.md"),
         ("docs/rcb/benchmarks/topogym.md", "docs/benchmarks/robotangle.md"), ("docs/rcb/PROTOCOL.md", "docs/PROTOCOL.md"),
-        ("docs/rcb/TAXONOMY.md", "docs/TAXONOMY.md"), ("docs/rcb/LIMITED_MODE_PROTOCOL.md", "docs/LIMITED_MODE_PROTOCOL.md")]
+        ("docs/rcb/TAXONOMY.md", "docs/TAXONOMY.md"), ("docs/rcb/LIMITED_MODE_PROTOCOL.md", "docs/STANDARD_MODE.md")]
 IMAGE_RX = re.compile(r"(?:[\w.-]+/)+rcb-topogym:[\w.-]+")
 EAI = ROOT / "scripts/eai_standard"
 LAYER = {"environment/rcb_client.py": EAI / "v2_4/rcb_client.py", "environment/rcb1.py": EAI / "rcb1.py",
