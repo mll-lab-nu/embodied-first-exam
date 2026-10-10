@@ -1,0 +1,13 @@
+{
+ "task_text": "Pick up the glass conical flask that stands on the bench and hold it up. Success the moment the flask's centre has been more than 10 cm above where it stood for one second (60 control steps in a row).",
+ "default_cameras": [
+  "camera_1",
+  "camera_2",
+  "wrist_cam"
+ ],
+ "static": {
+  "inventory": [
+   "glass conical flask, about 9.5 cm across the base and 17 cm tall"
+  ]
+ }
+}

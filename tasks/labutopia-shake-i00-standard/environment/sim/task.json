@@ -1,0 +1,13 @@
+{
+ "task_text": "Pick up the glass beaker, shake it, and hold it still. Nothing is counted while the beaker's centre is less than 5 cm above where it stood. Success the moment the second of these is met: (1) five times, the beaker's centre moves 5 cm or more (horizontally) from where it was when that count began; (2) after the fifth, the centre stays within 1 cm in each horizontal direction over one second (60 control steps in a row).",
+ "default_cameras": [
+  "camera_1",
+  "camera_2",
+  "wrist_cam"
+ ],
+ "static": {
+  "inventory": [
+   "small glass beaker, about 6.5 cm across and 10 cm tall"
+  ]
+ }
+}
