@@ -44,7 +44,9 @@ the expected size of the pull request.
    expected peak, `measured`; docker caps per compose service). `normalize` writes `[metadata.resources.limits]` /
    `.caps` and ends `instruction.md` with the `## Resource limits` paragraph the agent reads. With enforcement on
    (`RCB_LIMITS_ENFORCE=1`, v1.2) exceeding a limit fails the trial, so set them a generous margin above measured peaks
-   (e.g. `max(1.5 x peak, peak + 4 GiB)`) and make sure the oracle stays inside them.
+   (e.g. `max(1.5 x peak, peak + 4 GiB)`) and make sure the oracle stays inside them. The caps are the ones docker
+   applies: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb` and writes the other services' caps
+   into the compose file; a cap your compose file sets itself must be the declared value (`check-resources.py`).
 4. Base images: `images/<sim>/Dockerfile`, versioned in `images/<sim>/VERSION`, built and pushed with
    `scripts/build_images.sh` / `scripts/push_images.sh`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
    and build instructions.

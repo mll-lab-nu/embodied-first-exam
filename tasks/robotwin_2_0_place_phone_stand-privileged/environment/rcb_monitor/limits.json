@@ -21,6 +21,9 @@
  "max_processes": 512,
  "mode": "privileged",
  "scope": "trial",
+ "scope_services": [
+  "main"
+ ],
  "sustain_sec": 60.0,
  "task": "robotwin_2_0_place_phone_stand-privileged",
  "tick_sec": 5,

@@ -26,6 +26,9 @@
  "max_processes": 512,
  "mode": "standard",
  "scope": "agent",
+ "scope_services": [
+  "main"
+ ],
  "sustain_sec": 60.0,
  "task": "dextoolbench_eraser_handle_eraser_wipe_smile-standard",
  "tick_sec": 5,
