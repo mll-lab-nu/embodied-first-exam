@@ -95,6 +95,8 @@ def main() -> int:
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                "instance_ok": int(instance_ok), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)), "n_actions": int(len(acts)),
                "sim_steps": int(outs[0].get("sim_steps") or 0),
+               # the robot fell over in a replay (the tooling's fall rule ended it there; the goal did not hold)
+               "fallen": int(any(bool(o.get("fallen")) for o in outs)),
                # progress: the 2026 challenge's q_score of the last replay (before 2026-09-27 this read a key "progress"
                # that the replay does not report, so final_reward was always 0)
                "final_reward": float(outs[-1].get("q_score") or 0.0), "q_score": float(outs[-1].get("q_score") or 0.0),

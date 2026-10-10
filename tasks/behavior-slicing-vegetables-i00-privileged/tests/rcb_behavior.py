@@ -18,6 +18,9 @@ trajectory : the (T, A) low-level robot actions handed to env.step, one row per 
              later ones drift, so the verifier replays in two fresh processes (the `replay` CLI).
 budget     : there is no step budget: the agent's wall clock is the limit. The challenge's timeout termination is lifted to
              MAX_STEPS, which only stops runaway trajectories; the episode still ends the moment the BDDL goal holds.
+falls      : the episode also ends, as a failure, when the robot has fallen over: OmniGibson's own Falling rule (its base
+             more than 3 cm below the floor, or its up axis tilted more than 41.4 degrees from vertical) holding for
+             FALL_HOLD_STEPS consecutive control steps (10 s of simulated time); status()["fallen"]. A replay ends there too.
 
 CLI
 ---
@@ -41,7 +44,7 @@ Python (what the agent gets)
   s.robot_spec(); s.robot_state()    # joints with real limits, gripper rule, drive gains, TCP, mobile base; measured q/qd/effort, poses
   s.kinematics({"op": "fk", "q": q}) # stateless FK / IK in the robot base frame (s.kinematics_spec()); the standard mode's /kinematics
   s.record_start(); ...; actions = s.record_stop()   # (T, 25) low-level actions, one row per env step
-  s.status()                         # {'success': bool, 'q_score': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
+  s.status()                         # {'success': bool, 'fallen': bool, 'q_score': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
   s.replay(actions)                  # the first replay in a process is exact; the CLI `replay` (fresh process) is the grader's view
   s.save_trajectory(actions, "/app/output/trajectory.npz")
 """
@@ -73,6 +76,45 @@ import numpy as np
 SESSION_LOG = os.environ.get("RCB_SESSION_LOG", "/app/output/rcb_session_log.jsonl")
 SESSION_LOG_KEEP = os.environ.get("RCB_SESSION_LOG_KEEP", "/logs/agent/rcb_session_log.jsonl")
 MAX_STEPS = 200_000        # no step budget (the wall clock is); this only stops a runaway trajectory (~1.9 h of sim time)
+# The robot has fallen over: OmniGibson 3.9.2's Falling termination condition (omnigibson/termination_conditions/falling.py,
+# used by its navigation tasks; BehaviorTask has only Timeout and PredicateGoal) with its defaults, on the pose it reads
+# (robot.get_position_orientation(): the R1Pro's base_link), held for FALL_HOLD_STEPS consecutive control steps so that a
+# short topple that is over within the hold never counts (the longest in the recorded standard-mode runs: 4.3 s).
+FALL_HEIGHT_M = 0.03            # the base more than this below the floor (the scene's floor height: 0 in BEHAVIOR's houses)
+FALL_TILT_TOLERANCE = 0.75      # the z of the base's up axis below this: tilted more than 41.4 degrees
+FALL_HOLD_STEPS = 300           # 10 s at the 30 Hz control rate (simulated time: a fresh-process replay ends at the same step)
+FALL_REASON = "failure: the robot fell over"
+
+
+def up_z(quat_xyzw) -> float:
+    """z of a body's up axis for an XYZW quaternion (R[2][2]). On the R1Pro it is also cos(rx) * cos(ry) of the virtual
+    base joints base_footprint_rx_joint / _ry_joint: the base hangs from an upright world-fixed root."""
+    qx, qy, qz, qw = (float(v) for v in quat_xyzw)
+    n = qx * qx + qy * qy + qz * qz + qw * qw
+    return 1.0 - 2.0 * (qx * qx + qy * qy) / n if n > 0.0 else float("nan")
+
+
+class FallWatch:
+    """OmniGibson's Falling condition, held for `hold` consecutive control steps; update() once per control step.
+    `fallen` latches until reset(), as the episode's end does. NaN never counts (as upstream: NaN < x is False)."""
+
+    def __init__(self, hold: int = FALL_HOLD_STEPS, floor_z: float = 0.0):
+        self.hold, self.floor_z = int(hold), float(floor_z)
+        self.reset()
+
+    def reset(self) -> None:
+        self.run, self.fallen, self.fallen_step, self.steps = 0, False, None, 0
+
+    @staticmethod
+    def falling(base_z: float, up_z_: float, floor_z: float = 0.0) -> bool:
+        return bool(base_z < floor_z - FALL_HEIGHT_M or up_z_ < FALL_TILT_TOLERANCE)
+
+    def update(self, base_z: float, up_z_: float) -> bool:
+        self.steps += 1
+        self.run = self.run + 1 if self.falling(base_z, up_z_, self.floor_z) else 0
+        if not self.fallen and self.run >= self.hold:
+            self.fallen, self.fallen_step = True, self.steps
+        return self.fallen
 
 
 def _slog(ev: str, **kw) -> None:
@@ -1143,6 +1185,12 @@ class Session:
                 if strict:
                     raise RuntimeError(msg)
                 _log("WARNING:", msg)
+        try:
+            floor_z = float(self.env.scene.get_floor_height())
+        except Exception:  # noqa: BLE001
+            floor_z = 0.0
+        self._fall = FallWatch(FALL_HOLD_STEPS, floor_z)   # the fall rule (FALL_*); its end is self.end_reason
+        self.end_reason: str | None = None
         _log(f"instance {self.instance_id} loaded; state_sha={self.instance_sha}; max_steps={self.max_steps}")
 
     def _poses_match(self, inst: dict, pos_tol: float = 2e-3, quat_tol: float = 2e-2) -> bool:
@@ -1198,6 +1246,8 @@ class Session:
         self.episode_done = False
         self._last_action = None
         self._stepped = False
+        self._fall.reset()
+        self.end_reason = None
         self._policy.reset()
         self.ev.reset()
         self._lift_timeout()
@@ -1209,16 +1259,27 @@ class Session:
         if a.numel() != self.action_dim:
             raise ValueError(f"action must have {self.action_dim} entries, got {a.numel()}")
         if self.episode_done:
-            raise PrimitiveError("episode is over (success or timeout); call reset() before stepping again")
+            raise PrimitiveError(f"episode is over ({self.end_reason or 'success or timeout'}); call reset() before stepping again")
         if self._recording is not None:
             self._recording.append(a.clone())
         self._stepped = True
         self._last_action = a.clone()
         self._policy.next = a
         terminated, truncated = self.ev.step()
+        if not (terminated or truncated) and self._fall_step():   # the BDDL goal first: a success on the same step stands
+            terminated = True
         if terminated or truncated:
             self.episode_done = True
         return terminated, truncated
+
+    def _fall_step(self) -> bool:
+        """The fall rule for the control step just taken; True on the step its hold is reached (the episode ends there)."""
+        pos, quat = self.robot.get_position_orientation()
+        if self._fall.update(float(pos[2]), up_z(quat.tolist())) and self.end_reason is None:
+            self.end_reason = FALL_REASON
+            _slog("fallen", task=self.task, sim_steps=int(self.env.episode_steps), hold_steps=FALL_HOLD_STEPS)
+            return True
+        return False
 
     def _gripper_cmd(self, arm: str, open_: bool):
         """The action entries of `arm`'s gripper: open = both fingers 2 cm beyond their upper limit (assisted grasping only
@@ -1246,8 +1307,8 @@ class Session:
         return a
 
     def status(self) -> dict[str, Any]:
-        out = {"success": bool(self.env.task.success), "sim_steps": int(self.env.episode_steps), "resets": self._resets,
-               "state_sha": self.state_sha(), "q_score": None}
+        out = {"success": bool(self.env.task.success), "fallen": bool(self._fall.fallen), "sim_steps": int(self.env.episode_steps),
+               "resets": self._resets, "state_sha": self.state_sha(), "q_score": None}
         try:
             for m in self.ev.metrics:
                 agg = m.aggregate(self.env)
