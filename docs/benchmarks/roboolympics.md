@@ -57,7 +57,11 @@ what it heard, the serve); never the ball's or the opponent's state, nor the see
   past `RCB_MAX_RESUMES` it is an infrastructure failure (`infra_error = 1`).
 - **Timing.** The service renders the images and plans the strokes on its own thread between control steps; a long
   plan (badminton) makes it run late and catch up (`max_lag_s`, `stalls` in `final.json`), never changes what happens
-  in the match.
+  in the match. `final.json` and `reward.json` also carry `clock_s`, `stalled_s` and `stalled_share` (the wall time the
+  clock ran, the time its stalls dropped, their ratio), `held_steps`, `requests_refused` and `request_busy_s`: evidence,
+  which decides no verdict. The agent's requests cannot slow the clock (the shared 2.3 layer, since 2026-10-10: bodies
+  are read, decoded and checked off the simulator's thread, waiting requests are served once the clock has caught up,
+  the cameras are rendered once per control step; `docs/LIMITED_MODE_PROTOCOL.md`).
 
 ## Per-benchmark exceptions (owner, 2026-10-08; PROTOCOL §4b)
 | | PROTOCOL §4b | RoboOlympics | why |
@@ -114,6 +118,16 @@ Every replay was deterministic. Badminton's reference player is the weakest of t
 - **2026-10-10.** `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict. `reward.json` writes `deterministic` and `sim_error` in every branch; a refused
   `/reset` no longer answers a pending `get_obs(seconds=...)` early, and `final.json`'s realtime counters survive a
   crash-resume.
+- **2026-10-10 (board 0067, review R2 finding M1).** The shared 2.3 layer no longer lets the agent's requests slow the
+  clock: bodies are read, decoded and checked off the simulator's thread (more than 1 MiB of JSON text by a child
+  process), waiting requests are served once the clock has caught up, and the cameras are rendered once per control
+  step. On a stub simulator at 50 Hz, four threads of refused 21 MB bodies used to leave 3 control steps in 6 s, four
+  threads of `/observe` with a 25 ms render 234 of 300; both now keep every step
+  (`scripts/humanoidbench/tests/test_realtime_load.py`). `final.json` and `reward.json` add `clock_s`, `stalled_s`,
+  `stalled_share`, `held_steps`, `requests_refused` and `request_busy_s`, and `max_lag_s` is the true maximum (it never
+  passed 0.5). The match, the commands that take effect and the verdict rule are unchanged. **A trial recorded before
+  this date whose `final.json` shows `stalls` > 0 ran on a clock that was slower than S for part of the match** (how
+  much is not recorded there: each stall dropped more than 0.5 s); whether such a trial counts is an owner decision.
 
 ## Attribution
 - RoboOlympics (simulators, referees, opponents, reference players): CHIGUI0 and contributors, MIT.

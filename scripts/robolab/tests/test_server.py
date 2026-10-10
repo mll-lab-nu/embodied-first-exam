@@ -57,6 +57,7 @@ def run(bench, dim, ee_dim, hz):
         "video_fps bool": {**good, "video_fps": True}, "video_fps 31": {**good, "video_fps": 31}, "video_fps list": {**good, "video_fps": [5]},
         "note int": {**good, "note": 5}, "note list": {**good, "note": ["x"]}, "note object": {**good, "note": {"a": 1}},
         "cameras int": {**good, "cameras": 5}, "cameras object": {**good, "cameras": {"a": 1}}, "cameras list of ints": {**good, "cameras": [1, 2]},
+        "cameras a string": {**good, "cameras": "cam"},   # a list of names since the shared layer's parse_request (#132), never a bare string
         "interpolate int": {**good, "interpolate": 3}, "interpolate unknown": {**good, "interpolate": "cubic"}, "interpolate list": {**good, "interpolate": ["hold"]},
         "video int": {**good, "video": 7}, "video unknown": {**good, "video": "gif"}, "video object": {**good, "video": {}},
         "type null": {**good, "type": None}, "type int": {**good, "type": 5}, "type list": {**good, "type": ["joint_position"]},
@@ -91,8 +92,8 @@ def run(bench, dim, ee_dim, hz):
     code, m = s.post("/submit", {**good, "actions": [row] * 3, "note": "hello"}); check(code == 200 and m["control_steps_chunk"] == 3 and m["executed_rows"] == 3, f"{bench} valid joint_position: {code}")
     code, m = s.post("/submit", {**good, "dt": None, "video_fps": None, "note": None, "cameras": None, "interpolate": None, "video": None, "depth": None})
     check(code == 200 and m["control_steps_chunk"] == 1, f"{bench} null fields take their defaults: {code} {str(m)[:120] if code != 200 else ''}")
-    code, m = s.post("/submit", {**good, "dt": 2.0 / hz, "interpolate": "hold", "cameras": spec["default_cameras"][0], "video": "none"})
-    check(code == 200 and m["control_steps_chunk"] == 2, f"{bench} dt = 2 periods, one camera as a string: {code}")
+    code, m = s.post("/submit", {**good, "dt": 2.0 / hz, "interpolate": "hold", "cameras": [spec["default_cameras"][0]], "video": "none"})
+    check(code == 200 and m["control_steps_chunk"] == 2, f"{bench} dt = 2 periods, one camera: {code}")
     code, m = s.post("/submit", {**good, "cameras": ["no_such_camera"]}); check(code == 200, f"{bench} unknown camera name falls back to all (unchanged): {code}")
     code, m = s.post("/submit", eerow(i0=0.45)); plan = (m.get("plan") or [{}])[0]
     check(code == 200 and all(v == "Success" for k, v in plan.items() if k.endswith("arm")) and 0 < m["control_steps_chunk"] < 200, f"{bench} valid ee_pose: {code} plan {plan}")

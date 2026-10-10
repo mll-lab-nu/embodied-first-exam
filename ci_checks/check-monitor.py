@@ -70,8 +70,14 @@ def check(task: Path) -> list[str]:
     side = [h for h in hooks if h != "main"]
     if not side or side[0] != "rcb_monitor":
         err.append("task.toml: the first sidecar [[verifier.collect]] hook must be rcb_monitor's seal")
-    if inject.TRAP not in ((task / "tests" / "test.sh").read_text() if (task / "tests" / "test.sh").is_file() else ""):
+    sh = (task / "tests" / "test.sh").read_text() if (task / "tests" / "test.sh").is_file() else ""
+    if inject.TRAP not in sh:
         err.append("tests/test.sh: no verifier-step trap")
+    if inject.GUARD not in sh or inject.TRAP not in sh or not sh.index(inject.TRAP) < sh.index(inject.GUARD):
+        err.append("tests/test.sh: no `rcb_limits.py sanitize /app/output` line after the trap (the agent's files are untrusted input)")
+    elif any(re.search(r"grade|/app/output", ln) for ln in sh[:sh.index(inject.GUARD)].splitlines()
+             if ln.strip() and not ln.lstrip().startswith("#") and inject.TRAP not in ln):
+        err.append("tests/test.sh: something reads the agent's files before the sanitize line")
     if "COPY rcb_limits.py rcb_limits.json /tests/" not in ((task / "tests" / "Dockerfile").read_text()
                                                             if (task / "tests" / "Dockerfile").is_file() else ""):
         err.append("tests/Dockerfile: does not COPY rcb_limits.py rcb_limits.json")

@@ -692,6 +692,9 @@ class Service:
                 try:
                     n = int(self.headers.get("Content-Length") or 0)
                 except ValueError:
+                    n = -1
+                if n < 0:                            # (read(-1) would read to the end of the stream, without a limit)
+                    self.close_connection = True
                     return self._send(*svc._reply_json(400, {"error": "bad Content-Length"}))
                 if n > MAX_BODY:                     # refused unread: drop the connection with it
                     self.close_connection = True

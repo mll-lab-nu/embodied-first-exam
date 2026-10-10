@@ -16,8 +16,16 @@ A process whose first thread has exited is found through a thread that lives; a 
 Every tick (5 s; disk every 60 s) it samples, per container and summed over the scope: GPU memory (NVML, per process,
 compute and graphics), memory (cgroup anon+shmem when the container has its own cgroup, else PSS anon+shmem), processes
 (TGIDs, zombies included), disk growth under the limits' disk_paths in the agent's container (complete walks only, in
-slices between the samples), OOM kills, CPU (recorded only). It appends to /var/rcb-monitor/samples.jsonl and
+slices between the samples), CPU (recorded only). It appends to /var/rcb-monitor/samples.jsonl and
 events.jsonl and writes the agent-visible /run/rcb-limits/usage.json.
+
+Kernel OOM kills (`oom` events) are read from each watched container's cgroup `memory.events` by a thread of its own
+(OomWatch), many times a second: a kill that takes the container's main process with it ends the container, and compose
+restarts it with a new cgroup whose counters start at 0, within milliseconds -- a reading once per tick never sees it.
+Every event says whom it hit (`scope`: a container the limits bind, or a benchmark-owned service that is only
+recorded) and why (`cause`): "cap" when the container's own `oom` counter rose with it (the kernel says its memory
+reached its own cap), else "host" (the host's OOM killer, or an enclosing cgroup's: not this container's doing).
+Only a "cap" kill in the scope is a violation (rcb_limits.violations); the verifier step reports the others.
 
 RCB_LIMITS_ENFORCE=1 (run-time switch; compose default 0; 0/1/true/false, anything else is a fatal record): once a
 violation is confirmed (rcb_limits.violations, the verifier's own rule) the monitor SIGKILLs every in-scope process
@@ -34,9 +42,11 @@ largest process once the scope is above its declared memory caps.
 import ctypes
 import json
 import os
+import select
 import signal
 import stat as stat_mod
 import sys
+import threading
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -54,6 +64,11 @@ GIB = float(2 ** 30)
 EMERGENCY_GPU_FACTOR = 1.5      # host protection (enforced runs): above this x the GPU-memory limit at one sample
 DISK_SLICE_SEC = 1.5            # of every tick a running disk walk may take (the monitor's CPU cap is half a core)
 DISK_WALK_MAX_SEC = 300.0       # a walk not finished by then is partial: a gap in the record, never a baseline
+OOM_COLD_SEC = 0.02             # OomWatch: every memory.events is read this often (or at once, when the kernel notifies)
+OOM_HOT_SEC = 0.002             # ... and this often for OOM_HOT_FOR_SEC after any of them changed (memory pressure)
+OOM_HOT_FOR_SEC = 2.0
+OOM_CAP_WINDOW_SEC = 10.0       # a kill is the container's own cap's when its `oom` counter rose with it or this shortly before
+OOM_FORGET_SEC = 600.0          # a cgroup not seen by the sampler for this long is no longer watched
 
 
 # --------------------------------------------------------------------------------------------------- small helpers
@@ -281,6 +296,139 @@ class DiskWalk:
         return True
 
 
+# --------------------------------------------------------------------------------------------------- OOM kills
+class OomWatch:
+    """Kernel OOM kills of the watched containers, from each one's cgroup v2 `memory.events`:
+      oom       times the cgroup's memory reached its own limit (memory.max) and an allocation was about to fail
+      oom_kill  processes of the cgroup killed by any OOM killer (its own limit's, an enclosing cgroup's, the host's)
+    A kill whose `oom` counter rose with it (or within OOM_CAP_WINDOW_SEC before) happened at the container's own cap
+    (`cause: "cap"`); one without is the host's or an enclosing cgroup's OOM killer (`cause: "host"`), which the
+    container did not cause by its own use (PROTOCOL §2.10: nothing another trial does can fail a trial).
+
+    The counters live and die with the cgroup, and a container whose main process is killed is gone (and restarted by
+    compose with fresh counters) within milliseconds. So the files are read by this object's own thread, every
+    OOM_COLD_SEC, at once when the kernel signals a change (poll: memory.events notifies), and every OOM_HOT_SEC for a
+    while after any change (the `max` counter rises under memory pressure, before a kill). A kill that removes the
+    cgroup within about a millisecond can still be missed: such a kill is then in no record.
+
+    scan() reads every file once; the sampler calls it at each tick when the thread does not run (the tests). The
+    thread ends when the record is sealed."""
+
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.w = {}                  # cgroup dir -> {"role", "scope", "fd", "kill", "oom", "sig", "cap_t", "seen"}
+        self.hot_until = 0.0
+        self.thread = None
+        self.stopped = False         # set at the seal: the record is closed, like the samples
+
+    def watch(self, cg, role, scope, t):
+        """The sampler saw this container's cgroup at time t."""
+        with self.lock:
+            e = self.w.get(cg)
+            if e is None:
+                e = self.w[cg] = {"fd": None, "kill": None, "oom": None, "sig": None, "cap_t": None}
+            e.update(role=role, scope=bool(scope), seen=t)
+
+    @staticmethod
+    def _close(e):
+        if e["fd"] is not None:
+            try:
+                os.close(e["fd"])
+            except OSError:
+                pass
+            e["fd"] = None
+
+    def _read(self, cg, e):
+        """The counters of the cgroup's memory.events ({} when the file cannot be read: the container is not up).
+        A file that stops answering belonged to a cgroup that is gone; the same path opened again is a new cgroup (the
+        container restarted: another directory, by its inode and creation time), whose counters all belong to the
+        trial: they are compared with 0. The same cgroup opened again keeps what was already counted."""
+        for _ in (0, 1):
+            try:
+                if e["fd"] is None:
+                    e["fd"] = os.open(cg + "/memory.events", os.O_RDONLY)
+                    st = os.stat(cg)
+                    ident = (st.st_dev, st.st_ino, st.st_ctime_ns)
+                    if e["sig"] is not None and ident != e.get("ident"):
+                        e["kill"] = e["oom"] = 0     # read before, gone, here again: another instance of the cgroup
+                    e["ident"] = ident
+                os.lseek(e["fd"], 0, os.SEEK_SET)
+                out = {}
+                for line in os.read(e["fd"], 8192).decode("ascii", "replace").splitlines():
+                    k, _, v = line.partition(" ")
+                    if v.strip().isdigit():
+                        out[k] = int(v)
+                return out
+            except OSError:
+                self._close(e)
+        return {}
+
+    def scan(self):
+        """Read every watched file once and record the kills since the last reading. True when a counter changed."""
+        changed = False
+        with self.lock:
+            t = now()
+            for cg, e in list(self.w.items()):
+                if t - e["seen"] > OOM_FORGET_SEC:
+                    self._close(e)
+                    del self.w[cg]
+                    continue
+                c = self._read(cg, e)
+                if "oom_kill" not in c:
+                    continue
+                kill, oom = c["oom_kill"], c.get("oom", 0)
+                sig = (kill, oom, c.get("max", 0))
+                if e["kill"] is None or kill < e["kill"] or oom < e["oom"]:
+                    # the first reading is the baseline; counters that went back are a new cgroup under the same path
+                    e["kill"], e["oom"] = (kill, oom) if e["kill"] is None else (0, 0)
+                changed |= sig != e["sig"]
+                if oom > e["oom"]:
+                    e["cap_t"] = t
+                if kill > e["kill"]:
+                    at_cap = e["cap_t"] is not None and t - e["cap_t"] <= OOM_CAP_WINDOW_SEC
+                    kw = {"role": e["role"], "scope": e["scope"], "count": kill - e["kill"],
+                          "cause": "cap" if at_cap else "host", "cap_hits": oom - e["oom"]}
+                    for name, key in (("memory.max", "memory_cap_gb"), ("memory.current", "memory_current_gb")):
+                        v = (read(cg + "/" + name) or "").strip()      # evidence only: the cause is the counters'
+                        if v.isdigit():
+                            kw[key] = round(int(v) / GIB, 3)
+                    event("oom", **kw)
+                e["kill"], e["oom"], e["sig"] = kill, oom, sig
+        return changed
+
+    def start(self):
+        self.thread = threading.Thread(target=self._loop, name="rcb-oom-watch", daemon=True)
+        self.thread.start()
+
+    def _loop(self):
+        said = False
+        while not self.stopped:
+            try:
+                if self.scan():
+                    self.hot_until = now() + OOM_HOT_FOR_SEC
+                if now() < self.hot_until:
+                    time.sleep(OOM_HOT_SEC)
+                    continue
+                with self.lock:
+                    fds = [e["fd"] for e in self.w.values() if e["fd"] is not None]
+                if not fds:
+                    time.sleep(OOM_COLD_SEC)
+                    continue
+                p = select.poll()                     # memory.events notifies its readers (POLLPRI) when it changes
+                for fd in fds:
+                    p.register(fd, select.POLLPRI | select.POLLERR)
+                if p.poll(OOM_COLD_SEC * 1000):
+                    self.hot_until = now() + OOM_HOT_FOR_SEC
+            except Exception as e:                    # never stop watching
+                if not said:
+                    said = True
+                    try:
+                        event("error", why=f"oom watch: {type(e).__name__}: {e}"[:300])
+                    except Exception:
+                        pass
+                time.sleep(OOM_COLD_SEC)
+
+
 # --------------------------------------------------------------------------------------------------- the monitor
 class Monitor:
     def __init__(self):
@@ -294,7 +442,7 @@ class Monitor:
         self.neg, self.ok = set(), set()     # this tick: namespaces that said no / whose witness still lives
         self.via = {}            # pid -> /proc path of a living thread, for a process whose first thread has exited
         self.prev_cpu = {}       # pid -> (starttime, ticks, t)
-        self.oom = {}            # cgroup path -> oom_kill count
+        self.oomw = OomWatch()   # kernel OOM kills of the watched containers (its own thread in run())
         self.disk_base = None    # GiB under disk_paths at the first complete walk (kept in state.json across restarts)
         self.disk_last = 0.0
         self.disk_gb = None
@@ -486,13 +634,7 @@ class Monitor:
                 m["memory_gb"] = round(self.mem_pss(pids), 3)
             mx = (read(cg + "/memory.max") or "").strip()
             m["memory_cap_gb"] = None if mx in ("", "max") else round(int(mx) / GIB, 2)
-            for line in (read(cg + "/memory.events") or "").splitlines():
-                if line.startswith("oom_kill "):
-                    n = int(line.split()[1])
-                    old = self.oom.get(cg)
-                    if old is not None and n > old:
-                        event("oom", role=g["role"], scope=g["kind"] == "scope", count=n - old)
-                    self.oom[cg] = n
+            self.oomw.watch(cg, g["role"], g["kind"] == "scope", now())
         else:
             m["memory_gb"] = round(self.mem_pss(pids), 3)
         return m
@@ -643,8 +785,9 @@ class Monitor:
         if self.enforce and t <= self.kill_until:
             self.kill_scope(groups, ",".join(sorted(self.confirmed)))
         # Host protection (enforced runs only; PROTOCOL §2.10). An emergency kill is never a violation by itself: the
-        # trial fails only by the sustained rule above or a kernel OOM kill. Both conditions are the trial's own doing
-        # (its scope's use against its own limit or caps), never the state of a card it shares with other trials.
+        # trial fails only by the sustained rule above or a kernel OOM kill at its own memory cap. Both conditions are
+        # the trial's own doing (its scope's use against its own limit or caps), never the state of a card or host it
+        # shares with other trials.
         if self.enforce:
             cap = self.scope_memory_cap()
             lim_gpu = float(self.lim.get("max_gpu_memory_gb") or 0)
@@ -656,7 +799,7 @@ class Monitor:
                 self._emergency(groups, "gpu_memory", lim_gpu, scope_vals["gpu_memory_gb"], key="gpu")
 
     def _emergency(self, groups, why, limit, observed, key):
-        best, bv = None, -1
+        best, bv = None, 0                            # only a process that holds some: never one with none of it
         for g in groups.values():
             if g["kind"] != "scope":
                 continue
@@ -705,6 +848,8 @@ class Monitor:
             event("fatal", why="no scope beacon mounted at /run/rcb-limits")
         if self.lim.get("gpu") and not self.nvml:
             event("fatal", why="GPU task but NVML is unavailable: " + str(self.caps.get("nvml_error")))
+        sys.setswitchinterval(0.001)                  # the OOM watch must get its turn within a millisecond
+        self.oomw.start()
         while not os.path.exists(os.path.join(REC, "seal.request")):
             t = now()
             try:
@@ -727,6 +872,8 @@ class Monitor:
         self._gpu_per = gpu_per
         ms = [self.measure(g, gpu_per, t, gpu_unknown) for g in groups.values()]
         self._last_measures = ms
+        if self.oomw.thread is None:
+            self.oomw.scan()                          # no thread (tests): read the OOM counters with the sample
         scope = [m for m in ms if m["kind"] == "scope"]
         if scope and not self.scope_seen:
             self.scope_seen = True
@@ -765,6 +912,13 @@ class Monitor:
             pass
 
     def seal(self):
+        try:
+            self.oomw.scan()                          # the counters once more, whatever the watch thread is doing
+        except Exception:
+            pass
+        # The record ends here, for OOM kills as for the samples: what happens to a sidecar in the collect hooks that
+        # follow (its replays) is the grader's to judge, from the hook's own evidence.
+        self.oomw.stopped = True
         summary, samples, events = rcb_limits.load_record(REC)
         viol = rcb_limits.violations(samples, self.lim, events)
         meta = rcb_limits.read_json(os.path.join(REC, "meta.json")) or {}

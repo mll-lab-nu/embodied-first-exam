@@ -160,7 +160,10 @@ Accepted consequence: a calibrated camera aimed at the workspace tells roughly w
 ## 11. Errors (no physics executed)
 As 2.1: 400 malformed request (including a bad kinematics request), 409 episode over (`/observe` and `/kinematics` still
 answer), 413 body over 64 MB, 500 simulator error: **on `/submit` and `/observe` the episode ends** with `reason = "error"`
-(PROTOCOL §4.6).
+(PROTOCOL §4.6). A negative `Content-Length` is a 400, answered without reading the body. The service listens on port
+8000 of a network namespace that, under Harbor's egress control, the agent's container shares: if a process of the agent
+holds the port when the scene is built, the service waits for it (the agent's own time) instead of exiting, which would
+count as one of its crashes.
 
 ## 12. Per-call bounds (2.2)
 No step cap, and the wall clock stays the episode's only budget (PROTOCOL §4.4, §4.5). Two bounds keep one call from
@@ -258,7 +261,7 @@ One state hash per call (not per step). A resume replays the episode so far with
 `python3 scripts/eai_standard/selftest.py` (CPU only, ~2 min) runs `toy_server.py` under `run.sh` with a stand-in for
 compose's restart policy and checks: resume between and inside calls, both classes, the third crash, the watchdog and
 back-off, client hang-up, the wall bound, both collect-hook outcomes, SIGUSR1 during a resume, a simulator error, the
-client's protocol names. Per benchmark, the acceptance test (kill the service of one standard task, the episode goes on
+client's protocol names, malformed requests, a port that is taken, a negative `Content-Length` (CI job `unit-tests`). Per benchmark, the acceptance test (kill the service of one standard task, the episode goes on
 and is graded correctly; check that `live_matches_replay` stays 1 where it was) belongs to its PR.
 
 ## 14. Evidence and grading (the agent never sees this)

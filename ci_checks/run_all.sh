@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Run every per-task check on the given task dirs (default: all of tasks/*), then repo-level checks.
 set -uo pipefail
+# Seven generators' check modes compare file modes with a fresh render, which depends on the caller's umask: with 0002
+# (a common default) every rendered file is group-writable and 179 checks fail on a clean checkout. The checks run with
+# the umask the repository is written with; the checkout itself must be made with umask 022 too.
+umask 022
 root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
 tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=("$root"/tasks/*/)
 for t in "${tasks[@]}"; do
@@ -16,13 +20,14 @@ done
 bash "$root/ci_checks/check-dataset-manifest.sh" || rc=1
 bash "$root/ci_checks/check-generated-tasks.sh" || rc=1              # generators with a check mode: tasks/ is what they write
 bash "$root/ci_checks/check-unit-tests.sh" || rc=1                   # graders / collect hooks: the tests that need only the standard library
+python3 "$root/ci_checks/check-ci-selftest.py" || rc=1               # the checks themselves: real tasks broken in one way each must fail their rule
 bash "$root/ci_checks/check-robopaint-tooling.sh" || rc=1            # RoboPaint: tooling byte-identical within a family / stack
 bash "$root/ci_checks/check-tooling-identity.sh" || rc=1             # D9 shared sources; the eai-standard/2.2 layer = scripts/eai_standard/
 bash "$root/ci_checks/check-standard-client.sh" || rc=1              # standard agent + verifier images: the pinned client base and pins
 # PROTOCOL §2.9 (v1.1.4): [metadata.resources] (minimum compute) in every task.toml, consistent with the GPU reservations and
 # caps, and the README's Compute resources section rendered from it
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-resources.py" || rc=1; else python3 "$root/ci_checks/check-resources.py" "$@" || rc=1; fi
-# Protocol v1.0: `legacy:` rules (image move, docs/PROTOCOL.md §7) warn; all other rules fail. RCB_PROTOCOL_STRICT=1 fails on legacy too.
+# The task protocol (docs/PROTOCOL.md): `legacy:` rules (image move, §7) warn; all other rules fail. RCB_PROTOCOL_STRICT=1 fails on legacy too.
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-protocol-v1.py" || rc=1; else python3 "$root/ci_checks/check-protocol-v1.py" "$@" || rc=1; fi
 # PROTOCOL §2.10 (v1.2): the resource monitor sidecar and the verifier step, wired by scripts/rcb_monitor/inject.py
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-monitor.py" || rc=1; else python3 "$root/ci_checks/check-monitor.py" "$@" || rc=1; fi
