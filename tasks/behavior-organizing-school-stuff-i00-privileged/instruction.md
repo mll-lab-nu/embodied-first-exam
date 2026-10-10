@@ -74,8 +74,13 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   finger targets, 0 = closed; assisted grasping holds what a closing gripper touches). The base entries are x, y, yaw
   position targets in the robot's own frame, re-applied every control step: a per-step displacement, 0 = stand still.
   `s.hold_action()` (the last command with the base at 0) is the no-op.
-- Control runs at 30 Hz with 120 Hz physics. Your wall-clock budget is 4 h (14400 s); there is no step budget. The
-  episode ends by itself the moment the goal holds. It also ends, as a failure, when the robot has fallen over: its base
+- Control runs at 30 Hz with 120 Hz physics. Your wall-clock budget is 4 h (14400 s); there is no step budget. Only a
+  runaway guard bounds an episode: it ends after 200,000 control steps (1.85 h of simulated time), and a trajectory
+  with more rows than that is rejected (`bad_trajectory`, score 0). The trajectory must be the file
+  `s.save_trajectory()` writes (an `.npz` with `actions` (T, 25) and `task`): a file the grader cannot read, or with
+  the wrong shape, is `bad_trajectory` too. The grader replays it twice at the simulator's own speed, each replay
+  within min(4 h, max(1 h, 20 min + 0.5 s per row)); a replay that runs out of time is reported as a grader error.
+  The episode ends by itself the moment the goal holds. It also ends, as a failure, when the robot has fallen over: its base
   tilted more than 41.4° from upright (the z of its up axis below 0.75), or more than 3 cm below the floor, for 10 s of
   simulated time in a row (OmniGibson's own Falling rule; `s.status()["fallen"]`, `s.episode_done`). `s.reset()` starts
   again; the grader's replays end at the same step. While the robot moves, the cameras' frames lag the physics by 2

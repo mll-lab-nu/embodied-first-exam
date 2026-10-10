@@ -126,6 +126,14 @@ the simulator to 2e-7 m), and thin primitives: `move_ee` (both arms together, Is
 - Standard: the service dumps the episode and exits on the collect hook's signal; the hook (`environment/sim/finalize.sh`,
   RoboLab's) replays it in two fresh processes; success = live ∧ replay ∧ deterministic, `live_matches_replay` reported
   separately. The standard verifier reads only `final.json` with `network_mode = "no-network"`.
+- Whose failure a 0 is (2026-10-10), as RoboLab's (docs/benchmarks/robolab.md, Grading): the standard grader books a
+  missing, unreadable or unfinalized `final.json`, a lost GPU and a replay process without a result (`replay_error`) as
+  `infra_error = 1`; `finalize.sh` writes `final.json` atomically and retries a replay that died once. The privileged
+  grader books an unreadable deliverable as `bad_trajectory` (the agent's 0) and a replay without a result, a replay
+  time-out or `instance_ok = 0` as `grader_error = infra_error = 1`.
+- The replay video never decides a replay (it is filmed during one of the two graded replays): the tooling catches every
+  video failure (`video_ok` false in the replay's result) and the frames go straight to the encoder; a trajectory longer
+  than 18,000 control steps is filmed as a time lapse (at most 9,000 frames), so filming adds a bounded cost.
 - Both verifiers run with `network_mode = "no-network"`. Isaac Sim starts and renders offline: the two web assets the
   scene would otherwise fetch from NVIDIA's asset bucket at run time (Isaac Lab's default ground; the three MDL materials
   of YAMLab's workstation USDs) are baked into the image (`images/yamlab/web_assets.txt`, sha256-checked; the workstation
@@ -134,7 +142,8 @@ the simulator to 2e-7 m), and thin primitives: `move_ee` (both arms together, Is
 
 ## Crash recovery (standard mode, docs/STANDARD_MODE_2_2.md §13)
 Resume class `exact`: the resumed service is a fresh process whose journal replay is that process's first run, so the
-state hash at the last checkpoint must match exactly (else `resume_failed`, `infra_error`). `RCB_STARTUP_TIMEOUT_S = 900`.
+state hash at the last checkpoint must match exactly (else `resume_failed`, `infra_error`). `RCB_STARTUP_TIMEOUT_S = 1800`
+(the compose file's value; see Time budget).
 Acceptance test `scripts/yamlab/kill_test.sh` (Harbor oracle on `yamlab-put-pot-on-cooktop-i01-standard`, since removed, the service
 killed with SIGKILL in the middle of its 7th call, after 6 checkpointed calls / 180 control steps): the container restarted,
 the fresh service replayed the 180 journaled steps in 1.9 s, matched the checkpoint's state hash exactly (`68076b87…`),
@@ -148,12 +157,27 @@ A trial's first Isaac start in a container compiles the shaders into the trial's
 heavily loaded host; the standard sidecar's startup watchdog is therefore 1800 s (as BEHAVIOR-1K), and the standard
 oracle waits up to an hour for the service.
 
+Verifier-side limits (2026-10-10; not measured on a GPU host for this change). Privileged: each fresh-process replay has
+max(1800 s, 1200 s + rows / 20) (the verifier's first Isaac start is the cold one; 20 control steps/s is a third of the slow
+nominal rate) and `[verifier] timeout_sec = 13000` fits two replays of the longest accepted trajectory (100,000 rows:
+6200 s each) plus 600 s; before, 2400 s was shorter than two 1800 s replays and than one cold start plus a long filmed
+replay. Standard: `[[verifier.collect]] timeout_sec = 15000` (was 5400) = the episode end (up to 2700 s through a resume)
++ two replays of up to 5700 s + 900 s; `finalize.sh` time-boxes each replay inside that deadline.
+The tests of these rules run without a simulator and cover YAMLab with RoboLab: `scripts/robolab/tests/test_*.py`.
+
+The tooling's runaway guard ends an episode after 100,000 control steps (`step_guard`, 55.6 min of simulated time). At
+60-120 control steps/s a standard episode can reach it within the 5400 s budget, so it is stated in `/spec`
+(`max_control_steps`, `episode`), in both instructions and in the README (PROTOCOL §4.5: a technical cap, not a step
+budget); a privileged trajectory may hold at most that many rows.
+
 ## Standard mode (eai-standard/2.2)
 `joint_position` (14: YAMLab's action, rows `dt` apart, a multiple of 1/30 s; `linear` interpolates the gripper targets too)
 and `ee_pose` (16: both tool frames + both gripper targets per row, closed-loop differential IK, at most 0.25 m/s); cameras
 `top`, `left_wrist`, `right_wrist` (640×480, z-depth); `/kinematics` from numpy models of both arms (`q` = left joint1..6,
 right joint1..6); 58 proprio columns (joints and fingers, both tool poses, gripper targets, velocities, gripper openings,
-arm efforts). STANDARD_MODE_2_2.md §16.
+arm efforts). STANDARD_MODE_2_2.md §16. Requests are checked completely before the first control step, as RoboLab's
+(docs/benchmarks/robolab.md, Standard mode): wrong types, out-of-range values, an `ee_pose` position more than 3 m from
+the world origin on any axis or a zero quaternion are 400s that execute nothing.
 
 ## Declarations
 - **Tooling: thin wrappers only.** IK moves, joint moves, gripper commands, hold, plus the frozen instance, state, stage

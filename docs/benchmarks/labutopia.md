@@ -179,6 +179,29 @@ PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the im
     with the environment), and a clock started when the service is ready would overstate what is left by that much;
   - crash recovery with resume class `exact` (a resumed service is a fresh process). The collect hook replays the
     recorded trajectory in two fresh processes.
+  - a request is checked in full before anything is executed: a malformed field (null or a wrong type for `dt`,
+    `seconds`, `cameras`, `note`, `video`, `interpolate`, `depth`; a `dt` that is not finite or not a whole multiple of
+    1/60 s) is a 400 and the episode goes on. Null for `dt`, `seconds`, `video_fps`, `cameras` or `note` means the
+    default.
+- **Time limits of the graders** (2026-10-10). A verdict replay only simulates: under a minute to start, then at most
+  36000 rows at about 200 control steps/s (180 s); it may take 2400 s (the limit a replay always had in the privileged grader), and is killed at that limit.
+  Privileged: `[verifier] timeout_sec` 5400 (was 3600) = 2 x 2400 + the video replay, whose renderer starts cold (what is left,
+  at most 2400 s; skipped under 120 s) + 300 s, so `tests/grade.py` always writes a reward before Harbor's timeout
+  (before, each of the three replays had 2400 s, together more than the verifier's 3600 s). Standard: the collect hook's `timeout_sec` is 9000 (was 5400, with no
+  limit on a replay) = 2700 (the episode's end, through a resume) + 2 x 2400 + the video replay (what is left, at most
+  1800 s) + 300 s. The numbers are stated once in `generate.py` (`REPLAY_TIMEOUT`, `VERIFIER_TIMEOUT`,
+  `COLLECT_TIMEOUT`), which refuses to generate when `shared/grade.py` or `shared/standard/finalize.sh` say otherwise.
+- **What is not the agent's 0** (`infra_error = 1` in `reward.json`, PROTOCOL §2.6). Standard: `final.json` missing
+  (the service writes it as soon as its scene is up), unreadable, or without a verdict (the collect hook was killed
+  before it wrote one: `no_verdict`); the service never ending its episode for the hook; a give-up after crashes
+  between calls or a failed resume; the GPU refusing new processes in the sidecar (`gpu_lost`); a replay process that
+  gave no result or ran into its limit (`replay_failed`, `replay_timed_out`); replays that did not rebuild the
+  instance's placements (`instance_mismatch`); an unreadable `episode.json`. A crash inside a call
+  (`sim_crashed_on_call`) stays the agent's failure. `final.json` is written whole (temporary file, then rename).
+  Privileged: a replay without a result and an instance mismatch set `grader_error` and `infra_error`; a deliverable
+  that cannot be read (not an npz, no `actions`, object arrays, the wrong shape, more than 36000 rows) is the agent's 0
+  (`bad_trajectory`), never a grader error. A result a replay wrote counts whatever the process's exit status (Isaac
+  Sim may fail while it shuts down, after the result is on disk).
 - **Two kinds of Session.** With its RTX renderer, Isaac Sim prepares a whole stage for rendering when the stage is
   loaded (a shader pipeline for every material, textures and geometry into its derived-data cache). The first time
   in a container, on eight idle cores: 5 minutes for the stage of six families (`lab_001`: 299 s) and 13 minutes for
@@ -289,6 +312,15 @@ On the authoring host (Intel Xeon Platinum 8559C, 8 vCPUs, 62 GB of RAM; RTX PRO
   `kill -9` after 239 of the reference's 478 control steps, restarts (about 20 s) and resumes the same episode; the
   rest is executed and graded: success, one resume counted, the live state equal to both fresh replays and to the
   reference's recorded state.
+- **2026-10-10, the graders' bookkeeping** (time limits, `infra_error`, request checks; "Modes" above), checked without
+  a simulator (the GPU was busy; no oracle run was repeated): the scripts are `scripts/labutopia/tests/test_*.py` (LabUtopia
+  and AutoBio together; numpy only, each run as a script): synthetic runs of both graders and of the collect hook
+  with stand-in replays (missing / corrupt / unfinished `final.json`, a replay that dies, hangs, or crashes after
+  writing its result, give-ups, unreadable deliverables: 114 cases over LabUtopia and AutoBio) and 13068 malformed
+  requests against the request checks taken from `server.py` (none raises anything but a 400); `server.py` itself on
+  the shared layer with a stand-in simulator, over HTTP: 32 malformed requests answered 400 with nothing executed, the
+  episode open and valid chunks running after them. The same hook and grader logic ran end to end on AutoBio's
+  `pickup` (CPU). Not re-run here: `harbor run`, `kill_test.sh`, the service itself on Isaac Sim.
 - **Static checks**: `bash ci_checks/run_all.sh tasks/labutopia-*` (checkout with umask 022): every check passes
   (`protocol v1.1: 18 task(s) conform`, `ok shared sources: ... labutopia 18 task dirs, 10 shared files`,
   `ok scripts/labutopia/generate.py: 18 task directories match`), and so does the run over the whole repository;

@@ -53,7 +53,9 @@ measured = "GPU: 15.7 GiB on a 48 GB card, 15.3 on 24 GB (batch_eval_live vram_p
 main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
 
 [verifier]
-timeout_sec = 2400.0
+timeout_sec = 29100.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory
+                                  # (replay_timeout(100,000 rows) = 900 s + rows / 7.5 = 14,234 s each) + 600 s; a usual
+                                  # trajectory (up to 6,750 rows) keeps the old 1800 s per replay
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 # Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.

@@ -645,6 +645,8 @@ ACTION_DIM = 8
 CONTROL_HZ = 15                      # sim dt 1/120 s x decimation 8
 DEFAULT_SEED = 0
 MAX_STEPS = 100_000                  # no step budget (the wall clock is); this only stops a runaway trajectory (~1.9 h of sim time)
+MAX_VIDEO_FRAMES = 9000              # the `replay` CLI's video holds at most this many frames (10 min at 15 fps): a longer
+                                     # trajectory is filmed as a time lapse, so filming never multiplies a long replay's cost
 ARM_SLICE = slice(0, 7)
 GRIP_INDEX = 7
 GRIPPER_OPEN, GRIPPER_CLOSE = 0.0, 1.0
@@ -1277,11 +1279,19 @@ class Session:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         # frames go straight to the encoder: a long episode's frames would not fit in memory
         w = imageio.get_writer(str(path), fps=fps, format="FFMPEG", codec="libx264", macro_block_size=1)
-        self._video = {"path": str(path), "every": every, "writer": w, "last": None}
+        self._video = {"path": str(path), "every": every, "writer": w, "last": None, "n": 0, "error": None}
         self._video_add()
 
     def _video_add(self) -> None:
-        f = self._video_frame(); self._video["writer"].append_data(f); self._video["last"] = f
+        """One frame to the encoder. Filming never decides a run: a frame that cannot be rendered or written stops the
+        filming (the reason is logged and stop_video() returns None), never the control step it belongs to."""
+        v = self._video
+        if v is None or v["error"]:
+            return
+        try:
+            f = self._video_frame(); v["writer"].append_data(f); v["last"] = f; v["n"] += 1
+        except Exception as exc:  # noqa: BLE001
+            v["error"] = repr(exc)[:200]; _log("video: filming stopped:", v["error"])
 
     def _video_frame(self) -> np.ndarray:
         from robolab.core.observations.observation_utils import unpack_image_obs, unpack_viewport_cams
@@ -1308,13 +1318,21 @@ class Session:
         return np.ascontiguousarray(main)
 
     def stop_video(self) -> str | None:
+        """End the filming started by start_video(). Returns the video's path, or None when nothing was being filmed or
+        the video could not be written (logged; a failed video never raises here, it must not undo the run it filmed)."""
         if self._video is None:
             return None
-        import imageio.v2 as imageio
         v, self._video = self._video, None
-        v["writer"].close()
-        imageio.imwrite(str(Path(v["path"]).with_suffix(".last.png")), v["last"])
-        return v["path"]
+        try:
+            v["writer"].close()
+            if v["error"] or v["last"] is None:
+                raise RuntimeError(v["error"] or "no frame was filmed")
+            import imageio.v2 as imageio
+            imageio.imwrite(str(Path(v["path"]).with_suffix(".last.png")), v["last"])
+            return v["path"]
+        except Exception as exc:  # noqa: BLE001
+            _log("video: not written:", repr(exc)[:200])
+            return None
 
     # ---- objects / robot state (env-local frame = robot root frame for the Franka)
     def object_names(self) -> list[str]:
@@ -1955,8 +1973,25 @@ class Session:
 
 # --------------------------------------------------------------------------- CLI
 def _load_traj(path: str) -> dict[str, Any]:
+    """The trajectory file's entries. A replay needs `actions` and `task` only: any other entry that cannot be read
+    without pickle (an object array somebody added) is skipped, it never stops the replay."""
     d = np.load(path, allow_pickle=False)
-    return {k: (d[k].item() if d[k].shape == () else d[k]) for k in d.files}
+    out: dict[str, Any] = {}
+    for k in d.files:
+        try:
+            v = d[k]
+        except Exception:  # noqa: BLE001
+            if k in ("actions", "task"):
+                raise
+            continue
+        out[k] = v.item() if v.shape == () else v
+    return out
+
+
+def _video_every(n_actions: int, fps: int) -> int:
+    """Control steps per video frame for the `replay` CLI: real time (CONTROL_HZ / fps) up to MAX_VIDEO_FRAMES frames,
+    a time lapse beyond."""
+    return max(1, CONTROL_HZ // max(1, int(fps)), math.ceil(int(n_actions) / MAX_VIDEO_FRAMES))
 
 
 def _versions() -> dict:
@@ -2006,16 +2041,26 @@ def cmd_replay(a) -> None:
     s = Session(a.task, instance=a.instance, strict=a.strict, depth=False)   # replays render no depth (faster; same physics)
     acts = np.asarray(traj["actions"], dtype=np.float32)
     t0 = time.time()
-    outs = []
+    outs = []; video_ok = None
     for i in range(a.repeat):
+        filming = False
         if a.video and i == 0:
-            s.start_video(a.video, fps=a.fps)   # the video shows the first (fresh-process-exact) replay
+            # the video shows the first (fresh-process-exact) replay. It never decides the replay: a video that cannot be
+            # started, filmed or encoded is reported (`video_ok` false) and the replay's result stands.
+            try:
+                s.start_video(a.video, fps=a.fps, every=_video_every(len(acts), a.fps)); filming = True
+            except Exception as exc:  # noqa: BLE001
+                s._video = None; video_ok = False; _log("video: not started:", repr(exc)[:200])
         outs.append(s.replay(acts))
-        if a.video and i == 0:
-            s.stop_video()
+        if filming:
+            try:
+                video_ok = s.stop_video() is not None
+            except Exception as exc:  # noqa: BLE001
+                video_ok = False; _log("video: not written:", repr(exc)[:200])
     out = {"n_actions": int(len(acts)), "instance_sha": s.instance_sha, "instance_matches": s.instance_matches,
            "instance_exact": s.instance_exact, "replays": outs, "all_success": all(o["success"] for o in outs),
-           "deterministic": len({o["state_sha"] for o in outs}) == 1, "wall_s": round(time.time() - t0, 1), "video": a.video}
+           "deterministic": len({o["state_sha"] for o in outs}) == 1, "wall_s": round(time.time() - t0, 1), "video": a.video,
+           "video_ok": video_ok}
     print(json.dumps(out), flush=True)
     s.close()
 
