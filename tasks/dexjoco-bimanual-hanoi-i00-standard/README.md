@@ -33,6 +33,18 @@ The sim service judges the episode live and records every executed control step;
 `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live check succeeded, both replays succeed,
 and they end in the same state. Oracle: success after 1085 control steps.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 5 GB | 4 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU-only; CPU author estimate
+
 ## Details
 | | |
 |---|---|

@@ -24,6 +24,18 @@ AutoBio's scripted expert (screw_loosen.py @ 0850421), seed 0: the position targ
 ## Verification
 `tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.json`; the compiled model and the rebuilt start state are checked against its recorded hashes); pass iff both episodes succeed (the first control step at which AutoBio's check holds ends the episode in success) in the same state (`deterministic`). `nop`: no trajectory, reward 0.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 4 | 4 |
+| Memory | 8 GB | 8 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: author (merged PR #94): CPU-only, 4 CPUs and 8 GB per trial, verifier the same
+
 ## Details
 | | |
 |---|---|

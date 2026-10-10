@@ -93,6 +93,18 @@ writes `/logs/verifier/replay.mp4` and, because Harbor promotes every `reward.js
 leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`) in
 `/logs/verifier/diagnostics.json`. The oracle (`solution/solve.sh`) scores 1; `nop` scores 0.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 4 GB | 3 GB |
+| GPU memory | 0 GB | 0 GB |
+
+- GPU: not needed.
+- Measured: GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate
+
 ## Details
 | | |
 |---|---|

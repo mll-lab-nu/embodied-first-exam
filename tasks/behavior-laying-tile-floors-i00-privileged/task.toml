@@ -19,6 +19,19 @@ oracle_evidence = "No reference solution and no verified positive example yet: B
 instance_seed = 301               # scene = environment/instance.json (2026 challenge public_test instance 301 + its state hash); identity = dataset.toml digest
 expert_time_estimate_hours = 3.0
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 6.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 10.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 6.0
+verifier_min_memory_gb = 16.0
+verifier_min_gpu_memory_gb = 10.5
+measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (batch_eval_live vram override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + mll-4090-1, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (board 0048, ps); author: 13-16 GB of RAM per Isaac process"
+
 [verifier]
 timeout_sec = 30600.0             # two fresh-process replays, each capped at 4 h by tests/grade.py (1200 s start + 2 steps/s,
                                   # floor 3600 s), + 30 min; measured on an 8-vCPU L40S: 626 s Isaac start, < 3.5 steps/s

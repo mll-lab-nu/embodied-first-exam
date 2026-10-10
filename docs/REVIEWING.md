@@ -30,6 +30,9 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   the recording-only usage gateway (PROTOCOL D11)?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
 - Names end in their mode, `-privileged` / `-standard` / `-standard-realtime`; README in the standard layout; no `results/` in task directories.
+- Compute resources (PROTOCOL §2.9): are the minimums measured (what does `measured` cite?) rather than copied from the
+  `[environment]` caps? Does `gpu_class` match the simulator (Isaac Sim / Omniverse: `rtx`)? Would the oracle run on a
+  machine with exactly these values?
 
 ## Human review (oracle `partial` or `none`)
 Review per family (same generator and predicate), at least two instances per family:

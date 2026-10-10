@@ -27,6 +27,18 @@ replay`: upstream's official env, one step per row until upstream ends the episo
 holds in both (the task's success held for 1 s, no fall) and both end in the same state. Success condition: the three blocks form one stack on the green pad: the lowest touching the pad, each of the others touching the block below it, at least 0.03 m higher and within 0.05 m of it horizontally; no block held by a gripper.
 A block touching the floor ends the episode as a failure. No oracle; human review in PR #123 (PROTOCOL §2.7).
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 4 GB | 3 GB |
+| GPU memory | 1.5 GB | 1.5 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
+- Measured: GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)
+
 ## Details
 | | |
 |---|---|

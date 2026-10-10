@@ -47,6 +47,19 @@ colour_regions = 55                # the exemplar's palette-colour areas >= 30 m
 source_image = "File:Fine Wind, Clear Morning by Hokusai (Shimane Art Museum).jpg"
 source_license = "Public domain"
 
+[metadata.resources]
+# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+min_cpus = 2.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 1.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 4.0
+verifier_min_gpu_memory_gb = 1.0
+measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); CPU author estimate"
+
 [verifier]
 timeout_sec = 1200.0
 environment_mode = "separate"

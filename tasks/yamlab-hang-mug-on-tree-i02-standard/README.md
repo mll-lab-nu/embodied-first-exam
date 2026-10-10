@@ -39,6 +39,18 @@ every control step; the episode ends at the first step where every stage has lat
 live episode and both replays end in the privileged oracle's final state (hash `2b8459c04e9ab3c6`). `nop`: the episode ends
 on the time-out with no stage reached, reward 0.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 8 | 8 |
+| Memory | 16 GB | 15 GB |
+| GPU memory | 5 GB | 5 GB |
+
+- GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: L40S 48GB / L4 24GB / RTX 4090 24GB.
+- Measured: GPU 3.8-4.0 GB per trial, anon memory 11.1-11.8 GB, CPU p90 5.8-8.7 cores over 12 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + mll-4090-1, 10-10); vram_profile peaks 5.5-6.5 GB on 24 GB cards; board 0048: about 11 GB RAM and 8 CPUs per simulator; verifier 7.2 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10)
+
 ## Details
 | | |
 |---|---|

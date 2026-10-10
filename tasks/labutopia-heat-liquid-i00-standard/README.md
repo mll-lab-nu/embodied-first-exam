@@ -24,6 +24,18 @@ Same instance and success rule as `labutopia-heat-liquid-i00-privileged` (LabUto
 ## Verification
 The sim service judges the episode live and records every executed control step; the collect hook (`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, both replays succeed, and they end in the same state. `nop`: the episode times out, reward 0.
 
+## Compute resources
+Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 8 | 8 |
+| Memory | 28 GB | 27 GB |
+| GPU memory | 8.5 GB | 8.5 GB |
+
+- GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: RTX 4090 24GB / L40S 48GB.
+- Measured: oracle checks on RTX 4090 (driver 580), lab_001 pick: rendering container peak 17 GB RAM, about 7 GB GPU, 8 CPUs (start-up bursts to 16 cores for about 70 s); author: lab_003 families 21 GB at the peak (8 vCPU host)
+
 ## Details
 | | |
 |---|---|
