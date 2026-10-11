@@ -65,7 +65,8 @@ timeout_sec = 120
 
 [agent]
 timeout_sec = 14400.0             # BEHAVIOR budget: every Python process pays ~3 min of Isaac Sim + scene load, ~10 steps/s (docs/benchmarks/behavior.md)
-# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
 
 [environment]
 build_timeout_sec = 3600.0

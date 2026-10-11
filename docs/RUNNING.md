@@ -80,19 +80,65 @@ public: every host builds it (the marker file says how, and what licences and da
 a private package for org members. Before 2026-10-02 the images were `rcb-<sim>` (several registries) or `eai-<name>`
 under `embodied-agent-interface-v2-internal`; a host with an old tag can `docker tag` it to the new name.
 
-## Web search (off by default)
+## No tool outside the container (web search off by default)
 `scripts/run_agent_batch.sh` turns the harness's web search off unless `WEB_SEARCH=allowed`: Codex gets
-`--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (PROTOCOL §5). For a bare
-`harbor run`, pass the same option yourself. Codex with ChatGPT login searches by default; an API key can still request
-search directly, which the usage gateway's raw log shows (docs/LEAKAGE.md).
+`--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (PROTOCOL D11, §2.11). For a bare
+`harbor run`, pass the same option yourself. Codex with ChatGPT login searches by default, and it hands the model the
+account's connectors, apps, plugins and an image generator unless its config turns them off (`features.apps = false`,
+`features.plugins = false`, `features.image_generation = false`, `apps._default.enabled = false`, before any table of
+the config); Claude Code under a full claude.ai login loads the account's connectors (`disableClaudeAiConnectors`). An
+official run starts the harness without them. An API key can still request a search directly; the usage gateway
+refuses such a request and every path that is not a model call (below, docs/LEAKAGE.md).
 
 ## Usage gateway (token usage per request, optional)
 Off by default: the agent calls its API directly, as Harbor runs it. With `GATEWAY=1`, `scripts/run_agent_batch.sh` starts `scripts/usage_gateway/gateway.py` on the docker bridge (`GATEWAY_BIND`, 172.17.0.1)
 and points the agent's base URL at it (`--ae ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL`; a copy of `AGENT_CONFIG` with its
 provider `base_url`s rewritten and `supports_websockets = false`). The agent is still Harbor's own `codex` /
-`claude-code` with its own credentials: the gateway forwards every request unchanged to the same API, never stores a key,
+`claude-code` with its own credentials: the gateway forwards model requests unchanged to the same API, never stores a key,
 and refuses any host that is not a model API (`scripts/set_agent_egress.py` HOSTS), so it is no way around an egress
-allowlist. Under an allowlist the runner adds `--allow-agent-host 172.17.0.1`.
+allowlist.
+
+**Model-API calls only, and the only way out (PROTOCOL §2.11).** The gateway forwards the requests listed per provider
+in `scripts/usage_gateway/api_paths.json` (responses, messages, token counting, the model list; chat completions only
+to a self-hosted upstream: no official run used them, and at the providers that API serves models that search the web
+without any tool declaration) and answers anything else 403 without forwarding it: connectors and apps,
+plugins, files, conversations, web search. A model request is forwarded as it is or not at all: its body must be one
+JSON object the gateway can read (one Content-Length of at most 256 MiB, at most one Content-Encoding), and every tool
+it declares (top-level `tools`, and the `tools` of an `input` item, where Codex declares its own) must be one the agent
+runs itself (`client_tool_types` in the same file: no type, `function`, `custom`, `namespace`, which is all Codex and
+Claude Code declared in the recorded runs). Any other tool type is the provider's (web search or fetch, image
+generation, remote MCP, file search, a hosted shell or code interpreter) and the request is refused, as is one with a
+provider-side search, MCP or stored-prompt field (`provider_side_fields`), an OpenRouter `:online` model, or an image,
+document or file given as an http(s) address for the provider to fetch (`data:` URLs are fine). What the gateway does
+not judge: which model a request names (a provider's model that searches by itself on a forwarded path would pass;
+give a run a key that can call only its model). Codex compresses its
+ChatGPT-login requests with zstd: the gateway reads them with the `zstandard` module or the `zstd` program; a host with
+neither forwards such a body unchecked, marks it `body_unchecked` and says so in the gateway's start-up log. Refusals
+are in `<trial>/gateway/usage.jsonl` (`refused`: `path_not_allowed`, `host_not_allowed`, `server_tool` or
+`body_unreadable`, with method and path, never a body) and counted in `totals.json` (`refused_paths`,
+`refused_server_tools`, `refused_bodies`); the batch summary shows `REFUSED n` in the gateway column. A trial with one
+tried to leave the model API and is to be looked at. To add a provider, a path or a client tool type (a new harness
+version that declares another one is refused until it is listed), edit `api_paths.json` (default deny; a host without a
+provider there gets nothing forwarded).
+The model APIs' hosts also serve all of that directly, so with the gateway on each job runs from its own copy of the
+task (`$JOBS/.tasks/<job>/`, removed afterwards) whose egress allowlist is the gateway's address alone
+(`scripts/set_agent_egress.py only <GATEWAY_BIND>`; Harbor's `--allow-agent-host` can add a host, not remove one).
+`GATEWAY_EGRESS=task` keeps the task's own allowlist (the hosts reachable directly; not for official runs).
+Harbor's allowlist names addresses, not ports: every TCP service that listens on the gateway's address (the docker
+bridge) of the runner host is reachable from a trial, as it has been since the gateway exists; bind the host's other
+services to 127.0.0.1 or firewall the bridge.
+One exception, Codex with a ChatGPT login: before its first model call Codex 0.160.1 asks
+`chatgpt.com/backend-api/wham/accounts/check` for the account's workspace, at `chatgpt_base_url` and not at the model's
+base URL, and it accepts only an HTTPS origin there, which the plain-HTTP gateway is not (through the gateway the lookup
+succeeds and Codex then stops with "workspace backend must use an HTTPS origin"; without it, "workspace routing
+discovery failed"). Such a run keeps `chatgpt.com` (that one host) on the copy's allowlist beside the gateway, so that
+backend's other paths stay reachable directly and the account's connectors are off by the harness's configuration
+alone. Closing it needs a gateway that speaks HTTPS with a certificate the harness trusts; until then prefer API keys,
+which have no connectors, and keep the evaluation accounts' connectors disconnected. Measured 2026-10-10 on a pool host
+(one short trial each, a container probing its own reach): a Codex API key, a Claude subscription token and a
+self-hosted endpoint work with the gateway as the only address, and `chatgpt.com`, `api.openai.com`,
+`api.anthropic.com`, `auth.openai.com`, GitHub and PyPI fail from the container; a ChatGPT login works with the
+exception, with `chatgpt.com` answering directly and the other hosts failing.
 The runner waits `GATEWAY_START_WAIT` seconds (10) for the gateway to come up; raise it on busy shared nodes.
 
 Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts):
@@ -116,5 +162,5 @@ compacts it to `raw.jsonl.xz` (one 1,994-request trial: 5.9 GB as one gzip file 
 2026-10-02, 32 MB now; `rawlog.py pack --delete <dir>` converts such `raw/` directories).
 Switches: `GATEWAY=1` (record usage and, by default, raw bodies), `GATEWAY_RAW=0` (usage only; raw bodies are private: they hold the
 whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
-attempts); Codex request bodies are zstd-compressed and are stored as base64, and so not deduplicated, unless
-`zstandard` is installed on the runner host; OpenAI reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
+attempts); Codex's zstd-compressed request bodies are stored as base64, and so not deduplicated, on a runner host
+that has neither the `zstandard` module nor the `zstd` program; OpenAI reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.

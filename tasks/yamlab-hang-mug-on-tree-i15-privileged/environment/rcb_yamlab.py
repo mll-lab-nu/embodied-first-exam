@@ -31,7 +31,7 @@ budget     : no step budget: the agent's wall clock is the limit. MAX_STEPS only
 
 CLI
 ---
-  python rcb_yamlab.py make-instance --task put_pot_on_cooktop --dataset putpot_007.hdf5 --demo 0 --out instance.json --oracle-out oracle_actions.npy
+  python rcb_yamlab.py make-instance --task put_pot_on_cooktop --dataset <recording> --demo 0 --out instance.json --oracle-out oracle_actions.npy
   python rcb_yamlab.py run-actions   --task put_pot_on_cooktop --instance instance.json --actions oracle_actions.npy --out traj.npz
   python rcb_yamlab.py replay        --task put_pot_on_cooktop --instance instance.json --traj traj.npz [--video replay.mp4]
   python rcb_yamlab.py render        --task put_pot_on_cooktop --instance instance.json --traj traj.npz --out replay.mp4
@@ -1364,9 +1364,9 @@ def cmd_make_instance(a) -> None:
            "initial_state": s.initial_state, "state_sha": s.instance_sha, "action_dim": ACTION_DIM, "control_hz": CONTROL_HZ,
            "sim_dt": float(s.env.physics_dt), "decimation": int(s.env.cfg.decimation), "physics": {"device": "cpu"},
            "robot_joint_positions": {arm: [round(float(x), 6) for x in s.joint_positions(arm)] for arm in ARMS},
-           "objects": s.objects(), "success_params": s.success_params(), "table_top_z": None, "source": {"dataset": "yamlab/yamlab_datasets", "file": os.path.basename(a.dataset),
-                                                                      "demo": int(a.demo), "state": "initial_state",
-                                                                      "oracle": f"{a.ramp}-step ramp from the home targets + the demo's {len(acts)} actions"},
+           "objects": s.objects(), "success_params": s.success_params(), "table_top_z": None,
+           # no provenance here: the instance is in the agent's container, and where its scene came from is the address
+           # of a solution (PROTOCOL §2.7); the maintainers' record is scripts/yamlab/instances.json
            "versions": _versions()}
     try:
         from yamlab.robot.yam import ROBOT

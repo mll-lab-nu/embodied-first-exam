@@ -20,7 +20,9 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
 
 ## Questions to ask
 - Could you write the verifier from the instruction alone? Is every convention the agent needs stated?
-- Can the agent reach a solution, a pointer to one, or the success predicate (images, tooling, docs, network)?
+- Can the agent reach a solution, a pointer to one, or the success predicate (images, tooling, docs, network)? In the
+  image too: recorded episodes, demonstration files, a `source_url` or dataset name in instance metadata (PROTOCOL
+  §2.7). Does the agent's container start and work with the allowlist only (§2.11: oracle run under it)?
 - Does the verifier depend on anything the agent controlled besides the declared artifacts?
 - Is the predicate checked at the end of the replay, and can it be true without doing the task?
 - Standard mode: four endpoints only, RCB1 responses, no reset (unless the optional capability is declared and its

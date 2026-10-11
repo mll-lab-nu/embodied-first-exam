@@ -22,6 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ISOLATION = ["bash", str(ROOT / "ci_checks/check-verifier-isolation.sh")]
 RESOURCES = [sys.executable, str(ROOT / "ci_checks/check-resources.py")]
+POINTERS = [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")]
 IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-level: runs on a tasks directory (see main)
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
@@ -129,8 +130,26 @@ MUTATIONS = [
     ("... `network_mode: bridge`", HEAVY, COMPOSE, in_service("main", "    network_mode: bridge"), ISOLATION, "service main: `network_mode` is not allowed"),
     ("a sidecar on a network of its own", STD, COMPOSE, in_service("sim", "    networks: [default]"), ISOLATION, "service sim: `networks` is not allowed"),
     ("a top-level networks block", STD, COMPOSE, append("networks:\n  default:\n    driver: bridge\n"), ISOLATION, "top-level `networks` is not allowed"),
-    ("a benchmark with downloadable solutions drops its allowlist",
+    ("a task drops its allowlist (PROTOCOL §2.11: every task's agent reaches the model APIs only)",
      HEAVY, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
+    ("... a task of a benchmark that was open until 2026-10-10",
+     TWIN_P, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
+    ("the instruction no longer states the external-material rule",
+     STD, "instruction.md", sub(r"(?ms)^## External material\n.*?(?=^## )", ""), RESOURCES, "does not state `## External material`"),
+    ("the frozen instance the agent reads names where its scene came from",
+     PRIV, "environment/instance.json", sub(r"^\{", '{"source_url": "https://example.org/demos/data/manifest.json", ', count=1, flags=0),
+     POINTERS, "key `source_url` locates upstream material"),
+    ("... names the recording its reference replays",
+     PRIV, "environment/instance.json", sub(r"^\{", '{"source": {"file": "demos/boxing_books_017.hdf5", "demo": 3}, ', count=1, flags=0),
+     POINTERS, "file `boxing_books_017.hdf5` locates upstream material"),
+    ("a step with a network policy of its own (Harbor would let it override [agent])",
+     STD, TOML, append('\n[[steps]]\nname = "s1"\n[steps.agent]\nnetwork_mode = "public"\n'), ISOLATION, "a step sets its own network policy"),
+    ("the instruction links the upstream repository",
+     STD, "instruction.md", append("\nThe benchmark's code: https://github.com/StanfordVL/BEHAVIOR-1K\n"), POINTERS,
+     "URL `https://github.com/StanfordVL/BEHAVIOR-1K` locates upstream material"),
+    ("the instruction states the external-material rule in other words",
+     STD, "instruction.md", sub(r"A result obtained with external material is void\.", "Prefer not to download things."), RESOURCES,
+     "does not state `## External material`"),
     # ---- review round 3, M5: a variable in a volume source, the top level of the file, files by another road
     ("the sim's trusted volume as the default of a variable",
      STD, COMPOSE, in_service("main", "      - ${RCB_CACHE_VOL:-rcb_behavior_cache_trusted}:/cache", VOL), ISOLATION, VAR),
@@ -215,7 +234,7 @@ def main() -> int:
                 return 1
             clean[name] = Path(tmp) / "clean" / name
             shutil.copytree(src, clean[name])
-            for cmd in (ISOLATION, RESOURCES):
+            for cmd in (ISOLATION, RESOURCES, POINTERS):
                 rc, out = run(cmd, clean[name])
                 if rc != 0:
                     print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {Path(cmd[-1]).name}:\n{out[-800:]}")

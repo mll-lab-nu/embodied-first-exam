@@ -31,4 +31,6 @@ if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-resources.py" || rc=1; else
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-protocol.py" || rc=1; else python3 "$root/ci_checks/check-protocol.py" "$@" || rc=1; fi
 # PROTOCOL §2.10 (v1.2): the resource monitor sidecar and the verifier step, wired by scripts/rcb_monitor/inject.py
 if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-monitor.py" || rc=1; else python3 "$root/ci_checks/check-monitor.py" "$@" || rc=1; fi
+# PROTOCOL §2.7: no address of upstream material (repository, dataset, demonstration file, video) in a file the agent reads
+if [ $# -eq 0 ]; then python3 "$root/ci_checks/check-agent-pointers.py" || rc=1; else python3 "$root/ci_checks/check-agent-pointers.py" "$@" || rc=1; fi
 [ $rc -eq 0 ] && echo "all checks passed"; exit $rc
