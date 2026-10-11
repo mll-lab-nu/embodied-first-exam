@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_bread_skillet — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** If there is one bread on the table, use one arm to grab the bread and put it into the skillet.
+cannot open. You get one client and one episode. **Task:** If there is one bread on the table, use one arm to grab the bread and put it into the skillet. The success check, run at the end of every call, passes when the bread's position is within 3.5 cm in x and in y of the reference point in the skillet's pan while the skillet is held off the table: that point and the bread are both above z = 0.76 m (2 cm above the table top).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

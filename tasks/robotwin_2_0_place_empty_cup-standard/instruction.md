@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_empty_cup — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use an arm to place the empty cup on the coaster.
+cannot open. You get one client and one episode. **Task:** Use an arm to place the empty cup on the coaster. The success check, run at the end of every call, passes when the centre of the cup's base is within 3.5 cm (in the table plane) of the coaster's centre and within 1.5 cm of the coaster's surface in height, and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

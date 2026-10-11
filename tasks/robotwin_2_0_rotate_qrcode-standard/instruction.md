@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · rotate_qrcode — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use arm to catch the qrcode board on the table, pick it up and rotate to let the qrcode face towards the robot.
+cannot open. You get one client and one episode. **Task:** Use arm to catch the qrcode board on the table, pick it up and rotate to let the qrcode face towards the robot. The success check, run at the end of every call, passes when the board is back on the table (its base below z = 0.75 m), stands upright with the QR code facing the robot (toward -y) within about 8 degrees, and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

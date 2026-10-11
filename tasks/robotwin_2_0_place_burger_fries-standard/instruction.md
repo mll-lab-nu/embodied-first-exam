@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_burger_fries — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use dual arm to pick the hamburg and frenchfries and put them onto the tray.
+cannot open. You get one client and one episode. **Task:** Use dual arm to pick the hamburg and frenchfries and put them onto the tray. The success check, run at the end of every call, passes when the hamburger is within 8 cm (in the table plane) of the tray's left placing spot and the french fries are within 8 cm of its right placing spot (the two spots are about 7 cm to the left and to the right of the tray's centre), and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

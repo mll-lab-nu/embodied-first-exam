@@ -37,7 +37,9 @@ tt = tt.replace('"stack_blocks_two"]', f'"{task}"]').replace('family = "stack_bl
 ins = (dst / "instruction.md").read_text()
 ins, n_title = re.subn(r"^# RoboTwin 2\.0 · stack_blocks_two — (LIMITED|STANDARD) MODE", f"# RoboTwin 2.0 · {task} — STANDARD MODE", ins, count=1, flags=re.M)
 assert n_title == 1, "template title drifted: update the title substitution"
-ins = re.sub(r"\*\*Task:\*\* .*?\n\n", f"**Task:** {goal}\n\n", ins, count=1, flags=re.S)
+# the goal text, then the facts of the judge for this task (scripts/robotwin/standard_facts.json; robotwin_sync_shared.py checks it)
+facts = json.load(open(root / "scripts/robotwin/standard_facts.json")).get(task, {}).get("facts", "")
+ins = re.sub(r"\*\*Task:\*\* .*?\n\n", lambda m: f"**Task:** {goal}{' ' + facts if facts else ''}\n\n", ins, count=1, flags=re.S)
 ins = ins.replace("Objects here: two 5 cm cubes (red, green). Table top at z ≈ 0.74 m.", "Table top at z ≈ 0.74 m. The scene's objects are what the cameras show.")
 (dst / "instruction.md").write_text(ins)
 rd = (dst / "README.md").read_text().replace("robotwin_2_0_stack_blocks_two-standard", f"robotwin_2_0_{task}-standard").replace("`robotwin_2_0_stack_blocks_two-privileged`", f"`robotwin_2_0_{task}-privileged`").replace("RoboTwin seed 60417", f"RoboTwin seed {seed}")
