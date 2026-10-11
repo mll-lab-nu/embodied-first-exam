@@ -46,7 +46,7 @@ elif ag.get("network_mode") == "allowlist":
     if not hosts: fail("cannot read HOSTS from scripts/set_agent_egress.py (the allowlist every task must have)")
     elif sorted(ag["allowed_hosts"]) != sorted(hosts):
         fail(f"[agent].allowed_hosts differs from scripts/set_agent_egress.py HOSTS (missing {sorted(set(hosts) - set(ag['allowed_hosts']))}, extra {sorted(set(ag['allowed_hosts']) - set(hosts))})")
-# PROTOCOL §2.11: every task's agent reaches the model APIs and nothing else. With open egress (the default of six
+# PROTOCOL §2.11: every task's agent reaches the model APIs and the package registries, nothing else. With open egress (the default of six
 # benchmarks until 2026-10-10) agents downloaded upstream sources, a reference solution, a recorded demonstration and
 # robot models from their own shell. An exception is a directory prefix here with its reason, changed together with the
 # protocol's text; a task that drops its allowlist otherwise fails.
@@ -58,7 +58,7 @@ for st in d.get("steps") or []:
         if isinstance(st, dict) and {"network_mode", "allowed_hosts"} & set((st.get(role) or {})):
             fail(f"[[steps]] {st.get('name', '?')}: a step sets its own network policy ([steps.{role}]); the task's [agent] / [verifier] policy must be the only one")
 if ag.get("network_mode") != "allowlist" and not t.name.startswith(tuple(OPEN_EGRESS)):
-    fail('[agent].network_mode must be "allowlist" (PROTOCOL §2.11: the model APIs only, in every task; the generator writes it, scripts/set_agent_egress.py allowlist)')
+    fail('[agent].network_mode must be "allowlist" (PROTOCOL §2.11: the model APIs and the package registries, in every task; the generator writes it, scripts/set_agent_egress.py allowlist)')
 df = t / "tests/Dockerfile"
 if not df.is_file(): fail("tests/Dockerfile missing (separate verifier image)")
 else:

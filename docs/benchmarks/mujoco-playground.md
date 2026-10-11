@@ -82,7 +82,7 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
   - Spot gait tracking: trained with the command added to the observation (see below).
 - Every reference row is float32-exact: the standard client sends actions as float32, so the standard oracle (streaming
   the rows through the client) records exactly the privileged reference.
-- Policies only make the references: no image contains one, and the agent's egress is the model APIs only (Playground's
+- Policies only make the references: no image contains one, and the agent's egress is the model APIs and the package registries only (Playground's
   policies are public). The four manipulation pairs have scripted references of our own and were left on Harbor's open
   default until 2026-10-10; they are on the same allowlist now (Change log).
 
@@ -152,14 +152,15 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   `actions` array is `bad_trajectory`, not `grader_error`, and every early exit writes `deterministic`; the verdicts
   are the same.
 - 2026-10-10 (owner decision, board 0072), the four manipulation pairs (`mujoco_playground_{aloha,panda}_*`, both modes):
-  the agent's network egress is the model APIs only (`[agent] network_mode = "allowlist"`, the hosts of
+  the agent's network egress is the allowlist every task has (`[agent] network_mode = "allowlist"`, the hosts of
   `scripts/set_agent_egress.py`; `scripts/mj_mk_limited.py` writes it for every twin, and the four hand-made privileged
   tasks were switched with `scripts/set_agent_egress.py allowlist`). It was open before, for no technical reason: no
   solution of these four was public, so PROTOCOL §2.7's rule did not ask for an allowlist. With open egress agents cloned
   Playground and MuJoCo Menagerie from their own shell and, in standard mode, rebuilt the task's simulator locally
   (board 0072). Nothing in the containers needs the network at run time: `eai-mujoco:0.1.2` holds the Playground and
   Menagerie files the tooling loads (`/opt/rcb_mj`, `images/mujoco/prepare_assets.sh`), and the standard agent image has
-  Python with requests, numpy, pillow and scipy and can install nothing more. Scenes, instances, tooling and pass rules
+  Python with requests, numpy, pillow and scipy (2026-10-11: PyPI and the apt archives are on the list, so more can be
+  installed; the PyPI packages `playground` and `envpool` carry Playground's task sources, PROTOCOL §2.11). Scenes, instances, tooling and pass rules
   are unchanged; results from before this date were obtained with open egress. The quadruped pairs were already on the
   allowlist.
 

@@ -130,7 +130,7 @@ MUTATIONS = [
     ("... `network_mode: bridge`", HEAVY, COMPOSE, in_service("main", "    network_mode: bridge"), ISOLATION, "service main: `network_mode` is not allowed"),
     ("a sidecar on a network of its own", STD, COMPOSE, in_service("sim", "    networks: [default]"), ISOLATION, "service sim: `networks` is not allowed"),
     ("a top-level networks block", STD, COMPOSE, append("networks:\n  default:\n    driver: bridge\n"), ISOLATION, "top-level `networks` is not allowed"),
-    ("a task drops its allowlist (PROTOCOL §2.11: every task's agent reaches the model APIs only)",
+    ("a task drops its allowlist (PROTOCOL §2.11: one host list, in every task)",
      HEAVY, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
     ("... a task of a benchmark that was open until 2026-10-10",
      TWIN_P, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
@@ -148,7 +148,7 @@ MUTATIONS = [
      STD, "instruction.md", append("\nThe benchmark's code: https://github.com/StanfordVL/BEHAVIOR-1K\n"), POINTERS,
      "URL `https://github.com/StanfordVL/BEHAVIOR-1K` locates upstream material"),
     ("the instruction states the external-material rule in other words",
-     STD, "instruction.md", sub(r"A result obtained with external material is void\.", "Prefer not to download things."), RESOURCES,
+     STD, "instruction.md", sub(r"This is an honour rule; trials are reviewed\.", "Do as you like."), RESOURCES,
      "does not state `## External material`"),
     # ---- review round 3, M5: a variable in a volume source, the top level of the file, files by another road
     ("the sim's trusted volume as the default of a variable",

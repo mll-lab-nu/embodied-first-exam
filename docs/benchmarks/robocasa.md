@@ -102,7 +102,7 @@ Synthetic tests of 6–8 (a stub in place of the simulator; no MuJoCo) were run 
 repository's checks.
 
 ## Egress
-The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs
+The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries
 (`network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`), as DexToolBench and HumanoidBench do.
 The image contains no demonstration data and no pointer to it: the Dockerfile deletes RoboCasa's
 `robocasa/scripts/download_datasets.py` and the clone's `.git`, and blanks the demonstration links (`*.hdf5`) in

@@ -21,7 +21,8 @@ Pick a named object and set it into or onto a named receptacle in an unseen, clu
 
 ## Reference solution
 None is shipped. Upstream's scripted experts (`molmo_spaces/policy/solvers`) are reference solutions and are not in the
-image; neither are grasp files nor the public MolmoBot trajectories (agent egress: the model APIs only).
+image; neither are grasp files nor the public MolmoBot trajectories (agent egress: the model APIs and the package
+registries; the PyPI distribution `molmo-spaces` has those experts, PROTOCOL §2.11).
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`).

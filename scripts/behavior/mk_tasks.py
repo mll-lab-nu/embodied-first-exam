@@ -151,7 +151,7 @@ CHANGES = {
         "still only recorded (enforcement is off), so no result changes; the scene, the pass rule and the verifier are "
         "unchanged, and the task keeps its name.",
         "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
-        "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), "
+        "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), "
         "and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, "
         "the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before "
         "this date were obtained with open egress."],
@@ -191,7 +191,7 @@ CHANGES = {
         "their timeout (up to an hour). The adapter, the collect hook, the grader, the scene and the pass rule are "
         "unchanged.",
         "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
-        "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), "
+        "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), "
         "and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, "
         "the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before "
         "this date were obtained with open egress."],
@@ -273,7 +273,7 @@ def agent_egress(tt: Path) -> None:
     block, sep2, tail = rest.partition("\n[")
     lines = [ln for ln in block.splitlines() if ln.strip() and not re.match(r"\s*(network_mode|allowed_hosts)\s*=", ln)
              and "set_agent_egress" not in ln]
-    lines.append('network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4')
+    lines.append('network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11')
     lines.append("allowed_hosts = [" + ", ".join(f'"{h}"' for h in hosts) + "]")
     tt.write_text(head + "[agent]\n" + "\n".join(lines) + "\n" + (("\n[" + tail) if sep2 else ""))
 

@@ -257,7 +257,7 @@ through the client as `joint_position_velocity` chunks.
   their motion primitives), `policy/`, `data_collectors/`, `main.py` and the two factories that build them, in the same
   image layer as the clone (no layer holds them); the build fails if its check afterwards finds one. What builds a
   scene and reads its state stays: `tasks/`, `robots/`, `utils/`, `config/`, `assets/`.
-- **Agent egress is the model APIs only, in both modes.** The controllers are in LabUtopia's public repository; a
+- **Agent egress is the model APIs and the package registries, in both modes** (PROTOCOL §2.11). The controllers are in LabUtopia's public repository; a
   standard-mode agent could also rebuild the simulator from it.
 - **Only rows cross to the verifier.** The privileged grader copies the trajectory's rows into a clean file and replays
   them with its own copy of the tooling and of the instance, in a sandbox the agent never saw, without network.

@@ -31,7 +31,7 @@ environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dock
 
 [agent]
 timeout_sec = @@BUDGET@@.0             # ManiGuard budget, both modes (docs/benchmarks/maniguard.md)
-network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py): ManiGuard's demonstrations and data generator are public
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py): ManiGuard's demonstrations and data generator are public
 allowed_hosts = @@ALLOWED_HOSTS@@
 
 [environment]

@@ -46,7 +46,7 @@ timeout_sec = 15000               # = finalize.sh's HOOK_BUDGET_S (keep them equ
 
 [agent]
 timeout_sec = 5400.0              # RoboLab budget, both modes (docs/benchmarks/robolab.md)
-network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = [@@ALLOWED_HOSTS@@]
 
 [environment]
