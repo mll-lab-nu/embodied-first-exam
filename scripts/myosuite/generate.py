@@ -40,7 +40,7 @@ RESET_BUDGET = 10  # standard mode's default reset budget (owner, 2026-10-09; PR
 REVIEW_PR = "65"  # the number of the pull request that adds the benchmark (human review, PROTOCOL §2.7)
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
-    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com",
+    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com",
 ]  # fmt: skip
 BODY = {
     "hand": ("MyoHand", "myohand", "a musculoskeletal model of a human forearm and hand"),
@@ -493,8 +493,9 @@ expert_time_estimate_hours = {f['hours'] + (1.0 if std else 0.0)}
 {verifier}
 [agent]
 timeout_sec = {AGENT_TIMEOUT}.0
-# MyoSuite's trained baselines ship in its PyPI wheel (and a standard-mode agent could rebuild the simulator from it):
-# the agent reaches the model APIs and nothing else (scripts/set_agent_egress.py HOSTS).
+# The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS). MyoSuite's
+# trained baselines ship in its PyPI wheel (and a standard-mode agent could rebuild the simulator from it): reachable
+# since 2026-10-11, left to the instruction's honour rule (PROTOCOL §2.11).
 network_mode = "allowlist"
 allowed_hosts = [{", ".join(toml_str(h) for h in HOSTS)}]
 

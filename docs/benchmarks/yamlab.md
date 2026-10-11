@@ -87,7 +87,7 @@ and every selected demonstration succeeds under the evaluation thresholds. The p
 runs `solution/oracle_actions.npy` through the agent's own tooling; the standard oracle (`solution/oracle_replay.py`, the
 RoboLab script) streams the same rows as one-second `joint_position` chunks (`dt` = 1/30 s, `hold`) through the client,
 riding through a service crash. The demonstrations are public (the dataset), so the agent's egress is closed to the model
-APIs in both modes (`network_mode = "allowlist"`), and the image contains no demonstration.
+APIs and the package registries in both modes (`network_mode = "allowlist"`), and the image contains no demonstration.
 
 ## Tooling (`rcb_yamlab.py`)
 Same shape as RoboLab's `rcb_robolab.py`: `Session` (frozen instance, reset, step, record, replay, save_trajectory, video),

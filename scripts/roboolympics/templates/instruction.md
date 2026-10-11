@@ -28,7 +28,7 @@ match). Use only the camera images, the service's replies and this document: no 
 ## Interface
 The client is installed: `from rcb_client import Robot, EpisodeOver` (`/opt/tools/rcb_client.py`, on `PYTHONPATH`;
 its docstring is the reference). Your container has Python 3.12 with numpy, SciPy, Pillow, requests and
-opencv-python-headless; no internet except your model's API.
+opencv-python-headless; the network reaches only your model's API and the package registries (PyPI, Debian / Ubuntu archives).
 
 ```python
 r = Robot()                                   # connects to the simulator, waits until it is ready

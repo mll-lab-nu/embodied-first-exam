@@ -69,7 +69,7 @@ sub("task.toml", [
     ('family = "stack_blocks_two"', f'family = "{task}"'),
     ("instance_seed = 60417", f"instance_seed = {seed}"),
 ])
-# the agent's egress is the template's: the model APIs only (owner decision 2026-10-10; scripts/set_agent_egress.py)
+# the agent's egress is the template's: the one allowlist of scripts/set_agent_egress.py (model APIs and package registries)
 assert '\nnetwork_mode = "allowlist"' in (dst / "task.toml").read_text(), "template task.toml: [agent] is not on the egress allowlist"
 instr = f'''# RoboTwin 2.0 · {task} — frozen instance
 

@@ -83,7 +83,7 @@
 #
 # Per task, for the human review of a task without an oracle (docs/PROTOCOL.md §2.7): `oracle_evidence`, the
 # positive example a reviewer checks, or why none is known. A task with oracles/<family>/<mode>/ has an oracle instead.
-# The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs only), read by gen_tasks.py:
+# The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs and the package registries), read by gen_tasks.py:
 # upstream is a public commit, so anything more lets the agent fetch back the reward the image deletes.
 # ======================================================================================================
 

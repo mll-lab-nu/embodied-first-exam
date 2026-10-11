@@ -100,7 +100,10 @@ resume keeps it), not from the service's start: the service is up before the har
 
 ## Egress
 Meta-World's scripted policies solve these tasks and are public (PyPI, GitHub), so `task.toml` closes agent egress to
-the model APIs (`network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`), as DexToolBench does. The
+the one allowlist (`network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`), as DexToolBench does. Since
+2026-10-11 that list has the package registries, so the PyPI distribution `metaworld`, which ships those policies, is
+reachable again: the instruction's honour rule asks the agent not to fetch a solution, nothing blocks it, and a trial
+that installs `metaworld` is one to look at (PROTOCOL §2.11). The
 policies are deleted from the image in the layer that installs them; `freeze.sh` mounts them from the pinned commit.
 
 ## Rebuilding

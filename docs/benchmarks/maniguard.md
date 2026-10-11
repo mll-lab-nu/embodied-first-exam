@@ -297,7 +297,7 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
   `check-standard-texts.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
   base pose is in `robot_spec`. Privileged tasks give everything through the tooling.
 - **Reference solutions out of reach.** ManiGuard's 40 public demonstrations per task, its scripted data generator and its
-  grasp annotations are not in the image or the task dirs, and agent egress is allowlisted to the model APIs by default in
+  grasp annotations are not in the image or the task dirs, and agent egress is allowlisted to the model APIs and the package registries by default in
   both modes (`[agent] network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`; user decision 2026-10-03).
 
 ## Licences

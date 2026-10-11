@@ -304,14 +304,14 @@ sizes, colours and the detailed goal; privileged texts may give world quantities
 
 ## Network policy
 
-The agent's egress is the model APIs only (`[agent] network_mode = "allowlist"`, the hosts of
+The agent's egress is the model APIs and, since 2026-10-11, the package registries (`[agent] network_mode = "allowlist"`, the hosts of
 `scripts/set_agent_egress.py`; owner decision 2026-10-10, board 0072), in both modes; `scripts/robotangle/mk_tasks.py`
 writes it. It was open until then, on the argument that no reference solution was publicly downloadable. That was wrong:
 one privileged trial downloaded the upstream demonstration of interlocked_claws (3084 recorded dual-arm frames) from an
 address the image itself names, and scored 1. Every RoboTangle result from before the switch is withdrawn.
 
-Who reaches what: the agent's container reaches the model APIs during the agent phase and nothing else (no GitHub, PyPI
-or Hugging Face). Under Harbor's egress control the standard `sim` service shares that network namespace, so it is public
+Who reaches what: the agent's container reaches the model APIs and the package registries during the agent phase and
+nothing else (no GitHub or Hugging Face). Under Harbor's egress control the standard `sim` service shares that network namespace, so it is public
 while the environment starts and allowlisted during the agent phase; it downloads nothing (the image is complete, the
 instance is staged from it). Both verifiers run with `network_mode = "no-network"`.
 

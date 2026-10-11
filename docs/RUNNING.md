@@ -80,6 +80,28 @@ public: every host builds it (the marker file says how, and what licences and da
 a private package for org members. Before 2026-10-02 the images were `rcb-<sim>` (several registries) or `eai-<name>`
 under `embodied-agent-interface-v2-internal`; a host with an old tag can `docker tag` it to the new name.
 
+## What an agent's container reaches
+Every task's `[agent]` allowlist is one list, `HOSTS` in `scripts/set_agent_egress.py`: the model APIs and the package
+registries (PyPI: pypi.org, files.pythonhosted.org; apt: deb.debian.org, security.debian.org, archive.ubuntu.com,
+security.ubuntu.com, snapshot.ubuntu.com). So `pip install` (or `uv pip install` in the images without pip) and
+`apt-get update && apt-get install` work in every agent container, in both modes; GitHub, raw.githubusercontent.com,
+Hugging Face and the general web do not answer (PROTOCOL §2.11: the instruction asks the agent, as an honour rule, not
+to look a solution up; the network keeps the places where solutions are published out of reach). Checked on real
+trials (2026-10-11; Debian 12 and 13, Ubuntu 22.04 images): both installs succeed with and without the usage gateway.
+In the Ubuntu images built on NVIDIA's CUDA base, `apt-get update` warns about NVIDIA's own repository
+(developer.download.nvidia.com is not on the list) and goes on; the Ubuntu archives answer.
+
+The list is the one switch.
+- Another host for every task: add it to `HOSTS` (to `PACKAGE_HOSTS` too if a run through the gateway should reach it
+  directly), update the generators' copies of the list, `python3 scripts/set_agent_egress.py allowlist`,
+  `cd tasks && harbor add --scan .`.
+- A run with no restriction at all (the agent may reach anything): run a copy of the tasks, since CI keeps the list
+  in `tasks/`:
+  `cp -a tasks /some/dir/tasks && python3 scripts/set_agent_egress.py public /some/dir/tasks/*/`, then
+  `harbor run -p /some/dir/tasks ...` (with `scripts/run_agent_batch.sh`: a copy of the repository with that `tasks/`,
+  and `GATEWAY_EGRESS=task`, or the runner narrows each job's copy again). The instructions' last sentence about the
+  network is then no longer true: change `EXTERNAL_TEXT` in `scripts/task_conventions.py` if that becomes the default.
+
 ## No tool outside the container (web search off by default)
 `scripts/run_agent_batch.sh` turns the harness's web search off unless `WEB_SEARCH=allowed`: Codex gets
 `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (PROTOCOL D11, §2.11). For a bare
@@ -121,15 +143,19 @@ give a run a key that can call only its model). Codex compresses its
 ChatGPT-login requests with zstd: the gateway reads them with the `zstandard` module or the `zstd` program; a host with
 neither forwards such a body unchecked, marks it `body_unchecked` and says so in the gateway's start-up log. Refusals
 are in `<trial>/gateway/usage.jsonl` (`refused`: `path_not_allowed`, `host_not_allowed`, `server_tool` or
-`body_unreadable`, with method and path, never a body) and counted in `totals.json` (`refused_paths`,
-`refused_server_tools`, `refused_bodies`); the batch summary shows `REFUSED n` in the gateway column. A trial with one
-tried to leave the model API and is to be looked at. To add a provider, a path or a client tool type (a new harness
+`body_unreadable`, with method and path, never a body) and counted in `totals.json` (`refused_paths`, `refused_hosts`,
+`refused_server_tools`, `refused_bodies`); the batch summary shows `REFUSED n` in the gateway column. A refusal is an
+attempt: the trial is one to look at, and that is all (PROTOCOL §2.11: an attempt does not void a trial, and nothing
+tells the agent that trying is forbidden). What a harness sends by itself at start-up without being a model call
+(`harness_probes` in `api_paths.json`: Claude Code's `HEAD /api/hello`, in every trial) is refused but neither recorded
+nor counted. To add a provider, a path or a client tool type (a new harness
 version that declares another one is refused until it is listed), edit `api_paths.json` (default deny; a host without a
 provider there gets nothing forwarded).
 The model APIs' hosts also serve all of that directly, so with the gateway on each job runs from its own copy of the
-task (`$JOBS/.tasks/<job>/`, removed afterwards) whose egress allowlist is the gateway's address alone
-(`scripts/set_agent_egress.py only <GATEWAY_BIND>`; Harbor's `--allow-agent-host` can add a host, not remove one).
-`GATEWAY_EGRESS=task` keeps the task's own allowlist (the hosts reachable directly; not for official runs).
+task (`$JOBS/.tasks/<job>/`, removed afterwards) whose egress allowlist is the gateway's address and the package
+registries (`scripts/set_agent_egress.py only <GATEWAY_BIND>,<PACKAGE_HOSTS>`; Harbor's `--allow-agent-host` can add a
+host, not remove one). `GATEWAY_EGRESS=task` keeps the task's own allowlist (the hosts reachable directly; not for
+official runs).
 Harbor's allowlist names addresses, not ports: every TCP service that listens on the gateway's address (the docker
 bridge) of the runner host is reachable from a trial, as it has been since the gateway exists; bind the host's other
 services to 127.0.0.1 or firewall the bridge.
@@ -140,11 +166,12 @@ succeeds and Codex then stops with "workspace backend must use an HTTPS origin";
 discovery failed"). Such a run keeps `chatgpt.com` (that one host) on the copy's allowlist beside the gateway, so that
 backend's other paths stay reachable directly and the account's connectors are off by the harness's configuration
 alone. Closing it needs a gateway that speaks HTTPS with a certificate the harness trusts; until then prefer API keys,
-which have no connectors, and keep the evaluation accounts' connectors disconnected. Measured 2026-10-10 on a pool host
+which have no connectors, and keep the evaluation accounts' connectors disconnected. Measured 2026-10-11 on a pool host
 (one short trial each, a container probing its own reach): a Codex API key, a Claude subscription token and a
-self-hosted endpoint work with the gateway as the only address, and `chatgpt.com`, `api.openai.com`,
-`api.anthropic.com`, `auth.openai.com`, GitHub and PyPI fail from the container; a ChatGPT login works with the
-exception, with `chatgpt.com` answering directly and the other hosts failing.
+self-hosted endpoint work with the gateway and the package registries as the only addresses: `pip install` and
+`apt-get install` succeed, and `chatgpt.com`, `api.openai.com`, `api.anthropic.com`, GitHub, raw.githubusercontent.com
+and Hugging Face fail from the container; a ChatGPT login works with the exception, with `chatgpt.com` answering
+directly and the other hosts failing.
 The runner waits `GATEWAY_START_WAIT` seconds (10) for the gateway to come up; raise it on busy shared nodes.
 
 Per trial, next to Harbor's `agent/` and `verifier/` (outside the agent's mounts):

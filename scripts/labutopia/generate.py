@@ -94,7 +94,7 @@ CHANGE_LOG = {
 FAMILIES = {k: v for k, v in json.loads((HERE / "families.json").read_text()).items() if not k.startswith("_")}
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
-    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com",
+    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com",
 ]  # fmt: skip
 SIM = "LabUtopia on NVIDIA Isaac Sim 6.1.0"
 
@@ -492,7 +492,7 @@ expert_time_estimate_hours = {t["hours"] + (1.0 if std else 0.0)}
 [agent]
 timeout_sec = {AGENT_TIMEOUT}.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 27 minutes to start
 # LabUtopia's scripted controllers are in its public repository (and a standard-mode agent could rebuild the simulator
-# from it): the agent reaches the model APIs and nothing else (scripts/set_agent_egress.py HOSTS).
+# from it): the agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
 allowed_hosts = [{", ".join(toml_str(h) for h in HOSTS)}]
 
