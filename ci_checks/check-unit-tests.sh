@@ -22,7 +22,8 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]
 }
 for t in robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
-         robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py; do
+         robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py \
+         tests/test_codex_tools_off.py; do
   run 300 "$t"
 done
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
