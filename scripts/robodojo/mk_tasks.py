@@ -107,6 +107,23 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
                    f"{I.get('determinism_why')}; the end states' hashes are reported as `state_identical`)"
                    if I.get("determinism") == "verdict" else " and both end in the same state hash")
     common["README_RULE"] = readme_rule
+    # A task whose physics does not replay bit for bit (instance.json "determinism": "verdict") has no privileged twin: an
+    # open-loop trajectory of it cannot be graded reproducibly. Its standard twin is graded by the live episode the trusted
+    # service ran (success = live_success); the two fresh-process replays are recorded and never decide.
+    live = I.get("determinism") == "verdict"
+    modes = ("standard",) if live else MODES
+    priv_ref = f"`{base(task, i)}-privileged`"
+    common["STD_INTRO"] = (f"Standard-only task (no privileged twin: its physics does not replay bit for bit, so an open-loop "
+                           f"trajectory cannot be graded reproducibly; RoboDojo's `{common['LAYOUT_FILE']}`)." if live else
+                           f"Standard-mode twin of {priv_ref} (same frozen layout, RoboDojo's `{common['LAYOUT_FILE']}`).")
+    common["ORACLE_SEE"] = "None:" if live else "None (see the privileged twin):"
+    common["STD_VERDICT"] = (f"the live episode succeeded: this task is graded by its live episode, which the trusted service "
+                             f"ran (`instance.json` sets `\"determinism\": \"verdict\"` because {I.get('determinism_why')}); "
+                             f"the two replays are recorded (`replay_success`, `state_identical`, `deterministic`) and never "
+                             f"decide" if live else "the live episode succeeded and both replays succeed" + readme_rule)
+    common["LIVE_NOTE"] = (f"\n- **Graded on your live episode.** This task's physics does not replay bit for bit "
+                           f"({I.get('determinism_why')}), so the episode as it happened in the service decides; the service "
+                           f"still replays it twice for the record." if live else "")
     # Change Log (PROTOCOL §2.8): per-task entries of instance_overrides.json "change_log", the last section of both READMEs
     log = OVERRIDES.get(task, {}).get("change_log") or []
     common["CHANGE_LOG"] = ("\n### Change Log\n" + "".join(f"- {x}\n" for x in log)) if log else ""
@@ -135,7 +152,7 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
     out: dict[str, dict[str, tuple[bytes, int]]] = {}
     priv_frame = "`s.proprio()` gives each arm's end-effector pose in this frame."
     assert conv["FRAME"].endswith(priv_frame)
-    for mode in MODES:
+    for mode in modes:
         ev = evidence(mode)
         # standard mode has no Session: its proprioception names the same poses
         common["FRAME"] = conv["FRAME"] if mode == "privileged" else conv["FRAME"].replace(
@@ -232,7 +249,7 @@ def main() -> int:
                 made.add(name); diffs += sync(ROOT / "tasks" / name, files, a.check)
     for t in sorted((ROOT / "tasks").glob("robodojo-*")):
         if t.is_dir() and t.name not in made:
-            diffs.append(f"stale  {t.name} (no frozen instance)")
+            diffs.append(f"stale  {t.name} (not generated: no frozen instance, or the privileged twin of a standard-only task)")
     for d in diffs:
         print(d)
     if missing:

@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboDojo |
 | Mode | standard (`eai-standard/2.2`) |
-| Twin | `robodojo-pour-by-language-i00-privileged` |
+| Twin | — (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8) |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `pour_by_language` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-robodojo:0.1.0` |
 
 ## Task
-Standard-mode twin of `robodojo-pour-by-language-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/pour_by_language_0.json`). Following the sentence, pour the liquid of each named bottle into its named bowl, in the order first, second, third, then return the arms to their start pose. (RoboDojo's `pour_by_language`). The agent drives the
+Standard-only task (no privileged twin: its physics does not replay bit for bit, so an open-loop trajectory cannot be graded reproducibly; RoboDojo's `arx_x5/0/pour_by_language_0.json`). Following the sentence, pour the liquid of each named bottle into its named bowl, in the order first, second, third, then return the arms to their start pose. (RoboDojo's `pour_by_language`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
@@ -21,14 +21,14 @@ A RoboDojo Open task (mixed: rigid (bottles, bowls) + fluid particles (wine) obj
 poses, no success signal, no reset, one episode (no step cap; RoboDojo's own evaluation gives a policy 800 actions).
 
 ## Reference solution
-None (see the privileged twin): RoboDojo releases no expert or planner script, and its training demonstrations record no
+None: RoboDojo releases no expert or planner script, and its training demonstrations record no
 initial state, so none replays on a frozen layout. The task is reported separately until it has a positive example
 (PROTOCOL §7, Open 4).
 
 ## Verification
 The sim service ends the episode on RoboDojo's own check (success), a failed check, the runaway guard or the time limit, and
 writes `/data/trajectory.npz`; the collect hook (`environment/sim/finalize.sh`) replays it from the frozen layout in two
-fresh processes; `tests/grade.py` scores 1 iff the live episode succeeded and both replays succeed (determinism by verdict: `instance.json` sets `"determinism": "verdict"` because the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism); the grader requires both replays to succeed; the end states' hashes are reported as `state_identical`). No oracle;
+fresh processes; `tests/grade.py` scores 1 iff the live episode succeeded: this task is graded by its live episode, which the trusted service ran (`instance.json` sets `"determinism": "verdict"` because the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism)); the two replays are recorded (`replay_success`, `state_identical`, `deterministic`) and never decide. No oracle;
 human review in PR #142 (no positive example yet). `nop` (no actions) scores 0.
 
 ## Compute resources
@@ -51,3 +51,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` frames or a watch window; `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
 | Source | RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0) |
 | Benchmark notes | docs/benchmarks/robodojo.md |
+
+### Change Log
+- 2026-10-11: standard only, graded by the live episode. The physics does not replay bit for bit, so an open-loop trajectory cannot be graded reproducibly: the privileged twin is removed, and this task scores the live episode the trusted service ran (`success` = `live_success`); the collect hook still replays it twice in fresh processes and reports `replay_success`, `state_identical` and `deterministic`, which no longer decide. The scene, the layout and RoboDojo's success check are unchanged. A trial recorded before this date can be re-scored from its `live_success`.

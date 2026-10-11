@@ -8,9 +8,11 @@
 #   2. replay the trajectory from the frozen instance in TWO fresh processes with the tooling's own `replay` CLI (the
 #      privileged verifier's check): on Isaac only the first replay in a process is bit-exact, so determinism is fresh
 #      process == fresh process; `live_matches_replay` reports live == replay separately. The first replay also films
-#      replay.mp4; the tooling never lets the filming decide the replay's result. A task graded by verdict (instance.json
-#      "determinism": "verdict": GPU PhysX particles, not bit-reproducible) needs the two replays' verdicts to agree
-#      instead of their end states; `state_identical` is reported either way.
+#      replay.mp4; the tooling never lets the filming decide the replay's result. A task whose physics does not replay bit
+#      for bit (instance.json "determinism": "verdict": GPU PhysX particles and cloth, make_toast_random) is graded by the
+#      LIVE episode instead (`graded_by` "live", success = live_success; the task is standard-only): its two replays still
+#      run and are reported (`replay_success`, `state_identical`, `deterministic`: both replays reach the same verdict),
+#      and a replay that gives no result is recorded (`replay_error`) without voiding the live verdict.
 #   3. merge everything into final.json, the only thing the verifier sandbox grades. final.json is always replaced
 #      atomically (a temporary file + rename), so the verifier never reads a half-written one.
 # A replay is the infrastructure's job: the trajectory was recorded by this trusted service. A replay process that ends
@@ -131,13 +133,14 @@ def result(r):
     ok = isinstance(reps, list) and reps and isinstance(reps[0], dict) and reps[0].get("state_sha")
     return reps[0] if ok else None
 out = {"finalized": True, "replay_success": False, "deterministic": False, "video": False}
-errors = []
+errors = []            # the replays (no verdict on the agent when the replays decide)
+episode_error = None   # no live record at all: never a verdict on the agent, whoever decides
 try:
     ep = json.load(open(os.path.join(d, "episode.json")))
     if not isinstance(ep, dict): raise ValueError("not an object")
     out.update(ep)
 except Exception as exc:
-    errors.append(f"no episode.json: {exc!r}")
+    episode_error = f"no episode.json: {exc!r}"
 r1, r2 = last_json("replay1.json"), last_json("replay2.json")
 a, b = result(r1), result(r2)
 gpu_lost = bool(r1.get("gpu_lost"))
@@ -153,11 +156,12 @@ if not gpu_lost:
 out["replay_success"] = bool(a and a.get("success")) and bool(b and b.get("success"))
 out["replay_sha"], out["replay_sha2"] = (a or {}).get("state_sha"), (b or {}).get("state_sha")
 out["state_identical"] = bool(a and b) and a["state_sha"] == b["state_sha"]
-try:   # instance.json "determinism": "verdict" = the replays must agree on the verdict only (physics not bit-reproducible)
+try:   # instance.json "determinism": "verdict" = the physics does not replay bit for bit: the live episode decides
     verdict_mode = json.load(open(os.environ.get("RCB_INSTANCE", "/srv/instance.json"))).get("determinism") == "verdict"
 except Exception:
     verdict_mode = False
 out["determinism_verdict_mode"] = verdict_mode
+out["graded_by"] = "live" if verdict_mode else "replay"
 out["deterministic"] = (bool(a and b) and bool(a.get("success")) == bool(b.get("success"))) if verdict_mode else out["state_identical"]
 out["live_matches_replay"] = bool(a) and a["state_sha"] == out.get("live_sha")
 # The live episode started from the frozen instance (the service is strict). A replay whose fresh process rebuilt the
@@ -169,13 +173,20 @@ if not verdict_mode and a and b and not out["instance_exact"]:
     errors.append(f"a replay did not start from the frozen instance (rebuilt states {r1.get('instance_sha')} / {r2.get('instance_sha')})")
 mp4 = os.path.join(d, "replay.mp4")
 out["video"] = bool(a) and r1.get("video_ok") is not False and os.path.exists(mp4) and os.path.getsize(mp4) > 0
+if episode_error:
+    # the service's own record of the live episode is missing: no verdict either way
+    out["infra_error"] = 1; out["error"] = "infrastructure: " + episode_error
 if gpu_lost:
-    out["gpu_lost"] = True; out["infra_error"] = 1
-    out["error"] = "infrastructure: the GPU was not accessible to new processes in the sim sidecar, so the episode could not be replayed"
+    out["gpu_lost"] = True
+    if not verdict_mode:
+        out["infra_error"] = 1
+        out["error"] = "infrastructure: the GPU was not accessible to new processes in the sim sidecar, so the episode could not be replayed"
 elif errors:
-    # the trajectory is the trusted service's own record: a replay (or a dump) that produced nothing is not the agent's 0
-    out["replay_error"] = "; ".join(errors); out["infra_error"] = 1
-    out["error"] = "infrastructure: the episode could not be replayed to a verdict: " + out["replay_error"]
+    out["replay_error"] = "; ".join(errors)
+    if not verdict_mode:
+        # the trajectory is the trusted service's own record: a replay that produced nothing is not the agent's 0
+        out["infra_error"] = 1
+        out["error"] = "infrastructure: the episode could not be replayed to a verdict: " + out["replay_error"]
 out["finalized"] = True
 p = os.path.join(d, "final.json"); tmp = f"{p}.{os.getpid()}.tmp"
 with open(tmp, "w") as f:
