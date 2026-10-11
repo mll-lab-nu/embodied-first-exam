@@ -36,8 +36,8 @@ TASK = os.environ.get("RCB_TASK", "stack_bowls"); INSTANCE = os.environ.get("RCB
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 25; SUBSTEPS = 10; ACTION_DIM = 14
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
-MAX_FRAMES = 3000        # images one call may capture (cameras x frames, per-frame depth counted again): every one is held in
-                         # memory until the response is sent, so a call without a bound could exhaust the service's memory
+MAX_FRAMES = L.MAX_FRAMES_PER_CALL   # images one call may capture (cameras x frames, per-frame depth counted again; 3000):
+                         # every one is held in memory until the response is sent (L.check_frames; /spec max_frames_per_call)
 LOCK = threading.Lock(); PID_FILE = os.path.join(DATA, "server.pid")
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 # crash recovery replays the journal in a fresh process: bit-identical where the task's physics is (resume class exact);
@@ -394,13 +394,10 @@ def images_per_frame(cams, depth: str) -> int:
 
 def check_frames(cams, fps: int, depth: str, control_steps: int) -> None:
     """A call whose length is known before it runs (a joint_position chunk, an /observe) is refused when it would capture
-    more than MAX_FRAMES images (a 400, nothing executed): the Recorder films every `every`-th action plus the first and
-    the last frame, whatever `video` asks to be returned."""
+    more than MAX_FRAMES images (the layer's check: a 400, nothing executed): the Recorder films every `every`-th action
+    plus the first and the last frame, whatever `video` asks to be returned."""
     every = max(1, int(round(CTRL_HZ / max(1, fps))))
-    n = (int(math.ceil(control_steps / every)) + 2) * images_per_frame(cams, depth)
-    if n > MAX_FRAMES:
-        raise ValueError(f"this call would capture {n} images (cameras x frames, per-frame depth counted again); the limit is "
-                         f"max_frames_per_call = {MAX_FRAMES}: ask for fewer cameras, a lower video_fps or a shorter call")
+    L.check_frames(len(cams), int(math.ceil(control_steps / every)) + 2, depth in ("frames", "legacy"), MAX_FRAMES)
 
 
 def parse_submit(meta: dict, A: np.ndarray) -> tuple:
