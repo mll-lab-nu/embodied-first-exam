@@ -1,0 +1,29 @@
+{
+ "task": "play_stacking_toy",
+ "goal": "Put all ten stacking-toy blocks onto the base's four pegs (pole 0: 4 blocks, pole 1: 3, pole 2: 2, pole 3: 1), exactly centred on the pegs, then return both arms to the start pose.",
+ "instruction_templates": [
+  "Place all stacking toy pieces onto the correct pegs."
+ ],
+ "success": [
+  "All at the same action boundary (every threshold is 1 mm for xy):",
+  "Pole 0 (blocks block0..block3): xy distance between origins of block0-block1, block1-block2, block2-block3 each < 0.001 m; block0 origin xy within 0.001 m of the stack_base passive support point 'pole/0'; each of block0..block3 has stack_base bbox z_max - block bbox z_min > 0.005 m.",
+  "Pole 1 (block4..block6): block4-block5 and block5-block6 origin xy < 0.001 m; block4 origin xy within 0.001 m of support point 'pole/1'; each of block4..block6: stack_base bbox z_max - block z_min > 0.005 m.",
+  "Pole 2 (block7, block8): block7-block8 origin xy < 0.001 m; block7 within 0.001 m xy of 'pole/2'; both: stack_base bbox z_max - block z_min > 0.005 m.",
+  "Pole 3 (block9): origin xy within 0.001 m of 'pole/3'; stack_base bbox z_max - block9 z_min > 0.005 m.",
+  "all_robot_back_to_origin(): every agent-controlled (target) arm's end-effector must be within 0.15 m on EACH of x, y, z (per-axis) and within 20 degrees of its pose at the start of the episode, at the same action boundary as all other conditions. Grippers are NOT required to be open by the success test (only by partial-credit scoring)."
+ ],
+ "evaluation": "All listed conditions are checked together, in order, after every action (reward_manager.step runs once per action, after the action's whole control sequence has executed; nothing is checked between actions). They form a single stage: all must be true at the same action boundary (any list inside the conditions means 'at least one of'). Success is declared at the first action boundary where all hold; the episode then ends. No final_check list is used. Otherwise the episode ends as a failure after step_lim actions. No early-fail rule. Order of stacking within a pole is not checked (only coaxial xy and depth).",
+ "step_lim": 1200,
+ "objects": [
+  "stack_base: stacking-toy base with four poles (category stacking base 'stack_base'), static geometry, x=0.0, y in [-0.225,-0.175], yaw up to +-15 deg",
+  "block0..block3: 4 blocks of one stackingblocks model (mode 'same'), x in [-0.4,0.4], y in [-0.25,-0.05], yaw up to +-45 deg; belong on pole 0",
+  "block4..block6: 3 blocks of another model, x in [-0.45,0.45], same y; pole 1",
+  "block7, block8: 2 blocks of a third model; pole 2",
+  "block9: 1 block of a fourth model, x in [-0.4,0.4]; pole 3"
+ ],
+ "scene_dynamics": "none",
+ "needs_memory_or_language": "The block-to-pole assignment is fixed by label groups (identical blocks go together on one pole: 4/3/2/1), but the instruction itself does not state which pole; the solver must infer 'correct pegs' from block sizes/models and the pole slot counts.",
+ "end_requirements": "all_robot_back_to_origin(): every agent-controlled (target) arm's end-effector must be within 0.15 m on EACH of x, y, z (per-axis) and within 20 degrees of its pose at the start of the episode, (part of the success condition). Grippers are NOT required to be open by the success test (only by partial-credit scoring).",
+ "physics_kind": "rigid",
+ "notes": "The 1 mm xy thresholds are very strict (blocks centred on the peg within 1 mm of the pole's support point) and rely on the pegs physically constraining the blocks; the 0.005 m depth test compares to stack_base's bbox top (if the base bbox includes the poles, block bottoms must be 5 mm below the top of the poles; if it excludes them, the blocks need to be on the base surface -- cannot be determined statically). pole/N support-point positions are asset-defined. Which model goes to which pole is determined by the group sizes in the config (4,3,2,1 blocks of identical models), not by an explicit rule in the reward. Predicate conventions (from func_parser.py): object 'position' = the object's root/origin position in world coordinates (metres, z up); 'bbox' = the 8 corners of the object's local bounding box transformed to world; is_A_in_B = A's origin xy lies inside the convex hull of B's world-projected bbox AND A's origin z > B's bbox z_min; is_axis_up(label, axis, threshold) = angle between (object rotation applied to the local axis) and world +z is < threshold degrees (wrapper default threshold 15 deg); is_axis_aligned = angle between two (optionally functional-point-frame) axes < align_threshold degrees, optionally after projection onto a plane (project_plane='xy' drops z and renormalises); all_robot_back_to_origin() default = for every target (agent-controlled) arm, end-effector pose vs its pose at episode start: |dx|,|dy|,|dz| each <= 0.15 m (per-axis, not Euclidean) and orientation difference <= 20 deg; is_all_gripper_open(open_threshold) = every target gripper's normalised opening ((val-scale0)/(scale1-scale0)) >= open_threshold (wrapper default 0.6). "
+}
