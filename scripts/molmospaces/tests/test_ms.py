@@ -78,11 +78,14 @@ hb = float(re.search(r"RCB_HOOK_BUDGET_S:-(\d+)", open(os.path.join(T_STD, "envi
 check(hb < ct, "finalize: the hook's own deadline is before the collect timeout", (hb, ct))
 
 # ------------------------------------------------------------------ privileged grade.py
-def priv_grade(name, make_traj, beh=None):
+def priv_grade(name, make_traj, beh=None, log_bytes=None):
     d = os.path.join(td, "priv_" + name); tests, log = os.path.join(d, "tests"), os.path.join(d, "log"); os.makedirs(tests); os.makedirs(log)
     traj = os.path.join(d, "trajectory.npz")
     if make_traj: make_traj(traj)
     shutil.copy(os.path.join(T_PRIV, "tests/grade.py"), tests)
+    if log_bytes is not None:                              # the agent's session log (self-reported cost), read from here instead of /app/output
+        slog = os.path.join(d, "rcb_session_log.jsonl"); open(slog, "wb").write(log_bytes); g = os.path.join(tests, "grade.py")
+        src = open(g).read(); assert '"/app/output/rcb_session_log.jsonl"' in src; open(g, "w").write(src.replace('"/app/output/rcb_session_log.jsonl"', repr(slog)))
     json.dump({"family": "pick", "t0": {"action_dim": 8}}, open(os.path.join(tests, "instance.json"), "w"))
     open(os.path.join(tests, "rcb_molmospaces.py"), "w").write(textwrap.dedent("""
         import json, os, sys
@@ -111,6 +114,9 @@ r = priv_grade("shape", lambda p: np.savez(p, actions=np.zeros((30, 7)))); check
 r = priv_grade("family", lambda p: np.savez(p, actions=A, family="open")); check(r.get("wrong_family") == 1 and r["grader_error"] == 0, "privileged: wrong_family", r)
 r = priv_grade("die", lambda p: np.savez(p, actions=A), "die"); check(r["grader_error"] == 1 and r["success"] == 0, "privileged: a replay process that died -> grader_error", r)
 r = priv_grade("mismatch", lambda p: np.savez(p, actions=A), "mismatch"); check(r["grader_error"] == 1 and r["instance_mismatch"] == 1, "privileged: instance_mismatch -> grader_error", r)
+BAD_LOG = b'{"ev": "session_start"}\n{"ev": "reset", "note": "\xff\xfe"}\n\x00\n{"ev": "session_start"}\n' + b"x" * 2**20 + b"\n"   # not UTF-8, a NUL, a 1 MB line
+r = priv_grade("badlog_pass", lambda p: np.savez(p, actions=A, family="pick"), log_bytes=BAD_LOG); check(r["success"] == 1 and r["grader_error"] == 0 and r["agent_sessions"] == 2 and r["agent_resets"] == 1, "privileged: a session log that is not UTF-8 costs no verdict (was no reward file)", r)
+r = priv_grade("badlog_missing", None, log_bytes=BAD_LOG); check(r["missing_trajectory"] == 1 and r["grader_error"] == 0 and r["agent_sessions"] == 2, "privileged: the same log without a trajectory -> missing_trajectory", r)
 
 # ------------------------------------------------------------------ the service: malformed requests
 SIM = os.path.join(T_STD, "environment/sim")

@@ -461,6 +461,7 @@ class TestGraders(unittest.TestCase):
             for k, v in self.CLOCK.items():
                 self.assertEqual(out[k], v, (bench, k))
             self.assertEqual((out["success"], out["infra_error"], out["_reward_txt"]), (1, 0, "1"), bench)
+            self.assertEqual(out.get("realtime"), 1, bench)   # the key that tells the mode apart, from all three graders
 
     def test_a_stalled_trial_keeps_its_verdict(self):
         for bench in GRADERS:

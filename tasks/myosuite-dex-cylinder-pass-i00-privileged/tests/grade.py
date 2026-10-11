@@ -7,6 +7,12 @@ episode ends at the first success, i.e. the goal held for the hold time, or at t
 replays succeed, end in the same state, and start from the instance's recorded state hash. Writes
 /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders replay.mp4, after the verdict
 is on disk (it never changes it).
+
+Whose failure a 0 is (PROTOCOL §2.6): a file that is no trajectory for this instance -- unreadable, not (T, actuators),
+empty or too long, NaN/inf -- is the agent's (`bad_trajectory`), checked here before any replay. After that check a
+replay process that gives no result (out of time, killed, not started, a failing tool) is the grader's
+(`replay_failed`, `grader_error` and `infra_error` = 1), as is an instance the verifier's host does not rebuild:
+every `grader_error` = 1 has `infra_error` = 1 next to it, and every reward.json carries `infra_error`.
 """
 
 import argparse
@@ -26,6 +32,7 @@ REPLAY_TIMEOUT_S = 1200
 
 
 def write(ok: bool, out: dict) -> None:
+    out = {**out, "infra_error": int(bool(out.get("grader_error")))}  # no grader error here is the agent's doing
     os.makedirs(LOG_DIR, exist_ok=True)
     open(os.path.join(LOG_DIR, "reward.txt"), "w").write("1\n" if ok else "0\n")
     json.dump(out, open(os.path.join(LOG_DIR, "reward.json"), "w"))
@@ -43,7 +50,7 @@ def agent_cost() -> dict:
         "agent_cost_self_reported": 1,
     }
     try:
-        with open("/app/output/rcb_session_log.jsonl") as f:
+        with open("/app/output/rcb_session_log.jsonl", errors="replace") as f:
             for i, line in enumerate(f):
                 if i > 200_000 or len(line) > 10_000:
                     break
@@ -62,7 +69,7 @@ def agent_cost() -> dict:
                         cost["agent_replays"] += 1
                 except Exception:  # noqa: BLE001 -- one bad line must not sink the verdict
                     continue
-    except OSError:
+    except Exception:  # noqa: BLE001 -- the agent's file, any bytes: the cost stays self-reported, the verdict is never lost
         pass
     return cost
 
@@ -80,7 +87,9 @@ def replay(a, traj: str, out: str, video: str | None = None) -> dict:
         subprocess.run(
             cmd, env=env, stdout=subprocess.DEVNULL, stderr=sys.stderr, timeout=REPLAY_TIMEOUT_S, check=False
         )
-        return json.load(open(out))
+        with open(out) as f:
+            r = json.load(f)
+        return r if isinstance(r, dict) else {}
     except (subprocess.TimeoutExpired, OSError, ValueError):
         traceback.print_exc(file=sys.stderr)
         return {}
@@ -109,7 +118,13 @@ def main() -> int:
     if task != a.family:
         write(False, {"success": 0, "deterministic": 0, "wrong_family": 1, "grader_error": 0, **cost})
         return 0
-    if acts.ndim != 2 or not 0 < acts.shape[0] <= MAX_ROWS or not np.all(np.isfinite(acts)):
+    try:  # the row width this instance's model takes (its actuators), from the verifier's own file
+        nu = int(np.load(a.instance, allow_pickle=False)["model__actuator_ctrlrange"].shape[0])
+    except Exception:  # noqa: BLE001 -- the replays below will say what is wrong with the instance
+        traceback.print_exc(file=sys.stderr)
+        nu = None
+    if (acts.ndim != 2 or not 0 < acts.shape[0] <= MAX_ROWS or (nu is not None and acts.shape[1] != nu)
+            or not np.all(np.isfinite(acts))):
         write(
             False,
             {
@@ -127,16 +142,17 @@ def main() -> int:
         np.savez(clean, actions=acts, task=a.family)
         r1 = replay(a, clean, os.path.join(tmp, "r1.json"))
         r2 = replay(a, clean, os.path.join(tmp, "r2.json"))
-        if not (
-            r1.get("state_sha") and r2.get("state_sha")
-        ):  # a replay process died: bad rows (wrong width) or a crash
+        if not (r1.get("state_sha") and r2.get("state_sha")):
+            # The rows were checked above (shape, width, finite values), so a replay without a result did not run to a
+            # verdict: out of time, killed (out of memory), not started, or the tool failed. That is no verdict on the
+            # agent (until 2026-10-10 it was booked as its bad_trajectory).
             write(
                 False,
                 {
                     "success": 0,
                     "deterministic": 0,
-                    "bad_trajectory": 1,
-                    "grader_error": 0,
+                    "replay_failed": 1,
+                    "grader_error": 1,
                     "n_actions": int(len(acts)),
                     **cost,
                 },

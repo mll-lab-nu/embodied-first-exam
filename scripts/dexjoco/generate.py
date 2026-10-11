@@ -407,6 +407,53 @@ PRIV_ORACLE_GEN = """# How solution/oracle_trajectory.npz was made (scripts/dexj
 
 
 # ------------------------------------------------------------------------------------------------- standard mode
+# The service's bound on the images of one call, quoted from the source so the texts state the value that is enforced.
+MAX_FRAMES = int(re.search(r"^MAX_FRAMES = (\d+)", (SHARED / "standard" / "server.py").read_text(), re.M).group(1))
+NO_POSE = ("on an object of the scene and {move} with it: images and depth only, no mount and no pose -- `extrinsic_cv` / "
+           "`cam2world_gl` are null in `meta[\"cameras\"]` and NaN per frame -- because {its} pose would be that object's")
+
+
+def cameras_text(F: dict, bim: bool) -> str:
+    """The instruction's camera sentence. A camera that rides on an object of the scene (facts.json `scene_cameras`,
+    decided from the model by make_instances.py as the service decides it) is never called static: it has no pose."""
+    scene = F.get("scene_cameras") or []
+    hand = [c for c in F["cameras"] if c.startswith("handcam")]
+    static = [c for c in F["cameras"] if not c.startswith("handcam") and c not in scene]
+    names = lambda cs: ", ".join(f"`{c}`" for c in cs)  # noqa: E731
+    one = len(scene) == 1
+    return (f"{names(static)} (static), {names(hand)} (on the hand mount{'s' if bim else ''}; they move,\n"
+            "so use the calibration that comes with each response; `spec[\"cameras\"][cam][\"mount\"]` gives the static pose or the mount\n"
+            "link)" + (f", {names(scene)} ({NO_POSE.format(move='moves' if one else 'move', its='its' if one else 'their')})"
+                       if scene else ""))
+
+
+def std_changes(F: dict) -> str:
+    """README Change Log of a standard task (PROTOCOL §2.8: published tasks are fixed in place and say so)."""
+    scene = F.get("scene_cameras") or []
+    names = " and ".join(f"`{c}`" for c in scene)
+    out = [
+        "- 2026-10-10 (review round 3, board 0067): the sim service (`environment/sim/server.py`), the shared layer under it\n"
+        "  (`rcb_limited.py`) and the client (`environment/rcb_client.py`); the scene, the frozen instance and the pass rule\n"
+        f"  are unchanged, so the task keeps its name. One call returns at most {MAX_FRAMES} images (cameras x frames, per-frame\n"
+        "  depth counted again; `/spec` `max_frames_per_call`): a larger request is a 400 and nothing runs. Before, a call had\n"
+        "  no bound, and one request within the documented ranges (several cameras for 30 s at 50 fps) could exhaust the\n"
+        "  sidecar's memory: the service was killed, and a trial that then failed was recorded as an infrastructure\n"
+        "  failure (`resource_service_oom`), not as a result. A camera named more than once in `cameras` is rendered and\n"
+        "  returned once. A service that has given up on the episode (too few CPUs, or it could not resume after its\n"
+        "  crashes) answers every request with 409 and the reason, and `Robot()` / `wait_ready()` raise `EpisodeOver` at\n"
+        "  once; before, nothing answered and they waited out their timeout (up to an hour)."]
+    if scene:
+        out.append(
+            f"- 2026-10-10 (review round 3, board 0067): **what the agent observes changed.** The camera {names} rides on an\n"
+            "  object of the scene (here: it is the lens of the camera the hands have to pick up). The service published its\n"
+            "  mount and its live pose as it does for the robot's own cameras (`spec[\"cameras\"][cam][\"mount\"]`,\n"
+            "  `meta[\"cameras\"]`, the per-frame `extrinsic_cv`), and the texts called it static: that pose is the object's\n"
+            "  pose, which standard mode must not give (PROTOCOL §4.5). It now gives images and depth only: no mount,\n"
+            "  `extrinsic_cv` / `cam2world_gl` null in `meta[\"cameras\"]`, NaN per frame. Standard-mode results of this task\n"
+            "  from before this date could read the object's pose and are reported separately.")
+    return "\n".join(out) + "\n"
+
+
 def task_text(fam: str) -> str:
     f = FAMILIES[fam]
     return f"{f['goal']}\n\n{f['scene']}\n"
@@ -417,7 +464,7 @@ def std_instruction(fam: str, F: dict) -> str:
     bim = fam.startswith("bimanual_")
     dim = 46 if bim else 23
     hand_cams = [c for c in F["cameras"] if c.startswith("handcam")]
-    static = [c for c in F["cameras"] if not c.startswith("handcam")]
+    static = [c for c in F["cameras"] if not c.startswith("handcam") and c not in (F.get("scene_cameras") or [])]
     cam0 = "front" if "front" in static else static[0]
     tcp = "`tcp_right`, `tcp_left`" if bim else "`tcp`"
     return f"""# DexJoCo · {fam} — STANDARD MODE (robot as a service, eai-standard/2.2)
@@ -459,10 +506,10 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, last/<cam>
 r.fk(q); r.ik({{"{"tcp_right" if bim else "tcp"}": pose}}, seed=q)  # kinematics of the robot (stateless: no physics, no time)
 r.status()                                    # calls, control steps, done, reason, elapsed time
 ```
-Cameras: {", ".join(f"`{c}`" for c in static)} (static), {", ".join(f"`{c}`" for c in hand_cams)} (on the hand mount{"s" if bim else ""}; they move,
-so use the calibration that comes with each response; `spec["cameras"][cam]["mount"]` gives the static pose or the mount
-link). Resolution 640x480. Rendering runs on the CPU: ask only for the cameras you need; `video="none"` makes a chunk
-fastest. If a call fails with a connection error the service may have crashed: it resumes the same episode;
+Cameras: {cameras_text(F, bim)}. Resolution 640x480. Rendering runs on the CPU: ask only for the cameras you need; `video="none"` makes a chunk
+fastest. One call returns at most {MAX_FRAMES} images (cameras x frames at `video_fps`, default 10, at most 50; depth for
+every frame counts again; `spec["max_frames_per_call"]`): a larger request is refused with a 400 before anything runs, so
+ask for fewer cameras, a lower `video_fps` or a shorter call. If a call fails with a connection error the service may have crashed: it resumes the same episode;
 `r.wait_ready()`, then check `r.status()` (`spec["on_service_error"]`).
 
 ### Action type `ee_pose` ({dim}) — DexJoCo's own action
@@ -531,7 +578,9 @@ Oracle: success after {F["oracle_rows"]} control steps.
 
 ### Provenance
 Generated by `scripts/dexjoco/generate.py`, as its privileged twin.
-"""
+
+### Change Log
+{std_changes(F)}"""
 
 
 def std_toml(fam: str) -> str:

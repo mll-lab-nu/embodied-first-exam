@@ -17,6 +17,7 @@
   "top0",
   "handcam_rgb"
  ],
+ "scene_cameras": [],
  "tcp0": "[-0.059, 0.008, 1.096] / [1.0, 0.0, 0.0, 0.0]",
  "table_top_z": 0.936,
  "arm_bases": {

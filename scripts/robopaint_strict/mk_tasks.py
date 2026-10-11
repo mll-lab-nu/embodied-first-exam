@@ -72,6 +72,20 @@ CODE_CHANGES = {
         "scene builds in under a minute) and `cameras=\"name\"` (a string) is one camera, no longer its characters. The "
         "collect hook, the grader, the scene and the pass rule are unchanged; a trial that ended with reason `error` "
         "(`sim_error = 1`) right after such a request before this date was not a simulator fault.",
+        "2026-10-10 (review round 3, board 0067): the shared service layer, the client and two request checks of the "
+        "service (`environment/sim/rcb_limited.py`, `environment/rcb_client.py`, `environment/sim/server.py`). A camera named more than once in "
+        "`cameras` is rendered and returned once (N copies of one name made the service build N x N images within "
+        "the frame budget, which could exhaust its memory). A service that has given up on the episode (it could "
+        "not start it, or could not resume it after its crashes) answers every request with 409 and the reason, "
+        "and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out "
+        "their timeout (up to an hour). One call returns at most 640 images (`/spec` `max_frames_per_call`: cameras x "
+        "frames, a frame with per-frame depth counts 4): a request that would exceed it is a 400 before anything runs; the "
+        "control steps of an `ee_pose` chunk that is slowed down to 0.25 m/s are counted before it starts. Before, a call "
+        "had no such bound: one long observation at the full frame rate, or one `ee_pose` row far outside the workspace "
+        "(for example millimetres sent as metres), could hold more frames than the sidecar's memory and get the service "
+        "killed, so a trial that ended `sim_crashed*` or with `resource_service_oom` right after such a request before this "
+        "date was that. An `ee_pose` position too large for a finite distance is a 400 as well (it ended the episode with a "
+        "500 in the middle of the chunk). The collect hook, the grader, the scene and the pass rule are unchanged.",
     ],
 }
 WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code

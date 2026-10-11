@@ -20,7 +20,9 @@ from pathlib import Path
 
 import numpy as np
 
-STANDARD = Path(__file__).resolve().parents[1] / "shared" / "standard"
+# RCB_SERVICE_DIR: another benchmark's copy of the service (LIBERO-MAX's rcb_service.py is its own variant; the unit
+# tests job runs the classes that apply to it against scripts/libero-max/shared/standard)
+STANDARD = Path(os.environ.get("RCB_SERVICE_DIR") or Path(__file__).resolve().parents[1] / "shared" / "standard").resolve()
 sys.path.insert(0, str(STANDARD))
 import rcb1  # noqa: E402
 import rcb_service  # noqa: E402
@@ -254,6 +256,28 @@ class Submit(Base):
         code, body, _ = self.submit(svc, [[0.1]] * 100, video="frames", video_fps=10, cameras=["cam", "side"])
         self.assertEqual(code, 400)
         self.assertEqual(svc.sim.t, 0)
+
+    def test_a_repeated_camera_is_rendered_and_returned_once(self):
+        """Before: N copies of one name were rendered into one list N times and returned N times (N * N images) while
+        the frame budget counted N -- a request of a few hundred bytes could exhaust the service's memory."""
+        sim = FakeSim(goal=99)
+        asked = []
+        images = sim.images
+        sim.images = lambda cams, depth: asked.append(list(cams)) or images(cams, depth)
+        svc = self.service(sim, max_frames_per_call=50)
+        code, meta, parts = self.submit(svc, [[0.1]] * 4, video="frames", video_fps=10,
+                                        cameras=["side"] + ["cam"] * 40 + ["side"])
+        self.assertEqual(code, 200)
+        self.assertTrue(all(a == ["side", "cam"] for a in asked), asked)       # each once, in the order asked for
+        n = parts["proprio"]["data"].shape[0]
+        self.assertEqual(parts["frames/cam"]["data"].shape, (n, 4, 6, 3))
+        self.assertEqual(parts["frames/side"]["data"].shape, (n, 4, 6, 3))
+        self.assertEqual([e for e in events(self.data) if e["ev"] == "submit"][-1]["cameras"], ["side", "cam"])
+        code, meta, parts = call(svc, "POST", "/observe", {"cameras": ["cam"] * 2000, "video": "frames"})
+        self.assertEqual((code, parts["frames/cam"]["data"].shape), (200, (1, 4, 6, 3)))
+        # the budget counts what is really returned: 2 cameras x (100 steps at 10 fps + 2) > 50
+        code, body, _ = self.submit(svc, [[0.1]] * 100, video="frames", video_fps=10, cameras=["cam", "cam", "side"])
+        self.assertEqual(code, 400)
 
     def test_oversized_body_is_413(self):
         svc = self.service()
@@ -657,6 +681,24 @@ class ResetChecks(Base):
         code, body, _ = call(svc, "POST", "/reset", {})
         self.assertEqual((code, body["error"]), (409, "reset budget exhausted"))
 
+    def test_a_reset_the_simulator_fails_is_a_simulator_error(self):
+        """Before (LIBERO-MAX's variant until 2026-10): the trial ended "reset" -- the agent's own choice -- when the
+        simulator failed to start the new episode."""
+        sim = FakeSim(goal=99)
+        svc = self.service(sim, reset_budget=2)
+        self.submit(svc, [[0.1]] * 2)
+
+        def boom():
+            raise RuntimeError("the scene did not build")
+        sim.reset = boom
+        code, body, _ = call(svc, "POST", "/reset", {})
+        self.assertEqual(code, 500)
+        code, st, _ = call(svc, "GET", "/status")
+        self.assertEqual((st["done"], st["reason"]), (True, "error"))
+        self.assertEqual(final(self.data)["reason"], "error")
+        ends = [e for e in events(self.data) if e["ev"] == "end"]
+        self.assertTrue(ends[-1].get("reset_failed"), ends)
+
 
 class Grade(Base):
     def grade(self, fin: dict | None) -> tuple[str, dict]:
@@ -797,6 +839,28 @@ class Boot(Base):
         t.join(5)
         self.assertFalse(t.is_alive())
         got["srv"].server_close()
+
+    def test_a_service_that_gave_up_answers_every_request(self):
+        """Before: nothing listened after a give-up, and a client waited out its connection timeout."""
+        import socket
+        import requests
+        import rcb_client
+        with socket.socket() as k:
+            k.bind(("127.0.0.1", 0))
+            port = k.getsockname()[1]
+        threading.Thread(target=rcb_service.refuse_forever, args=("sim_crashed", port), daemon=True).start()
+        url = f"http://127.0.0.1:{port}"
+        for _ in range(100):
+            try:
+                r = requests.get(url + "/status", timeout=5)
+                break
+            except requests.exceptions.ConnectionError:
+                threading.Event().wait(0.05)
+        self.assertEqual((r.status_code, r.json()["reason"], r.json()["gave_up"]), (409, "sim_crashed", True))
+        self.assertEqual(requests.post(url + "/submit", data=b"x" * 100000, timeout=5).status_code, 409)
+        with self.assertRaises(requests.exceptions.HTTPError) as ctx:      # the client: at once, not after its timeout
+            rcb_client.Robot(url, timeout=120)
+        self.assertEqual(ctx.exception.response.status_code, 409)
 
     def test_every_start_is_counted(self):
         rcb_service.count_start(self.data)

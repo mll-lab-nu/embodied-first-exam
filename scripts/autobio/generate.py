@@ -49,7 +49,15 @@ CHANGE_LOG = {
         "`environment/sim/server.py`: a malformed request field (null or a wrong type for `dt`, `seconds`, `cameras`, "
         "`note`) is a 400 before anything is executed (was a 500 that ended the episode). The instruction and `/spec` `episode` now state that a MuJoCo physics warning (an unstable simulation) ends the episode as a failure; the rule itself is unchanged (AutoBio's evaluator's, in force since the task was added). A pass before this "
         "change is a pass after it; results recorded before it may hold infrastructure failures counted as the agent's 0.\n"
-        "- 2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to 3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` outlasts the simulator's start (no effect on this benchmark, whose service is up within a minute); `cameras=\"name\"` (a string) is one camera, no longer its characters. The service, the collect hook, the grader, the scene and the pass rule are unchanged."
+        "- 2026-10-10 (review round 2, board 0067): the client only (`environment/rcb_client.py`). `Robot()` waits up to 3600 s for the service (was 600 s) and prints its progress to stderr once a minute, so the first `Robot()` outlasts the simulator's start (no effect on this benchmark, whose service is up within a minute); `cameras=\"name\"` (a string) is one camera, no longer its characters. The service, the collect hook, the grader, the scene and the pass rule are unchanged.\n"
+        "- 2026-10-10 (review round 3, board 0067): the shared service layer and the client only "
+        "(`environment/sim/rcb_limited.py`, `environment/rcb_client.py`). A camera named more than once in "
+        "`cameras` is rendered and returned once (N copies of one name made the service build N x N images within "
+        "the frame budget, which could exhaust its memory). A service that has given up on the episode (it could "
+        "not start it, or could not resume it after its crashes) answers every request with 409 and the reason, "
+        "and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out "
+        "their timeout (up to an hour). The adapter, the collect hook, the grader, the scene and the pass rule are "
+        "unchanged."
     ),
     False: (
         "- 2026-10-10: the grader's time limits and flags; the scene, the frozen instance and the pass rule are unchanged, so "
@@ -57,7 +65,12 @@ CHANGE_LOG = {
         f"what is left of the verifier's {VERIFIER_TIMEOUT} s (every replay had 1700 s), so a reward is written "
         "before Harbor's timeout whatever the trajectory's length; a replay without a result also sets `infra_error` "
         "(with `grader_error`, as before), every `reward.json` carries `infra_error`, and an error inside the grader "
-        "still writes a reward (`grader_error = 1`). A trajectory that was graded before gets the same verdict."
+        "still writes a reward (`grader_error = 1`). A trajectory that was graded before gets the same verdict.\n"
+        "- 2026-10-10 (review round 3, board 0067): `tests/grade.py` only. A byte that is not valid UTF-8 in the "
+        "session log the agent's tools write (`/app/output/rcb_session_log.jsonl`, read only for the self-reported "
+        "`agent_*` cost fields) was graded `grader_error = 1` and `infra_error = 1` with reward 0, whatever the "
+        "trajectory; the log is now read tolerantly and can no longer decide anything. A trial whose log is valid "
+        "is graded as before; the pass rule is unchanged."
     ),
 }
 FAMILIES = {k: v for k, v in json.loads((HERE / "families.json").read_text()).items() if not k.startswith("_")}

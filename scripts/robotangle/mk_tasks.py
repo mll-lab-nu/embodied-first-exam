@@ -383,7 +383,7 @@ def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
            "timeout; a longer one is\n`bad_trajectory`)." if mode == "privileged" else "")
     s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + cap + "\n\n" + nop + "\n\n", s)
     return (s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n"
-            + "\n".join(changes(mode) + change_r2(base, mode)) + "\n")
+            + "\n".join(changes(mode) + change_r2(base, mode) + change_r3(mode)) + "\n")
 
 
 # ---------------------------------------------------------------- fixes of the round-2 review (2026-10-10, board 0067 R2)
@@ -399,6 +399,14 @@ EXPOSED_NEW = ("The success implementation is not exposed, and of the simulator'
 WAIT_S = 3600             # v2_4/rcb_client.Robot.__init__'s default timeout (600 s until 2026-10-10)
 WAIT_OLD = ("(default connection budget: 600 seconds,", "(default timeout 600 s)")
 WAIT_NEW = (f"(default connection budget: {WAIT_S} seconds,", f"(default timeout {WAIT_S} s)")
+# the call's image budget of the standard service (review round 3), read from its source so that the texts state what is enforced
+_SERVER = (SHARED / "standard" / "sim" / "server.py").read_text()
+MAX_FRAMES, DEPTH_FRAME = (int(re.search(rf"^{k} = (\d+)", _SERVER, re.M).group(1)) for k in ("MAX_FRAMES", "DEPTH_FRAME"))
+FRAMES_AT = "- Both action types: no gripper target goes lower than"
+FRAMES_NEW = (f"- One call returns at most {MAX_FRAMES} images (`spec[\"max_frames_per_call\"]`: cameras x frames; a frame with\n"
+              f"  `depth=\"frames\"` counts {DEPTH_FRAME}). A request that would exceed it is answered 400 before anything moves: ask for\n"
+              "  fewer cameras, a lower `video_fps` or a shorter call. Rows that take longer than planned (the speed limit, `ee_pose`)\n"
+              "  stop adding frames at that number; the motion is executed in full and `meta[\"frames_skipped\"]` counts them.\n")
 OPENING_NEW = ("\n  The proprio group `gripper_opening` (`res.group(\"gripper_opening\")`) is the measured gap between each gripper's finger\n"
                "  pads in metres (0 = the pads touch); the gripper entries of `joint_pos` are in the unit of the gripper command above.")
 
@@ -424,6 +432,7 @@ def review_fixes_r2(s: str, base: str, mode: str) -> str:
             s = swap(s, a, b, f"{base} Robot() wait")
         s = swap(s, "`meta[\"clipped\"]` says so.\n- `ee_pose`", "`meta[\"clipped\"]` says so." + OPENING_NEW + "\n- `ee_pose`",
                  f"{base} gripper_opening")
+        s = swap(s, FRAMES_AT, FRAMES_NEW + FRAMES_AT, f"{base} image budget")      # round 3
     return s
 
 
@@ -448,6 +457,26 @@ def change_r2(base: str, mode: str) -> list[str]:
             f"waits up to {WAIT_S} s for the service (600 s before) and prints its progress, and `cameras=\"name\"` is one "
             "camera, not its characters. The image, scene, frozen instance, tooling and grader are unchanged, so the task "
             "keeps its name."]
+
+
+def change_r3(mode: str) -> list[str]:
+    """The round-3 Change Log entry (standard tasks: the service, the 2.4 layer and the client)."""
+    if mode != "standard":
+        return []
+    return ["- 2026-10-10 (review round 3): the sim service, its 2.4 layer and the client; the pass rule is "
+            "unchanged. A camera named more than once in `cameras` is rendered and returned once. A service that "
+            "has given up on the episode (it could not start it, or could not resume it after its crashes) answers "
+            "every request with 409 and the reason, and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; "
+            "before, nothing answered and they waited out their timeout (up to an hour). `/spec`'s description of "
+            "the proprio group `gripper_opening` says that a gripper closed on cloth reads 0 (it said that a "
+            "gripper closed on an object stops above 0, which holds for rigid objects only); the values are "
+            f"unchanged. One call returns at most {MAX_FRAMES} images (`/spec` `max_frames_per_call`: cameras x frames, a "
+            f"frame with per-frame depth counts {DEPTH_FRAME}): a request that would exceed it is a 400 before anything "
+            "runs, and rows that take longer than planned stop adding frames there (`meta[\"frames_skipped\"]`). "
+            "Before, a call had no such bound: one long observation at the full frame rate could hold more frames "
+            "than the sidecar's memory and get the service killed, so a trial that ended `sim_crashed*` or with "
+            "`resource_service_oom` right after such a request before this date was that. The image, scene, frozen "
+            "instance, tooling and grader are unchanged, so the task keeps its name."]
 
 
 def binding(base: str, inst_dir: pathlib.Path | None = None) -> bytes:

@@ -176,7 +176,15 @@ CHANGES = {
         "600 s in 38 of 60 archived trials), so the first `Robot()` raised \"sim service unavailable\" and a script that did "
         "not retry ended with 0 control steps. `cameras=\"name\"` (a string) is one camera, no longer its characters. The "
         "service, the collect hook, the grader, the scene and the pass rule are unchanged; a trial scored 0 with 0 control "
-        "steps before this date may have been this wait."],
+        "steps before this date may have been this wait.",
+        "2026-10-10 (review round 3, board 0067): the shared service layer and the client only "
+        "(`environment/sim/rcb_limited.py`, `environment/rcb_client.py`). A camera named more than once in "
+        "`cameras` is rendered and returned once (N copies of one name made the service build N x N images within "
+        "the frame budget, which could exhaust its memory). A service that has given up on the episode (it could "
+        "not start it, or could not resume it after its crashes) answers every request with 409 and the reason, "
+        "and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out "
+        "their timeout (up to an hour). The adapter, the collect hook, the grader, the scene and the pass rule are "
+        "unchanged."],
 }
 
 
