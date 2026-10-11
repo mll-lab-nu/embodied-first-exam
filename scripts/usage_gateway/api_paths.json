@@ -1,0 +1,40 @@
+{
+ "_comment": [
+  "The model-API requests the usage gateway forwards (PROTOCOL §2.11, D11; owner 2026-10-10, board 0072). Default deny: a",
+  "request is forwarded only if its host matches a provider here and its method and path are in that provider's list;",
+  "anything else is answered 403 and recorded (method and path, no body). A path is matched without its query string,",
+  "segment by segment (`*` = exactly one segment). The lists are what Codex and Claude Code sent in 738,826 recorded",
+  "requests of official runs (responses, models, messages, count_tokens) plus the Responses API's compaction call.",
+  "Not on any list, so refused: account connectors and apps, plugins, files, conversations, chat completions,",
+  "web search, images, audio, batches, assistants, token endpoints. `http` is the provider of a --http-host upstream."
+ ],
+ "_comment_tools": [
+  "A model request may declare only tools the agent runs itself: no `type` (Anthropic's custom tools) or one of",
+  "client_tool_types (what Codex 0.160 and Claude Code 2.1 declared in every recorded request). Any other type is the",
+  "provider's: web search and fetch, image generation, remote MCP, file search, hosted shells and code interpreters.",
+  "provider_side_fields: top-level request fields that make the provider search the web, connect to a server, query",
+  "its own data sources, or take tools from a stored prompt. Chat completions are forwarded only to a --http-host",
+  "upstream (a self-hosted server): no recorded request of an official run used them, and at the providers that API",
+  "serves models that search the web without any tool declaration; list the path for a provider that needs it."
+ ],
+ "client_tool_types": ["function", "custom", "namespace"],
+ "provider_side_fields": ["mcp_servers", "web_search_options", "plugins", "data_sources", "prompt"],
+ "providers": [
+  {"name": "chatgpt-codex", "hosts": ["chatgpt.com"],
+   "allow": [["POST", "/backend-api/codex/responses"], ["POST", "/backend-api/codex/responses/compact"],
+             ["GET", "/backend-api/codex/models"]]},
+  {"name": "openai", "hosts": ["api.openai.com"],
+   "allow": [["POST", "/v1/responses"], ["POST", "/v1/responses/compact"], ["GET", "/v1/models"]]},
+  {"name": "azure-openai", "hosts": ["*.openai.azure.com", "*.cognitiveservices.azure.com", "*.services.ai.azure.com"],
+   "allow": [["POST", "/openai/v1/responses"], ["POST", "/openai/v1/responses/compact"], ["POST", "/openai/responses"],
+             ["GET", "/openai/v1/models"]]},
+  {"name": "anthropic", "hosts": ["api.anthropic.com"],
+   "allow": [["POST", "/v1/messages"], ["POST", "/v1/messages/count_tokens"]]},
+  {"name": "openrouter", "hosts": ["openrouter.ai"],
+   "allow": [["POST", "/api/v1/responses"], ["POST", "/api/v1/messages"], ["POST", "/api/v1/messages/count_tokens"],
+             ["GET", "/api/v1/models"]]},
+  {"name": "http", "hosts": [],
+   "allow": [["POST", "/v1/messages"], ["POST", "/v1/messages/count_tokens"], ["POST", "/v1/chat/completions"],
+             ["POST", "/v1/responses"], ["GET", "/v1/models"]]}
+ ]
+}

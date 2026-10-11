@@ -25,6 +25,7 @@
 - [ ] Runs with Harbor's native agents (no custom runner, gateway or adapter)
 - [ ] Names `<base>-privileged` / `<base>-standard` / `<base>-standard-realtime`; README in the standard layout; no `results/`
 - [ ] `[metadata.resources]` from measured peaks; README `## Compute resources` rendered (`scripts/task_conventions.py`)
+- [ ] The agent's egress is the allowlist and the oracle passes under it (nothing is downloaded at run time); no file the agent reads, in the task or its image, names or locates a solution, a demonstration or its dataset (PROTOCOL §2.7, §2.11)
 - [ ] `[metadata.resources.limits]` and `.caps` set from measured peaks; the oracle stays inside them; `instruction.md` ends with the rendered `## Resource limits` (PROTOCOL §2.10)
 - [ ] No credentials, personal paths or files > 2 MB; `tasks/dataset.toml` refreshed
 

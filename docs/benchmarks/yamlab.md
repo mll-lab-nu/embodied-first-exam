@@ -187,6 +187,15 @@ the world origin on any axis or a zero quaternion are 400s that execute nothing.
   `check-standard-texts.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
   privileged state through the tooling and the world heights of the success check in the instruction.
 
+- **Pointers to the reference solution.** The reference solution of an instance is the YAMLab teleoperation
+  demonstration it was frozen from, replayed (Evidence), and that dataset is public. The agent's egress is the model
+  APIs only, so it cannot be fetched. Since 2026-10-10 the instance file an agent reads names no recording (it had a
+  `source` entry with the dataset, the file and the demonstration index; `mk_tasks.py` now refuses such a file, and the
+  provenance is in `scripts/yamlab/instances.json` only). What still locates it for someone outside the trial: the
+  instance id `iNN` in the task name is the index of the dataset's recording file, the privileged instruction names the
+  object asset with the same number, and the image's `/opt/yamlab` (its README and `scripts/download_data.py`) names the
+  dataset. Renaming the instances would change every task's identity; it is left as it is.
+
 ## Image and host
 `images/yamlab/` → `ghcr.io/mll-lab-nu/eai-yamlab:0.1.0` (~26.5 GB): YAMLab, Isaac Lab, Isaac Sim 5.1, the LeRobot fork
 YAMLab's recorder imports, and the two tasks' object assets (~3 GB). It contains Isaac Sim: **BUILD_ONLY**

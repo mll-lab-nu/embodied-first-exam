@@ -175,7 +175,7 @@ numbers. The instances were drawn on MuJoCo 3.1.6 and load identically on 0.2.0,
 overlapping the heels by 19 mm (its mesh feet touch that box; it is a fixture), and `hurdle`'s hurdles, which its reward
 never reads: each is one collision box 37.5 cm high across the track (`generated_xml_hurdles.xml`; the bars drawn on it,
 about 40 cm tall, have no collision geometry of their own), so the robot has to get over it. The task text said so until 2026-10-08, said the
-hurdles had no collision geometry from then (it had looked only at the drawn bars), and says so again since 2026-10-10.
+hurdles had no collision geometry from then (it had looked only at the drawn bars), and says so again since 2026-10-11.
 
 ## Answer-key leakage
 

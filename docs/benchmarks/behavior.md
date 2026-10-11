@@ -199,8 +199,37 @@ container, outside Harbor's lifecycle. A cache can reach ~10 GB (one probe volum
   through an extra compose file, its separate verifier through a patch of its copy of `tests/docker-compose.yaml`). The
   standard verifier needs no network (`no-network`).
 - **Privileged verifier network.** The privileged verifier keeps Harbor's default network instead of `no-network` (a
-  SHOULD, PROTOCOL §2.6): it starts Isaac Sim, and an Isaac / Omniverse Kit start without any network has not been
-  tested. It downloads nothing: the dataset is mounted and the image is complete.
+  SHOULD, PROTOCOL §2.6): it starts Isaac Sim, and an Isaac / Omniverse Kit start in a container without any network
+  interface has not been tested (with only the model APIs reachable it starts and loads the scene as before: Network,
+  below). It downloads nothing: the dataset is mounted and the image is complete.
+
+## Network
+The agent reaches the model APIs and nothing else: `[agent] network_mode = "allowlist"` with the hosts of
+`scripts/set_agent_egress.py`, which `mk_tasks.py` (`agent_egress`) writes into every task (owner decision 2026-10-10,
+board 0072). Until then the tasks had Harbor's default, public egress: they were added on 2026-09-20 without a network
+setting, and the repository-wide default of 2026-09-24 (kept on 2026-10-02) left them so. There was no technical reason:
+nothing in a BEHAVIOR container needs the network at run time. The image holds Isaac Sim, OmniGibson, cuRobo and every
+Python package, the scenes and robot assets come from the mounted dataset, and the EULA is accepted by an environment
+variable. What the open egress did allow was a download of the 2026 challenge's public material for the same activities
+(its teleoperated demonstrations, which a task's name locates, and its baselines) and of packages.
+
+| Service | Before | Since 2026-10-10 |
+|---|---|---|
+| privileged `main` (agent and its Isaac processes) | public | public from container start until the agent starts (the harness is installed then), the model APIs only while the agent runs |
+| standard `main` (agent, client only) | public | the same |
+| standard `sim` (the simulator service) | public | the same as `main`: Harbor's egress control puts every compose service without a network setting of its own in one namespace, so the service's Isaac start (it begins at container start and takes about 10 minutes) and a restart after a crash run with the model APIs only; public again while the collect hook replays the episode |
+| `rcb_monitor` | none | none |
+| privileged verifier | public (Harbor's default) | unchanged |
+| standard verifier | none (`no-network`) | unchanged |
+
+Checked on real simulators (2026-10-11, L40S hosts, the oracle of `picking-up-trash` with a probe run from inside the
+agent's container first): GitHub, PyPI (`pip download`), Hugging Face and NVIDIA's Omniverse content bucket were
+unreachable and the OpenAI, Anthropic and OpenRouter APIs answered. The results equal the
+open-egress runs of the same oracles on the same host class (board 0067, R2): privileged, the `partial` oracle's reward 0
+with `q_score` 0.667, 4,390 steps, the same initial and final state hashes, `deterministic` 1 and no error flag;
+standard, reward 1 with live = replay = 1, `deterministic` 1, 5,114 steps and one simulator start. Isaac was not slower
+to start (evaluator ready after 674 s in the agent's container and 631 s in the service, against 757 s and 652 s), and
+its log has no failed download: the scene loads from the mounted dataset alone.
 
 ## Grading and determinism
 - Privileged: the verifier replays `trajectory.npz` from the frozen instance in **two fresh processes** (an in-process
