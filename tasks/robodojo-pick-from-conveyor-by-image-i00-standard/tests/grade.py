@@ -41,6 +41,9 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "rep
            "deterministic": int(bool(d.get("deterministic"))), "live_matches_replay": int(bool(d.get("live_matches_replay"))),
            "state_identical": int(bool(d.get("state_identical"))), "determinism_verdict_mode": int(bool(d.get("determinism_verdict_mode"))),
            "ended_failed_check": int(d.get("reason") == "failed_check"), "ended_step_guard": int(d.get("reason") == "step_guard"),
+           # the replays' fresh processes rebuilt the frozen layout to its recorded state (finalize.sh; a mismatch on a task
+           # that is not graded by verdict is a replay_error: no verdict on the agent)
+           "instance_exact": int(bool(d.get("instance_exact"))), "instance_mismatch": int(bool(d.get("instance_mismatch"))),
            "finalized": int(not unfinished), "missing_log": 0, "n_actions": int(num("n_actions")), "sim_steps": int(num("control_steps")),
            "physics_steps": int(num("physics_steps")), "steps": int(num("steps")), "elapsed_s": num("elapsed_s"),
            "video_rendered": int(bool(d.get("video"))), "gpu_lost": int(gpu_lost), "replay_error": int(replay_error),

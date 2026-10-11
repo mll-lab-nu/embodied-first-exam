@@ -101,6 +101,9 @@ frame).
   submit; a position more than 3 m from the world origin on any axis, or a zero quaternion, is rejected (400), nothing
   moves.
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
+- One call captures at most 3000 images (cameras × frames; per-frame depth counts again; `spec["max_frames_per_call"]`): a
+  `joint_position` submit or a `get_obs(seconds=...)` that would exceed it is a 400 (fewer cameras, a lower `video_fps` or
+  a shorter call); a long `ee_pose` submit keeps moving and stops filming there (`meta["frames_capped"]` > 0).
 - World frame: Axes: x to the right as seen from behind the arms (from the left arm towards the right one), y forward from the arm bases towards the far side of the table, z up. The left arm's base is at (-0.3, -0.45, 0.765) and the right arm's at (0.3, -0.45, 0.765), both facing +y; the table top is at z = 0.765 (the table spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y) and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector) pose in this frame.
 - Control runs at 25 Hz (simulated time; physics dt 4 ms, 10 physics steps per action).
 

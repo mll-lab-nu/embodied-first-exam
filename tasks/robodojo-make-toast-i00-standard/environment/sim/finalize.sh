@@ -160,6 +160,13 @@ except Exception:
 out["determinism_verdict_mode"] = verdict_mode
 out["deterministic"] = (bool(a and b) and bool(a.get("success")) == bool(b.get("success"))) if verdict_mode else out["state_identical"]
 out["live_matches_replay"] = bool(a) and a["state_sha"] == out.get("live_sha")
+# The live episode started from the frozen instance (the service is strict). A replay whose fresh process rebuilt the
+# layout to another state (this GPU / driver does not reset the task reproducibly) cannot be compared with it: no verdict
+# on the agent, an infrastructure failure. Not for a task graded by verdict, whose resets differ by design.
+out["instance_exact"] = bool(a and b) and r1.get("instance_exact") is not False and r2.get("instance_exact") is not False
+if not verdict_mode and a and b and not out["instance_exact"]:
+    out["instance_mismatch"] = True
+    errors.append(f"a replay did not start from the frozen instance (rebuilt states {r1.get('instance_sha')} / {r2.get('instance_sha')})")
 mp4 = os.path.join(d, "replay.mp4")
 out["video"] = bool(a) and r1.get("video_ok") is not False and os.path.exists(mp4) and os.path.getsize(mp4) > 0
 if gpu_lost:

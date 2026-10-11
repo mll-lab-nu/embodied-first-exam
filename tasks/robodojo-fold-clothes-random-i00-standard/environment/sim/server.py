@@ -36,6 +36,8 @@ TASK = os.environ.get("RCB_TASK", "stack_bowls"); INSTANCE = os.environ.get("RCB
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 25; SUBSTEPS = 10; ACTION_DIM = 14
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+MAX_FRAMES = 3000        # images one call may capture (cameras x frames, per-frame depth counted again): every one is held in
+                         # memory until the response is sent, so a call without a bound could exhaust the service's memory
 LOCK = threading.Lock(); PID_FILE = os.path.join(DATA, "server.pid")
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 # crash recovery replays the journal in a fresh process: bit-identical where the task's physics is (resume class exact);
@@ -130,7 +132,7 @@ STEP_GUARD = int(S.step_lim)
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "robodojo (RoboDojo's evaluator on Isaac Lab / Isaac Sim 5.1)",
     "robot": "arx-x5-bimanual", "task_text": S.inst.get("goal_text") or S.instruction(), "control_hz": CTRL_HZ,
-    "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
+    "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S, "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": [int(FIRST[c].shape[1]), int(FIRST[c].shape[0])],
                     "calibration_in_obs": OBS_CALIBRATION, "intrinsic_cv": CAM0[c]["intrinsic_cv"], "mount": CAM0[c]["mount"]} for c in CAMS},
     "default_cameras": list(CAMS),
@@ -253,7 +255,11 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded action, journaled for crash recovery. True when the call must stop here: the episode is over (success,
     a failed check, the runaway guard), or the service stops the call (max_call_wall_s, the client hung up)."""
     a = np.asarray(a, dtype=np.float32)                    # the exact row Session.step executes (and records)
-    over = S.step(a); stop = EP.journal(a); rec.tick()
+    over = S.step(a); stop = EP.journal(a)
+    if rec.n % rec.every == 0 and (len(rec.steps) + 2) * images_per_frame(rec.cams, rec.mode) > MAX_FRAMES:
+        rec.n += 1; rec.capped = getattr(rec, "capped", 0) + 1     # the call's frame budget is used up (a long ee_pose move):
+    else:                                                          # the actions go on, the filming stops; the forced last
+        rec.tick()                                                 # frame is still taken
     if over: finish(end_reason())
     return E["done"] or stop
 
@@ -345,7 +351,7 @@ def cameras(meta: dict) -> list:
         v = [v]
     if not isinstance(v, (list, tuple)) or not all(isinstance(c, str) for c in v):
         raise ValueError(f"cameras must be a list of camera names ({', '.join(CAMS)})")
-    return [c for c in v if c in CAMS] or list(CAMS)
+    return list(dict.fromkeys(c for c in v if c in CAMS)) or list(CAMS)      # each camera once, in the order asked for
 
 
 def note_text(meta: dict) -> str:
@@ -382,6 +388,21 @@ def check_ee_rows(A: np.ndarray) -> None:
                 raise ValueError(f"ee_pose row {ri}: the {a} quaternion (wxyz) has zero length")
 
 
+def images_per_frame(cams, depth: str) -> int:
+    return len(cams) * (2 if depth in ("frames", "legacy") else 1)
+
+
+def check_frames(cams, fps: int, depth: str, control_steps: int) -> None:
+    """A call whose length is known before it runs (a joint_position chunk, an /observe) is refused when it would capture
+    more than MAX_FRAMES images (a 400, nothing executed): the Recorder films every `every`-th action plus the first and
+    the last frame, whatever `video` asks to be returned."""
+    every = max(1, int(round(CTRL_HZ / max(1, fps))))
+    n = (int(math.ceil(control_steps / every)) + 2) * images_per_frame(cams, depth)
+    if n > MAX_FRAMES:
+        raise ValueError(f"this call would capture {n} images (cameras x frames, per-frame depth counted again); the limit is "
+                         f"max_frames_per_call = {MAX_FRAMES}: ask for fewer cameras, a lower video_fps or a shorter call")
+
+
 def parse_submit(meta: dict, A: np.ndarray) -> tuple:
     """Every field of a /submit, checked; nothing is executed here."""
     typ = meta.get("type")
@@ -389,7 +410,7 @@ def parse_submit(meta: dict, A: np.ndarray) -> tuple:
         raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
     dt = number(meta, "dt", 1.0 / CTRL_HZ); interp = choice(meta, "interpolate", "linear", ("hold", "linear"))
     cams = cameras(meta); fps = video_fps(meta); video = choice(meta, "video", "mp4", ("mp4", "frames", "both", "none"))
-    note = note_text(meta); L.depth_mode(meta)
+    note = note_text(meta); depth = L.depth_mode(meta)
     dim = SPEC["action_types"][typ]["dim"]
     if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
     if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
@@ -399,6 +420,9 @@ def parse_submit(meta: dict, A: np.ndarray) -> tuple:
     if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
     if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
     if typ == "ee_pose": check_ee_rows(A)
+    # joint_position: the chunk's length is known here. ee_pose: a row lasts as long as its move (known after its IK), so
+    # ctrl_step() stops filming once the call has captured MAX_FRAMES images and the rows go on (meta "frames_capped")
+    if typ == "joint_position": check_frames(cams, fps, depth, A.shape[0] * int(round(dt * CTRL_HZ)))
     return typ, dt, interp, cams, fps, video, note
 
 
@@ -412,7 +436,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     rec.tick(force=True, last=True)
     succ = E["success"] or check_success(); E["success"] = succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
-           "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
+           "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
+           "frames_capped": int(getattr(rec, "capped", 0))}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "depth": rec.mode, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ,
          **({"stopped": EP.stop_reason} if EP.stopping else {})})
@@ -425,8 +450,9 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
 def parse_observe(meta: dict) -> tuple:
     """Every field of an /observe, checked; nothing is executed here."""
     cams = cameras(meta); seconds = number(meta, "seconds", 0.0); fps = video_fps(meta)
-    video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none")); L.depth_mode(meta)
+    video = choice(meta, "video", "frames", ("mp4", "frames", "both", "none")); depth = L.depth_mode(meta)
     if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    check_frames(cams, fps, depth, int(round(seconds * CTRL_HZ)))
     return cams, seconds, fps, video
 
 

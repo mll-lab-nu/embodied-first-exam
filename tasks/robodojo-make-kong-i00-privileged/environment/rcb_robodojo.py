@@ -364,6 +364,11 @@ class Session:
         # the start of RoboDojo's episode (EvalEnv.run_eval): register the task's checks, its process score, and for the
         # interactive tasks the support arm's first move; then the policy loop, i.e. step()
         env.run_reward()
+        # RoboDojo's reward manager reports success once its check lists are empty (reward_manager.get_reward): a task that
+        # registered no check would succeed at the first action. Every task registers one; refuse to run otherwise.
+        rm = getattr(env, "reward_manager", None)
+        if rm is None or not any(len(getattr(rm, k)[0]) for k in ("check_list", "final_check_list", "trigger_check_list")):
+            raise RuntimeError(f"RoboDojo registered no success check for task {self.task}: the episode would read as a success at once")
         if hasattr(env, "get_score"):
             env.get_score()
         if getattr(env, "interact", False) and hasattr(env, "query_support_arm_traj"):
@@ -421,8 +426,12 @@ class Session:
         a = np.asarray(action, dtype=np.float64).reshape(-1)
         if a.size != ACTION_DIM:
             raise ValueError(f"action must have {ACTION_DIM} entries, got {a.size}")
+        # a trajectory file holds float32 rows and the grader replays those: execute exactly the row that is recorded, so a
+        # live rollout and its replay get the same targets to the last bit (the standard service does the same)
+        with np.errstate(over="ignore"):
+            a = a.astype(np.float32).astype(np.float64)
         if not np.all(np.isfinite(a)):
-            raise ValueError("action contains nan/inf")
+            raise ValueError("action contains nan/inf (or a value outside float32)")
         if self.done:
             raise PrimitiveError(f"episode is over ({self.end_reason()}); call reset() before stepping again")
         if self._recording is not None:
@@ -797,8 +806,11 @@ class Session:
 
 
 def _load_traj(path: str) -> dict[str, Any]:
-    d = np.load(path, allow_pickle=False)
-    return {k: (d[k].item() if d[k].shape == () else d[k]) for k in d.files}
+    """`task` and `actions` of a trajectory file, the two entries a replay reads. Any other entry is never loaded: a file
+    with an extra entry numpy refuses without pickle (a dict saved as `meta`, an object array) or with a large padding
+    array is still the same trajectory, and must be replayed, not end the replay process without a result."""
+    with np.load(path, allow_pickle=False) as d:
+        return {"task": str(d["task"]), "actions": np.asarray(d["actions"])}
 
 
 def cmd_make_instance(a) -> None:

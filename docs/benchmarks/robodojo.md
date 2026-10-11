@@ -72,13 +72,19 @@ Checked on one RTX 4090 (driver 580.159); not checked across GPU models.
   (default) end in the same state hash, or (verdict tasks) both succeed. `no-network`. A file that is not a trajectory of
   the task (not an npz, pickled or object arrays, another shape, NaN/inf, more than 15,000 rows) is the agent's 0
   (`bad_trajectory`, `wrong_task`); a replay process that ends without a result or runs out of its time is the verifier's
-  (`grader_error` = `infra_error` = 1, `replay_failed` / `replay_timed_out`: no verdict on the agent).
+  (`grader_error` = `infra_error` = 1, `replay_failed` / `replay_timed_out`: no verdict on the agent). Only the file's
+  `task` and `actions` entries are read (their sizes checked in the archive before anything is decompressed); any other
+  entry is ignored. Two replays that did not start from the same state (the frozen layout does not rebuild reproducibly on
+  the host; not for the tasks graded by verdict) are `instance_unstable`, the verifier's failure too, never a 0 for
+  "not deterministic". `instance_exact` reports whether the rebuilt layout hashed as recorded.
 - standard: the service ends and dumps the episode on the collect hook's signal; `finalize.sh` replays it in two fresh
   processes, each time-boxed inside the hook's budget and retried once when it dies without a result (Isaac does not exit
   after a fatal GPU error, it waits on a crash dialog, so only the time limit ends it); a replay that still gives no
   result is `replay_error` / `infra_error`, never the agent's 0; `final.json` is replaced atomically.
   `success = live_success ∧ replay_success ∧ deterministic`. `no-network`. A missing, unreadable or unfinalized
-  `final.json` is `infra_error`.
+  `final.json` is `infra_error`. The live episode starts from the frozen instance (the service is strict); a replay whose
+  process rebuilt the layout to another state is `instance_mismatch` (a `replay_error`: `infra_error`), not for the tasks
+  graded by verdict.
 - Time limits (wall clock only; the verdict rules do not depend on them). Measured on the model trials: Isaac start, scene
   build and RoboDojo's settling 2.5-4 min per process, replays at 7-11 actions/s (the filmed one at the low end). A
   privileged replay has max(1800 s, 1200 s + rows / 2.5) (a third of the slow rate), `[verifier] timeout_sec` = 15000 s
@@ -107,7 +113,10 @@ settling (a trial's first start also compiles shaders and materials), and many t
 `cam_left_wrist`, `cam_right_wrist` (640×480, z-depth); `/kinematics` (FK/IK of both arms from the X5 URDF; matches the
 simulator's link6 poses); 58 proprio columns. Request checks (PROTOCOL §4.6): every field of a `/submit` or `/observe` is
 read and checked before the first action; a malformed request (a wrong type, a value out of range, an `ee_pose` position
-more than 3 m from the world origin on any axis, a zero quaternion) is a 400 and executes nothing.
+more than 3 m from the world origin on any axis, a zero quaternion) is a 400 and executes nothing. Cameras are taken once
+each, and one call captures at most 3000 images (cameras × frames, per-frame depth counted again; `/spec`
+`max_frames_per_call`): a `joint_position` chunk or an `/observe` that would exceed it is a 400; an `ee_pose` call, whose
+length is only known once its IK is solved, keeps executing and stops filming (`meta["frames_capped"]`).
 
 ## Declarations
 - **Tooling: thin wrappers only.** Joint moves, gripper commands, hold, RoboDojo's IK, plus the frozen instance, state,
