@@ -1,0 +1,18 @@
+# Isaac Sim needs an RTX-class NVIDIA GPU even headless. Harbor's local docker sandbox rejects [environment].gpus, but
+# merging this onto the main service passes the device through. Isaac's shader/extension cache gets a volume for the
+# trial, named after the trial's compose project (no fixed name: side-by-side trials must not share it; Harbor's
+# teardown, `compose down --volumes`, deletes it): every trial compiles its shaders once (~2 min).
+services:
+  main:
+    shm_size: "8gb"
+    volumes:
+      - rcb_robodojo_cache:/cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+volumes:
+  rcb_robodojo_cache:

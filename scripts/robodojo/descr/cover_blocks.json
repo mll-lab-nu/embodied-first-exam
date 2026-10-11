@@ -1,0 +1,26 @@
+{
+ "task": "cover_blocks",
+ "goal": "Cover the three coloured blocks with the three cups one after another from left to right, remember which colour is under which cup, then uncover them one at a time in the order red, green, blue, and finally return the arm home.",
+ "instruction_templates": [
+  "Cover the blocks from left to right, remember their colors, then uncover them in the order: red, green, and blue."
+ ],
+ "success": [
+  "The success is a sequence of 6 stages that must be observed in order (see evaluation). Definitions: L, M, R = the red/green/blue cubes sorted by their world x at the start of the episode (L = smallest x, 'left'; R = largest x). 'X covered' = at least one of cup0, cup1, cup2 'covers' X: the xy convex-hull footprint of the cup's bbox fully contains the footprint of X's bbox, AND the cup's bbox top z is higher than X's bbox top z, AND X's bbox bottom z is > (cup's bbox bottom z - 0.03 m).",
+  "Stage 1: L covered, M not covered, R not covered. Stage 2: L covered, M covered, R not covered. Stage 3: L, M, R all covered. Stage 4: red NOT covered, green covered, blue covered. Stage 5: red NOT covered, green NOT covered, blue covered. Stage 6: red, green, blue all NOT covered AND all target robots back at their start end-effector pose (|dx|,|dy|,|dz| each <= 0.15 m, rotation <= 20 degrees).",
+  "In every stage (1-6), each of cup0, cup1, cup2 must have its local -z axis within 10 degrees of world +z (is_axis_up axis=[0,0,-1], threshold=10), i.e. the cups must remain in the same orientation (opening facing down, inverted) throughout; tipped or upright cups invalidate the stage.",
+  "Throughout the episode (query aim 0): the red, green and blue cubes must each stay within 0.05 m (3D Euclidean distance of the root position) of where they started; if any cube is ever displaced by more than 0.05 m at any checked step the episode fails immediately."
+ ],
+ "evaluation": "Staged and in order. After every action the stage list is evaluated once: only the FIRST remaining stage is tested; if all its conditions hold at that step it is removed and the next stage becomes active on the following action step (at most one stage advances per action). So the 6 states must be observed after separate actions in the sequence: stage 1 state, then stage 2 state, ..., stage 6 state. Skipping a state (e.g. covering two cubes within a single action before the one-cube state was ever observed) leaves the earlier stage pending and it can no longer be completed unless the state recurs. Success is declared when the last stage is removed (reward 1) i.e. at the first step after stages 1-5 are done that stage 6 holds. The three is_moved queries are checked every step; a cube displaced > 0.05 m (counter > 0) sets failure. The episode otherwise fails at step_lim=800 actions. Note the order (left cup first, etc.) is fixed by the cubes' initial x positions, not by colour, but uncovering order is by colour.",
+ "step_lim": 800,
+ "objects": [
+  "red: cube (category cube, index 4), 1, y=-0.13, x one of {-0.2, 0.0, 0.2} (the three cubes occupy the three positions; assignment is random per episode), no rotation.",
+  "green: cube (index 6), 1, y=-0.13, x one of {-0.2, 0.0, 0.2}.",
+  "blue: cube (index 5), 1, y=-0.13, x one of {-0.2, 0.0, 0.2}.",
+  "cup0, cup1, cup2: cup (category cup, index 1), 1 each, fixed at y=-0.23, x=-0.2, 0.0, 0.2 respectively, placed with place_tag 'down' (the stable pose named 'down'), no rotation. They are not at the cubes' y initially (cups are 0.10 m closer to the robot base side in y than the cubes) and start uncovering nothing."
+ ],
+ "scene_dynamics": "none",
+ "needs_memory_or_language": "Memory: after the cubes are covered the colours are hidden, so the agent must remember which colour is at which x position (it is visible only at the start) and then uncover in the order red, green, blue (instruction text is fixed). Left-to-right means ascending world x of the cube positions as in the observation.",
+ "end_requirements": "At the last stage all cubes must be uncovered and the target arms back within 0.15 m per axis and 20 degrees of their start end-effector pose. Cups must still be oriented with their -z axis within 10 degrees of up.",
+ "physics_kind": "rigid",
+ "notes": "Staged checks require intermediate states to be observed between actions, so cover the cubes one at a time (left, then middle, then right) and uncover them one at a time. Covering has to be geometrically 'bbox footprint of cup contains cube footprint with cup top higher than cube top', cups are not required to be on any specific cube (any cup counts). Cup orientation check implies cups are inverted (mouth down); the placement tag 'down' presumably means the cups start in that pose, but this cannot be verified statically. A cube pushed or dragged by a cup by more than 0.05 m fails the episode. Left/mid/right are fixed from the initial positions (run_reward is called once after reset)."
+}

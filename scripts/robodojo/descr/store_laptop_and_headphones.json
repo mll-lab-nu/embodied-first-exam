@@ -1,0 +1,28 @@
+{
+ "task": "store_laptop_and_headphones",
+ "goal": "Hang the headphones on the headphone stand, close the laptop, then put the closed laptop upright into the vertical laptop storage rack, and finally return the arm(s) to the start pose.",
+ "instruction_templates": [
+  "Hang the headphones on the headphone stand, close the laptop, then place it into the vertical laptop stand."
+ ],
+ "success": [
+  "Headphones on stand: the headset's active functional point 'headband_bridge' is within 0.05 m (3D Euclidean, strictly less) of the stand's passive functional point 'support_cradle' AND the orientation of the two functional-point frames differs by less than 30 degrees (quaternion angular distance; is_align_qpos=True, align_qpos_threshold=30). Any of the matching points suffices if there are several.",
+  "Laptop closed: the joint tagged 'laptop_hinge' of the laptop has normalised position ratio (position-lower)/(upper-lower) strictly greater than 0.85 (is_joint_position_above_ratio, percentage 0.85). The source does not state which end of the range is 'closed'; the instruction 'close the laptop' implies > 0.85 = closed.",
+  "Laptop upright: the laptop's local +y axis is within 10 degrees (strictly less) of world up (is_axis_up, axis [0,1,0], threshold 10).",
+  "Laptop in rack: the laptop's 'bottom' ACTIVE functional point lies inside the oriented 3D bounding box of vertical_laptop_storage_rack (point transformed into the rack's frame and tested against the rack's oriented bbox with tolerance 1e-6 m; any one such point suffices).",
+  "all_robot_back_to_origin: every target arm's end-effector pose is within 0.15 m per axis (|dx|,|dy|,|dz| each <= 0.15 m) and within 20 degrees (quaternion angular distance) of its start-of-episode pose (the arms must be returned to roughly their starting pose)."
+ ],
+ "evaluation": "Success conditions form ONE stage: after every action (once all simulation sub-steps of that action are done) the reward manager evaluates all conditions; the episode succeeds as soon as ALL hold simultaneously at the same moment (reward 1 -> episode ends with success). Conditions are not latched or ordered. Otherwise the episode ends as a failure after step_lim=800 actions (the check made after the last action still counts). No early-fail rule exists apart from the environment being flagged invalid (e.g. a required label missing / physics broken).",
+ "step_lim": 800,
+ "objects": [
+  "laptop: an articulated laptop (category 'laptop', model index 0), 1 total, placed on the laptop_stand: offset x in [-0.05,0.05], y=-0.08, z=0.02 relative to the stand ('laptop_stand/laptop_stand/0'), no rotation randomisation, initial opening not stated in the source (presumably open since the task asks to close it)",
+  "laptop_stand: static geometry (index 1) holding the laptop, 1 total, on table at x in [0.04,0.09], y=0.02 (Table-relative), yaw in [-10,0] deg",
+  "vertical_laptop_storage_rack: static geometry, 1 total, a rack that stores a laptop standing on its edge, on table at x in [0.30,0.35], y in [-0.15,-0.05], z=0.025, yaw in [75,105] deg",
+  "stand: static geometry 'headset_stand' (headphone stand), 1 total, on table at x in [-0.35,-0.25], y in [-0.02,0.05], yaw in [0,30] deg",
+  "headset: headphones (category 'headset', model index 2,3,4,5 or 6 chosen randomly), 1 total, random position on table x in [-0.4,0.4], y in [-0.25,0.0] (Table-relative), random yaw up to +-30 deg"
+ ],
+ "scene_dynamics": "none (the laptop starts on its stand; nothing moves without the agent)",
+ "needs_memory_or_language": "none (fixed instruction; roles are fixed by label)",
+ "end_requirements": "All target (controlled) arms must be back near their start pose when success is evaluated (it is one of the success conditions, see success list): every target arm's end-effector position within 0.15 m on EACH of x, y, z (per-axis, not Euclidean) and orientation within 20 degrees of its pose at the start of the episode (pose recorded right after the robot is set to its initial state). Gripper opening is NOT checked by the success test.",
+ "physics_kind": "mixed: articulated (laptop with hinge) plus rigid (headset) and static geometry (stands/rack)",
+ "notes": "All five conditions must hold at the SAME moment, so the headset must stay on the stand while the laptop is processed (if it is knocked off, the first condition fails). Headset hanging is judged by functional points ('headband_bridge' vs 'support_cradle'), whose exact locations are asset metadata not visible in the source. The hinge direction (which end is closed) and the laptop's initial opening angle cannot be determined statically. No gripper-open requirement in success; the process score (paired: +20 headset hung with gripper open >=0.8 normalised; +80 laptop closed/upright/in rack with gripper open >=0.7) does not decide success. Success is evaluated on object root poses/points, not on gripper contact. Object geometry sizes/asset dimensions are not in the source and cannot be determined statically."
+}

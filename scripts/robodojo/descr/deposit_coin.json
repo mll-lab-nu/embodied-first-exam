@@ -1,0 +1,24 @@
+{
+ "task": "deposit_coin",
+ "goal": "Pick the coin up from the vertical coin holder and drop it into the piggy bank (coin bank) through its slot, then return the arm home.",
+ "instruction_templates": [
+  "Pick up the coin from the holder and insert it precisely into the coin bank."
+ ],
+ "success": [
+  "coin0 (the coin) bbox is inside the piggy_bank bbox region defined by is_A_bbox_in_B_bbox: the xy convex-hull footprint of coin0's oriented bbox must be fully contained in piggy_bank's xy footprint (convex hull of its oriented bbox).",
+  "Vertical range: coin0's bbox lowest z >= (z lower bound) - 1e-6 m, and its bbox highest z <= (z upper bound) + 1e-6 m, where the lower bound = max(piggy_bank bbox z_min, highest z among piggy_bank's 'bottom' passive functional point(s)) and the upper bound = min(piggy_bank bbox z_max, lowest z among its 'center' passive functional point(s)). I.e. the whole coin must be below the piggy bank's 'center' functional point and above its 'bottom' functional point, so the coin must have dropped inside the bank's body (not merely sit on top). The exact heights of these points are asset metadata, not determinable statically.",
+  "All target robots back at start end-effector pose: |dx|,|dy|,|dz| each <= 0.15 m and rotation <= 20 degrees (all_robot_back_to_origin defaults)."
+ ],
+ "evaluation": "Checked after every action; all conditions must hold at the same step; the first such step is success. Fails at step_lim=300 actions. Process score only (not for success): 20 if coin0 is lifted > 0.08 m (z of root above its start), 100 when inserted. No early-fail rule other than generic ones.",
+ "step_lim": 300,
+ "objects": [
+  "vertical_coin_stand: coin stand (Geometry, category vertical_coin_stand), 1, on the table, x in [-0.43,0.43], y in [-0.20,-0.05] (m), random yaw within +/-30 deg.",
+  "coin0: coin (category coin), 1, initially placed in the stand at the stand's local slot (relative_plane vertical_coin_stand/vertical_coin_stand/0, offset 0,0, 'point' check mode), so it starts standing in the holder.",
+  "piggy_bank: piggy bank (Geometry, category piggy_bank), 1, on the table, x in [-0.4,-0.3] or [0.3,0.4], y in [-0.20,-0.15], random yaw within +/-15 deg, 0.04 m margin."
+ ],
+ "scene_dynamics": "none",
+ "needs_memory_or_language": "none",
+ "end_requirements": "Target arms back within 0.15 m per axis and 20 degrees of their start end-effector pose at the moment of success.",
+ "physics_kind": "rigid",
+ "notes": "The coin must be entirely inside the piggy bank's vertical extent between the 'bottom' and 'center' functional-point heights: a coin merely resting on the piggy bank's top or held in the gripper over the slot does not count. Positions of those points are in asset metadata (not available statically). The piggy bank is a Geometry (fixed or heavy) object; whether it can move cannot be determined statically. The slot being narrow requires precise alignment."
+}
