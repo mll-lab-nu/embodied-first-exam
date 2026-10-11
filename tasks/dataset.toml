@@ -5995,19 +5995,19 @@ digest = "sha256:117d477a4e6fa37c9c2a1c258f7115690b1df657c5ea9b67ce101e4820a47a7
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fold-clothes-i00-privileged"
-digest = "sha256:174354a4e0166cec81791fe0feb529ed2b54a6f1a3467276eecaa7eca8e42b57"
+digest = "sha256:f96f5eff90b151cd692ba8822848532fc1b3cec1b1a859493750212bdef8acab"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fold-clothes-i00-standard"
-digest = "sha256:84997c10a8d71b47d3d72096269329a7a88c93a74eaee2031929f04b1e5a14f6"
+digest = "sha256:8d54bef6db31701c031d209383fcd4d1787f552eef9cf360fe6fb1c52854e91d"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fold-clothes-random-i00-privileged"
-digest = "sha256:5bd5ed3f1744b61dc504213f567773583d7d7d0748678288db2576cd5d8e9706"
+digest = "sha256:f72d995d76d92cf5f1d3210c4e6b6eb77b92cb32efac11a59a17d521efdfbaac"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fold-clothes-random-i00-standard"
-digest = "sha256:a8f80e01129280a1debde4a6c318c1b6bf6e962355601a83871e1a38a6d95d84"
+digest = "sha256:218b92718c8b2d76cd44caa173bb9be9bba949474f10920b5425f568f942e05f"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-general-pickup-i00-privileged"

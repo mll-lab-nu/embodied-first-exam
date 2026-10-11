@@ -54,8 +54,14 @@ bit-for-bit the same state), which the instructions say.
 ## Determinism (measured on Isaac Sim 5.1, RoboDojo's GPU PhysX)
 RoboDojo forces PhysX GPU dynamics for every task (`overwrite_gpu_setting(1)`, needed for its cloth and liquids); kept.
 Test per task (`make-instance`, then two fresh-process replays of a 120-action trajectory moving both arms and grippers):
-- 49 tasks: the three resets and the two replays' end states bit-identical (including cloth, the conveyor tasks and the
+- 47 tasks: the three resets and the two replays' end states bit-identical (including the conveyor tasks and the
   support-arm tasks);
+- `fold_clothes` and `fold_clothes_random` passed that test too, but the test's trajectory moves the arms without handling
+  the garment. Once the cloth is handled it does not replay bit for bit (GPU PhysX cloth): in the first model trial that
+  folded it (Codex + GPT-6 Astra, `fold_clothes` standard, 2026-10-10, an L40) the live episode and its two fresh-process
+  replays, all started from the exact frozen state (`5fe7775799792961`), ended in three different states (live
+  `5d9ed2250495a7d8`, replays `ac5893c4ebbff04c` / `b573a2a98e98f457`), and the trial was scored 0 as not deterministic.
+  Both are graded by verdict since then (their resets are bit-identical, so `instance_exact` stays meaningful for them);
 - `make_toast`: 1 of 3 fresh resets differed; with PhysX enhanced determinism (RoboDojo's own sim setting, off by default)
   all agree, so its instance records `"physics": {"enable_enhanced_determinism": true}` and every session, the service and
   the verifier run with it;
@@ -65,7 +71,9 @@ Test per task (`make-instance`, then two fresh-process replays of a 120-action t
   asks for the same verdict in a fresh process. Their rebuilt layout hashes differently in every process by design, so
   the tooling reports it (`instance_exact` false) and never refuses the instance for it (the standard service starts
   strict otherwise: a rebuilt layout that hashes differently from the recorded one is refused on every other task).
-Checked on one RTX 4090 (driver 580.159); not checked across GPU models.
+Frozen on one RTX 4090 (driver 580.159). Across GPU models (2026-10-10, the evaluation hosts): the frozen layouts rebuild
+to the recorded hashes, and a 120-action driver trajectory ends in the same state as on the 4090, on L40S (drivers
+580.178 and 580.82), L40 (driver 610) and L4 (11 instances checked; every graded trial reports `instance_exact`).
 
 ## Grading
 - privileged: `tests/grade.py` replays `/app/output/trajectory.npz` in two fresh processes; reward 1 iff both succeed and
@@ -95,7 +103,7 @@ Checked on one RTX 4090 (driver 580.159); not checked across GPU models.
 
 ## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
 Resume class `exact` (the resumed service is a fresh process whose journal replay is that process's first run), `approx` for
-the four tasks graded by verdict. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test `scripts/robodojo/kill_test.sh`: RoboDojo
+the six tasks graded by verdict. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test `scripts/robodojo/kill_test.sh`: RoboDojo
 has no oracle, so a driver client (12 joint_position chunks; not a solution) runs as Harbor's oracle on a copy of
 `robodojo-general-pickup-i00-standard`, and the service is killed with SIGKILL inside the 6th call, after 5 checkpoints.
 Result (2026-10-10, RTX 4090): resumed once, exactly (state hash `224d592a77d3c27f` = the checkpoint's; TCP deviation

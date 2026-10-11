@@ -28,7 +28,7 @@ initial state, so none replays on a frozen layout. The task is reported separate
 ## Verification
 The sim service ends the episode on RoboDojo's own check (success), a failed check, the runaway guard or the time limit, and
 writes `/data/trajectory.npz`; the collect hook (`environment/sim/finalize.sh`) replays it from the frozen layout in two
-fresh processes; `tests/grade.py` scores 1 iff the live episode succeeded and both replays succeed and both end in the same state hash. No oracle;
+fresh processes; `tests/grade.py` scores 1 iff the live episode succeeded and both replays succeed (determinism by verdict: `instance.json` sets `"determinism": "verdict"` because the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10); the grader requires both replays to succeed; the end states' hashes are reported as `state_identical`). No oracle;
 human review in PR #142 (no positive example yet). `nop` (no actions) scores 0.
 
 ## Compute resources
@@ -51,3 +51,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` frames or a watch window; `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
 | Source | RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0) |
 | Benchmark notes | docs/benchmarks/robodojo.md |
+
+### Change Log
+- 2026-10-10: determinism class `state` -> `verdict` (`instance.json`: `"determinism": "verdict"`; the scene, the layout, the recorded reset hash and RoboDojo's success check are unchanged). The task could not be passed before: every trial that folded the garment was scored 0 as "not deterministic", because GPU PhysX cloth does not replay bit for bit (the determinism test that classed it `state` moved the arms without handling the cloth). Both replays must succeed now; `state_identical` is still reported. Standard mode: the service resumes `approx`. Trials graded before this date with `deterministic` 0 are re-scored from their recorded fields (`all_success` / `replay_success`), not rerun.

@@ -21,6 +21,7 @@ import argparse, json, os, pathlib, sys, tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robodojo"
+OVERRIDES = json.loads((HERE / "instance_overrides.json").read_text())   # per-task determinism class, physics, change log
 REGISTRY = "ghcr.io/mll-lab-nu"
 MODES = ("privileged", "standard")
 LAYER = ROOT / "scripts/eai_standard"
@@ -106,6 +107,9 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
                    f"{I.get('determinism_why')}; the end states' hashes are reported as `state_identical`)"
                    if I.get("determinism") == "verdict" else " and both end in the same state hash")
     common["README_RULE"] = readme_rule
+    # Change Log (PROTOCOL §2.8): per-task entries of instance_overrides.json "change_log", the last section of both READMEs
+    log = OVERRIDES.get(task, {}).get("change_log") or []
+    common["CHANGE_LOG"] = ("\n### Change Log\n" + "".join(f"- {x}\n" for x in log)) if log else ""
     MT = json.loads((HERE / "model_trials.json").read_text())
     tr = MT["trials"].get(task, {})
     run = f"Codex + GPT-6 Luna, effort xhigh, run `{MT['run']}`, {MT['date']}"
