@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · handover_mic — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use one arm to grasp the microphone on the table and handover it to the other arm.
+cannot open. You get one client and one episode. **Task:** Use one arm to grasp the microphone on the table and handover it to the other arm. The success check, run at the end of every call, passes when the arm on the side opposite to where the microphone lies at the start has taken it over (if it starts on the right half of the table, x > 0, the left arm must hold it; if on the left half, the right arm): that arm's gripper is commanded closed (below 0.2), the other gripper is commanded open (above 0.8), a gripper is touching the microphone, and the microphone's reference point is above z = 0.92 m (18 cm above the table top) on the holding arm's side of the centre line (x < 0 for the left arm, x > 0 for the right arm).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

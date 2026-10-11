@@ -12,8 +12,12 @@ simulator image and an oracle run), each as a copy of the templates tasks/robotw
   tests/rcb_traj.py with the task's own goal-text entry and selftest default (what robotwin_mk_task.py substitutes);
 - standard: environment/sim/{server.py,rcb_live.py,rcb1.py}, environment/{rcb_client.py,rcb1.py}, tests/{grade.py,test.sh}
   (unchanged copies); environment/sim/rcb_traj.py = the privileged twin's; the sim service's `[[verifier.collect]]`
-  command in task.toml; instruction.md from "## Rules" up to the task's own objects line (the title, the task
-  paragraph, the objects line and the generated "## Resource limits" tail stay the task's).
+  command in task.toml; instruction.md from "## Rules" up to the task's own objects line (the title, the objects line
+  and the generated "## Resource limits" tail stay the task's); and, for a task listed in
+  scripts/robotwin/standard_facts.json, the instruction's task paragraph: the goal text followed by the facts of the
+  judge (what RoboTwin's check_success tests, with its numbers; owner decision 2026-10-10). The five tasks whose goal
+  text already states them (the template, place_can_basket, put_bottles_dustbin, scan_object, open_microwave) are not
+  listed and keep their paragraph.
 Standard library only."""
 from __future__ import annotations
 
@@ -35,6 +39,8 @@ ENTRY = ('    "stack_blocks_two": dict(\n        text="Stack the green block on 
 SELFTEST = 'q = sub.add_parser("selftest"); q.add_argument("--task", default="stack_blocks_two")'
 HOOK = re.compile(r'(\[\[verifier\.collect\]\]\nservice = "sim"\ncommand = )(".*")\n')
 RULES = "## Rules (real-robot rules)\n"
+FACTS = json.loads((ROOT / "scripts/robotwin/standard_facts.json").read_text())
+TASK_PARA = re.compile(r"\*\*Task:\*\* .*?\n\n", re.S)
 OBJECTS = re.compile(r"^(Objects here: .*|Table top at z ≈ 0\.74 m\. The scene's objects are what the cameras show\.)$", re.M)
 
 
@@ -92,7 +98,12 @@ def main(argv: list[str]) -> int:
         put(std / "task.toml", HOOK.sub(lambda m: m.group(1) + hook.group(2) + "\n", toml, count=1))
         ins = (std / "instruction.md").read_text()
         x, y = shared_span(ins)
-        put(std / "instruction.md", ins[:x] + span + ins[y:])
+        new = ins[:x] + span + ins[y:]
+        if task in FACTS:
+            assert task != TPL and len(TASK_PARA.findall(new)) == 1, f"{std.name}/instruction.md: no task paragraph"
+            goal = json.loads((priv / "environment/instance.json").read_text())["text"]
+            new = TASK_PARA.sub(lambda m: f"**Task:** {goal} {FACTS[task]['facts']}\n\n", new, count=1)
+        put(std / "instruction.md", new)
     if check and changed:
         print(f"FAIL: {len(changed)} RoboTwin file(s) differ from the templates (run scripts/robotwin_sync_shared.py):")
         for c in changed[:40]:

@@ -25,7 +25,8 @@ recovery), §19–§25 are Part 4. The sections of Parts 1 and 3 are cited by th
 
 The agent talks to a **sim service** it cannot open, over HTTP. **No reset**: one trial = one episode. **No step limit** (except a technical episode cap where a
 task states one, e.g. DexToolBench's 360,000 control steps); the agent's wall-clock budget is the real limit; actions and simulated time are reported as cost. Nothing the agent can
-call reveals object poses, scene files, seeds or the success predicate. Videos, frames, depth and proprioception come
+call reveals object poses, scene files, seeds or the success predicate (contact or safety telemetry only where a
+benchmark declares it, PROTOCOL §4.5: RoboTangle's `meta["safety"]`). Videos, frames, depth and proprioception come
 back as **binary** in the response body (RCB1 frames, below), never base64; the agent's code decides what to keep.
 
 Base URL: `http://sim:8000` (compose network) or `http://localhost:8000` (Harbor egress control puts the service in the
@@ -380,6 +381,16 @@ holding the single-threaded service:
 In both cases the executed prefix stays: it is journaled and checkpointed like any call, and `/status` and the next
 `meta.proprio.now` report the state after it, like a real controller that loses its link. An old client sees a normal
 response with fewer rows executed; `rcb_client` exposes `Result.stopped` and prints a one-line warning.
+
+A third bound keeps one call from exhausting the service's memory (every frame is held until the response is sent):
+- **`max_frames_per_call`** (`/spec`, where the adapter states one: DexJoCo and MyoSuite 1000, RoboTangle 2000, RoboWits
+  1500, RoboPaint 640, RoboDojo 3000; LabUtopia and AutoBio state a bound per camera): the images a call may return, cameras x frames
+  with per-frame depth counted again (as four images in RoboTangle, RoboWits and RoboPaint, what a depth frame costs).
+  A request over it is a 400 before anything is executed (`rcb_limited.check_frames`); a camera named twice is one
+  camera. Where the length of a call is known only while it runs (RoboTangle's and RoboWits' `ee_pose` rows), the
+  call stops taking frames at the bound, runs to its end, always returns the last frame, and `meta.frames_skipped`
+  counts the frames left out. RoboLab, YAMLab, ManiGuard, MolmoSpaces, BEHAVIOR and MuJoCo Playground's quadruped
+  services state no such bound yet (their calls are bounded by `max_watch_s`, `max_chunk_s` and the frame rate).
 
 ### 13. Crash recovery
 The 2.2 implementation of PROTOCOL §4.7, with the semantics of the RoboTwin and MuJoCo services

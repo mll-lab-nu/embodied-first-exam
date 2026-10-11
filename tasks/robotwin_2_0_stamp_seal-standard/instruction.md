@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · stamp_seal — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Grab the stamp and stamp onto the specific color mat.
+cannot open. You get one client and one episode. **Task:** Grab the stamp and stamp onto the specific color mat. The success check, run at the end of every call, passes when the stamp's position is within 1 cm in x and in y of the mat's centre and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

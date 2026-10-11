@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · press_stapler — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use one arm to press the stapler.
+cannot open. You get one client and one episode. **Task:** Use one arm to press the stapler. The success check, run at the end of every call, passes when a gripper is touching the stapler within 3 cm (in x, in y and in z) of the stapler's press point; once that has held at the end of a call, the task counts as done.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

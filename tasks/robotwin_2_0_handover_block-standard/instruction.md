@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · handover_block — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use the left arm to grasp the red block on the table, handover it to the right arm and place it on the blue pad.
+cannot open. You get one client and one episode. **Task:** Use the left arm to grasp the red block on the table, handover it to the right arm and place it on the blue pad. The success check, run at the end of every call, passes when the block stands on the blue pad, the centre of the end face that is down at the start within 3 cm in x and in y of the pad's centre and within 1 cm of the pad's top surface in height, and the right gripper is commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

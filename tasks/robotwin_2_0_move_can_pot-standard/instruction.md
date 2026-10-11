@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · move_can_pot — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** There is a can and a pot on the table, use one arm to pick up the can and move it to beside the pot.
+cannot open. You get one client and one episode. **Task:** There is a can and a pot on the table, use one arm to pick up the can and move it to beside the pot. The success check, run at the end of every call, passes when the can stands upright (within 15 degrees) on the table beside the pot, on the side of the pot where the can lies at the start (to the pot's left if the can starts on the left half of the table, x < 0; to its right otherwise): the can's centre is less than 20 cm from the pot's centre in x and less than 3.5 cm from it in y, the can's base is not above the level of the pot's base, and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
