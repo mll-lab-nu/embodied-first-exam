@@ -201,9 +201,11 @@ licensed to whoever downloads them, never in the image or the repository (`image
 - A JSON `/submit` body (not RCB1) whose `actions` is an object, or an RCB1 header whose `meta` is not an object with
   no `actions` part, fails in the shared layer before the adapter sees it (`rcb_limited.py`: 500, the episode ends).
   The official client always sends an RCB1 `actions` array, so only a hand-written request can do this.
-- The response of one call is built in memory: a long `ee_pose` chunk (up to 50 rows of up to 400 control steps) with
-  per-frame video or depth of three cameras can exhaust the sidecar's memory, which is a crash inside a call (the
-  agent's failure after three, PROTOCOL §4.7). The adapter has no frame limit per response yet.
+- The response of one call is built in memory, so one call returns at most 1500 images (`/spec` `max_frames_per_call`,
+  `shared/server.py` `MAX_FRAMES`: cameras x frames, a frame with per-frame depth counts 4): over it a 400 before anything
+  runs, and `ee_pose` rows that take longer than counted (up to 400 control steps each) stop adding frames there
+  (`meta["frames_skipped"]`; `scripts/robowits/tests/test_server_frames.py`). Until 2026-10-10 there was no limit: a
+  long chunk or watch with per-frame video or depth of three cameras could exhaust the sidecar's memory.
 - During the standard service's in-process grading replay, a late `/status` reports the replay's counter.
 - The predicates are RoboWits' own and some are looser than their task text (the criterion sections say where); the
   review checks each family's predicate (PROTOCOL §2.7).

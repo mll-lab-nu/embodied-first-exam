@@ -39,6 +39,11 @@ MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 RESET_BUDGET = max(0, int(os.environ.get("RCB_RESET_BUDGET") or 0))  # the compose file's default: 10 (PROTOCOL §4.5)
 W, H = 640, 480
+# Images one call may return (cameras x frames, per-frame depth counted again), checked before anything runs: every
+# frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per 1000 RGB
+# frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.4 GB, under the
+# sidecar's 8 GiB cap (docs/benchmarks/myosuite.md). The 2.1 services' 3000 would need more than the cap.
+MAX_FRAMES = 1000
 LOCK = threading.Lock()
 PID_FILE = os.path.join(DATA, "server.pid")
 E = {
@@ -352,6 +357,7 @@ SPEC = {
     "physics_substeps": SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_watch_s": MAX_WATCH_S,
+    "max_frames_per_call": MAX_FRAMES,
     "cameras": {
         c: {
             "rgb": True,
@@ -601,8 +607,16 @@ def note_of(meta: dict) -> str:
     return "" if note is None else str(note)[:500]
 
 
-def recorder(cams, fps: int, meta: dict, video: str) -> L.Recorder:
-    every = max(1, int(round(CTRL_HZ / max(1, fps)))) if video != "none" else 10**9  # no video: first and last frame
+def frame_every(fps: int, video: str) -> int:
+    return max(1, int(round(CTRL_HZ / max(1, fps)))) if video != "none" else 10**9  # no video: first and last frame
+
+
+def recorder(cams, fps: int, meta: dict, video: str, steps: int = 0) -> L.Recorder:
+    """The call's recorder, after its frame budget: the images a call of `steps` control steps would hold and return
+    (the first and the last frame plus one every frame_every control steps, for each camera; per-frame depth counted
+    again) are refused above MAX_FRAMES (ValueError: 400, before anything runs)."""
+    every = frame_every(fps, video)
+    L.check_frames(len(cams), 2 + steps // every, L.depth_mode(meta) in ("frames", "legacy"), MAX_FRAMES)
     return L.Recorder(
         cams, every, grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ
     )
@@ -624,7 +638,7 @@ def cameras_of(meta: dict) -> list:
     bad = [c for c in cams if c not in CAMS]
     if bad:
         raise ValueError(f"unknown cameras {bad}; cameras: {CAMS}")
-    return list(cams)
+    return list(dict.fromkeys(cams))  # each camera once (POST /reset does not pass the layer's parse_request)
 
 
 def meta_common(cams) -> dict:
@@ -671,7 +685,7 @@ def do_submit(meta: dict, A: np.ndarray):
             raise ValueError("interpolate must be hold|linear")
         if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
             raise ValueError("video must be mp4|frames|both|none")
-        rec = recorder(cams, fps, meta, video)
+        rec = recorder(cams, fps, meta, video, steps=A.shape[0] * int(round(k)))
     E["calls"] += 1
     step0, before = E["step"], ctrl_steps()
     rec.tick(force=True)
@@ -727,7 +741,7 @@ def do_observe(meta: dict):
             raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
         if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
             raise ValueError("video must be mp4|frames|both|none")
-        rec, before = recorder(cams, fps, meta, video), ctrl_steps()
+        rec, before = recorder(cams, fps, meta, video, steps=int(round(seconds / DT))), ctrl_steps()
     if seconds > 0 and not E["done"]:
         rec.tick(force=True)
         hold = last_command()
@@ -788,7 +802,8 @@ def do_reset(meta: dict):
     """POST /reset: a new episode from the frozen instance (the running one, if any, is abandoned, never graded)."""
     with checking():
         cams, fps = cameras_of(meta), video_fps(meta)
-        L.depth_mode(meta)  # a bad depth value is a 400 before anything changes
+        # a bad depth value is a 400 before anything changes (as the frame budget would be: one frame per camera here)
+        L.check_frames(len(cams), 2, L.depth_mode(meta) in ("frames", "legacy"), MAX_FRAMES)
     if E["success"]:
         raise Refused({"error": "trial finished: an episode succeeded", "reason": E["reason"], "resets_left": 0})
     if E["resets"] >= RESET_BUDGET:
@@ -925,13 +940,12 @@ def make_handler(svc: L.Service):
 
 
 def serve(svc: L.Service, port: int) -> None:
-    """L.serve with this service's handler (the same spec defaults and check)."""
-    from http.server import HTTPServer
-
+    """L.serve with this service's handler (the same spec defaults and check, and L.bind: a port still held when the
+    service restarts is waited for, not a crash)."""
     svc.spec.setdefault("on_service_error", L.ON_SERVICE_ERROR)
     svc.spec.setdefault("max_call_wall_s", EP.max_call_wall_s)
     L.check_spec(svc.spec)
-    HTTPServer(("0.0.0.0", port), make_handler(svc)).serve_forever()
+    L.bind(port, make_handler(svc)).serve_forever()
 
 
 try:

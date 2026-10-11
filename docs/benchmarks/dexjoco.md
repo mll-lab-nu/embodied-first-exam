@@ -100,6 +100,16 @@ unchanged), resume class `exact`:
   executed DexJoCo row, so the recorded trajectory replays in the privileged tooling unchanged.
 - **observations:** every camera of the scene (static `front`, `back`, `left`, `right`, `top0`; the hand cameras on each
   hand's mount) at 640 x 480 with calibration (static pose or mount link), optional z-depth from the same renderer;
+  a camera whose body is neither fixed in the world nor moved by the robot's own joints alone (`scene_camera` in
+  `server.py`, decided from the model as MyoSuite's service does; `make_instances.py` records the same list as
+  `scene_cameras` in `facts.json`, and `tests/test_standard_server.py` checks it against the frozen models) gives images
+  and depth only: no mount, `extrinsic_cv` / `cam2world_gl` null, NaN per frame. In the 11 families that is
+  bimanual_photograph's `cam_pos_z`, the lens of the camera the hands pick up;
+- **frames per call:** at most 1000 images (cameras x frames, per-frame depth counted again; `/spec`
+  `max_frames_per_call`), checked before anything is executed (400). Every frame is held until the response is sent;
+  measured on the layer's Recorder with 640 x 480 frames: 2.7 GB per 1000 RGB frames, 5.1 GB per 1000 images of one
+  camera with per-frame depth, on top of the simulator's 1.9 GB under the sidecar's 8 GiB cap. The default camera at
+  the default 10 fps needs 302 images for the longest watch (30 s) and 102 for the longest chunk (10 s);
   proprioception `joint_pos`, `joint_vel`, `joint_effort` (7 + 16 per arm), `tcp_pose`, plus `tcp_target` and
   `hand_target` (the targets being tracked); no gripper-opening column (a dexterous hand).
 - **kinematics:** stateless FK of the arm links, the hand mount and the tcp; IK of each tcp over its arm's 7 joints
@@ -167,6 +177,17 @@ python3 scripts/dexjoco/generate.py && python3 scripts/dexjoco/generate.py --che
     bimanual tasks), so an agent gets more simulated steps out of the same wall clock than before.
   - Past results: a privileged trajectory of more than 50,000 rows that passed before would now score 0; none is known
     (the references have 202-1085 rows). Nothing else changes a verdict that was reached before.
+- 2026-10-10, third review (board 0067, R3B-M1, R3B-M2; standard mode only: the instances, the success checks and the
+  references are unchanged, so the tasks keep their names):
+  - bimanual_photograph: `cam_pos_z` rides on the camera the hands pick up (a free body), and the service published its
+    mount and live pose like a robot camera's: the object's pose, which standard mode must not give. It now gives
+    images and depth only (Standard mode, observations). Past standard results of
+    `dexjoco-bimanual-photograph-i00-standard` could read the object's pose and are reported separately; the other ten
+    families have no such camera (checked on every frozen instance's model).
+  - all 11: at most 1000 images per call (400 above; Standard mode, frames per call). Before, one request within the
+    documented ranges could exhaust the sidecar's memory; a failed trial recorded as `infra_error` with
+    `resource_service_oom` before this date may have been caused by such a request. The standard READMEs get a
+    Change Log section.
 - 2026-10-10, second review (board 0067, R2: M2, M3; the instances, the success checks and the references are
   unchanged, so the tasks keep their names):
   - both modes: the minimum is 4 CPUs visible to every container that runs the simulator (`min_cpus` and

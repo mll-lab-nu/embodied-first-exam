@@ -40,6 +40,13 @@ CHANGES = [
     "ended, so every later call was a 409 and the rolled-back state was graded (a 0 without `infra_error`); the resume now "
     "ignores an end that belongs to the lost call, and the episode continues from the last completed call, as the "
     "instruction says. An episode without a crash is unaffected.",
+    "2026-10-10 (review round 3, board 0067): the sim service's request handling only "
+    "(`environment/sim/server_mj.py`). A negative or non-numeric `Content-Length` is answered 400 without reading "
+    "the body (the service read until the client hung up, without a bound, which could exhaust its memory); a "
+    "camera named more than once in `cameras` is rendered and returned once (N copies of one name made it build N "
+    "x N images within the frame budget); a port that is still held when the service restarts is waited for, not "
+    "counted as a crash; a JSON `true` or `false` where `dt` or `seconds` takes a number is a 400 (`true` ran as 1 "
+    "second). An episode's physics, the grader and the pass rule are unchanged.",
 ]
 CHANGES_ALOHA = [
     "2026-10-10 (review 0067): the calibration is recomputed for every response. Before, it was computed once at start-up, so "

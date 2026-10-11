@@ -92,6 +92,15 @@ CHANGES_STANDARD = [
     "2026-10-10 (review round 2, board 0067): `tests/grade.py` only. A `final.json` that cannot be read as a JSON object "
     "(truncated, not JSON, not an object) is graded `infra_error = 1` and `grader_error = 1`; before, the grader raised "
     "and the trial had no reward file. Nothing else changes: a readable `final.json` is graded as before.",
+    "2026-10-10 (review round 3, board 0067): the sim service's request handling "
+    "(`environment/sim/server_casa.py`) and `tests/grade.py`. A negative or non-numeric `Content-Length` is "
+    "answered 400 without reading the body (the service read until the client hung up, without a bound, which "
+    "could exhaust its memory); a camera named more than once in `cameras` is rendered and returned once (N copies "
+    "of one name made it build N x N images within the frame budget); a port that is still held when the service "
+    "restarts is waited for, not counted as a crash; a JSON `true` or `false` where `dt` or `seconds` takes a "
+    "number is a 400 (`true` ran as 1 second). The grader: a `final.json` whose evidence fields (`control_steps`, "
+    "`calls`, `elapsed_s`, `final_reward`) are not numbers no longer stops it before it writes a reward (they are "
+    "reported as 0 and decide nothing). An episode's physics and the pass rule are unchanged.",
 ]
 
 

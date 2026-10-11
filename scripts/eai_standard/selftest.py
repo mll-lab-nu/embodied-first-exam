@@ -41,6 +41,7 @@ class Compose:
         self.port = free_port(); self.max = restarts; self.restarts = 0; self.stopped = False; self.rc = None
         # run.sh starts `python`: the interpreter that runs this selftest (which has numpy), whatever PATH says first
         self.env = {**os.environ, "RCB_DATA": self.data, "RCB_SERVER": os.path.join(HERE, "toy_server.py"), "RCB_TOY_PORT": str(self.port),
+                    "RCB_PORT": str(self.port),   # where a service that gave up answers (rcb_limited.refuse_forever)
                     "PATH": PYBIN + os.pathsep + os.environ.get("PATH", ""), **{k: str(v) for k, v in env.items()}}
         self.out = open(os.path.join(self.data, "container.log"), "ab")
         self.p = None; self._t = threading.Thread(target=self._loop, daemon=True); self._t.start()
@@ -265,6 +266,50 @@ def give_up_reports_earlier_resumes():
 
 
 @case
+def a_give_up_is_answered_at_once():
+    """A service that gave up answers 409 to every request and the client raises EpisodeOver at once. Before, nothing
+    listened: Robot() and wait_ready() waited out their timeout (an hour by default) for a simulator that was gone."""
+    c = Compose("refused_at_start", RCB_TOY_REFUSE="too_few_cpus")
+    try:
+        t = time.time()
+        e = _try(lambda: c.robot(timeout=120))
+        expect(isinstance(e, rcb_client.EpisodeOver) and "too_few_cpus" in str(e) and "infrastructure" in str(e), f"Robot() raises the refusal: {e!r}")
+        expect(time.time() - t < 30, f"at once, not after its timeout ({time.time() - t:.0f} s)")
+        fin = c.final()
+        expect(fin["reason"] == "too_few_cpus" and fin["infra_error"] == 1 and fin["gave_up"] and fin["success"] is False, f"final {fin}")
+        expect(c.restarts == 0 and c.p.poll() is None, "the container stays up for the collect hook, never restarted")
+        expect(c.end(timeout=30) == 2, "the collect hook keeps the give-up verdict")
+        expect(c.final() == fin, "and nothing a client sends changes it")
+    finally:
+        c.down()
+    c = Compose("gave_up_after_crashes")
+    try:
+        r = c.robot()
+        for _ in range(3):                               # the third crash ends the episode: sim_crashed
+            r.submit("joint_position", chunk(2, 0.3), dt=0.05, video="none")
+            c.kill_service()
+            if isinstance(_try(lambda: r.wait_ready(60)), Exception):
+                break
+        t = time.time()
+        for what, fn in (("wait_ready()", lambda: r.wait_ready(120)), ("status()", r.status), ("Robot()", lambda: c.robot(timeout=120)),
+                         ("submit()", lambda: r.submit("joint_position", chunk(2, 0.3), dt=0.05, video="none")),
+                         ("get_obs()", r.get_obs)):
+            e = _try(fn)
+            expect(isinstance(e, rcb_client.EpisodeOver) and "sim_crashed" in str(e), f"{what} raises EpisodeOver with the reason: {e!r}")
+        expect(time.time() - t < 30, f"all at once ({time.time() - t:.0f} s)")
+        e = _try(lambda: r.fk([0.0, 0.0, 0.0]))
+        expect(isinstance(e, ValueError) and "409" in str(e), f"kinematics: an error, no hang: {e!r}")
+        with socket.create_connection(("127.0.0.1", c.port), timeout=10) as k:   # a malformed request cannot stop the answer
+            k.sendall(b"POST /submit HTTP/1.1\r\nHost: x\r\nContent-Length: -1\r\n\r\n")
+            k.settimeout(10)
+            expect(b" 409 " in k.recv(4096), "409 whatever the request")
+        fin = c.final()
+        expect(fin["reason"] == "sim_crashed" and fin["infra_error"] == 1 and fin["gave_up"], f"final {fin}")
+    finally:
+        c.down()
+
+
+@case
 def startup_watchdog_and_backoff():
     c = Compose("watchdog", RCB_TOY_HANG_S=30, RCB_STARTUP_TIMEOUT_S=2)
     try:
@@ -451,6 +496,23 @@ def negative_content_length_is_refused_at_once():
         expect(not st["done"] and st["calls"] == st0["calls"], f"the episode goes on: {st}")
     finally:
         c.down()
+
+
+@case
+def a_repeated_camera_is_one_camera():
+    """N copies of one camera name were rendered into one list N times and returned N times (N * N images), while the
+    adapters' budgets counted N: a request of a few hundred bytes could exhaust the service's memory."""
+    meta = {"cameras": ["top", "side", "top", "top"]}
+    L.parse_request("/observe", meta, {})
+    expect(meta["cameras"] == ["top", "side"], f"the adapter gets each name once, in the order asked for: {meta}")
+    grabs = []
+
+    def grab(cams, want):
+        grabs.append(list(cams)); return {c: np.zeros((2, 2, 3), np.uint8) for c in cams}, {}
+    rec = L.Recorder(["top"] * 40, 1, grab, lambda: np.zeros(1), lambda cams: {}, lambda: 0)
+    rec.tick(force=True); rec.tick(force=True)
+    shapes = [p[3]["shape"] for p in rec.parts("frames", 10) if p[0] == "frames/top"]
+    expect(grabs == [["top"]] * 2 and shapes == [[2, 2, 2, 3]], f"the recorder too: grabs {grabs[:1]}, frames/top {shapes}")
 
 
 @case

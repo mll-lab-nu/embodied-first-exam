@@ -186,6 +186,43 @@ def case_malformed_bodies_are_400():
         srv.shutdown()
 
 
+def case_give_up_is_answered_and_a_repeated_camera_is_one():
+    """What the 2.4 layer shares with 2.2 (scripts/eai_standard/selftest.py has the full cases): a service that gave up
+    answers 409 to every request and the client raises EpisodeOver at once (before: nothing listened, and Robot() waited
+    out its timeout, an hour by default); the recorder renders and returns a camera named N times once, not N * N times."""
+    import socket
+    sys.path[:0] = [HERE, os.path.dirname(HERE)]
+    import rcb_client, rcb_limited as L
+    grabs = []
+
+    def grab(cams, want):
+        grabs.append(list(cams)); return {c: np.zeros((2, 2, 3), np.uint8) for c in cams}, {}
+    rec = L.Recorder(["top"] * 40, 1, grab, lambda: np.zeros(1), lambda cams: {}, lambda: 0)
+    rec.tick(force=True)
+    shapes = [p[3]["shape"] for p in rec.parts("frames", 10) if p[0] == "frames/top"]
+    assert grabs == [["top"]] and shapes == [[1, 2, 2, 3]], (grabs, shapes)
+    with socket.socket() as k:
+        k.bind(("127.0.0.1", 0)); port = k.getsockname()[1]
+    code = (f"import sys; sys.path[:0] = [{HERE!r}, {os.path.dirname(HERE)!r}]; import rcb_limited as L; "
+            "ep = L.Episode(sys.argv[1], dim=2); ep.startup(); ep.give_up('too_few_cpus', infra=True)")
+    with tempfile.TemporaryDirectory() as data:
+        p = subprocess.Popen([sys.executable, "-c", code, data], env={**os.environ, "RCB_PORT": str(port)},
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            t = time.time()
+            try:
+                rcb_client.Robot(base=f"http://127.0.0.1:{port}", timeout=120)
+                raise AssertionError("Robot() connected to a service that gave up")
+            except rcb_client.EpisodeOver as exc:
+                assert "too_few_cpus" in str(exc) and "infrastructure" in str(exc), exc
+            assert time.time() - t < 30, f"at once, not after its timeout ({time.time() - t:.0f} s)"
+            fin = final(data)
+            assert fin.get("reason") == "too_few_cpus" and fin.get("infra_error") == 1 and fin.get("gave_up"), fin
+            assert p.poll() is None, "the service stays up for the collect hook"
+        finally:
+            p.kill(); p.wait()
+
+
 def main(argv: list[str]) -> int:
     cases = [(n[5:], f) for n, f in sorted(globals().items()) if n.startswith("case_") and (not argv or any(a in n for a in argv))]
     bad = 0

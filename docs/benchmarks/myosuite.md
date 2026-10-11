@@ -99,7 +99,11 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 ## Modes
 - **Privileged:** `rcb_myosuite.Session` in the agent's container: reset, the task's observation dict, MuJoCo model and
   data, actuator descriptions and moment arms, rendering, recording and self-replay. Deliverable
-  `/app/output/trajectory.npz`, `(T, nu)` actuator commands, one row per control step.
+  `/app/output/trajectory.npz`, `(T, nu)` actuator commands, one row per control step. `tests/grade.py` checks the
+  file (readable, `(T, nu)` for this instance's `nu`, at most 1,000,000 rows, finite: otherwise `bad_trajectory`, the
+  agent's 0) before it replays it; a replay process that then gives no result (out of time, killed, not started) is
+  `replay_failed` with `grader_error = 1` and `infra_error = 1`, never the agent's 0 (since 2026-10-10, board 0067
+  R3B-M3: it was booked as `bad_trajectory`), and every `reward.json` carries `infra_error`.
 - **Standard (`eai-standard/2.2`):** the shared layer of `scripts/eai_standard/` and the adapter
   `shared/standard/server.py`, one source for all 22 families:
   - action type `muscle` (all-muscle bodies) or `actuators` (with the non-muscle ones: MyoDex's 6-DoF wrist positioning,
@@ -132,7 +136,12 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   `seconds`, `cameras` that is not a list of names, a `note` that is not text) is a 400 before anything runs (it was a
   500 that ended the episode; `note`, after the chunk had run), an absent or null `dt` / `seconds` is the default, and
   the verifier books a missing, unreadable or never-finalized `final.json` as `infra_error = 1` (it was the agent's 0);
-  `finalize.sh` writes `final.json` atomically. One gap is left in the shared 2.2 layer (`scripts/eai_standard/
+  `finalize.sh` writes `final.json` atomically. Since the third review (2026-10-10, board 0067 R3B-M2) one call
+  returns at most 1000 images (cameras x frames, per-frame depth counted again; `/spec` `max_frames_per_call`), checked
+  before anything runs (400): every frame is held until the response is sent (measured on the layer's Recorder with
+  640 x 480 frames: 2.7 GB per 1000 RGB frames, 5.1 GB per 1000 images of one camera with per-frame depth, on top of
+  the simulator's 1.4 GB under the sidecar's 8 GiB cap), and before, one request within the documented ranges could
+  exhaust that memory. The default camera at 10 fps needs 302 images for the longest watch. One gap is left in the shared 2.2 layer (`scripts/eai_standard/
   rcb_limited.py`, not MyoSuite's): JSON `actions` holding an object is a TypeError there, still a 500.
 - **Reset budget: 10** (owner, 2026-10-09; PROTOCOL §4.5, a per-benchmark exception to "no reset"). MyoSuite's own
   termination ends most standard episodes within one or two seconds of simulated time (measured in #116: a constant

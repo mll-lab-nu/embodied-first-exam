@@ -59,7 +59,7 @@ def agent_cost() -> dict:
         "agent_cost_self_reported": 1,
     }
     try:
-        with open("/app/output/rcb_session_log.jsonl") as f:
+        with open("/app/output/rcb_session_log.jsonl", errors="replace") as f:
             for i, line in enumerate(f):
                 if i > 200_000 or len(line) > 10_000:
                     break
@@ -78,7 +78,7 @@ def agent_cost() -> dict:
                         cost["agent_replays"] += 1
                 except Exception:  # noqa: BLE001 -- one bad line must not sink the verdict
                     continue
-    except OSError:
+    except Exception:  # noqa: BLE001 -- the agent's file, any bytes: the cost stays self-reported, the verdict is never lost
         pass
     return cost
 

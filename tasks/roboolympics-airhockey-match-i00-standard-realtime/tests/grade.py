@@ -9,7 +9,8 @@ Writes /logs/verifier/reward.txt (1/0) and a numeric-only reward.json, and copie
 frame, the replay's summary, event log) next to them for humans.
 infra_error = 1: no verdict on the agent (the service crashed past its restarts, failed to resume, ended on a simulator
 error, never finished, or failed to finalize; PROTOCOL §4b).
-reward.json also repeats how well the service kept its clock (PROTOCOL §4b; none of it decides the verdict): slowdown S;
+reward.json says realtime = 1 (every RoboOlympics task is standard-realtime; the other realtime graders write the same
+key) and repeats how well the service kept its clock (PROTOCOL §4b; none of it decides the verdict): slowdown S;
 clock_s, the wall seconds the clock ran; max_lag_s, the furthest a control step ran behind its time; stalls, the times
 the service dropped more than 0.5 s of debt instead of fast-forwarding the match; stalled_s, the wall time dropped that
 way (the match stood still while its clock should have run); stalled_share = stalled_s / clock_s; held_steps and
@@ -81,7 +82,7 @@ def main() -> None:
                "timeout": int(d.get("reason") == "timeout"),
                "n_actions": int(num(d.get("n_actions"))), "control_steps": int(num(d.get("control_steps_total"))),
                "calls": int(num(d.get("calls"))), "rows": int(num(d.get("rows"))),
-               "reset_budget": int(num(d.get("reset_budget"))), "slowdown": num(d.get("slowdown")),
+               "reset_budget": int(num(d.get("reset_budget"))), "realtime": 1, "slowdown": num(d.get("slowdown")),
                "clock_s": num(d.get("clock_s")), "max_lag_s": num(d.get("max_lag_s")),
                "stalls": int(num(d.get("stalls"))), "stalled_s": num(d.get("stalled_s")),
                "stalled_share": num(d.get("stalled_share")), "held_steps": int(num(d.get("held_steps"))),

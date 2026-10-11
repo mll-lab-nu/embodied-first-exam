@@ -23,6 +23,15 @@ def write(out: dict) -> None:
     print(json.dumps(out))
 
 
+def num(v, kind=float):
+    """A number from the service's record for the reward's evidence fields; anything else (a string, a list) is 0: these
+    fields decide nothing, and a value of the wrong type must not cost the verdict."""
+    try:
+        return kind(v or 0)
+    except (TypeError, ValueError, OverflowError):
+        return kind(0)
+
+
 def main() -> None:
     os.makedirs(LOG, exist_ok=True)
     path = f"{DATA}/final.json"
@@ -51,11 +60,11 @@ def main() -> None:
             "replay_success": int(rep),
             "live_success": int(live),
             "finalized": int(bool(d.get("finalized"))),
-            "control_steps": int(d.get("control_steps") or 0),
-            "sim_steps": int(d.get("control_steps") or 0),
-            "calls": int(d.get("calls") or 0),
-            "elapsed_s": float(d.get("elapsed_s") or 0),
-            "final_reward": float(d.get("final_reward") or 0),
+            "control_steps": num(d.get("control_steps"), int),
+            "sim_steps": num(d.get("control_steps"), int),
+            "calls": num(d.get("calls"), int),
+            "elapsed_s": num(d.get("elapsed_s")),
+            "final_reward": num(d.get("final_reward")),
             "video_rendered": int(bool(d.get("video"))),
             "sim_error": int(d.get("reason") == "error"),
             "missing_log": 0,
