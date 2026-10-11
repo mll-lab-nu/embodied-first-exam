@@ -118,6 +118,10 @@ class Rules(unittest.TestCase):
                 f.write_text(json.dumps(doc))
                 with self.assertRaises((KeyError, ValueError)):
                     gateway.load_paths(f)
+            for probe in (["POST", "/v1/files"], ["GET", "/backend-api/wham/apps"], ["HEAD", "/a?b"]):   # a probe carries nothing
+                f.write_text(json.dumps({**base, "harness_probes": [probe], "providers": []}))
+                with self.assertRaises(ValueError):
+                    gateway.load_paths(f)
             self.assertEqual(gateway.CLIENT_TOOLS, {"function", "custom", "namespace"})      # a bad file changes nothing
 
     def test_server_tools(self):
@@ -295,6 +299,13 @@ class EndToEnd(unittest.TestCase):
             with socket.create_connection(("127.0.0.1", self.port), timeout=30) as sk:
                 sk.sendall(b"POST /h/" + self.up.encode() + b"/v1/messages HTTP/1.1\r\nHost: x\r\n" + head + b"\r\n" + body)
                 self.assertTrue(sk.recv(65536).startswith(b"HTTP/1.1 403"), head)
+        before = len(self.records())                 # Claude Code's own start-up probe: refused, but no record of a refusal
+        c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=30)
+        c.request("HEAD", f"/h/{self.up}/api/hello")
+        r = c.getresponse(); r.read(); c.close()
+        self.assertEqual((r.status, len(self.records())), (403, before))
+        self.assertEqual(self.call("GET", f"/h/{self.up}/api/hello")[0], 403)          # only that method: this one is recorded
+        self.assertEqual(len(self.records()), before + 1)
         for method in ("PUT", "DELETE", "PATCH"):
             self.assertEqual(self.call(method, f"/h/{self.up}/v1/messages", {} if method != "DELETE" else None)[0], 403)
         self.assertEqual(len(Stub.seen), 1, Stub.seen)
@@ -326,9 +337,11 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(st, 403)
         recs = self.records()
         refused = [r for r in recs if r.get("refused") == "path_not_allowed"]
-        self.assertEqual([(r["method"], r["path"]) for r in refused if r["method"] in ("GET", "POST")],
-                         [("POST", "/v1/files"), ("GET", "/v1/messages"), ("POST", "/v1/messages/../files"),
-                          ("POST", "/backend-api/wham/apps"), ("POST", "/v1/messages/batches"), ("POST", "/backend-api/wham/apps")])
+        self.assertEqual(sorted((r["method"], r["path"]) for r in refused if r["method"] in ("GET", "POST")),
+                         sorted([("POST", "/v1/files"), ("GET", "/v1/messages"), ("POST", "/v1/messages/../files"),
+                                 ("POST", "/backend-api/wham/apps"), ("POST", "/v1/messages/batches"), ("GET", "/api/hello"),
+                                 ("POST", "/backend-api/wham/apps")]))
+        self.assertFalse([r for r in recs if r["method"] == "HEAD"])
         self.assertTrue(all(r["status"] == 403 for r in refused))
         self.assertEqual([(r["host"], r["path"]) for r in recs if r.get("refused") == "host_not_allowed"], [("github.com", "/v1/responses")])
         tool = [r for r in recs if r.get("refused") == "server_tool"]

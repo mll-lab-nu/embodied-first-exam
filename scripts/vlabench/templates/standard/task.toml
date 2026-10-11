@@ -53,8 +53,8 @@ timeout_sec = 1500
 
 [agent]
 timeout_sec = 3600.0
-# The agent container holds no simulator, but VLABench's experts are public upstream: the agent reaches the model APIs
-# and nothing else (scripts/set_agent_egress.py HOSTS).
+# The agent container holds no simulator, but VLABench's experts are public upstream: the agent reaches the model APIs and the package registries,
+# nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
 allowed_hosts = [{{allowed_hosts}}]
 

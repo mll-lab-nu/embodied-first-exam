@@ -76,7 +76,7 @@ CHANGE_LOG = {
 FAMILIES = {k: v for k, v in json.loads((HERE / "families.json").read_text()).items() if not k.startswith("_")}
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
-    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com",
+    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com",
 ]  # fmt: skip
 # Why a family is hard for a coding agent, beyond AutoBio's own level (facts of the scene and of the check only).
 NOTES = {
@@ -419,7 +419,7 @@ expert_time_estimate_hours = {t["hours"] + (1.0 if std else 0.0)}
 [agent]
 timeout_sec = {AGENT_TIMEOUT}.0
 # AutoBio's scripted experts are in its public repository and its recorded demonstrations on Hugging Face (and a
-# standard-mode agent could rebuild the simulator from the repository): the agent reaches the model APIs and nothing
+# standard-mode agent could rebuild the simulator from the repository): the agent reaches the model APIs and the package registries, nothing
 # else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
 allowed_hosts = [{", ".join(toml_str(h) for h in HOSTS)}]

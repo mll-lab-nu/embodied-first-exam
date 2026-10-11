@@ -64,7 +64,7 @@ timeout_sec = 900
 
 [agent]
 timeout_sec = {{agent_timeout_sec}}
-# The agent reaches the model APIs and the sim (localhost:8000, Harbor's egress control) and nothing else.
+# The agent reaches the model APIs, the package registries and the sim (localhost:8000, Harbor's egress control) and nothing else.
 network_mode = "allowlist"
 allowed_hosts = {{allowed_hosts}}
 

@@ -55,7 +55,7 @@ timeout_sec = {{collect_timeout}}
 [agent]
 timeout_sec = 3600.0
 # The agent container holds no simulator, but LIBERO's demonstrations and LIBERO-MAX's policies are public upstream: the
-# agent reaches the model APIs and nothing else (scripts/set_agent_egress.py HOSTS).
+# agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
 allowed_hosts = [{{allowed_hosts}}]
 

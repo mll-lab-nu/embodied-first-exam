@@ -105,7 +105,7 @@ graded.
 | where | what | handling |
 |---|---|---|
 | `bigym/envs/*.py` (`_success`, `_fail`), `bigym/loco/eval/` | predicates, tolerances, fall check | privileged: kept (PROTOCOL, owner 2026-10-02); standard: sidecar only |
-| HF `SWIRL-Lab/bigym-g1-native60` (public) | 60 successful demonstrations per task with full simulator state | seed 0 is none of them; the dataset is not in the image; the agent reaches model APIs only |
+| HF `SWIRL-Lab/bigym-g1-native60` (public) | 60 successful demonstrations per task with full simulator state | seed 0 is none of them; the dataset is not in the image; the agent reaches the model APIs and the package registries only |
 | HF `SWIRL-Lab/bigym2-agent-rollouts` (public) + the project page | two coding agents' programs (`policy.py`, on the page) and their 5,400 rollouts on seeds 620000–620099, for 9 tasks (5 of ours: reach_target_dual, move_two_plates, dishwasher_close, drawer_top_open, pick_box) | a program that generalises over seeds solves seed 0 too: only the egress rule keeps it out |
 | `tests/fixtures/demo_endpoints.npz` | the final state of one demonstration per task | not shipped: the wheel installs `bigym/` only |
 | `dishwasher_close`, `wall_cupboard_open` | no reset randomisation: every demonstration starts from this scene | covered by the dataset row |

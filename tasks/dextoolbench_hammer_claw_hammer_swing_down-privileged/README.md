@@ -45,4 +45,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | deliverable | `(T, 29)` joint targets per control step; bit-exact replay |
 | table props | one nail (SimToolReal table_narrow_nail) |
 | port check | without the table props, the policy's final state hash in this scene equals the one in SimToolReal's own MuJoCo sim (b8acca987fcd); the nail was added afterwards (SimToolReal's own sim2sim scene has no props) |
-| egress | allowlist (model APIs only): the pretrained policy is publicly downloadable |
+| egress | allowlist (the model APIs and the package registries): the pretrained policy is publicly downloadable |

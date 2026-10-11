@@ -44,4 +44,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | physics | MuJoCo 3.3.7, 600 Hz, implicitfast, elliptic cones; control 60 Hz (10 substeps) |
 | deliverable | `(T, 29)` joint targets per control step; bit-exact replay |
 | table props | one nail (SimToolReal table_narrow_nail) |
-| egress | allowlist (model APIs only): the pretrained policy is publicly downloadable |
+| egress | allowlist (the model APIs and the package registries): the pretrained policy is publicly downloadable |

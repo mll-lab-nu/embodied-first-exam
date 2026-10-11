@@ -103,9 +103,9 @@ timeout_sec = 900
 
 [agent]
 timeout_sec = 7200
-# The agent reaches the model APIs and the sim (localhost:8000, Harbor's egress control) and nothing else.
+# The agent reaches the model APIs, the package registries and the sim (localhost:8000, Harbor's egress control) and nothing else.
 network_mode = "allowlist"
-allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
 build_timeout_sec = 1200.0

@@ -17,6 +17,12 @@
   "upstream (a self-hosted server): no recorded request of an official run used them, and at the providers that API",
   "serves models that search the web without any tool declaration; list the path for a provider that needs it."
  ],
+ "_comment_probes": [
+  "harness_probes: requests a harness sends by itself at start-up that are not model calls (Claude Code: HEAD",
+  "/api/hello, a reachability check, in every trial). Answered 403 like any other unlisted path, but not recorded and",
+  "not counted as a refusal: they say nothing about what the agent did."
+ ],
+ "harness_probes": [["HEAD", "/api/hello"]],
  "client_tool_types": ["function", "custom", "namespace"],
  "provider_side_fields": ["mcp_servers", "web_search_options", "plugins", "data_sources", "prompt"],
  "providers": [

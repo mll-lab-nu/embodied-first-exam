@@ -79,7 +79,7 @@ MODES=standard-realtime scripts/run_agent_batch.sh <batch> roboolympics-tableten
 Docker, CPU only. Per trial the sim takes up to 6 CPUs and 8 GB (air hockey 4 CPUs), the agent container 2 CPUs and
 4 GB. Run real-time tasks where the host is not overloaded: the service's lag behind its clock is reported
 (`max_lag_s`, `stalls`). The agent reaches the sim through Harbor's egress-control namespace (`allowlist`: the model
-APIs only); with public egress `main` could not reach `localhost:8000`.
+APIs and the package registries only); with public egress `main` could not reach `localhost:8000`.
 
 ## Image
 `images/olympiad/`: MuJoCo 3.3.7, numpy, imageio, PyOpenGL, Pillow, OSMesa, and since 0.2.0 the players' visual meshes

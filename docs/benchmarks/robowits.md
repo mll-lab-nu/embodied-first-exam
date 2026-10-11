@@ -135,7 +135,7 @@ replays the episode on the agent's clock. Results are reported with this budget.
   without requiring it. None of them is in the repository.
 
 ## Network policy
-The agent's egress is the model APIs only, in both modes (`[agent] network_mode = "allowlist"`, the hosts of
+The agent's egress is the model APIs and, since 2026-10-11, the package registries, in both modes (`[agent] network_mode = "allowlist"`, the hosts of
 `scripts/set_agent_egress.py`; owner decision 2026-10-10, board 0072). The tasks used Harbor's default (public) until
 then, because RoboWits ships no expert or planner; nothing in a trial needs the network. With open egress an agent could
 fetch RoboWits' source and robot models from its own shell, and RoboWits does publish human demonstrations of its seed
@@ -145,7 +145,7 @@ addresses, which the allowlist makes unreachable).
   the BlenderKit folder mounted read-only from the host; `scripts/robowits/fetch_blenderkit*.sh` run on the host, never
   in a container), Genesis' convex-decomposition and particle caches are seeded from `instance.json`, and
   `QD_OFFLINE_CACHE=0` only turns off Quadrants' on-disk kernel cache. The image's Python has no `pip`; `uv pip install`,
-  `git` and `curl` now fail for any host outside the allowlist.
+  `git` and `curl` fail for any host outside the allowlist (`uv pip install` from PyPI works).
 - Standard `main` (the pinned client image): Python, the client and its pins; nothing to download.
 - Standard `sim`: Harbor's egress control puts it in the same network namespace as `main` (that is how the client reaches
   `localhost:8000`), so it is public while the environment starts and on the allowlist during the agent phase, a restart
@@ -154,8 +154,8 @@ addresses, which the allowlist makes unreachable).
 
 Verified on a pool host (2026-10-11 UTC, dominos, both modes, Harbor's oracle agent): reward 1 and `deterministic` 1 as
 before, the privileged oracle running the simulator inside the allowlisted agent container; from inside the agent's
-container github.com, huggingface.co, pypi.org and blenderkit.com fail at the TLS handshake while the model API hosts
-answer.
+container github.com, huggingface.co, blenderkit.com and (then: the list had no registries yet) pypi.org failed at the
+TLS handshake while the model API hosts answered.
 
 ## Standard mode (eai-standard/2.2)
 `joint_position` (16) and `ee_pose` (16, right arm first, IK per row on RoboWits' pink/pinocchio IK, gripper-tip frame);

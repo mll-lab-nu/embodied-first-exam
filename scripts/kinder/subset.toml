@@ -19,7 +19,7 @@
 #   difficulty        what makes it hard, and how models did
 #   oracle_evidence   the positive example a reviewer checks (the family's, both modes)
 #   oracle_privileged, oracle_standard   instead, where oracles/<family>/<mode>/ holds an oracle: what it does
-# The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs only), read by gen_tasks.py:
+# The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs and the package registries), read by gen_tasks.py:
 # KinDER and its baselines are public, so anything more lets a standard-mode agent install the simulator it is not
 # given, and either mode fetch upstream's planners.
 
