@@ -1,0 +1,23 @@
+{
+ "task": "match_and_pick_from_conveyor",
+ "goal": "Watch the first object that appears on the conveyor, remember it, and pick up the identical object when it shows up again (lift it more than 10 cm).",
+ "instruction_templates": [
+  "Remember the first object on the conveyor, then pick the matching object when it appears again."
+ ],
+ "success": [
+  "target1's origin z is more than 0.1 m above its origin z at episode start (is_lift, z_threshold=0.1), evaluated on the current state at an action boundary."
+ ],
+ "evaluation": "All listed conditions are checked together, in order, after every action (reward_manager.step runs once per action, after the action's whole control sequence has executed; nothing is checked between actions). They form a single stage: all must be true at the same action boundary (any list inside the conditions means 'at least one of'). Success is declared at the first action boundary where all hold; the episode then ends. No final_check list is used. Otherwise the episode ends as a failure after step_lim actions. No requirement to hold it, place it, release it or return the arms. No penalty exists for touching or lifting the other objects (no query, no early fail). Note the conveyor carries objects away: if target1 leaves reach/falls off, the episode just runs to step_lim and fails.",
+ "step_lim": 700,
+ "objects": [
+  "conveyor: moving belt (category conveyor idx 0, 'Dynamic' object), at world (-2.08, 0.175), z 0 on the ground",
+  "target0: the 'first' object (same model as target1), at conveyor-frame x=1.88, y=-0.13 (the far end), random yaw up to +-35 deg",
+  "target1: the object to pick, one of 10 fixed models (bottle 47, camera 2, game_machine 0, headset 7, ice_cream 0, phone 0, garage 16, puppet 0, bag 0, plate 2), placed at conveyor-frame x in {-0.3,-0.14,0.02,0.2}, y in [-0.3,-0.2]",
+  "other0, other1, other2: three distractor objects (distinct models from the same 10), also at the four x slots {-0.3,-0.14,0.02,0.2}, y in [-0.3,-0.2]"
+ ],
+ "scene_dynamics": "Yes: the conveyor belt runs and moves the objects during the episode (belt speed/direction are defined inside the conveyor USD asset and cannot be determined statically). Target0 starts at the far end; the others start behind it, so objects arrive at the robot sequentially.",
+ "needs_memory_or_language": "Yes: remember the appearance of the first object (target0) and later identify the identical one (target1) among distractors. No language naming the object is given.",
+ "end_requirements": "none",
+ "physics_kind": "mixed: rigid objects riding on a dynamic/kinematic conveyor",
+ "notes": "is_lift compares against the pose recorded at episode start (init_state), so if target1 is moved by the belt the z reference is still its starting z (belt is flat, so only lifting changes z). The success test does not verify that the chosen object matches target0 other than via the label 'target1'; picking the wrong one earns nothing. Belt speed and whether target0 passes before target1 arrive are not statically determinable. Predicate conventions (from func_parser.py): object 'position' = the object's root/origin position in world coordinates (metres, z up); 'bbox' = the 8 corners of the object's local bounding box transformed to world; is_A_in_B = A's origin xy lies inside the convex hull of B's world-projected bbox AND A's origin z > B's bbox z_min; is_axis_up(label, axis, threshold) = angle between (object rotation applied to the local axis) and world +z is < threshold degrees (wrapper default threshold 15 deg); is_axis_aligned = angle between two (optionally functional-point-frame) axes < align_threshold degrees, optionally after projection onto a plane (project_plane='xy' drops z and renormalises); all_robot_back_to_origin() default = for every target (agent-controlled) arm, end-effector pose vs its pose at episode start: |dx|,|dy|,|dz| each <= 0.15 m (per-axis, not Euclidean) and orientation difference <= 20 deg; is_all_gripper_open(open_threshold) = every target gripper's normalised opening ((val-scale0)/(scale1-scale0)) >= open_threshold (wrapper default 0.6). "
+}

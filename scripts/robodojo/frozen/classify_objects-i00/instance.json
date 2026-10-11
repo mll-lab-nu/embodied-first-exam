@@ -1,0 +1,1281 @@
+{
+ "task": "classify_objects",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/classify_objects_0.json",
+ "layout_sha256": "5ceb9e18e6d8490a7db85dd001462d63265c297ea6fad0d7438364deb2de3ece",
+ "layout": {
+  "Rigid": {
+   "pen": [
+    {
+     "category": "pen",
+     "category_idx": 4,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.23,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 60,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cat0_0",
+     "default_pos": [
+      0.22548661610460463,
+      -0.08814989927628986,
+      0.765900020095998
+     ],
+     "default_ori": [
+      0.9977315993783189,
+      -9.977113143347557e-05,
+      6.761681187711048e-06,
+      -0.06731749848281006
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.03,
+      "friction": 0.32,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "pen",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.23,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 60,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cat0_1",
+     "default_pos": [
+      0.07083357343346501,
+      -0.22638807326442442,
+      0.7719
+     ],
+     "default_ori": [
+      0.6802995353282846,
+      0.19285368088818058,
+      0.6802995353282846,
+      -0.19285368088818058
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.008,
+      "friction": 0.3,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "watch": [
+    {
+     "category": "watch",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.23,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 60,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cat1_0",
+     "default_pos": [
+      0.0752998347087438,
+      -0.13132602166122445,
+      0.7785880424927307
+     ],
+     "default_ori": [
+      0.7217573083733801,
+      0.29283189377081414,
+      0.5679402223185198,
+      -0.2660070932757293
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.045,
+      "friction": 0.25,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "watch",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.23,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 60,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cat1_1",
+     "default_pos": [
+      0.15085814786769475,
+      -0.1868154324659588,
+      0.7784623816759415
+     ],
+     "default_ori": [
+      0.758583483903822,
+      -0.08638808535507989,
+      0.6433921029894195,
+      0.0559892710068235
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.035,
+      "friction": 0.75,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "garage": [
+    {
+     "category": "garage",
+     "category_idx": 15,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.23,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 60,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cat2_0",
+     "default_pos": [
+      -0.41578806172475186,
+      -0.12210929329558128,
+      0.7944426144212695
+     ],
+     "default_ori": [
+      0.6794798918793453,
+      -0.6364255564274298,
+      -0.2371674642765507,
+      0.27752690238299565
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.04,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "garage",
+     "category_idx": 15,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.23,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 60,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cat2_1",
+     "default_pos": [
+      -0.26584421994422636,
+      -0.11700987785337344,
+      0.7944426144212695
+     ],
+     "default_ori": [
+      0.6459912644073545,
+      -0.5874707931988586,
+      0.34082834700716497,
+      -0.3484385043649093
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.04,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "garage",
+     "category_idx": 15,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.23,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 60,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cat2_2",
+     "default_pos": [
+      0.3974118378610622,
+      -0.1574280157868581,
+      0.7944426144212695
+     ],
+     "default_ori": [
+      0.696940454103798,
+      -0.6379905664354695,
+      0.23292473489237123,
+      -0.2301914604155836
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.04,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "basket": [
+    {
+     "category": "basket",
+     "category_idx": 2,
+     "group": null,
+     "xlim": [
+      -0.28,
+      -0.28
+     ],
+     "ylim": [
+      0.05,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "basket0",
+     "default_pos": [
+      -0.28,
+      0.05,
+      0.8036
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 1.8,
+      "friction": 0.45,
+      "type": "geometry"
+     },
+     "visual": {}
+    },
+    {
+     "category": "basket",
+     "category_idx": 3,
+     "group": null,
+     "xlim": [
+      -0.0,
+      0.0
+     ],
+     "ylim": [
+      0.05,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "basket1",
+     "default_pos": [
+      0.0,
+      0.05,
+      0.8036
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 1.2,
+      "friction": 0.45,
+      "type": "geometry"
+     },
+     "visual": {}
+    },
+    {
+     "category": "basket",
+     "category_idx": 4,
+     "group": null,
+     "xlim": [
+      0.28,
+      0.28
+     ],
+     "ylim": [
+      0.05,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "basket2",
+     "default_pos": [
+      0.28,
+      0.05,
+      0.8036
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 1.2,
+      "friction": 0.45,
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "5b24ec93c8218187",
+ "step_lim": 1100,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Sort the objects by category into the three baskets.",
+ "labels": [
+  "cat0_0",
+  "cat0_1",
+  "cat1_0",
+  "cat1_1",
+  "cat2_0",
+  "cat2_1",
+  "cat2_2",
+  "basket0",
+  "basket1",
+  "basket2",
+  "camera_stand"
+ ],
+ "objects": {
+  "cat0_0": {
+   "position": [
+    0.22551,
+    -0.08812,
+    0.76596
+   ],
+   "orientation_wxyz": [
+    0.9976,
+    -0.01053,
+    0.01042,
+    -0.06759
+   ],
+   "bbox_corners": [
+    [
+     0.0941,
+     0.0005,
+     -0.0075
+    ],
+    [
+     -0.091,
+     -0.0015,
+     -0.0029
+    ],
+    [
+     0.0943,
+     0.0135,
+     0.0058
+    ],
+    [
+     -0.0908,
+     0.0115,
+     0.0104
+    ],
+    [
+     0.0946,
+     -0.0128,
+     0.0056
+    ],
+    [
+     -0.0905,
+     -0.0148,
+     0.0101
+    ],
+    [
+     0.0948,
+     0.0003,
+     0.0189
+    ],
+    [
+     -0.0903,
+     -0.0018,
+     0.0234
+    ]
+   ]
+  },
+  "cat0_1": {
+   "position": [
+    0.06897,
+    -0.2294,
+    0.7713
+   ],
+   "orientation_wxyz": [
+    0.70723,
+    0.35262,
+    0.61241,
+    -0.02069
+   ],
+   "bbox_corners": [
+    [
+     0.0099,
+     -0.0025,
+     0.0726
+    ],
+    [
+     0.0099,
+     -0.0025,
+     -0.0724
+    ],
+    [
+     0.0032,
+     0.01,
+     0.0726
+    ],
+    [
+     0.0032,
+     0.01,
+     -0.0724
+    ],
+    [
+     -0.0015,
+     -0.0086,
+     0.0726
+    ],
+    [
+     -0.0015,
+     -0.0086,
+     -0.0724
+    ],
+    [
+     -0.0082,
+     0.0039,
+     0.0726
+    ],
+    [
+     -0.0082,
+     0.0039,
+     -0.0724
+    ]
+   ]
+  },
+  "cat1_0": {
+   "position": [
+    0.07532,
+    -0.13135,
+    0.77832
+   ],
+   "orientation_wxyz": [
+    0.71737,
+    0.29538,
+    0.57312,
+    -0.26394
+   ],
+   "bbox_corners": [
+    [
+     0.0281,
+     0.0315,
+     -0.0184
+    ],
+    [
+     0.0281,
+     -0.025,
+     -0.0184
+    ],
+    [
+     -0.0282,
+     0.0315,
+     -0.0184
+    ],
+    [
+     -0.0282,
+     -0.025,
+     -0.0184
+    ],
+    [
+     0.0281,
+     0.0315,
+     0.016
+    ],
+    [
+     0.0281,
+     -0.025,
+     0.016
+    ],
+    [
+     -0.0282,
+     0.0315,
+     0.016
+    ],
+    [
+     -0.0282,
+     -0.025,
+     0.016
+    ]
+   ]
+  },
+  "cat1_1": {
+   "position": [
+    0.15032,
+    -0.18655,
+    0.77867
+   ],
+   "orientation_wxyz": [
+    0.7707,
+    -0.09035,
+    0.62881,
+    0.0495
+   ],
+   "bbox_corners": [
+    [
+     -0.0147,
+     0.0221,
+     0.029
+    ],
+    [
+     -0.0147,
+     0.0221,
+     -0.0288
+    ],
+    [
+     -0.0147,
+     -0.0255,
+     0.029
+    ],
+    [
+     -0.0147,
+     -0.0255,
+     -0.0288
+    ],
+    [
+     0.0158,
+     0.0221,
+     0.029
+    ],
+    [
+     0.0158,
+     0.0221,
+     -0.0288
+    ],
+    [
+     0.0158,
+     -0.0255,
+     0.029
+    ],
+    [
+     0.0158,
+     -0.0255,
+     -0.0288
+    ]
+   ]
+  },
+  "cat2_0": {
+   "position": [
+    -0.41615,
+    -0.1229,
+    0.79413
+   ],
+   "orientation_wxyz": [
+    0.68651,
+    -0.62892,
+    -0.24512,
+    0.27032
+   ],
+   "bbox_corners": [
+    [
+     -0.0299,
+     -0.0459,
+     0.048
+    ],
+    [
+     -0.0314,
+     -0.0105,
+     -0.0655
+    ],
+    [
+     0.0336,
+     -0.0431,
+     0.048
+    ],
+    [
+     0.032,
+     -0.0077,
+     -0.0655
+    ],
+    [
+     -0.0324,
+     0.0115,
+     0.066
+    ],
+    [
+     -0.034,
+     0.0469,
+     -0.0475
+    ],
+    [
+     0.031,
+     0.0143,
+     0.066
+    ],
+    [
+     0.0295,
+     0.0497,
+     -0.0475
+    ]
+   ]
+  },
+  "cat2_1": {
+   "position": [
+    -0.26656,
+    -0.11648,
+    0.79413
+   ],
+   "orientation_wxyz": [
+    0.64478,
+    -0.58897,
+    0.32979,
+    -0.35862
+   ],
+   "bbox_corners": [
+    [
+     -0.0299,
+     -0.0459,
+     0.048
+    ],
+    [
+     -0.0314,
+     -0.0105,
+     -0.0655
+    ],
+    [
+     0.0336,
+     -0.0431,
+     0.048
+    ],
+    [
+     0.032,
+     -0.0077,
+     -0.0655
+    ],
+    [
+     -0.0324,
+     0.0115,
+     0.066
+    ],
+    [
+     -0.034,
+     0.0469,
+     -0.0475
+    ],
+    [
+     0.031,
+     0.0143,
+     0.066
+    ],
+    [
+     0.0295,
+     0.0497,
+     -0.0475
+    ]
+   ]
+  },
+  "cat2_2": {
+   "position": [
+    0.39657,
+    -0.15718,
+    0.79413
+   ],
+   "orientation_wxyz": [
+    0.69755,
+    -0.63751,
+    0.22188,
+    -0.24036
+   ],
+   "bbox_corners": [
+    [
+     -0.0299,
+     -0.0459,
+     0.048
+    ],
+    [
+     -0.0314,
+     -0.0105,
+     -0.0655
+    ],
+    [
+     0.0336,
+     -0.0431,
+     0.048
+    ],
+    [
+     0.032,
+     -0.0077,
+     -0.0655
+    ],
+    [
+     -0.0324,
+     0.0115,
+     0.066
+    ],
+    [
+     -0.034,
+     0.0469,
+     -0.0475
+    ],
+    [
+     0.031,
+     0.0143,
+     0.066
+    ],
+    [
+     0.0295,
+     0.0497,
+     -0.0475
+    ]
+   ]
+  },
+  "basket0": {
+   "position": [
+    -0.28,
+    0.05,
+    0.8036
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     0.126,
+     0.084,
+     0.0384
+    ],
+    [
+     -0.126,
+     0.084,
+     0.0384
+    ],
+    [
+     0.126,
+     -0.084,
+     0.0384
+    ],
+    [
+     -0.126,
+     -0.084,
+     0.0384
+    ],
+    [
+     0.126,
+     0.084,
+     -0.0386
+    ],
+    [
+     -0.126,
+     0.084,
+     -0.0386
+    ],
+    [
+     0.126,
+     -0.084,
+     -0.0386
+    ],
+    [
+     -0.126,
+     -0.084,
+     -0.0386
+    ]
+   ]
+  },
+  "basket1": {
+   "position": [
+    0.0,
+    0.05,
+    0.8036
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     0.126,
+     0.084,
+     0.0384
+    ],
+    [
+     -0.126,
+     0.084,
+     0.0384
+    ],
+    [
+     0.126,
+     -0.084,
+     0.0384
+    ],
+    [
+     -0.126,
+     -0.084,
+     0.0384
+    ],
+    [
+     0.126,
+     0.084,
+     -0.0386
+    ],
+    [
+     -0.126,
+     0.084,
+     -0.0386
+    ],
+    [
+     0.126,
+     -0.084,
+     -0.0386
+    ],
+    [
+     -0.126,
+     -0.084,
+     -0.0386
+    ]
+   ]
+  },
+  "basket2": {
+   "position": [
+    0.28,
+    0.05,
+    0.8036
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     0.126,
+     0.084,
+     0.0384
+    ],
+    [
+     -0.126,
+     0.084,
+     0.0384
+    ],
+    [
+     0.126,
+     -0.084,
+     0.0384
+    ],
+    [
+     -0.126,
+     -0.084,
+     0.0384
+    ],
+    [
+     0.126,
+     0.084,
+     -0.0386
+    ],
+    [
+     -0.126,
+     0.084,
+     -0.0386
+    ],
+    [
+     0.126,
+     -0.084,
+     -0.0386
+    ],
+    [
+     -0.126,
+     -0.084,
+     -0.0386
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ]
+}

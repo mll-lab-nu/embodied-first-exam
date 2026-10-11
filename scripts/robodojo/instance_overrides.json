@@ -1,0 +1,13 @@
+{
+ "_doc": "Per-task fields added to a frozen instance.json when it is copied into scripts/robodojo/frozen/ (sync_frozen.py). physics: PhysX settings on top of RoboDojo's (recorded and used by every session, the service and the grader). determinism: 'state' (default: the grader's two fresh-process replays must end in the same state hash) or 'verdict' (both replays must succeed; their end states may differ), with the reason.",
+ "make_toast": {"physics": {"enable_enhanced_determinism": true},
+                "physics_why": "without PhysX enhanced determinism, 1 of 3 fresh processes reset to a different state; with it, all agree (scripts/robodojo determinism test)"},
+ "make_toast_random": {"physics": {"enable_enhanced_determinism": true}, "determinism": "verdict",
+                       "determinism_why": "its resets are not always bit-identical across fresh processes, even with PhysX enhanced determinism (the 15 clutter objects); the grader requires both replays to succeed"},
+ "pour_liquid_into_cup": {"determinism": "verdict",
+                          "determinism_why": "the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism); the grader requires both replays to succeed"},
+ "pour_liquid_into_cup_random": {"determinism": "verdict",
+                                 "determinism_why": "the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism); the grader requires both replays to succeed"},
+ "pour_by_language": {"determinism": "verdict",
+                      "determinism_why": "the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism); the grader requires both replays to succeed"}
+}
