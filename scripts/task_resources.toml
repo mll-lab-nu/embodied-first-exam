@@ -546,6 +546,34 @@ verifier_min_memory_gb = 8.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
 
+# robodojo, privileged: 54 task(s)
+[[rule]]
+match = "^robodojo-.*-privileged$"
+min_cpus = 8.0
+min_memory_gb = 20.0
+min_gpu_memory_gb = 10.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 19.0
+verifier_min_gpu_memory_gb = 11.0
+measured = "heaviest scene (pour_liquid_into_cup_random: GPU PhysX liquid + 15-20 clutter objects), one Isaac Session driven through 300 actions with frames from the three cameras, then the verifier's two fresh-process replays (the second filmed): main container docker peak 16.1 GiB (anon 14.9), GPU 9.0 GiB, CPU at its 8-core cap; verifier docker peak 15.7 GiB, GPU 9.6 GiB, 8 cores; rcb_monitor (peak_memory_gb 15.85, peak_gpu_memory_gb 9.0) + a per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10; determinism runs on all 54 tasks: 4.6-8.4 GB of GPU memory per Isaac process"
+
+# robodojo, standard: 54 task(s)
+[[rule]]
+match = "^robodojo-.*-standard$"
+min_cpus = 8.0
+min_memory_gb = 20.0
+min_gpu_memory_gb = 11.0
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 8.0
+verifier_min_memory_gb = 19.0
+verifier_min_gpu_memory_gb = 11.0
+measured = "heaviest scene (pour_liquid_into_cup_random), a client driving 12 joint_position chunks, then the collect hook's two fresh-process replays (the first filmed): sim sidecar docker peak 16.0 GiB (anon 14.9), GPU 9.5 GiB, up to 16 cores while Isaac starts; agent container under 0.1 GiB; per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10; the verifier phase replays as the privileged verifier does (docker peak 15.7 GiB, GPU 9.6 GiB)"
+
 # robolab, privileged: 53 task(s)
 [[rule]]
 match = "^robolab-.*-privileged$"
@@ -1399,6 +1427,36 @@ trial_max_memory_gb = 19.0
 measured = "memory: agent container docker peak 3.9 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 11 GiB (docker peak 6.4 GiB, 14 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [[limit]]
+match = "^robodojo-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 16.0
+max_memory_gb = 32.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 32.0
+measured = "GPU: 9.0 GiB per Isaac Session on the heaviest scene (rcb_monitor, pour_liquid_into_cup_random, RTX 4090, 10-10) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 32 GiB, which every past trial ran under (docker peak 16.1 GiB of one Session on the heaviest scene; the agent may run a second Session); processes (peak 6) 512 and disk (peak 0.7 GiB) 20 GiB: design defaults"
+
+[[limit]]
+match = "^robodojo-.*-standard$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 16.0
+trial_max_memory_gb = 33.0
+measured = "GPU (sim sidecar): 9.5 GiB on the heaviest scene (sampler, RTX 4090, 10-10) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container max(1.5 x peak, peak + 4, 8) = 8 (a client under 0.1 GiB; no agent-trial sample yet); whole trial: + the sim sidecar's 25 GiB (docker peak 16.0 GiB); processes 512 and disk 20 GiB: design defaults"
+
+[[limit]]
 match = "^robolab-.*-privileged$"
 scope = "trial"
 max_gpu_memory_gb = 24.0
@@ -1821,6 +1879,15 @@ main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
 match = "^robocasa365-.*-standard$"
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 14.0, pids = 8192 }
+
+[[cap]]
+match = "^robodojo-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
+
+[[cap]]
+match = "^robodojo-.*-standard$"
+main = { cpus = 8.0, memory_gb = 16.0, pids = 16384 }
+sim = { cpus = 16.0, memory_gb = 25.0, pids = 16384 }
 
 [[cap]]
 match = "^robolab-.*-privileged$"
