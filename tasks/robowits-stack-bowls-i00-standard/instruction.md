@@ -96,6 +96,10 @@ gains and the tool frames; `spec["world"]` the frame conventions.
   number in 1 .. 30, `video`, `interpolate`, `cameras` not a list of names, `note` not a string, actions that are not
   finite (T, 16) numbers) is answered 400 before anything is executed: the client raises `ValueError`, nothing has
   moved and the episode goes on.
+- One call returns at most 1500 images (`spec["max_frames_per_call"]`: cameras x frames; a frame with
+  `depth="frames"` counts 4). A request that would exceed it is answered 400 the same way: ask for fewer cameras,
+  a lower `video_fps` or a shorter call. `ee_pose` rows that take longer than planned stop adding frames at that
+  number; the motion is executed in full and `meta["frames_skipped"]` counts them.
 
 Objects here: large bowl, medium bowl.
 

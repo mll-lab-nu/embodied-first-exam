@@ -106,6 +106,11 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   decides no verdict. A negative `Content-Length` is refused unread, and a simulator that fails inside
   `POST /reset` ends the episode as `error` (`infra_error = 1`), not `reset`. The scene, instance and pass
   rule are unchanged, so the task keeps its name.
+- 2026-10-10 (3; third review round): the sim service (`environment/sim/rcb_service.py`) renders and returns a
+  camera named more than once in `cameras` once (N copies of one name made it build N x N images within the
+  frame budget, which could exhaust its memory), and a service that has given up on the episode (it could not
+  resume it after its crashes) answers every request with 409 and the reason instead of not listening. The
+  scene, instance, pass rule and every verdict reached before are unchanged, so the task keeps its name.
 - 2026-10-08: the task text no longer says the hurdles are solid and have to be cleared: upstream's model
   draws them without collision geometry and its reward never looks at them. The scene, instance, pass rule and
   verifier are unchanged, so the task keeps its name; runs recorded before this change were told otherwise and

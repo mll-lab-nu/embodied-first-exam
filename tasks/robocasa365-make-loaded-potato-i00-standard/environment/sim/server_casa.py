@@ -28,6 +28,7 @@ A request is validated as a whole before any physics: whatever is wrong with it 
 
 from __future__ import annotations
 
+import errno
 import faulthandler
 import importlib
 import json
@@ -413,6 +414,8 @@ def _number(meta: dict, key: str, default: float) -> float:
     if v is None:
         return float(default)
     try:
+        if isinstance(v, bool):  # JSON true is no number (float(True) is 1.0: `dt: true` ran as one second per row)
+            raise TypeError
         x = float(v)
     except (TypeError, ValueError, OverflowError):
         raise ValueError(f"{key} must be a number") from None
@@ -430,7 +433,8 @@ def _fps(meta: dict) -> int:
 
 def _cameras(meta: dict, default: list) -> list:
     """The requested cameras: a list of names (or one name); missing, null or empty means the default. Names the robot
-    does not have are left out; if none remains, the default is used."""
+    does not have are left out; if none remains, the default is used. A repeated name is dropped BEFORE the frame
+    budget and any rendering: the recorder keeps frames per name, so repeats would multiply its work."""
     v = meta.get("cameras")
     if v is None:
         return list(default)
@@ -438,7 +442,7 @@ def _cameras(meta: dict, default: list) -> list:
         v = [v]
     if not isinstance(v, (list, tuple)) or not all(isinstance(c, str) for c in v):
         raise ValueError("cameras must be a list of camera names (see /spec cameras)")
-    return [c for c in v if c in CAMS] or list(default)
+    return list(dict.fromkeys(c for c in v if c in CAMS)) or list(default)
 
 
 def _frame_budget(cams, fps: int, seconds: float, depth: bool) -> None:
@@ -741,6 +745,8 @@ class Hd(BaseHTTPRequestHandler):
         try:
             self._n = int(self.headers.get("Content-Length", 0) or 0)
         except ValueError:
+            self._n = -1
+        if self._n < 0:  # read(-1) would read until the client hangs up, without any bound
             return self._json(400, {"error": "bad Content-Length"})
         if self._n > MAX_BODY:
             return self._json(413, {"error": f"request body over {MAX_BODY} bytes"})
@@ -854,6 +860,23 @@ def _resume_or_start() -> None:
     write_final()
 
 
+def _bind(port: int, handler) -> HTTPServer:
+    """The listening server. Under Harbor's egress control the agent's container shares this network namespace, so a
+    process of the agent may hold the port when the service (re)starts. Wait for the port instead of failing: an
+    exception here would count as a crash of the service (the collect hook's signal is still served meanwhile)."""
+    said = False
+    while True:
+        try:
+            return HTTPServer(("0.0.0.0", port), handler)
+        except OSError as exc:
+            if exc.errno != errno.EADDRINUSE:
+                raise
+        if not said:
+            said = True
+            print(f"[sim] port {port} is in use (a process in the agent's container?): waiting for it to be free", flush=True)
+        time.sleep(1.0)
+
+
 _resume_or_start()
 signal.signal(signal.SIGUSR1, lambda *_: threading.Thread(target=_end_from_signal, daemon=True).start())
 if _USR1["pending"]:
@@ -862,4 +885,4 @@ RECF = open(REC_PATH, "ab")
 E["ready"] = True
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} RoboCasa sim ready ({TOOL.__name__}: {S.inst.get('env_name')})", flush=True)
-HTTPServer(("0.0.0.0", 8000), Hd).serve_forever()
+_bind(int(os.environ.get("RCB_PORT", "8000")), Hd).serve_forever()  # RCB_PORT: for tests, as RCB_DATA

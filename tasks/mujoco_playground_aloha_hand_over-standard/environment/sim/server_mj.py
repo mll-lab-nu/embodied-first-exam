@@ -22,7 +22,7 @@ Requests are validated in full before any physics runs: a malformed one (dt / se
 cameras not a list of names, ...) is answered 400 and changes nothing; only a failure of the simulator itself is a 500
 that ends the episode. `time_s` / `time_left_s` count from the agent's first request to the service."""
 from __future__ import annotations
-import importlib, json, math, os, signal, sys, threading, time, traceback
+import errno, importlib, json, math, os, signal, sys, threading, time, traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import numpy as np
 
@@ -31,7 +31,7 @@ os.environ["RCB_SESSION_LOG"] = ""; os.environ["RCB_AGENT_TRACE_DIR"] = ""
 import rcb1  # noqa: E402
 
 PROTOCOL = "eai-standard/2.1"
-DATA = "/data"; os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
+DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)   # RCB_DATA / RCB_PORT: test hooks (never set in tasks)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "rcb_dtb"))
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
@@ -340,18 +340,22 @@ def _fps(meta: dict) -> int:
 
 def _num(meta: dict, key: str, default: float) -> float:
     """A finite numeric request field; anything else (null, a string, NaN, Infinity) is a 400."""
-    try: v = float(meta.get(key, default))
+    try:
+        v = meta.get(key, default)
+        if isinstance(v, bool): raise TypeError     # JSON true is no number (float(True) is 1.0)
+        v = float(v)
     except (TypeError, ValueError, OverflowError): raise ValueError(f"{key} must be a number") from None
     if not math.isfinite(v): raise ValueError(f"{key} must be a finite number")
     return v
 
 
 def _cameras(meta: dict, default: list) -> list:
-    """The requested cameras (unknown names are ignored; none left = the default)."""
+    """The requested cameras, each once (unknown names are ignored; none left = the default). A repeated name is dropped
+    BEFORE the frame budget and any rendering: the recorder keeps frames per name, so repeats would multiply its work."""
     cams = meta.get("cameras")
     if cams is None: return list(default)
     if not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams): raise ValueError(f"cameras must be a list of camera names: {list(CAMS)}")
-    return [c for c in cams if c in CAMS] or list(default)
+    return list(dict.fromkeys(c for c in cams if c in CAMS)) or list(default)
 
 
 def _video(meta: dict, default: str) -> str:
@@ -484,7 +488,9 @@ class Hd(BaseHTTPRequestHandler):
             parts = [p for p in parts if not (p[0].startswith("frames/") or p[0].startswith("depth/"))]; meta = {**meta, "degraded": "frames/depth dropped (response too large)"}; body = rcb1.encode(meta, parts)
         self.send_response(200); self.send_header("Content-Type", "application/x-rcb1"); self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
     def _body(self):
-        n = int(self.headers.get("Content-Length", 0) or 0)
+        try: n = int(self.headers.get("Content-Length", 0) or 0)
+        except ValueError: raise ValueError("bad Content-Length") from None
+        if n < 0: raise ValueError("bad Content-Length")   # read(-1) would read until the client hangs up, without any bound
         if n > MAX_BODY: raise ValueError("request too large")
         raw = self.rfile.read(n) if n else b""
         if raw[:4] == rcb1.MAGIC: return rcb1.decode(raw)
@@ -572,6 +578,19 @@ def _resume_or_start() -> None:
     write_final()
 
 
+def _bind(port: int, handler) -> HTTPServer:
+    """The listening server. Under Harbor's egress control the agent's container shares this network namespace, so a
+    process of the agent may hold the port when the service (re)starts. Wait for the port instead of failing: an
+    exception here would count as a crash of the service (the collect hook's signal is still served meanwhile)."""
+    said = False
+    while True:
+        try: return HTTPServer(("0.0.0.0", port), handler)
+        except OSError as exc:
+            if exc.errno != errno.EADDRINUSE: raise
+        if not said: said = True; print(f"[sim] port {port} is in use (a process in the agent's container?): waiting for it to be free", flush=True)
+        time.sleep(1.0)
+
+
 _resume_or_start()
 signal.signal(signal.SIGUSR1, lambda *_: threading.Thread(target=_end_from_signal, daemon=True).start())
 if _USR1["pending"]: threading.Thread(target=_end_from_signal, daemon=True).start()
@@ -579,4 +598,4 @@ RECF = open(REC_PATH, "ab")
 E["ready"] = True
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} MuJoCo sim ready ({TOOL.__name__})", flush=True)
-HTTPServer(("0.0.0.0", 8000), Hd).serve_forever()
+_bind(int(os.environ.get("RCB_PORT", "8000")), Hd).serve_forever()

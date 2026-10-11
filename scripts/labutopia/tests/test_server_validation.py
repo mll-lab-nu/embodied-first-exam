@@ -13,14 +13,14 @@ BAD = [None, True, False, [], [1], {}, {"a": 1}, "x", "0.02", "", float("nan"), 
 FIELDS = ("type", "dt", "seconds", "video_fps", "cameras", "note", "interpolate", "video", "depth", "include_depth", "actions")
 bad = 0
 for bench, dim, types in (("labutopia", 9, ("joint_position", "joint_position_velocity")), ("autobio", 7, ("joint_position", "done")),
-                          ("dexjoco", 23, ("ee_pose", "joint_position"))):   # DexJoCo: no frame limit per call (no frames_ok)
+                          ("dexjoco", 23, ("ee_pose", "joint_position"))):
     path = os.path.join(ROOT, "scripts", bench, "shared/standard/server.py")
     tree = ast.parse(open(path).read())
     fns = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in WANT]
-    assert {f.name for f in fns} == set(WANT) - ({"frames_ok"} if bench == "dexjoco" else set()), {f.name for f in fns}
+    assert {f.name for f in fns} == set(WANT), {f.name for f in fns}
     DT = 1 / 60 if bench == "labutopia" else 0.02 if bench == "dexjoco" else 0.002
     ns = {"math": math, "np": np, "L": L, "DT": DT, "PERIOD": "1/60 s", "MAX_CHUNK_S": 10.0, "MAX_WATCH_S": 30.0,
-          "MAX_FPS": 30 if bench == "labutopia" else 50, "MAX_FRAMES": 300 if bench == "labutopia" else 3000,
+          "MAX_FPS": 30 if bench == "labutopia" else 50, "MAX_FRAMES": 300 if bench == "labutopia" else 3000, "CTRL_HZ": 1 / DT,   # DexJoCo's frames_ok counts control steps
           "CAMS": ["cam_a", "cam_b"], "DEFAULT_CAMS": ["cam_a"], "ND": 9, "NA": 7, "ADIM": 23, "SPEC": {"action_types": {"not_yet": ["ee_pose"]}}}
     exec(compile(ast.Module(body=fns, type_ignores=[]), path, "exec"), ns)
     ps, po = ns["parse_submit"], ns["parse_observe"]

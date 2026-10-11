@@ -331,6 +331,84 @@ def test_emergency():
         f.close()
 
 
+# --------------------------------------------------------------------------------------------------- the kill at a confirmed violation
+def test_kill_path():
+    """R3 M7: the kill itself. A violation is confirmed only after sustain_sec over a limit, so a test that feeds one
+    sample (test_emergency) never reaches Monitor.check's kill: this one feeds whole records. Not enforced: a confirmed
+    violation is recorded and nothing is killed. Enforced: the agent's processes of the scope are killed at the
+    confirmation, and never the container's PID 1, its keepalive, or a process of a benchmark-owned service. Spikes
+    that never add up to sustain_sec inside one window_sec confirm nothing, however long the record."""
+    f = Fake()
+    killed = []
+    real_kill = os.kill
+    try:
+        os.kill = lambda pid, sig: killed.append(pid)
+        lim = {"scope": "agent", "max_gpu_memory_gb": 0.0, "max_memory_gb": 21.0, "max_processes": 512,
+               "sustain_sec": 60, "window_sec": 120, "tick_sec": 5,
+               "caps": {"main": {"cpus": 8, "memory_gb": 29.0, "pids": 8192}, "sim": {"cpus": 8, "memory_gb": 16.0, "pids": 8192}},
+               "scope_services": ["main"]}
+        croot, sroot = f.root("main"), f.sidecar_root("sim")
+        f.pid(100, "mnt:[111]", croot, start=1000, nspid=1)                    # the agent container's PID 1
+        f.pid(103, "mnt:[111]", croot, start=1001, ppid=100, nspid=7)          # its keepalive, started with it
+        f.pid(101, "mnt:[111]", croot, start=5000, ppid=77, nspid=9)           # exec'd into the container: the agent's
+        f.pid(102, "mnt:[111]", croot, start=5001, ppid=101, nspid=10)
+        f.pid(104, "mnt:[111]", croot, start=6000, ppid=100, nspid=11)         # an orphan PID 1 adopted later: the agent's
+        f.pid(200, "mnt:[222]", sroot, start=1000, nspid=1)                    # the benchmark's own service (the sim)
+        f.pid(201, "mnt:[222]", sroot, start=5000, ppid=200, nspid=5)
+        agent, never = {101, 102, 104}, {100, 103, 200, 201}
+
+        def feed(enforce, values, step=5.0):
+            """Monitor.check on one sample per value (GiB of memory, `step` seconds apart): (monitor, {sample index: pids killed})."""
+            del killed[:]
+            shutil.rmtree(f.rec)
+            os.makedirs(f.rec)
+            m = f.monitor(lim, enforce=enforce)
+            groups = m.groups()
+            check(sorted((g["kind"], g["role"], sorted(g["pids"])) for g in groups.values())
+                  == [("observe", "sidecar", [200, 201]), ("scope", "main", [100, 101, 102, 103, 104])], f"the two containers: {groups}")
+            m._gpu_per = {}
+            m._last_measures = [{"kind": "scope", "role": "main", "memory_cap_gb": 29.0}]   # the kernel's cap holds: no stand-in kill
+            at = {}
+            for i, v in enumerate(values):
+                n = len(killed)
+                m.check(100.0 + step * i, {"gpu_memory_gb": 0.0, "memory_gb": v, "processes": 5, "disk_gb": None}, groups)
+                if len(killed) > n:
+                    at[i] = sorted(killed[n:])
+            return m, at
+
+        over = [25.0] * 30                                    # 150 s over the 21 GiB limit, under the 29 GiB cap
+        m, at = feed("0", over)
+        check(list(m.confirmed) == ["memory_gb"] and len(f.events("violation")) == 1, f"not enforced: confirmed and recorded: {m.confirmed}")
+        check(at == {} and killed == [] and m.killed == 0 and not f.events("kill") and not f.events("emergency_kill"),
+              f"not enforced: a confirmed violation kills nothing: {at}")
+        m, at = feed("1", over)
+        check(list(m.confirmed) == ["memory_gb"] and len(f.events("violation")) == 1, f"enforced: confirmed once: {m.confirmed}")
+        # sample i lasts until sample i + 1: 60 s over the limit are reached with the 13th sample (index 12), not before
+        check(at and min(at) == 12, f"enforced: the first kill is at the confirmation, not before: {sorted(at)}")
+        check(set(at[12]) == agent and len(at[12]) == len(agent), f"enforced: every agent process of the scope, once: {at[12]}")
+        check(not (set(killed) & never), f"never PID 1, its keepalive or the benchmark's service: {sorted(set(killed) & never)}")
+        check(set(killed) == agent and m.killed == len(killed) and len(f.events("kill")) == len(at),
+              f"the kills are counted and recorded: {m.killed}, {len(killed)}, {len(f.events('kill'))}")
+        # at the limit is not over it; a record with gaps of under-limit samples that stays below sustain_sec per window
+        m, at = feed("1", [21.0] * 60)
+        check(not m.confirmed and killed == [], f"at the limit: no violation: {m.confirmed}")
+        spikes = ([25.0] * 5 + [1.0] * 12) * 12               # 25 s over, 60 s under, for 17 minutes: 300 s over in all,
+        m, at = feed("1", spikes)                             # at most 50 s of it inside any 120 s
+        check(not m.confirmed and killed == [] and not f.events("violation"), f"spikes spread over more than window_sec: {m.confirmed} {at}")
+        rec = [{"t": 100.0 + 5 * i, "scope": {"gpu_memory_gb": 0.0, "memory_gb": v, "processes": 5, "disk_gb": None}}
+               for i, v in enumerate(spikes)]
+        check(rcb_limits.violations(rec, lim) == [], "the verifier's rule on the whole record agrees: no violation")
+        dense = ([25.0] * 7 + [1.0] * 4) * 6                  # 35 s over, 20 s under: 70 s over inside 120 s
+        m, at = feed("1", dense)
+        check(list(m.confirmed) == ["memory_gb"] and at and set(killed) == agent,
+              f"going under for a moment does not reset the time: {m.confirmed} {sorted(set(killed))}")
+        m, at = feed("0", dense)
+        check(list(m.confirmed) == ["memory_gb"] and killed == [], "... and not enforced, nothing is killed")
+    finally:
+        os.kill = real_kill
+        f.close()
+
+
 # --------------------------------------------------------------------------------------------------- the switch, the verifier step
 def test_switch():
     for v, want in (("0", 0), ("1", 1), ("true", 1), ("False", 0), ("TRUE", 1), ("", 0), (None, 0), (1, 1), (0, 0), (True, 1)):
@@ -793,7 +871,7 @@ def test_default_is_neutral():
 
 def main():
     for t in (test_classify_race, test_dead_leader_and_zombies, test_disk_walk, test_disk_baseline, test_emergency,
-              test_switch, test_verify_edges, test_oom_watch, test_oom_verdicts, test_sanitize, test_default_is_neutral):
+              test_kill_path, test_switch, test_verify_edges, test_oom_watch, test_oom_verdicts, test_sanitize, test_default_is_neutral):
         t()
     shutil.rmtree(os.environ["RCB_MONITOR_RECORD"], ignore_errors=True)
     print("rcb_monitor test_monitor: ok")

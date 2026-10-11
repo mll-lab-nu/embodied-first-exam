@@ -22,11 +22,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ISOLATION = ["bash", str(ROOT / "ci_checks/check-verifier-isolation.sh")]
 RESOURCES = [sys.executable, str(ROOT / "ci_checks/check-resources.py")]
+IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-level: runs on a tasks directory (see main)
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
 HEAVY = "labutopia-heat-liquid-i00-standard"                   # an allowlist; a sidecar with a large verifier minimum
 RT = "roboolympics-airhockey-match-i00-standard-realtime"      # min_cpus = the sum of its two services' caps
+# benchmarks whose generators have no check mode: their shared files are held together by check-tooling-identity.sh
+DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbench_hammer_claw_hammer_swing_down-privileged"
+MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
+MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
+TWIN_P = "robotwin_2_0_grab_roller-privileged"
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -50,8 +56,15 @@ def in_service(service: str, lines: str, after: str = ""):
     return f
 
 
+def append(text: str):
+    return lambda s: s + text
+
+
 COMPOSE, TOML, TEST_COMPOSE = "environment/docker-compose.yaml", "task.toml", "tests/docker-compose.yaml"
+TEST_SH, TEST_DF = "tests/test.sh", "tests/Dockerfile"
 VOL = r"^    volumes:.*$"
+VAR = "a variable in a volume source must be the whole source"
+NO_TRAP = sub(r"^(trap .*EXIT.*\n)", r"\1trap - EXIT\n")       # the resource step's trap dropped again one line later
 # (name, task, file, mutation, check, what the check must say)
 MUTATIONS = [
     # ---- the agent's container and the trusted volumes (the M5 class: every way of writing the same mount)
@@ -110,6 +123,70 @@ MUTATIONS = [
     ("the allowlist opens another host",
      HEAVY, TOML, sub(r'allowed_hosts = \["chatgpt\.com"', 'allowed_hosts = ["github.com", "chatgpt.com"'), ISOLATION,
      "allowed_hosts differs from scripts/set_agent_egress.py"),
+    # ---- review round 3, M4: a service with its own network setting is outside Harbor's egress control (the allowlist)
+    ("the agent container on a network of its own (`networks:`): the allowlist no longer applies to it",
+     HEAVY, COMPOSE, in_service("main", "    networks: [default]"), ISOLATION, "service main: `networks` is not allowed"),
+    ("... `network_mode: bridge`", HEAVY, COMPOSE, in_service("main", "    network_mode: bridge"), ISOLATION, "service main: `network_mode` is not allowed"),
+    ("a sidecar on a network of its own", STD, COMPOSE, in_service("sim", "    networks: [default]"), ISOLATION, "service sim: `networks` is not allowed"),
+    ("a top-level networks block", STD, COMPOSE, append("networks:\n  default:\n    driver: bridge\n"), ISOLATION, "top-level `networks` is not allowed"),
+    ("a benchmark with downloadable solutions drops its allowlist",
+     HEAVY, TOML, sub(r'^network_mode = "allowlist".*\nallowed_hosts = .*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
+    # ---- review round 3, M5: a variable in a volume source, the top level of the file, files by another road
+    ("the sim's trusted volume as the default of a variable",
+     STD, COMPOSE, in_service("main", "      - ${RCB_CACHE_VOL:-rcb_behavior_cache_trusted}:/cache", VOL), ISOLATION, VAR),
+    ("the sidecar's code as the default of a variable", STD, COMPOSE, in_service("main", "      - ${RCB_SIM_DIR:-./sim}:/sim:ro", VOL), ISOLATION, VAR),
+    ("... `${X-../tests}`", STD, COMPOSE, in_service("main", "      - ${X-../tests}:/t:ro", VOL), ISOLATION, VAR),
+    ("a path after a variable", STD, COMPOSE, in_service("main", "      - ${PWD}/sim:/sim:ro", VOL), ISOLATION, VAR),
+    ("a variable that is not the runner's (Harbor's own: the task's environment directory)",
+     STD, COMPOSE, in_service("main", "      - ${CONTEXT_DIR}:/ctx:ro", VOL), ISOLATION, VAR),
+    ("a variable inside a volume's name", STD, COMPOSE, in_service("main", "      - rcb_${B:-behavior}_cache_trusted_${E:-}x:/cache", VOL), ISOLATION, VAR),
+    ("... long form",
+     STD, COMPOSE, in_service("main", "      - type: volume\n        source: ${V:-rcb_behavior_cache_trusted}\n        target: /cache", VOL), ISOLATION, VAR),
+    ("... inline list",
+     STD, COMPOSE, lambda s: sub(r"^      - rcb_limits:/run/rcb-limits:ro.*\n", "")(
+         sub(r"^  main:\n((?:    .*\n)*?)    volumes:.*$", r"  main:\n\1    volumes: [rcb_limits:/run/rcb-limits:ro, '${V:-rcb_behavior_cache_trusted}:/cache']")(s)),
+     ISOLATION, VAR),
+    ("... in the verifier's compose file", PRIV, TEST_COMPOSE, sub(r"^      - \$\{RCB_BEHAVIOR_DATA:\?[^}]*\}", "      - ${RCB_BEHAVIOR_DATA:-../solution}"), ISOLATION, VAR),
+    ("two names for one volume (top-level `name:`): the agent's volume is the sim's trusted one",
+     STD, COMPOSE, lambda s: in_service("main", "      - agent_scratch:/cache", VOL)(s).replace(
+         "  rcb_behavior_cache_trusted:\n", "  rcb_behavior_cache_trusted:\n    name: shared_kit_cache\n  agent_scratch:\n    name: shared_kit_cache\n"),
+     ISOLATION, "is not a bare name"),
+    ("... `external:`", STD, COMPOSE, lambda s: in_service("main", "      - agent_scratch:/cache", VOL)(s) + "  agent_scratch:\n    external: true\n",
+     ISOLATION, "is not a bare name"),
+    ("a top-level volume that binds the sidecar's code (driver_opts)",
+     STD, COMPOSE, lambda s: in_service("main", "      - agent_view:/sim", VOL)(s) + "  agent_view:\n    driver_opts:\n      type: none\n      o: bind\n      device: ${PWD}/sim\n",
+     ISOLATION, "is not a bare name"),
+    ("... in the verifier's compose file", PRIV, TEST_COMPOSE, sub(r"^  rcb_behavior_cache_trusted:\n", "  rcb_behavior_cache_trusted:\n    name: rcb_kit_cache\n"),
+     ISOLATION, "is not a bare name"),
+    ("the reference solution as a secret of the agent container",
+     STD, COMPOSE, lambda s: in_service("main", "    secrets: [sol]")(s) + "secrets:\n  sol:\n    file: ../solution/solve.sh\n", ISOLATION, "service main: `secrets` is not allowed"),
+    ("the sidecar's code as a config of the agent container",
+     STD, COMPOSE, lambda s: in_service("main", "    configs:\n      - source: simcode\n        target: /sim_server.py")(s) + "configs:\n  simcode:\n    file: ./sim/server.py\n",
+     ISOLATION, "top-level `configs` is not allowed"),
+    ("a task file read through env_file", STD, COMPOSE, in_service("main", "    env_file: ./sim/instance.json"), ISOLATION, "service main: `env_file` is not allowed"),
+    ("the agent's image built from the task directory", STD, COMPOSE, in_service("main", "    build:\n      context: .."), ISOLATION, "service main: `build` is not allowed"),
+    ("another compose file included", STD, COMPOSE, lambda s: "include:\n  - extra.yaml\n" + s, ISOLATION, "top-level `include` is not allowed"),
+    ("a service whose keys are indented deeper than the reader looks",
+     STD, COMPOSE, sub(r"(?s)^  main:\n.*?(?=^  sim:)", "  main:\n      networks: [default]\n      depends_on: [sim]\n"), ISOLATION, "at an unexpected indentation"),
+    ("the kernel's OOM killer switched off for a container", STD, COMPOSE, in_service("sim", "    oom_kill_disable: true"), ISOLATION, "`oom_kill_disable` is not allowed"),
+    # ---- pinned images in every stage and file; the verifier's log directory emptied, not a look-alike of it
+    ("a second, unpinned stage in the verifier's Dockerfile", STD, TEST_DF, append("FROM python:latest\nCOPY --from=0 /tests /tests\n"), ISOLATION, "must be a pinned registry image"),
+    ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/eai-behavior):\S+", r"\1:${TAG:-latest}"), ISOLATION, "must be pinned"),
+    ("tests/test.sh removes only a look-alike of the verifier's logs",
+     STD, TEST_SH, sub(r"^rm -rf /logs/verifier/\*", "rm -rf /logs/verifier/*.bak"), ISOLATION, "must empty /logs/verifier"),
+    # ---- review round 3, M6: benchmarks without a generator check mode (one task hand-edited, its digest refreshed)
+    ("DexToolBench: one task's grader edited", DTB, "tests/grade.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of standard tests/grade.py"),
+    ("... its service", DTB, "environment/sim/server_mj.py", append("# drift\n"), IDENTITY, "environment/sim/server_mj.py differs from images/mujoco/limited/server_mj.py"),
+    ("... its client", DTB, "environment/rcb_client.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of standard environment/rcb_client.py"),
+    ("... its tooling module", DTB_P, "tests/rcb_dtb.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of rcb_dtb.py"),
+    ("... tests/test.sh without the resource step", DTB_P, TEST_SH, NO_TRAP, IDENTITY, "dextoolbench: 2 versions of privileged tests/test.sh"),
+    ("MuJoCo Playground (ALOHA): the same service edited", MJ, "environment/sim/server_mj.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of standard environment/sim/server_mj.py"),
+    ("MetaWorld+: one task's service edited", MWP, "environment/sim/server_mw.py", append("# drift\n"), IDENTITY, "environment/sim/server_mw.py differs from images/metaworld/standard/server_mw.py"),
+    ("... its grader", MWP_P, "tests/grade.py", append("# drift\n"), IDENTITY, "metaworldplus: 2 versions of privileged tests/grade.py"),
+    ("... its tooling module", MWP, "environment/sim/mw_tool.py", append("# drift\n"), IDENTITY, "metaworldplus: 2 versions of mw_tool.py"),
+    ("... tests/test.sh without the resource step", MWP, TEST_SH, NO_TRAP, IDENTITY, "metaworldplus: 2 versions of standard tests/test.sh"),
+    ("RoboTwin: a privileged task's tests/test.sh without the resource step", TWIN_P, TEST_SH, NO_TRAP, IDENTITY, "robotwin_2_0: 2 versions of privileged tests/test.sh"),
+    ("... its grader", TWIN_P, "tests/grade.py", append("# drift\n"), IDENTITY, "robotwin_2_0: 2 versions of privileged tests/grade.py"),
     # ---- caps and minimums (PROTOCOL §2.10)
     ("a sidecar's memory cap below the verifier phase's declared minimum (the kernel would kill it at a cap the task itself says is too low)",
      HEAVY, None, {TOML: sub(r"^(sim = \{ cpus = [0-9.]+, memory_gb = )[0-9.]+", r"\g<1>24.0"),
@@ -153,7 +230,13 @@ def main() -> int:
                 print(f"FAIL check-ci-selftest [{what}]: the mutation no longer applies to {name} ({e}): update MUTATIONS")
                 bad += 1
                 continue
-            rc, out = run(cmd, t)
+            if cmd is IDENTITY:        # a repo-level rule: the broken copy among every other task (links to the real ones)
+                for other in (ROOT / "tasks").iterdir():
+                    if other.name != name and (other / "task.toml").is_file():
+                        (t.parent / other.name).symlink_to(other)
+                rc, out = run(cmd, t.parent)
+            else:
+                rc, out = run(cmd, t)
             if rc == 0 or expect not in out:
                 bad += 1
                 print(f"FAIL check-ci-selftest [{what}]: {Path(cmd[-1]).name} "

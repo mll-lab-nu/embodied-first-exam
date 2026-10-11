@@ -5,6 +5,9 @@ eai-standard/2.4 layer, with a stub Session (fake_service.py; needs numpy, no si
      2026-10-10 R2, M5);
   2. the proprio group `gripper_opening` is the measured pad gap in metres in both gripper spaces, and its /spec text and
      joint_pos's agree with the column (M7): in the native space it repeated the drive coordinate.
+  3. one call holds at most /spec max_frames_per_call images (review R3 B-M2): a request that would exceed it for certain
+     is a 400 that moves nothing, the largest default request is served, a camera named several times is one camera, and
+     rows that take longer than their `dt` (the joint-speed limit) stop adding frames at the budget without being cut short.
 usage: python3 scripts/robotangle/tests/test_server_requests.py [repo root]"""
 import json, os, shutil, socket, subprocess, sys, tempfile, time, urllib.error, urllib.request
 import numpy as np
@@ -114,6 +117,39 @@ try:
         errs.append(f"width: joint_pos gripper {now[7]}, gripper_opening {now[first]} (want 0.04 m both)")
     if "gripper opening (m)" not in g["joint_pos"][2] or "native" in g["joint_pos"][2] + g["joint_vel"][2] + g["gripper_opening"][2]:
         errs.append(f"width /spec proprio_groups: {g['joint_pos'][2]!r} {g['gripper_opening'][2]!r}")
+finally:
+    svc.close()
+svc = Service("native")     # 3. the call's image budget
+try:
+    def call(path, meta, actions=None):
+        raw = rcb1.encode(meta, [rcb1.array_part("actions", np.asarray(actions, np.float32))]) if actions is not None else json.dumps(meta).encode()
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{svc.port}{path}", data=raw, method="POST"), timeout=300)
+            return r.status, *rcb1.decode(r.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read()), {}
+    limit = get(svc.port, "/spec").get("max_frames_per_call"); n += 1
+    if limit != 2000: errs.append(f"/spec max_frames_per_call: {limit!r} (want 2000)")
+    for name, path, meta, acts in (
+            ("a 30 s watch at 40 fps with per-frame depth (1202 frames x 4)", "/observe", {"seconds": 30, "video_fps": 40, "depth": "frames"}, None),
+            ("the same with include_depth", "/observe", {"seconds": 30, "video_fps": 40, "include_depth": True}, None),
+            ("a 10 s chunk at 40 fps with per-frame depth", "/submit", {**BASE, "dt": 0.25, "video_fps": 40, "depth": "frames", "video": "frames"}, np.zeros((40, 8)))):
+        code, body, _ = call(path, meta, acts); st = get(svc.port, "/status"); n += 1
+        want = 400 if path == "/observe" else 200      # the chunk: 402 frames x 4 = 1608 images, inside the budget
+        if code != want or st["done"] or (want == 400 and (st["control_steps"] != 0 or "max_frames_per_call" not in str(body))):
+            errs.append(f"{name}: HTTP {code} (want {want}), status {st}: {str(body)[:200]}")
+    steps0 = get(svc.port, "/status")["control_steps"]
+    code, m, parts = call("/observe", {"seconds": 30, "cameras": ["agentview"] * 7, "video": "frames"}); n += 1   # the default rate, the longest watch
+    shape = list(parts.get("frames/agentview", {}).get("data", np.zeros(0)).shape)
+    if code != 200 or shape[0] not in (301, 302) or m.get("frames_skipped") or get(svc.port, "/status")["control_steps"] != steps0 + 1200:
+        errs.append(f"the longest default watch, its camera named 7 times: HTTP {code}, frames {shape} (want 301 or 302 of one camera), {str(m)[:200]}")
+    A = np.zeros((30, 8)); A[::2, :7] = 2.9; A[1::2, :7] = -2.9      # each row takes 145 control steps at 0.04 rad per step, not 1
+    code, m, parts = call("/submit", {"type": "joint_position", "dt": 0.025, "video_fps": 40, "depth": "frames", "video": "frames"}, A); n += 1
+    shape = list(parts.get("frames/agentview", {}).get("data", np.zeros(0)).shape)
+    if not (code == 200 and m["executed_rows"] == 30 and m["control_steps_chunk"] > 4000 and shape[:1] == [500] and m.get("frames_skipped", 0) > 3000
+            and len(parts["proprio"]["data"]) == 500):
+        errs.append(f"rows stretched by the speed limit: HTTP {code}, frames {shape} (want 500 = 2000 / 4), "
+                    f"{ {k: m.get(k) for k in ('executed_rows', 'control_steps_chunk', 'frames_skipped')} }")
 finally:
     svc.close()
 shutil.rmtree(TMP, ignore_errors=True)

@@ -72,6 +72,11 @@ def main() -> None:
         if not TRAJ.is_file():
             out["missing_trajectory"] = 1
         else:
+            # the verifier's own modules, loaded outside the next try: an image that cannot import them is a grader error
+            # (it was booked as the agent's invalid trajectory)
+            import casa_tool  # noqa: F401
+            import numpy  # noqa: F401
+
             try:
                 n = check_file()
             except Exception as exc:  # noqa: BLE001
