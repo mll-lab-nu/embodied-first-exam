@@ -149,7 +149,12 @@ CHANGES = {
         "`RCB_TEXTURE_BUDGET=0.1` (three oracle runs, two tasks, two L40S hosts, the task's own monitor), which left 5 % under "
         "the old limit; the new one is max(1.5 x peak, peak + 4) rounded up, as for the other Isaac Sim benchmarks. Limits are "
         "still only recorded (enforcement is off), so no result changes; the scene, the pass rule and the verifier are "
-        "unchanged, and the task keeps its name."],
+        "unchanged, and the task keeps its name.",
+        "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
+        "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), "
+        "and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, "
+        "the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before "
+        "this date were obtained with open egress."],
     "standard": [
         "2026-10-08: collect-hook time limit only. `[[verifier.collect]] timeout_sec` is 37800 s (was 21600 s): the episode end "
         f"(up to 2 h through a resume) plus two replays of up to 4 h each (the privileged grader's cap of {REPLAY_LIMIT}) "
@@ -184,7 +189,12 @@ CHANGES = {
         "not start it, or could not resume it after its crashes) answers every request with 409 and the reason, "
         "and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out "
         "their timeout (up to an hour). The adapter, the collect hook, the grader, the scene and the pass rule are "
-        "unchanged."],
+        "unchanged.",
+        "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
+        "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), "
+        "and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, "
+        "the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before "
+        "this date were obtained with open egress."],
 }
 
 
@@ -249,6 +259,23 @@ def oracle_lines(fam: str, e: dict, mode: str) -> str:
     text = e["oracle_evidence"][mode] if level == "partial" else evidence(fam, e, mode)
     text = text.replace("\\", "\\\\").replace('"', '\\"')
     return f'oracle = "{level}"\noracle_evidence = "{text}"\n'
+
+
+def agent_egress(tt: Path) -> None:
+    """task.toml's `[agent]` block restricts the agent's egress to the model APIs (owner decision 2026-10-10, board 0072;
+    docs/benchmarks/behavior.md, Network): the two lines `scripts/set_agent_egress.py allowlist` writes, with its HOSTS
+    (one list for every task, ci_checks/check-verifier-isolation.sh). Idempotent."""
+    m = re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text())
+    hosts = re.findall(r'"([^"]+)"', m.group(1)) if m else []
+    assert hosts, "scripts/set_agent_egress.py has no HOSTS"
+    head, sep, rest = tt.read_text().partition("[agent]\n")
+    assert sep, (str(tt), "no [agent] section")
+    block, sep2, tail = rest.partition("\n[")
+    lines = [ln for ln in block.splitlines() if ln.strip() and not re.match(r"\s*(network_mode|allowed_hosts)\s*=", ln)
+             and "set_agent_egress" not in ln]
+    lines.append('network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4')
+    lines.append("allowed_hosts = [" + ", ".join(f'"{h}"' for h in hosts) + "]")
+    tt.write_text(head + "[agent]\n" + "\n".join(lines) + "\n" + (("\n[" + tail) if sep2 else ""))
 
 
 def client_image() -> str:
@@ -482,6 +509,7 @@ def generate(families: list[str], F: dict, src: Path, out: Path) -> list[Path]:
         dirs += [out / priv(fam), out / std(fam)]
         print("generated", priv(fam), "and", std(fam), f"(oracle {F[fam]['oracle']})")
     for d in dirs:                                   # the protocol's conventions, last (PROTOCOL §2.1)
+        agent_egress(d / "task.toml")
         normalize(d)
     return dirs
 

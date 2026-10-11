@@ -136,6 +136,9 @@ def plan_instance(fam: str, i: int, R: dict, version: str) -> dict[str, dict[str
     oracle_b = (fz / "oracle_actions.npy").read_bytes()
     if I.get("task") != fam or I.get("state_sha") != R["instance_sha"] or I["assets"] != R["assets"]:
         raise RuntimeError(f"{fz}: instance.json does not match instances.json (task, state_sha, assets)")
+    if "source" in I or b".hdf5" in inst_b or b"yamlab_datasets" in inst_b:
+        # the agent reads this file in privileged mode: where the scene came from locates its solution (PROTOCOL §2.7)
+        raise RuntimeError(f"{fz}: instance.json names its source recording; provenance belongs in instances.json only")
     tool = (HERE / "shared/rcb_yamlab.py").read_bytes()
     image = f"{REGISTRY}/eai-yamlab:{version}"
     names = list(I["assets"])
