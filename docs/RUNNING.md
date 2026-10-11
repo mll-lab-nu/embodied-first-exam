@@ -99,14 +99,19 @@ and refuses any host that is not a model API (`scripts/set_agent_egress.py` HOST
 allowlist.
 
 **Model-API calls only, and the only way out (PROTOCOL §2.11).** The gateway forwards the requests listed per provider
-in `scripts/usage_gateway/api_paths.json` (responses, chat completions, messages, token counting, the model list) and
-answers anything else 403 without forwarding it: connectors and apps,
+in `scripts/usage_gateway/api_paths.json` (responses, messages, token counting, the model list; chat completions only
+to a self-hosted upstream: no official run used them, and at the providers that API serves models that search the web
+without any tool declaration) and answers anything else 403 without forwarding it: connectors and apps,
 plugins, files, conversations, web search. A model request is forwarded as it is or not at all: its body must be one
-JSON object the gateway can read, and every tool it declares (in any `tools` list, at any depth) must be one the agent
+JSON object the gateway can read (one Content-Length of at most 256 MiB, at most one Content-Encoding), and every tool
+it declares (top-level `tools`, and the `tools` of an `input` item, where Codex declares its own) must be one the agent
 runs itself (`client_tool_types` in the same file: no type, `function`, `custom`, `namespace`, which is all Codex and
 Claude Code declared in the recorded runs). Any other tool type is the provider's (web search or fetch, image
 generation, remote MCP, file search, a hosted shell or code interpreter) and the request is refused, as is one with a
-provider-side search or MCP field (`provider_side_fields`) or an OpenRouter `:online` model. Codex compresses its
+provider-side search, MCP or stored-prompt field (`provider_side_fields`), an OpenRouter `:online` model, or an image,
+document or file given as an http(s) address for the provider to fetch (`data:` URLs are fine). What the gateway does
+not judge: which model a request names (a provider's model that searches by itself on a forwarded path would pass;
+give a run a key that can call only its model). Codex compresses its
 ChatGPT-login requests with zstd: the gateway reads them with the `zstandard` module or the `zstd` program; a host with
 neither forwards such a body unchecked, marks it `body_unchecked` and says so in the gateway's start-up log. Refusals
 are in `<trial>/gateway/usage.jsonl` (`refused`: `path_not_allowed`, `host_not_allowed`, `server_tool` or
@@ -119,6 +124,9 @@ The model APIs' hosts also serve all of that directly, so with the gateway on ea
 task (`$JOBS/.tasks/<job>/`, removed afterwards) whose egress allowlist is the gateway's address alone
 (`scripts/set_agent_egress.py only <GATEWAY_BIND>`; Harbor's `--allow-agent-host` can add a host, not remove one).
 `GATEWAY_EGRESS=task` keeps the task's own allowlist (the hosts reachable directly; not for official runs).
+Harbor's allowlist names addresses, not ports: every TCP service that listens on the gateway's address (the docker
+bridge) of the runner host is reachable from a trial, as it has been since the gateway exists; bind the host's other
+services to 127.0.0.1 or firewall the bridge.
 One exception, Codex with a ChatGPT login: before its first model call Codex 0.160.1 asks
 `chatgpt.com/backend-api/wham/accounts/check` for the account's workspace, at `chatgpt_base_url` and not at the model's
 base URL, and it accepts only an HTTPS origin there, which the plain-HTTP gateway is not (through the gateway the lookup

@@ -18,8 +18,10 @@ What it does:
      own references, an MDL module's textures and relative imports. A URL the bucket does not serve (404) is skipped:
      the open-egress scene did not get it either;
   3. compares the downloaded bytes with the sha256 list (`sha256sum` format, paths relative to <mirror dir>) and fails on
-     any difference: a missing file, an extra one, other bytes;
-  4. rewrites the references, in the library's layers and in the mirrored ones, to the local absolute paths.
+     any difference: a missing file, an extra one, other bytes. With --check a file is compared before it is written
+     or opened, so bytes the list does not name are never parsed;
+  4. rewrites the references, in the library's layers and in the mirrored ones, to the local absolute paths, and fails
+     if a layer still names a remote file the bucket serves.
 It needs `pxr`, which the image has in Isaac Sim's bundled omni.usd.libs (no Kit start, no GPU): when `pxr` is not
 importable the script re-runs itself with that library on its paths. Standard library otherwise."""
 import hashlib
@@ -122,6 +124,7 @@ def main(argv: list[str]) -> int:
     referencing: list[str] = []                      # library layers with a remote reference
     digests: dict[str, str] = {}                     # mirrored file (relative to the mirror) -> sha256 of the downloaded bytes
     absent: list[str] = []
+    pinned_map = (dict(reversed(ln.split("  ", 1)) for ln in pin.read_text().splitlines() if ln) if mode == "--check" else None)
 
     def want(url: str) -> None:
         if url not in seen:
@@ -153,9 +156,21 @@ def main(argv: list[str]) -> int:
             absent.append(url)
             continue
         dst = local_path(mirror, url)
+        if mirror not in dst.resolve().parents:      # a URL whose path climbs out of the mirror
+            print(f"FAIL: {url} does not map to a file under {mirror}", file=sys.stderr)
+            return 1
+        rel, digest = dst.resolve().relative_to(mirror).as_posix(), hashlib.sha256(data).hexdigest()
+        if pinned_map is not None and pinned_map.get(rel) != digest:
+            print(f"FAIL: {rel} is not what {pin} pins ({'other bytes' if rel in pinned_map else 'not in the list'}): the "
+                  "content bucket changed, or the library did; re-pin with --write only after checking the rendering",
+                  file=sys.stderr)
+            return 1
+        if rel in digests and digests[rel] != digest:
+            print(f"FAIL: two URLs map to {rel} with different bytes", file=sys.stderr)
+            return 1
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_bytes(data)
-        digests[dst.relative_to(mirror).as_posix()] = hashlib.sha256(data).hexdigest()
+        digests[rel] = digest
         if dst.suffix == ".mdl":
             for rel in mdl_needs(data.decode("utf-8", "replace")):
                 want(urllib.parse.urljoin(url, rel))
@@ -190,7 +205,13 @@ def main(argv: list[str]) -> int:
                 return str(local_path(mirror, url))
             return p
         UsdUtils.ModifyAssetPaths(layer, repl)
-        layer.Save()
+        if not layer.Save():
+            print(f"FAIL: could not save {lp}", file=sys.stderr)
+            return 1
+        left = sorted({u for u in map(norm, asset_paths(layer)) if u and u not in absent})
+        if left:
+            print(f"FAIL: {lp} still names remote files, e.g. {left[:3]}", file=sys.stderr)
+            return 1
     size = sum((mirror / f).stat().st_size for f in digests)
     print(f"mirror_remote_assets: {len(layers)} layers scanned, {len(referencing)} with remote references, "
           f"{len(digests)} files mirrored ({size / 1e6:.0f} MB), {len(absent)} URLs not served by the bucket, "

@@ -64,7 +64,11 @@ Versions
   (sha256:1b3194b90fe3991303070a78d041126ff91717d0b5777b14b9ae5b6b9fc3b0d6) plus exactly those two instructions,
     printf 'FROM ghcr.io/mll-lab-nu/eai-robolab:0.1.1@sha256:1b3194b90fe3991303070a78d041126ff91717d0b5777b14b9ae5b6b9fc3b0d6\nCOPY mirror_remote_assets.py remote_assets.sha256 /opt/robolab/\nRUN python /opt/robolab/mirror_remote_assets.py /opt/robolab/assets /opt/robolab/assets/_remote --check /opt/robolab/remote_assets.sha256\n' \
       | docker build -f - -t ghcr.io/mll-lab-nu/eai-robolab:0.1.2 images/robolab
-  A full build with the command above gives the same files in other layers. Check of either, without network: every
+  A full build with the command above gives the same files in other layers. (The copy of mirror_remote_assets.py inside
+  the published 0.1.2 is the script before three checks were added to it: a file is compared with the pinned list before
+  it is written or opened, a URL must map inside the mirror, and a layer that still names a served remote file fails the
+  build. Run in 0.1.1 against the same pinned list, the script as it is here gives the same 419 files and rewrites the
+  same 150 references.) Check of either, without network: every
   mirrored file has its pinned hash, and no text layer of the library names the bucket by URL any more (the binary
   layers were checked with pxr when 0.1.2 was built: none of the 409 layers kept a remote reference):
     docker run --rm --network none ghcr.io/mll-lab-nu/eai-robolab:0.1.2 sh -c \

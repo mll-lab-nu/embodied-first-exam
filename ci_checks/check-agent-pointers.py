@@ -29,7 +29,8 @@ HOSTS = re.compile(
     r"storage\.googleapis\.com|dropbox\.com|box\.com|amazonaws\.com|youtube\.com|youtu\.be|vimeo\.com|bilibili\.com)"
     r"(?:[/:?#][^\s\"'<>)\]]*)?", re.I)
 KEYS = re.compile(r"""["']?\b((?:source|demo|demonstration|dataset|video|viewer|source_viewer|methods|reference|solution|
-                               checkpoint|ckpt|policy|pretrained)_(?:url|uri|link|repo|repo_id))\b["']?\s*[:=]""", re.I | re.X)
+                               checkpoint|ckpt|policy|pretrained|repo|download)[_-]?(?:url|uri|link|repo|repo_id)|repo_id)\b["']?\s*[:=]""",
+                  re.I | re.X)
 FILES = re.compile(r"""(?<![\w.-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrecord)\b|datasets/[\w.-]+/[\w.-]+)""", re.I)
 # (task-name regex, path regex, matched-text regex, reason)
 ALLOW = [
@@ -56,7 +57,7 @@ def findings(task: pathlib.Path):
         raw = p.read_bytes()
         if b"\0" in raw[:4096]:
             continue
-        text = raw.decode("utf-8", "replace"); rel = p.relative_to(task).as_posix()
+        text = raw.decode("utf-8", "replace").replace("\\/", "/"); rel = p.relative_to(task).as_posix()    # JSON may escape "/"
         for kind, rx in (("URL", HOSTS), ("key", KEYS), ("file", FILES)):
             for m in rx.finditer(text):
                 hit = m.group(1) if kind == "key" else m.group(0)

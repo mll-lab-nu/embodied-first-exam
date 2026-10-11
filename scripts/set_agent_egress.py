@@ -18,7 +18,11 @@ usage gateway therefore runs from a copy of the task whose allowlist is the gate
 (scripts/run_agent_batch.sh, GATEWAY=1; plus chatgpt.com for Codex with a ChatGPT login, whose start-up lookup needs
 it); the gateway forwards the model-API paths and refuses the rest. `only` and
 `public` take explicit directories and refuse one inside this repository's tasks/."""
-import pathlib, re, sys, tomllib
+import pathlib, re, sys
+try:
+    import tomllib               # Python 3.11+: the result is parsed back as a check; older runner hosts go without
+except ModuleNotFoundError:
+    tomllib = None
 
 HOSTS = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com",
          "api.anthropic.com", "*.anthropic.com", "openrouter.ai",
@@ -35,16 +39,26 @@ if mode == "only":
     hosts, args = args[0].split(","), args[1:]
 dirs = [pathlib.Path(d) for d in args]
 if mode != "allowlist":      # a run's or an experiment's copy, never the repository's tasks
-    inside = [d for d in dirs if d.resolve().is_relative_to(root / "tasks")]
+    inside = [d for d in dirs if (root / "tasks").resolve() in [d.resolve(), *d.resolve().parents]]
     if not dirs or inside:
         sys.exit(f"`{mode}` takes copies of task directories, outside {root / 'tasks'}" + (f": {inside[0]}" if inside else ""))
 dirs = dirs or sorted(p for p in (root / "tasks").iterdir() if (p / "task.toml").is_file())
+done = 0
 for d in dirs:
     p = d / "task.toml"; s = p.read_text()
     head, sep, rest = s.partition("[agent]\n")
     if not sep:
+        if mode != "allowlist":      # a run's copy that cannot be narrowed must not run
+            sys.exit(f"{d}: task.toml has no plain `[agent]` section; nothing written")
         print(f"skip {d.name}: no [agent] section"); continue
+    if mode != "allowlist" and re.search(r"(?m)^\s*\[\[?\s*steps\b", s):
+        # Harbor lets a step's own agent policy override [agent] (trial/network_policy.py): this script does not rewrite those
+        sys.exit(f"{d}: task.toml has [[steps]]; a step's network policy would override [agent]; nothing written")
     block, sep2, tail = rest.partition("\n[")
+    if mode == "allowlist":          # already this list: leave the generator's own lines and comments as they are
+        m = re.search(r'(?m)^allowed_hosts\s*=\s*\[(.*)\]\s*$', block)
+        if re.search(r'(?m)^network_mode\s*=\s*"allowlist"', block) and m and re.findall(r'"([^"]+)"', m.group(1)) == hosts:
+            done += 1; continue
     lines = [l for l in block.splitlines() if not re.match(r"\s*(network_mode|allowed_hosts)\s*=", l) and "set_agent_egress" not in l]
     lines = [l for l in lines if l.strip()]
     if mode == "allowlist":
@@ -56,5 +70,7 @@ for d in dirs:
     else:
         lines.append("# egress: Harbor default (public), in this copy only (scripts/set_agent_egress.py public).")
     s2 = head + "[agent]\n" + "\n".join(lines) + "\n" + (("\n[" + tail) if sep2 else "")
-    tomllib.loads(s2); p.write_text(s2)
-print(f"{mode}: {len(dirs)} task(s)")
+    if tomllib is not None:
+        tomllib.loads(s2)
+    p.write_text(s2); done += 1
+print(f"{mode}: {done} task(s)")

@@ -23,12 +23,14 @@ body) and counted in totals.json ("refused_paths"), for the runner to flag (run_
 Model requests without provider-run tools (the same rule, inside the body): a POST that passes the path list is
 forwarded as it is or not at all. Its body must be one JSON object the gateway can read (identity, gzip or zstd; zstd
 through the `zstandard` module or the `zstd` program, whichever the runner host has), or it is refused ("refused":
-"body_unreadable"). Every tool it declares, in any `tools` list at any depth (Codex declares its tools inside `input`),
-must be of a type the agent runs itself (api_paths.json client_tool_types: no type, function, custom, namespace); any
-other type is one the provider would run with its own network or files (web search and fetch, image generation, remote
-MCP, file search, hosted shells and code interpreters) and the request is refused ("refused": "server_tool", with
-"server_tools" = the types), as is one with a provider-side search or MCP field (provider_side_fields) or an
-OpenRouter `:online` model. --server-tools record only records them (a run that allows the harness's web search). The
+"body_unreadable"). Every tool it declares (top-level `tools`, and the `tools` of an `input` item, where Codex declares
+its own; namespaces followed) must be of a type the agent runs itself (api_paths.json client_tool_types: no type,
+function, custom, namespace); any other type is one the provider would run with its own network or files (web search
+and fetch, image generation, remote MCP, file search, hosted shells and code interpreters) and the request is refused
+("refused": "server_tool", with "server_tools" = what was found), as is one with a provider-side search, MCP or stored
+prompt field (provider_side_fields), an OpenRouter `:online` model, or a content block the provider would fetch by URL
+(an image, document or file given as an http(s) address; `data:` URLs are the agent's own bytes). Tool calls'
+arguments and tools' schemas are data and are not looked into. --server-tools record only records them (a run that allows the harness's web search). The
 one body forwarded unchecked is a zstd body on a host with neither decoder ("body_unchecked": true, counted in
 totals.json; the start-up log says so).
 
@@ -94,7 +96,8 @@ API_PATHS = pathlib.Path(__file__).resolve().parent / "api_paths.json"
 PROVIDERS: list[dict] = []     # api_paths.json, loaded at start-up (load_paths); empty = every request refused
 CLIENT_TOOLS: set[str] = set()         # api_paths.json client_tool_types: tool types the agent runs itself
 PROVIDER_FIELDS: set[str] = set()      # api_paths.json provider_side_fields: top-level request fields that make the provider search or connect
-MAX_BODY = 1 << 30                     # a decoded request body larger than this is not read (and so not forwarded)
+MAX_BODY = 256 << 20                   # a request body larger than this, as sent or decoded, is not read (and so not
+                                       # forwarded): the largest recorded one is 31 MB
 HTTP_PROVIDER = "http"         # the provider whose list a --http-host upstream gets
 
 
@@ -155,11 +158,52 @@ def _no_duplicates(pairs: list) -> dict:
     return d
 
 
+def _declared(tools, found: set) -> None:
+    """The types of a list of tool declarations that are not the agent's own; a namespace's tools are followed."""
+    if not isinstance(tools, list):
+        raise Unreadable("tools is not a list")
+    stack = list(tools)
+    while stack:
+        t = stack.pop()
+        if not isinstance(t, dict):
+            raise Unreadable("a tool is not an object")
+        typ = t.get("type")
+        if typ is not None and not (isinstance(typ, str) and typ in CLIENT_TOOLS):
+            found.add(str(typ)[:64])
+        if isinstance(t.get("tools"), list):
+            stack.extend(t["tools"])
+
+
+def _remote(v) -> bool:
+    return isinstance(v, str) and v.lstrip()[:8].lower().startswith(("http://", "https://"))
+
+
+def _fetched(blocks, found: set, depth: int = 0) -> None:
+    """Content blocks that make the provider fetch a URL for the model (an image, a document or a file by address, in the
+    Anthropic, Responses and Chat Completions shapes); a `data:` URL carries its own bytes and is the agent's."""
+    for b in blocks if isinstance(blocks, list) else []:
+        if not isinstance(b, dict):
+            continue
+        src = b.get("source")
+        if isinstance(src, dict) and (src.get("type") == "url" or _remote(src.get("url"))):
+            found.add("url_source")
+        img = b.get("image_url")
+        if _remote(img) or (isinstance(img, dict) and _remote(img.get("url"))) or _remote(b.get("file_url")):
+            found.add("url_source")
+        if depth == 0 and b.get("type") == "tool_result":      # Anthropic: a tool result's own blocks
+            _fetched(b.get("content"), found, 1)
+
+
 def server_tools(text: str) -> list[str]:
-    """What a model request asks the provider to run for it: the types of the tools it declares, in any `tools` list at
-    any depth, that are not the agent's own (CLIENT_TOOLS; a tool without a type is a function tool), the provider-side
-    fields it sets (PROVIDER_FIELDS) and an OpenRouter `:online` model. Raises Unreadable unless the body is one JSON
-    object without duplicate keys."""
+    """What a model request asks the provider to run or fetch for it. Raises Unreadable unless the body is one JSON object
+    without duplicate keys. Looked at, and nothing else (a tool call's arguments and a tool's schema are data: a key
+    named `tools` in them is not a declaration):
+      - the tools it declares: top-level `tools`, and the `tools` of a top-level `input` item (Codex 0.160 declares its
+        tools there, in `additional_tools` items), namespaces followed. A type that is not the agent's own
+        (CLIENT_TOOLS; no type = a function tool) is the provider's;
+      - the provider-side fields it sets (PROVIDER_FIELDS), and a `:online` model (OpenRouter's web plugin), also among
+        `models`;
+      - content the provider would fetch by URL: blocks of `messages[*].content` and `input[*].content`."""
     try:
         body = json.loads(text, object_pairs_hook=_no_duplicates)
     except Unreadable:
@@ -169,24 +213,19 @@ def server_tools(text: str) -> list[str]:
     if not isinstance(body, dict):
         raise Unreadable("not a JSON object")
     found = {f for f in PROVIDER_FIELDS if body.get(f) is not None and body[f] != []}     # `{}` asks for the default search
-    if isinstance(body.get("model"), str) and body["model"].endswith(":online"):
+    models = [body.get("model"), *(body["models"] if isinstance(body.get("models"), list) else [])]
+    if any(isinstance(m, str) and m.strip().lower().endswith(":online") for m in models):
         found.add("model:online")
-    stack = [body]
-    while stack:
-        v = stack.pop()
-        if isinstance(v, dict):
-            tools = v.get("tools")
-            if tools is not None and not isinstance(tools, list):
-                raise Unreadable("tools is not a list")
-            for t in tools or []:
-                if not isinstance(t, dict):
-                    raise Unreadable("a tool is not an object")
-                typ = t.get("type")
-                if typ is not None and typ not in CLIENT_TOOLS:
-                    found.add(str(typ)[:64])
-            stack.extend(x for x in v.values() if isinstance(x, (dict, list)))
-        else:
-            stack.extend(x for x in v if isinstance(x, (dict, list)))
+    if body.get("tools") is not None:
+        _declared(body["tools"], found)
+    for key in ("input", "messages"):
+        items = body.get(key)
+        for item in items if isinstance(items, list) else []:
+            if not isinstance(item, dict):
+                continue
+            if key == "input" and isinstance(item.get("tools"), list):
+                _declared(item["tools"], found)
+            _fetched(item.get("content"), found)
     return sorted(found)
 
 
@@ -255,6 +294,7 @@ def parse_body(body: bytes, acc: dict) -> None:
 
 
 NO_ZSTD = "undecoded zstd: ModuleNotFoundError"      # neither the zstandard module nor the zstd program on this host
+ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
 
 
 def _unzstd(body: bytes) -> bytes:
@@ -462,8 +502,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.guarded()
 
-    def do_POST(self):
-        self.guarded()
+    do_POST = do_PUT = do_PATCH = do_DELETE = do_HEAD = do_OPTIONS = do_GET      # all but GET / POST are on no list: refused, recorded
 
     def guarded(self) -> None:
         """forward(), with whatever it raises on a malformed request turned into an answer: the thread never dies with
@@ -491,6 +530,7 @@ class Handler(BaseHTTPRequestHandler):
         """A request that is not forwarded: recorded (method and path, never the body) and answered 403."""
         ip = self.client_address[0]
         shown = re.sub(r"[^A-Za-z0-9._~/*%:@+,=-]", "?", path.split("?", 1)[0])[:300]
+        host = host[:253]
         record(trial, {"ts": round(t0, 3), "dur_s": 0.0, "client_ip": ip, "host": host, "method": self.command,
                        "path": shown, "status": 403, "model": None, "usage": {}, "usage_raw": {}, "request_bytes": nbytes,
                        "response_bytes": 0, "client_gone": False, "refused": why, **(extra or {})}, None)
@@ -548,15 +588,24 @@ class Handler(BaseHTTPRequestHandler):
                 "only the model's own API is available in a trial; scripts/usage_gateway/api_paths.json)"),
                 "path_not_allowed", n, drained)
         length = int(self.headers.get("Content-Length") or 0)
+        encodings = self.headers.get_all("Content-Encoding") or []
         if length < 0:
             raise ValueError("Content-Length")
+        if length > MAX_BODY or len(encodings) > 1 or self.headers.get("Transfer-Encoding"):
+            # what the gateway would check and what the upstream would read could differ: not forwarded
+            n, _ = self.drain()
+            return self.refuse(trial, t0, host, path, "body_unreadable", (
+                "usage gateway: a request body must have one Content-Length (at most 256 MiB), at most one "
+                "Content-Encoding and no Transfer-Encoding; it was not forwarded (PROTOCOL §2.11)"), "body_unreadable", n, False)
         body = self.rfile.read(length)
-        text, how = decode_request(body, self.headers.get("Content-Encoding", "")) if body else (None, "text")
+        if self.command != "POST":
+            body = b""                   # a GET's body is not forwarded: nothing on the lists reads one
+        text, how = decode_request(body, encodings[0] if encodings else "") if body else (None, "text")
         tools, unchecked = [], False
         if self.command == "POST":       # a model request: one readable JSON object that declares no provider-run tool
             refuse = ARGS.server_tools == "refuse"
-            if text is None and body and how == NO_ZSTD:
-                unchecked = True         # no zstd decoder on this host: the one body that is forwarded unread
+            if text is None and how == NO_ZSTD and body.startswith(ZSTD_MAGIC):
+                unchecked = True         # a zstd body and no zstd decoder on this host: the one body forwarded unread
             else:
                 try:
                     tools = server_tools(text if text is not None else "")
@@ -579,7 +628,7 @@ class Handler(BaseHTTPRequestHandler):
                            "request_bytes": len(body), "response_bytes": 0, "client_gone": False,
                            "refused": "over_token_budget"}, None)
             return self._reply(400, budget_error(host, path, tot))
-        hdrs = {k: v for k, v in self.headers.items() if k.lower() not in HOP}
+        hdrs = {k: v for k, v in self.headers.items() if k.lower() not in HOP and "\n" not in v and "\r" not in v}
         hdrs["Host"] = host
         if body:
             hdrs["Content-Length"] = str(len(body))
@@ -589,7 +638,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.request(self.command, path, body=body or None, headers=hdrs)
             r = conn.getresponse()
         except Exception as exc:  # noqa: BLE001 -- the agent sees an upstream error, as it would without the gateway
-            log(f"upstream {host}: {exc!r}")
+            log(f"upstream {host[:253]}: {type(exc).__name__}")        # not the message: it can hold the request's URL
             return self._reply(502, {"error": f"usage gateway: upstream {host} unreachable: {type(exc).__name__}"})
         self.send_response(r.status)
         for k, v in r.getheaders():

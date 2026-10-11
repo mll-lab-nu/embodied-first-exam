@@ -51,6 +51,12 @@ elif ag.get("network_mode") == "allowlist":
 # robot models from their own shell. An exception is a directory prefix here with its reason, changed together with the
 # protocol's text; a task that drops its allowlist otherwise fails.
 OPEN_EGRESS: dict[str, str] = {}
+# Harbor lets a step's own policy override [agent] (trial/network_policy.py: `[[steps]]` with `[steps.agent]`): no task has
+# steps, and one that sets a network policy there would open what [agent] closes, and what a run's gateway-only copy narrows
+for st in d.get("steps") or []:
+    for role in ("agent", "verifier", "environment"):
+        if isinstance(st, dict) and {"network_mode", "allowed_hosts"} & set((st.get(role) or {})):
+            fail(f"[[steps]] {st.get('name', '?')}: a step sets its own network policy ([steps.{role}]); the task's [agent] / [verifier] policy must be the only one")
 if ag.get("network_mode") != "allowlist" and not t.name.startswith(tuple(OPEN_EGRESS)):
     fail('[agent].network_mode must be "allowlist" (PROTOCOL §2.11: the model APIs only, in every task; the generator writes it, scripts/set_agent_egress.py allowlist)')
 df = t / "tests/Dockerfile"

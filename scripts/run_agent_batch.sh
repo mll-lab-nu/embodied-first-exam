@@ -46,7 +46,9 @@
 #                else at the provider 403 (account connectors, files, web tools; counted in totals.json refused_paths)
 #   GATEWAY_EGRESS  gateway (default; takes effect with GATEWAY=1) = each job runs from its own copy of the task
 #                ($JOBS/.tasks/<job>/, removed afterwards) whose egress allowlist is the gateway's address alone, so the
-#                agent's container reaches its provider through the gateway's model-API paths and in no other way
+#                agent's container reaches its provider through the gateway's model-API paths only. (Harbor's allowlist
+#                names an address, not a port: every TCP service listening on that address of the host is reachable
+#                from a trial, as it has been since the gateway exists. Bind host services to 127.0.0.1.)
 #                (one exception: Codex with a ChatGPT login also keeps chatgpt.com, which its start-up lookup needs);
 #                task = run tasks/ as it is (the task's allowlist: the model APIs' hosts stay reachable directly)
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
@@ -157,7 +159,10 @@ if [ "$GATEWAY" = 1 ]; then
   [ "$AGENT" = claude-code ] && agent_up=$(upstream ANTHROPIC_BASE_URL https://api.anthropic.com) || agent_up=$(upstream OPENAI_BASE_URL https://api.openai.com/v1)
   [[ "$agent_up" =~ ^http://([A-Za-z0-9.-]+:[0-9]+)(/|$) ]] && gw_args+=(--http-host "${BASH_REMATCH[1]}")
   setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
-  gw_pid=$!; CUR_COPY=""; trap 'kill "$gw_pid" 2>/dev/null; case "$CUR_COPY" in "$JOBS"/.tasks/?*) rm -rf "$CUR_COPY" ;; esac' EXIT
+  gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
+  # job copies a killed runner left behind (run_job removes its own; never here on exit: Harbor may still be tearing a
+  # trial down from that directory, whose compose file and bind mounts it holds)
+  [ -d "$JOBS/.tasks" ] && find "$JOBS/.tasks" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null
   for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && break; sleep 0.2; done
   [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
   GW="http://$GATEWAY_BIND:$(cat "$ready")"
@@ -185,6 +190,13 @@ if [ "$GATEWAY" = 1 ]; then
   # (run_job: the job's own copy of the task; Harbor's --allow-agent-host can add a host to a task's list, not remove one)
   AGENT_ARGS+=(--allow-agent-host "$GATEWAY_BIND")
   GATEWAY_ONLY="$GATEWAY_BIND"
+  # the tool that narrows a job's copy must work on this host before any job is claimed
+  if [ "$GATEWAY_EGRESS" = gateway ]; then
+    probe="$JOBS/.gateway/egress-probe.$$"; rm -rf "$probe"; mkdir -p "$probe/t" && printf '[agent]\ntimeout_sec = 1.0\n' > "$probe/t/task.toml" \
+      && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_BIND" "$probe/t" >/dev/null && grep -q "^allowed_hosts = \[\"$GATEWAY_BIND\"\]\$" "$probe/t/task.toml" \
+      || { log "scripts/set_agent_egress.py cannot write a gateway-only task copy on this host (python3: $(python3 -V 2>&1)); not starting"; rm -rf "$probe"; exit 2; }
+    rm -rf "$probe"
+  fi
   # The exception: Codex with a ChatGPT login. Before its first model call Codex 0.160.1 looks its account's workspace up
   # at chatgpt_base_url (GET /backend-api/wham/accounts/check), not at the model's base URL, and accepts only an HTTPS
   # origin there ("workspace backend must use an HTTPS origin"), which this plain-HTTP gateway is not. So chatgpt.com
@@ -287,7 +299,7 @@ run_job() {  # <job> <concurrency> <harbor -i args...>
   local root="$R" f
   if [ "$GATEWAY" = 1 ] && [ "$GATEWAY_EGRESS" = gateway ]; then
     [[ "$job" =~ ^[A-Za-z0-9._-]+$ ]] || { log "FAILED $job: not a job name (letters, digits, . _ -); not started"; return 1; }
-    root="$JOBS/.tasks/$job"; CUR_COPY="$root"
+    root="$JOBS/.tasks/$job"
     gateway_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy with the gateway as the only egress ($root); not started"; rm -rf "$root"; return 1; }
     for f in .env .env.local; do [ -e "$R/$f" ] && ln -s "$R/$f" "$root/$f"; done     # what Harbor would load from the repository
   fi
@@ -307,6 +319,7 @@ name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard 
   esac
 }
 
+not_started=0
 if [ "$SEQ" = 1 ]; then
   mkdir -p "$JOBS/.claims"
   for t in "${tasks[@]}"; do
@@ -316,7 +329,7 @@ if [ "$SEQ" = 1 ]; then
       if [ -f "$JOBS/$job/result.json" ]; then log "skip $job (already has result.json)"; continue; fi
       mkdir "$JOBS/.claims/$job" 2>/dev/null || continue   # another lane of this batch took it
       wait_for "$m"
-      run_job "$job" 1 -i "$(name "$m" "$t")" || { rmdir "$JOBS/.claims/$job" 2>/dev/null; continue; }   # not started: another lane or a later run may take it
+      run_job "$job" 1 -i "$(name "$m" "$t")" || { rmdir "$JOBS/.claims/$job" 2>/dev/null; not_started=$((not_started + 1)); continue; }   # another lane or a later run may take it
       finish_job "$job"; summary
       # the model account is out of credits, rate-limited or logged out: every further job would fail within minutes. Only
       # structured evidence counts (Codex's rate_limits and last event, Claude Code's result event): scripts/account_failure_check.py
@@ -344,4 +357,5 @@ fi
 summary
 log "summary: $JOBS/$batch.summary.md"
 cat "$JOBS/$batch.summary.md" | tee -a "$LOG" >/dev/null
+[ "$not_started" -gt 0 ] && log "WARNING: $not_started job(s) of batch $batch were NOT started (their task copy could not be prepared, see FAILED above)"
 log "runner $$ of batch $batch finished (no unclaimed job left)"

@@ -465,13 +465,14 @@ The model APIs' hosts also serve what a trial must not reach (a ChatGPT login's 
 conversation endpoints), and the credentials of the run are in the container. So with the gateway on, the runner
 starts each job from a copy of the task whose allowlist is the gateway's address alone (`scripts/set_agent_egress.py
 only <address>`; Harbor can add a host to a task's allowlist at run time, not take one off), and the gateway forwards
-only the requests listed per provider in `scripts/usage_gateway/api_paths.json` (responses, chat completions, messages,
-token counting, the model list), answers every other one 403 and records it (`<trial>/gateway/usage.jsonl`
+only the requests listed per provider in `scripts/usage_gateway/api_paths.json` (responses, messages, token counting,
+the model list), answers every other one 403 and records it (`<trial>/gateway/usage.jsonl`
 `refused = "path_not_allowed"`, `totals.json` `refused_paths`). A model request's body is forwarded as it is or not at
 all: it must be one JSON object the gateway can read, and every tool it declares must be of a type the agent runs
 itself (`client_tool_types` in the same file); a request declaring any other type (the provider's: web search or
-fetch, image generation, remote MCP, file search, a hosted shell or code interpreter) or a provider-side search field is
-refused (`refused = "server_tool"`), an unreadable one too (`"body_unreadable"`). Without the gateway (`GATEWAY=0`, a
+fetch, image generation, remote MCP, file search, a hosted shell or code interpreter), a provider-side search field or
+content for the provider to fetch by URL is refused (`refused = "server_tool"`), an unreadable one too
+(`"body_unreadable"`). Without the gateway (`GATEWAY=0`, a
 bare `harbor run`), the task's own allowlist applies and these hosts are reachable directly: not for official runs.
 Open: Codex with a ChatGPT login needs `chatgpt.com` itself at start-up, over HTTPS (docs/RUNNING.md), so such a run
 keeps that host beside the gateway, and its account connectors are off by the harness's configuration only; official

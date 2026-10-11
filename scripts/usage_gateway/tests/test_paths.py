@@ -41,7 +41,30 @@ class Rules(unittest.TestCase):
             self.assertTrue(ok(host, method, path), (host, method, path))
         for path in ("/v1/messages", "/v1/messages/count_tokens", "/v1/chat/completions"):
             self.assertTrue(ok("10.0.0.5:8080", "POST", path, plain=True), path)
-        self.assertTrue(ok("res-1.openai.azure.com", "POST", "/openai/deployments/gpt-6/chat/completions"))
+
+    def test_chat_completions_only_on_a_self_hosted_upstream(self):
+        """At the providers that API also serves models that search without a tool declaration: not forwarded there."""
+        for host, path in (("api.openai.com", "/v1/chat/completions"), ("openrouter.ai", "/api/v1/chat/completions"),
+                           ("res-1.openai.azure.com", "/openai/deployments/gpt-6/chat/completions"),
+                           ("res-1.openai.azure.com", "/openai/v1/chat/completions")):
+            self.assertFalse(ok(host, "POST", path), (host, path))
+        self.assertTrue(ok("10.0.0.5:8080", "POST", "/v1/chat/completions", plain=True))
+
+    def test_a_star_is_one_segment(self):
+        with tempfile.TemporaryDirectory() as td:
+            f = pathlib.Path(td) / "p.json"
+            f.write_text(json.dumps({"client_tool_types": ["function", "custom", "namespace"], "provider_side_fields": ["mcp_servers"],
+                                     "providers": [{"name": "x", "hosts": ["h.example"], "allow": [["POST", "/d/*/chat"]]}]}))
+            saved = (list(gateway.PROVIDERS), set(gateway.CLIENT_TOOLS), set(gateway.PROVIDER_FIELDS))
+            try:
+                gateway.PROVIDERS[:] = gateway.load_paths(f)
+                self.assertTrue(ok("h.example", "POST", "/d/gpt-6/chat"))
+                for path in ("/d/a/b/chat", "/d/../chat", "/d//chat", "/d/chat", "/d/*/chat/x"):
+                    self.assertFalse(ok("h.example", "POST", path), path)
+            finally:
+                gateway.PROVIDERS[:] = saved[0]
+                gateway.CLIENT_TOOLS.clear(); gateway.CLIENT_TOOLS.update(saved[1])
+                gateway.PROVIDER_FIELDS.clear(); gateway.PROVIDER_FIELDS.update(saved[2])
 
     def test_everything_else_is_refused(self):
         for host, method, path in [
@@ -79,8 +102,7 @@ class Rules(unittest.TestCase):
                      "/BACKEND-API/codex/responses", "/backend-api/codex/responses/compact/more", "", "/",
                      "/backend-api/codex/responses%3Fx", "/backend-api/codex/*"):
             self.assertFalse(ok("chatgpt.com", "POST", path), path)
-        self.assertFalse(ok("res-1.openai.azure.com", "POST", "/openai/deployments/a/b/chat/completions"))
-        self.assertFalse(ok("res-1.openai.azure.com", "POST", "/openai/deployments/../chat/completions"))
+        self.assertFalse(ok("res-1.openai.azure.com", "POST", "/openai/v1/../responses"))
         self.assertFalse(ok("10.0.0.5:8080", "POST", "/v1/messages"))        # an HTTPS host without a provider
         self.assertFalse(ok("chatgpt.com", "POST", "/backend-api/codex/responses", plain=True))   # http: its own list only
 
@@ -119,6 +141,32 @@ class Rules(unittest.TestCase):
         self.assertEqual(st(json.dumps({"model": "openai/gpt-x:online", "messages": [], "plugins": [{"id": "web"}]})),
                          ["model:online", "plugins"])
         self.assertEqual(st(json.dumps({"model": "m", "mcp_servers": [], "plugins": None})), [])
+        self.assertEqual(st(json.dumps({"model": "a", "models": ["b", "c:ONLINE "]})), ["model:online"])
+        self.assertEqual(st(json.dumps({"model": "m", "input": "hi", "prompt": {"id": "pmpt_1"}})), ["prompt"])
+        self.assertEqual(st(json.dumps({"tools": [{"type": ["web_search"]}, {"type": {"a": 1}}]})), ["['web_search']", "{'a': 1}"])
+        self.assertEqual(st(json.dumps({"input": [{"type": "tool_search_output", "tools": [{"type": "mcp", "server_url": "https://x"}]}]})), ["mcp"])
+        # data is not a declaration: a tool call's arguments, a tool's schema, a message that talks about tools
+        data = {"model": "m", "tools": [{"name": "Agent", "input_schema": {"type": "object", "properties": {
+                    "tools": {"type": "array", "items": {"type": "string"}}}}},
+                    {"type": "function", "name": "f", "parameters": {"properties": {"tools": {"type": "web_search"}}}}],
+                "messages": [{"role": "assistant", "content": [
+                    {"type": "tool_use", "id": "t1", "name": "Agent", "input": {"tools": ["Bash", "Read"], "x": {"tools": "all"}}},
+                    {"type": "tool_use", "id": "t2", "name": "Plan", "input": {"tools": [{"type": "hammer"}], "mcp_servers": [1],
+                                                                               "source": {"type": "url", "url": "https://x"}}}]},
+                             {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "t1", "content": [
+                                 {"type": "text", "text": "{\"tools\": [{\"type\": \"web_search\"}]}"},
+                                 {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": "AAAA"}}]}]}],
+                "input": [{"type": "function_call", "name": "x", "arguments": "{\"tools\": [{\"type\": \"mcp\"}]}"},
+                          {"type": "message", "content": [{"type": "input_image", "image_url": "data:image/png;base64,AAAA"}]}]}
+        self.assertEqual(st(json.dumps(data)), [])
+        # content the provider would fetch by address
+        for block in ({"type": "image", "source": {"type": "url", "url": "https://x/a.png"}},
+                      {"type": "document", "source": {"type": "url", "url": "https://x/a.pdf"}},
+                      {"type": "tool_result", "tool_use_id": "t", "content": [{"type": "image", "source": {"type": "url", "url": "http://x"}}]},
+                      {"type": "image_url", "image_url": {"url": " HTTPS://x/a.png"}},
+                      {"type": "input_image", "image_url": "https://x/a.png"}, {"type": "input_file", "file_url": "https://x/a.pdf"}):
+            for key in ("messages", "input"):
+                self.assertEqual(st(json.dumps({"model": "m", key: [{"role": "user", "content": [block]}]})), ["url_source"], (key, block))
         for body in ("", "not json", "[1]", '"x"', '{"tools": 5}', '{"tools": [1]}', '{"tools": [], "tools": [{"type": "mcp"}]}',
                      "\ufeff{}", "[" * 100000):
             with self.assertRaises(gateway.Unreadable, msg=body[:40]):
@@ -231,6 +279,32 @@ class EndToEnd(unittest.TestCase):
         c.request("POST", f"/h/{self.up}/v1/messages", body=b"{}", headers={"Content-Length": "abc"})   # answered, not dropped
         self.assertEqual(c.getresponse().status, 400)
         c.close()
+        # two Content-Encoding headers (which one would the upstream believe?), a chunked body, a zstd label on other bytes
+        import socket
+        for head, body in ((b"Content-Encoding: identity\r\nContent-Encoding: gzip\r\nContent-Length: 2\r\n", b"{}"),
+                           (b"Transfer-Encoding: chunked\r\n", b"2\r\n{}\r\n0\r\n\r\n"),
+                           (b"Content-Encoding: zstd\r\nContent-Length: 14\r\n", b'{"model": "m"}')):
+            with socket.create_connection(("127.0.0.1", self.port), timeout=30) as sk:
+                sk.sendall(b"POST /h/" + self.up.encode() + b"/v1/messages HTTP/1.1\r\nHost: x\r\n" + head + b"\r\n" + body)
+                self.assertTrue(sk.recv(65536).startswith(b"HTTP/1.1 403"), head)
+        for method in ("PUT", "DELETE", "PATCH"):
+            self.assertEqual(self.call(method, f"/h/{self.up}/v1/messages", {} if method != "DELETE" else None)[0], 403)
+        self.assertEqual(len(Stub.seen), 1, Stub.seen)
+        st, _ = self.call("POST", f"/h/{self.up}/v1/chat/completions", {"model": "m", "messages": []})     # the self-hosted upstream
+        self.assertEqual((st, Stub.seen[-1]), (200, ("POST", "/v1/chat/completions")))
+        Stub.seen.pop()
+        try:                                       # a zstd body, as Codex sends with a ChatGPT login: read, checked, forwarded as sent
+            import zstandard
+            z = zstandard.ZstdCompressor()
+            for payload, want in (({"model": "m", "messages": []}, 200), ({"model": "m", "messages": [], "tools": [{"type": "mcp"}]}, 403)):
+                c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=30)
+                c.request("POST", f"/h/{self.up}/v1/messages", body=z.compress(json.dumps(payload).encode()),
+                          headers={"Content-Type": "application/json", "Content-Encoding": "zstd"})
+                r = c.getresponse(); r.read(); c.close()
+                self.assertEqual(r.status, want, payload)
+            Stub.seen.pop()
+        except ModuleNotFoundError:
+            pass
         self.assertEqual(len(Stub.seen), 1, Stub.seen)
         for method, path in (("POST", "/v1/files"), ("GET", "/v1/messages"), ("POST", "/v1/messages/../files"),
                              ("POST", "/backend-api/wham/apps"), ("POST", "/v1/messages/batches")):
@@ -244,17 +318,19 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(st, 403)
         recs = self.records()
         refused = [r for r in recs if r.get("refused") == "path_not_allowed"]
-        self.assertEqual([(r["method"], r["path"]) for r in refused],
+        self.assertEqual([(r["method"], r["path"]) for r in refused if r["method"] in ("GET", "POST")],
                          [("POST", "/v1/files"), ("GET", "/v1/messages"), ("POST", "/v1/messages/../files"),
                           ("POST", "/backend-api/wham/apps"), ("POST", "/v1/messages/batches"), ("POST", "/backend-api/wham/apps")])
         self.assertTrue(all(r["status"] == 403 for r in refused))
         self.assertEqual([(r["host"], r["path"]) for r in recs if r.get("refused") == "host_not_allowed"], [("github.com", "/v1/responses")])
         tool = [r for r in recs if r.get("refused") == "server_tool"]
-        self.assertEqual([r["server_tools"] for r in tool], [["web_search_20250305"], ["mcp"], ["image_generation"], ["web_search"]])
-        self.assertEqual(len([r for r in recs if r.get("refused") == "body_unreadable"]), 5)
+        self.assertEqual([r["server_tools"] for r in tool][:4], [["web_search_20250305"], ["mcp"], ["image_generation"], ["web_search"]])
+        self.assertEqual(len([r for r in recs if r.get("refused") == "body_unreadable"]), 8)
+        self.assertEqual(sorted(r["method"] for r in refused if r["method"] not in ("GET", "POST")), ["DELETE", "PATCH", "PUT"])
         fwd = [r for r in recs if not r.get("refused")]
+        self.assertTrue(all("server_tools" not in r and "body_unchecked" not in r for r in fwd), fwd)
+        fwd = [r for r in fwd if r["path"] == "/v1/messages" and r["request_bytes"] > 60]
         self.assertEqual(len(fwd), 1)
-        self.assertNotIn("server_tools", fwd[0])
         self.assertEqual(fwd[0]["usage"], {"input": 4, "cached": 1, "output": 2})
         everything = "".join(p.read_text() for p in (self.jobs / ".gateway").iterdir() if p.is_file())
         self.assertNotIn("SECRET-KEY", everything)
