@@ -38,14 +38,15 @@ def tools_off(text):
     """`text` (a config.toml, possibly empty) with every key of OFF = false; ValueError if it sets one otherwise."""
     lines, table, headers = [], "", {}
     for line in text.splitlines():
+        header, assign = HEADER.match(line), ASSIGN.match(line)  # no walrus: runner hosts may have an old python3
         if ARRAY.match(line):
             table = "[[]]"  # an array of tables: none of the keys lives in one
-        elif m := HEADER.match(line):
-            table = path(m.group(1))
+        elif header:
+            table = path(header.group(1))
             headers[table] = len(lines)
-        elif (m := ASSIGN.match(line)) and table != "[[]]":
-            key = path(f"{table}.{m.group(1)}" if table else m.group(1))
-            value = m.group(2).split("#")[0].strip()
+        elif assign and table != "[[]]":
+            key = path(f"{table}.{assign.group(1)}" if table else assign.group(1))
+            value = assign.group(2).split("#")[0].strip()
             if key in OFF:
                 if value != "false":
                     raise ValueError(f"the config sets {key} = {value}; an official run sets it to false")
