@@ -269,7 +269,7 @@ class Requests(ServiceCase):
         self.assertEqual(len(first), 1)
         s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.1)])
         s.stop(); time.sleep(1.0)                         # a crash: the resumed service keeps the clock's origin
-        s.start()
+        s.start(); s.wait_up()                            # the PID file is written just before the port is bound
         _, m2, _ = s.post("/observe", {})
         self.assertGreater(m2["time_s"], 1.0)
         self.assertEqual(m2["step"], 1)
