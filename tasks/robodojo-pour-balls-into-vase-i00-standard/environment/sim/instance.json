@@ -1,0 +1,1167 @@
+{
+ "task": "pour_balls_into_vase",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/pour_balls_into_vase_0.json",
+ "layout_sha256": "171eb88834b95edeb1e90a5786802400ad3c924f4c9e4ed412d318e98fd69000",
+ "layout": {
+  "Rigid": {
+   "cup": [
+    {
+     "category": "cup",
+     "category_idx": 6,
+     "group": null,
+     "xlim": [
+      -0.4,
+      0.4
+     ],
+     "ylim": [
+      -0.2,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 75,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cup",
+     "default_pos": [
+      0.2261004579702134,
+      -0.1680072565598446,
+      0.8009000000000001
+     ],
+     "default_ori": [
+      0.8945302863497885,
+      0.0,
+      0.0,
+      0.44700734535683595
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.15,
+      "friction": 0.25,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "sphere": [
+    {
+     "category": "sphere",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      0.02
+     ],
+     "ylim": [
+      -0.02,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 75,
+     "rotate_rand": true,
+     "relative_plane": "cup",
+     "place_tag": null,
+     "margin": 0,
+     "check_mode": "enforce",
+     "need_check_stable": false,
+     "label": "sphere_0",
+     "default_pos": [
+      0.2064664167627974,
+      -0.16102770220341747,
+      0.8349000000000001
+     ],
+     "default_ori": [
+      0.846133659154807,
+      0.0,
+      0.0,
+      -0.5329707598408161
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.01,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "sphere",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      0.02
+     ],
+     "ylim": [
+      -0.02,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 75,
+     "rotate_rand": true,
+     "relative_plane": "cup",
+     "place_tag": null,
+     "margin": 0,
+     "check_mode": "enforce",
+     "need_check_stable": false,
+     "label": "sphere_1",
+     "default_pos": [
+      0.2301659886685368,
+      -0.1547396818697746,
+      0.8349000000000001
+     ],
+     "default_ori": [
+      0.8674049291391315,
+      0.0,
+      0.0,
+      -0.49760294302298735
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.01,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "sphere",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      0.02
+     ],
+     "ylim": [
+      -0.02,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 75,
+     "rotate_rand": true,
+     "relative_plane": "cup",
+     "place_tag": null,
+     "margin": 0,
+     "check_mode": "enforce",
+     "need_check_stable": false,
+     "label": "sphere_2",
+     "default_pos": [
+      0.21974028999294545,
+      -0.15847641074931018,
+      0.8349000000000001
+     ],
+     "default_ori": [
+      0.9999968167617739,
+      0.0,
+      0.0,
+      -0.002523185748063871
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.01,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "sphere",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      0.02
+     ],
+     "ylim": [
+      -0.02,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 75,
+     "rotate_rand": true,
+     "relative_plane": "cup",
+     "place_tag": null,
+     "margin": 0,
+     "check_mode": "enforce",
+     "need_check_stable": false,
+     "label": "sphere_3",
+     "default_pos": [
+      0.24086314632635802,
+      -0.18382055161022476,
+      0.8349000000000001
+     ],
+     "default_ori": [
+      0.9965269115884329,
+      0.0,
+      0.0,
+      0.08327133048066221
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.01,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "sphere",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      0.02
+     ],
+     "ylim": [
+      -0.02,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 75,
+     "rotate_rand": true,
+     "relative_plane": "cup",
+     "place_tag": null,
+     "margin": 0,
+     "check_mode": "enforce",
+     "need_check_stable": false,
+     "label": "sphere_4",
+     "default_pos": [
+      0.24046531945793262,
+      -0.1664776664212822,
+      0.8349000000000001
+     ],
+     "default_ori": [
+      0.9639470349219709,
+      0.0,
+      0.0,
+      -0.26609418232111115
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.01,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "sphere",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      0.02
+     ],
+     "ylim": [
+      -0.02,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 75,
+     "rotate_rand": true,
+     "relative_plane": "cup",
+     "place_tag": null,
+     "margin": 0,
+     "check_mode": "enforce",
+     "need_check_stable": false,
+     "label": "sphere_5",
+     "default_pos": [
+      0.22641046236694784,
+      -0.1530253491816354,
+      0.8349000000000001
+     ],
+     "default_ori": [
+      0.9712309713381233,
+      0.0,
+      0.0,
+      0.23813945560029637
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.01,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "sphere",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      0.02
+     ],
+     "ylim": [
+      -0.02,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 75,
+     "rotate_rand": true,
+     "relative_plane": "cup",
+     "place_tag": null,
+     "margin": 0,
+     "check_mode": "enforce",
+     "need_check_stable": false,
+     "label": "sphere_6",
+     "default_pos": [
+      0.23846235680885505,
+      -0.17404878521614398,
+      0.8349000000000001
+     ],
+     "default_ori": [
+      0.8406560357877991,
+      0.0,
+      0.0,
+      -0.5415694133659532
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.01,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "vase": [
+    {
+     "category": "vase",
+     "category_idx": 2,
+     "group": null,
+     "xlim": [
+      -0.35,
+      0.35
+     ],
+     "ylim": [
+      -0.12,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "vase",
+     "default_pos": [
+      -0.09545868045664367,
+      -0.1059130713295333,
+      0.8391
+     ],
+     "default_ori": [
+      0.9936925722880496,
+      0.0,
+      0.0,
+      0.11213862750880858
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.25,
+      "friction": 0.45,
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "5c01aafc51777743",
+ "step_lim": 600,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Pour all the balls from the cup into the vase.",
+ "labels": [
+  "cup",
+  "sphere_0",
+  "sphere_1",
+  "sphere_2",
+  "sphere_3",
+  "sphere_4",
+  "sphere_5",
+  "sphere_6",
+  "vase",
+  "camera_stand"
+ ],
+ "objects": {
+  "cup": {
+   "position": [
+    0.22604,
+    -0.16803,
+    0.8005
+   ],
+   "orientation_wxyz": [
+    0.89431,
+    -0.00451,
+    0.00323,
+    0.44741
+   ],
+   "bbox_corners": [
+    [
+     0.0401,
+     -0.0314,
+     -0.038
+    ],
+    [
+     0.0312,
+     0.04,
+     -0.038
+    ],
+    [
+     0.0402,
+     -0.0315,
+     0.034
+    ],
+    [
+     0.0312,
+     0.04,
+     0.034
+    ],
+    [
+     -0.0312,
+     -0.0404,
+     -0.038
+    ],
+    [
+     -0.0402,
+     0.0311,
+     -0.038
+    ],
+    [
+     -0.0312,
+     -0.0404,
+     0.034
+    ],
+    [
+     -0.0402,
+     0.0311,
+     0.034
+    ]
+   ]
+  },
+  "sphere_0": {
+   "position": [
+    0.21086,
+    -0.17197,
+    0.78018
+   ],
+   "orientation_wxyz": [
+    0.35119,
+    0.33263,
+    -0.13156,
+    0.86528
+   ],
+   "bbox_corners": [
+    [
+     0.0071,
+     0.0045,
+     0.0034
+    ],
+    [
+     -0.0016,
+     0.0057,
+     -0.0012
+    ],
+    [
+     0.0024,
+     0.0041,
+     0.0122
+    ],
+    [
+     -0.0063,
+     0.0053,
+     0.0076
+    ],
+    [
+     0.0063,
+     -0.0053,
+     0.0024
+    ],
+    [
+     -0.0024,
+     -0.0041,
+     -0.0022
+    ],
+    [
+     0.0016,
+     -0.0057,
+     0.0112
+    ],
+    [
+     -0.0071,
+     -0.0045,
+     0.0066
+    ]
+   ]
+  },
+  "sphere_1": {
+   "position": [
+    0.22251,
+    -0.1617,
+    0.79054
+   ],
+   "orientation_wxyz": [
+    0.35039,
+    0.83483,
+    -0.42452,
+    -0.00784
+   ],
+   "bbox_corners": [
+    [
+     0.0071,
+     0.0045,
+     0.0034
+    ],
+    [
+     -0.0016,
+     0.0057,
+     -0.0012
+    ],
+    [
+     0.0024,
+     0.0041,
+     0.0122
+    ],
+    [
+     -0.0063,
+     0.0053,
+     0.0076
+    ],
+    [
+     0.0063,
+     -0.0053,
+     0.0024
+    ],
+    [
+     -0.0024,
+     -0.0041,
+     -0.0022
+    ],
+    [
+     0.0016,
+     -0.0057,
+     0.0112
+    ],
+    [
+     -0.0071,
+     -0.0045,
+     0.0066
+    ]
+   ]
+  },
+  "sphere_2": {
+   "position": [
+    0.21553,
+    -0.18749,
+    0.78568
+   ],
+   "orientation_wxyz": [
+    0.6381,
+    -0.46821,
+    0.56673,
+    0.22895
+   ],
+   "bbox_corners": [
+    [
+     0.0071,
+     0.0045,
+     0.0034
+    ],
+    [
+     -0.0016,
+     0.0057,
+     -0.0012
+    ],
+    [
+     0.0024,
+     0.0041,
+     0.0122
+    ],
+    [
+     -0.0063,
+     0.0053,
+     0.0076
+    ],
+    [
+     0.0063,
+     -0.0053,
+     0.0024
+    ],
+    [
+     -0.0024,
+     -0.0041,
+     -0.0022
+    ],
+    [
+     0.0016,
+     -0.0057,
+     0.0112
+    ],
+    [
+     -0.0071,
+     -0.0045,
+     0.0066
+    ]
+   ]
+  },
+  "sphere_3": {
+   "position": [
+    0.2269,
+    -0.18166,
+    0.78942
+   ],
+   "orientation_wxyz": [
+    0.14009,
+    0.96441,
+    -0.19421,
+    0.11214
+   ],
+   "bbox_corners": [
+    [
+     0.0071,
+     0.0045,
+     0.0034
+    ],
+    [
+     -0.0016,
+     0.0057,
+     -0.0012
+    ],
+    [
+     0.0024,
+     0.0041,
+     0.0122
+    ],
+    [
+     -0.0063,
+     0.0053,
+     0.0076
+    ],
+    [
+     0.0063,
+     -0.0053,
+     0.0024
+    ],
+    [
+     -0.0024,
+     -0.0041,
+     -0.0022
+    ],
+    [
+     0.0016,
+     -0.0057,
+     0.0112
+    ],
+    [
+     -0.0071,
+     -0.0045,
+     0.0066
+    ]
+   ]
+  },
+  "sphere_4": {
+   "position": [
+    0.23989,
+    -0.18073,
+    0.78089
+   ],
+   "orientation_wxyz": [
+    -0.54609,
+    -0.2624,
+    0.10984,
+    0.78795
+   ],
+   "bbox_corners": [
+    [
+     0.0071,
+     0.0045,
+     0.0034
+    ],
+    [
+     -0.0016,
+     0.0057,
+     -0.0012
+    ],
+    [
+     0.0024,
+     0.0041,
+     0.0122
+    ],
+    [
+     -0.0063,
+     0.0053,
+     0.0076
+    ],
+    [
+     0.0063,
+     -0.0053,
+     0.0024
+    ],
+    [
+     -0.0024,
+     -0.0041,
+     -0.0022
+    ],
+    [
+     0.0016,
+     -0.0057,
+     0.0112
+    ],
+    [
+     -0.0071,
+     -0.0045,
+     0.0066
+    ]
+   ]
+  },
+  "sphere_5": {
+   "position": [
+    0.20836,
+    -0.16516,
+    0.79027
+   ],
+   "orientation_wxyz": [
+    0.30496,
+    -0.51211,
+    0.79701,
+    -0.09753
+   ],
+   "bbox_corners": [
+    [
+     0.0071,
+     0.0045,
+     0.0034
+    ],
+    [
+     -0.0016,
+     0.0057,
+     -0.0012
+    ],
+    [
+     0.0024,
+     0.0041,
+     0.0122
+    ],
+    [
+     -0.0063,
+     0.0053,
+     0.0076
+    ],
+    [
+     0.0063,
+     -0.0053,
+     0.0024
+    ],
+    [
+     -0.0024,
+     -0.0041,
+     -0.0022
+    ],
+    [
+     0.0016,
+     -0.0057,
+     0.0112
+    ],
+    [
+     -0.0071,
+     -0.0045,
+     0.0066
+    ]
+   ]
+  },
+  "sphere_6": {
+   "position": [
+    0.21961,
+    -0.17579,
+    0.78149
+   ],
+   "orientation_wxyz": [
+    0.93977,
+    -0.12329,
+    0.31382,
+    -0.05614
+   ],
+   "bbox_corners": [
+    [
+     0.0071,
+     0.0045,
+     0.0034
+    ],
+    [
+     -0.0016,
+     0.0057,
+     -0.0012
+    ],
+    [
+     0.0024,
+     0.0041,
+     0.0122
+    ],
+    [
+     -0.0063,
+     0.0053,
+     0.0076
+    ],
+    [
+     0.0063,
+     -0.0053,
+     0.0024
+    ],
+    [
+     -0.0024,
+     -0.0041,
+     -0.0022
+    ],
+    [
+     0.0016,
+     -0.0057,
+     0.0112
+    ],
+    [
+     -0.0071,
+     -0.0045,
+     0.0066
+    ]
+   ]
+  },
+  "vase": {
+   "position": [
+    -0.09546,
+    -0.10591,
+    0.8391
+   ],
+   "orientation_wxyz": [
+    0.99369,
+    0.0,
+    0.0,
+    0.11214
+   ],
+   "bbox_corners": [
+    [
+     0.1256,
+     0.0224,
+     -0.0019
+    ],
+    [
+     0.0121,
+     0.0023,
+     0.1165
+    ],
+    [
+     0.0657,
+     -0.1029,
+     -0.0806
+    ],
+    [
+     -0.0478,
+     -0.1229,
+     0.0378
+    ],
+    [
+     0.0265,
+     0.1193,
+     -0.0805
+    ],
+    [
+     -0.0871,
+     0.0992,
+     0.0379
+    ],
+    [
+     -0.0335,
+     -0.0059,
+     -0.1593
+    ],
+    [
+     -0.147,
+     -0.026,
+     -0.0409
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {}
+}

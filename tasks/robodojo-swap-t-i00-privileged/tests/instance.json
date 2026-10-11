@@ -1,0 +1,429 @@
+{
+ "task": "swap_T",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/swap_T_0.json",
+ "layout_sha256": "e7181ce640596479865b95711f8c4a92bd50c11b646dd4dc9bc496c29c3489fd",
+ "layout": {
+  "Rigid": {
+   "t": [
+    {
+     "category": "t",
+     "category_idx": 0,
+     "xlim": [
+      -0.09,
+      -0.03
+     ],
+     "ylim": [
+      -0.2,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 360,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "t0",
+     "default_pos": [
+      -0.07595690686585277,
+      -0.17657362889686304,
+      0.7725
+     ],
+     "default_ori": [
+      0.02362842546489303,
+      0.0,
+      0.0,
+      -0.999720809781436
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.45,
+      "type": "rigid",
+      "static_friction": 2.0,
+      "dynamic_friction": 2.0
+     },
+     "visual": {}
+    },
+    {
+     "category": "t",
+     "category_idx": 1,
+     "xlim": [
+      0.03,
+      0.09
+     ],
+     "ylim": [
+      -0.2,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 360,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "t1",
+     "default_pos": [
+      0.08198133096024872,
+      -0.19491447616402113,
+      0.7725
+     ],
+     "default_ori": [
+      -0.905850333890179,
+      0.0,
+      0.0,
+      0.4235978902108121
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.45,
+      "type": "rigid",
+      "static_friction": 2.0,
+      "dynamic_friction": 2.0
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "ed8eada6a744925c",
+ "step_lim": 400,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Pick up the two T-shaped blocks, swap their positions, and place them back with the correct orientations.",
+ "labels": [
+  "t0",
+  "t1",
+  "camera_stand"
+ ],
+ "objects": {
+  "t0": {
+   "position": [
+    -0.07596,
+    -0.17657,
+    0.7725
+   ],
+   "orientation_wxyz": [
+    -0.02363,
+    -0.0,
+    0.0,
+    0.99972
+   ],
+   "bbox_corners": [
+    [
+     -0.04,
+     -0.03,
+     0.0075
+    ],
+    [
+     0.04,
+     -0.03,
+     0.0075
+    ],
+    [
+     -0.04,
+     0.03,
+     0.0075
+    ],
+    [
+     0.04,
+     0.03,
+     0.0075
+    ],
+    [
+     -0.04,
+     -0.03,
+     -0.0075
+    ],
+    [
+     0.04,
+     -0.03,
+     -0.0075
+    ],
+    [
+     -0.04,
+     0.03,
+     -0.0075
+    ],
+    [
+     0.04,
+     0.03,
+     -0.0075
+    ]
+   ]
+  },
+  "t1": {
+   "position": [
+    0.08198,
+    -0.19491,
+    0.7725
+   ],
+   "orientation_wxyz": [
+    0.90585,
+    0.0,
+    -0.0,
+    -0.4236
+   ],
+   "bbox_corners": [
+    [
+     -0.04,
+     -0.03,
+     0.0075
+    ],
+    [
+     0.04,
+     -0.03,
+     0.0075
+    ],
+    [
+     -0.04,
+     0.03,
+     0.0075
+    ],
+    [
+     0.04,
+     0.03,
+     0.0075
+    ],
+    [
+     -0.04,
+     -0.03,
+     -0.0075
+    ],
+    [
+     0.04,
+     -0.03,
+     -0.0075
+    ],
+    [
+     -0.04,
+     0.03,
+     -0.0075
+    ],
+    [
+     0.04,
+     0.03,
+     -0.0075
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {}
+}

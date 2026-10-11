@@ -1,0 +1,365 @@
+{
+ "task": "fold_clothes",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/fold_clothes_0.json",
+ "layout_sha256": "53de16e28978c71cfaa0620712633a0e07ed9d4bb79cdb63c5a953fa26f1b5ba",
+ "layout": {
+  "Geometry": {
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Garment": {
+   "Top_Long": [
+    {
+     "category": "Top_Long",
+     "category_idx": 9,
+     "xlim": [
+      -0.02,
+      0.02
+     ],
+     "ylim": [
+      -0.25,
+      -0.18
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 25,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "target",
+     "default_pos": [
+      -0.0019589031174904294,
+      -0.11405754412247544,
+      0.8441020788545468
+     ],
+     "default_ori": [
+      0.992150919617902,
+      0.021533981752058888,
+      0.002672869627049761,
+      0.1231490807891406
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "garment",
+      "scale": [
+       1.0,
+       1.0,
+       1.0
+      ],
+      "particle_system": {
+       "particle_system_enabled": true,
+       "enable_ccd": true,
+       "solver_position_iteration_count": 32,
+       "max_depenetration_velocity": null,
+       "global_self_collision_enabled": true,
+       "non_particle_collision_enabled": true,
+       "contact_offset": 0.008,
+       "rest_offset": 0.004,
+       "particle_contact_offset": 0.005,
+       "fluid_rest_offset": 0.0025,
+       "solid_rest_offset": 0.0025,
+       "wind": null,
+       "max_neighborhood": null,
+       "max_velocity": 5.0
+      },
+      "particle_material": {
+       "adhesion": 0.1,
+       "adhesion_offset_scale": 0.0,
+       "cohesion": 0.0,
+       "particle_adhesion_scale": 0.2,
+       "particle_friction_scale": 0.6,
+       "drag": 0.0,
+       "lift": 0.0,
+       "friction": 0.5,
+       "damping": 0.05,
+       "gravity_scale": 2,
+       "viscosity": null,
+       "vorticity_confinement": null,
+       "surface_tension": null
+      },
+      "garment_config": {
+       "particle_mass": 0.01,
+       "self_collision": true,
+       "self_collision_filter": true,
+       "stretch_stiffness": 100000000.0,
+       "bend_stiffness": 5000.0,
+       "shear_stiffness": 5000.0,
+       "spring_damping": 10.0
+      }
+     },
+     "visual": {
+      "visible": true,
+      "visual_usd_path": "$Robodojo_ASSETS/Material/Garment/train/Leather020_1K_JPG.usd"
+     }
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "5fe7775799792961",
+ "step_lim": 500,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Fold the clothes neatly.",
+ "labels": [
+  "target",
+  "camera_stand"
+ ],
+ "objects": {
+  "target": {
+   "position": [
+    0.02635,
+    -0.14042,
+    0.7843
+   ],
+   "orientation_wxyz": [
+    0.99215,
+    0.02153,
+    0.00267,
+    0.12315
+   ],
+   "bbox_corners": [
+    [
+     -0.3064,
+     -0.1724,
+     -0.081
+    ],
+    [
+     -0.3064,
+     -0.1724,
+     0.1073
+    ],
+    [
+     -0.3064,
+     0.1469,
+     -0.081
+    ],
+    [
+     -0.3064,
+     0.1469,
+     0.1073
+    ],
+    [
+     0.3078,
+     -0.1724,
+     -0.081
+    ],
+    [
+     0.3078,
+     -0.1724,
+     0.1073
+    ],
+    [
+     0.3078,
+     0.1469,
+     -0.081
+    ],
+    [
+     0.3078,
+     0.1469,
+     0.1073
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ]
+}

@@ -1,0 +1,25 @@
+{
+ "task": "fasten_screws",
+ "goal": "Pick up each of the three nuts and screw/place it onto the bolt of the same colour (same model index), so each nut sits upright and centred on its bolt, then open the gripper and return the arm home.",
+ "instruction_templates": [
+  "Insert and tighten each screw into the nut of the same color."
+ ],
+ "success": [
+  "For each i in 0,1,2 (nut_i with bolt_i, the bolt having the same model index/colour as the nut): the nut's local +z axis within 10 degrees of world +z (nut upright; is_axis_up axis=[0,0,1], threshold=10).",
+  "For each i: horizontal (xy) distance between nut_i root origin and bolt_i root origin < 0.001 m (1 millimetre, strict), world frame.",
+  "For each i: insertion depth: (top z of bolt_i's world bbox) - (bottom z of nut_i's world bbox) > 0.009 m (9 mm), i.e. the nut's lowest point must be at least 9 mm below the bolt's highest point.",
+  "All grippers of the target robots are open: gripper opening fraction (normalised by the gripper's scale range, mean over fingers) >= 0.9 for every target robot (is_all_gripper_open open_threshold=0.9).",
+  "All target robots back at start end-effector pose: |dx|,|dy|,|dz| each <= 0.15 m and rotation <= 20 degrees (all_robot_back_to_origin defaults)."
+ ],
+ "evaluation": "Checked after every action; all conditions (three nut/bolt pairs, gripper open, arm home) must hold at the same step; the first such step is success. Fails at step_lim=1900 actions. No early fail. Process score (partial only): 20/50/100 for 1/2/3 pairs done with grippers open (>=0.8).",
+ "step_lim": 1900,
+ "objects": [
+  "nut0, nut1, nut2: factory nuts (category factory_nut, indices from 0-4, 3 unique ones, so three different colours/models), on the table, x in [-0.45,0.45], y in [-0.25,-0.05], yaw not randomised, placed in the 'up' stable pose; keep-out area x[-0.05,0.05], y[-0.17,-0.13].",
+  "bolt0, bolt1, bolt2: factory bolts (Geometry, category factory_bolt), each with the same model index as its nut (nut_i <-> bolt_i, 'same colour'), x in [-0.35,-0.15] or [0.15,0.35], y in [-0.20,-0.15], no rotation, 0.035 m margin. Fixed to the table (Geometry)."
+ ],
+ "scene_dynamics": "none",
+ "needs_memory_or_language": "none (the pairing is by colour/model index visible in the scene; the instruction is fixed).",
+ "end_requirements": "Gripper(s) open (>= 0.9 of opening range) AND target arms back within 0.15 m per axis and 20 degrees of start end-effector pose at the moment of success.",
+ "physics_kind": "rigid (threaded engagement is not modelled in the check; only geometry)",
+ "notes": "The 1 mm xy tolerance between nut and bolt root origins is extremely strict; the depth requirement of 9 mm and 10 degree uprightness mean the nut must be fully seated. 'Tighten' (rotation) is not checked. The pairing nut_i with bolt_i is by label; the agent must match by colour/appearance. Whether the bolts are fixed (Geometry) or movable cannot be determined statically."
+}
