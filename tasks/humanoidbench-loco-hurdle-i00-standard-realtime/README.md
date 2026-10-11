@@ -115,3 +115,9 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   draws them without collision geometry and its reward never looks at them. The scene, instance, pass rule and
   verifier are unchanged, so the task keeps its name; runs recorded before this change were told otherwise and
   are reported separately.
+- 2026-10-11: the task text says the hurdles are solid again, and what is solid: upstream's model
+  (assets/locomotion/generated_xml_hurdles.xml) puts at every hurdle a collision box 37.5 cm high and 6 cm
+  thick across the track, under drawn bars that have no collision geometry; the 2026-10-08 entry looked only
+  at the drawn bars. The scene, instance, pass rule and verifier are unchanged, so the task keeps its name;
+  runs recorded from 2026-10-08 until this change were told the hurdles have no collision geometry and are
+  reported separately.

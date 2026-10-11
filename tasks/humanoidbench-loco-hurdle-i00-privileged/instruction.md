@@ -16,9 +16,10 @@ vertical) and low actuator force, multiplied together — but the speed target i
 a walk, on the order of 5 m/s. On top of that, touching any barrier's collision geometry multiplies
 that entire step down to a small fraction of its value: contact is a gate to be respected, not a
 penalty to be traded off. Only the walls that line the track on both sides and behind the start
-count as barriers here; the hurdles carry no such penalty, and in upstream's model they have no
-collision geometry at all (drawn, not solid): the robot runs through them. The episode ends early if
-the pelvis drops near the ground.
+count as barriers here; the hurdles carry no such penalty. They are solid all the same: each hurdle
+is one collision box 37.5 cm high across the whole track (the bars drawn on it have no collision
+geometry of their own), so the robot has to get over it. The episode ends early if the pelvis drops
+near the ground.
 
 **The reward function is not in this container.** `s.step()` returns `None` where the reward would
 be and `s.status()` reports no return; the episode is scored in a separate process after you are
