@@ -34,7 +34,7 @@ LAYER = ROOT / "scripts/eai_standard"
 REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 REVIEW_PR = ""                              # the pull request with the per-task review (PROTOCOL §2.7), once there is one
-# agent egress: model APIs only, by default in both modes (user decision 2026-10-03); the host list of set_agent_egress.py
+# agent egress: the one allowlist (model APIs; since 2026-10-11 also the package registries), in both modes (user decision 2026-10-03); the host list of set_agent_egress.py
 HOSTS = ast.literal_eval(re.search(r"^HOSTS = (\[.*?\])", (ROOT / "scripts/set_agent_egress.py").read_text(), re.S | re.M).group(1))
 
 

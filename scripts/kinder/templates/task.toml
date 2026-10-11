@@ -35,7 +35,7 @@ memory_mb = 8192
 
 [agent]
 timeout_sec = {{agent_timeout}}
-# The model APIs and nothing else (scripts/set_agent_egress.py HOSTS): KinDER and its baselines are public.
+# The model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS): KinDER and its baselines are public.
 network_mode = "allowlist"
 allowed_hosts = [{{allowed_hosts}}]
 

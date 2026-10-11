@@ -63,7 +63,7 @@ benchmark re-verifies on its frozen instance (`scripts/vlabench/freeze.sh`) and 
   request, intrinsics and pose in `/spec`; proprioception: joint angles and velocities, finger positions, the hand's
   pose and the last command. No object poses, no task conditions, no success signal before the end (`meta.task` is not
   used: VLABench's goals are relations between objects, not a target point).
-- **Egress.** VLABench's experts are public upstream, so `task.toml` allowlists the model APIs only (as HumanoidBench and
+- **Egress.** VLABench's experts are public upstream, so `task.toml` allowlists the model APIs and the package registries only (as HumanoidBench and
   DexToolBench do).
 
 ## Image

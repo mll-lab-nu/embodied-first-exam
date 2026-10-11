@@ -68,7 +68,7 @@ region; the instructions state the rule in both modes.
   volumes, never the agent's; every cache volume is scoped to the trial's compose project (no fixed name).
 
 ## Network
-The agent reaches the model APIs and nothing else: `[agent] network_mode = "allowlist"` with the hosts of
+The agent reaches the model APIs and, since 2026-10-11, the package registries (PyPI, apt archives), nothing else: `[agent] network_mode = "allowlist"` with the hosts of
 `scripts/set_agent_egress.py`, in both templates' `task.toml.tmpl` (`mk_tasks.py` fills the host list from that script;
 owner decision 2026-10-10, board 0072). Until then the tasks had Harbor's default, public egress, the repository-wide
 default of 2026-09-24 (kept on 2026-10-02) with which the templates were written; no reason specific to RoboLab was
@@ -77,9 +77,9 @@ it: the second point.
 
 | Service | Before | Since 2026-10-10 |
 |---|---|---|
-| privileged `main` (agent and its Isaac processes) | public | public from container start until the agent starts (the harness is installed then), the model APIs only while the agent runs |
+| privileged `main` (agent and its Isaac processes) | public | public from container start until the agent starts (the harness is installed then), the allowlist (the model APIs and the package registries) while the agent runs |
 | standard `main` (agent, client only) | public | the same |
-| standard `sim` (the simulator service) | public | the same as `main`: Harbor's egress control puts every compose service without a network setting of its own in one namespace, so the service's Isaac start (it begins at container start and takes 5 to 9 minutes) and a restart after a crash run with the model APIs only; public again while the collect hook replays the episode |
+| standard `sim` (the simulator service) | public | the same as `main`: Harbor's egress control puts every compose service without a network setting of its own in one namespace, so the service's Isaac start (it begins at container start and takes 5 to 9 minutes) and a restart after a crash run with the allowlist only; public again while the collect hook replays the episode |
 | `rcb_monitor` | none | none |
 | privileged verifier | public (Harbor's default) | unchanged |
 | standard verifier | none (`no-network`) | unchanged |

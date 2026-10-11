@@ -32,7 +32,7 @@ tt = (dst / "task.toml").read_text()
 tt = tt.replace('name = "robot-coding-bench/robotwin_2_0_stack_blocks_two-standard"', f'name = "robot-coding-bench/robotwin_2_0_{task}-standard"')
 tt = re.sub(r'description = ".*"', f'description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 {task} on the same frozen instance as the privileged task (seed {seed}). {goal} The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."', tt)
 tt = tt.replace('"stack_blocks_two"]', f'"{task}"]').replace('family = "stack_blocks_two"', f'family = "{task}"').replace("instance_seed = 60417", f"instance_seed = {seed}")
-assert '\nnetwork_mode = "allowlist"' in tt, "template task.toml: [agent] is not on the egress allowlist"   # the template's: model APIs only (owner decision 2026-10-10; scripts/set_agent_egress.py)
+assert '\nnetwork_mode = "allowlist"' in tt, "template task.toml: [agent] is not on the egress allowlist"   # the template's: the one allowlist (model APIs and package registries; scripts/set_agent_egress.py)
 (dst / "task.toml").write_text(tt)
 # instruction: swap the task-specific paragraph
 ins = (dst / "instruction.md").read_text()

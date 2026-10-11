@@ -47,7 +47,7 @@
 #                The gateway forwards model-API calls only (scripts/usage_gateway/api_paths.json) and answers anything
 #                else at the provider 403 (account connectors, files, web tools; counted in totals.json refused_paths)
 #   GATEWAY_EGRESS  gateway (default; takes effect with GATEWAY=1) = each job runs from its own copy of the task
-#                ($JOBS/.tasks/<job>/, removed afterwards) whose egress allowlist is the gateway's address alone, so the
+#                ($JOBS/.tasks/<job>/, removed afterwards) whose egress allowlist is the gateway's address and the package registries (PyPI, apt), so the
 #                agent's container reaches its provider through the gateway's model-API paths only. (Harbor's allowlist
 #                names an address, not a port: every TCP service listening on that address of the host is reachable
 #                from a trial, as it has been since the gateway exists. Bind host services to 127.0.0.1.)
@@ -202,14 +202,20 @@ if [ "$GATEWAY" = 1 ]; then
       && sed -i -E "s#^([[:space:]]*)(base_url[[:space:]]*=.*)#\1\2\n\1supports_websockets = false#" "$cfg"
     for i in "${!AGENT_ARGS[@]}"; do [ "${AGENT_ARGS[$i]}" = "config=$AGENT_CONFIG" ] && AGENT_ARGS[$i]="config=$cfg"; done
   fi
-  # the egress allowlist must let the agent reach the gateway; with GATEWAY_EGRESS=gateway it is the only address on it
+  # the egress allowlist must let the agent reach the gateway; with GATEWAY_EGRESS=gateway the list is the gateway's
+  # address and the package registries (PyPI and the apt archives: installing packages is allowed, PROTOCOL §2.11), and
+  # no model API's own host
   # (run_job: the job's own copy of the task; Harbor's --allow-agent-host can add a host to a task's list, not remove one)
   AGENT_ARGS+=(--allow-agent-host "$GATEWAY_BIND")
   GATEWAY_ONLY="$GATEWAY_BIND"
   # the tool that narrows a job's copy must work on this host before any job is claimed
   if [ "$GATEWAY_EGRESS" = gateway ]; then
-    probe="$JOBS/.gateway/egress-probe.$$"; rm -rf "$probe"; mkdir -p "$probe/t" && printf '[agent]\ntimeout_sec = 1.0\n' > "$probe/t/task.toml" \
-      && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_BIND" "$probe/t" >/dev/null && grep -q "^allowed_hosts = \[\"$GATEWAY_BIND\"\]\$" "$probe/t/task.toml" \
+    PACKAGE_HOSTS="$(python3 "$R/scripts/set_agent_egress.py" package-hosts 2>/dev/null)"
+    GATEWAY_ONLY="$GATEWAY_BIND${PACKAGE_HOSTS:+,$PACKAGE_HOSTS}"      # PACKAGE_HOSTS may be empty: the gateway alone
+    probe="$JOBS/.gateway/egress-probe.$$"; rm -rf "$probe"; [[ "$PACKAGE_HOSTS" =~ ^([A-Za-z0-9.-]+(,[A-Za-z0-9.-]+)*)?$ ]] \
+      && mkdir -p "$probe/t" && printf '[agent]\ntimeout_sec = 1.0\n' > "$probe/t/task.toml" \
+      && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$probe/t" >/dev/null \
+      && grep -q "^allowed_hosts = \[\"${GATEWAY_ONLY//,/\", \"}\"\]\$" "$probe/t/task.toml" \
       || { log "scripts/set_agent_egress.py cannot write a gateway-only task copy on this host (python3: $(python3 -V 2>&1)); not starting"; rm -rf "$probe"; exit 2; }
     rm -rf "$probe"
   fi
@@ -220,7 +226,7 @@ if [ "$GATEWAY" = 1 ]; then
   # with it, directly, every path of that backend: the account's connectors are then off by the harness's configuration
   # only (docs/RUNNING.md). API-key and Claude Code runs have no such exception.
   case "$AGENT:${CODEX_FORCE_AUTH_JSON:-}" in codex:1|codex:true|codex:TRUE|codex:yes)
-    GATEWAY_ONLY="$GATEWAY_BIND,chatgpt.com"
+    GATEWAY_ONLY="$GATEWAY_ONLY,chatgpt.com"
     [ "$GATEWAY_EGRESS" = gateway ] && log "ChatGPT login: chatgpt.com stays directly reachable beside the gateway (Codex's workspace lookup needs it over HTTPS)" ;;
   esac
   log "usage gateway $GW (pid $gw_pid, raw bodies: $GATEWAY_RAW, token budget $TOKEN_BUDGET_IN in / $TOKEN_BUDGET_OUT out, agent egress: $GATEWAY_EGRESS); per-trial records in <trial>/gateway/"
@@ -260,8 +266,9 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     ae = r.get("agent_execution") or {}
     gw = json.loads((trial / "gateway/totals.json").read_text()) if (trial / "gateway/totals.json").exists() else {}
     gw_cell = (f"{gw['input']} / {gw['output']}" + (" OVER BUDGET" if gw.get("over_token_budget") else "")) if gw else "-"
-    # requests the gateway refused because they were not model-API calls (PROTOCOL §2.11): a trial to look at
-    left = sum(gw.get(k, 0) for k in ("refused_paths", "refused_server_tools", "refused_bodies"))
+    # requests the gateway refused because they were not model-API calls (PROTOCOL §2.11): attempts, for a look; they
+    # do not void the trial, and the harness's own start-up probes are not among them
+    left = sum(gw.get(k, 0) for k in ("refused_paths", "refused_server_tools", "refused_bodies", "refused_hosts"))
     gw_cell += f" REFUSED {left}" if left else ""
     try:
         wall = round((f(ae["finished_at"]) - f(ae["started_at"])).total_seconds())
@@ -296,7 +303,7 @@ stamp_task_dirs() {  # <root> <harbor -i args...>: give every file of each task 
   done
 }
 
-gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway as its only egress (PROTOCOL §2.11)
+gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (PROTOCOL §2.11)
   local dir="$1" a; shift
   rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
   while [ $# -gt 0 ]; do
@@ -316,7 +323,7 @@ run_job() {  # <job> <concurrency> <harbor -i args...>
   if [ "$GATEWAY" = 1 ] && [ "$GATEWAY_EGRESS" = gateway ]; then
     [[ "$job" =~ ^[A-Za-z0-9._-]+$ ]] || { log "FAILED $job: not a job name (letters, digits, . _ -); not started"; return 1; }
     root="$JOBS/.tasks/$job"
-    gateway_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy with the gateway as the only egress ($root); not started"; rm -rf "$root"; return 1; }
+    gateway_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy (the gateway and the package registries as the only egress) ($root); not started"; rm -rf "$root"; return 1; }
     for f in .env .env.local; do [ -e "$R/$f" ] && ln -s "$R/$f" "$root/$f"; done     # what Harbor would load from the repository
   fi
   stamp_task_dirs "$root" "$@"

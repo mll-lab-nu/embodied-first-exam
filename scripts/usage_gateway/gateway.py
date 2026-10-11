@@ -15,10 +15,14 @@ Model-API paths only (PROTOCOL §2.11; owner 2026-10-10): on such a host the gat
 api_paths.json for the host's provider (the model calls: responses, chat completions, messages, token counting, the
 model list) and answers everything else 403 without forwarding it: account connectors and apps, plugins, files,
 conversations, web search. A provider's hosts are on the task's egress allowlist only so that the model can be called;
-with the gateway on, the runner takes them off it (scripts/run_agent_batch.sh: the allowlist is the gateway's address),
+with the gateway on, the runner takes them off it (scripts/run_agent_batch.sh: the allowlist is the gateway's address
+and the package registries),
 so these paths are all an agent's container reaches at its provider, whatever it runs with the credentials it holds. A
 refusal is recorded like a request (usage.jsonl: "refused": "path_not_allowed", method, path without the query; no
-body) and counted in totals.json ("refused_paths"), for the runner to flag (run_agent_batch.sh's summary shows it).
+body) and counted in totals.json ("refused_paths"), for the runner to flag (run_agent_batch.sh's summary shows it). A
+refusal is an attempt, to be looked at: it does not void a trial, and the agent is not told that trying is forbidden.
+What a harness sends by itself at start-up without being a model call (api_paths.json harness_probes: Claude Code's
+HEAD /api/hello) is refused too, but neither recorded nor counted.
 
 Model requests without provider-run tools (the same rule, inside the body): a POST that passes the path list is
 forwarded as it is or not at all. Its body must be one JSON object the gateway can read (identity, gzip or zstd; zstd
@@ -84,10 +88,13 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 def _model_hosts() -> list[str]:
-    """HOSTS from scripts/set_agent_egress.py (read, not imported: that script acts on import)."""
+    """The model APIs' hosts: HOSTS of scripts/set_agent_egress.py without its PACKAGE_HOSTS (the package index is on
+    every task's allowlist, but nothing of it goes through this gateway). Read, not imported: that script acts on import."""
     src = (ROOT / "scripts" / "set_agent_egress.py").read_text()
     m = re.search(r"^HOSTS\s*=\s*(\[.*?\])", src, re.M | re.S)
-    return ast.literal_eval(m.group(1)) if m else []
+    k = re.search(r"^PACKAGE_HOSTS\s*=\s*(\[.*?\])", src, re.M | re.S)
+    skip = set(ast.literal_eval(k.group(1))) if k else set()
+    return [h for h in (ast.literal_eval(m.group(1)) if m else []) if h not in skip]
 
 
 MODEL_HOSTS = _model_hosts()   # extended at start-up by --extra-host (e.g. an Azure AI Foundry *.services.ai.azure.com)
@@ -96,6 +103,7 @@ API_PATHS = pathlib.Path(__file__).resolve().parent / "api_paths.json"
 PROVIDERS: list[dict] = []     # api_paths.json, loaded at start-up (load_paths); empty = every request refused
 CLIENT_TOOLS: set[str] = set()         # api_paths.json client_tool_types: tool types the agent runs itself
 PROVIDER_FIELDS: set[str] = set()      # api_paths.json provider_side_fields: top-level request fields that make the provider search or connect
+HARNESS_PROBES: set[tuple] = set()     # api_paths.json harness_probes: (METHOD, path) a harness sends by itself; refused, not counted
 MAX_BODY = 256 << 20                   # a request body larger than this, as sent or decoded, is not read (and so not
                                        # forwarded): the largest recorded one is 31 MB
 HTTP_PROVIDER = "http"         # the provider whose list a --http-host upstream gets
@@ -110,6 +118,9 @@ def load_paths(path: pathlib.Path = API_PATHS) -> list[dict]:
     tools, fields = doc["client_tool_types"], doc["provider_side_fields"]
     if not all(isinstance(x, str) and x for x in [*tools, *fields]):
         raise ValueError(f"{path}: client_tool_types / provider_side_fields must be lists of names")
+    probes = {(str(m), str(q)) for m, q in doc.get("harness_probes", [])}
+    if not all(m in ("HEAD", "OPTIONS") and re.fullmatch(r"(/[A-Za-z0-9._-]+)+", q) for m, q in probes):
+        raise ValueError(f"{path}: harness_probes must be [HEAD | OPTIONS, /plain/path] pairs (a method that carries nothing)")
     for p in doc["providers"]:
         allow = []
         for method, pth in p["allow"]:
@@ -118,6 +129,7 @@ def load_paths(path: pathlib.Path = API_PATHS) -> list[dict]:
             allow.append((method, pth.split("/")[1:]))
         out.append({"name": str(p["name"]), "hosts": [str(h).lower() for h in p["hosts"]], "allow": allow})
     CLIENT_TOOLS.clear(); CLIENT_TOOLS.update(tools)             # only once the whole file is good
+    HARNESS_PROBES.clear(); HARNESS_PROBES.update(probes)
     PROVIDER_FIELDS.clear(); PROVIDER_FIELDS.update(fields)
     return out
 
@@ -451,6 +463,8 @@ def record(trial: pathlib.Path | None, rec: dict, raw: dict | None) -> None:
             tot["refused_server_tools"] = tot.get("refused_server_tools", 0) + 1
         elif rec.get("refused") == "body_unreadable":
             tot["refused_bodies"] = tot.get("refused_bodies", 0) + 1
+        elif rec.get("refused") == "host_not_allowed":
+            tot["refused_hosts"] = tot.get("refused_hosts", 0) + 1
         elif rec.get("refused"):
             tot["refused"] = tot.get("refused", 0) + 1
         else:
@@ -511,7 +525,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.guarded()
 
-    do_POST = do_PUT = do_PATCH = do_DELETE = do_HEAD = do_OPTIONS = do_GET      # all but GET / POST are on no list: refused, recorded
+    do_POST = do_PUT = do_PATCH = do_DELETE = do_HEAD = do_OPTIONS = do_GET      # all but GET / POST are on no list: refused
 
     def guarded(self) -> None:
         """forward(), with whatever it raises on a malformed request turned into an answer: the thread never dies with
@@ -593,9 +607,12 @@ class Handler(BaseHTTPRequestHandler):
         host, path = m.group(1), m.group(2) or "/"
         if not path_allowed(provider_of(host, m is plain), self.command, path):   # default deny, never forwarded
             n, drained = self.drain()
+            if (self.command, path.split("?", 1)[0]) in HARNESS_PROBES:     # the harness's own probe: refused, not an attempt
+                return self._reply(403, api_error(host, path, "usage gateway: not a model API call", "path_not_allowed"),
+                                   close=not drained)
             return self.refuse(trial, t0, host, path, "path_not_allowed", (
-                f"usage gateway: {self.command} {{path}} is not a model API call and was not forwarded (PROTOCOL §2.11: "
-                "only the model's own API is available in a trial; scripts/usage_gateway/api_paths.json)"),
+                f"usage gateway: {self.command} {{path}} is not a model API call and was not forwarded (this gateway "
+                "forwards model API calls only; scripts/usage_gateway/api_paths.json)"),
                 "path_not_allowed", n, drained)
         length = int(self.headers.get("Content-Length") or 0)
         encodings = self.headers.get_all("Content-Encoding") or []
@@ -606,7 +623,7 @@ class Handler(BaseHTTPRequestHandler):
             n, _ = self.drain()
             return self.refuse(trial, t0, host, path, "body_unreadable", (
                 "usage gateway: a request body must have one Content-Length (at most 256 MiB), at most one "
-                "Content-Encoding and no Transfer-Encoding; it was not forwarded (PROTOCOL §2.11)"), "body_unreadable", n, False)
+                "Content-Encoding and no Transfer-Encoding; it was not forwarded"), "body_unreadable", n, False)
         body = self.rfile.read(length)
         if self.command != "POST":
             body = b""                   # a GET's body is not forwarded: nothing on the lists reads one
@@ -623,13 +640,13 @@ class Handler(BaseHTTPRequestHandler):
                     if refuse:
                         return self.refuse(trial, t0, host, path, "body_unreadable", (
                             "usage gateway: the body of this request is not one JSON object the gateway can read "
-                            f"({how if text is None else exc}); it was not forwarded (PROTOCOL §2.11)"), "body_unreadable",
+                            f"({how if text is None else exc}); it was not forwarded"), "body_unreadable",
                             len(body), True)
                     unchecked = True
             if tools and refuse:         # never forwarded: the provider would run it for the agent
                 return self.refuse(trial, t0, host, path, "server_tool", (
                     f"usage gateway: this request asks the model provider to run a tool or a search for it ({', '.join(tools)}) "
-                    "and was not forwarded (PROTOCOL §2.11: no tool that runs outside the container)"),
+                    "and was not forwarded (provider-run tools are not available in this environment)"),
                     "server_tool_not_allowed", len(body), True, {"server_tools": tools})
         tot = trial_totals(trial)
         if trial is not None and over_budget(tot):           # refuse, never forward: the trial has spent its budget

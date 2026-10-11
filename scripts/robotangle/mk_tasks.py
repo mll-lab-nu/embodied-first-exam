@@ -44,12 +44,12 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as TC  # noqa: E402  the protocol's conventions: every generator ends with normalize(task_dir)
 
 REL = json.loads((HERE / "release.json").read_text())
-# Agent egress (owner, 2026-10-10, board 0072): the model APIs only. The packages' task.toml carry the release's line (open
+# Agent egress (owner, 2026-10-10 / 10-11, board 0072): the model APIs and the package registries. The packages' task.toml carry the release's line (open
 # egress); rewrite_toml puts the two lines `scripts/set_agent_egress.py allowlist` writes, with that script's HOSTS (one
 # list for every task: ci_checks/check-verifier-isolation.sh).
 EGRESS_OLD = "# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.\n"
 _HOSTS = re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text()).group(1)
-EGRESS_NEW = ('network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4\n'
+EGRESS_NEW = ('network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11\n'
               "allowed_hosts = [" + ", ".join(f'"{h}"' for h in re.findall(r'"([^"]+)"', _HOSTS)) + "]\n")
 NOP = json.loads((HERE / "nop_records.json").read_text())
 ASSETS = json.loads((HERE / "assets.json").read_text())        # the pinned HF dataset (scripts/robotangle/assets.py)
@@ -469,7 +469,7 @@ def change_r2(base: str, mode: str) -> list[str]:
 
 CHANGE_EGRESS = (
     "- 2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
-    "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), and "
+    "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), and "
     "agents could download upstream sources, reference solutions and robot models from their own shell: the image's "
     "simulator package names the address of an upstream demonstration (`reference_scene.json` `source_url`; "
     "docs/benchmarks/robotangle.md, Network policy), which one trial downloaded. The image, scene, frozen instance, "

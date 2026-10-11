@@ -112,7 +112,7 @@ harbor view jobs
 - Disk space for the base images (the RoboTwin image is about 22 GB). Public images can be pulled; `BUILD_ONLY` ones are built on the host.
 
 **Running official results:**
-- Use Harbor's native agents through `scripts/run_agent_batch.sh` with `GATEWAY=1`, and with no tool that runs outside the trial's container (PROTOCOL §2.11, D11): the harness's web search off (Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch`: the script's default), no account connectors, apps, plugins or image generation. They run at the model provider, so no egress allowlist stops them; the gateway forwards model-API calls only and is the agent container's only egress.
+- Use Harbor's native agents through `scripts/run_agent_batch.sh` with `GATEWAY=1`, and with no tool that runs outside the trial's container (PROTOCOL §2.11, D11): the harness's web search off (Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch`: the script's default), no account connectors, apps, plugins or image generation. They run at the model provider, so no egress allowlist stops them; the gateway forwards model-API calls only and is, with the package registries, the agent container's only egress.
 - Align reasoning effort and the time budget (3600 s by default) across agents. The token budget (100M input / 10M output tokens per trial) is defined in PROTOCOL §5; it will be applied to Harbor's recorded counts, which is not implemented yet (PROTOCOL §7).
 
 ## Integrity
@@ -125,13 +125,13 @@ harbor view jobs
   oracle agent alone. Upstream experts are removed from the agent's images.
 - **Recorded evidence in standard mode.** The simulator service records the episode, replays it in a fresh simulator,
   and writes the verdict inputs. The agent never holds the simulator.
-- **Network policy and external material.** Every task restricts the agent's egress to the model APIs
-  (`[agent] network_mode = "allowlist"`), and every instruction states the same rule (`## External material`): the agent
-  works with what is in its container and the documented task interface, downloads and installs nothing, and uses no
-  tool that runs outside its container; a result obtained with external material is void (PROTOCOL §2.11). Official
-  runs go through the usage gateway, which is then the container's only egress and forwards model-API calls only; the
-  harness's web search, account connectors and other provider-side tools are off (they run at the model provider, past
-  any allowlist).
+- **Network policy and external material.** Every task restricts the agent's egress to the model APIs and the package
+  registries (PyPI, the Debian / Ubuntu apt archives; `[agent] network_mode = "allowlist"`, one host list in
+  `scripts/set_agent_egress.py`), and every instruction states the same honour rule (`## External material`): the agent
+  may install the packages it needs and is asked not to look up or download a solution to the task (PROTOCOL §2.11).
+  GitHub, Hugging Face and the general web, where the benchmarks' sources, demonstrations and policies are, stay
+  closed. Official runs go through the usage gateway, which forwards model-API calls only; the harness's web search,
+  account connectors and other provider-side tools are off (they run at the model provider, past any allowlist).
 - **Reproducibility.** Base images are pinned by tag (pinning every pip dependency: PROTOCOL §7, open item 2). A task's identity is its digest in `tasks/dataset.toml`,
   and published task inputs never change.
 

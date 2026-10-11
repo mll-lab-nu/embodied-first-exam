@@ -85,10 +85,12 @@ The checklist is in PROTOCOL §2.7.
 ## Rules that apply to every contribution
 - A published task's `environment/` and `tests/` inputs are immutable; changing the scene makes a new task.
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.
-- The agent's egress is the model APIs only, in every task (`[agent] network_mode = "allowlist"` with the hosts of
-  `scripts/set_agent_egress.py`; PROTOCOL §2.11): bake what the agent's container needs at run time into the image or
-  the task directory, and never tell the agent that it may install or download something. `normalize` writes the
-  `## External material` paragraph into `instruction.md`. Keep provenance (source repository, dataset, demonstration
+- The agent's egress is the model APIs and the package registries (PyPI, the Debian / Ubuntu apt archives), in every
+  task (`[agent] network_mode = "allowlist"` with the hosts of `scripts/set_agent_egress.py`; PROTOCOL §2.11): bake
+  what the task itself needs at run time into the image or the task directory (an agent may install packages; a task
+  must not depend on it). `normalize` writes the `## External material` paragraph, an honour rule, into
+  `instruction.md`. If a distribution on PyPI ships your benchmark's solutions or task sources, add it to the table in
+  PROTOCOL §2.11. Keep provenance (source repository, dataset, demonstration
   file, expert module) out of every file under `environment/` that the agent reads, and look through a new image for
   recorded episodes and links to them (`ci_checks/check-agent-pointers.py` covers the task's own files only).
 - The agent is root in its container: assume it can modify anything under `/app` and `/opt`. Grading therefore runs in
