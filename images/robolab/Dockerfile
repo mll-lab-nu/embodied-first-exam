@@ -2,8 +2,9 @@
 # (images/robolab/uv.lock, generated with `uv lock` from RoboLab's pyproject at v0.3.1: every version = the reference environment,
 # torch 2.7.0+cu128, numpy 1.26.0, isaacsim 5.1.0.0). Infrastructure only, no benchmark code. RoboLab's asset library (~6 GB of USD
 # objects/scenes/backgrounds, Apache-2.0 like the code, distributed through the repo's git LFS) IS baked in, as RoboLab's own
-# docker/Dockerfile does; nothing has to be mounted. Isaac Sim needs an RTX-class GPU even headless: a task's
-# environment/docker-compose.yaml reserves it and mounts a trial-scoped cache volume at /cache (shader/extension cache, ~2 min first launch).
+# docker/Dockerfile does, and so are the remote files it references (last step); nothing has to be mounted or downloaded at
+# run time. Isaac Sim needs an RTX-class GPU even headless: a task's environment/docker-compose.yaml reserves it and mounts a
+# trial-scoped cache volume at /cache (shader/extension cache, ~2 min first launch).
 # Tag = images/robolab/VERSION; build from the repo root (images/robolab/BUILD_ONLY has the command, the licences and the checks):
 #   docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .
 # BUILD_ONLY, never published: Isaac Sim 5.1 / Omniverse Kit may be installed and used but not redistributed; every host builds it.
@@ -32,4 +33,11 @@ ENV PATH="/opt/robolab/.venv/bin:${PATH}" VIRTUAL_ENV=/opt/robolab/.venv
 # Kit caches (shaders, extension registry, user data) live under /cache so a task's compose can keep them in a shared volume
 RUN mkdir -p /cache/ov-cache /cache/ov-data /cache/ov-logs /root/.cache /root/.local/share /root/.nvidia-omniverse /app/output && \
     ln -s /cache/ov-cache /root/.cache/ov && ln -s /cache/ov-data /root/.local/share/ov && ln -s /cache/ov-logs /root/.nvidia-omniverse/logs
+# 0.1.2: the asset library needs no network. Its USD layers reference NVIDIA's public Omniverse content bucket by URL (the MDL
+# materials of the tables, bins and robot, their textures, a few props), which Kit fetched at scene build; a container whose
+# egress is the model APIs only rendered the table red. mirror_remote_assets.py copies those files to
+# /opt/robolab/assets/_remote, checks every one against remote_assets.sha256 (the build fails if the bucket serves other
+# bytes) and points the layers at the copies. The published 0.1.2 is 0.1.1 plus exactly these two instructions (BUILD_ONLY).
+COPY images/robolab/mirror_remote_assets.py images/robolab/remote_assets.sha256 /opt/robolab/
+RUN python /opt/robolab/mirror_remote_assets.py /opt/robolab/assets /opt/robolab/assets/_remote --check /opt/robolab/remote_assets.sha256
 WORKDIR /app

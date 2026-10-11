@@ -26,7 +26,8 @@ environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dock
 
 [agent]
 timeout_sec = 5400.0              # RoboLab budget, both modes (docs/benchmarks/robolab.md): every Python process pays ~2 min of Isaac Sim launch + scene build
-# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4
+allowed_hosts = [@@ALLOWED_HOSTS@@]
 
 [environment]
 build_timeout_sec = 3600.0

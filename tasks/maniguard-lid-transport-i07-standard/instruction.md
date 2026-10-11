@@ -80,5 +80,8 @@ z = 0); poses are position + quaternion **XYZW**; the robot's fixed base pose is
 
 Objects here: a long countertop with a light-brown wooden top and a sink cut-out; on it a clear glass hingeless jar (about 14.5 cm across and 17 cm tall) with an apple inside, and its clear glass lid with a knob (14 cm across, 8.5 cm tall) lying on the countertop; and the green goal sphere (radius 4.3 cm), which does not collide with anything. Grasping is sticky: the gripper attaches an object as soon as a finger touches it when it closes, and releases it when it opens.
 
+## External material
+Use only what is in your container and the task interface described above. Do not download or install anything: no source code, robot models, datasets, demonstrations, pretrained policies, published solutions or packages. Do not use web search, browsing, account connectors or any other tool that runs outside your container. Network access is limited to your model's API. A result obtained with external material is void.
+
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.
