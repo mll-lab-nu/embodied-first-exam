@@ -108,7 +108,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | Item | Level | Basis |
 |---|---|---|
 | Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`metaworldplus-<env>-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
-| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` | MUST | suffix [CI]; shared instance [current] |
+| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` (a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance) | MUST | suffix [CI]; shared instance [current] |
 | Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`; its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
@@ -659,6 +659,7 @@ results must state the reset budget and are compared only with results under the
 | Needing a custom agent adapter to finish an episode | MUST NOT | [new] |
 | A fresh replay decides: `success = replay_success ∧ deterministic` | MUST | [current] |
 | `∧ live_success` when a live predicate exists | SHOULD | [current] |
+| Exception, physics that does not replay bit for bit: a task measured not to (its frozen instance records it and why, e.g. `"determinism": "verdict"`; the benchmark's doc names the tasks and the measurement) is graded by the live episode the trusted service ran, `success = live_success`; the fresh replays still run and are reported (`replay_success`, `state_identical`, `deterministic`) but never decide, a replay without a result does not void the live verdict, and `reward.json` says `graded_by_live = 1`. Such a task is standard-only: an open-loop trajectory of it cannot be graded reproducibly, so it has no privileged twin (`ci_checks/check-instance-copies.sh` and `scripts/task_conventions.py` list exactly these tasks). The verifier still grades `final.json` only, so §2.6's same verdict in a fresh process holds. RoboDojo: 6 tasks (two cloth, three liquid, `make_toast_random`) | MAY, by owner decision | [new] (proposed 2026-10-11; owner decision pending) |
 | The verifier grades `final.json` only, without network access | MUST | [current] |
 
 ### 4.9 Live recording (sidecar only)
