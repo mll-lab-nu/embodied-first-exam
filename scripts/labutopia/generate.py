@@ -63,7 +63,15 @@ CHANGE_LOG = {
         "texts said about 15); `Robot()` waits up to 3600 s for the service (was 600 s, so the instruction said "
         "`Robot(timeout=2400)`) and prints its progress once a minute; `cameras=\"name\"` (a string) is one camera, no longer "
         "its characters. `pour` only: the instruction says that the last condition counts 84 control steps in all, not in "
-        "a row (what the rule always did). The service, the collect hook, the grader, the scene and the pass rule are unchanged."
+        "a row (what the rule always did). The service, the collect hook, the grader, the scene and the pass rule are unchanged.\n"
+        "- 2026-10-10 (review round 3, board 0067): the shared service layer and the client only "
+        "(`environment/sim/rcb_limited.py`, `environment/rcb_client.py`). A camera named more than once in "
+        "`cameras` is rendered and returned once (N copies of one name made the service build N x N images within "
+        "the frame budget, which could exhaust its memory). A service that has given up on the episode (it could "
+        "not start it, or could not resume it after its crashes) answers every request with 409 and the reason, "
+        "and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out "
+        "their timeout (up to an hour). The adapter, the collect hook, the grader, the scene and the pass rule are "
+        "unchanged."
     ),
     False: (
         "- 2026-10-10: the grader's time limits and flags; the scene, the frozen instance and the pass rule are unchanged, so "
@@ -75,7 +83,12 @@ CHANGE_LOG = {
         "- 2026-10-10 (review round 2, board 0067): texts only. The renderer's first start is stated as measured (5 to 27 "
         "minutes by stage and host: 26-27 minutes for the `lab_003` stage on an 8-vCPU L40S host, where the texts said about "
         "15), in the instruction and in the tooling's progress message. `pour` only: the instruction says that the last "
-        "condition counts 84 control steps in all, not in a row (what the rule always did). Nothing else changes."
+        "condition counts 84 control steps in all, not in a row (what the rule always did). Nothing else changes.\n"
+        "- 2026-10-10 (review round 3, board 0067): `tests/grade.py` only. A byte that is not valid UTF-8 in the "
+        "session log the agent's tools write (`/app/output/rcb_session_log.jsonl`, read only for the self-reported "
+        "`agent_*` cost fields) was graded `grader_error = 1` and `infra_error = 1` with reward 0, whatever the "
+        "trajectory; the log is now read tolerantly and can no longer decide anything. A trial whose log is valid "
+        "is graded as before; the pass rule is unchanged."
     ),
 }
 FAMILIES = {k: v for k, v in json.loads((HERE / "families.json").read_text()).items() if not k.startswith("_")}

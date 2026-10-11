@@ -105,6 +105,10 @@ view along the sheets that shows the brush height).
 - `joint_position` (7): `panda_joint1..7` absolute joint targets in radians (PD-tracked), rows `dt` apart, `interpolate` =
   `"linear"` (default) or `"hold"`; a chunk may cover at most 10 s; out-of-limit values are clipped and listed in
   `meta["clipped"]` (limits in the spec).
+- One call returns at most 640 images (`spec["max_frames_per_call"]`: cameras x frames; a frame with `depth="frames"`
+  counts 4). A request that would exceed it is answered 400 before anything moves: ask for fewer cameras, a lower
+  `video_fps` or a shorter call (an `ee_pose` row that is slowed down to 0.25 m/s takes the control steps its distance
+  needs).
 
 The exemplar derives from the fonts AR PL KaitiM GB / AR PL UKai (Arphic Public License): `/app/ARPHICPL.TXT`,
 `/app/NOTICE-exemplar.md`.

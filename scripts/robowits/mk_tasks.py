@@ -58,6 +58,8 @@ FILE = 0o644
 # the source, which this generator cannot import (numpy), so that the instructions always state the value that is enforced.
 MAX_STEPS = int(re.search(r"^MAX_STEPS = ([\d_]+)", (SHARED / "rcb_robowits.py").read_text(), re.M).group(1).replace("_", ""))
 MAX_STEPS_H = f"{MAX_STEPS / 30 / 3600:.2f}"       # hours of simulated time at the 30 Hz control rate
+# The standard service's image budget of one call (shared/server.py MAX_FRAMES, DEPTH_FRAME), read from the source too.
+MAX_FRAMES, DEPTH_FRAME = (int(re.search(rf"^{k} = (\d+)", (SHARED / "server.py").read_text(), re.M).group(1)) for k in ("MAX_FRAMES", "DEPTH_FRAME"))
 # Fixes to the published tasks (PROTOCOL §2.8): one README Change Log entry per mode, newest last.
 CHANGE_LOG = {
     "priv": [
@@ -92,6 +94,19 @@ CHANGE_LOG = {
         "outlasts the simulator's start (no effect on a scene that builds in about a minute); "
         '`cameras="name"` (a string) is one camera, no longer its characters. The '
         'service, the collect hook, the grader, the scene and the pass rule are unchanged.',
+        "2026-10-10 (review round 3, board 0067): the shared service layer, the client and a per-call image limit in the "
+        "service (`environment/sim/rcb_limited.py`, `environment/rcb_client.py`, `environment/sim/server.py`). A camera named more than once in "
+        "`cameras` is rendered and returned once (N copies of one name made the service build N x N images within "
+        "the frame budget, which could exhaust its memory). A service that has given up on the episode (it could "
+        "not start it, or could not resume it after its crashes) answers every request with 409 and the reason, "
+        "and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out "
+        f"their timeout (up to an hour). One call returns at most {MAX_FRAMES} images (`/spec` `max_frames_per_call`: "
+        f"cameras x frames, a frame with per-frame depth counts {DEPTH_FRAME}): a request that would exceed it is a 400 "
+        "before anything runs, and `ee_pose` rows that take longer than planned stop adding frames there "
+        "(`meta[\"frames_skipped\"]`). Before, a call had no such bound: one long observation at the full frame rate "
+        "could hold more frames than the sidecar's memory and get the service killed, so a trial that ended "
+        "`sim_crashed*` or with `resource_service_oom` right after such a request before this date was that. The "
+        "collect hook, the grader, the scene and the pass rule are unchanged.",
     ],
 }
 
@@ -335,6 +350,10 @@ gains and the tool frames; `spec["world"]` the frame conventions.
   number in 1 .. 30, `video`, `interpolate`, `cameras` not a list of names, `note` not a string, actions that are not
   finite (T, 16) numbers) is answered 400 before anything is executed: the client raises `ValueError`, nothing has
   moved and the episode goes on.
+- One call returns at most @MAXFRAMES@ images (`spec["max_frames_per_call"]`: cameras x frames; a frame with
+  `depth="frames"` counts @DEPTHFRAME@). A request that would exceed it is answered 400 the same way: ask for fewer cameras,
+  a lower `video_fps` or a shorter call. `ee_pose` rows that take longer than planned stop adding frames at that
+  number; the motion is executed in full and `meta["frames_skipped"]` counts them.
 
 @OBJECTS@
 
@@ -367,7 +386,7 @@ def std_instruction(fam: str, f: dict) -> str:
              f"the simulator runs in a service you cannot open. You get one client and one episode. **Task:** {f.get('std_goal') or f_text(fam)}")
     subs = {"@FAM@": fam, "@INTRO@": wrap(intro), "@NOTE@": (f["std_note"] + "\n\n") if f.get("std_note") else "",
             "@CRITERION@": criterion_section(fam, f, "std"), "@ROBOT@": robot, "@OBJECTS@": f["std_objects"],
-            "@MAXSTEPS@": str(MAX_STEPS), "@MAXHOURS@": MAX_STEPS_H}
+            "@MAXSTEPS@": str(MAX_STEPS), "@MAXHOURS@": MAX_STEPS_H, "@MAXFRAMES@": str(MAX_FRAMES), "@DEPTHFRAME@": str(DEPTH_FRAME)}
     s = STD_INSTRUCTION
     for k, v in subs.items():
         s = s.replace(k, v)

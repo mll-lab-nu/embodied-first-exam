@@ -18,6 +18,18 @@
 #    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
 #    byte-identical to their one source, scripts/humanoidbench/shared/realtime/ (docs/STANDARD_MODE.md,
 #    "Standard-realtime mode"), and so is every other copy of that source under scripts/*/shared/realtime/.
+# 4. The benchmarks whose generators have no check mode (review round 3, M6: a hand edit of one task with a refreshed
+#    digest passed every check): DexToolBench and the MuJoCo Playground tasks that serve the same service (ALOHA, Panda;
+#    scripts/dtb_mk_task.py, mj_mk_limited.py), MetaWorld+ (scripts/metaworldplus/generate.py) and RoboTwin 2.0
+#    (scripts/robotwin_mk_*.py). Every file their generator writes unchanged into each task of a mode is byte-identical
+#    within the benchmark and mode (FAMILY_SHARED: service, client, graders, tests/test.sh, Dockerfiles, the oracle's
+#    runner; the Playground ALOHA and Panda standard tasks count as DexToolBench's, their privileged twins as a
+#    benchmark each), the tooling module is one version in every mode, and the service is the one under images/ (MetaWorld+:
+#    unchanged; the MuJoCo service: as scripts/task_conventions.py replace_words spells it). RoboTwin's privileged
+#    tests/test.sh and solution/solve.sh differ by the task's name only and are compared with the name replaced; its
+#    other shared files are also held to the template tasks by scripts/robotwin_sync_shared.py --check.
+#    Not covered here: the per-task texts of these benchmarks (instruction.md, README.md, task.toml), which only a check
+#    mode of their generators could compare.
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -33,6 +45,24 @@ SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/s
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",
          "environment/sim/rcb1.py": "rcb1.py", "environment/sim/run.sh": "run.sh"}
 sha = lambda p: hashlib.sha256(open(p, "rb").read()).hexdigest()[:16]  # noqa: E731
+# 4. benchmarks without a generator check mode: (label, tooling module) by directory prefix; a task that serves
+# environment/sim/server_mj.py belongs to the DexToolBench family whatever its prefix (MuJoCo Playground ALOHA / Panda)
+FAMILY = {"dextoolbench_": ("dextoolbench", "rcb_dtb.py"), "metaworldplus-": ("metaworldplus", "mw_tool.py"),
+          "robotwin_2_0_": ("robotwin_2_0", None), "mujoco_playground_aloha_": ("mujoco_playground_aloha", "rcb_aloha.py"),
+          "mujoco_playground_panda_": ("mujoco_playground_panda", "rcb_panda.py")}
+FAMILY_SHARED = SHARED | {"environment/Dockerfile", "tests/Dockerfile", "tests/test.sh", "solution/solve.sh", "solution/oracle_replay.py",
+                          "environment/sim/server_mj.py", "environment/sim/server_mw.py", "environment/sim/rcb_live.py"}
+BY_NAME = {("robotwin_2_0", "privileged"): {"tests/test.sh", "solution/solve.sh"}}   # the same but for the task's own name
+sys.path.insert(0, os.path.dirname(src))
+from task_conventions import replace_words  # noqa: E402  (what normalize rewrites in a task's text files)
+images = os.path.join(os.path.dirname(os.path.dirname(src)), "images")
+FAMILY_SOURCE = {"environment/sim/server_mj.py": ("images/mujoco/limited/server_mj.py", replace_words),
+                 "environment/sim/server_mw.py": ("images/metaworld/standard/server_mw.py", lambda x: x)}
+src_sha = {}
+for rel, (f, spell) in FAMILY_SOURCE.items():
+    p = os.path.join(os.path.dirname(images), f)
+    if os.path.isfile(p):
+        src_sha[rel] = hashlib.sha256(spell(open(p, encoding="utf-8").read()).encode()).hexdigest()[:16]
 canon = {f: sha(os.path.join(src, f)) for f in set(LAYER.values()) if os.path.isfile(os.path.join(src, f))}
 V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (scripts/eai_standard/v2_4/); the rest is 2.2's
 canon24 = {f: sha(os.path.join(src, "v2_4" if f in V24 else "", f)) for f in set(LAYER.values())
@@ -99,11 +129,32 @@ for t in sorted(os.listdir(tasks)):
             bad.append(f"{t}: the sim service needs `restart: on-failure:N` with N >= 3 (crash recovery)")
         if not re.search(r"^\s*command:\s*[\"']?sh /srv/run\.sh[\"']?\s*$", blk, re.M):
             bad.append(f"{t}: the sim service must run `sh /srv/run.sh` (it exits non-zero when the service crashes)")
+    mode = ("standard-realtime" if t.endswith("-standard-realtime") else "standard" if t.endswith("-standard")
+            else "privileged")
+    own_fam, module = next((v for k, v in FAMILY.items() if t.startswith(k)), (None, None))
+    fam = "dextoolbench" if os.path.isfile(os.path.join(tasks, t, "environment/sim/server_mj.py")) else own_fam
+    if fam:
+        dirs[own_fam or fam] += 1
+        own = t[len("robotwin_2_0_"):-len("-" + mode)] if fam == "robotwin_2_0" else ""
+        for dp, dns, fns in os.walk(os.path.join(tasks, t)):
+            dns[:] = [d for d in dns if d not in ("results", "__pycache__")]
+            for f in fns:
+                rel = os.path.relpath(os.path.join(dp, f), os.path.join(tasks, t)).replace(os.sep, "/")
+                if module and f == module:              # the tooling module: one version in every mode of its own benchmark
+                    seen[own_fam][module].setdefault(sha(os.path.join(dp, f)), f"{t}/{rel}")
+                    continue
+                role = f"{mode} {rel}" if rel in FAMILY_SHARED else None
+                if not role:
+                    continue
+                h = sha(os.path.join(dp, f))
+                if rel in BY_NAME.get((fam, mode), ()):
+                    h = hashlib.sha256(open(os.path.join(dp, f), "rb").read().replace(own.encode(), b"@TASK@")).hexdigest()[:16]
+                seen[fam][role].setdefault(h, f"{t}/{rel}")
+                if rel in src_sha and h != src_sha[rel]:
+                    bad.append(f"{t}: {rel} differs from {FAMILY_SOURCE[rel][0]} (the service has one source: change it there and regenerate)")
     if bench not in MODULE:
         continue
     dirs[bench] += 1
-    mode = ("standard-realtime" if t.endswith("-standard-realtime") else "standard" if t.endswith("-standard")
-            else "privileged")
     for dp, dns, fns in os.walk(os.path.join(tasks, t)):
         dns[:] = [d for d in dns if d not in ("results", "__pycache__")]
         for f in fns:

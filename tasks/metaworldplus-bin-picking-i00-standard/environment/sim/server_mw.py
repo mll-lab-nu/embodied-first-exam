@@ -29,6 +29,7 @@ replay.last.png and final.json.
 
 from __future__ import annotations
 
+import errno
 import faulthandler
 import importlib
 import json
@@ -48,7 +49,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb1  # noqa: E402
 
 PROTOCOL = "eai-standard/2.1"
-DATA = "/data"
+DATA = os.environ.get("RCB_DATA", "/data")  # RCB_DATA / RCB_PORT: test hooks (never set in tasks)
 os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
 TOOL = importlib.import_module(os.environ.get("RCB_TOOL", "mw_tool"))
 INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.npz"))
@@ -443,7 +444,10 @@ def _fps(meta: dict) -> int:
 def _num(meta: dict, key: str, default: float) -> float:
     """A finite numeric request field; anything else (null, a string, NaN, Infinity) is a 400."""
     try:
-        v = float(meta.get(key, default))
+        v = meta.get(key, default)
+        if isinstance(v, bool):  # JSON true is no number (float(True) is 1.0)
+            raise TypeError
+        v = float(v)
     except (TypeError, ValueError, OverflowError):
         raise ValueError(f"{key} must be a number") from None
     if not math.isfinite(v):
@@ -452,13 +456,14 @@ def _num(meta: dict, key: str, default: float) -> float:
 
 
 def _cameras(meta: dict, default: list) -> list:
-    """The requested cameras (unknown names are ignored; none left = the default)."""
+    """The requested cameras, each once (unknown names are ignored; none left = the default). A repeated name is dropped
+    BEFORE the frame budget and any rendering: the recorder keeps frames per name, so repeats would multiply its work."""
     cams = meta.get("cameras")
     if cams is None:
         return list(default)
     if not isinstance(cams, (list, tuple)) or not all(isinstance(c, str) for c in cams):
         raise ValueError(f"cameras must be a list of camera names: {list(CAMS)}")
-    return [c for c in cams if c in CAMS] or list(default)
+    return list(dict.fromkeys(c for c in cams if c in CAMS)) or list(default)
 
 
 def _video(meta: dict, default: str) -> str:
@@ -732,6 +737,8 @@ class Hd(BaseHTTPRequestHandler):
         try:
             self._n = int(self.headers.get("Content-Length", 0) or 0)
         except ValueError:
+            self._n = -1
+        if self._n < 0:  # read(-1) would read until the client hangs up, without any bound
             return self._json(400, {"error": "bad Content-Length"})
         if self._n > MAX_BODY:
             return self._json(413, {"error": f"request body over {MAX_BODY} bytes"})
@@ -843,6 +850,23 @@ def _resume_or_start() -> None:
     write_final()
 
 
+def _bind(port: int, handler) -> HTTPServer:
+    """The listening server. Under Harbor's egress control the agent's container shares this network namespace, so a
+    process of the agent may hold the port when the service (re)starts. Wait for the port instead of failing: an
+    exception here would count as a crash of the service (the collect hook's signal is still served meanwhile)."""
+    said = False
+    while True:
+        try:
+            return HTTPServer(("0.0.0.0", port), handler)
+        except OSError as exc:
+            if exc.errno != errno.EADDRINUSE:
+                raise
+        if not said:
+            said = True
+            print(f"[sim] port {port} is in use (a process in the agent's container?): waiting for it to be free", flush=True)
+        time.sleep(1.0)
+
+
 _resume_or_start()
 signal.signal(signal.SIGUSR1, lambda *_: threading.Thread(target=_end_from_signal, daemon=True).start())
 if _USR1["pending"]:
@@ -851,4 +875,4 @@ RECF = open(REC_PATH, "ab")
 E["ready"] = True
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} MetaWorld+ sim ready ({TOOL.__name__}: {S.inst.get('env_id')})", flush=True)
-HTTPServer(("0.0.0.0", 8000), Hd).serve_forever()
+_bind(int(os.environ.get("RCB_PORT", "8000")), Hd).serve_forever()

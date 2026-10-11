@@ -43,6 +43,7 @@ import json
 import os
 import signal
 import tempfile
+import threading
 import time
 import traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -462,6 +463,9 @@ class Service:
         if not isinstance(cams, list) or (unknown := sorted(set(map(str, cams)) - set(self.sim.cameras))):
             raise ValueError(f"unknown camera(s) {unknown if isinstance(cams, list) else cams}; "
                              f"the cameras are {list(self.sim.cameras)}")
+        # Each camera once, in the order asked for. A name repeated N times would be rendered into one list N times and
+        # returned N times (N * N images), which the frame budget counted as N: a small request could exhaust the memory.
+        cams = list(dict.fromkeys(map(str, cams)))
         try:
             fps = int(meta.get("video_fps", 10))
         except (TypeError, ValueError, OverflowError):
@@ -603,17 +607,32 @@ class Service:
         self._save_call(out, None)
         return out, rec.parts()
 
-    def _reset(self, meta: dict, parts: dict) -> tuple[dict, list]:
+    def _reset_view(self, meta: dict) -> tuple[list[str], int, str, bool]:
+        """A reset's checks, all of them, before anything changes: Refused (409, 400) or the view it returns."""
         if self.success or self.stopping:
             raise Refused(409, {"error": "trial finished: " + ("an episode succeeded" if self.success else "your time is up"),
                                 "reason": self.reason})
         if self.resets >= self.reset_budget:
             raise Refused(409, {"error": "reset budget exhausted", "budget": self.reset_budget})
         with bad_request():
-            cams, fps, video, depth = self._view(meta, "frames")
+            return self._view(meta, "frames")
+
+    def _reset(self, meta: dict, parts: dict) -> tuple[dict, list]:
+        cams, fps, video, depth = self._reset_view(meta)
         if not self.done:
             self._end("reset")                       # the running episode is abandoned
-        self.sim.reset()
+        try:
+            self.sim.reset()
+        except Exception:
+            # The simulator failed to start the new episode: the trial ends on a simulator error, not on the episode
+            # the agent had every right to abandon (handle() answers 500; its _end("error") finds the episode ended).
+            self.done, self.reason, self.success = True, "error", False
+            try:
+                self._checkpoint("end", reset_failed=True)
+            except Exception as exc:  # noqa: BLE001 -- a broken simulator may not even hash
+                self.log("end", reason="error", reset_failed=True, checkpoint_error=repr(exc)[:300])
+                self._write_final()
+            raise
         self.resets += 1
         self.ep_start, self.episode = self.journal_rows, []
         self.done, self.reason, self.success, self.t_end = False, None, False, None
@@ -731,6 +750,47 @@ class Service:
         srv.serve_forever()
 
 
+def refuse_forever(reason: str, port: int = 8000) -> None:
+    """After a give-up: answer every request 409 with the reason until the container is removed. Before, nothing
+    listened once the service had given up, and a client waited out its whole connection timeout for a simulator that
+    would never answer. The verdict is on disk already: nothing here reads or changes it."""
+    body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
+                       "gave_up": True}).encode()
+
+    class Refusal(BaseHTTPRequestHandler):
+        timeout = 30                                 # a client that stops sending must not hold the only thread
+
+        def _refuse(self):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                if 0 < n <= MAX_BODY:                # take the request first: a client still sending would see a reset
+                    self.rfile.read(n)
+                self.send_response(409)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except (OSError, ValueError):
+                pass
+            self.close_connection = True
+
+        do_GET = do_POST = _refuse
+
+        def log_message(self, *args):
+            pass
+
+    def answer():
+        while True:
+            try:
+                HTTPServer(("0.0.0.0", port), Refusal).serve_forever()
+            except Exception:  # noqa: BLE001 -- a busy port, or anything else: the give-up stands without the answer
+                time.sleep(5.0)
+
+    threading.Thread(target=answer, daemon=True).start()
+    while True:
+        time.sleep(3600)
+
+
 def main(build: Callable[[], Sim], port: int = 8000) -> None:
     """A sidecar's life: count the start, back off after a failed one, build the scene under a startup watchdog, resume
     or start the episode, serve. Settings: RCB_DATA (/data), RCB_RESET_BUDGET (0), RCB_WALL_CLOCK_S (3600),
@@ -758,8 +818,7 @@ def main(build: Callable[[], Sim], port: int = 8000) -> None:
     except GiveUp as exc:
         print(f"restart refused: {exc}", flush=True)
         signal.signal(signal.SIGUSR1, lambda *_: None)
-        while True:
-            time.sleep(3600)
+        refuse_forever(str(exc), port)
     if pending:
         svc.on_sigusr1()
     svc.serve(port)

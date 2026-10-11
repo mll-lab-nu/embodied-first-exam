@@ -13,6 +13,7 @@
   "handcam_rgb_right",
   "handcam_rgb_left"
  ],
+ "scene_cameras": [],
  "tcp0": "right [-0.443, -0.4, 1.517] / [0.0, 1.0, 0.0, 0.0], left [-0.443, 0.4, 1.517] / [0.0, 1.0, 0.0, 0.0]",
  "table_top_z": 0.97,
  "arm_bases": {

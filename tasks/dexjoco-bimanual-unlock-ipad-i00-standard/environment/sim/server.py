@@ -11,7 +11,9 @@ The robot is a Franka Panda with a 16-DoF Allegro hand, or two of them side by s
                   by forward kinematics (the controller tracks the tcp pose, not the joints).
 Either way, the executed (journaled, recorded) row is DexJoCo's own row, so the recorded trajectory replays in the
 privileged tooling unchanged. As in DexJoCo's evaluation the episode ends at the first success or task failure;
-otherwise when the agent's time is over (the collect hook's SIGUSR1).
+otherwise when the agent's time is over (the collect hook's SIGUSR1). Nothing about the objects leaves this process: a
+camera that rides on a body of the scene (bimanual_photograph's `cam_pos_z`, on the camera the hands pick up) gives
+images and depth only, its pose would be that object's (SCENE_CAMS). One call returns at most MAX_FRAMES images.
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
 every executed row is journaled; after a crash the service rebuilds the instance and replays the journal. When the
@@ -38,6 +40,11 @@ WALL_CLOCK_S = float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10"))
 MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 MAX_FPS = 50
+# Images one call may return (cameras x frames, per-frame depth counted again), checked before anything is executed:
+# every frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per
+# 1000 RGB frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.9 GB,
+# under the sidecar's 8 GiB cap (docs/benchmarks/dexjoco.md). The 2.1 services' 3000 would need more than the cap.
+MAX_FRAMES = 1000
 CAM_W, CAM_H = 640, 480
 CTRL_HZ = 50.0
 DT = 1.0 / CTRL_HZ
@@ -130,6 +137,37 @@ CAMS = S.cameras()
 HAND_CAMS = [c for c in CAMS if c.startswith("handcam")]
 DEFAULT_CAMS = [S.default_camera()]
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])
+OWN_JOINTS = {MD.joint(j).id for j in JOINTS}        # the arms' and the hands' joints: what moves the robot itself
+
+
+def own_body(b: int) -> bool:
+    """Whether the MuJoCo body `b` is fixed in the world or moved by the robot's own joints alone. A mocap body or a
+    body behind any other joint (the objects: free joints, hinges, slides) is scene state: where it is must never leave
+    this process (PROTOCOL §4.5). Decided from the model, never from a name (the rule of MyoSuite's service)."""
+    while b > 0:
+        if int(MD.body_mocapid[b]) >= 0:
+            return False
+        first = int(MD.body_jntadr[b])
+        if any(j not in OWN_JOINTS for j in range(first, first + int(MD.body_jntnum[b]))):
+            return False
+        b = int(MD.body_parentid[b])
+    return True
+
+
+def scene_camera(cam: str) -> bool:
+    """A camera that is mounted on, tracks or is aimed at a body of the scene that is not the robot's own (in
+    bimanual_photograph: `cam_pos_z`, the lens of the camera the hands pick up): its pose is that object's pose, so the
+    service gives its images (and depth) and never its pose."""
+    i = MD.camera(cam).id
+    bodies = [int(MD.cam_bodyid[i])]
+    if int(MD.cam_mode[i]) in (3, 4):                # targetbody, targetbodycom: the orientation follows the target
+        bodies.append(int(MD.cam_targetbodyid[i]))
+    return not all(own_body(b) for b in bodies if b >= 0)
+
+
+SCENE_CAMS = [c for c in CAMS if scene_camera(c)]
+NO_POSE = ("not published: this camera rides on an object of the scene, so its pose would be that object's pose; it "
+           "gives images and depth (camera frame) only")
 
 
 def _intrinsic(cam: str) -> list:
@@ -151,12 +189,19 @@ def _extrinsic(cam: str) -> np.ndarray:
 
 
 def camera_info(cam: str) -> dict:
+    if cam in SCENE_CAMS:
+        return {"intrinsic_cv": _intrinsic(cam), "extrinsic_cv": None, "cam2world_gl": None, "image_size": [CAM_W, CAM_H],
+                "pose": NO_POSE}
     return {"intrinsic_cv": _intrinsic(cam), "extrinsic_cv": _extrinsic(cam).tolist(), "cam2world_gl": _cam2world_gl(cam).tolist(),
             "image_size": [CAM_W, CAM_H]}
 
 
 def _mount(cam: str) -> dict:
     i = MD.camera(cam).id
+    if cam in SCENE_CAMS:   # neither the body it rides on nor an offset: either would place that object
+        return {"type": "link", "parent_link": None, "pose": NO_POSE,
+                "note": "it moves with an object of the scene; extrinsic_cv and cam2world_gl are null in meta[\"cameras\"] "
+                        "and the per-frame extrinsic_cv rows are NaN"}
     body = MD.body(int(MD.cam_bodyid[i])).name
     if int(MD.cam_bodyid[i]) == 0:
         return {"type": "static", "extrinsic_cv": _extrinsic(cam).tolist(), "cam2world_gl": _cam2world_gl(cam).tolist()}
@@ -169,6 +214,8 @@ def _mount(cam: str) -> dict:
 
 
 def _mounted(cam: str) -> str:
+    if cam in SCENE_CAMS:
+        return "on an object of the scene (it moves with it): images and depth only, no pose"
     if cam.startswith("handcam"):
         side = "the right" if cam.endswith("_right") else "the left" if cam.endswith("_left") else "the"
         return f"on {side} hand's mount (moves with the hand)"
@@ -293,6 +340,7 @@ SPEC = {
     "physics_hz": CTRL_HZ * SUBSTEPS,
     "max_chunk_s": MAX_CHUNK_S,
     "max_watch_s": MAX_WATCH_S,
+    "max_frames_per_call": MAX_FRAMES,
     "cameras": {c: {"rgb": True, "depth": True, "mounted": _mounted(c), "resolution": [CAM_W, CAM_H], "intrinsic_cv": _intrinsic(c),
                     "mount": _mount(c)} for c in CAMS},
     "default_cameras": DEFAULT_CAMS,
@@ -390,7 +438,8 @@ def grab(cams, want_depth: bool):
 
 
 def extrinsics(cams) -> dict:
-    return {c: _extrinsic(c) for c in cams}
+    """Per frame; a scene camera has none (the recorder writes NaN rows for a camera that is not in the dict)."""
+    return {c: _extrinsic(c) for c in cams if c not in SCENE_CAMS}
 
 
 def summary() -> dict:
@@ -446,6 +495,15 @@ def ctrl_step(a, rec) -> bool:
 def recorder(cams, fps: int, meta: dict) -> L.Recorder:
     return L.Recorder(cams, max(1, int(round(CTRL_HZ / max(1, fps)))), grab, proprio_row, extrinsics, ctrl_steps,
                       depth=L.depth_mode(meta), clock_hz=CTRL_HZ)
+
+
+def frames_ok(cams, fps: int, steps: int, meta: dict) -> None:
+    """The images a call of `steps` control steps would hold and return, refused (ValueError: 400, nothing executed)
+    above MAX_FRAMES: the recorder's first and last frame plus one every `every` control steps (recorder()'s), for each
+    camera, whatever `video` says (video="none" still records them for `last/` and the proprio rows); per-frame depth
+    counts again."""
+    every = max(1, int(round(CTRL_HZ / max(1, fps))))
+    L.check_frames(len(cams), 2 + steps // every, L.depth_mode(meta) in ("frames", "legacy"), MAX_FRAMES)
 
 
 def checked(parse):
@@ -574,6 +632,7 @@ def parse_submit(meta: dict, A: np.ndarray):
         raise ValueError("interpolate must be hold|linear")
     if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
+    frames_ok(cams, fps, A.shape[0] * int(round(k)), meta)
     return typ, dt, interp, video, cams, fps, note
 
 
@@ -633,6 +692,7 @@ def parse_observe(meta: dict):
     if not isinstance(video, str) or video not in ("mp4", "frames", "both", "none"):
         raise ValueError("video must be mp4|frames|both|none")
     L.depth_mode(meta)  # a bad `depth` is a 400 here, not after the watch
+    frames_ok(cams, fps, int(round(seconds / DT)), meta)
     return cams, fps, seconds, video
 
 

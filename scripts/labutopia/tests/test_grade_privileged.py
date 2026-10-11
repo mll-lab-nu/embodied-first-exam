@@ -1,6 +1,6 @@
 """Synthetic test of the privileged graders (LabUtopia, AutoBio) with a fake replay tool: deliverable defects are the
 agent's 0 (bad_trajectory, never grader_error), a replay without a result is grader_error + infra_error, a reward is
-always written, and the time limits hold."""
+always written, the time limits hold, and no byte in the agent's session log changes a verdict."""
 import io, json, os, re, shutil, subprocess, sys, tempfile, time, zipfile
 import numpy as np
 ROOT, HERE = (sys.argv[1] if len(sys.argv) > 1 else os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))), os.path.dirname(os.path.abspath(__file__))
@@ -33,6 +33,9 @@ CASES = {
     "pass":         ("good", {}, 1, {"grader_error": 0, "infra_error": 0, "deterministic": 1, "video_rendered": 1}),
     "pass_no_task": ("no_task", {}, 1, {"grader_error": 0, "infra_error": 0}),
     "pass_object_extra": ("object_extra", {}, 1, {"grader_error": 0}),   # only actions / task are read; the rest never crosses
+    # the agent's session log (self-reported cost) with bytes that are not UTF-8, a NUL and a 1 MB line (where the count stops): never an error
+    "pass_bad_log": ("good", {}, 1, {"grader_error": 0, "infra_error": 0, "deterministic": 1, "agent_sessions": 2, "agent_resets": 1}),
+    "missing_bad_log": ("missing", {}, 0, {"missing_trajectory": 1, "grader_error": 0, "infra_error": 0, "agent_sessions": 2}),
     "fail":         ("good", {"FAKE_MODE": "fail"}, 0, {"grader_error": 0, "infra_error": 0, "deterministic": 1, "replay_success": 0}),
     "missing":      ("missing", {}, 0, {"missing_trajectory": 1, "grader_error": 0, "infra_error": 0, "deterministic": 0}),
     "not_npz":      ("not_npz", {}, 0, {"bad_trajectory": 1, "grader_error": 0, "infra_error": 0, "deterministic": 0}),
@@ -55,6 +58,7 @@ CASES = {
     "video_dies":   ("good", {"FAKE_VIDEO": "die"}, 1, {"grader_error": 0, "video_rendered": 0}),
     "video_hangs":  ("good", {"FAKE_VIDEO": "hang"}, 1, {"grader_error": 0, "video_rendered": 0}),
 }
+BAD_LOG = b'{"ev": "session_start"}\n{"ev": "reset", "note": "\xff\xfe"}\n\x00\n{"ev": "session_start"}\n' + b"x" * 2**20 + b"\n"
 bad = 0
 for bench, n_act in N.items():
     src = open(os.path.join(ROOT, "scripts", bench, "shared/grade.py")).read()
@@ -69,6 +73,8 @@ for bench, n_act in N.items():
         fast = src.replace(f"VERDICT_TIMEOUT_S = {vd}\n", "VERDICT_TIMEOUT_S = 3\n").replace(f"VIDEO_TIMEOUT_S = {vid}\n", "VIDEO_TIMEOUT_S = 123\n") \
                   .replace(f"VERIFIER_TIMEOUT_S = {ver}\n", "VERIFIER_TIMEOUT_S = 126\n").replace(f"MARGIN_S = {mg}\n", "MARGIN_S = 0\n")
         assert fast != src
+        slog = os.path.join(tmp, "rcb_session_log.jsonl")        # the agent's log, read from here instead of /app/output
+        fast = fast.replace('"/app/output/rcb_session_log.jsonl"', repr(slog)); assert repr(slog) in fast
         open(os.path.join(tests, "grade.py"), "w").write(fast)
         shutil.copy(os.path.join(HERE, "fake_priv_tool.py"), os.path.join(tests, f"rcb_{bench}.py"))
         inst = os.path.join(tests, "instance.json"); json.dump({"family": "fam", "n_action": n_act}, open(inst, "w"))
@@ -77,6 +83,8 @@ for bench, n_act in N.items():
                 continue
             work = os.path.join(tmp, name); os.makedirs(work); traj = os.path.join(work, "trajectory.npz"); log = os.path.join(work, "log")
             make(kind, traj, n_act, "fam", max_rows)
+            if os.path.exists(slog): os.remove(slog)
+            if name.endswith("_bad_log"): open(slog, "wb").write(BAD_LOG)
             t0 = time.time()
             r = subprocess.run([sys.executable, "-B", os.path.join(tests, "grade.py"), "--instance", inst, "--traj", traj],
                                env={**os.environ, "RCB_VERIFIER_LOG_DIR": log, **env}, capture_output=True, text=True, timeout=300)

@@ -18,6 +18,18 @@
 # namespaces, volumes_from ...), no published port on a sidecar, the agent's container binds only directories the
 # runner names through an environment variable (never the task's own ./sim, ../tests, ../solution or a docker socket),
 # beacons read-only; standard modes: the verifier's evidence is collected from a sidecar, never from `main`.
+# Review round 3 (M4, M5) closed four ways around these rules, all of them green before:
+# - a service with `networks:` or `network_mode:` is one Harbor's egress control leaves alone (harbor 0.23
+#   docker.py _egress_controlled_service_names routes only services without either key through the allowlist): not
+#   allowed on any service but the generated rcb_monitor (`network_mode: none`, ci_checks/check-monitor.py);
+# - a volume source with a variable is a runner-named directory only as the whole source `${RCB_NAME}` or
+#   `${RCB_NAME:?message}`: a default (`${V:-rcb_x_trusted}`, `${D:-./sim}`), a variable the runner does not own
+#   (`${PWD}`, `${CONTEXT_DIR}`) or a path after it resolves to a trusted volume, a task file or a host path;
+# - the file's top level holds `services:` and `volumes:` only, and a top-level volume is a bare name: `name:`,
+#   `external:` and `driver_opts:` alias one volume under two names or bind a path, `secrets:` / `configs:` /
+#   `include:` hand a container files of the task;
+# - a service takes no `secrets`, `configs`, `env_file` or `build` (the same files by another road; images are pinned).
+# A benchmark whose reference solutions can be downloaded keeps its allowlist (PROTOCOL §4, ALLOWLISTED below).
 t="$1"; python3 - "$t" "$(cd "$(dirname "$0")/.." && pwd)" <<'PY'
 import sys, tomllib, pathlib, re
 t = pathlib.Path(sys.argv[1]); root = pathlib.Path(sys.argv[2]); rc = 0
@@ -34,19 +46,31 @@ elif ag.get("network_mode") == "allowlist":
     hosts = re.findall(r'"([^"]+)"', m.group(1)) if m else []
     if hosts and sorted(ag["allowed_hosts"]) != sorted(hosts):
         fail(f"[agent].allowed_hosts differs from scripts/set_agent_egress.py HOSTS (missing {sorted(set(hosts) - set(ag['allowed_hosts']))}, extra {sorted(set(ag['allowed_hosts']) - set(hosts))})")
+# PROTOCOL §4: the benchmarks whose reference solutions can be downloaded (a public repository or wheel) ship with the
+# allowlist; the others are open by default and switched per run (scripts/set_agent_egress.py). A task of a benchmark
+# listed here that drops its allowlist lets the agent fetch the solution: change the protocol's list with this one.
+ALLOWLISTED = ("autobio-", "bigym2-", "dexjoco-", "dextoolbench_", "humanoidbench-", "kinder-", "labutopia-", "libero-max-",
+               "maniguard-", "metaworldplus-", "molmospaces-", "mujoco_playground_barkour_", "mujoco_playground_go1_",
+               "mujoco_playground_spot_", "myosuite-", "robocasa-", "robocasa365-", "robocasa-gr1-", "roboolympics-",
+               "robopaint-", "vlabench-", "yamlab-")
+if t.name.startswith(ALLOWLISTED) and ag.get("network_mode") != "allowlist":
+    fail('[agent].network_mode must be "allowlist" for this benchmark (its reference solutions are publicly downloadable, PROTOCOL §4; scripts/set_agent_egress.py allowlist)')
 df = t / "tests/Dockerfile"
 if not df.is_file(): fail("tests/Dockerfile missing (separate verifier image)")
 else:
-    m = re.search(r"^FROM\s+(\S+)", df.read_text(), re.M); frm = m.group(1) if m else ""
-    if not (re.match(r"^[\w.\-]+(:\d+)?/.+[:@].+", frm) and not frm.endswith(":latest")): fail(f"tests/Dockerfile FROM {frm!r} must be a pinned registry image")
+    froms = re.findall(r"^FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?", df.read_text(), re.M | re.I) or [("", "")]   # every stage, not only the first
+    for k, (frm, _) in enumerate(froms):
+        if frm in [a for _, a in froms[:k] if a]: continue     # an earlier stage of this file
+        if not (re.match(r"^[\w.\-]+(:\d+)?/.+[:@].+", frm) and not frm.endswith(":latest") and "$" not in frm): fail(f"tests/Dockerfile FROM {frm!r} must be a pinned registry image")
     if "test.sh" not in df.read_text(): fail("tests/Dockerfile must COPY test.sh into /tests/")
-cf = t / "environment/docker-compose.yaml"
-if cf.is_file():
-    for img in re.findall(r"^\s*image:\s*(\S+)", cf.read_text(), re.M):
-        if not (re.match(r"^[\w.\-]+(:\d+)?/.+[:@].+", img) and not img.endswith(":latest")): fail(f"compose sidecar image {img!r} must be pinned")
+for cf in (t / "environment/docker-compose.yaml", t / "tests/docker-compose.yaml"):
+    if cf.is_file():
+        for img in re.findall(r"^\s*image:\s*(\S+)", cf.read_text(), re.M):
+            img = img.strip("'\"")
+            if not (re.match(r"^[\w.\-]+(:\d+)?/.+[:@].+", img) and not img.endswith(":latest") and "$" not in img): fail(f"compose sidecar image {img!r} must be pinned")
 
 # test.sh clears /logs/verifier first
-CLEAR_LOGS = re.compile(r"^(rm\s+-[rRf]+\s+/logs/verifier/\*|find\s+/logs/verifier\s+-mindepth\s+1\b.*(-delete|-exec\s+rm))")
+CLEAR_LOGS = re.compile(r"^(rm\s+-[rRf]+\s+/logs/verifier/\*(\s|;|&|$)|find\s+/logs/verifier\s+-mindepth\s+1\b.*(-delete|-exec\s+rm))")
 sh = t / "tests/test.sh"
 if sh.is_file():
     cmds = [ln.strip() for ln in sh.read_text().splitlines() if ln.strip() and not ln.strip().startswith("#")]
@@ -67,6 +91,11 @@ def uncomment(line: str) -> str:
 
 
 BIND = (".", "/", "$", "~")     # a volume source that is a host path (bind mount), not a named volume
+# A source with a variable: the whole source is one variable of the runner's (RCB_*), without a default. Anything else
+# (a default, another variable, a path or a name around it) resolves to something this reader cannot see.
+RUNNER_DIR = re.compile(r"^\$\{RCB_[A-Z0-9_]+(:?\?[^}]*)?\}$")
+VAR_RULE = "a variable in a volume source must be the whole source, `${RCB_NAME}` or `${RCB_NAME:?message}` (no default, no path after it)"
+TOP_LEVEL = ("services", "volumes")
 LONG_KEYS = r"(type|source|target|read_only|bind|volume|tmpfs|consistency)"
 
 
@@ -76,13 +105,15 @@ def compose_services(compose: pathlib.Path):
     the long form. Indentation-based (2 spaces a level, as scripts/rcb_monitor/inject.py writes and requires), no YAML
     dependency; whatever it does not understand inside `services:` is reported, never skipped."""
     out, bad = {}, []
-    svc, in_services, in_vols, item = None, False, False, None
+    svc, in_services, in_vols, item, top, first = None, False, False, None, None, False
 
     def close():
         nonlocal item
         if item is not None:
             typ, src = item.get("type", "volume"), item.get("source", "")
-            if typ in ("volume", "bind") and src:
+            if "$" in src and not RUNNER_DIR.match(src):
+                bad.append(f"service {svc}: volume source `{src}`: {VAR_RULE}")
+            elif typ in ("volume", "bind") and src:
                 kind = "bind" if typ == "bind" or src.startswith(BIND) else "volume"
                 out[svc]["mounts"].append((kind, src, "ro" if item.get("read_only", "").lower() == "true" else ""))
             elif typ not in ("tmpfs",):
@@ -99,15 +130,28 @@ def compose_services(compose: pathlib.Path):
         if ind == 0:
             close(); in_services = bool(re.match(r"services\s*:\s*$", text)); svc = None; in_vols = False
             if text.startswith("services") and not in_services: bad.append(f"line {n}: `{text}` (services must be a block)")
+            top = text.partition(":")[0].strip().strip("'\"")
+            if top not in TOP_LEVEL:
+                bad.append(f"line {n}: top-level `{top}` is not allowed (only {' and '.join(TOP_LEVEL)}: include, secrets, configs and networks reach files and networks this check does not read)")
+            elif top == "volumes" and text.partition(":")[2].strip():
+                bad.append(f"line {n}: `{text}` (top-level volumes must be a block of bare names)")
             continue
-        if not in_services: continue
+        if not in_services:
+            # a top-level volume is a bare name (a volume of this trial only): `name:` / `external:` alias one volume
+            # under two names (or name one that outlives the trial), `driver_opts:` binds a path
+            if top == "volumes" and not (ind == 2 and re.match(r"""^['"]?[A-Za-z0-9_.-]+['"]?\s*:\s*(\{\s*\}|null|~)?$""", text)):
+                bad.append(f"line {n}: top-level volume line `{text}` is not a bare name (no name:, external:, driver or driver_opts: a volume belongs to one trial and has one name)")
+            continue
         if ind == 2:
             close(); in_vols = False
             m = re.match(r"""^['"]?([A-Za-z0-9_.-]+)['"]?\s*:\s*$""", text)
             if not m:
                 bad.append(f"line {n}: `{text}` is not a service line"); svc = None; continue
-            svc = m.group(1); out[svc] = {"keys": {}, "mounts": []}
+            svc = m.group(1); out[svc] = {"keys": {}, "mounts": []}; first = True
             continue
+        if svc is not None and first and ind != 4:      # a service whose keys sit deeper would be read as having none
+            bad.append(f"line {n}: service {svc}: `{text}` at an unexpected indentation (a service's keys are indented 4 spaces)"); svc = None; continue
+        first = False
         if svc is None or ind < 4 or ind == 3:
             bad.append(f"line {n}: `{text}` at an unexpected indentation"); continue
         if ind == 4:
@@ -122,6 +166,7 @@ def compose_services(compose: pathlib.Path):
                 elif val.startswith("[") and val.endswith("]"):
                     for it in [x.strip().strip("'\"") for x in val[1:-1].split(",") if x.strip()]:
                         src, _, rest = it.partition(":")
+                        if "$" in it: bad.append(f"line {n}: service {svc}: volume entry `{it}`: {VAR_RULE} (and in the block form)")
                         out[svc]["mounts"].append(("bind" if src.startswith(BIND) else "volume", src, rest))
                 else: bad.append(f"line {n}: service {svc}: volumes `{val}` not understood")
             continue
@@ -136,9 +181,13 @@ def compose_services(compose: pathlib.Path):
             body = body.strip("'\"")
             if not body or body.startswith(("{", "[", "*", "&")):
                 bad.append(f"line {n}: service {svc}: volume entry `{text}` not understood"); continue
+            if "$" in body:                          # ${RCB_VAR:?message with : in it}:/target -> a bind named by the runner
+                m = re.match(r"^(\$\{[^}]*\})(?::(.*))?$", body)
+                if m and RUNNER_DIR.match(m.group(1)) and "$" not in (m.group(2) or ""):
+                    out[svc]["mounts"].append(("bind", m.group(1), m.group(2) or ""))
+                else: bad.append(f"line {n}: service {svc}: volume entry `{body}`: {VAR_RULE}")
+                continue
             src, _, rest = body.partition(":")
-            if src.startswith("$"):                  # ${VAR:?message with : in it}:/target -> a bind named by the runner
-                out[svc]["mounts"].append(("bind", src, rest)); continue
             out[svc]["mounts"].append(("bind" if src.startswith(BIND) else "volume", src, rest))
             continue
         m = re.match(rf"^{LONG_KEYS}\s*:\s*(.*)$", text)
@@ -161,7 +210,14 @@ BEACONS = {"rcb_limits", "rcb_observe"}
 # Nothing that widens a container beyond its own namespaces and file system (the generated rcb_monitor service has
 # its own rules: ci_checks/check-monitor.py). Sidecars publish no port: the agent reaches the service on localhost only.
 WIDEN = ("privileged", "cap_add", "security_opt", "devices", "device_cgroup_rules", "volumes_from", "pid", "ipc", "uts",
-         "cgroup", "cgroup_parent", "userns_mode", "extends", "<<")
+         "cgroup", "cgroup_parent", "userns_mode", "extends", "<<",
+         "oom_kill_disable", "oom_score_adj", "memswap_limit", "sysctls", "runtime")   # around the declared caps (§2.10)
+# A service with its own network setting is not routed through Harbor's egress control: the task's allowlist would not
+# apply to it (harbor 0.23, docker.py _egress_controlled_service_names).
+OWN_NETWORK = ("network_mode", "networks")
+# Files of the task or the host handed to a container by another road than `volumes:`; `build` replaces Harbor's own
+# build of main (context: environment/) or a sidecar's pinned image.
+HANDS_FILES = ("secrets", "configs", "env_file", "build")
 mode = next((m for m in ("standard-realtime", "privileged", "standard") if t.name.endswith("-" + m)), "")
 if env_c.is_file():
     services, bad = compose_services(env_c)
@@ -170,8 +226,12 @@ if env_c.is_file():
         if svc == "rcb_monitor": continue
         for k in WIDEN:
             if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (it widens the container beyond its own namespaces and files)")
+        for k in OWN_NETWORK:
+            if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (Harbor's egress control skips a service with its own network setting: the allowlist would not apply; a sidecar is reached on localhost only, PROTOCOL §4.1)")
+        for k in HANDS_FILES:
+            if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (it hands the container files of the task or the host outside `volumes:`, or replaces the pinned image)")
         if svc != "main":
-            for k in ("ports", "expose", "network_mode"):
+            for k in ("ports", "expose"):
                 if k in info["keys"]: fail(f"sidecar {svc}: `{k}` is not allowed (the agent reaches a sidecar on localhost only, PROTOCOL §4.1)")
         for kind, src, rest in info["mounts"]:
             if kind == "bind":
@@ -201,5 +261,8 @@ if test_c.is_file():
     for b in bad: fail(f"tests/docker-compose.yaml: {b}")
     for v in named_volumes(services).get("main", []):
         if not v.endswith("_trusted"): fail(f"the verifier mounts {v}, which is not a *_trusted volume")
+    for svc, info in services.items():
+        for k in WIDEN + HANDS_FILES:
+            if k in info["keys"]: fail(f"tests/docker-compose.yaml: service {svc}: `{k}` is not allowed")
 sys.exit(rc)
 PY

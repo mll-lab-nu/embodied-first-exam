@@ -37,10 +37,12 @@ res.save("/app/runs/003")                     # meta.json, <cam>.mp4, last/<cam>
 r.fk(q); r.ik({"tcp_right": pose}, seed=q)  # kinematics of the robot (stateless: no physics, no time)
 r.status()                                    # calls, control steps, done, reason, elapsed time
 ```
-Cameras: `front`, `back`, `left`, `right`, `top0`, `cam_pos_z` (static), `handcam_rgb_right`, `handcam_rgb_left` (on the hand mounts; they move,
+Cameras: `front`, `back`, `left`, `right`, `top0` (static), `handcam_rgb_right`, `handcam_rgb_left` (on the hand mounts; they move,
 so use the calibration that comes with each response; `spec["cameras"][cam]["mount"]` gives the static pose or the mount
-link). Resolution 640x480. Rendering runs on the CPU: ask only for the cameras you need; `video="none"` makes a chunk
-fastest. If a call fails with a connection error the service may have crashed: it resumes the same episode;
+link), `cam_pos_z` (on an object of the scene and moves with it: images and depth only, no mount and no pose -- `extrinsic_cv` / `cam2world_gl` are null in `meta["cameras"]` and NaN per frame -- because its pose would be that object's). Resolution 640x480. Rendering runs on the CPU: ask only for the cameras you need; `video="none"` makes a chunk
+fastest. One call returns at most 1000 images (cameras x frames at `video_fps`, default 10, at most 50; depth for
+every frame counts again; `spec["max_frames_per_call"]`): a larger request is refused with a 400 before anything runs, so
+ask for fewer cameras, a lower `video_fps` or a shorter call. If a call fails with a connection error the service may have crashed: it resumes the same episode;
 `r.wait_ready()`, then check `r.status()` (`spec["on_service_error"]`).
 
 ### Action type `ee_pose` (46) — DexJoCo's own action

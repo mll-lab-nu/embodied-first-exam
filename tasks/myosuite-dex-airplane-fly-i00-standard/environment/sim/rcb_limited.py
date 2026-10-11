@@ -48,6 +48,19 @@ COMPAT = ["rcb-limited/2.0", "rcb-limited/2.1", "eai-standard/2.1"]   # requests
 MAX_BODY = 64 * 1024 * 1024
 MAX_RESP = 256 * 1024 * 1024
 DEPTH_MODES = ("none", "last", "frames")
+MAX_FRAMES_PER_CALL = 3000   # images one response may carry (cameras x frames, per-frame depth counted again): the 2.1 services' bound
+
+
+def check_frames(n_cameras: int, n_frames: int, depth_frames: bool = False, limit: int = MAX_FRAMES_PER_CALL) -> int:
+    """The images one call would return (cameras x frames; per-frame depth counted again), refused above `limit`
+    (ValueError -> 400, for the adapter to raise before it executes or renders anything): every frame is held in memory
+    until the response is sent, so a call without a bound can exhaust the service's memory. The adapter passes the frames
+    its Recorder will capture and the limit its /spec states as `max_frames_per_call`."""
+    n = int(n_cameras) * int(n_frames) * (2 if depth_frames else 1)
+    if n > limit:
+        raise ValueError(f"this call would return {n} images (cameras x frames, per-frame depth counted again); the limit is "
+                         f"max_frames_per_call = {limit}: ask for fewer cameras, a lower video_fps or a shorter call")
+    return n
 DEPTH_MAX_M = 65.535                                        # uint16 millimetres; a farther surface reads 0 (no reading)
 DEPTH_NOISE = os.environ.get("RCB_DEPTH_NOISE", "off").strip().lower()   # off | realsense (as rcb-limited/2.1)
 _RNG = np.random.default_rng(int(os.environ.get("RCB_DEPTH_NOISE_SEED", "0")))
@@ -125,7 +138,7 @@ class Recorder:
                  depth: str = "none", clock_hz: float = 1.0):
         if depth not in DEPTH_MODES + ("legacy",):
             raise ValueError(f"bad depth mode {depth!r}")
-        self.cams = list(cameras); self.every = max(1, int(every)); self.mode = depth; self.hz = float(clock_hz)
+        self.cams = list(dict.fromkeys(cameras)); self.every = max(1, int(every)); self.mode = depth; self.hz = float(clock_hz)
         self._grab, self._prop, self._ext, self._clock = grab, proprio_row, extrinsics, clock
         self.frames: dict = {c: [] for c in self.cams}; self.depth: dict = {c: [] for c in self.cams}
         self.ext: dict = {c: [] for c in self.cams}; self.last_depth: dict = {}
@@ -720,7 +733,8 @@ class Episode:
 
     def give_up(self, reason: str, infra: bool) -> None:
         """End the trial's episode without a new one (never a reset): log it, write the verdict unless one is on disk,
-        leave the PID file for the collect hook, and idle until the container is removed."""
+        leave the PID file for the collect hook, and answer every request with the refusal until the container is
+        removed (refuse_forever)."""
         faulthandler.cancel_dump_traceback_later()
         self.log({"ev": "restart_refused", "reason": reason})
         if not final_verdict(self.data):
@@ -732,8 +746,46 @@ class Episode:
             f.write(str(os.getpid()))
         signal.signal(signal.SIGUSR1, lambda *_: None)
         print(f"[{PROTOCOL}] restart refused: {reason}", flush=True)
-        while True:
-            time.sleep(3600)
+        refuse_forever(reason, infra)
+
+
+def refuse_forever(reason: str, infra: bool, port: int | None = None) -> None:
+    """After a give-up: answer every request 409 {"error", "reason", "gave_up": true, "infra_error"} until the container
+    is removed. Before, nothing listened once the service had given up -- whether it refused the episode at its start
+    (DexJoCo with fewer than 4 CPUs, a frozen instance that does not rebuild) or after its crashes -- and the client's
+    Robot() and wait_ready() waited out their whole timeout, an hour, for a simulator that would never answer. The
+    client raises EpisodeOver on this answer at once. The verdict is on disk already: nothing here reads or changes it."""
+    body = json.dumps({"error": "the sim service gave up on this episode and will not serve it", "reason": reason,
+                       "gave_up": True, "infra_error": int(bool(infra))}).encode()
+
+    class Refusal(BaseHTTPRequestHandler):
+        timeout = 30                         # a client that stops sending must not hold the only thread
+
+        def _refuse(self):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                if 0 < n <= MAX_BODY:        # take the request first: a client still sending would see a reset, not the answer
+                    self.rfile.read(n)
+                self.send_response(409); self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+            except (OSError, ValueError):
+                pass
+            self.close_connection = True
+
+        do_GET = do_POST = _refuse
+
+        def log_message(self, *a):
+            pass
+
+    def answer():
+        try:
+            bind(int(os.environ.get("RCB_PORT", "8000")) if port is None else port, Refusal).serve_forever()
+        except Exception:  # noqa: BLE001 -- the refusal is a courtesy to the client; the give-up stands without it
+            traceback.print_exc()
+
+    threading.Thread(target=answer, daemon=True).start()
+    while True:
+        time.sleep(3600)
 
 
 # ---------------------------------------------------------------- the HTTP layer
@@ -760,6 +812,8 @@ def parse_request(path: str, meta, parts: dict):
     cams = meta.get("cameras")
     if cams is not None and not (isinstance(cams, (list, tuple)) and all(isinstance(c, str) for c in cams)):
         raise ValueError("cameras must be a list of camera names")
+    if cams is not None:   # each camera once, in the order asked for: N copies of a name were rendered and returned N * N times
+        meta["cameras"] = list(dict.fromkeys(cams))
     if path != "/submit":
         return None
     try:

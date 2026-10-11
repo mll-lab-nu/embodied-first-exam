@@ -149,6 +149,13 @@ E["instance_exact"] = bool(S.instance_exact)
 E["ready"] = True                       # S exists: ctrl_steps() counts its control steps (a resume replay included)
 ROBOT = S.robot
 CAMS = ["ego", "wrist_right", "wrist_left"]
+# The images one call may hold. Every frame a call records stays in memory until its response is sent, and building the
+# response takes about three times the frames' size (a per-frame depth map costs about three RGB frames more): a call
+# without a bound could exhaust the sidecar's memory, and a service killed for memory is never the agent's failure
+# (PROTOCOL §2.6), so one large request could void a failed trial. MAX_FRAMES images of 848x480 peak at about 5.4 GB of
+# the sidecar's 11 GiB (measured on the layer's Recorder and encode_response).
+MAX_FRAMES = 1500                  # /spec max_frames_per_call: cameras x frames; a frame with per-frame depth counts DEPTH_FRAME
+DEPTH_FRAME = 4
 MOUNT = {"ego": "static, above and behind the robot", "wrist_right": "right wrist", "wrist_left": "left wrist"}
 ARM = {"right": (slice(0, 7), 7), "left": (slice(8, 15), 15)}
 LAYOUT = [f"Joint{i}_R" for i in range(1, 8)] + ["right_gripper"] + [f"Joint{i}_L" for i in range(1, 8)] + ["left_gripper"]
@@ -189,6 +196,7 @@ PROPRIO_GROUPS = {   # name: [first column, count, meaning]
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": "robowits (Genesis 0.4.7)", "robot": "marvin-bimanual", "task_text": S.spec["text"],
     "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
+    "max_frames_per_call": MAX_FRAMES,
     # not a step budget (budget.steps stays null: the wall clock is the budget) but the technical cap of one episode
     # (PROTOCOL §4.5, `max_control_steps`): the tooling's runaway guard, also the longest trajectory the graders accept
     "max_control_steps": int(S.max_steps),
@@ -253,8 +261,32 @@ def calib(cameras: list[str]) -> dict:
     return {c: {k: v[k] for k in ("intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size")} for c, v in S.camera_info(cameras).items()}
 
 
+def frames_ok(cams: list, steps: int, fps: int, meta: dict) -> None:
+    """400 (ValueError), before anything is executed, for a call that would hold more than MAX_FRAMES images: `steps`
+    control steps recorded at `fps`, the recorder's first and last frames included."""
+    deep = L.depth_mode(meta) in ("frames", "legacy")
+    try:
+        L.check_frames(len(cams) * (DEPTH_FRAME if deep else 1), steps // int(round(CTRL_HZ / max(1, fps))) + 2, limit=MAX_FRAMES)
+    except ValueError as exc:
+        raise ValueError(f"{exc}" + (f" (here a frame with per-frame depth counts {DEPTH_FRAME} images)" if deep else "")) from None
+
+
+class Rec(L.Recorder):
+    """The call's recorder, keeping the image budget while the call runs: how many control steps an ee_pose row takes
+    (4 to 400) is known only then. At the budget it takes no more frames -- the motion goes on, the last frame is always
+    taken -- and meta["frames_skipped"] counts the frames left out."""
+    skipped = 0
+
+    def _capture(self, last: bool) -> None:
+        per = len(self.cams) * (DEPTH_FRAME if self.mode in ("frames", "legacy") else 1)
+        if not last and per * (len(self.steps) + 2) > MAX_FRAMES:
+            self.skipped += 1
+            return
+        super()._capture(last)
+
+
 def recorder(cams: list[str], fps: int, meta: dict) -> L.Recorder:
-    return L.Recorder(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ)
+    return Rec(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ)
 
 
 def meta_common(cams) -> dict:
@@ -401,7 +433,9 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
                          f"{periods:.4f} periods; the nearest is {k}/{CTRL_HZ} = {k / CTRL_HZ!r}")
     if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
     if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
-    rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []      # (the depth mode is checked here: ValueError)
+    # the least the rows take (a joint row: dt; an ee_pose row: 4 control steps); what ee_pose rows take beyond it, Rec bounds
+    frames_ok(cams, A.shape[0] * (int(round(periods)) if typ == "joint_position" else 4), fps, meta)   # (the depth mode is checked here)
+    rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []
     # ---- the request is valid: from here on the chunk is executed
     E["calls"] += 1; step0 = E["step"]
     before = ctrl_steps(); rec.tick(force=True)
@@ -410,7 +444,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     rec.tick(force=True, last=True)
     succ = check_success(); E["success"] = E["success"] or succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
-           "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
+           "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
+           **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
@@ -423,9 +458,10 @@ def do_observe(meta: dict) -> tuple[dict, list]:
     meta = req_dict(meta)
     cams = req_cameras(meta); seconds = req_number(meta, "seconds", 0); fps = req_fps(meta); video = req_choice(meta, "video", "frames", VIDEO_MODES)
     if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
-    rec = recorder(cams, fps, meta); before = ctrl_steps()                     # (the depth mode is checked here: ValueError)
-    # ---- the request is valid
     watch = seconds > 0 and not E["done"]
+    frames_ok(cams, int(round(seconds * CTRL_HZ)) if watch else 0, fps, meta)   # (the depth mode is checked here: ValueError)
+    rec = recorder(cams, fps, meta); before = ctrl_steps()
+    # ---- the request is valid
     rec.tick(force=True, last=not watch)
     if watch:
         hold = np.asarray(S.hold_action(), dtype=np.float64)
@@ -436,7 +472,7 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         if succ: finish("success")
     E["calls"] += 1
     out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
-           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True}
+           "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {})}
     log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before})
     if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)

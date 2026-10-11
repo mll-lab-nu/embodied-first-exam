@@ -6,7 +6,7 @@ success + determinism and renders the six-view /data/replay.mp4. It also produce
 while physics runs, skipped while nothing moves; by default rendered from the trajectory at the end), saves each call's actions under /data/calls/, and appends the
 trajectory to /data/trajectory_live.f64 after every call (crash-safe). Nothing about objects ever leaves this process."""
 from __future__ import annotations
-import io, json, math, os, signal, sys, threading, time, traceback
+import errno, io, json, math, os, signal, sys, threading, time, traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import numpy as np
 
@@ -454,7 +454,9 @@ def _fps(meta: dict) -> int:
 def _num(meta: dict, key: str, default: float) -> float:
     """A numeric request field; anything else is the caller's mistake (400), never a simulator error."""
     try:
-        v = float(meta.get(key, default))
+        v = meta.get(key, default)
+        if isinstance(v, bool): raise TypeError     # JSON true is no number (float(True) is 1.0)
+        v = float(v)
     except (TypeError, ValueError, OverflowError):
         raise ValueError(f"{key} must be a number") from None
     if not math.isfinite(v): raise ValueError(f"{key} must be a finite number")
@@ -466,7 +468,9 @@ def _cams(meta: dict, default: list) -> list:
     if not c: return [x for x in default if x in ALL_CAMS] or ["head_camera"]
     if isinstance(c, str): c = [c]
     if not isinstance(c, (list, tuple)): raise ValueError("cameras must be a list of camera names")
-    return [x for x in c if isinstance(x, str) and x in ALL_CAMS] or ["head_camera"]   # unknown names are ignored
+    # unknown names are ignored; a repeated name is dropped BEFORE the frame budget and any rendering (the recorder keeps
+    # frames per name, so repeats would multiply its work)
+    return list(dict.fromkeys(x for x in c if isinstance(x, str) and x in ALL_CAMS)) or ["head_camera"]
 
 
 def _bad_request(exc: Exception) -> ValueError:
@@ -559,6 +563,7 @@ class H(BaseHTTPRequestHandler):
     def _body(self):
         try: n = int(self.headers.get("Content-Length", 0))
         except ValueError: raise ValueError("bad Content-Length")
+        if n < 0: raise ValueError("bad Content-Length")   # read(-1) would read until the client hangs up, without any bound
         if n > MAX_BODY: raise ValueError("request too large")
         raw = self.rfile.read(n) if n else b""
         if raw[:4] == rcb1.MAGIC:
@@ -658,6 +663,19 @@ def _resume_or_start() -> None:
     write_final()
 
 
+def _bind(port: int, handler) -> HTTPServer:
+    """The listening server. Under Harbor's egress control the agent's container shares this network namespace, so a
+    process of the agent may hold the port when the service (re)starts. Wait for the port instead of failing: an
+    exception here would count as a crash of the service (the collect hook's signal is still served meanwhile)."""
+    said = False
+    while True:
+        try: return HTTPServer(("0.0.0.0", port), handler)
+        except OSError as exc:
+            if exc.errno != errno.EADDRINUSE: raise
+        if not said: said = True; print(f"[sim] port {port} is in use (a process in the agent's container?): waiting for it to be free", flush=True)
+        time.sleep(1.0)
+
+
 _resume_or_start()
 signal.signal(signal.SIGUSR1, on_usr1)
 if _USR1["pending"]: on_usr1()
@@ -665,4 +683,4 @@ E["ready"] = True
 LIVE = rcb_live.LiveRecorder(S, DATA, t0=E["t0"]); LIVE.open()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready", flush=True)
-HTTPServer(("0.0.0.0", int(os.environ.get("RCB_PORT", "8000"))), H).serve_forever()
+_bind(int(os.environ.get("RCB_PORT", "8000")), H).serve_forever()

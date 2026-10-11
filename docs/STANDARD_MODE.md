@@ -398,7 +398,10 @@ The 2.2 implementation of PROTOCOL §4.7, with the semantics of the RoboTwin and
 - **Limits.** At most `RCB_MAX_RESUMES` (2) resumes; a third crash ends the episode: `sim_crashed_on_call` if every crash
   happened while a call was being served (the agent's failure), else `sim_crashed` (`infra_error = 1`). A journal shorter
   than the log ends it as `resume_failed` (`infra_error = 1`). A verdict already on disk is never overwritten; the service
-  then idles with its PID file for the collect hook.
+  then keeps its PID file for the collect hook and answers every request, `GET /spec` and `/status` included, with 409
+  `{"gave_up": true, "reason", "infra_error"}`: the client's `Robot()` and `wait_ready()` raise `EpisodeOver` at once
+  instead of waiting out their timeout. The same holds for a service that refuses the episode at its start (DexJoCo with
+  fewer than 4 CPUs, RoboWits when the frozen instance does not rebuild).
 - **Start-up.** A crash before the scene exists is a plain restart. The startup watchdog (faulthandler's C thread: it fires
   even while a native scene build holds the GIL) dumps every thread's traceback to `server.log` and exits after
   `RCB_STARTUP_TIMEOUT_S` (default 900 s); a start that follows failed starts waits min(120, 20·(n − 1)) s first. The

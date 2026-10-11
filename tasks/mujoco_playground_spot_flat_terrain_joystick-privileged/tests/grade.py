@@ -36,7 +36,7 @@ def agent_cost() -> dict:
         if not os.path.exists(path):
             continue
         try:
-            with open(path) as f:
+            with open(path, errors="replace") as f:
                 for i, line in enumerate(f):
                     if i > 200_000 or len(line) > 10_000:
                         break
@@ -53,7 +53,7 @@ def agent_cost() -> dict:
                             cost["agent_sim_steps"] += min(int(float(e.get("sim_steps", 0) or 0)), 10**9)
                     except Exception:  # noqa: BLE001 -- one bad line must not sink the verdict
                         continue
-        except OSError:
+        except Exception:  # noqa: BLE001 -- the agent's file, any bytes: the cost stays self-reported, the verdict is never lost
             pass
         break
     return cost
