@@ -54,8 +54,9 @@ region; the instructions state the rule in both modes.
 
 ## Image and host
 - `images/robolab/` (Isaac Lab 2.3.2 / Isaac Sim 5.1 from the pinned `uv.lock`, RoboLab's Apache-2.0 asset library baked
-  in), tagged `ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION>` (0.1.1, the same build as
-  the former `rcb-robolab:0.1.1`). It contains NVIDIA Isaac Sim, whose licence forbids redistribution: **BUILD_ONLY**.
+  in), tagged `ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION>` (0.1.2 = 0.1.1, the same build as
+  the former `rcb-robolab:0.1.1`, plus one layer with the remote files of the asset library: Network, below). It
+  contains NVIDIA Isaac Sim, whose licence forbids redistribution: **BUILD_ONLY**.
   `images/robolab/BUILD_ONLY` has the licences, the build command
   (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .`),
   the check of a build and how a CI machine builds it. A host that has the old tag only needs `docker tag`.
@@ -65,6 +66,51 @@ region; the instructions state the rule in both modes.
   `sim` sidecar uses eai-robolab.
 - Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount their own `*_trusted` cache
   volumes, never the agent's; every cache volume is scoped to the trial's compose project (no fixed name).
+
+## Network
+The agent reaches the model APIs and nothing else: `[agent] network_mode = "allowlist"` with the hosts of
+`scripts/set_agent_egress.py`, in both templates' `task.toml.tmpl` (`mk_tasks.py` fills the host list from that script;
+owner decision 2026-10-10, board 0072). Until then the tasks had Harbor's default, public egress, the repository-wide
+default of 2026-09-24 (kept on 2026-10-02) with which the templates were written; no reason specific to RoboLab was
+recorded. One existed, found when the allowlist was first run on a real simulator (2026-10-11), and image 0.1.2 removes
+it: the second point.
+
+| Service | Before | Since 2026-10-10 |
+|---|---|---|
+| privileged `main` (agent and its Isaac processes) | public | public from container start until the agent starts (the harness is installed then), the model APIs only while the agent runs |
+| standard `main` (agent, client only) | public | the same |
+| standard `sim` (the simulator service) | public | the same as `main`: Harbor's egress control puts every compose service without a network setting of its own in one namespace, so the service's Isaac start (it begins at container start and takes 5 to 9 minutes) and a restart after a crash run with the model APIs only; public again while the collect hook replays the episode |
+| `rcb_monitor` | none | none |
+| privileged verifier | public (Harbor's default) | unchanged |
+| standard verifier | none (`no-network`) | unchanged |
+
+- **Isaac itself needs no network**: the image holds Isaac Sim, Isaac Lab, RoboLab and every Python package, and the EULA
+  is accepted by environment variables. With only the model APIs reachable the oracle of `banana-in-bowl` scores 1 in
+  both modes with the same initial and final state hashes as with open egress (`deterministic` 1, `instance_ok` 1, live =
+  replay; L40S hosts, 2026-10-11), and a probe from inside the agent's container finds GitHub, PyPI, Hugging Face and
+  NVIDIA's Omniverse content bucket unreachable while the OpenAI, Anthropic and OpenRouter APIs answer.
+- **RoboLab's asset library did, until image 0.1.2.** 15 of its USD layers reference NVIDIA's public Omniverse content
+  bucket (`omniverse-content-production.s3…amazonaws.com`) by URL: the MDL materials of the four tables, of the grey bin
+  and of the robot, their textures, and a few props of scenes that are not tasks here; the scenes of 43 of the 53
+  families load some of them. Kit fetched them whenever a scene was built. On 0.1.1 under the allowlist the fetches
+  fail (`could not find module … in module path`, `Unable to find SdrShaderNode`): the table renders as a glossy red
+  surface instead of wood (64 % of the pixels of the front camera's first frame differ from the open-egress frame, 77 %
+  of the wrist camera's, 16 % of the shoulder camera's) and the scene is ready later (501 to 640 s against 333 to
+  428 s), while physics is unchanged (none of the 53 families references remote geometry). Image 0.1.2 holds the files:
+  `images/robolab/mirror_remote_assets.py`, the last step of the build, copies all 419 (635 MB) to
+  `/opt/robolab/assets/_remote`, checks each against `images/robolab/remote_assets.sha256` and points the layers at the
+  copies; no layer of the library names a remote file any more. Checked from the published 0.1.2 under the
+  allowlist (2026-10-11, L40S hosts, the oracle of `banana-in-bowl`): reward 1 in both modes with the state hashes of
+  the open-egress runs, no material error in Kit's log, the scene ready after 321 to 341 s, and first frames that
+  differ from the open-egress ones in 0.02 to 0.7 % of the pixels (render noise), in the standard service's cameras and
+  in the privileged tooling's.
+- **The privileged verifier** keeps Harbor's default network (Grading and determinism); since 0.1.2 it does not need it
+  for the materials either.
+- **The recorded example episode is not in the agent's image.** RoboLab's repository ships one recorded successful
+  episode (`examples/recorded_data/RubiksCubeAndBananaTask`: actions, video and environment configuration, replayed by
+  `examples/run_recorded.py`), a solution of `rubiks_cube_and_banana` inside the base image. The privileged
+  `environment/Dockerfile` removes the directory (since 2026-10-10); nothing at run time reads it. The standard agent
+  container has no simulator image, and the verifier's image is not the agent's.
 
 ## Time budget (D8)
 5400 s for every task of both modes, longer than the default 3600 s: every Python process pays about 2 minutes of Isaac
@@ -82,8 +128,9 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
   replays it in two fresh processes; success = live ∧ replay ∧ deterministic, `live_matches_replay` reported separately.
   The standard verifier only reads `final.json` and runs with `network_mode = "no-network"`.
 - The privileged verifier keeps Harbor's default network (PROTOCOL §2.6 recommends no-network): it starts Isaac Sim, and
-  an offline Kit start (extension registry, asset resolvers) has not been tested on our hosts. Grading downloads nothing:
-  RoboLab's assets and every package are in the image.
+  a Kit start in a container without any network interface has not been tested on our hosts (with only the model APIs
+  reachable it starts and builds the scene: Network). Grading downloads nothing: RoboLab's assets, since image 0.1.2 the
+  remote files they reference too, and every package are in the image.
 - Whose failure a 0 is (2026-10-10). Standard: `tests/grade.py` writes a reward whatever it finds; a missing, unreadable
   or unfinalized `final.json` (the service never came up, the collect hook was killed), a lost GPU, or a replay process
   that ended without a result (`replay_error`: Isaac died, its time limit) is `infra_error = 1`, never the agent's 0.

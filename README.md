@@ -112,7 +112,7 @@ harbor view jobs
 - Disk space for the base images (the RoboTwin image is about 22 GB). Public images can be pulled; `BUILD_ONLY` ones are built on the host.
 
 **Running official results:**
-- Use Harbor's native agents, with the harness's web search off: Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (the default of `scripts/run_agent_batch.sh`; PROTOCOL §5). The search runs at the model provider, so no egress allowlist stops it.
+- Use Harbor's native agents through `scripts/run_agent_batch.sh` with `GATEWAY=1`, and with no tool that runs outside the trial's container (PROTOCOL §2.11, D11): the harness's web search off (Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch`: the script's default), no account connectors, apps, plugins or image generation. They run at the model provider, so no egress allowlist stops them; the gateway forwards model-API calls only and is the agent container's only egress.
 - Align reasoning effort and the time budget (3600 s by default) across agents. The token budget (100M input / 10M output tokens per trial) is defined in PROTOCOL §5; it will be applied to Harbor's recorded counts, which is not implemented yet (PROTOCOL §7).
 
 ## Integrity
@@ -125,11 +125,13 @@ harbor view jobs
   oracle agent alone. Upstream experts are removed from the agent's images.
 - **Recorded evidence in standard mode.** The simulator service records the episode, replays it in a fresh simulator,
   and writes the verdict inputs. The agent never holds the simulator.
-- **Network policy.** DexToolBench, KinDER, HumanoidBench, MetaWorld+, RoboPaint, VLABench, MyoSuite, LabUtopia, AutoBio, the three
-  RoboCasa benchmarks, DexJoCo, YAMLab, RoboDojo, LIBERO-MAX, ManiGuard, MolmoSpaces, BiGym 2.0, RoboOlympics and MuJoCo Playground's quadruped tasks restrict agent egress to model APIs by default, because their reference policies, demonstrations or
-  baselines are public. RoboTwin, MuJoCo Playground's manipulation tasks, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle use Harbor's default
-  (public) and can be switched with `scripts/set_agent_egress.py allowlist`. Separately, the harness's own web search is
-  off by default in batch runs (it runs at the model provider, past any allowlist).
+- **Network policy and external material.** Every task restricts the agent's egress to the model APIs
+  (`[agent] network_mode = "allowlist"`), and every instruction states the same rule (`## External material`): the agent
+  works with what is in its container and the documented task interface, downloads and installs nothing, and uses no
+  tool that runs outside its container; a result obtained with external material is void (PROTOCOL §2.11). Official
+  runs go through the usage gateway, which is then the container's only egress and forwards model-API calls only; the
+  harness's web search, account connectors and other provider-side tools are off (they run at the model provider, past
+  any allowlist).
 - **Reproducibility.** Base images are pinned by tag (pinning every pip dependency: PROTOCOL §7, open item 2). A task's identity is its digest in `tasks/dataset.toml`,
   and published task inputs never change.
 
@@ -138,7 +140,7 @@ harbor view jobs
 ```
 tasks/                 Harbor tasks (one directory per task and mode) and dataset.toml (manifest with digests)
 images/<sim>/          simulator base images (simulator installs only)
-scripts/               task generators, image build/push, egress switch, results and report tools
+scripts/               task generators, image build/push, the egress allowlist, results and report tools
 ci_checks/             contract checks run on every pull request (ci_checks/run_all.sh)
 docs/                  PROTOCOL.md (contract), STANDARD_MODE.md (standard-mode wire protocol),
                        TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),

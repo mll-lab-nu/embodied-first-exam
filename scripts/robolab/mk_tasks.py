@@ -28,7 +28,7 @@ Both twins of a family are written to a scratch directory, passed through script
 the generator writes, other files are removed. Results are not kept in task dirs (PROTOCOL D3): the cited positives are
 named by trial id with their results-site and Hugging Face links."""
 from __future__ import annotations
-import argparse, json, os, pathlib, shutil, sys, tempfile
+import argparse, json, os, pathlib, re, shutil, sys, tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robolab"
@@ -37,6 +37,13 @@ REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 RUN_ID = "codex-gpt6_luna-xhigh"            # the run whose trials are the cited positives (results site, Hugging Face)
 REVIEW_PR = "#3"                           # the pull request with the per-family review (PROTOCOL §2.7): dev/qineng = PR #3
+# The agent's egress is the model APIs only (owner decision 2026-10-10, board 0072; docs/benchmarks/robolab.md, Network): the
+# templates' `[agent]` blocks hold the two lines `scripts/set_agent_egress.py allowlist` writes, with that script's HOSTS (one
+# list for every task, ci_checks/check-verifier-isolation.sh).
+_HOSTS = re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text())
+ALLOWED_HOSTS = ", ".join(f'"{h}"' for h in re.findall(r'"([^"]+)"', _HOSTS.group(1) if _HOSTS else ""))
+if not ALLOWED_HOSTS:
+    raise RuntimeError("scripts/set_agent_egress.py has no HOSTS")
 
 
 def toml_str(s: str) -> str:
@@ -147,7 +154,7 @@ def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[by
         return reference_none(fam, F) if oracle_level(F, mode) == "none" else text
 
     common = {"FAMILY": fam, "SLUG": slug(fam), "PRIV": task_dir(fam, "privileged"), "STD": task_dir(fam, "standard"),
-              "SEED": str(F["seed"]), "IMAGE": image, "IMAGE_VERSION": version,
+              "SEED": str(F["seed"]), "IMAGE": image, "IMAGE_VERSION": version, "ALLOWED_HOSTS": ALLOWED_HOSTS,
               "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip()}
     priv = {"GOAL": F["goal"], "GOAL_TOML": toml_str(F["goal"]), "ROBOLAB_TASK": F["robolab_task"], "README_GOAL": F.get("readme_goal", F["goal"]),
             "DIFFICULTY": F["difficulty"], "OBJECTS_BLOCK": objects_block(F), **per_mode("privileged"),

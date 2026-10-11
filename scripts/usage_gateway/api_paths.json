@@ -1,0 +1,31 @@
+{
+ "_comment": [
+  "The model-API requests the usage gateway forwards (PROTOCOL §2.11, D11; owner 2026-10-10, board 0072). Default deny: a",
+  "request is forwarded only if its host matches a provider here and its method and path are in that provider's list;",
+  "anything else is answered 403 and recorded (method and path, no body). A path is matched without its query string,",
+  "segment by segment (`*` = exactly one segment). The lists are what Codex and Claude Code sent in 738,826 recorded",
+  "requests of official runs (responses, models, messages, count_tokens) plus each API's chat-completions and",
+  "responses-compaction calls. Not on any list, so refused: account connectors and apps, plugins, files, conversations,",
+  "web search, images, audio, batches, assistants, token endpoints. `http` is the provider of a --http-host upstream."
+ ],
+ "providers": [
+  {"name": "chatgpt-codex", "hosts": ["chatgpt.com"],
+   "allow": [["POST", "/backend-api/codex/responses"], ["POST", "/backend-api/codex/responses/compact"],
+             ["GET", "/backend-api/codex/models"]]},
+  {"name": "openai", "hosts": ["api.openai.com"],
+   "allow": [["POST", "/v1/responses"], ["POST", "/v1/responses/compact"], ["POST", "/v1/chat/completions"],
+             ["GET", "/v1/models"]]},
+  {"name": "azure-openai", "hosts": ["*.openai.azure.com", "*.cognitiveservices.azure.com", "*.services.ai.azure.com"],
+   "allow": [["POST", "/openai/v1/responses"], ["POST", "/openai/v1/responses/compact"],
+             ["POST", "/openai/v1/chat/completions"], ["POST", "/openai/responses"],
+             ["POST", "/openai/deployments/*/chat/completions"], ["GET", "/openai/v1/models"]]},
+  {"name": "anthropic", "hosts": ["api.anthropic.com"],
+   "allow": [["POST", "/v1/messages"], ["POST", "/v1/messages/count_tokens"]]},
+  {"name": "openrouter", "hosts": ["openrouter.ai"],
+   "allow": [["POST", "/api/v1/responses"], ["POST", "/api/v1/chat/completions"], ["POST", "/api/v1/messages"],
+             ["POST", "/api/v1/messages/count_tokens"], ["GET", "/api/v1/models"]]},
+  {"name": "http", "hosts": [],
+   "allow": [["POST", "/v1/messages"], ["POST", "/v1/messages/count_tokens"], ["POST", "/v1/chat/completions"],
+             ["POST", "/v1/responses"], ["GET", "/v1/models"]]}
+ ]
+}
