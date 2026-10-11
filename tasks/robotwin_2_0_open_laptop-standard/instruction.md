@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · open_laptop — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use one arm to open the laptop.
+cannot open. You get one client and one episode. **Task:** Use one arm to open the laptop. The success check, run at the end of every call, passes when the lid's hinge is at 40 percent of its joint range or more (it starts at 20 percent) and, at that moment, the gripper centre (TCP) of the arm that RoboTwin assigns to this laptop (the left or the right one, fixed by which way the laptop is turned) is within 10 cm of a grasp point on the lid.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · beat_block_hammer — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** There is a hammer and a block on the table, use the arm to grab the hammer and beat the block.
+cannot open. You get one client and one episode. **Task:** There is a hammer and a block on the table, use the arm to grab the hammer and beat the block. The success check, run at the end of every call, passes when the hammer's head is within 2 cm in x and in y of the centre of the block's top face and the hammer is touching the block.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

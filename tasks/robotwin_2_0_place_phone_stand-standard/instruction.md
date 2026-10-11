@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_phone_stand — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Pick up the phone and put it on the phone stand.
+cannot open. You get one client and one episode. **Task:** Pick up the phone and put it on the phone stand. The success check, run at the end of every call, passes when the phone's reference point is within 4.5 cm in x, 4 cm in y and 4 cm in z of the stand's support point and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

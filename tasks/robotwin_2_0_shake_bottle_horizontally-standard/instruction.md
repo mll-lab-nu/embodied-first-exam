@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · shake_bottle_horizontally — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Shake the bottle horizontally with proper arm.
+cannot open. You get one client and one episode. **Task:** Shake the bottle horizontally with proper arm. The success check, run at the end of every call, passes when the bottle is lifted, the centre of its base above z = 0.80 m (6 cm above the table top).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

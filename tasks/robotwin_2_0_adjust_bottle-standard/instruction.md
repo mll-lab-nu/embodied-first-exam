@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · adjust_bottle — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Pick up the bottle on the table headup with the correct arm.
+cannot open. You get one client and one episode. **Task:** Pick up the bottle on the table headup with the correct arm. The success check, run at the end of every call, passes when the bottle's centre is above z = 0.90 m (16 cm above the table top) and more than 15 cm to one side of the table's centre line, on the side where the bottle lies at the start (x < -0.15 m if it starts left of centre, x > 0.15 m if it starts right of centre).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

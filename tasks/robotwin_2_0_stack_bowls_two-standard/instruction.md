@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · stack_bowls_two — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Stack the two bowls on top of each other.
+cannot open. You get one client and one episode. **Task:** Stack the two bowls on top of each other. The success check, run at the end of every call, passes when the two bowls' positions are within 4 cm of each other in x and in y, the lower bowl's base is below z = 0.76 m and the upper one's below z = 0.79 m (2 cm and 5 cm above the table top), and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

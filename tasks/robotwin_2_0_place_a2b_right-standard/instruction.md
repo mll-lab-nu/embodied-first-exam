@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_a2b_right — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use appropriate arm to place object A on the right of object B.
+cannot open. You get one client and one episode. **Task:** Use appropriate arm to place object A on the right of object B. The success check, run at the end of every call, passes when object A's position is to the right of object B's (larger x), between 8 cm and 20 cm from it in the table plane and less than 5 cm from it in y, and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
