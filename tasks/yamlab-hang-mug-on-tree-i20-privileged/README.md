@@ -25,7 +25,8 @@ the primitives are only IK / joint moves and gripper commands. This mode is the 
 `solution/oracle_actions.npy` (612 control steps, run by `solution/oracle.py` through the agent's own tooling): a
 30-step (1 s) linear move from the home pose to the first action of the human teleoperation demonstration of this instance
 (`hangmug_020.hdf5 demo_2` of `yamlab/yamlab_datasets` @ `fc6be97`), then that demonstration's recorded actions, replayed open-loop.
-YAMLab's demonstrations are not in the image, and the agent's network reaches only the model APIs.
+YAMLab's demonstrations are not in the image, and the agent's network reaches only the model APIs and the package
+registries.
 
 ## Verification
 `tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the instance

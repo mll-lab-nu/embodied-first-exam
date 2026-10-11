@@ -58,7 +58,7 @@ hook is `scripts/robocasa-gr1/shared/finalize.sh`; both files are RoboCasa's byt
 (`docs/benchmarks/robocasa.md`: verdict final before the video, the hook's budget, request validation).
 
 ## Egress
-The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs. The image
+The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image
 contains no demonstration data.
 
 ## Image

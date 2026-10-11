@@ -14,7 +14,7 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 | image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
 | oracle | full, both modes: the demonstration's own actions |
 | agent time budget | 5400 s for every task (D8: dexterous control of 16 hand joints per arm through a thin interface; the model runs we made used most of it) |
-| egress | allowlisted to the model APIs in both modes: the reference demonstrations are public (PROTOCOL §2.7) |
+| egress | allowlisted to the model APIs and the package registries in both modes: the reference demonstrations are public (PROTOCOL §2.7) |
 
 ## Tasks
 

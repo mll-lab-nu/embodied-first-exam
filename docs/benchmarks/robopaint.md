@@ -332,7 +332,7 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 - A standard twin's agent container and verifier use the one client base of every standard task
   (`scripts/eai_standard/client.env`, pinned by digest). The agent side installs the exact pins of
   `client-requirements.txt`, inline; the generator writes both (`ci_checks/check-standard-client.sh`).
-- Agent egress is an allowlist (model APIs only) on every task, because the sources of some targets are public.
+- Agent egress is an allowlist (the model APIs and the package registries) on every task, because the sources of some targets are public.
 - Frozen inputs over 2 MB: 9 of the 11 oil reference pictures (`target.png`, 2.0–2.5 MB, 5 copies per pair).
   - They are photographic scans, so lossless re-encoding gets only 5 of the 9 under 2 MB.
   - They stay as frozen (the instance hash covers their pixels). The 2 MB limit is for results.

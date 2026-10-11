@@ -37,7 +37,7 @@ REGISTRY = "ghcr.io/mll-lab-nu"
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 RUN_ID = "codex-gpt6_luna-xhigh"            # the run whose trials are the cited positives (results site, Hugging Face)
 REVIEW_PR = "#3"                           # the pull request with the per-family review (PROTOCOL §2.7): dev/qineng = PR #3
-# The agent's egress is the model APIs only (owner decision 2026-10-10, board 0072; docs/benchmarks/robolab.md, Network): the
+# The agent's egress is the model APIs and the package registries (owner decisions 2026-10-10 / 10-11, board 0072; docs/benchmarks/robolab.md, Network): the
 # templates' `[agent]` blocks hold the two lines `scripts/set_agent_egress.py allowlist` writes, with that script's HOSTS (one
 # list for every task, ci_checks/check-verifier-isolation.sh).
 _HOSTS = re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text())

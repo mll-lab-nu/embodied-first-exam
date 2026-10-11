@@ -34,7 +34,7 @@ CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR, ORG = "Changhe Chen", "MLL Lab"
 HOSTS = [
     "chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
-    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com",
+    "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com",
 ]  # fmt: skip
 PREFIXES = ("mujoco_playground_go1_", "mujoco_playground_spot_", "mujoco_playground_barkour_")
 CAMERAS = {"go1": "`track`, `side`, `back`, `top` (they follow the robot)", "spot": "`track`, `side`, `back`, `top` (they follow the robot)",

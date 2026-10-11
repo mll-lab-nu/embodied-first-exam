@@ -53,7 +53,7 @@ COLLECT_TIMEOUT = 7200
 # against the containers' 4-CPU quota: bimanual_hanoi ran at 35 control steps/s that way on a 32-thread host, 150 with 4.
 BLAS_THREADS = 4
 ALLOWED_HOSTS = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
-                 "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
+                 "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 # Per family: the goal in words (the standard twin never sees the code, so it is complete), what the scene holds, the
 # extra rule robot_coding_bench adds, the static camera the texts name first, the difficulty and the expert time.

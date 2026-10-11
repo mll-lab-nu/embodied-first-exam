@@ -95,14 +95,15 @@ ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §2.10: run-time switch (compose default 
 EMERGENCY_GPU_FACTOR = 1.5           # §2.10: host protection in enforced runs (the same value: rcb_monitor/monitor.py)
 LIMIT_SCOPES = {"privileged": "trial", "standard": "agent", "standard-realtime": "agent"}   # §2.10: who the limits bind
 LIMITS_HEADING = "## Resource limits"
-# PROTOCOL §2.11 (owner, 2026-10-10, board 0072): what the agent may use, the same words in every task's instruction.md, just
-# before `## Resource limits` (generator-owned: edit it here, never in a task; ci_checks/check-resources.py compares)
+# PROTOCOL §2.11 (owner, 2026-10-11, board 0072): an honour rule, the same words in every task's instruction.md, just
+# before `## Resource limits` (generator-owned: edit it here, never in a task; ci_checks/check-resources.py compares).
+# Installing packages is fine; looking the task's solution up is not. No threat: trials are reviewed, the owner decides.
 EXTERNAL_HEADING = "## External material"
 EXTERNAL_TEXT = (
-    "Use only what is in your container and the task interface described above. Do not download or install anything: no "
-    "source code, robot models, datasets, demonstrations, pretrained policies, published solutions or packages. Do not use "
-    "web search, browsing, account connectors or any other tool that runs outside your container. Network access is "
-    "limited to your model's API. A result obtained with external material is void.")
+    "You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution "
+    "to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or "
+    "policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the "
+    "package registries (PyPI, Debian / Ubuntu archives) only.")
 
 
 # ---------------------------------------------------------------------------------------------------------------------

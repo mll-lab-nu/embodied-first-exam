@@ -71,12 +71,12 @@ ORG = "MLL Lab"
 MAX_STEPS = 3000
 ALLOWED_HOSTS = (
     '["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", '
-    '"*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]'
+    '"*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]'
 )
 AGENT = f"""[agent]
 timeout_sec = 3600.0
-# The benchmark's demonstrations solve these tasks and are publicly downloadable, so egress is closed to the model APIs.
-network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §2.7
+# The benchmark's demonstrations solve these tasks and are publicly downloadable, so egress is closed to everything but the model APIs and the package registries.
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = {ALLOWED_HOSTS}
 """
 ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}

@@ -37,10 +37,10 @@ import task_conventions as TC  # noqa: E402  the protocol's conventions: every g
 
 TASKS = ROOT / "tasks"
 SHARED = HERE / "shared"
-# The agent's egress: the model APIs only (owner decision 2026-10-10, board 0072; PROTOCOL §2.7), the two lines that
+# The agent's egress: the model APIs and the package registries (owner decisions 2026-10-10 / 10-11, board 0072; PROTOCOL §2.11), the two lines that
 # scripts/set_agent_egress.py writes, with its HOSTS (ci_checks/check-verifier-isolation.sh requires that list).
 HOSTS = ast.literal_eval(re.search(r"^HOSTS = (\[.*?\])", (ROOT / "scripts/set_agent_egress.py").read_text(), re.S | re.M).group(1))
-AGENT_EGRESS = ('network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4\n'
+AGENT_EGRESS = ('network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11\n'
                 "allowed_hosts = [" + ", ".join(f'"{h}"' for h in HOSTS) + "]")
 LAYER = ROOT / "scripts" / "eai_standard"
 IMAGE = f"ghcr.io/mll-lab-nu/eai-robowits:{(ROOT / 'images/robowits/VERSION').read_text().strip()}"
@@ -67,7 +67,7 @@ MAX_STEPS_H = f"{MAX_STEPS / 30 / 3600:.2f}"       # hours of simulated time at 
 MAX_FRAMES, DEPTH_FRAME = (int(re.search(rf"^{k} = (\d+)", (SHARED / "server.py").read_text(), re.M).group(1)) for k in ("MAX_FRAMES", "DEPTH_FRAME"))
 EGRESS_CHANGE = (
     "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
-    "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), and "
+    "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), and "
     "agents could download upstream sources, reference solutions and robot models from their own shell. The scene, the "
     "frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before this "
     "date were obtained with open egress.")

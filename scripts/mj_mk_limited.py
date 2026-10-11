@@ -53,15 +53,15 @@ CHANGES_ALOHA = [
     "the wrist cameras' poses were those of the home pose however the arms had moved; a response with several frames now "
     "also carries the wrist cameras' pose for every frame (`cam2world_gl/<cam>`).",
 ]
-# The agent's egress (owner decision 2026-10-10, board 0072): the model APIs only, for every task this script writes. The
+# The agent's egress (owner decisions 2026-10-10 / 10-11, board 0072): the model APIs and the package registries, for every task this script writes. The
 # Playground ALOHA / Panda twins were open (Harbor's default) until then; DexToolBench has been on the allowlist from the start.
 EGRESS_CHANGE = (
     "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
-    "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), and "
+    "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), and "
     "agents could download upstream sources, reference solutions and robot models from their own shell. The scene, the "
     "frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before this date "
     "were obtained with open egress.")
-ALLOW = 'network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4\nallowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]'
+ALLOW = 'network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11\nallowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]'
 
 
 def tool_of(src: pathlib.Path) -> str:

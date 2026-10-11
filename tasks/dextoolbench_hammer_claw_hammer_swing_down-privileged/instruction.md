@@ -40,14 +40,14 @@ z = 0.53 m; the robot base is at (0, 0.8, 0). Everything in `s.model` / `s.data`
 tier), e.g. for inverse kinematics with `mujoco.mj_jacBody`.
 
 ## Rules
-- There is no internet access apart from the model API. Do not use pretrained manipulation policies or any
+- The network reaches only the model API and the package registries (PyPI, Debian / Ubuntu archives). Do not use pretrained manipulation policies or any
   DexToolBench / SimToolReal solution; write your own controller.
 - Only the joint targets count: editing `s.data` (e.g. moving the hammer by hand) while debugging changes nothing in
   the replay.
 - You have 60 minutes of wall-clock time.
 
 ## External material
-Use only what is in your container and the task interface described above. Do not download or install anything: no source code, robot models, datasets, demonstrations, pretrained policies, published solutions or packages. Do not use web search, browsing, account connectors or any other tool that runs outside your container. Network access is limited to your model's API. A result obtained with external material is void.
+You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **7 GiB of GPU memory**, **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 4 cores for your container; the cap only slows you down.
