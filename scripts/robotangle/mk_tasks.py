@@ -44,6 +44,13 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as TC  # noqa: E402  the protocol's conventions: every generator ends with normalize(task_dir)
 
 REL = json.loads((HERE / "release.json").read_text())
+# Agent egress (owner, 2026-10-10, board 0072): the model APIs only. The packages' task.toml carry the release's line (open
+# egress); rewrite_toml puts the two lines `scripts/set_agent_egress.py allowlist` writes, with that script's HOSTS (one
+# list for every task: ci_checks/check-verifier-isolation.sh).
+EGRESS_OLD = "# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.\n"
+_HOSTS = re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text()).group(1)
+EGRESS_NEW = ('network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4\n'
+              "allowed_hosts = [" + ", ".join(f'"{h}"' for h in re.findall(r'"([^"]+)"', _HOSTS)) + "]\n")
 NOP = json.loads((HERE / "nop_records.json").read_text())
 ASSETS = json.loads((HERE / "assets.json").read_text())        # the pinned HF dataset (scripts/robotangle/assets.py)
 STAGED = "/tmp/robotangle-instance"                             # where the standard sim stages its instance   # nop runs on this release's build (very_easy / easier)
@@ -297,6 +304,7 @@ def rewrite_toml(s: str, base: str, rec: dict) -> str:
     s = s.replace('authors = [{ name = "jianwen" }]', 'authors = [{ name = "Jianwen Lyu" }]')
     s = s.replace('"topogym",', '"robotangle",')
     s = re.sub(r'(?m)^tooling_version = "\d+"', f'tooling_version = "{REL["tooling_version"]}"', s)
+    s = swap(s, EGRESS_OLD, EGRESS_NEW, f"{base} agent egress")
     s = re.sub(r'(?m)^oracle_evidence = .*\n', "", s)
     if {"privileged", "standard"} <= set(rec["evidence"]):   # a passing oracle run in both modes (docs/benchmarks/robotangle.md)
         s = re.sub(r'(?m)^oracle = .*\n', 'oracle = "full"\n', s, count=1)
@@ -383,7 +391,7 @@ def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
            "timeout; a longer one is\n`bad_trajectory`)." if mode == "privileged" else "")
     s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + cap + "\n\n" + nop + "\n\n", s)
     return (s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n"
-            + "\n".join(changes(mode) + change_r2(base, mode) + change_r3(mode)) + "\n")
+            + "\n".join(changes(mode) + change_r2(base, mode) + change_r3(mode) + [CHANGE_EGRESS]) + "\n")
 
 
 # ---------------------------------------------------------------- fixes of the round-2 review (2026-10-10, board 0067 R2)
@@ -457,6 +465,16 @@ def change_r2(base: str, mode: str) -> list[str]:
             f"waits up to {WAIT_S} s for the service (600 s before) and prints its progress, and `cameras=\"name\"` is one "
             "camera, not its characters. The image, scene, frozen instance, tooling and grader are unchanged, so the task "
             "keeps its name."]
+
+
+CHANGE_EGRESS = (
+    "- 2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
+    "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), and "
+    "agents could download upstream sources, reference solutions and robot models from their own shell: the image's "
+    "simulator package names the address of an upstream demonstration (`reference_scene.json` `source_url`; "
+    "docs/benchmarks/robotangle.md, Network policy), which one trial downloaded. The image, scene, frozen instance, "
+    "tooling and pass rule are unchanged, so the task keeps its name; results from before this date were obtained with "
+    "open egress and are withdrawn (RoboTangle is run again from scratch).")
 
 
 def change_r3(mode: str) -> list[str]:

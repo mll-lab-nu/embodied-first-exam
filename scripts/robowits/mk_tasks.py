@@ -37,6 +37,11 @@ import task_conventions as TC  # noqa: E402  the protocol's conventions: every g
 
 TASKS = ROOT / "tasks"
 SHARED = HERE / "shared"
+# The agent's egress: the model APIs only (owner decision 2026-10-10, board 0072; PROTOCOL §2.7), the two lines that
+# scripts/set_agent_egress.py writes, with its HOSTS (ci_checks/check-verifier-isolation.sh requires that list).
+HOSTS = ast.literal_eval(re.search(r"^HOSTS = (\[.*?\])", (ROOT / "scripts/set_agent_egress.py").read_text(), re.S | re.M).group(1))
+AGENT_EGRESS = ('network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4\n'
+                "allowed_hosts = [" + ", ".join(f'"{h}"' for h in HOSTS) + "]")
 LAYER = ROOT / "scripts" / "eai_standard"
 IMAGE = f"ghcr.io/mll-lab-nu/eai-robowits:{(ROOT / 'images/robowits/VERSION').read_text().strip()}"
 # the one client base of every standard agent container and verifier, pinned by digest, and its pip pins (PROTOCOL §2.4):
@@ -60,6 +65,12 @@ MAX_STEPS = int(re.search(r"^MAX_STEPS = ([\d_]+)", (SHARED / "rcb_robowits.py")
 MAX_STEPS_H = f"{MAX_STEPS / 30 / 3600:.2f}"       # hours of simulated time at the 30 Hz control rate
 # The standard service's image budget of one call (shared/server.py MAX_FRAMES, DEPTH_FRAME), read from the source too.
 MAX_FRAMES, DEPTH_FRAME = (int(re.search(rf"^{k} = (\d+)", (SHARED / "server.py").read_text(), re.M).group(1)) for k in ("MAX_FRAMES", "DEPTH_FRAME"))
+EGRESS_CHANGE = (
+    "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
+    "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), and "
+    "agents could download upstream sources, reference solutions and robot models from their own shell. The scene, the "
+    "frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before this "
+    "date were obtained with open egress.")
 # Fixes to the published tasks (PROTOCOL §2.8): one README Change Log entry per mode, newest last.
 CHANGE_LOG = {
     "priv": [
@@ -76,6 +87,7 @@ CHANGE_LOG = {
         "(`tests/test.sh` passes it as `--budget`). Before, the video replay of a very long trajectory could run into "
         "Harbor's verifier timeout, which discards the verdict already written. The verdict, the pass rule, the frozen "
         "instance and the tooling are unchanged; validated with a synthetic test of the grader, not re-run in the simulator.",
+        EGRESS_CHANGE,
     ],
     "std": [
         "2026-10-10 (review of board 0067; findings RW-1, RW-2, RW-3, RW-4, RW-7, RW-8): the service checks every request "
@@ -107,6 +119,7 @@ CHANGE_LOG = {
         "could hold more frames than the sidecar's memory and get the service killed, so a trial that ended "
         "`sim_crashed*` or with `resource_service_oom` right after such a request before this date was that. The "
         "collect hook, the grader, the scene and the pass rule are unchanged.",
+        EGRESS_CHANGE,
     ],
 }
 
@@ -551,7 +564,7 @@ network_mode = "no-network"       # the replay needs no download: assets in the 
 
 [agent]
 timeout_sec = {float(BUDGET_S)}             # RoboWits budget: 1.5 h of wall clock (docs/benchmarks/robowits.md)
-# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+{AGENT_EGRESS}
 
 [environment]
 build_timeout_sec = 3600.0
@@ -616,7 +629,7 @@ timeout_sec = {ct}                # service up (a resume replays the journal fir
 
 [agent]
 timeout_sec = {float(BUDGET_S)}             # RoboWits budget: 1.5 h of wall clock (docs/benchmarks/robowits.md)
-# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.
+{AGENT_EGRESS}
 
 [environment]
 build_timeout_sec = 1800.0

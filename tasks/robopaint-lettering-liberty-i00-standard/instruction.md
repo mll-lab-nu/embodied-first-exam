@@ -139,5 +139,8 @@ same orientation of the nib (the mark is the same for a pen turned by 180°).
 
 The exemplar comes from a public-domain engraved copybook plate (1741): `/app/NOTICE-exemplar.md`.
 
+## External material
+Use only what is in your container and the task interface described above. Do not download or install anything: no source code, robot models, datasets, demonstrations, pretrained policies, published solutions or packages. Do not use web search, browsing, account connectors or any other tool that runs outside your container. Network access is limited to your model's API. A result obtained with external material is void.
+
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **9 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.

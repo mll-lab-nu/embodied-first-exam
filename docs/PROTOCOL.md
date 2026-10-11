@@ -4,7 +4,9 @@
 verifier's limits step are in every task (§2.10; #131, with the review fixes of the same day: an out-of-memory kill is
 the agent's only at its container's own cap, a benchmark-owned service killed for memory is never the agent's 0, a CPU
 cap above the host's CPU count is clamped by the runner); enforcement is off by default, and v1.2 becomes final when
-the calibration batch has confirmed the limits. Earlier versions, whose rules are all part of this text: v1.0
+the calibration batch has confirmed the limits. Also on 2026-10-10 (owner decision, board 0072): every task's agent
+egress is the model APIs only, every instruction states the external-material rule in the same words (§2.11), and the
+usage gateway forwards model-API calls only (D11, §5). Earlier versions, whose rules are all part of this text: v1.0
 (2026-09-30: the two modes and their names), v1.1 (2026-10-08: the standard-realtime mode, §4b), v1.1.4 (compute
 resources, §2.9), v1.1.5 (resource limits, §2.10).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard and
@@ -58,8 +60,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | D8 | Agent time budget | 3600 s by default, at most 14400 s; longer budgets are justified, uniform within a benchmark, and results are grouped by budget. Documented per-benchmark exceptions to the cap (§2.3): RoboTangle 21600 s (owner, 2026-10-08). |
 | D9 | Shared code | Shared sources are copied into tasks by the generator; nothing at run time imports repository code outside the task directory. |
 | D10 | Token budget | Per trial: **100M input tokens, 10M output tokens** by default; exceeding either fails the trial. |
-| D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. A transparent usage gateway that forwards requests unchanged and only records token usage (`scripts/usage_gateway/`) is allowed. |
-| The harness's web search is off in official runs: Codex `web_search = "disabled"` (Harbor `--ak web_search=disabled`), Claude Code `WebSearch` and `WebFetch` disallowed (`--ak disallowed_tools=WebSearch,WebFetch`). The search runs at the model provider, so no egress allowlist stops it; `scripts/run_agent_batch.sh` sets both by default (`WEB_SEARCH=disabled`) | MUST | [new] (2026-10-02: tested with Codex 0.159.2 and gpt-6-luna — with ChatGPT login the default searches GitHub and quotes upstream experts, `disabled` stops it; with an Azure API key Codex offers no search, but the API runs one for a request that carries the `web_search` tool, which only the usage gateway's raw log can reveal) |
+| D11 | Harness | Official results use Harbor's native agents only; no agent adapters, and no gateway that holds credentials or changes requests. The usage gateway (`scripts/usage_gateway/`) is allowed: it forwards model-API requests unchanged, records token usage, and refuses what a trial may not have: a request past the token budget (§5) and, since 2026-10-10, every request that is not a model-API call (§2.11). No tool that runs outside the trial's container is offered to the model (§2.11): official runs turn the harness's web search off (Codex `web_search = "disabled"`, Claude Code `WebSearch` and `WebFetch` disallowed; `scripts/run_agent_batch.sh` `WEB_SEARCH=disabled`, the default) and start the harness without account connectors, apps, plugins, image generation and cloud agents. These run at the model provider, so no egress allowlist stops them (2026-10-02: Codex with a ChatGPT login searched GitHub by default; 2026-10-10: the same login handed the model 238 account connector tools, and 21 trials called them) |
 | D12 | Mode naming | `mode ∈ {privileged, standard, standard-realtime}` (the third mode since v1.1, #86; named `standard-realtime` since v1.1.1, owner 2026-10-08, #97: it is standard mode's robot as a service on a clock that does not stop); the `tier` field is removed; every task directory ends in its mode: `-privileged`, `-standard` or `-standard-realtime`. |
 
 ## 1. Checklist (every task)
@@ -78,13 +79,15 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 12. A published task's `environment/` and `tests/` inputs never change; a change is a new task. [current]
 13. The directory name ends in `-privileged`, `-standard` or `-standard-realtime`, matching `mode` (§2.2); no `results/` directory (D3). [CI]
 14. `README.md` in the standard layout (§2.1). [CI] (sections and key rows; `scripts/task_conventions.py --check` for the rest)
-15. Runs with Harbor's native agents; no custom runner or adapter, and no gateway beyond the recording-only usage gateway (D11). [new]
+15. Runs with Harbor's native agents; no custom runner or adapter, and no gateway beyond the usage gateway (D11). [new]
 16. Standard-mode tasks also satisfy every MUST in §4; standard-realtime tasks every MUST in §4 and §4b.
 17. `[metadata.resources]` states the minimum CPU cores, memory and GPU memory of the agent phase and the verifier
     phase, the GPU class and a recommended GPU; the README's `## Compute resources` shows the same values (§2.9). [CI] (v1.1.4)
 18. `[metadata.resources.limits]` states the agent phase's limits (GPU memory, memory, processes, disk) and the whole
     trial's expected peak, `[metadata.resources.caps]` the docker caps per service; `instruction.md` ends with the
     `## Resource limits` paragraph rendered from them (§2.10). [CI] (v1.1.5)
+19. `[agent] network_mode = "allowlist"` with the model APIs' hosts; `instruction.md` states `## External material`
+    just before `## Resource limits`; the agent needs no download at run time (§2.11). [CI]
 
 ## 2. Task contract
 
@@ -170,7 +173,8 @@ Harbor builds the task images locally from the task directory on every run; only
 | Gives the success predicate's exact parameters | MAY | [current] |
 | World-frame quantities (coordinates, table height): decided per benchmark, consistent within it, documented | MUST | [new] |
 | Written by a human | SHOULD | [current] |
-| Ends with `## Resource limits`, rendered from `[metadata.resources.limits]` by `scripts/task_conventions.py` (§2.10) | MUST | [CI] (v1.1.5) |
+| Ends with `## External material` (§2.11: the same words in every task) and `## Resource limits`, rendered from `[metadata.resources.limits]` (§2.10); `scripts/task_conventions.py` writes both | MUST | [CI] (v1.1.5; 2026-10-10) |
+| Tells the agent that it may install or download something | MUST NOT | [new] (§2.11: under the allowlist it cannot) |
 
 ### 2.6 Verifier
 | Item | Level | Basis |
@@ -206,9 +210,9 @@ Harbor builds the task images locally from the task directory on every run; only
 | Item | Level | Basis |
 |---|---|---|
 | Reference solutions only under `solution/` (mounted for the oracle agent only) | MUST | [current] |
-| A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container) | MUST NOT | [current] |
+| A solution, or a pointer to one, anywhere the agent can reach (task image, base image, tooling, docs in the container). A pointer is anything that locates the solution of this task: a URL, a dataset or file name, a demonstration or episode id, the name of the upstream expert that produced the reference. Provenance is kept in `scripts/<bench>/` and the README, never in a file under `environment/` the agent reads | MUST NOT | [CI] for the task's own files (`ci_checks/check-agent-pointers.py`: hosts of code, data and video, `*_url` keys, dataset and demonstration file names); [current] for images, reviewed when they are built. Upstream documentation inside a simulator image that names the benchmark's public datasets or checkpoints is not removed file by file: the allowlist of §2.11 makes them unreachable. Open (2026-10-10): RoboTangle's image (docs/benchmarks/robotangle.md) |
 | Upstream experts scrubbed from images (e.g. RoboTwin `play_once`) | MUST | [current] |
-| Agent egress allowlisted in `task.toml` when a solution is publicly downloadable | SHOULD | [current] for AutoBio, BiGym 2.0, DexJoCo, DexToolBench, HumanoidBench, KinDER, LabUtopia, LIBERO-MAX, ManiGuard, MetaWorld+, MolmoSpaces, MuJoCo Playground's nine quadruped pairs, MyoSuite, RoboCasa, RoboCasa365, RoboCasa-GR1, RoboOlympics, RoboPaint, RoboDojo, VLABench and YAMLab; RoboTwin, MuJoCo Playground's four Aloha / Panda pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle are open by default and switched per run with `scripts/set_agent_egress.py` (allowlist contents under review, §7). An allowlist is that script's `HOSTS`, the same in every task [CI] |
+| Agent egress allowlisted in `task.toml` (the model APIs only), in every task (§2.11) | MUST | [CI] (2026-10-10; until then a SHOULD "when a solution is publicly downloadable", and RoboTwin, MuJoCo Playground's four Aloha / Panda pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle were open) |
 | `nop` scores 0 | MUST | [current] |
 | `oracle = "full"`: the oracle scores 1 | MUST | [current] |
 | `oracle = "partial"` or `"none"`: `oracle_evidence` and **human review** | MUST | [new] |
@@ -423,6 +427,57 @@ only (the simulator in the `sim` service is the benchmark's and does not count)"
 
 (The sentence about 1.5 times the GPU-memory limit is rendered only where the limits include GPU memory.)
 
+### 2.11 External material and the network (2026-10-10)
+An agent solves a task with what is in its container and with the task interface its `instruction.md` documents, and
+with nothing else (owner decision, board 0072). Before, only three benchmarks' instructions said so, six benchmarks
+left the agent's egress open, and trials downloaded upstream sources, a reference solution, a recorded demonstration,
+robot models and pretrained policies, from their own shell or through tools of the model's account.
+
+| Item | Level | Basis |
+|---|---|---|
+| The agent uses only what is in its container and the documented task interface (the tooling, the standard-mode client and its service). It downloads and installs nothing: no source code, robot models, datasets, demonstrations, pretrained policies, published solutions or packages | MUST | [new] (stated in every instruction; the allowlist below) |
+| No tool that runs outside the container is used: web search and fetch, browsing, account connectors and apps, remote MCP servers, plugins, image generation, cloud agents. The runner does not offer them (D11) | MUST NOT | [new] |
+| `[agent] network_mode = "allowlist"` in every task, `allowed_hosts` = the model APIs' hosts (`scripts/set_agent_egress.py` `HOSTS`, the same list in every task) | MUST | [CI] |
+| What the agent's container needs at run time (assets, robot models, packages, caches) is in its image or the task directory; a task that needs a download during the agent phase does not conform | MUST | [current] (of the six benchmarks switched on 2026-10-10, RoboTwin, the Playground pairs, RoboWits, BEHAVIOR-1K and RoboLab were run with the oracle under the allowlist, both modes, with the rewards and state hashes of their open-egress runs; RoboLab needed its image to hold the materials it used to fetch, `eai-robolab:0.1.2`; RoboTangle, whose image documents that it needs no network, was not run again before its next release) |
+| Every `instruction.md` states the rule in the same words under `## External material`, just before `## Resource limits`; `scripts/task_conventions.py` (`EXTERNAL_TEXT`) writes it and it is never edited in a task | MUST | [CI] |
+| A run through the usage gateway narrows the agent's egress to the gateway's address, and the gateway forwards model-API calls only (§5) | MUST for official runs | [new] (`scripts/run_agent_batch.sh` `GATEWAY=1`) |
+| A result obtained with external material is void: the trial is withdrawn and run again. It is neither a success nor a failure of the task | MUST | [new] |
+
+The paragraph in every `instruction.md`:
+
+> ## External material
+> Use only what is in your container and the task interface described above. Do not download or install anything: no
+> source code, robot models, datasets, demonstrations, pretrained policies, published solutions or packages. Do not use
+> web search, browsing, account connectors or any other tool that runs outside your container. Network access is
+> limited to your model's API. A result obtained with external material is void.
+
+Who reaches what in a trial (Harbor's egress control puts `main` and every compose service without its own network
+setting in one network namespace; §2.6 forbids such a setting on any service but the monitor):
+
+| | While the environment starts and the harness is installed | During the agent phase |
+|---|---|---|
+| The agent's container (`main`) | public (Harbor's baseline: the harness is installed from its registry) | the allowlist: the model APIs' hosts; in a run through the usage gateway, the gateway's address only (and `chatgpt.com` for Codex with a ChatGPT login, below) |
+| The `sim` sidecar (standard modes) and other services of the task | public; it needs nothing: images are complete | the same allowlist as `main` (one namespace): a service that restarts mid-episode starts without the network |
+| `rcb_monitor` | none | none |
+| The verifier (its own sandbox, afterwards) | | `no-network` (§2.6: MUST in the standard modes, SHOULD in privileged mode) |
+
+The model APIs' hosts also serve what a trial must not reach (a ChatGPT login's account connectors, file and
+conversation endpoints), and the credentials of the run are in the container. So with the gateway on, the runner
+starts each job from a copy of the task whose allowlist is the gateway's address alone (`scripts/set_agent_egress.py
+only <address>`; Harbor can add a host to a task's allowlist at run time, not take one off), and the gateway forwards
+only the requests listed per provider in `scripts/usage_gateway/api_paths.json` (responses, messages, token counting,
+the model list), answers every other one 403 and records it (`<trial>/gateway/usage.jsonl`
+`refused = "path_not_allowed"`, `totals.json` `refused_paths`). A model request's body is forwarded as it is or not at
+all: it must be one JSON object the gateway can read, and every tool it declares must be of a type the agent runs
+itself (`client_tool_types` in the same file); a request declaring any other type (the provider's: web search or
+fetch, image generation, remote MCP, file search, a hosted shell or code interpreter), a provider-side search field or
+content for the provider to fetch by URL is refused (`refused = "server_tool"`), an unreadable one too
+(`"body_unreadable"`). Without the gateway (`GATEWAY=0`, a
+bare `harbor run`), the task's own allowlist applies and these hosts are reachable directly: not for official runs.
+Open: Codex with a ChatGPT login needs `chatgpt.com` itself at start-up, over HTTPS (docs/RUNNING.md), so such a run
+keeps that host beside the gateway, and its account connectors are off by the harness's configuration only; official
+runs prefer API keys, which have none.
+
 ## 3. Privileged mode (`mode = "privileged"`, `task_type = "trajectory"`)
 
 | Item | Level | Basis |
@@ -624,6 +679,7 @@ settings.
 |---|---|---|
 | Report success together with cost: tokens, money, turns, wall clock, simulation steps, calls | SHOULD | [current] |
 | Official results use Harbor's native agents (`-a codex`, `-a claude-code`, …), configured through environment variables (OpenRouter, Azure, subscriptions) | MUST | [new] |
+| Official runs go through the usage gateway, which forwards model-API calls only and is the agent container's only egress; the harness offers the model no tool that runs outside the container (§2.11, D11). A trial with a call of such a tool, or with material fetched from outside, is void | MUST | [new] (2026-10-10; the runner flags a trial whose `totals.json` has `refused_paths` or `server_tool_requests`) |
 | **Token budget** per trial: input **100M** (Harbor `n_input_tokens`, cache included), output **10M** (`n_output_tokens`, reasoning included). Exceeding either fails the trial (`success = 0`); the results metadata records the budget and `over_token_budget` | MUST | [new] (enforced while the usage gateway runs; without it, the after-run check is not implemented yet, §7 Open 3) |
 | Align reasoning effort, `max_turns`, token budget and `[agent].timeout_sec` before comparing agents | SHOULD | [current] |
 | Run id `<harness>-<model>-<effort>` | MUST | [new] |
@@ -688,7 +744,19 @@ Open:
    families in their three modes; KinDER's tasks all name a passing privileged trajectory since #134) and the 15
    DexToolBench `partial` pairs (whose reference policy reaches only part of the goals, so it scores 0) have no verified
    positive example. Until they get one, results report them separately from the tasks with a verified solution.
-5. Agent egress (owner, 2026-10-02: kept as it is): the per-benchmark settings stay; the harness's web search is off (§5).
+5. ~~Agent egress~~ decided 2026-10-10 (owner, board 0072; it replaces "kept as it is" of 2026-10-02): every task is
+   on the allowlist and every instruction states the external-material rule (§2.11). RoboTwin had been set back to open
+   on 2026-09-24 and MuJoCo Playground's manipulation pairs, RoboWits, RoboLab, BEHAVIOR-1K and RoboTangle were added
+   open, none for a stated technical reason. One had a dependency nobody had recorded: RoboLab's asset library fetched
+   MDL materials and textures from NVIDIA's Omniverse content bucket at every scene build (without them its tables
+   render red); image 0.1.2 holds them, and RoboLab's tasks moved to it with this change (rendering equal to the
+   open-egress one within render noise, physics unchanged). An in-place change of every task's
+   `instruction.md` and of 542 `task.toml` (scenes, instances, tooling and pass rules unchanged). Results obtained with
+   open egress stand unless the trial fetched external material (those are withdrawn and run again; RoboTangle is run
+   again as a whole); an agent could `pip install` there (plotting and image libraries were the common ones), which
+   it no longer can. Open: RoboTangle's image still names upstream demonstrations and solution sheets in files a
+   privileged agent can read (unreachable under the allowlist; docs/benchmarks/robotangle.md, Network policy: a
+   requirement for its next release).
 6. Resource limits (§2.10, v1.1.5): every task declares limits and caps and its `instruction.md` states the limits (an
    in-place change of every task's `task.toml`, `instruction.md` and README, 2026-10-10); BEHAVIOR-1K's compose files
    default `RCB_TEXTURE_BUDGET` to 0.1 (what every official run already used), so that Isaac's GPU memory does not grow

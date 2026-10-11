@@ -247,13 +247,6 @@
   "place_steps": 30
  },
  "table_top_z": 0.7517,
- "source": {
-  "dataset": "yamlab/yamlab_datasets",
-  "file": "putpot_000.hdf5",
-  "demo": 0,
-  "state": "initial_state",
-  "oracle": "30-step ramp from the home targets + the demo's 475 actions"
- },
  "versions": {
   "isaaclab": "0.54.3",
   "isaacsim": "",

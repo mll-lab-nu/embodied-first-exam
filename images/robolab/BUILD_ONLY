@@ -1,6 +1,7 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION> is never pushed to a
-registry (docs/PROTOCOL.md §2.4, D5). Every evaluation host builds it locally; the RoboLab tasks reference that tag and
-Harbor finds it in the local Docker image store.
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION> is never published
+(docs/PROTOCOL.md §2.4, D5). An evaluation host builds it locally, or takes it from the organization's own non-public
+copy of the package (docs/PROTOCOL.md §7, item 1); the RoboLab tasks reference that tag and Harbor finds it in the local
+Docker image store.
 
 Why
   The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the Isaac Lab 2.3.2 pip wheels (installed from
@@ -15,14 +16,16 @@ What the builder accepts
   No account, key or token is needed: everything is downloaded anonymously.
 
 Data
-  None beyond the image: the RoboLab asset library is baked in; nothing is mounted at run time. The frozen task
-  instances live in the task directories.
+  None beyond the image: the RoboLab asset library is baked in, and since 0.1.2 so are the remote files its USD layers
+  reference (below); nothing is mounted or downloaded at run time. The frozen task instances live in the task
+  directories.
 
 Host
   Linux x86_64, Docker with the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 5.1 supports
   (Isaac renders with RTX even headless; PhysX runs on the CPU). Checked on RTX 4090 (laptop and desktop) and RTX PRO
-  6000. Build: ~40 GB of free disk, network access to github.com (+ its LFS), astral.sh, pypi.org and pypi.nvidia.com,
-  about 45-60 min. Run: one Isaac simulator per 32 GB of host RAM (the standard sidecar and its replays run one at a time).
+  6000. Build: ~40 GB of free disk, network access to github.com (+ its LFS), astral.sh, pypi.org, pypi.nvidia.com and
+  NVIDIA's Omniverse content bucket (omniverse-content-production.s3.us-west-2.amazonaws.com and its s3-us-west-2
+  spelling), about 45-60 min. Run: one Isaac simulator per 32 GB of host RAM (the standard sidecar and its replays run one at a time).
 
 Build (from the repository root)
   docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .
@@ -47,3 +50,26 @@ On a CI machine (maintainers)
   runs the check, and keeps the image in its local Docker store (or in a registry the organization keeps private), never
   on a public registry. Hosts of the same organization may copy a built image among themselves
   (docker save ... | zstd, docker load); a new VERSION means a rebuild on every host.
+
+Versions
+  0.1.2 (2026-10-11): the asset library needs no network. RoboLab's USD layers reference NVIDIA's public Omniverse
+  content bucket by URL (the MDL materials of the tables, the bins and the robot, their textures, a few props); Kit
+  fetched them at scene build, and a container whose egress is the model APIs only rendered the table red. The last
+  two instructions of the Dockerfile run mirror_remote_assets.py: 419 files (635 MB) copied to
+  /opt/robolab/assets/_remote, each checked against remote_assets.sha256 (the build fails when the bucket serves other
+  bytes, a file less or a file more; `--write` re-pins, after a look at the rendering), and the 15 layers that named
+  them point at the copies. Python packages, RoboLab's code and the physics assets are those of 0.1.1.
+  The organization's copy of 0.1.2 (digest sha256:3503e3b554f313f1e62e8f53c9f771c5743f3f67c07ea44d12ac72fc267b9ea6)
+  was made as a delta, so that a host with 0.1.1 fetches one 651 MB layer: 0.1.1
+  (sha256:1b3194b90fe3991303070a78d041126ff91717d0b5777b14b9ae5b6b9fc3b0d6) plus exactly those two instructions,
+    printf 'FROM ghcr.io/mll-lab-nu/eai-robolab:0.1.1@sha256:1b3194b90fe3991303070a78d041126ff91717d0b5777b14b9ae5b6b9fc3b0d6\nCOPY mirror_remote_assets.py remote_assets.sha256 /opt/robolab/\nRUN python /opt/robolab/mirror_remote_assets.py /opt/robolab/assets /opt/robolab/assets/_remote --check /opt/robolab/remote_assets.sha256\n' \
+      | docker build -f - -t ghcr.io/mll-lab-nu/eai-robolab:0.1.2 images/robolab
+  A full build with the command above gives the same files in other layers. (The copy of mirror_remote_assets.py inside
+  the published 0.1.2 is the script before three checks were added to it: a file is compared with the pinned list before
+  it is written or opened, a URL must map inside the mirror, and a layer that still names a served remote file fails the
+  build. Run in 0.1.1 against the same pinned list, the script as it is here gives the same 419 files and rewrites the
+  same 150 references.) Check of either, without network: every
+  mirrored file has its pinned hash, and no text layer of the library names the bucket by URL any more (the binary
+  layers were checked with pxr when 0.1.2 was built: none of the 409 layers kept a remote reference):
+    docker run --rm --network none ghcr.io/mll-lab-nu/eai-robolab:0.1.2 sh -c \
+      'cd /opt/robolab/assets/_remote && sha256sum -c --quiet /opt/robolab/remote_assets.sha256 && ! grep -rIlE "https?:/+omniverse-content" /opt/robolab/assets --include=*.usda'

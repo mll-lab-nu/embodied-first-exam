@@ -9,7 +9,7 @@
 | Family / instance | `pick_up_blue_pitcher` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-pick-up-blue-pitcher-i00__uX7zauo (robolab-pick-up-blue-pitcher-i00-privileged, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/pick_up_blue_pitcher/unlimited/). Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robolab:0.1.2` |
 
 ## Task
 Pick up the large blue pitcher.
@@ -63,3 +63,5 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   `bad_trajectory` (was `grader_error`); `instance_ok` = 0 (the rebuilt scene differs on this host) sets `grader_error` and
   `infra_error`; every reward has `deterministic` and `infra_error`. Tooling: a failed replay video never voids the
   replay, and the video of a trajectory longer than 9,000 rows is a time lapse (at most 9,000 frames).
+- 2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), and agents could download upstream sources, reference solutions and robot models from their own shell. The simulator image is `eai-robolab:0.1.2` (was 0.1.1): it holds the MDL materials and textures that RoboLab's asset library fetched from NVIDIA's Omniverse content bucket whenever a scene was built, so that the cameras show under the allowlist what they showed with open egress (on 0.1.1 without that download the table renders red). The scene, the frozen instance, the physics, the tooling and the pass rule are unchanged, so the task keeps its name; results from before this date were obtained with open egress.
+- 2026-10-10 (board 0072): the agent's image no longer holds RoboLab's recorded example episode (`/opt/robolab/examples/recorded_data`: the actions of a successful `RubiksCubeAndBananaTask` run, a solution of `robolab-rubiks-cube-and-banana-i00-privileged` within the agent's reach, PROTOCOL §2.7); `environment/Dockerfile` removes it. Nothing at run time reads it (only RoboLab's `examples/run_recorded.py` does), so the scene, the frozen instance, the tooling and the pass rule are unchanged; a privileged trial from before this date could read that file.

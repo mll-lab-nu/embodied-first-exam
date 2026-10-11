@@ -20,7 +20,8 @@ What it does:
   values its generator or author wrote.
 - `[environment].memory_mb` = `[metadata.resources.caps].main.memory_gb` x 1024 (§2.10: Harbor writes main's kernel
   memory cap from it, and the cap sits above the limit so that the monitor sees a violation before the OOM killer).
-- `instruction.md` ends with `## Resource limits`, rendered from `[metadata.resources.limits]` (§2.10).
+- `instruction.md` ends with `## External material` (§2.11: the same text in every task) and `## Resource limits`, rendered
+  from `[metadata.resources.limits]` (§2.10).
 - `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
   Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
 """
@@ -94,6 +95,14 @@ ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §2.10: run-time switch (compose default 
 EMERGENCY_GPU_FACTOR = 1.5           # §2.10: host protection in enforced runs (the same value: rcb_monitor/monitor.py)
 LIMIT_SCOPES = {"privileged": "trial", "standard": "agent", "standard-realtime": "agent"}   # §2.10: who the limits bind
 LIMITS_HEADING = "## Resource limits"
+# PROTOCOL §2.11 (owner, 2026-10-10, board 0072): what the agent may use, the same words in every task's instruction.md, just
+# before `## Resource limits` (generator-owned: edit it here, never in a task; ci_checks/check-resources.py compares)
+EXTERNAL_HEADING = "## External material"
+EXTERNAL_TEXT = (
+    "Use only what is in your container and the task interface described above. Do not download or install anything: no "
+    "source code, robot models, datasets, demonstrations, pretrained policies, published solutions or packages. Do not use "
+    "web search, browsing, account connectors or any other tool that runs outside your container. Network access is "
+    "limited to your model's API. A result obtained with external material is void.")
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -393,18 +402,27 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
     return LIMITS_HEADING + "\n" + text + "\n"
 
 
+def render_external() -> str:
+    """instruction.md's `## External material` (PROTOCOL §2.11)."""
+    return EXTERNAL_HEADING + "\n" + EXTERNAL_TEXT + "\n"
+
+
 def normalize_instruction(task: Path) -> None:
-    """instruction.md ends with `## Resource limits` rendered from `[metadata.resources.limits]` (replacing an earlier
-    one); without limits in task.toml it is left as it is."""
+    """instruction.md ends with `## External material` (PROTOCOL §2.11) and `## Resource limits` rendered from
+    `[metadata.resources.limits]` (each replacing an earlier one); without limits in task.toml the second is left out."""
     p = task / "instruction.md"
     md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
     lim = (md.get("resources") or {}).get("limits")
-    if not p.is_file() or not isinstance(lim, dict):
+    if not p.is_file():
         return
     s = p.read_text(encoding="utf-8")
-    s = re.sub(rf"(?ms)^{re.escape(LIMITS_HEADING)}\n.*?(?=^## |\Z)", "", s).rstrip() + "\n"
-    env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
-    write_if_changed(p, s + "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus")))
+    for heading in (EXTERNAL_HEADING, LIMITS_HEADING) if isinstance(lim, dict) else (EXTERNAL_HEADING,):
+        s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
+    s = s.rstrip() + "\n\n" + render_external()
+    if isinstance(lim, dict):
+        env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
+        s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
+    write_if_changed(p, s)
 
 
 def _shared_sources() -> set[bytes]:

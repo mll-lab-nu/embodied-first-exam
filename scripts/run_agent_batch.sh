@@ -8,7 +8,7 @@
 #   EFFORT       reasoning effort, --ak reasoning_effort=<EFFORT> (xhigh); `default` passes none
 #   AK           more agent options, e.g. "--ak reasoning_summary=detailed"
 #   WEB_SEARCH   disabled (default) = the harness offers the model no web search: Codex --ak web_search=disabled,
-#                Claude Code --ak disallowed_tools=WebSearch,WebFetch (PROTOCOL §5; the search runs at the model
+#                Claude Code --ak disallowed_tools=WebSearch,WebFetch (PROTOCOL D11; the search runs at the model
 #                provider, past any egress allowlist); "allowed" = leave the harness default (not for official runs)
 #   AGENT_CONFIG a native config file, --ak config=<file>: Codex's config.toml (an Azure provider; retries with
 #                request_max_retries / stream_max_retries) or Claude Code's settings
@@ -42,6 +42,15 @@
 #   GATEWAY_RAW  1 (default, takes effect with GATEWAY=1) = the gateway also keeps every request and response body
 #                (<trial>/gateway/raw.jsonl.xz, deduplicated, see scripts/usage_gateway/rawlog.py; private: it holds the
 #                whole conversation); 0 = token usage only
+#                The gateway forwards model-API calls only (scripts/usage_gateway/api_paths.json) and answers anything
+#                else at the provider 403 (account connectors, files, web tools; counted in totals.json refused_paths)
+#   GATEWAY_EGRESS  gateway (default; takes effect with GATEWAY=1) = each job runs from its own copy of the task
+#                ($JOBS/.tasks/<job>/, removed afterwards) whose egress allowlist is the gateway's address alone, so the
+#                agent's container reaches its provider through the gateway's model-API paths only. (Harbor's allowlist
+#                names an address, not a port: every TCP service listening on that address of the host is reachable
+#                from a trial, as it has been since the gateway exists. Bind host services to 127.0.0.1.)
+#                (one exception: Codex with a ChatGPT login also keeps chatgpt.com, which its start-up lookup needs);
+#                task = run tasks/ as it is (the task's allowlist: the model APIs' hosts stay reachable directly)
 #   GATEWAY_BIND the docker bridge address the trial containers reach the host by (172.17.0.1)
 #   GATEWAY_EXTRA_HOSTS  more model API host patterns the gateway forwards to, space-separated (e.g. "*.services.ai.azure.com");
 #                a plain-HTTP base URL with a port (ANTHROPIC_BASE_URL / OPENAI_BASE_URL=http://<host>:<port>, a self-hosted
@@ -66,6 +75,13 @@ MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${
 JOBS="${JOBS:-$R/jobs/agents}"; RESULTS="${RESULTS-$(dirname "$R")/rcb_results}"; LABEL="${LABEL:-$AGENT + $MODEL ($EFFORT)}"
 LOG_MIRROR="${LOG_MIRROR:-1}"; MEM_GUARD="${MEM_GUARD:-1}"
 GATEWAY="${GATEWAY:-0}"; GATEWAY_RAW="${GATEWAY_RAW:-1}"; GATEWAY_BIND="${GATEWAY_BIND:-172.17.0.1}"; GATEWAY_START_WAIT="${GATEWAY_START_WAIT:-10}"
+GATEWAY_EGRESS="${GATEWAY_EGRESS:-gateway}"
+case "$GATEWAY_EGRESS" in gateway|task) ;; *) echo "GATEWAY_EGRESS must be gateway or task" >&2; exit 2 ;; esac
+# absolute paths: with the gateway on, Harbor is started from the job's own copy of the task (run_job), not from the repository
+abspath() { case "$1" in ""|/*) printf '%s' "$1" ;; *) printf '%s/%s' "$PWD" "$1" ;; esac; }
+JOBS="$(abspath "$JOBS")"; ENV_FILE="$(abspath "$ENV_FILE")"; AGENT_CONFIG="$(abspath "$AGENT_CONFIG")"
+[ -n "${RESULTS:-}" ] && RESULTS="$(abspath "$RESULTS")"
+[ -n "${CODEX_AUTH_JSON_PATH:-}" ] && { CODEX_AUTH_JSON_PATH="$(abspath "$CODEX_AUTH_JSON_PATH")"; export CODEX_AUTH_JSON_PATH; }
 TOKEN_BUDGET_IN="${TOKEN_BUDGET_IN:-100000000}"; TOKEN_BUDGET_OUT="${TOKEN_BUDGET_OUT:-10000000}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
@@ -83,7 +99,7 @@ AGENT_ARGS=(-a "$AGENT" -m "$MODEL")
 [ -n "$AGENT_CONFIG" ] && AGENT_ARGS+=(--ak "config=$AGENT_CONFIG")
 # shellcheck disable=SC2206
 AGENT_ARGS+=($AK)
-# no harness web search unless asked for (PROTOCOL §5): it runs at the model provider, so no egress allowlist stops it
+# no harness web search unless asked for (PROTOCOL D11): it runs at the model provider, so no egress allowlist stops it
 case "$WEB_SEARCH" in
   disabled) if [ "$AGENT" = codex ]; then AGENT_ARGS+=(--ak web_search=disabled)
             else AGENT_ARGS+=(--ak disallowed_tools=WebSearch,WebFetch); fi ;;
@@ -138,11 +154,16 @@ if [ "$GATEWAY" = 1 ]; then
     printf '%s' "${v:-$2}"
   }
   gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
+  [ "$WEB_SEARCH" = allowed ] && gw_args+=(--server-tools record)   # not an official run: the provider-run tools are only recorded
   # a plain-HTTP base URL (a self-hosted model server, e.g. sglang): the gateway may forward to exactly that host:port
   [ "$AGENT" = claude-code ] && agent_up=$(upstream ANTHROPIC_BASE_URL https://api.anthropic.com) || agent_up=$(upstream OPENAI_BASE_URL https://api.openai.com/v1)
   [[ "$agent_up" =~ ^http://([A-Za-z0-9.-]+:[0-9]+)(/|$) ]] && gw_args+=(--http-host "${BASH_REMATCH[1]}")
   setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
   gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
+  # job copies a killed runner left behind (run_job removes its own; never here on exit: Harbor may still be tearing a
+  # trial down from that directory, whose compose file and bind mounts it holds; a copy is at most 11 MB, and no job
+  # runs for a month)
+  [ -d "$JOBS/.tasks" ] && find "$JOBS/.tasks" -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
   for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && break; sleep 0.2; done
   [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
   GW="http://$GATEWAY_BIND:$(cat "$ready")"
@@ -166,9 +187,28 @@ if [ "$GATEWAY" = 1 ]; then
       && sed -i -E "s#^([[:space:]]*)(base_url[[:space:]]*=.*)#\1\2\n\1supports_websockets = false#" "$cfg"
     for i in "${!AGENT_ARGS[@]}"; do [ "${AGENT_ARGS[$i]}" = "config=$AGENT_CONFIG" ] && AGENT_ARGS[$i]="config=$cfg"; done
   fi
-  # an egress allowlist must let the agent reach the gateway (ignored where egress is public)
+  # the egress allowlist must let the agent reach the gateway; with GATEWAY_EGRESS=gateway it is the only address on it
+  # (run_job: the job's own copy of the task; Harbor's --allow-agent-host can add a host to a task's list, not remove one)
   AGENT_ARGS+=(--allow-agent-host "$GATEWAY_BIND")
-  log "usage gateway $GW (pid $gw_pid, raw bodies: $GATEWAY_RAW, token budget $TOKEN_BUDGET_IN in / $TOKEN_BUDGET_OUT out); per-trial records in <trial>/gateway/"
+  GATEWAY_ONLY="$GATEWAY_BIND"
+  # the tool that narrows a job's copy must work on this host before any job is claimed
+  if [ "$GATEWAY_EGRESS" = gateway ]; then
+    probe="$JOBS/.gateway/egress-probe.$$"; rm -rf "$probe"; mkdir -p "$probe/t" && printf '[agent]\ntimeout_sec = 1.0\n' > "$probe/t/task.toml" \
+      && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_BIND" "$probe/t" >/dev/null && grep -q "^allowed_hosts = \[\"$GATEWAY_BIND\"\]\$" "$probe/t/task.toml" \
+      || { log "scripts/set_agent_egress.py cannot write a gateway-only task copy on this host (python3: $(python3 -V 2>&1)); not starting"; rm -rf "$probe"; exit 2; }
+    rm -rf "$probe"
+  fi
+  # The exception: Codex with a ChatGPT login. Before its first model call Codex 0.160.1 looks its account's workspace up
+  # at chatgpt_base_url (GET /backend-api/wham/accounts/check), not at the model's base URL, and accepts only an HTTPS
+  # origin there ("workspace backend must use an HTTPS origin"), which this plain-HTTP gateway is not. So chatgpt.com
+  # itself stays reachable for such a run (that host alone: not *.chatgpt.com, auth.openai.com or api.openai.com), and
+  # with it, directly, every path of that backend: the account's connectors are then off by the harness's configuration
+  # only (docs/RUNNING.md). API-key and Claude Code runs have no such exception.
+  case "$AGENT:${CODEX_FORCE_AUTH_JSON:-}" in codex:1|codex:true|codex:TRUE|codex:yes)
+    GATEWAY_ONLY="$GATEWAY_BIND,chatgpt.com"
+    [ "$GATEWAY_EGRESS" = gateway ] && log "ChatGPT login: chatgpt.com stays directly reachable beside the gateway (Codex's workspace lookup needs it over HTTPS)" ;;
+  esac
+  log "usage gateway $GW (pid $gw_pid, raw bodies: $GATEWAY_RAW, token budget $TOKEN_BUDGET_IN in / $TOKEN_BUDGET_OUT out, agent egress: $GATEWAY_EGRESS); per-trial records in <trial>/gateway/"
 fi
 
 wait_for() {  # <mode>: block until every WAIT_FOR file of this mode exists
@@ -205,6 +245,9 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     ae = r.get("agent_execution") or {}
     gw = json.loads((trial / "gateway/totals.json").read_text()) if (trial / "gateway/totals.json").exists() else {}
     gw_cell = (f"{gw['input']} / {gw['output']}" + (" OVER BUDGET" if gw.get("over_token_budget") else "")) if gw else "-"
+    # requests the gateway refused because they were not model-API calls (PROTOCOL §2.11): a trial to look at
+    left = sum(gw.get(k, 0) for k in ("refused_paths", "refused_server_tools", "refused_bodies"))
+    gw_cell += f" REFUSED {left}" if left else ""
     try:
         wall = round((f(ae["finished_at"]) - f(ae["started_at"])).total_seconds())
     except Exception:
@@ -222,17 +265,30 @@ PY
   mv -f "$JOBS/$batch.summary.md.$$" "$JOBS/$batch.summary.md"
 }
 
-stamp_task_dirs() {  # <harbor -i args...>: give every file of each task dir about to be built its own fresh nanosecond mtime
+stamp_task_dirs() {  # <root> <harbor -i args...>: give every file of each task dir about to be built its own fresh nanosecond mtime
   # BuildKit keeps one shared snapshot per build-context NAME (Harbor's are always "environment" and "tests") and re-sends a file
   # only when its name, size, mode or mtime changed; copies with whole-second mtimes (tar, rsync of a tar copy) can therefore
   # build one task's image with ANOTHER task's equal-size file (instance.json, target.png, test.sh). A fresh ns mtime per task
   # dir makes every such file differ. git ignores mtimes.
-  local a ts
+  local root="$1" a ts; shift
   while [ $# -gt 0 ]; do
     a="$1"; shift
     if [ "$a" = -i ] && [ $# -gt 0 ]; then
       ts="$(date +%s.%N)"
-      [ -d "$R/tasks/$1" ] && find "$R/tasks/$1" -exec touch -h -m -d "@$ts" {} +
+      [ -d "$root/tasks/$1" ] && find "$root/tasks/$1" -exec touch -h -m -d "@$ts" {} +
+      shift
+    fi
+  done
+}
+
+gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway as its only egress (PROTOCOL §2.11)
+  local dir="$1" a; shift
+  rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
+  while [ $# -gt 0 ]; do
+    a="$1"; shift
+    if [ "$a" = -i ] && [ $# -gt 0 ]; then
+      cp -a "$R/tasks/$1" "$dir/tasks/$1" && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$dir/tasks/$1" >/dev/null || return 1
+      grep -q "^allowed_hosts = \[\"${GATEWAY_ONLY//,/\", \"}\"\]\$" "$dir/tasks/$1/task.toml" || return 1     # fail closed
       shift
     fi
   done
@@ -241,10 +297,19 @@ stamp_task_dirs() {  # <harbor -i args...>: give every file of each task dir abo
 run_job() {  # <job> <concurrency> <harbor -i args...>
   local job="$1" n="$2"; shift 2
   local envf=(); [ -n "$ENV_FILE" ] && envf=(--env-file "$ENV_FILE")
-  stamp_task_dirs "$@"
+  local root="$R" f
+  if [ "$GATEWAY" = 1 ] && [ "$GATEWAY_EGRESS" = gateway ]; then
+    [[ "$job" =~ ^[A-Za-z0-9._-]+$ ]] || { log "FAILED $job: not a job name (letters, digits, . _ -); not started"; return 1; }
+    root="$JOBS/.tasks/$job"
+    gateway_copy "$root" "$@" || { log "FAILED $job: could not prepare its task copy with the gateway as the only egress ($root); not started"; rm -rf "$root"; return 1; }
+    for f in .env .env.local; do [ -e "$R/$f" ] && ln -s "$R/$f" "$root/$f"; done     # what Harbor would load from the repository
+  fi
+  stamp_task_dirs "$root" "$@"
   log "start $job: $* (concurrency $n, attempts $K)"
-  (cd "$R" && harbor run -p tasks "$@" "${AGENT_ARGS[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
+  (cd "$root" && harbor run -p tasks "$@" "${AGENT_ARGS[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
   log "done $job (harbor rc=$?)"
+  [ "$root" != "$R" ] && rm -rf "$root"
+  return 0
 }
 
 name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-standard-realtime (PROTOCOL §2.2)
@@ -255,6 +320,7 @@ name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard 
   esac
 }
 
+not_started=0
 if [ "$SEQ" = 1 ]; then
   mkdir -p "$JOBS/.claims"
   for t in "${tasks[@]}"; do
@@ -264,7 +330,7 @@ if [ "$SEQ" = 1 ]; then
       if [ -f "$JOBS/$job/result.json" ]; then log "skip $job (already has result.json)"; continue; fi
       mkdir "$JOBS/.claims/$job" 2>/dev/null || continue   # another lane of this batch took it
       wait_for "$m"
-      run_job "$job" 1 -i "$(name "$m" "$t")"
+      run_job "$job" 1 -i "$(name "$m" "$t")" || { rmdir "$JOBS/.claims/$job" 2>/dev/null; not_started=$((not_started + 1)); continue; }   # another lane or a later run may take it
       finish_job "$job"; summary
       # the model account is out of credits, rate-limited or logged out: every further job would fail within minutes. Only
       # structured evidence counts (Codex's rate_limits and last event, Claude Code's result event): scripts/account_failure_check.py
@@ -292,4 +358,5 @@ fi
 summary
 log "summary: $JOBS/$batch.summary.md"
 cat "$JOBS/$batch.summary.md" | tee -a "$LOG" >/dev/null
+[ "$not_started" -gt 0 ] && log "WARNING: $not_started job(s) of batch $batch were NOT started (their task copy could not be prepared, see FAILED above)"
 log "runner $$ of batch $batch finished (no unclaimed job left)"

@@ -53,6 +53,14 @@ CHANGES_ALOHA = [
     "the wrist cameras' poses were those of the home pose however the arms had moved; a response with several frames now "
     "also carries the wrist cameras' pose for every frame (`cam2world_gl/<cam>`).",
 ]
+# The agent's egress (owner decision 2026-10-10, board 0072): the model APIs only, for every task this script writes. The
+# Playground ALOHA / Panda twins were open (Harbor's default) until then; DexToolBench has been on the allowlist from the start.
+EGRESS_CHANGE = (
+    "2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] "
+    "network_mode = \"allowlist\"`, the hosts of `scripts/set_agent_egress.py`); it was open before (Harbor's default), and "
+    "agents could download upstream sources, reference solutions and robot models from their own shell. The scene, the "
+    "frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before this date "
+    "were obtained with open egress.")
 ALLOW = 'network_mode = "allowlist"      # model APIs only (scripts/set_agent_egress.py); PROTOCOL §4\nallowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]'
 
 
@@ -183,7 +191,6 @@ print("status:", r.status())
     kw = re.search(r"^keywords = (\[.*\])$", u, re.M).group(1).replace("]", ', "standard-mode"]')
     meta = re.search(r"\[metadata\]\n(.*?)\n\n", u, re.S).group(1)
     meta = re.sub(r'(?m)^(tier|mode|protocol|oracle|oracle_evidence) = .*\n?', '', meta).rstrip('\n')   # normalize() re-derives oracle
-    agent_net = ALLOW if dtb else '# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.'
     (dst / "task.toml").write_text(f'''schema_version = "1.3"
 artifacts = [
   {{ source = "/data/final.json", service = "sim" }},
@@ -218,7 +225,7 @@ timeout_sec = 900
 
 [agent]
 timeout_sec = 3600.0
-{agent_net}
+{ALLOW}
 
 [environment]
 build_timeout_sec = 1800.0
@@ -233,7 +240,8 @@ build_timeout_sec = 600.0
                                    f"(`images/mujoco/limited/server_mj.py`, protocol eai-standard/2.1, tooling `{tool}`). The agent sees camera RGB-D and proprioception only.\n\n"
                                    "| | |\n|---|---|\n| oracle | `solution/`: the privileged-mode oracle's recorded targets submitted through the client (one row per control step) |\n"
                                    "| grading | the sidecar replays the recorded episode in a fresh simulator; `deterministic` = same final state as the live episode |\n"
-                                   "\n## Change Log\n" + "".join(f"- {c}\n" for c in CHANGES + (CHANGES_ALOHA if tool == "rcb_aloha" else [])))
+                                   "\n## Change Log\n" + "".join(f"- {c}\n" for c in CHANGES + (CHANGES_ALOHA if tool == "rcb_aloha" else [])
+                                                                 + ([] if dtb else [EGRESS_CHANGE])))
     normalize(dst); normalize(src)   # protocol v1.0 conventions; the privileged twin's README gets its Twin row
     return dst
 
