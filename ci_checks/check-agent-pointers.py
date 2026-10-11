@@ -30,10 +30,10 @@ HOSTS = re.compile(
     r"(?:[/:?#][^\s\"'<>)\]]*)?", re.I)
 KEYS = re.compile(r"""["']?\b((?:source|demo|demonstration|dataset|video|viewer|source_viewer|methods|reference|solution|
                                checkpoint|ckpt|policy|pretrained)_(?:url|uri|link|repo|repo_id))\b["']?\s*[:=]""", re.I | re.X)
-FILES = re.compile(r"""(?<![\w./-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrecord)\b|datasets/[\w.-]+/[\w.-]+)""")
+FILES = re.compile(r"""(?<![\w.-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrecord)\b|datasets/[\w.-]+/[\w.-]+)""", re.I)
 # (task-name regex, path regex, matched-text regex, reason)
 ALLOW = [
-    (r"^maniguard-", r"^environment/instance/NOTICE$", r"huggingface\.co/datasets/IDEAS-Lab-Northwestern/ManiGuard-Bench|github\.com/NU-IDEAS-Lab/ManiGuard",
+    (r"^maniguard-", r"^environment/instance/NOTICE$", r"datasets/IDEAS-Lab-Northwestern/ManiGuard-Bench|github\.com/NU-IDEAS-Lab/ManiGuard",
      "CC BY-NC 4.0 attribution the licence requires, of the scene files' dataset (its demonstrations are other datasets, not named)"),
 ]
 

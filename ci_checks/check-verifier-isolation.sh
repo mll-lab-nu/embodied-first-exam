@@ -43,7 +43,8 @@ elif ag.get("network_mode") == "allowlist":
     # without having acted; one that adds a host opens what the others close)
     m = re.search(r"(?s)^HOSTS = \[(.*?)\]", (root / "scripts/set_agent_egress.py").read_text(), re.M)
     hosts = re.findall(r'"([^"]+)"', m.group(1)) if m else []
-    if hosts and sorted(ag["allowed_hosts"]) != sorted(hosts):
+    if not hosts: fail("cannot read HOSTS from scripts/set_agent_egress.py (the allowlist every task must have)")
+    elif sorted(ag["allowed_hosts"]) != sorted(hosts):
         fail(f"[agent].allowed_hosts differs from scripts/set_agent_egress.py HOSTS (missing {sorted(set(hosts) - set(ag['allowed_hosts']))}, extra {sorted(set(ag['allowed_hosts']) - set(hosts))})")
 # PROTOCOL §2.11: every task's agent reaches the model APIs and nothing else. With open egress (the default of six
 # benchmarks until 2026-10-10) agents downloaded upstream sources, a reference solution, a recorded demonstration and

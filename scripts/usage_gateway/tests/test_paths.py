@@ -87,24 +87,68 @@ class Rules(unittest.TestCase):
     def test_bad_rule_files_do_not_load(self):
         with tempfile.TemporaryDirectory() as td:
             f = pathlib.Path(td) / "p.json"
+            base = {"client_tool_types": ["function"], "provider_side_fields": ["mcp_servers"]}
             for allow in ([["PUT", "/v1/x"]], [["POST", "v1/x"]], [["POST", "/v1/x?y"]], [["POST", "/v1//x"]], [["POST"]]):
-                f.write_text(json.dumps({"providers": [{"name": "x", "hosts": ["h"], "allow": allow}]}))
-                with self.assertRaises((ValueError, KeyError, TypeError)):
+                f.write_text(json.dumps({**base, "providers": [{"name": "x", "hosts": ["h"], "allow": allow}]}))
+                with self.assertRaises((ValueError, TypeError)):
                     gateway.load_paths(f)
-            f.write_text("{}")
-            with self.assertRaises(KeyError):
-                gateway.load_paths(f)
+            for doc in ({}, {"providers": []}, {**base, "client_tool_types": [1], "providers": []}):
+                f.write_text(json.dumps(doc))
+                with self.assertRaises((KeyError, ValueError)):
+                    gateway.load_paths(f)
+            self.assertEqual(gateway.CLIENT_TOOLS, {"function", "custom", "namespace"})      # a bad file changes nothing
 
     def test_server_tools(self):
         st = gateway.server_tools
+        # what the harnesses declare: Claude Code's tools carry no type; Codex 0.160 declares its tools inside `input`
         self.assertEqual(st(json.dumps({"tools": [{"name": "Bash", "input_schema": {}}, {"type": "function", "name": "x"},
                                                   {"type": "custom", "name": "apply_patch"}]})), [])
+        codex = {"model": "m", "input": [{"type": "message", "content": [{"type": "input_text", "text": "the word \"tools\""}]},
+                                         {"type": "additional_tools", "tools": [{"type": "namespace", "name": "functions", "tools": [
+                                             {"type": "function", "name": "exec_command"}, {"type": "custom", "name": "apply_patch"}]}]}]}
+        self.assertEqual(st(json.dumps(codex)), [])
+        codex["input"][1]["tools"][0]["tools"].append({"type": "web_search"})
+        self.assertEqual(st(json.dumps(codex)), ["web_search"])
         self.assertEqual(st(json.dumps({"tools": [{"type": "web_search"}, {"type": "function"}, {"type": "mcp"},
-                                                  {"type": "web_search_20250305", "name": "web_search"}]})),
-                         ["mcp", "web_search", "web_search_20250305"])
+                                                  {"type": "web_search_20250305", "name": "web_search"},
+                                                  {"type": "shell", "environment": {"type": "container_auto"}}]})),
+                         ["mcp", "shell", "web_search", "web_search_20250305"])
+        self.assertEqual(st('{"\\u0074ools": [{"type": "image_generation"}]}'), ["image_generation"])       # an escaped key
         self.assertEqual(st(json.dumps({"tools": [], "mcp_servers": [{"url": "https://x"}]})), ["mcp_servers"])
-        for body in (None, "", "not json", "[1]", json.dumps({"input": "the word \"tools\" in a message"})):
-            self.assertEqual(st(body), [])
+        self.assertEqual(st(json.dumps({"model": "gpt-search", "messages": [], "web_search_options": {}})), ["web_search_options"])
+        self.assertEqual(st(json.dumps({"model": "openai/gpt-x:online", "messages": [], "plugins": [{"id": "web"}]})),
+                         ["model:online", "plugins"])
+        self.assertEqual(st(json.dumps({"model": "m", "mcp_servers": [], "plugins": None})), [])
+        for body in ("", "not json", "[1]", '"x"', '{"tools": 5}', '{"tools": [1]}', '{"tools": [], "tools": [{"type": "mcp"}]}',
+                     "\ufeff{}", "[" * 100000):
+            with self.assertRaises(gateway.Unreadable, msg=body[:40]):
+                st(body)
+
+    def test_decode_request(self):
+        import gzip
+        dec = gateway.decode_request
+        self.assertEqual(dec(b'{"a": 1}', ""), ('{"a": 1}', "text"))
+        self.assertEqual(dec(gzip.compress(b'{"a": 1}'), "gzip"), ('{"a": 1}', "text"))
+        self.assertIsNone(dec(gzip.compress(b"{}") + b"trailing", "gzip")[0])       # more than one gzip member's worth
+        self.assertIsNone(dec(b'{"a": 1}', "gzip")[0])                               # the header lies
+        for enc in ("br", "deflate", "x-gzip", "gzip, identity"):
+            self.assertIsNone(dec(b"{}", enc)[0], enc)
+        self.assertIsNone(dec(b"\xff\xfe{\x00}\x00", "")[0])                        # not UTF-8
+        try:
+            import zstandard
+        except ModuleNotFoundError:
+            return
+        c = zstandard.ZstdCompressor()
+        two = c.compress(b'{"tools": [') + c.compress(b'{"type": "mcp"}]}')         # two frames: all of them are read
+        self.assertEqual(dec(two, "zstd"), ('{"tools": [{"type": "mcp"}]}', "text"))
+        import shutil
+        if shutil.which("zstd"):                                                    # without the module: the zstd program
+            saved = sys.modules.get("zstandard")
+            sys.modules["zstandard"] = None
+            try:
+                self.assertEqual(dec(two, "zstd"), ('{"tools": [{"type": "mcp"}]}', "text"))
+            finally:
+                sys.modules["zstandard"] = saved
 
 
 class Stub(BaseHTTPRequestHandler):
@@ -166,7 +210,7 @@ class EndToEnd(unittest.TestCase):
         Stub.seen.clear()
         st, out = self.call("POST", f"/h/{self.up}/v1/messages?beta=true",
                             {"model": "m", "messages": [], "tools": [{"name": "Bash", "input_schema": {}},
-                                                                     {"type": "bash_20250124", "name": "bash"}]})
+                                                                     {"type": "custom", "name": "Edit"}]})
         self.assertEqual(st, 200, out)
         self.assertEqual(Stub.seen, [("POST", "/v1/messages?beta=true")])
         # a tool the provider would run for the agent: refused in the provider's error format, nothing forwarded
@@ -174,7 +218,19 @@ class EndToEnd(unittest.TestCase):
                       [{"type": "image_generation"}], [{"type": "web_search"}]):
             st, out = self.call("POST", f"/h/{self.up}/v1/messages", {"model": "m", "messages": [], "tools": tools})
             self.assertEqual(st, 403, out)
-            self.assertIn("runs at the model provider", json.loads(out)["error"]["message"])
+            self.assertIn("asks the model provider to run", json.loads(out)["error"]["message"])
+        # a body the gateway cannot read is not forwarded either (one keep-alive connection for all of them)
+        c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=30)
+        for raw, enc in ((b"", None), (b"not json", None), (b'{"tools": [], "tools": [{"type": "mcp"}]}', None),
+                         (b'{"model": "m"}', "br"), (b'{"model": "m"}', "gzip")):
+            hdr = {"Content-Type": "application/json", **({"Content-Encoding": enc} if enc else {})}
+            c.request("POST", f"/h/{self.up}/v1/messages", body=raw, headers=hdr)
+            r = c.getresponse(); out = r.read()
+            self.assertEqual(r.status, 403, (raw, enc, out))
+            self.assertIn("not one JSON object", json.loads(out)["error"]["message"])
+        c.request("POST", f"/h/{self.up}/v1/messages", body=b"{}", headers={"Content-Length": "abc"})   # answered, not dropped
+        self.assertEqual(c.getresponse().status, 400)
+        c.close()
         self.assertEqual(len(Stub.seen), 1, Stub.seen)
         for method, path in (("POST", "/v1/files"), ("GET", "/v1/messages"), ("POST", "/v1/messages/../files"),
                              ("POST", "/backend-api/wham/apps"), ("POST", "/v1/messages/batches")):
@@ -192,11 +248,13 @@ class EndToEnd(unittest.TestCase):
                          [("POST", "/v1/files"), ("GET", "/v1/messages"), ("POST", "/v1/messages/../files"),
                           ("POST", "/backend-api/wham/apps"), ("POST", "/v1/messages/batches"), ("POST", "/backend-api/wham/apps")])
         self.assertTrue(all(r["status"] == 403 for r in refused))
+        self.assertEqual([(r["host"], r["path"]) for r in recs if r.get("refused") == "host_not_allowed"], [("github.com", "/v1/responses")])
         tool = [r for r in recs if r.get("refused") == "server_tool"]
         self.assertEqual([r["server_tools"] for r in tool], [["web_search_20250305"], ["mcp"], ["image_generation"], ["web_search"]])
+        self.assertEqual(len([r for r in recs if r.get("refused") == "body_unreadable"]), 5)
         fwd = [r for r in recs if not r.get("refused")]
         self.assertEqual(len(fwd), 1)
-        self.assertEqual(fwd[0]["server_tools"], ["bash_20250124"])      # recorded: a typed tool the agent runs itself
+        self.assertNotIn("server_tools", fwd[0])
         self.assertEqual(fwd[0]["usage"], {"input": 4, "cached": 1, "output": 2})
         everything = "".join(p.read_text() for p in (self.jobs / ".gateway").iterdir() if p.is_file())
         self.assertNotIn("SECRET-KEY", everything)

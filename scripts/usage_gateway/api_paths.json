@@ -8,6 +8,14 @@
   "responses-compaction calls. Not on any list, so refused: account connectors and apps, plugins, files, conversations,",
   "web search, images, audio, batches, assistants, token endpoints. `http` is the provider of a --http-host upstream."
  ],
+ "_comment_tools": [
+  "A model request may declare only tools the agent runs itself: no `type` (Anthropic's custom tools) or one of",
+  "client_tool_types (what Codex 0.160 and Claude Code 2.1 declared in every recorded request). Any other type is the",
+  "provider's: web search and fetch, image generation, remote MCP, file search, hosted shells and code interpreters.",
+  "provider_side_fields: top-level request fields that make the provider search the web or connect to a server."
+ ],
+ "client_tool_types": ["function", "custom", "namespace"],
+ "provider_side_fields": ["mcp_servers", "web_search_options", "plugins"],
  "providers": [
   {"name": "chatgpt-codex", "hosts": ["chatgpt.com"],
    "allow": [["POST", "/backend-api/codex/responses"], ["POST", "/backend-api/codex/responses/compact"],

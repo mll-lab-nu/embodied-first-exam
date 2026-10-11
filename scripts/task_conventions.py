@@ -417,7 +417,7 @@ def normalize_instruction(task: Path) -> None:
         return
     s = p.read_text(encoding="utf-8")
     for heading in (EXTERNAL_HEADING, LIMITS_HEADING) if isinstance(lim, dict) else (EXTERNAL_HEADING,):
-        s = re.sub(rf"(?ms)^{re.escape(heading)}\n.*?(?=^## |\Z)", "", s)
+        s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
     s = s.rstrip() + "\n\n" + render_external()
     if isinstance(lim, dict):
         env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})

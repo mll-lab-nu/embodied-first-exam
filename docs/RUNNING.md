@@ -101,13 +101,20 @@ allowlist.
 **Model-API calls only, and the only way out (PROTOCOL §2.11).** The gateway forwards the requests listed per provider
 in `scripts/usage_gateway/api_paths.json` (responses, chat completions, messages, token counting, the model list) and
 answers anything else 403 without forwarding it: connectors and apps,
-plugins, files, conversations, web search. A model request that declares a tool the provider would run (web search or
-fetch, image generation, remote MCP, file search, a code interpreter) is refused too, where the body can be read
-(Codex compresses its ChatGPT-login requests with zstd: install `zstandard` on the runner host, or such a body is
-forwarded unchecked and marked `body_unchecked`). Refusals are in `<trial>/gateway/usage.jsonl` (`refused`:
-`path_not_allowed` or `server_tool`, with method and path, never a body) and counted in `totals.json` (`refused_paths`,
-`refused_server_tools`): a trial with either tried to leave the model API and is to be looked at. To add a provider or
-a path, edit `api_paths.json` (default deny; a host without a provider there gets nothing forwarded).
+plugins, files, conversations, web search. A model request is forwarded as it is or not at all: its body must be one
+JSON object the gateway can read, and every tool it declares (in any `tools` list, at any depth) must be one the agent
+runs itself (`client_tool_types` in the same file: no type, `function`, `custom`, `namespace`, which is all Codex and
+Claude Code declared in the recorded runs). Any other tool type is the provider's (web search or fetch, image
+generation, remote MCP, file search, a hosted shell or code interpreter) and the request is refused, as is one with a
+provider-side search or MCP field (`provider_side_fields`) or an OpenRouter `:online` model. Codex compresses its
+ChatGPT-login requests with zstd: the gateway reads them with the `zstandard` module or the `zstd` program; a host with
+neither forwards such a body unchecked, marks it `body_unchecked` and says so in the gateway's start-up log. Refusals
+are in `<trial>/gateway/usage.jsonl` (`refused`: `path_not_allowed`, `host_not_allowed`, `server_tool` or
+`body_unreadable`, with method and path, never a body) and counted in `totals.json` (`refused_paths`,
+`refused_server_tools`, `refused_bodies`); the batch summary shows `REFUSED n` in the gateway column. A trial with one
+tried to leave the model API and is to be looked at. To add a provider, a path or a client tool type (a new harness
+version that declares another one is refused until it is listed), edit `api_paths.json` (default deny; a host without a
+provider there gets nothing forwarded).
 The model APIs' hosts also serve all of that directly, so with the gateway on each job runs from its own copy of the
 task (`$JOBS/.tasks/<job>/`, removed afterwards) whose egress allowlist is the gateway's address alone
 (`scripts/set_agent_egress.py only <GATEWAY_BIND>`; Harbor's `--allow-agent-host` can add a host, not remove one).
@@ -147,5 +154,5 @@ compacts it to `raw.jsonl.xz` (one 1,994-request trial: 5.9 GB as one gzip file 
 2026-10-02, 32 MB now; `rawlog.py pack --delete <dir>` converts such `raw/` directories).
 Switches: `GATEWAY=1` (record usage and, by default, raw bodies), `GATEWAY_RAW=0` (usage only; raw bodies are private: they hold the
 whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
-attempts); Codex request bodies are zstd-compressed and are stored as base64, and so not deduplicated, unless
-`zstandard` is installed on the runner host; OpenAI reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
+attempts); Codex's zstd-compressed request bodies are stored as base64, and so not deduplicated, on a runner host
+that has neither the `zstandard` module nor the `zstd` program; OpenAI reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.

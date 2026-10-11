@@ -467,10 +467,11 @@ starts each job from a copy of the task whose allowlist is the gateway's address
 only <address>`; Harbor can add a host to a task's allowlist at run time, not take one off), and the gateway forwards
 only the requests listed per provider in `scripts/usage_gateway/api_paths.json` (responses, chat completions, messages,
 token counting, the model list), answers every other one 403 and records it (`<trial>/gateway/usage.jsonl`
-`refused = "path_not_allowed"`, `totals.json` `refused_paths`). A model request's body is forwarded as it is; tool types
-in it that are not the agent's own are recorded (`server_tools`), and a request declaring one the provider would run
-with its own network or files (web search or fetch, image generation, remote MCP, file search, a code interpreter) is
-refused too (`refused = "server_tool"`), wherever the gateway can read the body. Without the gateway (`GATEWAY=0`, a
+`refused = "path_not_allowed"`, `totals.json` `refused_paths`). A model request's body is forwarded as it is or not at
+all: it must be one JSON object the gateway can read, and every tool it declares must be of a type the agent runs
+itself (`client_tool_types` in the same file); a request declaring any other type (the provider's: web search or
+fetch, image generation, remote MCP, file search, a hosted shell or code interpreter) or a provider-side search field is
+refused (`refused = "server_tool"`), an unreadable one too (`"body_unreadable"`). Without the gateway (`GATEWAY=0`, a
 bare `harbor run`), the task's own allowlist applies and these hosts are reachable directly: not for official runs.
 Open: Codex with a ChatGPT login needs `chatgpt.com` itself at start-up, over HTTPS (docs/RUNNING.md), so such a run
 keeps that host beside the gateway, and its account connectors are off by the harness's configuration only; official
