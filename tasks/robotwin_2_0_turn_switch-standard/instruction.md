@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · turn_switch — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use the robotic arm to click the switch.
+cannot open. You get one client and one episode. **Task:** Use the robotic arm to click the switch. The success check, run at the end of every call, passes when the switch's joint is within 0.05 (in the joint's units) of the upper end of its range.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

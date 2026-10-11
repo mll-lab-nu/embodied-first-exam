@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · grab_roller — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use both arms to grab the roller on the table.
+cannot open. You get one client and one episode. **Task:** Use both arms to grab the roller on the table. The success check, run at the end of every call, passes when both grippers are commanded closed (below 0.2) and the roller is off the table, the centre of its underside above z = 0.80 m (6 cm above the table top).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

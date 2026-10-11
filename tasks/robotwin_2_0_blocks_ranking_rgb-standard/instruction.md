@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · blocks_ranking_rgb — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Place the red block, green block, and blue block in the order of red, green, and blue from left to right, placing in a row.
+cannot open. You get one client and one episode. **Task:** Place the red block, green block, and blue block in the order of red, green, and blue from left to right, placing in a row. The success check, run at the end of every call, passes when the blocks' centres are in the order red, green, blue by increasing x (left to right), neighbouring blocks (red and green, green and blue) are less than 13 cm apart in x and less than 3 cm apart in y, and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

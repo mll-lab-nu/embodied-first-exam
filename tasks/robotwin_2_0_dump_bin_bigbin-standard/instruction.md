@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · dump_bin_bigbin — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Grab the small bin and pour the balls into the big bin.
+cannot open. You get one client and one episode. **Task:** Grab the small bin and pour the balls into the big bin. The success check, run at the end of every call, passes when the small bin is, at that moment, held with the centre of its base above z = 1.0 m (26 cm above the table top) and each of the five balls is at a height between z = 0.13 m and z = 0.25 m, which is inside the big bin that stands on the floor at the robot's left (around x = -0.45 m).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

@@ -2191,7 +2191,7 @@ digest = "sha256:e15a1159878be400edadbd5952c22398837aba9a452bafc78cc90fe87bbd504
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_adjust_bottle-standard"
-digest = "sha256:bf91546eb104a5e99650f3eecaf4eef2aded2407c0579585d959c54f4a94025c"
+digest = "sha256:7ec59cf326e05864f068f482211923dd6ded72252f1bc141046eafdc8ea17b90"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_beat_block_hammer-privileged"
@@ -2199,7 +2199,7 @@ digest = "sha256:91aa9e9ade97ea1bdba468b179938beb60b3d3ebd956d45f9bc0d862a28c775
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_beat_block_hammer-standard"
-digest = "sha256:2061eef59c31689d485671960dc27c3cfc45938c1c6e60ebceeb5ed1b4689232"
+digest = "sha256:0c353e77715ee40290fb9e047dbdb794a19efe4d1a8afe876f3f9b37ecc84788"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_blocks_ranking_rgb-privileged"
@@ -2207,7 +2207,7 @@ digest = "sha256:da61af8fc8139bed0753a0bc51d9cae54795ac7e2d1e737567548193f594d77
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_blocks_ranking_rgb-standard"
-digest = "sha256:b0920637611b3005c17afacf825b563795cdb44aa6f8f65cf7bde18663eba3ef"
+digest = "sha256:baa7f9b44097e81d15a505c4971b5e59efe565de5366ef64b0179f915ca49580"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_blocks_ranking_size-privileged"
@@ -2215,7 +2215,7 @@ digest = "sha256:34f81b5be8560d881825cb4ae5042543c4f84a033d1689d4f29dfeceb3b2e08
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_blocks_ranking_size-standard"
-digest = "sha256:bf705a225fb63eeed9878f44b759d29b0036db35b94830ded046d0bf39a99e37"
+digest = "sha256:e0410e4b511ae712503ce32954b23e2ae31c3dac09045faaad122f929fc5c473"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_dump_bin_bigbin-privileged"
@@ -2223,7 +2223,7 @@ digest = "sha256:2bbd6de258f78dc04b0caa7b8cbe339ff74e9a9598393e11e2a2fc602cc4555
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_dump_bin_bigbin-standard"
-digest = "sha256:306f0247f97f8c74aa4b39f454026337f155a04cf7bd0885c10c99eb23ee5ed6"
+digest = "sha256:d0b6cd8ca2dab9c85c1633298f04d3a5fac5c17a560dbf2322ff537aeea08719"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_grab_roller-privileged"
@@ -2231,7 +2231,7 @@ digest = "sha256:42181e15416c88360acdf0dba61012ac3f915e479599acee34b79ca28297cb2
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_grab_roller-standard"
-digest = "sha256:87805c2cfaeaa8bdf3efbb3516a511872d411717ccaa3b354a3719b21daeadd0"
+digest = "sha256:31ad3ec4b6d866f7415c4bfc61f6d9b96df8878e1fb0624e78e49b73bc0fae7f"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_handover_block-privileged"
@@ -2239,7 +2239,7 @@ digest = "sha256:00b029a5d7721c28709f3456cbdb9e580d02a8685bd321150a81d3f7c5b5aad
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_handover_block-standard"
-digest = "sha256:5151ea28e4b78ff935828e7b00885ac0d780c7a6f900c33f6882a78b1cda1703"
+digest = "sha256:cb87e028dc3a1524d18d987eace8adbb498d86173efefb176ed60694593df134"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_handover_mic-privileged"
@@ -2247,7 +2247,7 @@ digest = "sha256:5a7a93fe9b5880931ff3a317c75a65cd69480686a8cf19b3eb0677ebce69c94
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_handover_mic-standard"
-digest = "sha256:50e1a175a46073bf2aa796c37e9ef9fc2f0084fc2ba3f0e0a3ba04dc24fd8981"
+digest = "sha256:64d9b155bfa7486a47413a6c71c2caae1b89135cfbf9640f61597513b79cc6d5"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_hanging_mug-privileged"
@@ -2255,7 +2255,7 @@ digest = "sha256:bbf4c54a577f41f3e3a4852dde95c09a0b95afff1f4ab2c5d373fdf70eee451
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_hanging_mug-standard"
-digest = "sha256:6253faa8839afce61ef7fa3951675aafc4bf1657f37b9f816e06cc7c28d25f1d"
+digest = "sha256:bead6ea6ca76b4cf25563ef6f6a0bd12e88245894fbe89f106792cb09616b35e"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_lift_pot-privileged"
@@ -2263,7 +2263,7 @@ digest = "sha256:c43b5b15039b93cf200a9317b214c2d93ff6637d9d145a9bca3af67dce74066
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_lift_pot-standard"
-digest = "sha256:46dce9402114317094aebb48f6e6d12e8a2b8723809e891e3f4bf21a723e3706"
+digest = "sha256:2c91a8703d84d19ec3a5abe37e7aa5c9b3e6b59b03778cc9f011d4123c62fb37"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_move_can_pot-privileged"
@@ -2271,7 +2271,7 @@ digest = "sha256:5d7ca0bd1e3d344b01669b0a1fe3cbae487431c50f94cb9b3ee8436eda4be74
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_move_can_pot-standard"
-digest = "sha256:3c3cbfd9f432e27a936220d133fbd1909e9a6848dd95d4f256886df464c61068"
+digest = "sha256:66249e68519ce2599cd4a397b81820871db6425eff6dbcc357785a5719b9174d"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_move_pillbottle_pad-privileged"
@@ -2279,7 +2279,7 @@ digest = "sha256:35d90533d7e128e0ad7a485c4f346f48a72cda6cda67462bef7491be7c06473
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_move_pillbottle_pad-standard"
-digest = "sha256:47ac3e8314bc0a26741ac4c9442a16dc9eecd866aa0bc1a4b4b5e789d7a026f2"
+digest = "sha256:f4ff3bf7df04b5297e71943f1a28e908d54c00be0eff39686b3044396ad44669"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_move_playingcard_away-privileged"
@@ -2287,7 +2287,7 @@ digest = "sha256:cedc4900ad504579cbc952effbe8e5aeef9cca2e273469fcd09598c7c76d8df
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_move_playingcard_away-standard"
-digest = "sha256:ed3de6a99dbf904e61ee59490af1fb237ab080ee4a33d82900173814bc30259d"
+digest = "sha256:144eeac18479d84521be01dad7730bdaca4a02bc487645b64e0546af2071d9b4"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_move_stapler_pad-privileged"
@@ -2295,7 +2295,7 @@ digest = "sha256:075d5866656ad83f1505d1a9ccc0e2e10a740da1ced1fe65965ff7a70fa9ab4
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_move_stapler_pad-standard"
-digest = "sha256:85667b5a4adc4697719d87d863f88311ec3f4324c5bf58f04c14987e751cfdc3"
+digest = "sha256:8005660e2920e76575b7d8001a2f01fcd1a466a4e10bacf0752c135795da53aa"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_open_laptop-privileged"
@@ -2303,7 +2303,7 @@ digest = "sha256:1c28d21b76ace7933c08141326e17cc664701b02179c346d01f60d92a6991aa
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_open_laptop-standard"
-digest = "sha256:49281253e2c307c681d55e3110f82d7856efd7b3cb29548be53337f9ee82df14"
+digest = "sha256:c3173c809da9dcbc3e11acf2e8c234eb204e1f8c68ec4b87cccd39aa2a9ce8c8"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_open_microwave-privileged"
@@ -2319,7 +2319,7 @@ digest = "sha256:2502dd38f990c8f7e5d01e063df8d5b461b9440ec437732f3ef0814e6c08649
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_pick_diverse_bottles-standard"
-digest = "sha256:024e9fa2a569edc752d59f6cbd57edbe389f64ef96a1bf0fac357436c9b01c07"
+digest = "sha256:dd56f0186f46848663db226cee322a141036c87d2dd0490dea31fe6f08c48823"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_pick_dual_bottles-privileged"
@@ -2327,7 +2327,7 @@ digest = "sha256:128fc405f76798bc592b83d66caef8f159178626ea49d4548b7ffbe51983b31
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_pick_dual_bottles-standard"
-digest = "sha256:84f9cceadec02c7179ae9025415b6d297a84490a612761200ec451c7a79be09c"
+digest = "sha256:ab4cca994fe1d7d6a17659e3a38bd1f18e28f03c8a23499e3968c3d06d6ed4ee"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_a2b_left-privileged"
@@ -2335,7 +2335,7 @@ digest = "sha256:7bd1b16758ce134b9d662fdd4f9c35f036af09aa593c013b9da3bee9e0b6b19
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_a2b_left-standard"
-digest = "sha256:f3b57242019fa5e0648de8273fe3d8f981fb389917f4b7699c846dcd457754cb"
+digest = "sha256:24e192d944e4d394d8b045449dba73939de51a84b32a503ef713977a9e814eec"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_a2b_right-privileged"
@@ -2343,7 +2343,7 @@ digest = "sha256:f33699a20ef8eb90e4a76087d372359fe9340e333f55d90ef2724eb1ca3d453
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_a2b_right-standard"
-digest = "sha256:78154349dc8f3183030217580a64dda9387f429ac9bdbf49eabfbfa9949397da"
+digest = "sha256:2ca3cd63048c765fa664904e08dbe40c7bcc0b855ab329903b99504c89fc40b8"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_bread_basket-privileged"
@@ -2351,7 +2351,7 @@ digest = "sha256:145faf1e136c88463e8909c5a7f1b2a46e0c92344efb81d7e7cdc6a78fd6d0b
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_bread_basket-standard"
-digest = "sha256:48b7b1680d03870c076da8a862f01945ded08c7eb2e7e676d01d9f0e96847459"
+digest = "sha256:3c2f7ac38955a66e1db4895937212d1af38f3ae64f03b9f13b06feaf391d21a4"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_bread_skillet-privileged"
@@ -2359,7 +2359,7 @@ digest = "sha256:4da5b0843c5b0188ee2f8d834efa316049e4d182a5737cdd582d1d3c2d80b77
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_bread_skillet-standard"
-digest = "sha256:f0dfd4fbbb496249579bfe889ee147c031d5264f14f3c68a96b8faf28a8a1364"
+digest = "sha256:4c4f343e8c2c7fe37c55984153e8b4d239fd8f9136e459e006fe276864235f78"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_burger_fries-privileged"
@@ -2367,7 +2367,7 @@ digest = "sha256:c822af529cf233925c6f03e1432672688abfa220512b30f7607e0451cf8689f
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_burger_fries-standard"
-digest = "sha256:18da58cdf9be426aa2eff886f8dbcdd4f624c5a3efff8fe794a8f33a587def4c"
+digest = "sha256:05f2dc13ad4682a28329c951a01ec9d638e163902097baa9cd54dc1545d603e4"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_can_basket-privileged"
@@ -2383,7 +2383,7 @@ digest = "sha256:39d78c4ef1f2cbbd1fd1ba273082309d7fd6fdcfef809e39559187b781889ea
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_cans_plasticbox-standard"
-digest = "sha256:8eb575d1b41b81bf1c51b79e2ac78b55ea6187b32539cde8d08ba7571e202342"
+digest = "sha256:d46c2e258c34db146a8f3aa88b099f15398a844d8e4e3d16ba3577f8c6953aee"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_container_plate-privileged"
@@ -2391,7 +2391,7 @@ digest = "sha256:954c8a3e1a93c2c289367ea7e085376c2b8774b5a233587be3b17c46df41fbb
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_container_plate-standard"
-digest = "sha256:8ec3c806e030c704eb5285cc416b206f9a35fc1b0285a48c8eacdf71be351602"
+digest = "sha256:9ae22cc1dea9ea5999d45f610b9c7e7f257d44d99aa96c057bb8bc7139921347"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_dual_shoes-privileged"
@@ -2399,7 +2399,7 @@ digest = "sha256:ee890a0eda5b0f03f14fb295d54ac6ba6f2c84cdc364239f1adb0c46738ca03
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_dual_shoes-standard"
-digest = "sha256:0328ccf6e775191c96a6986cbc43a662c1c3386e3decb3691b2a96dc9e8fa0cd"
+digest = "sha256:ab6182433c2c3129f5370779fedeef098753cb0030780fb05a4a64f6efc207c4"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_empty_cup-privileged"
@@ -2407,7 +2407,7 @@ digest = "sha256:5165e83eb02ea8d9d5538ad4d599e498b6724bfcac9c4e1dcb2a8833c011d60
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_empty_cup-standard"
-digest = "sha256:3c59f045a83acf81b4fc59f6a4accd8a09414f12c394c207844b417e1101a447"
+digest = "sha256:de6cd55512aea1f65996217104f0b0ab194886d69f425bcec15c4acaa73fb80f"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_fan-privileged"
@@ -2415,7 +2415,7 @@ digest = "sha256:cf4b848aa6e73e97ee5c6996d8f79efe89459abd7534324b0946816da4d7282
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_fan-standard"
-digest = "sha256:bf10f9a0dfcb26251781ce4a72a13b00d37357f380afb0bd699001200f9bf9b2"
+digest = "sha256:61595df440a4ba83999626bbffffd6186a8460211327e526a3dd289cf98167b6"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_mouse_pad-privileged"
@@ -2423,7 +2423,7 @@ digest = "sha256:9649ace5a32881edc678d654f109dd6c111a0b58244660b393064ba3133bf8f
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_mouse_pad-standard"
-digest = "sha256:77a323114046ba6138bfd065424b8af31c8f4ca0fdb92d9bcdcbfa3aa667ccf8"
+digest = "sha256:12e598fbce229fa2e7a13d902f93b5ebef96eed5f768617fbd59239832264c59"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_object_basket-privileged"
@@ -2431,7 +2431,7 @@ digest = "sha256:a8fd172a8d0f896fbdc5d1d1a179df48af48faf82d3c71bddad37eeff5724cc
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_object_basket-standard"
-digest = "sha256:30e420e556a6fb1d4a886a03a278a50cd55a7bd2d8ff92e3890ec8041ced1cd8"
+digest = "sha256:e73f8d6a147c735a0a0fae5a53c0b898db2d06874d00ca2533343b3aa352315b"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_object_scale-privileged"
@@ -2439,7 +2439,7 @@ digest = "sha256:549091058f9fa85b4d3d47c1ceb4e14b53506dab909d6291a08663f79d3a081
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_object_scale-standard"
-digest = "sha256:70210b5b96458e28c36fc993f4d59cca74bebaafcd8e1dff0451b9e4dfe2d6b1"
+digest = "sha256:42935b60919da41d552ca222974c3ebe06ebf75b65ad07ece633411c62ab57ec"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_object_stand-privileged"
@@ -2447,7 +2447,7 @@ digest = "sha256:0155ed1863a940808066d254c5322eb83ad47b05ddc86557e728557e314962e
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_object_stand-standard"
-digest = "sha256:2bcd9d54fb49a4eaef8efce7d89c1320dec7338f3d65a6781a7540a803ec19c7"
+digest = "sha256:8e4df928cc48ba9d5bec6c22a77608f411baa9e7bf0e23a568b96f522b5e0f81"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_phone_stand-privileged"
@@ -2455,7 +2455,7 @@ digest = "sha256:a9b5c817015ab03d2dc4fdaf1738ca4e4d6352c76ce74b19d1e140620ddee83
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_phone_stand-standard"
-digest = "sha256:813d1f1c5f60a45581fa5dfc9b9ee24fa8550cc84dffbc78622017a5e89e0588"
+digest = "sha256:ae356202d3c0bc2ad8bcbd648c72ad8491a8885892c75f719c5a283430356b5e"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_shoe-privileged"
@@ -2463,7 +2463,7 @@ digest = "sha256:fb2a251e825eff63b79f9fd7ffaebb1f2bb304f768feae13132e4b3a8237834
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_place_shoe-standard"
-digest = "sha256:035e8653d0a8b68b3a4728f448ee85dbcbff3a1041e8f5d67458f6889acfe84a"
+digest = "sha256:d58ce51aebbfd2b079a825dc0de299a74842f272e7c929cbc5953684e059c068"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_press_stapler-privileged"
@@ -2471,7 +2471,7 @@ digest = "sha256:19ace5ca57b127dd53e2c0039ad6f90b4811408170c8cdde3a96bada33f9e82
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_press_stapler-standard"
-digest = "sha256:4b95dd685a27fcd86abd9180499eee78add3f4746cd50411b60028c8d2409718"
+digest = "sha256:57c23ec9e9d8438a60400e35f9221f5267dda32076881cd29a3bc31d5dd7efdd"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_put_bottles_dustbin-privileged"
@@ -2487,7 +2487,7 @@ digest = "sha256:e4b92e7f6716c8f4c95a665bbe0f7933015a01e88f088b91a7e6e36def8197a
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_rotate_qrcode-standard"
-digest = "sha256:7ed7338d5f2d0e8c20c69da3039d969ec252a0dcc365d629cafdbc8446e72e9c"
+digest = "sha256:4f75988ec185841fed4300d6591382905cdef7bd517901bd77dc43a6afc5a58f"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_scan_object-privileged"
@@ -2503,7 +2503,7 @@ digest = "sha256:b123a7f408023223c88d3e655964827bb6898352cb9d68acda19108a0f13379
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_shake_bottle-standard"
-digest = "sha256:43aed8e3fac2bbaffad9696d6693005f9ddc39aa9c05d3052d05752feabb5dba"
+digest = "sha256:fe33d6ce175e4a430af1df063347c5ddb6275b56be5b08535400dd0b77088b47"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_shake_bottle_horizontally-privileged"
@@ -2511,7 +2511,7 @@ digest = "sha256:4216d55d6b65e487197c0bfdca42a2c911dce7bdd8b00f8bd62484c8261472b
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_shake_bottle_horizontally-standard"
-digest = "sha256:1b4edb6e4fcae5e57469e82901797721f4ee53482c5cc6e160638ffbe78e9d3d"
+digest = "sha256:884110a4cbef783298354b9b25994d397e16e142376cb789406d2e58ac2c1ccd"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_blocks_three-privileged"
@@ -2519,7 +2519,7 @@ digest = "sha256:447dbc8cdc2fba131cd817221b4bdf6e9d4c5f1df0c0d5a7b51c54d9cb095fc
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_blocks_three-standard"
-digest = "sha256:b80a0311f6502a4bdde63cfa6fd84c78f79c1f1f0e944ac3baa90e604084071a"
+digest = "sha256:4b1fec719873ecf4f358989c8394e05fbf9f6dc36a4668fd434b9ef06dc45c98"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_blocks_two-privileged"
@@ -2535,7 +2535,7 @@ digest = "sha256:89bb6df438fba3dcd93bcc2a48a658882c323ad1616c8beec128f9572b0dadb
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_bowls_three-standard"
-digest = "sha256:e4cc5d016f526ee12a8c11695250e43693515994077a63dbde5685a8cf08480e"
+digest = "sha256:b69617221d2633f7c664b48c03790399a9d0d7a24fbd1cf6b25e067faeaebaa0"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_bowls_two-privileged"
@@ -2543,7 +2543,7 @@ digest = "sha256:de0745f4e558937d282b6b8bb0d195e0003e1d1dc47097c679ba553b97c8ef7
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stack_bowls_two-standard"
-digest = "sha256:3c51f612acce9c1fcd81b23513aa07eaa8916d2f65f172dd48d61aac7e020377"
+digest = "sha256:adb62bb91eada84e74d3cdf8ef48080aaa13f4e6d499f7f35c579144fd9d5d0d"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stamp_seal-privileged"
@@ -2551,7 +2551,7 @@ digest = "sha256:dad03a6482606df6520c0a390d0ab7bd4ced1f08acb6ab3a01df4157af0be31
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_stamp_seal-standard"
-digest = "sha256:9a77dd7bf46300311bc9311ec312fb86ea20c5fd2c8fde440f1318c710e87568"
+digest = "sha256:62216fb7a7cf26c8ca616ced3dc497ed2f7c365c4114e68dddd88bbe272341ac"
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_turn_switch-privileged"
@@ -2559,7 +2559,7 @@ digest = "sha256:840e7157dccc402cb6bae65a22cc1a7d82e9d45cdf079676d769dcdee8e1cae
 
 [[tasks]]
 name = "robot-coding-bench/robotwin_2_0_turn_switch-standard"
-digest = "sha256:82ebe4e113daafe9f06761c9e6d40d463b326125584088310afe2ebf6b6db553"
+digest = "sha256:f09a4e81dd6966972fc10392c6cf2768d516610e647ac52a968b4ee740988cc8"
 
 [[tasks]]
 name = "robot-coding-bench/robowits-align-blocks-i00-privileged"
