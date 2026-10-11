@@ -384,7 +384,7 @@ response with fewer rows executed; `rcb_client` exposes `Result.stopped` and pri
 
 A third bound keeps one call from exhausting the service's memory (every frame is held until the response is sent):
 - **`max_frames_per_call`** (`/spec`, where the adapter states one: DexJoCo and MyoSuite 1000, RoboTangle 2000, RoboWits
-  1500, RoboPaint 640; LabUtopia and AutoBio state a bound per camera): the images a call may return, cameras x frames
+  1500, RoboPaint 640, RoboDojo 3000; LabUtopia and AutoBio state a bound per camera): the images a call may return, cameras x frames
   with per-frame depth counted again (as four images in RoboTangle, RoboWits and RoboPaint, what a depth frame costs).
   A request over it is a 400 before anything is executed (`rcb_limited.check_frames`); a camera named twice is one
   camera. Where the length of a call is known only while it runs (RoboTangle's and RoboWits' `ee_pose` rows), the
