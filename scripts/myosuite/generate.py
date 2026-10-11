@@ -14,6 +14,7 @@ needed.
 
 import filecmp
 import json
+import re
 import shutil
 import sys
 import tempfile
@@ -33,6 +34,8 @@ _ENV = dict(ln.split("=", 1) for ln in (LAYER / "client.env").read_text().splitl
 CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR = "Chi Gui"
 AGENT_TIMEOUT = 5400  # uniform within the benchmark; why not 3600: docs/benchmarks/myosuite.md
+# The standard service's bound on the images of one call, quoted from the source: the texts state the enforced value.
+MAX_FRAMES = int(re.search(r"^MAX_FRAMES = (\d+)", (SHARED / "standard" / "server.py").read_text(), re.M).group(1))
 RESET_BUDGET = 10  # standard mode's default reset budget (owner, 2026-10-09; PROTOCOL §4.5, docs/benchmarks/myosuite.md)
 REVIEW_PR = "65"  # the number of the pull request that adds the benchmark (human review, PROTOCOL §2.7)
 HOSTS = [
@@ -386,7 +389,9 @@ r.status()                                     # calls, control steps, done, rea
 obs = r._post("/reset", {{"cameras": ["{f["cameras"][0]}"]}}, [], 900)   # POST /reset: a new episode (the 2.2 client has no reset())
 ```
 Cameras: {cameras_text(fam, f)}. Rendering is on the CPU: ask only for the cameras you need; `video="none"` makes a
-chunk fastest. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel` (`qd_<joint>`),
+chunk fastest. One call returns at most {MAX_FRAMES} images (cameras x frames at `video_fps`, default 10, at most {hz}; depth
+for every frame counts again; `spec["max_frames_per_call"]`): a larger request is refused with a 400 before anything
+runs, so ask for fewer cameras, a lower `video_fps` or a shorter call. Proprioception (`spec["proprio_groups"]`): `joint_pos` (`q_<joint>`), `joint_vel` (`qd_<joint>`),
 `muscle_activation` (`act_<muscle>`), `muscle_length` (`len_<muscle>`, m), `joint_effort` (`effort_<joint>`, the
 actuators' generalized force on each joint){", `root_pose`, `root_vel`" if f["free_root"] else ""}. {kin}
 
@@ -510,6 +515,38 @@ CHASE_TAG_TEXT = (
 )
 
 
+R3_STD = f"""\
+- 2026-10-10 (review round 3, board 0067): the shared service layer and the client only
+  (`environment/sim/rcb_limited.py`, `environment/rcb_client.py`). A camera named more than once in `cameras` is
+  rendered and returned once (N copies of one name made the service build N x N images within the frame budget, which
+  could exhaust its memory). A service that has given up on the episode (it could not start it, or could not resume it
+  after its crashes) answers every request with 409 and the reason, and `Robot()` / `wait_ready()` raise `EpisodeOver`
+  at once; before, nothing answered and they waited out their timeout (up to an hour). `environment/sim/server.py`
+  waits for a port that is still held when it restarts (`rcb_limited.bind`) instead of exiting. The collect hook, the
+  grader, the scene and the pass rule are unchanged.
+- 2026-10-10 (review round 3, board 0067): `environment/sim/server.py` bounds the images of one call: at most
+  {MAX_FRAMES} (cameras x frames, per-frame depth counted again; `/spec` `max_frames_per_call`, stated in the instruction);
+  a larger request is a 400 and nothing runs. Before, a call had no bound, and one request within the documented
+  ranges (a 30 s watch at the control rate, or several cameras with per-frame depth) could exhaust the sidecar's memory:
+  the service was killed, and a trial that then failed was recorded as an infrastructure failure
+  (`resource_service_oom`), not as a result. The default camera at the default 10 fps fits every chunk and watch
+  (302 images at most). The scene, instance and pass rule are unchanged, so the task keeps its name.
+"""
+R3_PRIV = """\
+- 2026-10-10 (review round 3, board 0067): `tests/grade.py` only. A byte that is not valid UTF-8 in the session log
+  the agent's tools write (`/app/output/rcb_session_log.jsonl`, read only for the self-reported `agent_*` cost fields)
+  stopped the grader before it wrote a reward, so the trial had no verdict; the log is now read tolerantly and can no
+  longer decide anything. A trial whose log is valid is graded as before; the pass rule is unchanged.
+- 2026-10-10 (review round 3, board 0067): `tests/grade.py`, whose failure a 0 is. The width of the rows is checked
+  against the instance's actuators before any replay (a file that is no trajectory for this instance is
+  `bad_trajectory`, as before). After that check a replay process that gives no result (out of time, killed for
+  memory, not started) is `replay_failed` with `grader_error = 1` and `infra_error = 1`; it was booked as the agent's
+  `bad_trajectory`. Every `reward.json` now carries `infra_error` (1 next to every `grader_error`, so also when the
+  verifier's host does not rebuild the frozen instance). The pass rule is unchanged; a trial graded `bad_trajectory`
+  before this date whose rows had the right shape was an infrastructure failure.
+"""
+
+
 def change_log(fam: str, f: dict, std: bool) -> str:
     """The README's Change Log: the standard service's history, plus what changed for this family alone."""
     out = CHANGE_LOG if std else ""
@@ -532,6 +569,7 @@ def change_log(fam: str, f: dict, std: bool) -> str:
         )
     if fam == "chase_tag":
         out += CHASE_TAG_TEXT
+    out += R3_STD if std else R3_PRIV
     if out and not std:
         out = CHANGE_LOG_HEAD + out
     return out

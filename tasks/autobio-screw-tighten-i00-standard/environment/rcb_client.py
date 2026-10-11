@@ -40,6 +40,19 @@ class EpisodeOver(RuntimeError):
     pass
 
 
+def _over(r) -> str:
+    """What a 409 says: the reason the episode is over. A service that gave up on the episode for good (it refused to
+    start it, or could not resume it after its crashes) answers every request with one, GET /spec and /status too."""
+    try: err = r.json()
+    except Exception: return "episode finished"
+    if not isinstance(err, dict): return "episode finished"
+    if err.get("gave_up"):
+        return (f"the sim service gave up on this episode: {err.get('reason')}"
+                + (" (an infrastructure failure, recorded as one: not a result of your actions)" if err.get("infra_error") else "")
+                + ". It will not serve this trial again: waiting or calling again cannot help.")
+    return err.get("reason")
+
+
 def _decode_depth_frames(p: dict) -> np.ndarray:
     a = np.frombuffer(zlib.decompress(p["data"]), dtype="<u2").reshape(p["shape"])
     return a.astype(np.float32) / 1000.0
@@ -118,6 +131,7 @@ class Robot:
                 try:
                     r = requests.get(b + "/spec", timeout=(5, 30))
                     if r.status_code == 503: last = "warming up"; break
+                    if r.status_code == 409: raise EpisodeOver(_over(r))   # it gave up for good: no wait brings it back
                     r.raise_for_status(); self.base = b; self._spec = r.json()
                     if not str(self._spec.get("protocol", "")).startswith(ACCEPTED):
                         raise RuntimeError(f"not a 2.x service: protocol {self._spec.get('protocol')!r}")
@@ -139,7 +153,7 @@ class Robot:
         body = rcb1.encode(meta, parts)
         r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"}, timeout=(5, timeout))
         if r.status_code == 409:
-            raise EpisodeOver(r.json().get("reason") if r.headers.get("Content-Type", "").startswith("application/json") else "episode finished")
+            raise EpisodeOver(_over(r) if r.headers.get("Content-Type", "").startswith("application/json") else "episode finished")
         if r.status_code >= 400:
             try: err = r.json()
             except Exception: err = {"error": r.text[:300]}
@@ -181,11 +195,14 @@ class Robot:
         return res
 
     def status(self) -> dict:
-        r = requests.get(self.base + "/status", timeout=(5, 60)); r.raise_for_status(); return r.json()
+        r = requests.get(self.base + "/status", timeout=(5, 60))
+        if r.status_code == 409: raise EpisodeOver(_over(r))   # the service gave up for good (wait_ready() ends here too)
+        r.raise_for_status(); return r.json()
 
     def wait_ready(self, timeout: float = 3600.0) -> dict:
         """After a connection error: wait until the service answers GET /status again (it resumes the same episode after a
-        crash), then return the status. Raises RuntimeError after `timeout` seconds."""
+        crash), then return the status. Raises RuntimeError after `timeout` seconds, and EpisodeOver at once when the
+        service answers that it gave up on the episode."""
         t0 = time.time(); last = None
         while time.time() - t0 < timeout:
             try:

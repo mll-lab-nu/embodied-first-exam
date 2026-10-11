@@ -4,7 +4,8 @@ simulator (stub_sim.py): no SAPIEN, no GPU. The service and graders under test a
     python3 -m unittest discover -s scripts/robotwin/tests          # needs numpy
 
 Covers: malformed requests are 400s that leave the episode alive (a zero-row chunk, dt / video_fps / cameras of the
-wrong type or not finite); the calibration in every response is the current one (the wrist camera moves); the agent's
+wrong type or not finite; a negative Content-Length, which would be read without a bound); a camera named many times
+is rendered once, before the frame budget is counted; a port held by another process is waited for; the calibration in every response is the current one (the wrist camera moves); the agent's
 clock starts at its first request; the verdict is written before the videos, survives a restart, and is graded without
 `finalized`; a failed verification replay and an instance that does not rebuild are infra_error, not the agent's 0.
 """
@@ -84,6 +85,16 @@ class Service:
     def stop(self):
         if self.proc and self.proc.poll() is None:
             self.proc.kill(); self.proc.wait()
+
+    def wait_up(self, timeout: float = 30) -> dict:
+        """The first /status answer (the PID file is written just before the port is bound)."""
+        t0 = time.time()
+        while time.time() - t0 < timeout:
+            try:
+                return self.get("/status")
+            except OSError:
+                time.sleep(0.05)
+        raise AssertionError("the service does not answer")
 
     def get(self, path: str) -> dict:
         return json.loads(urllib.request.urlopen(f"http://127.0.0.1:{self.port}{path}", timeout=30).read())
@@ -185,6 +196,44 @@ class Requests(ServiceCase):
         self.assertEqual((code, m["executed_rows"], m["done"]), (200, 1, False))
         code, m, parts = s.post("/observe", {"cameras": ["head_camera", 7, "no_such_camera"], "video": None})
         self.assertEqual(code, 200); self.assertIn("last/head_camera", parts)
+
+    def test_bad_content_length_is_a_400_and_the_service_stays_up(self):
+        s = self.service(); s.wait_up()
+        for value in (b"-1", b"-2147483648", b"abc"):
+            # the head only, the connection left open as a client that goes on sending would (a service that waits for a
+            # body, as read(-1) does, times this out)
+            with socket.create_connection(("127.0.0.1", s.port), timeout=10) as c:
+                c.sendall(b"POST /observe HTTP/1.1\r\nHost: sim\r\nContent-Length: " + value + b"\r\n\r\n")
+                self.assertIn(b" 400 ", c.makefile("rb").readline(), value)
+        self.assertIsNone(s.proc.poll())
+        self.assertEqual(s.get("/status")["calls"], 0)                 # refused before a call began: nothing was executed
+        self.assertEqual(s.post("/observe", {"video": "none"})[0], 200)
+
+    def test_json_true_is_not_a_number(self):
+        s = self.service()
+        # float(True) is 1.0: `seconds: true` watched for 1 s
+        self.assertEqual(s.post("/observe", {"video": "none", "seconds": True})[0], 400)
+        self.assertEqual(s.get("/status")["calls"], 0)
+
+    def test_a_repeated_camera_is_rendered_once(self):
+        s = self.service()
+        code, _, one = s.post("/observe", {"cameras": ["head_camera"], "video": "frames"})
+        self.assertEqual(code, 200)
+        # 4000 names would be over the frame budget (3000) if repeats counted, and 4000 x 4000 frames if they were built
+        code, err, many = s.post("/observe", {"cameras": ["head_camera"] * 4000, "video": "frames"})
+        self.assertEqual(code, 200, err)
+        self.assertEqual(sorted(many), sorted(one))
+        self.assertEqual(many["frames/head_camera"]["data"].shape, one["frames/head_camera"]["data"].shape)
+        self.assertEqual(many["frames/head_camera"]["data"].shape[0], 1)
+
+    def test_a_busy_port_is_waited_for(self):
+        self.svc = s = Service(self.tmp)
+        with socket.socket() as held:                                  # e.g. a process of the agent, in the shared network namespace
+            held.bind(("0.0.0.0", s.port)); held.listen(1)
+            s.start()
+            time.sleep(1.5)
+            self.assertIsNone(s.proc.poll(), "the service died on the busy port (that would count as a crash)")
+        self.assertEqual(s.wait_up()["calls"], 0)
 
     def test_calibration_is_recomputed_for_every_response(self):
         s = self.service()

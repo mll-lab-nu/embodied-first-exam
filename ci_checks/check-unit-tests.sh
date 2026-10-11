@@ -21,7 +21,8 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]
   else echo "FAIL scripts/$t${*:+ $*}:"; echo "$out" | tail -n 40; rc=1; fi
 }
 for t in robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
-         myosuite/tests/test_standard_grade.py usage_gateway/tests/test_rawlog.py; do
+         myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
+         robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py; do
   run 300 "$t"
 done
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
@@ -36,9 +37,15 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            labutopia/tests/test_grade_privileged.py labutopia/tests/test_server_validation.py labutopia/tests/test_service_stub.py \
            molmospaces/tests/test_ms.py robolab/tests/test_grade_privileged.py robolab/tests/test_server.py \
            robolab/tests/test_tooling_units.py robotwin/tests/test_gripper_state.py robotwin/tests/test_standard_service.py \
-           robopaint_strict/tests/test_server_requests.py robotangle/tests/test_server_requests.py; do
+           robopaint_strict/tests/test_server_requests.py robotangle/tests/test_server_requests.py \
+           mujoco-playground/tests/test_standard_2_1_servers.py dexjoco/tests/test_standard_server.py \
+           myosuite/tests/test_standard_server.py robowits/tests/test_server_frames.py; do
     run 900 "$t"
   done
+  # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared
+  # service test that apply to it, run against that copy
+  RCB_SERVICE_DIR="$root/scripts/libero-max/shared/standard" run 900 humanoidbench/tests/test_standard_service.py \
+    Endpoints Submit Observe ResetCapability ResetChecks Client Boot
   # the realtime clock under request load: the classes that do not depend on the runner's speed (TestClockUnderLoad
   # measures step counts under floods of requests; run the whole file by hand on a quiet host)
   run 900 humanoidbench/tests/test_realtime_load.py TestRequests TestStallEvidence TestGraders

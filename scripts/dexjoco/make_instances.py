@@ -80,6 +80,38 @@ def build_from_demo(fam: str, demo: str, out: Path) -> None:
     # facts() rounds the rows to float32 (and checks they still succeed) if they are not float32-exact
 
 
+def scene_cameras(s) -> list:
+    """Cameras that are mounted on, track or are aimed at a body that is neither fixed in the world nor moved by the
+    robot's own joints alone (a mocap body, or a body behind an object's joint: in bimanual_photograph `cam_pos_z`, the
+    lens of the camera the hands pick up): their pose is that object's pose, so the standard service gives their images
+    only. The rule of shared/standard/server.py (`scene_camera`), repeated here for the task texts;
+    tests/test_standard_server.py checks the committed facts against the frozen instances' models."""
+    m = s.model
+    own = set()                                       # the arms' and the hands' joints, as the service names them
+    for a in s.arms():
+        sfx = f"_{a}" if s.bimanual else ""
+        own |= {int(m.joint(f"joint{i}{sfx}").id) for i in range(1, 8)}
+        own |= {int(m.actuator_trnid[i, 0]) for i in s._hand_ctrl_ids(a)}
+
+    def own_body(b: int) -> bool:
+        while b > 0:
+            if int(m.body_mocapid[b]) >= 0:
+                return False
+            first = int(m.body_jntadr[b])
+            if any(j not in own for j in range(first, first + int(m.body_jntnum[b]))):
+                return False
+            b = int(m.body_parentid[b])
+        return True
+
+    out = []
+    for name in s.cameras():
+        i = m.camera(name).id
+        bodies = [int(m.cam_bodyid[i])] + ([int(m.cam_targetbodyid[i])] if int(m.cam_mode[i]) in (3, 4) else [])
+        if not all(own_body(b) for b in bodies if b >= 0):
+            out.append(name)
+    return out
+
+
 def facts(fam: str, out: Path) -> dict:
     inst = out / "instance.npz"
     A = np.asarray(np.load(out / "oracle_trajectory.npz")["actions"], dtype=np.float64)
@@ -120,7 +152,7 @@ def facts(fam: str, out: Path) -> dict:
     src, path = success_source(s, fam)
     rcb_src = "\n".join(textwrap.dedent(inspect.getsource(getattr(R, n))) for n in RCB_CODE.get(fam, [])).rstrip()
     return {"family": fam, "demo": FAMILIES[fam][1], "instance_sha": s.instance_sha, "objects": list(s.objects()),
-            "cameras": s.cameras(), "tcp0": tcp0, "table_top_z": table_z, "arm_bases": bases,
+            "cameras": s.cameras(), "scene_cameras": scene_cameras(s), "tcp0": tcp0, "table_top_z": table_z, "arm_bases": bases,
             "hand_lo": fmt(s.hand_limits()[:, 0], 2), "hand_hi": fmt(s.hand_limits()[:, 1], 2),
             "oracle_rows": int(len(A)), "oracle_state_sha": st["state_sha"],
             "steps_per_s": int(round(len(A) / max(dt, 1e-6), -1)),

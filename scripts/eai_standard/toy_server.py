@@ -5,7 +5,8 @@ recovery; it is also the reference for how a benchmark's environment/sim/server.
 Env: RCB_DATA (record dir), RCB_TOY_RESUME (exact | approx), RCB_TOY_MODE (inprocess: grade by an in-process replay, as
 RoboWits | dump: dump the episode and exit on SIGUSR1, as RoboLab / BEHAVIOR / RoboPaint), test knobs RCB_TOY_STEP_S (wall
 time per control step), RCB_TOY_PERTURB (added to the joints at every step after a restart: a nondeterministic simulator),
-RCB_TOY_HANG_S (the scene build hangs that long on the first start), RCB_TOY_PORT."""
+RCB_TOY_HANG_S (the scene build hangs that long on the first start), RCB_TOY_REFUSE (a reason: the service refuses the
+episode at its start, as DexJoCo does with too few CPUs), RCB_TOY_PORT."""
 from __future__ import annotations
 import hashlib, os, sys, threading, time
 import numpy as np
@@ -20,6 +21,8 @@ LOCK = threading.Lock()
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 EP = L.Episode(DATA, dim=N, resume=os.environ.get("RCB_TOY_RESUME", "exact"), persist=("last_note",))
 EP.startup()
+if os.environ.get("RCB_TOY_REFUSE"):
+    EP.give_up(os.environ["RCB_TOY_REFUSE"], infra=True)   # never returns: the verdict, then 409 to every request
 
 
 class Toy:

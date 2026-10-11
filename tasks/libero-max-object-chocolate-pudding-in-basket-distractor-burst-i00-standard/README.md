@@ -79,3 +79,10 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
     budget) and one reference replay in the real simulator (same final state hash with the video as without).
 - 2026-10-10 (2): the sim service (`environment/sim/rcb_service.py`) refuses a negative `Content-Length` unread (400; it
   read until the client hung up). Nothing else changes; the task keeps its name.
+- 2026-10-10 (3; third review round): the sim service (`environment/sim/rcb_service.py`) renders and returns a camera
+  named more than once in `cameras` once (N copies of one name made it build N x N images within the frame budget,
+  which could exhaust its memory), and a service that has given up on the episode (it could not resume it after its
+  crashes) answers every request with 409 and the reason instead of not listening. A simulator that fails inside `POST
+  /reset` ends the episode as `error` (`sim_error = 1`), not `reset` (reachable only when a run grants resets; the
+  default is none). The scene, instance, pass rule and every verdict reached before are unchanged, so the task keeps
+  its name.
