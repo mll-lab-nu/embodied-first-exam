@@ -71,10 +71,11 @@ upright (head at standing height, torso vertical) and low actuator force, multip
 target is a sprint rather than a walk, on the order of 5 m/s. On top of that, touching any barrier's collision
 geometry multiplies that entire step down to a small fraction of its value: contact is a gate to be respected,
 not a penalty to be traded off. Only the walls that line the track on both sides and behind the start count as
-barriers here; the hurdles carry no such penalty, and in upstream's model they have no collision geometry at
-all (drawn, not solid): the robot runs through them. The service ends the episode the moment the pass mark is
-reached (`reason = "success"`), and a fresh replay of the recorded episode, the servo targets the robot
-actually executed at each control step, must reach it as well and end in the same state.
+barriers here; the hurdles carry no such penalty. They are solid all the same: each hurdle is one collision
+box 37.5 cm high across the whole track (the bars drawn on it have no collision geometry of their own), so the
+robot has to get over it. The service ends the episode the moment the pass mark is reached
+(`reason = "success"`), and a fresh replay of the recorded episode, the servo targets the robot actually
+executed at each control step, must reach it as well and end in the same state.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, standard-realtime mode)
 Your whole interface to the robot. Its docstring is the full reference

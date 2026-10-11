@@ -189,9 +189,9 @@ actuator force, multiplied together — but the speed target is a sprint rather 
 of 5 m/s. On top of that,
 touching any barrier's collision geometry multiplies that entire step down to a small fraction of its
 value: contact is a gate to be respected, not a penalty to be traded off. Only the walls that line the
-track on both sides and behind the start count as barriers here; the hurdles carry no such penalty, and
-in upstream's model they have no collision geometry at all (drawn, not solid): the robot runs through
-them.'''
+track on both sides and behind the start count as barriers here; the hurdles carry no such penalty. They
+are solid all the same: each hurdle is one collision box 37.5 cm high across the whole track (the bars
+drawn on it have no collision geometry of their own), so the robot has to get over it.'''
 ends_note = "The episode ends early if the pelvis drops near the ground."
 obs_layout = "qpos(26) + qvel(25), robot state only"
 task_notes = ""
@@ -201,12 +201,16 @@ difficulty = '''- **A multiplicative gate, not a penalty.** Contact with the sid
   respected exactly.
 - **Running, not walking.** The speed term is scaled to 5 m/s, so a comfortable walking gait leaves most
   of the per-step reward on the table even when nothing is hit.
-- **The hurdles are scenery.** Upstream draws them without collision geometry and its reward never
-  looks at them, so nothing has to be jumped: the task is a sprint down the walled track.'''
+- **Sprinting over solid hurdles.** The reward never looks at the hurdles, but each one is a solid box
+  37.5 cm high across the track: the robot has to clear it at speed or it trips.'''
 change_log = ["""2026-10-08: the task text no longer says the hurdles are solid and have to be cleared: upstream's
 model draws them without collision geometry and its reward never looks at them. The scene, instance, pass rule and
 verifier are unchanged, so the task keeps its name; runs recorded before this change were told otherwise and are
-reported separately."""]
+reported separately.""", """2026-10-11: the task text says the hurdles are solid again, and what is solid: upstream's
+model (assets/locomotion/generated_xml_hurdles.xml) puts at every hurdle a collision box 37.5 cm high and 6 cm thick
+across the track, under drawn bars that have no collision geometry; the 2026-10-08 entry looked only at the drawn
+bars. The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded from
+2026-10-08 until this change were told the hurdles have no collision geometry and are reported separately."""]
 
 [task.standard]
 ends = "when the robot falls (its pelvis drops near the ground)"
