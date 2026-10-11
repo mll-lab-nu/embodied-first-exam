@@ -304,9 +304,43 @@ sizes, colours and the detailed goal; privileged texts may give world quantities
 
 ## Network policy
 
-The agent's egress is open by default and switched per run with `scripts/set_agent_egress.py`, as for RoboWits, RoboLab and
-BEHAVIOR-1K. No reference solution is publicly downloadable: this repository is private. The harness's web search is off
-in official runs (PROTOCOL §5).
+The agent's egress is the model APIs only (`[agent] network_mode = "allowlist"`, the hosts of
+`scripts/set_agent_egress.py`; owner decision 2026-10-10, board 0072), in both modes; `scripts/robotangle/mk_tasks.py`
+writes it. It was open until then, on the argument that no reference solution was publicly downloadable. That was wrong:
+one privileged trial downloaded the upstream demonstration of interlocked_claws (3084 recorded dual-arm frames) from an
+address the image itself names, and scored 1. Every RoboTangle result from before the switch is withdrawn.
+
+Who reaches what: the agent's container reaches the model APIs during the agent phase and nothing else (no GitHub, PyPI
+or Hugging Face). Under Harbor's egress control the standard `sim` service shares that network namespace, so it is public
+while the environment starts and allowlisted during the agent phase; it downloads nothing (the image is complete, the
+instance is staged from it). Both verifiers run with `network_mode = "no-network"`.
+
+**Pointers to solutions in the image (open; a requirement for the next RoboTangle task release).** PROTOCOL §2.7 forbids
+a solution or a pointer to one anywhere the agent can reach. In privileged mode the agent's container is the whole image,
+and its simulator package (`/opt/topogym/topogym`, the release's pruned tree) names upstream material in 34 files. The
+allowlist makes none of it reachable; the files still have to change:
+
+| Where (under `/opt/topogym/topogym/assets/`) | Fields | What they locate |
+|---|---|---|
+| `resources/templates/interlocked_claws_reference_scene.json`, which `geometry/interlocked_claws.py` writes as `reference_scene.json` into every episode's asset folder (`/tmp/topogym-episode-*/assets/`) | `source_url`, `source_manifest_sha256`, `source_viewer_url`, `methods_url`, `retrieved_date` | the upstream demonstration's manifest (the recorded solution motion) and its viewer |
+| `resources/templates/rope_threading_reference.json` | `source`, `sources.{geometry,manifest,phase000}.url` (+ `sha256`) | the same site's rope-threading demonstration data |
+| `resources/templates/horseshoe_ring_template.json` and the 21 `resources/variations/horseshoe_ring/*.json` | `references[].url`, `.use`, `.author` | a puzzle collection page and two solution videos; `use` describes the solution in words |
+| `resources/templates/cast_keyhole_sources.json` | `sources[].url`, `.use`, `human_solution_documented` | the manufacturer's solution sheets and a solution video; `use` lists the solution's stages |
+| `resources/templates/cast_coil_template.json` and the 6 `resources/variations/cast_coil/*.json` | `sources[]` | product pages and the manufacturer's leaflet |
+| `geometry/orbits.py`, `geometry/slotted_post_ring.py` | `SOURCE_URL` | a video of each puzzle being solved |
+
+(`geometry/knot_untying.py`'s knot-atlas links, the robot vendors' pages and the texture sources locate no solution.)
+They cannot be masked from the task directory. Every Session rehashes the installed tree against the runtime binding
+(`topogym.simulator.frozen_binding.installed_runtime`: a changed file is `Frozen runtime binding failed`), the resource
+catalog (`resources/catalog.json`) and the frozen instances' `asset_identity` (e.g. `reference_scene.json`) name these
+files' bytes, and the tooling is the release's, verbatim. The next release must therefore: remove these fields from the
+package (and from the `reference_scene.json` it writes), with the provenance kept outside the image (the private dataset or this
+document); re-freeze the instances whose generated assets change; give the new source identity in `release.json`
+`runtime`; and add the pattern to `images/topogym/prune.py`'s checks, so that a pruned tree with an `http(s)` address
+of a demonstration, solution sheet or video fails the build. Until then the allowlist is the control: `ci_checks/check-verifier-isolation.sh` keeps every
+RoboTangle task on the allowlist.
+
+The harness's web search and every other tool that runs outside the container are off in official runs (PROTOCOL §5).
 
 ## Evidence and oracle levels
 
