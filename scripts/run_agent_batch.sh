@@ -7,9 +7,10 @@
 #   AGENT        codex | claude-code (codex)        MODEL   the -m model (openai/gpt-6-luna)
 #   EFFORT       reasoning effort, --ak reasoning_effort=<EFFORT> (xhigh); `default` passes none
 #   AK           more agent options, e.g. "--ak reasoning_summary=detailed"
-#   WEB_SEARCH   disabled (default) = the harness offers the model no web search: Codex --ak web_search=disabled,
-#                Claude Code --ak disallowed_tools=WebSearch,WebFetch (PROTOCOL §5; the search runs at the model
-#                provider, past any egress allowlist); "allowed" = leave the harness default (not for official runs)
+#   WEB_SEARCH   disabled (default) = the harness offers the model no web search: Codex --ak web_search=disabled
+#                and no apps (features.apps = false, added to a copy of AGENT_CONFIG), Claude Code --ak
+#                disallowed_tools=WebSearch,WebFetch (PROTOCOL §5; these tools run at the model provider, past any
+#                egress allowlist); "allowed" = leave the harness default (not for official runs)
 #   AGENT_CONFIG a native config file, --ak config=<file>: Codex's config.toml (an Azure provider; retries with
 #                request_max_retries / stream_max_retries) or Claude Code's settings
 #   ENV_FILE     a .env file Harbor loads (--env-file); without it the credentials come from this environment
@@ -80,6 +81,19 @@ fi
 [[ "$RUN_ID" =~ ^[a-z0-9_]+-[a-z0-9_]+-(none|minimal|low|medium|high|xhigh|max|default)$ ]] || { echo "run id $RUN_ID is not <harness>-<model>-<effort>" >&2; exit 2; }
 AGENT_ARGS=(-a "$AGENT" -m "$MODEL")
 [ "$EFFORT" != default ] && AGENT_ARGS+=(--ak "reasoning_effort=$EFFORT")
+# Codex's apps (connectors: GitHub fetch, a web search of their own, ...) run at the model provider too, through
+# chatgpt.com under a ChatGPT login, so they go off with the web search: features.apps = false in a copy of AGENT_CONFIG
+if [ "$WEB_SEARCH" = disabled ] && [ "$AGENT" = codex ]; then
+  mkdir -p "$JOBS/.agent-config"; cfg="$JOBS/.agent-config/config.toml.$$"
+  if [ -n "$AGENT_CONFIG" ]; then
+    grep -Eq '^[[:space:]]*(features\.)?apps[[:space:]]*=' "$AGENT_CONFIG" \
+      && { echo "$AGENT_CONFIG sets apps itself; WEB_SEARCH=disabled sets features.apps = false" >&2; exit 2; }
+    cp "$AGENT_CONFIG" "$cfg" || exit 2
+  else : > "$cfg"; fi
+  if grep -q '^\[features\]' "$cfg"; then sed -i '/^\[features\]/a apps = false' "$cfg"
+  else printf '\n[features]\napps = false\n' >> "$cfg"; fi
+  AGENT_CONFIG="$cfg"
+fi
 [ -n "$AGENT_CONFIG" ] && AGENT_ARGS+=(--ak "config=$AGENT_CONFIG")
 # shellcheck disable=SC2206
 AGENT_ARGS+=($AK)

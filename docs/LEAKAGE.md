@@ -20,6 +20,7 @@ a reward function, a success predicate, a trained policy, a demonstration set.
 | `.git` | `git show` reconstructs every file ever committed | delete it in that same `RUN` |
 | The network | upstream is public and pinned, one `curl` away | `[agent] network_mode = "allowlist"` of the model-API hosts (`scripts/set_agent_egress.py`): DexToolBench, KinDER, HumanoidBench and RoboPaint set it; the other benchmarks are public by default and switched per run (PROTOCOL §2.7) |
 | The model API | the harness's web search runs on the provider, reached through an allowed model-API host: Codex's `web_search` and Claude Code's `WebSearch` | **closed by default since 2026-10-02**: `scripts/run_agent_batch.sh` passes Codex `--ak web_search=disabled` and Claude Code `--ak disallowed_tools=WebSearch,WebFetch` unless `WEB_SEARCH=allowed` (PROTOCOL §5). Before that it was open unless a run's own agent config turned it off (audit below) |
+| Codex's apps | under a ChatGPT login Codex offers its apps (connectors) as `mcp__codex_apps__*` tools, which 0.160 calls from its `exec` tool: GitHub fetch, a web search of their own (`search_service_web_run`) and more. They run at OpenAI, reached through `chatgpt.com`, and `web_search = "disabled"` leaves them on | **closed by default since 2026-10-10**: with `WEB_SEARCH=disabled`, `scripts/run_agent_batch.sh` also sets Codex `features.apps = false` (PROTOCOL §5). Before that, 2 of 47 GPT-6 Astra trials of 2026-10-09/10 (Codex 0.160.1, HumanoidBench / KinDER / BiGym2) used them: HumanoidBench room standard fetched an H1 walking policy from GitHub and ran it, hurdle standard searched the web 6 times. Grep the transcript for `mcp__codex_apps__` |
 | The model-API key | Harbor's native agents put it in the agent's container. Codex: `OPENAI_API_KEY` in its environment and in `/tmp/codex-secrets/auth.json` (linked from `$CODEX_HOME/auth.json`), removed only after the run; Claude Code: `ANTHROPIC_API_KEY` (or its OAuth token) in its environment. With the model API allowed, the agent can spend it on any model, a search-enabled one included, which undoes the row above | **open**: the one fix measured so far, a model gateway beside the harness that holds the key, is ruled out by D11. Meanwhile one key per batch with a spending cap (`docs/RUNNING.md`), and read the transcript for direct API calls |
 | The model's memory | the benchmark's source is public, so it is in pretraining data: Opus 5.5 recalled H1's 19 actuator ranges exactly and the sit reward's seat-height band, with no tool | nothing in the harness removes it; report it with the result |
 | Package metadata | `*.egg-info/SOURCES.txt` lists files you deleted | generate metadata after the removal |
@@ -45,6 +46,9 @@ with `cached` or `live`, none with `disabled`; `gpt-6-luna` gets none in any mod
   carries `tools: [{"type": "web_search"}]` (or `web_search_preview`) is served with real searches, so an agent
   holding the key can still search by writing its own request. The usage gateway's raw log (`GATEWAY=1`, raw bodies on by default)
   shows the tool list of every request: flag any `web_search` tool or `alpha/search` path.
+
+2026-10-10, Codex 0.160.1: `codex features list` shows `apps` as stable and on; `features.apps = false` in
+`config.toml` (or `--disable apps`) turns it off.
 
 ## 2. Deciding what to remove
 

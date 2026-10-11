@@ -82,8 +82,10 @@ under `embodied-agent-interface-v2-internal`; a host with an old tag can `docker
 
 ## Web search (off by default)
 `scripts/run_agent_batch.sh` turns the harness's web search off unless `WEB_SEARCH=allowed`: Codex gets
-`--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (PROTOCOL §5). For a bare
-`harbor run`, pass the same option yourself. Codex with ChatGPT login searches by default; an API key can still request
+`--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch` (PROTOCOL §5). Codex's apps
+(connectors such as GitHub fetch, with a web search of their own) go off with it: the runner adds `features.apps = false`
+to a copy of `AGENT_CONFIG` (or to a config of its own) and refuses an `AGENT_CONFIG` that sets `apps` itself. For a bare
+`harbor run`, pass the same options yourself (`--ak config=<a config.toml with [features] apps = false>`). Codex with ChatGPT login searches by default; an API key can still request
 search directly, which the usage gateway's raw log shows (docs/LEAKAGE.md).
 
 ## Usage gateway (token usage per request, optional)
