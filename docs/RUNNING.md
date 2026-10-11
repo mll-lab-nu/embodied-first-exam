@@ -87,7 +87,13 @@ under `embodied-agent-interface-v2-internal`; a host with an old tag can `docker
 account's connectors, apps, plugins and an image generator unless its config turns them off (`features.apps = false`,
 `features.plugins = false`, `features.image_generation = false`, `apps._default.enabled = false`, before any table of
 the config); Claude Code under a full claude.ai login loads the account's connectors (`disableClaudeAiConnectors`). An
-official run starts the harness without them. An API key can still request a search directly; the usage gateway
+official run starts the harness without them. For Codex the runner does it with the same switch: it passes
+`--ak config=` a copy of `AGENT_CONFIG` (or a config of its own when there is none) in which
+`scripts/codex_tools_off.py` has set those features to false (`$JOBS/.agent-config/`), and refuses an `AGENT_CONFIG`
+that turns one of them on, and an `AK` that carries its own `config=` (Harbor would keep the last one). A config that
+already sets them to false, as a scheduler's own may, is accepted. For a bare `harbor run`:
+`--ak config=<the output of scripts/codex_tools_off.py [your config.toml]>`. Claude Code's settings stay the
+caller's (`AGENT_CONFIG`). An API key can still request a search directly; the usage gateway
 refuses such a request and every path that is not a model call (below, docs/LEAKAGE.md).
 
 ## Usage gateway (token usage per request, optional)
