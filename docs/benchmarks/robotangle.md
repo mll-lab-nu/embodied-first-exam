@@ -223,6 +223,31 @@ fixes below (`python3 scripts/eai_standard/v2_4/selftest.py` tests them on the C
 `check-tooling-identity.sh` keeps every copy byte-identical, and `task_conventions.normalize` leaves it alone (a shared
 source). The generator respells "eai-standard/2.3" to 2.4 in the task texts as well.
 
+### Safety readings in standard mode (the declared exception of PROTOCOL §4.5)
+
+Owner decision, 2026-10-10: the standard service keeps publishing `meta["safety"]` in every response, and the protocol
+records it as a declared exception to "no object contact forces". Why: the benchmark's physical-validity policy judges
+the agent on these readings -- a success with a deep task contact is held for human review instead of credited, a
+soft body that stays collapsed ends the episode, a simulator breakdown shortly after forcing is the agent's failure --
+so an agent that could not see them would be judged on something it cannot measure. The fields are exactly what
+`rcb_topogym._SafetyMonitor.read` returns (maxima since the previous response, each next to its limit), and nothing
+else of the simulator's contact state is published:
+
+| Field of `meta["safety"]` | What it is | Families |
+|---|---|---|
+| `rules`, `scope` | the policy's revision; "since the previous read" | all |
+| `forcing` | `max_press_force_n` (the largest total contact force an arm's gripper, or a part it holds, pressed on anything else with), `max_drive_fraction_while_pressing`, `longest_forcing_s`, `events`, the last three events (each: the arm and joint, the control step, the drive fraction and cap, the force, and in words what pressed on what, e.g. "a part it holds" on a named task part), and the thresholds (`contact_n`, `near_cap_fraction`, `event_after_s`) | all |
+| `task_contact_mm` | the deepest contact between task parts (`max`), the longest time above the sustained limit, and the review and breakdown limits | rigid |
+| `held_finger_contact_mm` | the deepest contact between a finger and the part it holds, with its review limits | rigid |
+| `review` | the count of review events and the last three (each: the kind, the control step, the names of the two task parts in contact, the depth in mm and the force in N); a success with one is held for review | rigid |
+| `soft_volume_ratio` | the lowest volume ratio of each soft body and the longest time at or below 0 | soft (rope, cord, cloth) |
+| `attachment_stretch_mm` | the worst cord attachment stretch and the longest time above its limit | soft |
+| `table_guard` | the control steps whose gripper target the table guard stopped, with the last events | where the guard applies |
+| `ik_jumps` | the last IK solutions that lay far from the current joints (`ee_pose` actions) | when one occurred |
+
+These are forces, depths, ratios and the names of the parts involved, never a pose: no field says where an object is.
+A change to this list is a change of the declaration and goes through the protocol-change process (PROTOCOL §6).
+
 ### Fixes applied on main (2026-10-10 review; to be taken upstream on dev/jianwen)
 
 These live in `scripts/robotangle/shared/`, `scripts/robotangle/mk_tasks.py` and `scripts/eai_standard/v2_4/`; the
@@ -262,8 +287,9 @@ real `server.py` on the real 2.4 layer with a stub Session, numpy only, about 20
   the 0.2.22 sources and the stub, not on a live scene.
 - Texts (`review_fixes_r2`): the 20 Panda tasks' instructions (both modes) gave the native drive target in metres; it
   is rad (0 = open, 0.8 = closed). The standard Rules said "internal measurements are not exposed" while the same
-  instruction documents `meta["safety"]`; the sentence now names that exception (what is exposed is unchanged: whether
-  the contact readings of `meta["safety"]` stay in standard mode is an open owner decision, PROTOCOL §4.5). The
+  instruction documents `meta["safety"]`; the sentence now names that exception (what is exposed is unchanged; the owner
+  decided on 2026-10-10 that the readings stay, as a declared exception of PROTOCOL §4.5: "Safety readings in standard
+  mode" above). The
   instruction states the client's new `Robot()` wait (3600 s; 600 s before) and what `gripper_opening` is.
 
 Not changed: a resume replay at collect time still has the fixed 3600 s `RCB_COLLECT_END_TIMEOUT_S`, and the collect

@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_dual_shoes — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use both arms to pick up the two shoes on the table and put them in the shoebox, with the shoe tip pointing to the left.
+cannot open. You get one client and one episode. **Task:** Use both arms to pick up the two shoes on the table and put them in the shoebox, with the shoe tip pointing to the left. The success check, run at the end of every call, passes when both shoes lie in the shoe box sole down with the tip pointing to the robot's left (toward -x), each within about 15 degrees of that orientation; the centre of the sole of the shoe that starts on the left is within 5 cm in x and in y of (x, y) = (0, -0.17) m and that of the shoe that starts on the right within 5 cm in x and in y of (0, -0.09) m (the box's centre is at (0, -0.13) m); each sole is within 3 cm in height of 1 cm above the box's base; and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

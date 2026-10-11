@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_object_scale — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use one arm to grab the object and put it on the scale.
+cannot open. You get one client and one episode. **Task:** Use one arm to grab the object and put it on the scale. The success check, run at the end of every call, passes when the object's position is within 3.5 cm (in the table plane) of the reference point on the scale's weighing surface and not more than 1 cm below it, and the gripper of the arm on the side where the object lies at the start (the right arm if it starts at x > 0, else the left arm) is commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · hanging_mug — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use left arm to pick the mug on the table, rotate the mug and put the mug down in the middle of the table, use the right arm to pick the mug and hang it onto the rack.
+cannot open. You get one client and one episode. **Task:** Use left arm to pick the mug on the table, rotate the mug and put the mug down in the middle of the table, use the right arm to pick the mug and hang it onto the rack. The success check, run at the end of every call, passes when the point inside the mug's handle is within 2 cm in x and in y of the midpoint between the rack's base point and the tip of its arm, that point is above z = 0.86 m (12 cm above the table top), and the right gripper is commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

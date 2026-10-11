@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · pick_diverse_bottles — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Pick up one bottle with one arm, and pick up another bottle with the other arm.
+cannot open. You get one client and one episode. **Task:** Pick up one bottle with one arm, and pick up another bottle with the other arm. The success check, run at the end of every call, passes when both bottles are held up in front of the robot: the centre of the bottle that starts on the left is within 10 cm in x and in y of (x, y) = (-0.06, -0.105) m, the centre of the bottle that starts on the right is within 10 cm in x and in y of (0.06, -0.105) m, and both centres are above z = 0.89 m (15 cm above the table top).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

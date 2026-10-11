@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_object_basket — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use one arm to grab the target object and put it in the basket, then use the other arm to grab the basket, and finally move the basket slightly away.
+cannot open. You get one client and one episode. **Task:** Use one arm to grab the target object and put it in the basket, then use the other arm to grab the basket, and finally move the basket slightly away. The success check, run at the end of every call, passes when the basket is at least 2 cm above its start height and upright (tilted less than 60 degrees), with the object inside it: the object at least 2 cm above its own start height, touching the basket and not the table, and within 15 cm of the basket's position (the distances in x, y and z added up).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a
