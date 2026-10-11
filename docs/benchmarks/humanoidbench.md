@@ -172,9 +172,10 @@ Results on image 0.1.6 or earlier are other physics and are reported apart; none
 numbers. The instances were drawn on MuJoCo 3.1.6 and load identically on 0.2.0, room's redrawn with its fix
 (`scripts/humanoidbench/README.md`). Known and not fixed: masses where upstream set no density (room's packages 24 and 40 kg) or chose one (the door, 160 kg at
 `density="600"`), the ±0.01 start noise on every `qpos` (feet start up to 18 mm in the floor), `sit_simple`'s chair box
-overlapping the heels by 19 mm (its mesh feet touch that box; it is a fixture), and `hurdle`'s hurdles, which upstream draws
-without collision geometry and its reward never reads (the robot runs through them; the task text says so since
-2026-10-08).
+overlapping the heels by 19 mm (its mesh feet touch that box; it is a fixture), and `hurdle`'s hurdles, which its reward
+never reads: each is one collision box 37.5 cm high across the track (`generated_xml_hurdles.xml`; the bars drawn on it,
+about 40 cm tall, have no collision geometry of their own), so the robot has to get over it. The task text said so until 2026-10-08, said the
+hurdles had no collision geometry from then (it had looked only at the drawn bars), and says so again since 2026-10-11.
 
 ## Answer-key leakage
 
