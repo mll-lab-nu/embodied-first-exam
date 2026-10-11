@@ -167,6 +167,14 @@ class Rules(unittest.TestCase):
                       {"type": "input_image", "image_url": "https://x/a.png"}, {"type": "input_file", "file_url": "https://x/a.pdf"}):
             for key in ("messages", "input"):
                 self.assertEqual(st(json.dumps({"model": "m", key: [{"role": "user", "content": [block]}]})), ["url_source"], (key, block))
+        for item in ({"type": "function_call_output", "call_id": "c", "output": [{"type": "input_file", "file_url": "https://x/a.pdf"}]},
+                     {"type": "custom_tool_call_output", "call_id": "c", "output": [{"type": "input_image", "image_url": "https://x/a.png"}]}):
+            self.assertEqual(st(json.dumps({"model": "m", "input": [item]})), ["url_source"], item)
+        nested = {"type": "document", "source": {"type": "content", "content": [{"type": "image", "source": {"type": "url", "url": "https://x"}}]}}
+        self.assertEqual(st(json.dumps({"model": "m", "messages": [{"role": "user", "content": [nested]}]})), ["url_source"])
+        ok_out = {"type": "function_call_output", "call_id": "c", "output": [{"type": "input_image", "image_url": "data:image/png;base64,AA"},
+                                                                             {"type": "input_text", "text": "https://x is a string"}]}
+        self.assertEqual(st(json.dumps({"model": "m", "input": [ok_out, {"type": "function_call_output", "call_id": "d", "output": "https://x"}]})), [])
         for body in ("", "not json", "[1]", '"x"', '{"tools": 5}', '{"tools": [1]}', '{"tools": [], "tools": [{"type": "mcp"}]}',
                      "\ufeff{}", "[" * 100000):
             with self.assertRaises(gateway.Unreadable, msg=body[:40]):

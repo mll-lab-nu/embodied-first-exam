@@ -161,8 +161,9 @@ if [ "$GATEWAY" = 1 ]; then
   setsid python3 "$R/scripts/usage_gateway/gateway.py" "${gw_args[@]}" >>"$JOBS/.gateway/gateway.$$.err" 2>&1 </dev/null &
   gw_pid=$!; trap 'kill "$gw_pid" 2>/dev/null' EXIT
   # job copies a killed runner left behind (run_job removes its own; never here on exit: Harbor may still be tearing a
-  # trial down from that directory, whose compose file and bind mounts it holds)
-  [ -d "$JOBS/.tasks" ] && find "$JOBS/.tasks" -mindepth 1 -maxdepth 1 -type d -mtime +7 -exec rm -rf {} + 2>/dev/null
+  # trial down from that directory, whose compose file and bind mounts it holds; a copy is at most 11 MB, and no job
+  # runs for a month)
+  [ -d "$JOBS/.tasks" ] && find "$JOBS/.tasks" -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} + 2>/dev/null
   for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && break; sleep 0.2; done
   [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
   GW="http://$GATEWAY_BIND:$(cat "$ready")"

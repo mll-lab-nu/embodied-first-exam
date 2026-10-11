@@ -55,6 +55,8 @@ for d in dirs:
         # Harbor lets a step's own agent policy override [agent] (trial/network_policy.py): this script does not rewrite those
         sys.exit(f"{d}: task.toml has [[steps]]; a step's network policy would override [agent]; nothing written")
     block, sep2, tail = rest.partition("\n[")
+    if re.search(r"(?m)^\s*allowed_hosts\s*=\s*\[[^\]\n]*$", block):      # a list over several lines: not rewritten line by line
+        sys.exit(f"{d}: [agent] allowed_hosts spans several lines; write it on one line; nothing written")
     if mode == "allowlist":          # already this list: leave the generator's own lines and comments as they are
         m = re.search(r'(?m)^allowed_hosts\s*=\s*\[(.*)\]\s*$', block)
         if re.search(r'(?m)^network_mode\s*=\s*"allowlist"', block) and m and re.findall(r'"([^"]+)"', m.group(1)) == hosts:

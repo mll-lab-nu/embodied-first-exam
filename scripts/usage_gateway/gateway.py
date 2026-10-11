@@ -180,7 +180,11 @@ def _remote(v) -> bool:
 
 def _fetched(blocks, found: set, depth: int = 0) -> None:
     """Content blocks that make the provider fetch a URL for the model (an image, a document or a file by address, in the
-    Anthropic, Responses and Chat Completions shapes); a `data:` URL carries its own bytes and is the agent's."""
+    Anthropic, Responses and Chat Completions shapes); a `data:` URL carries its own bytes and is the agent's. Blocks
+    inside blocks are followed where the APIs nest them (a tool result's content, a document's content source), never
+    into a tool call's arguments."""
+    if isinstance(blocks, dict):
+        blocks = [blocks]
     for b in blocks if isinstance(blocks, list) else []:
         if not isinstance(b, dict):
             continue
@@ -190,8 +194,10 @@ def _fetched(blocks, found: set, depth: int = 0) -> None:
         img = b.get("image_url")
         if _remote(img) or (isinstance(img, dict) and _remote(img.get("url"))) or _remote(b.get("file_url")):
             found.add("url_source")
-        if depth == 0 and b.get("type") == "tool_result":      # Anthropic: a tool result's own blocks
-            _fetched(b.get("content"), found, 1)
+        if depth < 4 and b.get("type") not in ("tool_use", "server_tool_use", "function_call", "custom_tool_call"):
+            _fetched(b.get("content"), found, depth + 1)
+            if isinstance(src, dict):
+                _fetched(src.get("content"), found, depth + 1)
 
 
 def server_tools(text: str) -> list[str]:
@@ -203,7 +209,8 @@ def server_tools(text: str) -> list[str]:
         (CLIENT_TOOLS; no type = a function tool) is the provider's;
       - the provider-side fields it sets (PROVIDER_FIELDS), and a `:online` model (OpenRouter's web plugin), also among
         `models`;
-      - content the provider would fetch by URL: blocks of `messages[*].content` and `input[*].content`."""
+      - content the provider would fetch by URL: blocks of `messages[*].content`, `input[*].content` and
+        `input[*].output`, and the blocks nested in them."""
     try:
         body = json.loads(text, object_pairs_hook=_no_duplicates)
     except Unreadable:
@@ -226,6 +233,8 @@ def server_tools(text: str) -> list[str]:
             if key == "input" and isinstance(item.get("tools"), list):
                 _declared(item["tools"], found)
             _fetched(item.get("content"), found)
+            if key == "input":                       # a tool output's own content blocks (function_call_output and its kin)
+                _fetched(item.get("output"), found)
     return sorted(found)
 
 
@@ -556,11 +565,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        if close:                                   # the request body was not read: this connection ends here
+        if close or self.command == "HEAD":         # the request body was not read: this connection ends here
             self.send_header("Connection", "close")
             self.close_connection = True
         self.end_headers()
-        self.wfile.write(body)
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def forward(self) -> None:
         if self.path == "/_gateway/health":
