@@ -37,7 +37,7 @@ reads that limit and it does not apply here: where the description above mention
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same frozen layout in two fresh processes and scored 1 if the task succeeds in both replays and both end in the same state,
+open-loop from the same frozen layout in two fresh processes and scored 1 if the task succeeds in both replays (both replays must succeed; their end states may differ: the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10); the grader requires both replays to succeed),
 else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
 as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
 The file holds `task` and `actions`, a (T, 14) float array of at most **15,000 rows** (one per action, 10 min of robot

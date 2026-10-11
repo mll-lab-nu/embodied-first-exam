@@ -29,7 +29,7 @@ reported separately until it has a positive example (PROTOCOL §7, Open 4).
 
 ## Verification
 `tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout in two fresh processes
-(`rcb_robodojo.py replay`); reward 1 iff both replays end in RoboDojo's success and both end in the same state hash. No oracle; human review in
+(`rcb_robodojo.py replay`); reward 1 iff both replays end in RoboDojo's success (determinism by verdict: `instance.json` sets `"determinism": "verdict"` because the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10); the grader requires both replays to succeed; the end states' hashes are reported as `state_identical`). No oracle; human review in
 PR #142 (no positive example yet). `nop` (no
 trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
 (`task/RoboDojo/tasks/fold_clothes_random.py`, `env/reward_manager/`); the code is the reference.
@@ -54,3 +54,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   Hugging Face dataset `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0). The environment is RoboDojo's own evaluator
   (`src/eval_client/eval_env.py`) with one env and no policy server.
 - docs/benchmarks/robodojo.md has the benchmark's details (determinism, grading, the step limit, the image).
+
+### Change Log
+- 2026-10-10: determinism class `state` -> `verdict` (`instance.json`: `"determinism": "verdict"`; the scene, the layout, the recorded reset hash and RoboDojo's success check are unchanged). The task could not be passed before: every trial that folded the garment was scored 0 as "not deterministic", because GPU PhysX cloth does not replay bit for bit (the determinism test that classed it `state` moved the arms without handling the cloth). Both replays must succeed now; `state_identical` is still reported. Standard mode: the service resumes `approx`. Trials graded before this date with `deterministic` 0 are re-scored from their recorded fields (`all_success` / `replay_success`), not rerun.
