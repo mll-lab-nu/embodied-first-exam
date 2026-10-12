@@ -4,7 +4,7 @@
 # the task's own client) as Harbor's oracle on a copy of the task, kills -9 the sim service in the middle of the episode
 # (once N calls are checkpointed, while the next call runs), and checks that the service resumed the same episode exactly
 # (state hash = the checkpointed one), the driver carried on, the episode was graded as usual (finalized, no infrastructure
-# error), and the live run still equals its two fresh-process replays (live_matches_replay, deterministic). The driver
+# error), and the live run still equals its fresh-process replay (live_matches_replay, deterministic). The driver
 # does not solve the task: the reward's `success` is not part of the check.
 #   usage: scripts/robodojo/kill_test.sh [task dir] [jobs dir] [N checkpoints before the kill]
 #   default: tasks/robodojo-general-pickup-i00-standard, $PWD/jobs/kill_test, 4
