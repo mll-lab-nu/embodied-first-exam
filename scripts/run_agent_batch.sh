@@ -303,12 +303,16 @@ stamp_task_dirs() {  # <root> <harbor -i args...>: give every file of each task 
   done
 }
 
+OPEN_EGRESS_RE="$(python3 "$R/scripts/set_agent_egress.py" open-prefixes 2>/dev/null || true)"   # e.g. robofunolympics-
 gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (PROTOCOL §2.11)
   local dir="$1" a; shift
   rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
   while [ $# -gt 0 ]; do
     a="$1"; shift
     if [ "$a" = -i ] && [ $# -gt 0 ]; then
+      if [ -n "$OPEN_EGRESS_RE" ] && [[ "$1" =~ ^($OPEN_EGRESS_RE) ]]; then    # open egress by a documented exception (PROTOCOL §2.11): the copy keeps it
+        cp -a "$R/tasks/$1" "$dir/tasks/$1" || return 1; shift; continue
+      fi
       cp -a "$R/tasks/$1" "$dir/tasks/$1" && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$dir/tasks/$1" >/dev/null || return 1
       grep -q "^allowed_hosts = \[\"${GATEWAY_ONLY//,/\", \"}\"\]\$" "$dir/tasks/$1/task.toml" || return 1     # fail closed
       shift

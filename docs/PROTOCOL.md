@@ -86,7 +86,8 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 18. `[metadata.resources.limits]` states the agent phase's limits (GPU memory, memory, processes, disk) and the whole
     trial's expected peak, `[metadata.resources.caps]` the docker caps per service; `instruction.md` ends with the
     `## Resource limits` paragraph rendered from them (§2.10). [CI] (v1.1.5)
-19. `[agent] network_mode = "allowlist"` with the one host list (the model APIs and the package registries);
+19. `[agent] network_mode = "allowlist"` with the one host list (the model APIs and the package registries; a
+    benchmark with open egress by a documented exception, §2.11, sets no network policy and has its own paragraph);
     `instruction.md` states `## External material` just before `## Resource limits`; the task itself needs no download
     at run time (§2.11). [CI]
 
@@ -477,8 +478,25 @@ under an unrelated name would be missed.
 | LIBERO-MAX | `libero`, `hf-libero`, `rlinf-libero`, `rpent-libero`, `praxis-libero`, `libero-infinity`, `rlinf-liberopro`, `rpent-liberopro`, `rlinf-liberoplus` | LIBERO's goal definitions and initial states; no meshes, no demonstrations, not LIBERO-MAX's events |
 
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
-ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboTangle, RoboOlympics, BiGym, YAMLab; Isaac Sim does not
+ManiGuard, DexJoCo, LabUtopia, AutoBio, VLABench, RoboDojo, RoboTangle, RoboOlympics, RoboFunOlympics, BiGym, YAMLab; Isaac Sim does not
 install from pypi.org.
+
+**Per-benchmark exceptions.** A benchmark's agents have open egress, and its instructions say so, only by owner
+decision, recorded here, in `docs/benchmarks/<bench>.md` and in the three lists that implement it (the same directory
+prefix in each): `ci_checks/check-verifier-isolation.sh` `OPEN_EGRESS` (the task sets no `[agent]` network policy:
+Harbor's default, open), `scripts/task_conventions.py` `EXTERNAL_OPEN` (the benchmark's own `## External material`
+paragraph) and `scripts/set_agent_egress.py` `OPEN_EGRESS` (`allowlist` leaves these tasks alone). Its results are
+compared only with results under the same network setting.
+- **RoboFunOlympics** (owner, 2026-10-11; `robofunolympics-<family>-i<NN>`, single-humanoid sports,
+  [`benchmarks/robofunolympics.md`](benchmarks/robofunolympics.md)): the agent may search for, download and use public
+  tools, robot models and pretrained controllers (a published Unitree G1 walking, jumping or whole-body policy), and
+  is encouraged to: finding existing work and adapting it to the robot is part of what these tasks measure. The honour
+  rule that remains is not to look up the benchmark's own source and reference solutions. Nothing an agent can reach
+  in the task or its image holds a solution, as everywhere (§2.7). An official run still goes through the usage gateway
+  for the model API, and the runner leaves the rest of the egress open for these tasks. With open egress the gateway
+  is no longer the only road to a model provider (the provider key is in the agent's container): its token accounting
+  and its budget (§5) bind only what the harness itself sends, so these runs' usage is reported as harness-reported,
+  and a trial that called a model API directly is flagged in review.
 
 Who reaches what in a trial (Harbor's egress control puts `main` and every compose service without its own network
 setting in one network namespace; §2.6 forbids such a setting on any service but the monitor):
@@ -533,7 +551,7 @@ Wire details (endpoints, RCB1 frames, `meta`, error codes, crash recovery) are i
 ### 4.0 Versions
 | Version | Date | Content |
 |---|---|---|
-| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX and BiGym 2.0 |
+| eai-standard/2.1 | 2026-09-30 | the base (formerly `rcb-limited/2.1`): no reset; `/submit` action chunks, `/observe`; binary RCB1 responses; 82-column proprioception, optional depth noise; crash recovery. Served by the standard tasks of RoboTwin, DexToolBench, MuJoCo Playground (manipulation), KinDER, HumanoidBench, MetaWorld+, VLABench, the three RoboCasa benchmarks, LIBERO-MAX, BiGym 2.0 and RoboFunOlympics |
 | eai-standard/2.2 | 2026-10-01 | additive extension (§6, [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 2) with crash recovery; served by BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia, AutoBio, ManiGuard and MuJoCo Playground's quadruped tasks |
 | eai-standard/2.3 | 2026-10-08 | 2.2 + the realtime capability (§4b; [`STANDARD_MODE.md`](STANDARD_MODE.md) Part 3, "Standard-realtime mode"); every 2.2 addition stays a MAY. Served by standard-realtime tasks only (HumanoidBench, RoboOlympics, BiGym 2.0); standard tasks stay on 2.1 / 2.2. Issue #86 |
 | eai-standard/2.4 | 2026-10-08 | 2.3 + the operations capability ([`STANDARD_MODE.md`](STANDARD_MODE.md) Part 4): operation ids and request deadlines (408 / 409), `GET /operations/<id>`, a service-owned call watchdog, a physics-tick ledger, fsynced journals; every earlier addition, the realtime capability included, stays a MAY. Served by standard tasks (RoboTangle); reference implementation `scripts/eai_standard/v2_4/`. Issue #89 |
@@ -625,6 +643,10 @@ results must state the reset budget and are compared only with results under the
   no simulator to practise in, so a single episode is one blind attempt. `RCB_RESET_BUDGET=0` still runs one episode;
   HumanoidBench standard results recorded before 2026-10-07 ran with 0 and are reported separately
   ([`benchmarks/humanoidbench.md`](benchmarks/humanoidbench.md)).
+- **RoboFunOlympics** (owner, 2026-10-12):
+  `budget.reset = 50`, HumanoidBench's value for the same reason. A sport is attempts: a jump, a throw or a kick is over
+  in a second or two and ends at the first foul or fall, and the agent has no simulator to practise in. `RCB_RESET_BUDGET=0`
+  still runs one attempt ([`benchmarks/robofunolympics.md`](benchmarks/robofunolympics.md)).
 - **MyoSuite** (owner, 2026-10-09; standard tasks): `budget.reset = 10`. MyoSuite's own termination ends most episodes
   within a second or two of simulated time (a dropped object, an object off the reference motion), and the agent has no
   simulator to practise in, so a single episode is one blind attempt at muscle-level control. `RCB_RESET_BUDGET=0` still

@@ -1,0 +1,13 @@
+{
+ "family": "golf-putt",
+ "steps": 1718,
+ "time_s": 17.18,
+ "time_limit_s": 30.0,
+ "metrics": {
+  "ball_to_hole_m": 0.013,
+  "ball_speed_m_s": 0.0,
+  "head_contact_s": 0.013,
+  "head_hits": 1
+ },
+ "deterministic": true
+}

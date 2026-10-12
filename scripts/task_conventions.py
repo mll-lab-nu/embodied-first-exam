@@ -68,6 +68,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
+    ("robofunolympics-", "RoboFunOlympics"),
 ]
 # Documented per-benchmark exception (PROTOCOL §4b, owner 2026-10-08): standard-realtime tasks without a privileged twin
 # (the same list: ci_checks/check-instance-copies.sh NO_TWIN)
@@ -104,6 +105,17 @@ EXTERNAL_TEXT = (
     "to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or "
     "policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the "
     "package registries (PyPI, Debian / Ubuntu archives) only.")
+# Documented per-benchmark exception (PROTOCOL §2.11; the same prefixes: ci_checks/check-verifier-isolation.sh OPEN_EGRESS):
+# the agent's egress is open and finding existing tools and controllers is part of the task. RoboFunOlympics (owner,
+# 2026-10-11): single-humanoid sports, where a public walking, jumping or whole-body controller is fair equipment.
+EXTERNAL_OPEN = {
+    "robofunolympics-": (
+        "The network is open. You may install packages (pip, apt), and you may search for, download and use public tools, "
+        "robot models and pretrained controllers (for example a published Unitree G1 walking, jumping or whole-body "
+        "policy): finding existing work and adapting it to this robot is encouraged. Say in your notes what you used. "
+        "The one thing not to look up is a solution to this exact task: this benchmark's own source code and reference "
+        "solutions. This is an honour rule; trials are reviewed."),
+}
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -403,9 +415,11 @@ def render_limits(lim: dict, mode: str, sidecars: list[str], cpus: float | None 
     return LIMITS_HEADING + "\n" + text + "\n"
 
 
-def render_external() -> str:
-    """instruction.md's `## External material` (PROTOCOL §2.11)."""
-    return EXTERNAL_HEADING + "\n" + EXTERNAL_TEXT + "\n"
+def render_external(task_name: str = "") -> str:
+    """instruction.md's `## External material` (PROTOCOL §2.11): the same words in every task, except the benchmarks of
+    EXTERNAL_OPEN, whose agents may download tools and controllers."""
+    text = next((v for p, v in EXTERNAL_OPEN.items() if task_name.startswith(p)), EXTERNAL_TEXT)
+    return EXTERNAL_HEADING + "\n" + text + "\n"
 
 
 def normalize_instruction(task: Path) -> None:
@@ -419,7 +433,7 @@ def normalize_instruction(task: Path) -> None:
     s = p.read_text(encoding="utf-8")
     for heading in (EXTERNAL_HEADING, LIMITS_HEADING) if isinstance(lim, dict) else (EXTERNAL_HEADING,):
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    s = s.rstrip() + "\n\n" + render_external()
+    s = s.rstrip() + "\n\n" + render_external(task.name)
     if isinstance(lim, dict):
         env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
         s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
