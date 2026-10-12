@@ -118,7 +118,7 @@ class Task(TaskBase):
         sc.box("lamp_post", (4.0, 1.0, 0.35), (0.02, 0.02, 0.35), rgba=(0.2, 0.2, 0.22, 1))
         sc.geom(sc.wb, "start_lamp", type="sphere", pos=(4.0, 1.0, 0.8), size=(0.12,), rgba=LAMP["on_your_marks"],
                 contype="0", conaffinity="0")
-        sc.camera("venue", (D / 2, -(12.0 + D / 2), 6.0 + D / 5), (D / 2, 0.0, 0.0), fovy=62)
+        sc.camera("venue", (D / 2, -(6.0 + 0.36 * D), 3.0 + 0.14 * D), (D / 2, 0.0, 0.0), fovy=62)
         sc.camera("start", (-4.5, -3.2, 1.9), (3.0, 0.2, 0.6), fovy=55)
 
     # ------------------------------------------------------------------ the starter

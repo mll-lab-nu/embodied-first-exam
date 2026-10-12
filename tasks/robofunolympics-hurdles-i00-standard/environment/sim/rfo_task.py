@@ -170,7 +170,7 @@ class Task(TaskBase):
             sc.box(f"finish_post{tag}", (D, s * (1.5 * W + 0.5), 1.0), (0.05, 0.05, 1.0))
         for i, x in enumerate(self.hurdle_x()):
             self._hurdle(sc, f"hurdle{i + 1}", x)
-        sc.camera("venue", (D / 2, -(12.0 + D / 2), 6.0 + D / 5), (D / 2, 0.0, 0.0), fovy=62)
+        sc.camera("venue", (D / 2, -(6.0 + 0.36 * D), 3.0 + 0.14 * D), (D / 2, 0.0, 0.0), fovy=62)
         sc.camera("first_hurdle", (6.0, -5.5, 2.2), (11.5, 0.0, 0.8), fovy=55)
 
     def reset(self, w):

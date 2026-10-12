@@ -6451,11 +6451,11 @@ digest = "sha256:441d05d9a9af79b99a988de55b7e631e30f7c295377d732566a291de0db10ba
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-hurdles-i00-privileged"
-digest = "sha256:ba6189561af8bce68a04f6c68c0f8cdf727fca8d18e8e5030e1c862e184aec08"
+digest = "sha256:ecd372df73134b1df68765eb05a25e9e250cd5af3f9151d4bf2d7a75175d775e"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-hurdles-i00-standard"
-digest = "sha256:20c7afce888949f1d2fa435f7b7336e1952aa7a4b2d978a05033969011e09c43"
+digest = "sha256:8272f8926a6965e49142d45baac3e8e67fc4b4fb064e11c35dffba5db6e666e9"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-javelin-i00-privileged"
@@ -6555,11 +6555,11 @@ digest = "sha256:4fa7e0db568d77837dfd0952f3e779eb4f1306000496123025f1bf26e7bd9f1
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-sprint-i00-privileged"
-digest = "sha256:c836ebbfa8fd99c4f640b811054b85a220155fb436d399620bd25edf7e5cbe27"
+digest = "sha256:d23f63d730b06b6893c4b30eb085cf79aed822ed53c27841b64bfcb971e6ad55"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-sprint-i00-standard"
-digest = "sha256:e48ebe066e296d70b082d8457fe1ad44b97052eda83bef0f3e1ab930d79d6a16"
+digest = "sha256:a2764a0a99ab07be6baccb18605fa0a2d57fc3fd8d4ac5703ba3e71f8309de62"
 
 [[tasks]]
 name = "robot-coding-bench/robofunolympics-standing-long-jump-i00-privileged"
