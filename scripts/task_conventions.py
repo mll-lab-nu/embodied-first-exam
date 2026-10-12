@@ -67,6 +67,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robocasa-gr1-", "RoboCasa-GR1"),  # before "robocasa-": the first matching prefix wins
     ("robocasa-", "RoboCasa"), ("robocasa365-", "RoboCasa365"),
     ("libero-max-", "LIBERO-MAX"),
+    ("robotangle-new-", "RoboTangle-New"),  # RoboTangle on MuJoCo (scripts/robotangle-new/); before "robotangle-": the first matching prefix wins
     ("robotangle-", "RoboTangle"),
     ("roboolympics-", "RoboOlympics"),
     ("bigym2-", "BiGym 2.0"),
@@ -172,7 +173,8 @@ CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
 CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3; the same exceptions: ci_checks/check-task-fields.sh
-CUTOFF_CAP_EXCEPTIONS = {"RoboTangle": 21600}    # owner, 2026-10-08 (issue #87)
+CUTOFF_CAP_EXCEPTIONS = {"RoboTangle": 21600,   # owner, 2026-10-08 (issue #87)
+                         "RoboTangle-New": 21600}   # RoboTangle on MuJoCo: RoboTangle's 6 h kept (owner decision pending, docs/benchmarks/robotangle-new.md)
 
 
 # ---------------------------------------------------------------------------------------------------------------------

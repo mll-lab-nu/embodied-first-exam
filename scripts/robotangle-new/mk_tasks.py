@@ -1,0 +1,848 @@
+#!/usr/bin/env python3
+"""Render the tasks of the RoboTangle-on-MuJoCo benchmark (BENCH below; docs/benchmarks/<BENCH>.md), a benchmark of its
+own next to RoboTangle (Genesis, scripts/robotangle/, whose tasks stay as they are; user decision 2026-10-12):
+tasks/<BENCH>-<family>-<tier>-i01-privileged and its standard twin -standard (eai-standard/2.4).
+
+The benchmark's name is one parameter, BENCH: the task prefix, the image (ghcr.io/mll-lab-nu/eai-<BENCH>,
+images/<BENCH>/VERSION) and this directory (scripts/<BENCH>/). Renaming it: BENCH here and in
+scripts/robotangle/release_rebuild.py on dev/robotangle_mujoco (--bench), `git mv` of scripts/<BENCH>/,
+images/<BENCH>/ and docs/benchmarks/<BENCH>.md, and the registration lines listed in docs/benchmarks/<BENCH>.md
+("Registration").
+
+usage: python3 scripts/<BENCH>/mk_tasks.py [--check] [--list] [--assets <dir>] [base ...]
+       python3 scripts/<BENCH>/mk_tasks.py --dev <dev.json> --out <dir> base ...
+  no base   every base in release.json
+  --check   write nothing; exit 1 if a task would change, or if an identity check fails
+  --list    print the bases with their evidence
+  --assets  a local copy of the pinned HF dataset (the instances/<base>/ layout): also check the frozen instances' bytes
+            against the runtime bindings (without it, the pins in assets.json are compared)
+  --dev     local dev task dirs, written to --out (never tasks/): dev.json names a locally built image ("image":
+            reference, id; "runtime" and "uipc_builds" as its installed_runtime() reports them) and, per base, a local
+            frozen instance directory ("instance") and the reference trajectory both modes replay ("reference")
+
+Every base is a MuJoCo base (release.json physics_engine "mujoco"): the numpy / OpenBLAS SIMD masking in every container
+that runs a Session, render_bridge.py next to every copy of the tooling and its sha256 in the binding
+(render_bridge_sha256); the families the tooling renders with nyx_direct.py (TASKS renderer "direct") ship that file too
+(nyx_direct_sha256). A base on a GPU physics profile (release.json gpu_physics: the blanket's CUDA cloth step) keeps
+the GPU for its physics as well as for Nyx.
+
+Inputs, all in this directory, written by scripts/robotangle/release_rebuild.py --onto on dev/robotangle_mujoco
+(Python standard library only, plus scripts/task_conventions.normalize):
+  release.json   the release (dev/robotangle_mujoco commit, simulator source, runtime, tooling) and, per base, where its
+                 frozen instance comes from (ported_from: the RoboTangle Genesis base whose scene it ports; template:
+                 the base whose texts a new variation starts from), its texts' facts (grasp_rules, physics_dt_s) and
+                 the oracle runs that are its evidence
+  shared/        the tooling rcb_topogym.py with render_bridge.py and nyx_direct.py (dev/robotangle_mujoco's), the
+                 graders, the sim service adapter (server.py, replay.py, finalize.sh), the standard oracle player
+  scripts/eai_standard/v2_4/ + scripts/eai_standard/   the eai-standard/2.4 layer, copied unchanged
+  packages/      per task, the upstream texts (task.toml, README.md, instruction.md, Dockerfiles, compose files, test.sh):
+                 the RoboTangle base's texts it ports, renamed, with the family's own texts over them for a changed or
+                 new design; and the instance's lock (runtime_binding.upstream.json)
+  oracles/       the references (privileged.npz; standard.npz is the same file)
+  assets.json    the frozen instances, not in git: the private HF dataset eai-v2-internal/robotangle-assets (the same
+                 dataset as RoboTangle's, instances/<base>/), pinned by commit and sha256. The image carries them; a task
+                 keeps its runtime_binding.json and stages its instance from the image (/opt/robotangle/stage_instance.py).
+Nothing at run time imports repository code: the tooling and the sim layer are copies (PROTOCOL D9).
+"""
+from __future__ import annotations
+import argparse, filecmp, hashlib, json, math, os, pathlib, re, shutil, sys, tempfile, zipfile
+
+BENCH = "robotangle-new"   # the benchmark's name: task prefix, image eai-<BENCH>, scripts/<BENCH>/, docs/benchmarks/<BENCH>.md
+HERE = pathlib.Path(__file__).resolve().parent
+ROOT = HERE.parents[1]
+TASKS = ROOT / "tasks"
+SHARED, PKG, ORC = HERE / "shared", HERE / "packages", HERE / "oracles"
+sys.path.insert(0, str(ROOT / "scripts"))
+import task_conventions as TC  # noqa: E402  the protocol's conventions: every generator ends with normalize(task_dir)
+
+REL = json.loads((HERE / "release.json").read_text())
+# Agent egress (owner, 2026-10-10 / 10-11, board 0072): the model APIs and the package registries. The packages' task.toml carry the release's line (open
+# egress); rewrite_toml puts the two lines `scripts/set_agent_egress.py allowlist` writes, with that script's HOSTS (one
+# list for every task: ci_checks/check-verifier-isolation.sh).
+EGRESS_OLD = "# egress: Harbor default (public). `scripts/set_agent_egress.py allowlist` closes it to the model APIs.\n"
+_HOSTS = re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text()).group(1)
+EGRESS_NEW = ('network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11\n'
+              "allowed_hosts = [" + ", ".join(f'"{h}"' for h in re.findall(r'"([^"]+)"', _HOSTS)) + "]\n")
+ASSETS = json.loads((HERE / "assets.json").read_text())        # the pinned HF dataset (scripts/robotangle/assets.py)
+STAGED = "/tmp/robotangle-instance"                             # where the standard sim stages its instance   # nop runs on this release's build (very_easy / easier)
+VERSION = (ROOT / "images" / BENCH / "VERSION").read_text().strip()
+IMAGE = f"ghcr.io/mll-lab-nu/eai-{BENCH}:{VERSION}"
+ROBOT = {"aloha": "aloha-2", "panda_robotiq": "franka-robotiq-2f85"}
+ROBOT_WORDS = {"(aloha, Genesis)": "(ALOHA 2, Genesis)", "(panda_robotiq, Genesis)": "(Franka Panda + Robotiq 2F-85, Genesis)"}
+IMAGE_RX = re.compile(r"(?:[\w.-]+/)+rcb-topogym:[\w.-]+")
+EAI = ROOT / "scripts/eai_standard"
+LAYER = {"environment/rcb_client.py": EAI / "v2_4/rcb_client.py", "environment/rcb1.py": EAI / "rcb1.py",
+         "environment/client-requirements.txt": EAI / "client-requirements.txt",
+         "environment/sim/rcb_limited.py": EAI / "v2_4/rcb_limited.py", "environment/sim/rcb1.py": EAI / "rcb1.py",
+         "environment/sim/run.sh": EAI / "run.sh"}   # the eai-standard/2.4 layer, copied unchanged (check-tooling-identity.sh)
+PROTO = ("eai-standard/2.3", "eai-standard/2.4")   # the release's name of the layer -> its registered version (#89)
+sha = lambda b: hashlib.sha256(b).hexdigest()  # noqa: E731
+
+
+def dash(s: str) -> str:
+    return s.replace("_", "-")
+
+
+def text(s: str) -> str:
+    """User-facing rename (README, instruction, task.toml); code identifiers (topogym, rcb_topogym) stay."""
+    s = re.sub(r"\btopogym-([a-z0-9-]+-i\d\d-(?:privileged|standard))\b", BENCH + r"-\1", s)
+    s = s.replace("docs/benchmarks/robotangle.md", f"docs/benchmarks/{BENCH}.md")
+    s = IMAGE_RX.sub(IMAGE, s)
+    for a, b in ROBOT_WORDS.items():
+        s = s.replace(a, b)
+    s = s.replace("TopoGym", "RoboTangle").replace(*PROTO)
+    s = re.sub(r"\bhis (?=[a-z]+(?:_[a-z0-9]+)*_v\d)", "the ", s)
+    return s.replace("his qualification record", "the author's qualification record")
+
+
+# ---------------------------------------------------------------- MuJoCo bases (dev/robotangle_mujoco, the MuJoCo release)
+MUJOCO_WORDS = (("(ALOHA 2, Genesis)", "(ALOHA 2, MuJoCo)"),
+                ("(Franka Panda + Robotiq 2F-85, Genesis)", "(Franka Panda + Robotiq 2F-85, MuJoCo)"),
+                ("RoboTangle on Genesis 1.2.1", "RoboTangle on MuJoCo 3.14.0"),
+                ("`topogym`) on Genesis 1.2.1 physics", "`topogym`) on MuJoCo 3.14.0 physics"),
+                ('"genesis",', '"mujoco",'), ("(Genesis initialises once)", "(one simulator per process)"))
+STEP_RX = re.compile(r"One control step takes about ([0-9.]+) s of wall clock")
+
+
+def tooling_constant(name: str):
+    """A module-level constant of the shipped tooling (shared/rcb_topogym.py), read from its source: `NAME = <literal>`
+    or `NAME = dict(k=<literal>, ...)`. The texts state what the tooling grades (owner, 2026-10-12: text and grader
+    can never diverge)."""
+    import ast
+    for node in ast.parse((SHARED / "rcb_topogym.py").read_text()).body:
+        if isinstance(node, ast.Assign) and [getattr(t, "id", None) for t in node.targets] == [name]:
+            v = node.value
+            if isinstance(v, ast.Call) and getattr(v.func, "id", None) == "dict" and not v.args:
+                return {k.arg: ast.literal_eval(k.value) for k in v.keywords}
+            return ast.literal_eval(v)
+    raise KeyError(f"shared/rcb_topogym.py has no constant {name}")
+
+
+CONTACT_RX = re.compile(r"A success with deep interpenetration \(a task contact deeper than (?P<deep>[0-9.]+) mm, or deeper than "
+                        r"(?P<sus>[0-9.]+) mm for at least (?P<win>[0-9.]+) s: (?P<ticks>\d+) consecutive physics ticks; for a "
+                        r"finger contact with a held piece (?P<hdeep>[0-9.]+) mm, or (?P<hsus>[0-9.]+) mm for (?P<hwin>[0-9.]+) s\)")
+BREAKDOWN_RX = re.compile(r"(task contact deeper than )([0-9.]+)( mm(?:\)|: the episode| is a simulator breakdown))")
+
+
+def contact_text(s: str, rec: dict) -> str:
+    """The contact-review sentence with the values of the shipped tooling's CONTACT_RULE and BREAKDOWN_PENETRATION_M (owner
+    decision 2026-10-12, option a: the released texts said 1 mm where the MuJoCo tooling grades 2 mm). The window in
+    physics ticks: window_s over the base's physics tick (release.json physics_dt_s, recorded from its instance), else
+    the released count, which assumes the released 2.5 ms tick."""
+    c, mm = tooling_constant("CONTACT_RULE"), (lambda v: f"{v * 1000:g}")
+    def sub(m: re.Match) -> str:
+        if rec.get("physics_dt_s"):
+            ticks = max(1, math.ceil(c["window_s"] / float(rec["physics_dt_s"]) - 1e-12))
+        else:
+            assert float(m["win"]) == c["window_s"], "the released tick count assumes the released window"
+            ticks = int(m["ticks"])
+        return (f"A success with deep interpenetration (a task contact deeper than {mm(c['deep_m'])} mm, or deeper than "
+                f"{mm(c['sustained_m'])} mm for at least {c['window_s']:g} s: {ticks} consecutive physics ticks; for a finger "
+                f"contact with a held piece {mm(c['held_deep_m'])} mm, or {mm(c['held_sustained_m'])} mm for {c['window_s']:g} s)")
+    s, n = CONTACT_RX.subn(sub, s)
+    assert n <= 1, "more than one contact-review sentence"
+    if n:
+        s = BREAKDOWN_RX.sub(lambda m: m[1] + mm(tooling_constant("BREAKDOWN_PENETRATION_M")) + m[3], s)
+    return s
+
+
+GRASP_RX = re.compile(r"(?m)^((?:- )?(?:Grasping|Grippers): )((?:assisted grasping \(|physical grasping)[^\n]*)\.$")
+
+
+def grasp_text(s: str, rec: dict) -> str:
+    """A MuJoCo base's grasping rule in the words the tooling's Session.grasp_rules() emits for its instance (release.json
+    grasp_rules, read in the release image by release_rebuild.py): on MuJoCo the weld also lets go above the robot's
+    slip force averaged over its window, and the Robotiq after losing finger contact (owner decision 2026-10-12)."""
+    if not (is_mujoco(rec) and rec.get("grasp_rules")):
+        return s
+    s, n = GRASP_RX.subn(lambda m: m[1] + rec["grasp_rules"] + ".", s)
+    assert n <= 2, f"{n} grasping sentences"
+    return s
+
+
+def is_mujoco(rec: dict) -> bool:
+    """A base whose frozen instance runs on MuJoCo (release.json physics_engine)."""
+    return rec.get("physics_engine") == "mujoco"
+
+
+def mujoco_text(s: str, rec: dict) -> str:
+    """A MuJoCo base's texts name the engine it runs on, and the wall time per control step measured on MuJoCo
+    (release.json step_s: its reference's oracle run) where the released text stated Genesis'."""
+    if not is_mujoco(rec):
+        return s
+    for a, b in MUJOCO_WORDS:
+        s = s.replace(a, b)
+    s = s.replace("RoboTangle on MuJoCo 3.14.0 (CUDA physics, Nyx RGB)", "RoboTangle on MuJoCo 3.14.0 ("
+                  + ("CPU physics, CUDA cloth step" if rec.get("gpu_physics") else "CPU physics") + ", Nyx RGB)")
+    if rec.get("step_s"):
+        s = STEP_RX.sub(f"One control step takes about {rec['step_s']:g} s of wall clock", s)
+    return s
+
+
+# ---------------------------------------------------------------- fixes of the 2026-10-10 review (board 0067)
+# Applied here, on top of the release's texts and Dockerfiles, until dev/jianwen carries them (docs/benchmarks/robotangle.md,
+# "Fixes applied on main"). Every replacement asserts that its source text is still there: a new release that rewords
+# it fails the render instead of silently losing the fix.
+MAX_STEPS = 200000        # rcb_topogym.MAX_STEPS (RCB_MAX_STEPS): the runaway guard on an episode's / a trajectory's length
+MAX_CALL_WALL_S = 900     # v2_4/rcb_limited.MAX_CALL_WALL_S (RCB_MAX_CALL_WALL_S): no compose file overrides it
+CHUNK_S, WATCH_S = 10, 30  # the sim service's RCB_MAX_CHUNK_S / RCB_MAX_WATCH_S defaults
+BUILD_ALLOWANCE_S = 1800  # scene build, kernel compilation and video encoding inside the verifier's timeout
+
+
+def swap(s: str, old: str, new: str, what: str, count: int = 1) -> str:
+    assert s.count(old) == count, f"{what}: expected {count} x {old[:60]!r}, found {s.count(old)}"
+    return s.replace(old, new)
+
+
+def step_time(instruction: str) -> float:
+    return float(re.search(r"One control step takes about ([0-9.]+) s of wall clock", instruction).group(1))
+
+
+def base_step(base: str) -> float:
+    """The wall time per control step the base's texts state: a MuJoCo base's measured one (release.json step_s, see
+    mujoco_text), else the released instruction's."""
+    rec = REL["bases"][base]
+    if is_mujoco(rec) and rec.get("step_s"):
+        return float(rec["step_s"])
+    return step_time((PKG / f"{base}-privileged" / "instruction.md").read_text())
+
+
+def verifier_timeout(toml: str) -> float:
+    return float(re.search(r"(?ms)^\[verifier\]\n.*?^timeout_sec = ([0-9.]+)", toml).group(1))
+
+
+def row_cap(base: str) -> int:
+    """The longest trajectory the privileged verifier accepts: its two replays must fit [verifier] timeout_sec at 1.5 x
+    the step time the instruction states (the second replay also renders the video), after BUILD_ALLOWANCE_S; rounded
+    down to 1000 rows, never above rcb_topogym's own guard. The loader accepted 200000 rows for every task; by the
+    instructions' step times knot_untying (about 1.2 s per step) fits about 18000 rows twice into 45000 s, and a verifier
+    that runs out of time leaves no reward (arithmetic from the stated step times, not a measured run)."""
+    up = PKG / f"{base}-privileged"
+    budget = verifier_timeout((up / "task.toml").read_text()) - BUILD_ALLOWANCE_S
+    cap = min(MAX_STEPS, int(budget / (3 * base_step(base))) // 1000 * 1000)
+    traj = ORC / base / "privileged.npz"
+    if traj.is_file():      # the reference trajectory must fit, with room
+        with zipfile.ZipFile(traj) as z, z.open("actions.npy") as f:
+            f.read(8); n = int.from_bytes(f.read(2), "little"); header = f.read(n).decode("latin1")
+        rows = int(re.search(r"'shape': \((\d+),", header).group(1))
+        assert 1.5 * rows <= cap, f"{base}: the reference trajectory has {rows} rows, the cap is {cap}"
+    return cap
+
+
+R_HOLD_OLD = ("Success needs both replays to succeed AND at least one of them to reach the goal with the thresholds above "
+              "within your own rows (not only in the hold).")
+R_HOLD_NEW = ("Success needs both replays to succeed; each of them may complete its confirmation within that hold (whether "
+              "one reached the goal with the thresholds above within your own rows is recorded, `strict_goal_reached`, not "
+              "required).")
+ROWS_OLD = ("so a replay whose confirmation ends a few ticks later needs more rows: you may append copies of the final row "
+            "(holding still) before saving.")
+ROWS_NEW = ("so a replay whose confirmation ends a few ticks later completes it in that hold; copies of the final row "
+            "(holding still) appended before saving give it more room.")
+VERIFY_OLD = ("at least one replay must\nreach the goal with the instance's own thresholds within the trajectory's rows.")
+VERIFY_NEW = ("every replay may confirm\nwithin that hold (R-hold, 2026-10-05). Whether one reached the goal with the "
+              "instance's own thresholds within the\ntrajectory's rows is reported (`strict_goal_reached`), not required.")
+
+
+def time_per_call(step: float, hz: int) -> str:
+    """The standard instruction's "Time per call" for eai-standard/2.4 (v2_4/rcb_limited.py call_begin / poll_stop / the
+    operations endpoints, v2_4/rcb_client.py _post). The release's paragraph described 2.2's client timeouts."""
+    chunk = CHUNK_S * hz * step
+    fit = f"A `submit` of the maximum {CHUNK_S} s chunk takes about {chunk:.0f} s here"
+    if 2 * chunk > MAX_CALL_WALL_S:
+        fit += " (close to that limit on a slower host)"
+    if 2 * WATCH_S * hz * step <= MAX_CALL_WALL_S:
+        fit += f", and any watch up to {WATCH_S} s fits (both with a 2x margin)."
+    else:
+        n = int(MAX_CALL_WALL_S / (2 * step))
+        fit += (f"; a `get_obs(seconds=...)` watch fits up to about {n} control steps ({n / hz:.2f} s, a 2x margin), and a "
+                "longer one is cut short the same way.")
+    return (
+        "## Time per call\n"
+        f"- One control step takes about {step:g} s of wall clock here. A request returns when all of its steps have run, or\n"
+        f"  earlier: a call that has run for {MAX_CALL_WALL_S} s (`spec[\"max_call_wall_s\"]`) is stopped by the service at the next control\n"
+        "  step and returns what it executed (`res.stopped` is `\"max_call_wall_s\"`; `res.meta[\"executed_rows\"]`, or\n"
+        "  `res.meta[\"control_steps_watch\"]` for a watch, says how far it got; the robot holds its last target). Check\n"
+        f"  `res.stopped` before you send the next rows. {fit}\n"
+        "- The client waits longer than that (1800 s for `submit`, 1020 s for `get_obs`), so a client timeout or a connection\n"
+        "  error means the connection or the service failed, not that the call is still on its way. Do NOT send the request\n"
+        "  again blindly (it could run twice): `r.operation_status()` tells what became of the last one. Its `status` is\n"
+        "  `completed` or `error` (with `rows_before` and `committed_rows`, the episode's control steps before and after it,\n"
+        "  and `stopped`), `interrupted` (the service restarted during it and resumes the same episode in the state after the\n"
+        "  last completed call: `spec[\"on_service_error\"]`, `r.wait_ready()`), or `admitted` (not finished); an HTTP 404 error\n"
+        "  there means the service never admitted the request, so nothing ran. The service answers one request at a time, so\n"
+        "  this query waits while a call is running: repeat it if it times out. If your client hangs up, the service stops\n"
+        "  the call at the next control step. A request that arrives after its deadline is refused (408), and one whose\n"
+        "  operation id was already admitted is refused (409); neither moves the robot. A control step that hangs for more\n"
+        "  than 60 s past the call's limit ends the episode as an infrastructure error, not as your failure.\n")
+
+
+SERVICE_DEADLINE = ("\n  This service also ends the episode itself (`meta[\"reason\"]` is `timeout`; it is graded as it stands) when its own\n"
+                    "  count of that limit, `meta[\"time_left_s\"]`, reaches 0. That count has run since the service first started, a little\n"
+                    "  before your session, so plan by `time_left_s`.\n")
+
+
+def review_fixes(s: str, name: str, base: str, mode: str) -> str:
+    """The text fixes for one rendered file (name: instruction.md | README.md)."""
+    up = PKG / f"{base}-privileged" / "instruction.md"
+    step = base_step(base); hz = int(re.search(r"Control runs at (\d+) Hz", up.read_text()).group(1))
+    if mode == "privileged":
+        if R_HOLD_OLD in s:        # the GPU families (a tolerant hold): the grader's rule since tooling v16 is R-hold
+            s = swap(swap(s, R_HOLD_OLD, R_HOLD_NEW, f"{base} {name} R-hold"), ROWS_OLD, ROWS_NEW, f"{base} {name} R-hold rows")
+        if name == "README.md" and VERIFY_OLD in s:
+            s = swap(s, VERIFY_OLD, VERIFY_NEW, f"{base} README Verification")
+        assert "within your own rows (not only in the hold)" not in s and "at least one replay must" not in s, f"{base} {name}"
+        if name == "instruction.md":
+            cap = row_cap(base)
+            s = swap(s, "There is no step budget; your\n  wall-clock budget is",
+                     f"There is no step budget, but a trajectory may have at most\n  {cap} rows ({cap / hz / 60:.1f} min of simulated time): "
+                     "the verifier has to replay it twice within its own time limit, so `s.step` stops\n  after that many control steps "
+                     "since the last reset, and a longer trajectory is rejected as invalid (reward 0). Your\n  wall-clock budget is",
+                     f"{base} step budget")
+            # the agent's limit is stated once, by the closing `## Time limit` section normalize writes (PROTOCOL §2.12)
+            s, n = re.subn(r"Your\n  wall-clock budget is \d+ min \(\d+ s\)\. ", "The time limit\n  (`## Time limit`) is your only budget. ", s)
+            assert n == 1, f"{base}: the privileged budget sentence"
+    elif name == "instruction.md":
+        assert step_time(s) == step, f"{base}: the two modes state different step times"
+        # the agent's limit is stated once, in `## Time limit` (PROTOCOL §2.12); what is RoboTangle's own stays here: this service
+        # ends the episode on its own wall clock (server.py deadline_reached, counted from the service's first start)
+        s, n = re.subn(r'- \*\*Your wall-clock budget is \d+ min \(\d+ s\)\*\* \(`meta\["time_left_s"\]` counts it down\); ',
+                       "- **Your only budget is the time limit (`## Time limit`)**; ", s)
+        assert n == 1, f"{base}: the standard budget sentence"
+        s, n = re.subn(r"(One control step takes about [0-9.]+ s of wall clock here\.)\n(?=- There is nothing to hand in)",
+                       lambda m: m.group(1) + SERVICE_DEADLINE, s)
+        assert n == 1, f"{base}: the standard budget bullet's end"
+        s = swap(s, "steps are unlimited. Actions and\n  simulated time are reported as cost.",
+                 f"there is no step budget, but the\n  episode ends after {MAX_STEPS} control steps, watches included ({MAX_STEPS / hz / 60:.0f} min "
+                 "of simulated time; a technical cap,\n  `spec[\"max_control_steps\"]`: `meta[\"reason\"]` is `step_guard`, and the episode is graded as it stands). "
+                 "Actions and simulated time are reported as cost.", f"{base} step guard")
+        m = re.search(r"(?ms)^## Time per call\n.*?(?=^## )", s)
+        assert m and "the client gives up waiting after 1800 s" in m.group(0), f"{base}: Time per call"
+        s = s[:m.start()] + time_per_call(step, hz) + "\n" + s[m.end():]
+    return s
+
+
+def limits_env(name: str, s: str, base: str, mode: str) -> str:
+    """Privileged Dockerfiles: the row cap for the agent's tooling and the verifier (rcb_topogym reads RCB_MAX_STEPS),
+    and the verifier's own timeout for its grader (it skips the review-frame pass when the time left would not cover it)."""
+    if mode != "privileged" or name not in ("environment/Dockerfile", "tests/Dockerfile"):
+        return s
+    env = f"ENV RCB_MAX_STEPS={row_cap(base)}"
+    if name == "tests/Dockerfile":
+        env += f" RCB_VERIFIER_BUDGET_S={verifier_timeout((PKG / f'{base}-privileged' / 'task.toml').read_text()):.0f}"
+    line = "ENV PYTHONPATH=/opt/tools:/opt/topogym\n" if name == "environment/Dockerfile" else "ENV PYTHONPATH=/tests:/opt/topogym\n"
+    return swap(s, line, line + "# the longest trajectory the verifier replays within its timeout (scripts/robotangle/mk_tasks.py row_cap)\n" + env + "\n",
+                f"{base} {name}")
+
+
+def toml_str(s: str) -> str:
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def run_words(e: dict) -> str:
+    return f"{e['release']} (source {e['source']}, tooling {e['tooling']}; lab run {pathlib.Path(e['attempt']).name.removeprefix('attempt-')})"
+
+
+def evidence_text(base: str, rec: dict) -> str:
+    ev = rec["evidence"]
+    if not ev:
+        return ("Oracle pending: the author is fixing this tier's oracle; it follows in a later pull request. "
+                "Human review (PROTOCOL §2.7); nop pending.")
+    runs = "; ".join(f"{m}: {run_words(ev[m])}" for m in ("privileged", "standard") if m in ev)
+    note = rec.get("note")
+    return (f"Human review (PROTOCOL §2.7). No oracle run on this build (dev/jianwen {REL['release_commit'][:9]}, source "
+            f"{REL['runtime']['source']['sha256'][:8]}, tooling {REL['tooling_sha256'][:8]}). Positive examples: the "
+            f"author's oracle scored 1 in both modes on {runs}" + (f"; {note}" if note else "") +
+            ". solution/ replays the recorded trajectories.")
+
+
+def since_evidence(rec: dict) -> str:
+    """What changed between the evidence build and this release (release.json; docs/benchmarks/robotangle.md, Evidence)."""
+    end = " The oracle was not re-run on this build (docs/benchmarks/robotangle.md, Evidence)."
+    if rec["family"] == "blanket_flatten" and REL.get("blanket_change"):
+        return REL["blanket_change"] + end
+    shared = REL.get("release_change", "")
+    if rec.get("note"):          # graded on an earlier build than merged-v18 / its equivalent (the documented equivalence)
+        return f"Between that build and merged-v18: {rec['note']}. After merged-v18, {shared}." + end
+    return f"This family's task, geometry and asset files are unchanged from that build to this release; {shared}." + end
+
+
+def ref_solution(mode: str, rec: dict) -> str:
+    ev = rec["evidence"].get(mode)
+    if is_mujoco(rec) and ev:
+        if mode == "privileged":
+            route = ("this design's oracle, recorded on MuJoCo" if rec.get("template") or rec.get("design") else
+                     "the released route re-recorded on MuJoCo with a held tail")
+            return (f"`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `{ev['trajectory_sha256'][:16]}…`) to "
+                    f"`/app/output/`: the MuJoCo reference ({route}), which the verifier scored 1 in two fresh-process "
+                    f"replays on {run_words(ev)}.")
+        return ("`solution/solve.sh` streams the recorded rows of the standard-mode oracle episode "
+                "(`solution/oracle_qpos.npy`, one `joint_position` row per 25 ms control step, `hold`; the same rows as the "
+                "privileged reference) through the client (`solution/oracle_replay.py`). That episode scored 1 (live and "
+                f"fresh replay) on {run_words(ev)}.")
+    if not ev:
+        return ("None in this release: the author is fixing this tier's oracle (it follows in a later pull request). "
+                "`oracle = \"none\"`, human review (PROTOCOL §2.7).")
+    same = since_evidence(rec)
+    if mode == "privileged":
+        return (f"`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `{ev['trajectory_sha256'][:16]}…`) to "
+                f"`/app/output/`: the trajectory the author's oracle (the RoboTangle planner on dev/jianwen) produced on "
+                f"{run_words(ev)}, where the verifier scored it 1 in two fresh-process replays. " + same)
+    return ("`solution/solve.sh` streams the recorded rows of the author's standard-mode oracle episode "
+            "(`solution/oracle_qpos.npy`, one `joint_position` row per 25 ms control step, `hold`) through the client "
+            f"(`solution/oracle_replay.py`). That episode scored 1 (live and fresh replay) on {run_words(ev)}. " + same)
+
+
+def nop_words(base: str, mode: str, rec: dict) -> str:
+    n = rec.get("nop")
+    if n:
+        return f"`nop` scored 0 on this base in both modes on this build ({n['run']}; {n['date']}, {n['host']})."
+    return f"`nop`: pending (`harbor run -p tasks/{BENCH}-{base}-{mode} -a nop`, docs/benchmarks/{BENCH}.md)."
+
+
+def provenance(base: str, rec: dict) -> str:
+    if is_mujoco(rec):
+        return mujoco_provenance(base, rec)
+    rows = [f"- Frozen instance: built by TopoGym source `{rec['creation_source']}` (graded package "
+            f"`{rec['instance_package']}/topogym-{base}-privileged` on the lab host); bound to this release's runtime "
+            f"(source `{REL['runtime']['source']['sha256'][:8]}`, tooling `{REL['tooling_sha256'][:8]}`). An exact-restore "
+            "preflight on this build is pending (docs/benchmarks/robotangle.md, Pending)."]
+    rows.append(f"- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF "
+                f"dataset `{ASSETS['repo']}` at `{ASSETS['revision'][:12]}`, under `instances/{base}/` "
+                "(scripts/robotangle/assets.json pins each file's sha256). The image carries them, and "
+                "`/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, "
+                "which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at "
+                "every session start.")
+    rows.append(f"- Release: dev/jianwen `{REL['release_commit'][:9]}` (task templates `{REL['template_commit'][:9]}`), "
+                f"image `{IMAGE}` (images/robotangle/).")
+    rows.append("- Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the "
+                "simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.")
+    return "\n".join(rows)
+
+
+def mujoco_provenance(base: str, rec: dict) -> str:
+    rows = [f"- Frozen instance: a MuJoCo instance (`simulator.physics_engine` \"mujoco\", its scene frozen under "
+            f"`instance_assets/mujoco/`), built by TopoGym source `{rec['creation_source']}` ({rec['instance_package']}); "
+            f"bound to this release's runtime (source `{REL['runtime']['source']['sha256'][:8]}`, tooling "
+            f"`{REL['tooling_sha256'][:8]}`).",
+            f"- Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF "
+            f"dataset `{ASSETS['repo']}` at `{ASSETS['revision'][:12]}`, under `instances/{base}/` "
+            "(scripts/robotangle/assets.json pins each file's sha256). The image carries them, and "
+            "`/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, "
+            "which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at "
+            "every session start.",
+            f"- Release: dev/robotangle_mujoco `{rec['release_commit'][:9]}`, image `{IMAGE}` (images/{BENCH}/).",
+            "- Name: RoboTangle is the published name of TopoGym (2026-10-07). Code identifiers keep the old name: the "
+            "simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables."]
+    return "\n".join(rows)
+
+
+def rewrite_toml(s: str, base: str, rec: dict) -> str:
+    s = mujoco_text(text(s), rec)
+    s = re.sub(r'(?m)^simulator = "topogym"', 'simulator = "robotangle"', s)
+    s = re.sub(r'(?m)^robot = "([a-z_]+)"', lambda m: f'robot = "{ROBOT.get(m.group(1), m.group(1))}"', s)
+    s = re.sub(r'(?m)^author_name = "jianwen"', 'author_name = "Jianwen Lyu"', s)
+    s = s.replace('authors = [{ name = "jianwen" }]', 'authors = [{ name = "Jianwen Lyu" }]')
+    s = s.replace('"topogym",', '"robotangle",')
+    s = re.sub(r'(?m)^tooling_version = "\d+"', f'tooling_version = "{REL["tooling_version"]}"', s)
+    s = swap(s, EGRESS_OLD, EGRESS_NEW, f"{base} agent egress")
+    s = re.sub(r'(?m)^oracle_evidence = .*\n', "", s)
+    if {"privileged", "standard"} <= set(rec["evidence"]):   # a passing oracle run in both modes (docs/benchmarks/robotangle.md)
+        s = re.sub(r'(?m)^oracle = .*\n', 'oracle = "full"\n', s, count=1)
+    else:
+        s = re.sub(r'(?m)^oracle = .*\n', f'oracle = "none"\noracle_evidence = {toml_str(evidence_text(base, rec))}\n', s, count=1)
+    return s
+
+
+PORT_TASK = ("- {date}: new task of {bench} (RoboTangle on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): the scene, goal "
+             "and rules of RoboTangle's `robotangle-{old}-{mode}` (Genesis 1.2.1), ported to MuJoCo: its own frozen "
+             "instance and reference, the numpy / OpenBLAS SIMD masking in every container that runs a Session, and the "
+             "render bridge next to the tooling (Nyx frames).")
+DESIGN_TASK = ("- {date}: new task of {bench} (RoboTangle on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): a new design of "
+               "RoboTangle's `robotangle-{old}-{mode}` (Genesis 1.2.1): {design}. Its own frozen instance, task text, rules, "
+               "goal and reference, the numpy / OpenBLAS SIMD masking in every container that runs a Session, and the "
+               "render bridge next to the tooling.")
+NEW_TASK = ("- {date}: new task of {bench} (RoboTangle on MuJoCo 3.14.0, docs/benchmarks/{bench}.md): variation "
+            "`{variation}` of {family}{design}. Its task files start from `{bench}-{template}-{mode}`, with this design's "
+            "own task text, rules and goal, its own frozen instance and its own reference.")
+
+
+def mujoco_changes(mode: str, rec: dict) -> list[str]:
+    """The Change Log of a task of this benchmark: the entry that made it (later fixes add theirs, PROTOCOL §2.8)."""
+    date = rec["nop"]["date"]
+    if rec.get("template"):
+        return [NEW_TASK.format(date=date, bench=BENCH, variation=rec["variation"], family=rec["family"],
+                                template=rec["template"], design=f": {rec['design']}" if rec.get("design") else "", mode=mode)]
+    if rec.get("design"):
+        return [DESIGN_TASK.format(date=date, bench=BENCH, design=rec["design"], old=rec["ported_from"], mode=mode)]
+    return [PORT_TASK.format(date=date, bench=BENCH, old=rec["ported_from"], mode=mode)]
+
+
+def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
+    s = grasp_text(contact_text(mujoco_text(text(s), rec), rec), rec).replace("from `tests/instance.json`", "from the frozen instance (`/tests/instance.json`, staged from the image and "
+                        "checked against `tests/runtime_binding.json`)")
+    s = re.sub(r"(?ms)^## Reference solution\n.*?(?=^## )", "## Reference solution\n" + ref_solution(mode, rec) + "\n\n", s)
+    nop = nop_words(base, mode, rec)
+    s = review_fixes(s, "README.md", base, mode)
+    cap = (f"\nA trajectory may have at most {row_cap(base)} rows (`RCB_MAX_STEPS`: two replays must fit the verifier's "
+           "timeout; a longer one is\n`bad_trajectory`)." if mode == "privileged" else "")
+    s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + cap + "\n\n" + nop + "\n\n", s)
+    log = mujoco_changes(mode, rec)      # a new benchmark: the RoboTangle task's own history stays with that task
+    return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n" + "\n".join(log) + "\n"
+
+
+# ---------------------------------------------------------------- fixes of the round-2 review (2026-10-10, board 0067 R2)
+# Text fixes on top of review_fixes, with the same rule: every replacement asserts that its source text is still there.
+GRIP_OLD = "native drive target (m, limits 0 .. 0.8; open/closed targets in robot_spec)"
+GRIP_NEW = ("native drive target (rad, limits 0 .. 0.8: 0 = open, 0.8 = closed, the Robotiq 2F-85's driver joint; "
+            "open/closed targets in robot_spec)")
+EXPOSED_OLD = ("The success implementation and internal measurements are not exposed;\n"
+               "  the task requirements above still apply in full.")
+EXPOSED_NEW = ("The success implementation is not exposed, and of the simulator's internal\n"
+               "  measurements only the safety readings of `meta[\"safety\"]` are (listed under Action types, below); the task\n"
+               "  requirements above still apply in full.")
+WAIT_S = 3600             # v2_4/rcb_client.Robot.__init__'s default timeout (600 s until 2026-10-10)
+WAIT_OLD = ("(default connection budget: 600 seconds,", "(default timeout 600 s)")
+WAIT_NEW = (f"(default connection budget: {WAIT_S} seconds,", f"(default timeout {WAIT_S} s)")
+# the call's image budget of the standard service (review round 3), read from its source so that the texts state what is enforced
+_SERVER = (SHARED / "standard" / "sim" / "server.py").read_text()
+MAX_FRAMES, DEPTH_FRAME = (int(re.search(rf"^{k} = (\d+)", _SERVER, re.M).group(1)) for k in ("MAX_FRAMES", "DEPTH_FRAME"))
+FRAMES_AT = "- Both action types: no gripper target goes lower than"
+FRAMES_NEW = (f"- One call returns at most {MAX_FRAMES} images (`spec[\"max_frames_per_call\"]`: cameras x frames; a frame with\n"
+              f"  `depth=\"frames\"` counts {DEPTH_FRAME}). A request that would exceed it is answered 400 before anything moves: ask for\n"
+              "  fewer cameras, a lower `video_fps` or a shorter call. Rows that take longer than planned (the speed limit, `ee_pose`)\n"
+              "  stop adding frames at that number; the motion is executed in full and `meta[\"frames_skipped\"]` counts them.\n")
+OPENING_NEW = ("\n  The proprio group `gripper_opening` (`res.group(\"gripper_opening\")`) is the measured gap between each gripper's finger\n"
+               "  pads in metres (0 = the pads touch); the gripper entries of `joint_pos` are in the unit of the gripper command above.")
+
+
+def panda(base: str) -> bool:
+    return 'robot = "panda_robotiq"' in (PKG / f"{base}-privileged" / "task.toml").read_text()
+
+
+def native(base: str) -> bool:
+    return "_native_gripper" in (PKG / f"{base}-standard" / "instruction.md").read_text()
+
+
+def review_fixes_r2(s: str, base: str, mode: str) -> str:
+    """Round-2 text fixes of an instruction.md. The Robotiq 2F-85's native drive coordinate is its driver joint angle
+    (topogym/robot/panda_robotiq: gripper_position_rad, limits 0 .. 0.8 rad, GraspDescription open 0 / closed 0.8); the
+    release's texts gave it in metres. ALOHA's native coordinate is the finger rail in metres, as its texts say."""
+    assert (GRIP_OLD in s) == (panda(base) and native(base)), f"{base} {mode}: the gripper unit text and the robot disagree"
+    if GRIP_OLD in s:
+        s = swap(s, GRIP_OLD, GRIP_NEW, f"{base} {mode} Robotiq unit")
+    if mode == "standard":
+        s = swap(s, EXPOSED_OLD, EXPOSED_NEW, f"{base} safety readings")
+        for a, b in zip(WAIT_OLD, WAIT_NEW):
+            s = swap(s, a, b, f"{base} Robot() wait")
+        s = swap(s, "`meta[\"clipped\"]` says so.\n- `ee_pose`", "`meta[\"clipped\"]` says so." + OPENING_NEW + "\n- `ee_pose`",
+                 f"{base} gripper_opening")
+        s = swap(s, FRAMES_AT, FRAMES_NEW + FRAMES_AT, f"{base} image budget")      # round 3
+    return s
+
+
+def binding(base: str, inst_dir: pathlib.Path | None = None, bridge: bool = False, direct: bool = False) -> bytes:
+    """The task's runtime binding: the upstream lock (instance and asset hashes) with this release's tooling and runtime.
+    The frozen instance must be the pinned one in assets.json; with inst_dir (a local copy), its bytes are checked too."""
+    lock = json.loads((PKG / f"{base}-privileged" / "runtime_binding.upstream.json").read_text())
+    pinned = ASSETS["instances"].get(base, {}).get("instance_sha256")
+    assert lock["instance_sha256"] == pinned, f"{base}: the bound instance is not the one pinned in assets.json"
+    prefix = f"instances/{base}/"
+    pinned_assets = {k[len(prefix):]: v for k, v in ASSETS["files"].items() if k.startswith(prefix + "instance_assets/")}
+    # Frozen generated assets (image 0.2.22: knot_untying's rope volume meshes, rcb_topogym._install_frozen_assets), added to
+    # the instance after the upstream lock: each is a generated file whose sha256 the instance's asset_identity records.
+    frozen = {k: v for k, v in pinned_assets.items() if k.startswith("instance_assets/frozen_assets/")}
+    lock["asset_files"] = {**lock["asset_files"], **frozen}
+    assert lock["asset_files"] == pinned_assets, f"{base}: instance_assets pinned in assets.json differ from the binding"
+    if inst_dir is not None and frozen:
+        identity = json.loads((inst_dir / "instance.json").read_text()).get("asset_identity") or {}
+        for rel, want in frozen.items():
+            assert identity.get(pathlib.PurePosixPath(rel).name) == want, f"{base}: {rel} is not the generated asset it records"
+    if inst_dir is not None:
+        canon = json.dumps(json.loads((inst_dir / "instance.json").read_text()), sort_keys=True, separators=(",", ":"), allow_nan=False)
+        assert lock["instance_sha256"] == sha(canon.encode()), f"{base}: instance.json is not the bound instance"
+        assets = {p.relative_to(inst_dir).as_posix(): sha(p.read_bytes()) for p in sorted((inst_dir / "instance_assets").rglob("*")) if p.is_file()}
+        assert lock["asset_files"] == assets, f"{base}: instance_assets differ from the binding"
+    lock["tooling_sha256"] = sha((SHARED / "rcb_topogym.py").read_bytes())
+    lock["runtime"] = REL["runtime"]
+    # both libuipc builds the tooling chooses from by the GPU's compute capability (rcb_topogym.select_uipc_build), by their
+    # uipc-build.json sha256; the runtime's own uipc_build_sha256 stays the audited build, the image's default
+    lock["uipc_builds"] = {name: b["uipc_build_sha256"] for name, b in sorted(REL["uipc_builds"].items())}
+    return companions(lock, bridge, direct)
+
+
+def companions(lock: dict, bridge: bool, direct: bool) -> bytes:
+    """A MuJoCo task's binding names the render bridge next to the tooling (render_bridge_sha256) and, for a family that
+    renders with nyx_direct.py, that file (nyx_direct_sha256): the tooling checks both at Session start."""
+    if bridge:
+        lock["render_bridge_sha256"] = sha((SHARED / "render_bridge.py").read_bytes())
+    if direct:
+        lock["nyx_direct_sha256"] = sha((SHARED / "nyx_direct.py").read_bytes())
+    return (json.dumps(lock, indent=2) + "\n").encode()
+
+
+def put(dst: pathlib.Path, data: bytes, exe: bool = False) -> None:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_bytes(data)
+    os.chmod(dst, 0o755 if exe else 0o644)
+
+
+def copy_tree(src: pathlib.Path, dst: pathlib.Path) -> None:
+    for p in sorted(src.rglob("*")):
+        if p.is_file():
+            put(dst / p.relative_to(src), p.read_bytes())
+        elif p.is_dir():
+            (dst / p.relative_to(src)).mkdir(parents=True, exist_ok=True)
+
+
+GPU_OLD = ("# Nyx renders through Vulkan, so the container needs the NVIDIA graphics libraries as well as compute: `runtime: nvidia`\n"
+           "# with NVIDIA_DRIVER_CAPABILITIES=all (`capabilities: [gpu]` alone injects compute only).\n")
+GPU_NEW = ("# Nyx renders through Vulkan: the device reservation below passes exactly one GPU (Nyx needs exactly one), and\n"
+           "# NVIDIA_DRIVER_CAPABILITIES=all makes the container toolkit mount the driver's graphics libraries, which the image's\n"
+           "# Vulkan ICD and EGL vendor files name (images/robotangle/Dockerfile). No `runtime: nvidia`: with the image's\n"
+           "# NVIDIA_VISIBLE_DEVICES=all it can expose every GPU of the host.\n")
+
+
+def gpu_lines(name: str, s: str) -> str:
+    """Compose files: one GPU through the device reservation only, as images/robopaint/ (no `runtime: nvidia`)."""
+    if not name.endswith("docker-compose.yaml"):
+        return s
+    assert s.count(GPU_OLD) == 1 and len(re.findall(r"(?m)^\s*runtime: nvidia\n", s)) == 1, f"{name}: unexpected GPU block"
+    s = re.sub(r"(?m)^\s*runtime: nvidia\n", "", s.replace(GPU_OLD, GPU_NEW))
+    assert "count: 1" in s and "capabilities: [gpu]" in s and "NVIDIA_DRIVER_CAPABILITIES: all" in s, name
+    return s
+
+
+def image_lines(s: str) -> str:
+    s = re.sub(r"(?m)^FROM\s+" + IMAGE_RX.pattern, "FROM " + IMAGE, s)
+    return re.sub(r"(?m)^(\s*image:\s*)" + IMAGE_RX.pattern, lambda m: m.group(1) + IMAGE, s)
+
+
+STAGE = "RUN python /opt/robotangle/stage_instance.py {base} {dest} --purge   # the frozen instance, from the image (scripts/robotangle/assets.json), checked against runtime_binding.json"
+ENTRY = ('    # The frozen instance comes from the image (scripts/robotangle/assets.json): the entrypoint stages it next to a copy of\n'
+         '    # runtime_binding.json and checks it (images/robotangle/stage_instance.py), then runs the command.\n'
+         '    entrypoint: ["sh", "-c", "python /opt/robotangle/stage_instance.py {base} ' + STAGED + ' --binding /srv/runtime_binding.json && exec \\"$$@\\"", "stage"]\n')
+
+
+def staged(name: str, s: str, base: str) -> str:
+    """Task files that stage the frozen instance from the image instead of copying it from the task directory."""
+    def sub(a: str, b: str) -> str:
+        assert s.count(a) == 1, f"{base} {name}: expected one {a!r}"
+        return s.replace(a, b)
+    if name == "environment/Dockerfile" and "COPY instance.json /app/instance.json\n" in s:
+        s = sub("COPY instance.json /app/instance.json\n", "")
+        s = sub("COPY instance_assets/ /app/instance_assets/", STAGE.format(base=base, dest="/app"))
+    elif name == "tests/Dockerfile" and "instance_assets" in s:
+        s = sub("COPY grade.py instance.json rcb_topogym.py test.sh /tests/", "COPY grade.py rcb_topogym.py test.sh /tests/")
+        s = sub("COPY instance_assets/ /tests/instance_assets/", STAGE.format(base=base, dest="/tests"))
+    elif name == "environment/docker-compose.yaml" and "RCB_INSTANCE: /srv/instance.json" in s:
+        s = sub("RCB_INSTANCE: /srv/instance.json", f"RCB_INSTANCE: {STAGED}/instance.json")
+        s = sub("    command: sh /srv/run.sh\n", ENTRY.format(base=base) + "    command: sh /srv/run.sh\n")
+    return s
+
+
+MUJOCO_ENV = (("NPY_DISABLE_CPU_FEATURES", "AVX512F,AVX512CD,AVX512_SKX,AVX512_CLX,AVX512_CNL,AVX512_ICL,AVX512_SPR"),
+              ("OPENBLAS_CORETYPE", "Haswell"))   # the containers of a MuJoCo task (dev/robotangle_mujoco docs/rcb/MUJOCO_CORE.md)
+
+
+def direct_families() -> tuple[str, ...]:
+    """The families whose MuJoCo tasks render with nyx_direct.py: the tooling's own list (rcb_topogym.TASKS renderer
+    "direct", set in one loop there), read from the copy this release ships."""
+    m = re.search(r'(?ms)^for _name in \(([^)]*)\):\n\s+TASKS\[_name\]\["renderer"\] = "direct"', (SHARED / "rcb_topogym.py").read_text())
+    return tuple(re.findall(r'"([a-z0-9_]+)"', m.group(1))) if m else ()
+
+
+def nyx_direct(rec: dict) -> bool:
+    return rec["family"] in direct_families()
+
+
+CPU_PHYSICS = (("# The verifier replays in the simulator, which needs the GPU (CUDA physics, Nyx camera images for the replay video).",
+                "# The verifier replays in the simulator: MuJoCo physics on the CPU; the GPU renders the Nyx camera images of the replay video."),
+               ("# TopoGym runs its physics on the GPU (CUDA) and renders camera images with Nyx.",
+                "# RoboTangle runs its physics on MuJoCo (CPU) and renders camera images with Nyx on the GPU."))
+GPU_PHYSICS = (("# The verifier replays in the simulator, which needs the GPU (CUDA physics, Nyx camera images for the replay video).",
+                "# The verifier replays in the simulator, which needs the GPU (the cloth's CUDA step, Nyx camera images for the replay video)."),
+               ("# TopoGym runs its physics on the GPU (CUDA) and renders camera images with Nyx.",
+                "# RoboTangle runs its physics on MuJoCo with the cloth's CUDA step on the GPU, and renders camera images with Nyx."))
+
+
+def mujoco_lines(name: str, s: str, rec: dict) -> str:
+    """A MuJoCo task: the SIMD masking in the images that run a Session (privileged agent and verifier: the RoboTangle
+    image) and in the standard sim service; render_bridge.py (and nyx_direct.py for its families) copied next to the
+    privileged tooling; the compose comments say where the physics runs (the GPU reservation itself is unchanged: Nyx,
+    and a GPU physics profile, need it)."""
+    def sub(a: str, b: str) -> str:
+        assert s.count(a) == 1, f"{name}: expected one {a!r}"
+        return s.replace(a, b)
+    direct = nyx_direct(rec)
+    env = ("# MuJoCo task: numpy / OpenBLAS SIMD masking, so every CPU class generates the frozen bytes\n"
+           "ENV " + " ".join(f"{k}={v}" for k, v in MUJOCO_ENV) + "\n")
+    if name in ("environment/Dockerfile", "tests/Dockerfile") and f"FROM {IMAGE}\n" in s:
+        s = sub(f"FROM {IMAGE}\n", f"FROM {IMAGE}\n" + env)
+        if name == "environment/Dockerfile":
+            s = sub("COPY rcb_topogym.py /opt/tools/rcb_topogym.py\n",
+                    "COPY rcb_topogym.py /opt/tools/rcb_topogym.py\nCOPY render_bridge.py /opt/tools/render_bridge.py\n"
+                    + ("COPY nyx_direct.py /opt/tools/nyx_direct.py\n" if direct else ""))
+        else:
+            s = sub("COPY grade.py rcb_topogym.py test.sh /tests/", "COPY grade.py rcb_topogym.py render_bridge.py "
+                    + ("nyx_direct.py " if direct else "") + "test.sh /tests/")
+    if name == "environment/docker-compose.yaml" and "\n  sim:\n" in s:
+        s = sub("      RCB_TASK: ", "".join(f"      {k}: {v}\n" for k, v in MUJOCO_ENV) + "      RCB_TASK: ")
+    if name.endswith("docker-compose.yaml"):
+        for a, b in (GPU_PHYSICS if rec.get("gpu_physics") else CPU_PHYSICS):
+            s = s.replace(a, b)
+        s = s.replace("# TopoGym runs its physics on the GPU (CUDA) and renders camera images with Nyx: the GPU goes to the sidecar.",
+                      "# RoboTangle renders camera images with Nyx" + (" and steps its cloth on CUDA" if rec.get("gpu_physics")
+                                                                        else "") + ": the GPU goes to the sidecar.")
+        assert "CUDA physics" not in s and "TopoGym runs its physics" not in s, f"{name}: a Genesis-era GPU comment is left"
+    return s
+
+
+def dev_binding(inst_dir: pathlib.Path, dev: dict, bridge: bool = False, direct: bool = False) -> bytes:
+    """--dev: the binding of a local frozen instance (canonical sha256, every asset's sha256) to the dev image's runtime
+    and identity, with the same keys as binding()."""
+    inst = json.loads((inst_dir / "instance.json").read_text())
+    canon = json.dumps(inst, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    assets = {p.relative_to(inst_dir).as_posix(): sha(p.read_bytes()) for p in sorted((inst_dir / "instance_assets").rglob("*"))
+              if p.is_file() and "__pycache__" not in p.parts}
+    lock = dict(schema_version=1, instance_sha256=sha(canon.encode()), asset_files=assets,
+                tooling_sha256=sha((SHARED / "rcb_topogym.py").read_bytes()), creation_source=inst["topogym_source"],
+                runtime=dev["runtime"], image=dev["image"], uipc_builds=dev["uipc_builds"])
+    return companions(lock, bridge, direct)
+
+
+def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, dev: dict | None = None) -> list[pathlib.Path]:
+    rec = REL["bases"][base]
+    dirs = []
+    mujoco = is_mujoco(rec)
+    assert mujoco, f"{base}: every base of {BENCH} is a MuJoCo base (release.json physics_engine)"
+    direct = mujoco and nyx_direct(rec)
+    assert not mujoco or (SHARED / "render_bridge.py").is_file() and (not direct or (SHARED / "nyx_direct.py").is_file()), \
+        f"{base}: a MuJoCo base needs shared/render_bridge.py (and nyx_direct.py) from the MuJoCo release's tooling"
+    reference = pathlib.Path(dev["bases"][base]["reference"]) if dev else None
+    for mode in ("privileged", "standard"):
+        t = out / f"{BENCH}-{base}-{mode}"; up = PKG / f"{base}-{mode}"; dirs.append(t)
+        rd = lambda n: (up / n).read_text()  # noqa: E731
+        put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
+        put(t / "README.md", rewrite_readme(rd("README.md"), base, mode, rec).encode())
+        ins = grasp_text(contact_text(mujoco_text(text(rd("instruction.md")), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
+        put(t / "instruction.md", review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode).encode())
+        for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
+            if (up / n).is_file():
+                assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"
+                text_n = limits_env(n, staged(n, gpu_lines(n, image_lines(rd(n))), base), base, mode)
+                put(t / n, (mujoco_lines(n, text_n, rec) if mujoco else text_n).encode())
+        put(t / "tests/test.sh", (up / "tests/test.sh").read_bytes(), exe=True)
+        lock = binding(base, inst_src, mujoco, direct) if dev is None else dev_binding(inst_src, dev, mujoco, direct)
+        tool = (SHARED / "rcb_topogym.py").read_bytes()
+        extra = ([("render_bridge.py", (SHARED / "render_bridge.py").read_bytes())] if mujoco else []) + \
+                ([("nyx_direct.py", (SHARED / "nyx_direct.py").read_bytes())] if direct else [])
+        if mode == "privileged":
+            for d in ("environment", "tests"):
+                put(t / d / "runtime_binding.json", lock)
+                put(t / d / "rcb_topogym.py", tool)
+                for n, b in extra:
+                    put(t / d / n, b)
+            put(t / "tests/grade.py", (SHARED / "privileged/grade.py").read_bytes())
+            traj = reference or ORC / base / "privileged.npz"
+            if traj.is_file():
+                put(t / "solution/trajectory.npz", traj.read_bytes())
+                put(t / "solution/solve.sh", (
+                    "#!/bin/bash\n# Reference solution (privileged): the trajectory the author's oracle produced and the verifier scored 1\n"
+                    "# on the evidence run named in README.md (Reference solution). Uses nothing but the recorded file.\n"
+                    "set -euo pipefail\nmkdir -p /app/output\ncp /solution/trajectory.npz /app/output/trajectory.npz\n").encode(), exe=True)
+        else:
+            for rel, src in LAYER.items():
+                put(t / rel, src.read_bytes())
+            for n in ("server.py", "replay.py", "finalize.sh"):
+                put(t / "environment/sim" / n, (SHARED / "standard/sim" / n).read_bytes())
+            put(t / "environment/sim/runtime_binding.json", lock)
+            put(t / "environment/sim/rcb_topogym.py", tool)
+            for n, b in extra:
+                put(t / "environment/sim" / n, b)
+            put(t / "tests/grade.py", (SHARED / "standard/grade.py").read_bytes())
+            put(t / "tests/runtime_binding.json", lock)
+            traj = reference or ORC / base / "standard.npz"
+            if traj.is_file():
+                with zipfile.ZipFile(traj) as z:
+                    put(t / "solution/oracle_qpos.npy", z.read("actions.npy"))
+                put(t / "solution/oracle_meta.json", (json.dumps({"K": 1, "interpolate": "hold", "rows": "the recorded "
+                    "joint_position rows of the evidence episode (README.md, Reference solution)"}, indent=1) + "\n").encode())
+                put(t / "solution/oracle_replay.py", (SHARED / "standard/solution/oracle_replay.py").read_bytes())
+                put(t / "solution/solve.sh", (SHARED / "standard/solution/solve.sh").read_bytes(), exe=True)
+    for t in dirs:
+        TC.normalize(t)          # leaves the layer alone: scripts/eai_standard/ is a shared source (task_conventions)
+    return dirs
+
+
+def snapshot(d: pathlib.Path) -> dict:
+    return {p.relative_to(d).as_posix(): (p.read_bytes(), 0o755 if os.stat(p).st_mode & 0o100 else 0o644)   # exec bit only
+            for p in sorted(d.rglob("*")) if p.is_file()}
+
+
+def dev_main(a) -> int:
+    """--dev: render the named bases from dev.json into --out (local only; never tasks/, nothing checked against
+    release.json's instance pins)."""
+    global IMAGE
+    if a.out is None or not a.bases or a.check or a.assets:
+        raise SystemExit("--dev needs --out and the bases, and takes neither --check nor --assets")
+    dev = json.loads(a.dev.read_text())
+    resolve = lambda v: (a.dev.parent / v).resolve()  # noqa: E731  (dev.json paths: absolute, or relative to dev.json)
+    dev["bases"] = {b: {k: str(resolve(v)) for k, v in r.items()} for b, r in dev["bases"].items()}
+    IMAGE = dev["image"]["reference"]
+    a.out.mkdir(parents=True, exist_ok=True)
+    for b in a.bases:
+        for m in ("privileged", "standard"):
+            shutil.rmtree(a.out / f"{BENCH}-{b}-{m}", ignore_errors=True)
+        for t in render(b, a.out, pathlib.Path(dev["bases"][b]["instance"]), dev):
+            print(f"dev task {t}")
+    return 0
+
+
+def main(argv: list[str]) -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--check", action="store_true"); ap.add_argument("--list", action="store_true")
+    ap.add_argument("--assets", type=pathlib.Path, help="a local copy of the pinned HF dataset (assets.py fetch)")
+    ap.add_argument("--dev", type=pathlib.Path, help="dev.json: local dev task dirs (see usage)")
+    ap.add_argument("--out", type=pathlib.Path, help="with --dev: where the dev task dirs go")
+    ap.add_argument("bases", nargs="*")
+    a = ap.parse_args(argv)
+    if a.dev is not None:
+        return dev_main(a)
+    bases = a.bases or sorted(REL["bases"])
+    if a.list:
+        for b in bases:
+            r = REL["bases"][b]
+            print(f"{b:34s} instance {r['creation_source']}  " + "  ".join(f"{m}: {e['release']}:{e['source']}" for m, e in r["evidence"].items()) or "oracle pending")
+        return 0
+    bad = []
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp = pathlib.Path(tmp)
+        for b in bases:
+            inst = a.assets / "instances" / b if a.assets else None
+            if inst is not None and not (inst / "instance.json").is_file():
+                bad.append(f"{b}: no frozen instance at {inst}"); continue
+            for t in render(b, tmp / "out", inst):
+                cur = TASKS / t.name
+                if a.check:
+                    if not cur.is_dir() or snapshot(cur) != snapshot(t):
+                        bad.append(f"tasks/{t.name}: differs from a fresh render (run scripts/robotangle/mk_tasks.py)")
+                else:
+                    if cur.exists():
+                        shutil.rmtree(cur)
+                    shutil.copytree(t, cur, symlinks=False)
+        known = {f"{BENCH}-{b}-{m}" for b in REL["bases"] for m in ("privileged", "standard")}
+        stray = sorted(p.name for p in TASKS.glob(f"{BENCH}-*") if p.name not in known)
+        bad += [f"tasks/{n}: not in scripts/robotangle/release.json" for n in stray]
+        tools = {sha(p.read_bytes()) for p in TASKS.glob(f"{BENCH}-*/**/rcb_topogym.py")}
+        if tools - {sha((SHARED / "rcb_topogym.py").read_bytes())}:
+            bad.append("a task's rcb_topogym.py differs from scripts/robotangle/shared/rcb_topogym.py")
+    for b in bad:
+        print("FAIL", b)
+    if not bad:
+        print(f"ok {BENCH}: {2 * len(bases)} task dirs {'match a fresh render' if a.check else 'rendered'} "
+              f"(release {REL['release_commit'][:9]}, image {IMAGE})")
+    return 1 if bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -32,6 +32,7 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
 | RoboTangle | `difficulty` | `very_easy` · `easier` · `easy` · `medium` · `hard` (the tier: different puzzle geometry of one family) |
 | RoboTangle | `grasp` | `assisted (<model> grasp regions on <parts>)` · `physical (no assisted grasping)` |
 | RoboTangle | `success_rule`, `tooling_version` | the task-native success rule and its terminal revision; the tooling generation (text) |
+| RoboTangle-New | `difficulty`, `grasp`, `success_rule`, `tooling_version` | as RoboTangle (the same tooling, on MuJoCo); `difficulty` is the tier of the variation (`very_easy` … `hard`) |
 | RoboOlympics | `opponent_level`, `slowdown` | integers: the scripted opponent's level; the task's default slowdown S (the world runs at 1/S of real speed; PROTOCOL §4b exception: 10) |
 | RoboOlympics | `revision`, `play`, `action_level`, `source_task` | the sport's revision; `program`; `high` · `low`; the RoboOlympics task it was exported from |
 | RoboFunOlympics | `category` | `track-and-jumps` · `football-and-volleyball` · `basketball-and-rackets` · `throwing-catching-striking` · `parkour-apparatus-balance` |
@@ -52,6 +53,8 @@ Benchmark-specific fields (MAY, PROTOCOL §2.3):
   `[metadata].family` is the family (`cast_coil`), `difficulty` the tier.
 - RoboFunOlympics: `<base>` is `robofunolympics-<family-with-dashes>-i<NN>` (`[metadata].family` = the family with
   underscores, e.g. `penalty_kick`); every family in privileged and standard mode.
+- RoboTangle-New: `<base>` is `robotangle-new-<family-with-dashes>-<tier>-i01` (`<tier>`: the variation id without the family
+  prefix, with dashes, e.g. `very-easy` or `rd-hard`; `i01`: the MuJoCo instance of the scene RoboTangle's `i00` holds on Genesis).
 - RoboOlympics: `<base>` is `roboolympics-<sport>-<format>-i<NN>` (`[metadata].family` = `<sport>_<format>`), standard-realtime only (no
   privileged twin: a PROTOCOL §4b exception).
 - RoboPaint: `<base>` is `robopaint-<family>-<target>-i<NN>`; Chinese targets by pinyin (the codepoint appended on a
