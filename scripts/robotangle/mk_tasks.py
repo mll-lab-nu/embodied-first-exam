@@ -688,9 +688,10 @@ def main(argv: list[str]) -> int:
                         shutil.rmtree(cur)
                     shutil.copytree(t, cur, symlinks=False)
         known = {f"robotangle-{b}-{m}" for b in REL["bases"] for m in ("privileged", "standard")}
-        stray = sorted(p.name for p in TASKS.glob("robotangle-*") if p.name not in known)
+        mine = [p for p in TASKS.glob("robotangle-*") if TC.bench_of(p) == "RoboTangle"]   # not another benchmark's prefix
+        stray = sorted(p.name for p in mine if p.name not in known)
         bad += [f"tasks/{n}: not in scripts/robotangle/release.json" for n in stray]
-        tools = {sha(p.read_bytes()) for p in TASKS.glob("robotangle-*/**/rcb_topogym.py")}
+        tools = {sha(p.read_bytes()) for t in mine for p in t.glob("**/rcb_topogym.py")}
         if tools - {sha((SHARED / "rcb_topogym.py").read_bytes())}:
             bad.append("a task's rcb_topogym.py differs from scripts/robotangle/shared/rcb_topogym.py")
     for b in bad:
