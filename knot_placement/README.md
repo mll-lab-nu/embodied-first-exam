@@ -92,11 +92,21 @@ Many runs on the final instances now reach 0 crossings: hard_nostop in more than
   - A held piece cannot be turned much, because the weld releases at 0.15 rad of relative turn.
   - A pinch close to the clamp cannot be lifted high: the clamped strand goes taut and the weld drops at about 7.8 N.
 
-**What we are trying right now** (agents, today; no result yet on untied ropes):
+**What we are trying right now** (agents, today):
 1. A serpentine whose **first leg runs along the far side**, each next leg one gap nearer, so the loose rope never has to cross a placed leg. Green dashed in the figures.
 2. **Two-hand lays per leg.** Pinch the leg's two end stations, lift 3 cm (9 cm where a hand's path crosses the curb), carry both together in straight lines, lower, and release at the approach width.
 3. Stations chosen so the pinch's own yaw already holds at the target, so no wrist turn is needed while holding.
 4. Ropes under 35 % outside, such as b, get only the fix-up.
+
+**First results on the untied hard_nostop snapshot (15:20):**
+- Rope b, fix-up only: 26 % -> 0-4.9 % outside, no crossing.
+- Rope a, two-hand lays (item 2): 91 % -> **0 % outside** (the whole rope in its strip), but with **2 crossings**. A leg's end station, once released, slid 9-13 cm back toward the curb (the rest of the rope was still hanging over it), or its grip was lost while carrying. The next leg was then laid across it.
+- In progress now: hold each leg's end down with one hand while the other hand places the next leg's end, then switch roles, so the hands alternate east and west.
+- Grip rules we learned:
+  - keep the wrist from turning while holding (the weld lets go at 0.15 rad);
+  - carry at about 3 cm/s;
+  - never pinch within about 24 cm of the clamp before lifting.
+
 
 ## 4. The pictures and data
 
@@ -105,16 +115,17 @@ Many runs on the final instances now reach 0 crossings: hard_nostop in more than
   - **top:** plan view with the goal regions (green), curb, posts, clamps (black square = clamped end), arm bases and reach rings, the rope now (solid), one feasible goal shape (green dashed), and today's layout path (red dotted).
   - **oblique:** 3D view with heights x3.
   - **side:** rope height against y, with the curb and the 11 mm on-table line.
-- Snapshots:
-  - `hard_nostop_untied`: a real untied state on the original curb, 6 s after the last deletion. It comes from a different run than the 91 % numbers above; here a is 60 % outside and b 23 %, and a strand crosses the curb top at about 4.9 cm.
+- Snapshots (all in `viewer.html` and `figs/`):
+  - `hard_nostop_untied`: **the state our hard_nostop placement labs start from.** Row 10430, including a 2 s settle. 0 crossings, quiet. Rope a is 91 % outside its strip, b 26 %.
+  - `hard_nostop_untied_run2`: a second untied run, 6 s after its last deletion. a is 60 % outside, b 23 %, and a strand crosses the curb top at about 4.9 cm.
+  - `easier_v8_untied`: **the state our easier_v8 labs start from.** Row 13424, 0 crossings, quiet, 52 % outside. The rope leaves the strip past the clamp's west end, runs south of the curb, and comes back over it near x = 0.1; the free end is already inside.
   - `hard_nostop_birth` and `easier_v8_birth`: the start states (knotted), to show the scenes.
-  - An **easier_v8 untied** snapshot (the state our placement lab starts from) will be added here as `easier_v8_untied` when it is captured (by ~14:45 today).
 - `params.json`: frame, goal tolerances, robot, gripper and grasp limits, and all tiers' ropes, regions and fixtures.
 - `data/snapshots.json`: each snapshot's rope centre lines (task-frame xyz, clamped end first), plus today's layout paths. `data/plans.json` holds our current far-side-first shapes.
 
 ## 5. The questions, in detail
 
-**(a) Placement motion plan.** Starting from an untied rope (use `hard_nostop_untied`, and `easier_v8_untied` when it lands), how should the robot get every centre-line point into the strip, flat on the table (at most 11 mm up, so not on the curb), with no crossing, and let go?
+**(a) Placement motion plan.** Starting from an untied rope (use `hard_nostop_untied` and `easier_v8_untied`), how should the robot get every centre-line point into the strip, flat on the table (at most 11 mm up, so not on the curb), with no crossing, and let go?
 - Which points to grasp (arc length s from the clamp), with one or two hands.
 - Lift heights. The curb is 4.5 cm. Reach shrinks above 3 cm. A held piece can't be turned more than about 0.15 rad.
 - The path for each hand, and where to lower and release.
