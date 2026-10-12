@@ -1,0 +1,195 @@
+{
+ "success": true,
+ "first_success_step": 5149,
+ "steps": 5149,
+ "sim_time_s": 171.6333333332647,
+ "wall_time_s": 498.10906958580017,
+ "rope_state_sha16": "4f08b2edfb411dde",
+ "final": {
+  "step": 5149,
+  "success": true,
+  "goal_now": false,
+  "hold": 0,
+  "threaded": true,
+  "quiet": true,
+  "intact": true,
+  "crossing_sequence": [
+   "R1-",
+   "R2+"
+  ],
+  "thickness_clear": true,
+  "ambiguous": false,
+  "maximum_speed_m_s": 0.0006593476382716798,
+  "max_joint_gap_m": 1.6312000140404517e-07,
+  "release_threaded": true,
+  "release_quiet": true
+ },
+ "variant": "oracle",
+ "args": {
+  "task": "RopeThreading-Easy-v0",
+  "out": "runs/or2",
+  "variant": "oracle",
+  "stop_after": "",
+  "finish": "hold",
+  "save_ckpt": false,
+  "grasp_from_tip": 0.17,
+  "grip_close": -0.0015,
+  "pitch": 30.0,
+  "speed": 0.05,
+  "feed_stop": 0.06,
+  "feed_stop2": 0.09,
+  "recv_off": 0.07,
+  "recv_depth": 0.012,
+  "pull1": 0.33,
+  "pull1_xyz": [
+   0.62,
+   -0.25,
+   1.0
+  ],
+  "regrip_from_tip": [
+   0.17,
+   0.19,
+   0.15
+  ],
+  "drop_xyz": [
+   0.62,
+   -0.22,
+   0.86
+  ],
+  "drop_settle_s": 1.5,
+  "feed2_start": 0.21,
+  "pull2_wps": [
+   [
+    0.36,
+    -0.02,
+    0.98
+   ],
+   [
+    0.36,
+    0.08,
+    0.86
+   ],
+   [
+    0.38,
+    0.2,
+    0.79
+   ]
+  ],
+  "feed2_stage_y": -0.12,
+  "drag1_from_tip": 0.15,
+  "drag_x": 0.48,
+  "drag1_y": 0.5,
+  "overhang": 0.24,
+  "reorient_x": 0.55,
+  "reorient_y": 0.45,
+  "reorient_z": 0.85,
+  "flip_x": 0.6,
+  "flip_y": 0.4,
+  "flip_sense": 1.0,
+  "feed_start_y": 0.3,
+  "handover_xyz": [
+   0.4,
+   0.25,
+   0.83
+  ],
+  "support_from_tip": [
+   0.03
+  ],
+  "pitch2": 0.0,
+  "regrip_left_off": 0.08,
+  "settle_max_s": 20.0,
+  "nop_steps": 300,
+  "enable_cameras": false,
+  "xr": false,
+  "device": "cuda:0",
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "rendering_mode": null,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0,
+  "active_gpu": 0
+ },
+ "stages": {
+  "ledge_grasp": {
+   "step": 2121,
+   "crossings": [],
+   "held_offset": "[ 0.01188748  0.00019059 -0.00019308]",
+   "slip_after_lift_m": 0.000653455751646576,
+   "tip": "[0.49246172 0.76121789 0.63092836]"
+  },
+  "pick": {
+   "step": 3242,
+   "crossings": [],
+   "zsign": 1,
+   "finger": -0.004832417704164982,
+   "held_offset_deep": "[ 0.01188748  0.00019059 -0.00019308]",
+   "held_offset_after_reorient": "[ 0.01701864  0.00015816 -0.00356966]",
+   "approach": "[ 8.66025678e-01  2.41355764e-06 -4.99999526e-01]",
+   "rope_axis": "[ 2.52523720e-06 -1.00000000e+00 -4.53275191e-07]",
+   "tip": "[0.67608724 0.25842081 1.01460814]"
+  },
+  "feed1": {
+   "step": 3564,
+   "crossings": [
+    "R1-"
+   ],
+   "tip_past_R1_m": 0.08062621784622699,
+   "tip_radial_m": 0.011068885837234239,
+   "slip_m": 1.2731932289592267e-05
+  },
+  "recv1": {
+   "step": 3924,
+   "crossings": [
+    "R1-"
+   ],
+   "s_from_tip": 0.015307520777262964,
+   "held_offset": "[ 1.17033637e-02  4.72950296e-06 -1.98971952e-04]"
+  },
+  "pull1": {
+   "step": 4100,
+   "crossings": [
+    "R1-"
+   ],
+   "slip_m": 0.0001417807150465178,
+   "tip": "[ 0.61981396 -0.26517899  0.99957595]",
+   "past_R1": 0.34017898724362894
+  },
+  "drop": {
+   "step": 4292,
+   "crossings": [],
+   "tip": "[ 0.62595173 -0.12544074  0.75400036]",
+   "past_R1": 0.20044074009600155
+  },
+  "regrip": {
+   "step": 4593,
+   "crossings": [
+    "R1-"
+   ],
+   "from_tip": 0.17,
+   "held_offset": "[ 1.16856260e-02 -8.37834930e-05 -2.72736034e-05]",
+   "tip": "[ 0.62089372 -0.1102101   0.82935006]"
+  },
+  "feed2": {
+   "step": 5122,
+   "crossings": [
+    "R1-",
+    "R2+"
+   ],
+   "tip_past_R2_m": 0.052331767070327995,
+   "tip_radial_m": 0.06442165074033462,
+   "slip_m": 0.0007370355013433037
+  },
+  "episode_end": {
+   "terminated": true,
+   "truncated": false,
+   "step": 5149
+  }
+ }
+}

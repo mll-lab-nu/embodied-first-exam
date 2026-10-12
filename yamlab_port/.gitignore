@@ -1,0 +1,25 @@
+# Upstream YAMLab clone (pinned in HANDOVER.md: ARISE-Initiative/yamlab @ ec0455d) and old-source worktrees
+/yamlab/
+/ref/
+# Python / editor caches
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# Large or regenerable run artefacts (state dumps, logs, checkpoints); actions.npy + metrics.json are kept
+*.npz
+# ...except small inputs the code needs (start states, kinematics tables, gripper hulls)
+!**/assets/**/*.npz
+!tasks/buzz_wire_3d/data/yam_kin.npz
+!tasks/cast_keyhole/tools/gripper_hulls.npz
+*.pt
+*.ckpt
+*.log
+*.h5
+*.hdf5
+# Wrist-camera videos (occluded, large); top + close-up videos are kept
+**/video/**/left_wrist.mp4
+**/video/**/right_wrist.mp4
+# Secrets never belong here
+.env
+*.env
+tasks/buzz_wire_3d/video/very_easy/wire.mp4

@@ -1,0 +1,193 @@
+{
+ "success": true,
+ "first_success_step": 4963,
+ "steps": 4963,
+ "sim_time_s": 165.43333333326717,
+ "wall_time_s": 475.0693473815918,
+ "rope_state_sha16": "20fa2e63d0ea5887",
+ "final": {
+  "step": 4963,
+  "success": true,
+  "goal_now": false,
+  "hold": 0,
+  "threaded": true,
+  "quiet": true,
+  "intact": true,
+  "crossing_sequence": [
+   "R1-",
+   "R2+"
+  ],
+  "thickness_clear": true,
+  "ambiguous": false,
+  "maximum_speed_m_s": 0.0008751369226493223,
+  "max_joint_gap_m": 5.9017074016792946e-08,
+  "strict_threaded": true,
+  "strict_quiet": true,
+  "strict_crossing_sequence": [
+   "R1-",
+   "R2+"
+  ]
+ },
+ "variant": "oracle",
+ "args": {
+  "task": "RopeThreading-Easy-v0",
+  "out": "runs/or3",
+  "variant": "oracle",
+  "stop_after": "",
+  "env_mode": "evaluation",
+  "finish": "release",
+  "save_ckpt": false,
+  "grasp_from_tip": 0.2,
+  "grip_close": -0.0015,
+  "pitch": 30.0,
+  "speed": 0.05,
+  "feed_stop": 0.06,
+  "feed_stop2": 0.09,
+  "recv_off": 0.07,
+  "recv_depth": 0.012,
+  "pull1": 0.33,
+  "pull1_xyz": [
+   0.62,
+   -0.25,
+   1.0
+  ],
+  "regrip_from_tip": [
+   0.19,
+   0.17,
+   0.21,
+   0.15
+  ],
+  "drop_xyz": [
+   0.62,
+   -0.2,
+   0.92
+  ],
+  "drop_settle_s": 1.5,
+  "feed2_start": 0.21,
+  "pull2_wps": [
+   [
+    0.36,
+    -0.02,
+    0.98
+   ],
+   [
+    0.36,
+    0.08,
+    0.86
+   ],
+   [
+    0.38,
+    0.2,
+    0.79
+   ]
+  ],
+  "feed2_stage_y": -0.12,
+  "drag1_from_tip": 0.15,
+  "drag_x": 0.48,
+  "drag1_y": 0.5,
+  "overhang": 0.27,
+  "reorient_x": 0.55,
+  "reorient_y": 0.45,
+  "reorient_z": 0.85,
+  "flip_x": 0.6,
+  "flip_y": 0.4,
+  "flip_sense": 1.0,
+  "feed_start_y": 0.3,
+  "handover_xyz": [
+   0.4,
+   0.25,
+   0.83
+  ],
+  "support_from_tip": [
+   0.03
+  ],
+  "pitch2": 0.0,
+  "regrip_left_off": 0.08,
+  "settle_max_s": 20.0,
+  "nop_steps": 300,
+  "enable_cameras": false,
+  "xr": false,
+  "device": "cuda:0",
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "rendering_mode": null,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0,
+  "active_gpu": 0
+ },
+ "stages": {
+  "ledge_grasp": {
+   "step": 2030,
+   "crossings": [],
+   "held_offset": "[ 1.17995690e-02 -8.31998531e-05 -5.23567234e-04]",
+   "slip_after_lift_m": 0.0005162528438990236,
+   "tip": "[0.50859119 0.74195121 0.58387812]"
+  },
+  "pick": {
+   "step": 3152,
+   "crossings": [],
+   "zsign": 1,
+   "finger": -0.0048610614612698555,
+   "held_offset_deep": "[ 1.17995690e-02 -8.31998531e-05 -5.23567234e-04]",
+   "held_offset_after_reorient": "[ 0.01839403  0.00011931 -0.00502862]",
+   "approach": "[ 8.66025710e-01  2.53512779e-06 -4.99999470e-01]",
+   "rope_axis": "[ 2.65620190e-06 -1.00000000e+00 -4.69577799e-07]",
+   "tip": "[0.67163672 0.23644067 0.98811114]"
+  },
+  "feed1": {
+   "step": 3482,
+   "crossings": [
+    "R1-"
+   ],
+   "tip_past_R1_m": 0.09057821400526213,
+   "tip_radial_m": 0.036441581952245485,
+   "slip_m": 5.8215098881775215e-05
+  },
+  "recv1": {
+   "step": 3846,
+   "crossings": [
+    "R1-"
+   ],
+   "s_from_tip": 0.035868251912845255,
+   "held_offset": "[ 1.16007676e-02  1.30653423e-05 -2.38405303e-04]"
+  },
+  "pull1": {
+   "step": 4020,
+   "crossings": [
+    "R1-"
+   ],
+   "slip_m": 0.00025482447565356597,
+   "tip": "[ 0.62082927 -0.28574267  0.99812115]",
+   "past_R1": 0.36074266797294424
+  },
+  "drop": {
+   "step": 4184,
+   "crossings": [
+    "R1-"
+   ],
+   "tip": "[ 0.65609423 -0.06650668  0.75400066]",
+   "past_R1": 0.1415066791824708
+  },
+  "regrip": {
+   "step": 4489,
+   "crossings": [
+    "R1-"
+   ],
+   "from_tip": 0.19,
+   "held_offset": "[ 1.17925929e-02 -2.22742366e-06  7.55322221e-05]",
+   "tip": "[ 0.65081619 -0.05428405  0.83154209]"
+  },
+  "episode_end": {
+   "terminated": true,
+   "truncated": false,
+   "step": 4963
+  }
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "task": "KnotUntying-VeryEasy-v0",
+ "variant": "nop",
+ "success": false,
+ "success_step": null,
+ "steps": 900,
+ "sim_time_s": 30.0,
+ "wall_time_s": 45.49749827384949,
+ "plan": {
+  "iterations": []
+ },
+ "final": {
+  "step": 900,
+  "success": false,
+  "goal_now": false,
+  "hold": 0,
+  "planar_clear": false,
+  "on_table": false,
+  "quiet": true,
+  "intact": true,
+  "n_crossings": 1,
+  "minimum_nonlocal_distance_m": 0.0,
+  "maximum_speed_m_s": 0.00015499598012072197,
+  "z_min_surface_above_table_m": -3.798963394419097e-06,
+  "z_max_surface_above_table_m": 0.01604072009415658
+ },
+ "min_nonlocal_final_m": 0.0,
+ "rope_state_sha16": "98e3823750235222",
+ "action_sha16": "43fc227b4656a50e"
+}

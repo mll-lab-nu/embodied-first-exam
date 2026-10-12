@@ -1,0 +1,109 @@
+{
+ "task": "FiberBundling-Easier-v0",
+ "variant": "nop",
+ "success": false,
+ "failed": false,
+ "failure_reason": null,
+ "failure_step": null,
+ "steps": 8990,
+ "sim_time_s": 299.6666666665468,
+ "wall_time_s": 129.8634898662567,
+ "first_success_step": null,
+ "max_strand_gripper_force_n": 0.0,
+ "final_metrics": {
+  "strands_complete": [
+   false,
+   false,
+   false
+  ],
+  "maximum_bend_deg": 8.083019746519593,
+  "front_sheath_clear": false,
+  "front_passed": false,
+  "front_ahead_of_ring_m": -0.1099998706379326,
+  "front_radial_offset_m": 8.399369149900701e-07,
+  "strand_stages": [
+   [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ]
+  ],
+  "strand_min_ahead_m": [
+   -0.10999981937789916,
+   -0.10999984918022154,
+   -0.10999981937789916
+  ],
+  "strand_max_radial_m": [
+   0.031161659120377997,
+   0.031163780596941464,
+   0.031162084759418895
+  ],
+  "strand_gripper_force_n": 0.0
+ },
+ "params": {
+  "task": "FiberBundling-Easier-v0",
+  "out": "/workspace/yamlab_port/runs/fiber_bundling/out/eaf_nop",
+  "variant": "nop",
+  "pitch_deg": 45.0,
+  "grasp_back_m": 0.07,
+  "final_front_m": 0.021,
+  "d_press_m": 0.031,
+  "speed": 0.015,
+  "max_steps": 8990,
+  "fiber_damping": null,
+  "squeeze": -0.0105,
+  "naive_offset_m": 0.012,
+  "stop_after": null,
+  "enable_cameras": false,
+  "xr": false,
+  "device": "cpu",
+  "cpu": false,
+  "verbose": false,
+  "info": false,
+  "rendering_mode": null,
+  "kit_args": "",
+  "anim_recording_enabled": false,
+  "anim_recording_start_time": 0,
+  "anim_recording_stop_time": 10,
+  "headless": true,
+  "hide_ui": true,
+  "create_new_stage": false,
+  "physics_gpu": 0,
+  "active_gpu": 0
+ },
+ "events": []
+}

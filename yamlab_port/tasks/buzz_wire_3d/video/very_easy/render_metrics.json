@@ -1,0 +1,13 @@
+{
+ "task": "BuzzWire3D-VeryEasy-v0",
+ "states": "/data/out/buzz_wire_3d/ve_dump/states_full.npz",
+ "frames": 2831,
+ "max_pose_readback_err_m": 1.1920928955078125e-07,
+ "wall_s": 456.5723567008972,
+ "cameras": [
+  "top",
+  "left_wrist",
+  "right_wrist",
+  "wire"
+ ]
+}

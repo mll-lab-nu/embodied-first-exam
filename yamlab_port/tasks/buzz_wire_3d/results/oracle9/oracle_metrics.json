@@ -1,0 +1,180 @@
+{
+ "name": "oracle",
+ "success": true,
+ "success_step": 5660,
+ "termination": "success",
+ "steps": 5661,
+ "sim_time_s": 188.69999999992453,
+ "wall_time_s": 654.6553070545197,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 8.456008663856558,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": true,
+ "max_route_cursor_m": 0.6065800221424398,
+ "route_length_m": 0.6096323526398696,
+ "final": {
+  "distance_to_finish_m": 0.00017309724438177183,
+  "finish_angle_deg": 0.0,
+  "supported": true,
+  "released": true,
+  "quiet": true,
+  "lin_speed_m_s": 4.0143804653780535e-06,
+  "ang_speed_rad_s": 0.0009457316482439637
+ },
+ "state_sha256": "37cb6060104217bf67604d94806a8e63f9973b7222a694e70599bd93807dd0d8",
+ "phases": [
+  "init",
+  "1_left_pick_start",
+  "2_left_lift_tilt",
+  "3_right_ring_handover",
+  "3b_left_release",
+  "4_right_carry",
+  "5_left_gdown_handover",
+  "5b_right_release",
+  "6_left_yaw_lower",
+  "6b_left_release_drop"
+ ],
+ "mode": "oracle",
+ "tier": "very_easy",
+ "status": "completed",
+ "notes": {
+  "pick_approach_m": 0.04,
+  "pick_staging": null,
+  "pick_in_hand_error": {
+   "pos_mm": 0.783360701070068,
+   "rot_deg": 0.45268249952373607
+  },
+  "ring_approach_m": 0.04,
+  "ring_staging": null,
+  "handover1_pose": [
+   30.0,
+   -25.0,
+   0.055
+  ],
+  "carry_worst_clear_mm": {
+   "wire": 10.23543893080897,
+   "deck": 4.527161587580519,
+   "stops": 39.224613635300315,
+   "frame": 69.3248867397398,
+   "table": 67.62488673973976,
+   "arm": 100.0
+  },
+  "gdown_approach_m": 0.04,
+  "gdown_staging": null,
+  "release_height_mm": 32.0,
+  "reseed": [
+   [
+    "5b_right_release",
+    "right",
+    0.05179113193236429
+   ],
+   [
+    "6b_left_release_drop",
+    "left",
+    1.9134114373904472
+   ]
+  ],
+  "oracle_wall_s": 653.5387670993805,
+  "arm_wire_gap_mm_by_phase": {
+   "1_left_pick_start": {
+    "left": {
+     "fingers": 36.0,
+     "any_link": 8.5
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "2_left_lift_tilt": {
+    "left": {
+     "fingers": 40.1,
+     "any_link": 9.3
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "3_right_ring_handover": {
+    "left": {
+     "fingers": 38.0,
+     "any_link": 21.3
+    },
+    "right": {
+     "fingers": 11.6,
+     "any_link": 11.6
+    }
+   },
+   "3b_left_release": {
+    "left": {
+     "fingers": 28.6,
+     "any_link": 24.1
+    },
+    "right": {
+     "fingers": 10.5,
+     "any_link": 10.5
+    }
+   },
+   "4_right_carry": {
+    "left": {
+     "fingers": 269.4,
+     "any_link": 269.4
+    },
+    "right": {
+     "fingers": 10.4,
+     "any_link": 10.4
+    }
+   },
+   "5_left_gdown_handover": {
+    "left": {
+     "fingers": 37.1,
+     "any_link": 37.1
+    },
+    "right": {
+     "fingers": 10.5,
+     "any_link": 10.5
+    }
+   },
+   "5b_right_release": {
+    "left": {
+     "fingers": 35.0,
+     "any_link": 35.0
+    },
+    "right": {
+     "fingers": 13.9,
+     "any_link": 13.9
+    }
+   },
+   "6_left_yaw_lower": {
+    "left": {
+     "fingers": 33.8,
+     "any_link": 5.1
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "6b_left_release_drop": {
+    "left": {
+     "fingers": 40.1,
+     "any_link": 6.2
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": 0.0,
+  "translation": [
+   0.5144,
+   0.27,
+   0.7517
+  ]
+ }
+}

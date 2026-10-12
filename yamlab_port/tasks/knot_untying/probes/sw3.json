@@ -1,0 +1,8 @@
+[{"name":"k0","arm":1e-6,"k":0.0,"kt":0.0,"c":1e-4},
+ {"name":"k0.1x","arm":1e-6,"k":1e-4,"kt":7.7e-5},
+ {"name":"mu1","arm":1e-6,"friction":1.0},
+ {"name":"mu0","arm":1e-6,"friction":0.0},
+ {"name":"c1e-3","arm":1e-6,"c":1e-3},
+ {"name":"bodydamp_strong","arm":1e-6,"ang":50.0,"lin":10.0},
+ {"name":"sleep1e-5","arm":1e-6,"sleep":1e-5},
+ {"name":"iters128","arm":1e-6,"iters":128}]

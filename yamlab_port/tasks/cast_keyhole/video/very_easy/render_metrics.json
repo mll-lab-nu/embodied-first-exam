@@ -1,0 +1,13 @@
+{
+ "task": "CastKeyhole-VeryEasy-v0",
+ "states": "/data/out/cast_keyhole/ve_dump/states_full.npz",
+ "frames": 1256,
+ "max_pose_readback_err_m": 1.1920928955078125e-07,
+ "wall_s": 215.74981379508972,
+ "cameras": [
+  "top",
+  "left_wrist",
+  "right_wrist",
+  "plates"
+ ]
+}

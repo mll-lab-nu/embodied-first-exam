@@ -1,0 +1,487 @@
+{
+ "source": {
+  "task_base": "fiber-bundling-very-easy-i00",
+  "family": "fiber_bundling",
+  "tier": "very_easy",
+  "instance_state_sha": "ab8f936f108240d4"
+ },
+ "units": "millimetres; quaternions w,x,y,z; euler_xyz_deg = extrinsic rotations about the reference frame's X, then Y, then Z",
+ "frames": {
+  "table": {
+   "definition": "origin at the centre of the tabletop surface; +Z up; +X toward the right-hand ALOHA arm (simulator world X); +Y away from the ALOHA bases (simulator world Y)",
+   "world_position_mm": [
+    -135.679,
+    0.0,
+    919.643
+   ],
+   "tabletop_size_mm": [
+    1500.0,
+    1400.0
+   ]
+  },
+  "robot_bases": {
+   "panda_base": {
+    "table_position_mm": [
+     -434.321,
+     0.0,
+     0.0
+    ],
+    "table_quaternion_wxyz": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw_deg": 0.0
+   }
+  },
+  "part_frame": "each STL's origin is the centre of its axis-aligned bounding box in the part's own (simulator body) axes; the pose below places that origin and those axes"
+ },
+ "robot": {
+  "type": "panda_robotiq",
+  "description": "Franka Emika Panda (7-DoF) with a Robotiq 2F-85 gripper; base frame = link0 mounting face (world_tabletop_v1.yaml robot_mount.pos)",
+  "riser_mm": 0.0
+ },
+ "parts": [
+  {
+   "name": "cable_terminal_box",
+   "stl": "cable_terminal_box.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      -385.821,
+      -410.0,
+      150.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      48.5,
+      -410.0,
+      150.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": -0.003,
+   "joints": null
+  },
+  {
+   "name": "bundling_ring",
+   "stl": "bundling_ring.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      385.679,
+      -250.0,
+      239.997
+     ],
+     "quaternion_wxyz": [
+      0.707107,
+      0.0,
+      0.707107,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      -0.0,
+      90.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      820.0,
+      -250.0,
+      239.997
+     ],
+     "quaternion_wxyz": [
+      0.707107,
+      0.0,
+      0.707107,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      -0.0,
+      90.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 218.497,
+   "joints": null
+  },
+  {
+   "name": "cable_cradle_base",
+   "stl": "cable_cradle_base.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      55.679,
+      -250.0,
+      5.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      490.0,
+      -250.0,
+      5.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": -0.003,
+   "joints": null
+  },
+  {
+   "name": "cable_cradle_post",
+   "stl": "cable_cradle_post.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      55.679,
+      -250.0,
+      113.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      490.0,
+      -250.0,
+      113.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 11.997,
+   "joints": null
+  },
+  {
+   "name": "cable_cradle_pad",
+   "stl": "cable_cradle_pad.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      55.679,
+      -250.0,
+      223.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      490.0,
+      -250.0,
+      223.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 219.997,
+   "joints": null
+  },
+  {
+   "name": "cable_cradle_left",
+   "stl": "cable_cradle_left.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      55.679,
+      -271.0,
+      234.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      490.0,
+      -271.0,
+      234.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 215.997,
+   "joints": null
+  },
+  {
+   "name": "cable_cradle_right",
+   "stl": "cable_cradle_right.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      55.679,
+      -229.0,
+      234.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      490.0,
+      -229.0,
+      234.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 215.997,
+   "joints": null
+  },
+  {
+   "name": "ring_mount_base",
+   "stl": "ring_mount_base.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      385.679,
+      -250.0,
+      5.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      820.0,
+      -250.0,
+      5.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": -0.003,
+   "joints": null
+  },
+  {
+   "name": "ring_mount_post",
+   "stl": "ring_mount_post.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      385.679,
+      -250.0,
+      115.247
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      820.0,
+      -250.0,
+      115.247
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 11.997,
+   "joints": null
+  }
+ ],
+ "markers": [],
+ "non_printable": [
+  {
+   "name": "fiber_bundle",
+   "physics_model": "articulated_cable",
+   "sim_material": {
+    "gravity_compensation": 1.0
+   },
+   "kind": "cable",
+   "lead_length_mm": 830.1357681972314,
+   "jacket_diameter_mm": 24.0,
+   "trunk_length_mm": 240.0,
+   "fiber_count": 2,
+   "fiber_diameter_mm": 2.4,
+   "fiber_length_mm": 80.0,
+   "fan_angle_deg": [
+    28.0,
+    50.0
+   ],
+   "density_kg_m3": 1100.0,
+   "ring_inner_radius_mm": 13.5,
+   "trunk_radial_clearance_mm": 1.4789204835905199,
+   "model": "fixed terminal root; passive articulated slack lead, working trunk and fine strands",
+   "appearance": "black cable jacket, cut sheath and filler, PVC insulated cores, 3 mm stranded copper tips"
+  }
+ ]
+}

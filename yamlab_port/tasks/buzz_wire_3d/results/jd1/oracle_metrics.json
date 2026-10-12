@@ -1,0 +1,74 @@
+{
+ "name": "oracle",
+ "success": false,
+ "success_step": null,
+ "termination": null,
+ "steps": 776,
+ "sim_time_s": 25.86666666665632,
+ "wall_time_s": 85.73728108406067,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 9.484923080468828,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.044510484897463384,
+ "route_length_m": 0.6096323526398696,
+ "final": {
+  "distance_to_finish_m": 0.35372879478256325,
+  "finish_angle_deg": 142.5361667300784,
+  "supported": false,
+  "released": false,
+  "quiet": false,
+  "lin_speed_m_s": 0.018928056582808495,
+  "ang_speed_rad_s": 9.018983840942383
+ },
+ "state_sha256": "4afb261b1606ca7da1e7684d2ee94d344eccd06aedc4b8c89a68c7074ed8223e",
+ "phases": [
+  "init",
+  "1_left_pick_start",
+  "2_left_lift_tilt"
+ ],
+ "mode": "oracle",
+ "tier": "very_easy",
+ "status": "completed",
+ "notes": {
+  "pick_approach_m": 0.04,
+  "pick_staging": null,
+  "pick_in_hand_error": {
+   "pos_mm": 0.6965893972544698,
+   "rot_deg": 0.45732303190567974
+  },
+  "lift_test_wand_z_mm": 54.842618274688725,
+  "oracle_wall_s": 84.85207104682922,
+  "arm_wire_gap_mm_by_phase": {
+   "1_left_pick_start": {
+    "left": {
+     "fingers": 36.0,
+     "any_link": 7.6
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "2_left_lift_tilt": {
+    "left": {
+     "fingers": 40.3,
+     "any_link": 8.2
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": 0.0,
+  "translation": [
+   0.5144,
+   0.27,
+   0.7517
+  ]
+ }
+}

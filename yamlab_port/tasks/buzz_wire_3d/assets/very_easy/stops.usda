@@ -1,0 +1,53 @@
+#usda 1.0
+(
+    defaultPrim = "stops"
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "stops" (
+    prepend apiSchemas = ["PhysicsRigidBodyAPI"]
+)
+{
+    def "Looks"
+    {
+        def Material "wood" (
+            prepend apiSchemas = ["PhysicsMaterialAPI"]
+        )
+        {
+            float physics:dynamicFriction = 0.5
+            float physics:restitution = 0
+            float physics:staticFriction = 0.5
+        }
+    }
+
+    def Cube "block_0" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding:physics = </stops/Looks/wood> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (0.008, 0.008, 0.012)
+        double3 xformOp:translate = (-0.119321, -0.305, 0.14849700000000002)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def Cube "block_1" (
+        prepend apiSchemas = ["PhysicsCollisionAPI", "MaterialBindingAPI"]
+    )
+    {
+        rel material:binding:physics = </stops/Looks/wood> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 1
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (0.008, 0.008, 0.012)
+        double3 xformOp:translate = (0.230679, -0.305, 0.14849700000000002)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+}
+

@@ -1,0 +1,238 @@
+{
+ "base": "buzz-wire-3d-medium-i00",
+ "family": "buzz_wire_3d",
+ "tier": "medium",
+ "robot": "panda_robotiq",
+ "parts": [
+  {
+   "name": "wire_base",
+   "printable": true,
+   "movable": false,
+   "source": "union of the simulator's collision solids (URDF collision geometry; primitives tessellated)",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 4169106.7642288175,
+   "bodies": 1,
+   "extents_mm": [
+    520.1,
+    368.9,
+    142.5
+   ],
+   "faces": 156,
+   "repair": null,
+   "thickness": {
+    "min_mm": 0.27979988587828564,
+    "p1_mm": 5.999000000000002,
+    "p5_mm": 7.049118562421177
+   },
+   "joints": [],
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 4169106.7642288175
+   }
+  },
+  {
+   "name": "wire_rail_REFERENCE_tube",
+   "printable": false,
+   "movable": false,
+   "source": "tube swept along the rail centreline with the simulator's wire radius (32-gon); reference / bending template only: the real rail is a bent metal wire",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 17544.74654792333,
+   "bodies": 1,
+   "extents_mm": [
+    469.94,
+    234.4,
+    169.26
+   ],
+   "faces": 59644,
+   "repair": null,
+   "thickness": null,
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 17544.74654792333
+   }
+  },
+  {
+   "name": "wire_wood_stop_0",
+   "printable": true,
+   "movable": false,
+   "source": "union of the simulator's 'wood_stop' collision solids on the rail link (end blocks that hold the rail ends)",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 768.0,
+   "bodies": 1,
+   "extents_mm": [
+    8.0,
+    8.0,
+    12.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 7.9990000000000006,
+    "p1_mm": 7.9990000000000006,
+    "p5_mm": 7.9990000000000006
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 768.0
+   }
+  },
+  {
+   "name": "wire_wood_stop_1",
+   "printable": true,
+   "movable": false,
+   "source": "union of the simulator's 'wood_stop' collision solids on the rail link (end blocks that hold the rail ends)",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 768.0,
+   "bodies": 1,
+   "extents_mm": [
+    8.0,
+    8.0,
+    12.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 7.9990000000000006,
+    "p1_mm": 7.9990000000000006,
+    "p5_mm": 7.9990000000000006
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 768.0
+   }
+  },
+  {
+   "name": "wand",
+   "printable": true,
+   "movable": true,
+   "source": "generator smooth source mesh (URDF visual, components unioned)",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 2642.5284100265185,
+   "bodies": 1,
+   "extents_mm": [
+    78.54,
+    33.32,
+    7.0
+   ],
+   "faces": 3178,
+   "repair": null,
+   "thickness": {
+    "min_mm": 2.470578855632326,
+    "p1_mm": 2.470578911465306,
+    "p5_mm": 2.470578939555599
+   },
+   "joints": [],
+   "sim_collision_deviation": {
+    "symdiff_volume_pct": 0.2915892315702243,
+    "collision_outside_source_max_mm": 0.15481056725445239
+   },
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 2642.5284100265185
+   }
+  }
+ ],
+ "start_gaps": [
+  {
+   "a": "wire_base",
+   "b": "wand",
+   "min_gap_mm": 0.056033791428944824
+  },
+  {
+   "a": "wire_wood_stop_0",
+   "b": "wand",
+   "min_gap_mm": 8.455700158770604
+  }
+ ],
+ "non_printable": [
+  {
+   "name": "wire_rail",
+   "kind": "bent metal wire",
+   "length_mm": 2604.5976462505123,
+   "diameter_mm": 2.9399999999999995,
+   "min_bend_radius_mm": 1.98042365957343,
+   "loop_inner_radius_mm": 14.14,
+   "loop_tube_diameter_mm": 2.5199999999999996,
+   "nominal_radial_clearance_mm": 12.67,
+   "sections": [
+    "start_post",
+    "entry_comb",
+    "layered_eight",
+    "front_vertical_w",
+    "exit_bend",
+    "finish_post"
+   ],
+   "centreline_csv": "buzz_wire_centerline.csv",
+   "reference_tube_stl": "wire_rail_REFERENCE_tube.stl"
+  }
+ ],
+ "generator_clearances": {
+  "geometry_report.json": {
+   "layout.clearance_cover_m": 0.00035,
+   "layout.finish_cradle_mount_clearance_m": 0.0,
+   "nominal_radial_clearance_m": 0.01267
+  }
+ },
+ "notes": [],
+ "start_objects": {
+  "wire_base": {
+   "position_m": [
+    -0.08,
+    -0.27,
+    0.92839
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "wire": {
+   "position_m": [
+    -0.08,
+    -0.27,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "wand": {
+   "position_m": [
+    -0.297,
+    -0.389,
+    1.06419
+   ],
+   "orientation_wxyz": [
+    0.968437,
+    0.005936,
+    -0.023168,
+    0.24811
+   ],
+   "fixed": false
+  }
+ }
+}

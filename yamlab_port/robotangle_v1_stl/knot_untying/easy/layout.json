@@ -1,0 +1,103 @@
+{
+ "source": {
+  "task_base": "knot-untying-easy-i00",
+  "family": "knot_untying",
+  "tier": "easy",
+  "instance_state_sha": "fb82ccfa3fcdbe49"
+ },
+ "units": "millimetres; quaternions w,x,y,z; euler_xyz_deg = extrinsic rotations about the reference frame's X, then Y, then Z",
+ "frames": {
+  "table": {
+   "definition": "origin at the centre of the tabletop surface; +Z up; +X toward the right-hand ALOHA arm (simulator world X); +Y away from the ALOHA bases (simulator world Y)",
+   "world_position_mm": [
+    -135.679,
+    0.0,
+    919.643
+   ],
+   "tabletop_size_mm": [
+    1500.0,
+    1400.0
+   ]
+  },
+  "robot_bases": {
+   "aloha_left_base": {
+    "table_position_mm": [
+     -469.0,
+     -19.0,
+     0.0
+    ],
+    "table_quaternion_wxyz": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw_deg": 0.0
+   },
+   "aloha_right_base": {
+    "table_position_mm": [
+     469.0,
+     -19.0,
+     0.0
+    ],
+    "table_quaternion_wxyz": [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ],
+    "yaw_deg": 180.0
+   }
+  },
+  "part_frame": "each STL's origin is the centre of its axis-aligned bounding box in the part's own (simulator body) axes; the pose below places that origin and those axes"
+ },
+ "robot": {
+  "type": "aloha",
+  "description": "ALOHA 2 bimanual (two ViperX-300s 6-DoF arms with ALOHA parallel grippers), from MuJoCo Menagerie aloha.xml; base frames = left/base_link and right/base_link mounting faces",
+  "riser_mm": 0.0
+ },
+ "parts": [],
+ "markers": [],
+ "non_printable": [
+  {
+   "name": "rope",
+   "physics_model": "fem_elastic",
+   "sim_material": {
+    "E": 50000.0,
+    "friction_mu": 0.3,
+    "model": "stable_neohookean",
+    "nu": 0.3,
+    "rho": 650.0
+   },
+   "kind": "rope",
+   "length_mm": 1101.050298045596,
+   "diameter_mm": 8.0,
+   "knot": {
+    "type": "open_two_overlap_loop",
+    "closure": "not_a_knot_invariant",
+    "crossings": 2,
+    "over_under_along_rope": [
+     "O",
+     "O",
+     "U",
+     "U"
+    ],
+    "gauss_code": [
+     1,
+     2,
+     2,
+     1
+    ],
+    "handedness": "right",
+    "tail_length_mm": 180.0,
+    "planar_scale_mm": 32.0,
+    "crossing_height_gaps_mm": [
+     10.53,
+     12.78
+    ],
+    "min_bend_radius_mm": 9.658647616597687
+   },
+   "centreline_csv": "rope_start_centerline.csv"
+  }
+ ]
+}

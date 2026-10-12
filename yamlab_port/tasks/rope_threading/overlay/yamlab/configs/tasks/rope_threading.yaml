@@ -1,0 +1,34 @@
+# =====================================================================
+# RopeThreading (port of RoboTangle rope_threading). Rope = capsule-chain articulation,
+# rings/stands/bases = static colliders.
+# Instruction: "Thread the rope through all rings in the prescribed order and direction,
+# then keep the whole rope still."
+# Keys here OVERRIDE configs/defaults.yaml on conflict.
+# =====================================================================
+env_names:
+  - RopeThreading-Easy-v0
+  - RopeThreading-Medium-v0
+
+# No rigid objects; the rope is an articulation (scene asset "rope"), not an --asset.
+# YamRobot needs finger contact sensors; a sensor filter must match exactly one body per env,
+# so they filter one rope link (link_109) only. is_grasping() and the grasp clamp therefore do
+# not apply to the rope (the oracle limits its own gripper squeeze instead).
+grasp_detect:
+  left_arm: [rope]
+  right_arm: [rope]
+
+# ---- Goal check (old RopeThreadingTask.evaluate_state with the RELEASED task's terminal: release
+# profile contact_relaxed_v16, topogym/tasks/release_profile.py, the robotangle-r2 instances the STL package
+# comes from). The class defaults (1 mm/s, no allowance, cylindrical slices) are logged as strict_* diagnostics.
+success:
+  max_speed_m_s: 0.01                 # quiet: every rope point <= 1 cm/s (release terminal.maximum_speed_m_s)
+  aperture_margin_m: 0.0001           # extra radial margin beyond tube + rope radius
+  aperture_contact_allowance_m: 0.001 # rope may press 1 mm into the rim (release aperture_contact_allowance_m)
+  round_ring_slices: 1.0              # 1 = round_ring profile for the +-tube slices (release), 0 = cylindrical
+  max_joint_gap_m: 0.001              # intact
+  stable_steps: 15                    # 0.5 s at 30 Hz (old stable_duration_s)
+
+# CPU PhysX in every mode (deterministic path; one env).
+modes:
+  evaluation:
+    sim: {device: cpu, num_envs: 1}

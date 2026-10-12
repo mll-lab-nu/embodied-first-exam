@@ -1,0 +1,43 @@
+{
+ "name": "nop",
+ "success": false,
+ "success_step": null,
+ "termination": "timeout",
+ "steps": 9001,
+ "sim_time_s": 300.03333333321336,
+ "wall_time_s": 110.67121577262878,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 13.267273410477516,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.0,
+ "route_length_m": 0.6096323526398696,
+ "final": {
+  "distance_to_finish_m": 0.3499999575111614,
+  "finish_angle_deg": 108.69005824150486,
+  "supported": true,
+  "released": true,
+  "quiet": true,
+  "lin_speed_m_s": 1.61909179041686e-06,
+  "ang_speed_rad_s": 2.729470179474447e-05
+ },
+ "state_sha256": "72ba086b0b3e1d15bb492fb08085cc11677fcae38f75f651b8eedb8da7f39848",
+ "phases": [
+  "nop"
+ ],
+ "mode": "nop",
+ "tier": "very_easy",
+ "status": "completed",
+ "notes": {
+  "arm_wire_gap_mm_by_phase": {}
+ },
+ "layout": {
+  "yaw_deg": 0.0,
+  "translation": [
+   0.5144,
+   0.27,
+   0.7517
+  ]
+ }
+}

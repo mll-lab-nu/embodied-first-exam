@@ -1,0 +1,17 @@
+{
+ "task": "FiberBundling-Easier-v0",
+ "actions": "/workspace/yamlab_port/runs/fiber_bundling/out/eaf/actions.npy",
+ "steps_run": 3809,
+ "success": true,
+ "first_success_step": 3808,
+ "failed": false,
+ "failure_reason": null,
+ "wall_time_s": 62.00092959403992,
+ "final_state_hash": "bbeb299d23df6df9",
+ "state_hash_chain": "2f0bacfc8a1cfaab4a6cfe843245bd2f5ebcddb55d811b7689f6bf998c0c3fb5",
+ "reference_steps": 3809,
+ "compared_steps": 3809,
+ "max_abs_state_diff": 0.0,
+ "bit_identical": true,
+ "first_diff_step": null
+}

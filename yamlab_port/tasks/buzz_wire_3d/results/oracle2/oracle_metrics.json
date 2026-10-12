@@ -1,0 +1,111 @@
+{
+ "name": "oracle",
+ "success": false,
+ "success_step": null,
+ "termination": null,
+ "steps": 1422,
+ "sim_time_s": 47.39999999998104,
+ "wall_time_s": 132.2794988155365,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 7.2664055320980365,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.0,
+ "route_length_m": 0.6096323526398697,
+ "final": {
+  "distance_to_finish_m": 0.34284603895341975,
+  "finish_angle_deg": 155.85974467392785,
+  "supported": true,
+  "released": true,
+  "quiet": true,
+  "lin_speed_m_s": 1.9439143216004595e-05,
+  "ang_speed_rad_s": 0.004907872993499041
+ },
+ "state_sha256": "75fd0b668f891608128321c4215fca1a1a91c25e13609ee1e6768864f8e5e186",
+ "phases": [
+  "init",
+  "1_right_pick_start",
+  "2_right_lift_tilt"
+ ],
+ "mode": "oracle",
+ "tier": "very_easy",
+ "status": "plan_error: left plan_grasp failed (0 IK branches): ",
+ "notes": {
+  "pick_approach_m": 0.03,
+  "unconverged": [
+   [
+    "1_right_pick_start",
+    "right",
+    0.12232226480437267
+   ],
+   [
+    "1_right_pick_start",
+    "right",
+    0.33112392601231105
+   ],
+   [
+    "1_right_pick_start",
+    "right",
+    0.6132357849738169
+   ],
+   [
+    "1_right_pick_start",
+    "right",
+    0.6101942739785878
+   ]
+  ],
+  "reseed": [
+   [
+    "1_right_pick_start",
+    "right",
+    0.12232226480437267
+   ],
+   [
+    "1_right_pick_start",
+    "right",
+    0.33112392601231105
+   ],
+   [
+    "1_right_pick_start",
+    "right",
+    0.6132357849738169
+   ],
+   [
+    "1_right_pick_start",
+    "right",
+    0.6101942739785878
+   ]
+  ],
+  "arm_wire_gap_mm_by_phase": {
+   "1_right_pick_start": {
+    "left": {
+     "fingers": 166.1,
+     "any_link": 166.1
+    },
+    "right": {
+     "fingers": 0.0,
+     "any_link": -0.1
+    }
+   },
+   "2_right_lift_tilt": {
+    "left": {
+     "fingers": 166.1,
+     "any_link": 166.1
+    },
+    "right": {
+     "fingers": 20.2,
+     "any_link": 11.6
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": -90.0,
+  "translation": [
+   0.96,
+   0.055679,
+   0.7517
+  ]
+ }
+}

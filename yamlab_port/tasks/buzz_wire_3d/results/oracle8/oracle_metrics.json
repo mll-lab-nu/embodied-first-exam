@@ -1,0 +1,72 @@
+{
+ "name": "oracle",
+ "success": false,
+ "success_step": null,
+ "termination": null,
+ "steps": 779,
+ "sim_time_s": 25.966666666656284,
+ "wall_time_s": 86.28442740440369,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 8.624379877086335,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.044463605450006216,
+ "route_length_m": 0.6096323526398696,
+ "final": {
+  "distance_to_finish_m": 0.35339230422718754,
+  "finish_angle_deg": 142.37742111200208,
+  "supported": false,
+  "released": false,
+  "quiet": false,
+  "lin_speed_m_s": 0.10920802503824234,
+  "ang_speed_rad_s": 10.274053573608398
+ },
+ "state_sha256": "d823266b503d197566088b754c7481f2948ead20c1035278419bba85f2c567ff",
+ "phases": [
+  "init",
+  "1_left_pick_start",
+  "2_left_lift_tilt"
+ ],
+ "mode": "oracle",
+ "tier": "very_easy",
+ "status": "plan_error: right plan_grasp failed (0 IK branches): ",
+ "notes": {
+  "pick_approach_m": 0.04,
+  "pick_staging": null,
+  "pick_in_hand_error": {
+   "pos_mm": 0.783360701070068,
+   "rot_deg": 0.45268249952373607
+  },
+  "arm_wire_gap_mm_by_phase": {
+   "1_left_pick_start": {
+    "left": {
+     "fingers": 36.0,
+     "any_link": 8.5
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "2_left_lift_tilt": {
+    "left": {
+     "fingers": 40.1,
+     "any_link": 9.3
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": 0.0,
+  "translation": [
+   0.5144,
+   0.27,
+   0.7517
+  ]
+ }
+}

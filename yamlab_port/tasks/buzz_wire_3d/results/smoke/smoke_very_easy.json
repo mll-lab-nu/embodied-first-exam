@@ -1,0 +1,136 @@
+{
+ "tier": "very_easy",
+ "control_steps_per_s": 55.293121949804764,
+ "wand_start": [
+  [
+   0.45949989557266235,
+   0.17500056326389313,
+   0.8962467908859253
+  ],
+  [
+   0.773120641708374,
+   -0.015162486582994461,
+   -0.01849578693509102,
+   -0.633807897567749
+  ]
+ ],
+ "wand_end": [
+  0.45949995517730713,
+  0.17500059306621552,
+  0.896193265914917,
+  0.7731207609176636,
+  -0.015163182280957699,
+  -0.01849476806819439,
+  -0.6338078379631042
+ ],
+ "drift_mm": 0.05352501249258647,
+ "diag": {
+  "touched": false,
+  "gap_touch": false,
+  "force_touch": false,
+  "min_gap_m": 0.014501621875871201,
+  "max_rail_force_n": 0.0,
+  "route_cursor_m": 0.0,
+  "route_length_m": 0.6096323526398697,
+  "traversal_tracked": false,
+  "traversal_started_ever": false,
+  "traversal_complete": false,
+  "distance_to_finish_m": 0.3500005971002963,
+  "finish_angle_deg": 157.3801853555269,
+  "supported": true,
+  "deck_force_n": 0.09496837854385376,
+  "released": true,
+  "robot_force_n": 0.0,
+  "gripped": false,
+  "lin_speed_m_s": 1.8746057321550325e-05,
+  "ang_speed_rad_s": 0.0048557426780462265,
+  "quiet": true,
+  "ok_now": false,
+  "ok_steps": 0,
+  "success": false
+ },
+ "fk": {
+  "right": {
+   "max_pos_err_mm": 7.863907291276381,
+   "max_rot_err_deg": 9.313292668875388e-05,
+   "body_names": [
+    "arm",
+    "link_1",
+    "link_2",
+    "link_3",
+    "link_4",
+    "link_5",
+    "link_6",
+    "left_finger",
+    "right_finger",
+    "camera_mount",
+    "camera_d405",
+    "camera_frame"
+   ],
+   "joint_names": [
+    "joint1",
+    "joint2",
+    "joint3",
+    "joint4",
+    "joint5",
+    "joint6",
+    "left_finger",
+    "right_finger"
+   ]
+  },
+  "left": {
+   "max_pos_err_mm": 47.50002042399709,
+   "max_rot_err_deg": 9.313292668875388e-05,
+   "body_names": [
+    "arm",
+    "link_1",
+    "link_2",
+    "link_3",
+    "link_4",
+    "link_5",
+    "link_6",
+    "left_finger",
+    "right_finger",
+    "camera_mount",
+    "camera_d405",
+    "camera_frame"
+   ],
+   "joint_names": [
+    "joint1",
+    "joint2",
+    "joint3",
+    "joint4",
+    "joint5",
+    "joint6",
+    "left_finger",
+    "right_finger"
+   ]
+  }
+ },
+ "filters": [
+  "rail",
+  "deck",
+  "stops",
+  "LeftArm/arm/link_4",
+  "LeftArm/arm/link_5",
+  "LeftArm/arm/link_6",
+  "LeftArm/arm/left_finger",
+  "LeftArm/arm/right_finger",
+  "LeftArm/arm/camera_mount",
+  "LeftArm/arm/camera_d405",
+  "RightArm/arm/link_4",
+  "RightArm/arm/link_5",
+  "RightArm/arm/link_6",
+  "RightArm/arm/left_finger",
+  "RightArm/arm/right_finger",
+  "RightArm/arm/camera_mount",
+  "RightArm/arm/camera_d405"
+ ],
+ "sensor_shape": [
+  1,
+  4,
+  1,
+  17,
+  3
+ ]
+}

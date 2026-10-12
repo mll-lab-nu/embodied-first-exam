@@ -1,0 +1,21 @@
+{
+ "task": "KnotUntying-Easier-v0",
+ "actions": "ea7/actions.npy",
+ "steps": 2235,
+ "success": true,
+ "success_step": 2235,
+ "latch_min_nonlocal_m": 0.01745038423663305,
+ "wall_time_s": 163.25273656845093,
+ "rope_state_sha16": "6250d007cc138adf",
+ "final": {
+  "step": 2235,
+  "success": true,
+  "goal_now": false,
+  "n_crossings": 0,
+  "minimum_nonlocal_distance_m": 0.01745038423663305,
+  "maximum_speed_m_s": 0.000637113957257271,
+  "on_table": true,
+  "planar_clear": true
+ },
+ "cameras": false
+}

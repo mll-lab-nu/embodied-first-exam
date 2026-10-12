@@ -1,0 +1,74 @@
+{
+ "base": "knot-untying-medium-i00",
+ "family": "knot_untying",
+ "tier": "medium",
+ "robot": "aloha",
+ "parts": [],
+ "start_gaps": [],
+ "non_printable": [
+  {
+   "name": "rope",
+   "physics_model": "fem_elastic",
+   "sim_material": {
+    "E": 50000.0,
+    "friction_mu": 0.3,
+    "model": "stable_neohookean",
+    "nu": 0.3,
+    "rho": 650.0
+   },
+   "kind": "rope",
+   "length_mm": 1073.7684051204835,
+   "diameter_mm": 8.0,
+   "knot": {
+    "type": "open_overhand",
+    "closure": "trefoil_3_1",
+    "crossings": 3,
+    "over_under_along_rope": [
+     "U",
+     "O",
+     "U",
+     "O",
+     "U",
+     "O"
+    ],
+    "gauss_code": [
+     1,
+     2,
+     3,
+     1,
+     2,
+     3
+    ],
+    "handedness": "right",
+    "tail_length_mm": 180.0,
+    "planar_scale_mm": 32.0,
+    "crossing_height_gaps_mm": [
+     11.62,
+     11.62,
+     11.62
+    ],
+    "min_bend_radius_mm": 27.109378808360624
+   },
+   "centreline_csv": "rope_start_centerline.csv"
+  }
+ ],
+ "generator_clearances": {
+  "asset_report.json": {
+   "minimum_nonlocal_surface_gap_m": 0.0035050020183210098,
+   "table_surface_clearance_m": 0.001,
+   "parameters.table_clearance_m": 0.001
+  }
+ },
+ "notes": [],
+ "start_objects": {
+  "rope": {
+   "position_m": [
+    5e-05,
+    -0.03335,
+    0.92489
+   ],
+   "orientation_wxyz": null,
+   "fixed": null
+  }
+ }
+}

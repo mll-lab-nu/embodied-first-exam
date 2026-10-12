@@ -1,0 +1,24 @@
+{
+ "1_pick_right": {
+  "worst_mm": {},
+  "approach_m": 0.04,
+  "approach_worst_mm": {
+   "wire": 17.2,
+   "deck": 4.9,
+   "stops": 29.7,
+   "table": 67.6
+  }
+ },
+ "lift_variant": [
+  0.03,
+  0.04,
+  20.0
+ ],
+ "2_lift_tilt_right": {
+  "worst_mm": {
+   "wire": 2.5,
+   "deck": 5.9,
+   "table": 67.6
+  }
+ }
+}

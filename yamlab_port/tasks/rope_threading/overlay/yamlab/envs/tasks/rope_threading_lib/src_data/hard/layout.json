@@ -1,0 +1,835 @@
+{
+ "source": {
+  "task_base": "rope-threading-hard-i00",
+  "family": "rope_threading",
+  "tier": "hard",
+  "instance_state_sha": "1114fbae4e231143"
+ },
+ "units": "millimetres; quaternions w,x,y,z; euler_xyz_deg = extrinsic rotations about the reference frame's X, then Y, then Z",
+ "frames": {
+  "table": {
+   "definition": "origin at the centre of the tabletop surface; +Z up; +X toward the right-hand ALOHA arm (simulator world X); +Y away from the ALOHA bases (simulator world Y)",
+   "world_position_mm": [
+    -135.679,
+    0.0,
+    919.643
+   ],
+   "tabletop_size_mm": [
+    1500.0,
+    1400.0
+   ]
+  },
+  "robot_bases": {
+   "aloha_left_base": {
+    "table_position_mm": [
+     -469.0,
+     -19.0,
+     20.9
+    ],
+    "table_quaternion_wxyz": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw_deg": 0.0
+   },
+   "aloha_right_base": {
+    "table_position_mm": [
+     469.0,
+     -19.0,
+     20.9
+    ],
+    "table_quaternion_wxyz": [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ],
+    "yaw_deg": 180.0
+   }
+  },
+  "part_frame": "each STL's origin is the centre of its axis-aligned bounding box in the part's own (simulator body) axes; the pose below places that origin and those axes"
+ },
+ "robot": {
+  "type": "aloha",
+  "description": "ALOHA 2 bimanual (two ViperX-300s 6-DoF arms with ALOHA parallel grippers), from MuJoCo Menagerie aloha.xml; base frames = left/base_link and right/base_link mounting faces",
+  "riser_mm": 20.9
+ },
+ "parts": [
+  {
+   "name": "R1",
+   "stl": "R1.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      75.0,
+      -19.0,
+      331.897
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      544.0,
+      0.0,
+      310.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      394.0,
+      -0.0,
+      310.997
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 269.897,
+   "joints": null
+  },
+  {
+   "name": "R1_stand",
+   "stl": "R1_stand.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      75.0,
+      -75.0,
+      170.897
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      544.0,
+      -56.0,
+      149.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      394.0,
+      56.0,
+      149.997
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 4.897,
+   "joints": null
+  },
+  {
+   "name": "R1_base",
+   "stl": "R1_base.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      75.0,
+      -75.0,
+      3.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      544.0,
+      -56.0,
+      -16.903
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      394.0,
+      56.0,
+      -16.903
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": -0.003,
+   "joints": null
+  },
+  {
+   "name": "R2",
+   "stl": "R2.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      -25.0,
+      120.0,
+      310.897
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      444.0,
+      139.0,
+      289.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      494.0,
+      -139.0,
+      289.997
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 248.897,
+   "joints": null
+  },
+  {
+   "name": "R2_stand",
+   "stl": "R2_stand.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      31.0,
+      120.0,
+      160.397
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      500.0,
+      139.0,
+      139.497
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      438.0,
+      -139.0,
+      139.497
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 4.897,
+   "joints": null
+  },
+  {
+   "name": "R2_base",
+   "stl": "R2_base.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      31.0,
+      120.0,
+      3.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      500.0,
+      139.0,
+      -16.903
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      438.0,
+      -139.0,
+      -16.903
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": -0.003,
+   "joints": null
+  },
+  {
+   "name": "R3",
+   "stl": "R3.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      90.0,
+      375.0,
+      280.897
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      559.0,
+      394.0,
+      259.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      379.0,
+      -394.0,
+      259.997
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 221.782,
+   "joints": null
+  },
+  {
+   "name": "R3_stand",
+   "stl": "R3_stand.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      36.874,
+      392.709,
+      145.397
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      505.874,
+      411.709,
+      124.497
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      432.126,
+      -411.709,
+      124.497
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 4.897,
+   "joints": null
+  },
+  {
+   "name": "R3_base",
+   "stl": "R3_base.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      36.874,
+      392.709,
+      3.997
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      505.874,
+      411.709,
+      -16.903
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      432.126,
+      -411.709,
+      -16.903
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": -0.003,
+   "joints": null
+  },
+  {
+   "name": "left_base_riser",
+   "stl": "left_base_riser.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      -469.001,
+      -19.0,
+      10.447
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      -0.001,
+      0.0,
+      -10.453
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      938.001,
+      0.0,
+      -10.453
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": -0.003,
+   "joints": null
+  },
+  {
+   "name": "right_base_riser",
+   "stl": "right_base_riser.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      468.999,
+      -19.0,
+      10.447
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      937.999,
+      0.0,
+      -10.453
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      0.001,
+      0.0,
+      -10.453
+     ],
+     "quaternion_wxyz": [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      180.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": -0.003,
+   "joints": null
+  }
+ ],
+ "markers": [],
+ "non_printable": [
+  {
+   "name": "rope",
+   "physics_model": "fem_elastic",
+   "sim_material": {
+    "E": 5000000.0,
+    "friction_mu": 0.3,
+    "model": "stable_neohookean",
+    "nu": 0.3,
+    "rho": 650.0
+   },
+   "kind": "rope",
+   "length_mm": 1100.000000000001,
+   "diameter_mm": 8.0,
+   "route": {
+    "order": [
+     "R1-",
+     "R2+",
+     "R3+"
+    ],
+    "rings": [
+     {
+      "name": "R1",
+      "centre_table_mm": [
+       75.0,
+       -19.0,
+       331.9
+      ],
+      "normal": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "aperture_diameter_mm": 100.0
+     },
+     {
+      "name": "R2",
+      "centre_table_mm": [
+       -25.0,
+       120.0,
+       310.9
+      ],
+      "normal": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "aperture_diameter_mm": 100.0
+     },
+     {
+      "name": "R3",
+      "centre_table_mm": [
+       90.0,
+       375.0,
+       280.9
+      ],
+      "normal": [
+       0.3,
+       0.9,
+       0.316228
+      ],
+      "aperture_diameter_mm": 100.0
+     }
+    ],
+    "meaning": "'R1-' = the rope passes through ring R1 against its normal, '+' = along it, in this order from the rope's material start (first CSV row) to its end; at the start the rope lies unthreaded on the table (no crossings)"
+   },
+   "centreline_csv": "rope_start_centerline.csv"
+  }
+ ]
+}

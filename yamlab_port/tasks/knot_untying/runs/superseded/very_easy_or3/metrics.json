@@ -1,0 +1,108 @@
+{
+ "task": "KnotUntying-VeryEasy-v0",
+ "variant": "oracle",
+ "success": true,
+ "success_step": 1246,
+ "steps": 1246,
+ "sim_time_s": 41.53333333333333,
+ "wall_time_s": 87.99511289596558,
+ "plan": {
+  "iterations": [
+   {
+    "step": 0,
+    "crossings": 1,
+    "over_under": [
+     "O",
+     "U"
+    ],
+    "candidates": [
+     [
+      "start",
+      0.21304882240987194
+     ]
+    ],
+    "end": "start",
+    "s_grasp": 0.03,
+    "grasp_point": [
+     0.4010653452600392,
+     -0.12299662867255516,
+     0.7540015508246563
+    ],
+    "crossing_xy": [
+     0.5257471119409982,
+     0.007372757194279284
+    ],
+    "target": [
+     0.495086674122542,
+     0.15991341449227994
+    ],
+    "over_tail_angle_deg": -133.7225206798454,
+    "under_tail_angle_deg": 136.36492937271865,
+    "target_angle_deg": -258.6350706272813,
+    "tail_len": 0.21304882240987194,
+    "arm": "left_arm",
+    "worst_ik_err_mm": 1.1246121718440923e-09
+   },
+   {
+    "step": 633,
+    "crossings": 2,
+    "over_under": [
+     "O",
+     "O",
+     "U",
+     "U"
+    ],
+    "candidates": [
+     [
+      "start",
+      0.14988985212467495
+     ]
+    ],
+    "end": "start",
+    "s_grasp": 0.03,
+    "grasp_point": [
+     0.48298038481407735,
+     0.1934153090271108,
+     0.7540009690026241
+    ],
+    "crossing_xy": [
+     0.44426096964800565,
+     0.09608082606173385
+    ],
+    "target": [
+     0.34277063561404497,
+     0.10527980545426958
+    ],
+    "over_tail_angle_deg": 68.30746036063032,
+    "under_tail_angle_deg": 139.8209213664753,
+    "target_angle_deg": 174.82092136647535,
+    "tail_len": 0.14988985212467495,
+    "arm": "left_arm",
+    "worst_ik_err_mm": 2.663086156424532e-09
+   },
+   {
+    "step": 1185,
+    "crossings": 0,
+    "over_under": []
+   }
+  ]
+ },
+ "final": {
+  "step": 1246,
+  "success": true,
+  "goal_now": true,
+  "hold": 15,
+  "planar_clear": true,
+  "on_table": true,
+  "quiet": true,
+  "intact": true,
+  "n_crossings": 0,
+  "minimum_nonlocal_distance_m": 0.008009080800820155,
+  "maximum_speed_m_s": 0.0003775650272860498,
+  "z_min_surface_above_table_m": -6.663451159405476e-06,
+  "z_max_surface_above_table_m": 0.008001209431431677
+ },
+ "min_nonlocal_final_m": 0.008009080800820155,
+ "rope_state_sha16": "9122bc0ad5415cf0",
+ "action_sha16": "aa72112955331d9c"
+}

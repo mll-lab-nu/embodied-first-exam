@@ -1,0 +1,254 @@
+{
+ "tier": "medium",
+ "n_links": 107,
+ "link_length_m": 0.010035220377509297,
+ "rope_length_m": 1.0737685803934949,
+ "radius_m": 0.004,
+ "mass_per_link_kg": 0.00032787637599743306,
+ "bend_stiffness_Nm_per_rad": 0.0010017813374600228,
+ "twist_stiffness_Nm_per_rad": 0.0007706010288154022,
+ "rope_params": {
+  "friction": 0.3,
+  "joint_damping": 0.001,
+  "armature": 1e-06,
+  "linear_damping": 0.0,
+  "angular_damping": 0.0,
+  "solver_position_iterations": 32,
+  "solver_velocity_iterations": 4,
+  "contact_offset": 0.002,
+  "rest_offset": 0.0,
+  "max_depenetration_velocity": 0.5
+ },
+ "relayout": {
+  "yaw_deg": -90.0,
+  "center_xy": [
+   0.56,
+   0.0
+  ]
+ },
+ "relayout_matrix_xy": [
+  [
+   6.123233995736766e-17,
+   1.0
+  ],
+  [
+   -1.0,
+   6.123233995736766e-17
+  ]
+ ],
+ "relayout_translation_xy_m": [
+  0.6087035000000001,
+  0.13644950000000003
+ ],
+ "settled_over_under": [
+  "U",
+  "O",
+  "U",
+  "O",
+  "U",
+  "O"
+ ],
+ "settled_crossings": 3,
+ "expected_over_under": [
+  "U",
+  "O",
+  "U",
+  "O",
+  "U",
+  "O"
+ ],
+ "order_matches": true,
+ "settle_s": 6.0,
+ "settled_crossing_height_gaps_mm": [
+  -7.98,
+  8.0,
+  -7.93
+ ],
+ "settled_crossing_xy": [
+  [
+   0.5842549299263435,
+   -0.04066420703998621
+  ],
+  [
+   0.6572325940061486,
+   0.0006530702528180854
+  ],
+  [
+   0.5851217577259838,
+   0.04116501020970926
+  ]
+ ],
+ "settled_vmax_m_s": Infinity,
+ "settled_min_nonlocal_m": 0.0,
+ "settle_log": [
+  {
+   "t": 0.0,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 0.5,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 1.0,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 1.5,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 2.0,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 2.5,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 3.0,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 3.5,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 4.0,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 4.5,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 5.0,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 5.5,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 6.0,
+   "vmax": Infinity,
+   "n_cr": 3,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  }
+ ]
+}

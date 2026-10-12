@@ -1,0 +1,70 @@
+{
+ "task": "KnotUntying-VeryEasy-v0",
+ "variant": "naive",
+ "success": false,
+ "success_step": null,
+ "steps": 900,
+ "sim_time_s": 30.0,
+ "wall_time_s": 55.98743176460266,
+ "plan": {
+  "iterations": [
+   {
+    "step": 0,
+    "crossings": 1,
+    "over_under": [
+     "O",
+     "U"
+    ],
+    "candidates": [
+     [
+      "start",
+      0.21304882240987194
+     ]
+    ],
+    "end": "start",
+    "s_grasp": 0.03,
+    "grasp_point": [
+     0.4010653452600392,
+     -0.12299662867255516,
+     0.7540015508246563
+    ],
+    "crossing_xy": [
+     0.5257471119409982,
+     0.007372757194279284
+    ],
+    "target": [
+     0.35775990142174297,
+     -0.16827754077525128
+    ],
+    "over_tail_angle_deg": -133.7225206798454,
+    "under_tail_angle_deg": 136.36492937271865,
+    "target_angle_deg": -133.7225206798454,
+    "tail_len": 0.21304882240987194,
+    "arm": "right_arm",
+    "worst_ik_err_mm": 2.9514001220149526e-10
+   }
+  ],
+  "held_spreads": []
+ },
+ "final": {
+  "step": 900,
+  "success": false,
+  "goal_now": false,
+  "hold": 0,
+  "planar_clear": false,
+  "on_table": false,
+  "quiet": true,
+  "intact": true,
+  "n_crossings": 1,
+  "minimum_nonlocal_distance_m": 0.0,
+  "maximum_speed_m_s": 0.00013287168711121011,
+  "z_min_surface_above_table_m": -7.826240681074736e-06,
+  "z_max_surface_above_table_m": 0.016037294518348788
+ },
+ "min_nonlocal_final_m": 0.0,
+ "latch_min_nonlocal_m": null,
+ "latch_goal": {},
+ "end_reason": "time_out",
+ "rope_state_sha16": "cd41628167d61e67",
+ "action_sha16": "1a551303135075ab"
+}

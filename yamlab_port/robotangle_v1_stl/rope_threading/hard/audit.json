@@ -1,0 +1,570 @@
+{
+ "base": "rope-threading-hard-i00",
+ "family": "rope_threading",
+ "tier": "hard",
+ "robot": "aloha",
+ "parts": [
+  {
+   "name": "R1",
+   "printable": true,
+   "movable": false,
+   "source": "generator mesh R1.glb",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 39278.06650593111,
+   "bodies": 1,
+   "extents_mm": [
+    12.0,
+    124.0,
+    124.0
+   ],
+   "faces": 3072,
+   "repair": null,
+   "thickness": {
+    "min_mm": 11.882238725756737,
+    "p1_mm": 11.882243973154171,
+    "p5_mm": 11.882251118853958
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 39278.06650593111
+   }
+  },
+  {
+   "name": "R1_stand",
+   "printable": true,
+   "movable": false,
+   "source": "generator mesh R1_stand.glb",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 25150.15013645827,
+   "bodies": 1,
+   "extents_mm": [
+    10.0,
+    10.0,
+    332.0
+   ],
+   "faces": 512,
+   "repair": null,
+   "thickness": {
+    "min_mm": 9.768970319683923,
+    "p1_mm": 9.806847169138562,
+    "p5_mm": 9.806848163223716
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 25150.15013645827
+   }
+  },
+  {
+   "name": "R1_base",
+   "printable": true,
+   "movable": false,
+   "source": "generator mesh R1_base.glb",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 32000.0,
+   "bodies": 1,
+   "extents_mm": [
+    50.0,
+    80.0,
+    8.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 7.9990000000000006,
+    "p1_mm": 7.9990000000000006,
+    "p5_mm": 7.9990000000000006
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 32000.0
+   }
+  },
+  {
+   "name": "R2",
+   "printable": true,
+   "movable": false,
+   "source": "generator mesh R2.glb",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 39278.06764019856,
+   "bodies": 1,
+   "extents_mm": [
+    124.0,
+    12.0,
+    124.0
+   ],
+   "faces": 3072,
+   "repair": null,
+   "thickness": {
+    "min_mm": 11.88139553068815,
+    "p1_mm": 11.88224480742814,
+    "p5_mm": 11.882250060757592
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 39278.06764019856
+   }
+  },
+  {
+   "name": "R2_stand",
+   "printable": true,
+   "movable": false,
+   "source": "generator mesh R2_stand.glb",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 23542.883282398787,
+   "bodies": 1,
+   "extents_mm": [
+    10.0,
+    10.0,
+    311.0
+   ],
+   "faces": 512,
+   "repair": null,
+   "thickness": {
+    "min_mm": 9.761100168802512,
+    "p1_mm": 9.806847075441361,
+    "p5_mm": 9.806848660349564
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 23542.883282398787
+   }
+  },
+  {
+   "name": "R2_base",
+   "printable": true,
+   "movable": false,
+   "source": "generator mesh R2_base.glb",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 32000.00244140625,
+   "bodies": 1,
+   "extents_mm": [
+    50.0,
+    80.0,
+    8.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 7.9990000000000006,
+    "p1_mm": 7.9990000000000006,
+    "p5_mm": 7.9990000000000006
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 32000.00244140625
+   }
+  },
+  {
+   "name": "R3",
+   "printable": true,
+   "movable": false,
+   "source": "generator mesh R3.glb",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 39278.05540423002,
+   "bodies": 1,
+   "extents_mm": [
+    118.83,
+    60.77,
+    118.23
+   ],
+   "faces": 3072,
+   "repair": null,
+   "thickness": {
+    "min_mm": 11.88154643031545,
+    "p1_mm": 11.882243068803417,
+    "p5_mm": 11.882249570893455
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 39278.05540423002
+   }
+  },
+  {
+   "name": "R3_stand",
+   "printable": true,
+   "movable": false,
+   "source": "generator mesh R3_stand.glb",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 21246.775572712926,
+   "bodies": 1,
+   "extents_mm": [
+    10.0,
+    10.0,
+    281.0
+   ],
+   "faces": 512,
+   "repair": null,
+   "thickness": {
+    "min_mm": 9.759437384197147,
+    "p1_mm": 9.806839445130816,
+    "p5_mm": 9.806839671844106
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 21246.775572712926
+   }
+  },
+  {
+   "name": "R3_base",
+   "printable": true,
+   "movable": false,
+   "source": "generator mesh R3_base.glb",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 31999.99633789016,
+   "bodies": 1,
+   "extents_mm": [
+    50.0,
+    80.0,
+    8.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 7.9990000000000006,
+    "p1_mm": 7.9990000000000006,
+    "p5_mm": 7.9990000000000006
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 31999.99633789016
+   }
+  },
+  {
+   "name": "left_base_riser",
+   "printable": true,
+   "movable": false,
+   "source": "primitive box from the scene spec",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 102409.99813079834,
+   "bodies": 1,
+   "extents_mm": [
+    70.0,
+    70.0,
+    20.9
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 20.898999618530276,
+    "p1_mm": 20.898999618530276,
+    "p5_mm": 20.898999618530276
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 102409.99813079834
+   }
+  },
+  {
+   "name": "right_base_riser",
+   "printable": true,
+   "movable": false,
+   "source": "primitive box from the scene spec",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 102409.99813079834,
+   "bodies": 1,
+   "extents_mm": [
+    70.0,
+    70.0,
+    20.9
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 20.898999618530276,
+    "p1_mm": 20.898999618530276,
+    "p5_mm": 20.898999618530276
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 102409.99813079834
+   }
+  }
+ ],
+ "start_gaps": [],
+ "non_printable": [
+  {
+   "name": "rope",
+   "physics_model": "fem_elastic",
+   "sim_material": {
+    "E": 5000000.0,
+    "friction_mu": 0.3,
+    "model": "stable_neohookean",
+    "nu": 0.3,
+    "rho": 650.0
+   },
+   "kind": "rope",
+   "length_mm": 1100.000000000001,
+   "diameter_mm": 8.0,
+   "route": {
+    "order": [
+     "R1-",
+     "R2+",
+     "R3+"
+    ],
+    "rings": [
+     {
+      "name": "R1",
+      "centre_table_mm": [
+       75.0,
+       -19.0,
+       331.9
+      ],
+      "normal": [
+       1.0,
+       0.0,
+       0.0
+      ],
+      "aperture_diameter_mm": 100.0
+     },
+     {
+      "name": "R2",
+      "centre_table_mm": [
+       -25.0,
+       120.0,
+       310.9
+      ],
+      "normal": [
+       0.0,
+       1.0,
+       0.0
+      ],
+      "aperture_diameter_mm": 100.0
+     },
+     {
+      "name": "R3",
+      "centre_table_mm": [
+       90.0,
+       375.0,
+       280.9
+      ],
+      "normal": [
+       0.3,
+       0.9,
+       0.316228
+      ],
+      "aperture_diameter_mm": 100.0
+     }
+    ],
+    "meaning": "'R1-' = the rope passes through ring R1 against its normal, '+' = along it, in this order from the rope's material start (first CSV row) to its end; at the start the rope lies unthreaded on the table (no crossings)"
+   },
+   "centreline_csv": "rope_start_centerline.csv"
+  }
+ ],
+ "generator_clearances": {
+  "asset_report.json": {
+   "table_surface_gap_m": 0.00029999999999999623,
+   "minimum_fixture_gap_lower_bound_m": 0.1402942974985144,
+   "minimum_nonlocal_rope_surface_gap_m": 0.026357775183276526
+  }
+ },
+ "notes": [],
+ "start_objects": {
+  "rope": {
+   "position_m": [
+    -0.15536,
+    -0.17391,
+    0.92392
+   ],
+   "orientation_wxyz": null,
+   "fixed": null
+  },
+  "R1": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R1_stand": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R1_base": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R2": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R2_stand": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R2_base": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R3": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R3_stand": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "R3_base": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.91964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "left_base_riser": {
+   "position_m": [
+    -0.60468,
+    -0.019,
+    0.93009
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "right_base_riser": {
+   "position_m": [
+    0.33332,
+    -0.019,
+    0.93009
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ }
+}

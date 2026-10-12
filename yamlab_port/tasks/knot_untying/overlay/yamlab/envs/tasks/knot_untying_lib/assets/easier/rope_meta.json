@@ -1,0 +1,219 @@
+{
+ "tier": "easier",
+ "n_links": 111,
+ "link_length_m": 0.009990452764114914,
+ "rope_length_m": 1.1089402568167555,
+ "radius_m": 0.004,
+ "mass_per_link_kg": 0.0003264137033017042,
+ "bend_stiffness_Nm_per_rad": 0.0010062703591970762,
+ "twist_stiffness_Nm_per_rad": 0.0007740541224592896,
+ "rope_params": {
+  "friction": 0.3,
+  "joint_damping": 0.001,
+  "armature": 1e-06,
+  "linear_damping": 0.0,
+  "angular_damping": 0.0,
+  "solver_position_iterations": 32,
+  "solver_velocity_iterations": 4,
+  "contact_offset": 0.002,
+  "rest_offset": 0.0,
+  "max_depenetration_velocity": 0.5
+ },
+ "relayout": {
+  "yaw_deg": -90.0,
+  "center_xy": [
+   0.56,
+   0.0
+  ]
+ },
+ "relayout_matrix_xy": [
+  [
+   6.123233995736766e-17,
+   1.0
+  ],
+  [
+   -1.0,
+   6.123233995736766e-17
+  ]
+ ],
+ "relayout_translation_xy_m": [
+  0.6590005000000001,
+  0.13567899999999997
+ ],
+ "settled_over_under": [
+  "U",
+  "O",
+  "U",
+  "O"
+ ],
+ "settled_crossings": 2,
+ "expected_over_under": [
+  "U",
+  "O",
+  "U",
+  "O"
+ ],
+ "order_matches": true,
+ "settle_s": 6.0,
+ "settled_crossing_height_gaps_mm": [
+  -7.9,
+  7.96
+ ],
+ "settled_crossing_xy": [
+  [
+   0.4643770751411236,
+   0.010015907439366638
+  ],
+  [
+   0.549994367533558,
+   -0.009440589285173943
+  ]
+ ],
+ "settled_vmax_m_s": Infinity,
+ "settled_min_nonlocal_m": 0.0,
+ "settle_log": [
+  {
+   "t": 0.0,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 0.5,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 1.0,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 1.5,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 2.0,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 2.5,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 3.0,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 3.5,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 4.0,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 4.5,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 5.0,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 5.5,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  },
+  {
+   "t": 6.0,
+   "vmax": Infinity,
+   "n_cr": 2,
+   "ou": [
+    "U",
+    "O",
+    "U",
+    "O"
+   ]
+  }
+ ]
+}

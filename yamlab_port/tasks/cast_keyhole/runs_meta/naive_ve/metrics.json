@@ -1,0 +1,173 @@
+{
+ "task": "CastKeyhole-VeryEasy-v0",
+ "variant": "naive_pull",
+ "status": "done",
+ "success": false,
+ "first_success_step": null,
+ "steps": 2535,
+ "sim_time_s": 84.5,
+ "wall_time_s": 107.48628306388855,
+ "final_check": {
+  "reached": 0.0,
+  "all_target_inside": 0.0,
+  "remainder_on_system_side": 0.0,
+  "quiet": 1.0,
+  "failure": 0.0,
+  "silver_lin_speed": 0.0002150008804164827,
+  "silver_ang_speed": 0.008524609729647636,
+  "silver_xy_margin": -0.17601972818374634,
+  "silver_min_z": 1.1920928955078125e-07,
+  "silver_max_z": 0.03274524211883545,
+  "gold_separator_margin": -0.32967671751976013,
+  "lowest_point_rel_table": -4.172325134277344e-07,
+  "left_grasping_gold": 0.0,
+  "right_grasping_silver": 0.0,
+  "consecutive_steps": 0.0,
+  "success": 0.0
+ },
+ "final_state_hash": "a88752f52a515c43c5bb27756ead06105803a3e20194e7e00a9f09f8491f23f2",
+ "params": {
+  "gold_y": 0.009,
+  "gold_x_tcp": 0.061,
+  "gold_jaw": 1.0,
+  "silver_y": -0.0024,
+  "silver_x_tcp": -0.051,
+  "silver_jaw": -1.0,
+  "fix_jaw": true,
+  "work_bar": [
+   0.595,
+   -0.213
+  ],
+  "h_bar": 0.0405,
+  "h_setup": 0.052,
+  "t_lower": 2.0,
+  "psi": -15.1,
+  "gamma": 43.844,
+  "split": 0.16,
+  "t_setup": 9.0,
+  "t_hover": 3.0,
+  "t_down": 1.5,
+  "t_approach": 1.5,
+  "t_close": 1.2,
+  "t_lift": 1.5,
+  "lift": 0.02,
+  "t_stand": 6.0,
+  "t_align": 4.0,
+  "t_level": 6.0,
+  "t_turn": 8.0,
+  "chan_speed": 0.01,
+  "chan_extra": 0.04,
+  "k_corr": {
+   "gold": 0.0,
+   "silver": 0.1
+  },
+  "corr_max": [
+   0.02,
+   0.2
+  ],
+  "gold_filter": 0.15,
+  "rel_fb": 1.0,
+  "t_align_hold": 3.0,
+  "max_dq": 0.06,
+  "lost_mm": 25.0,
+  "lost_deg": 25.0,
+  "pre_back": 0.06,
+  "hover_up": 0.06,
+  "sep_up": 0.06,
+  "gold_release_h": 0.03,
+  "gold_dy": -0.02,
+  "t_gold_down": 2.5,
+  "place_margin": 0.012,
+  "silver_tip0_deg": 30.0,
+  "silver_carry_h": 0.02,
+  "silver_set_h": 0.002,
+  "silver_tip_deg": 65.0,
+  "t_tip": 3.0,
+  "t_carry": 5.0,
+  "t_wait": 3.0,
+  "gold_jaw_used": 1.0,
+  "silver_jaw_used": -1.0
+ },
+ "phases": [
+  {
+   "name": "settle",
+   "start_step": 0
+  },
+  {
+   "name": "hover",
+   "start_step": 90
+  },
+  {
+   "name": "down",
+   "start_step": 180
+  },
+  {
+   "name": "approach",
+   "start_step": 225
+  },
+  {
+   "name": "close",
+   "start_step": 270
+  },
+  {
+   "name": "stand",
+   "start_step": 306
+  },
+  {
+   "name": "move",
+   "start_step": 501
+  },
+  {
+   "name": "lower",
+   "start_step": 786
+  },
+  {
+   "name": "turn",
+   "start_step": 951
+  },
+  {
+   "name": "channel",
+   "start_step": 1206
+  },
+  {
+   "name": "silver_up",
+   "start_step": 1806
+  },
+  {
+   "name": "gold_down",
+   "start_step": 1851
+  },
+  {
+   "name": "gold_release",
+   "start_step": 1926
+  },
+  {
+   "name": "left_retreat",
+   "start_step": 1956
+  },
+  {
+   "name": "silver_carry",
+   "start_step": 2076
+  },
+  {
+   "name": "silver_lower",
+   "start_step": 2226
+  },
+  {
+   "name": "silver_tip",
+   "start_step": 2280
+  },
+  {
+   "name": "silver_release",
+   "start_step": 2370
+  },
+  {
+   "name": "right_retreat",
+   "start_step": 2400
+  },
+  {
+   "name": "wait",
+   "start_step": 2445
+  }
+ ]
+}

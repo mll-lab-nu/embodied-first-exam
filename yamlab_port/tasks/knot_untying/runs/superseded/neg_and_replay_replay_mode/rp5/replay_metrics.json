@@ -1,0 +1,20 @@
+{
+ "task": "KnotUntying-VeryEasy-v0",
+ "actions": "or5/actions.npy",
+ "steps": 1631,
+ "success": true,
+ "success_step": 1246,
+ "wall_time_s": 106.34274888038635,
+ "rope_state_sha16": "428b1ef9beba5900",
+ "final": {
+  "step": 1631,
+  "success": true,
+  "goal_now": true,
+  "n_crossings": 0,
+  "minimum_nonlocal_distance_m": 0.013261057124409562,
+  "maximum_speed_m_s": 0.00032094206756571496,
+  "on_table": true,
+  "planar_clear": true
+ },
+ "cameras": false
+}

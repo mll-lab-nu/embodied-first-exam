@@ -1,0 +1,57 @@
+{
+ "name": "oracle",
+ "success": false,
+ "success_step": null,
+ "termination": null,
+ "steps": 562,
+ "sim_time_s": 18.73333333332584,
+ "wall_time_s": 64.0617606639862,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 10.534439613204011,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.0,
+ "route_length_m": 0.6096323526398696,
+ "final": {
+  "distance_to_finish_m": 0.35376236159558483,
+  "finish_angle_deg": 118.07819865344324,
+  "supported": true,
+  "released": false,
+  "quiet": false,
+  "lin_speed_m_s": 0.021126145496964455,
+  "ang_speed_rad_s": 2.2836620807647705
+ },
+ "state_sha256": "63e2e90fd26d18ca599126189f9c3894f2ea0cecfca821305ca404b36203d48a",
+ "phases": [
+  "init",
+  "1_left_pick_start"
+ ],
+ "mode": "oracle",
+ "tier": "very_easy",
+ "status": "plan_error: left track IK failed at 8/55 (ep 2.37e-05 er 1.65e-02)",
+ "notes": {
+  "pick_approach_m": 0.04,
+  "pick_staging": null,
+  "arm_wire_gap_mm_by_phase": {
+   "1_left_pick_start": {
+    "left": {
+     "fingers": 46.7,
+     "any_link": 32.3
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": 0.0,
+  "translation": [
+   0.5144,
+   0.27,
+   0.7517
+  ]
+ }
+}

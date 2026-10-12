@@ -1,0 +1,37 @@
+# =====================================================================
+# FiberBundling task config (port of the old RoboTangle fiber_bundling family).
+#
+# "Manipulate only the thick sheath. Pass every fiber tip first through the copper ring
+#  in material order, without sharp bends, until the roots and front sheath have passed.
+#  Any gripper contact with a fine strand fails the task; keep the rear terminal anchored."
+#
+# Goal check = old terminal_v4_fiber_ring_plane (topogym/tasks/fiber_bundling/common.py @ 2dafa5f),
+# see envs/tasks/fiber_bundling_manager.py. Assets: envs/tasks/fiber_bundling_assets/<tier>/
+# (built from the old STL package by tasks/fiber_bundling/tools/build_assets.py).
+# =====================================================================
+env_names:
+  - FiberBundling-VeryEasy-v0
+  - FiberBundling-Easier-v0
+  - FiberBundling-Easy-v0
+
+sim:
+  episode_length_s: 300.0
+
+# Old thresholds (unchanged).
+success:
+  maximum_bend_deg: 60.0              # max bend between consecutive strand segments
+  stable_duration_s: 0.5              # goal must hold this long (old stable_duration_s)
+  ring_plane_half_thickness_m: 0.000001   # old RING_PLANE_M
+  below_table_margin_m: 0.1           # old "Fiber below table" failure
+  strand_contact_force_n: 0.0         # any gripper-strand contact force above this fails (latched)
+
+# Grasp detection (YAMLab's finger contact sensors; the robot model requires at least one arm
+# with them). Target = the cable's trunk_04 link (sub-path set in the task cfg). Diagnostic only:
+# the oracle commands the gripper target directly and the grasp clamp stays off.
+grasp_detect:
+  left_arm: [cable]
+  right_arm: [cable]
+
+modes:
+  evaluation:
+    sim: {device: cpu, num_envs: 1}

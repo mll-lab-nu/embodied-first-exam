@@ -1,0 +1,13 @@
+{
+ "task": "RopeThreading-Easy-v0",
+ "states": "/data/out/rope_threading/easy_dump/states_full.npz",
+ "frames": 2482,
+ "max_pose_readback_err_m": 8.940696716308594e-07,
+ "wall_s": 469.21385431289673,
+ "cameras": [
+  "top",
+  "left_wrist",
+  "right_wrist",
+  "rings"
+ ]
+}

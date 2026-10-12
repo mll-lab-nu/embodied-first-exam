@@ -1,0 +1,4 @@
+[{"name":"arm1e-6","arm":1e-6},
+ {"name":"arm1e-6_c1e-4","arm":1e-6,"c":1e-4},
+ {"name":"arm1e-5_c1e-4","arm":1e-5,"c":1e-4},
+ {"name":"arm1e-6_k0","arm":1e-6,"k":0.0,"kt":0.0,"c":1e-4}]

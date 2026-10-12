@@ -1,0 +1,2655 @@
+{
+ "frame": {
+  "units": "metres, radians, seconds, newtons",
+  "description": "task frame: z = 0 at the table top; +x toward the right arm, -x toward the left arm; -y is the front (the curb side in hard), +y the back. Every coordinate in this packet is in this frame.",
+  "origin_world_xy": [
+   -0.1356786,
+   0.0
+  ],
+  "table_top_z_world": 0.9196429
+ },
+ "goal_predicate": {
+  "summary": "Untie and spread every rope on the tabletop until its top-down projection has no crossings or overlaps, inside its goal region, then release it; checked continuously, success after 0.5 s of confirmation.",
+  "planar_clearance": "nonlocal centre-line segments at least one rope diameter (0.008 m) apart in the top view: no crossings, overlaps, collapsed segments or exact foldbacks",
+  "on_table": {
+   "min_centre_z": -0.001,
+   "max_centre_z": 0.011,
+   "note": "no point more than 1 mm below the table, none higher than one diameter + 3 mm (2 r + 0.003); a strand resting on the 4.5 cm curb fails this"
+  },
+  "in_region": "every centre-line point of a rope inside its region polygon (task frame xy)",
+  "between_ropes_min_planar_distance": 0.008,
+  "quiet": {
+   "max_speed_m_s": 0.001,
+   "max_displacement_m": 0.001,
+   "confirmation_s": 0.5
+  },
+  "released": {
+   "grippers_open": true,
+   "assisted_grasp_disengaged": true,
+   "min_clearance_rope_to_moving_robot_m": 0.001
+  },
+  "integrity": "rope volume intact (no inversion / collapse); fixed bases may touch the rope"
+ },
+ "robot": {
+  "model": "bimanual ALOHA: two 6-DOF arms (waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate) + parallel grippers",
+  "base_xy": {
+   "left": [
+    -0.469,
+    -0.019
+   ],
+   "right": [
+    0.469,
+    -0.019
+   ]
+  },
+  "control": {
+   "rate_hz": 40,
+   "action": "absolute joint targets per row (JOINT_ABS) + gripper width",
+   "physics_dt_s": 0.005,
+   "ticks_per_row": 5,
+   "solver_substeps_per_tick": 8
+  },
+  "joint_speed_limit_rad_s": 3.1416,
+  "joint_speed_note": "per joint; faster targets are slowed (clamped), never failed",
+  "reach_vertical_pinch_m": {
+   "pinch up to 0.03 above the table": 0.585,
+   "up to 0.11": 0.55,
+   "higher": 0.5
+  },
+  "reach_note": "planar distance from the arm's base at which a vertical (top-down) pinch is still solvable; the wrist cannot turn a held rope freely (see assisted_grasp.releases_when.rotation)",
+  "home_joints": [
+   0.0,
+   -0.96,
+   1.16,
+   0.0,
+   -0.3,
+   0.0
+  ],
+  "gripper": {
+   "max_opening_m": 0.03,
+   "release_opening_m": 0.016,
+   "holding_gap_m": 0.008,
+   "pinch": "vertical, fingers close across the rope",
+   "finger_bar_width_note": "two grippers cannot pinch closer than about 0.12 m apart along a rope (their finger bars clash)"
+  },
+  "oracle_motion": {
+   "free_move_m_s": [
+    0.25,
+    0.4
+   ],
+   "carry_m_s": [
+    0.03,
+    0.06
+   ],
+   "lift_m": [
+    0.02,
+    0.09
+   ],
+   "note": "what the scripted oracle uses today; a carry faster than ~0.06 m/s dragging rope over the curb lost the grip"
+  }
+ },
+ "assisted_grasp": {
+  "model": "contact_weld_v1",
+  "creates": "a weld between the pads and the rope link they pinch, once both fingers touch that link and the jaws close (stable for 0.02 s, TCP within 0.06 m of the link, penetration < 6 mm)",
+  "releases_when": {
+   "link_drift_from_pads_m": 0.025,
+   "link_rotation_from_pads_rad": 0.15,
+   "jaws_open_fraction": 0.15
+  },
+  "holding_force_n": "about 1-3 N steady; brief peaks to 6-8 N were held; the oracle stops pulling at 8 N",
+  "consequence": "turning a held rope piece by ~0.9 rad (to align it with a target direction) released it in our tests; the pinch yaw is set by the rope's local direction at the pinch"
+ },
+ "tiers": {
+  "very_easy": {
+   "tier": "very_easy",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.633,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {},
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.2884,
+      -0.0732,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -15.44
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.2859,
+      -0.064,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -15.44
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.291,
+      -0.0824,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -15.44
+    }
+   ]
+  },
+  "easier_v8": {
+   "tier": "easier",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.7923,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.42,
+      0.155
+     ],
+     [
+      0.3,
+      0.155
+     ],
+     [
+      0.3,
+      0.33
+     ],
+     [
+      -0.42,
+      0.33
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3605,
+      0.2427,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3547,
+      0.2503,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3662,
+      0.2352,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.115,
+      -0.02,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.02,
+      -0.13,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.06,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.34,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "easier_loose": {
+   "tier": "easier",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.9651,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.42,
+      0.155
+     ],
+     [
+      0.3,
+      0.155
+     ],
+     [
+      0.3,
+      0.33
+     ],
+     [
+      -0.42,
+      0.33
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3605,
+      0.2427,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3547,
+      0.2503,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3662,
+      0.2352,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.115,
+      -0.02,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.02,
+      -0.13,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.06,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.34,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "easy_v8": {
+   "tier": "easy",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 2.2873,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.43,
+      0.155
+     ],
+     [
+      0.32,
+      0.155
+     ],
+     [
+      0.32,
+      0.31
+     ],
+     [
+      -0.43,
+      0.31
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3722,
+      0.2059,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.365,
+      0.2121,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3794,
+      0.1997,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.235,
+      0.03,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.1,
+      -0.1,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.05,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.4,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "easy_loose": {
+   "tier": "easy",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 2.4579,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.43,
+      0.155
+     ],
+     [
+      0.32,
+      0.155
+     ],
+     [
+      0.32,
+      0.31
+     ],
+     [
+      -0.43,
+      0.31
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3722,
+      0.2059,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.365,
+      0.2121,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3794,
+      0.1997,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.235,
+      0.03,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.1,
+      -0.1,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.05,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.4,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "easy": {
+   "tier": "easy",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 2.5403,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.43,
+      0.155
+     ],
+     [
+      0.32,
+      0.155
+     ],
+     [
+      0.32,
+      0.31
+     ],
+     [
+      -0.43,
+      0.31
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3722,
+      0.2059,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.365,
+      0.2121,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3794,
+      0.1997,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.235,
+      0.03,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.1,
+      -0.1,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.05,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.4,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "medium_v81": {
+   "tier": "medium",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.7622,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.44,
+      -0.32
+     ],
+     [
+      0.02,
+      -0.32
+     ],
+     [
+      0.02,
+      0.01
+     ],
+     [
+      -0.44,
+      0.01
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1403,
+      -0.0679,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 36.33
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.146,
+      -0.0602,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 36.33
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1347,
+      -0.0755,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 36.33
+    },
+    {
+     "name": "post_eye",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.0,
+      0.04,
+      0.04
+     ],
+     "radius": 0.011,
+     "height": 0.08
+    },
+    {
+     "name": "post_back",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.1,
+      0.12,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.2,
+      0.11,
+      0.015
+     ],
+     "half_extents": [
+      0.02,
+      0.2,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "medium_b81": {
+   "tier": "medium",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.9102,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.44,
+      -0.32
+     ],
+     [
+      0.02,
+      -0.32
+     ],
+     [
+      0.02,
+      0.01
+     ],
+     [
+      -0.44,
+      0.01
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1404,
+      -0.0677,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 37.26
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1462,
+      -0.0602,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 37.26
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1347,
+      -0.0753,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 37.26
+    },
+    {
+     "name": "post_eye",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.0,
+      0.04,
+      0.04
+     ],
+     "radius": 0.011,
+     "height": 0.08
+    },
+    {
+     "name": "post_back",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.1,
+      0.12,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.2,
+      0.11,
+      0.015
+     ],
+     "half_extents": [
+      0.02,
+      0.2,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "medium_loose": {
+   "tier": "medium",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.4327,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.44,
+      -0.32
+     ],
+     [
+      0.02,
+      -0.32
+     ],
+     [
+      0.02,
+      0.01
+     ],
+     [
+      -0.44,
+      0.01
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1403,
+      -0.0679,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 36.33
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.146,
+      -0.0602,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 36.33
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1347,
+      -0.0755,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 36.33
+    },
+    {
+     "name": "post_eye",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.0,
+      0.04,
+      0.04
+     ],
+     "radius": 0.011,
+     "height": 0.08
+    },
+    {
+     "name": "post_back",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.1,
+      0.12,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.2,
+      0.11,
+      0.015
+     ],
+     "half_extents": [
+      0.02,
+      0.2,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "hard_nostop": {
+   "tier": "hard",
+   "ropes": [
+    {
+     "name": "a",
+     "length_m": 1.5367,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_a_plate"
+    },
+    {
+     "name": "b",
+     "length_m": 0.9203,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_b_plate"
+    }
+   ],
+   "regions": {
+    "a": [
+     [
+      -0.44,
+      -0.33
+     ],
+     [
+      0.3,
+      -0.33
+     ],
+     [
+      0.3,
+      -0.175
+     ],
+     [
+      -0.44,
+      -0.175
+     ]
+    ],
+    "b": [
+     [
+      -0.3,
+      0.17
+     ],
+     [
+      0.42,
+      0.17
+     ],
+     [
+      0.42,
+      0.32
+     ],
+     [
+      -0.3,
+      0.32
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_b_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3589,
+      0.2503,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3626,
+      0.2416,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3552,
+      0.2591,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_a_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.389,
+      -0.2301,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3929,
+      -0.2214,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3852,
+      -0.2388,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "post_mid",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.13,
+      0.015,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_left",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.16,
+      0.15,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      0.02,
+      -0.155,
+      0.015
+     ],
+     "half_extents": [
+      0.3,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "hard": {
+   "tier": "hard",
+   "ropes": [
+    {
+     "name": "a",
+     "length_m": 1.5367,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_a_plate"
+    },
+    {
+     "name": "b",
+     "length_m": 1.2807,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_b_plate"
+    }
+   ],
+   "regions": {
+    "a": [
+     [
+      -0.44,
+      -0.33
+     ],
+     [
+      0.3,
+      -0.33
+     ],
+     [
+      0.3,
+      -0.175
+     ],
+     [
+      -0.44,
+      -0.175
+     ]
+    ],
+    "b": [
+     [
+      -0.3,
+      0.17
+     ],
+     [
+      0.42,
+      0.17
+     ],
+     [
+      0.42,
+      0.32
+     ],
+     [
+      -0.3,
+      0.32
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_b_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3589,
+      0.2503,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3626,
+      0.2416,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3552,
+      0.2591,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_a_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.389,
+      -0.2301,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3929,
+      -0.2214,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3852,
+      -0.2388,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "post_mid",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.13,
+      0.015,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_left",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.16,
+      0.15,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      0.02,
+      -0.155,
+      0.015
+     ],
+     "half_extents": [
+      0.3,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "hard_nostop_ra": {
+   "tier": "hard",
+   "ropes": [
+    {
+     "name": "a",
+     "length_m": 1.5367,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_a_plate"
+    },
+    {
+     "name": "b",
+     "length_m": 0.9203,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_b_plate"
+    }
+   ],
+   "regions": {
+    "a": [
+     [
+      -0.44,
+      -0.33
+     ],
+     [
+      0.3,
+      -0.33
+     ],
+     [
+      0.3,
+      -0.195
+     ],
+     [
+      -0.44,
+      -0.195
+     ]
+    ],
+    "b": [
+     [
+      -0.3,
+      0.17
+     ],
+     [
+      0.42,
+      0.17
+     ],
+     [
+      0.42,
+      0.32
+     ],
+     [
+      -0.3,
+      0.32
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_b_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3589,
+      0.2503,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3626,
+      0.2416,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3552,
+      0.2591,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_a_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.389,
+      -0.2301,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3929,
+      -0.2214,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3852,
+      -0.2388,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "post_mid",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.13,
+      0.015,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_left",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.16,
+      0.15,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      0.02,
+      -0.175,
+      0.015
+     ],
+     "half_extents": [
+      0.3,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "medium_loose_ra": {
+   "tier": "medium",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.6016,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.44,
+      -0.32
+     ],
+     [
+      0.02,
+      -0.32
+     ],
+     [
+      0.02,
+      0.01
+     ],
+     [
+      -0.44,
+      0.01
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1402,
+      -0.0681,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 35.39
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1457,
+      -0.0603,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 35.39
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1347,
+      -0.0758,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 35.39
+    },
+    {
+     "name": "post_eye",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.0,
+      0.04,
+      0.04
+     ],
+     "radius": 0.008,
+     "height": 0.08
+    },
+    {
+     "name": "post_back",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.1,
+      0.12,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.2,
+      0.11,
+      0.015
+     ],
+     "half_extents": [
+      0.02,
+      0.2,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "easier_v8_rw": {
+   "tier": "easier",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.7923,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.44,
+      0.155
+     ],
+     [
+      0.32,
+      0.155
+     ],
+     [
+      0.32,
+      0.37
+     ],
+     [
+      -0.44,
+      0.37
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3605,
+      0.2427,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3547,
+      0.2503,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3662,
+      0.2352,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.115,
+      -0.02,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.02,
+      -0.13,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.06,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.34,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "easier_loose_rw": {
+   "tier": "easier",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.9651,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.44,
+      0.155
+     ],
+     [
+      0.32,
+      0.155
+     ],
+     [
+      0.32,
+      0.37
+     ],
+     [
+      -0.44,
+      0.37
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3605,
+      0.2427,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3547,
+      0.2503,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3662,
+      0.2352,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -37.43
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.115,
+      -0.02,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.02,
+      -0.13,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.06,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.34,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "easy_v8_rw": {
+   "tier": "easy",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 2.2873,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.45,
+      0.155
+     ],
+     [
+      0.34,
+      0.155
+     ],
+     [
+      0.34,
+      0.37
+     ],
+     [
+      -0.45,
+      0.37
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3722,
+      0.2059,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.365,
+      0.2121,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3794,
+      0.1997,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.235,
+      0.03,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.1,
+      -0.1,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.05,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.4,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "easy_loose_rw": {
+   "tier": "easy",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 2.4579,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.45,
+      0.155
+     ],
+     [
+      0.34,
+      0.155
+     ],
+     [
+      0.34,
+      0.37
+     ],
+     [
+      -0.45,
+      0.37
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3722,
+      0.2059,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.365,
+      0.2121,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3794,
+      0.1997,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -49.33
+    },
+    {
+     "name": "post_away",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.235,
+      0.03,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_front",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.1,
+      -0.1,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.05,
+      0.135,
+      0.015
+     ],
+     "half_extents": [
+      0.4,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "hard_nostop_ra_rw": {
+   "tier": "hard",
+   "ropes": [
+    {
+     "name": "a",
+     "length_m": 1.5367,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_a_plate"
+    },
+    {
+     "name": "b",
+     "length_m": 0.9203,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_b_plate"
+    }
+   ],
+   "regions": {
+    "a": [
+     [
+      -0.46,
+      -0.37
+     ],
+     [
+      0.32,
+      -0.37
+     ],
+     [
+      0.32,
+      -0.195
+     ],
+     [
+      -0.46,
+      -0.195
+     ]
+    ],
+    "b": [
+     [
+      -0.32,
+      0.17
+     ],
+     [
+      0.44,
+      0.17
+     ],
+     [
+      0.44,
+      0.37
+     ],
+     [
+      -0.32,
+      0.37
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_b_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3589,
+      0.2503,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3626,
+      0.2416,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_b_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      0.3552,
+      0.2591,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": -157.1
+    },
+    {
+     "name": "clamp_a_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.389,
+      -0.2301,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3929,
+      -0.2214,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "clamp_a_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.3852,
+      -0.2388,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 24.04
+    },
+    {
+     "name": "post_mid",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.13,
+      0.015,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "post_left",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      -0.16,
+      0.15,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      0.02,
+      -0.175,
+      0.015
+     ],
+     "half_extents": [
+      0.3,
+      0.02,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  },
+  "medium_loose_ra_rw": {
+   "tier": "medium",
+   "ropes": [
+    {
+     "name": "rope",
+     "length_m": 1.6016,
+     "radius_m": 0.004,
+     "clamped_end": "start (s = 0)",
+     "clamp": "clamp_rope_plate"
+    }
+   ],
+   "regions": {
+    "rope": [
+     [
+      -0.44,
+      -0.37
+     ],
+     [
+      0.06,
+      -0.37
+     ],
+     [
+      0.06,
+      0.01
+     ],
+     [
+      -0.44,
+      0.01
+     ]
+    ]
+   },
+   "fixtures": [
+    {
+     "name": "clamp_rope_plate",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1402,
+      -0.0681,
+      0.0125
+     ],
+     "half_extents": [
+      0.032,
+      0.034,
+      0.006
+     ],
+     "yaw_deg": 35.39
+    },
+    {
+     "name": "clamp_rope_leg0",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1457,
+      -0.0603,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 35.39
+    },
+    {
+     "name": "clamp_rope_leg1",
+     "role": "clamp",
+     "kind": "box",
+     "center": [
+      -0.1347,
+      -0.0758,
+      0.0047
+     ],
+     "half_extents": [
+      0.032,
+      0.008,
+      0.0095
+     ],
+     "yaw_deg": 35.39
+    },
+    {
+     "name": "post_eye",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.0,
+      0.04,
+      0.04
+     ],
+     "radius": 0.008,
+     "height": 0.08
+    },
+    {
+     "name": "post_back",
+     "role": "post",
+     "kind": "cylinder",
+     "center": [
+      0.1,
+      0.12,
+      0.08
+     ],
+     "radius": 0.012,
+     "height": 0.16
+    },
+    {
+     "name": "curb",
+     "role": "curb",
+     "kind": "box",
+     "center": [
+      -0.2,
+      0.11,
+      0.015
+     ],
+     "half_extents": [
+      0.02,
+      0.2,
+      0.03
+     ],
+     "yaw_deg": 0.0
+    }
+   ]
+  }
+ }
+}

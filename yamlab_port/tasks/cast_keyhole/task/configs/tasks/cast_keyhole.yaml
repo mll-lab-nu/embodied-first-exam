@@ -1,0 +1,66 @@
+# =====================================================================
+# CastKeyhole (port of RoboTangle cast_keyhole, robotangle-r2 / topogym 2dafa5f).
+#
+# Two flat rigid keyhole plates (gold, silver) start interlocked, each through the other's
+# slot, resting on the table. Goal: take the silver piece out and rest the ENTIRE silver piece
+# inside the goal square; the gold piece stays on the system side of the separator.
+# Geometry, start poses and goal square: envs/tasks/cast_keyhole_assets/<tier>/layout.json
+# (built by yamlab_port/tasks/cast_keyhole/tools/build_assets.py).
+# =====================================================================
+env_names:
+  - CastKeyhole-VeryEasy-v0
+  - CastKeyhole-Easier-v0
+  - CastKeyhole-Easy-v0
+
+objects:
+  keyhole_gold:
+    mass: 0.6395          # volume of the authored plate x 6600 kg/m3 (old density)
+    asset: null
+  keyhole_silver:
+    mass: 0.4263
+    asset: null
+
+grasp_detect:
+  left_arm: [keyhole_gold]
+  right_arm: [keyhole_silver]
+
+kwargs:
+  gripper_grasp_clamp_extra: 0.0075
+
+# Old task material: friction 0.35 on both plates (Genesis). The manager binds it with PhysX combine
+# mode "max": plate-plate 0.35, plate-finger 3.0 (YAMLab's finger material), plate-table max(0.35, table).
+friction:
+  static: 0.35
+  dynamic: 0.35
+
+# Old success predicate (topogym tasks/placement.py + task_metrics.placement_candidate):
+# silver inside the goal square (1 mm boundary margin, 1 mm penetration tolerance), gold on the
+# system side, silver quiet (<= 1 mm/s, <= 0.02 rad/s), held for stable_duration_s 0.5 s.
+success:
+  linear_speed_limit_m_s: 0.001
+  angular_speed_limit_rad_s: 0.02
+  stable_duration_s: 0.5
+  below_table_failure_m: 0.1
+
+sim:
+  episode_length_s: 120.0
+
+modes:
+  teleoperation:
+    sim: {device: cpu, num_envs: 1}
+  replay:
+    sim: {device: cpu, num_envs: 1}
+  mimicgen:
+    sim: {device: cpu, num_envs: 1}
+  evaluation:
+    sim: {device: cpu, num_envs: 1}
+
+variants:
+  CastKeyhole-Easier-v0:
+    objects:
+      keyhole_gold: {mass: 0.6085}
+      keyhole_silver: {mass: 0.4263}
+  CastKeyhole-Easy-v0:
+    objects:
+      keyhole_gold: {mass: 0.6395}
+      keyhole_silver: {mass: 0.4263}

@@ -1,0 +1,434 @@
+{
+ "base": "fiber-bundling-very-easy-i00",
+ "family": "fiber_bundling",
+ "tier": "very_easy",
+ "robot": "panda_robotiq",
+ "parts": [
+  {
+   "name": "cable_terminal_box",
+   "printable": true,
+   "movable": false,
+   "source": "union of the colliding geoms of the MJCF body 'fixed_terminal' (boxes, cylinder; tessellated)",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 9830086.288380858,
+   "bodies": 1,
+   "extents_mm": [
+    247.0,
+    180.0,
+    302.0
+   ],
+   "faces": 646,
+   "repair": null,
+   "thickness": {
+    "min_mm": 13.998999999999995,
+    "p1_mm": 13.998999999999995,
+    "p5_mm": 35.988151082795405
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 9830086.288380858
+   }
+  },
+  {
+   "name": "bundling_ring",
+   "printable": true,
+   "movable": false,
+   "source": "generator smooth source mesh (URDF visual)",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 5377.367105842858,
+   "bodies": 1,
+   "extents_mm": [
+    43.0,
+    43.0,
+    8.0
+   ],
+   "faces": 2048,
+   "repair": null,
+   "thickness": {
+    "min_mm": 7.835133984824461,
+    "p1_mm": 7.836189522543144,
+    "p5_mm": 7.836189937142591
+   },
+   "joints": [],
+   "sim_collision_deviation": {
+    "symdiff_volume_pct": 2.688004028101872,
+    "collision_outside_source_max_mm": 0.18107827219312295
+   },
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 5377.367105842858
+   }
+  },
+  {
+   "name": "cable_cradle_base",
+   "printable": true,
+   "movable": false,
+   "source": "primitive box from the scene spec",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 198000.0,
+   "bodies": 1,
+   "extents_mm": [
+    150.0,
+    110.0,
+    12.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 11.998999999999999,
+    "p1_mm": 11.998999999999999,
+    "p5_mm": 11.998999999999999
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 198000.0
+   }
+  },
+  {
+   "name": "cable_cradle_post",
+   "printable": true,
+   "movable": false,
+   "source": "primitive box from the scene spec",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 127296.0,
+   "bodies": 1,
+   "extents_mm": [
+    24.0,
+    26.0,
+    204.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 23.999000000000002,
+    "p1_mm": 23.999000000000002,
+    "p5_mm": 23.999000000000002
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 127296.0
+   }
+  },
+  {
+   "name": "cable_cradle_pad",
+   "printable": true,
+   "movable": false,
+   "source": "primitive box from the scene spec",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 43680.0,
+   "bodies": 1,
+   "extents_mm": [
+    130.0,
+    42.0,
+    8.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 7.9990000000000006,
+    "p1_mm": 7.9990000000000006,
+    "p5_mm": 7.9990000000000006
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 43680.0
+   }
+  },
+  {
+   "name": "cable_cradle_left",
+   "printable": true,
+   "movable": false,
+   "source": "primitive box from the scene spec",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 49400.0,
+   "bodies": 1,
+   "extents_mm": [
+    130.0,
+    10.0,
+    38.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 9.998999999999999,
+    "p1_mm": 9.998999999999999,
+    "p5_mm": 9.998999999999999
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 49400.0
+   }
+  },
+  {
+   "name": "cable_cradle_right",
+   "printable": true,
+   "movable": false,
+   "source": "primitive box from the scene spec",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 49400.0,
+   "bodies": 1,
+   "extents_mm": [
+    130.0,
+    10.0,
+    38.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 9.998999999999999,
+    "p1_mm": 9.998999999999999,
+    "p5_mm": 9.998999999999999
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 49400.0
+   }
+  },
+  {
+   "name": "ring_mount_base",
+   "printable": true,
+   "movable": false,
+   "source": "primitive box from the scene spec",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 156000.0,
+   "bodies": 1,
+   "extents_mm": [
+    100.0,
+    130.0,
+    12.0
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 11.998999999999999,
+    "p1_mm": 11.998999999999999,
+    "p5_mm": 11.998999999999999
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 156000.0
+   }
+  },
+  {
+   "name": "ring_mount_post",
+   "printable": true,
+   "movable": false,
+   "source": "primitive box from the scene spec",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 39648.0,
+   "bodies": 1,
+   "extents_mm": [
+    12.0,
+    16.0,
+    206.5
+   ],
+   "faces": 12,
+   "repair": null,
+   "thickness": {
+    "min_mm": 11.998999999999999,
+    "p1_mm": 11.998999999999999,
+    "p5_mm": 11.998999999999999
+   },
+   "joints": null,
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 39648.0
+   }
+  }
+ ],
+ "start_gaps": [],
+ "non_printable": [
+  {
+   "name": "fiber_bundle",
+   "physics_model": "articulated_cable",
+   "sim_material": {
+    "gravity_compensation": 1.0
+   },
+   "kind": "cable",
+   "lead_length_mm": 830.1357681972314,
+   "jacket_diameter_mm": 24.0,
+   "trunk_length_mm": 240.0,
+   "fiber_count": 2,
+   "fiber_diameter_mm": 2.4,
+   "fiber_length_mm": 80.0,
+   "fan_angle_deg": [
+    28.0,
+    50.0
+   ],
+   "density_kg_m3": 1100.0,
+   "ring_inner_radius_mm": 13.5,
+   "trunk_radial_clearance_mm": 1.4789204835905199,
+   "model": "fixed terminal root; passive articulated slack lead, working trunk and fine strands",
+   "appearance": "black cable jacket, cut sheath and filler, PVC insulated cores, 3 mm stranded copper tips"
+  }
+ ],
+ "generator_clearances": {
+  "asset_report.json": {
+   "fiber_min_initial_surface_clearance_m": 0.013600000000000001,
+   "trunk_radial_clearance_m": 0.00147892048359052,
+   "coarse_min_initial_surface_clearance_m": 0.01167338636301967
+  }
+ },
+ "notes": [],
+ "start_objects": {
+  "fiber_bundle": {
+   "position_m": [
+    -0.1,
+    -0.25,
+    1.15964
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": false
+  },
+  "bundling_ring": {
+   "position_m": [
+    0.25,
+    -0.25,
+    1.15964
+   ],
+   "orientation_wxyz": [
+    0.707107,
+    0.0,
+    0.707107,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_base": {
+   "position_m": [
+    -0.08,
+    -0.25,
+    0.92564
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_post": {
+   "position_m": [
+    -0.08,
+    -0.25,
+    1.03364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_pad": {
+   "position_m": [
+    -0.08,
+    -0.25,
+    1.14364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_left": {
+   "position_m": [
+    -0.08,
+    -0.271,
+    1.15464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "cable_cradle_right": {
+   "position_m": [
+    -0.08,
+    -0.229,
+    1.15464
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_mount_base": {
+   "position_m": [
+    0.25,
+    -0.25,
+    0.92564
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  },
+  "ring_mount_post": {
+   "position_m": [
+    0.25,
+    -0.25,
+    1.03489
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ }
+}

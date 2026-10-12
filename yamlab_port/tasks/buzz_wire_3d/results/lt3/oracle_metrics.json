@@ -1,0 +1,43 @@
+{
+ "name": "oracle",
+ "success": false,
+ "success_step": null,
+ "termination": null,
+ "steps": 5,
+ "sim_time_s": 0.16666666666660002,
+ "wall_time_s": 2.9909310340881348,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 14.501566687815583,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.0,
+ "route_length_m": 0.6096323526398696,
+ "final": {
+  "distance_to_finish_m": 0.350000344967749,
+  "finish_angle_deg": 108.69007939598066,
+  "supported": true,
+  "released": true,
+  "quiet": true,
+  "lin_speed_m_s": 1.1887886103068013e-05,
+  "ang_speed_rad_s": 0.0031371742952615023
+ },
+ "state_sha256": "400bece8f59323dd525707dd2d08cb301760f97430e3aec47246e5c77563c121",
+ "phases": [
+  "init"
+ ],
+ "mode": "oracle",
+ "tier": "very_easy",
+ "status": "plan_error: pick+lift: left plan_grasp failed (1 IK branches): follow: left track collision at 0/46: {'wire': 1.7, 'deck': 4.0, 'frame': 69.3, 'table': 67.6, 'arm': 100.0}",
+ "notes": {
+  "arm_wire_gap_mm_by_phase": {}
+ },
+ "layout": {
+  "yaw_deg": 0.0,
+  "translation": [
+   0.5144,
+   0.27,
+   0.7517
+  ]
+ }
+}

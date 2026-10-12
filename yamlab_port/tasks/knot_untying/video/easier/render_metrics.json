@@ -1,0 +1,13 @@
+{
+ "task": "KnotUntying-Easier-v0",
+ "states": "/data/out/knot_untying/ea7_dump/states_full.npz",
+ "frames": 1118,
+ "max_pose_readback_err_m": 3.5762786865234375e-07,
+ "wall_s": 190.69320130348206,
+ "cameras": [
+  "top",
+  "left_wrist",
+  "right_wrist",
+  "rope"
+ ]
+}

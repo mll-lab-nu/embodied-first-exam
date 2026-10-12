@@ -1,0 +1,841 @@
+[
+ {
+  "tx": 0.5,
+  "ty": -0.08,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.5,
+  "ty": -0.08,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.5,
+  "ty": -0.04,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30",
+   "side+y_p45"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.5,
+  "ty": -0.04,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.5,
+  "ty": 0.0,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30",
+   "side+y_p45"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.5,
+  "ty": 0.0,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.5,
+  "ty": 0.04,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30",
+   "side+y_p45"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.5,
+  "ty": 0.04,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.54,
+  "ty": -0.08,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.54,
+  "ty": -0.08,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.54,
+  "ty": -0.04,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.54,
+  "ty": -0.04,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.54,
+  "ty": 0.0,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.54,
+  "ty": 0.0,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.54,
+  "ty": 0.04,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.54,
+  "ty": 0.04,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30"
+  ],
+  "F2_right_feed_R2": [
+   "side+y",
+   "side+y_p30"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.58,
+  "ty": -0.08,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.58,
+  "ty": -0.08,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.58,
+  "ty": -0.04,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.58,
+  "ty": -0.04,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.58,
+  "ty": 0.0,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.58,
+  "ty": 0.0,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.58,
+  "ty": 0.04,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.58,
+  "ty": 0.04,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.62,
+  "ty": -0.08,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.62,
+  "ty": -0.08,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45"
+  ]
+ },
+ {
+  "tx": 0.62,
+  "ty": -0.04,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.62,
+  "ty": -0.04,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.62,
+  "ty": 0.0,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.62,
+  "ty": 0.0,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.62,
+  "ty": 0.04,
+  "dz": -0.03,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ },
+ {
+  "tx": 0.62,
+  "ty": 0.04,
+  "dz": 0.0,
+  "n_strokes_ok": 4,
+  "F1_left_feed_R1": [
+   "fwd+x",
+   "fwd+x_p30",
+   "fwd+x_p45",
+   "fwd+x_p60"
+  ],
+  "G1_right_recv_R1": [
+   "fwd+x",
+   "fwd+x_p30"
+  ],
+  "F2_right_feed_R2": [
+   "side+y"
+  ],
+  "G2_left_recv_R2": [
+   "side-y",
+   "side-y_p30",
+   "side-y_p45",
+   "side-y_p60"
+  ]
+ }
+]

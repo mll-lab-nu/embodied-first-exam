@@ -1,0 +1,69 @@
+# =====================================================================
+# BuzzWire3D task config (port of the old RoboTangle buzz_wire_3d family).
+#
+# Guide the metal loop along the entire wire without touching it, then
+# release the tool on the finish support and let it settle.
+#
+# Keys here OVERRIDE configs/defaults.yaml on conflict. The robot (YAM arms,
+# gains, gripper, cameras, 30 Hz control, 120 Hz physics) is unchanged.
+# =====================================================================
+env_names:
+  - BuzzWire3D-VeryEasy-v0
+  - BuzzWire3D-Easier-v0
+
+# ---- Objects ---------------------------------------------------------
+# The wand (loop + stem + wooden grip) is the only dynamic object. Mass =
+# the old generator's mass model (metal 7800 kg/m3 capsules + wood 650 kg/m3 grip) applied to the port's
+# enlarged grip (45 x 9.8 x 16 mm instead of 30.52 x 9.8 x 7 mm; tool deviation, see STATUS.md).
+# The wire rail, its two wood end blocks and the deck are fixed (kinematic).
+# Fixed instance (old i00): no randomization.
+objects:
+  wand:
+    mass: 0.012906269247007685
+    asset: null
+
+# ---- Grasp detection -------------------------------------------------
+# Both arms may hold the wand (the oracle carries it with the right arm and
+# finishes with the left arm).
+grasp_detect:
+  left_arm: [wand]
+  right_arm: [wand]
+
+# ---- Runtime kwargs --------------------------------------------------
+kwargs:
+  gripper_grasp_clamp_extra: 0.0075
+
+# ---- Success (old terminal_v4_traversal_then_deck_release thresholds) --
+success:
+  finish_position_tolerance_m: 0.005
+  finish_angle_tolerance_deg: 10.0
+  maximum_speed_m_s: 0.001
+  maximum_angular_speed_rad_s: 0.02
+  start_route_tolerance_m: 0.01
+  route_progress_tolerance_m: 0.003
+  stable_duration_s: 1.0
+
+# ---- Object-side friction (task knob) ---------------------------------
+friction:
+  wand_grip: 0.8
+  wand_metal: 1.0
+  deck: 0.5
+
+# ---- Physics device ---------------------------------------------------
+# CPU PhysX everywhere (deterministic path; one env). Long episodes: the
+# oracle needs about 2-3 minutes of sim time.
+sim:
+  episode_length_s: 300.0
+modes:
+  evaluation:
+    sim: {device: cpu, num_envs: 1}
+  replay:
+    sim: {device: cpu, num_envs: 1}
+
+variants:
+  BuzzWire3D-VeryEasy-v0:
+    kwargs:
+      tier: very_easy
+  BuzzWire3D-Easier-v0:
+    kwargs:
+      tier: easier

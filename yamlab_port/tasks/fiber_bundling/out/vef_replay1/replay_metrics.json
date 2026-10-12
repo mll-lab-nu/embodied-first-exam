@@ -1,0 +1,17 @@
+{
+ "task": "FiberBundling-VeryEasy-v0",
+ "actions": "/workspace/yamlab_port/runs/fiber_bundling/out/vef/actions.npy",
+ "steps_run": 2922,
+ "success": true,
+ "first_success_step": 2921,
+ "failed": false,
+ "failure_reason": null,
+ "wall_time_s": 46.341809034347534,
+ "final_state_hash": "59bfdb7193f1765a",
+ "state_hash_chain": "681f013a0b84964eb0a31ef23258088c59d8caf11c6329ca441d9493c77ca549",
+ "reference_steps": 2922,
+ "compared_steps": 2922,
+ "max_abs_state_diff": 0.0,
+ "bit_identical": true,
+ "first_diff_step": null
+}

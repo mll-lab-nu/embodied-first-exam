@@ -1,0 +1,51 @@
+{
+ "task": "CastKeyhole-VeryEasy-v0",
+ "steps": 2510,
+ "sim_time_s": 83.66666666666667,
+ "wall_time_s": 35.83278775215149,
+ "success": true,
+ "first_success_step": 2509,
+ "final_check": {
+  "reached": 1.0,
+  "all_target_inside": 1.0,
+  "remainder_on_system_side": 1.0,
+  "quiet": 1.0,
+  "failure": 0.0,
+  "silver_lin_speed": 0.00014860402734484524,
+  "silver_ang_speed": 0.00249945605173707,
+  "silver_xy_margin": 0.018566370010375977,
+  "silver_min_z": 0.0,
+  "silver_max_z": 0.019185900688171387,
+  "gold_separator_margin": 0.15238121151924133,
+  "lowest_point_rel_table": 0.0,
+  "left_grasping_gold": 0.0,
+  "right_grasping_silver": 0.0,
+  "consecutive_steps": 15.0,
+  "success": 1.0
+ },
+ "final_state_hash": "f36fea3ae676009c2baaa9107fa88684c5bbcb4a72582e5335e3dad1cbe1b739",
+ "cameras": false,
+ "vs_reference": {
+  "keyhole_gold": {
+   "max_abs": 0.0,
+   "bit_identical": true,
+   "first_diff_step": null
+  },
+  "keyhole_silver": {
+   "max_abs": 0.0,
+   "bit_identical": true,
+   "first_diff_step": null
+  },
+  "left_arm_q": {
+   "max_abs": 0.0,
+   "bit_identical": true,
+   "first_diff_step": null
+  },
+  "right_arm_q": {
+   "max_abs": 0.0,
+   "bit_identical": true,
+   "first_diff_step": null
+  }
+ },
+ "bit_identical": true
+}

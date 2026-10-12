@@ -1,0 +1,7 @@
+part,stl,printable,role,frame,x_mm,y_mm,z_mm,qw,qx,qy,qz,roll_x_deg,pitch_y_deg,yaw_z_deg
+keyhole_gold,keyhole_gold.stl,True,movable,table,-70.498,50.0,31.257,0.653281,0.270598,0.653281,0.270598,90.0,45.0,90.0
+keyhole_gold,keyhole_gold.stl,True,movable,aloha_left_base,398.502,69.0,31.257,0.653281,0.270598,0.653281,0.270598,90.0,45.0,90.0
+keyhole_gold,keyhole_gold.stl,True,movable,aloha_right_base,539.498,-69.0,31.257,-0.270598,-0.653281,0.270598,0.653281,90.0,45.0,-90.0
+keyhole_silver,keyhole_silver.stl,True,movable,table,70.504,49.996,31.261,0.653281,0.270598,0.653281,0.270598,90.0,45.0,90.0
+keyhole_silver,keyhole_silver.stl,True,movable,aloha_left_base,539.504,68.996,31.261,0.653281,0.270598,0.653281,0.270598,90.0,45.0,90.0
+keyhole_silver,keyhole_silver.stl,True,movable,aloha_right_base,398.496,-68.996,31.261,-0.270598,-0.653281,0.270598,0.653281,90.0,45.0,-90.0

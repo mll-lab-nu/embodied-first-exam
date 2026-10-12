@@ -1,0 +1,8 @@
+[{"name":"base"},
+ {"name":"c1e-4","c":1e-4},
+ {"name":"bodydamp2","lin":2.0,"ang":2.0},
+ {"name":"arm1e-6","arm":1e-6},
+ {"name":"c1e-4_ang5_lin1","c":1e-4,"ang":5.0,"lin":1.0},
+ {"name":"c1e-4_ang5_lin1_vi8_co1mm","c":1e-4,"ang":5.0,"lin":1.0,"vel_iters":8,"co":0.001},
+ {"name":"sleep1e-6","sleep":1e-6,"c":1e-4},
+ {"name":"iters64_c1e-4","iters":64,"c":1e-4}]

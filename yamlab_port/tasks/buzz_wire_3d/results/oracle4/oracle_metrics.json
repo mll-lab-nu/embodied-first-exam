@@ -1,0 +1,68 @@
+{
+ "name": "oracle",
+ "success": false,
+ "success_step": null,
+ "termination": null,
+ "steps": 976,
+ "sim_time_s": 32.53333333332032,
+ "wall_time_s": 522.6785113811493,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 14.501629780375394,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.0,
+ "route_length_m": 0.6096323526398697,
+ "final": {
+  "distance_to_finish_m": 0.3500005971003045,
+  "finish_angle_deg": 157.38017751139424,
+  "supported": true,
+  "released": true,
+  "quiet": true,
+  "lin_speed_m_s": 1.7732567357597873e-05,
+  "ang_speed_rad_s": 0.004812036640942097
+ },
+ "state_sha256": "094630f82b325ca3674610fc95532e163bd69be13a28223540288ef1c0a54461",
+ "phases": [
+  "init",
+  "1_right_pick_start",
+  "2_right_lift_tilt"
+ ],
+ "mode": "oracle",
+ "tier": "very_easy",
+ "status": "plan_error: left plan_grasp failed (0 IK branches): ",
+ "notes": {
+  "pick_approach_m": 0.03,
+  "pick_staging": null,
+  "arm_wire_gap_mm_by_phase": {
+   "1_right_pick_start": {
+    "left": {
+     "fingers": 166.1,
+     "any_link": 166.1
+    },
+    "right": {
+     "fingers": 29.6,
+     "any_link": 5.4
+    }
+   },
+   "2_right_lift_tilt": {
+    "left": {
+     "fingers": 166.1,
+     "any_link": 166.1
+    },
+    "right": {
+     "fingers": 27.7,
+     "any_link": 15.2
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": -90.0,
+  "translation": [
+   0.96,
+   0.055679,
+   0.7517
+  ]
+ }
+}

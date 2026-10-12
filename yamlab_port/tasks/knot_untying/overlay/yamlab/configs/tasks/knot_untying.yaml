@@ -1,0 +1,31 @@
+# =====================================================================
+# KnotUntying (port of RoboTangle knot_untying). Rope = capsule-chain articulation.
+# Instruction: "Untangle the rope and leave it still on the table with no projected
+# crossings or overlapping segments."
+# Keys here OVERRIDE configs/defaults.yaml on conflict.
+# =====================================================================
+env_names:
+  - KnotUntying-VeryEasy-v0
+  - KnotUntying-Easier-v0
+  - KnotUntying-Easy-v0
+  - KnotUntying-Medium-v0
+
+# No rigid objects; the rope is an articulation (scene asset "rope"), not an --asset.
+# YamRobot needs finger contact sensors; a sensor filter must match exactly one body per env,
+# so they filter the rope's first link (link_000) only. is_grasping() and the grasp clamp
+# therefore do not apply to the rope (the oracle limits its own gripper squeeze instead).
+grasp_detect:
+  left_arm: [rope]
+  right_arm: [rope]
+
+# ---- Goal check (old evaluate_state, terminal_v5) --------------------
+success:
+  max_speed_m_s: 0.001            # quiet: every rope point <= 1 mm/s
+  table_clearance_m: 0.003        # z_max(surface) <= table + 2r + 3 mm
+  penetration_tolerance_m: 0.001  # z_min(surface) >= table - 1 mm
+  stable_steps: 15                # 0.5 s at 30 Hz (old stable_duration_s)
+
+# CPU PhysX in every mode (deterministic path; one env).
+modes:
+  evaluation:
+    sim: {device: cpu, num_envs: 1}

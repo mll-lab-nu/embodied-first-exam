@@ -1,0 +1,13 @@
+{
+ "task": "FiberBundling-Easier-v0",
+ "states": "/data/out/fiber_bundling/eaf_dump/states_full.npz",
+ "frames": 1905,
+ "max_pose_readback_err_m": 7.152557373046875e-07,
+ "wall_s": 371.2628548145294,
+ "cameras": [
+  "top",
+  "left_wrist",
+  "right_wrist",
+  "ring"
+ ]
+}

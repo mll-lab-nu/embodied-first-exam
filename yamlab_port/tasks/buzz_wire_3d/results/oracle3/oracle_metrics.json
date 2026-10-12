@@ -1,0 +1,80 @@
+{
+ "name": "oracle",
+ "success": false,
+ "success_step": null,
+ "termination": null,
+ "steps": 1121,
+ "sim_time_s": 37.366666666651724,
+ "wall_time_s": 198.62474179267883,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 7.487439344717034,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.0,
+ "route_length_m": 0.6096323526398697,
+ "final": {
+  "distance_to_finish_m": 0.3441601133161138,
+  "finish_angle_deg": 152.2646551090099,
+  "supported": true,
+  "released": true,
+  "quiet": true,
+  "lin_speed_m_s": 1.911475555971265e-05,
+  "ang_speed_rad_s": 0.004982432816177607
+ },
+ "state_sha256": "834e702533b974a0120a36e50af8ddb96a438e68fedce8980d6c83e5775bcbce",
+ "phases": [
+  "init",
+  "1_right_pick_start"
+ ],
+ "mode": "oracle",
+ "tier": "very_easy",
+ "status": "plan_error: right track collision at 8/44: {'wire': 2.6, 'deck': 7.9, 'table': 67.6, 'arm': 100.0}",
+ "notes": {
+  "pick_approach_m": 0.03,
+  "unconverged": [
+   [
+    "1_right_pick_start",
+    "right",
+    0.14282757636777677
+   ],
+   [
+    "1_right_pick_start",
+    "right",
+    0.3708098612130849
+   ]
+  ],
+  "reseed": [
+   [
+    "1_right_pick_start",
+    "right",
+    0.14282757636777677
+   ],
+   [
+    "1_right_pick_start",
+    "right",
+    0.3708098612130849
+   ]
+  ],
+  "arm_wire_gap_mm_by_phase": {
+   "1_right_pick_start": {
+    "left": {
+     "fingers": 166.1,
+     "any_link": 166.1
+    },
+    "right": {
+     "fingers": 0.5,
+     "any_link": -0.2
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": -90.0,
+  "translation": [
+   0.96,
+   0.055679,
+   0.7517
+  ]
+ }
+}

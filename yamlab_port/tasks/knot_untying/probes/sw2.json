@@ -1,0 +1,8 @@
+[{"name":"arm1e-6","arm":1e-6},
+ {"name":"arm1e-5","arm":1e-5},
+ {"name":"arm1e-6_c1e-4","arm":1e-6,"c":1e-4},
+ {"name":"arm1e-6_ang2_lin0.5","arm":1e-6,"ang":2.0,"lin":0.5},
+ {"name":"arm1e-6_c1e-4_ang5_lin1","arm":1e-6,"c":1e-4,"ang":5.0,"lin":1.0},
+ {"name":"arm1e-5_c1e-4_ang5_lin1","arm":1e-5,"c":1e-4,"ang":5.0,"lin":1.0},
+ {"name":"arm1e-6_vi16","arm":1e-6,"vel_iters":16},
+ {"name":"arm1e-6_co0.5mm","arm":1e-6,"co":0.0005}]

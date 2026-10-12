@@ -1,0 +1,90 @@
+[
+ {
+  "n": 12,
+  "armature": 1e-06,
+  "damping": 0.0002,
+  "finite": true,
+  "tip_droop_mm": 6.57,
+  "theory_small_mm": 6.97,
+  "vmax_last_0p5s_mm_s": 0.724,
+  "droop_t1_mm": 7.2,
+  "droop_t2_mm": 6.6
+ },
+ {
+  "n": 12,
+  "armature": 1e-06,
+  "damping": 0.002,
+  "finite": true,
+  "tip_droop_mm": 7.54,
+  "theory_small_mm": 6.97,
+  "vmax_last_0p5s_mm_s": 0.0,
+  "droop_t1_mm": 7.54,
+  "droop_t2_mm": 7.54
+ },
+ {
+  "n": 12,
+  "armature": 1e-05,
+  "damping": 0.002,
+  "finite": true,
+  "tip_droop_mm": 6.56,
+  "theory_small_mm": 6.97,
+  "vmax_last_0p5s_mm_s": 0.0,
+  "droop_t1_mm": 6.56,
+  "droop_t2_mm": 6.56
+ },
+ {
+  "n": 12,
+  "armature": 1e-05,
+  "damping": 0.01,
+  "finite": true,
+  "tip_droop_mm": 6.94,
+  "theory_small_mm": 6.97,
+  "vmax_last_0p5s_mm_s": 0.0,
+  "droop_t1_mm": 6.94,
+  "droop_t2_mm": 6.94
+ },
+ {
+  "n": 20,
+  "armature": 1e-06,
+  "damping": 0.0002,
+  "finite": true,
+  "tip_droop_mm": 31.68,
+  "theory_small_mm": 57.62,
+  "vmax_last_0p5s_mm_s": 451.246,
+  "droop_t1_mm": 57.34,
+  "droop_t2_mm": 76.75
+ },
+ {
+  "n": 20,
+  "armature": 1e-06,
+  "damping": 0.002,
+  "finite": true,
+  "tip_droop_mm": 60.5,
+  "theory_small_mm": 57.62,
+  "vmax_last_0p5s_mm_s": 3.532,
+  "droop_t1_mm": 66.52,
+  "droop_t2_mm": 59.73
+ },
+ {
+  "n": 20,
+  "armature": 1e-05,
+  "damping": 0.002,
+  "finite": true,
+  "tip_droop_mm": 52.96,
+  "theory_small_mm": 57.62,
+  "vmax_last_0p5s_mm_s": 1.335,
+  "droop_t1_mm": 55.33,
+  "droop_t2_mm": 52.99
+ },
+ {
+  "n": 20,
+  "armature": 1e-05,
+  "damping": 0.01,
+  "finite": true,
+  "tip_droop_mm": 56.45,
+  "theory_small_mm": 57.62,
+  "vmax_last_0p5s_mm_s": 0.002,
+  "droop_t1_mm": 56.45,
+  "droop_t2_mm": 56.45
+ }
+]

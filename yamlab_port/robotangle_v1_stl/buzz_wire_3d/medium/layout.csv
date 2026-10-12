@@ -1,0 +1,11 @@
+part,stl,printable,role,frame,x_mm,y_mm,z_mm,qw,qx,qy,qz,roll_x_deg,pitch_y_deg,yaw_z_deg
+wire_base,wire_base.stl,True,fixed,table,55.679,-270.0,71.247,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+wire_base,wire_base.stl,True,fixed,panda_base,490.0,-270.0,71.247,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+wire_rail_REFERENCE_tube,wire_rail_REFERENCE_tube.stl,False,fixed,table,72.179,-294.268,237.629,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+wire_rail_REFERENCE_tube,wire_rail_REFERENCE_tube.stl,False,fixed,panda_base,506.5,-294.268,237.629,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+wire_wood_stop_0,wire_wood_stop_0.stl,True,fixed,table,-161.321,-389.0,148.497,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+wire_wood_stop_0,wire_wood_stop_0.stl,True,fixed,panda_base,273.0,-389.0,148.497,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+wire_wood_stop_1,wire_wood_stop_1.stl,True,fixed,table,305.679,-390.0,148.497,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+wire_wood_stop_1,wire_wood_stop_1.stl,True,fixed,panda_base,740.0,-390.0,148.497,1.0,0.0,0.0,0.0,0.0,0.0,0.0
+wand,wand.stl,True,movable,table,-141.519,-378.141,145.628,0.968437,0.005936,-0.023168,0.24811,0.0,-2.741,28.74
+wand,wand.stl,True,movable,panda_base,292.802,-378.141,145.628,0.968437,0.005936,-0.023168,0.24811,0.0,-2.741,28.74

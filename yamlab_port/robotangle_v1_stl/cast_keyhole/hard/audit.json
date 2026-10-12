@@ -1,0 +1,124 @@
+{
+ "base": "cast-keyhole-hard-i00",
+ "family": "cast_keyhole",
+ "tier": "hard",
+ "robot": "aloha",
+ "parts": [
+  {
+   "name": "keyhole_gold",
+   "printable": true,
+   "movable": true,
+   "source": "union of the simulator's collision solids (URDF collision geometry; primitives tessellated)",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 83735.35593666503,
+   "bodies": 1,
+   "extents_mm": [
+    9.0,
+    78.0,
+    207.0
+   ],
+   "faces": 1296,
+   "repair": null,
+   "thickness": {
+    "min_mm": 3.575915850954284,
+    "p1_mm": 3.585984092028915,
+    "p5_mm": 8.998999999999997
+   },
+   "joints": [],
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 83735.35593666503
+   }
+  },
+  {
+   "name": "keyhole_silver",
+   "printable": true,
+   "movable": true,
+   "source": "union of the simulator's collision solids (URDF collision geometry; primitives tessellated)",
+   "watertight": true,
+   "winding_consistent": true,
+   "volume_mm3": 91470.66989513591,
+   "bodies": 1,
+   "extents_mm": [
+    78.0,
+    9.0,
+    207.0
+   ],
+   "faces": 596,
+   "repair": null,
+   "thickness": {
+    "min_mm": 8.998999999999997,
+    "p1_mm": 8.998999999999997,
+    "p5_mm": 8.998999999999999
+   },
+   "joints": [],
+   "sim_collision_deviation": null,
+   "stl_reload": {
+    "watertight": true,
+    "winding_consistent": true,
+    "volume_mm3": 91470.66989513591
+   }
+  }
+ ],
+ "start_gaps": [
+  {
+   "a": "keyhole_gold",
+   "b": "keyhole_silver",
+   "min_gap_mm": 3.8923042853532674
+  }
+ ],
+ "non_printable": [],
+ "generator_clearances": {
+  "geometry_report.json": {
+   "minimum_initial_surface_clearance_m": 0.0038999999999999755
+  }
+ },
+ "notes": [],
+ "start_objects": {
+  "keyhole_gold": {
+   "position_m": [
+    -0.20007,
+    0.04953,
+    0.95044
+   ],
+   "orientation_wxyz": [
+    0.653281,
+    0.270598,
+    0.653281,
+    0.270598
+   ],
+   "fixed": false
+  },
+  "keyhole_silver": {
+   "position_m": [
+    -0.06245,
+    0.04955,
+    0.95135
+   ],
+   "orientation_wxyz": [
+    0.653281,
+    0.270598,
+    0.653281,
+    0.270598
+   ],
+   "fixed": false
+  },
+  "goal_region": {
+   "position_m": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "fixed": true
+  }
+ }
+}

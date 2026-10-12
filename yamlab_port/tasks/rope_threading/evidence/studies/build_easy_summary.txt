@@ -1,0 +1,2 @@
+INIT_POS_ERR 2.3801349402496896e-07
+BUILD {"tier": "easy", "n_links": 110, "link_length_m": 0.009999999318817723, "settled_drift_m": 0.00030255489349362286, "settled_z_range": [0.7539974451065063, 0.754000723361969], "max_joint_gap_m": 4.2269624770727885e-08, "start_crossings": []}

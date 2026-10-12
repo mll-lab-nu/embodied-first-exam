@@ -1,0 +1,184 @@
+{
+ "tier": "very_easy",
+ "n_links": 99,
+ "link_length_m": 0.009988864322920813,
+ "rope_length_m": 0.9888975679691605,
+ "radius_m": 0.004,
+ "mass_per_link_kg": 0.0003263618048557693,
+ "bend_stiffness_Nm_per_rad": 0.0010064303775174056,
+ "twist_stiffness_Nm_per_rad": 0.0007741772134749275,
+ "rope_params": {
+  "friction": 0.3,
+  "joint_damping": 0.001,
+  "armature": 1e-06,
+  "linear_damping": 0.0,
+  "angular_damping": 0.0,
+  "solver_position_iterations": 32,
+  "solver_velocity_iterations": 4,
+  "contact_offset": 0.002,
+  "rest_offset": 0.0,
+  "max_depenetration_velocity": 0.5
+ },
+ "relayout": {
+  "yaw_deg": -90.0,
+  "center_xy": [
+   0.56,
+   0.0
+  ]
+ },
+ "relayout_matrix_xy": [
+  [
+   6.123233995736766e-17,
+   1.0
+  ],
+  [
+   -1.0,
+   6.123233995736766e-17
+  ]
+ ],
+ "relayout_translation_xy_m": [
+  0.6590025,
+  0.13567899999999997
+ ],
+ "settled_over_under": [
+  "O",
+  "U"
+ ],
+ "settled_crossings": 1,
+ "expected_over_under": [
+  "O",
+  "U"
+ ],
+ "order_matches": true,
+ "settle_s": 6.0,
+ "settled_crossing_height_gaps_mm": [
+  8.0
+ ],
+ "settled_crossing_xy": [
+  [
+   0.525745241656425,
+   0.007373565157547161
+  ]
+ ],
+ "settled_vmax_m_s": Infinity,
+ "settled_min_nonlocal_m": 0.0,
+ "settle_log": [
+  {
+   "t": 0.0,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 0.5,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 1.0,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 1.5,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 2.0,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 2.5,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 3.0,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 3.5,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 4.0,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 4.5,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 5.0,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 5.5,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  },
+  {
+   "t": 6.0,
+   "vmax": Infinity,
+   "n_cr": 1,
+   "ou": [
+    "O",
+    "U"
+   ]
+  }
+ ]
+}

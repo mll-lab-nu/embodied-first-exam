@@ -1,0 +1,220 @@
+{
+ "name": "oracle",
+ "success": false,
+ "success_step": null,
+ "termination": "touch",
+ "steps": 6540,
+ "sim_time_s": 217.99999999991283,
+ "wall_time_s": 1056.4626560211182,
+ "touched": true,
+ "first_touch_step": 6539,
+ "min_metal_wire_gap_mm": 0.018577402451872484,
+ "max_rail_force_n": 0.060786474496126175,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.615384084645828,
+ "route_length_m": 0.6457751658709897,
+ "final": {
+  "distance_to_finish_m": 0.040388127644655124,
+  "finish_angle_deg": 15.88732971387917,
+  "supported": false,
+  "released": false,
+  "quiet": false,
+  "lin_speed_m_s": 0.0055678533390164375,
+  "ang_speed_rad_s": 0.6358340978622437
+ },
+ "state_sha256": "f6f7ec6dedac88649a3f9a456aeb4d4e0f28e8897f164856031536273ce78ea4",
+ "phases": [
+  "init",
+  "1_left_pick_start",
+  "2_left_lift_tilt",
+  "3_right_ring_handover",
+  "3b_left_release",
+  "4_right_carry",
+  "5_left_pen_handover",
+  "5b_right_release",
+  "6_left_turn",
+  "7_right_side_pinch",
+  "7b_left_release",
+  "8_right_turn_aim",
+  "8b_right_release_drop"
+ ],
+ "mode": "oracle",
+ "tier": "easier",
+ "status": "completed",
+ "notes": {
+  "mirror": false,
+  "pick_approach_m": 0.04,
+  "pick_staging": null,
+  "pick_in_hand_error": {
+   "pos_mm": 0.12775042206892,
+   "rot_deg": 0.12850264497725108
+  },
+  "ring_approach_m": 0.04,
+  "ring_staging": null,
+  "handover1_pose": null,
+  "carry_worst_clear_mm": {
+   "wire": 4.398384660461092,
+   "deck": 3.8605135523323337,
+   "stops": 38.770230492607375,
+   "frame": 69.3248867427656,
+   "table": 67.62488674276557,
+   "arm": 100.0
+  },
+  "relay_pen_approach_m": 0.04,
+  "relay_pen_staging": null,
+  "relay": {
+   "hz_mm": 56.0,
+   "h_mid_deg": 140.0,
+   "side_roll_xc": [
+    90.0,
+    0.04
+   ]
+  },
+  "reseed": [
+   [
+    "5b_right_release",
+    "right",
+    0.05385055931587346
+   ],
+   [
+    "8b_right_release_drop",
+    "right",
+    1.9760910636206626
+   ]
+  ],
+  "relay_side_approach_m": 0.04,
+  "relay_side_staging": null,
+  "release_height_mm": 52.403536605834965,
+  "oracle_wall_s": 1055.4399666786194,
+  "arm_wire_gap_mm_by_phase": {
+   "1_left_pick_start": {
+    "left": {
+     "fingers": 32.8,
+     "any_link": 5.4
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "2_left_lift_tilt": {
+    "left": {
+     "fingers": 32.9,
+     "any_link": 6.1
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "3_right_ring_handover": {
+    "left": {
+     "fingers": 31.5,
+     "any_link": 23.0
+    },
+    "right": {
+     "fingers": 11.2,
+     "any_link": 11.2
+    }
+   },
+   "3b_left_release": {
+    "left": {
+     "fingers": 34.3,
+     "any_link": 24.1
+    },
+    "right": {
+     "fingers": 10.4,
+     "any_link": 10.4
+    }
+   },
+   "4_right_carry": {
+    "left": {
+     "fingers": 263.7,
+     "any_link": 263.7
+    },
+    "right": {
+     "fingers": 4.0,
+     "any_link": 4.0
+    }
+   },
+   "5_left_pen_handover": {
+    "left": {
+     "fingers": 63.2,
+     "any_link": 63.2
+    },
+    "right": {
+     "fingers": 10.4,
+     "any_link": 10.4
+    }
+   },
+   "5b_right_release": {
+    "left": {
+     "fingers": 60.6,
+     "any_link": 60.6
+    },
+    "right": {
+     "fingers": 12.0,
+     "any_link": 12.0
+    }
+   },
+   "6_left_turn": {
+    "left": {
+     "fingers": 52.9,
+     "any_link": 52.9
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "7_right_side_pinch": {
+    "left": {
+     "fingers": 53.1,
+     "any_link": 53.1
+    },
+    "right": {
+     "fingers": 24.4,
+     "any_link": 13.3
+    }
+   },
+   "7b_left_release": {
+    "left": {
+     "fingers": 59.7,
+     "any_link": 57.7
+    },
+    "right": {
+     "fingers": 24.5,
+     "any_link": 19.5
+    }
+   },
+   "8_right_turn_aim": {
+    "left": {
+     "fingers": 263.7,
+     "any_link": 263.7
+    },
+    "right": {
+     "fingers": 24.3,
+     "any_link": 19.7
+    }
+   },
+   "8b_right_release_drop": {
+    "left": {
+     "fingers": 263.7,
+     "any_link": 263.7
+    },
+    "right": {
+     "fingers": 25.8,
+     "any_link": 25.8
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": 0.0,
+  "translation": [
+   0.5144,
+   0.27,
+   0.7517
+  ]
+ }
+}

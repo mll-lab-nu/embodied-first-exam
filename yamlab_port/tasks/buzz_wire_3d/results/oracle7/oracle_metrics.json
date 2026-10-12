@@ -1,0 +1,115 @@
+{
+ "name": "oracle",
+ "success": false,
+ "success_step": null,
+ "termination": null,
+ "steps": 3129,
+ "sim_time_s": 104.29999999995829,
+ "wall_time_s": 369.04981565475464,
+ "touched": false,
+ "first_touch_step": null,
+ "min_metal_wire_gap_mm": 3.8157566956953892,
+ "max_rail_force_n": 0.0,
+ "traversal_complete": false,
+ "max_route_cursor_m": 0.5629102167330131,
+ "route_length_m": 0.6096323526398696,
+ "final": {
+  "distance_to_finish_m": 0.05411795033609753,
+  "finish_angle_deg": 49.0260140177262,
+  "supported": false,
+  "released": false,
+  "quiet": false,
+  "lin_speed_m_s": 0.009539533406496048,
+  "ang_speed_rad_s": 1.813806176185608
+ },
+ "state_sha256": "fe4b592fdb977878000038f3eeaa7e401756ba87f7a42f39097a52c60ddf8140",
+ "phases": [
+  "init",
+  "1_left_pick_start",
+  "2_left_lift_tilt",
+  "3_right_ring_handover",
+  "3b_left_release",
+  "4_right_carry"
+ ],
+ "mode": "oracle",
+ "tier": "very_easy",
+ "status": "plan_error: G_down handover: left plan_grasp failed (1 IK branches): follow: left track collision at 0/38: {'wire': 36.1, 'deck': -5.7, 'frame': 69.3, 'table': 67.6, 'arm': 100.0}",
+ "notes": {
+  "pick_approach_m": 0.04,
+  "pick_staging": null,
+  "pick_in_hand_error": {
+   "pos_mm": 0.7116335296175617,
+   "rot_deg": 0.45362867403971596
+  },
+  "ring_approach_m": 0.04,
+  "ring_staging": null,
+  "carry_worst_clear_mm": {
+   "wire": 10.100566913379094,
+   "deck": 3.8611178731952407,
+   "stops": 38.68326119050488,
+   "frame": 69.32488674235704,
+   "table": 67.624886742357,
+   "arm": 100.0
+  },
+  "arm_wire_gap_mm_by_phase": {
+   "1_left_pick_start": {
+    "left": {
+     "fingers": 36.0,
+     "any_link": 7.6
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "2_left_lift_tilt": {
+    "left": {
+     "fingers": 40.3,
+     "any_link": 8.2
+    },
+    "right": {
+     "fingers": 198.6,
+     "any_link": 198.6
+    }
+   },
+   "3_right_ring_handover": {
+    "left": {
+     "fingers": 44.1,
+     "any_link": 29.1
+    },
+    "right": {
+     "fingers": 12.2,
+     "any_link": 12.2
+    }
+   },
+   "3b_left_release": {
+    "left": {
+     "fingers": 33.6,
+     "any_link": 30.7
+    },
+    "right": {
+     "fingers": 10.4,
+     "any_link": 10.4
+    }
+   },
+   "4_right_carry": {
+    "left": {
+     "fingers": 269.4,
+     "any_link": 269.4
+    },
+    "right": {
+     "fingers": 10.3,
+     "any_link": 10.3
+    }
+   }
+  }
+ },
+ "layout": {
+  "yaw_deg": 0.0,
+  "translation": [
+   0.5144,
+   0.27,
+   0.7517
+  ]
+ }
+}

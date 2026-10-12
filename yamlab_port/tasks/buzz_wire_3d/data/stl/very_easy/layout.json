@@ -1,0 +1,299 @@
+{
+ "source": {
+  "task_base": "buzz-wire-3d-very-easy-i00",
+  "family": "buzz_wire_3d",
+  "tier": "very_easy",
+  "instance_state_sha": "ad85fa3814d1d7b2"
+ },
+ "units": "millimetres; quaternions w,x,y,z; euler_xyz_deg = extrinsic rotations about the reference frame's X, then Y, then Z",
+ "frames": {
+  "table": {
+   "definition": "origin at the centre of the tabletop surface; +Z up; +X toward the right-hand ALOHA arm (simulator world X); +Y away from the ALOHA bases (simulator world Y)",
+   "world_position_mm": [
+    -135.679,
+    0.0,
+    919.643
+   ],
+   "tabletop_size_mm": [
+    1500.0,
+    1400.0
+   ]
+  },
+  "robot_bases": {
+   "panda_base": {
+    "table_position_mm": [
+     -434.321,
+     0.0,
+     0.0
+    ],
+    "table_quaternion_wxyz": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw_deg": 0.0
+   }
+  },
+  "part_frame": "each STL's origin is the centre of its axis-aligned bounding box in the part's own (simulator body) axes; the pose below places that origin and those axes"
+ },
+ "robot": {
+  "type": "panda_robotiq",
+  "description": "Franka Emika Panda (7-DoF) with a Robotiq 2F-85 gripper; base frame = link0 mounting face (world_tabletop_v1.yaml robot_mount.pos)",
+  "riser_mm": 0.0
+ },
+ "parts": [
+  {
+   "name": "wire_base",
+   "stl": "wire_base.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      55.679,
+      -270.0,
+      71.247
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      490.0,
+      -270.0,
+      71.247
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": -0.003,
+   "joints": null
+  },
+  {
+   "name": "wire_rail_REFERENCE_tube",
+   "stl": "wire_rail_REFERENCE_tube.stl",
+   "printable": false,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      55.679,
+      -305.0,
+      227.231
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      490.0,
+      -305.0,
+      227.231
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 152.997,
+   "joints": null
+  },
+  {
+   "name": "wire_wood_stop_0",
+   "stl": "wire_wood_stop_0.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      -119.321,
+      -305.0,
+      148.497
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      315.0,
+      -305.0,
+      148.497
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 142.497,
+   "joints": null
+  },
+  {
+   "name": "wire_wood_stop_1",
+   "stl": "wire_wood_stop_1.stl",
+   "printable": true,
+   "role": "fixed",
+   "pose": {
+    "table": {
+     "position_mm": [
+      230.679,
+      -305.0,
+      148.497
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      665.0,
+      -305.0,
+      148.497
+     ],
+     "quaternion_wxyz": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 142.497,
+   "joints": null
+  },
+  {
+   "name": "wand",
+   "stl": "wand.stl",
+   "printable": true,
+   "role": "movable",
+   "pose": {
+    "table": {
+     "position_mm": [
+      -97.176,
+      -300.571,
+      145.628
+     ],
+     "quaternion_wxyz": [
+      0.994849,
+      0.002357,
+      -0.0238,
+      0.098509
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      -2.741,
+      11.31
+     ]
+    },
+    "panda_base": {
+     "position_mm": [
+      337.146,
+      -300.571,
+      145.628
+     ],
+     "quaternion_wxyz": [
+      0.994849,
+      0.002357,
+      -0.0238,
+      0.098509
+     ],
+     "euler_xyz_deg": [
+      0.0,
+      -2.741,
+      11.31
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 142.551,
+   "joints": null
+  }
+ ],
+ "markers": [],
+ "non_printable": [
+  {
+   "name": "wire_rail",
+   "kind": "bent metal wire",
+   "length_mm": 609.6575865348211,
+   "diameter_mm": 2.9399999999999995,
+   "min_bend_radius_mm": 34.68561604117971,
+   "loop_inner_radius_mm": 14.14,
+   "loop_tube_diameter_mm": 2.5199999999999996,
+   "nominal_radial_clearance_mm": 12.67,
+   "sections": [
+    "start_post",
+    "entry_elbow",
+    "straight_span",
+    "exit_elbow",
+    "finish_post"
+   ],
+   "centreline_csv": "buzz_wire_centerline.csv",
+   "reference_tube_stl": "wire_rail_REFERENCE_tube.stl"
+  }
+ ]
+}

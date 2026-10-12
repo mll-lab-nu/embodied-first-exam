@@ -1,0 +1,8 @@
+[{"name":"current","arm":1e-6,"c":1e-4},
+ {"name":"bodydamp5","arm":1e-6,"c":1e-4,"lin":5.0,"ang":5.0},
+ {"name":"arm1e-5","arm":1e-5,"c":1e-4},
+ {"name":"vi1","arm":1e-6,"c":1e-4,"vel_iters":1},
+ {"name":"co1mm","arm":1e-6,"c":1e-4,"co":0.001},
+ {"name":"mu0.6","arm":1e-6,"c":1e-4,"friction":0.6},
+ {"name":"c1e-3_bd2","arm":1e-6,"c":1e-3,"lin":2.0,"ang":2.0},
+ {"name":"iters64","arm":1e-6,"c":1e-4,"iters":64}]

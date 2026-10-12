@@ -1,0 +1,204 @@
+{
+ "source": {
+  "task_base": "cast-keyhole-hard-i00",
+  "family": "cast_keyhole",
+  "tier": "hard",
+  "instance_state_sha": "5255637da111436b"
+ },
+ "units": "millimetres; quaternions w,x,y,z; euler_xyz_deg = extrinsic rotations about the reference frame's X, then Y, then Z",
+ "frames": {
+  "table": {
+   "definition": "origin at the centre of the tabletop surface; +Z up; +X toward the right-hand ALOHA arm (simulator world X); +Y away from the ALOHA bases (simulator world Y)",
+   "world_position_mm": [
+    -135.679,
+    0.0,
+    919.643
+   ],
+   "tabletop_size_mm": [
+    1500.0,
+    1400.0
+   ]
+  },
+  "robot_bases": {
+   "aloha_left_base": {
+    "table_position_mm": [
+     -469.0,
+     -19.0,
+     0.0
+    ],
+    "table_quaternion_wxyz": [
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "yaw_deg": 0.0
+   },
+   "aloha_right_base": {
+    "table_position_mm": [
+     469.0,
+     -19.0,
+     0.0
+    ],
+    "table_quaternion_wxyz": [
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ],
+    "yaw_deg": 180.0
+   }
+  },
+  "part_frame": "each STL's origin is the centre of its axis-aligned bounding box in the part's own (simulator body) axes; the pose below places that origin and those axes"
+ },
+ "robot": {
+  "type": "aloha",
+  "description": "ALOHA 2 bimanual (two ViperX-300s 6-DoF arms with ALOHA parallel grippers), from MuJoCo Menagerie aloha.xml; base frames = left/base_link and right/base_link mounting faces",
+  "riser_mm": 0.0
+ },
+ "parts": [
+  {
+   "name": "keyhole_gold",
+   "stl": "keyhole_gold.stl",
+   "printable": true,
+   "role": "movable",
+   "pose": {
+    "table": {
+     "position_mm": [
+      -70.496,
+      49.995,
+      31.262
+     ],
+     "quaternion_wxyz": [
+      0.653281,
+      0.270598,
+      0.653281,
+      0.270598
+     ],
+     "euler_xyz_deg": [
+      90.0,
+      45.0,
+      90.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      398.504,
+      68.995,
+      31.262
+     ],
+     "quaternion_wxyz": [
+      0.653281,
+      0.270598,
+      0.653281,
+      0.270598
+     ],
+     "euler_xyz_deg": [
+      90.0,
+      45.0,
+      90.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      539.496,
+      -68.995,
+      31.262
+     ],
+     "quaternion_wxyz": [
+      -0.270598,
+      -0.653281,
+      0.270598,
+      0.653281
+     ],
+     "euler_xyz_deg": [
+      90.0,
+      45.0,
+      -90.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 0.503,
+   "joints": null
+  },
+  {
+   "name": "keyhole_silver",
+   "stl": "keyhole_silver.stl",
+   "printable": true,
+   "role": "movable",
+   "pose": {
+    "table": {
+     "position_mm": [
+      70.505,
+      50.0,
+      31.257
+     ],
+     "quaternion_wxyz": [
+      0.653281,
+      0.270598,
+      0.653281,
+      0.270598
+     ],
+     "euler_xyz_deg": [
+      90.0,
+      45.0,
+      90.0
+     ]
+    },
+    "aloha_left_base": {
+     "position_mm": [
+      539.505,
+      69.0,
+      31.257
+     ],
+     "quaternion_wxyz": [
+      0.653281,
+      0.270598,
+      0.653281,
+      0.270598
+     ],
+     "euler_xyz_deg": [
+      90.0,
+      45.0,
+      90.0
+     ]
+    },
+    "aloha_right_base": {
+     "position_mm": [
+      398.495,
+      -69.0,
+      31.257
+     ],
+     "quaternion_wxyz": [
+      -0.270598,
+      -0.653281,
+      0.270598,
+      0.653281
+     ],
+     "euler_xyz_deg": [
+      90.0,
+      45.0,
+      -90.0
+     ]
+    }
+   },
+   "bottom_z_above_table_mm": 0.498,
+   "joints": null
+  }
+ ],
+ "markers": [
+  {
+   "name": "goal_region",
+   "kind": "flat goal outline on the tabletop (visual only, no collision)",
+   "table_xy_min_mm": [
+    -128.3,
+    114.8
+   ],
+   "table_xy_max_mm": [
+    128.3,
+    371.3
+   ]
+  }
+ ],
+ "non_printable": []
+}
