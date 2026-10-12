@@ -8,9 +8,14 @@ permissions:
 concurrency:
   group: static-checks-${{ github.ref }}
   cancel-in-progress: true
+# Runner (2026-10-12): the two self-hosted runners with the label `rcb-ci` (containers on the lab workstation, no host
+# mounts; the official actions-runner image plus xz-utils, file, rsync). The repository is private and GitHub-hosted
+# minutes ran out for the month (jobs were refused: "recent account payments have failed or your spending limit needs
+# to be increased"). To go back to GitHub's runners, put `ubuntu-latest` in both `runs-on` lines. Do not give these
+# runners the `docker` label: validate-task.yml targets [self-hosted, docker] and runs Harbor trials.
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rcb-ci]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -23,7 +28,7 @@ jobs:
   # simulator, no image, no GPU): ci_checks/check-unit-tests.sh, second tier. A job of its own, so that the static
   # checks above do not wait for it.
   unit-tests:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rcb-ci]
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
