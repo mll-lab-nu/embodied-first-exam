@@ -13,7 +13,6 @@
 [defaults]
 upstream = "CHIGUI0/roboolympics 596d551a862c4236e74aea2beb25654b9783f9a7 (branch upstream-export, core 0.2.13)"
 image = "ghcr.io/mll-lab-nu/eai-olympiad:0.2.0"
-agent_timeout_sec = 7200        # uniform in the benchmark: a match plus its breaks takes 10-60 min of wall time at S = 10
 slowdown = 10                   # RoboOlympics' official slowdown (owner, 2026-10-08; PROTOCOL §4b exception)
 instance_tag = "00"
 

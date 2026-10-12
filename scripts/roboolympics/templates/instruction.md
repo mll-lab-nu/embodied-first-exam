@@ -15,7 +15,7 @@ in `/app/output/`; there is nothing else to hand in: the simulator records the m
   the clock keeps running, nothing moves and nothing scores, and play resumes by itself at the end of the break. Use it
   to look at what happened and fix your program. Send a `ready` row to resume earlier (put your review, why you won or
   lost the {{unit}} and what you change, in `submit`'s `note`). Commands planned for steps inside a break are dropped.
-- You have {{agent_timeout_sec}} s in all. **If your session ends before the match is over, you lose** (success 0); so
+- **If your session ends before the match is over, you lose** (success 0), and the time limit (`## Time limit`) ends it; so
   start the match well before your time runs out and stay until it is over (`meta["done"]`).
 - No reset: one match is the whole episode.
 

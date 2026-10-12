@@ -32,12 +32,20 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   the recording-only usage gateway (PROTOCOL D11)?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
 - Names end in their mode, `-privileged` / `-standard` / `-standard-realtime`; README in the standard layout; no `results/` in task directories.
+- Time cutoff (PROTOCOL §2.12): is the benchmark's number in `scripts/task_cutoffs.toml`, under the benchmark's label of
+  `scripts/task_conventions.py` `BENCHMARKS` (a new benchmark: the label first, in its shared-files pull request; the
+  row with its tasks) (3600 s unless the pull
+  request justifies more, never above the cap without an owner decision; an exception for a family or a task is an owner decision too), and does `instruction.md` end with the
+  rendered `## Time limit` section and state the limit nowhere else? Does the benchmark's own text say what the cutoff costs
+  here (simulator start-up, what the service's `time_left_s` counts from, a service that ends the episode itself)? A
+  pull request that changes a cutoff: an owner decision, a `[[history]]` entry, `scripts/task_cutoffs.py apply` run
+  (the task directories, `docs/CUTOFFS.md` and `tasks/dataset.toml` changed with the table), nothing else changed.
 - Compute resources (PROTOCOL §2.9): are the minimums measured (what does `measured` cite?) rather than copied from the
   `[environment]` caps? Does `gpu_class` match the simulator (Isaac Sim / Omniverse: `rtx`)? Would the oracle run on a
   machine with exactly these values?
 - Resource limits (PROTOCOL §2.10): would an honest agent stay inside them (one simulator at the task's defaults on the
   largest card it runs on, the tooling's own replay checks, videos it is told to write)? Is the scope `trial` in
-  privileged mode and `agent` in standard modes, and does `instruction.md` end with the rendered paragraph? Does
+  privileged mode and `agent` in standard modes, and does `instruction.md` have the rendered paragraph just before the closing `## Time limit`? Does
   `measured` cite real peaks (and say where there are none)? Do the caps leave the margin of §2.10 above the limits?
 
 ## Human review (oracle `partial` or `none`)

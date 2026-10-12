@@ -65,8 +65,9 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - Tool frame `left_tcp` / `right_tcp` (`s.ee_pose(arm)`, `move_ee`, `ik_step`): the midpoint of the gripper's two
   fingertips, 0.1426 m from `link_6` along `link_6`'s +z axis (the approach direction), with `link_6`'s orientation. At the
   home pose (all joints 0, grippers open) both tool frames point forward (+x) at z = 0.924.
-- Control runs at 30 Hz (sim dt 1/120 s, decimation 4). Your wall-clock budget is 90 min (5400 s); there is no step budget
-  (a runaway guard ends an episode after 100,000 control steps, `end_reason` `step_guard`: the most a trajectory may hold).
+- Control runs at 30 Hz (sim dt 1/120 s, decimation 4). There is no step budget: the time limit (`## Time limit`) is your only
+  budget (a runaway guard ends an episode after 100,000 control steps, `end_reason` `step_guard`: the most a trajectory
+  may hold).
 - One `Session` per process (Isaac Sim launches once, then the scene builds: ~1.5-3 min; the very first start in this
   container also compiles Isaac's shaders, ~10 min on a busy host). Physics is PhysX on the
   **CPU**; rendering (on the GPU) happens only when a frame is asked for and never moves anything. Stepping runs at about

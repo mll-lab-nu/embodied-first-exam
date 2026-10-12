@@ -8,7 +8,6 @@
 | Task type / mode | trajectory / privileged (its standard-mode twin: `{{task_dir}}-standard`) |
 | Base image | `{{image}}` |
 | Physics vs upstream | {{physics_note}} |
-| Agent budget | {{agent_timeout}} s, {{cpus}} CPUs; GPU optional (see below) |
 
 ## Difficulty
 The pass mark is a **threshold on the whole episode's return** (`>= {{success_bar}}` over {{max_steps}}
