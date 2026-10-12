@@ -61,7 +61,7 @@ apart from the tasks with a verified solution (§7 Open 4):
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
 | privileged | the simulator, its full state (`get_state`/`set_state`) and the goal check | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
-| standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | none (optional capability, reported separately) | the recorded episode, replayed in a fresh simulator |
+| standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | 10 (owner, 2026-10-11; PROTOCOL §4.5); `RCB_RESET_BUDGET=0`: none | the last episode, replayed in a fresh simulator |
 
 World-frame information (PROTOCOL D7): privileged mode gives KinDER's world state; standard mode gives none -- odometry
 starts at the robot's start pose, and the goal is named by what the cameras see.
@@ -79,13 +79,15 @@ starts at the robot's start pose, and the goal is named by what the cameras see.
 harbor run -p tasks/kinder-scoop-pour-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
-Agent, provider and effort settings: docs/RUNNING.md. `RCB_RESET_BUDGET=50 harbor run ...` turns on the optional reset capability, whose results are
-reported separately. Build the image: `docker build -f images/kinder/Dockerfile -t
+Agent, provider and effort settings: docs/RUNNING.md. Standard tasks grant 10 resets by default (owner, 2026-10-11:
+the 1000 control steps bound each episode, so without a reset the practice and the graded attempt share them; all 4
+GPT-6 Astra standard runs of 2026-10-03/04 ended with the steps spent and most of the hour unused);
+`RCB_RESET_BUDGET=0 harbor run ...` runs the single-episode configuration, whose results are reported separately. Build the image: `docker build -f images/kinder/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
 
 ## Results
 
 Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (verdict, cost, what happened),
 `reward.json`, the replay's last frame and videos are published on the results site, keyed by run id. Standard-mode
-runs with the optional reset capability (50 resets) are reported separately from the standard configuration (no
-reset, PROTOCOL D1), and runs recorded before protocol v1.0 are marked as such.
+runs with 10 resets (the default from 2026-10-11), with 50 (the optional capability before it) and with none are
+reported separately (PROTOCOL D1), and runs recorded before protocol v1.0 are marked as such.

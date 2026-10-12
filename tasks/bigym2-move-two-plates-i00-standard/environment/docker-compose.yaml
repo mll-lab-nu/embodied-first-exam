@@ -21,11 +21,11 @@ services:
     environment:
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: "Take both plates out of the left dish rack and gently stand them in the right dish rack."
-      RCB_EPISODE: "one episode, no reset: it succeeds when this has held for 1 s (50 control steps): each plate stands in a slot of the right-hand rack: its centre within 0.05 m of one of that rack's six slot points, standing on edge with its face toward your right (its axis within 20 degrees of the robot's right at the start, as the plates stand now; a plate turned around does not count), touching the right-hand rack, not touching the table, held by neither gripper; both plates at once (held = a finger of the gripper touching the object); a plate touching the floor ends the episode as a failure; a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 2300 control steps"
+      RCB_EPISODE: "10 resets, the last episode graded: an episode succeeds when this has held for 1 s (50 control steps): each plate stands in a slot of the right-hand rack: its centre within 0.05 m of one of that rack's six slot points, standing on edge with its face toward your right (its axis within 20 degrees of the robot's right at the start, as the plates stand now; a plate turned around does not count), touching the right-hand rack, not touching the table, held by neither gripper; both plates at once (held = a finger of the gripper touching the object); a plate touching the floor ends the episode as a failure; a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator error, or after 2300 control steps"
       RCB_WALL_CLOCK_S: "3600"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode (the protocol's default)
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-10}"        # BiGym2 standard: 10 resets (docs/benchmarks/bigym2.md); 0: one episode
       RCB_IMAGE_HW: "${RCB_IMAGE_HW:-84}"               # the side of each onboard camera's square image, pixels (84: upstream's)
       RCB_SESSION_LOG: ""
       NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility

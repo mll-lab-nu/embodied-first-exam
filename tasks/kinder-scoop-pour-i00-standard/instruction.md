@@ -5,12 +5,14 @@ arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulato
 and you reach it only through a client. **Task:** move all 30 small dark-red cubes from the yellow bin into the green bin; a scoop is in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
 
 ## Rules (real-robot rules)
-- **One episode; a reset only where `spec()` grants one.** The episode starts when the service comes up. It ends
-  when the task succeeds, after 1000 control steps (100 s of robot time), when your time is up, or on a simulator
-  error; nothing else ends it.
-  `spec()["budget"]["reset"]` is 0 in the standard configuration. (A run that grants N resets says so there; then
-  `r.reset()` starts a new episode from the same starting state (abandoning the running one, or after one has
-  ended), only the last episode is graded, and a success ends the run.)
+- **Episodes and resets.** The episode starts when the service comes up. It ends when the task succeeds, after
+  1000 control steps (100 s of robot time), when your time is up, or on a simulator error; nothing else ends it.
+  You have **10 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0, there is no
+  reset and the one episode is the run). `r.reset()` starts a new episode from the same starting state, with its own
+  1000 control steps, either abandoning the running episode or after one has ended; it returns the start's
+  frames. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives `resets_left`) until you reset.
+  **Only the last episode is graded**: a success ends the run at once, and when your time is up the episode then
+  running is the one graded; `meta["episode"]` and `meta["resets_left"]` count the episodes.
 - **Time moves only inside calls.** `submit` runs your actions, and `get_obs(seconds=s)` holds the last command for
   s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while you think;
   `get_obs()` with no seconds is free.
@@ -19,10 +21,10 @@ and you reach it only through a client. **Task:** move all 30 small dark-red cub
   `meta["reason"]`: `"success"`, `"failed"` when its control steps ran out, or `"error"` after a simulator error).
   `spec()` gives the robot's own facts, as its documentation would: each arm joint's axis, position and limits, the
   gripper's grasp point, each camera's field of view and pose.
-- There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the script
+- There is nothing to hand in: the service records every episode, replays the last one and grades the replay. Keep the script
   that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run
-  the same way, so do not stop early: while the episode runs, it can still pass.
+  the same way, so do not stop early: while the episode runs, or a reset is left, the run can still pass.
 
 ## Scoring
 The run passes iff the episode reaches the goal above, as KinDER's own goal check judges it, within 1000
@@ -37,7 +39,8 @@ help(rcb_client)"`); the calls and the endpoints they use:
 |---|---|---|
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
 | `r.spec()` | `GET /spec` | the robot's facts: the action's layout and bounds, `control_dt` (0.1 s), `max_control_steps` (1000), the cameras, `proprio_layout`, `budget` |
-| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
+| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the starting state (at most 10 in all); returns the start's frames |
 | `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or hold the last command and watch for `seconds` (at most 30) |
 | `r.submit("delta", A, cameras=None, video="mp4", include_depth=False)` | `POST /submit` | runs `A`, one row of 11 values per control step, at most 100 rows a call; stops early when the episode ends |
 
