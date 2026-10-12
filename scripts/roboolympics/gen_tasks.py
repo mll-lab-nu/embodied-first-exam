@@ -154,7 +154,7 @@ def context(t: dict, defaults: dict, sports: dict, facts: dict) -> dict:
         "revision": sport_toml["sport"]["revision"], "slowdown": slowdown,
         "wall_s_per_step": f"{0.01 * slowdown:g}", "break_s": f"{break_s:g}", "break_wall_s": f"{break_s * slowdown:g}",
         # the agent's time limit: the cutoff table's (scripts/task_cutoffs.toml, PROTOCOL §2.12); normalize writes it into
-        # task.toml, the service's RCB_WALL_CLOCK_S and instruction.md's opening paragraphs, and no template states it
+        # task.toml, the service's RCB_WALL_CLOCK_S and instruction.md's closing `## Time limit` section, and no template states it
         "agent_timeout_sec": _cutoff_sec(), "image": defaults["image"],
         "client_image": CLIENT_IMAGE, "allowed_hosts": json.dumps(HOSTS), "upstream": defaults["upstream"],
         "review_pr": REVIEW_PR,

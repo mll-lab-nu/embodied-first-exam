@@ -31,6 +31,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402
 
 DOC = ROOT / "docs/CUTOFFS.md"
+BASELINE = ROOT / "scripts/task_cutoffs.baseline.toml"   # the table on the day it was created: never edited
 MANIFEST = ROOT / "tasks/dataset.toml"
 SHORT = {"privileged": "P", "standard": "S", "standard-realtime": "RT"}
 
@@ -50,6 +51,100 @@ def table_rows(tasks: list[Path]) -> list[str]:
         cells = [_dur(row[m]) if m in row else "—" for m in tc.MODES]
         counts = " / ".join(str(n[(bench, m)]) if n[(bench, m)] else "—" for m in tc.MODES)
         rows.append(f"| {bench} | {cells[0]} | {cells[1]} | {cells[2]} | {counts} |")
+    return rows
+
+
+HISTORY_FIELDS = {"date", "benchmark", "family", "modes", "task", "from_sec", "to_sec", "decided_by", "note"}
+
+
+def _key_name(key: tuple) -> str:
+    return (f"task {key[1]}" if key[0] == "task" else f"{key[1]}, family {key[2]}, {key[3]}" if key[0] == "family"
+            else f"{key[1]}, {key[2]}")
+
+
+def _keys(cutoff_sec: dict, families: dict, tasks: dict) -> dict[tuple, int]:
+    """Every number of a table under the key its history is kept by."""
+    out: dict[tuple, int] = {}
+    for bench, row in cutoff_sec.items():
+        for mode, sec in row.items():
+            out[("bench", bench, mode)] = sec
+    for bench, rows in families.items():
+        for family, row in rows.items():
+            for mode, sec in row.items():
+                out[("family", bench, family, mode)] = sec
+    for name, sec in tasks.items():
+        out[("task", name)] = sec
+    return out
+
+
+def history_errors() -> list[str]:
+    """The table's `[[history]]` is the only record of a change (PROTOCOL §2.8, §2.12), so it is required: every number
+    of the table equals its last recorded value, which is the `to_sec` of its newest entry dated after the baseline or,
+    without one, its number in scripts/task_cutoffs.baseline.toml (the table on the day it was created; a number that
+    is in neither, a new row or exception, has no recorded value: 0). Entries are checked for their fields, and an
+    entry's `from_sec` is the value recorded before it. Returns what is wrong, [] when nothing is."""
+    errs: list[str] = []
+    raw = tomllib.loads(tc.CUTOFFS_FILE.read_text(encoding="utf-8"))
+    base = tomllib.loads(BASELINE.read_text(encoding="utf-8"))
+    families, by_task = tc.cutoff_overrides()
+    current = _keys(tc.cutoff_table(), families, by_task)
+    recorded = _keys(base.get("cutoff_sec", {}), base.get("family_cutoff_sec", {}), base.get("task_cutoff_sec", {}))
+    last = ""
+    for n, h in enumerate(raw.get("history", []), 1):
+        where = f"{tc.CUTOFFS_FILE.name}: [[history]] entry {n}"
+        if not isinstance(h, dict):
+            errs.append(f"{where}: not a table"); continue
+        bad = sorted(set(h) - HISTORY_FIELDS)
+        if bad:
+            errs.append(f"{where}: unknown field(s) {', '.join(bad)} (the fields are {', '.join(sorted(HISTORY_FIELDS))})")
+        date = h.get("date")
+        if not isinstance(date, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
+            errs.append(f'{where}: date = "YYYY-MM-DD" is required'); continue
+        where += f" ({date})"
+        if date < last:
+            errs.append(f"{where}: entries are in order of date, oldest first (the one before it is {last})")
+        last = max(last, date)
+        for f in ("decided_by", "note"):
+            if not isinstance(h.get(f), str) or not h[f].strip():
+                errs.append(f"{where}: `{f}` is required (who decided; why, and what happens to results under the old number)")
+        a, b = h.get("from_sec"), h.get("to_sec")
+        if any(isinstance(v, bool) or not isinstance(v, int) or v < 0 for v in (a, b)) or a == b:
+            errs.append(f"{where}: from_sec and to_sec are two different whole numbers of seconds (0 = no entry)"); continue
+        modes = h.get("modes")
+        if "task" in h:
+            keys = [("task", h["task"])] if not ({"benchmark", "family", "modes"} & set(h)) and isinstance(h["task"], str) else None
+        elif isinstance(h.get("benchmark"), str) and isinstance(modes, list) and modes and all(m in tc.MODES for m in modes):
+            keys = ([("family", h["benchmark"], h["family"], m) for m in modes] if isinstance(h.get("family"), str)
+                    else [("bench", h["benchmark"], m) for m in modes] if "family" not in h else None)
+        else:
+            keys = None
+        if keys is None:
+            errs.append(f"{where}: name what changed: benchmark + modes (a list of {', '.join(tc.MODES)}), "
+                        "benchmark + family + modes, or task alone")
+            continue
+        if date <= str(base.get("date", "")):
+            continue                      # from before the table existed: part of the record, already in the baseline
+        for key in keys:
+            was = recorded.get(key, 0)
+            if was != a:
+                errs.append(f"{where}: {_key_name(key)}: from_sec = {a}, but the value recorded before this entry is {was}")
+            recorded[key] = b
+    for key in sorted(set(current) | set(recorded), key=str):
+        now, was = current.get(key, 0), recorded.get(key, 0)
+        if now != was:
+            errs.append(f"{tc.CUTOFFS_FILE.name}: {_key_name(key)} is {now or 'not in the table'}, its last recorded value is "
+                        f"{was or 'none'}: add a [[history]] entry (from_sec = {was}, to_sec = {now}; date, decided_by, note)")
+    return errs
+
+
+def history_rows() -> list[str]:
+    rows = []
+    for h in tomllib.loads(tc.CUTOFFS_FILE.read_text(encoding="utf-8")).get("history", []):
+        what = (f"`{h.get('task')}`" if "task" in h else str(h.get("benchmark", ""))
+                + (f": family `{h['family']}`" if "family" in h else "") + (", " + ", ".join(h.get("modes", [])) if h.get("modes") else ""))
+        a, b = h.get("from_sec", 0), h.get("to_sec", 0)
+        rows.append(f"| {h.get('date', '')} | {what} | {str(a) + ' s' if a else '(none)'} -> {str(b) + ' s' if b else '(removed)'} "
+                    f"| {h.get('decided_by', '')} | {h.get('note', '')} |")
     return rows
 
 
@@ -154,7 +249,8 @@ def render_doc(tasks: list[Path]) -> str:
         "## Changing a cutoff",
         "",
         "1. Edit the number in [`scripts/task_cutoffs.toml`](../scripts/task_cutoffs.toml) (the benchmark's row, or an "
-        "exception) and add a `[[history]]` entry at its end (date, who decided, old -> new, why).",
+        "exception) and add a `[[history]]` entry at its end (date, who decided, from -> to, why). It is required: CI and "
+        "`apply` refuse a number that differs from its last recorded value.",
         "2. `python3 scripts/task_cutoffs.py apply` (about three minutes; `apply \"<benchmark>\"` for one benchmark).",
         "3. Commit everything it changed and open a pull request. CI (`ci_checks/check-cutoffs.py`) fails when a task's "
         "`task.toml`, its instruction or its sim service disagrees with the table.",
@@ -165,7 +261,9 @@ def render_doc(tasks: list[Path]) -> str:
         "",
         "A change of a cutoff changes the task in place: the scene, the frozen instance, the success rule and the "
         "verifier are the same, so the task keeps its name (PROTOCOL §2.8, §2.12). The record of the change is its "
-        "`[[history]]` entry (below), not a Change Log entry in each task's README. Results recorded under another cutoff "
+        "`[[history]]` entry (below), not a Change Log entry in each task's README. A number's last recorded value is its "
+        "newest entry's, or, if it never changed, the table of 2026-10-11 "
+        "([`scripts/task_cutoffs.baseline.toml`](../scripts/task_cutoffs.baseline.toml), never edited). Results recorded under another cutoff "
         "are reported separately (PROTOCOL D8), and trials already running keep the cutoff they started with.",
         "",
         "## What follows the number, and what does not",
@@ -181,18 +279,18 @@ def render_doc(tasks: list[Path]) -> str:
         "were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 "
         "`COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the "
         f"cap of {tc.CUTOFF_CAP} s.",
-        "- **RoboOlympics**: the cutoff has to stay above a match's wall time (10 to 60 minutes at slowdown 10).",
+        "- **RoboOlympics**: the cutoff has to stay above a match's wall time (5 to 60 minutes at slowdown 10).",
         "- **Not derived from it**: the token budget (PROTOCOL §5), the resource limits (§2.10), reset budgets, step "
         "caps, verifier timeouts.",
         "",
         "## History",
         "",
-        "| Date | Benchmark | Change | Decided by | Note |",
+        "The table started on 2026-10-11 with the number every task had on that day; each change since has an entry.",
+        "",
+        "| Date | What | Change | Decided by | Note |",
         "|---|---|---|---|---|",
+        *history_rows(),
     ]
-    for h in raw.get("history", []):
-        out.append(f"| {h.get('date', '')} | {h.get('benchmark', '')} | {h.get('change', '')} | {h.get('decided_by', '')} "
-                   f"| {h.get('note', '')} |")
     return "\n".join(out) + "\n"
 
 
@@ -246,6 +344,9 @@ def apply(only: str | None) -> int:
     missing = sorted({f"{tc.bench_of(t) or t.name} ({tc.mode_of(t)})" for t in tasks if tc.cutoff_for(t) is None})
     if missing:
         raise SystemExit(f"{tc.CUTOFFS_FILE.name} has no cutoff for: {', '.join(missing)}")
+    hist = history_errors()
+    if hist and not os.environ.get("RCB_CUTOFFS_FILE"):      # a what-if run with another table needs no record
+        raise SystemExit("\n".join(["A changed number needs its [[history]] entry (the only record of the change):"] + hist))
     os.umask(0o022)
     for k, t in enumerate(tasks, 1):
         tc.normalize(t)

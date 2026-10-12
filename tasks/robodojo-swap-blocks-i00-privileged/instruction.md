@@ -97,8 +97,8 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   position targets (rad); RoboDojo's controller moves each arm from where it is to the new target over the action's 10
   physics steps (linear for 8, then holding). Gripper: RoboDojo's normalised command, clipped to 0..1 (1 = fully open, as at the start; 0 = closed; a closing gripper stops at whatever is between its fingers).
   `s.hold_action()` keeps the current targets.
-- Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action). There is no step budget: the time limit at the
-  top is your only budget.
+- Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action). There is no step budget: the time limit
+  (`## Time limit`) is your only budget.
 - One `Session` per process (~3-5 min). Rendering happens only when a frame is asked for and never moves anything. Do
   not call `s.close()` before writing every output.
 

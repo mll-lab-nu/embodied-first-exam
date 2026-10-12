@@ -7,7 +7,7 @@ this page explains how a contribution gets from an idea to `main`. Reviewers fol
 
 | Kind | What it may change | Before you start |
 |---|---|---|
-| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md`, `tasks/dataset.toml` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
+| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md`, `tasks/dataset.toml`, its row in `scripts/task_cutoffs.toml` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
 | **Tasks for an existing benchmark** | the same, without `images/` | — |
 | **Task fix** | the affected task directories and their generator | describe the agent behaviour it closes; include before/after runs |
 | **Shared files / protocol** | `docs/PROTOCOL.md`, `docs/STANDARD_MODE.md`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
@@ -35,7 +35,10 @@ the expected size of the pull request.
 2. Fill in `task.toml` (PROTOCOL §2.3), `instruction.md` (§2.5, written by a human), the verifier under `tests/`
    (§2.6, separate sandbox) and `solution/` (§2.7).
    The agent's time cutoff (PROTOCOL §2.12) is not written in the task: add your benchmark's row to
-   `scripts/task_cutoffs.toml` (seconds per mode; 3600 unless you justify more, D8). `normalize` writes the number into
+   `scripts/task_cutoffs.toml` (seconds per mode; 3600 unless you justify more, D8), named by the benchmark's label in
+   `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix -> name: a new benchmark adds it in its
+   shared-files pull request), with a `[[history]]` entry (`from_sec = 0`). The row goes in the pull request that adds
+   the benchmark's first tasks: a row without tasks fails CI, and so do tasks without a row. `normalize` writes the number into
    `[agent] timeout_sec` and the standard modes' `RCB_WALL_CLOCK_S`, and ends `instruction.md` with the `## Time limit`
    section, after `## External material` and `## Resource limits` ("You have N seconds to complete this task. Do not
    cheat by using online solutions or hints specific to this task.", then what the cutoff means in the mode). Your own
@@ -50,7 +53,8 @@ the expected size of the pull request.
    Add the resource limits and caps too (PROTOCOL §2.10): a `[[limit]]` and a `[[cap]]` rule in the same file (scope
    `trial` for privileged tasks, `agent` for standard ones; GPU memory, memory, processes, disk in GiB, the whole trial's
    expected peak, `measured`; docker caps per compose service). `normalize` writes `[metadata.resources.limits]` /
-   `.caps` and ends `instruction.md` with the `## Resource limits` paragraph the agent reads. With enforcement on
+   `.caps` and writes the `## Resource limits` paragraph the agent reads into `instruction.md` (just before the closing
+   `## Time limit`). With enforcement on
    (`RCB_LIMITS_ENFORCE=1`, v1.2) exceeding a limit fails the trial, so set them a generous margin above measured peaks
    (e.g. `max(1.5 x peak, peak + 4 GiB)`) and make sure the oracle stays inside them. The caps are the ones docker
    applies: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb` and writes the other services' caps
@@ -94,7 +98,8 @@ The checklist is in PROTOCOL §2.7.
 ## Rules that apply to every contribution
 - A published task's `environment/` and `tests/` inputs are immutable; changing the scene makes a new task.
 - To change a time cutoff (an owner decision), edit the number in `scripts/task_cutoffs.toml` (the benchmark's row, or an
-  exception for one family or one task), add a `[[history]]` entry there, run `python3 scripts/task_cutoffs.py apply` and commit what it changed
+  exception for one family or one task), add its `[[history]]` entry there (required: CI and `apply` refuse a changed
+  number without one), run `python3 scripts/task_cutoffs.py apply` and commit what it changed
   ([docs/CUTOFFS.md](docs/CUTOFFS.md)); never edit the number in a task, a template or a generator. The task keeps its
   name; results under the earlier cutoff are reported separately (PROTOCOL §2.8, §2.12).
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.

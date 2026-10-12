@@ -24,10 +24,11 @@
 - [ ] Oracle `partial`/`none`: per-family table of positive examples (PROTOCOL §2.7)
 - [ ] Runs with Harbor's native agents (no custom runner, gateway or adapter)
 - [ ] Names `<base>-privileged` / `<base>-standard` / `<base>-standard-realtime`; README in the standard layout; no `results/`
+- [ ] A new benchmark: its label is in `scripts/task_conventions.py` `BENCHMARKS` (shared-files pull request) and its row, with a `[[history]]` entry, is in `scripts/task_cutoffs.toml` (this pull request)
 - [ ] The cutoff is in `scripts/task_cutoffs.toml` only; `instruction.md` ends with the rendered `## Time limit` section and states the limit nowhere else (`ci_checks/check-cutoffs.py`; PROTOCOL §2.12)
 - [ ] `[metadata.resources]` from measured peaks; README `## Compute resources` rendered (`scripts/task_conventions.py`)
 - [ ] The agent's egress is the allowlist (model APIs + package registries) and the oracle passes under it (the task itself downloads nothing at run time); no file the agent reads, in the task or its image, names or locates a solution, a demonstration or its dataset (PROTOCOL §2.7, §2.11)
-- [ ] `[metadata.resources.limits]` and `.caps` set from measured peaks; the oracle stays inside them; `instruction.md` ends with the rendered `## Resource limits` (PROTOCOL §2.10)
+- [ ] `[metadata.resources.limits]` and `.caps` set from measured peaks; the oracle stays inside them; `instruction.md` has the rendered `## Resource limits` just before the closing `## Time limit` (PROTOCOL §2.10)
 - [ ] No credentials, personal paths or files > 2 MB; `tasks/dataset.toml` refreshed
 
 ## Evidence

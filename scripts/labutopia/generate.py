@@ -36,7 +36,7 @@ AUTHOR = "Canyu Chen"
 # rendering once), which a standard task pays before its service answers and a privileged agent pays if it looks at
 # the scene.
 # The number itself is in scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12): normalize writes it into task.toml, the
-# instruction's first paragraphs, the README row and the sim service's wall clock.
+# instruction's closing `## Time limit` section, the README row and the sim service's wall clock.
 CUTOFF = {m: cutoff_sec("LabUtopia", m) for m in ("privileged", "standard")}
 STARTUP_TIMEOUT = 2400
 # The graders' time (docs/benchmarks/labutopia.md, "Time limits of the graders"). The longest episode (36000 rows) replays in

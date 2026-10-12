@@ -9,7 +9,8 @@
 # standard modes, the sim service's `RCB_WALL_CLOCK_S`.
 #
 # To change a time:
-#   1. edit the number in this file, and add a `[[history]]` entry at the bottom (date, who decided, old -> new);
+#   1. edit the number in this file, and add a `[[history]]` entry at the bottom (date, who decided, old -> new):
+#      CI and `apply` refuse a changed number without one;
 #   2. python3 scripts/task_cutoffs.py apply     # rewrites the tasks, docs/CUTOFFS.md and tasks/dataset.toml (~3 min)
 #   3. commit everything and open a pull request (CI runs ci_checks/check-cutoffs.py and the generators' checks).
 # Never edit the number in a task, a template or a generator: ci_checks/check-cutoffs.py fails when a task disagrees
@@ -57,24 +58,30 @@
 # [task_cutoff_sec]
 # "robotangle-cast-coil-hard-i00-standard" = 10800             # this one task directory
 
-# History of the values, newest last: one entry per change (docs/CUTOFFS.md shows them; PROTOCOL §2.12).
+# History of the values, oldest first: one entry per change, the only record of it (PROTOCOL §2.8, §2.12; docs/CUTOFFS.md
+# shows them). CI requires it: ci_checks/check-cutoffs.py compares every number above with its last recorded value, which
+# is the `to_sec` of its newest entry here or, for a number that never changed, scripts/task_cutoffs.baseline.toml (the
+# table on 2026-10-11, never edited). A number that differs from its last recorded value fails until its entry is added.
+#   benchmark   + modes          a benchmark's row              e.g. benchmark = "RoboLab", modes = ["privileged", "standard"]
+#   benchmark   + family + modes a family's exception           e.g. benchmark = "RoboTangle", family = "cast_coil", modes = ["standard"]
+#   task                         a task's exception             e.g. task = "robotangle-cast-coil-hard-i00-standard"
+#   from_sec / to_sec            the number before and after; 0 = no entry (a new row or exception: from_sec = 0; an
+#                                exception removed: to_sec = 0)
+#   date, decided_by, note       "YYYY-MM-DD"; who decided; why, and what happens to results under the old number
 # [[history]]
 # date = "2026-10-20"
 # benchmark = "RoboLab"
-# change = "privileged, standard: 5400 -> 3600"
+# modes = ["privileged", "standard"]
+# from_sec = 5400
+# to_sec = 3600
 # decided_by = "owner"
 # note = "why; results recorded with the old value are reported separately"
 
 [[history]]
 date = "2026-10-11"
 benchmark = "RoboDojo"
-change = "privileged, standard: 5400 -> 3600"
+modes = ["privileged", "standard"]
+from_sec = 5400
+to_sec = 3600
 decided_by = "owner"
-note = "#155, before this table existed; trials recorded with 5400 s are kept apart"
-
-[[history]]
-date = "2026-10-11"
-benchmark = "all"
-change = "none: the table starts with the value every task had on that day"
-decided_by = "owner"
-note = "board 0080: one table, and every instruction states its cutoff in one format"
+note = "#155, before this table existed (the baseline already has 3600); trials recorded with 5400 s are kept apart"

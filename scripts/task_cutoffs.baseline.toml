@@ -1,0 +1,34 @@
+# DO NOT EDIT. The cutoff table (scripts/task_cutoffs.toml) as it was on 2026-10-11, the day it was created with the
+# number every task had (board 0080, #157): no exception, and RoboDojo already at 3600 s (#155).
+# ci_checks/check-cutoffs.py takes it as the last recorded value of every number that has no `[[history]]` entry dated
+# after it: a number in the table that differs from its last recorded value needs a `[[history]]` entry (PROTOCOL §2.12).
+# To change a cutoff, edit scripts/task_cutoffs.toml, never this file.
+date = "2026-10-11"
+
+[cutoff_sec]
+"AutoBio"           = { privileged =  3600, standard =  3600 }
+"BEHAVIOR-1K"       = { privileged = 14400, standard = 14400 }
+"BiGym 2.0"         = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
+"DexJoCo"           = { privileged =  5400, standard =  5400 }
+"DexToolBench"      = { privileged =  3600, standard =  3600 }
+"HumanoidBench"     = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
+"KinDER"            = { privileged =  3600, standard =  3600 }
+"LIBERO-MAX"        = { privileged =  3600, standard =  3600 }
+"LabUtopia"         = { privileged =  5400, standard =  5400 }
+"ManiGuard"         = { privileged =  7200, standard =  7200 }
+"MetaWorld+"        = { privileged =  3600, standard =  3600 }
+"MolmoSpaces"       = { privileged =  3600, standard =  3600 }
+"MuJoCo Playground" = { privileged =  3600, standard =  3600 }
+"MyoSuite"          = { privileged =  5400, standard =  5400 }
+"RoboCasa"          = { privileged =  3600, standard =  3600 }
+"RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
+"RoboCasa365"       = { privileged =  3600, standard =  3600 }
+"RoboDojo"          = { privileged =  3600, standard =  3600 }
+"RoboLab"           = { privileged =  5400, standard =  5400 }
+"RoboOlympics"      = { standard-realtime = 7200 }
+"RoboPaint"         = { privileged =  7200, standard =  7200 }
+"RoboTangle"        = { privileged = 21600, standard = 21600 }
+"RoboTwin 2.0"      = { privileged =  3600, standard =  3600 }
+"RoboWits"          = { privileged =  5400, standard =  5400 }
+"VLABench"          = { privileged =  3600, standard =  3600 }
+"YAMLab"            = { privileged =  5400, standard =  5400 }

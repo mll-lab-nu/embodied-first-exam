@@ -185,6 +185,14 @@ MUTATIONS = [
     ("... 'You have 60 minutes of wall-clock time'",
      PRIV, "instruction.md", sub(r"^(## External material)$", r"- You have 60 minutes of wall-clock time.\n\n\1"),
      CUTOFFS, "states the agent's limit a second time"),
+    ("... in words nobody has used yet: 'You have one hour.'",
+     STD, "instruction.md", sub(r"^(## External material)$", r"You have one hour.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
+    ("... 'The limit is 3600 seconds.'",
+     PRIV, "instruction.md", sub(r"^(## External material)$", r"The limit is 3600 seconds.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
+    ("... 'Finish within 60 minutes.'",
+     STD, "instruction.md", sub(r"^(## External material)$", r"Finish within 60 minutes.\n\n\1"), CUTOFFS, "states the agent's limit a second time"),
+    ("the README's `Agent time budget` row with another number than the table's",
+     STD, "README.md", sub(r"^(\| Agent time budget \| )\d+ s;", r"\g<1>28800 s;"), CUTOFFS, "README.md's `Agent time budget` row does not say"),
     ("the sim service is told another wall clock than the table's",
      STD, COMPOSE, sub(r'(RCB_WALL_CLOCK_S: ")\d+', r"\g<1>3600"), CUTOFFS, "RCB_WALL_CLOCK_S = 3600, the table says"),
     ("the sim service is not told the wall clock (it would report its code's default)",
@@ -323,12 +331,32 @@ def cutoff_exceptions(tmp: Path) -> int:
         ("a task entry above the cap", f'[task_cutoff_sec]\n"{fam_s}" = 20000\n', "is above the 14400 s cap"),
         ("a task entry that is not a whole number of seconds", f'[task_cutoff_sec]\n"{fam_s}" = 3600.5\n', "is not a whole positive number of seconds"),
         ("a task entry whose name is not a task directory name", '[task_cutoff_sec]\n"boxing_books" = 3600\n', "is not a task directory name"),
+        ("a misspelled table (it would be an exception that silently does nothing)", f'[task_cutoffs_sec]\n"{fam_s}" = 7200\n', "unknown table [task_cutoffs_sec]"),
+        ("an exception added without its [[history]] entry", f'[task_cutoff_sec]\n"{fam_s}" = 7200\n',
+         f"task {fam_s} is 7200, its last recorded value is none: add a [[history]] entry"),
+        ("a [[history]] entry without who decided and why",
+         f'[task_cutoff_sec]\n"{fam_s}" = 7200\n[[history]]\ndate = "2026-10-20"\ntask = "{fam_s}"\nfrom_sec = 0\nto_sec = 7200\n', "`decided_by` is required"),
+        ("a [[history]] entry whose from_sec is not the recorded value",
+         f'[task_cutoff_sec]\n"{fam_s}" = 7200\n[[history]]\ndate = "2026-10-20"\ntask = "{fam_s}"\nfrom_sec = 3600\nto_sec = 7200\ndecided_by = "owner"\nnote = "x"\n',
+         "from_sec = 3600, but the value recorded before this entry is 0"),
     ]:
         rc, out = run_py([CUTOFFS[1]], table(extra))
         expect(rc != 0 and say in out, f"{what}: check-cutoffs.py must fail with `{say}`", out)
+    # a number of a benchmark's row changed: refused without its [[history]] entry, accepted with it
+    changed = head.replace('"KinDER"            = { privileged =  3600, standard =  3600 }', '"KinDER"            = { privileged =  3600, standard =  3000 }')
+    expect(changed != head, "the KinDER row of the table is not where this test expects it (update the test)")
+    say = "KinDER, standard is 3000, its last recorded value is 3600: add a [[history]] entry"
+    tables.append(tmp / "cutoffs-changed.toml"); tables[-1].write_text(changed)
+    rc, out = run_py([CUTOFFS[1]], tables[-1])
+    expect(rc != 0 and say in out, "a changed number without its [[history]] entry must fail", out)
+    tables.append(tmp / "cutoffs-recorded.toml")
+    tables[-1].write_text(changed + '[[history]]\ndate = "2026-10-20"\nbenchmark = "KinDER"\nmodes = ["standard"]\nfrom_sec = 3600\nto_sec = 3000\ndecided_by = "owner"\nnote = "a test"\n')
+    rc, out = run_py([CUTOFFS[1]], tables[-1])
+    expect("[[history]]" not in out, "a changed number with its [[history]] entry: the history rule must be satisfied", out)
     if not bad:
         print("check-ci-selftest: the cutoff table's exceptions (task > family > benchmark and mode): 3 tasks written and "
-              "checked under a table with a family and a task entry, 8 unusable tables refused")
+              "checked under a table with a family and a task entry, 12 unusable tables refused, a changed number refused "
+              "without its [[history]] entry and accepted with it")
     return bad
 
 

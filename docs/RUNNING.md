@@ -80,8 +80,10 @@ at the cutoff with
 `AgentTimeoutError`, and then collects the artifacts and runs the verifier as after any other end, so the trial is
 graded as it stands. The number comes from one table, `scripts/task_cutoffs.toml` ([CUTOFFS.md](CUTOFFS.md), PROTOCOL
 §2.12), and the task's instruction states it in its last section, `## Time limit`. Harbor hands `instruction.md` to the
-agent as it is and `scripts/run_agent_batch.sh` adds nothing to it, so that section is the last thing the agent reads. Official runs pass no multiplier for it: never
-`--timeout-multiplier` or `--agent-timeout-multiplier` (a result is only comparable under the stated cutoff, D8).
+agent as it is and `scripts/run_agent_batch.sh` adds nothing to it, so that section is the last thing the agent reads. Official runs pass no multiplier or override for it: never
+`--timeout-multiplier`, `--agent-timeout-multiplier` or an agent `override_timeout_sec` (a result is only comparable
+under the stated cutoff, D8), and no prompt template or extra instruction, in `AK` or elsewhere (they would add text
+after the task's last section).
 `--agent-setup-timeout-multiplier` (in `AK`, for slow harness installs) is fine: set-up is not the agent's time. A trial
 that ends at the cutoff is a result, not an infrastructure failure, and is not run again.
 

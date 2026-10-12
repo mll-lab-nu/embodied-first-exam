@@ -378,7 +378,7 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                                "episode after a crash (resume class `approx`, docs/STANDARD_MODE.md §13.1); startup watchdog "
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
-            ("Budget", "the same agent wall clock as the privileged twin (the `Agent time budget` row; docs/benchmarks/behavior.md)"),
+            ("Budget", "the agent's time is the `Agent time budget` row (the number lives in `scripts/task_cutoffs.toml`; docs/benchmarks/behavior.md)"),
             ("Collect hook time", "37800 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + 30 min")]
     return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e),
                   details(rows, [("Sidecar and grading", SIDECAR)]) + change_log("standard"), review_pr(e))

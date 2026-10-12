@@ -70,25 +70,26 @@ What a benchmark adds about its own time (a simulator's start-up, what its servi
 
 ## Changing a cutoff
 
-1. Edit the number in [`scripts/task_cutoffs.toml`](../scripts/task_cutoffs.toml) (the benchmark's row, or an exception) and add a `[[history]]` entry at its end (date, who decided, old -> new, why).
+1. Edit the number in [`scripts/task_cutoffs.toml`](../scripts/task_cutoffs.toml) (the benchmark's row, or an exception) and add a `[[history]]` entry at its end (date, who decided, from -> to, why). It is required: CI and `apply` refuse a number that differs from its last recorded value.
 2. `python3 scripts/task_cutoffs.py apply` (about three minutes; `apply "<benchmark>"` for one benchmark).
 3. Commit everything it changed and open a pull request. CI (`ci_checks/check-cutoffs.py`) fails when a task's `task.toml`, its instruction or its sim service disagrees with the table.
 
 Never edit the number in a task, a template or a generator. `apply` writes, in every task concerned: `[agent] timeout_sec`, the number in the closing section of `instruction.md`, the README's `Agent time budget` row, the sim service's `RCB_WALL_CLOCK_S` (standard modes), the task's digest in `tasks/dataset.toml`, and this page.
 
-A change of a cutoff changes the task in place: the scene, the frozen instance, the success rule and the verifier are the same, so the task keeps its name (PROTOCOL §2.8, §2.12). The record of the change is its `[[history]]` entry (below), not a Change Log entry in each task's README. Results recorded under another cutoff are reported separately (PROTOCOL D8), and trials already running keep the cutoff they started with.
+A change of a cutoff changes the task in place: the scene, the frozen instance, the success rule and the verifier are the same, so the task keeps its name (PROTOCOL §2.8, §2.12). The record of the change is its `[[history]]` entry (below), not a Change Log entry in each task's README. A number's last recorded value is its newest entry's, or, if it never changed, the table of 2026-10-11 ([`scripts/task_cutoffs.baseline.toml`](../scripts/task_cutoffs.baseline.toml), never edited). Results recorded under another cutoff are reported separately (PROTOCOL D8), and trials already running keep the cutoff they started with.
 
 ## What follows the number, and what does not
 
 - **Follows by itself** (`apply`): everything listed above, and a scheduler's estimate of a trial's length, which reads `task.toml`.
 - **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the service's start or from the agent's first request. Harbor's timeout is what stops the agent. RoboTangle's service is the exception today: it ends the episode itself when its own count, running since the service started, reaches 0 (to become report-only at RoboTangle's next task update: `docs/benchmarks/robotangle.md`).
 - **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the cap of 14400 s.
-- **RoboOlympics**: the cutoff has to stay above a match's wall time (10 to 60 minutes at slowdown 10).
+- **RoboOlympics**: the cutoff has to stay above a match's wall time (5 to 60 minutes at slowdown 10).
 - **Not derived from it**: the token budget (PROTOCOL §5), the resource limits (§2.10), reset budgets, step caps, verifier timeouts.
 
 ## History
 
-| Date | Benchmark | Change | Decided by | Note |
+The table started on 2026-10-11 with the number every task had on that day; each change since has an entry.
+
+| Date | What | Change | Decided by | Note |
 |---|---|---|---|---|
-| 2026-10-11 | RoboDojo | privileged, standard: 5400 -> 3600 | owner | #155, before this table existed; trials recorded with 5400 s are kept apart |
-| 2026-10-11 | all | none: the table starts with the value every task had on that day | owner | board 0080: one table, and every instruction states its cutoff in one format |
+| 2026-10-11 | RoboDojo, privileged, standard | 5400 s -> 3600 s | owner | #155, before this table existed (the baseline already has 3600); trials recorded with 5400 s are kept apart |

@@ -144,6 +144,7 @@ CUTOFF_NOTE = {
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
+CUTOFF_TABLES = {"cutoff_sec", "family_cutoff_sec", "task_cutoff_sec", "history"}   # scripts/task_cutoffs.toml, top level
 CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3; the same exceptions: ci_checks/check-task-fields.sh
 CUTOFF_CAP_EXCEPTIONS = {"RoboTangle": 21600}    # owner, 2026-10-08 (issue #87)
 
@@ -479,6 +480,10 @@ def _cutoffs() -> tuple[dict, dict, dict]:
     global _CUTOFFS
     if _CUTOFFS is None:
         raw = tomllib.loads(CUTOFFS_FILE.read_text(encoding="utf-8"))
+        unknown = sorted(set(raw) - CUTOFF_TABLES)       # a misspelled table would be an exception that silently does nothing
+        if unknown:
+            raise ValueError(f"{CUTOFFS_FILE.name}: unknown table {', '.join('[' + k + ']' for k in unknown)} "
+                             f"(the tables are {', '.join('[' + k + ']' for k in sorted(CUTOFF_TABLES))})")
         labels = {label for _prefix, label in BENCHMARKS}
 
         def known(bench: str, where: str) -> None:

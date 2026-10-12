@@ -20,8 +20,8 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
   `task_conventions.normalize` from the rules in `scripts/task_resources.toml`, and the README's `## Compute resources`
   rendered from it; `ci_checks/check-resources.py` checks both.
 - Every task declares resource limits and docker caps (PROTOCOL §2.10, v1.1.5): `[metadata.resources.limits]` / `.caps` from
-  the `[[limit]]` / `[[cap]]` rules in the same file; `normalize` ends `instruction.md` with the `## Resource limits` paragraph
-  rendered from them (generator-owned: edit the rules, never the paragraph). From v1.2 a task-provided monitor
+  the `[[limit]]` / `[[cap]]` rules in the same file; `normalize` writes the `## Resource limits` paragraph of `instruction.md`
+  (just before the closing `## Time limit`), rendered from them (generator-owned: edit the rules, never the paragraph). From v1.2 a task-provided monitor
   (`scripts/rcb_monitor/`, copied into every task by `normalize`; `ci_checks/check-monitor.py` runs its tests) and the
   verifier judge them; with `RCB_LIMITS_ENFORCE=1` a violation fails the trial (default 0: recorded only). Declared caps
   are the applied ones: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb`. A CPU cap above the
@@ -35,8 +35,10 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
   using online solutions or hints specific to this task.", then what the cutoff means in the mode), after `## External
   material` and `## Resource limits`: generator-owned like those two, whatever a template writes there is overwritten.
   A benchmark's own text says "the time limit (`## Time limit`)", never a duration; a generator that needs the number
-  takes the benchmark's from `task_conventions.cutoff_sec(label, mode)` (normalize applies an exception). To change a time: edit the table, add a `[[history]]` entry,
-  `python3 scripts/task_cutoffs.py apply`, commit. `ci_checks/check-cutoffs.py` fails when a task disagrees with the table.
+  takes the benchmark's from `task_conventions.cutoff_sec(label, mode)` (normalize applies an exception). To change a time: edit the table, add its `[[history]]`
+  entry (required: CI compares every number with its last recorded value), `python3 scripts/task_cutoffs.py apply`, commit.
+  A new benchmark: its label in `task_conventions.py` `BENCHMARKS` (the table's rows are named by it), then its row and a
+  `[[history]]` entry (`from_sec = 0`) in the pull request that adds its first tasks. `ci_checks/check-cutoffs.py` fails when a task disagrees with the table.
 - `ci_checks/run_all.sh [task dirs]`: contract checks (incl. verifier isolation: `[verifier] environment_mode = "separate"`
   + `tests/Dockerfile`) and the protocol check (`check-protocol.py`). New check =
   `check-<thing>.sh <task_dir>`, registered in `run_all.sh`; a rule that guards the trust boundary or the caps also gets a

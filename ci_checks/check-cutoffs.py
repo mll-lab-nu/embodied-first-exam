@@ -10,14 +10,16 @@ scripts/task_cutoffs.toml gives the seconds per benchmark and mode, with optiona
     to this task." with the same N, then what the cutoff means in the task's mode; nothing follows it, and the heading
     and the sentence stand there once;
   - nothing else in instruction.md states the agent's limit as a duration (the wordings tasks used before 2026-10-11:
-    "wall-clock budget is 90 min (5400 s)", "You have 60 minutes of wall-clock time", "Time limit: one hour", ...): a
-    second statement goes stale at the next change of the table, and two limits in one instruction are worse than none;
+    "wall-clock budget is 90 min (5400 s)", "You have 60 minutes of wall-clock time", "Time limit: one hour", ...; and
+    the obvious other shapes: "You have one hour.", "The limit is 3600 seconds.", "Finish within 60 minutes."): a second
+    statement goes stale at the next change of the table, and two limits in one instruction are worse than none;
   - the README's "Agent time budget" row has the number;
   - standard modes: the `sim` service is told the same number (`RCB_WALL_CLOCK_S` in environment/docker-compose.yaml,
     what its `/spec` budget and `meta["time_left_s"]` report; PROTOCOL §2.3).
 Repository level (no task given): the table itself is usable, has a number for exactly the benchmark-mode pairs that
-have tasks, every exception names a family or a task that exists, and docs/CUTOFFS.md is what
-`python3 scripts/task_cutoffs.py apply` renders from it.
+have tasks, every exception names a family or a task that exists, every number equals its last recorded value (its
+newest `[[history]]` entry, else scripts/task_cutoffs.baseline.toml: a change without its entry fails), and
+docs/CUTOFFS.md is what `python3 scripts/task_cutoffs.py apply` renders from it.
 
     python3 ci_checks/check-cutoffs.py [task dirs]      # default: every task and the repository-level rules
 Fix: edit scripts/task_cutoffs.toml (never a task), then `python3 scripts/task_cutoffs.py apply`. Standard library only.
@@ -35,18 +37,34 @@ import task_conventions as tc  # noqa: E402  (one table reader, one renderer)
 import task_cutoffs  # noqa: E402
 
 DUR = r"\d[\d,.]*\s*(?:s|sec|secs|seconds?|min|mins|minutes?|h|hrs?|hours?)\b"
-WORD_DUR = r"(?:an|one|two|three|four|six|half an) hours?\b"
-# Other statements of the agent's limit, searched in each sentence of the instruction's own text (outside the cutoff
-# paragraphs and the two closing sections). Durations of other things (a client's connection wait, a simulator's
-# start-up, a replay's limit, simulated time, a step's cost) are not the agent's limit and match none of these.
+WORD_DUR = (r"(?:(?:an|one|two|three|four|six|half an) hours?|(?:ten|fifteen|twenty|thirty|forty[- ]five|sixty|ninety|"
+            r"a hundred and twenty|one hundred and twenty) minutes)\b")
+ANY_DUR = rf"(?:{DUR}|{WORD_DUR})"
+# Other statements of the agent's limit, searched in each sentence of the instruction's own text (outside the three
+# closing sections). The first five are the wordings tasks used before 2026-10-11.
 OTHER_LIMIT = [
-    ("a wall-clock or time budget with a duration", rf"(?:wall[- ]clock|time) budget\b.*?(?:{DUR}|{WORD_DUR})"),
+    ("a wall-clock or time budget with a duration", rf"(?:wall[- ]clock|time) budget\b.*?{ANY_DUR}"),
     ("'You have <duration> ... of wall-clock time / in all / in total'",
-     rf"\byou have\b.*?(?:{DUR}|{WORD_DUR}).*?(?:wall[- ]clock|\bin all\b|\bin total\b)"),
+     rf"\byou have\b.*?{ANY_DUR}.*?(?:wall[- ]clock|\bin all\b|\bin total\b)"),
     ("'your <duration> are up'", rf"\byour\s+{DUR}\s+(?:are|is)\s+up\b"),
     ("'<minutes or hours> of wall clock'", r"\d[\d,.]*\s*(?:min|mins|minutes?|h|hrs?|hours?) of wall[- ]clock"),
-    ("'Time limit: <duration>'", rf"\btime limit:\**\s*(?:{DUR}|{WORD_DUR})"),
+    ("'Time limit: <duration>'", rf"\btime limit:\**\s*{ANY_DUR}"),
 ]
+# Wider shapes of the same thing, for wordings nobody has used yet ("You have one hour.", "The limit is 3600 seconds.",
+# "Finish within 60 minutes.", "The session lasts 5400 s."). They would also catch durations that are not the agent's
+# limit, so a sentence that is plainly about something else (NOT_THE_LIMIT) is not searched with them. A heuristic: it
+# finds the obvious second statement, a reviewer still reads the text.
+OTHER_LIMIT_WIDE = [
+    ("'You have / are given <duration>'", rf"\byou (?:have|are given|get|are allowed)\b(?: \w+){{0,3}}? (?:\*\*)?{ANY_DUR}"),
+    ("a limit, budget, cutoff, timeout or deadline with a duration",
+     rf"\b(?:limit|budget|cutoff|timeout|deadline)\b(?:\*\*)?(?: is| of|:)(?: \w+){{0,2}}? (?:\*\*)?{ANY_DUR}"),
+    ("'finish / complete ... within <duration>'", rf"\b(?:finish|complete|solve|be done)\b[^,;:()]{{0,40}}?\bwithin (?:\*\*)?{ANY_DUR}"),
+    ("'the session / trial / run lasts <duration>'",
+     rf"\b(?:session|trial|run)\b (?:lasts|is limited to|is cut off after|times out after|ends after) (?:\*\*)?{ANY_DUR}"),
+]
+NOT_THE_LIMIT = (r"simulated time|robot time|of play\b|control steps?|physics|per (?:call|goal|row|step|request)|each (?:goal|call|request)|"
+                 r"replay|Robot\(|gives up after|connection|start-?up|starts?\b|launch|reset|rows?\b|mm\b|path budget|step budget|"
+                 r"\bHz\b|its own time limit|challenge")
 
 
 def own_text(instruction: str) -> str:
@@ -62,7 +80,8 @@ def other_limits(instruction: str) -> list[str]:
     for para in re.split(r"\n[ \t]*\n", own_text(instruction)):
         flat = " ".join(para.split())
         for sentence in re.split(r"(?<=[.;!?])\s+", flat):
-            for what, pat in OTHER_LIMIT:
+            wide = [] if re.search(NOT_THE_LIMIT, sentence, re.I) else OTHER_LIMIT_WIDE
+            for what, pat in OTHER_LIMIT + wide:
                 if re.search(pat, sentence, re.I):
                     out.append(f"{what}: \"{sentence[:160]}\"")
                     break
@@ -141,6 +160,7 @@ def check_repo(tasks: list[Path]) -> list[str]:
     for name in sorted(by_task):
         if name not in names:
             errs.append(f"scripts/task_cutoffs.toml: [task_cutoff_sec] names {name!r}, which is not a task directory")
+    errs += task_cutoffs.history_errors()     # every number equals its last recorded value: a change has its [[history]] entry
     doc = ROOT / "docs/CUTOFFS.md"
     if not doc.is_file() or doc.read_text(encoding="utf-8") != task_cutoffs.render_doc(tasks):
         errs.append("docs/CUTOFFS.md is not what scripts/task_cutoffs.toml renders (run python3 scripts/task_cutoffs.py apply)")
