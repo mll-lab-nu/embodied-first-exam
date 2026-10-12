@@ -38,8 +38,8 @@ ROOT = HERE.parent.parent
 TASKS_DIR = ROOT / "tasks"
 sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
-# standard mode's default reset budget (RCB_RESET_BUDGET's default; PROTOCOL §4.5's per-benchmark exception, proposed
-# 2026-10-10): 10, since the 1000 control steps bound each episode and without a reset the practice and the graded
+# standard mode's default reset budget (RCB_RESET_BUDGET's default; PROTOCOL §4.5's per-benchmark exception, owner
+# 2026-10-11): 10, since the 1000 control steps bound each episode and without a reset the practice and the graded
 # attempt share them; ten, as MyoSuite, because a scripted episode ends in about a minute; RCB_RESET_BUDGET=0 still runs
 # the single-episode configuration
 RESET_BUDGET = 10

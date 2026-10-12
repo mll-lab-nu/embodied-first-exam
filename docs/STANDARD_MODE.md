@@ -195,7 +195,7 @@ tables. A request body over 64 MB gets 413 before it is decoded.
 Off by default (`budget.reset = 0`): one trial is one episode, in standard and standard-realtime mode alike. Exception, by
 owner decision (PROTOCOL §4.5): HumanoidBench's standard tasks (2026-10-07) and standard-realtime tasks (2026-10-08) default
 to `budget.reset = 50`, MyoSuite's standard tasks (2026-10-09) to `budget.reset = 10`; BiGym2's and KinDER's standard
-tasks to `budget.reset = 10` (proposed 2026-10-10, pending the owner's decision). A run may set `RCB_RESET_BUDGET=N`
+tasks (2026-10-11) to `budget.reset = 10`. A run may set `RCB_RESET_BUDGET=N`
 on the service (implemented by the KinDER, HumanoidBench, BiGym2 and MyoSuite services; MyoSuite's 2.2 client has no `reset()`,
 so its instruction calls `POST /reset` through `Robot._post`). Then `/spec.budget.reset = N`, `/spec.reset` describes it, and
 `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running episode and starts a new one from the

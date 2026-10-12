@@ -81,8 +81,7 @@ Every instruction states, besides upstream's task sentence and success rule: whe
 (one sentence measured on the frozen scene: distance, direction, height; upstream gives its own agents a demonstration
 video instead, which a task here cannot ship), the action table, and upstream's own notes on the whole-body controller
 (`bigym/loco/agent/templates/api_strict.md`). Standard `spec()` adds the robot's description: joint axes and positions,
-the point between each gripper's pads, camera mounts. Reset budget: standard 10 (proposed 2026-10-10, PROTOCOL §4.5;
-needs the owner's decision), standard-realtime 0. The horizon bounds each episode, so without a reset the practice and
+the point between each gripper's pads, camera mounts. Reset budget: standard 10 (owner, 2026-10-11; PROTOCOL §4.5), standard-realtime 0. The horizon bounds each episode, so without a reset the practice and
 the graded attempt share it: in GPT-6 Astra's 12 standard runs of 2026-10-09, 6 of the 8 failures ended with the
 horizon spent and 2 on an object on the floor, the wall clock mostly unused. (The robot itself does not fall: 15
 adversarial command patterns of 12 s each, no fall.) `RCB_RESET_BUDGET=0` still runs one episode; standard results
