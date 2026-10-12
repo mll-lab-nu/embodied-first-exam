@@ -28,8 +28,8 @@ None. RoboDojo releases no expert or planner script, and its training demonstrat
 reported separately until it has a positive example (PROTOCOL §7, Open 4).
 
 ## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout in two fresh processes
-(`rcb_robodojo.py replay`); reward 1 iff both replays end in RoboDojo's success@@README_RULE@@. No oracle; human review in
+`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout once, in a fresh process
+(`rcb_robodojo.py replay`); reward 1 iff that replay ends in RoboDojo's success@@README_RULE@@. No oracle; human review in
 PR #@@REVIEW_PR@@ (@@EVIDENCE_SHORT@@). `nop` (no
 trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
 (`task/RoboDojo/tasks/@@TASK@@.py`, `env/reward_manager/`); the code is the reference.
