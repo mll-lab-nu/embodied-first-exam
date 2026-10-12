@@ -32,7 +32,7 @@ _ENV = dict(ln.split("=", 1) for ln in (LAYER / "client.env").read_text().splitl
 CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR = "Canyu Chen"
 # The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12). No copy of the number here:
-# normalize writes it into task.toml, the instruction's first paragraphs, the README row and the sim service's wall clock.
+# normalize writes it into task.toml, the instruction's closing `## Time limit` section, the README row and the sim service's wall clock.
 CUTOFF = {m: cutoff_sec("AutoBio", m) for m in ("privileged", "standard")}
 # The graders' time (docs/benchmarks/autobio.md, "Time limits of the graders"). The longest episode (600000 rows) replays in
 # 1000 s in the slowest family (insert_centrifuge_5430, 600 control steps/s); a verdict replay may take REPLAY_TIMEOUT.
@@ -293,7 +293,7 @@ in a service you cannot open. You get one client and one episode.
   the robot's own proprioception: joint positions, velocities and drive efforts{", gripper openings" if grip else ""}, the
   poses of its tool frames and the targets in effect. No poses of tubes, racks or instruments, no instrument state, no
   success check: `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it).
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
 - {done}
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.

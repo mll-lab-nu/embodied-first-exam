@@ -1,9 +1,5 @@
 # MyoSuite · hand_pose — frozen instance
 
-You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
-
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 39
 muscles: there is no joint-level controller.
 **Task:** Put the hand in the target pose: the norm of the 23 hand and wrist joint-angle errors (rad) below 0.7 for 50 consecutive control steps (1.0 s). Failure (the episode ends): that norm above 6.28 rad. The target joint angles are given below. Target joint angles (rad): pro_sup +0.000, deviation +0.000, flexion +0.000, cmc_abduction -0.090, cmc_flexion +0.082, mp_flexion -0.682, ip_flexion -0.515, mcp2_flexion +0.000, mcp2_abduction -0.014, pm2_flexion -0.046, md2_flexion +0.000, mcp3_flexion +0.676, mcp3_abduction -0.021, pm3_flexion +0.770, md3_flexion +0.660, mcp4_flexion +0.000, mcp4_abduction +0.000, pm4_flexion +0.000, md4_flexion +0.000, mcp5_flexion +0.479, mcp5_abduction -0.099, pm5_flexion +0.958, md5_flexion +0.000.
@@ -88,3 +84,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **10 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

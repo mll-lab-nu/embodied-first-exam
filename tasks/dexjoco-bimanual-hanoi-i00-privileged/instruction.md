@@ -1,9 +1,5 @@
 # DexJoCo · bimanual_hanoi — frozen instance
 
-You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
-
 You control two Franka Panda arms, each with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Tower of Hanoi with three disks on three vertical posts in a row along y: the small disk is on post A (y > 0, the left arm's side), the medium disk on post B (middle), the large disk on post C (y < 0). Build the full tower on post C: large at the bottom, then medium, then small, posts A and B empty, every disk at rest and seated on the post (horizontally within 4 cm of it, at its stacking height within 1.2 cm), held for 20 consecutive control steps. A larger disk resting on a smaller one, or a disk resting on the table, for 10 consecutive steps ends the episode as a failure.
 
 Two arms with a hand each stand side by side facing the table (right arm at y < 0, left arm at y > 0); the wooden Hanoi base with its three posts is in front of them. Each disk has a hole and slides over a post. `s.objects()` gives the live poses of the task objects (`disk_small`, `disk_medium`, `disk_large`, `post_a`, `post_b`, `post_c`). DexJoCo's success code (from
@@ -156,3 +152,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **8 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

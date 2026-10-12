@@ -1,9 +1,5 @@
 # DexJoCo · click_mouse — frozen instance
 
-You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
-
 You control a Franka Panda arm with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Put the computer mouse on the magenta mousepad and click its button. Success: the mouse is on the pad (its centre within the pad's 0.15 m radius horizontally and within 0.05 m of the pad's height), the button has been pressed while the mouse was on the pad (button joint more than 0.001 rad past its rest angle), which turns the monitor blue, and the mouse then stays on the pad for 10 consecutive control steps. A click while the mouse is off the pad does nothing.
 
 The mouse lies on the table in front of the monitor; the round magenta mousepad is next to it at lower y. The button is a hinge on the mouse's front half. `s.objects()` gives the live poses of the task objects (`mouse`, `mouse_button`, `mousepad`, `monitor`, `table_top`). DexJoCo's success code (from
@@ -102,3 +98,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **8 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

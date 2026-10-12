@@ -51,7 +51,7 @@ CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
 CLIENT_REQUIREMENTS = CLIENT_ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
 PROTOCOL = "eai-standard/2.2"
 # The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12; why: docs/benchmarks/robowits.md,
-# Time budget). No copy of the number here: normalize writes it into task.toml, the instruction's first paragraphs, the
+# Time budget). No copy of the number here: normalize writes it into task.toml, the instruction's closing `## Time limit` section, the
 # README row and the sim service's wall clock.
 CUTOFF = {m: TC.cutoff_sec("RoboWits", m) for m in ("privileged", "standard")}
 REVIEW = "PR #3"         # where the human review of the no-oracle families is recorded (PROTOCOL §2.7)
@@ -278,7 +278,7 @@ CLI equivalent of the grader:
   arm works at y > 0). Quaternions are **WXYZ**.
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
-- Control runs at 30 Hz (@SUBSTEPS@). There is no step budget: the time limit at the top is your only budget.
+- Control runs at 30 Hz (@SUBSTEPS@). There is no step budget: the time limit (`## Time limit`) is your only budget.
   One technical cap: a trajectory, and a `Session` between two resets, has at most @MAXSTEPS@ control steps (about
   @MAXHOURS@ h of simulated time). `s.step` returns `True` on the step that reaches it and raises after it until
   `s.reset()`; the grader scores a trajectory with more rows 0 (`bad_trajectory`).
@@ -301,7 +301,7 @@ STD_INSTRUCTION = """# RoboWits · @FAM@ — STANDARD MODE (robot as a service, 
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
   (`meta["done"]`, `reason` "success") the first time it holds.
-- **Your only budget is the time limit at the top** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
+- **Your only budget is the time limit (`## Time limit`)** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
   and simulated time are reported as cost. One technical cap: the episode has at most @MAXSTEPS@ control steps (about
   @MAXHOURS@ h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
   that watches counts too). The call that reaches it stops there, the episode ends (`reason` "step_guard") and is graded

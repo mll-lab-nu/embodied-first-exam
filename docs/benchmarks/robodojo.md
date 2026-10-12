@@ -142,7 +142,7 @@ The cost that had argued for the longer budget is unchanged and is what an agent
 pays ~2.5-4 min of Isaac Sim launch, scene build and RoboDojo's settling (a trial's first start also compiles shaders and
 materials), and many tasks are long (RoboDojo gives policies up to 1900 actions), so an hour holds about a dozen simulator
 starts at most.
-Every instruction states the cutoff in the standard cutoff paragraphs at the top (written by `task_conventions.normalize`
+Every instruction states the cutoff in the closing `## Time limit` section (written by `task_conventions.normalize`
 from the table, like `[agent] timeout_sec`, the README row and the standard service's `RCB_WALL_CLOCK_S`, which only
 reports the budget: `spec["budget"]`, `meta["time_left_s"]`; the service never ends an episode on it). RoboDojo's own
 text adds, right after the task's introduction and without a number: privileged, `/app/output/trajectory.npz` must be

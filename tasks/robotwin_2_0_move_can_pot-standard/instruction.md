@@ -1,9 +1,5 @@
 # RoboTwin 2.0 · move_can_pot — STANDARD MODE (robot as a service, eai-standard/2.1)
 
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
-
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
 cannot open. You get one client and one episode. **Task:** There is a can and a pot on the table, use one arm to pick up the can and move it to beside the pot. The success check, run at the end of every call, passes when the can stands upright (within 15 degrees) on the table beside the pot, on the side of the pot where the can lies at the start (to the pot's left if the can starts on the left half of the table, x < 0; to its right otherwise): the can's centre is less than 20 cm from the pot's centre in x and less than 3.5 cm from it in y, the can's base is not above the level of the pot's base, and both grippers are commanded open (above 0.8).
 
@@ -78,3 +74,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

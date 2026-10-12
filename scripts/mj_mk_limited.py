@@ -247,7 +247,7 @@ build_timeout_sec = 600.0
 
 
 def instruction(src, inst, tool) -> str:
-    u = strip_cutoff((src / "instruction.md").read_text())   # without the cutoff paragraphs under the title (normalize writes this twin's own)
+    u = strip_cutoff((src / "instruction.md").read_text())   # without a cutoff block an earlier render put under the title (normalize writes this twin's own `## Time limit`)
     title = u.splitlines()[0].replace("# ", "# ", 1) + " — LIMITED MODE (robot as a service)"
     intro = u.split("\n\n")[1].strip()
     score = re.search(r"## (Scoring \(the benchmark's own rule\)|Success)\n(.*?)\n\n", u, re.S)
@@ -282,7 +282,7 @@ client and one episode.
 - **No reset.** Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
   robot's own joint positions, velocities and targets. No object poses, no success predicate.
-- Your only budget is the time limit at the top. `meta["time_left_s"]` is the service's count of it, from your first
+- Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your first
   request to the service; approximate — the harness's own deadline is authoritative. There is nothing to hand in: the
   service records the episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the
   record.

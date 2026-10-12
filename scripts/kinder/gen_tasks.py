@@ -247,7 +247,7 @@ def context(t: dict, d: dict, f: dict) -> dict:
         "standard_action_layout": action_layout(f, standard=True),
         "expert_hours": t["expert_hours"], "standard_expert_hours": 2 * t["expert_hours"],
         # the agent's time limit: the cutoff table's (scripts/task_cutoffs.toml, PROTOCOL §2.12), never stated as a number
-        # in a template: normalize writes it, and the texts say "the time limit at the top"
+        # in a template: normalize writes it, and the texts say "the time limit (`## Time limit`)"
         "agent_timeout": float(cutoff_sec(BENCHMARK, "privileged")),
         "verifier_timeout": float(d["verifier_timeout_sec"]), "image_hw": "×".join(map(str, std["image_hw"])),
         "ms_single": f"{ms['single']:.1f}", "ms_images": f"{ms['images']:.1f}", "ms_batch": f"{ms['batch']:.1f}",

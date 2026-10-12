@@ -1,9 +1,5 @@
 # LabUtopia · place — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
-
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, **as if it were real**: the simulator (LabUtopia's chemistry laboratory on NVIDIA Isaac
 Sim) runs in a service you cannot open. You get one client and one episode.
 **Task:** Pick up the glass beaker and set it down on the white square plate. Success the moment, after the beaker's centre has been more than 10 cm above where it stood, the beaker has stood on the plate for one second (60 control steps in a row): its centre within 5 cm (horizontally) of the plate's centre and within 5 cm of the height at which it started, with the gripper more than 5 cm away from the beaker's centre (measured from the point between the fingertips).
@@ -17,7 +13,7 @@ On the bench in front of the arm: a glass beaker, about 11 cm across and 9 cm ta
   the robot's own proprioception: joint positions, velocities and drive efforts, the gripper's opening, the pose of its
   tool frame and the targets in effect. No poses of the objects or instruments, no success check: `meta["done"]` /
   `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it). **The service
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). **The service
   needs 5 to 10 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
   `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.
@@ -78,3 +74,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

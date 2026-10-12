@@ -158,8 +158,7 @@ BDDL goals; the BDDL problems are copied from the image. Their predicates are th
 
 ## Time budget (D8)
 14400 s (the protocol maximum) for every task of both modes, the same in the whole benchmark. The number lives in
-`scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md)); `instruction.md` states it once, in the standard
-cutoff paragraphs under its title (PROTOCOL §2.12), and the benchmark's own text says "the time limit at the top".
+`scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md)); `instruction.md` states it once, in its closing `## Time limit` section (PROTOCOL §2.12), and the benchmark's own text says "the time limit (`## Time limit`)".
 Why 14400 s:
 - every Python process pays an Isaac launch and scene load: about 2-3 minutes with a warm Kit cache, and the first launch
   of a trial adds about 4 minutes to compile shaders into the trial's own cache (below);

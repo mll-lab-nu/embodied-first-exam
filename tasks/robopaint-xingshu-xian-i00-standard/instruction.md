@@ -1,9 +1,5 @@
 # RoboPaint · 行书 臨帖 · 賢 — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
-
 You control a **Franka Panda arm holding a large Chinese writing brush (毛笔)** (ManiSkill 3.0.1 physics; the brush's mark comes from
 a dynamic model of a real brush) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and one episode. **Task (臨帖):** copy the exemplar character **賢** in running script (行书), shown in the picture
@@ -16,7 +12,7 @@ client and one episode. **Task (臨帖):** copy the exemplar character **賢** i
   efforts and its brush-tip pose. There is no sheet readout, no brush state and **no score**: the grader computes it afterwards from
   the service's own record of your episode.
 - A **practice sheet** lies beside the main sheet: test the brush there as much as you like; it is never scored or counted.
-- Steps are unlimited; **the time limit at the top** is your only budget (`meta["time_left_s"]` is the service's count of
+- Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
   it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
   simulated time; watching with `seconds > 0` also advances it).
 - There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
@@ -143,3 +139,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **9 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

@@ -33,7 +33,7 @@ CLIENT_ENV = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().sp
 CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
 # The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12; why longer than the default:
 # dexterous control of a 16-DoF hand per arm, docs/benchmarks/dexjoco.md). No copy of the number here: normalize writes it
-# into task.toml, the instruction's first paragraphs, the README row and the sim service's wall clock.
+# into task.toml, the instruction's closing `## Time limit` section, the README row and the sim service's wall clock.
 CUTOFF = {m: cutoff_sec("DexJoCo", m) for m in ("privileged", "standard")}
 # Privileged hand-in cap (rows of trajectory.npz), read from the tooling: its one source.
 MAX_ROWS = int(re.search(r"^MAX_TRAJECTORY_ROWS = ([\d_]+)", (SHARED / "rcb_dexjoco.py").read_text(), re.M).group(1))
@@ -483,7 +483,7 @@ one client and one episode. **Task:** {f["goal"]}
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) plus
   the robot's own proprioception (joints, tcp poses, the current targets). No object poses, no success check:
   `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it). Actions and
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). Actions and
   simulated time are reported as cost. Do not stop before the task is solved.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record (save it early, update it as you go).

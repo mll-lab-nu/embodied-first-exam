@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """The agent's time cutoff (docs/PROTOCOL.md §2.12): one table, and every task says what the table says.
 
-scripts/task_cutoffs.toml gives the seconds per benchmark and mode. For every task:
-  - the table has a number for its benchmark and mode;
+scripts/task_cutoffs.toml gives the seconds per benchmark and mode, with optional exceptions per family and per task
+(the most specific wins). For every task:
+  - the table has a number for it;
   - `[agent] timeout_sec` in task.toml is that number (Harbor enforces it);
-  - instruction.md opens with its `# ` title and then the two cutoff paragraphs scripts/task_conventions.py renders:
-    "You have N seconds to complete this task. Do not cheat by using online solutions or hints specific to this task."
-    with the same N, then what the cutoff means in the task's mode; the sentence stands there once;
+  - instruction.md ends with the section scripts/task_conventions.py renders, the last thing the agent reads:
+    `## Time limit`, "You have N seconds to complete this task. Do not cheat by using online solutions or hints specific
+    to this task." with the same N, then what the cutoff means in the task's mode; nothing follows it, and the heading
+    and the sentence stand there once;
   - nothing else in instruction.md states the agent's limit as a duration (the wordings tasks used before 2026-10-11:
     "wall-clock budget is 90 min (5400 s)", "You have 60 minutes of wall-clock time", "Time limit: one hour", ...): a
     second statement goes stale at the next change of the table, and two limits in one instruction are worse than none;
@@ -14,7 +16,8 @@ scripts/task_cutoffs.toml gives the seconds per benchmark and mode. For every ta
   - standard modes: the `sim` service is told the same number (`RCB_WALL_CLOCK_S` in environment/docker-compose.yaml,
     what its `/spec` budget and `meta["time_left_s"]` report; PROTOCOL §2.3).
 Repository level (no task given): the table itself is usable, has a number for exactly the benchmark-mode pairs that
-have tasks, and docs/CUTOFFS.md is what `python3 scripts/task_cutoffs.py apply` renders from it.
+have tasks, every exception names a family or a task that exists, and docs/CUTOFFS.md is what
+`python3 scripts/task_cutoffs.py apply` renders from it.
 
     python3 ci_checks/check-cutoffs.py [task dirs]      # default: every task and the repository-level rules
 Fix: edit scripts/task_cutoffs.toml (never a task), then `python3 scripts/task_cutoffs.py apply`. Standard library only.
@@ -47,7 +50,7 @@ OTHER_LIMIT = [
 
 
 def own_text(instruction: str) -> str:
-    """The instruction without the generated parts: the cutoff paragraphs and the two closing sections."""
+    """The instruction without the generated parts: the three closing sections (and cutoff paragraphs anywhere)."""
     s = tc.strip_cutoff(instruction)
     for heading in (tc.EXTERNAL_HEADING, tc.LIMITS_HEADING):
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
@@ -76,24 +79,25 @@ def check_task(task: Path) -> list[str]:
     sec = tc.cutoff_for(task)
     if sec is None:
         return [f"scripts/task_cutoffs.toml has no cutoff for {bench or 'this benchmark'!s} in {mode} mode "
-                "(add the number to the benchmark's row; a new benchmark also needs its label in task_conventions.py BENCHMARKS)"]
+                "(add the number to the benchmark's row in [cutoff_sec]; a new benchmark also needs its label in "
+                "task_conventions.py BENCHMARKS)"]
     meta = tomllib.loads((task / "task.toml").read_text())
     have = meta.get("agent", {}).get("timeout_sec")
     if have is None or float(have) != sec:
-        errs.append(f"[agent] timeout_sec = {have!r}, the table says {sec} ({bench}, {mode})")
+        errs.append(f"[agent] timeout_sec = {have!r}, the table says {sec} ({task_cutoffs.source_of(task)})")
     ins = (task / "instruction.md").read_text(encoding="utf-8") if (task / "instruction.md").is_file() else ""
-    lines = ins.split("\n")
     want = tc.render_cutoff(sec, mode)
-    if not lines or not lines[0].startswith("# "):
-        errs.append("instruction.md does not start with its `# ` title line (the cutoff paragraphs stand right under it)")
-    elif not ins.startswith(lines[0] + "\n\n" + want + "\n"):
+    if not ins.startswith("# "):
+        errs.append("instruction.md does not start with its `# ` title line")
+    if not ins.endswith("\n\n" + want):
         stated = re.findall(tc.CUTOFF_RE, ins)
-        errs.append("instruction.md does not open, right under its title, with the cutoff paragraphs rendered for "
-                    f"{sec} s in {mode} mode" + (f" (it says {', '.join(stated)} seconds)" if stated else " (the sentence is missing)"))
-    if len(re.findall(tc.CUTOFF_RE, ins)) > 1:
-        errs.append("instruction.md has the cutoff sentence more than once")
-    errs += [f"instruction.md states the agent's limit a second time, outside the cutoff paragraphs ({x}); say "
-             "\"the time limit at the top\" instead of a number" for x in other_limits(ins)]
+        errs.append(f"instruction.md does not end with the `{tc.CUTOFF_HEADING}` section rendered for {sec} s in {mode} mode "
+                    "(the last thing the agent reads; nothing after it)"
+                    + (f" (it says {', '.join(stated)} seconds)" if stated else " (the sentence is missing)"))
+    if len(re.findall(tc.CUTOFF_RE, ins)) > 1 or len(re.findall(rf"(?m)^{re.escape(tc.CUTOFF_HEADING)}[ \t]*$", ins)) > 1:
+        errs.append(f"instruction.md has the cutoff sentence or the `{tc.CUTOFF_HEADING}` heading more than once")
+    errs += [f"instruction.md states the agent's limit a second time, outside `{tc.CUTOFF_HEADING}` ({x}); say "
+             f"\"{tc.CUTOFF_REF}\" instead of a number" for x in other_limits(ins)]
     readme = (task / "README.md").read_text(encoding="utf-8") if (task / "README.md").is_file() else ""
     if f"| Agent time budget | {sec} s;" not in readme:
         errs.append(f"README.md's `Agent time budget` row does not say {sec} s")
@@ -117,11 +121,26 @@ def check_task(task: Path) -> list[str]:
 def check_repo(tasks: list[Path]) -> list[str]:
     errs: list[str] = []
     table = tc.cutoff_table()
+    families, by_task = tc.cutoff_overrides()
     have = {(tc.bench_of(t), tc.mode_of(t)) for t in tasks}
     for bench, row in sorted(table.items()):
         for mode in row:
             if (bench, mode) not in have:
                 errs.append(f"scripts/task_cutoffs.toml: {bench} has a cutoff for {mode} mode but no task in that mode")
+    # an exception that reaches no task is a typo (a family is `[metadata] family` in task.toml) or a leftover
+    fam = {(tc.bench_of(t), tc.family_of(t), tc.mode_of(t)) for t in tasks} if families else set()
+    for bench, rows in sorted(families.items()):
+        for family, row in sorted(rows.items()):
+            for mode in row:
+                if (bench, family, mode) not in fam:
+                    known = sorted({f for b, f, _m in fam if b == bench})
+                    errs.append(f"scripts/task_cutoffs.toml: [family_cutoff_sec] {bench} has no task of family {family!r} in "
+                                f"{mode} mode (its families, `[metadata] family` in task.toml: {', '.join(known[:12])}"
+                                + (", ..." if len(known) > 12 else "") + ")")
+    names = {t.name for t in tasks}
+    for name in sorted(by_task):
+        if name not in names:
+            errs.append(f"scripts/task_cutoffs.toml: [task_cutoff_sec] names {name!r}, which is not a task directory")
     doc = ROOT / "docs/CUTOFFS.md"
     if not doc.is_file() or doc.read_text(encoding="utf-8") != task_cutoffs.render_doc(tasks):
         errs.append("docs/CUTOFFS.md is not what scripts/task_cutoffs.toml renders (run python3 scripts/task_cutoffs.py apply)")

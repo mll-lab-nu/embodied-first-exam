@@ -1,9 +1,5 @@
 # LabUtopia · heat_liquid — frozen instance
 
-You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
-
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, in LabUtopia's simulated chemistry laboratory (NVIDIA Isaac Sim, PhysX), via Python,
 through joint targets.
 **Task:** Put the beaker on the heater's plate and press the heater's button. Success, at the first control step at which the third condition is met: (1) the beaker's centre has been above z = 0.82 m; (2) after that, the beaker has been on the plate: its centre at or below z = 0.86 m and within 0.05 m in x and in y of the plate's frame (`/World/heat_device/heat_device/heat_device/plat`); (3) after that, the beaker is on the plate as in (2) and the button's frame (`/World/heat_device/button`) is below z = 0.761 m.
@@ -100,3 +96,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of GPU memory**, **32 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

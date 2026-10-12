@@ -731,7 +731,7 @@ def assemble(family: str, slug: str, tpl: str, template_root: Path, out_root: Pa
         for f in ("instruction.md", "README.md", "task.toml"):
             (d / f).write_text(render((TPL["dir"] / tdir / f"{side}_{f}").read_text(), values).replace("ORACLE_STATS", stats))
     # The agent's time limit: normalize writes it from scripts/task_cutoffs.toml into both task.toml files, the sim's
-    # RCB_WALL_CLOCK_S and the instructions' first paragraphs (PROTOCOL §2.12); ci_checks/check-cutoffs.py checks they agree.
+    # RCB_WALL_CLOCK_S and the instructions' closing `## Time limit` section (PROTOCOL §2.12); ci_checks/check-cutoffs.py checks they agree.
     # The literal in the templates' task.toml is only what normalize replaces.
     for d in (dst_u, dst_l):
         normalize(d)

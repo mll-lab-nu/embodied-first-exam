@@ -23,15 +23,15 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robodojo"
 OVERRIDES = json.loads((HERE / "instance_overrides.json").read_text())   # per-task determinism class, physics, change log
 # The agent's time limit is not this generator's: scripts/task_cutoffs.toml is the one table (docs/PROTOCOL.md §2.12), and
-# scripts/task_conventions.py (normalize) writes `[agent] timeout_sec`, the instruction's cutoff paragraphs at the top,
+# scripts/task_conventions.py (normalize) writes `[agent] timeout_sec`, the instruction's closing `## Time limit` section,
 # the README row and the standard service's RCB_WALL_CLOCK_S from it (ci_checks/check-cutoffs.py compares). What is
 # rendered here takes the number from the same table (agent_timeout) and the instruction's own text names none: CUTOFF
-# is what RoboDojo adds to the cutoff paragraphs, placed right after the task's introduction.
+# is what RoboDojo adds to the closing `## Time limit` section, placed right after the task's introduction.
 CUTOFF = {
-    "privileged": """`/app/output/trajectory.npz` must be written before the time limit at the top is up: save a working
+    "privileged": """`/app/output/trajectory.npz` must be written before the time limit (`## Time limit`) is up: save a working
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends @@STARTUP@@ launching Isaac Sim and building the scene, and that time counts.""",
-    "standard": """Nothing is handed in, so the task must be completed before the time limit at the top is up (the episode
+    "standard": """Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
 ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).""",
 }

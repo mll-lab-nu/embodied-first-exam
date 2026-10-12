@@ -68,7 +68,7 @@ ALLOWED_HOSTS = (
     '"*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]'
 )
 # `[agent] timeout_sec` is the cutoff table's number for the mode (scripts/task_cutoffs.toml, PROTOCOL §2.12);
-# normalize writes the same number again, with the instruction's cutoff paragraphs and the sim service's wall clock.
+# normalize writes the same number again, with the instruction's closing `## Time limit` section and the sim service's wall clock.
 def agent_block(mode: str) -> str:
     return f"""[agent]
 timeout_sec = {cutoff_sec(TITLE, mode)}.0
@@ -252,7 +252,7 @@ client and one episode.
 - **No reset.** What you knock over stays knocked over.
 - **No privileged state.** You see what the robot's cameras see (RGB, optional depth, with each camera's
   calibration) and the robot's own state. No object poses, no scene layout, no success signal.
-- Your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it). There is nothing
+- Your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). There is nothing
   to hand in: the service records the episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record.
 - Do not use the benchmark's demonstrations, trained policies or any published solution; write your own controller.

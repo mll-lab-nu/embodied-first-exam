@@ -108,8 +108,7 @@ which was graded on ws (AMD, with `instance_exact = 1`).
 take several attempts (a failed push or a dropped object is reset in privileged mode and must be recovered in standard
 mode), every Python process pays about a minute of scene build before its first step, and a standard-mode crash resume
 replays the episode on the agent's clock. Results are reported with this budget. The number lives in
-`scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in the standard
-cutoff paragraphs under its title (PROTOCOL §2.12).
+`scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Grading and determinism
 - Physics on Genesis' CPU backend (single-threaded): bit-exact, in-process repeats included. The privileged verifier

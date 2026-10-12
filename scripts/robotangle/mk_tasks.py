@@ -193,15 +193,15 @@ def review_fixes(s: str, name: str, base: str, mode: str) -> str:
                      "the verifier has to replay it twice within its own time limit, so `s.step` stops\n  after that many control steps "
                      "since the last reset, and a longer trajectory is rejected as invalid (reward 0). Your\n  wall-clock budget is",
                      f"{base} step budget")
-            # the agent's limit is stated once, by the cutoff paragraphs normalize writes at the top (PROTOCOL §2.12)
-            s, n = re.subn(r"Your\n  wall-clock budget is \d+ min \(\d+ s\)\. ", "The time limit\n  at the top is your only budget. ", s)
+            # the agent's limit is stated once, by the closing `## Time limit` section normalize writes (PROTOCOL §2.12)
+            s, n = re.subn(r"Your\n  wall-clock budget is \d+ min \(\d+ s\)\. ", "The time limit\n  (`## Time limit`) is your only budget. ", s)
             assert n == 1, f"{base}: the privileged budget sentence"
     elif name == "instruction.md":
         assert step_time(s) == step, f"{base}: the two modes state different step times"
-        # the agent's limit is stated once, at the top (PROTOCOL §2.12); what is RoboTangle's own stays here: this service
+        # the agent's limit is stated once, in `## Time limit` (PROTOCOL §2.12); what is RoboTangle's own stays here: this service
         # ends the episode on its own wall clock (server.py deadline_reached, counted from the service's first start)
         s, n = re.subn(r'- \*\*Your wall-clock budget is \d+ min \(\d+ s\)\*\* \(`meta\["time_left_s"\]` counts it down\); ',
-                       "- **Your only budget is the time limit at the top**; ", s)
+                       "- **Your only budget is the time limit (`## Time limit`)**; ", s)
         assert n == 1, f"{base}: the standard budget sentence"
         s, n = re.subn(r"(One control step takes about [0-9.]+ s of wall clock here\.)\n(?=- There is nothing to hand in)",
                        lambda m: m.group(1) + SERVICE_DEADLINE, s)

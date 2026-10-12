@@ -156,15 +156,29 @@ MUTATIONS = [
      STD, TOML, sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?timeout_sec = )[0-9.]+", r"\g<1>28800.0"), CUTOFFS, "the table says"),
     ("the instruction's cutoff sentence with another number",
      STD, "instruction.md", sub(r"^You have \d+ seconds to complete this task\.", "You have 28800 seconds to complete this task."),
-     CUTOFFS, "does not open, right under its title, with the cutoff paragraphs"),
+     CUTOFFS, "does not end with the `## Time limit` section"),
     ("the instruction without the cutoff sentence",
      PRIV, "instruction.md", sub(r"^You have \d+ seconds to complete this task\.[^\n]*\n\n", ""), CUTOFFS, "the sentence is missing"),
-    ("the cutoff sentence further down, not under the title",
-     PRIV, "instruction.md", lambda s: (lambda rows: "\n".join(rows[:2] + ["An introduction first."] + [""] + rows[2:]))(s.split("\n")),
-     CUTOFFS, "does not open, right under its title, with the cutoff paragraphs"),
+    ("the cutoff section is not the end of the instruction: something follows it",
+     PRIV, "instruction.md", append("\nOne more remark after the time limit.\n"), CUTOFFS, "does not end with the `## Time limit` section"),
+    ("the cutoff paragraphs under the title, where they stood until 2026-10-12, instead of at the end",
+     PRIV, "instruction.md",
+     lambda s: (lambda head, sep, block: head.split("\n", 1)[0] + "\n\n" + block.split("\n", 1)[1] + "\n" + head.split("\n", 1)[1])(*s.partition("\n## Time limit\n"))
+     if "\n## Time limit\n" in s else (_ for _ in ()).throw(AssertionError("no `## Time limit` section")),
+     CUTOFFS, "does not end with the `## Time limit` section"),
     ("a privileged task with the standard modes' second paragraph",
      PRIV, "instruction.md", sub(r"only what is in `/app/output/` at that moment is\s+graded", "the episode is graded as it stands"),
-     CUTOFFS, "does not open, right under its title, with the cutoff paragraphs"),
+     CUTOFFS, "does not end with the `## Time limit` section"),
+    ("the closing sections in another order (`## Time limit` before `## Resource limits`)",
+     STD, "instruction.md",
+     lambda s: (lambda a, b, c: a + "\n## Time limit\n" + c.rstrip("\n") + "\n\n## Resource limits\n" + b.rstrip("\n") + "\n")(
+         s.split("\n## Resource limits\n")[0], *s.split("\n## Resource limits\n")[1].split("\n## Time limit\n")),
+     CUTOFFS, "does not end with the `## Time limit` section"),
+    ("... which the resources check refuses too (the limits paragraph is the last thing before `## Time limit`)",
+     STD, "instruction.md",
+     lambda s: (lambda a, b, c: a + "\n## Time limit\n" + c.rstrip("\n") + "\n\n## Resource limits\n" + b.rstrip("\n") + "\n")(
+         s.split("\n## Resource limits\n")[0], *s.split("\n## Resource limits\n")[1].split("\n## Time limit\n")),
+     RESOURCES, "does not end (before `## Time limit`) with the `## Resource limits` paragraph"),
     ("the instruction states the limit a second time, in a benchmark's old words",
      STD, "instruction.md", sub(r"^(## External material)$", r"Your wall-clock budget is 4 h (14400 s); there is no step budget.\n\n\1"),
      CUTOFFS, "states the agent's limit a second time"),
@@ -248,6 +262,76 @@ def run(cmd: list[str], task: Path) -> tuple[int, str]:
     return r.returncode, r.stdout + r.stderr
 
 
+def cutoff_exceptions(tmp: Path) -> int:
+    """The cutoff table's exceptions (PROTOCOL §2.12): task > family > benchmark and mode. Three real tasks under a
+    table with a family entry and a task entry: normalize writes each task the right number, check-cutoffs.py accepts
+    exactly that (and refuses the same files under the repository's table), an entry that reaches no task fails the
+    repository-level rule, and tables that are not usable are refused. Returns the number of failures."""
+    import os
+    import tomllib
+    fam_p, fam_s, other = "behavior-boxing-books-up-for-storage-i00-privileged", STD, "behavior-bringing-water-i00-standard"
+    family = tomllib.loads((ROOT / "tasks" / STD / "task.toml").read_text())["metadata"]["family"]
+    base = (ROOT / "scripts/task_cutoffs.toml").read_text()
+    head = base[:base.index("\n[[history]]") + 1]      # the table without its history
+    tables: list[Path] = []
+
+    def table(extra: str) -> Path:
+        tables.append(tmp / f"cutoffs-{len(tables)}.toml")
+        tables[-1].write_text(head + extra)
+        return tables[-1]
+
+    def run_py(args: list[str], cutoffs: Path | None) -> tuple[int, str]:
+        env = {k: v for k, v in os.environ.items() if k != "RCB_CUTOFFS_FILE"}     # None: the repository's table
+        if cutoffs is not None:
+            env["RCB_CUTOFFS_FILE"] = str(cutoffs)
+        r = subprocess.run([sys.executable] + args, capture_output=True, text=True, env=env)
+        return r.returncode, r.stdout + r.stderr
+
+    bad = 0
+
+    def expect(ok: bool, what: str, out: str = "") -> None:
+        nonlocal bad
+        if not ok:
+            bad += 1
+            print(f"FAIL check-ci-selftest [cutoff exceptions: {what}]" + (f":\n{out[-600:]}" if out else ""))
+
+    good = table(f'[family_cutoff_sec."BEHAVIOR-1K"]\n"{family}" = {{ standard = 7200, privileged = 9000 }}\n'
+                 f'[task_cutoff_sec]\n"{fam_p}" = 5400\n')
+    work = tmp / "exceptions"
+    for name in (fam_p, fam_s, other):
+        shutil.copytree(ROOT / "tasks" / name, work / name)
+    rc, out = run_py([str(ROOT / "scripts/task_conventions.py")] + [str(work / n) for n in (fam_p, fam_s, other)], good)
+    expect(rc == 0, "normalize under a table with exceptions", out)
+    want = {fam_p: 5400, fam_s: 7200, other: 14400}     # the task's own; its family's for the mode; the benchmark's
+    for name, sec in want.items():
+        t = work / name
+        got = tomllib.loads((t / "task.toml").read_text())["agent"]["timeout_sec"]
+        expect(float(got) == sec, f"{name}: [agent] timeout_sec is {got}, expected {sec}")
+        expect(f"\nYou have {sec} seconds to complete this task." in (t / "instruction.md").read_text(), f"{name}: the instruction does not say {sec} seconds")
+        rc, out = run_py([CUTOFFS[1], str(t)], good)
+        expect(rc == 0, f"{name}: check-cutoffs.py under the table with exceptions", out)
+        rc, out = run_py([CUTOFFS[1], str(t)], None)
+        expect((rc != 0 and "the table says" in out) if sec != 14400 else rc == 0, f"{name}: check-cutoffs.py under the repository's table", out)
+    expect('RCB_WALL_CLOCK_S: "7200"' in (work / fam_s / "environment/docker-compose.yaml").read_text(), f"{fam_s}: the sim service's wall clock is not the family's 7200")
+    # an entry that reaches no task; tables that are not usable
+    for what, extra, say in [
+        ("a family that no task has", '[family_cutoff_sec."BEHAVIOR-1K"]\n"no_such_family" = { standard = 7200 }\n', "has no task of family 'no_such_family'"),
+        ("a family entry for a mode the family has no task in", f'[family_cutoff_sec."BEHAVIOR-1K"]\n"{family}" = {{ standard-realtime = 7200 }}\n', f"has no task of family '{family}' in standard-realtime mode"),
+        ("a task entry that is no task directory", '[task_cutoff_sec]\n"behavior-no-such-task-i00-standard" = 7200\n', "which is not a task directory"),
+        ("a family entry of an unknown benchmark", '[family_cutoff_sec."Behaviour"]\n"x" = { standard = 7200 }\n', "unknown benchmark 'Behaviour'"),
+        ("a family entry with an unknown mode", f'[family_cutoff_sec."BEHAVIOR-1K"]\n"{family}" = {{ limited = 7200 }}\n', "unknown mode 'limited'"),
+        ("a task entry above the cap", f'[task_cutoff_sec]\n"{fam_s}" = 20000\n', "is above the 14400 s cap"),
+        ("a task entry that is not a whole number of seconds", f'[task_cutoff_sec]\n"{fam_s}" = 3600.5\n', "is not a whole positive number of seconds"),
+        ("a task entry whose name is not a task directory name", '[task_cutoff_sec]\n"boxing_books" = 3600\n', "is not a task directory name"),
+    ]:
+        rc, out = run_py([CUTOFFS[1]], table(extra))
+        expect(rc != 0 and say in out, f"{what}: check-cutoffs.py must fail with `{say}`", out)
+    if not bad:
+        print("check-ci-selftest: the cutoff table's exceptions (task > family > benchmark and mode): 3 tasks written and "
+              "checked under a table with a family and a task entry, 8 unusable tables refused")
+    return bad
+
+
 def main() -> int:
     bad = 0
     with tempfile.TemporaryDirectory(prefix="rcb-ci-selftest-") as tmp:
@@ -285,6 +369,7 @@ def main() -> int:
                 bad += 1
                 print(f"FAIL check-ci-selftest [{what}]: {Path(cmd[-1]).name} "
                       + ("PASSED the broken task: the rule is blind" if rc == 0 else f"failed, but not with `{expect}`:\n{out[-600:]}"))
+        bad += cutoff_exceptions(Path(tmp))
     if not bad:
         print(f"check-ci-selftest: {len(MUTATIONS)} mutations of real tasks, each caught by its rule")
     return 1 if bad else 0

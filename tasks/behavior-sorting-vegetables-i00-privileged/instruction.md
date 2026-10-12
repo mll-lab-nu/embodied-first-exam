@@ -1,9 +1,5 @@
 # BEHAVIOR-1K · sorting_vegetables — frozen instance
 
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
-
 You control a simulated **R1Pro** mobile manipulator (BEHAVIOR-1K v3.9.2: OmniGibson on Isaac Sim, the 2026 BEHAVIOR
 Challenge stack) via Python. **Task:** Sort the vegetables in the kitchen. Two wicker baskets stand on the kitchen floor, one with three bok choy and three ears of sweet corn, the other with two broccoli, two leeks and three Vidalia onions; three mixing bowls stand on the countertop. Put the bok choy and the onions together into one mixing bowl, the leeks and the broccoli together into a second one, and the sweet corn into a third.
 
@@ -108,7 +104,7 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   finger targets, 0 = closed; assisted grasping holds what a closing gripper touches). The base entries are x, y, yaw
   position targets in the robot's own frame, re-applied every control step: a per-step displacement, 0 = stand still.
   `s.hold_action()` (the last command with the base at 0) is the no-op.
-- Control runs at 30 Hz with 120 Hz physics. There is no step budget: the time limit at the top is your only budget. Only a
+- Control runs at 30 Hz with 120 Hz physics. There is no step budget: the time limit (`## Time limit`) is your only budget. Only a
   runaway guard bounds an episode: it ends after 200,000 control steps (1.85 h of simulated time), and a trajectory
   with more rows than that is rejected (`bad_trajectory`, score 0). The trajectory must be the file
   `s.save_trajectory()` writes (an `.npz` with `actions` (T, 25) and `task`): a file the grader cannot read, or with
@@ -128,3 +124,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **24 GiB of GPU memory**, **24 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

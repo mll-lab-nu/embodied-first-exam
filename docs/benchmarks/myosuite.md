@@ -96,7 +96,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 - **Budget: 5400 s** (D8, uniform within the benchmark). Muscle-level control on a CPU-rendered simulator is slow to
   explore, and three of the seven positive examples below took a model 74-86 minutes (baoding, obj_reorient, relocate).
   The number lives in `scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction
-  states it in the standard cutoff paragraphs under its title (PROTOCOL §2.12).
+  states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Modes
 - **Privileged:** `rcb_myosuite.Session` in the agent's container: reset, the task's observation dict, MuJoCo model and

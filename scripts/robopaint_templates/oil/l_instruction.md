@@ -11,7 +11,7 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
   efforts and its brush-tip pose. There is no sheet readout, no brush state and **no score**: the grader computes it afterwards from
   the service's own record of your episode.
 - A **practice sheet** lies beside the main sheet: test the brush there as much as you like; it is never scored or counted.
-- Steps are unlimited; **the time limit at the top** is your only budget (`meta["time_left_s"]` is the service's count of
+- Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
   it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
   simulated time; watching with `seconds > 0` also advances it).
 - There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your

@@ -1,9 +1,5 @@
 # MuJoCo Playground · Go1Getup — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
-
 **Task:** The Unitree Go1 has fallen over. Make it get up and stand upright at its standing height.
 
 You control the Unitree Go1 quadruped — **as if it were real hardware** — in one episode of MuJoCo Playground's
@@ -19,7 +15,7 @@ The robot was dropped from 0.5 m in a random orientation with random joint angle
   velocity), foot contacts. No world positions, no success check.
 - **The episode ends** the moment the robot has been upright for 25 control steps in a row (success), after 300 control steps (`spec["max_control_steps"]`, counted by `meta["control_steps"]`), when you submit `done`, or when your time is up.
 - **Success** is 25 control steps in a row with the trunk within 10 deg of upright and the IMU at least 0.22 m above the floor (the Go1 stands at 0.255-0.26 m), judged after every control step; when the episode ends otherwise, it is judged on its last control steps.
-- Your only budget is the time limit at the top. Simulated time only advances with your commands (and
+- Your only budget is the time limit (`## Time limit`). Simulated time only advances with your commands (and
   `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
   from your first call to the service; approximate — the harness's own deadline is authoritative.
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
@@ -55,3 +51,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

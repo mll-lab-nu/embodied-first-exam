@@ -276,8 +276,8 @@ def context(t: dict, defaults: dict, facts: dict) -> dict:
         "instance_tag": tag,
         "seed": defaults["seed"],
         # The agent's time limit is the cutoff table's (scripts/task_cutoffs.toml, per benchmark and mode; PROTOCOL §2.12):
-        # normalize writes it into task.toml, the sim service's RCB_WALL_CLOCK_S and the cutoff paragraphs that open
-        # instruction.md. The templates never state it as a number: they say "the time limit at the top".
+        # normalize writes it into task.toml, the sim service's RCB_WALL_CLOCK_S and the closing `## Time limit` section of
+        # instruction.md. The templates never state it as a number: they say "the time limit (`## Time limit`)".
         "agent_timeout": float(cutoff_sec(BENCHMARK, "privileged")),
         "cpus": defaults["cpus"],
         "allowed_hosts": ", ".join(f'"{h}"' for h in agent_hosts()),

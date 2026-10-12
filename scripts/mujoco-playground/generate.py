@@ -154,7 +154,7 @@ RUN chmod +x /tests/test.sh
 """
 # The agent's time cutoff per mode: the table's number (scripts/task_cutoffs.toml, PROTOCOL §2.12), written into
 # `[agent] timeout_sec` and the sim service's wall clock; normalize writes the same number again, and the instruction's
-# cutoff paragraphs. No template states it a second time.
+# closing `## Time limit` section. No template states it a second time.
 CUTOFF = {m: cutoff_sec("MuJoCo Playground", m) for m in ("privileged", "standard")}
 STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).

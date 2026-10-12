@@ -1,10 +1,12 @@
-# Agent time cutoffs: THE table (docs/PROTOCOL.md §2.12). One row per benchmark, one number per mode, in seconds.
+# Agent time cutoffs: THE table (docs/PROTOCOL.md §2.12). One row per benchmark, one number per mode, in seconds;
+# optional exceptions per family and per task further down.
 #
-# The number is the agent's wall-clock limit: Harbor's `[agent] timeout_sec`, counted from the start of the agent's
-# session; at the cutoff the agent is stopped and the trial is graded as it stands. Everything that states or follows
-# the limit is written from this file by scripts/task_conventions.py (`normalize`): `[agent] timeout_sec` in task.toml,
-# the first paragraph of instruction.md ("You have N seconds to complete this task. ..."), the README's
-# "Agent time budget" row and, in the standard modes, the sim service's `RCB_WALL_CLOCK_S`.
+# The number is the agent's wall-clock limit: Harbor's `[agent] timeout_sec`, counted around the agent's run only
+# (after the environment is built and started and the harness is installed); at the cutoff the agent is stopped and the
+# trial is graded as it stands. Everything that states or follows the limit is written from this file by
+# scripts/task_conventions.py (`normalize`): `[agent] timeout_sec` in task.toml, the closing `## Time limit` section of
+# instruction.md ("You have N seconds to complete this task. ..."), the README's "Agent time budget" row and, in the
+# standard modes, the sim service's `RCB_WALL_CLOCK_S`.
 #
 # To change a time:
 #   1. edit the number in this file, and add a `[[history]]` entry at the bottom (date, who decided, old -> new);
@@ -42,6 +44,18 @@
 "RoboWits"          = { privileged =  5400, standard =  5400 }
 "VLABench"          = { privileged =  3600, standard =  3600 }
 "YAMLab"            = { privileged =  5400, standard =  5400 }
+
+# Exceptions (optional; none is in use today). The most specific entry wins: task > family > the benchmark's row above.
+# - A family is `[metadata] family` in task.toml (`python3 scripts/task_cutoffs.py families "RoboTangle"` lists a
+#   benchmark's). A family's entry gives a number per mode; a mode it leaves out keeps the benchmark's number.
+# - A task is its directory name under tasks/ (the mode is in the name).
+# An entry that matches no task fails CI. An exception is an owner decision like any cutoff: add its `[[history]]` entry.
+#
+# [family_cutoff_sec."RoboTangle"]
+# "cast_coil" = { privileged = 14400, standard = 14400 }      # every cast_coil task, whatever its tier
+#
+# [task_cutoff_sec]
+# "robotangle-cast-coil-hard-i00-standard" = 10800             # this one task directory
 
 # History of the values, newest last: one entry per change (docs/CUTOFFS.md shows them; PROTOCOL §2.12).
 # [[history]]

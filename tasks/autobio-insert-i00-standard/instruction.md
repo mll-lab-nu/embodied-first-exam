@@ -1,9 +1,5 @@
 # AutoBio · insert — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
-
 You control a **UR5e** arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, **as if it were real**: the simulator (AutoBio's biology laboratory on MuJoCo 3.3.0) runs
 in a service you cannot open. You get one client and one episode.
 **Task:** Move the 50 mL centrifuge tube (orange screw cap) from the rack it stands in to the other rack, into the slot AutoBio calls row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row the end slot on the side of the first rack. Success the moment the tube stands in that slot: within 15 mm of the slot's centre and seated at the height at which a tube stands in a slot (within 1 mm).
@@ -18,7 +14,7 @@ On the bench: two 10-slot tube racks (2 rows of 5 each) side by side, with one c
   the robot's own proprioception: joint positions, velocities and drive efforts, gripper openings, the
   poses of its tool frames and the targets in effect. No poses of tubes, racks or instruments, no instrument state, no
   success check: `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it).
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
 - `r.submit("done", [])` ends the episode in its current state; before the goal is reached that is a failure.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
@@ -65,3 +61,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

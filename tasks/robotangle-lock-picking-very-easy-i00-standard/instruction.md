@@ -1,9 +1,5 @@
 # RoboTangle (simulator package `topogym`) · lock_picking — STANDARD MODE (robot as a service, eai-standard/2.4)
 
-You have 21600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
-
 You control a robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and one episode. **Task:** Pick up the two-tab key from its rest. Insert the tabbed key through all two rotor plates and the final END plate, while respecting their slots and stops. Both rotor slots start aligned for straight insertion.
 
@@ -42,7 +38,7 @@ client and one episode. **Task:** Pick up the two-tab key from its rest. Insert 
   objects are (no object poses or positions). The success implementation is not exposed, and of the simulator's internal
   measurements only the safety readings of `meta["safety"]` are (listed under Action types, below); the task
   requirements above still apply in full.
-- **Your only budget is the time limit at the top**; there is no step budget, but the
+- **Your only budget is the time limit (`## Time limit`)**; there is no step budget, but the
   episode ends after 200000 control steps, watches included (83 min of simulated time; a technical cap,
   `spec["max_control_steps"]`: `meta["reason"]` is `step_guard`, and the episode is graded as it stands). Actions and simulated time are reported as cost. One control step takes about 0.08 s of wall clock here.
   This service also ends the episode itself (`meta["reason"]` is `timeout`; it is graded as it stands) when its own
@@ -156,3 +152,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 21600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

@@ -352,7 +352,7 @@ Sim) runs in a service you cannot open. You get one client and one episode.
   the robot's own proprioception: joint positions, velocities and drive efforts, the gripper's opening, the pose of its
   tool frame and the targets in effect. No poses of the objects or instruments, no success check: `meta["done"]` /
   `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it). **The service
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). **The service
   needs {cold(f)} to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
   `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.

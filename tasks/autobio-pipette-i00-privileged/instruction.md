@@ -1,9 +1,5 @@
 # AutoBio · pipette — frozen instance
 
-You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
-
 You control two **UR5e** arms fixed to the bench: `arm1` carries a dexterous hand that holds a pipette (its thumb presses the plunger); `arm2` has a Robotiq 2F-85 gripper, in AutoBio's simulated biology laboratory (MuJoCo 3.3.0), via Python, through joint
 position targets.
 **Task:** Aspirate from the 50 mL centrifuge tube with the pipette. AutoBio's test is a sequence: (1) with the plunger pressed (the thumb's target, action entry `arm1_dh_rh_thj3`, above 0.70 rad), the pipette tip is within 6.5 mm (horizontally) of the tube's axis and more than 5 mm below the liquid surface; (2) the plunger is released (the thumb's target below 0.45 rad) while the tip is still below the surface; (3) success at the first control step after (1) and (2) where the tip is more than 5 cm above the liquid surface. The tube holds 31.5 mL; the test is on positions and commands, and no liquid actually moves (AutoBio models the liquid's surface in the tube, not its transfer).
@@ -64,3 +60,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **10 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

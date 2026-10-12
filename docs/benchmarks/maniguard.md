@@ -227,7 +227,7 @@ primitives. Every one scores 0, for the reason given.
 
 ## Time budget (D8)
 The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL §2.12), and
-every instruction states it in the standard cutoff paragraphs at the top; the benchmark's own text names no number. On
+every instruction states it in its closing `## Time limit` section; the benchmark's own text names no number. On
 2026-10-11: 7200 s for every task of both modes (user decision 2026-10-03): every Python process pays an Isaac Sim 4.5 launch and the
 scene load (measured: 23 s with a warm cache, 239 s with a cold one, which every trial's first process has: Kit's shaders
 and OmniGibson's `torch.compile` kernels; then roughly 20 control steps per wall second), and the shortlisted tasks are long

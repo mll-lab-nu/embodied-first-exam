@@ -366,7 +366,7 @@ f" and {len(f['actuators'])} other actuators" if f["actuators"] else ""}).
   the body's own proprioception: joint positions, velocities and actuator torques, muscle activations and lengths{root}.
   No object, ball, opponent or goal poses, no success check: `meta["done"]` / `meta["reason"]` tell you when the episode
   is over and why.{refline}
-- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it).
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early: while
   the episode runs, or a reset is left, the run can still pass.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.

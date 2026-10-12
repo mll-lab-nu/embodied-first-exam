@@ -152,7 +152,7 @@ as usual: success 1, live = replay 1 = replay 2, `resumes = 1`, `sim_startups = 
 
 ## Time budget (D8)
 The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL §2.12), and
-every instruction states it in the standard cutoff paragraphs at the top; the benchmark's own text names no number. On
+every instruction states it in its closing `## Time limit` section; the benchmark's own text names no number. On
 2026-10-11: 5400 s for every task of both modes, as RoboLab: every Python process pays ~1.5-2.5 min of Isaac Sim launch and scene build
 (more on a loaded host), and these are long two-arm episodes (the reference demonstrations run 10-28 s of robot time).
 A trial's first Isaac start in a container compiles the shaders into the trial's fresh Kit cache: 629 s measured on a

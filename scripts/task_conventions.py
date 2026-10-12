@@ -23,8 +23,8 @@ What it does:
 - `instruction.md` ends with `## External material` (§2.11: the same text in every task) and `## Resource limits`, rendered
   from `[metadata.resources.limits]` (§2.10).
 - the agent's time cutoff (§2.12) from `scripts/task_cutoffs.toml`, the one table: `[agent] timeout_sec`, the standard
-  modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, and the first paragraphs of `instruction.md`, right
-  under its title ("You have N seconds to complete this task. Do not cheat ...", then what the cutoff means in the mode).
+  modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, and the last section of `instruction.md`, `## Time
+  limit` ("You have N seconds to complete this task. Do not cheat ...", then what the cutoff means in the mode).
 - `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
   Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
 """
@@ -116,18 +116,21 @@ EXTERNAL_TEXT = (
     "policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the "
     "package registries (PyPI, Debian / Ubuntu archives) only.")
 
-# PROTOCOL §2.12 (owner, 2026-10-11, board 0080): the agent's time cutoff. One table, scripts/task_cutoffs.toml (seconds
-# per benchmark and mode), from which normalize writes `[agent] timeout_sec`, the standard modes' RCB_WALL_CLOCK_S and
-# the first paragraphs of every instruction.md, right under its title: CUTOFF_SENTENCE (one format in every task, after
-# Terminal-Bench's), then CUTOFF_NOTE, what the cutoff means in the task's mode. Generator-owned like the two closing
-# sections: edit the table or these words here, never in a task (ci_checks/check-cutoffs.py compares).
+# PROTOCOL §2.12 (owner, 2026-10-11 / 12, board 0080): the agent's time cutoff. One table, scripts/task_cutoffs.toml
+# (seconds per benchmark and mode, with optional exceptions per family and per task), from which normalize writes
+# `[agent] timeout_sec`, the standard modes' RCB_WALL_CLOCK_S and the last section of every instruction.md, `## Time
+# limit`, the last thing the agent reads (owner: at the end, where Terminal-Bench has it): CUTOFF_SENTENCE (one format in
+# every task, Terminal-Bench's), then CUTOFF_NOTE, what the cutoff means in the task's mode. Generator-owned like the
+# two sections before it: edit the table or these words here, never in a task (ci_checks/check-cutoffs.py compares).
 CUTOFFS_FILE = Path(os.environ.get("RCB_CUTOFFS_FILE") or Path(__file__).resolve().parent / "task_cutoffs.toml")
 #   (RCB_CUTOFFS_FILE: another table, for a dry run of a change: tests and what-if renders only)
 CUTOFF_SENTENCE = ("You have {sec} seconds to complete this task. Do not cheat by using online solutions or hints specific "
                    "to this task.")
 CUTOFF_RE = (r"You have (\d+) seconds to complete this task\. Do not cheat by using online solutions or hints specific "
              r"to this task\.")
-_CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` below)."
+CUTOFF_HEADING = "## Time limit"
+CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text names the limit: never a duration
+_CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
 CUTOFF_NOTE = {
     "privileged": ("This is wall-clock time from the start of your session; the time a simulator takes to start counts. "
                    "When it is up you are stopped without warning and only what is in `/app/output/` at that moment is "
@@ -447,41 +450,104 @@ def render_external() -> str:
     return EXTERNAL_HEADING + "\n" + EXTERNAL_TEXT + "\n"
 
 
-_CUTOFFS: dict | None = None
+_CUTOFFS: tuple[dict, dict, dict] | None = None
 
 
-def cutoff_table() -> dict[str, dict[str, int]]:
-    """scripts/task_cutoffs.toml `[cutoff_sec]`: benchmark label -> mode -> seconds. Raises ValueError on a table that is
-    not usable: an unknown benchmark or mode, a value that is not a whole positive number of seconds, one above the cap."""
+def _cutoff_value(where: str, bench: str, sec) -> int:
+    cap = CUTOFF_CAP_EXCEPTIONS.get(bench, CUTOFF_CAP)
+    if isinstance(sec, bool) or not isinstance(sec, int) or sec <= 0:
+        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec!r} is not a whole positive number of seconds")
+    if sec > cap:
+        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: {sec} s is above the {cap} s cap (PROTOCOL D8, §2.3)")
+    return sec
+
+
+def _cutoff_row(where: str, bench: str, row) -> dict[str, int]:
+    if not isinstance(row, dict) or not row:
+        raise ValueError(f"{CUTOFFS_FILE.name}: {where}: expected {{ <mode> = <seconds>, ... }}")
+    for mode, sec in row.items():
+        if mode not in MODES:
+            raise ValueError(f"{CUTOFFS_FILE.name}: {where}: unknown mode {mode!r} (one of {', '.join(MODES)})")
+        _cutoff_value(f"{where} {mode}", bench, sec)
+    return row
+
+
+def _cutoffs() -> tuple[dict, dict, dict]:
+    """The table, read once and checked: (`[cutoff_sec]` benchmark -> mode -> seconds, `[family_cutoff_sec]` benchmark ->
+    family -> mode -> seconds, `[task_cutoff_sec]` task directory -> seconds). Raises ValueError on a table that is not
+    usable: an unknown benchmark or mode, a value that is not a whole positive number of seconds, one above the cap."""
     global _CUTOFFS
     if _CUTOFFS is None:
-        raw = tomllib.loads(CUTOFFS_FILE.read_text(encoding="utf-8")).get("cutoff_sec", {})
+        raw = tomllib.loads(CUTOFFS_FILE.read_text(encoding="utf-8"))
         labels = {label for _prefix, label in BENCHMARKS}
-        for bench, row in raw.items():
+
+        def known(bench: str, where: str) -> None:
             if bench not in labels:
-                raise ValueError(f"{CUTOFFS_FILE.name}: unknown benchmark {bench!r} (the names are the labels of "
+                raise ValueError(f"{CUTOFFS_FILE.name}: {where}: unknown benchmark {bench!r} (the names are the labels of "
                                  f"scripts/task_conventions.py BENCHMARKS: {', '.join(sorted(labels))})")
-            cap = CUTOFF_CAP_EXCEPTIONS.get(bench, CUTOFF_CAP)
-            for mode, sec in row.items():
-                if mode not in MODES:
-                    raise ValueError(f"{CUTOFFS_FILE.name}: {bench}: unknown mode {mode!r} (one of {', '.join(MODES)})")
-                if isinstance(sec, bool) or not isinstance(sec, int) or sec <= 0:
-                    raise ValueError(f"{CUTOFFS_FILE.name}: {bench} {mode}: {sec!r} is not a whole positive number of seconds")
-                if sec > cap:
-                    raise ValueError(f"{CUTOFFS_FILE.name}: {bench} {mode}: {sec} s is above the {cap} s cap (PROTOCOL D8, §2.3)")
-        _CUTOFFS = raw
+        table = raw.get("cutoff_sec", {})
+        for bench, row in table.items():
+            known(bench, "[cutoff_sec]")
+            _cutoff_row(bench, bench, row)
+        families = raw.get("family_cutoff_sec", {})
+        for bench, rows in families.items():
+            known(bench, "[family_cutoff_sec]")
+            if not isinstance(rows, dict):
+                raise ValueError(f"{CUTOFFS_FILE.name}: [family_cutoff_sec.\"{bench}\"]: expected \"<family>\" = {{ <mode> = <seconds> }}")
+            for family, row in rows.items():
+                _cutoff_row(f"{bench}, family {family!r}", bench, row)
+        tasks = raw.get("task_cutoff_sec", {})
+        for name, sec in tasks.items():
+            bench = next((label for prefix, label in BENCHMARKS if name.startswith(prefix)), "")
+            if not bench or not name.endswith(tuple("-" + m for m in MODES)):
+                raise ValueError(f"{CUTOFFS_FILE.name}: [task_cutoff_sec]: {name!r} is not a task directory name")
+            _cutoff_value(f"task {name}", bench, sec)
+        _CUTOFFS = (table, families, tasks)
     return _CUTOFFS
 
 
+def cutoff_table() -> dict[str, dict[str, int]]:
+    """scripts/task_cutoffs.toml `[cutoff_sec]`: benchmark label -> mode -> seconds, the default of every task of the
+    benchmark and mode."""
+    return _cutoffs()[0]
+
+
+def cutoff_overrides() -> tuple[dict[str, dict[str, dict[str, int]]], dict[str, int]]:
+    """The table's exceptions: (`[family_cutoff_sec]` benchmark -> family -> mode -> seconds, `[task_cutoff_sec]` task
+    directory -> seconds)."""
+    return _cutoffs()[1], _cutoffs()[2]
+
+
+def family_of(task: Path) -> str:
+    """A task's family: `[metadata] family` in its task.toml (what `[family_cutoff_sec]` is keyed by)."""
+    try:
+        return str(tomllib.loads((task / "task.toml").read_text()).get("metadata", {}).get("family", ""))
+    except (OSError, tomllib.TOMLDecodeError):
+        return ""
+
+
 def cutoff_for(task: Path) -> int | None:
-    """The agent's time cutoff of a task in seconds, from the table; None when the table has no number for its
-    benchmark and mode (ci_checks/check-cutoffs.py fails such a task: every task has one)."""
-    return cutoff_table().get(bench_of(task), {}).get(mode_of(task))
+    """The agent's time cutoff of a task in seconds, from the table. The most specific entry wins: the task's own
+    (`[task_cutoff_sec]`, by directory name), then its family's for its mode (`[family_cutoff_sec]`, the family being
+    `[metadata] family` in task.toml), then the benchmark's for its mode (`[cutoff_sec]`). None when the table has no
+    number for the task (ci_checks/check-cutoffs.py fails such a task: every task has one)."""
+    table, families, tasks = _cutoffs()
+    if task.name in tasks:
+        return tasks[task.name]
+    bench, mode = bench_of(task), mode_of(task)
+    rows = families.get(bench)
+    if rows:
+        sec = rows.get(family_of(task), {}).get(mode)
+        if sec is not None:
+            return sec
+    return table.get(bench, {}).get(mode)
 
 
 def cutoff_sec(bench: str, mode: str) -> int:
-    """The table's number for a benchmark label and mode: what a generator that still writes the number (task.toml,
-    the sim service's wall clock) takes it from, so that no generator keeps a copy of its own."""
+    """The benchmark's number for a mode (`[cutoff_sec]`): what a generator that still writes the number (task.toml,
+    the sim service's wall clock) takes it from, so that no generator keeps a copy of its own. A family's or a task's
+    exception is not a generator's business: normalize, which every generator ends with, writes the task's number
+    (cutoff_for) over whatever was rendered."""
     try:
         return cutoff_table()[bench][mode]
     except KeyError:
@@ -489,12 +555,15 @@ def cutoff_sec(bench: str, mode: str) -> int:
 
 
 def render_cutoff(sec: int, mode: str) -> str:
-    """instruction.md's first paragraphs (PROTOCOL §2.12): the cutoff sentence, then what the cutoff means in the mode."""
-    return CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + CUTOFF_NOTE[mode] + "\n"
+    """instruction.md's last section (PROTOCOL §2.12): the heading, the cutoff sentence, then what the cutoff means in
+    the mode."""
+    return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + CUTOFF_NOTE[mode] + "\n"
 
 
 def strip_cutoff(s: str) -> str:
-    """An instruction without the cutoff paragraphs (wherever an earlier render or an author put them)."""
+    """An instruction without the cutoff section, and without the cutoff paragraphs wherever an earlier render put them
+    (until 2026-10-12 they stood under the title, without a heading)."""
+    s = re.sub(rf"(?ms)^{re.escape(CUTOFF_HEADING)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
     s = re.sub(rf"(?m)^{CUTOFF_RE}[ \t]*\n(?:[ \t]*\n)*", "", s)
     return re.sub(rf"(?m)^{re.escape(CUTOFF_NOTE_START)}[^\n]*\n(?:[ \t]*\n)*", "", s)
 
@@ -558,27 +627,27 @@ def set_wall_clock(compose: str, sec: int, name: str = "") -> str:
 
 
 def normalize_instruction(task: Path) -> None:
-    """instruction.md opens, right under its title, with the cutoff paragraphs (PROTOCOL §2.12; left out when the table
-    has no number for the task) and ends with `## External material` (PROTOCOL §2.11) and `## Resource limits` rendered
-    from `[metadata.resources.limits]` (each replacing an earlier one); without limits in task.toml the last is left out."""
+    """instruction.md ends with three generator-owned sections, each replacing an earlier one: `## External material`
+    (PROTOCOL §2.11), `## Resource limits` rendered from `[metadata.resources.limits]` (§2.10; left out without limits
+    in task.toml) and, last, `## Time limit` rendered from the cutoff table (§2.12; left out when the table has no
+    number for the task): the last thing the agent reads."""
     p = task / "instruction.md"
     md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
     lim = (md.get("resources") or {}).get("limits")
     if not p.is_file():
         return
     s = p.read_text(encoding="utf-8")
-    for heading in (EXTERNAL_HEADING, LIMITS_HEADING) if isinstance(lim, dict) else (EXTERNAL_HEADING,):
-        s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
     sec = cutoff_for(task)
     if sec is not None:
         s = strip_cutoff(s)
-        block = render_cutoff(sec, mode_of(task))
-        title, nl, rest = s.partition("\n")
-        s = (title + "\n\n" + block + "\n" + rest.lstrip("\n")) if title.startswith("# ") else (block + "\n" + s.lstrip("\n"))
+    for heading in (EXTERNAL_HEADING, LIMITS_HEADING) if isinstance(lim, dict) else (EXTERNAL_HEADING,):
+        s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
     s = s.rstrip() + "\n\n" + render_external()
     if isinstance(lim, dict):
         env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
         s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
+    if sec is not None:
+        s += "\n" + render_cutoff(sec, mode_of(task))
     write_if_changed(p, s)
 
 

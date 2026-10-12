@@ -28,13 +28,14 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
   host's CPU count is the runner's to clamp (docker refuses it); the values in `scripts/task_resources.toml` stay.
   The same step's `sanitize` line in every `tests/test.sh` removes links and special files from `/app/output` before
   the grader reads the agent's files.
-- The agent's time cutoff (PROTOCOL §2.12) has one source, `scripts/task_cutoffs.toml` (seconds per benchmark and mode;
-  rendered for reading in `docs/CUTOFFS.md`). `normalize` writes it into `[agent] timeout_sec`, the standard modes'
-  `RCB_WALL_CLOCK_S` and the first two paragraphs of every `instruction.md`, right under the title ("You have N seconds
-  to complete this task. Do not cheat by using online solutions or hints specific to this task.", then what the cutoff
-  means in the mode): generator-owned like the two closing sections, whatever a template writes there is overwritten.
-  A benchmark's own text says "the time limit at the top", never a duration; a generator that needs the number takes
-  it from `task_conventions.cutoff_sec(label, mode)`. To change a time: edit the table, add a `[[history]]` entry,
+- The agent's time cutoff (PROTOCOL §2.12) has one source, `scripts/task_cutoffs.toml` (seconds per benchmark and mode,
+  with optional exceptions per family and per task: task > family > benchmark and mode; rendered for reading in
+  `docs/CUTOFFS.md`). `normalize` writes it into `[agent] timeout_sec`, the standard modes' `RCB_WALL_CLOCK_S` and the
+  last section of every `instruction.md`, `## Time limit` ("You have N seconds to complete this task. Do not cheat by
+  using online solutions or hints specific to this task.", then what the cutoff means in the mode), after `## External
+  material` and `## Resource limits`: generator-owned like those two, whatever a template writes there is overwritten.
+  A benchmark's own text says "the time limit (`## Time limit`)", never a duration; a generator that needs the number
+  takes the benchmark's from `task_conventions.cutoff_sec(label, mode)` (normalize applies an exception). To change a time: edit the table, add a `[[history]]` entry,
   `python3 scripts/task_cutoffs.py apply`, commit. `ci_checks/check-cutoffs.py` fails when a task disagrees with the table.
 - `ci_checks/run_all.sh [task dirs]`: contract checks (incl. verifier isolation: `[verifier] environment_mode = "separate"`
   + `tests/Dockerfile`) and the protocol check (`check-protocol.py`). New check =

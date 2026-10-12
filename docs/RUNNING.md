@@ -72,11 +72,15 @@ append-only copy of every trial's `agent/` record that neither the agent nor the
 event). `LOG_MIRROR=0` / `MEM_GUARD=0` skip starting the first two.
 
 ## The agent's time (the cutoff)
-A trial's agent gets the task's `[agent] timeout_sec` and nothing else: Harbor counts it from the start of the agent's
-session (after the environment has started and the harness is installed), stops the agent at the cutoff with
+A trial's agent gets the task's `[agent] timeout_sec` and nothing else: Harbor counts it around the agent's run only
+(`asyncio.wait_for(agent.run(...), timeout=...)`: after the environment has been built and started and the harness
+installed, each under a timeout of its own, not from the container's start; a standard-mode `sim` service starts with
+the environment, and what it has not finished starting by then is waited out inside the agent's time), stops the agent
+at the cutoff with
 `AgentTimeoutError`, and then collects the artifacts and runs the verifier as after any other end, so the trial is
 graded as it stands. The number comes from one table, `scripts/task_cutoffs.toml` ([CUTOFFS.md](CUTOFFS.md), PROTOCOL
-§2.12), and the task's instruction states it in its first lines. Official runs pass no multiplier for it: never
+§2.12), and the task's instruction states it in its last section, `## Time limit`. Harbor hands `instruction.md` to the
+agent as it is and `scripts/run_agent_batch.sh` adds nothing to it, so that section is the last thing the agent reads. Official runs pass no multiplier for it: never
 `--timeout-multiplier` or `--agent-timeout-multiplier` (a result is only comparable under the stated cutoff, D8).
 `--agent-setup-timeout-multiplier` (in `AK`, for slow harness installs) is fine: set-up is not the agent's time. A trial
 that ends at the cutoff is a result, not an infrastructure failure, and is not run again.

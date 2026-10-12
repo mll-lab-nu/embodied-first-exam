@@ -1,9 +1,5 @@
 # BEHAVIOR-1K · setup_a_bar_for_a_cocktail_party — STANDARD MODE (robot as a service, eai-standard/2.2)
 
-You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
-
 You drive an **R1Pro** mobile bimanual robot around a house **as if it were real hardware**: the simulator (BEHAVIOR-1K
 v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. You get one client and one episode.
 **Task:** Set up the bar. On the cabinet in the bar stand three cans of soda, a tray with six ice cubes, an ice bucket, a corkscrew, a wine bottle and two wine glasses. Put the wine bottle on the bar countertop; put the three cans on that countertop, each next to another can; put all six ice cubes inside the bucket and the bucket on the countertop; put both wine glasses on the countertop next to each other, at least one of them next to the wine bottle; and put the corkscrew on the countertop next to the wine bottle. Success means all of the following hold at the same time: (1) the wine bottle is on top of the bar countertop; (2) each of the three cans of soda is on top of the countertop and next to another one of the cans; (3) all six ice cubes are inside the bucket; (4) the bucket is on top of the countertop; (5) both wine glasses are on top of the countertop and next to each other; (6) at least one of the wine glasses is next to the wine bottle; (7) the corkscrew is on top of the countertop and next to the wine bottle. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. ontop(A, B): A touches B and B is directly below A (and not above it). nextto(A, B): the gap between A's and B's axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions, and nothing lies between them along a horizontal axis. The service checks the goal and the episode ends the moment it holds.
@@ -17,7 +13,7 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
   proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
-- There is no step budget; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count
+- There is no step budget; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count
   of it). Actions and simulated time are reported as cost. Only a runaway guard bounds the episode: it ends at 200,000
   control steps (1.85 h of simulated time; `spec["max_control_steps"]`, reason `step_guard`).
 - **A malformed request is refused with a 400 and nothing is executed** (a wrong type or shape, a value out of range,
@@ -97,3 +93,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

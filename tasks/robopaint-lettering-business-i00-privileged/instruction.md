@@ -1,9 +1,5 @@
 # RoboPaint · lettering · Business makes a Man respected. — frozen instance
 
-You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
-
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
-
 You control a simulated **Franka Panda arm holding a pointed flexible dip pen** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3 physics (PhysX
 on the CPU) for the robot; the pen's mark is the ink laid between the two tines, whose spread follows the press depth. **Task (臨摹, copying an
 exemplar):** copy the line **Business makes a Man respected.** (engraved English round hand, 1741), shown in the picture `/app/target.png`, onto the main sheet with pen and ink, **in at most 9
@@ -128,7 +124,7 @@ The grader replays in two fresh processes, each exactly this CLI (a fresh proces
   Quaternions are **WXYZ**. At the start the pen points straight down (`s.tip_pose()` gives the tip's position).
 - Action (7): panda_joint1..7 absolute joint-position targets (rad), ManiSkill's `pd_joint_pos` controller. `s.hold_action()`
   is the no-op. Control runs at 20 Hz (physics 100 Hz).
-- **Your only budget is the time limit at the top**; there is no step budget. A runaway guard stops an episode at 72000 control steps
+- **Your only budget is the time limit (`## Time limit`)**; there is no step budget. A runaway guard stops an episode at 72000 control steps
   (1 h of simulated time). Everything runs on the CPU except camera rendering.
 - The exemplar comes from a public-domain engraved copybook plate (1741): `/app/NOTICE-exemplar.md`.
 
@@ -137,3 +133,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included; the `scorer` service is the benchmark's and does not count): at most **5 GiB of GPU memory**, **16 GiB of memory**, **512 processes** and **10 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).
