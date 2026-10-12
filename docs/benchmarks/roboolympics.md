@@ -14,7 +14,7 @@ mode only, on `eai-standard/2.3` (PROTOCOL §4b), with the per-benchmark excepti
 | image | `ghcr.io/mll-lab-nu/eai-olympiad:0.2.0` (`images/olympiad/`; public): the simulator stack and the players' visual meshes |
 | generator | `scripts/roboolympics/gen_tasks.py render` / `check` (CI: `ci_checks/check-generated-tasks.sh`) from `tasks.toml`, `sports.toml`, `templates/`, `shared/`, `oracle/` |
 | oracle | full: the sport's RoboOlympics reference player (camera images, the proprio columns and `/spec` only) through the agent's own client (`scripts/roboolympics/oracle/oracle_play.py`) |
-| agent budget | 7200 s (uniform; a match plus its breaks takes 5-60 min of wall time at S = 10) |
+| agent budget | uniform; the number is the benchmark's row of `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); 7200 s on 2026-10-11), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12). It has to stay above a match's wall time: a match plus its breaks takes 5-60 min at S = 10 |
 
 ## Tasks
 | task | sport, rules | robot, commands | instance |

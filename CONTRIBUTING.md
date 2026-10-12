@@ -7,7 +7,7 @@ this page explains how a contribution gets from an idea to `main`. Reviewers fol
 
 | Kind | What it may change | Before you start |
 |---|---|---|
-| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md`, `tasks/dataset.toml` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
+| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md`, `tasks/dataset.toml`, its row in `scripts/task_cutoffs.toml` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
 | **Tasks for an existing benchmark** | the same, without `images/` | — |
 | **Task fix** | the affected task directories and their generator | describe the agent behaviour it closes; include before/after runs |
 | **Shared files / protocol** | `docs/PROTOCOL.md`, `docs/STANDARD_MODE.md`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
@@ -34,6 +34,17 @@ the expected size of the pull request.
    the README in the standard layout (§2.1); there is no `results/` directory.
 2. Fill in `task.toml` (PROTOCOL §2.3), `instruction.md` (§2.5, written by a human), the verifier under `tests/`
    (§2.6, separate sandbox) and `solution/` (§2.7).
+   The agent's time cutoff (PROTOCOL §2.12) is not written in the task: add your benchmark's row to
+   `scripts/task_cutoffs.toml` (seconds per mode; 3600 unless you justify more, D8), named by the benchmark's label in
+   `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix -> name: a new benchmark adds it in its
+   shared-files pull request), with a `[[history]]` entry (`from_sec = 0`). The row goes in the pull request that adds
+   the benchmark's first tasks: a row without tasks fails CI, and so do tasks without a row. `normalize` writes the number into
+   `[agent] timeout_sec` and the standard modes' `RCB_WALL_CLOCK_S`, and ends `instruction.md` with the `## Time limit`
+   section, after `## External material` and `## Resource limits` ("You have N seconds to complete this task. Do not
+   cheat by using online solutions or hints specific to this task.", then what the cutoff means in the mode). Your own
+   text never repeats the limit as a duration: say "the time limit (`## Time limit`)", and add what is particular to
+   your benchmark (a simulator's start-up cost, what your service's `time_left_s` counts from). A family or a single
+   task that needs another number than its benchmark gets an exception in the same table (owner decision).
 3. State the minimum compute (PROTOCOL §2.9): CPU cores, memory and GPU memory of the agent phase and the verifier
    phase, the GPU class and a recommended GPU, derived from measured peaks (oracle or agent trials; `docker stats` /
    cgroup `memory.stat` and `nvidia-smi` while they run). Add a rule to `scripts/task_resources.toml` (or have the
@@ -42,7 +53,8 @@ the expected size of the pull request.
    Add the resource limits and caps too (PROTOCOL §2.10): a `[[limit]]` and a `[[cap]]` rule in the same file (scope
    `trial` for privileged tasks, `agent` for standard ones; GPU memory, memory, processes, disk in GiB, the whole trial's
    expected peak, `measured`; docker caps per compose service). `normalize` writes `[metadata.resources.limits]` /
-   `.caps` and ends `instruction.md` with the `## Resource limits` paragraph the agent reads. With enforcement on
+   `.caps` and writes the `## Resource limits` paragraph the agent reads into `instruction.md` (just before the closing
+   `## Time limit`). With enforcement on
    (`RCB_LIMITS_ENFORCE=1`, v1.2) exceeding a limit fails the trial, so set them a generous margin above measured peaks
    (e.g. `max(1.5 x peak, peak + 4 GiB)`) and make sure the oracle stays inside them. The caps are the ones docker
    applies: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb` and writes the other services' caps
@@ -58,6 +70,7 @@ the expected size of the pull request.
 bash ci_checks/run_all.sh tasks/<your tasks>      # must pass
 python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the standard layout
 python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (§2.9, §2.10)
+python3 ci_checks/check-cutoffs.py tasks/<your tasks>               # the time cutoff: table = task.toml = instruction = sim service (§2.12)
 python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
 #   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)
 #   and check that `git diff --exit-code tasks/` is empty
@@ -84,6 +97,11 @@ The checklist is in PROTOCOL §2.7.
 
 ## Rules that apply to every contribution
 - A published task's `environment/` and `tests/` inputs are immutable; changing the scene makes a new task.
+- To change a time cutoff (an owner decision), edit the number in `scripts/task_cutoffs.toml` (the benchmark's row, or an
+  exception for one family or one task), add its `[[history]]` entry there (required: CI and `apply` refuse a changed
+  number without one), run `python3 scripts/task_cutoffs.py apply` and commit what it changed
+  ([docs/CUTOFFS.md](docs/CUTOFFS.md)); never edit the number in a task, a template or a generator. The task keeps its
+  name; results under the earlier cutoff are reported separately (PROTOCOL §2.8, §2.12).
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.
 - The agent's egress is the model APIs and the package registries (PyPI, the Debian / Ubuntu apt archives), in every
   task (`[agent] network_mode = "allowlist"` with the hosts of `scripts/set_agent_egress.py`; PROTOCOL §2.11): bake

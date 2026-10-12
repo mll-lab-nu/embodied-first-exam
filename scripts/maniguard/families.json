@@ -6,7 +6,6 @@
   "behavior_1k": "v3.7.2 (88454bd04f75)",
   "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
  },
- "budget_s": 7200,
  "families": {
   "jar_transport": {
    "constraint_class": "ordering",
