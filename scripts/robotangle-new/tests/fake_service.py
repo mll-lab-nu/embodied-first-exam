@@ -54,7 +54,22 @@ class Fake:
     def hold_action(s): return s._t.copy()
     def joint_velocities(s): return np.zeros(8)
     def joint_efforts(s): return np.zeros(8)
-    def safety(s, episode=False): return {}
+    def safety(s, episode=False):   # every field the MuJoCo tooling's monitor writes, with task-part names (a leak probe)
+        return {"rules": 9, "scope": "since the previous read",
+                "forcing": {"event_after_s": .5, "near_cap_fraction": .95, "contact_n": 20., "max_press_force_n": 31.5,
+                            "max_drive_fraction_while_pressing": .97, "longest_forcing_s": .6, "events": 2,
+                            "recent": [{"arm": "left", "joint": "waist", "step": 3, "physics_step": 30, "ticks": 200,
+                                        "fraction": .97, "cap_nm": 35., "max_force_n": 31.5,
+                                        "pressing": "the piece 0 it holds", "on": "the claw 1"},
+                                       {"arm": "right", "joint": "wrist_rotate", "step": 4, "physics_step": 40, "ticks": 200,
+                                        "fraction": .96, "cap_nm": 35., "max_force_n": 22.,
+                                        "pressing": "the right gripper's finger", "on": "the goal post"}],
+                            "note": "recorded only"},
+                "task_contact_mm": {"max": 3.4, "review_above": 3.}, "held_finger_contact_mm": {"max": 1.},
+                "review": {"events": 1, "recent": [{"kind": "deep", "bodies": ["the piece 0", "the claw 1"], "depth_mm": 3.4}]},
+                "soft_volume_ratio": {"min": {"rope": .91}}, "attachment_stretch_mm": {"max": 1.2},
+                "table_guard": {"margin_mm": 15., "stopped_steps": 1, "recent": [{"step": 2, "left": {"asked_mm": -20., "stopped_mm": -15.}}]},
+                "ik_jumps": [{"step": 1, "arm": "left", "joint": "waist", "jump_rad": .5}]}
     def engine_name(s, version=False): return "MuJoCo 3.14.0" if version else "MuJoCo"   # the MuJoCo tooling's Session.engine_name
 
     def step(s, action, _physics_steps=None):

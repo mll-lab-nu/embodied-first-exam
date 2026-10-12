@@ -258,7 +258,7 @@ SPEC = {
                 f"forcing (an arm drive at {M.FORCING['near_cap']:.0%} of its torque cap or more while the gripper, or a part it "
                 f"holds, presses on something with {M.FORCING['contact_n']:g} N or more) within the {M.FORCING['attribution_s']:g} s "
                 f"before (reason {M.FORCED_BREAKDOWN}: the agent's failure); forcing itself and task-contact penetration do not end "
-                "it (meta safety records them), but a success with a deep task contact (meta safety review) is held for review "
+                "it (meta safety records the forcing), but a success with a deep task contact is held for review (the grader's evidence) "
                 "instead of credited automatically; the recorded trajectory is then replayed once in a fresh process and graded"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
@@ -326,12 +326,32 @@ def recorder(cams: list[str], fps: int, meta: dict) -> L.Recorder:
     return Rec(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ, time_clock=lambda: S.sim_time_s, fps=fps)
 
 
+# RoboTangle-New (user decision 2026-10-12; docs/benchmarks/robotangle-new.md, "Safety readings"): meta["safety"] carries
+# only what the robot can feel itself: its forcing record (forces and drive loads of its own arms, a part it holds named
+# only "a held part", what it pressed on only "the environment"), the table-guard stops of its own targets, its IK jumps,
+# and the rules / scope of the reading. Task contacts, review events, soft-body volume ratios and cord stretch stay in the
+# grader's evidence (final.json, the review), never in a response.
+SAFETY_PUBLISHED = ("rules", "scope", "forcing", "table_guard", "ik_jumps")
+
+
+def robot_felt(safety: dict) -> dict:
+    """Session.safety() reduced to the readings the robot can feel itself (SAFETY_PUBLISHED), task-part names removed."""
+    out = {k: v for k, v in safety.items() if k in SAFETY_PUBLISHED}
+    if isinstance(out.get("forcing"), dict):
+        f = dict(out["forcing"])
+        f["recent"] = [dict(e, pressing=("a held part" if str(e.get("pressing", "")).endswith(" it holds")
+                                          else e.get("pressing")), on="the environment")
+                       for e in f.get("recent") or []]
+        out["forcing"] = f
+    return out
+
+
 def meta_common(cams) -> dict:
     n = ctrl_steps()
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
             "time_s": round(time.time() - E["t0"], 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - (time.time() - E["t0"]), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
-            "safety": S.safety(), **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
+            "safety": robot_felt(S.safety()), **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
 
 
 def save_call_evidence(idx: int, meta: dict, rec: L.Recorder) -> None:

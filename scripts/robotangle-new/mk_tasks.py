@@ -160,6 +160,22 @@ def grasp_text(s: str, rec: dict) -> str:
     return s
 
 
+SAFETY_OLD = ('Every response\'s `meta["safety"]` reports, since the\n  previous call, forcing (the arms\' pressing loads and forcing '
+              'events), the deepest task contact, the longest time above\n  its sustained limit and the review events (rigid families), '
+              'the lowest rope / cord volume ratio (soft families) and the\n  table-guard stops, against the limits above.')
+SAFETY_NEW = ('Every response\'s `meta["safety"]` reports, since the\n  previous call, what the robot itself can feel: its forcing '
+              'record (the largest force an arm or a part it holds pressed\n  with, the drive load meanwhile, the longest forcing run '
+              'and the forcing events, naming only "a held part" and "the\n  environment"), the table-guard stops of its gripper '
+              'targets and its IK jumps. Task contacts, review events and\n  soft-body readings are the grader\'s evidence and are not '
+              'reported.')
+
+
+def safety_text(s: str) -> str:
+    """The standard instruction's meta["safety"] paragraph: RoboTangle-New publishes only what the robot feels itself
+    (user decision 2026-10-12; the sim service's robot_felt, SAFETY_PUBLISHED)."""
+    return swap(s, SAFETY_OLD, SAFETY_NEW, "the meta safety paragraph")
+
+
 def is_mujoco(rec: dict) -> bool:
     """A base whose frozen instance runs on MuJoCo (release.json physics_engine)."""
     return rec.get("physics_engine") == "mujoco"
@@ -725,7 +741,8 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
         put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
         put(t / "README.md", rewrite_readme(rd("README.md"), base, mode, rec).encode())
         ins = grasp_text(contact_text(mujoco_text(text(rd("instruction.md")), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
-        put(t / "instruction.md", review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode).encode())
+        ins = review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode)
+        put(t / "instruction.md", (safety_text(ins) if mode == "standard" else ins).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
                 assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"

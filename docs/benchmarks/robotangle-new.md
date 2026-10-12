@@ -49,10 +49,31 @@ layer as RoboTangle; docs/benchmarks/robotangle.md, "Grading and determinism", "
 RoboTangle keeps its 6 h. The texts say "the time limit (`## Time limit`)"; RoboTangle's own sentence that the
 standard service ends the episode on its own clock stays (`RCB_WALL_CLOCK_S` follows the table).
 
-## Standard mode, safety readings, world frame, network
+## Safety readings in standard mode (`meta["safety"]`)
 
-As RoboTangle (docs/benchmarks/robotangle.md): `eai-standard/2.4`; `meta["safety"]` as declared there (pending: the
-owner lists this benchmark under PROTOCOL §4.5's declared telemetry); no world coordinates in standard texts (D7,
+User decision 2026-10-12: a standard response publishes only what the robot can feel itself, the readings a real robot
+senses through its own drives and controller:
+- `forcing`: the largest force an arm, or a part it holds, pressed with (`max_press_force_n`), the arm drive's load
+  meanwhile (`max_drive_fraction_while_pressing`), the longest run of the forcing condition (`longest_forcing_s`), the
+  number of forcing events and the last ones (arm, joint, step, drive fraction, torque cap, force), with the thresholds
+  (`event_after_s`, `near_cap_fraction`, `contact_n`). In an event, what pressed is the robot's own link or "a held part",
+  and what it pressed on is "the environment": no task part is named.
+- `table_guard`: the control steps whose gripper target the table guard stopped (the robot's own targets).
+- `ik_jumps`: IK solutions far from the current joints.
+- `rules`, `scope`: the rules revision and what the reading covers.
+
+Not published (the grader's evidence, final.json and the review): task-contact depths (part to part), held-finger
+contact depths, review events, soft-body volume ratios, cord attachment stretch. Why: the agent may be judged on its own
+forcing (a breakdown it forced is its failure), so it sees that; the depth of a contact between two task parts, which
+part touched which, and the internal state of a deformable are not something the robot can sense.
+Implementation: the sim service's `robot_felt` (`scripts/robotangle-new/shared/standard/sim/server.py`,
+`SAFETY_PUBLISHED`), on the benchmark's own copy; RoboTangle's service is unchanged.
+`scripts/robotangle-new/tests/test_server_requests.py` checks that no dropped field and no task-part name reaches a
+response. Pending the owner: this listing under PROTOCOL §4.5's declared telemetry.
+
+## Standard mode, world frame, network
+
+As RoboTangle (docs/benchmarks/robotangle.md): `eai-standard/2.4`; no world coordinates in standard texts (D7,
 `check-standard-texts.sh`); agent egress on the allowlist (PROTOCOL §2.11).
 
 ## Registration (the lines a rename changes)
