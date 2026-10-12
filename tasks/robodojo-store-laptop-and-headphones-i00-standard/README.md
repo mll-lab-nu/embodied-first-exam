@@ -8,7 +8,7 @@
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `store_laptop_and_headphones` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robodojo:0.1.0` |
 
 ## Task
@@ -51,3 +51,6 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` frames or a watch window; `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
 | Source | RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0) |
 | Benchmark notes | docs/benchmarks/robodojo.md |
+
+### Change Log
+- 2026-10-11: agent time limit 5400 s -> 3600 s (`[agent] timeout_sec`, and the service's `RCB_WALL_CLOCK_S`, which only reports it: `spec["budget"]`, `meta["time_left_s"]`; owner decision, docs/benchmarks/robodojo.md), and `instruction.md` states the cutoff at the top. The scene, the frozen layout, RoboDojo's success check, the collect hook and the verifier are unchanged, so the task keeps its name; trials recorded before this date ran with 5400 s and are kept apart (no official result was published with it).
