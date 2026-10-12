@@ -69,9 +69,16 @@ BENCHMARKS = [  # (directory prefix, label)
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
 ]
-# Documented per-benchmark exception (PROTOCOL §4b, owner 2026-10-08): standard-realtime tasks without a privileged twin
-# (the same list: ci_checks/check-instance-copies.sh NO_TWIN)
-NO_TWIN = {"roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)"}
+# Documented exceptions: tasks without a privileged twin (the same lists: ci_checks/check-instance-copies.sh NO_TWIN and
+# STANDARD_ONLY). RoboOlympics (PROTOCOL §4b, owner 2026-10-08): standard-realtime only. RoboDojo's six tasks whose physics
+# does not replay bit for bit (PROTOCOL §4.8 exception, owner 2026-10-11): standard only, graded by the live episode.
+NO_TWIN = {"roboolympics-": "— (none: RoboOlympics is standard-realtime only, PROTOCOL §4b)",
+           "robodojo-fold-clothes-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
+           "robodojo-fold-clothes-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
+           "robodojo-make-toast-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
+           "robodojo-pour-by-language-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
+           "robodojo-pour-liquid-into-cup-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)",
+           "robodojo-pour-liquid-into-cup-random-i00-standard": "— (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4.8)"}
 HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / instance", "Oracle", "Agent time budget",
                "Base image"}
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
@@ -580,7 +587,8 @@ def render_readme(task: Path) -> str:
     head = [("Benchmark", bench_of(task) or "—"),
             ("Mode", mode + (f" (`{md['protocol']}`)" if mode in SIDECAR_MODES and md.get("protocol") else ""))]
     # a standard or realtime task always has its privileged twin (PROTOCOL §2.2), even when a generator renders it first
-    no_twin = next((v for p, v in NO_TWIN.items() if task.name.startswith(p)), None)
+    # (an exempted name whose twin still exists, e.g. before a removal lands, keeps the twin)
+    no_twin = None if task.with_name(twin).is_dir() else next((v for p, v in NO_TWIN.items() if task.name.startswith(p)), None)
     head.append(("Twin", no_twin or (f"`{twin}`" if mode in SIDECAR_MODES or task.with_name(twin).is_dir()
                                      else "— (privileged only)")))
     head += [("Simulator / robot", f"`{md.get('simulator', '')}` / `{md.get('robot', '')}`"),

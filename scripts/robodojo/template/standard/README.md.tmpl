@@ -12,7 +12,7 @@
 | Base image | `@@IMAGE@@` (sim sidecar); agent: the shared standard client image |
 
 ## Task
-Standard-mode twin of `@@PRIV@@` (same frozen layout, RoboDojo's `@@LAYOUT_FILE@@`). @@README_GOAL@@ The agent drives the
+@@STD_INTRO@@ @@README_GOAL@@ The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
@@ -21,14 +21,14 @@ the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 poses, no success signal, no reset, one episode (no step cap; RoboDojo's own evaluation gives a policy @@STEP_LIM@@ actions).
 
 ## Reference solution
-None (see the privileged twin): RoboDojo releases no expert or planner script, and its training demonstrations record no
+@@ORACLE_SEE@@ RoboDojo releases no expert or planner script, and its training demonstrations record no
 initial state, so none replays on a frozen layout. The task is reported separately until it has a positive example
 (PROTOCOL §7, Open 4).
 
 ## Verification
 The sim service ends the episode on RoboDojo's own check (success), a failed check, the runaway guard or the time limit, and
 writes `/data/trajectory.npz`; the collect hook (`environment/sim/finalize.sh`) replays it from the frozen layout in two
-fresh processes; `tests/grade.py` scores 1 iff the live episode succeeded and both replays succeed@@README_RULE@@. No oracle;
+fresh processes; `tests/grade.py` scores 1 iff @@STD_VERDICT@@. No oracle;
 human review in PR #@@REVIEW_PR@@ (@@EVIDENCE_SHORT@@). `nop` (no actions) scores 0.
 
 ## Details
@@ -38,3 +38,4 @@ human review in PR #@@REVIEW_PR@@ (@@EVIDENCE_SHORT@@). `nop` (no actions) score
 | Action space | `submit` chunks of `joint_position` (14: RoboDojo's own action at 25 Hz, the agent's `dt` a multiple of 1/25 s) or `ee_pose` (16: both arms' link6 targets, IK per row); `observe` frames or a watch window; `/kinematics` (FK / IK of both arms, stateless); binary RCB1 responses |
 | Source | RoboDojo @ `cb2a37d` (MIT), its Isaac Lab 2.3 fork @ `afca7b0`, its cuRobo fork @ `d17b54c`; assets from `RoboDojo-Benchmark/RoboDojo` @ `35efbc7` (Apache-2.0) |
 | Benchmark notes | docs/benchmarks/robodojo.md |
+@@CHANGE_LOG@@

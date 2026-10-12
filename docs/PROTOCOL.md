@@ -6,7 +6,8 @@ the agent's only at its container's own cap, a benchmark-owned service killed fo
 cap above the host's CPU count is clamped by the runner); enforcement is off by default, and v1.2 becomes final when
 the calibration batch has confirmed the limits. Also on 2026-10-10 and 2026-10-11 (owner decisions, board 0072): every task's
 agent egress is the model APIs and the package registries, every instruction states the same honour rule about looking
-solutions up (§2.11), and the usage gateway forwards model-API calls only (D11, §5). Earlier versions, whose rules are all part of this text: v1.0
+solutions up (§2.11), and the usage gateway forwards model-API calls only (D11, §5). On 2026-10-11 (owner): §4.8's exception for
+physics that does not replay bit for bit (such a task is standard only and graded by the live episode; RoboDojo's six). Earlier versions, whose rules are all part of this text: v1.0
 (2026-09-30: the two modes and their names), v1.1 (2026-10-08: the standard-realtime mode, §4b), v1.1.4 (compute
 resources, §2.9), v1.1.5 (resource limits, §2.10).
 The tasks in the repository follow it except for the open items in §7. The wire format of standard and
@@ -108,7 +109,7 @@ Unchanged: the task name prefix `robot-coding-bench/`, the client and tool file 
 | Item | Level | Basis |
 |---|---|---|
 | Privileged tasks: `<base>-privileged`, where `<base>` is `<benchmark>-<family>-i<NN>` (`metaworldplus-<env>-i00`, `kinder-<family>-i00`, `humanoidbench-<category>-<task>-i00`) or an upstream name kept as is (`robotwin_2_0_<task>`, `dextoolbench_<cat>_<obj>_<task>`, `mujoco_playground_<env>`) | MUST | suffix [CI] |
-| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` | MUST | suffix [CI]; shared instance [current] |
+| Standard tasks: `<base>-standard`, sharing the privileged twin's frozen instance and `instance_seed` (a standard-only task under the §4.8 exception for non-reproducible physics has no twin: its sidecar carries the frozen instance) | MUST | suffix [CI]; shared instance [current] |
 | Standard-realtime tasks: `<base>-standard-realtime`, sharing the privileged twin's frozen instance and `instance_seed`; its twin is `<base>-privileged` (a benchmark that has standard-realtime tasks usually has `<base>-standard` too) | MAY (the mode) / MUST (the name) | suffix and instance [CI] [new] (v1.1) |
 | Versions or durations in task names (`-v3-`, `-60min-`) | MUST NOT | [new] — versions are dataset digests |
 
@@ -646,7 +647,7 @@ results must state the reset budget and are compared only with results under the
 | Crash recovery: every executed step journaled, a checkpoint (step count, state hash) per completed call; after a restart the journal is replayed, the hash checked and the same episode continues — never a reset | MUST | [current] |
 | At most 2 resumes (`RCB_MAX_RESUMES`); a third crash ends the episode with `sim_crashed_on_call` if every crash happened inside a call, else `sim_crashed` (`infra_error = 1`); a written verdict is never overwritten | SHOULD | [current] |
 | Startup watchdog and back-off before rebuilding | SHOULD | [current] |
-| Per-simulator resume rule: a simulator declared nondeterministic compares and records the hash, and a mismatch continues the same episode with `resume_state_mismatch` (unless the robot diverged grossly), as in [`STANDARD_MODE.md`](STANDARD_MODE.md) §13.1; the verdict still comes from fresh replays of the whole recorded trajectory | MAY | [new] (2.2) |
+| Per-simulator resume rule: a simulator declared nondeterministic compares and records the hash, and a mismatch continues the same episode with `resume_state_mismatch` (unless the robot diverged grossly), as in [`STANDARD_MODE.md`](STANDARD_MODE.md) §13.1; the verdict still comes from fresh replays of the whole recorded trajectory (except for a task graded by the live episode under §4.8's exception) | MAY | [new] (2.2) |
 
 ### 4.8 Evidence and grading
 | Item | Level | Basis |
@@ -659,6 +660,7 @@ results must state the reset budget and are compared only with results under the
 | Needing a custom agent adapter to finish an episode | MUST NOT | [new] |
 | A fresh replay decides: `success = replay_success ∧ deterministic` | MUST | [current] |
 | `∧ live_success` when a live predicate exists | SHOULD | [current] |
+| Exception, physics that does not replay bit for bit: a task measured not to (its frozen instance records it and why, e.g. `"determinism": "verdict"`; the benchmark's doc names the tasks and the measurement) is graded by the live episode the trusted service ran, `success = live_success`, read from the sim sidecar's own record of that episode (`final.json`; nothing the agent's container writes is read); the fresh replays still run and are reported (`replay_success`, `state_identical`, `deterministic`) but never decide, a replay without a result does not void the live verdict, and `reward.json` says `graded_by_live = 1`. A missing live record stays `infra_error`; an episode resumed after a crash (§4.7) is graded on its live state after the resume, so `reward.json` reports `resumes` and `resume_state_mismatch` and results state them. Such a task is standard-only: an open-loop trajectory of it cannot be graded reproducibly, so it has no privileged twin (`ci_checks/check-instance-copies.sh` and `scripts/task_conventions.py` list exactly these tasks). The verifier still grades `final.json` only, so §2.6's same verdict in a fresh process holds. RoboDojo: 6 tasks (two cloth, three liquid, `make_toast_random`) | MAY, by owner decision | [new] (owner, 2026-10-11) |
 | The verifier grades `final.json` only, without network access | MUST | [current] |
 
 ### 4.9 Live recording (sidecar only)
