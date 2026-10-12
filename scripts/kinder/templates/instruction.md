@@ -22,7 +22,7 @@ afterwards, so keep them short and factual.
 | `NOTES.md` | **at most 20 lines**: your final approach and why it works, and the approaches that failed and what each told you about the task |
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py` and `NOTES.md` to
-match) whenever you have a better one.** You have a wall-clock budget ({{agent_timeout_hours}} h) and it ends without
+match) whenever you have a better one.** The time limit (`## Time limit`) ends without
 warning; a run that ends with no file scores zero. `s.replay(...)` tells you whether a trajectory reaches the goal:
 once the saved one does, you are done; until then, do not stop early -- keep working until the time is up.
 

@@ -171,6 +171,11 @@ def time_per_call(step: float, hz: int) -> str:
         "  than 60 s past the call's limit ends the episode as an infrastructure error, not as your failure.\n")
 
 
+SERVICE_DEADLINE = ("\n  This service also ends the episode itself (`meta[\"reason\"]` is `timeout`; it is graded as it stands) when its own\n"
+                    "  count of that limit, `meta[\"time_left_s\"]`, reaches 0. That count has run since the service first started, a little\n"
+                    "  before your session, so plan by `time_left_s`.\n")
+
+
 def review_fixes(s: str, name: str, base: str, mode: str) -> str:
     """The text fixes for one rendered file (name: instruction.md | README.md)."""
     up = PKG / f"{base}-privileged" / "instruction.md"
@@ -188,8 +193,19 @@ def review_fixes(s: str, name: str, base: str, mode: str) -> str:
                      "the verifier has to replay it twice within its own time limit, so `s.step` stops\n  after that many control steps "
                      "since the last reset, and a longer trajectory is rejected as invalid (reward 0). Your\n  wall-clock budget is",
                      f"{base} step budget")
+            # the agent's limit is stated once, by the closing `## Time limit` section normalize writes (PROTOCOL §2.12)
+            s, n = re.subn(r"Your\n  wall-clock budget is \d+ min \(\d+ s\)\. ", "The time limit\n  (`## Time limit`) is your only budget. ", s)
+            assert n == 1, f"{base}: the privileged budget sentence"
     elif name == "instruction.md":
         assert step_time(s) == step, f"{base}: the two modes state different step times"
+        # the agent's limit is stated once, in `## Time limit` (PROTOCOL §2.12); what is RoboTangle's own stays here: this service
+        # ends the episode on its own wall clock (server.py deadline_reached, counted from the service's first start)
+        s, n = re.subn(r'- \*\*Your wall-clock budget is \d+ min \(\d+ s\)\*\* \(`meta\["time_left_s"\]` counts it down\); ',
+                       "- **Your only budget is the time limit (`## Time limit`)**; ", s)
+        assert n == 1, f"{base}: the standard budget sentence"
+        s, n = re.subn(r"(One control step takes about [0-9.]+ s of wall clock here\.)\n(?=- There is nothing to hand in)",
+                       lambda m: m.group(1) + SERVICE_DEADLINE, s)
+        assert n == 1, f"{base}: the standard budget bullet's end"
         s = swap(s, "steps are unlimited. Actions and\n  simulated time are reported as cost.",
                  f"there is no step budget, but the\n  episode ends after {MAX_STEPS} control steps, watches included ({MAX_STEPS / hz / 60:.0f} min "
                  "of simulated time; a technical cap,\n  `spec[\"max_control_steps\"]`: `meta[\"reason\"]` is `step_guard`, and the episode is graded as it stands). "

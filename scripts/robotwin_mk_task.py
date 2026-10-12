@@ -135,7 +135,6 @@ readme = f'''# robotwin_2_0_{task}-privileged
 | Family / instance | `{task}` / RoboTwin seed {seed} (deliberately not one of the seeds used by the public RoboTwin dataset) |
 | Task type / tier | trajectory / privileged |
 | Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.1` (needs an NVIDIA GPU: `environment/docker-compose.yaml`) |
-| Agent budget | 3600 s |
 | RoboTwin eval step limit | {step_lim} (policy-eval budget upstream; indicative of task length) |
 
 ## Goal

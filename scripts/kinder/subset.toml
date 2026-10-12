@@ -27,7 +27,6 @@
 instance_tag = "i00"
 seed = 0                  # KinDER draws the scene from this seed; the instance pins it (instance.json)
 max_steps = 1000          # upstream's episode length for these tasks (TidyBot3DConfig.horizon): 100 s at 10 Hz
-agent_timeout_sec = 3600
 verifier_timeout_sec = 900
 review_pr = 8             # the pull request whose human review covers the tasks without an oracle (0: not opened yet)
 

@@ -65,7 +65,7 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - @@GRASP_TEXT@@
 - End-effector frames: `eef` is OmniGibson's end-effector link (+z along the fingers, the fingers close along +y); `tcp`
   is the fingertip centre, further along +z by the long fingers' length (`s.robot_spec()["tcp"]`).
-- Control runs at 20 Hz with 120 Hz physics (PhysX on the CPU). Your wall-clock budget is @@BUDGET_MIN@@ min (@@BUDGET@@ s);
+- Control runs at 20 Hz with 120 Hz physics (PhysX on the CPU). The time limit (`## Time limit`) is your only budget:
   there is no step budget (ManiGuard's own evaluator would stop at @@HORIZON@@ steps; here that is reported, not
   enforced), only the cap of 50,000 control steps per episode above.
 - One `Session` per process: Isaac Sim launches once (a few minutes per process; plan your experiments accordingly). The

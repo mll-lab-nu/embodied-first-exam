@@ -50,7 +50,10 @@ CLIENT_ENV = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().sp
 CLIENT_IMAGE = CLIENT_ENV["CLIENT_IMAGE"].strip()
 CLIENT_REQUIREMENTS = CLIENT_ENV.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
 PROTOCOL = "eai-standard/2.2"
-BUDGET_S = 5400          # docs/benchmarks/robowits.md, Time budget (D8)
+# The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12; why: docs/benchmarks/robowits.md,
+# Time budget). No copy of the number here: normalize writes it into task.toml, the instruction's closing `## Time limit` section, the
+# README row and the sim service's wall clock.
+CUTOFF = {m: TC.cutoff_sec("RoboWits", m) for m in ("privileged", "standard")}
 REVIEW = "PR #3"         # where the human review of the no-oracle families is recorded (PROTOCOL §2.7)
 BK_VOLUME = ("${RCB_ROBOWITS_BLENDERKIT:?set RCB_ROBOWITS_BLENDERKIT to your BlenderKit model folder (images/robowits/NOTICE)}"
              ":/opt/robowits/assets/blender_kit:ro")
@@ -236,8 +239,8 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
 completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
-Your wall-clock budget is 90 min (5400 s): save a trajectory as soon as one replays successfully (you can overwrite
-it later), and do not stop before you have one.
+Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
+one.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -275,7 +278,7 @@ CLI equivalent of the grader:
   arm works at y > 0). Quaternions are **WXYZ**.
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
-- Control runs at 30 Hz (@SUBSTEPS@). There is no step budget; your wall-clock budget is 90 min (5400 s).
+- Control runs at 30 Hz (@SUBSTEPS@). There is no step budget: the time limit (`## Time limit`) is your only budget.
   One technical cap: a trajectory, and a `Session` between two resets, has at most @MAXSTEPS@ control steps (about
   @MAXHOURS@ h of simulated time). `s.step` returns `True` on the step that reaches it and raises after it until
   `s.reset()`; the grader scores a trajectory with more rows 0 (`bad_trajectory`).
@@ -298,7 +301,7 @@ STD_INSTRUCTION = """# RoboWits · @FAM@ — STANDARD MODE (robot as a service, 
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
   (`meta["done"]`, `reason` "success") the first time it holds.
-- **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down). There is no step budget; actions
+- **Your only budget is the time limit (`## Time limit`)** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
   and simulated time are reported as cost. One technical cap: the episode has at most @MAXSTEPS@ control steps (about
   @MAXHOURS@ h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
   that watches counts too). The call that reaches it stops there, the episode ends (`reason` "step_guard") and is graded
@@ -563,7 +566,7 @@ environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dock
 network_mode = "no-network"       # the replay needs no download: assets in the image, Genesis' caches seeded from instance.json
 
 [agent]
-timeout_sec = {float(BUDGET_S)}             # RoboWits budget: 1.5 h of wall clock (docs/benchmarks/robowits.md)
+timeout_sec = {float(CUTOFF["privileged"])}             # RoboWits budget (scripts/task_cutoffs.toml; why: docs/benchmarks/robowits.md)
 {AGENT_EGRESS}
 
 [environment]
@@ -628,7 +631,7 @@ command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout
 timeout_sec = {ct}                # service up (a resume replays the journal first), the grading replay, then the video
 
 [agent]
-timeout_sec = {float(BUDGET_S)}             # RoboWits budget: 1.5 h of wall clock (docs/benchmarks/robowits.md)
+timeout_sec = {float(CUTOFF["standard"])}             # RoboWits budget (scripts/task_cutoffs.toml; why: docs/benchmarks/robowits.md)
 {AGENT_EGRESS}
 
 [environment]
@@ -666,7 +669,7 @@ def std_compose(fam: str, f: dict) -> str:
     out += "    environment:\n"
     if gpu:
         out += "      RCB_ROBOWITS_BACKEND: gpu     # particle-heavy scene: GPU physics (not bit-exact; resume class approx)\n"
-    out += (f"      RCB_TASK: {fam}\n      RCB_INSTANCE: /srv/instance.json\n      RCB_DATA: /data\n      RCB_WALL_CLOCK_S: \"{BUDGET_S}\"\n"
+    out += (f"      RCB_TASK: {fam}\n      RCB_INSTANCE: /srv/instance.json\n      RCB_DATA: /data\n      RCB_WALL_CLOCK_S: \"{CUTOFF['standard']}\"\n"
             f"      RCB_STARTUP_TIMEOUT_S: \"{startup_timeout(f)}\"   # >= 2 x the slowest measured scene build (docs/benchmarks/robowits.md)\n"
             "      PYTHONPATH: /srv\n      QD_OFFLINE_CACHE: \"0\"\n"
             "      RCB_SESSION_LOG: \"\"           # the sidecar's own Session must not write the agent-side interaction log\n")

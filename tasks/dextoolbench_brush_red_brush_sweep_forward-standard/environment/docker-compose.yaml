@@ -24,6 +24,7 @@ services:
       RCB_MAX_CONTROL_STEPS: "360000"
       PYTHONPATH: /srv
       RCB_MJ_ROOT: /opt/rcb_mj
+      RCB_WALL_CLOCK_S: "3600"
     shm_size: "4gb"
     deploy:
       resources:

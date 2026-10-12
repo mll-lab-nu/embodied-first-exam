@@ -61,6 +61,13 @@ def normalizer():
     return normalize
 
 
+def agent_timeout(mode: str) -> int:
+    """The agent's cutoff of a mode in seconds, from the one table (scripts/task_cutoffs.toml, PROTOCOL §2.12)."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from task_conventions import cutoff_sec
+    return cutoff_sec("ManiGuard", mode)
+
+
 def fill(text: str, values: dict) -> str:
     for k, v in values.items():
         text = text.replace(f"@@{k}@@", v)
@@ -271,7 +278,7 @@ def oracle_evidence(T: dict, mode: str) -> str:
 
 
 # ---------------------------------------------------------------- planning one task's twins
-def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[str, dict[str, tuple[bytes, int]]]:
+def plan_task(key: str, T: dict, fams: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
     d, diag, scene, meta = load_instance(key)
     fam = key.split("/")[0]; F = fams[fam]
     if meta.get("gpu_dynamics"):
@@ -294,7 +301,7 @@ def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[
     if note:
         std_safety += f"\n{note}\n"
     common = {"PRIV": task_dir(key, "privileged"), "STD": task_dir(key, "standard"), "MG_TASK": key, "FAMILY": fam, "INDEX": idx,
-              "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(), "BUDGET": str(budget), "BUDGET_MIN": str(budget // 60),
+              "IMAGE": image, "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(),
               "PROMPT": prompt, "PROMPT_TOML": toml_str(prompt), "CONSTRAINT_CLASS": F["constraint_class"], "SKILL": F["skill"],
               "GRASPING": F["grasping"], "HORIZON": str(F["upstream_max_steps"]), "DIFFICULTY": T["difficulty"].strip(),
               "README_SAFETY": readme_safety(diag) + (f"\n\n{note}" if note else ""), "ALLOWED_HOSTS": "[" + ", ".join(f'"{h}"' for h in HOSTS) + "]"}
@@ -302,7 +309,8 @@ def plan_task(key: str, T: dict, fams: dict, version: str, budget: int) -> dict[
     def per_mode(mode: str) -> dict:
         lvl = T["oracle"][mode]
         ev = None if lvl == "full" and not T.get("oracle_evidence") else oracle_evidence(T, mode)
-        return {"ORACLE": lvl, "REVIEW_NOTE": review_note(lvl), "ORACLE_EVIDENCE_LINE": f'oracle_evidence = "{toml_str(ev)}"\n' if ev else "",
+        # BUDGET: the agent's cutoff, from the one table (scripts/task_cutoffs.toml; normalize writes the same number)
+        return {"BUDGET": str(agent_timeout(mode)), "ORACLE": lvl, "REVIEW_NOTE": review_note(lvl), "ORACLE_EVIDENCE_LINE": f'oracle_evidence = "{toml_str(ev)}"\n' if ev else "",
                 "REFERENCE_SOLUTION": reference_none(mode, T["oracle"].get("privileged") == "full") if lvl == "none"
                 else reference_text(key, T, mode)}
     priv = {**per_mode("privileged"), "GOAL_BLOCK": goal_block_privileged(diag, scene, fam), "SAFETY_BLOCK": safety_block_privileged(diag) + (f"\n{note}\n" if note else ""),
@@ -415,7 +423,7 @@ def main() -> int:
     normalize = normalizer()
     diffs = []
     for key in todo:
-        for name, files in normalized(plan_task(key, tasks[key], fams, version, int(cfg["budget_s"])), normalize).items():
+        for name, files in normalized(plan_task(key, tasks[key], fams, version), normalize).items():
             diffs += sync(ROOT / "tasks" / name, files, a.check)
     if not a.tasks:                                   # task dirs of tasks that are no longer generated
         made = {task_dir(k, m) for k, T in tasks.items() if T["include"] for m in T["modes"]}

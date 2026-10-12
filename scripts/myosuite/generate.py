@@ -23,7 +23,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
+from task_conventions import cutoff_sec, normalize  # noqa: E402   (protocol v1.0.1 conventions; the cutoff table)
 
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
@@ -33,7 +33,10 @@ IMAGE = f"ghcr.io/mll-lab-nu/eai-myosuite:{VERSION}"
 _ENV = dict(ln.split("=", 1) for ln in (LAYER / "client.env").read_text().splitlines() if "=" in ln and ln[0] != "#")
 CLIENT_IMAGE = _ENV["CLIENT_IMAGE"].strip()
 AUTHOR = "Chi Gui"
-AGENT_TIMEOUT = 5400  # uniform within the benchmark; why not 3600: docs/benchmarks/myosuite.md
+# The agent's time cutoff per mode: scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12; why not the default:
+# docs/benchmarks/myosuite.md). No copy of the number here: normalize writes it into task.toml, the instruction's first
+# paragraphs, the README row and the sim service's wall clock.
+CUTOFF = {m: cutoff_sec("MyoSuite", m) for m in ("privileged", "standard")}
 # The standard service's bound on the images of one call, quoted from the source: the texts state the enforced value.
 MAX_FRAMES = int(re.search(r"^MAX_FRAMES = (\d+)", (SHARED / "standard" / "server.py").read_text(), re.M).group(1))
 RESET_BUDGET = 10  # standard mode's default reset budget (owner, 2026-10-09; PROTOCOL §4.5, docs/benchmarks/myosuite.md)
@@ -203,7 +206,7 @@ services:
       RCB_INSTANCE: /srv/instance.npz
       RCB_TOOL: /srv/rcb_myosuite.py
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "{AGENT_TIMEOUT}"
+      RCB_WALL_CLOCK_S: "{CUTOFF["standard"]}"
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
@@ -292,8 +295,7 @@ Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_tr
 open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
 state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
-Your time budget is {AGENT_TIMEOUT} s of wall clock. Save a trajectory as soon as you have one that works, improve it while
-time remains, and do not stop early.
+Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -364,8 +366,8 @@ f" and {len(f['actuators'])} other actuators" if f["actuators"] else ""}).
   the body's own proprioception: joint positions, velocities and actuator torques, muscle activations and lengths{root}.
   No object, ball, opponent or goal poses, no success check: `meta["done"]` / `meta["reason"]` tell you when the episode
   is over and why.{refline}
-- Your wall-clock budget is {AGENT_TIMEOUT} s from your start (`meta["time_left_s"]`); steps are unlimited. Simulated time
-  only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early: while
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it).
+  Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early: while
   the episode runs, or a reset is left, the run can still pass.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
@@ -492,7 +494,7 @@ expert_time_estimate_hours = {f['hours'] + (1.0 if std else 0.0)}
 
 {verifier}
 [agent]
-timeout_sec = {AGENT_TIMEOUT}.0
+timeout_sec = {CUTOFF["standard" if std else "privileged"]}.0
 # The agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS). MyoSuite's
 # trained baselines ship in its PyPI wheel (and a standard-mode agent could rebuild the simulator from it): reachable
 # since 2026-10-11, left to the instruction's honour rule (PROTOCOL §2.11).

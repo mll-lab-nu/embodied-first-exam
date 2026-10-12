@@ -21,7 +21,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
+from task_conventions import cutoff_sec, normalize  # noqa: E402   (protocol v1.0.1 conventions; the cutoff table)
 
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
@@ -35,7 +35,9 @@ AUTHOR = "Canyu Chen"
 # the first simulator with its renderer in a container takes 5 to 27 minutes to start (Isaac Sim prepares the stage for
 # rendering once), which a standard task pays before its service answers and a privileged agent pays if it looks at
 # the scene.
-AGENT_TIMEOUT = 5400
+# The number itself is in scripts/task_cutoffs.toml, the one table (PROTOCOL §2.12): normalize writes it into task.toml, the
+# instruction's closing `## Time limit` section, the README row and the sim service's wall clock.
+CUTOFF = {m: cutoff_sec("LabUtopia", m) for m in ("privileged", "standard")}
 STARTUP_TIMEOUT = 2400
 # The graders' time (docs/benchmarks/labutopia.md, "Time limits of the graders"). The longest episode (36000 rows) replays in
 # about 180 s after a start of under a minute (no renderer); a verdict replay may take REPLAY_TIMEOUT.
@@ -174,7 +176,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL: /srv/rcb_labutopia.py
       RCB_DATA: /data
-      RCB_WALL_CLOCK_S: "{AGENT_TIMEOUT}"
+      RCB_WALL_CLOCK_S: "{CUTOFF["standard"]}"
       RCB_STARTUP_TIMEOUT_S: "{STARTUP_TIMEOUT}"
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
@@ -259,8 +261,7 @@ Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_tr
 open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
 state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
-Your time budget is {AGENT_TIMEOUT} s of wall clock. Save a trajectory as soon as you have one that works, improve it while
-time remains, and do not stop early.
+Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -351,7 +352,7 @@ Sim) runs in a service you cannot open. You get one client and one episode.
   the robot's own proprioception: joint positions, velocities and drive efforts, the gripper's opening, the pose of its
   tool frame and the targets in effect. No poses of the objects or instruments, no success check: `meta["done"]` /
   `meta["reason"]` tell you when the episode is over and why.
-- Your wall-clock budget is {AGENT_TIMEOUT} s from your start (`meta["time_left_s"]`); steps are unlimited. **The service
+- Steps are unlimited; your only budget is the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of it). **The service
   needs {cold(f)} to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
   `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.
@@ -490,7 +491,7 @@ expert_time_estimate_hours = {t["hours"] + (1.0 if std else 0.0)}
 
 {verifier}
 [agent]
-timeout_sec = {AGENT_TIMEOUT}.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 27 minutes to start
+timeout_sec = {CUTOFF["standard" if std else "privileged"]}.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 27 minutes to start
 # LabUtopia's scripted controllers are in its public repository (and a standard-mode agent could rebuild the simulator
 # from it): the agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
