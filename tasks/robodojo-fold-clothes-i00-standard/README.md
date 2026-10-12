@@ -8,7 +8,7 @@
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `fold_clothes` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robodojo:0.1.0` |
 
 ## Task
@@ -55,3 +55,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ### Change Log
 - 2026-10-10: determinism class `state` -> `verdict` (`instance.json`: `"determinism": "verdict"`; the scene, the layout, the recorded reset hash and RoboDojo's success check are unchanged). The task could not be passed before: every trial that folded the garment was scored 0 as "not deterministic", because GPU PhysX cloth does not replay bit for bit (the determinism test that classed it `state` moved the arms without handling the cloth). Both replays must succeed now; `state_identical` is still reported. Standard mode: the service resumes `approx`. Trials graded before this date with `deterministic` 0 are re-scored from their recorded fields (`all_success` / `replay_success`), not rerun.
 - 2026-10-11: standard only, graded by the live episode. The physics does not replay bit for bit, so an open-loop trajectory cannot be graded reproducibly: the privileged twin is removed, and this task scores the live episode the trusted service ran (`success` = `live_success`); the collect hook still replays it twice in fresh processes and reports `replay_success`, `state_identical` and `deterministic`, which no longer decide. The scene, the layout and RoboDojo's success check are unchanged. A trial recorded before this date can be re-scored from its `live_success`.
+- 2026-10-11: agent time limit 5400 s -> 3600 s (`[agent] timeout_sec`, and the service's `RCB_WALL_CLOCK_S`, which only reports it: `spec["budget"]`, `meta["time_left_s"]`; owner decision, docs/benchmarks/robodojo.md), and `instruction.md` states the cutoff at the top. The scene, the frozen layout, RoboDojo's success check, the collect hook and the verifier are unchanged, so the task keeps its name; trials recorded before this date ran with 5400 s and are kept apart (no official result was published with it).

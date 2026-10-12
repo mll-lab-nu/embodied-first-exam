@@ -3,6 +3,12 @@
 You control two simulated **ARX X5 arms with parallel two-finger grippers** at a table (RoboDojo's dual-arm simulation
 setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimension: **Generalization (randomised variant: other models, clutter)**.
 
+**Time limit: one hour.** You have 60 min (3600 s) of wall-clock time in total, counted from the start of your session; when it
+is up you are stopped where you are. Only what is in `/app/output/` at that moment is graded, so
+`/app/output/trajectory.npz` must be written before the cutoff: save a working trajectory as soon as you have one and
+overwrite it as you improve it. Every Python process that opens a `Session` first spends ~3-5 min launching Isaac Sim
+and building the scene, and that time counts.
+
 **Task:** Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep all the small objects (bricks, earbuds, paper balls) into the dustpan, then return the arm(s) to the start pose.
 
 RoboDojo's own instruction for this scene: *"Pick up the broom, hand it over to the right hand, then use the dustpan to sweep the objects."*
@@ -83,8 +89,8 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   position targets (rad); RoboDojo's controller moves each arm from where it is to the new target over the action's 10
   physics steps (linear for 8, then holding). Gripper: RoboDojo's normalised command, clipped to 0..1 (1 = fully open, as at the start; 0 = closed; a closing gripper stops at whatever is between its fingers).
   `s.hold_action()` keeps the current targets.
-- Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action). Your wall-clock budget is 90 min (5400 s); there is
-  no step budget.
+- Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action). Your wall-clock budget is 60 min (3600 s, the
+  time limit at the top); there is no step budget.
 - One `Session` per process (~3-5 min). Rendering happens only when a frame is asked for and never moves anything. Do
   not call `s.close()` before writing every output.
 
