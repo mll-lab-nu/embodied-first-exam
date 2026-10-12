@@ -28,6 +28,10 @@ REGISTRY = "ghcr.io/mll-lab-nu"
 REVIEW_PR = 123  # the pull request that holds the human review of these tasks (PROTOCOL §2.7)
 IMAGE_HW = 84  # the onboard cameras' default image side in standard modes (compose RCB_IMAGE_HW): upstream's, its agents' and policies'
 MODES = {"privileged": "privileged", "standard": "standard", "standard-realtime": "realtime"}
+# the service modes' default reset budget (RCB_RESET_BUDGET's default; PROTOCOL §4.5's per-benchmark exception, owner
+# 2026-10-11): standard 10, since the horizon bounds each episode and without a reset the practice and the graded
+# attempt share it; ten, as MyoSuite, because a scripted episode ends in about a minute; standard-realtime keeps the mode's 0
+RESET_BUDGET = {"standard": 10, "standard-realtime": 0}
 CLIENT = dict(
     line.split("=", 1)
     for line in (ROOT / "scripts/eai_standard/client.env").read_text().splitlines()
@@ -117,15 +121,20 @@ def success_par(task: dict) -> str:
     return out
 
 
-def episode_text(task: dict, t0: dict) -> str:
+def episode_text(task: dict, t0: dict, resets: int) -> str:
     fail = f"; {task['fail']}" if task["fail"] else ""
     held = " (held = a finger of the gripper touching the object)" if "held" in task["success"] else ""
+    head = "one episode, no reset: it succeeds" if not resets else f"{resets} resets, the last episode graded: an episode succeeds"
     return (
-        f"one episode, no reset: it succeeds when this has held for 1 s (50 control steps): {task['success']}"
+        f"{head} when this has held for 1 s (50 control steps): {task['success']}"
         f"{held}{fail}; a fall (pelvis tilted beyond ~53 degrees or below 0.30 m) fails "
         "it without ending it; it ends at the success, a failure, the pelvis 10 m from the scene's origin, a simulator "
         f"error, or after {t0['horizon_steps']} control steps"
     )
+
+
+def yaml(s: str) -> str:
+    return json.dumps(s).replace("$", "$$")   # a double-quoted YAML scalar; compose interpolates $
 
 
 def values(fam: str, task: dict, inst: dict, version: str) -> dict:
@@ -133,7 +142,6 @@ def values(fam: str, task: dict, inst: dict, version: str) -> dict:
     pitch = "pitch" in t0["layout"]
     fail = task["fail"]
     sentence = task["sentence"]
-    yaml = lambda s: json.dumps(s).replace("$", "$$")  # noqa: E731 -- a double-quoted YAML scalar; compose interpolates $
     return {
         "FAMILY": fam,
         "TASK": task["upstream_task"],
@@ -169,7 +177,6 @@ def values(fam: str, task: dict, inst: dict, version: str) -> dict:
         + f"human review in PR #{REVIEW_PR}",
         "REVIEW": f"No oracle; human review in PR #{REVIEW_PR} (PROTOCOL §2.7).",
         "TASK_TEXT_YAML": yaml(sentence),
-        "EPISODE_TEXT_YAML": yaml(episode_text(task, t0)),
     }
 
 
@@ -201,6 +208,10 @@ def plan(fam: str, task: dict, version: str) -> dict[str, dict[str, tuple[bytes,
     for mode, tmpl in MODES.items():
         vals["SIM_COMMAND"] = "python /srv/rcb_realtime.py" if mode == "standard-realtime" else "python /srv/server.py"
         vals["SLOWDOWN_LINE"] = SLOWDOWN if mode == "standard-realtime" else ""
+        vals["RESET_BUDGET"] = RESET_BUDGET.get(mode, 0)
+        vals["RESET_COMMENT"] = (f"BiGym2 standard: {vals['RESET_BUDGET']} resets (docs/benchmarks/bigym2.md); 0: one episode"
+                                 if vals["RESET_BUDGET"] else "0: one episode (the protocol's default)")
+        vals["EPISODE_TEXT_YAML"] = yaml(episode_text(task, inst["t0"], vals["RESET_BUDGET"]))
         if mode == "privileged":
             files = files_of(HERE / "templates/privileged", vals)
             for rel in ("environment/rcb_bigym2.py", "tests/rcb_bigym2.py"):

@@ -15,7 +15,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/{{task_dir}}"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER {{env_name}} on the same frozen instance as {{twin_dir}}. The agent only gets a client: /observe and /submit (the robot's {{sensors_plus}}; delta actions in chunks). One episode, no reset, no privileged state, no goal check; the sim service records the episode, replays it in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER {{env_name}} on the same frozen instance as {{twin_dir}}. The agent only gets a client: /observe and /submit (the robot's {{sensors_plus}}; delta actions in chunks). {{reset_budget}} resets (the last episode graded), no privileged state, no goal check; the sim service records every episode, replays the last one in a fresh simulator and grades it."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "kinder", {{keywords}}, "physical-reasoning", "standard-mode", "trajectory", "{{family}}"]
 

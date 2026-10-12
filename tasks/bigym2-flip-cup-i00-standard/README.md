@@ -17,7 +17,7 @@ episode.)
 
 ## Difficulty
 In-hand reorientation: an upside-down cup turned 180 degrees and set down within 5 degrees of upright, the tightest orientation tolerance in the suite. In standard mode the agent sees only the robot's cameras (the head camera looks down at the hands at the
-start) and proprioception, acts through the client, and gets one episode with no reset.
+start) and proprioception, acts through the client, and gets 10 resets (only the last episode is graded).
 
 ## Reference solution
 None (as `bigym2-flip-cup-i00-privileged`).
@@ -46,3 +46,8 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Service | `environment/sim/server.py` (the BiGym 2.0 adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_bigym2.py`, `instance.json` (= the privileged twin's) |
 | Observations | three onboard RGB cameras (`RCB_IMAGE_HW`, default 84 px square, as upstream renders them, 60° field of view); upstream's low-dimensional observation (joints, grippers, tracked pelvis pose) |
 | Horizon | 1850 control steps (37 s at 50 Hz) |
+
+### Change Log
+- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5,
+  docs/benchmarks/bigym2.md); the service already had `POST /reset`. The scene, instance, pass rule and verifier are
+  unchanged, so the task keeps its name; runs recorded before this date had no reset and are reported separately.
