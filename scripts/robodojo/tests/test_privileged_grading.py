@@ -23,6 +23,11 @@ CASES = {
     "one replay fails": (GOOD, 1, "fail", 0, {"success": 0, "all_success": 0, "replay_success": 0, "deterministic": 1,
                                               "determinism_checked": 0, "grader_error": 0, "infra_error": 0, "ended_failed_check": 1}, 1),
     "the replay stands without its video": (GOOD, 1, "novideo", 1, {"success": 1, "video_rendered": 0, "infra_error": 0}, 1),
+    "the replay stands with a part of a video": (GOOD, 1, "partvideo", 1, {"success": 1, "video_rendered": 0, "infra_error": 0}, 1),
+    "the result, then a crash at shutdown": (GOOD, 1, "ok_crash", 1, {"success": 1, "infra_error": 0, "grader_error": 0}, 1),
+    # past its time limit: the verifier's failure, never the agent's 0 (the grader's three constants set to 3 s for this case)
+    "the replay runs out of its time": (GOOD, 1, "sleep", 0, {"success": 0, "replay_timed_out": 1, "grader_error": 1, "infra_error": 1,
+                                                              "n_actions": 5}, 1),
     "the layout rebuilt to another state, the replay succeeded": (GOOD, 1, "inexact", 0,
                                                                   {"success": 0, "instance_mismatch": 1, "instance_exact": 0,
                                                                    "grader_error": 1, "infra_error": 1, "replay_success": 1}, 1),
@@ -40,6 +45,9 @@ CASES = {
     "--repeat 2: both succeed in the same state": (GOOD, 2, "ok,ok", 1, {"success": 1, "deterministic": 1, "determinism_checked": 1, "replays": 2}, 2),
     "--repeat 2: both succeed in different states": (GOOD, 2, "ok,diff", 0, {"success": 0, "all_success": 1, "deterministic": 0,
                                                                              "state_identical": 0, "infra_error": 0}, 2),
+    # with two replays that started from the same state, a layout that hashes differently from the record is reported only
+    "--repeat 2: same start, not the recorded hash": (GOOD, 2, "inexact,inexact", 1, {"success": 1, "instance_exact": 0, "instance_mismatch": 0,
+                                                                                      "infra_error": 0}, 2),
     "--repeat 2: the replays started from different states": (GOOD, 2, "inst2,inst2", 0,
                                                               {"success": 0, "instance_unstable": 1, "grader_error": 1, "infra_error": 1}, 2),
 }
@@ -63,6 +71,10 @@ for name, (traj, repeat, plan, want_reward, want_rj, want_calls) in CASES.items(
         tests, log, out = (os.path.join(td, x) for x in ("tests", "log", "out")); os.makedirs(tests); os.makedirs(out)
         os.makedirs(log)                                   # test.sh makes /logs/verifier before the grader runs
         shutil.copy(os.path.join(TPL, "tests", "grade.py"), tests)
+        if plan == "sleep":                                # the only edit of the grader, for this case: its time limit
+            consts = "REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 1800.0, 1200.0, 2.5"
+            assert src.count(consts) == 1
+            open(os.path.join(tests, "grade.py"), "w").write(src.replace(consts, "REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 3.0, 3.0, 2.5"))
         shutil.copy(os.path.join(HERE, "stub_tool.py"), os.path.join(tests, "rcb_robodojo.py"))
         inst = os.path.join(tests, "instance.json"); json.dump({"task": "t", "state_sha": "ii"}, open(inst, "w"))
         tp = os.path.join(out, "trajectory.npz")

@@ -117,8 +117,9 @@ for bit it had never disagreed (below), and it cost 29-48 % (median 44 %) of the
   (`instance_mismatch`, `grader_error` = `infra_error` = 1), as in standard mode. Every graded trial so far rebuilt it
   exactly, on every host. `grade.py --repeat 2` is still the two-replay check, for a determinism measurement by hand.
 - standard: the service ends and dumps the episode on the collect hook's signal; `finalize.sh` replays it once, in a
-  fresh process, time-boxed inside the hook's budget and retried once when it dies without a result (Isaac does not exit
-  after a fatal GPU error, it waits on a crash dialog, so only the time limit ends it); a replay that still gives no
+  fresh process, with the privileged replay's allowance for the episode's length inside the hook's budget, and runs it
+  once more when it dies without a result or runs out of that allowance while the hook has time left (Isaac does not exit
+  after a fatal GPU error, it waits on a crash dialog, so only a time limit ends it); a replay that still gives no
   result is `replay_error` / `infra_error`, never the agent's 0; `final.json` is replaced atomically.
   `success = live_success ∧ replay_success`: one successful replay is enough. The two halves guard each other: a live
   success that does not repeat in the replay is 0, and so is a replay that succeeds where the live episode did not. The
@@ -141,7 +142,8 @@ for bit it had never disagreed (below), and it cost 29-48 % (median 44 %) of the
   trial is rerun.
 - Unit tests with stand-ins for the simulator (CI: check-unit-tests.sh): `scripts/robodojo/tests/test_standard_grading.py`
   runs the collect hook and the standard grader on both rules, `test_privileged_grading.py` the privileged grader; both
-  check that exactly one replay process runs (two when the first died without a result), and that it is the filmed one.
+  check that exactly one replay process runs (in the hook two when the first gave no result and was run again; the
+  privileged grader never runs one again), and that it is the filmed one.
 - Time limits (wall clock only; the verdict rules do not depend on them), for ONE replay since 2026-10-12. Measured in
   the pool on 2026-10-11/12 (35 graded trials on loaded hosts, trajectories of up to 6,241 actions): 47-427 s from the
   start of a replay process until the layout is ready (427 s: a cold first start, which every privileged verifier's
@@ -152,8 +154,11 @@ for bit it had never disagreed (below), and it cost 29-48 % (median 44 %) of the
   what was sized for two: `[verifier] timeout_sec` (privileged) 15000 s -> **7800 s** (one replay of 15,000 rows + 600 s
   for the grader and the resource step); the standard collect hook 18000 s -> **10800 s** (`finalize.sh`'s
   `HOOK_BUDGET_S`, equal to `[[verifier.collect]] timeout_sec`: the episode end, up to 2700 s through a resume, one
-  replay of up to 7200 s, 900 s to spare; the replay gets everything left before the deadline minus 300 s, a second
-  attempt after a process that died what is left then). The standard verifier keeps 1200 s (it only reads files). A trial
+  replay of up to 7200 s, 900 s to spare). Inside it the hook's replay now has the same allowance for its length as the
+  privileged one, never more than what is left before the deadline minus 300 s; until 2026-10-12 a replay had its share
+  of the whole remaining budget whatever the episode's length, so a hung Isaac held the hook for about 2.5 h; now it is
+  ended after the allowance (1800 s for an episode of up to 1,500 actions) and run once more if time is left. An episode
+  whose length cannot be read keeps the whole remaining budget. The standard verifier keeps 1200 s (it only reads files). A trial
   can now take at most 3600 + 7800 = 11400 s (privileged; 18600 before) and 3600 + 10800 + 1200 = 15600 s (standard;
   22800 before). Typical, from the same trials: the privileged verifier took 3.9-27 min with two replays and the
   collect hook 6-25 min; the filmed replay of the standard trials alone took 3-15 min.

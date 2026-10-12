@@ -5907,409 +5907,409 @@ digest = "sha256:b7300eba405169a2a364284a6cf8636373fe6936818f2a0a45662d058d479a8
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-align-blocks-i00-privileged"
-digest = "sha256:78e55acff3f43680b3cb0cf30fbc094d9aea493b11114804a74d12c84695caeb"
+digest = "sha256:26635ac16a8a422b76e281854a187149e388fbfc0a5ee59247754436dbb98118"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-align-blocks-i00-standard"
-digest = "sha256:04d4c6634c457e0768568cb323f1fcd9edc8bff295763bb2e4aabcc7aabb9d9e"
+digest = "sha256:adbb1aef46d5ca4217438f703255c22b99193199e7d7b89067ca66d5597c6434"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-arrange-largest-number-i00-privileged"
-digest = "sha256:3c610afa7141ba1543c29fc9868b2a64ddb3e18a0deeba19f2c56e2aa4719c58"
+digest = "sha256:d81004dbdf79321d337db1d61b913e040aaa99b2e852acd7b1e927e4bc5c5a7c"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-arrange-largest-number-i00-standard"
-digest = "sha256:b1f6cad3bd9a6475f2c65a3f93f87e420399dce1aff59184225505d635552baa"
+digest = "sha256:8cc25d571567c51444f43669a3afd5121decbc5f2198027d8601ea34ef952b25"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-arrange-largest-number-random-i00-privileged"
-digest = "sha256:f7389704ef12eb7a52d7fd1d4b0453e66f23e173a33487c5b89e55f6d221c252"
+digest = "sha256:46d3258e54350c468736cb2fd51a1dd8c9df0ecb1ca4f5d9c7b579dcf9dc7fb3"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-arrange-largest-number-random-i00-standard"
-digest = "sha256:c4776a49074d7e1c75abc89b7a6b2127953dc0bf4c0bc81b975f499c2066ac3c"
+digest = "sha256:6a8822c068194db552bf47202eae10330d5509af70b469624aa28d3fe9789426"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-build-tower-i00-privileged"
-digest = "sha256:9015cf4d7dbcef6a4d4172c001147b342544a3937fd9bcddd4fe5ece46ad2c92"
+digest = "sha256:46a754b9bf0f8b94797a847fc9715e90b7c9b25e74d295a9e6fefb9924369766"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-build-tower-i00-standard"
-digest = "sha256:3906240267c656584f5841de2618079637a2a0a10a34940f0d1dfb986918e55e"
+digest = "sha256:1b7362411b70879d58bef0d4528005b4b77aa7acf160952d63bdb99b91604b77"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-classify-objects-by-language-i00-privileged"
-digest = "sha256:2f2c8fbcd116ea45e166d73ae55aac24627b43b4fff2a916aa479d2c1dc2b7d4"
+digest = "sha256:b17091b5470a94f1b9f57108f95a5a9b11a084e7c92db8bbce335e6623af8018"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-classify-objects-by-language-i00-standard"
-digest = "sha256:d0138b1e749d2a942a78b7591a1b8ada3de33c9653529e1b17e142b454e17ea8"
+digest = "sha256:05a785eeb7e01da5d7e3beef7573ee860f015357f860e7f092a875fa89757471"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-classify-objects-i00-privileged"
-digest = "sha256:89bfe2c883d6d21932fa4f9e5639c90fef24d599b24e0aa348976b137dbbaca5"
+digest = "sha256:fd2e29be8d503419cd0f3ce999d91e6b54a73406008308f1becc9b31c6d1e67b"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-classify-objects-i00-standard"
-digest = "sha256:0cecbf50171f9a69b15d7c94ccbbbab4a9ca186a3e287cdfb7ce26cb2faa1442"
+digest = "sha256:15b7e278335c6cfe049477cd71a52980c92ad90eeb1299ee63e5ecf3328eb278"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-cover-blocks-i00-privileged"
-digest = "sha256:074ebd4fce613246102886a6cd067532619cce2cdc3a9be1207db05e3320b527"
+digest = "sha256:e752e9b31c92f184f8036ef5e8cf27c84b0fb2e03f41b8b8e2a7d869ef0ba628"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-cover-blocks-i00-standard"
-digest = "sha256:d3785ffdbb04cbfedeb8b5c06b1abd656f3f2f6c0799463e7d909d2f4823265e"
+digest = "sha256:1624f02ffa0ec4ad8311a1bacac9b15afcbe9f81ea3a11180dc0d7b5bb8c5695"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-deposit-coin-i00-privileged"
-digest = "sha256:e0d3eb156908975da8f367902fda65b4a53a3647229ca1316e6ddf526002999b"
+digest = "sha256:215fcaf7d51e0f23e514ece75c760ecc6d611585bb8ee66c4ee36799f289a6ba"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-deposit-coin-i00-standard"
-digest = "sha256:a5c98f7c7e674b53f60645cff88d237c61d91eb08fefc05321a00adaff85213f"
+digest = "sha256:ec88a6f40f38bf700149bf3c73c43b3af8ad95fb720b33cbe7044e43319e22af"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fasten-screws-i00-privileged"
-digest = "sha256:368283fb643ae11e3d4a94e76e4736e2689a59acfd3e37be6210eca3e657e744"
+digest = "sha256:fd98dc781d9f83b3c02f234f94e7e474964b25b30de74d1f48a7245d14c4f4b6"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fasten-screws-i00-standard"
-digest = "sha256:2fb115942153a96dd03c63e8bd44418ebbc21ff91ae2fd76c6b2fe8a43901518"
+digest = "sha256:9689924304bac7b0f25446031dc7113f46608d87e39ab8a87c45c6f1c1eb1cda"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fill-egg-holder-i00-privileged"
-digest = "sha256:f71e87ff4b492b8f0935283e93dade718f5190cc64762a6f6bc3423d8a8d8930"
+digest = "sha256:7ad24373c3730fb132db5f977cb8d2284fdbb3c6893fe37387a94ca169c5d081"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fill-egg-holder-i00-standard"
-digest = "sha256:7bedb0d8b8fc6242b8083592034538be98f6b03f8f8380f89c4efcb43f923ee1"
+digest = "sha256:d4e6bc8c4839c3068fd7b9b9493a88eb9a2cdcb721f0ffeda4177c89d925f07d"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fill-pen-holder-i00-privileged"
-digest = "sha256:893b6e5dcf74c463b83c6cbab2cd3a95dc1c445d18b90a483c19cb7958abcae3"
+digest = "sha256:77b782b3b470dd05fcc5e442cc3b516367fb26d1828bf5970b7388747c6fc754"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fill-pen-holder-i00-standard"
-digest = "sha256:dc4ddcf4fae56f308138ba1550308ce2e709b8e1dcd29410f6b1fc39cbdfd4eb"
+digest = "sha256:a0402b6b422b80323704dda01f51d5e3504eab2d8f0991fb01ff122a2257a49a"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fold-clothes-i00-standard"
-digest = "sha256:fcaae6ce41626549f49f4e0d952d31968e18e894adcd5f4fee1b4ac69a48b05d"
+digest = "sha256:eaae61b3c9ecdd8a768dccc3ad52ea135eb35357c755da807cc44c8e4490d557"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fold-clothes-random-i00-standard"
-digest = "sha256:53dc30790fab0f8c0ef25a72c5ccae3881350636421da67593107c29076a3968"
+digest = "sha256:f2e40c9b94dee51876dcb9334501dd14804b2c310489683b96e0bec351a8bcaf"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-general-pickup-i00-privileged"
-digest = "sha256:1f9f9be592157b284f4d6ba30f7704359caa402b463dfb26c2e43043e6ccdcda"
+digest = "sha256:d6818a4cbd86e1e397aac0d2538b67aeeda9f34bc9cda49d1e0920bf6407c5cf"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-general-pickup-i00-standard"
-digest = "sha256:59d25da2917afbcd656751c10292d5a2f3154427e2dae2ad66250cf0a70b5adb"
+digest = "sha256:cb8b2c35b963b574e1f0af35079f4eddce2ae4e9bc9f88b5d9824eb1ab06bc39"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-hang-mugs-i00-privileged"
-digest = "sha256:e6ba245b63e2150543def8636a334c7362c3e7c1185f3111ec99b1be7da92472"
+digest = "sha256:2aa852a863516e8e2ee1347a4d04e0f34a082942de4319da062d22b9b6d710e3"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-hang-mugs-i00-standard"
-digest = "sha256:4e4dd36e8b3ffda40df3ece054bca3d9fa67a3f532fe22ac31df88b1c8a3deab"
+digest = "sha256:8251eb78d07a69f2d14897dde82b69c8d9762f5f007d292f392612c592e821ef"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-hang-mugs-random-i00-privileged"
-digest = "sha256:a72d3af8339e59acf02083ae7170908b80cc24922aff72e3ee901e40a793e87b"
+digest = "sha256:e6c8e8785bf3262a2e3585919b28f20e83a8248bf338ff94d09e5a8a2dbefae4"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-hang-mugs-random-i00-standard"
-digest = "sha256:1c0ebde9e384c5bd27a27d088ac4cd14f2452bed6ac831d1c42578522b2a6404"
+digest = "sha256:becbc318598b736b7639c479c49ab6cb1b75278419c77c15b36a75a36214326b"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-imitate-sorting-sequence-i00-privileged"
-digest = "sha256:51800260f5a2d51ee9fd0f587f4be4a02dcbdfdc9fd9310d9b11cafc53b7f42d"
+digest = "sha256:bd413c063fd65213500c6d3fe9c9a518a3ba54070a2008eab4a1b1e09c30a57f"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-imitate-sorting-sequence-i00-standard"
-digest = "sha256:4f69e85a13c4f6bd47e10c3400008241cb776624e1809c8644d4e224e0a2ce02"
+digest = "sha256:7d0c531f234e13615afe5b4cb3cfcb1bdf5fa186cbf8257300bb5711a72af0b8"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-insert-key-i00-privileged"
-digest = "sha256:c034b1ba8a3272b645df24fe069917aa8af1026e6e5eaf1704d612beb64ac32b"
+digest = "sha256:b490b75c648d88768687b13683933643e8649e88853f4bf426411557af9fdc6e"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-insert-key-i00-standard"
-digest = "sha256:5a16104805920b9950e84adfe915c3a9fd6cadbd52e958723624c27b9cf654a7"
+digest = "sha256:679b1db64473933c157404b7817f053b3d8343c2a1f3a6de9cc81074b7485599"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-insert-tubes-i00-privileged"
-digest = "sha256:2d3faf61dc5bf56db72189f1d0283e7935ddc4dc748ab50fb339750c6166dde9"
+digest = "sha256:7710b7fe8105ca4963747d4cbd6a57d72edb303af5dc407a7bbf2da30b4b02bc"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-insert-tubes-i00-standard"
-digest = "sha256:d903177fb7e388ed18258e7a11f1c121b3958cc337c6bd3be0fe2df015236518"
+digest = "sha256:0aa29ceca8459ad48ce3c71ec3e573810ee5c37dbfae7ddbc00412c246a6f8bf"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-make-kong-i00-privileged"
-digest = "sha256:a4b92ed856ab0c7b735e8ebb03c3f090c820a9ce6bb4f0e3885b42472772b0cd"
+digest = "sha256:94a512d664583b78c49084dffd2559f4ad42f565700cc21bb709e42cb725ef84"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-make-kong-i00-standard"
-digest = "sha256:ef2668d622185b0f9fe6b3716ea9897ac609ea21078f5f35612a5bd57e6d17b1"
+digest = "sha256:3c763379633a3712be2798765d81fb1f8461b686c43afbacab7b132c0bc9a931"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-make-toast-i00-privileged"
-digest = "sha256:42721955ea27f78051aa6fd22773d40e25b1b68194c26a7a8ec30ddcf412127f"
+digest = "sha256:960154e6319206a9b0800c883aae027d2681871f7449e0a5d5350a8df63fc55c"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-make-toast-i00-standard"
-digest = "sha256:18b5af7816d883732b5e6b7a9ec6b45212d66e9e40b3425ea90aeb69286cd31d"
+digest = "sha256:e1f2dab42e43d3997e1b36e6621ea8d31f9aa265ca545dfae2e40f4a561e3bf2"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-make-toast-random-i00-standard"
-digest = "sha256:4db4d9bbf8a4914848b6c043bd78368d424c59fb5fdd4fc908614e844f32c22c"
+digest = "sha256:3f780f19a552894980db378283ab5b51edb5274f289542d162aa3a62867127dd"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-match-and-pick-from-conveyor-i00-privileged"
-digest = "sha256:97c140afffde8ad1c94e241a04e01cc1ea855fc5cb219002380d9b5c360ae67e"
+digest = "sha256:71b36b3d7d552de197b1c71d2bb03ecf50d0d5994f8a6424d7991c938a84ded7"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-match-and-pick-from-conveyor-i00-standard"
-digest = "sha256:963216ecae05f2d64629d3375d529e8d3fcbffa3763fe7d13c8704442120b4b1"
+digest = "sha256:210033c3b6babb7180c2c07f804673d935d437ed173bbe5e468e8d97190425df"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-organize-table-i00-privileged"
-digest = "sha256:cd9a794862f5fe940548ef6a6b1fed29b2f74b3b18b919fc73e29ab5509b8183"
+digest = "sha256:16a01cb64f0d31feb6e785ebdf57b9e1358c3fe851f376106cdf1662877df1ad"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-organize-table-i00-standard"
-digest = "sha256:fb8608986f796a378b37d4810362281696cf8d9897b3be45a1de246b6685ac03"
+digest = "sha256:7a7d6b1e99e38a06a1bbf2f8bf2dac161203115b4374d0dd7f7750c1761e32b2"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pack-objects-into-box-i00-privileged"
-digest = "sha256:d54b5ce4d510960e99ae146465a7544d9d9204d31e050a345c5ce801ffad6d19"
+digest = "sha256:3920026bdbe5547e4299dcae64001a65c910eddc002009ea3674b192e4b83a25"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pack-objects-into-box-i00-standard"
-digest = "sha256:0733ae7df91b51ccca280c710bab2c4e8d6c6a9609f37ec0c72c2f3495fc07a8"
+digest = "sha256:0ed98678e15ec77e0f945b86db9d206a06f0c7595901909ce378c57f4bd2a95d"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pack-objects-into-box-random-i00-privileged"
-digest = "sha256:3b3b64cf3b74a8c96d4d43cb97cd4fc34057bb129327ec21f9830b0005f0e1d7"
+digest = "sha256:5fd515de399ae958beea80b58691b65df7e7624d7a6cfab6790fd1579ec210a9"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pack-objects-into-box-random-i00-standard"
-digest = "sha256:cbace1cbcaef9207d414dc308c7a518da7d963bcff7c0410fbd6f19e967d7f6c"
+digest = "sha256:4dc16967ddafb63918acc71d783bbee1647b5442463ceaeb07da6f7b65fee60e"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pick-from-conveyor-by-image-i00-privileged"
-digest = "sha256:58d098b60b34b814cf8916fd181304f1c7eff6034ded5475480aa282caf41b3f"
+digest = "sha256:236ecd08502d6328fe2261c17f2d1a9de9bd8214532e7ef025054e626afd786e"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pick-from-conveyor-by-image-i00-standard"
-digest = "sha256:cae8003e7c31d3840eca6ef976337e7b31f5289da91ba58bd3b6a6aa35d86e0c"
+digest = "sha256:19d3cdde28253cafb4910a60f6ed537d3071e0661ce2441269705967e1ee4008"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-play-stacking-toy-i00-privileged"
-digest = "sha256:ea393d215ca2ccb0c8b81f5487869052a88a0e37fa6107fd0b4afa360d8eb6b1"
+digest = "sha256:9c520f9bf9e37b47e0f646adccaf8fbcce3994a970b6cc08ca427f1d8e15e39c"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-play-stacking-toy-i00-standard"
-digest = "sha256:c52aa669d6161b3c860517f20002cb69550dcc138efb8e962ebc747b762ee9e0"
+digest = "sha256:7dcf18db62d87f1c558c5cdef4198561cdd096efde670bb6fae332b2a8d35b19"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-play-tic-tac-toe-i00-privileged"
-digest = "sha256:a7a5dbd68d8c8ce24b35bbf1dd8453bc7f64acd29395870870e6f6697bead0d2"
+digest = "sha256:e319c9354366dad76afe8d1310fd09a88d3b67c0701d8e1d3cc8dde35ab7127a"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-play-tic-tac-toe-i00-standard"
-digest = "sha256:568c4fb5c07426bdaf3d099846a7e487b2cd72176c722c6466e57233e595d4cd"
+digest = "sha256:74624e66f919477eebdafe7c2429efb52b7a532a3c2f75c1f089074ee71069d0"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-play-xylophone-i00-privileged"
-digest = "sha256:cc2547d1491226929850c6583dc465f25cbcbf3732596cdaed817b899979f3cf"
+digest = "sha256:08ddf41509d2dbde6bf0a20a19a5e0fa602ef0f1003797cc5f587079b631704a"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-play-xylophone-i00-standard"
-digest = "sha256:87a0901996268a57328397b1590d2188fb78b34c6045cc52a56e76024c6df22a"
+digest = "sha256:a5ddab17a2b61d60a3216a29092cb6d40123cb77727789c8aedddfb2e4bc16c5"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-plug-in-charger-i00-privileged"
-digest = "sha256:92a3f83ca6275f7255ad743b953bcfc2f3ee1d1c9cff50e9125e7f3ec0ff4d37"
+digest = "sha256:bb7932c55283ca1601f455ee4926b3dfe935c0855c49c7bec62698b4da79a251"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-plug-in-charger-i00-standard"
-digest = "sha256:70d23a6d811272901f36f2c86a19c6713a5aa86e4c8580d2be9711263d1baef3"
+digest = "sha256:df9359deab4e450f6e6af37895d7edd1d39cb404a09859e60e85b8a2377fe8e0"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pour-balls-into-vase-i00-privileged"
-digest = "sha256:3473d211b58735028223650bb2cdc72b6f18c82ff078db4f5e8654060cdb0728"
+digest = "sha256:06e0832ae84e5e8985d232a05cd8d51d5d95c4cad66fe1bd023989fb446a961a"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pour-balls-into-vase-i00-standard"
-digest = "sha256:129ab82a7a36c9ba912db7b5191164f3ec1ed78145cd4cb831c2f7f6416cc4a8"
+digest = "sha256:a083b023530e81c552f624293f5e05e30dba0f560ac2cbbb5da3d034a955d98c"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pour-by-language-i00-standard"
-digest = "sha256:7b9351b1730f60575a65e02dcfbb8448b757f5283eb210226be8ca8d5558383f"
+digest = "sha256:c09a9653aeaff6d6fef97d74a3ea325748915fe7840fd364ba90b30225093b65"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pour-liquid-into-cup-i00-standard"
-digest = "sha256:9a06267b66a1b2cab8ab59bbcf45e126977e41587abb2be76c253d586d3bc781"
+digest = "sha256:7bb791c850b0b20b663bf03a2068dd24fa8836f4257635bbe70d3cb5d90721ed"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pour-liquid-into-cup-random-i00-standard"
-digest = "sha256:bf993bdb0b80c9a93a7dbc1be39635c57c3c8f6fc390783c4be9fa75eeca02f2"
+digest = "sha256:b645340a4962b835c0bd2a18ffa6bcac5c50b01138df164757c61190ac2d7a99"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-press-by-number-i00-privileged"
-digest = "sha256:a716663dc84e6e2673e24eff5a936b2e32b43ac75412b9a8c7d7cd3f579eb233"
+digest = "sha256:5469803600d40a32f818807fbd36299f2d7e51e38a80ff4a740ded38c57e0a81"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-press-by-number-i00-standard"
-digest = "sha256:d870a3ecc237bd1d4c809174e026319274bb6bcf3f761864385eb88c82ddc382"
+digest = "sha256:93fcb53b9c62bf6d2ec42cf3f80bd82c10cb78d2d727e21bdf444d607adac2ed"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-push-t-i00-privileged"
-digest = "sha256:77ee015b1048a94b6685e9f09454b21cb21997a7e43221f95b85108e4f5e0bdd"
+digest = "sha256:0ccab47b190afb55798a2257fe1dbe11fe38a7dfe9bdd0528f72a79e518e072f"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-push-t-i00-standard"
-digest = "sha256:e3c9d488e6d50cd3b37f3b60e10c729e7e7fef90d0cb30b830d16b234c978891"
+digest = "sha256:b198dac0b97a6e054872dc579791bd58fdffedaaae8618472ed836c58a55184e"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-push-t-random-i00-privileged"
-digest = "sha256:9ac9cc129772ee40aa437fb6606fffbe79652b44292263e318a8c3f479e898eb"
+digest = "sha256:a32de59f2e2dd58f03c48b505e45b75038ae14f7f514ebac6e8c58f3ae3d384e"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-push-t-random-i00-standard"
-digest = "sha256:67353475fa67387af44bfa22119befe33fe429938a2978604ff3b1d733d77ffe"
+digest = "sha256:435743375485ac71df2631c2c14a1ec117cfb313f695be339af255deea636f2c"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-put-bottles-into-dustbin-i00-privileged"
-digest = "sha256:27823e10ace43801ab4c67610a5727ea172925e0e3167fcb1fe776cb5c272f89"
+digest = "sha256:cb6d61411479285c4e7c5102827cdbabcd182df48ce31dff4cc31a5ac7aefd26"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-put-bottles-into-dustbin-i00-standard"
-digest = "sha256:be81b959a7d8eeba4b9ac20fdfc5f2d704c8429bf715ee741f46cde32a2fa704"
+digest = "sha256:b41eaa0a54806edafd3021ef032da5b173cf055cb0af6413a009387b2cd75a80"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-solve-equation-i00-privileged"
-digest = "sha256:f395f11e6ae20629b39160eff48b330cc64d0761fdf2975803e338f94afae16b"
+digest = "sha256:63ca2f0321718d2374ddf7aa7cdeb0da34d2ab8495de3a7c213d8e13fdb15966"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-solve-equation-i00-standard"
-digest = "sha256:846c0d201914af0f494a995de626190a7c414766895ff408ec8f290255beab40"
+digest = "sha256:828521dfce2ea1ddf8dec0420f5aa5f1bcb84faa618a93d33d3ddc429f6838fe"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-sort-nesting-dolls-by-size-i00-privileged"
-digest = "sha256:b38a78381940f97382b91fc7163153617b0fa4073f79a3ff10282e1e67ad70f0"
+digest = "sha256:f93e55e70c9b374f4baa3d2c38cb90527521974347917073e0af2507487b8c2f"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-sort-nesting-dolls-by-size-i00-standard"
-digest = "sha256:015de2162b1a98a5ea2924f50bcde0929621907ecc80ebcdf2941ae2f178106f"
+digest = "sha256:f683d3e9c18bba6fdaf4959cc080906ffc71cdb31472f76de4fb458e106bcfaf"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-sort-nesting-dolls-by-size-random-i00-privileged"
-digest = "sha256:c1718f487d019f16dfb1df318f666cda9215221ba12fb3f3ef802fd821edd25d"
+digest = "sha256:b09be9cfb997a51c74997f7fb7a8903de0fc535e8c6c08d3064dbcf19a3acd16"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-sort-nesting-dolls-by-size-random-i00-standard"
-digest = "sha256:26986fa66773d71f735e3c9cf65ab208cdd376a1ecf00c4e1d7b03916bd3fbc3"
+digest = "sha256:9ba7de8914779d5998fd0e16755135e46f05e47b0f9adce0b15036cebb5c6c27"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-blocks-by-language-i00-privileged"
-digest = "sha256:56afb2382c33d1ffc839abaccbf01d128775d6a92d034f1d2d35e375369c8987"
+digest = "sha256:bb54d12d48e85583ba330f0ddd7e293d596e3720c9305f1286a70f75cc4f8809"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-blocks-by-language-i00-standard"
-digest = "sha256:e43fa63178b4e6edc18e9e506b36f66d31afd1ca94a4762326250b341fbfdec5"
+digest = "sha256:66d7467b61b12f5b7ca1b9c1169d0c850f25991e5bff98c5c911281a4ca9a2da"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-blocks-i00-privileged"
-digest = "sha256:3fdb59bf1e1e2de23f9ae838bb17a4d4e7cb1b0fef47af738e828934c4e8a555"
+digest = "sha256:06b4ba4d1f116964cf7d5f7b4ffb382745931dc7ef2327bcc9f73cc6a1aba792"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-blocks-i00-standard"
-digest = "sha256:b2eded3058df34abd0880a1b02d1303bd602371e0bcdb9e1d7dda502bbc7b285"
+digest = "sha256:d96d0ddc21c4aa3b0342ac6d08362d3b8dcfb2a9dbefd01d828a542b3b174973"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-blocks-random-i00-privileged"
-digest = "sha256:766da7bf57c471df54492b9a43eba27da4d70141c36d17518717261214448cbd"
+digest = "sha256:72f0d2d9bb532d2b09c36de17cbc1ab440305ee7eb30f0f06c59979898ff211b"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-blocks-random-i00-standard"
-digest = "sha256:c7d954b03a17f86f7596f8ab663c352371143cd7df9b9850bb4ae4cd1cdce384"
+digest = "sha256:984158e2a99b1b2f35354346664560484752894d363db6633290974d741c7d5c"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-bowls-i00-privileged"
-digest = "sha256:6b7c976b3e2d28510854c93a062cba043ff3108a9356912ad10aa06788074f38"
+digest = "sha256:f0d4e72f95b73bc7b7b0d8a0c15bc3be4ac67f8288780826577b30195279de8e"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-bowls-i00-standard"
-digest = "sha256:1fd3613f1fe486eeb3d2c882b188ca3596a530c67d34776f3c1ea6b45c27bd11"
+digest = "sha256:376715bcf9db018782d66b5832f9ab38280fcde305983e8c2775099927fa5ffb"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-bowls-random-i00-privileged"
-digest = "sha256:b1e7d883f81a4af7b4b85eeaa0f213d43ad68bd02b59136ef41d32398a819eac"
+digest = "sha256:9ee8c41d26d6736136fe4beecda9979153b5e726f82167ef3ee9bbb720a4911a"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-stack-bowls-random-i00-standard"
-digest = "sha256:1e1e3ce80a7f85eb83ab3a71104e2059e6899889c98deaf1d91a62907d246b59"
+digest = "sha256:7303ec6dc3154104c72c2f40bc5ead6f6ed9def3648bb0e10d9c85f557839a2d"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-store-laptop-and-headphones-i00-privileged"
-digest = "sha256:93d5077946efd620bd047d6e9213caae92025e2df32a3e43272b518e65e65d79"
+digest = "sha256:514549bf0e5c78c2bb00d628e675292fd56ac84fd0f591765d0395c4fe93d1b1"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-store-laptop-and-headphones-i00-standard"
-digest = "sha256:906b0d28a346dc12ff6bc91f482f8bace251fec9ad9adbb22df2d3b88e60dd09"
+digest = "sha256:3a04fb1e004f7c6dd244806f027537fbf92872a85ef68a9b422931a636deec18"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-store-laptop-and-headphones-random-i00-privileged"
-digest = "sha256:168046e955e8dae73d2584588490abe0387a12900bf83b07d6922117413d7095"
+digest = "sha256:8c487fef689ff7e6b923e75b59596a4ea72edd5a9ed7bda11707a9b56b28144f"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-store-laptop-and-headphones-random-i00-standard"
-digest = "sha256:00806dd4fdf677c19e254b3e0d034128d6123caeff5ff2b316ec64a89b52d25a"
+digest = "sha256:650f6d4a66e9d1eb20f61e112d4c438b5838911de126ef9c125a5044c27efd6e"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-store-tools-in-toolbox-i00-privileged"
-digest = "sha256:ac2e9e77bdfe1bae63702300bfe4b825123b532f69158ee9b015ab005e60cfad"
+digest = "sha256:03236488cddee2e5f09e8a3184747bda1d3b066b5528adf3fa5f6f9b19d43847"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-store-tools-in-toolbox-i00-standard"
-digest = "sha256:95521056ee9d47d3e74aa51bcd723571b513940f6cd707c922d600e1b8597744"
+digest = "sha256:3289b2bf605e23803d0f6a9815116939835cadf4cd0c2bdcbcbf74a8a0fd9445"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-swap-blocks-i00-privileged"
-digest = "sha256:3ef39f8cbca96ee4048ee611cca44f117104c8e3559d1b69676f93d08aaf0479"
+digest = "sha256:cb7260df9b7a88671656827ca8a9c5ba091a5ddfe2874258689f07dee574cb5b"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-swap-blocks-i00-standard"
-digest = "sha256:d0c89b031d95eb2511b13aa618406e854d85b37ab8cdd7e6119c06b19f995320"
+digest = "sha256:9231dc2bba74816909af6ffd68f3028b4629b99ee823ff9ee868086aa8ccda25"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-swap-t-i00-privileged"
-digest = "sha256:91e5d1f88e34f7016d74edfe615864cbbad8eef0daab0946323dddd6f8260326"
+digest = "sha256:9635f32a07f6afb6dc649a5aa2ddc6b71072a876ce50199d46f6d2a3cb820831"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-swap-t-i00-standard"
-digest = "sha256:9fbac40a20d5553075e59386d601128ed0aa106227ea22a1dd66e7c5db236b13"
+digest = "sha256:83d4f8b684f0a0f81af73e55a132185067bb3f079b25ac2070e0af4cbc79e457"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-sweep-blocks-i00-privileged"
-digest = "sha256:2c08c64d6be34b448671c2cd0db993ae0e8521ef47587baceac5e49c37147c7f"
+digest = "sha256:7e6fdd324e73b474fcfafa84238900b9e55a6169d10724e01a9dcbcd8113028e"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-sweep-blocks-i00-standard"
-digest = "sha256:ca53a5dce6e057a4666c2b63f25832dd6c1a557ddeda69de2f1c4481f3ebbd4d"
+digest = "sha256:a2eed4f65cfc12298c3cf536b6201ff19fe81df08df088f33a9e2bd5d95973de"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-sweep-blocks-random-i00-privileged"
-digest = "sha256:7f7fa162ad99972f73e73962613f90dfde64b4d075b4d338df0e03b9dc0ac3d1"
+digest = "sha256:9c0ffc5c69973b841b2f3d1a40232ef5773a8e417b6983bffad308a7135f84f9"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-sweep-blocks-random-i00-standard"
-digest = "sha256:089cada0125a0ee40e753835359283e71c73accd6fc76f2160ca2f5389c138a6"
+digest = "sha256:2f1a7d07d791092b80d3f78c25c391906ce19bcead7deada05fa921e07fc283c"
 

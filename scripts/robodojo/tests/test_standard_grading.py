@@ -6,7 +6,9 @@ Two rules (docs/benchmarks/robodojo.md):
   succeeds in another end state than the live episode still passes (`deterministic` = 0 is reported, it does not decide).
   The AND works both ways: a replay that succeeds where the live episode did not is 0, and a live success whose replay
   fails is 0. A replay that gives no result (it died twice, an error line, its time limit, a layout rebuilt to another
-  state) is an infrastructure failure, no verdict on the agent; a replay that dies once is run again;
+  state) is an infrastructure failure, no verdict on the agent; a replay that dies once, or that runs out of its own
+  allowance (max(1800 s, 1200 s + actions / 2.5), the privileged grader's; a hung Isaac) while the hook has time left, is
+  run once more; one that the hook's own deadline ended is not;
 - tasks whose physics does not replay bit for bit (instance.json "determinism": "verdict"; standard-only): the LIVE
   episode decides (success = live success); the replay is recorded and never decides, and a replay that gives no result
   does not void the live verdict. A missing live record is an infrastructure failure under both rules.
@@ -18,6 +20,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); TPL = os.path.join(HERE, ".."
 EP = {"success": True, "steps": 5, "calls": 2, "control_steps": 5, "physics_steps": 50, "elapsed_s": 9.0, "reason": "success",
       "task": "t", "protocol": "eai-standard/2.2", "n_actions": 5, "live_sha": "aa", "sim_startups": 1, "resumes": 0}
 FAILED = {**EP, "success": False, "reason": "failed_check", "live_sha": "zz"}
+BOX7 = {"RCB_REPLAY_FLOOR_S": "5", "RCB_REPLAY_STARTUP_S": "5"}   # the replay's allowance for EP's 5 actions: 5 + 5 / 2.5 = 7 s
 # name: (instance determinism, env, episode.json (None: none), want reward, want reward.json subset, replay processes run)
 CASES = {
     "state: pass": ("state", {"STUB_PLAN": "ok"}, EP, 1,
@@ -47,10 +50,25 @@ CASES = {
                                                              "instance_exact": 0, "grader_error": 1}, 1),
     "state: no time left for the replay": ("state", {"STUB_PLAN": "ok", "RCB_COLLECT_TIMEOUT_S": "300"}, EP, 0,
                                            {"success": 0, "infra_error": 1, "replay_error": 1, "replay_timed_out": 1}, 0),
-    "state: the replay runs out of its time": ("state", {"STUB_PLAN": "sleep", "RCB_COLLECT_TIMEOUT_S": "362"}, EP, 0,
-                                               {"success": 0, "infra_error": 1, "replay_error": 1, "replay_timed_out": 1}, 1),
+    # the hook's own deadline ends the replay (62 s are left, the allowance is 1800 s): no second attempt
+    "state: the hook's deadline ends the replay": ("state", {"STUB_PLAN": "sleep,ok", "RCB_COLLECT_TIMEOUT_S": "362"}, EP, 0,
+                                                   {"success": 0, "infra_error": 1, "replay_error": 1, "replay_timed_out": 1}, 1),
+    # the replay's own allowance ends it (a hung Isaac; here 7 s for the 5 actions) and the hook has time: run once more
+    "state: the replay hangs past its allowance, its second attempt decides": ("state", {"STUB_PLAN": "sleep,ok", **BOX7}, EP, 1,
+                                                                               {"success": 1, "replay_success": 1, "infra_error": 0,
+                                                                                "replay_error": 0, "replay_timed_out": 0}, 2),
+    "state: the replay hangs past its allowance twice": ("state", {"STUB_PLAN": "sleep,sleep", **BOX7}, EP, 0,
+                                                         {"success": 0, "infra_error": 1, "replay_error": 1, "replay_timed_out": 1,
+                                                          "grader_error": 1}, 2),
+    # the result line counts even when the process crashes after it (Isaac's shutdown)
+    "state: the result, then a crash at shutdown": ("state", {"STUB_PLAN": "ok_crash"}, EP, 1, {"success": 1, "infra_error": 0, "replay_error": 0}, 1),
+    # an episode whose length cannot be read keeps the whole remaining budget: a replay of 10 s, longer than the 7 s
+    # allowance its length would have had, is not ended
+    "state: no n_actions in episode.json": ("state", {"STUB_PLAN": "slow", **BOX7}, {k: v for k, v in EP.items() if k != "n_actions"}, 1,
+                                            {"success": 1, "infra_error": 0, "replay_timed_out": 0}, 1),
     # a video that could not be written never decides
     "state: pass without a video": ("state", {"STUB_PLAN": "novideo"}, EP, 1, {"success": 1, "video_rendered": 0, "infra_error": 0}, 1),
+    "state: pass with a part of a video": ("state", {"STUB_PLAN": "partvideo"}, EP, 1, {"success": 1, "video_rendered": 0, "infra_error": 0}, 1),
     "state: no episode.json": ("state", {"STUB_PLAN": "ok"}, None, 0, {"infra_error": 1}, 1),
     "state: service never ended": ("state", {"STUB_END_RC": "1"}, EP, 0, {"success": 0, "infra_error": 1, "finalized": 1}, 0),
     "live: pass": ("verdict", {"STUB_PLAN": "ok"}, EP, 1,
@@ -60,6 +78,9 @@ CASES = {
                                               "infra_error": 0, "grader_error": 0}, 1),
     "live: live success, the replay ends in another state": ("verdict", {"STUB_PLAN": "diff"}, EP, 1,
                                                              {"success": 1, "state_identical": 0, "deterministic": 1}, 1),
+    "live: live success, the replay hangs past its allowance twice": ("verdict", {"STUB_PLAN": "sleep,sleep", **BOX7}, EP, 1,
+                                                                      {"success": 1, "replay_error": 1, "replay_timed_out": 1,
+                                                                       "infra_error": 0, "grader_error": 0}, 2),
     "live: live success, the replay dies twice": ("verdict", {"STUB_PLAN": "die,die"}, EP, 1,
                                                   {"success": 1, "replay_error": 1, "infra_error": 0, "grader_error": 0}, 2),
     "live: live success, replay error line": ("verdict", {"STUB_PLAN": "error,error"}, EP, 1, {"success": 1, "replay_error": 1, "infra_error": 0}, 2),
@@ -78,6 +99,17 @@ toml = open(os.path.join(TPL, "task.toml.tmpl")).read()
 hook_budget = src.split('HOOK_BUDGET_S="${RCB_COLLECT_TIMEOUT_S:-', 1)[1].split("}", 1)[0]
 if f"timeout_sec = {hook_budget} " not in toml.split('command = "sh /srv/finalize.sh"', 1)[1].split("[agent]", 1)[0]:
     print(f"FAIL finalize.sh HOOK_BUDGET_S {hook_budget} is not task.toml.tmpl's [[verifier.collect]] timeout_sec"); bad += 1
+# the replay's allowance in the hook is the privileged grader's (the same three numbers), and the hook's budget holds the
+# episode end, one replay of the longest episode at that allowance, and the merge margin
+import re
+priv = open(os.path.join(TPL, "..", "privileged", "tests", "grade.py")).read()
+floor, startup, rate = (float(x) for x in re.search(r"REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = ([\d.]+), ([\d.]+), ([\d.]+)", priv).groups())
+hook = tuple(float(re.search(r'%s="\$\{RCB_%s:-([\d.]+)\}"' % (k, k), src).group(1)) for k in ("REPLAY_FLOOR_S", "REPLAY_STARTUP_S", "REPLAY_MIN_RATE"))
+if hook != (floor, startup, rate):
+    print(f"FAIL finalize.sh's replay allowance {hook} is not the privileged grader's {(floor, startup, rate)}"); bad += 1
+end_s = float(re.search(r'RCB_COLLECT_END_TIMEOUT_S:-(\d+)', src).group(1)); margin = float(re.search(r"MERGE_MARGIN_S=(\d+)", src).group(1))
+if float(hook_budget) < end_s + max(floor, startup + 15000 / rate) + margin:
+    print(f"FAIL the hook's budget {hook_budget} s does not hold the episode end ({end_s:.0f}) + one replay of 15,000 actions + {margin:.0f}"); bad += 1
 for name, (det, env, ep, want_reward, want_rj, want_calls) in CASES.items():
     with tempfile.TemporaryDirectory() as td:
         data, log, bindir = (os.path.join(td, x) for x in ("data", "log", "bin")); os.makedirs(data); os.makedirs(bindir)

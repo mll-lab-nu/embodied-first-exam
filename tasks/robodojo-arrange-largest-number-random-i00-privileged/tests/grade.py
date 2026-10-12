@@ -186,7 +186,8 @@ def main() -> int:
                "ended_step_guard": int(outs[-1].get("end_reason") == "step_guard"),
                "ended_failed_check": int(outs[-1].get("end_reason") == "failed_check"),
                "replay_wall_s": round(time.time() - t0, 1), "replay_timeout_s": round(limit, 1), "grader_error": 0, "infra_error": 0,
-               "video_rendered": int(os.path.isfile(os.path.join(LOG_DIR, "replay.mp4"))), **cost}
+               # the tooling says when the video could not be filmed or written (`video_ok` false; a part of a file may be left)
+               "video_rendered": int(os.path.isfile(os.path.join(LOG_DIR, "replay.mp4")) and runs[-1].get("video_ok") is not False), **cost}
         write(ok, out)
     except Exception:  # noqa: BLE001
         traceback.print_exc(file=sys.stderr)

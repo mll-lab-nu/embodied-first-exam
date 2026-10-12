@@ -1,7 +1,7 @@
 """Stand-in for `rcb_robodojo.py` in the grading tests (test_standard_grading.py: the collect hook's replay CLI;
 test_privileged_grading.py: copied next to the grader as rcb_robodojo.py, which the grader imports and runs).
 STUB_PLAN = comma list, one entry per invocation (counted in $STUB_DIR/stub_calls, default $RCB_DATA; the argument list of
-every invocation is appended to stub_argv): ok | fail | diff | die | error | inexact | inexact_fail | inst2 | novideo | sleep."""
+every invocation is appended to stub_argv): ok | fail | diff | die | error | inexact | inexact_fail | inst2 | novideo | partvideo | ok_crash | slow | sleep."""
 import json, os, sys
 ACTION_DIM, MAX_ACTIONS = 14, 15000    # what the privileged grader imports
 
@@ -28,6 +28,13 @@ def main() -> None:
     elif what == "inexact_fail": result(success=False, sha="zz", exact=False, instance_sha="other")
     elif what == "inst2": result(instance_sha=f"i{n}")                # exact by its own account, another start state
     elif what == "novideo": result(film=False)                        # the replay stands, the video could not be written
+    elif what == "partvideo":                                         # ... and a part of it was left behind
+        if video: open(video, "w").write("part")
+        result(film=False)
+    elif what == "ok_crash": result(); sys.stdout.flush(); os._exit(139)   # the result line, then a crash at Isaac's shutdown
+    elif what == "slow":                                              # a result after 10 s
+        import time
+        time.sleep(10); result()
     elif what == "sleep":                                             # never returns in the test's time (a hung Isaac)
         import time
         time.sleep(600)

@@ -20,17 +20,22 @@
 #      atomically (a temporary file + rename), so the verifier never reads a half-written one.
 # A replay is the infrastructure's job: the trajectory was recorded by this trusted service. A replay process that ends
 # without a result (Isaac died at startup, out of memory, its time limit: Isaac does not exit after a fatal GPU error, it
-# waits on a crash dialog, so only the time limit ends it) is retried once when it did not time out; if it
-# still has no result, final.json says `replay_error` and `infra_error` = 1 (no verdict on the agent), never a silent 0.
+# waits on a crash dialog, so only the time limit ends it) is run once more, unless the hook's own deadline ended it; if
+# it still has no result, final.json says `replay_error` and `infra_error` = 1 (no verdict on the agent), never a silent 0.
 # Time: the hook has HOOK_BUDGET_S (task.toml's [[verifier.collect]] timeout_sec; keep the two equal): 10800 s = the
-# episode end (up to 2700 s through a resume) + ONE replay of up to 7200 s (the privileged verifier's allowance for the
-# 15,000 actions an episode may have: 1200 s + actions / 2.5) + 900 s; 18000 s with two replays, before 2026-10-12. The
-# replay gets what is left before that deadline, minus MERGE_MARGIN_S for step 3 (one replay: nothing to share it with):
-# a replay that is too slow is ended here and recorded, instead of Harbor killing the hook and leaving an unfinalized
-# final.json.
+# episode end (up to 2700 s through a resume) + ONE replay of up to 7200 s + 900 s; 18000 s with two replays, before
+# 2026-10-12. The replay has the privileged verifier's allowance for a trajectory of its length (tests/grade.py
+# replay_timeout: max(1800 s, 1200 s + actions / 2.5), 7200 s for the 15,000 actions an episode may have), and never more
+# than what is left before the hook's deadline minus MERGE_MARGIN_S for step 3. Before 2026-10-12 a replay had its share
+# of the whole remaining budget whatever the episode's length, so a hung Isaac held the hook for hours; now it is ended
+# after the allowance and the replay is run once more if time is left. A replay that is too slow is ended here and
+# recorded, instead of Harbor killing the hook and leaving an unfinalized final.json. An episode whose length cannot be
+# read (no n_actions in episode.json) keeps the whole remaining budget.
 set -u
 DATA="${RCB_DATA:-/data}"; TOOL="${RCB_TOOL:?}"; TASK="${RCB_TASK:?}"; INSTANCE="${RCB_INSTANCE:?}"
 HOOK_BUDGET_S="${RCB_COLLECT_TIMEOUT_S:-10800}"; MERGE_MARGIN_S=300; T0=$(date +%s)
+# one replay's allowance: the same three numbers as tests/grade.py of the privileged twin (scripts/robodojo/tests checks)
+REPLAY_FLOOR_S="${RCB_REPLAY_FLOOR_S:-1800}"; REPLAY_STARTUP_S="${RCB_REPLAY_STARTUP_S:-1200}"; REPLAY_MIN_RATE="${RCB_REPLAY_MIN_RATE:-2.5}"
 # A resume replays the whole episode first (~7-11 actions/s); the replay below needs as long again.
 python /srv/rcb_limited.py end "$DATA" --timeout "${RCB_COLLECT_END_TIMEOUT_S:-2700}"; rc=$?
 if [ "$rc" = 2 ]; then
@@ -56,8 +61,21 @@ print(json.dumps(out))
 PY
     exit 0
 fi
-echo "[finalize] episode dumped; replaying once in a fresh process"
 rm -f "$DATA/replay1.json" "$DATA/replay2.json" "$DATA/replay1.rc" "$DATA/replay2.rc"   # replay2.*: none is written any more
+# BOX: the replay's allowance in whole seconds for this episode's length; 0 = unknown (the whole remaining budget).
+BOX=$(REPLAY_FLOOR_S="$REPLAY_FLOOR_S" REPLAY_STARTUP_S="$REPLAY_STARTUP_S" REPLAY_MIN_RATE="$REPLAY_MIN_RATE" python - <<'PY'
+import json, math, os
+try:
+    n = json.load(open(os.path.join(os.environ.get("RCB_DATA", "/data"), "episode.json")))["n_actions"]
+    if isinstance(n, bool) or not isinstance(n, int) or n < 0: raise ValueError(n)
+    print(int(math.ceil(max(float(os.environ["REPLAY_FLOOR_S"]),
+                            float(os.environ["REPLAY_STARTUP_S"]) + n / float(os.environ["REPLAY_MIN_RATE"])))))
+except Exception:
+    print(0)
+PY
+) || BOX=0
+case "$BOX" in ''|*[!0-9]*) BOX=0 ;; esac
+echo "[finalize] episode dumped; replaying once in a fresh process (allowance ${BOX} s; 0 = what is left of the hook's budget)"
 
 has_result() {   # the replay CLI printed its result line (a crash at Isaac's shutdown after that line still counts)
     grep -q '"state_sha"' "$1" 2>/dev/null
@@ -69,8 +87,13 @@ run_replay() {   # run_replay <n> <replays still to run, this one included> [ext
         left=$(( T0 + HOOK_BUDGET_S - MERGE_MARGIN_S - $(date +%s) ))
         limit=$(( left / share ))
         if [ "$limit" -lt 60 ]; then
-            echo "[finalize] replay $n: no time left before the hook's deadline"; echo "124 0 $limit" > "$DATA/replay$n.rc"; return
+            echo "[finalize] replay $n: no time left before the hook's deadline"
+            # a first attempt that never ran is recorded as out of time; after a first attempt its own record stays
+            if [ "$attempt" = 1 ]; then echo "124 0 $limit" > "$DATA/replay$n.rc"; fi
+            return
         fi
+        boxed=0   # 1: this attempt is limited by the replay's own allowance, not by the hook's deadline
+        if [ "$BOX" -gt 0 ] && [ "$limit" -gt "$BOX" ]; then limit=$BOX; boxed=1; fi
         t_start=$(date +%s)
         if command -v timeout >/dev/null 2>&1; then
             RCB_SESSION_LOG= timeout -k 30 "$limit" python "$TOOL" replay --task "$TASK" --instance "$INSTANCE" --traj "$DATA/trajectory.npz" "$@" > "$DATA/replay$n.json" 2>> "$DATA/replay$n.log"
@@ -81,9 +104,12 @@ run_replay() {   # run_replay <n> <replays still to run, this one included> [ext
         echo "$rrc $took $limit" > "$DATA/replay$n.rc"                 # exit code, seconds it ran, its limit
         echo "[finalize] replay $n attempt $attempt exit $rrc after ${took} s (limit ${limit} s)"
         if has_result "$DATA/replay$n.json"; then return; fi
-        # out of time (124, or 137 when it had to be killed at the limit): a second attempt would be too. Any other end
-        # without a result (a crash at Isaac's start, the out-of-memory killer's 137) gets one more attempt.
-        if [ "$rrc" = 124 ] || { [ "$rrc" = 137 ] && [ "$took" -ge "$limit" ]; }; then return; fi
+        # out of time (124, or 137 when it had to be killed at the limit) at the hook's own deadline: a second attempt
+        # would be too. Out of its own allowance with time left (a hung Isaac), and any other end without a result (a
+        # crash at Isaac's start, the out-of-memory killer's 137), gets one more attempt.
+        if [ "$rrc" = 124 ] || { [ "$rrc" = 137 ] && [ "$took" -ge "$limit" ]; }; then
+            if [ "$boxed" != 1 ]; then return; fi
+        fi
         echo "[finalize] replay $n ended without a result" >> "$DATA/replay$n.log"
     done
 }

@@ -59,7 +59,8 @@ ONE_REPLAY = {
                  "Before, two replays had to succeed and end in the same state hash. `deterministic` (= `state_identical` = "
                  "`live_matches_replay`) now says whether the replay ended in the live episode's state; it is reported and no "
                  "longer decides. The collect hook's limit 18000 s -> 10800 s (`[[verifier.collect]] timeout_sec` = "
-                 "`finalize.sh`'s `HOOK_BUDGET_S`). The scene, the frozen layout, RoboDojo's success check and the service the "
+                 "`finalize.sh`'s `HOOK_BUDGET_S`); inside it the replay has max(1800 s, 1200 s + actions / 2.5) and is run once "
+                 "more when it gives no result in that time. The scene, the frozen layout, RoboDojo's success check and the service the "
                  "agent talks to are unchanged, so the task keeps its name. No ranked result exists; a trial graded before "
                  "this date is re-read from its saved `reward.json` (`live_success`, `replay_success`, `state_identical`), not "
                  "rerun: in the first 38 graded trials of the run that began on 2026-10-11 no verdict changes."),
@@ -68,7 +69,7 @@ ONE_REPLAY_LIVE = ("2026-10-12: the collect hook replays the episode ONCE in a f
                    "docs/benchmarks/robodojo.md). The verdict is unchanged, the live episode's (`success` = `live_success`); the "
                    "replay is recorded (`replay_success`; `state_identical`: it ended in the live episode's state; "
                    "`deterministic`: it reached the live episode's verdict) and never decides. The collect hook's limit 18000 s "
-                   "-> 10800 s. No trial needs a rerun.")
+                   "-> 10800 s; inside it the replay has max(1800 s, 1200 s + actions / 2.5). No trial needs a rerun.")
 CHANGE_LOG_ALL = {   # README Change Log entries of every task (PROTOCOL §2.8), after the task's own (instance_overrides.json)
     "privileged": [f"2026-10-11: agent time limit 5400 s -> {AGENT_TIMEOUT_S} s (`[agent] timeout_sec`; owner decision, "
                    "docs/benchmarks/robodojo.md), and `instruction.md` states the cutoff at the top. The scene, the frozen layout, "
