@@ -16,7 +16,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/@@STD@@"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo @@TASK@@ (@@DIMENSION@@) on the same frozen layout as the privileged task (@@LAYOUT_FILE@@). @@GOAL_TOML@@ The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo @@TASK@@ (@@DIMENSION@@) @@TOML_LAYOUT@@ @@GOAL_TOML@@ The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; @@TOML_GRADING@@"
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
