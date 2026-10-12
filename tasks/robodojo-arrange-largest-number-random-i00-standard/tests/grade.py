@@ -3,6 +3,12 @@
 fields), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic, and no
 infrastructure failure. Numeric-only reward.json; a reward is written whatever final.json holds.
 
+A task whose physics does not replay bit for bit (instance.json "determinism": "verdict"; final.json `graded_by` "live")
+is graded by its LIVE episode, which the trusted service ran: success = live success, and no infrastructure failure of the
+live record (final.json missing, unreadable or unfinalized, or the service's own infra_error). Its two replays are
+reported (`replay_success`, `state_identical`, `deterministic`, `replay_error`, `gpu_lost`) and never decide
+(`graded_by_live` = 1). Such a task is standard-only: an open-loop trajectory of it cannot be graded reproducibly.
+
 infra_error = 1 (no verdict on the agent, PROTOCOL §2.6): final.json is missing (the service never came up, or its
 container was gone when the collect hook ran), unreadable, or not finalized (the collect hook did not finish: killed at
 its time limit, or the sidecar died during the replays); the hook could not replay the episode (the GPU lost, a replay
@@ -35,8 +41,15 @@ def num(k):
 unfinished = not d.get("finalized")                        # the collect hook never completed final.json
 replay_error = bool(d.get("replay_error"))                 # a replay process died or timed out without a result
 gpu_lost = bool(d.get("gpu_lost"))
-infra = bool(d.get("infra_error")) or gpu_lost or unfinished or replay_error
-ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic")) and not infra
+live_graded = d.get("graded_by") == "live" or bool(d.get("determinism_verdict_mode"))
+if live_graded:   # the physics does not replay bit for bit: the live episode decides, the replays are evidence only
+    infra = bool(d.get("infra_error")) or unfinished
+    ok = bool(d.get("success")) and not infra
+    grader_error = 0
+else:
+    infra = bool(d.get("infra_error")) or gpu_lost or unfinished or replay_error
+    ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic")) and not infra
+    grader_error = int(gpu_lost or replay_error)   # the replays could not run: an infrastructure failure, not the agent's 0
 write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "replay_success": int(bool(d.get("replay_success"))),
            "deterministic": int(bool(d.get("deterministic"))), "live_matches_replay": int(bool(d.get("live_matches_replay"))),
            "state_identical": int(bool(d.get("state_identical"))), "determinism_verdict_mode": int(bool(d.get("determinism_verdict_mode"))),
@@ -48,7 +61,7 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "rep
            "physics_steps": int(num("physics_steps")), "steps": int(num("steps")), "elapsed_s": num("elapsed_s"),
            "video_rendered": int(bool(d.get("video"))), "gpu_lost": int(gpu_lost), "replay_error": int(replay_error),
            "replay_timed_out": int(bool(d.get("replay_timed_out"))),
-           "grader_error": int(gpu_lost or replay_error),   # the replays could not run: an infrastructure failure, not the agent's 0
+           "grader_error": grader_error, "graded_by_live": int(live_graded),
            # an infrastructure failure, not the agent's (PROTOCOL §2.6): see the module docstring
            "infra_error": int(infra), "gave_up": int(bool(d.get("gave_up"))),
            "sim_crashed_on_call": int(d.get("reason") == "sim_crashed_on_call"),
