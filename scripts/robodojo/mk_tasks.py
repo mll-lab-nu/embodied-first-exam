@@ -17,40 +17,65 @@ Inputs, all in the repository:
 Every task dir is written to a scratch directory, passed through scripts/task_conventions.py's normalize() and then synced
 into tasks/: a task dir holds exactly what the generator writes."""
 from __future__ import annotations
-import argparse, json, os, pathlib, re, sys, tempfile, tomllib
+import argparse, json, os, pathlib, sys, tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robodojo"
 OVERRIDES = json.loads((HERE / "instance_overrides.json").read_text())   # per-task determinism class, physics, change log
-# The agent's time limit, both modes (owner, 2026-10-11: one hour; 5400 s before). The one source of task.toml's
-# `[agent] timeout_sec`, the README row, the instruction's cutoff paragraph (CUTOFF below) and the standard service's
-# RCB_WALL_CLOCK_S (spec budget, meta time_left_s). check_time_limit() refuses a render in which they disagree.
-AGENT_TIMEOUT_S = 3600
-AGENT_TIMEOUT_MIN = AGENT_TIMEOUT_S // 60
-assert AGENT_TIMEOUT_S == AGENT_TIMEOUT_MIN * 60
-TIME_LIMIT_HEAD = (f"**Time limit: {'one hour' if AGENT_TIMEOUT_S == 3600 else f'{AGENT_TIMEOUT_MIN} min'}.** You have "
-                   f"{AGENT_TIMEOUT_MIN} min ({AGENT_TIMEOUT_S} s) of wall-clock time in total")
+# The agent's time limit is not this generator's: scripts/task_cutoffs.toml is the one table (docs/PROTOCOL.md §2.12), and
+# scripts/task_conventions.py (normalize) writes `[agent] timeout_sec`, the instruction's closing `## Time limit` section,
+# the README row and the standard service's RCB_WALL_CLOCK_S from it (ci_checks/check-cutoffs.py compares). What is
+# rendered here takes the number from the same table (agent_timeout) and the instruction's own text names none: CUTOFF
+# is what RoboDojo adds to the closing `## Time limit` section, placed right after the task's introduction.
 CUTOFF = {
-    "privileged": TIME_LIMIT_HEAD + """, counted from the start of your session; when it
-is up you are stopped where you are. Only what is in `/app/output/` at that moment is graded, so
-`/app/output/trajectory.npz` must be written before the cutoff: save a working trajectory as soon as you have one and
-overwrite it as you improve it. Every Python process that opens a `Session` first spends @@STARTUP@@ launching Isaac Sim
-and building the scene, and that time counts.""",
-    "standard": TIME_LIMIT_HEAD + """, counted from the start of the trial; when it is
-up you are stopped where you are. Nothing is handed in: the one episode is graded as it stands at that moment, so the task
-must be completed before the cutoff (the episode ends by itself when RoboDojo's check passes: `res.meta["done"]`). The
-time you wait for the service counts: its first start in a trial takes ~4-15 min (Client, below).""",
+    "privileged": """`/app/output/trajectory.npz` must be written before the time limit (`## Time limit`) is up: save a working
+trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
+spends @@STARTUP@@ launching Isaac Sim and building the scene, and that time counts.""",
+    "standard": """Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+start in a trial takes ~4-15 min (Client, below).""",
 }
+# One replay (owner, 2026-10-12; docs/benchmarks/robodojo.md Grading): the Change Log entry of every task. A standard
+# task graded by its live episode gets ONE_REPLAY_LIVE instead (plan_instance).
+ONE_REPLAY = {
+    "privileged": ("2026-10-12: graded by ONE fresh-process replay (two before; owner decision, docs/benchmarks/robodojo.md): "
+                   "reward 1 iff that replay ends in RoboDojo's success. Before, both replays had to succeed and end in the same "
+                   "state hash; with one replay nothing is compared, so `reward.json` reports `deterministic` = 1 with "
+                   "`determinism_checked` = 0 and `replays` = 1, and a replay whose process did not rebuild the frozen layout "
+                   "to its recorded hash gives no verdict (`instance_mismatch`, `infra_error`). `[verifier] timeout_sec` 15000 s "
+                   "-> 7800 s (one replay of the 15,000 rows a trajectory may have, 7200 s, + 600 s). The scene, the frozen layout, "
+                   "RoboDojo's success check and what the agent hands in are unchanged, so the task keeps its name; "
+                   "`instruction.md` says one replay. No ranked result exists; a trial graded before this date is re-read from "
+                   "its saved `reward.json` (`all_success`, `state_identical`), not rerun: in the first 38 graded trials of the run "
+                   "that began on 2026-10-11 the two replays always ended in the same state, and no verdict changes."),
+    "standard": ("2026-10-12: graded with ONE fresh-process replay of the recorded episode (two before; owner decision, "
+                 "docs/benchmarks/robodojo.md): `success` = `live_success` and `replay_success`, one successful replay is enough. "
+                 "Before, two replays had to succeed and end in the same state hash. `deterministic` (= `state_identical` = "
+                 "`live_matches_replay`) now says whether the replay ended in the live episode's state; it is reported and no "
+                 "longer decides. The collect hook's limit 18000 s -> 10800 s (`[[verifier.collect]] timeout_sec` = "
+                 "`finalize.sh`'s `HOOK_BUDGET_S`); inside it the replay has max(1800 s, 1200 s + actions / 2.5) and is run once "
+                 "more when it gives no result in that time. The scene, the frozen layout, RoboDojo's success check and the service the "
+                 "agent talks to are unchanged, so the task keeps its name. No ranked result exists; a trial graded before "
+                 "this date is re-read from its saved `reward.json` (`live_success`, `replay_success`, `state_identical`), not "
+                 "rerun: in the first 38 graded trials of the run that began on 2026-10-11 no verdict changes."),
+}
+ONE_REPLAY_LIVE = ("2026-10-12: the collect hook replays the episode ONCE in a fresh process (twice before; owner decision, "
+                   "docs/benchmarks/robodojo.md). The verdict is unchanged, the live episode's (`success` = `live_success`); the "
+                   "replay is recorded (`replay_success`; `state_identical`: it ended in the live episode's state; "
+                   "`deterministic`: it reached the live episode's verdict) and never decides. The collect hook's limit 18000 s "
+                   "-> 10800 s; inside it the replay has max(1800 s, 1200 s + actions / 2.5). No trial needs a rerun.")
 CHANGE_LOG_ALL = {   # README Change Log entries of every task (PROTOCOL §2.8), after the task's own (instance_overrides.json)
-    "privileged": [f"2026-10-11: agent time limit 5400 s -> {AGENT_TIMEOUT_S} s (`[agent] timeout_sec`; owner decision, "
+    "privileged": ["2026-10-11: agent time limit 5400 s -> 3600 s (`[agent] timeout_sec`; owner decision, "
                    "docs/benchmarks/robodojo.md), and `instruction.md` states the cutoff at the top. The scene, the frozen layout, "
                    "RoboDojo's success check and the verifier are unchanged, so the task keeps its name; trials recorded before "
-                   "this date ran with 5400 s and are kept apart (no official result was published with it)."],
-    "standard": [f"2026-10-11: agent time limit 5400 s -> {AGENT_TIMEOUT_S} s (`[agent] timeout_sec`, and the service's "
+                   "this date ran with 5400 s and are kept apart (no official result was published with it).",
+                   ONE_REPLAY["privileged"]],
+    "standard": ["2026-10-11: agent time limit 5400 s -> 3600 s (`[agent] timeout_sec`, and the service's "
                  "`RCB_WALL_CLOCK_S`, which only reports it: `spec[\"budget\"]`, `meta[\"time_left_s\"]`; owner decision, "
                  "docs/benchmarks/robodojo.md), and `instruction.md` states the cutoff at the top. The scene, the frozen layout, "
                  "RoboDojo's success check, the collect hook and the verifier are unchanged, so the task keeps its name; trials "
-                 "recorded before this date ran with 5400 s and are kept apart (no official result was published with it)."],
+                 "recorded before this date ran with 5400 s and are kept apart (no official result was published with it).",
+                 ONE_REPLAY["standard"]],
 }
 REGISTRY = "ghcr.io/mll-lab-nu"
 MODES = ("privileged", "standard")
@@ -62,8 +87,8 @@ CONVENTIONS = """- World frame: RoboDojo's env frame, metres; quaternions are **
   position targets (rad); RoboDojo's controller moves each arm from where it is to the new target over the action's 10
   physics steps (linear for 8, then holding). Gripper: RoboDojo's normalised command, clipped to 0..1 (@@GRIPPER@@).
   `s.hold_action()` keeps the current targets.
-- Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action). Your wall-clock budget is @@AGENT_TIMEOUT_MIN@@ min (@@AGENT_TIMEOUT_S@@ s, the
-  time limit at the top); there is no step budget.
+- Control runs at 25 Hz (physics dt 4 ms, 10 physics steps per action). There is no step budget: the time limit
+  (`## Time limit`) is your only budget.
 - One `Session` per process (@@STARTUP@@). Rendering happens only when a frame is asked for and never moves anything. Do
   not call `s.close()` before writing every output."""
 
@@ -80,6 +105,13 @@ def normalizer():
     sys.path.insert(0, str(ROOT / "scripts"))
     from task_conventions import normalize
     return normalize
+
+
+def agent_timeout(mode: str) -> int:
+    """The agent's cutoff of a mode in seconds, from the one table (scripts/task_cutoffs.toml)."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from task_conventions import cutoff_sec
+    return cutoff_sec("RoboDojo", mode)
 
 
 def fill(text: str, values: dict) -> str:
@@ -130,16 +162,15 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
               "IMAGE": image, "DIMENSION": dim, "LAYOUT_FILE": I["layout_file"].removeprefix("Assets/Eval_Layout/RoboDojo/"),
               "LAYOUT_SHA": I["layout_sha256"][:16], "STEP_LIM": str(step_lim), "STEP_LIM_S": f"{step_lim / 25:.0f}",
               "GOAL_TOML": toml_str("Task: " + goal), "STARTUP": conv["STARTUP"], "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip(),
-              "FRAME": conv["FRAME"], "AGENT_TIMEOUT_S": str(AGENT_TIMEOUT_S), "AGENT_TIMEOUT_MIN": str(AGENT_TIMEOUT_MIN)}
-    rule = (f" (both replays must succeed; their end states may differ: {I.get('determinism_why')})" if I.get("determinism") == "verdict"
-            else " and both end in the same state")
-    readme_rule = (f" (determinism by verdict: `instance.json` sets `\"determinism\": \"verdict\"` because "
-                   f"{I.get('determinism_why')}; the end states' hashes are reported as `state_identical`)"
-                   if I.get("determinism") == "verdict" else " and both end in the same state hash")
+              "FRAME": conv["FRAME"]}
+    # ONE fresh-process replay decides (owner, 2026-10-12): no second replay, so no end-state comparison in privileged mode
+    readme_rule = (" (one replay since 2026-10-12, the owner's decision: before, two replays that also had to end in the same "
+                   "state hash; `deterministic` is reported as 1 with `determinism_checked` = 0, and a replay that did not "
+                   "start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict)")
     common["README_RULE"] = readme_rule
     # A task whose physics does not replay bit for bit (instance.json "determinism": "verdict") has no privileged twin: an
     # open-loop trajectory of it cannot be graded reproducibly. Its standard twin is graded by the live episode the trusted
-    # service ran (success = live_success); the two fresh-process replays are recorded and never decide.
+    # service ran (success = live_success); its one fresh-process replay is recorded and never decides.
     live = I.get("determinism") == "verdict"
     modes = ("standard",) if live else MODES
     priv_ref = f"`{base(task, i)}-privileged`"
@@ -151,15 +182,19 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
     common["TOML_LAYOUT"] = (f"on RoboDojo's frozen layout ({common['LAYOUT_FILE']}); standard only, no privileged twin." if live else
                              f"on the same frozen layout as the privileged task ({common['LAYOUT_FILE']}).")
     common["TOML_GRADING"] = ("the sim service records the episode and grades it as it happened live (the physics does not "
-                              "replay bit for bit; the two replays are recorded only)." if live else
+                              "replay bit for bit; the replay is recorded only)." if live else
                               "the sim service records the episode as a trajectory and grades it.")
     common["STD_VERDICT"] = (f"the live episode succeeded: this task is graded by its live episode, which the trusted service "
                              f"ran (`instance.json` sets `\"determinism\": \"verdict\"` because {I.get('determinism_why')}); "
-                             f"the two replays are recorded (`replay_success`, `state_identical`, `deterministic`) and never "
-                             f"decide" if live else "the live episode succeeded and both replays succeed" + readme_rule)
+                             f"the replay is recorded (`replay_success`, `state_identical`, `deterministic`) and never "
+                             f"decides" if live else
+                             "the live episode succeeded and the replay succeeds (`success` = `live_success` and "
+                             "`replay_success`: one successful replay is enough, the owner's decision of 2026-10-12; whether the "
+                             "replay ended in the live episode's state is reported as `deterministic` = `state_identical` = "
+                             "`live_matches_replay` and does not decide)")
     common["LIVE_NOTE"] = (f"\n- **Graded on your live episode.** This task's physics does not replay bit for bit "
                            f"({I.get('determinism_why')}), so the episode as it happened in the service decides; the service "
-                           f"still replays it twice for the record." if live else "")
+                           f"still replays it once for the record." if live else "")
     # Change Log (PROTOCOL §2.8): per-task entries of instance_overrides.json "change_log", the last section of both READMEs
     log = OVERRIDES.get(task, {}).get("change_log") or []
     MT = json.loads((HERE / "model_trials.json").read_text())
@@ -178,10 +213,10 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
         return ("no positive example yet" + (" (" + "; ".join(bits) + ")" if bits else "") + "; no reference solution (RoboDojo "
                 "releases no expert, and its training demonstrations carry no initial state); reported separately until one exists")
     common["REVIEW_PR"] = str(MT["review_pr"] or "TBD")
-    priv = {"GOAL": goal, "INSTRUCTION": I.get("instruction") or "", "OBJECTS_BLOCK": objects, "REPLAY_RULE": rule,
+    priv = {"GOAL": goal, "INSTRUCTION": I.get("instruction") or "", "OBJECTS_BLOCK": objects,
             "SUCCESS_BLOCK": bullets(D["success"]), "EVALUATION": D["evaluation"].strip(),
             "EXTRA_BLOCK": ("\n" + "\n\n".join(extra) + "\n") if extra else "",
-            "CONVENTIONS": fill(CONVENTIONS, {**conv, "AGENT_TIMEOUT_S": str(AGENT_TIMEOUT_S), "AGENT_TIMEOUT_MIN": str(AGENT_TIMEOUT_MIN)}), "README_GOAL": f"{goal} (RoboDojo's `{task}`).",
+            "CONVENTIONS": fill(CONVENTIONS, conv), "README_GOAL": f"{goal} (RoboDojo's `{task}`).",
             "DIFFICULTY": (f"A RoboDojo {dim} task ({D.get('physics_kind', 'rigid')} objects), graded by RoboDojo's own success "
                            f"thresholds (its evaluation gives a policy {step_lim} actions; no step cap here, PROTOCOL D1).")}
     out: dict[str, dict[str, tuple[bytes, int]]] = {}
@@ -195,7 +230,9 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
         common["ORACLE_EVIDENCE"] = toml_str(ev + f"; human review in PR #{common['REVIEW_PR']}")
         common["EVIDENCE_SHORT"] = ("a model trial solved it" if ev.startswith("positive") else "no positive example yet")
         common["CUTOFF"] = fill(CUTOFF[mode], {"STARTUP": conv["STARTUP"]})
-        common["CHANGE_LOG"] = "\n### Change Log\n" + "".join(f"- {x}\n" for x in log + CHANGE_LOG_ALL[mode])
+        common["AGENT_TIMEOUT_S"] = str(agent_timeout(mode))
+        every = [ONE_REPLAY_LIVE if (live and x is ONE_REPLAY["standard"]) else x for x in CHANGE_LOG_ALL[mode]]
+        common["CHANGE_LOG"] = "\n### Change Log\n" + "".join(f"- {x}\n" for x in log + every)
         files: dict[str, tuple[bytes, int]] = {}
         tdir = HERE / "template" / mode
         for p in sorted(tdir.rglob("*")):
@@ -241,32 +278,6 @@ def normalized(planned: dict[str, dict[str, tuple[bytes, int]]], normalize) -> d
     return out
 
 
-def check_time_limit(name: str, files: dict) -> None:
-    """The rendered task states one agent time limit: task.toml's `[agent] timeout_sec` is AGENT_TIMEOUT_S, instruction.md
-    tells the agent that cutoff (the paragraph rendered from the same constant) and names no other budget, the README row
-    agrees, and the standard service reports the same number. Raises otherwise: neither a render nor --check passes."""
-    def text(rel):
-        return files[rel][0].decode()
-    bad = []
-    if float(tomllib.loads(text("task.toml"))["agent"]["timeout_sec"]) != AGENT_TIMEOUT_S:
-        bad.append("task.toml [agent] timeout_sec")
-    ins = " ".join(text("instruction.md").split())
-    if " ".join(TIME_LIMIT_HEAD.split()) not in ins or "before the cutoff" not in ins:
-        bad.append("instruction.md does not state the cutoff")
-    stated = set(re.findall(r"budget is (\d+) min \((\d+) s", ins)) | set(re.findall(r"You have (\d+) min \((\d+) s\) of wall-clock", ins))
-    if stated != {(str(AGENT_TIMEOUT_MIN), str(AGENT_TIMEOUT_S))}:
-        bad.append(f"instruction.md states {sorted(stated)}")
-    if f"| Agent time budget | {AGENT_TIMEOUT_S} s;" not in text("README.md"):
-        bad.append("README.md Agent time budget row")
-    if name.endswith("-standard"):
-        if f'RCB_WALL_CLOCK_S: "{AGENT_TIMEOUT_S}"' not in text("environment/docker-compose.yaml"):
-            bad.append("docker-compose.yaml RCB_WALL_CLOCK_S")
-        if f'os.environ.get("RCB_WALL_CLOCK_S", "{AGENT_TIMEOUT_S}")' not in text("environment/sim/server.py"):
-            bad.append("sim/server.py RCB_WALL_CLOCK_S default")
-    if bad:
-        raise RuntimeError(f"{name}: the agent time limit ({AGENT_TIMEOUT_S} s, mk_tasks.py AGENT_TIMEOUT_S) is not stated consistently: " + "; ".join(bad))
-
-
 def sync(task: pathlib.Path, files: dict, check: bool) -> list[str]:
     diffs = []
     have = {p.relative_to(task).as_posix() for p in task.rglob("*") if p.is_file() or p.is_symlink()} if task.exists() else set()
@@ -309,7 +320,6 @@ def main() -> int:
         for fz in frozen:
             i = int(fz.name[-2:])
             for name, files in normalized(plan_instance(task, i, D, dims, conv, version), normalize).items():
-                check_time_limit(name, files)
                 made.add(name); diffs += sync(ROOT / "tasks" / name, files, a.check)
     for t in sorted((ROOT / "tasks").glob("robodojo-*")):
         if t.is_dir() and t.name not in made:

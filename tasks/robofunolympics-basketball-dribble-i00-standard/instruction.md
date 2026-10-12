@@ -17,7 +17,7 @@ Directions are from the robot at the start: +x is the way you face, +y is to you
 - Art. 24.1.2 (the ball 'comes to rest' in a hand) is read as: a hand's touch of the ball that lasts longer than 0.3 s. A dribble that has ended cannot legally be started again (Art. 24.2), so a ball that comes to rest in a hand, or is touched by both hands at once, ends the attempt.
 - Art. 13: every touch of the ball by a part of you other than a hand is a violation; intent (an accidental touch of a leg is legal in the rule book) cannot be judged.
 - Art. 14 / 24 give no distance for 'control' of a dribbled ball: here the ball's centre must stay within 2.0 m (horizontally) of your pelvis, so that a ball thrown ahead and walked after is not a dribble.
-- Art. 28 (eight seconds to reach the frontcourt) is not applied: the limit is 60 s.
+- Art. 28 (eight seconds to reach the frontcourt) is not applied: the attempt lasts at most 60 s of robot time.
 
 A FIBA court, 28.0 m by 15.0 m inside its boundary lines (lines 0.05 m wide); the centre line's axis is 14.0 m from the end line. The ball is a size-7 basketball (0.239 m across, 0.62 kg, it keeps 0.85 of its speed in a bounce on the floor). It starts gripped in your right hand, and you stand still. Starting the dribble: the first foot you lift makes the other your pivot foot; the pivot foot, and before a foot is lifted either foot, may not slide more than 0.2 m along the floor, and the pivot foot may not leave the floor before you have let go of the ball (a foot has left the floor when it has not touched it for 0.03 s). The dribble: after the release you play the ball with one hand at a time, by touches that push it to the floor (thrown, tapped, rolled or bounced): between two touches by your hands the ball must have touched the floor; contacts of a hand less than 0.03 s apart are one touch; no grip takes the ball again. There is no limit to your steps while the ball is not in a hand. You succeed at the first moment the ball touches the floor in the frontcourt (beyond the centre line's far edge, 14.0 m plus half a line width from the end line) with both your feet in the frontcourt (every point where each foot last touched the floor is beyond that edge), after at least one touch of your dribble. You fail if you travel at the start; if a hand's touch lasts longer than 0.3 s (the ball has come to rest in the hand); if both hands touch the ball at the same time; if a hand touches the ball twice without the ball having touched the floor in between; if the ball touches any part of you other than a hand; if the ball's centre is ever more than 2.0 m (horizontally) from your pelvis after the release; if the ball or any part of you touches the floor on or outside a boundary line (out of bounds); if you fall (a fall: your pelvis lower than 0.35 m above the floor, or any part of you other than your feet on the floor); or after 60 s.
 
@@ -40,7 +40,7 @@ A referee in the service decides this from the simulator's state. The events tha
 - There is nothing to hand in: the service records your last attempt, replays it in a fresh simulator and grades the
   replay. Keep the script that drives the robot at `/app/output/gen.py` and a `NOTES.md` of at most 20 lines (your
   approach, what failed, what you downloaded or installed) for the record: save them early and keep them current.
-- Wall-clock budget: 2 h. It ends without warning, and ending your session earlier ends the run the same
+- Wall clock: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same
   way, so do not stop early: while you have attempts left, the run can still pass.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
@@ -159,3 +159,8 @@ The network is open. You may install packages (pip, apt), and you may search for
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

@@ -91,7 +91,7 @@ success rate), load rotor 14.7 / 1.0.
 - **Texts.** The instructions describe each check in our own words and point to its source in the image
   (`/opt/AutoBio/autobio/<module>.py`); AutoBio's code is not quoted (no licence). The texts are in
   `scripts/autobio/families.json`.
-- **Budget: 3600 s** (D8), both modes.
+- **Budget: 3600 s** (D8), both modes; the number lives in `scripts/task_cutoffs.toml` (shown in [`docs/CUTOFFS.md`](../CUTOFFS.md)), and every instruction states it in its closing `## Time limit` section (PROTOCOL §2.12).
 
 ## Modes
 - **Privileged:** `rcb_autobio.Session` in the agent's container: AutoBio's task object (`s.task`: its scene helpers and

@@ -36,7 +36,7 @@
   "Art. 24.1.2 (the ball 'comes to rest' in a hand) is read as: a hand's touch of the ball that lasts longer than 0.3 s. A dribble that has ended cannot legally be started again (Art. 24.2), so a ball that comes to rest in a hand, or is touched by both hands at once, ends the attempt.",
   "Art. 13: every touch of the ball by a part of you other than a hand is a violation; intent (an accidental touch of a leg is legal in the rule book) cannot be judged.",
   "Art. 14 / 24 give no distance for 'control' of a dribbled ball: here the ball's centre must stay within 2.0 m (horizontally) of your pelvis, so that a ball thrown ahead and walked after is not a dribble.",
-  "Art. 28 (eight seconds to reach the frontcourt) is not applied: the limit is 60 s."
+  "Art. 28 (eight seconds to reach the frontcourt) is not applied: the attempt lasts at most 60 s of robot time."
  ],
  "texts": {
   "sentence": "Dribble the basketball in your right hand from the end line across the centre line, 14 m up the court, without a dribbling or a travelling violation.",

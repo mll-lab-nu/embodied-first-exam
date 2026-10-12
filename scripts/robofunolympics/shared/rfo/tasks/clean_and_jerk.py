@@ -103,8 +103,8 @@ class Task(TaskBase):
              "direction square to the bar; under a bar tilted more than {bar_tilt_max_deg} degrees from level the "
              "feet never count as on one line), the bar and your pelvis slower than {still_m_s} m/s, and you under "
              "the bar as in the clean (trunk upright, the bar's centre over the middle of your shoulders, the bar "
-             "along your shoulder line). When you have held "
-             "it for {hold_s} s without a break the down signal is given: that is success, and the attempt ends. "
+             "along your shoulder line). Once it is held "
+             "for {hold_s} s without a break the down signal is given: that is success, and the attempt ends. "
              "At any time you fail if a part of you other than your feet touches the platform, if any part of you or "
              "of the barbell touches the floor beside the platform, or after {time_limit_s} s. There is no other fall "
              "rule: you may squat as low as you like, and the bar may touch your body.")

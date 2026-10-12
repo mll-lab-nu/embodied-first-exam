@@ -66,7 +66,7 @@ class Task(TaskBase):
              "x > {distance_m} m at the far line (turns 1 and 3), at x < 0 at the start line (turn 2); a foot on the "
              "line does not count. The turns count in this order only. After the third turn you finish at the "
              "moment the leading point of your torso (not the head, arms, legs or feet) reaches the start line. Which "
-             "way you face and how you turn is up to you. You succeed when you finish within {time_limit_s} s. A "
+             "way you face and how you turn is up to you. You succeed when you finish within {time_limit_s} s of robot time. A "
              "fall does not end the attempt: you are down while your pelvis is below {down_z_m} m, you may get up "
              "and go on, but {down_limit_s} s down in a row end it. You fail when down for {down_limit_s} s, or "
              "after {time_limit_s} s.")

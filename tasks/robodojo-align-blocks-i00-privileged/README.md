@@ -28,8 +28,8 @@ None. RoboDojo releases no expert or planner script, and its training demonstrat
 reported separately until it has a positive example (PROTOCOL §7, Open 4).
 
 ## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout in two fresh processes
-(`rcb_robodojo.py replay`); reward 1 iff both replays end in RoboDojo's success and both end in the same state hash. No oracle; human review in
+`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout once, in a fresh process
+(`rcb_robodojo.py replay`); reward 1 iff that replay ends in RoboDojo's success (one replay since 2026-10-12, the owner's decision: before, two replays that also had to end in the same state hash; `deterministic` is reported as 1 with `determinism_checked` = 0, and a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
 PR #142 (no positive example yet). `nop` (no
 trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
 (`task/RoboDojo/tasks/align_blocks.py`, `env/reward_manager/`); the code is the reference.
@@ -57,3 +57,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 ### Change Log
 - 2026-10-11: agent time limit 5400 s -> 3600 s (`[agent] timeout_sec`; owner decision, docs/benchmarks/robodojo.md), and `instruction.md` states the cutoff at the top. The scene, the frozen layout, RoboDojo's success check and the verifier are unchanged, so the task keeps its name; trials recorded before this date ran with 5400 s and are kept apart (no official result was published with it).
+- 2026-10-12: graded by ONE fresh-process replay (two before; owner decision, docs/benchmarks/robodojo.md): reward 1 iff that replay ends in RoboDojo's success. Before, both replays had to succeed and end in the same state hash; with one replay nothing is compared, so `reward.json` reports `deterministic` = 1 with `determinism_checked` = 0 and `replays` = 1, and a replay whose process did not rebuild the frozen layout to its recorded hash gives no verdict (`instance_mismatch`, `infra_error`). `[verifier] timeout_sec` 15000 s -> 7800 s (one replay of the 15,000 rows a trajectory may have, 7200 s, + 600 s). The scene, the frozen layout, RoboDojo's success check and what the agent hands in are unchanged, so the task keeps its name; `instruction.md` says one replay. No ranked result exists; a trial graded before this date is re-read from its saved `reward.json` (`all_success`, `state_identical`), not rerun: in the first 38 graded trials of the run that began on 2026-10-11 the two replays always ended in the same state, and no verdict changes.

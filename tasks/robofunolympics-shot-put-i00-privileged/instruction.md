@@ -45,7 +45,7 @@ The tooling also appends its own log, `rcb_session_log.jsonl`, to `/app/output/`
 `RCB_SESSION_LOG`.
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py` and `NOTES.md` to
-match) whenever you have a better one.** Your wall-clock budget is 2 h and it ends without warning; a run
+match) whenever you have a better one.** The time limit (`## Time limit`) ends without warning; a run
 that ends with no file scores zero. Do not stop early: keep improving until the time is up.
 
 ## Tooling (already installed; run `python` from any directory)
@@ -152,3 +152,8 @@ The network is open. You may install packages (pip, apt), and you may search for
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **13 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

@@ -20,7 +20,7 @@ benchmark here, search for and download public tools and pretrained controllers.
 | image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` (`images/robofunolympics/`, about 600 MB) |
 | generator | `scripts/robofunolympics/gen_tasks.py render` / `check` from `families.json`, `instances/`, `shared/`, `templates/`, `oracles/`; a family is one module, `shared/rfo/tasks/<family>.py` (`scripts/robofunolympics/AUTHORING.md`, `FAMILIES.md`) |
 | oracle | full on the families that have a real controller in the official setting, none on the rest (table below), with a referee test and human review |
-| agent budget | 7200 s in both modes (owner, 2026-10-12; PROTOCOL D8: the tasks ask the agent to find, download and adapt controllers, or to build one, which an hour does not hold; results are grouped by this budget); standard mode: 50 resets, the last attempt graded (owner, 2026-10-12) |
+| agent budget | 7200 s in both modes (the benchmark's row of `scripts/task_cutoffs.toml`; owner, 2026-10-12; PROTOCOL D8: the tasks ask the agent to find, download and adapt controllers, or to build one, which an hour does not hold; results are grouped by this budget); standard mode: 50 resets, the last attempt graded (owner, 2026-10-12) |
 | network | open (owner, 2026-10-11): PROTOCOL §2.11 exception, below |
 
 ## Owner decisions (2026-10-11) and what they made
@@ -35,7 +35,7 @@ benchmark here, search for and download public tools and pretrained controllers.
 | **real settings, not an easy one** (after the first version, whose venues and success lines were scaled to the G1 so that reference solutions existed) | official rule-book dimensions, equipment masses and ball physics in every family; a family names its rule book and lists each deviation with its reason (RoboOlympics' convention), and a deviation is never "easier"; a success line is the rule book's (a goal, a legal serve, a strike, a cleared bar) or a named human school / club mark, never what a controller reaches |
 | all humanoid; the bigger H1-2 where the G1 cannot reach the official size | `Task.robot`; 20 families on the G1, 30 on the H1-2 |
 | single actions, not matches | one attempt of one skill per episode; a feeder, a server or a keeper is scripted and deterministic |
-| 2026-10-12: standard reset budget 50; agent budget 2 h; the track events are the indoor 50 m and 50 m hurdles (four hurdles), not 100 m and 110 m: "we are not the Olympics in full, we show what a robot can do" | `RESET_BUDGET`, `AGENT_TIMEOUT` in `gen_tasks.py`; `sprint.py`, `hurdles.py`. Where an official event is long only by repetition, the family takes its shortest official form |
+| 2026-10-12: standard reset budget 50; agent budget 2 h; the track events are the indoor 50 m and 50 m hurdles (four hurdles), not 100 m and 110 m: "we are not the Olympics in full, we show what a robot can do" | `RESET_BUDGET` in `gen_tasks.py`, the row of `scripts/task_cutoffs.toml`; `sprint.py`, `hurdles.py`. Where an official event is long only by repetition, the family takes its shortest official form |
 
 <!-- families:begin -->
 ## The 50 families

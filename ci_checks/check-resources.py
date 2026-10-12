@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from task_conventions import (  # noqa: E402  (one list of keys, one README / instruction renderer)
-    CAP_KEYS, LIMIT_KEYS, LIMIT_SCOPES, RESOURCE_KEYS, mode_of, observed_of, render_external, render_limits, render_resources,
+    CAP_KEYS, CUTOFF_HEADING, LIMIT_KEYS, LIMIT_SCOPES, RESOURCE_KEYS, mode_of, observed_of, render_external, render_limits, render_resources,
     sidecars_of)
 from rcb_monitor import inject  # noqa: E402  (one reader of the compose file's services and caps)
 
@@ -203,10 +203,12 @@ def check_limits(task: Path, d: dict, r: dict, env_gpu: bool, services: list[str
         errs.append("scope trial: trial_max_memory_gb equals max_memory_gb (the limits bind the whole trial)")
     # instruction.md ends with the paragraph rendered from these values
     ins = (task / "instruction.md").read_text() if (task / "instruction.md").is_file() else ""
+    # ... before the closing `## Time limit` section (PROTOCOL §2.12; ci_checks/check-cutoffs.py checks that one)
+    ins = re.sub(rf"(?ms)\n^{re.escape(CUTOFF_HEADING)}[ \t]*\n.*\Z", "", ins)   # with the blank line before it
     want = render_limits(lim, mode, sidecars_of(task), env.get("cpus"))
     if not ins.endswith("\n" + want):
         errs.append(
-            "instruction.md does not end with the `## Resource limits` paragraph rendered from [metadata.resources.limits] "
+            "instruction.md does not end (before `## Time limit`) with the `## Resource limits` paragraph rendered from [metadata.resources.limits] "
             f"(run python3 scripts/task_conventions.py {task.relative_to(ROOT) if task.is_relative_to(ROOT) else task})"
         )
     # ... and, just before it, the `## External material` paragraph every task states in the same words (PROTOCOL §2.11)

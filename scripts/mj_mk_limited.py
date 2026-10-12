@@ -11,7 +11,7 @@ grades the sidecar's final.json (a fresh replay of the recorded episode).
 Run it on the tasks whose standard twin serves server_mj.py (DexToolBench, Playground ALOHA and Panda); the Playground
 quadrupeds are written by scripts/mujoco-playground/generate.py, so `--all` skips them."""
 import json, pathlib, re, shutil, sys
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_conventions import normalize  # noqa: E402
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_conventions import bench_of, cutoff_sec, normalize, strip_cutoff  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RT = ROOT / "tasks/robotwin_2_0_stack_blocks_two-standard"
@@ -224,7 +224,7 @@ command = "{COLLECT}"
 timeout_sec = 900
 
 [agent]
-timeout_sec = 3600.0
+timeout_sec = {cutoff_sec(bench_of(dst), "standard")}.0
 {ALLOW}
 
 [environment]
@@ -247,7 +247,7 @@ build_timeout_sec = 600.0
 
 
 def instruction(src, inst, tool) -> str:
-    u = (src / "instruction.md").read_text()
+    u = strip_cutoff((src / "instruction.md").read_text())   # without a cutoff block an earlier render put under the title (normalize writes this twin's own `## Time limit`)
     title = u.splitlines()[0].replace("# ", "# ", 1) + " — LIMITED MODE (robot as a service)"
     intro = u.split("\n\n")[1].strip()
     score = re.search(r"## (Scoring \(the benchmark's own rule\)|Success)\n(.*?)\n\n", u, re.S)
@@ -282,9 +282,10 @@ client and one episode.
 - **No reset.** Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
   robot's own joint positions, velocities and targets. No object poses, no success predicate.
-- Your wall-clock budget is 60 minutes. `meta["time_left_s"]` is counted from your first request to the service;
-  approximate — the harness's own deadline is authoritative. There is nothing to hand in: the service records the
-  episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
+- Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your first
+  request to the service; approximate — the harness's own deadline is authoritative. There is nothing to hand in: the
+  service records the episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the
+  record.
 - Do not use pretrained manipulation policies or any published solution for this benchmark; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 

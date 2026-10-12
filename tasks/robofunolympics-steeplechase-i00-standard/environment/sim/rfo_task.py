@@ -60,7 +60,7 @@ class Task(TaskBase):
              "you may touch the pit's floor and walls and the track before and beyond the pit: there is no fall "
              "rule. You succeed when your whole body is beyond the pit's far edge and you then stand for {stand_s} s "
              "without a break: only your feet on the ground, your torso within {stand_tilt_deg} degrees of vertical, "
-             "your pelvis moving no faster than {still_m_s} m/s. The time limit is {time_limit_s} s.")
+             "your pelvis moving no faster than {still_m_s} m/s. The attempt ends after {time_limit_s} s of robot time.")
     venue = ("You stand on the track facing the hurdle (+x), on the centre line of the water jump. The hurdle's near "
              "face is {approach_m} m ahead; its bar is as high as your hip joints. Directly behind the bar the pit "
              "drops {pit_depth_m} m; its far edge is {water_jump_length_m} m beyond the hurdle's near face. The track "

@@ -30,7 +30,17 @@ SHARED = HERE / "shared"
 REGISTRY = "ghcr.io/mll-lab-nu"
 PREFIX = "robofunolympics"
 RESET_BUDGET = 50        # standard mode's attempts (PROTOCOL §4.5 per-benchmark default; owner, 2026-10-12)
-AGENT_TIMEOUT = 7200     # 2 h, uniform in both modes (owner, 2026-10-12; PROTOCOL D8; docs/benchmarks/robofunolympics.md)
+BENCHMARK = "RoboFunOlympics"   # this benchmark's row of scripts/task_cutoffs.toml (the label of task_conventions.BENCHMARKS)
+
+
+def agent_timeout() -> int:
+    """The agent's time limit (PROTOCOL §2.12): the cutoff table's, the same in both modes. normalize writes it into
+    task.toml, RCB_WALL_CLOCK_S and the closing `## Time limit`; the templates never state it as a number."""
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+    from task_conventions import cutoff_sec
+    p, s = cutoff_sec(BENCHMARK, "privileged"), cutoff_sec(BENCHMARK, "standard")
+    assert p == s, (p, s)
+    return int(p)
 CORE = ("__init__.py", "scene.py", "looks.py", "world.py", "referee.py", "task.py")   # the rfo package in a task (no other family)
 MODES = ("privileged", "standard")
 CLIENT = dict(
@@ -199,8 +209,7 @@ def values(fam: str, spec: dict, inst: dict, version: str) -> dict:
         "ROBOT_TITLE": rob["title"], "ROBOT_ID": {"unitree_g1": "unitree-g1", "unitree_h1": "unitree-h1-2"}[rob["name"]],
         "ROBOT_KW": {"unitree_g1": "unitree-g1", "unitree_h1": "unitree-h1-2"}[rob["name"]],
         "NJ": len(rob["joints"]),
-        "BUDGET_TEXT": f"{AGENT_TIMEOUT // 3600} h",
-        "AGENT_TIMEOUT": AGENT_TIMEOUT,
+        "AGENT_TIMEOUT": agent_timeout(),
         "RESET_BUDGET": RESET_BUDGET,
         "PRIV": task_dir(fam, "privileged"),
         "STD": task_dir(fam, "standard"),

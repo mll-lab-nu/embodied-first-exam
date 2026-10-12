@@ -54,7 +54,7 @@ class Task(TaskBase):
              "flight must be a jump: your pelvis has to rise at least {rise_min_m} m above its height at lift-off. "
              "The touch: during that flight a hand (the fist or the wrist beyond the forearm) touches the vane. The "
              "first contact after the flight must be with your feet only. After the landing you may step; you "
-             "succeed when you have stood for {stand_s} s: only your feet on the ground, your torso within about 20 "
+             "succeed once you stand for {stand_s} s without a break: only your feet on the ground, your torso within about 20 "
              "degrees of vertical, your pelvis slower than 0.35 m/s. A fall fails the attempt at any time: your "
              "pelvis lower than {fall_z_m} m, or any part of you other than your feet on the ground. You fail on a "
              "step or shuffle before the take-off, a foot that leaves the ground before the other, a touch of the "

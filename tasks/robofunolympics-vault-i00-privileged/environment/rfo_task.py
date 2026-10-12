@@ -66,8 +66,8 @@ class Task(TaskBase):
              "it); your pelvis passes the far edge before a hand has touched the top; after your pelvis has passed "
              "the far edge, any part of you touches the floor, or a part other than your feet touches the mat "
              "before the stand is complete. Before the table there is no fall rule: any part of you may touch the "
-             "floor and the springboard, and using the springboard is not required. The time limit is "
-             "{time_limit_s} s.")
+             "floor and the springboard, and using the springboard is not required. The attempt ends after "
+             "{time_limit_s} s of robot time.")
     venue = ("You stand at the start of the run-up, a strip {runup_width_m} m wide that leads straight ahead (+x) to "
              "the springboard and the table; the board's low end is 23.3 m ahead of you and its high end 24.5 m. The "
              "table's top is higher than your shoulders' joints are when you stand (about 1.47 m is the height of "

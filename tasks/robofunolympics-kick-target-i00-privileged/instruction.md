@@ -20,7 +20,7 @@ to your left, +z is up; the floor is z = 0.
 - "The required level of impact" is measured: the impulse the bag receives during the touch (the change of the bag's angular momentum about its hook, divided by the depth below the hook of the lowest point the blow touched) must be at least 20.0 N s; "not a push": the touch lasts at most 0.15 s. Both numbers are this benchmark's (a light, clean kick of a trained adult on a heavy bag), not a rule book's.
 - The chain is rigid: the bag and its chain swing as one body about the hook (a ball joint).
 
-A heavy bag (30.0 kg, 1.2 m long, 0.35 m across) hangs by a 0.5 m chain from a hook, free to swing in every direction; its top is 1.75 m above the floor and its axis 0.8 m in front of you. The marked band runs round the bag from 0.95 m to 1.25 m above the floor. Your first touch of the bag is your kick. It must be made with your right foot or right shin alone and must first meet the bag inside the band. It is a blow, not a push: the touch lasts at most 0.15 s (it ends when leg and bag have been apart for 0.03 s), and during it the bag must receive an impulse of at least 20.0 N s, measured as the change of the bag's angular momentum about its hook divided by the depth below the hook of the lowest point the blow touched. You succeed when, after the kick, you have stood for 2.0 s without a break: both feet and nothing else on the floor, the torso within about 20 degrees of upright, the pelvis slower than 0.35 m/s. You fail if anything other than the right foot or shin touches the bag at any time; if the kick lands outside the band, is too weak or is a push; if anything touches the bag again after the kick; if you fall (your pelvis lower than 0.5 m above the floor, or any part of you other than your feet on the floor); or after 15 s.
+A heavy bag (30.0 kg, 1.2 m long, 0.35 m across) hangs by a 0.5 m chain from a hook, free to swing in every direction; its top is 1.75 m above the floor and its axis 0.8 m in front of you. The marked band runs round the bag from 0.95 m to 1.25 m above the floor. Your first touch of the bag is your kick. It must be made with your right foot or right shin alone and must first meet the bag inside the band. It is a blow, not a push: the touch lasts at most 0.15 s (it ends when leg and bag have been apart for 0.03 s), and during it the bag must receive an impulse of at least 20.0 N s, measured as the change of the bag's angular momentum about its hook divided by the depth below the hook of the lowest point the blow touched. You succeed when, after the kick, you stand for 2.0 s without a break: both feet and nothing else on the floor, the torso within about 20 degrees of upright, the pelvis slower than 0.35 m/s. You fail if anything other than the right foot or shin touches the bag at any time; if the kick lands outside the band, is too weak or is a push; if anything touches the bag again after the kick; if you fall (your pelvis lower than 0.5 m above the floor, or any part of you other than your feet on the floor); or after 15 s.
 
 A referee decides this from the simulator's state after every physics step (1 ms): the events that must happen, in
 order, are **strike → stand**. The attempt ends at the success (that moment is the success), at the first rule violation,
@@ -41,7 +41,7 @@ The tooling also appends its own log, `rcb_session_log.jsonl`, to `/app/output/`
 `RCB_SESSION_LOG`.
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py` and `NOTES.md` to
-match) whenever you have a better one.** Your wall-clock budget is 2 h and it ends without warning; a run
+match) whenever you have a better one.** The time limit (`## Time limit`) ends without warning; a run
 that ends with no file scores zero. Do not stop early: keep improving until the time is up.
 
 ## Tooling (already installed; run `python` from any directory)
@@ -148,3 +148,8 @@ The network is open. You may install packages (pip, apt), and you may search for
 
 ## Resource limits
 Limits for the whole trial, all its processes together (every simulator you start included): at most **13 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; the task has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` above).

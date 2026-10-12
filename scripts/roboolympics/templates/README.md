@@ -14,7 +14,7 @@ a fresh process and renders the replay video; the verifier grades the sidecar's 
 | time | S = {{slowdown}} (RoboOlympics' official slowdown; `RCB_SLOWDOWN` overrides it, results under another S are reported separately): one 10 ms control step every {{wall_s_per_step}} s of wall time; the match starts paused and its clock starts at the first `submit` or `get_obs(seconds > 0)`; after every {{unit}} a break of {{break_s}} s of game time ({{break_wall_s}} s of wall time) in which the clock runs on and nothing plays, ended early by the agent's `ready` row |
 | actions | {{action_list}}: the sport's own commands (action level `{{action_level}}`), one per row, effective at the row's control step |
 | observation | camera images and the agent's own robot plus the referee's information as proprio columns; no ball or opponent state, no seed |
-| budget | {{agent_timeout_sec}} s, no reset (one match is the episode), no privileged twin (PROTOCOL §4b exceptions, `docs/benchmarks/roboolympics.md`) |
+| budget | no reset (one match is the episode), no privileged twin (PROTOCOL §4b exceptions, `docs/benchmarks/roboolympics.md`) |
 | agent API | `environment/rcb_client.py` (the realtime client); `instruction.md` documents the commands, the proprio columns and the cameras |
 
 ## Difficulty

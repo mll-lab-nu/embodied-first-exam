@@ -21,7 +21,7 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "scripts"))
 from envs import GOALS, SUCCESS  # noqa: E402
-from task_conventions import normalize  # noqa: E402
+from task_conventions import cutoff_sec, normalize  # noqa: E402
 
 SHARED = HERE / "shared"
 FROZEN = HERE / "frozen"
@@ -45,12 +45,17 @@ ALLOWED_HOSTS = (
     '["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", '
     '"*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]'
 )
-AGENT = f"""[agent]
-timeout_sec = 3600.0
+# `[agent] timeout_sec` is the cutoff table's number for the mode (scripts/task_cutoffs.toml, PROTOCOL §2.12);
+# normalize writes the same number again, with the instruction's closing `## Time limit` section and the sim service's wall clock.
+def agent_block(mode: str) -> str:
+    return f"""[agent]
+timeout_sec = {cutoff_sec("MetaWorld+", mode)}.0
 # Meta-World's scripted policies solve these tasks and are publicly downloadable, so egress is closed to everything but the model APIs and the package registries.
 network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = {ALLOWED_HOSTS}
 """
+
+
 FRAME = (
     "World frame: metres; x to the robot's right, y forward (away from the robot's base), z up; the table top is at "
     "z = 0. Quaternions are w x y z."
@@ -176,7 +181,7 @@ img = s.render("front")   # RGB (240, 320, 3); views front, left, right, topview
 ## Rules
 - Write your own controller. Do not use Meta-World's scripted policies or any published solution for this benchmark.
 - Only the actions count: editing `s.data` or the environment while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time. Save a working trajectory early, then improve it; do not stop early.
+- Save a working trajectory early, then improve it; do not stop early.
 """
 
 
@@ -193,9 +198,10 @@ client and one episode.
 - **No reset.** What you knock over stays knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration), the
   robot's own state and the task's target point. No object poses, no success signal.
-- Your wall-clock budget is 60 minutes. `meta["time_left_s"]` is counted from your first request to the service;
-  approximate — the harness's own deadline is authoritative. There is nothing to hand in: the service records the
-  episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
+- Your only budget is the time limit (`## Time limit`). `meta["time_left_s"]` is the service's count of it, from your first
+  request to the service; approximate — the harness's own deadline is authoritative. There is nothing to hand in: the
+  service records the episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the
+  record.
 - Do not use Meta-World's scripted policies or any published solution for this benchmark; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
@@ -338,7 +344,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-{AGENT}
+{agent_block('privileged')}
 [environment]
 build_timeout_sec = 1800.0
 cpus = 4
@@ -400,7 +406,7 @@ service = "sim"
 command = "{collect}"
 timeout_sec = 900
 
-{AGENT}
+{agent_block('standard')}
 [environment]
 build_timeout_sec = 1800.0
 cpus = 4

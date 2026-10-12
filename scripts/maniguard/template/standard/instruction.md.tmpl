@@ -18,7 +18,7 @@ after every control step but never tells you their state: watch your robot and t
 - **No privileged state.** You see what the cameras see (RGB; depth on request) plus the robot's own proprioception
   (joints, gripper opening and command, end-effector and fingertip poses, velocities, drive efforts). No object poses, no
   goal position, no success or safety predicate.
-- There is no step budget: your wall-clock budget is @@BUDGET_MIN@@ min (@@BUDGET@@ s; `meta["time_left_s"]`), and the
+- There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`), and the
   only step limit is the cap above (`meta["control_steps"]` counts towards it; holding and watching with
   `get_obs(seconds=...)` count too: 20 control steps per second). Actions and simulated time are reported as cost.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at

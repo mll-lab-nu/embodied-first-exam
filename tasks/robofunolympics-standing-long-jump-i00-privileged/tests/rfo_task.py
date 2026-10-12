@@ -60,7 +60,7 @@ class Task(TaskBase):
              "first contact after the flight must be with your feet only. The mark is the point nearest the "
              "take-off line at which any part of you touches the ground from that landing until you have stood; it "
              "must be at least {qualifying_mark_m} m beyond the line. After the landing you may step; you succeed "
-             "when you have stood for {stand_s} s: only your feet on the ground, your torso within about 20 degrees "
+             "once you stand for {stand_s} s without a break: only your feet on the ground, your torso within about 20 degrees "
              "of vertical, your pelvis slower than 0.35 m/s. A fall fails the attempt at any time: your pelvis "
              "lower than {fall_z_m} m, or any part of you other than your feet on the ground. You fail on a foot on "
              "or over the line, a step or shuffle before the take-off, a foot that leaves the ground before the "

@@ -85,7 +85,7 @@ class Task(TaskBase):
              "foot reaching the start line before \"set\". From the gun on you must keep your lane: your pelvis may "
              "not be more than half the lane's width from y = 0. You finish at the moment the leading point of your "
              "torso (not the head, arms, legs or feet) reaches the finish line; the time counts from the gun. You "
-             "succeed with a valid finish within {finish_limit_s} s of the gun. A fall does not end the race: you "
+             "succeed with a valid finish within {finish_limit_s} s of robot time after the gun. A fall does not end the race: you "
              "are down while your pelvis is below {down_z_m} m, you may get up and run on, but {down_limit_s} s down "
              "in a row end it. You fail on a false start, on leaving the lane, when down for {down_limit_s} s, or "
              "when {finish_limit_s} s after the gun have passed.")

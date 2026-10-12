@@ -9,14 +9,13 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
+  { source = "/data/replay1.log", service = "sim" },           # the collect hook's one fresh-process replay
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/robodojo-fold-clothes-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo fold_clothes (Generalization) on RoboDojo's frozen layout (arx_x5/0/fold_clothes_0.json); standard only, no privileged twin. Task: Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode and grades it as it happened live (the physics does not replay bit for bit; the two replays are recorded only)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo fold_clothes (Generalization) on RoboDojo's frozen layout (arx_x5/0/fold_clothes_0.json); standard only, no privileged twin. Task: Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode and grades it as it happened live (the physics does not replay bit for bit; the replay is recorded only)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]
 
@@ -80,14 +79,14 @@ timeout_sec = 120
 
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json
-timeout_sec = 18000               # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
-                                  # resume) + two fresh-process replays of up to 7200 s each (an Isaac start + up to 15,000
-                                  # actions at 7-11 actions/s, a third of that on a busy host, the first one filmed) + 900 s;
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay once in a fresh process, write final.json
+timeout_sec = 10800               # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
+                                  # resume) + ONE fresh-process replay (owner, 2026-10-12; two and 18000 s before) of up to
+                                  # 7200 s (an Isaac start + up to 15,000 actions, filmed: 1200 s + actions / 2.5) + 900 s;
                                   # finalize.sh ends a replay that would pass this deadline and records it (replay_error, infra_error)
 
 [agent]
-timeout_sec = 3600.0              # RoboDojo budget, both modes (owner, 2026-10-11; mk_tasks.py AGENT_TIMEOUT_S, which the instruction's cutoff text and the service's RCB_WALL_CLOCK_S are rendered from)
+timeout_sec = 3600.0              # the agent's cutoff: scripts/task_cutoffs.toml, the one table (written by normalize, PROTOCOL §2.12), as the service's RCB_WALL_CLOCK_S
 # RoboDojo's training demonstrations and policy checkpoints are public (Hugging Face), so the agent reaches the model APIs and the package registries,
 # nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"

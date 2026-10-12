@@ -77,6 +77,6 @@ The grader replays in two fresh processes, each exactly this CLI (a fresh proces
   Quaternions are **WXYZ**. At the start the brush points straight down with the tip at about (0.000, 0.000, 0.108).
 - Action (7): panda_joint1..7 absolute joint-position targets (rad), ManiSkill's `pd_joint_pos` controller. `s.hold_action()`
   is the no-op. Control runs at 20 Hz (physics 100 Hz).
-- **Your wall-clock budget is 2 h (7200 s)**; there is no step budget. A runaway guard stops an episode at 72000 control steps (1 h
+- **Your only budget is the time limit (`## Time limit`)**; there is no step budget. A runaway guard stops an episode at 72000 control steps (1 h
   of simulated time). Everything runs on the CPU except camera rendering.
 - {{SRC}}; libmypaint is ISC, the mypaint-brushes presets CC0 (`/opt/mypaint`).

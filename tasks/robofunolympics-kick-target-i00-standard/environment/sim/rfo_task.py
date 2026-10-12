@@ -104,7 +104,7 @@ class Task(TaskBase):
              "blow, not a push: the touch lasts at most {max_contact_s} s (it ends when leg and bag have been apart "
              "for {touch_gap_s} s), and during it the bag must receive an impulse of at least {min_impulse_n_s} "
              "N s, measured as the change of the bag's angular momentum about its hook divided by the depth below the "
-             "hook of the lowest point the blow touched. You succeed when, after the kick, you have stood for {stand_s} s without a break: "
+             "hook of the lowest point the blow touched. You succeed when, after the kick, you stand for {stand_s} s without a break: "
              "both feet and nothing else on the floor, the torso within about 20 degrees of upright, the pelvis "
              "slower than 0.35 m/s. You fail if anything other than the {leg} foot or shin touches the bag at any "
              "time; if the kick lands outside the band, is too weak or is a push; if anything touches the bag again "

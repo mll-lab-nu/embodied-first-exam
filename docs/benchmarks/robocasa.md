@@ -84,7 +84,10 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences:
    0.035 s per control step (oracle trials, 2026-10-02: both passes together 0.064–0.078 s per step; the live service
    takes 0.047–0.062 s per step with its cameras), so 3450 s covers about 97,000 control steps, 48,000 on a host
    twice as slow. Episodes have no step limit (D1), but the replay runs the episode's own physics once more without
-   its cameras, in the same container: it cannot take longer than the agent's hour did. Before, the hook waited
+   its cameras, in the same container: it cannot take longer than the agent's time did. The hook's 3600 s is a number
+   of its own, sized for the agent cutoff of 3600 s (the cutoff lives in `scripts/task_cutoffs.toml`, shown in
+   `docs/CUTOFFS.md`, and every instruction states it in its closing `## Time limit` section): lowering the cutoff keeps
+   it safe, raising it means raising `COLLECT_TIMEOUT_S` in the three RoboCasa generators too. Before, the hook waited
    980 s of a 1500 s timeout for verdict and video together, which lost episodes over about 10,000 control steps.
 8. **Request validation.** A request is checked as a whole before any physics (`parse_submit` / `parse_observe`):
    a `dt`, `seconds` or `video_fps` that is not a finite number in range, `cameras` that is not a list of names,

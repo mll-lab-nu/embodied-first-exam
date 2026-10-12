@@ -17,7 +17,7 @@ your trajectory right after the task is met is how you stop there.
 `/app/output/trajectory.npz` with `actions`: float64 (T, @@DIM@@), one row per control step, the targets of upstream's
 joint-position controllers in this order: @@LAYOUT@@ (@@UNITS@@).@@GRIPPER_T0@@ `s.save_trajectory(rows)` writes it. Also leave the
 script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
-you improve it: whatever is in `/app/output/` when your 3600 s are up is graded. The tooling also writes
+you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling also writes
 `/app/output/rcb_session_log.jsonl` (your sessions, resets and simulated steps, reported as cost; not graded): leave it
 there.
 

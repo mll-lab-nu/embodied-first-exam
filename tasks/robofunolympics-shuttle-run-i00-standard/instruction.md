@@ -19,7 +19,7 @@ Directions are from the robot at the start: +x is the way you face, +y is to you
 - a fallen runner: a robot whose pelvis is below 0.4 m is down; it may get up and go on, but 10.0 s down in a row end the attempt
 - the qualifying time, 30 s, is this benchmark's own round number: school norms for this test are 10 to 14 s
 
-Two lines cross the floor: the start line x = 0 and the far line x = 10.0 m (the planes meant are the edges of the painted lines that face each other). The clock starts at t = 0. You run four legs: to the far line, back to the start line, to the far line, back to the start line. At each of the three turns you must put a foot on the ground wholly beyond the line: every part of that foot at x > 10.0 m at the far line (turns 1 and 3), at x < 0 at the start line (turn 2); a foot on the line does not count. The turns count in this order only. After the third turn you finish at the moment the leading point of your torso (not the head, arms, legs or feet) reaches the start line. Which way you face and how you turn is up to you. You succeed when you finish within 30 s. A fall does not end the attempt: you are down while your pelvis is below 0.4 m, you may get up and go on, but 10.0 s down in a row end it. You fail when down for 10.0 s, or after 30 s.
+Two lines cross the floor: the start line x = 0 and the far line x = 10.0 m (the planes meant are the edges of the painted lines that face each other). The clock starts at t = 0. You run four legs: to the far line, back to the start line, to the far line, back to the start line. At each of the three turns you must put a foot on the ground wholly beyond the line: every part of that foot at x > 10.0 m at the far line (turns 1 and 3), at x < 0 at the start line (turn 2); a foot on the line does not count. The turns count in this order only. After the third turn you finish at the moment the leading point of your torso (not the head, arms, legs or feet) reaches the start line. Which way you face and how you turn is up to you. You succeed when you finish within 30 s of robot time. A fall does not end the attempt: you are down while your pelvis is below 0.4 m, you may get up and go on, but 10.0 s down in a row end it. You fail when down for 10.0 s, or after 30 s.
 
 A referee in the service decides this from the simulator's state. The events that must happen, in order, are
 **turn 1 → turn 2 → turn 3 → finish**. An attempt (an episode) ends at the success, at the first rule violation, or after 30 s
@@ -40,7 +40,7 @@ A referee in the service decides this from the simulator's state. The events tha
 - There is nothing to hand in: the service records your last attempt, replays it in a fresh simulator and grades the
   replay. Keep the script that drives the robot at `/app/output/gen.py` and a `NOTES.md` of at most 20 lines (your
   approach, what failed, what you downloaded or installed) for the record: save them early and keep them current.
-- Wall-clock budget: 2 h. It ends without warning, and ending your session earlier ends the run the same
+- Wall clock: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same
   way, so do not stop early: while you have attempts left, the run can still pass.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
@@ -168,3 +168,8 @@ The network is open. You may install packages (pip, apt), and you may search for
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

@@ -104,7 +104,7 @@ class Task(TaskBase):
              "are gone over in order. Knocking a hurdle down with your legs is allowed (a hurdle tipped more than "
              "{knocked_deg} degrees is counted as down, without a fault). You finish at the moment "
              "the leading point of your torso (the trunk and head hull; not the arms, legs or feet) reaches the "
-             "finish line, with all hurdles gone over. You succeed with a finish within {time_limit_s} s. A fall "
+             "finish line, with all hurdles gone over. You succeed with a finish within {time_limit_s} s of robot time. A fall "
              "does not end the race: you are down while your pelvis is below {down_z_m} m, you may get up and go "
              "on, but {down_limit_s} s down in a row end it. You fail if your pelvis or a foot crosses the next "
              "hurdle's plane beside the hurdle, or lower than said above (going under its top); if a part of one "

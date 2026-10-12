@@ -241,7 +241,7 @@ class Task(TaskBase):
         "Art. 14 / 24 give no distance for 'control' of a dribbled ball: here the ball's centre must stay within "
         "{control_radius_m} m (horizontally) of your pelvis, so that a ball thrown ahead and walked after is not a "
         "dribble.",
-        "Art. 28 (eight seconds to reach the frontcourt) is not applied: the limit is {time_limit_s} s.",
+        "Art. 28 (eight seconds to reach the frontcourt) is not applied: the attempt lasts at most {time_limit_s} s of robot time.",
     ]
     time_limit_s = 60.0
     start = (0.0, 0.0, 0.0)

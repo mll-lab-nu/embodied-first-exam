@@ -78,7 +78,7 @@ class Task(TaskBase):
              "point of your torso (not the head, arms, legs or feet) reaches the start line's plane x = 0 with your "
              "pelvis in the right half (y < 0). Any crossing of the centre line by your pelvis that is not the next "
              "one of this list, at any time, is leaving the prescribed path. You succeed when you finish within "
-             "{time_limit_s} s. A fall does not end the attempt: you are down while your pelvis is below "
+             "{time_limit_s} s of robot time. A fall does not end the attempt: you are down while your pelvis is below "
              "{down_z_m} m, you may get up and go on, but {down_limit_s} s down in a row end it. You fail if any "
              "part of you touches any of the eight cones, if you leave the prescribed path, when down for "
              "{down_limit_s} s, or after {time_limit_s} s.")
