@@ -26,7 +26,8 @@ for t in robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standar
          tests/test_codex_tools_off.py; do
   run 300 "$t"
 done
-# RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test)
+# RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged
+# grader's test needs numpy and runs in the second tier
 if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 robodojo/tests/test_standard_grading.py; fi
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
 if [ "${1:-}" = "--all" ]; then run 900 robolab/tests/test_finalize.py; fi
@@ -42,7 +43,8 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            robolab/tests/test_tooling_units.py robotwin/tests/test_gripper_state.py robotwin/tests/test_standard_service.py \
            robopaint_strict/tests/test_server_requests.py robotangle/tests/test_server_requests.py \
            mujoco-playground/tests/test_standard_2_1_servers.py dexjoco/tests/test_standard_server.py \
-           myosuite/tests/test_standard_server.py robowits/tests/test_server_frames.py; do
+           myosuite/tests/test_standard_server.py robowits/tests/test_server_frames.py \
+           robodojo/tests/test_privileged_grading.py; do
     run 900 "$t"
   done
   # LIBERO-MAX's rcb_service.py is its own variant (its verdict and video protocol differ): the classes of the shared

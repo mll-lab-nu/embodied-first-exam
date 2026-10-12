@@ -27,8 +27,8 @@ initial state, so none replays on a frozen layout. The task is reported separate
 
 ## Verification
 The sim service ends the episode on RoboDojo's own check (success), a failed check, the runaway guard or the time limit, and
-writes `/data/trajectory.npz`; the collect hook (`environment/sim/finalize.sh`) replays it from the frozen layout in two
-fresh processes; `tests/grade.py` scores 1 iff the live episode succeeded and both replays succeed and both end in the same state hash. No oracle;
+writes `/data/trajectory.npz`; the collect hook (`environment/sim/finalize.sh`) replays it from the frozen layout once,
+in a fresh process; `tests/grade.py` scores 1 iff the live episode succeeded and the replay succeeds (`success` = `live_success` and `replay_success`: one successful replay is enough, the owner's decision of 2026-10-12; whether the replay ended in the live episode's state is reported as `deterministic` = `state_identical` = `live_matches_replay` and does not decide). No oracle;
 human review in PR #142 (no positive example yet). `nop` (no actions) scores 0.
 
 ## Compute resources
@@ -54,3 +54,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 ### Change Log
 - 2026-10-11: agent time limit 5400 s -> 3600 s (`[agent] timeout_sec`, and the service's `RCB_WALL_CLOCK_S`, which only reports it: `spec["budget"]`, `meta["time_left_s"]`; owner decision, docs/benchmarks/robodojo.md), and `instruction.md` states the cutoff at the top. The scene, the frozen layout, RoboDojo's success check, the collect hook and the verifier are unchanged, so the task keeps its name; trials recorded before this date ran with 5400 s and are kept apart (no official result was published with it).
+- 2026-10-12: graded with ONE fresh-process replay of the recorded episode (two before; owner decision, docs/benchmarks/robodojo.md): `success` = `live_success` and `replay_success`, one successful replay is enough. Before, two replays had to succeed and end in the same state hash. `deterministic` (= `state_identical` = `live_matches_replay`) now says whether the replay ended in the live episode's state; it is reported and no longer decides. The collect hook's limit 18000 s -> 10800 s (`[[verifier.collect]] timeout_sec` = `finalize.sh`'s `HOOK_BUDGET_S`); inside it the replay has max(1800 s, 1200 s + actions / 2.5) and is run once more when it gives no result in that time. The scene, the frozen layout, RoboDojo's success check and the service the agent talks to are unchanged, so the task keeps its name. No ranked result exists; a trial graded before this date is re-read from its saved `reward.json` (`live_success`, `replay_success`, `state_identical`), not rerun: in the first 38 graded trials of the run that began on 2026-10-11 no verdict changes.
