@@ -85,6 +85,13 @@ processes and reports `replay_success`, `state_identical` and `deterministic` (b
 never decide, and a replay that gives no result is recorded (`replay_error`) without voiding the live verdict. The cost:
 these six scores cannot be recomputed from the trajectory, and a live success may include some luck of the physics. Trials
 recorded before 2026-10-11 can be re-scored from their `live_success` without new runs.
+Removed on 2026-10-11 (owner; they had been on main for a day, since #142, and their earlier results are kept apart, not
+ranked): the six privileged task directories `robodojo-fold-clothes-i00-privileged`,
+`robodojo-fold-clothes-random-i00-privileged`, `robodojo-make-toast-random-i00-privileged`,
+`robodojo-pour-by-language-i00-privileged`, `robodojo-pour-liquid-into-cup-i00-privileged` and
+`robodojo-pour-liquid-into-cup-random-i00-privileged`. The names are not reused. An episode of the six that resumed after a
+service crash (resume class `approx`) is graded on its live state after the resume; `reward.json` reports `resumes` and
+`resume_state_mismatch` (PROTOCOL §4.8, docs/STANDARD_MODE.md §13.1).
 Frozen on one RTX 4090 (driver 580.159). Across GPU models (2026-10-10, the evaluation hosts): the frozen layouts rebuild
 to the recorded hashes, and a 120-action driver trajectory ends in the same state as on the 4090, on L40S (drivers
 580.178 and 580.82), L40 (driver 610) and L4 (11 instances checked; every graded trial reports `instance_exact`).

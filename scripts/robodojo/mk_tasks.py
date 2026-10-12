@@ -117,6 +117,12 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
                            f"trajectory cannot be graded reproducibly; RoboDojo's `{common['LAYOUT_FILE']}`)." if live else
                            f"Standard-mode twin of {priv_ref} (same frozen layout, RoboDojo's `{common['LAYOUT_FILE']}`).")
     common["ORACLE_SEE"] = "None:" if live else "None (see the privileged twin):"
+    # task.toml's description (the task list shows it): no privileged task to name, and what decides
+    common["TOML_LAYOUT"] = (f"on RoboDojo's frozen layout ({common['LAYOUT_FILE']}); standard only, no privileged twin." if live else
+                             f"on the same frozen layout as the privileged task ({common['LAYOUT_FILE']}).")
+    common["TOML_GRADING"] = ("the sim service records the episode and grades it as it happened live (the physics does not "
+                              "replay bit for bit; the two replays are recorded only)." if live else
+                              "the sim service records the episode as a trajectory and grades it.")
     common["STD_VERDICT"] = (f"the live episode succeeded: this task is graded by its live episode, which the trusted service "
                              f"ran (`instance.json` sets `\"determinism\": \"verdict\"` because {I.get('determinism_why')}); "
                              f"the two replays are recorded (`replay_success`, `state_identical`, `deterministic`) and never "

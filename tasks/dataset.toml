@@ -5995,11 +5995,11 @@ digest = "sha256:f602adc6ef35c8be519be4742324bd94afc78bfb25b4077d4765c71fa9714a3
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fold-clothes-i00-standard"
-digest = "sha256:c7f6d32c136bdd5fe44cb2d41bde690a3d2bdf615284969bb84e0093f01cdce6"
+digest = "sha256:e92232323977c192334a7cb9fc3a7d7b27f9053ed1a8d52806c39feba2e01b7b"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-fold-clothes-random-i00-standard"
-digest = "sha256:77b24f9b50e18441e840b98106e2bb475e1cb8f44ef6b2a038ba51ea253462c6"
+digest = "sha256:e7153ce4dd664b03795cf8df9bbb35a85f9b8be740f0759c29e000fc3ad27ee6"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-general-pickup-i00-privileged"
@@ -6067,7 +6067,7 @@ digest = "sha256:89b833080c01bb8ff0bb4c64c5e3fc40dd8c026574d968030e53ff6a0e0616b
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-make-toast-random-i00-standard"
-digest = "sha256:82d2fc9540da3d4ef6a9a15c2642777cc85eeec8dad5f12bda4bafa59636925b"
+digest = "sha256:07dfb2398571d9b24a117e76e5b74afacee18d77be134e253f3d49be681e7de3"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-match-and-pick-from-conveyor-i00-privileged"
@@ -6151,15 +6151,15 @@ digest = "sha256:82c1d3a86ac34e54d8a239ea3d542e309ab3cfbfe10cf6e4fa3a61371474d40
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pour-by-language-i00-standard"
-digest = "sha256:f7cd243d6ef33a9818f365565aa73345d8554b0ee5cca9fc806e45443f932c61"
+digest = "sha256:840e25125aeea0f3ee85ad858898cfc6ddd4766eb84523c125cd93bbe6699081"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pour-liquid-into-cup-i00-standard"
-digest = "sha256:dbbc9cba775f1de840a51475ab0dbf2600202c385b9a41c2ef15b959fc466466"
+digest = "sha256:89c92cafa7fa709fd86efb70e0bfa8581f68cd51378bf7979c36018693accd99"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-pour-liquid-into-cup-random-i00-standard"
-digest = "sha256:7d0f051c9f4145389da9d02749c5819cc5f355fa37a2237c5bdb092d7db5b73e"
+digest = "sha256:bcf0ec26bdb7251cc6db9fa32a5d82b3310326083045370ea96a3d44ebdc3bee"
 
 [[tasks]]
 name = "robot-coding-bench/robodojo-press-by-number-i00-privileged"
