@@ -1102,5 +1102,5 @@
   "enable_enhanced_determinism": true
  },
  "determinism": "verdict",
- "determinism_why": "its resets are not always bit-identical across fresh processes, even with PhysX enhanced determinism (the 15 clutter objects); the grader requires both replays to succeed"
+ "determinism_why": "its resets are not always bit-identical across fresh processes, even with PhysX enhanced determinism (the 15 clutter objects)"
 }

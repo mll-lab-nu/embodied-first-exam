@@ -38,6 +38,11 @@ ROOT = HERE.parent.parent
 TASKS_DIR = ROOT / "tasks"
 sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
+# standard mode's default reset budget (RCB_RESET_BUDGET's default; PROTOCOL §4.5's per-benchmark exception, owner
+# 2026-10-11): 10, since the 1000 control steps bound each episode and without a reset the practice and the graded
+# attempt share them; ten, as MyoSuite, because a scripted episode ends in about a minute; RCB_RESET_BUDGET=0 still runs
+# the single-episode configuration
+RESET_BUDGET = 10
 STANDARD = SHARED / "standard"                 # the standard-mode sidecar, client and verifier (eai-standard/2.1)
 IMAGE = "ghcr.io/mll-lab-nu/eai-kinder:" + (ROOT / "images/kinder/VERSION").read_text().strip()
 # The agent container and the verifier of every standard-mode task: the one client base (pinned by digest) and the
@@ -221,7 +226,7 @@ def context(t: dict, d: dict, f: dict) -> dict:
     mujoco = k == "tidybot"
     return {
         "family": t["family"], "env_id": t["env_id"], "env_name": t["env_id"].split("/")[1].removesuffix("-v0"),
-        "instance_tag": d["instance_tag"], "seed": d["seed"], "max_steps": n,
+        "instance_tag": d["instance_tag"], "seed": d["seed"], "max_steps": n, "reset_budget": RESET_BUDGET,
         "category": category, "robot": robot, "robot_id": "tidybot-plus-plus",   # both kinds' robot
         "keywords": ", ".join(f'"{w}"' for w in keywords), "view": "task_view" if mujoco else "render",
         "step_time": f" ({n / 10:g} s at 10 Hz)" if mujoco else "", "step_name": "10 Hz control step" if mujoco else "control step",

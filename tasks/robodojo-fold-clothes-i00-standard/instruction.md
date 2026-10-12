@@ -4,6 +4,11 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization**.
 
+**Time limit: one hour.** You have 60 min (3600 s) of wall-clock time in total, counted from the start of the trial; when it is
+up you are stopped where you are. Nothing is handed in: the one episode is graded as it stands at that moment, so the task
+must be completed before the cutoff (the episode ends by itself when RoboDojo's check passes: `res.meta["done"]`). The
+time you wait for the service counts: its first start in a trial takes ~4-15 min (Client, below).
+
 **Task:** Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open.
 
 RoboDojo's own instruction for this scene: *"Fold the clothes neatly."*
@@ -34,10 +39,11 @@ it does not apply here: where the description above mentions step_lim, read the 
   error. A dropped or knocked-over object stays that way.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
   (joints, grippers, link6 poses, velocities, efforts). No object poses, no success signal.
-- There is no step budget; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time are
+- There is no step budget; your wall-clock budget is 60 min (3600 s; `meta["time_left_s"]` is the service's count of what is left). Actions and simulated time are
   reported as cost (`meta["control_steps"]` counts them; the technical cap above is 15,000).
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record. The episode is graded as it stands when it ends or your time is up.
+- **Graded on your live episode.** This task's physics does not replay bit for bit (the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10)), so the episode as it happened in the service decides; the service still replays it twice for the record.
 - **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
   (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
   until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
