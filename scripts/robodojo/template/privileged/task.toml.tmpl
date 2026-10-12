@@ -21,9 +21,9 @@ oracle_evidence = "@@ORACLE_EVIDENCE@@"
 expert_time_estimate_hours = 2.0
 
 [verifier]
-timeout_sec = 15000.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory
-                                  # (replay_timeout(15,000 actions) = 1200 s + actions / 2.5 = 7200 s each) + 600 s; a usual
-                                  # trajectory (up to 1,500 actions) has 1800 s per replay
+timeout_sec = 7800.0              # ONE fresh-process replay (owner, 2026-10-12; two and 15000 s before) at tests/grade.py's
+                                  # limit for the longest accepted trajectory (replay_timeout(15,000 actions) = 1200 s +
+                                  # actions / 2.5 = 7200 s) + 600 s; a usual trajectory (up to 1,500 actions) has 1800 s
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image
 

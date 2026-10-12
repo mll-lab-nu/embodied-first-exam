@@ -21,7 +21,7 @@ RoboDojo specifics:
   or when the time is up. RoboDojo's per-task step limit (a policy's episode length in its evaluation; no check reads it)
   is not applied: no step caps (PROTOCOL D1), only a runaway guard;
 - the episode is NOT replayed here: when it ends the service writes /data/trajectory.npz + /data/episode.json, the collect
-  hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh replays the trajectory in two fresh processes."""
+  hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh replays the trajectory once, in a fresh process."""
 from __future__ import annotations
 import json, math, os, sys, threading, time, traceback
 from typing import Callable
