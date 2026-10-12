@@ -166,7 +166,7 @@ SPEC = {
                        "far side of the table, z up; the arm bases and every link are in it (spec.robot_spec)",
               "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes (x right, y up, z back)"},
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "5400"))},
+    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
     # PROTOCOL §4.5: no step budget, but a technical cap is stated here. The tooling's runaway guard ends the episode after
     # STEP_GUARD actions (reason "step_guard"): 10 min of simulated time.
     "max_control_steps": STEP_GUARD,
