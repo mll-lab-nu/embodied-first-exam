@@ -1207,5 +1207,5 @@
  ],
  "physics": {},
  "determinism": "verdict",
- "determinism_why": "the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism); the grader requires both replays to succeed"
+ "determinism_why": "the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism)"
 }
