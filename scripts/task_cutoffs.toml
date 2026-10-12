@@ -42,7 +42,7 @@
 "RoboOlympics"      = { standard-realtime = 7200 }
 "RoboPaint"         = { privileged =  3600, standard =  3600 }
 "RoboTangle"        = { privileged =  7200, standard =  7200 }
-"RoboTangle-New"    = { privileged = 21600, standard = 21600 }
+"RoboTangle-New"    = { privileged =  7200, standard =  7200 }
 "RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
 "RoboWits"          = { privileged =  3600, standard =  3600 }
 "VLABench"          = { privileged =  1800, standard =  1800 }
@@ -237,6 +237,6 @@ date = "2026-10-12"
 benchmark = "RoboTangle-New"
 modes = ["privileged", "standard"]
 from_sec = 0
-to_sec = 21600
-decided_by = "owner (pending: the user's decision of 2026-10-12 makes RoboTangle on MuJoCo its own benchmark; RoboTangle's 6 h budget, never lowered)"
-note = "new benchmark (scripts/robotangle-new/, docs/benchmarks/robotangle-new.md): RoboTangle's families on MuJoCo; the budget is RoboTangle's (PROTOCOL §2.3 exception, issue #87)"
+to_sec = 7200
+decided_by = "user (2026-10-12)"
+note = "new benchmark (scripts/robotangle-new/, docs/benchmarks/robotangle-new.md): RoboTangle's families on MuJoCo, kept apart from RoboTangle's results; 2 h, within the default cap"

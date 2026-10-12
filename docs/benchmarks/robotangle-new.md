@@ -5,7 +5,7 @@ own (user decision, 2026-10-12). The Genesis benchmark RoboTangle (`robotangle-*
 as it is: its tasks, image, tooling and dataset entries are not changed by this one.
 
 - Name: `robotangle-new` is a working name (the user may choose the final one). It is one parameter (Registration,
-  below).
+  below). Final for now (user, 2026-10-12): "essentially RoboTangle, kept apart from the old results for now".
 - Status: generator, image recipe and registration ready; no task yet. The tasks come with the release after the
   physics freeze (dev/robotangle_mujoco `docs/rcb/HARBOR_FREEZE_RUNBOOK.md`).
 
@@ -45,9 +45,9 @@ layer as RoboTangle; docs/benchmarks/robotangle.md, "Grading and determinism", "
 
 ## Time budget (D8)
 
-21600 s (6 h) in both modes, RoboTangle's budget (`scripts/task_cutoffs.toml`). Pending: the owner's decision to record
-it as this benchmark's exception in PROTOCOL §2.3 (the cutoff table, `CUTOFF_CAP_EXCEPTIONS` and `check-task-fields.sh`
-carry it already).
+7200 s (2 h) in both modes (user, 2026-10-12; `scripts/task_cutoffs.toml`), within the default cap: no exception.
+RoboTangle keeps its 6 h. The texts say "the time limit (`## Time limit`)"; RoboTangle's own sentence that the
+standard service ends the episode on its own clock stays (`RCB_WALL_CLOCK_S` follows the table).
 
 ## Standard mode, safety readings, world frame, network
 
@@ -59,9 +59,9 @@ owner lists this benchmark under PROTOCOL §4.5's declared telemetry); no world 
 
 `BENCH` in `scripts/robotangle-new/mk_tasks.py` and `BENCH` in dev/robotangle_mujoco's
 `scripts/robotangle/release_rebuild.py` (or `--bench`); `git mv` of `scripts/robotangle-new/`, `images/robotangle-new/`
-and this page; then the registration lines: `scripts/task_conventions.py` (`BENCHMARKS`, `CUTOFF_CAP_EXCEPTIONS`),
+and this page; then the registration lines: `scripts/task_conventions.py` (`BENCHMARKS`),
 `scripts/task_cutoffs.toml` (row and `[[history]]`), `scripts/task_resources.toml` (six `^robotangle-new-` rules),
-`ci_checks/check-task-fields.sh` (`BUDGET_EXCEPTIONS`), `ci_checks/check-tooling-identity.sh` (`MODULE`),
+`ci_checks/check-task-fields.sh` (`BUDGET_EXCEPTIONS`: the default cap, because of the prefix overlap), `ci_checks/check-tooling-identity.sh` (`MODULE`),
 `ci_checks/check-generated-tasks.sh`, `ci_checks/check-unit-tests.sh`, `docs/TAXONOMY.md`, `README.md`, and the
 `docs/CUTOFFS.md` render (`python3 scripts/task_cutoffs.py apply "<label>"`). A name that starts with `robotangle-`
 overlaps RoboTangle's prefix: `BENCHMARKS` lists it first, RoboTangle's generator and `check-tooling-identity.sh` tell
