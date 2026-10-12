@@ -1,0 +1,17 @@
+{
+ "task": "FiberBundling-Easy-v0",
+ "actions": "/data/pingyue/yamlab/runs/fiber/out/esf/actions.npy",
+ "steps_run": 5272,
+ "success": true,
+ "first_success_step": 5271,
+ "failed": false,
+ "failure_reason": null,
+ "wall_time_s": 45.98809885978699,
+ "final_state_hash": "59a6d465c78b920d",
+ "state_hash_chain": "4f9e81b9820ed54c7429b717c952935ab892fee51548c7a0988faa09743006b0",
+ "reference_steps": 5272,
+ "compared_steps": 5272,
+ "max_abs_state_diff": 0.0,
+ "bit_identical": true,
+ "first_diff_step": null
+}

@@ -1,54 +1,65 @@
 # fiber_bundling -> YAMLab: status
 
-Updated 2026-10-12, final (agent: fiber_bundling task agent).
+Updated 2026-10-12 (handover state by the fiber_bundling task agent; easy tier added by S2 / pingyue).
 
-## State (final, 2026-10-12)
+## State (2026-10-12)
 
 | tier | task | goal check | oracle | replay | nop | naive | evidence |
 |---|---|---|---|---|---|---|---|
 | very_easy | DONE (`FiberBundling-VeryEasy-v0`, 47 links) | old predicate, thresholds unchanged | SUCCESS step 2921 (97.4 s sim, 49 s wall) | succeeds at the same step; bit-identical to the oracle run and between 2 replays | fails (300 s) | no-comb: fiber_gripper_contact; 12 mm off-axis feed: no success (jacket blocked) | `out/vef*` |
 | easier | DONE (`FiberBundling-Easier-v0`, 57 links) | same | SUCCESS step 3808 (127.0 s sim, 70 s wall) | same (bit-identical x2) | fails (300 s) | same two failures | `out/eaf*` |
+| easy | DONE (`FiberBundling-Easy-v0`, 67 links, 4 strands) | same | SUCCESS step 5271 (175.7 s sim, 63 s wall) | same (bit-identical x2, hash chain 4f9e81b9820ed54c...) | fails (300 s) | no-comb: fiber_gripper_contact (step 1615); 12 mm off-axis feed: no success (jacket blocked) | `out/esf*`, `video/easy/{top,ring}.mp4` |
 
-Video: not rendered (RTX crashes on vast). Lead: run `render_on_rtx.sh <yamlab clone> <outdir>` on ws/ws3.
+Video: state playback (`setup/render_states.py` dump -> render, local RTX 4090) in `video/<tier>/`; easy also has
+`video/easy/keyframes_ring.png` (ring close-up at steps 0, 2400, 4770, 4990, 5120, 5270).
 
-## How to reproduce (vast, see README)
+## How to reproduce (see README)
 
-`R=/workspace/yamlab_port/runs/fiber_bundling`: build assets (`tools/build_assets.py --tier <tier> --tx 0.25 --ty -0.01`),
-`install.sh $R/yamlab $R/assets`, then `checks.sh <prefix> FiberBundling-VeryEasy-v0` (or `-Easier-v0`) runs oracle,
-nop, 2 replays and 2 naive variants into `$R/out/<prefix>*`. The final evidence is `vef*` and `eaf*`. Their
-`actions.npy` replay bit-identically with `tools/replay.py`, whatever the oracle code version.
+Layout `R=/data/pingyue/yamlab/runs/fiber` (`task/` = a snapshot of this folder, `yamlab/` = the pinned YAMLab clone with
+the task installed by `install.sh`; env `/data/pingyue/yamlab/activate.sh`). `checks.sh <prefix> FiberBundling-<Tier>-v0`
+runs oracle, nop, 2 replays and 2 naive variants into `$R/out/<prefix>*`. The final evidence is `vef*`, `eaf*` and
+`esf*`. Their `actions.npy` replay bit-identically with `tools/replay.py`, whatever the oracle code version.
 
-Note: after vef/eaf the oracle's feed was changed for the easy tier (it now re-aligns on the axis while backing off
-10 mm before advancing). With the new code, easier still succeeds (`ea5`: step 3875, 129.2 s, metrics in `out/ea5`);
-very_easy has not been re-run with it.
+Regression with the final oracle code (servo feed, below): very_easy succeeds at step 2971 (strand max radius
+14.7 / 15.1 mm, bend 6.7 deg) and easier at step 3858 (9.6 / 8.0 / 10.7 mm, 7.0 deg). vef/eaf stay the evidence for those
+tiers (older oracle code; their actions replay unchanged).
 
-## Easy tier (4 strands): NOT done, stopped by the wrap-up order
+## Easy tier (4 strands): DONE
 
-Ready:
-- `FiberBundling-Easy-v0` is registered (yaml, cfg, manager, install.sh); `assets/easy/` is built (67 links,
-  strands fanning -x, up, +x, down).
-- The oracle runs end to end on it.
+`FiberBundling-Easy-v0`, `assets/easy/` (67 links, strands fanning -x, up, +x, down). Same predicate and thresholds.
 
-Results:
-- `es1`: combing works. Six presses take all four strands to 8.0 mm, i.e. straight, at the root radius.
-  The feed then failed (`fiber_gripper_contact`, step 5037). After the last re-centre the hand lagged its command
-  by 3.9 mm, so the sheath stayed about 7 mm off axis while the combed tips sat ~9 mm before the ring plane. The
-  first feed move pushed the tips into the ring tube; the strands spread to 30-60 mm, folded back and touched
-  the fingers.
-- `es2`: feed now aligns while backing off 10 mm. The strands still spread while the jacket advances from
-  -87 mm to -45 mm. Two strands go from 8 to 19-31 mm, with small contact forces of 2-5 mN, i.e. strands
-  touching each other or the ring. The run ended with the same `fiber_gripper_contact` (step 5170).
+Why the handover runs `es1`/`es2` failed (reproduced locally as `es2r`, identical failure at step 5170):
+- Combing works (six presses, all four strands at 8.0 mm = straight at the root radius), but at the end of combing
+  the jacket front is 7.2 mm off the ring axis and tilted 4.3 deg: the trunk pivots in the friction grasp
+  (70 mm x sin 4.3 deg = 5 mm).
+- The old feed correction acted on the front position only and was clipped to +-3 mm, so the offset only fell to
+  4.2 mm. Advancing, strands 1 and 2 met the ring at 17.5 mm radius (the tube centreline), stuck on the tube face
+  (tip held at -5 mm while the jacket advanced) and buckled out to 30-40 mm until they touched the fingers.
+- Second cause, found with a PhysX contact view on the arm links: the left wrist camera (`camera_d405`) rests on
+  the jacket behind the grasp (trunk_02/03), which the combing presses leave kinked toward the hand. When the
+  correction moves the hand toward it, the camera presses the jacket with 90-136 N, joint 2 saturates at its
+  28 N m effort limit and the hand stops (21 mm / 11 deg behind its command), so an integral correction winds up.
+  Opening the gripper does not free the arm, i.e. the load is camera-jacket contact, not the grasp. Backing the
+  hand off 10 mm pushes the camera further into the slack jacket.
 
-Missing: an easy oracle success, replay, nop and naive runs.
+Oracle change (`tools/oracle.py`, used for all tiers):
+- the feed servos the jacket front position and the trunk axis direction (integral gains 0.15 and 0.1 per control
+  step, position clip 20 mm, direction clip 0.2 rad);
+- anti-windup: no integration while the hand lags its command by more than 2 mm;
+- the feed backs off only 5 mm (was 10 mm) and holds there until the jacket is on the axis (offset < 2 mm and tilt
+  < 1 deg for 10 steps) or 150 steps have passed, then advances to the -45 mm station and feeds as before.
+- easy: the hold ends at 3.2 mm / 1.1 deg (the camera contact limits it), enough because the combed strands sit at 8 mm
+  radius inside the 13.5 mm aperture; the strands pass at 7.9-8.5 mm.
+- Tried and dropped: feeding straight on from the comb position at 5-15 mm/s without the -45 mm station passes
+  easy (4/4 runs) but fails very_easy, whose two strands are only combed to 11-14 mm: when the tips cross the ring
+  plane slowly they stick on the tube face and pass outside the ring. Through the -45 mm station they cross at
+  ~20 mm/s, where the strand damping keeps them straight and the rounded tube front guides them in.
 
-Best next ideas:
-1. After the final press, stay at the slide position, re-centre with the integral feedback on, and feed
-   directly at 5 mm/s without the -45 mm station, keeping the combed tips moving only forward along the axis.
-2. Log which bodies the strands touch (add a ring/strand filtered sensor) to tell strand-strand contact from
-   strand-ring contact.
-3. If the strands repel each other, comb with the final press direction chosen so all four lie in one sector
-   (the old SECTOR combs), or raise the strand damping further, e.g. 5e-2, and document it.
- `/workspace/yamlab_port/runs/fiber_bundling/out/{vef,eaf}*`, copies in `out/`)
+No new task deviation: the wrist camera touching the jacket is robot-jacket contact, which the task allows (only
+gripper-strand contact fails).
+
+## Runs (vast: `/workspace/yamlab_port/runs/fiber_bundling/out/{vef,eaf}*`; local: `/data/pingyue/yamlab/runs/fiber/out/esf*`; copies in `out/`)
+
 
 | run | success | failed / reason | steps | sim s | wall s | notes |
 |---|---|---|---|---|---|---|
@@ -62,6 +73,11 @@ Best next ideas:
 | eaf_nop | no | - | 8990 | 299.7 | 130 | |
 | eaf_naive_nocomb | no | fiber_gripper_contact (step 1221) | 1222 | 40.7 | 19 | |
 | eaf_naive_off12 | no | - (script end) | 3921 | 130.7 | 67 | jacket blocked |
+| esf oracle | yes (5271) | - | 5272 | 175.7 | 63.0 | 6 comb presses; feed hold ends at 3.2 mm / 1.1 deg; front +19.3 mm past the ring plane, axis offset 0.11 mm, strand max radius 7.9 / 8.0 / 8.5 / 8.0 mm, max bend 8.4 deg, force 0 |
+| esf_replay1/2 | yes (5271) | - | 5272 | | 46 / 47 | bit-identical to esf states; hash chain 4f9e81b9820ed54c... |
+| esf_nop | no | - | 8990 | 299.7 | 78 | |
+| esf_naive_nocomb | no | fiber_gripper_contact (step 1615) | 1616 | 53.9 | 16 | |
+| esf_naive_off12 | no | - (script end) | 5441 | 181.4 | 54 | jacket stops on the ring face (front -4.2 mm), strands not through, bend 63 deg |
 
 Clearance (`tools/jacket_clearance.py`): while the jacket passes the ring plane its axis stays within 0.18 mm
 (vef) / 0.16 mm (eaf) of the ring axis; minimum radial jacket-ring gap 1.297 / 1.318 mm of the nominal 1.479 mm,
@@ -168,5 +184,4 @@ integral correction of the measured front point -> hold until the 0.5 s window l
 
 ## Blockers
 
-None. Open: the video (lead renders with `render_on_rtx.sh`); tiers easy/medium/hard not attempted (out of scope);
-easy+ has 4+ strands (67+ links) and denser fans.
+None. Tiers medium/hard not attempted (out of scope).

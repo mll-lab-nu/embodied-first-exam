@@ -1,7 +1,7 @@
 #!/bin/bash
-# Full evidence set for one tier on vast (at most 2 Isaac processes at a time):
+# Full evidence set for one tier (at most 2 Isaac processes at a time; layout: see run.sh):
 #   checks.sh <prefix> <task> [oracle args...]
-R=/workspace/yamlab_port/runs/fiber_bundling; cd $R
+R=/data/pingyue/yamlab/runs/fiber; cd $R
 P=$1; T=$2; shift 2
 bash task/run.sh ${P} --task $T --max_steps 8900 "$@" &
 bash task/run.sh ${P}_nop --task $T --variant nop --max_steps 8990 &

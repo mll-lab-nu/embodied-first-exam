@@ -21,23 +21,24 @@ first) to YAMLab (Isaac Sim 5.1 / Isaac Lab 2.3.2, bimanual YAM). Gym ids:
 | `tools/analyze.py` | per-phase summary of a run |
 | `install.sh` | copies the task files + assets into a YAMLab clone and adds the registration lines |
 | `assets/<tier>/` | generated assets (copied back from vast) |
-| `sync.sh`, `vs.sh`, `run.sh`, `replay.sh`, `checks.sh` | mirror to vast, ssh with retries, run oracle / replay / the full evidence set on vast |
+| `run.sh`, `replay.sh`, `checks.sh` | run oracle / replay / the full evidence set (layout: see run.sh) |
 | `render_on_rtx.sh` | for the lead: install + replay the final runs with `--enable_cameras` on an RTX host |
-| `out/{vef,eaf}*` | final evidence (metrics.json, actions.npy, states.npz, plots; replay_metrics.json) |
+| `out/{vef,eaf,esf}*` | final evidence (metrics.json, actions.npy, states.npz, plots; replay_metrics.json) |
 | `tools/jacket_clearance.py`, `plot_run.py`, `strand_local.py`, `grasp_slip.py`, `test_goal.py` | analysis / offline goal test |
 | `tools/strand_drift_test.py`, `env_drift_test.py`, `env_props.py` | physics diagnostics (strand drift) |
 
-## Build and run (vast)
+## Build and run
+
+Layout `R=/data/pingyue/yamlab/runs/fiber`: `task/` = a snapshot of this folder, `yamlab/` = a copy of the pinned YAMLab clone.
 
 ```bash
-R=/workspace/yamlab_port/runs/fiber_bundling
-. /workspace/yamlab_port/env.sh
-FB_OLD_PKG=$R/old_pkg python $R/task/tools/build_assets.py --tier very_easy --out $R/assets --tx 0.25 --ty -0.01   # also --tier easier
-bash $R/task/install.sh $R/yamlab $R/assets
-bash $R/task/checks.sh <prefix> FiberBundling-VeryEasy-v0   # oracle, nop, 2 replays, 2 naive -> $R/out/<prefix>*
+R=/data/pingyue/yamlab/runs/fiber
+source /data/pingyue/yamlab/activate.sh   # yamlab_fiber = symlink to the env python (process name)
+FB_OLD_PKG=<old STL package> python $R/task/tools/build_assets.py --tier very_easy --out $R/task/assets --tx 0.25 --ty -0.01   # assets/ are committed
+bash $R/task/install.sh $R/yamlab $R/task/assets
+bash $R/task/checks.sh <prefix> FiberBundling-Easy-v0   # oracle, nop, 2 replays, 2 naive -> $R/out/<prefix>*
 bash $R/task/run.sh <name> --task <id> [--variant oracle|nop|naive_nocomb|naive_offset] --max_steps 8900
-PYTHONPATH=$R/yamlab YAMLAB_STRIP_CAMERAS=1 python $R/task/tools/replay.py --actions $R/out/<name>/actions.npy \
-    --reference $R/out/<name>/states.npz --out $R/out/<name>_replay --device cpu
+bash $R/task/replay.sh <name> <name>_replay <id>
 ```
 
 ## Render (RTX host, e.g. ws/ws3 Isaac 5.1 container)
