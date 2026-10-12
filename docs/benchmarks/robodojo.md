@@ -135,9 +135,18 @@ Result (2026-10-10, RTX 4090): resumed once, exactly (state hash `224d592a77d3c2
 fresh-process replays, deterministic, no infrastructure error. The driver does not solve the task (success 0 is expected).
 
 ## Time budget (D8)
-5400 s for every task of both modes: every Python process pays ~2.5-4 min of Isaac Sim launch, scene build and RoboDojo's
-settling (a trial's first start also compiles shaders and materials), and many tasks are long (RoboDojo gives policies up to
-1900 actions).
+3600 s (one hour) for every task of both modes: the owner's decision of 2026-10-11 (5400 s before, from #142 on
+2026-10-10; no official result was published with 5400 s, and the trials recorded with it are kept apart). The cost that had
+argued for the longer budget is unchanged and is what an agent has to plan around: every Python process pays ~2.5-4 min of
+Isaac Sim launch, scene build and RoboDojo's settling (a trial's first start also compiles shaders and materials), and many
+tasks are long (RoboDojo gives policies up to 1900 actions), so an hour holds about a dozen simulator starts at most.
+Every instruction states the cutoff at the top, and what it means for the deliverable: privileged,
+`/app/output/trajectory.npz` must be written before it; standard, the episode is graded as it stands at that moment.
+One source: `mk_tasks.py` `AGENT_TIMEOUT_S` renders `[agent] timeout_sec`, the instruction's cutoff paragraph and budget
+line, the README row and the standard service's `RCB_WALL_CLOCK_S` (which only reports the budget: `spec["budget"]`,
+`meta["time_left_s"]`; the service never ends an episode on it), and `check_time_limit()` refuses a render, and so
+`--check` in CI, in which they disagree. Nothing else is derived from the agent's limit: the verifier and collect-hook
+limits above come from the 15,000-action cap and the replay speed, `RCB_STARTUP_TIMEOUT_S` from the scene build.
 
 ## Standard mode (eai-standard/2.2)
 `joint_position` (14: RoboDojo's action, rows `dt` apart, a multiple of 1/25 s) and `ee_pose` (16: both arms' link6 targets
