@@ -60,6 +60,14 @@ CASES = {
     "state: the replay hangs past its allowance twice": ("state", {"STUB_PLAN": "sleep,sleep", **BOX7}, EP, 0,
                                                          {"success": 0, "infra_error": 1, "replay_error": 1, "replay_timed_out": 1,
                                                           "grader_error": 1}, 2),
+    # the allowance grows with the episode: 25 actions have 3 + 25 / 2.5 = 13 s, enough for a replay of 10 s (the floor
+    # alone, or the start alone, would end it)
+    "state: a longer episode has a longer allowance": ("state", {"STUB_PLAN": "slow", "RCB_REPLAY_FLOOR_S": "3", "RCB_REPLAY_STARTUP_S": "3"},
+                                                       {**EP, "n_actions": 25}, 1, {"success": 1, "infra_error": 0, "replay_timed_out": 0}, 1),
+    # the replay dies after 5 s with 62 s left: no time for a second attempt (under 60 s), and the record says that it
+    # died (exit code 139), not that it ran out of time
+    "state: the replay dies and no time is left to run it again": ("state", {"STUB_PLAN": "die_slow,ok", "RCB_COLLECT_TIMEOUT_S": "362"}, EP, 0,
+                                                                   {"success": 0, "infra_error": 1, "replay_error": 1, "replay_timed_out": 0}, 1),
     # the result line counts even when the process crashes after it (Isaac's shutdown)
     "state: the result, then a crash at shutdown": ("state", {"STUB_PLAN": "ok_crash"}, EP, 1, {"success": 1, "infra_error": 0, "replay_error": 0}, 1),
     # an episode whose length cannot be read keeps the whole remaining budget: a replay of 10 s, longer than the 7 s
@@ -121,7 +129,11 @@ for name, (det, env, ep, want_reward, want_rj, want_calls) in CASES.items():
         open(os.path.join(data, "trajectory.npz"), "w").write("x")
         e = {"PATH": bindir + ":/usr/bin:/bin", "RCB_DATA": data, "RCB_TOOL": os.path.join(HERE, "stub_tool.py"), "RCB_TASK": "t",
              "RCB_INSTANCE": inst, **env}
-        p = subprocess.run(["sh", sh], env=e, capture_output=True, text=True, timeout=240)
+        try:
+            p = subprocess.run(["sh", sh], env=e, capture_output=True, text=True, timeout=240, start_new_session=True)
+        except subprocess.TimeoutExpired:                  # a hook that does not end its replay: a failed case, not a traceback
+            print("FAIL", name, "; the hook did not finish in 240 s"); bad += 1
+            continue
         g = subprocess.run([sys.executable, "-I", grade], env={"RCB_DATA": data, "RCB_VERIFIER_LOG_DIR": log, "PATH": e["PATH"]},
                            capture_output=True, text=True, timeout=60)
         errs = [] if p.returncode == 0 else [f"hook rc {p.returncode}: {p.stderr[-200:]}"]
@@ -144,6 +156,8 @@ for name, (det, env, ep, want_reward, want_rj, want_calls) in CASES.items():
         if extra: errs.append(f"files of a second replay: {extra}")
         if env.get("STUB_END_RC") != "1":
             fin = json.load(open(os.path.join(data, "final.json")))
+            if name.startswith("state: the replay dies and no time") and fin.get("replay_rc") != [139]:
+                errs.append(f"replay_rc {fin.get('replay_rc')}: the first attempt's exit record was lost")
             if fin.get("replays") != 1 or "replay_sha2" in fin or len(fin.get("replay_rc") or []) != 1:
                 errs.append(f"final.json does not describe one replay: replays={fin.get('replays')} replay_rc={fin.get('replay_rc')}")
             if "deterministic" not in fin or "replay_success" not in fin: errs.append("final.json lost deterministic / replay_success")

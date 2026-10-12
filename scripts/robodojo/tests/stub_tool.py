@@ -1,7 +1,7 @@
 """Stand-in for `rcb_robodojo.py` in the grading tests (test_standard_grading.py: the collect hook's replay CLI;
 test_privileged_grading.py: copied next to the grader as rcb_robodojo.py, which the grader imports and runs).
 STUB_PLAN = comma list, one entry per invocation (counted in $STUB_DIR/stub_calls, default $RCB_DATA; the argument list of
-every invocation is appended to stub_argv): ok | fail | diff | die | error | inexact | inexact_fail | inst2 | novideo | partvideo | ok_crash | slow | sleep."""
+every invocation is appended to stub_argv): ok | fail | diff | die | error | inexact | inexact_fail | inst2 | novideo | partvideo | ok_crash | slow | die_slow | sleep."""
 import json, os, sys
 ACTION_DIM, MAX_ACTIONS = 14, 15000    # what the privileged grader imports
 
@@ -39,6 +39,9 @@ def main() -> None:
         import time
         time.sleep(600)
     elif what == "die": sys.stderr.write("Segmentation fault (stub)\n"); os._exit(139)
+    elif what == "die_slow":                                          # dies after 5 s
+        import time
+        time.sleep(5); sys.stderr.write("Segmentation fault (stub)\n"); os._exit(139)
     elif what == "error": print(json.dumps({"error": "trajectory task x != y"})); sys.exit(2)
 
 
