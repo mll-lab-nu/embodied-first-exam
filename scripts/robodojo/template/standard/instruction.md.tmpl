@@ -26,7 +26,7 @@ it does not apply here: where the description above mentions step_lim, read the 
   error. A dropped or knocked-over object stays that way.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
   (joints, grippers, link6 poses, velocities, efforts). No object poses, no success signal.
-- There is no step budget; your wall-clock budget is @@AGENT_TIMEOUT_MIN@@ min (@@AGENT_TIMEOUT_S@@ s; `meta["time_left_s"]` is the service's count of what is left). Actions and simulated time are
+- There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]` is the service's count of what is left). Actions and simulated time are
   reported as cost (`meta["control_steps"]` counts them; the technical cap above is 15,000).
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record. The episode is graded as it stands when it ends or your time is up.@@LIVE_NOTE@@

@@ -125,6 +125,12 @@ def rules_md(sport_toml: dict, facts: dict, profile: str) -> str:
     return "\n".join(lines)
 
 
+def _cutoff_sec() -> int:
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from task_conventions import cutoff_sec
+    return cutoff_sec("RoboOlympics", "standard-realtime")
+
+
 def context(t: dict, defaults: dict, sports: dict, facts: dict) -> dict:
     s = sports[t["sport"]]
     sport_toml = tomllib.loads((SHARED / "sports" / t["sport"] / "sport.toml").read_text())
@@ -147,7 +153,9 @@ def context(t: dict, defaults: dict, sports: dict, facts: dict) -> dict:
                                          "inside a break is dropped and does not count"}[t["sport"]],
         "revision": sport_toml["sport"]["revision"], "slowdown": slowdown,
         "wall_s_per_step": f"{0.01 * slowdown:g}", "break_s": f"{break_s:g}", "break_wall_s": f"{break_s * slowdown:g}",
-        "agent_timeout_sec": int(defaults["agent_timeout_sec"]), "image": defaults["image"],
+        # the agent's time limit: the cutoff table's (scripts/task_cutoffs.toml, PROTOCOL §2.12); normalize writes it into
+        # task.toml, the service's RCB_WALL_CLOCK_S and instruction.md's closing `## Time limit` section, and no template states it
+        "agent_timeout_sec": _cutoff_sec(), "image": defaults["image"],
         "client_image": CLIENT_IMAGE, "allowed_hosts": json.dumps(HOSTS), "upstream": defaults["upstream"],
         "review_pr": REVIEW_PR,
     }

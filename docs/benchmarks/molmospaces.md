@@ -69,7 +69,8 @@ ProcTHOR-10k one misses objects on 0.2.9's scene version).
 Standard mode's texts name objects and the goal only (D7, `ci_checks/check-standard-texts.sh`); the robot's pose and
 camera calibration come from the service, object poses never. Both graders check that each replay starts in the
 instance's t = 0 state (else `grader_error`, with `infra_error`); a third replay renders `replay.mp4` after the verdict. Crash recovery:
-resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: 3600 s, no step limit beyond the horizon.
+resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: the agent's cutoff of `scripts/task_cutoffs.toml` (the one table, [`../CUTOFFS.md`](../CUTOFFS.md); 3600 s on
+2026-10-11), stated by the closing `## Time limit` section of every instruction; no step limit beyond the horizon.
 
 Tests without a simulator: `scripts/molmospaces/tests/test_ms.py` (run as a script; numpy): both graders, `finalize.sh` with
 stand-in replays and the real `server.py` on the real shared layer with a stub Session.

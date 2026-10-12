@@ -23,7 +23,7 @@ work afterwards, so keep them short and factual.
 | `NOTES.md` | at most 20 lines: your final approach and why it works, and what you tried that failed |
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it whenever you have a better one.**
-You have 60 minutes of wall-clock time and it ends without warning; a run that ends with no file scores zero. Do not
+The time limit (`## Time limit`) ends without warning; a run that ends with no file scores zero. Do not
 stop early: keep improving and checking until you are sure the replay succeeds.
 
 ## Tooling (`/opt/tools/vlb_tool.py`, importable as `vlb_tool`)

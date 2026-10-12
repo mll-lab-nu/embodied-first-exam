@@ -22,7 +22,7 @@ and you reach it only through a client. **Task:** {{task_statement}}
   gripper's grasp point, each camera's field of view and pose.
 - There is nothing to hand in: the service records every episode, replays the last one and grades the replay. Keep the script
   that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
-- Wall-clock budget: {{agent_timeout_hours}} h. It ends without warning, and ending your session earlier ends the run
+- Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run
   the same way, so do not stop early: while the episode runs, or a reset is left, the run can still pass.
 
 ## Scoring

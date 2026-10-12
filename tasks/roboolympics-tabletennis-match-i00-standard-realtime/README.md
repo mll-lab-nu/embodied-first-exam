@@ -66,5 +66,5 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | time | S = 10 (RoboOlympics' official slowdown; `RCB_SLOWDOWN` overrides it, results under another S are reported separately): one 10 ms control step every 0.1 s of wall time; the match starts paused and its clock starts at the first `submit` or `get_obs(seconds > 0)`; after every point a break of 12 s of game time (120 s of wall time) in which the clock runs on and nothing plays, ended early by the agent's `ready` row |
 | actions | `stroke`, `rest`, `ready`: the sport's own commands (action level `high`), one per row, effective at the row's control step |
 | observation | camera images and the agent's own robot plus the referee's information as proprio columns; no ball or opponent state, no seed |
-| budget | 7200 s, no reset (one match is the episode), no privileged twin (PROTOCOL §4b exceptions, `docs/benchmarks/roboolympics.md`) |
+| budget | no reset (one match is the episode), no privileged twin (PROTOCOL §4b exceptions, `docs/benchmarks/roboolympics.md`) |
 | agent API | `environment/rcb_client.py` (the realtime client); `instruction.md` documents the commands, the proprio columns and the cameras |

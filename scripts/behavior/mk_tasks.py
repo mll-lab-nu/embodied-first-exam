@@ -345,7 +345,8 @@ def readme_privileged(fam: str, e: dict) -> str:
             ("Image", f"`{IMAGE}` = `stanfordvl/behavior:3.9.2` + ffmpeg; BUILD_ONLY, built on every host (`images/behavior/`)"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition), never baked in"),
             ("GPU", "an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`)"),
-            ("Budget", "14400 s: every Python process pays ~3 min of Isaac Sim + scene load; ~7-11 control steps/s "
+            ("Budget", "the agent's time (the `Agent time budget` row; the number lives in `scripts/task_cutoffs.toml`): every "
+                       "Python process pays ~3 min of Isaac Sim + scene load out of it; ~7-11 control steps/s "
                        "(docs/benchmarks/behavior.md)"),
             ("Verifier time", f"each replay {REPLAY_LIMIT}; `[verifier] timeout_sec` 30600 s (two capped replays + 30 min)")]
     return readme(priv(fam), task, r.get("difficulty") or e["difficulty"], ref, VERIFY_PRIVILEGED, review_key(e),
@@ -377,7 +378,7 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                                "episode after a crash (resume class `approx`, docs/STANDARD_MODE.md §13.1); startup watchdog "
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
-            ("Budget", "14400 s of agent wall clock, as the privileged twin (docs/benchmarks/behavior.md)"),
+            ("Budget", "the agent's time is the `Agent time budget` row (the number lives in `scripts/task_cutoffs.toml`; docs/benchmarks/behavior.md)"),
             ("Collect hook time", "37800 s: the episode end (up to 2 h through a resume) + two replays of up to 4 h + 30 min")]
     return readme(std(fam), task, difficulty, ref, VERIFY_STANDARD, review_key(e),
                   details(rows, [("Sidecar and grading", SIDECAR)]) + change_log("standard"), review_pr(e))

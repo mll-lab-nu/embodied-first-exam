@@ -81,8 +81,9 @@ timeout_sec = 30
 # Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
 # restarting), which replays the episode in a fresh simulator and writes the verdict with "finalized": true. The hook
 # waits for that verdict (up to 3450 s), then, bounded, for the optional replay video, which decides nothing.
-# timeout_sec = the agent's budget: the replay runs the episode's own physics once more, without its cameras, so it
-# cannot take longer than the episode did (about 0.035 s per control step + one scene build; finalize.sh has the sums).
+# timeout_sec was sized for an episode as long as a 3600 s agent time limit: the replay runs the episode's own physics
+# once more, without its cameras, so it cannot take longer than the episode did (about 0.035 s per control step + one
+# scene build; finalize.sh has the sums). Look at it when the agent's cutoff is raised.
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"

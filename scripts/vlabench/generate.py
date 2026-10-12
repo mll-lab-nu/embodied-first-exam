@@ -23,7 +23,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from task_conventions import normalize  # noqa: E402   (protocol v1.0.1 conventions)
+from task_conventions import cutoff_sec, normalize  # noqa: E402   (protocol v1.0.1 conventions)
 
 TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
@@ -105,7 +105,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_TASK_TEXT: {json.dumps(task_text)}
       RCB_EPISODE: {json.dumps(episode)}
-      RCB_WALL_CLOCK_S: "3600.0"
+      RCB_WALL_CLOCK_S: "{float(cutoff_sec("VLABench", "standard"))}"
       RCB_MAX_CONTROL_STEPS: "{MAX_CONTROL_STEPS}"
       RCB_IMAGE_HW: "{IMAGE_HW}"
       # One episode, no reset, as instruction.md tells the agent: pinned, not a knob (a `${{RCB_RESET_BUDGET:-0}}` here

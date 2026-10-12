@@ -17,7 +17,7 @@ as often as you like. Your deliverable is **one open-loop trajectory**, not a ge
 the 12 joint position actuators, in `s.joint_names` order ({{joint_text}}), in radians; {{rows_rule}}. Values
 outside the actuator ranges (`s.lower`, `s.upper`) are clipped. `s.save_trajectory(rows)` writes it. Also leave the
 script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
-you improve it: whatever is in `/app/output/` when your 3600 s are up is graded. The tooling logs your sessions and
+you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling logs your sessions and
 resets (cost accounting, not graded).
 
 ## Tooling (installed; `python` from any directory)

@@ -40,9 +40,9 @@ within the first second unless it is held — and wipe the window with it, movin
 - There is nothing to hand in: the service records every control step it ran, replays the last episode in a
   fresh simulator and grades the replay. Keep the controller that drives the robot at `/app/output/gen.py` for
   the record: save it early and keep it current.
-- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way
-  (and stops your background programs), so do not stop early: while the episode runs, or a reset is left, the
-  run can still pass.
+- Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session
+  earlier ends the run the same way (and stops your background programs), so do not stop early: while the
+  episode runs, or a reset is left, the run can still pass.
 
 ## Time and streaming
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the
@@ -126,3 +126,8 @@ You may install packages you need (pip, apt). Please solve the task yourself: do
 
 ## Resource limits
 Limits for your agent environment, your own container only (the simulator in the `sim` service is the benchmark's and does not count): at most **8 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`; your container has no GPU. These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. CPU is capped at 4 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).

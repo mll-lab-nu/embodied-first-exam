@@ -29,7 +29,7 @@ timeout_sec = 3600.0              # two fresh replays of at most 72,000 control 
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 
 [agent]
-timeout_sec = 7200.0              # 2 h of wall clock (a replay of a few thousand control steps takes seconds)
+timeout_sec = 7200.0              # written by normalize from scripts/task_cutoffs.toml (a replay of a few thousand control steps takes seconds)
 network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
