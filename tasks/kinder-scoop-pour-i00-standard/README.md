@@ -15,7 +15,7 @@
 Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-scoop-pour-i00-privileged`: the same KinDER instance (`kinder/ScoopPour3D-o30-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. One episode, no reset.
+never the scene's state or the goal check. 10 resets; only the last episode is graded.
 
 Task: move all 30 small dark-red cubes from the yellow bin into the green bin; a scoop is in the scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner walls and at least 0.5 cm below its rim.
 
@@ -46,3 +46,10 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
 - Measured: GPU 1.2-1.3 GB (oracle 1.2 GB on RTX 4090), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.8 GB, sim 1.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate
 - Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 6 GiB GPU memory, 14 GiB memory. Limits measured: GPU: 1.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.8 GiB over 11 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 6 GiB (docker peak 1.1 GiB, 1 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
+
+## Details
+
+### Change Log
+- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5,
+  docs/benchmarks/kinder.md); the service already had `POST /reset`. The scene, instance, pass rule and verifier are
+  unchanged, so the task keeps its name; runs recorded before this date had no reset and are reported separately.

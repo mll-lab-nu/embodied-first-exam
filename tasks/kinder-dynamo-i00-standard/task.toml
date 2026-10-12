@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/kinder-dynamo-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER Dynamo3D-o3 on the same frozen instance as kinder-dynamo-i00-privileged. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). One episode, no reset, no privileged state, no goal check; the sim service records the episode, replays it in a fresh simulator and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): KinDER Dynamo3D-o3 on the same frozen instance as kinder-dynamo-i00-privileged. The agent only gets a client: /observe and /submit (the robot's camera RGB-D + joint encoders + base odometry; delta actions in chunks). 10 resets (the last episode graded), no privileged state, no goal check; the sim service records every episode, replays the last one in a fresh simulator and grades it."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "kinder", "mujoco", "tidybot", "mobile-manipulation", "physical-reasoning", "standard-mode", "trajectory", "dynamo"]
 

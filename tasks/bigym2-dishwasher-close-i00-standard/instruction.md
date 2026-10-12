@@ -10,11 +10,11 @@ At the start the dishwasher stands on a plinth with its door open and both racks
 heights above the floor; measured on this scene.)
 
 ## Rules (real-robot rules)
-- **One episode, no reset.** The episode starts when the service comes up, from a fixed starting state. `spec()["budget"]["reset"]` is authoritative: it is 0 here, so the one episode is the run.
+- **Episodes and resets.** The episode starts when the service comes up, from a fixed starting state; what ends it is under Success below. You have **10 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it says 0, there is no reset and the one episode is the run). `r.reset()` puts the robot and the scene back on the same starting state and starts a new episode with its own 4650 control steps, either abandoning the running episode or after one has ended; it takes no robot time and returns the start's frames. Once an episode has ended, `submit` raises `EpisodeOver` (its message gives `resets_left`) until you reset. **Only the last episode is graded**: a success ends the run at once, and when your time is up the episode then running is the one graded; `meta["episode"]` and `meta["resets_left"]` count the episodes.
 - **Time moves only inside calls.** `submit` runs your commands and `get_obs(seconds=s)` stands still for s seconds; both use up the episode's control steps. Between calls the robot waits, frozen, while you think; `get_obs()` with no seconds is free.
 - **No privileged state, no score.** You see what the robot's three cameras see (RGB, 84×84: `head`, `left_wrist`, `right_wrist`) and its own proprioception (below). Not where any object is now (only the start sentence above), not the success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`). `spec()` gives the robot's facts: the action slots and their bounds, each camera's field of view and its pose at the start.
-- There is nothing to hand in: the service records the episode, replays it in a fresh simulator and grades the replay. Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
-- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way, so do not stop early: while the episode runs, the run can still pass.
+- There is nothing to hand in: the service records every episode, replays the last one in a fresh simulator and grades the replay. Keep the script that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
+- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way, so do not stop early: while the episode runs, or a reset is left, the run can still pass.
 
 ## Success
 The episode succeeds when the following has held for **1 s (50 control steps in a row)**: the door and both racks are closed to within 5% of their travel: the door within about 4.5 degrees of shut, the lower rack within 0.025 m and the upper rack within 0.0225 m of fully in. The robot must not fall at any time: a fall (the pelvis tilted more than about 53 degrees from upright, or lower than 0.30 m) makes the episode a failure, but does not end it.
@@ -32,7 +32,8 @@ help(rcb_client)"`); here the action type is `"whole_body"` (not the docstring's
 |---|---|---|
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
 | `r.spec()` | `GET /spec` | the robot's facts: `action_types["whole_body"]` (layout, lower, upper, units), `control_dt` (0.02 s), `max_control_steps` (4650), the cameras, `proprio_layout`, `budget` |
-| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |
+| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the starting state (at most 10 in all); returns the start's frames |
 | `r.get_obs(cameras=None, seconds=0, video="frames")` | `POST /observe` | the current frames (free), or stand still and watch for `seconds` (at most 30) |
 | `r.submit("whole_body", A, dt=0.02, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of 21 commands `dt` seconds apart (a multiple of 0.02; a chunk covers at most 10 s); stops early when the episode ends |
 
