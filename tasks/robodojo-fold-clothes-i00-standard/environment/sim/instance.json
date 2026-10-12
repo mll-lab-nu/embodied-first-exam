@@ -361,5 +361,7 @@
   -0.0,
   0.0,
   1.0
- ]
+ ],
+ "determinism": "verdict",
+ "determinism_why": "the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10)"
 }

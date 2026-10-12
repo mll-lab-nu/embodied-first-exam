@@ -9,10 +9,12 @@ tasks over five capability dimensions (Generalization 12, Memory 6, Precision 8,
 
 One frozen instance per task, RoboDojo's own evaluation layout `Assets/Eval_Layout/RoboDojo/arx_x5/0/<task>_0.json`,
 each a privileged task `robodojo-<task>-i00-privileged` and its standard twin `robodojo-<task>-i00-standard`
-(`eai-standard/2.2`): 108 task directories. `oracle = "none"` for every task (below).
+(`eai-standard/2.2`), except the six tasks whose physics does not replay bit for bit (Determinism, below): they are
+standard only, graded by the live episode. 48 privileged + 54 standard = 102 task directories. `oracle = "none"` for every
+task (below).
 
 ## Tasks and generator
-`scripts/robodojo/mk_tasks.py [--check]` writes the 108 directories from:
+`scripts/robodojo/mk_tasks.py [--check]` writes the 102 directories from:
 - `scripts/robodojo/descr/<task>.json`: what the task asks and exactly what its check tests (every predicate, threshold,
   stage and end-of-episode requirement), written from RoboDojo's code (`task/RoboDojo/tasks/<task>.py`, its config,
   `env/reward_manager/`); the instructions quote it. The code is the reference.
@@ -54,37 +56,67 @@ bit-for-bit the same state), which the instructions say.
 ## Determinism (measured on Isaac Sim 5.1, RoboDojo's GPU PhysX)
 RoboDojo forces PhysX GPU dynamics for every task (`overwrite_gpu_setting(1)`, needed for its cloth and liquids); kept.
 Test per task (`make-instance`, then two fresh-process replays of a 120-action trajectory moving both arms and grippers):
-- 49 tasks: the three resets and the two replays' end states bit-identical (including cloth, the conveyor tasks and the
+- 47 tasks: the three resets and the two replays' end states bit-identical (including the conveyor tasks and the
   support-arm tasks);
+- `fold_clothes` and `fold_clothes_random` passed that test too, but the test's trajectory moves the arms without handling
+  the garment. Once the cloth is handled it does not replay bit for bit (GPU PhysX cloth): in the first model trial that
+  folded it (Codex + GPT-6 Astra, `fold_clothes` standard, 2026-10-10, an L40) the live episode and its two fresh-process
+  replays, all started from the exact frozen state (`5fe7775799792961`), ended in three different states (live
+  `5d9ed2250495a7d8`, replays `ac5893c4ebbff04c` / `b573a2a98e98f457`), and the trial was scored 0 as not deterministic.
+  Both are in the class below since then (their resets are bit-identical, so `instance_exact` stays meaningful for them);
 - `make_toast`: 1 of 3 fresh resets differed; with PhysX enhanced determinism (RoboDojo's own sim setting, off by default)
   all agree, so its instance records `"physics": {"enable_enhanced_determinism": true}` and every session, the service and
   the verifier run with it;
 - `make_toast_random` (resets differ even with enhanced determinism) and the three liquid tasks (`pour_liquid_into_cup`,
-  its random variant, `pour_by_language`: GPU PhysX particles, not bit-reproducible): graded by verdict (instance.json
-  `"determinism": "verdict"` with the reason): both replays must succeed; `state_identical` is reported. PROTOCOL §1 item 9
-  asks for the same verdict in a fresh process. Their rebuilt layout hashes differently in every process by design, so
-  the tooling reports it (`instance_exact` false) and never refuses the instance for it (the standard service starts
-  strict otherwise: a rebuilt layout that hashes differently from the recorded one is refused on every other task).
-Checked on one RTX 4090 (driver 580.159); not checked across GPU models.
+  its random variant, `pour_by_language`: GPU PhysX particles, not bit-reproducible). Their rebuilt layout hashes
+  differently in every process by design, so the tooling reports it (`instance_exact` false) and never refuses the
+  instance for it (the standard service starts strict otherwise: a rebuilt layout that hashes differently from the
+  recorded one is refused on every other task).
+
+**The six tasks whose physics does not replay bit for bit** (`fold_clothes`, `fold_clothes_random`, `make_toast_random`,
+`pour_liquid_into_cup`, `pour_liquid_into_cup_random`, `pour_by_language`; instance.json `"determinism": "verdict"` with
+the reason) are **standard only, graded by the live episode** (since 2026-10-11, the PROTOCOL exception for declared
+non-reproducible physics). An open-loop trajectory of them cannot be graded reproducibly: the same file can succeed in one
+fresh replay and fail in the next, so a privileged twin, whose only evidence is replay, would score chance, and the
+replays of a standard episode cannot decide either (the `fold_clothes` trial above succeeded live and was scored 0). In
+standard mode the trusted service ran the episode and the agent never held the simulator, so the live result is the
+verdict: `success = live_success` (`graded_by_live` = 1). The collect hook still replays the episode twice in fresh
+processes and reports `replay_success`, `state_identical` and `deterministic` (both replays reach the same verdict); they
+never decide, and a replay that gives no result is recorded (`replay_error`) without voiding the live verdict. The cost:
+these six scores cannot be recomputed from the trajectory, and a live success may include some luck of the physics. Trials
+recorded before 2026-10-11 can be re-scored from their `live_success` without new runs.
+Removed on 2026-10-11 (owner; they had been on main for a day, since #142, and their earlier results are kept apart, not
+ranked): the six privileged task directories `robodojo-fold-clothes-i00-privileged`,
+`robodojo-fold-clothes-random-i00-privileged`, `robodojo-make-toast-random-i00-privileged`,
+`robodojo-pour-by-language-i00-privileged`, `robodojo-pour-liquid-into-cup-i00-privileged` and
+`robodojo-pour-liquid-into-cup-random-i00-privileged`. The names are not reused. An episode of the six that resumed after a
+service crash (resume class `approx`) is graded on its live state after the resume; `reward.json` reports `resumes` and
+`resume_state_mismatch` (PROTOCOL §4.8, docs/STANDARD_MODE.md §13.1).
+Frozen on one RTX 4090 (driver 580.159). Across GPU models (2026-10-10, the evaluation hosts): the frozen layouts rebuild
+to the recorded hashes, and a 120-action driver trajectory ends in the same state as on the 4090, on L40S (drivers
+580.178 and 580.82), L40 (driver 610) and L4 (11 instances checked; every graded trial reports `instance_exact`).
 
 ## Grading
 - privileged: `tests/grade.py` replays `/app/output/trajectory.npz` in two fresh processes; reward 1 iff both succeed and
-  (default) end in the same state hash, or (verdict tasks) both succeed. `no-network`. A file that is not a trajectory of
+  end in the same state hash (its verdict branch, both replays succeed, has no RoboDojo task since the six above are
+  standard only). `no-network`. A file that is not a trajectory of
   the task (not an npz, pickled or object arrays, another shape, NaN/inf, more than 15,000 rows) is the agent's 0
   (`bad_trajectory`, `wrong_task`); a replay process that ends without a result or runs out of its time is the verifier's
   (`grader_error` = `infra_error` = 1, `replay_failed` / `replay_timed_out`: no verdict on the agent). Only the file's
   `task` and `actions` entries are read (their sizes checked in the archive before anything is decompressed); any other
   entry is ignored. Two replays that did not start from the same state (the frozen layout does not rebuild reproducibly on
-  the host; not for the tasks graded by verdict) are `instance_unstable`, the verifier's failure too, never a 0 for
+  the host) are `instance_unstable`, the verifier's failure too, never a 0 for
   "not deterministic". `instance_exact` reports whether the rebuilt layout hashed as recorded.
 - standard: the service ends and dumps the episode on the collect hook's signal; `finalize.sh` replays it in two fresh
   processes, each time-boxed inside the hook's budget and retried once when it dies without a result (Isaac does not exit
   after a fatal GPU error, it waits on a crash dialog, so only the time limit ends it); a replay that still gives no
   result is `replay_error` / `infra_error`, never the agent's 0; `final.json` is replaced atomically.
-  `success = live_success ∧ replay_success ∧ deterministic`. `no-network`. A missing, unreadable or unfinalized
-  `final.json` is `infra_error`. The live episode starts from the frozen instance (the service is strict); a replay whose
-  process rebuilt the layout to another state is `instance_mismatch` (a `replay_error`: `infra_error`), not for the tasks
-  graded by verdict.
+  `success = live_success ∧ replay_success ∧ deterministic`; for the six standard-only tasks `success = live_success`
+  (Determinism, above; a replay without a result is recorded, never `infra_error`). `no-network`. A missing, unreadable or
+  unfinalized `final.json` is `infra_error`. `scripts/robodojo/tests/test_standard_grading.py` runs the collect hook and the
+  grader on both rules with stand-ins for the simulator (CI: check-unit-tests.sh). The live episode starts from the
+  frozen instance (the service is strict); a replay whose process rebuilt the layout to another state is
+  `instance_mismatch` (a `replay_error`: `infra_error`), not for the six standard-only tasks.
 - Time limits (wall clock only; the verdict rules do not depend on them). Measured on the model trials: Isaac start, scene
   build and RoboDojo's settling 2.5-4 min per process, replays at 7-11 actions/s (the filmed one at the low end). A
   privileged replay has max(1800 s, 1200 s + rows / 2.5) (a third of the slow rate), `[verifier] timeout_sec` = 15000 s
@@ -95,7 +127,7 @@ Checked on one RTX 4090 (driver 580.159); not checked across GPU models.
 
 ## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
 Resume class `exact` (the resumed service is a fresh process whose journal replay is that process's first run), `approx` for
-the four tasks graded by verdict. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test `scripts/robodojo/kill_test.sh`: RoboDojo
+the six standard-only tasks graded by the live episode. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test `scripts/robodojo/kill_test.sh`: RoboDojo
 has no oracle, so a driver client (12 joint_position chunks; not a solution) runs as Harbor's oracle on a copy of
 `robodojo-general-pickup-i00-standard`, and the service is killed with SIGKILL inside the 6th call, after 5 checkpoints.
 Result (2026-10-10, RTX 4090): resumed once, exactly (state hash `224d592a77d3c27f` = the checkpoint's; TCP deviation
