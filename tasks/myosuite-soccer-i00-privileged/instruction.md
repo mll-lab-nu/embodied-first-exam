@@ -1,5 +1,9 @@
 # MyoSuite · soccer — frozen instance
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control the **MyoLegs**, a free-standing musculoskeletal model of a human torso and both legs (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 290
 muscles: there is no joint-level controller.
 **Task:** Score a goal: kick the ball into the goal, past the goalkeeper, within 10 s of simulated time (MyoChallenge 2025 Soccer P1: the ball's centre crosses the goal line between the posts and under the bar). Failure (the episode ends): the pelvis below 0.2 m (fallen), or the time limit.
@@ -69,8 +73,7 @@ Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_tr
 open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
 state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
-Your time budget is 5400 s of wall clock. Save a trajectory as soon as you have one that works, improve it while
-time remains, and do not stop early.
+Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python

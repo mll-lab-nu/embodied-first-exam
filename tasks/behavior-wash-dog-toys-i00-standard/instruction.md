@@ -1,5 +1,9 @@
 # BEHAVIOR-1K · wash_dog_toys — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You drive an **R1Pro** mobile bimanual robot around a house **as if it were real hardware**: the simulator (BEHAVIOR-1K
 v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. You get one client and one episode.
 **Task:** Wash the dog toys. Two teddy bears, a tennis ball and a softball are inside the cabinet in the utility room: one teddy is dirty and the other dusty, the tennis ball is covered with debris and the softball with dirt. Clean all four; a washing machine stands in the utility room. Success means all of the following hold at the same time: (1) neither teddy bear has any dirt or dust on it; (2) the tennis ball has no debris on it; (3) the softball has no dirt on it. How the simulator judges them: covered(A, S): at least one particle of the substance S (e.g. dust) is on A; A is clean of S (not covered) only when every particle of S has been removed from it. The service checks the goal and the episode ends the moment it holds.
@@ -13,9 +17,9 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
   proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
-- There is no step budget; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time
-  are reported as cost. Only a runaway guard bounds the episode: it ends at 200,000 control steps (1.85 h of simulated
-  time; `spec["max_control_steps"]`, reason `step_guard`).
+- There is no step budget; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count
+  of it). Actions and simulated time are reported as cost. Only a runaway guard bounds the episode: it ends at 200,000
+  control steps (1.85 h of simulated time; `spec["max_control_steps"]`, reason `step_guard`).
 - **A malformed request is refused with a 400 and nothing is executed** (a wrong type or shape, a value out of range,
   a `dt` that is not a whole number of control periods, `video_fps` outside 1-30): fix it and send it again.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script

@@ -1,5 +1,9 @@
 # RoboTwin 2.0 · put_bottles_dustbin — frozen instance
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Put all three bottles into the dustbin that stands on the floor at the robot's left (x = -0.45). Only the left arm can reach the dustbin, so bottles on the right half of the table must be handed over from the right arm to the left arm in the air.
 

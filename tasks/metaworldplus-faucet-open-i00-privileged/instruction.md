@@ -1,5 +1,9 @@
 # MetaWorld+ · faucet-open
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 A **Sawyer** arm stands at a table: Meta-World's `faucet-open-v3` environment (MuJoCo). **Task: Rotate the faucet handle to open the faucet.**
 The scene is one frozen instance of Meta-World's own randomization (object and goal positions; seed 0).
 
@@ -39,7 +43,7 @@ img = s.render("front")   # RGB (240, 320, 3); views front, left, right, topview
 ## Rules
 - Write your own controller. Do not use Meta-World's scripted policies or any published solution for this benchmark.
 - Only the actions count: editing `s.data` or the environment while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time. Save a working trajectory early, then improve it; do not stop early.
+- Save a working trajectory early, then improve it; do not stop early.
 
 ## External material
 You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

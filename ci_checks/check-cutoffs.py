@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""The agent's time cutoff (docs/PROTOCOL.md §2.12): one table, and every task says what the table says.
+
+scripts/task_cutoffs.toml gives the seconds per benchmark and mode. For every task:
+  - the table has a number for its benchmark and mode;
+  - `[agent] timeout_sec` in task.toml is that number (Harbor enforces it);
+  - instruction.md opens with its `# ` title and then the two cutoff paragraphs scripts/task_conventions.py renders:
+    "You have N seconds to complete this task. Do not cheat by using online solutions or hints specific to this task."
+    with the same N, then what the cutoff means in the task's mode; the sentence stands there once;
+  - nothing else in instruction.md states the agent's limit as a duration (the wordings tasks used before 2026-10-11:
+    "wall-clock budget is 90 min (5400 s)", "You have 60 minutes of wall-clock time", "Time limit: one hour", ...): a
+    second statement goes stale at the next change of the table, and two limits in one instruction are worse than none;
+  - the README's "Agent time budget" row has the number;
+  - standard modes: the `sim` service is told the same number (`RCB_WALL_CLOCK_S` in environment/docker-compose.yaml,
+    what its `/spec` budget and `meta["time_left_s"]` report; PROTOCOL §2.3).
+Repository level (no task given): the table itself is usable, has a number for exactly the benchmark-mode pairs that
+have tasks, and docs/CUTOFFS.md is what `python3 scripts/task_cutoffs.py apply` renders from it.
+
+    python3 ci_checks/check-cutoffs.py [task dirs]      # default: every task and the repository-level rules
+Fix: edit scripts/task_cutoffs.toml (never a task), then `python3 scripts/task_cutoffs.py apply`. Standard library only.
+"""
+from __future__ import annotations
+
+import re
+import sys
+import tomllib
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import task_conventions as tc  # noqa: E402  (one table reader, one renderer)
+import task_cutoffs  # noqa: E402
+
+DUR = r"\d[\d,.]*\s*(?:s|sec|secs|seconds?|min|mins|minutes?|h|hrs?|hours?)\b"
+WORD_DUR = r"(?:an|one|two|three|four|six|half an) hours?\b"
+# Other statements of the agent's limit, searched in each sentence of the instruction's own text (outside the cutoff
+# paragraphs and the two closing sections). Durations of other things (a client's connection wait, a simulator's
+# start-up, a replay's limit, simulated time, a step's cost) are not the agent's limit and match none of these.
+OTHER_LIMIT = [
+    ("a wall-clock or time budget with a duration", rf"(?:wall[- ]clock|time) budget\b.*?(?:{DUR}|{WORD_DUR})"),
+    ("'You have <duration> ... of wall-clock time / in all / in total'",
+     rf"\byou have\b.*?(?:{DUR}|{WORD_DUR}).*?(?:wall[- ]clock|\bin all\b|\bin total\b)"),
+    ("'your <duration> are up'", rf"\byour\s+{DUR}\s+(?:are|is)\s+up\b"),
+    ("'<minutes or hours> of wall clock'", r"\d[\d,.]*\s*(?:min|mins|minutes?|h|hrs?|hours?) of wall[- ]clock"),
+    ("'Time limit: <duration>'", rf"\btime limit:\**\s*(?:{DUR}|{WORD_DUR})"),
+]
+
+
+def own_text(instruction: str) -> str:
+    """The instruction without the generated parts: the cutoff paragraphs and the two closing sections."""
+    s = tc.strip_cutoff(instruction)
+    for heading in (tc.EXTERNAL_HEADING, tc.LIMITS_HEADING):
+        s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
+    return s
+
+
+def other_limits(instruction: str) -> list[str]:
+    out = []
+    for para in re.split(r"\n[ \t]*\n", own_text(instruction)):
+        flat = " ".join(para.split())
+        for sentence in re.split(r"(?<=[.;!?])\s+", flat):
+            for what, pat in OTHER_LIMIT:
+                if re.search(pat, sentence, re.I):
+                    out.append(f"{what}: \"{sentence[:160]}\"")
+                    break
+    return out
+
+
+def check_task(task: Path) -> list[str]:
+    errs: list[str] = []
+    try:
+        mode = tc.mode_of(task)
+    except ValueError as e:
+        return [str(e)]
+    bench = tc.bench_of(task)
+    sec = tc.cutoff_for(task)
+    if sec is None:
+        return [f"scripts/task_cutoffs.toml has no cutoff for {bench or 'this benchmark'!s} in {mode} mode "
+                "(add the number to the benchmark's row; a new benchmark also needs its label in task_conventions.py BENCHMARKS)"]
+    meta = tomllib.loads((task / "task.toml").read_text())
+    have = meta.get("agent", {}).get("timeout_sec")
+    if have is None or float(have) != sec:
+        errs.append(f"[agent] timeout_sec = {have!r}, the table says {sec} ({bench}, {mode})")
+    ins = (task / "instruction.md").read_text(encoding="utf-8") if (task / "instruction.md").is_file() else ""
+    lines = ins.split("\n")
+    want = tc.render_cutoff(sec, mode)
+    if not lines or not lines[0].startswith("# "):
+        errs.append("instruction.md does not start with its `# ` title line (the cutoff paragraphs stand right under it)")
+    elif not ins.startswith(lines[0] + "\n\n" + want + "\n"):
+        stated = re.findall(tc.CUTOFF_RE, ins)
+        errs.append("instruction.md does not open, right under its title, with the cutoff paragraphs rendered for "
+                    f"{sec} s in {mode} mode" + (f" (it says {', '.join(stated)} seconds)" if stated else " (the sentence is missing)"))
+    if len(re.findall(tc.CUTOFF_RE, ins)) > 1:
+        errs.append("instruction.md has the cutoff sentence more than once")
+    errs += [f"instruction.md states the agent's limit a second time, outside the cutoff paragraphs ({x}); say "
+             "\"the time limit at the top\" instead of a number" for x in other_limits(ins)]
+    readme = (task / "README.md").read_text(encoding="utf-8") if (task / "README.md").is_file() else ""
+    if f"| Agent time budget | {sec} s;" not in readme:
+        errs.append(f"README.md's `Agent time budget` row does not say {sec} s")
+    if mode in tc.SIDECAR_MODES:
+        c = task / "environment/docker-compose.yaml"
+        text = c.read_text() if c.is_file() else ""
+        vals = re.findall(rf"""{tc.WALL_CLOCK_ENV}:[ \t]*["']?([^"'\s#]+)""", text)
+        if not vals:
+            errs.append(f"environment/docker-compose.yaml does not give the sim service {tc.WALL_CLOCK_ENV} (the "
+                        "service would report a default of its own as the budget)")
+        for v in vals:
+            try:
+                ok = float(v) == sec
+            except ValueError:
+                ok = False
+            if not ok:
+                errs.append(f"environment/docker-compose.yaml: {tc.WALL_CLOCK_ENV} = {v}, the table says {sec}")
+    return errs
+
+
+def check_repo(tasks: list[Path]) -> list[str]:
+    errs: list[str] = []
+    table = tc.cutoff_table()
+    have = {(tc.bench_of(t), tc.mode_of(t)) for t in tasks}
+    for bench, row in sorted(table.items()):
+        for mode in row:
+            if (bench, mode) not in have:
+                errs.append(f"scripts/task_cutoffs.toml: {bench} has a cutoff for {mode} mode but no task in that mode")
+    doc = ROOT / "docs/CUTOFFS.md"
+    if not doc.is_file() or doc.read_text(encoding="utf-8") != task_cutoffs.render_doc(tasks):
+        errs.append("docs/CUTOFFS.md is not what scripts/task_cutoffs.toml renders (run python3 scripts/task_cutoffs.py apply)")
+    return errs
+
+
+def main(argv: list[str]) -> int:
+    try:
+        tc.cutoff_table()
+    except (ValueError, tomllib.TOMLDecodeError, OSError) as e:
+        print(f"FAIL scripts/task_cutoffs.toml: {e}")
+        return 1
+    every = sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    tasks = [Path(a) for a in argv if (Path(a) / "task.toml").is_file()] if argv else every
+    rc = 0
+    for t in tasks:
+        for e in check_task(t):
+            rc = 1
+            print(f"FAIL {t}: {e}")
+    if not argv:
+        for e in check_repo(every):
+            rc = 1
+            print(f"FAIL {e}")
+        if rc == 0:
+            print(f"check-cutoffs: {len(tasks)} tasks state the cutoff of scripts/task_cutoffs.toml "
+                  "(task.toml, instruction.md, README, sim service)")
+    return rc
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

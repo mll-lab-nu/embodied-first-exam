@@ -1,5 +1,9 @@
 # RoboTangle (simulator package `topogym`) · hedgehog_in_cage — frozen instance
 
+You have 21600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**; RoboTangle on Genesis 1.2.1 physics, Nyx rendering) via Python.
 **Task:** Separate and place the whole hedgehog ball, including every spike inside the green dashed goal region. Keep all cage components on the puzzle/system side.
 
@@ -101,8 +105,8 @@ CLI equivalent of the grader:
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget, but a trajectory may have at most
   200000 rows (83.3 min of simulated time): the verifier has to replay it twice within its own time limit, so `s.step` stops
-  after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). Your
-  wall-clock budget is 360 min (21600 s). One control step takes about 0.057 s of wall clock here, so budget your experiments.
+  after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). The time limit
+  at the top is your only budget. One control step takes about 0.057 s of wall clock here, so budget your experiments.
 - Grippers: assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (hedgehog_ball) once both fingers touch the same part inside its grasp region, the tool frame within 11.9304 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, or the part drifts 1 cm / 0.15 rad from its held pose) is lost, and the gripper must open before it can take hold again. Two grippers never hold the same part; other objects are grasped physically (friction).
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [0.0, 0.0, 1.0], finger-closing axis = local [-0.0, -1.0, 0.0]. The ee_pose action, the proprio tcp pose and the IK use this frame.
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.

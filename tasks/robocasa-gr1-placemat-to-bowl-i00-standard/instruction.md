@@ -1,5 +1,9 @@
 # RoboCasa-GR1 · PosttrainPnPNovelFromPlacematToBowlSplitA — STANDARD MODE (robot as a service)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 A **Fourier GR1 humanoid** (arms, waist and two dexterous six-command Fourier hands; fixed base) works at a kitchen counter: RoboCasa's GR1 tabletop `PosttrainPnPNovelFromPlacematToBowlSplitA` task (robosuite, MuJoCo).
 **Task: pick the can from the placemat and place it in the bowl.**
 The scene is one frozen instance: the initial state of one of the benchmark's official demonstrations.
@@ -11,8 +15,9 @@ client and one episode.
 - **No reset.** What you knock over stays knocked over.
 - **No privileged state.** You see what the robot's cameras see (RGB, optional depth, with each camera's
   calibration) and the robot's own state. No object poses, no scene layout, no success signal.
-- Your wall-clock budget is 60 minutes (`meta["time_left_s"]`). There is nothing to hand in: the service records the
-  episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
+- Your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it). There is nothing
+  to hand in: the service records the episode as the trajectory and grades it. Leave your script at
+  `/app/output/gen.py` for the record.
 - Do not use the benchmark's demonstrations, trained policies or any published solution; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 

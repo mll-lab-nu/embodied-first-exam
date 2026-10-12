@@ -1,5 +1,9 @@
 # MuJoCo Playground · ALOHA single peg insertion
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 An **ALOHA 2** bimanual robot (two ViperX 300s arms facing each other across a table) has a **blue socket** (a square
 tube, open on one end, red wall at the back) and a **red peg** in front of it.
 **Task:** pick up the socket with one arm and the peg with the other, lift both, and **insert the peg's end into the
@@ -38,7 +42,6 @@ e.g. for inverse kinematics with `mujoco.mj_jacSite` on the `left/gripper` / `ri
 ## Rules
 - Write your own controller; do not use trained policies from MuJoCo Playground or elsewhere.
 - Only the actuator targets count: editing `s.data` while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time.
 
 ## External material
 You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

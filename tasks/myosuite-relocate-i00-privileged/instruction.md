@@ -1,5 +1,9 @@
 # MyoSuite · relocate — frozen instance
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control the **MyoArm**, a musculoskeletal model of a human shoulder, arm and hand (MyoSuite 2.12.2 on MuJoCo), via Python, through its actuators — 63
 muscles: there is no joint-level controller.
 **Task:** Pick up the object from the table and put it in the target receptacle: the object's position within 0.1 m of the target (rotation is ignored) for 100 consecutive control steps (1.0 s). Failure (the episode ends): the palm more than 0.5 m from the object.
@@ -72,8 +76,7 @@ Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_tr
 open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
 state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
-Your time budget is 5400 s of wall clock. Save a trajectory as soon as you have one that works, improve it while
-time remains, and do not stop early.
+Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python

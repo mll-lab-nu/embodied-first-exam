@@ -1,5 +1,9 @@
 # LabUtopia · open_close — frozen instance
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, in LabUtopia's simulated chemistry laboratory (NVIDIA Isaac Sim, PhysX), via Python,
 through joint targets.
 **Task:** Open the top drawer of the cabinet, let go of it, then close it again and let go. Success, at the first control step at which the second condition has held for 60 consecutive control steps (1 s): (1) for 60 consecutive control steps, the drawer handle's centre (`/World/Cabinet_01/drawer_handle_top`) is more than 0.13 m from where it started and the hand (the point between the fingertips) is more than 0.04 m from the handle's centre; (2) after that, measured from where the handle was at the step (1) was met: the handle's centre is more than 0.13 m from there and nearer to where it started than it was at that step (the drawer has come back, not gone further out), and the hand is more than 0.04 m from the handle's centre.
@@ -19,8 +23,7 @@ Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_tr
 open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
 state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
-Your time budget is 5400 s of wall clock. Save a trajectory as soon as you have one that works, improve it while
-time remains, and do not stop early.
+Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python

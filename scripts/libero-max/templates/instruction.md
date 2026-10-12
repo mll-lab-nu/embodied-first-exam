@@ -44,4 +44,4 @@ img = s.render("agentview", 256)   # RGB, upright; cameras "agentview" and "wris
 ## Rules
 - Write your own controller. Do not use LIBERO's demonstrations, LIBERO-MAX's policies or any published solution.
 - Only the actions count: editing the simulator state while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time. Save a working trajectory early, then improve it; do not stop early.
+- Save a working trajectory early, then improve it; do not stop early.

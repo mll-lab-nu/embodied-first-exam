@@ -1,5 +1,9 @@
 # MyoSuite · dex_apple_lift — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control the **MyoHand**, a musculoskeletal model of a human forearm and hand, **as if it were real**: the simulator (MyoSuite 2.12.2 on MuJoCo) runs in a service
 you cannot open. You get one client and up to 11 episodes, and you act only through its actuators (39 muscles and 6 other actuators).
 **Task:** Move the apple along MyoDex's recorded lift motion: a reference of the object's pose over 57 control steps (1.14 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 57 steps. Success: the object's motion follows the reference's: its centre of mass's displacement since the start within 0.03 m of the reference's displacement since the reference's start, at at least 90% of the control steps and at the last one, with the displacement error never above 0.05 m. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.
@@ -21,8 +25,8 @@ An apple lies on the table; the MyoHand (with a 6-DoF positioned wrist) is at it
   No object, ball, opponent or goal poses, no success check: `meta["done"]` / `meta["reason"]` tell you when the episode
   is over and why.
 - The goal is a reference motion: `spec["reference_motion"]` gives, per control step, the object's centre of mass relative to where it starts and its orientation.
-- Your wall-clock budget is 5400 s from your start (`meta["time_left_s"]`); steps are unlimited. Simulated time
-  only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early: while
+- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it).
+  Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last command). Do not stop early: while
   the episode runs, or a reset is left, the run can still pass.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a

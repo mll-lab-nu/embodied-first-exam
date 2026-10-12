@@ -1,5 +1,9 @@
 # constrained-cupboard — instance i00
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) via Python: a holonomic base, a Kinova Gen3
 7-DoF arm and a Robotiq 2F-85 gripper. **Task:** put the six brown rods lying on the floor (30 cm long) into the six 40 cm-tall compartments of the row of eleven narrow cupboards standing side by side, one rod each, as the state names pair them: rod `cuboid_i` into cupboard `cupboard_i` for i = 0 to 5, whose tall compartment is the upper one in `cupboard_0` to `cupboard_2` and the lower one in `cupboard_3` to `cupboard_5`. The task succeeds the moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and within the cupboard's 10 cm width and 30 cm depth.
 
@@ -23,7 +27,7 @@ afterwards, so keep them short and factual.
 | `NOTES.md` | **at most 20 lines**: your final approach and why it works, and the approaches that failed and what each told you about the task |
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py` and `NOTES.md` to
-match) whenever you have a better one.** You have a wall-clock budget (1 h) and it ends without
+match) whenever you have a better one.** The time limit at the top ends without
 warning; a run that ends with no file scores zero. `s.replay(...)` tells you whether a trajectory reaches the goal:
 once the saved one does, you are done; until then, do not stop early -- keep working until the time is up.
 

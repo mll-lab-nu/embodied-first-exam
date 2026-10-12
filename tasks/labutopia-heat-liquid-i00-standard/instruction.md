@@ -1,5 +1,9 @@
 # LabUtopia · heat_liquid — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, **as if it were real**: the simulator (LabUtopia's chemistry laboratory on NVIDIA Isaac
 Sim) runs in a service you cannot open. You get one client and one episode.
 **Task:** Put the glass beaker on the heater's plate and press the heater's round red button. Success the moment the third of these is met: (1) the beaker's centre has been more than 5.9 cm above where it stood; (2) after that, the beaker has stood on the plate: its centre within 5 cm, in each horizontal direction, of the plate's centre and no more than 9.9 cm above where it stood at the start; (3) after that, with the beaker on the plate as in (2), the button is pressed down more than 10 mm.
@@ -13,7 +17,7 @@ On the bench in front of the arm: a small glass beaker, about 6.5 cm across and 
   the robot's own proprioception: joint positions, velocities and drive efforts, the gripper's opening, the pose of its
   tool frame and the targets in effect. No poses of the objects or instruments, no success check: `meta["done"]` /
   `meta["reason"]` tell you when the episode is over and why.
-- Your wall-clock budget is 5400 s from your start (`meta["time_left_s"]`); steps are unlimited. **The service
+- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it). **The service
   needs 13 to 27 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
   `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.

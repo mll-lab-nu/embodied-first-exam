@@ -1,5 +1,9 @@
 # LabUtopia · press — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, **as if it were real**: the simulator (LabUtopia's chemistry laboratory on NVIDIA Isaac
 Sim) runs in a service you cannot open. You get one client and one episode.
 **Task:** Press the red button on the instrument's front panel (the two grey buttons next to it do not count) and keep it pressed. Success the moment its cap has been pushed in more than 5 mm for one second (60 control steps in a row). The panel is vertical and faces the arm: the button is pushed in along the forward (+x) axis of the arm's base.
@@ -13,7 +17,7 @@ In front of the arm stands an instrument with a vertical front panel that carrie
   the robot's own proprioception: joint positions, velocities and drive efforts, the gripper's opening, the pose of its
   tool frame and the targets in effect. No poses of the objects or instruments, no success check: `meta["done"]` /
   `meta["reason"]` tell you when the episode is over and why.
-- Your wall-clock budget is 5400 s from your start (`meta["time_left_s"]`); steps are unlimited. **The service
+- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it). **The service
   needs 13 to 27 minutes to come up** (Isaac Sim prepares the stage for its renderer once; longer on a busy host):
   `Robot()` waits for it (it prints its progress to stderr), and that wait is part of your budget. Simulated time only advances with your commands (and `get_obs(seconds=...)`, which
   holds the last targets). Do not stop early.

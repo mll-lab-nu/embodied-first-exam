@@ -1,5 +1,9 @@
 # RoboPaint · lettering · Business makes a Man respected. — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a **Franka Panda arm holding a pointed flexible dip pen** (ManiSkill 3.0.1 physics; the pen's mark comes from a model of a real
 pen) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 **Task (臨摹, copying an exemplar):** copy the line **Business makes a Man respected.** (engraved English round hand, 1741), shown in the picture `/app/target.png`, onto the main sheet with pen and
@@ -12,9 +16,9 @@ ink, **in at most 9 strokes**.
   efforts and its pen-tip pose. There is no sheet readout, no pen state and **no score**: the grader computes it afterwards from the
   service's own record of your episode.
 - A **practice sheet** lies beside the main sheet: test the pen there as much as you like; it is never scored or counted.
-- Steps are unlimited; your wall-clock budget of **2 h (7200 s)** is the limit (`meta["time_left_s"]`). Actions and simulated
-  time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of simulated time; watching with
-  `seconds > 0` also advances it).
+- Steps are unlimited; **the time limit at the top** is your only budget (`meta["time_left_s"]` is the service's count of
+  it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
+  simulated time; watching with `seconds > 0` also advances it).
 - There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
   script at `/app/output/gen.py` for the record.
 - **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the

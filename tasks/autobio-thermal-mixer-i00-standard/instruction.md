@@ -1,5 +1,9 @@
 # AutoBio · thermal_mixer — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a **UR5e** arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, **as if it were real**: the simulator (AutoBio's biology laboratory on MuJoCo 3.3.0) runs
 in a service you cannot open. You get one client and one episode.
 **Task:** Set the thermal mixer by pressing the buttons of its panel: time 30 s, temperature 33 °C, mixing speed 600 rpm. The panel's display shows the current settings (time, set / actual temperature, speed), and each setting has an up and a down button. The episode is judged in the state in which it ends: success iff the panel is then set to exactly these three values. The score reported as `progress` is 0.5 x temperature + 0.3 x time + 0.2 x speed, each term the fraction of the way from the initial to the target value.
@@ -14,8 +18,8 @@ On the bench: a thermal mixer (an Eppendorf ThermoMixer C model) with a thermobl
   the robot's own proprioception: joint positions, velocities and drive efforts, gripper openings, the
   poses of its tool frames and the targets in effect. No poses of tubes, racks or instruments, no instrument state, no
   success check: `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Your wall-clock budget is 3600 s from your start (`meta["time_left_s"]`); steps are unlimited. Simulated time
-  only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
+- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it).
+  Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
 - `r.submit("done", [])` ends the episode: do it once the panel shows the target values. If you never do, the episode is judged in the state it is in when your time is up.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a

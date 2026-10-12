@@ -1,5 +1,9 @@
 # RoboTwin 2.0 · move_playingcard_away — STANDARD MODE (robot as a service, eai-standard/2.1)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
 cannot open. You get one client and one episode. **Task:** Use the arm to pick up the playing card and move it away from the table. For example, if the playing card is on the outward side of the table, you should move it further outward side of the table. The success check, run at the end of every call, passes when the playing cards are more than 23 cm from the table's centre line (|x| > 0.23 m) and both grippers are commanded open (above 0.8).
 

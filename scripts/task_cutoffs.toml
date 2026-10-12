@@ -1,0 +1,66 @@
+# Agent time cutoffs: THE table (docs/PROTOCOL.md §2.12). One row per benchmark, one number per mode, in seconds.
+#
+# The number is the agent's wall-clock limit: Harbor's `[agent] timeout_sec`, counted from the start of the agent's
+# session; at the cutoff the agent is stopped and the trial is graded as it stands. Everything that states or follows
+# the limit is written from this file by scripts/task_conventions.py (`normalize`): `[agent] timeout_sec` in task.toml,
+# the first paragraph of instruction.md ("You have N seconds to complete this task. ..."), the README's
+# "Agent time budget" row and, in the standard modes, the sim service's `RCB_WALL_CLOCK_S`.
+#
+# To change a time:
+#   1. edit the number in this file, and add a `[[history]]` entry at the bottom (date, who decided, old -> new);
+#   2. python3 scripts/task_cutoffs.py apply     # rewrites the tasks, docs/CUTOFFS.md and tasks/dataset.toml (~3 min)
+#   3. commit everything and open a pull request (CI runs ci_checks/check-cutoffs.py and the generators' checks).
+# Never edit the number in a task, a template or a generator: ci_checks/check-cutoffs.py fails when a task disagrees
+# with this table. Limits: a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+# The benchmark names are the labels of scripts/task_conventions.py BENCHMARKS; a mode a benchmark has no tasks in has
+# no number.
+
+[cutoff_sec]
+"AutoBio"           = { privileged =  3600, standard =  3600 }
+"BEHAVIOR-1K"       = { privileged = 14400, standard = 14400 }
+"BiGym 2.0"         = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
+"DexJoCo"           = { privileged =  5400, standard =  5400 }
+"DexToolBench"      = { privileged =  3600, standard =  3600 }
+"HumanoidBench"     = { privileged =  3600, standard =  3600, standard-realtime = 3600 }
+"KinDER"            = { privileged =  3600, standard =  3600 }
+"LIBERO-MAX"        = { privileged =  3600, standard =  3600 }
+"LabUtopia"         = { privileged =  5400, standard =  5400 }
+"ManiGuard"         = { privileged =  7200, standard =  7200 }
+"MetaWorld+"        = { privileged =  3600, standard =  3600 }
+"MolmoSpaces"       = { privileged =  3600, standard =  3600 }
+"MuJoCo Playground" = { privileged =  3600, standard =  3600 }
+"MyoSuite"          = { privileged =  5400, standard =  5400 }
+"RoboCasa"          = { privileged =  3600, standard =  3600 }
+"RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
+"RoboCasa365"       = { privileged =  3600, standard =  3600 }
+"RoboDojo"          = { privileged =  3600, standard =  3600 }
+"RoboLab"           = { privileged =  5400, standard =  5400 }
+"RoboOlympics"      = { standard-realtime = 7200 }
+"RoboPaint"         = { privileged =  7200, standard =  7200 }
+"RoboTangle"        = { privileged = 21600, standard = 21600 }
+"RoboTwin 2.0"      = { privileged =  3600, standard =  3600 }
+"RoboWits"          = { privileged =  5400, standard =  5400 }
+"VLABench"          = { privileged =  3600, standard =  3600 }
+"YAMLab"            = { privileged =  5400, standard =  5400 }
+
+# History of the values, newest last: one entry per change (docs/CUTOFFS.md shows them; PROTOCOL §2.12).
+# [[history]]
+# date = "2026-10-20"
+# benchmark = "RoboLab"
+# change = "privileged, standard: 5400 -> 3600"
+# decided_by = "owner"
+# note = "why; results recorded with the old value are reported separately"
+
+[[history]]
+date = "2026-10-11"
+benchmark = "RoboDojo"
+change = "privileged, standard: 5400 -> 3600"
+decided_by = "owner"
+note = "#155, before this table existed; trials recorded with 5400 s are kept apart"
+
+[[history]]
+date = "2026-10-11"
+benchmark = "all"
+change = "none: the table starts with the value every task had on that day"
+decided_by = "owner"
+note = "board 0080: one table, and every instruction states its cutoff in one format"

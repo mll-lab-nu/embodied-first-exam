@@ -1,5 +1,9 @@
 # RoboTangle (simulator package `topogym`) · knot_untying — frozen instance
 
+You have 21600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; RoboTangle on Genesis 1.2.1 physics, Nyx rendering) via Python.
 **Task:** Untie and spread the rope on the tabletop until its top-down projection has no crossings or overlaps, then release it.
 
@@ -119,8 +123,8 @@ CLI equivalent of the grader:
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (5 physics step(s) per control step). There is no step budget, but a trajectory may have at most
   12000 rows (5.0 min of simulated time): the verifier has to replay it twice within its own time limit, so `s.step` stops
-  after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). Your
-  wall-clock budget is 360 min (21600 s). One control step takes about 1.2 s of wall clock here, so budget your experiments.
+  after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). The time limit
+  at the top is your only budget. One control step takes about 1.2 s of wall clock here, so budget your experiments.
 - Grippers: physical grasping only (no assisted grasping): closing on an object squeezes it with the gripper's PD force; friction holds it.
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.008]. The ee_pose action, the proprio tcp pose and the IK use this frame.
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.

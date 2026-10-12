@@ -1,5 +1,9 @@
 # MuJoCo Playground · Go1JoystickRoughTerrain — frozen episode
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 **Task:** Make the Unitree Go1 follow the joystick command schedule on rough terrain (a 20 x 20 m heightfield, up to 5 cm high) for the whole 20 s episode without falling over.
 
 You control the Unitree Go1 quadruped in one episode of MuJoCo Playground's `Go1JoystickRoughTerrain` environment, rebuilt in plain
@@ -35,7 +39,7 @@ The episode lasts exactly 1000 control steps: the trajectory must have T = 1000 
 the 12 joint position actuators, in `s.joint_names` order (FR, FL, RR, RL legs, each hip (abduction), thigh (hip pitch), calf (knee)), in radians; T = 1000 (the whole schedule). Values
 outside the actuator ranges (`s.lower`, `s.upper`) are clipped. `s.save_trajectory(rows)` writes it. Also leave the
 script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
-you improve it: whatever is in `/app/output/` when your 3600 s are up is graded. The tooling logs your sessions and
+you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling logs your sessions and
 resets (cost accounting, not graded).
 
 ## Tooling (installed; `python` from any directory)

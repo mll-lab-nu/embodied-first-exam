@@ -1,5 +1,9 @@
 # RoboLab · food_packing3_cans — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup) **as if it were real
 hardware**: the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Pack canned foods into the bin. Success: The three cans (the Spam can, the tomato soup can and the tuna can) must end inside the dark grey bin and the gripper must touch none of them. "Inside" means the centre of the object's convex hull lies within the container's convex hull, extended without limit along the container's own up axis (the open side; straight up for a container standing normally).
 
@@ -8,7 +12,7 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
   success condition holds), when your time is up, or on a simulator error. Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own
   proprioception (joints, gripper, end-effector pose, velocities, drive efforts). No object poses, no success predicate.
-- There is no step budget; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time
+- There is no step budget: the time limit at the top is your only budget (`meta["time_left_s"]`). Actions and simulated time
   are reported as cost. One technical cap: the episode ends after 100,000 control steps (1.9 h of simulated time;
   `spec["max_control_steps"]`, reason `step_guard`) and is graded as it stands; at this service's speed (3-15 control
   steps/s) your time runs out long before.

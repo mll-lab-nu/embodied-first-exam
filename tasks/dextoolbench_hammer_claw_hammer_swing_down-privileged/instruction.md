@@ -1,5 +1,9 @@
 # DexToolBench · claw hammer · swing_down (MuJoCo)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **claw hammer** on it.
 **Task:** pick up the hammer and move it through the demonstrated *swing-down* motion: bring it to each of the
 **37 goal poses in order** (the green ghost hammer shows the current goal). This is task `hammer / claw_hammer /
@@ -44,7 +48,6 @@ tier), e.g. for inverse kinematics with `mujoco.mj_jacBody`.
   DexToolBench / SimToolReal solution; write your own controller.
 - Only the joint targets count: editing `s.data` (e.g. moving the hammer by hand) while debugging changes nothing in
   the replay.
-- You have 60 minutes of wall-clock time.
 
 ## External material
 You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

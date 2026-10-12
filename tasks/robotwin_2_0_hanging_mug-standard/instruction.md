@@ -1,5 +1,9 @@
 # RoboTwin 2.0 · hanging_mug — STANDARD MODE (robot as a service, eai-standard/2.1)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
 cannot open. You get one client and one episode. **Task:** Use left arm to pick the mug on the table, rotate the mug and put the mug down in the middle of the table, use the right arm to pick the mug and hang it onto the rack. The success check, run at the end of every call, passes when the point inside the mug's handle is within 2 cm in x and in y of the midpoint between the rack's base point and the tip of its arm, that point is above z = 0.86 m (12 cm above the table top), and the right gripper is commanded open (above 0.8).
 

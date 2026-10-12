@@ -1,5 +1,9 @@
 # RoboWits · retrieve_cube — frozen instance
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated **bimanual Marvin** robot (two 7-DoF arms with Pika parallel grippers; RoboWits on Genesis
 0.4.7 physics) via Python. **Task:** Retrieve the cube from the container and place it on the green target area.
 
@@ -215,8 +219,8 @@ inside the object's axis-aligned bounding box grown by 3 cm on every side; the *
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
 completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
-Your wall-clock budget is 90 min (5400 s): save a trajectory as soon as one replays successfully (you can overwrite
-it later), and do not stop before you have one.
+Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
+one.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -254,7 +258,7 @@ CLI equivalent of the grader:
   arm works at y > 0). Quaternions are **WXYZ**.
 - Action (16): right arm 7 joint targets (rad), right gripper width (m, 0 closed .. 0.1 open), left arm 7 joint targets,
   left gripper width; absolute position targets tracked by PD controllers. `s.hold_action()` is the no-op.
-- Control runs at 30 Hz (4 physics substeps). There is no step budget; your wall-clock budget is 90 min (5400 s).
+- Control runs at 30 Hz (4 physics substeps). There is no step budget: the time limit at the top is your only budget.
   One technical cap: a trajectory, and a `Session` between two resets, has at most 200000 control steps (about
   1.85 h of simulated time). `s.step` returns `True` on the step that reaches it and raises after it until
   `s.reset()`; the grader scores a trajectory with more rows 0 (`bad_trajectory`).

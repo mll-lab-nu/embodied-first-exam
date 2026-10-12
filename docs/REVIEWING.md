@@ -32,6 +32,12 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   the recording-only usage gateway (PROTOCOL D11)?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
 - Names end in their mode, `-privileged` / `-standard` / `-standard-realtime`; README in the standard layout; no `results/` in task directories.
+- Time cutoff (PROTOCOL §2.12): is the benchmark's number in `scripts/task_cutoffs.toml` (3600 s unless the pull
+  request justifies more, never above the cap without an owner decision), and does `instruction.md` open with the two
+  rendered cutoff paragraphs and state the limit nowhere else? Does the benchmark's own text say what the cutoff costs
+  here (simulator start-up, what the service's `time_left_s` counts from, a service that ends the episode itself)? A
+  pull request that changes a cutoff: an owner decision, a `[[history]]` entry, `scripts/task_cutoffs.py apply` run
+  (the task directories, `docs/CUTOFFS.md` and `tasks/dataset.toml` changed with the table), nothing else changed.
 - Compute resources (PROTOCOL §2.9): are the minimums measured (what does `measured` cite?) rather than copied from the
   `[environment]` caps? Does `gpu_class` match the simulator (Isaac Sim / Omniverse: `rtx`)? Would the oracle run on a
   machine with exactly these values?

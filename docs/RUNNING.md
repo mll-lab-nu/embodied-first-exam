@@ -71,6 +71,16 @@ append-only copy of every trial's `agent/` record that neither the agent nor the
 `scripts/account_failure_check.py` (structured evidence only: Codex's rate limits and last event, Claude Code's result
 event). `LOG_MIRROR=0` / `MEM_GUARD=0` skip starting the first two.
 
+## The agent's time (the cutoff)
+A trial's agent gets the task's `[agent] timeout_sec` and nothing else: Harbor counts it from the start of the agent's
+session (after the environment has started and the harness is installed), stops the agent at the cutoff with
+`AgentTimeoutError`, and then collects the artifacts and runs the verifier as after any other end, so the trial is
+graded as it stands. The number comes from one table, `scripts/task_cutoffs.toml` ([CUTOFFS.md](CUTOFFS.md), PROTOCOL
+§2.12), and the task's instruction states it in its first lines. Official runs pass no multiplier for it: never
+`--timeout-multiplier` or `--agent-timeout-multiplier` (a result is only comparable under the stated cutoff, D8).
+`--agent-setup-timeout-multiplier` (in `AK`, for slow harness installs) is fine: set-up is not the agent's time. A trial
+that ends at the cutoff is a result, not an infrastructure failure, and is not run again.
+
 ## Base images
 Every base image is `ghcr.io/mll-lab-nu/eai-<name>:<images/<name>/VERSION>` (PROTOCOL §2.4, D5): `scripts/build_images.sh`
 builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token

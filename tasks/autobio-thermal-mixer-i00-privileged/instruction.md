@@ -1,5 +1,9 @@
 # AutoBio · thermal_mixer — frozen instance
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a **UR5e** arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, in AutoBio's simulated biology laboratory (MuJoCo 3.3.0), via Python, through joint
 position targets.
 **Task:** Set the thermal mixer by pressing the buttons of its panel: time 30 s, temperature 33 °C, mixing speed 600 rpm. It starts at 60 s, 25 °C and 900 rpm. The episode is judged in the state in which your trajectory ends: success iff the panel is then set to exactly these three values. AutoBio's score for the task (reported as `progress`) is 0.5 x temperature + 0.3 x time + 0.2 x speed, each term the fraction of the way from the initial to the target value.
@@ -17,8 +21,7 @@ Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_tr
 open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
 state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
-Your time budget is 3600 s of wall clock. Save a trajectory as soon as you have one that works, improve it while
-time remains, and do not stop early.
+Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python

@@ -1,5 +1,9 @@
 # DexToolBench · claw hammer · swing_down (MuJoCo) — STANDARD MODE (robot as a service)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 A KUKA iiwa 14 arm with a 22-joint **Sharpa HA4** dexterous hand stands next to a table with a **claw hammer** on it.
 **Task:** pick up the hammer and move it through the demonstrated *swing-down* motion: bring it to each of the
 **37 goal poses in order** (the green ghost hammer shows the current goal). This is task `hammer / claw_hammer /
@@ -12,9 +16,10 @@ client and one episode.
 - **No reset.** Knocked-over objects stay knocked over.
 - **No privileged state.** You see what the cameras see (RGB, optional depth, with each camera's calibration) plus the
   robot's own joint positions, velocities and targets. No object poses, no success predicate.
-- Your wall-clock budget is 60 minutes. `meta["time_left_s"]` is counted from your first request to the service;
-  approximate — the harness's own deadline is authoritative. There is nothing to hand in: the service records the
-  episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the record.
+- Your only budget is the time limit at the top. `meta["time_left_s"]` is the service's count of it, from your first
+  request to the service; approximate — the harness's own deadline is authoritative. There is nothing to hand in: the
+  service records the episode as the trajectory and grades it. Leave your script at `/app/output/gen.py` for the
+  record.
 - Do not use pretrained manipulation policies or any published solution for this benchmark; write your own controller.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 

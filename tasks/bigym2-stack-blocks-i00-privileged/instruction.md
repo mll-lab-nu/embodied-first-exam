@@ -1,5 +1,9 @@
 # bigym2 stack-blocks — instance i00
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo) via Python. NVIDIA's
 GR00T whole-body controller, a learned policy that runs inside every simulator step, drives its legs and waist and
 keeps it balanced: you command where it walks, how high its pelvis is, how far its torso leans forward, its arm joints and its grippers.
@@ -32,7 +36,7 @@ The tooling also appends its own log, `rcb_session_log.jsonl`, to `/app/output/`
 `RCB_SESSION_LOG`.
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it (with `gen.py` and `NOTES.md` to
-match) whenever you have a better one.** Your wall-clock budget is 1 h and it ends without warning; a run that ends
+match) whenever you have a better one.** The time limit at the top ends without warning; a run that ends
 with no file scores zero. Do not stop early: keep improving until the time is up.
 
 ## Tooling (already installed; run `python` from any directory)

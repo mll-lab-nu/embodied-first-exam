@@ -1,5 +1,9 @@
 # YAMLab · PutPotOnCooktop-v0 — frozen instance i08
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control two simulated **I2RT YAM arms with parallel two-finger grippers** on a workstation table (YAMLab's bimanual
 setup on Isaac Lab / Isaac Sim 5.1, PhysX physics) via Python. **Task:** Lift the pot with **both** arms (both grippers holding it), put it down on the cooktop, upright, and let go with both grippers.
 
@@ -68,8 +72,9 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
 - Tool frame `left_tcp` / `right_tcp` (`s.ee_pose(arm)`, `move_ee`, `ik_step`): the midpoint of the gripper's two
   fingertips, 0.1426 m from `link_6` along `link_6`'s +z axis (the approach direction), with `link_6`'s orientation. At the
   home pose (all joints 0, grippers open) both tool frames point forward (+x) at z = 0.924.
-- Control runs at 30 Hz (sim dt 1/120 s, decimation 4). Your wall-clock budget is 90 min (5400 s); there is no step budget
-  (a runaway guard ends an episode after 100,000 control steps, `end_reason` `step_guard`: the most a trajectory may hold).
+- Control runs at 30 Hz (sim dt 1/120 s, decimation 4). There is no step budget: the time limit at the top is your only
+  budget (a runaway guard ends an episode after 100,000 control steps, `end_reason` `step_guard`: the most a trajectory
+  may hold).
 - One `Session` per process (Isaac Sim launches once, then the scene builds: ~1.5-3 min; the very first start in this
   container also compiles Isaac's shaders, ~10 min on a busy host). Physics is PhysX on the
   **CPU**; rendering (on the GPU) happens only when a frame is asked for and never moves anything. Stepping runs at about

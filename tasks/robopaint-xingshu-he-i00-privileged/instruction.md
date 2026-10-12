@@ -1,5 +1,9 @@
 # RoboPaint · 行书 臨帖 · 和 — frozen instance
 
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated **Franka Panda arm holding a large Chinese writing brush (毛笔)** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3
 physics (PhysX on the CPU) for the robot; the brush's mark is a dynamic virtual brush model of a real brush (below).
 **Task (臨帖):** copy the exemplar character **和** in running script (行书), shown in the picture `/app/target.png`, onto the main
@@ -123,7 +127,7 @@ The grader replays in two fresh processes, each exactly this CLI (a fresh proces
   Quaternions are **WXYZ**. At the start the brush points straight down with the tip at about (0.000, 0.000, 0.093).
 - Action (7): panda_joint1..7 absolute joint-position targets (rad), ManiSkill's `pd_joint_pos` controller. `s.hold_action()`
   is the no-op. Control runs at 20 Hz (physics 100 Hz).
-- **Your wall-clock budget is 2 h (7200 s)**; there is no step budget. A runaway guard stops an episode at 72000 control steps (1 h
+- **Your only budget is the time limit at the top**; there is no step budget. A runaway guard stops an episode at 72000 control steps (1 h
   of simulated time). Everything runs on the CPU except camera rendering.
 - The exemplar picture is derived from a public-domain historical work of running-script calligraphy (Wikimedia Commons,
   PD-Art); rendered by robot-coding-bench (RoboPaint): `/app/NOTICE-exemplar.md`.

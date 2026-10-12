@@ -1,5 +1,9 @@
 # RoboTwin 2.0 · scan_object — frozen instance
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Pick up the scanner with one arm and the tea box with the other, hold the tea box up in front of the robot, and point the scanner's head at the box from 0 to 7 cm away so it can be scanned. Keep both grippers closed at the end (nothing is put down).
 

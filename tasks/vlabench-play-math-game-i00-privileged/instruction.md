@@ -1,5 +1,9 @@
 # VLABench · play_math_game — instance i00
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Please give the answer of the following question by rearrange the number cube in placemat_seen:A mechanic charges different rates to repair the tires of trucks and cars.  For each truck tire that is repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40.  On Thursday, the mechanic repairs 6 truck tires and 4 car tires.  On Friday, the mechanic repairs 12 car tries and doesn't repair any truck tires.  How much more revenue did the mechanic earn on the day with higher revenue? Put the number cubes that spell the answer on placemat_seen, side by side, read from left to right as seen from the robot.**
 
 This states exactly what VLABench's success check requires; VLABench's own wording (also in `s.state()["instruction"]`) is: "Please give the answer of the following question by rearrange the number cube in placemat_seen:A mechanic charges different rates to repair the tires of trucks and cars.  For each truck tire that is repaired, the mechanic will charge $60 and for each car tire that is repaired, the mechanic will charge $40.  On Thursday, the mechanic repairs 6 truck tires and 4 car tires.  On Friday, the mechanic repairs 12 car tries and doesn't repair any truck tires.  How much more revenue did the mechanic earn on the day with higher revenue?".
@@ -25,7 +29,7 @@ work afterwards, so keep them short and factual.
 | `NOTES.md` | at most 20 lines: your final approach and why it works, and what you tried that failed |
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it whenever you have a better one.**
-You have 60 minutes of wall-clock time and it ends without warning; a run that ends with no file scores zero. Do not
+The time limit at the top ends without warning; a run that ends with no file scores zero. Do not
 stop early: keep improving and checking until you are sure the replay succeeds.
 
 ## Tooling (`/opt/tools/vlb_tool.py`, importable as `vlb_tool`)

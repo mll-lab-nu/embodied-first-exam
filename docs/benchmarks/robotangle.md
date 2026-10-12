@@ -149,7 +149,14 @@ One image and one version serve both modes:
 these puzzles are far harder than typical robotics tasks, and the budget probes the capability ceiling. Simulator
 speed-ups give the agent more interaction within the 6 h; they never shorten it. One full reference execution takes
 2–185 min (fiber_bundling hard is the longest). The standard sidecar's wall clock (`RCB_WALL_CLOCK_S`) is 21600 s as
-well.
+well, and unlike every other benchmark's it is a deadline: the service ends the episode itself (`reason = "timeout"`)
+when its own count, running since the service first started (a little before the agent's session), reaches 0; the
+standard instruction says so and tells the agent to plan by `meta["time_left_s"]`.
+
+The number lives in `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md)): `normalize` writes it into
+`[agent] timeout_sec`, `RCB_WALL_CLOCK_S` and the standard cutoff paragraphs under each instruction's title (PROTOCOL
+§2.12). The packages' own budget sentences ("Your wall-clock budget is 360 min (21600 s)") are swapped by
+`mk_tasks.py` (`review_fixes`) for "the time limit at the top", so that an instruction states the limit once.
 
 This is above PROTOCOL §2.3's default cap of 14400 s. **Accepted by the owner (2026-10-08) as a documented per-benchmark
 exception** (PROTOCOL §2.3, issue #87, PR #88; `check-task-fields.sh` caps `robotangle-*` at 21600 s). RoboTangle results

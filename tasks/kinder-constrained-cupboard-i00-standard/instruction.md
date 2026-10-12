@@ -1,5 +1,9 @@
 # KinDER task, instance i00 — STANDARD MODE (robot as a service)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) -- a holonomic base, a Kinova Gen3 7-DoF
 arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulator runs in a service you cannot open,
 and you reach it only through a client. **Task:** put the six brown rods lying on the floor (30 cm long) into the row of eleven narrow cupboards standing side by side ahead of the robot, one rod each, each into a cupboard's 40 cm-tall compartment: taking the rods in order of their distance from where the centre of the robot's base starts, nearest first, they go into the 11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row, counted from the robot's left as it faces the row at the start. The task succeeds the moment every rod's centre is inside its compartment: above that compartment's shelf, below the shelf over it, and within the cupboard's 10 cm width and 30 cm depth.
@@ -23,7 +27,7 @@ and you reach it only through a client. **Task:** put the six brown rods lying o
   gripper's grasp point, each camera's field of view and pose.
 - There is nothing to hand in: the service records every episode, replays the last one and grades the replay. Keep the script
   that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
-- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run
+- Wall-clock budget: the time limit at the top. It ends without warning, and ending your session earlier ends the run
   the same way, so do not stop early: while the episode runs, or a reset is left, the run can still pass.
 
 ## Scoring

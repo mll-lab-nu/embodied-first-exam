@@ -1,5 +1,9 @@
 # MuJoCo Playground · SpotFlatTerrainJoystick — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 **Task:** Make Boston Dynamics Spot follow the joystick command schedule on flat ground for the whole 20 s episode without falling over.
 
 You control the Boston Dynamics Spot quadruped — **as if it were real hardware** — in one episode of MuJoCo Playground's
@@ -26,9 +30,9 @@ The same schedule is `spec["command_schedule"]`; every response's `meta["command
   velocity), foot contacts. No world positions, no success check.
 - **The episode ends** after 1000 control steps, the whole schedule (`spec["max_control_steps"]`, counted by `meta["control_steps"]`), when the robot meets its termination rule (the trunk tilted by more than about 32 deg (the z component of the IMU frame's z axis below 0.85): a failure), when you submit `done`, or when your time is up (before the end of the schedule, both are failures).
 - **Success** is judged on the whole schedule: no termination, and in every command segment, after its first 25 control steps, a mean |v_xy - cmd_xy| of at most 0.2 m/s (`imu_linvel`) and a mean |w_z - cmd_wz| of at most 0.3 rad/s (`imu_gyro`).
-- Your wall-clock budget is 3600 s from your start. Simulated time only advances with your commands (and
-  `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is counted from your first call to
-  the service; approximate — the harness's own deadline is authoritative.
+- Your only budget is the time limit at the top. Simulated time only advances with your commands (and
+  `get_obs(seconds=...)`, which holds the current targets). `meta["time_left_s"]` is the service's count of the limit,
+  from your first call to the service; approximate — the harness's own deadline is authoritative.
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a
   reset) in the state after the last call it completed. `r.wait_ready()` waits for it; then check `r.status()`.

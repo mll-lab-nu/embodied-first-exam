@@ -1,5 +1,9 @@
 # RoboLab · pick_orange_object — frozen instance
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated **Franka Panda arm with a Robotiq 2F-85 gripper** (NVIDIA RoboLab's DROID setup on Isaac Lab 2.3 /
 Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the orange measuring cup.
 
@@ -66,7 +70,7 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   are **WXYZ**. `s.objects()["table"]["bounds"][1][2]` is the table-top height.
 - Action (8): panda_joint1..7 absolute joint-position targets (rad, PD-tracked) + gripper command (0 = open, 1 = close; the
   Robotiq action is binary). `s.hold_action()` is the no-op.
-- Control runs at 15 Hz (sim dt 1/120 s, decimation 8). Your wall-clock budget is 90 min (5400 s); there is no step
+- Control runs at 15 Hz (sim dt 1/120 s, decimation 8). There is no step budget: the time limit at the top is your only
   budget (a runaway guard ends an episode after 100,000 control steps, the most a trajectory may hold). The episode
   **ends by itself the moment the success predicate holds**: after that `s.step` raises and the primitives become
   no-ops, so stop recording there.

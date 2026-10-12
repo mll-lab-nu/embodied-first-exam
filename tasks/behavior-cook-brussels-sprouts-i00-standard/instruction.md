@@ -1,5 +1,9 @@
 # BEHAVIOR-1K · cook_brussels_sprouts — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You drive an **R1Pro** mobile bimanual robot around a house **as if it were real hardware**: the simulator (BEHAVIOR-1K
 v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. You get one client and one episode.
 **Task:** Roast the halved brussels sprouts. Four brussels sprouts are in a tupperware inside the kitchen refrigerator; a chopping board with a carving knife on it and a cookie sheet lie on the countertop, and there is an oven in the kitchen. Cut every sprout in half, cook all eight halves in the oven and leave them inside it, and close the oven and the refrigerator. Success means all of the following hold at the same time: (1) all eight half brussels sprouts exist (every sprout has been cut in half); (2) every half is cooked and inside the oven; (3) the refrigerator and the oven are closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. cooked(A): the highest temperature A has ever reached is at least its cooking temperature (70 °C by default). Heat comes from a heat source that is on (a stove burner, an oven: 200 °C) within 0.2 m of A; once cooked, A stays cooked. real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.
@@ -13,9 +17,9 @@ v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. Yo
   proprioception gives as cos(rx)·cos(ry) of `base_footprint_rx_joint` and `base_footprint_ry_joint`).
 - **No privileged state.** You see what the robot's cameras see (RGB; depth on request) plus its own proprioception
   (joints, base pose, end-effector and fingertip poses, gripper openings). No object poses, no map, no success predicate.
-- There is no step budget; your wall-clock budget is 4 h (14400 s; `meta["time_left_s"]`). Actions and simulated time
-  are reported as cost. Only a runaway guard bounds the episode: it ends at 200,000 control steps (1.85 h of simulated
-  time; `spec["max_control_steps"]`, reason `step_guard`).
+- There is no step budget; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count
+  of it). Actions and simulated time are reported as cost. Only a runaway guard bounds the episode: it ends at 200,000
+  control steps (1.85 h of simulated time; `spec["max_control_steps"]`, reason `step_guard`).
 - **A malformed request is refused with a 400 and nothing is executed** (a wrong type or shape, a value out of range,
   a `dt` that is not a whole number of control periods, `video_fps` outside 1-30): fix it and send it again.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script

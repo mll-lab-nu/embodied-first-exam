@@ -1,5 +1,9 @@
 # RoboTangle (simulator package `topogym`) · rope_threading — frozen instance
 
+You have 21600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**; RoboTangle on Genesis 1.2.1 physics, Nyx rendering) via Python.
 **Task:** Thread the rope through the cyan ring (R1) then green ring (R2) then purple ring (R3), in that order along the rope from material start to material end.
 
@@ -136,8 +140,8 @@ CLI equivalent of the grader:
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 25 Hz (1 physics step(s) per control step). There is no step budget, but a trajectory may have at most
   40000 rows (26.7 min of simulated time): the verifier has to replay it twice within its own time limit, so `s.step` stops
-  after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). Your
-  wall-clock budget is 360 min (21600 s). One control step takes about 0.36 s of wall clock here, so budget your experiments.
+  after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). The time limit
+  at the top is your only budget. One control step takes about 0.36 s of wall clock here, so budget your experiments.
 - Grippers: assisted grasping (ipc_soft_band_v1): closing intent and bilateral finger proximity to a material patch of rope must persist for 0.02 s, with penetration at most 6 mm and the TCP within 6 cm. The admitted patch follows through an elastic IPC attachment; the rest remains deformable. Opening by more than 0.2 % of gripper travel releases it. A hold is lost on excessive opening, material strain, invalid volume or follow error above 25 mm; a lost hand must open before reacquiring. Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets.
 - Tool frame (TCP, the ee pose and IK frame): a fixed point near the closed finger pads; approach axis (hand -> fingertips) = local [1.0, 0.0, -0.023], finger-closing axis = local [0.0, 1.0, 0.008]. The ee_pose action, the proprio tcp pose and the IK use this frame.
   `p["top_down_quat"](yaw)` builds a vertical approach whose fingers close along `yaw`; `p["gripper_quat"](yaw, approach)` any other.

@@ -1,5 +1,9 @@
 # powerlift — instance 00 — STANDARD-REALTIME MODE (robot as a service; time does not stop)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a simulated Unitree H1 humanoid with two Shadow dexterous hands (HumanoidBench / MuJoCo) **as if
 it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
 client. Like real hardware, it does not wait for you: once an episode is running, the robot moves in real time
@@ -40,9 +44,9 @@ there.
 - There is nothing to hand in: the service records every control step it ran, replays the last episode in a
   fresh simulator and grades the replay. Keep the controller that drives the robot at `/app/output/gen.py` for
   the record: save it early and keep it current.
-- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way
-  (and stops your background programs), so do not stop early: while the episode runs, or a reset is left, the
-  run can still pass.
+- Wall-clock budget: the time limit at the top. It ends without warning, and ending your session earlier ends
+  the run the same way (and stops your background programs), so do not stop early: while the episode runs, or
+  a reset is left, the run can still pass.
 
 ## Time and streaming
 - `submit` answers at once, with the robot as it is now: the rows you sent have not run yet. They become the

@@ -1,5 +1,9 @@
 # DexJoCo · bimanual_photograph — frozen instance
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control two Franka Panda arms, each with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Hold the camera with the left hand in front of the logo and press its shutter with the right hand. Success, at one control step: the camera's view point is inside the target region (0.16 m radius, +-0.10 m height, 0.40 m in front of the logo along -x, i.e. about 0.3 m above the table), the camera's viewing axis is within 10 degrees of world +x, and the shutter button is touched by something other than the camera.
 
 The camera lies on the table between the robots; the logo disk stands at the far side of the table. `s.objects()` gives the live poses of the task objects (`camera`, `view_point`, `shutter`, `logo`, `target_region`, `table_top`). DexJoCo's success code (from
@@ -65,8 +69,8 @@ general policy.
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
 open-loop from the same initial state in a fresh process and scored 1 if its episode ends in success, else 0. Also
 leave the script that produced it at `/app/output/gen.py`. A trajectory may have at most 50,000 rows
-(1000 s of robot time): `save_trajectory` refuses a longer one and the verifier scores it 0. You have
-90 minutes of wall clock: save a first trajectory early, improve it, and do not stop before the task is solved.
+(1000 s of robot time): `save_trajectory` refuses a longer one and the verifier scores it 0. Save a
+first trajectory early, improve it, and do not stop before the task is solved.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python

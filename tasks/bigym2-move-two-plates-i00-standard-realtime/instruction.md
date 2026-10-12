@@ -1,5 +1,9 @@
 # bigym2 move-two-plates — instance i00 — STANDARD-REALTIME MODE (robot as a service; time does not stop)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a simulated Unitree G1 humanoid robot with two-finger grippers (BiGym 2.0, MuJoCo) **as if it were real
 hardware**: the simulator runs in a service you cannot open, and you reach it only through a client. Like real hardware,
 it does not wait for you: once the episode is running, the robot moves in real time while you think. NVIDIA's GR00T
@@ -16,7 +20,7 @@ heights above the floor; measured on this scene.)
 - **One episode, no reset.** `spec()["budget"]["reset"]` is authoritative: it is 0 here, so the one episode is the run.
 - **No privileged state, no score.** You see what the robot's three cameras see (RGB, 84×84: `head`, `left_wrist`, `right_wrist`) and its own proprioception (below). Not where any object is now (only the start sentence above), not the success check: the service judges the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`). `spec()` gives the robot's facts: the action slots and their bounds, each camera's field of view and its pose at the start.
 - There is nothing to hand in: the service records every control step it ran, replays the episode in a fresh simulator and grades the replay. Keep the controller at `/app/output/gen.py` for the record: save it early and keep it current.
-- Wall-clock budget: 1 h. It ends without warning, and ending your session earlier ends the run the same way (and stops your background programs), so do not stop early.
+- Wall-clock budget: the time limit at the top. It ends without warning, and ending your session earlier ends the run the same way (and stops your background programs), so do not stop early.
 
 ## Success
 The episode succeeds when the following has held for **1 s (50 control steps in a row)**: each plate stands in a slot of the right-hand rack: its centre within 0.05 m of one of that rack's six slot points, standing on edge with its face toward your right (its axis within 20 degrees of the robot's right at the start, as the plates stand now; a plate turned around does not count), touching the right-hand rack, not touching the table, held by neither gripper; both plates at once. *Held* means that a finger of the gripper touches the object (BiGym's `is_gripper_holding_object`): an open gripper still resting against it holds it. A plate touching the floor ends the episode as a failure. The robot must not fall at any time: a fall (the pelvis tilted more than about 53 degrees from upright, or lower than 0.30 m) makes the episode a failure, but does not end it.

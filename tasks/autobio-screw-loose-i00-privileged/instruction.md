@@ -1,5 +1,9 @@
 # AutoBio · screw_loose — frozen instance
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control two **ALOHA arms** (`arm1` and `arm2`; 6 joints and a parallel gripper each), fixed to the bench on either side of the rack, in AutoBio's simulated biology laboratory (MuJoCo 3.3.0), via Python, through joint
 position targets.
 **Task:** Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success at the first control step where the cap is more than 0.15 m above the tube body's origin (screwed on it sits 0.1197 m above it, so 3 cm up), `arm1`'s left finger (geom `1/aloha:leftfinger`) touches the cap (geom `6/cap_cyl`), and the cap's thread (geom `6/nut`) no longer touches the tube's (geom `7/bolt`).
@@ -17,8 +21,7 @@ Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_tr
 open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
 state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
-Your time budget is 3600 s of wall clock. Save a trajectory as soon as you have one that works, improve it while
-time remains, and do not stop early.
+Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python

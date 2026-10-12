@@ -1,5 +1,9 @@
 # AutoBio · thermal_cycler_open — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a **UR5e** arm (6 joints) with a Robotiq 2F-85 gripper, fixed to the bench, **as if it were real**: the simulator (AutoBio's biology laboratory on MuJoCo 3.3.0) runs
 in a service you cannot open. You get one client and one episode.
 **Task:** Open the lid of the thermal cycler, which starts closed and locked: turn the lever on the lid back from its locked end (0.94 rad of travel) and swing the lid fully open (1.9 rad). Success the moment the lid and its lever are both within 0.003 rad of their fully open end positions.
@@ -14,8 +18,8 @@ On the bench: a thermal cycler (a Bio-Rad C1000 model) with its lid closed and l
   the robot's own proprioception: joint positions, velocities and drive efforts, gripper openings, the
   poses of its tool frames and the targets in effect. No poses of tubes, racks or instruments, no instrument state, no
   success check: `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Your wall-clock budget is 3600 s from your start (`meta["time_left_s"]`); steps are unlimited. Simulated time
-  only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
+- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it).
+  Simulated time only advances with your commands (and `get_obs(seconds=...)`, which holds the last targets). Do not stop early.
 - `r.submit("done", [])` ends the episode in its current state; before the goal is reached that is a failure.
 - Nothing to hand in: the service records your episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a

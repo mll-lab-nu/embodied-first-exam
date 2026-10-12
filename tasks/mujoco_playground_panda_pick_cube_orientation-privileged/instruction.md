@@ -1,5 +1,9 @@
 # MuJoCo Playground · Panda pick cube with orientation
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 A **Franka Panda** arm stands in front of a **green box** (4 × 4 × 6 cm) on the floor. A **translucent red target box**
 floats above, tilted.
 **Task:** pick up the green box and hold it **at the target, in the target's orientation**. This is MuJoCo Playground's
@@ -36,7 +40,6 @@ along the site's z axis and the fingers close along its y axis. Everything in `s
 ## Rules
 - Write your own controller; do not use trained policies from MuJoCo Playground or elsewhere.
 - Only the actuator targets count: editing `s.data` while debugging changes nothing in the replay.
-- You have 60 minutes of wall-clock time.
 
 ## External material
 You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

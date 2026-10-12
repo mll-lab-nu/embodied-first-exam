@@ -1,5 +1,9 @@
 # DexJoCo · bimanual_hanoi — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control two Franka Panda arms, each with a 16-DoF Allegro hand, **as if it were real hardware**: the simulator runs in a service you cannot open. You get
 one client and one episode. **Task:** Tower of Hanoi with three disks on three vertical posts in a row along y: the small disk is on post A (y > 0, the left arm's side), the medium disk on post B (middle), the large disk on post C (y < 0). Build the full tower on post C: large at the bottom, then medium, then small, posts A and B empty, every disk at rest and seated on the post (horizontally within 4 cm of it, at its stacking height within 1.2 cm), held for 20 consecutive control steps. A larger disk resting on a smaller one, or a disk resting on the table, for 10 consecutive steps ends the episode as a failure.
 
@@ -11,7 +15,7 @@ Two arms with a hand each stand side by side facing the table (right arm at y < 
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) plus
   the robot's own proprioception (joints, tcp poses, the current targets). No object poses, no success check:
   `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your wall-clock budget (90 minutes) is the limit (`meta["time_left_s"]`). Actions and
+- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it). Actions and
   simulated time are reported as cost. Do not stop before the task is solved.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record (save it early, update it as you go).

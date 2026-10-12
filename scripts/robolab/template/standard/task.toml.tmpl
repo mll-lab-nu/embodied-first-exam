@@ -41,7 +41,7 @@ service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json
 timeout_sec = 15000               # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
                                   # resume) + two fresh-process replays of up to 5700 s each (an Isaac start + an episode that
-                                  # stepped for the whole 5400 s agent budget, replayed at the live rate) + 900 s; finalize.sh
+                                  # stepped for a whole agent budget of 5400 s, what this was sized for, replayed at the live rate) + 900 s; finalize.sh
                                   # ends a replay that would pass this deadline and records it (replay_error, infra_error)
 
 [agent]

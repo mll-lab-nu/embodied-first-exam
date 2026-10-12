@@ -1,5 +1,9 @@
 # Air hockey: a match against a scripted opponent, in real time
 
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You play robot air hockey (USAA rules with the deviations below) against a scripted opponent: a MuJoCo KUKA iiwa 14 arm holding a mallet at your end of the table (x < 0), seen only through one fixed camera. A rally starts with the puck at rest in one player's half; a goal, a seven-second foul or a dead puck ends it. The first to 7 goals wins.
 
 **Your goal: win the match.** The task succeeds if the match finishes and you won it. Keep your scripts, logs and notes
@@ -15,7 +19,7 @@ in `/app/output/`; there is nothing else to hand in: the simulator records the m
   the clock keeps running, nothing moves and nothing scores, and play resumes by itself at the end of the break. Use it
   to look at what happened and fix your program. Send a `ready` row to resume earlier (put your review, why you won or
   lost the rally and what you change, in `submit`'s `note`). Commands planned for steps inside a break are dropped.
-- You have 7200 s in all. **If your session ends before the match is over, you lose** (success 0); so
+- **If your session ends before the match is over, you lose** (success 0), and the time limit at the top ends it; so
   start the match well before your time runs out and stay until it is over (`meta["done"]`).
 - No reset: one match is the whole episode.
 

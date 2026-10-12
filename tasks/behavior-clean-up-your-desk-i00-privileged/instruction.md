@@ -1,5 +1,9 @@
 # BEHAVIOR-1K · clean_up_your_desk — frozen instance
 
+You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated **R1Pro** mobile manipulator (BEHAVIOR-1K v3.9.2: OmniGibson on Isaac Sim, the 2026 BEHAVIOR
 Challenge stack) via Python. **Task:** Clean up the desk in the child's room. A folder, a pencil, two pens, two paperback books and a pencil box lie on the desk; the other folder lies on the chair, the stapler is inside the bookcase, and the open laptop lies on the bed. Put both folders and both paperback books into the bookcase and the pencil and both pens into the pencil box, which stays on the desk; take the stapler out of the bookcase and put it on the desk; and put the laptop on the desk, closed.
 
@@ -90,7 +94,7 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   finger targets, 0 = closed; assisted grasping holds what a closing gripper touches). The base entries are x, y, yaw
   position targets in the robot's own frame, re-applied every control step: a per-step displacement, 0 = stand still.
   `s.hold_action()` (the last command with the base at 0) is the no-op.
-- Control runs at 30 Hz with 120 Hz physics. Your wall-clock budget is 4 h (14400 s); there is no step budget. Only a
+- Control runs at 30 Hz with 120 Hz physics. There is no step budget: the time limit at the top is your only budget. Only a
   runaway guard bounds an episode: it ends after 200,000 control steps (1.85 h of simulated time), and a trajectory
   with more rows than that is rejected (`bad_trajectory`, score 0). The trajectory must be the file
   `s.save_trajectory()` writes (an `.npz` with `actions` (T, 25) and `task`): a file the grader cannot read, or with

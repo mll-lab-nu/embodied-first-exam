@@ -1,5 +1,9 @@
 # BEHAVIOR-1K · putting_up_Christmas_decorations_inside — frozen instance
 
+You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated **R1Pro** mobile manipulator (BEHAVIOR-1K v3.9.2: OmniGibson on Isaac Sim, the 2026 BEHAVIOR
 Challenge stack) via Python. **Task:** Decorate the house for Christmas. In the living room stand a Christmas tree, three gift boxes and a wicker basket holding a wreath, three candy canes and two pillar candles. Put the gift boxes by the tree, both candles on one dining-room table, one candy cane on a table, and the wreath and the two other candy canes on a sofa.
 
@@ -111,7 +115,7 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   finger targets, 0 = closed; assisted grasping holds what a closing gripper touches). The base entries are x, y, yaw
   position targets in the robot's own frame, re-applied every control step: a per-step displacement, 0 = stand still.
   `s.hold_action()` (the last command with the base at 0) is the no-op.
-- Control runs at 30 Hz with 120 Hz physics. Your wall-clock budget is 4 h (14400 s); there is no step budget. Only a
+- Control runs at 30 Hz with 120 Hz physics. There is no step budget: the time limit at the top is your only budget. Only a
   runaway guard bounds an episode: it ends after 200,000 control steps (1.85 h of simulated time), and a trajectory
   with more rows than that is rejected (`bad_trajectory`, score 0). The trajectory must be the file
   `s.save_trajectory()` writes (an `.npz` with `actions` (T, 25) and `task`): a file the grader cannot read, or with

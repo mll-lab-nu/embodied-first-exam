@@ -1,5 +1,9 @@
 # VLABench · select_poker_semantic — instance i00 — STANDARD MODE (robot as a service)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) **as if it were real hardware**: the simulator runs in
 a service you cannot open, and you reach it only through a client. **Task: Please pick up the poker 6 of spades and hold it up (grasped, lifted to z >= 0.9 m).**
 
@@ -17,7 +21,7 @@ a service you cannot open, and you reach it only through a client. **Task: Pleas
   why (`meta["done"]`, `meta["reason"]`: `"success"`, `"failed"` at the step cap, `"error"` after a simulator error).
 - There is nothing to hand in: the service records the episode, replays it and grades the replay. Keep the script that
   drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
-- Wall-clock budget: 60 minutes. It ends without warning, and ending your session earlier ends the run the same way, so
+- Wall-clock budget: the time limit at the top. It ends without warning, and ending your session earlier ends the run the same way, so
   do not stop early.
 - Do not use VLABench's expert solutions or any published solution for this benchmark; write your own controller.
 

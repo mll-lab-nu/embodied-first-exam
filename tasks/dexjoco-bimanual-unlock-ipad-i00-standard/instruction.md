@@ -1,5 +1,9 @@
 # DexJoCo · bimanual_unlock_ipad — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control two Franka Panda arms, each with a 16-DoF Allegro hand, **as if it were real hardware**: the simulator runs in a service you cannot open. You get
 one client and one episode. **Task:** Pick up the iPad and enter the passcode 1-2-3 on its screen. A digit is pressed when a FINGERTIP touches its button; pressing any other digit than the next one of 1-2-3 ends the episode as a failure. Success: the screen is unlocked (1, 2, 3 in order) and stays unlocked for 10 consecutive control steps.
 
@@ -11,7 +15,7 @@ The iPad rests on a stand on the table, screen facing the robots; its keypad sho
 - **No privileged state.** You see what the cameras see (RGB, and depth on request, with each camera's calibration) plus
   the robot's own proprioception (joints, tcp poses, the current targets). No object poses, no success check:
   `meta["done"]` / `meta["reason"]` tell you when the episode is over and why.
-- Steps are unlimited; your wall-clock budget (90 minutes) is the limit (`meta["time_left_s"]`). Actions and
+- Steps are unlimited; your only budget is the time limit at the top (`meta["time_left_s"]` is the service's count of it). Actions and
   simulated time are reported as cost. Do not stop before the task is solved.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record (save it early, update it as you go).

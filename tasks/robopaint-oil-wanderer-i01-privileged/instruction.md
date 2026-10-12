@@ -1,5 +1,9 @@
 # RoboPaint · oil painting from a reference · Wanderer above the Sea of Fog (after Friedrich) — frozen instance
 
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated **Franka Panda arm holding an oil-paint brush** via Python: ManiSkill 3.0.1 / SAPIEN 3.0.3 physics (PhysX on
 the CPU) for the robot; the paint is libmypaint's brush engine (MyPaint). **Task (paint from a reference):** paint the picture shown in `/app/target.png` (a square crop of Caspar David Friedrich's Wanderer above the Sea of Fog, c. 1817) onto the main sheet with brush and oil paints, **in at most 1974 strokes**.
 
@@ -104,7 +108,7 @@ The grader replays in two fresh processes, each exactly this CLI (a fresh proces
   Quaternions are **WXYZ**. At the start the brush points straight down with the tip at about (0.000, 0.000, 0.108).
 - Action (7): panda_joint1..7 absolute joint-position targets (rad), ManiSkill's `pd_joint_pos` controller. `s.hold_action()`
   is the no-op. Control runs at 20 Hz (physics 100 Hz).
-- **Your wall-clock budget is 2 h (7200 s)**; there is no step budget. A runaway guard stops an episode at 72000 control steps (1 h
+- **Your only budget is the time limit at the top**; there is no step budget. A runaway guard stops an episode at 72000 control steps (1 h
   of simulated time). Everything runs on the CPU except camera rendering.
 - The picture is a public-domain painting, Caspar David Friedrich, *Wanderer above the Sea of Fog* (c. 1817; Wikimedia Commons `File:Caspar David Friedrich - Wanderer above the sea of fog.jpg`, Public domain), cropped to a square and downscaled to the sheet; libmypaint is ISC, the mypaint-brushes presets CC0 (`/opt/mypaint`).
 

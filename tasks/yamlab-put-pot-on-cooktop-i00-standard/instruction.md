@@ -1,5 +1,9 @@
 # YAMLab · PutPotOnCooktop-v0 — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control two **I2RT YAM arms with parallel two-finger grippers** on a workstation table (YAMLab's bimanual setup)
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 **Task:** Lift the pot with **both** arms (both grippers holding it), put it down on the cooktop, upright, and let go with both grippers. The scene has the pot and the cooktop on the table.
@@ -17,7 +21,7 @@ stay counted once reached. The episode **ends by itself** at the first control s
   your time is up, or on a simulator error. A dropped or knocked-over object stays that way.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
   (joints, grippers, tool-frame poses, velocities, drive efforts). No object poses, no success signal.
-- There is no step budget; your wall-clock budget is 90 min (5400 s; `meta["time_left_s"]`). Actions and simulated time
+- There is no step budget: the time limit at the top is your only budget (`meta["time_left_s"]`). Actions and simulated time
   are reported as cost. One technical cap: the episode ends after **100,000 control steps** (55.6 min of simulated time;
   `spec["max_control_steps"]`, reason `step_guard`) and is graded as it stands. The service steps faster than real time
   (60-120 control steps/s), so long watches and far-away `ee_pose` targets can reach it: `meta["control_steps"]` counts.

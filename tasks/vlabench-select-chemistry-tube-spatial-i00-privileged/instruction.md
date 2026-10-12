@@ -1,5 +1,9 @@
 # VLABench · select_chemistry_tube_spatial — instance i00
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated **Franka Panda** arm (VLABench on MuJoCo) via Python. **Task: Take out the solution on the 1th row and 5th column**
 
 This is a *fixed scene instance*: VLABench's own scene for `select_chemistry_tube_spatial`, frozen (seed 0). You may reset and retry
@@ -23,7 +27,7 @@ work afterwards, so keep them short and factual.
 | `NOTES.md` | at most 20 lines: your final approach and why it works, and what you tried that failed |
 
 **Write `trajectory.npz` as soon as you have any trajectory at all, and overwrite it whenever you have a better one.**
-You have 60 minutes of wall-clock time and it ends without warning; a run that ends with no file scores zero. Do not
+The time limit at the top ends without warning; a run that ends with no file scores zero. Do not
 stop early: keep improving and checking until you are sure the replay succeeds.
 
 ## Tooling (`/opt/tools/vlb_tool.py`, importable as `vlb_tool`)

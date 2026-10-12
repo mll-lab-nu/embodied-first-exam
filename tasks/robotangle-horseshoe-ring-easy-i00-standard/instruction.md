@@ -1,5 +1,9 @@
 # RoboTangle (simulator package `topogym`) · horseshoe_ring — STANDARD MODE (robot as a service, eai-standard/2.4)
 
+You have 21600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
 client and one episode. **Task:** Separate and place the entire removable ring inside the green dashed goal region. Keep the horseshoes and chains on the puzzle/system side.
 
@@ -38,9 +42,12 @@ client and one episode. **Task:** Separate and place the entire removable ring i
   objects are (no object poses or positions). The success implementation is not exposed, and of the simulator's internal
   measurements only the safety readings of `meta["safety"]` are (listed under Action types, below); the task
   requirements above still apply in full.
-- **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); there is no step budget, but the
+- **Your only budget is the time limit at the top**; there is no step budget, but the
   episode ends after 200000 control steps, watches included (83 min of simulated time; a technical cap,
   `spec["max_control_steps"]`: `meta["reason"]` is `step_guard`, and the episode is graded as it stands). Actions and simulated time are reported as cost. One control step takes about 0.071 s of wall clock here.
+  This service also ends the episode itself (`meta["reason"]` is `timeout`; it is graded as it stands) when its own
+  count of that limit, `meta["time_left_s"]`, reaches 0. That count has run since the service first started, a little
+  before your session, so plan by `time_left_s`.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;

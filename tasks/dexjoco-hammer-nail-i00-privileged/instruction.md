@@ -1,5 +1,9 @@
 # DexJoCo · hammer_nail — frozen instance
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a Franka Panda arm with a 16-DoF Allegro hand (DexJoCo on MuJoCo 3.4) via Python. **Task:** Pick up the hammer and drive the nail into the wooden block by striking its head. A strike counts only if the hammer face was moving down faster than 0.02 m/s just before it touched the nail; each counted strike drives the nail 8 mm x min(3, speed / 0.02) deeper (at most 7.26 cm). Success: the nail is at least 4 cm deep.
 
 The hammer lies on the table at the robot's right (low y); the nail stands upright in a wooden block in front of the robot. The nail is not a free body: it only moves down when struck. `s.objects()` gives the live poses of the task objects (`hammer`, `nail`, `nail_top`, `wood_top`, `table_top`). DexJoCo's success code (from
@@ -57,8 +61,8 @@ general policy.
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
 open-loop from the same initial state in a fresh process and scored 1 if its episode ends in success, else 0. Also
 leave the script that produced it at `/app/output/gen.py`. A trajectory may have at most 50,000 rows
-(1000 s of robot time): `save_trajectory` refuses a longer one and the verifier scores it 0. You have
-90 minutes of wall clock: save a first trajectory early, improve it, and do not stop before the task is solved.
+(1000 s of robot time): `save_trajectory` refuses a longer one and the verifier scores it 0. Save a
+first trajectory early, improve it, and do not stop before the task is solved.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python

@@ -90,7 +90,6 @@
 [defaults]
 seed = 0
 instance_tag = "00"
-agent_timeout = 3600.0
 verifier_timeout = 900.0
 keywords = ["robotics", "humanoidbench", "code-as-policy", "trajectory"]
 cpus = 16                   # the privileged-mode agent's container: searching is what it is for

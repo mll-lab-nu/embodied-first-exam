@@ -1,5 +1,9 @@
 # RoboTwin 2.0 · place_bread_basket — STANDARD MODE (robot as a service, eai-standard/2.1)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
 cannot open. You get one client and one episode. **Task:** If there is one bread on the table, use one arm to grab the bread and put it in the basket, if there are two breads on the table, use two arms to simultaneously grab up two breads and put them in the basket. The success check, run at the end of every call, passes when every bread on the table at the start has its position within 5 cm in x and in y of the basket's centre and both grippers are commanded open (above 0.8).
 

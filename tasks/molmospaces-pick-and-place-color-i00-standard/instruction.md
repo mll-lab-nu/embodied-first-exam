@@ -1,5 +1,9 @@
 # MolmoSpaces · pick-and-place-color — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 **Task:** Pick up the metal stopwatch with buttons and place it in or on the red bowl.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) — **as if it were real hardware** — in one episode of Ai2's MolmoSpaces benchmark (an Objaverse object).
@@ -14,8 +18,8 @@ client and one episode.
   (`r.submit("done", [])`), or when your time is up.
 - **Success** is upstream's `judge_success()` on the state at that moment: the rule of pick-and-place, for the receptacle of the named colour (the other, differently coloured receptacle does not count): the robot does not touch the object; that receptacle supports the object (at least 50% of its weight through contact, or upstream's on-receptacle test, or within 5 mm and 10 degrees, relative to the receptacle, of a pose in which it was supported at an earlier control step); and that receptacle has moved at most 15 cm and tilted at most 60 degrees. The task has to hold at the
   end: met earlier and undone by then does not count, so end the episode with `done` once it holds.
-- Your wall-clock budget is 3600 s from your start (the service's `time_s`, `elapsed_s` and `time_left_s` count from
-  its own start, a few minutes earlier, so `time_left_s` reaches 0 a little before your budget ends).
+- Your only budget is the time limit at the top, from your start (the service's `time_s`, `elapsed_s` and `time_left_s`
+  count from its own start, a few minutes earlier, so `time_left_s` reaches 0 a little before your time is up).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`).
 - Nothing to hand in: the service records the episode and grades it. Leave your script at `/app/output/gen.py`.
 - **If the service crashes**, a call fails with a connection error: it restarts and resumes the SAME episode (never a

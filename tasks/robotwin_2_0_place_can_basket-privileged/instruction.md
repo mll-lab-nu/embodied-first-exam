@@ -1,5 +1,9 @@
 # RoboTwin 2.0 · place_can_basket — frozen instance
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** Put the can into the basket, then lift the basket with the other arm and hold it up: the basket must end at least 2 cm above its start height and upright, with the can inside it (touching the basket, not the table).
 

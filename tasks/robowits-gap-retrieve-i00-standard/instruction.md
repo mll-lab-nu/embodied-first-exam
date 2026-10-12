@@ -1,5 +1,9 @@
 # RoboWits · gap_retrieve — STANDARD MODE (robot as a service, eai-standard/2.2)
 
+You have 5400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` below).
+
 You control a bimanual **Marvin** robot (two 7-DoF arms with Pika parallel grippers) **as if it were real hardware**:
 the simulator runs in a service you cannot open. You get one client and one episode. **Task:** Place the lemon on the
 green target area.
@@ -32,7 +36,7 @@ not give: keeping clear of the table's edges satisfies it).
   joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
   objects are (no object poses or positions), and no endpoint tests the success criterion: the episode simply ends
   (`meta["done"]`, `reason` "success") the first time it holds.
-- **Your wall-clock budget is 90 min (5400 s)** (`meta["time_left_s"]` counts it down). There is no step budget; actions
+- **Your only budget is the time limit at the top** (`meta["time_left_s"]` is the service's count of it). There is no step budget; actions
   and simulated time are reported as cost. One technical cap: the episode has at most 200000 control steps (about
   1.85 h of simulated time at 30 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`; a `get_obs`
   that watches counts too). The call that reaches it stops there, the episode ends (`reason` "step_guard") and is graded

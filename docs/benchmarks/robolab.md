@@ -113,7 +113,9 @@ it: the second point.
   container has no simulator image, and the verifier's image is not the agent's.
 
 ## Time budget (D8)
-5400 s for every task of both modes, longer than the default 3600 s: every Python process pays about 2 minutes of Isaac
+The number lives in the one table, `scripts/task_cutoffs.toml` (shown in [`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL §2.12), and
+every instruction states it in the standard cutoff paragraphs at the top; the benchmark's own text names no number. On
+2026-10-11: 5400 s for every task of both modes, longer than the default 3600 s: every Python process pays about 2 minutes of Isaac
 launch and scene build, so an agent's iterations cost more than in the other simulators; with 3600 s most failures in
 our first sweep were agents running out of time mid-attempt (raised 2026-09-26, uniform since).
 

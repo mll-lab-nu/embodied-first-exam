@@ -24,6 +24,7 @@ ISOLATION = ["bash", str(ROOT / "ci_checks/check-verifier-isolation.sh")]
 RESOURCES = [sys.executable, str(ROOT / "ci_checks/check-resources.py")]
 POINTERS = [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")]
 IDENTITY = ["bash", str(ROOT / "ci_checks/check-tooling-identity.sh")]   # repo-level: runs on a tasks directory (see main)
+CUTOFFS = [sys.executable, str(ROOT / "ci_checks/check-cutoffs.py")]
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
@@ -150,6 +151,30 @@ MUTATIONS = [
     ("the instruction states the external-material rule in other words",
      STD, "instruction.md", sub(r"This is an honour rule; trials are reviewed\.", "Do as you like."), RESOURCES,
      "does not state `## External material`"),
+    # ---- the agent's time cutoff (PROTOCOL §2.12): the table, task.toml, the instruction and the sim service agree
+    ("task.toml gives the agent another time than the cutoff table",
+     STD, TOML, sub(r"(^\[agent\]\n(?:(?!\[).*\n)*?timeout_sec = )[0-9.]+", r"\g<1>28800.0"), CUTOFFS, "the table says"),
+    ("the instruction's cutoff sentence with another number",
+     STD, "instruction.md", sub(r"^You have \d+ seconds to complete this task\.", "You have 28800 seconds to complete this task."),
+     CUTOFFS, "does not open, right under its title, with the cutoff paragraphs"),
+    ("the instruction without the cutoff sentence",
+     PRIV, "instruction.md", sub(r"^You have \d+ seconds to complete this task\.[^\n]*\n\n", ""), CUTOFFS, "the sentence is missing"),
+    ("the cutoff sentence further down, not under the title",
+     PRIV, "instruction.md", lambda s: (lambda rows: "\n".join(rows[:2] + ["An introduction first."] + [""] + rows[2:]))(s.split("\n")),
+     CUTOFFS, "does not open, right under its title, with the cutoff paragraphs"),
+    ("a privileged task with the standard modes' second paragraph",
+     PRIV, "instruction.md", sub(r"only what is in `/app/output/` at that moment is\s+graded", "the episode is graded as it stands"),
+     CUTOFFS, "does not open, right under its title, with the cutoff paragraphs"),
+    ("the instruction states the limit a second time, in a benchmark's old words",
+     STD, "instruction.md", sub(r"^(## External material)$", r"Your wall-clock budget is 4 h (14400 s); there is no step budget.\n\n\1"),
+     CUTOFFS, "states the agent's limit a second time"),
+    ("... 'You have 60 minutes of wall-clock time'",
+     PRIV, "instruction.md", sub(r"^(## External material)$", r"- You have 60 minutes of wall-clock time.\n\n\1"),
+     CUTOFFS, "states the agent's limit a second time"),
+    ("the sim service is told another wall clock than the table's",
+     STD, COMPOSE, sub(r'(RCB_WALL_CLOCK_S: ")\d+', r"\g<1>3600"), CUTOFFS, "RCB_WALL_CLOCK_S = 3600, the table says"),
+    ("the sim service is not told the wall clock (it would report its code's default)",
+     MWP, COMPOSE, sub(r"^ *RCB_WALL_CLOCK_S:.*\n", ""), CUTOFFS, "does not give the sim service RCB_WALL_CLOCK_S"),
     # ---- review round 3, M5: a variable in a volume source, the top level of the file, files by another road
     ("the sim's trusted volume as the default of a variable",
      STD, COMPOSE, in_service("main", "      - ${RCB_CACHE_VOL:-rcb_behavior_cache_trusted}:/cache", VOL), ISOLATION, VAR),
@@ -234,7 +259,7 @@ def main() -> int:
                 return 1
             clean[name] = Path(tmp) / "clean" / name
             shutil.copytree(src, clean[name])
-            for cmd in (ISOLATION, RESOURCES, POINTERS):
+            for cmd in (ISOLATION, RESOURCES, POINTERS, CUTOFFS):
                 rc, out = run(cmd, clean[name])
                 if rc != 0:
                     print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {Path(cmd[-1]).name}:\n{out[-800:]}")

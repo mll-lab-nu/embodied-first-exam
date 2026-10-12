@@ -1,5 +1,9 @@
 # RoboTwin 2.0 · stack_blocks_two — frozen instance
 
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Installing packages is not cheating (`## External material` below).
+
 You control a simulated dual-arm **ALOHA-AgileX** robot (RoboTwin 2.0 on SAPIEN 3 / PhysX, CuRobo motion
 planning) via Python. **Task:** stack the green block on top of the red block, using either arm, then open both
 grippers so the stack stays put. (RoboTwin's success predicate: the green block's centre is within 2.5 cm in x/y
