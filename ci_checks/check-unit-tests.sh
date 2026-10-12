@@ -26,6 +26,8 @@ for t in robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standar
          tests/test_codex_tools_off.py; do
   run 300 "$t"
 done
+# RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test)
+if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 robodojo/tests/test_standard_grading.py; fi
 # standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
 if [ "${1:-}" = "--all" ]; then run 900 robolab/tests/test_finalize.py; fi
 

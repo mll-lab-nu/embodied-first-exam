@@ -211,8 +211,8 @@ episode is graded. Results with `N > 0` are reported separately and never ranked
 
 **Who serves it.** The standard twins of twelve benchmarks: BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces,
 MyoSuite, DexJoCo, YAMLab, RoboDojo, LabUtopia and AutoBio ([docs/benchmarks/](benchmarks/); MyoSuite and AutoBio: MuJoCo on the CPU, resume class `exact`; YAMLab: Isaac
-Lab with CPU PhysX, resume class `exact`; RoboDojo: Isaac Lab with GPU PhysX, resume class `exact`, `approx` for its four tasks
-graded by verdict; LabUtopia: Isaac Sim, PhysX on the CPU, resume class `exact`), and MuJoCo Playground's quadruped tasks. The RoboTwin and the other MuJoCo standard tasks (DexToolBench, MuJoCo Playground's manipulation tasks) serve 2.1.
+Lab with CPU PhysX, resume class `exact`; RoboDojo: Isaac Lab with GPU PhysX, resume class `exact`, `approx` for its six
+standard-only tasks graded by the live episode; LabUtopia: Isaac Sim, PhysX on the CPU, resume class `exact`), and MuJoCo Playground's quadruped tasks. The RoboTwin and the other MuJoCo standard tasks (DexToolBench, MuJoCo Playground's manipulation tasks) serve 2.1.
 
 **One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/), the D9 shared source of these six
 benchmarks: the service layer `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash
@@ -423,14 +423,18 @@ The resume check depends on the simulator's determinism class, which the adapter
 
 | class | rule | benchmarks |
 |---|---|---|
-| `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) | RoboWits on Genesis' CPU backend; RoboLab (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact); RoboPaint (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); MolmoSpaces (MuJoCo, CPU physics); YAMLab (Isaac, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact); LabUtopia (Isaac Sim, CPU PhysX, a fresh process as RoboLab; one control step is one physics step); AutoBio (MuJoCo 3.3, CPU physics; one control step is one physics step); RoboDojo (Isaac, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 50 of its 54 tasks; `make_toast` with PhysX enhanced determinism) |
-| `approx` | the hash is compared and the result recorded; a mismatch does not end the episode: `resume_state_mismatch = 1`, and the robot's deviation from its checkpointed proprio is recorded (max \|Δ\| over `joint_pos`; the largest TCP position error from `tcp_pose`). Only a gross divergence, a TCP more than `RCB_RESUME_MAX_DEV_M` (0.05 m) from where it was, ends the episode as `resume_failed` (`infra_error = 1`) | simulators declared nondeterministic: RoboWits on the GPU backend (the particle families separate_marbles_and_sand and stabilize_bottle, `RCB_ROBOWITS_BACKEND=gpu`); BEHAVIOR-1K (OmniGibson declares rollouts nondeterministic; measured so far: live = fresh replay on every 2.2 run, so it normally resumes exactly); ManiGuard (OmniGibson 3.7.2; not measured yet); RoboDojo's four tasks graded by verdict (`make_toast_random` and the three liquid tasks: GPU PhysX particles, resets not bit-identical) |
+| `exact` | the replayed state hash must equal the checkpoint's; otherwise the episode ends `resume_failed` (`infra_error = 1`) | RoboWits on Genesis' CPU backend; RoboLab (Isaac, CPU PhysX: the resumed service is a fresh process, whose first replay is bit-exact); RoboPaint (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); MolmoSpaces (MuJoCo, CPU physics); YAMLab (Isaac, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact); LabUtopia (Isaac Sim, CPU PhysX, a fresh process as RoboLab; one control step is one physics step); AutoBio (MuJoCo 3.3, CPU physics; one control step is one physics step); RoboDojo (Isaac, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism) |
+| `approx` | the hash is compared and the result recorded; a mismatch does not end the episode: `resume_state_mismatch = 1`, and the robot's deviation from its checkpointed proprio is recorded (max \|Δ\| over `joint_pos`; the largest TCP position error from `tcp_pose`). Only a gross divergence, a TCP more than `RCB_RESUME_MAX_DEV_M` (0.05 m) from where it was, ends the episode as `resume_failed` (`infra_error = 1`) | simulators declared nondeterministic: RoboWits on the GPU backend (the particle families separate_marbles_and_sand and stabilize_bottle, `RCB_ROBOWITS_BACKEND=gpu`); BEHAVIOR-1K (OmniGibson declares rollouts nondeterministic; measured so far: live = fresh replay on every 2.2 run, so it normally resumes exactly); ManiGuard (OmniGibson 3.7.2; not measured yet); RoboDojo's six standard-only tasks graded by the live episode (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit; PROTOCOL §4.8) |
 
 This relaxes "the hash checked" of PROTOCOL §4.7 for declared-nondeterministic simulators only. It cannot raise a score:
 the verdict never comes from the live state, it comes from fresh replays of the complete recorded trajectory (the
 replayed prefix plus everything after the resume). A mismatch only perturbs what the agent saw, and the flags say so;
 results can exclude or rerun such trials. Crashing the simulator on purpose gains nothing: there is no reset, and three
 crashes inside calls count as the agent's failure.
+The one exception is a task graded by the live episode (PROTOCOL §4.8: physics that does not replay bit for bit;
+RoboDojo's six standard-only tasks): there the verdict is the live episode's, so after a resume it is the live state the
+resumed service continued from. `reward.json` reports `resumes` and `resume_state_mismatch` for it, at most two resumes are
+allowed as everywhere, and a success with `resumes > 0` is reported with those fields (results can exclude or rerun it).
 
 #### 13.2 Evidence fields
 `final.json` and `episode.json` carry `sim_startups`, `resumes`, `resume_state_mismatch` (0/1), `resume_max_tcp_dev_m`,
