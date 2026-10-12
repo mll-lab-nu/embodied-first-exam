@@ -431,6 +431,10 @@ the verdict never comes from the live state, it comes from fresh replays of the 
 replayed prefix plus everything after the resume). A mismatch only perturbs what the agent saw, and the flags say so;
 results can exclude or rerun such trials. Crashing the simulator on purpose gains nothing: there is no reset, and three
 crashes inside calls count as the agent's failure.
+The one exception is a task graded by the live episode (PROTOCOL §4.8: physics that does not replay bit for bit;
+RoboDojo's six standard-only tasks): there the verdict is the live episode's, so after a resume it is the live state the
+resumed service continued from. `reward.json` reports `resumes` and `resume_state_mismatch` for it, at most two resumes are
+allowed as everywhere, and a success with `resumes > 0` is reported with those fields (results can exclude or rerun it).
 
 #### 13.2 Evidence fields
 `final.json` and `episode.json` carry `sim_startups`, `resumes`, `resume_state_mismatch` (0/1), `resume_max_tcp_dev_m`,
