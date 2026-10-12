@@ -175,9 +175,13 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 ## Integrity
 - The baselines are removed from the image in the same layer that installs MyoSuite (no layer of `eai-myosuite` holds
   them), and no task image has a solution.
-- **Agent egress is the model APIs only, in both modes.** The PyPI wheel ships the baselines (the reference solutions
-  of three families), and in an earlier standard-mode trial an agent pip-installed `myosuite==2.12.2` in its client
-  container and rebuilt the simulator locally to plan offline. With the allowlist, PyPI and GitHub are unreachable.
+- **Agent egress is the model APIs and the package registries, in both modes** (PROTOCOL §2.11). The PyPI wheel
+  ships the baselines (the reference solutions of three families), and in an earlier standard-mode trial an agent
+  pip-installed `myosuite==2.12.2` in its client container and rebuilt the simulator locally to plan offline. From
+  2026-10-10 to 2026-10-11 the allowlist had no PyPI; since the owner's decision of 2026-10-11 PyPI is reachable from
+  every task, so `pip install myosuite` works again: the instruction's honour rule asks the agent not to fetch a
+  solution, nothing blocks it, and a trial that installs `myosuite`, `myo-sim` or `robohive` is one to look at.
+  GitHub and Hugging Face stay unreachable.
 - Set 3 traps: MyoSuite 2.12.2's Bimanual, Soccer and ChaseTag envs call `float()` on one-element arrays, which numpy 2.4
   rejects (image 0.1.1 pins numpy 2.3.5; every earlier hash is unchanged); the opponent and the goalkeeper are mocap bodies
   that MyoSuite moves in `base.mj_data` only (the robot's own data keeps them at the origin: without saving them, the

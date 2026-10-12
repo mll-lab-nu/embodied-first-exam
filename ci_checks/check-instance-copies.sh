@@ -6,11 +6,14 @@
 # RoboPaint's privileged environment/ copy is reduced by design (check-robopaint-leak.sh), so its scorer sidecar's
 # environment/scorer/ copy is compared instead. A standard or standard-realtime task's twin <base>-privileged must
 # exist, except for the benchmarks PROTOCOL §4b exempts by owner decision (NO_TWIN below; the same list:
-# scripts/task_conventions.py NO_TWIN): they have no privileged mode and nothing to compare.
+# scripts/task_conventions.py NO_TWIN): they have no privileged mode and nothing to compare. STANDARD_ONLY: standard tasks
+# without a twin that carry their own frozen instance (PROTOCOL §4.8, physics that does not replay bit for bit: graded by
+# the live episode); their generator checks that copy against the benchmark's frozen instance (mk_tasks.py --check).
 # Usage: check-instance-copies.sh tasks/<task-dir>
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"; rc=0
 NO_TWIN=(roboolympics-)   # PROTOCOL §4b: RoboOlympics (owner, 2026-10-08), standard-realtime only
+STANDARD_ONLY=(robodojo-fold-clothes-i00-standard robodojo-fold-clothes-random-i00-standard robodojo-make-toast-random-i00-standard robodojo-pour-by-language-i00-standard robodojo-pour-liquid-into-cup-i00-standard robodojo-pour-liquid-into-cup-random-i00-standard)   # PROTOCOL §4.8 exception (owner, 2026-10-11)
 case "$n" in
   *-standard-realtime) base="${n%-standard-realtime}"; ref="$base-privileged/tests"; copy="environment/sim" ;;   # a sim sidecar too
   *-standard) base="${n%-standard}"; ref="$base-privileged/tests"; copy="environment/sim" ;;
@@ -18,6 +21,12 @@ case "$n" in
   *) base=""; ref="$n/tests"; copy="environment" ;;
 esac
 if [ -n "$base" ]; then
+  for s in "${STANDARD_ONLY[@]}"; do   # while its twin still exists (until the tasks change lands) the pair rules below apply
+    if [ "$n" = "$s" ] && [ ! -e "$(dirname "$t")/$base-privileged" ]; then
+      [ -f "$t/$copy/instance.json" ] || { echo "FAIL $t: a standard-only task carries its frozen instance ($copy/instance.json)"; exit 1; }
+      exit 0
+    fi
+  done
   for p in "${NO_TWIN[@]}"; do
     if [[ "$n" == "$p"* ]]; then
       for f in instance.json instance.npz; do   # no twin, so no instance copy to keep in step with one

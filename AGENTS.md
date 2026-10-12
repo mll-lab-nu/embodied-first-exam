@@ -42,10 +42,10 @@ Read `README.md`, `docs/PROTOCOL.md` (the contract, v1.2-rc) and `CONTRIBUTING.m
 - Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`); no adapters, and no gateway that holds
   credentials or changes requests. The usage gateway (`scripts/usage_gateway/`, `GATEWAY=1` in `run_agent_batch.sh`;
   official runs use it) forwards model-API calls only (`api_paths.json`; anything else at a provider is a 403), records
-  token usage, and is then the agent container's only egress (PROTOCOL D11, §2.11, docs/RUNNING.md). No tool that runs
+  token usage, and is then, with the package registries, the agent container's only egress (PROTOCOL D11, §2.11, docs/RUNNING.md). No tool that runs
   outside the container in official runs: the harness's web search is off (`run_agent_batch.sh` default
   `WEB_SEARCH=disabled`), as are account connectors, apps and plugins.
-- Every task's agent egress is the model APIs only (`[agent] network_mode = "allowlist"`, the hosts of
+- Every task's agent egress is the model APIs and the package registries (`[agent] network_mode = "allowlist"`, the hosts of
   `scripts/set_agent_egress.py`), and `normalize` ends every `instruction.md` with `## External material` (PROTOCOL
   §2.11, generator-owned like `## Resource limits`). A task needs no download at run time: bake it into the image or
   the task directory. Nothing an agent can read (image, tooling, instance metadata) names or locates a solution.

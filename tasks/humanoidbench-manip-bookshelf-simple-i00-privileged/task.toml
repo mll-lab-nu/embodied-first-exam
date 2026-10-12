@@ -78,11 +78,11 @@ memory_mb = 8192
 timeout_sec = 3600.0
 # Deleting get_reward() from the image (images/humanoidbench/scrub_oracles.py) buys nothing if the agent
 # can fetch it back -- upstream is pinned at a public commit, so one `curl raw.githubusercontent.com/...`
-# or `pip download humanoid-bench` restores the whole answer key. Measured: with the default `public`
+# restores the whole answer key (HumanoidBench is not on PyPI). Measured: with the default `public`
 # baseline an agent-phase curl pulled basic_locomotion_envs.py and found 5 `def get_reward`.
-# So the agent reaches the model APIs and nothing else (scripts/set_agent_egress.py HOSTS).
+# So the agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"
-allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
 build_timeout_sec = 1800.0

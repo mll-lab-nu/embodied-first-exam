@@ -183,7 +183,7 @@ A dense reward is the answer key: with it the task is to invert an expression, n
 every `get_reward()` and the constants only it read deleted (`images/humanoidbench/scrub_oracles.py`, in the same
 layer as the clone, `.git` included); each task's own formula ships only where scoring happens -- `tests/` (privileged)
 or `environment/sim/` (standard) -- and is patched back there (`shared/rcb_rewards.py`, from `rewards.json`). The agent
-reaches the model APIs and nothing else (`[agent]` allowlist, `scripts/set_agent_egress.py`), so it cannot fetch the
+reaches the model APIs and the package registries (`[agent]` allowlist, `scripts/set_agent_egress.py`), so it cannot fetch the
 public upstream back; instructions describe the scoring in words, with no tolerance or weight
 (`scripts/humanoidbench/subset.toml`, "HOW TO WRITE scoring_note"; `gen_tasks.py check` looks for formula fragments).
 Known gaps: the image still holds `_WALK_SPEED` and `_RUN_SPEED`, which a class body references (the move

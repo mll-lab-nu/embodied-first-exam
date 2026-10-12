@@ -49,9 +49,9 @@ LAYER = {"rcb_realtime.py": HB / "realtime" / "rcb_realtime.py", "rcb_service.py
 # own grader, and table tennis' duel and low level (these tasks play format match at the high level)
 NOT_IN_SIM = {"builtin_players.py", "grade.py", "duel.py", "workers.py", "ipc.py", "robot_model.py", "seat",
               "tt_duel.xml"}
-# the agent reaches the model APIs only (scripts/set_agent_egress.py HOSTS; the same list as every allowlist task)
+# the agent reaches the model APIs and the package registries only (scripts/set_agent_egress.py HOSTS; the same list as every allowlist task)
 HOSTS = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com",
-         "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com"]
+         "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 REVIEW_PR = 106          # the pull request that adds the tasks (their oracle evidence)
 
 

@@ -21,7 +21,8 @@ Open an articulated fixture in a hand-built AI2-THOR kitchen: find a handle, gra
 
 ## Reference solution
 None is shipped. Upstream's scripted experts (`molmo_spaces/policy/solvers`) are reference solutions and are not in the
-image; neither are grasp files nor the public MolmoBot trajectories (agent egress: the model APIs only).
+image; neither are grasp files nor the public MolmoBot trajectories (agent egress: the model APIs and the package
+registries; the PyPI distribution `molmo-spaces` has those experts, PROTOCOL §2.11).
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`).

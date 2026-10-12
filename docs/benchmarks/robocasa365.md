@@ -60,7 +60,7 @@ service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: ve
 hook's budget, request validation).
 
 ## Egress
-The demonstrations are public, so `task.toml` closes agent egress to the model APIs. The image contains no
+The demonstrations are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image contains no
 demonstration data.
 
 ## Image

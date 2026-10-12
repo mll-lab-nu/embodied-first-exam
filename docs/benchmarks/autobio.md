@@ -156,7 +156,7 @@ they still succeed (the success step moves by at most 22 control steps).
   derives from `Expert`, the `X.Expert = ...` binding and the `__main__` demonstration generator, in the same image
   layer as the clone (no layer holds them); the build fails if a class `...Expert` is left. Everything else stays as it
   is: the agent can read each task's scene code and `check()`.
-- **Agent egress is the model APIs only, in both modes.** The experts are in AutoBio's public repository and its
+- **Agent egress is the model APIs and the package registries, in both modes** (PROTOCOL §2.11). The experts are in AutoBio's public repository and its
   recorded demonstrations on Hugging Face; a standard-mode agent could also rebuild the simulator from the repository.
 - **Only rows cross to the verifier.** The privileged grader copies the trajectory's rows into a clean file and replays
   them with its own copy of the tooling and of the instance, in a sandbox the agent never saw.
