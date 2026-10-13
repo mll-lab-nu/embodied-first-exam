@@ -32,6 +32,9 @@ class Contract(unittest.TestCase):
     def test_banks_are_disjoint_and_share_exactly_one_plant(self):
         a, b = make_spec(0), make_spec(1)
         for spec in [a, b]:
+            self.assertEqual("control-transfer-instance/2", spec["schema"])
+            self.assertEqual("same-plant", spec["transfer_track"])
+            self.assertEqual(10000 + spec["index"] * 1000 + 100, spec["held_out"][0]["plant_seed"])
             self.assertEqual(12, len(spec["held_out"]))
             self.assertEqual(4, len(spec["adaptation"]))
             self.assertEqual({"flat", "slope", "rough", "steps"}, {c["terrain"] for c in spec["held_out"]})
