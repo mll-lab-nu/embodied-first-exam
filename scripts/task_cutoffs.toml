@@ -42,7 +42,7 @@
 "RoboOlympics"      = { standard-realtime = 7200 }
 "RoboPaint"         = { privileged =  3600, standard =  3600 }
 "RoboTangle"        = { privileged =  7200, standard =  7200 }
-"RoboTangle-New"    = { privileged =  7200, standard =  7200 }
+"RoboTangle-New"    = { privileged = 10800, standard = 10800 }
 "RoboTwin 2.0"      = { privileged =  1800, standard =  1800 }
 "RoboWits"          = { privileged =  3600, standard =  3600 }
 "VLABench"          = { privileged =  1800, standard =  1800 }
@@ -240,3 +240,12 @@ from_sec = 0
 to_sec = 7200
 decided_by = "user (2026-10-12)"
 note = "new benchmark (scripts/robotangle-new/, docs/benchmarks/robotangle-new.md): RoboTangle's families on MuJoCo, kept apart from RoboTangle's results; 2 h, within the default cap"
+
+[[history]]
+date = "2026-10-13"
+benchmark = "RoboTangle-New"
+modes = ["privileged", "standard"]
+from_sec = 7200
+to_sec = 10800
+decided_by = "user (2026-10-13)"
+note = "3 h wall clock for every family, within the default cap; the reasoning-time budget idea is dropped (not measurable reliably, least of all in privileged mode with its resets)"

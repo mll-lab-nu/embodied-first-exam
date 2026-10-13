@@ -33,7 +33,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | RoboOlympics | — | — | 7200 s (120 min) | — / — / 3 |
 | RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
 | RoboTangle | 7200 s (120 min) | 7200 s (120 min) | — | 52 / 52 / — |
-| RoboTangle-New | 7200 s (120 min) | 7200 s (120 min) | — | — / — / — |
+| RoboTangle-New | 10800 s (180 min) | 10800 s (180 min) | — | — / — / — |
 | RoboTwin 2.0 | 1800 s (30 min) | 1800 s (30 min) | — | 47 / 47 / — |
 | RoboWits | 3600 s (60 min) | 3600 s (60 min) | — | 15 / 15 / — |
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
@@ -114,3 +114,4 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | 2026-10-12 | MuJoCo Playground, privileged, standard | 3600 s -> 1800 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 3600 s are kept and reported as such |
 | 2026-10-12 | RoboTangle, privileged, standard | 21600 s -> 7200 s | owner | stricter cutoffs, the same number in both modes (board 0085 section 9); no result in the pool was recorded with 21600 s (the results of 10-08..10-10 were set aside before the egress fix); the cap exception of PROTOCOL 2.3 is no longer used |
 | 2026-10-12 | RoboTangle-New, privileged, standard | (none) -> 7200 s | user (2026-10-12) | new benchmark (scripts/robotangle-new/, docs/benchmarks/robotangle-new.md): RoboTangle's families on MuJoCo, kept apart from RoboTangle's results; 2 h, within the default cap |
+| 2026-10-13 | RoboTangle-New, privileged, standard | 7200 s -> 10800 s | user (2026-10-13) | 3 h wall clock for every family, within the default cap; the reasoning-time budget idea is dropped (not measurable reliably, least of all in privileged mode with its resets) |

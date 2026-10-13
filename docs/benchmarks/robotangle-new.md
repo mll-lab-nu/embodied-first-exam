@@ -45,8 +45,8 @@ layer as RoboTangle; docs/benchmarks/robotangle.md, "Grading and determinism", "
 
 ## Time budget (D8)
 
-7200 s (2 h) in both modes (user, 2026-10-12; `scripts/task_cutoffs.toml`), within the default cap: no exception.
-RoboTangle keeps its 6 h. The texts say "the time limit (`## Time limit`)"; RoboTangle's own sentence that the
+10800 s (3 h) wall clock in both modes and every family (user, 2026-10-13; 7200 s from 2026-10-12; `scripts/task_cutoffs.toml`), within the default cap: no exception.
+RoboTangle has its own row (7200 s since 2026-10-12). The texts say "the time limit (`## Time limit`)"; RoboTangle's own sentence that the
 standard service ends the episode on its own clock stays (`RCB_WALL_CLOCK_S` follows the table).
 
 ## Safety readings in standard mode (`meta["safety"]`)
