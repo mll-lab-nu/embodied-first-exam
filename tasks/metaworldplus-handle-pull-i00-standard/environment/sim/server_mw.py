@@ -293,8 +293,11 @@ SPEC = {
         "reset": 0,
         "wall_clock_s": WALL_CLOCK_S,
         "clock": (
-            "meta time_s / time_left_s are counted from your first request to the service; approximate - the harness's "
-            "own deadline is authoritative"
+            "meta time_s / time_left_s count from your first request to the service (any endpoint), not from the "
+            "service's start, and keep running through a restart of the service; time_left_s = budget.wall_clock_s - "
+            "time_s. The harness counts the same limit from the start of your session, so time_left_s never runs out "
+            "before the harness stops you: your real time left is time_left_s minus the time you spent before that "
+            "first request. Plan by time_left_s."
         ),
     },
     "episode": "runs until your time is up; the state after the last executed control step is graded",

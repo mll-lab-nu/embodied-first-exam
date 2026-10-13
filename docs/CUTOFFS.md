@@ -64,7 +64,9 @@ Every `instruction.md` ends with the same section, written by `scripts/task_conv
 
 In the standard and standard-realtime modes the second paragraph is:
 
-> This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).
+> This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Installing packages is not cheating (`## External material` above).
+
+(RoboTangle, whose service counts on a clock of its own, keeps the earlier sentence there: "The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left.")
 
 What a benchmark adds about its own time (a simulator's start-up, what its service counts) stands in its own text and names no number: it says "the time limit (`## Time limit`)".
 
@@ -81,7 +83,7 @@ A change of a cutoff changes the task in place: the scene, the frozen instance, 
 ## What follows the number, and what does not
 
 - **Follows by itself** (`apply`): everything listed above, and a scheduler's estimate of a trial's length, which reads `task.toml`.
-- **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the service's start or from the agent's first request. Harbor's timeout is what stops the agent. RoboTangle's service is the exception today: it ends the episode itself when its own count, running since the service started, reaches 0 (to become report-only at RoboTangle's next task update: `docs/benchmarks/robotangle.md`).
+- **The sim service's clock** (`RCB_WALL_CLOCK_S`) only reports: `spec["budget"]["wall_clock_s"]` and `meta["time_left_s"]`, counted from the agent's first request to the service (any endpoint; kept through a restart of the service), never from the service's start: the service is up before the agent's phase begins, so a clock started with it ran ahead of Harbor's (a median of 79 s over the recorded trials). Harbor's timeout is what stops the agent. RoboTangle's service is the exception today: it ends the episode itself when its own count, running since the service started, reaches 0 (to become report-only at RoboTangle's next task update: `docs/benchmarks/robotangle.md`).
 - **Look at these when you raise a cutoff** (lowering one is safe): the collect-hook and verifier budgets that were sized for an episode as long as the agent's time (RoboCasa, RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo and BEHAVIOR-1K, see their `docs/benchmarks/` pages), and the cap of 14400 s.
 - **RoboOlympics**: the cutoff has to stay above a match's wall time (5 to 60 minutes at slowdown 10).
 - **Not derived from it**: the token budget (PROTOCOL §5), the resource limits (§2.10), reset budgets, step caps, verifier timeouts.

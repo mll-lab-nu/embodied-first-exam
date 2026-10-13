@@ -40,10 +40,10 @@ get_obs with seconds=0, "mp4" means "frames". include_depth adds depth for the r
 most spec()["max_frames_per_call"] frames: (seconds x video_fps + 2) x cameras, depth counting double.
 
 Result (what get_obs / submit return):
-    res.meta                 dict: calls, rows, control_steps (this episode), sim_time_s, time_s (since the episode
-                             started), time_left_s (spec()["budget"]["wall_clock_s"] minus the time since the service's
-                             container started, which it does together with yours: your clock to within a few
-                             seconds; keep a margin), proprio {"layout", "now"}, task {"instruction"}, cameras
+    res.meta                 dict: calls, rows, control_steps (this episode), sim_time_s, time_s (since your first
+                             request to the service), time_left_s (spec()["budget"]["wall_clock_s"] minus time_s: it
+                             never runs out before your time does; your real time left is time_left_s minus what
+                             you spent before that request), proprio {"layout", "now"}, task {"instruction"}, cameras
                              {name: intrinsic_cv, cam2world_gl, width, height, fovy_deg} (current: they move), done,
                              reason (None while the episode runs; "timeout", "error", "step limit"); submit adds
                              chunk_id, type, executed_rows and clipped = n_clipped_rows (the number of rows that had a

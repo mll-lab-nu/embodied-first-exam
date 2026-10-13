@@ -116,6 +116,12 @@ def ctrl_step(a, rec) -> bool:
     return E["done"] or stop
 
 
+def clock() -> dict:
+    """meta time_s / time_left_s: the agent's clock, from its first request (rcb_limited.agent_time), as every adapter."""
+    t = L.agent_time(E)
+    return {"time_s": round(t, 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - t, 1))}
+
+
 def do_submit(meta, A):
     if meta.get("type") != "joint_position": raise ValueError("type must be joint_position")
     if A.ndim != 2 or A.shape[1] != N: raise ValueError(f"actions must be (T, {N})")
@@ -132,7 +138,7 @@ def do_submit(meta, A):
     rec.tick(force=True, last=True)
     EP.log({"ev": "submit", "call": E["calls"], "rows": E["step"] - step0, "control_steps": ctrl_steps()})
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "executed_rows": E["step"] - step0, "done": E["done"],
-            "reason": E["reason"], "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "ok": True}, rec.parts("none", 10)
+            "reason": E["reason"], "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "ok": True, **clock()}, rec.parts("none", 10)
 
 
 def do_observe(meta):
@@ -145,7 +151,7 @@ def do_observe(meta):
             if ctrl_step(S.target.copy(), rec): break
     E["calls"] += 1
     return {"calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "ok": True}, rec.parts("none", 10)
+            "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "ok": True, **clock()}, rec.parts("none", 10)
 
 
 def status() -> dict:

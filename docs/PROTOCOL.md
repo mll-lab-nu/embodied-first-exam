@@ -541,7 +541,7 @@ was a constant, a data value or a literal in each of 26 generators.
 | "Do not cheat" is §2.11's honour rule, not a second rule: installing packages is allowed and is not cheating (the second paragraph says so and points to `## External material`, which keeps the substance: what counts as a solution, that trials are reviewed, what the network reaches); a trial that fetched a solution is flagged and decided by the owner (§2.11, §5) | MUST (how it is read) | [new] |
 | What stops the agent is Harbor's agent timeout, `[agent] timeout_sec`, with no multiplier in official runs. Harbor counts it around the agent's run only (its trial's agent phase: `asyncio.wait_for(agent.run(...), timeout=...)`): after the environment has been built and started and after the agent's harness has been installed, each of which has a timeout of its own, not from the container's start. In the standard modes the `sim` service starts with the environment, so whatever start-up it has not finished by then is waited out inside the agent's time | MUST | [current] (Harbor 0.23; official runs pass only a multiplier for the harness's set-up) |
 | At the cutoff the trial is graded as it stands: privileged, what is in `/app/output/` at that moment; standard modes, the episode as the `sim` service holds it (the collect hook ends and records it, §4.8). A timeout is a result, not an infrastructure error, and is not retried | MUST | [current] |
-| The `sim` service's own clock (`RCB_WALL_CLOCK_S`: `/spec.budget.wall_clock_s`, `meta.time_left_s`) reports the same number and ends nothing; it counts from the service's start or from the agent's first request, so the instruction calls it the service's own count. A service that ends the episode on its own clock says so in the benchmark's own text: today RoboTangle's, counted from the service's first start, which becomes report-only at RoboTangle's next task update (`docs/benchmarks/robotangle.md`) | MUST | [CI] for the number; [current] |
+| The `sim` service's own clock (`RCB_WALL_CLOCK_S`: `/spec.budget.wall_clock_s`, `meta.time_left_s`) reports the same number and ends nothing. It counts from the agent's first request to the service (any endpoint; logged, so a restarted service keeps it), never from the service's start or the end of its scene build: the sidecar is up before the agent's phase begins, and a clock started then runs ahead of the harness's (STANDARD_MODE.md, "The agent's clock"). So `time_left_s` never runs out before the cutoff, and the instruction tells the agent to plan by it. A service that ends the episode on its own clock says so in the benchmark's own text and keeps the earlier closing sentence: today RoboTangle's, counted from the service's first start, which becomes report-only at RoboTangle's next task update (`docs/benchmarks/robotangle.md`) | MUST | [CI] for the number and the service layers' tests (`check-unit-tests.sh`); [new] (2026-10-13, owner; before, RoboCasa's three benchmarks and twelve `eai-standard/2.2` services, LabUtopia among them, counted from the service's start) |
 | Changing a cutoff: edit the table, add an entry to its `[[history]]` (what changed, from and to, date, who decided, why; `apply` and CI refuse a number that differs from its last recorded value: its newest entry, or `scripts/task_cutoffs.baseline.toml`, the table of 2026-10-11, for a number that never changed), run `python3 scripts/task_cutoffs.py apply`, commit; an owner decision, like the cap's exceptions. The task changes in place and keeps its name (§2.8); the `[[history]]` entry is the record, there is no Change Log entry in each task's README (owner, 2026-10-12); results recorded under another cutoff are reported separately (D8) | MUST | [new] |
 | A new benchmark needs two things before its tasks pass: its label in `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix -> name; the table's rows are named by it), which goes in its shared-files pull request (D6), and its row in the table with a `[[history]]` entry (`from_sec = 0`), which goes in the pull request that adds its first tasks: the one line of a shared file a tasks pull request carries, because a row without tasks and tasks without a row both fail | MUST | [CI] |
 
@@ -554,7 +554,9 @@ was a constant, a data value or a literal in each of 26 generators.
 
 Standard and standard-realtime modes, second paragraph:
 
-> This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left. Installing packages is not cheating (`## External material` above).
+> This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Installing packages is not cheating (`## External material` above).
+
+RoboTangle's standard tasks, whose service counts on a clock of its own (below), keep the sentence used until 2026-10-13 in its place: "The service's `time_left_s` is its own count of this limit, from the service's start or from your first request, so it can differ from the time you really have left."
 
 Seconds only, because the sentence is then the same in every task and the number is the one in `task.toml`; a second
 unit is a second number to keep right. The sentence pair opens the section and the explanation follows it, because the
@@ -908,6 +910,22 @@ Open:
    Open: RoboTangle's standard service ends the episode on its own wall clock, started with the service, a little before
    the agent's session; it becomes report-only, like every other service's, at RoboTangle's next task update
    (docs/benchmarks/robotangle.md, "To do").
+8. The agent's clock in the standard modes (§2.12; owner, 2026-10-12, boards 0085 and 0087; landed 2026-10-13): every
+   service's `meta.time_s` / `meta.time_left_s` count from the agent's first request to the service, and a resumed
+   service keeps that moment (STANDARD_MODE.md, "The agent's clock"). The services that counted from their own start
+   changed in place: RoboCasa, RoboCasa365 and RoboCasa-GR1 (`environment/sim/server_casa.py`: from the container's
+   first start) and the twelve benchmarks on the shared `eai-standard/2.2` layer whose adapter counted from the
+   service's start or readiness (BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo,
+   YAMLab, RoboDojo, LabUtopia, AutoBio: `environment/sim/rcb_limited.py`, `server.py`, and the client's docstring).
+   RoboTwin, DexToolBench, MetaWorld+, MuJoCo Playground, KinDER, HumanoidBench, BiGym 2.0, VLABench, LIBERO-MAX and
+   RoboOlympics already counted from the first request; their code is unchanged apart from the wording of `/spec`.
+   Every standard instruction's closing `## Time limit` paragraph changed in place (what `time_left_s` counts from, and
+   that the agent can plan by it), and the sentence "approximate: the harness's own deadline is authoritative" is gone
+   from the instructions and `/spec` texts that had it (RoboTwin, DexToolBench, MetaWorld+, MuJoCo Playground). No
+   service ended an episode on this clock (RoboTangle's apart, unchanged and still open as in 7), so no verdict
+   depended on it: scenes, instances, success rules and graders are unchanged and earlier results stand. What
+   changes for an agent is that `time_left_s` no longer reaches 0 while it still has the harness's set-up time left (the
+   service was up a median of 79 s before the agent's phase over 2,322 recorded standard trials, board 0085).
 
 Decided (owner, 2026-10-02):
 1. Success semantics stay benchmark-defined: each benchmark keeps its upstream's own rule (final state, first success,

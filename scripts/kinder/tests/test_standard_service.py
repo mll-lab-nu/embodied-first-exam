@@ -15,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from pathlib import Path
 
@@ -614,6 +615,36 @@ class CrashRecovery(Base):
         t0 = svc.t0
         svc2 = self.service()
         self.assertEqual(svc2.t0, t0)
+
+
+class AgentClock(Base):
+    """meta time_s / time_left_s: the agent's clock. Harbor counts the agent's cutoff around the agent's run only, and
+    the sidecar is up before that, so the clock starts at the agent's first request, never with the service."""
+
+    def test_it_starts_at_the_first_request_not_with_the_service(self):
+        svc = self.service(FakeSim(goal=99))                        # started and ready; nobody has asked anything
+        time.sleep(0.7)                                             # ... while the harness is being installed
+        self.assertIsNone(svc.t0)
+        self.assertFalse([e for e in events(self.data) if e["ev"] == "first_request"])
+        t = time.time()
+        code, spec, _ = call(svc, "GET", "/spec")                   # the first request, whatever the endpoint
+        self.assertIn("first request", spec["clock"])
+        code, meta, _ = call(svc, "POST", "/observe", {"seconds": 0, "video": "none"})
+        lag = time.time() - t
+        self.assertLessEqual(meta["time_s"], lag + 0.05)
+        self.assertGreaterEqual(meta["time_left_s"], 3600.0 - lag - 0.2)
+        self.assertEqual(len([e for e in events(self.data) if e["ev"] == "first_request"]), 1)
+
+    def test_a_resume_does_not_set_it_back(self):
+        svc = self.service(FakeSim(goal=99))
+        code, m0, _ = self.submit(svc, [[0.5]] * 2)
+        time.sleep(0.7)
+        svc2 = self.service(FakeSim(goal=99))                       # the restarted process resumes the episode
+        self.assertEqual(svc2.t0, svc.t0)
+        code, m1, _ = call(svc2, "POST", "/observe", {"seconds": 0, "video": "none"})
+        self.assertGreaterEqual(m1["time_s"], m0["time_s"] + 0.7)
+        self.assertLessEqual(m1["time_left_s"], m0["time_left_s"] - 0.7)
+        self.assertEqual(len([e for e in events(self.data) if e["ev"] == "first_request"]), 1)
 
 
 class ResetCapability(Base):
