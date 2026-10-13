@@ -81,3 +81,5 @@ python -m scripts.control_transfer.neuralfly_validate --asset /path/to/forces.np
 ```
 
 The family checks cover randomized initialization, disjoint fixed-plant banks, analytic reference derivatives, numeric validation, observation-only adaptation, public/private separation, OSMesa enforcement and no-submission behavior. The local runner executes both complete held-out banks after three adaptation rounds, checks fresh-process replay, decodes every video and records source/runtime hashes. This is local integration evidence, **not a container-isolation proof, native Harbor certification or an LLM model score**. Final numeric results and any remaining gaps are retained in the external validation receipt and worker handoff; raw run artifacts are not committed to Git.
+
+The spec imports only standard-library code and `neuralfly_constants.py`, a public data-only source of `DEFAULT` and `BOUNDS` re-exported by the controller. Include this constants module both in the private package root and in the exported public root beside `nominal_fly.py`. Static CI can run `python -S -m unittest scripts.control_transfer.tests.test_neuralfly_spec -v` without NumPy or MuJoCo.

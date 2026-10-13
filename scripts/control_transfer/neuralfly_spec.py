@@ -2,7 +2,7 @@
 
 import copy
 
-from .control_public.fly import BOUNDS, DEFAULT
+from .neuralfly_constants import BOUNDS, DEFAULT
 
 
 def make_spec(index):

@@ -189,7 +189,7 @@ class NeuralFlyTests(unittest.TestCase):
 
     def test_public_nominal_has_no_private_imports_or_draws(self):
         root = Path(__file__).resolve().parents[1]
-        for name in ["neuralfly_nominal.py", "neuralfly_video.py", "control_public/fly.py"]:
+        for name in ["neuralfly_nominal.py", "neuralfly_video.py", "neuralfly_constants.py", "control_public/fly.py"]:
             text = (root / name).read_text()
             for forbidden in ["trusted.", "plant_seed", "private-fly", "forces.npz", "ASSET_SHA256", "held_out"]:
                 self.assertNotIn(forbidden, text)
