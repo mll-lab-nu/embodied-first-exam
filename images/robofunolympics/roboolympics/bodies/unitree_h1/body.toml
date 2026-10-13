@@ -1,0 +1,210 @@
+# The Unitree H1 (revision H1-2: 6-DOF legs, a torso joint, 7-DOF arms with a 3-DOF wrist) from Unitree's own MJCF,
+# walking with Unitree's own pretrained H1-2 walking policy (unitree_rl_gym, BSD-3-Clause). A tall legged humanoid
+# (1.78 m, 67 kg in the model): the G1's API (bodies/unitree_g1) with a longer reach. Data only: body.py reads it.
+
+[body]
+name = "unitree_h1"
+title = "legged humanoid (Unitree H1-2, 27 DOF)"
+revision = "h1-4"                      # bump on any change that alters play (model.xml, policy, limits, controllers;
+                                       # h1-2: walking command at the real joystick limits, motor curves (estimate), bodies/servo.py)
+                                       # h1-3: self-collision, [self_collision] (bodies/selfcollision.py, 2026-10-09)
+                                       # h1-4: legs x legs, shin x foot (self-collision); the strike boxes out of it
+model = "model.xml"                    # tools/make_model.py from Unitree's h1_2.xml (provenance, changes)
+meshes = { standard = "meshes", fine = "meshes_fine", "25k" = "meshes_25k" }   # standard: 58 k faces (2.9 MB); fine: Unitree's meshes
+                                       # (787 k faces, 38 MB: not in git, tools/make_model.py regenerates them)
+# "25k": the players' level of detail (35 k faces, in git; bodies/lod.py from meshes_fine/,
+# user decision D1 2026-10-08): mount(..., lod="25k") draws the players' images with the real robot's appearance
+license = "BSD-3-Clause (LICENSE: Unitree unitree_rl_gym resources/robots/h1_2, the model and meshes; policy/LICENSE.unitree_rl_gym: the walking policy)"
+mass_kg = 67.4                         # the model (URDF 67.37 kg with the Inspire hands; datasheet "about 70 kg", S1)
+height_m = 1.78                        # standing (datasheet about 178 cm, S1; the model's head top at 1.79 m standing)
+kind = "legged"                        # the base is not a joint: it moves by walking (the policy)
+
+[dof]                                  # the controlled vector u, in this order (the G1's layout)
+names = ["walk_vx", "walk_vy", "walk_wz", "waist_pitch", "waist_yaw",
+         "arm_0", "arm_1", "arm_2", "arm_3", "arm_4", "arm_5", "arm_6"]
+# walk_*: the walking policy's velocity command in the robot's body frame (m/s, m/s, rad/s), held until changed;
+# waist_pitch: the H1 has none (one torso joint, a yaw): the slot keeps the G1's layout for the whole-body planner and
+# must stay within +-0.001 (no effect); waist_yaw: the torso joint; arm_i: the hand arm's joints (shoulder pitch, roll,
+# yaw, elbow pitch, elbow roll = the forearm's roll, wrist pitch, wrist yaw). The other arm holds [rest] other_arm. The
+# legs belong to the walking policy: they are not in u.
+
+[walk]                                 # the walking policy (policy/): Unitree unitree_rl_gym deploy/pre_train/h1_2/motion.pt
+policy = "policy/motion.pt"            # an LSTM actor (64 units) trained in Isaac Gym on h1_2_12dof (the upper body
+                                       # fixed), validated sim-to-sim in MuJoCo by Unitree (deploy/deploy_mujoco,
+                                       # configs/h1_2.yaml); 50 Hz; observation 47 (angular velocity, gravity, command,
+                                       # leg joints, velocities, last action, gait phase): the G1 policy's interface
+sha256 = "ea3003268d5d2e4b5004eb26d0969fbfdedced265ceeec7bf0b335309259cc80"
+weights = "policy/motion.npz"          # its weights as arrays (tools/export_policy.py): the simulator runs it in numpy
+rate_hz = 50
+gait_period_s = 0.8
+# leg joint order of the policy (Unitree's MJCF / URDF): hip yaw, hip pitch, hip roll, knee, ankle pitch, ankle roll
+default_angles = [0.0, -0.16, 0.0, 0.36, -0.2, 0.0, 0.0, -0.16, 0.0, 0.36, -0.2, 0.0]
+kp = [200, 200, 200, 300, 40, 40, 200, 200, 200, 300, 40, 40]
+kd = [2.5, 2.5, 2.5, 4, 2, 2, 2.5, 2.5, 2.5, 4, 2, 2]
+action_scale = 0.25
+obs_scales = { ang_vel = 0.25, dof_pos = 1.0, dof_vel = 0.05, cmd = [2.0, 2.0, 0.25] }
+command_max = [1.0, 1.0, 1.0]          # the policy's training range (lin_vel_x, lin_vel_y, ang_vel_yaw; S5); measured
+                                       # in MuJoCo (tools/smoke.py, steady state): 0.46 / 0.89 m/s forward for 0.5 /
+                                       # 1.0, -0.49 for -0.5, 0.46 / 0.79 m/s sideways for 0.5 / 1.0, 0.45 rad/s for
+                                       # 0.5; drift at 0: under 0.05 m/s; with the arms at a rest pose that moves the
+                                       # centre of mass it drifts (shoulders 0.3, elbows 0.6: 0.13 m/s backwards)
+command_accel = [2.0, 2.0, 4.0]        # how fast a command may change (per second): our rule, not the policy's
+[walk.planning]                        # a planner's model of walking (the planar copy's base): below the measured
+speed_m_s = 0.5                        # speeds (body.py docstring), with the policy's lag in the acceleration
+accel_m_s2 = 1.2
+yaw_rate_rad_s = 0.6
+yaw_accel_rad_s2 = 2.5
+base_kp = [6000.0, 6000.0, 400.0]      # the planar copy's base servo (x, y, yaw): soft in yaw, like the standing robot
+base_kd = [300.0, 300.0, 50.0]
+
+[limits.walk]                          # the walking command u[0:3] (bodies/servo.py WalkCommand): vx, vy, wz
+command_max = [0.8, 0.5, 1.57]         # what Unitree's own deployment accepts from the joystick (audit G8, approved)
+command_accel = [2.0, 2.0, 4.0]        # how fast a command may change (per second)
+[limits.walk.source]
+command_max = "S7 (deploy/deploy_real/configs/h1_2.yaml:45 max_cmd [0.8, 0.5, 1.57]; the policy was trained on +-1, [walk] command_max)"
+command_accel = "ESTIMATE: our rule (the joystick has no published rate limit), as the G1's"
+
+[limits.arm]                           # joints 0..6 of either arm; Unitree h1_2.urdf <limit> (S2)
+speed_rad_s = [9.0, 9.0, 20.0, 20.0, 31.4, 31.4, 31.4]
+torque_nm = [40.0, 40.0, 18.0, 18.0, 19.0, 19.0, 19.0]
+# the datasheet (S1) gives far larger peak torques (shoulder and elbow about 120 N m, wrist about 30 N m) and a peak
+# arm load of about 21 kg (rated about 7 kg): we keep the URDF's efforts, the numbers Unitree's own models use
+reach_m = 0.78                         # shoulder to the palm's mount at most (the model; the paddle's blade centre
+                                       # 0.14 m beyond it)
+payload_kg = 7.0                       # rated (S1)
+[limits.arm.source]
+speed_rad_s = "S2"
+accel_rad_s2 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S6); bounded by the torques"
+jerk_rad_s3 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S6); bounded by the torques"
+torque_nm = "S2 (URDF effort; the datasheet's larger peaks, S1, not used; with the estimated motor curves of [motors], S8)"
+
+[limits.waist]                         # the torso joint (yaw; S2)
+speed_rad_s = [23.0]
+torque_nm = [200.0]
+range_rad = [[-2.35, 2.35]]
+[limits.waist.source]
+speed_rad_s = "S2"
+accel_rad_s2 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S6); bounded by the torques"
+jerk_rad_s3 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S6); bounded by the torques"
+torque_nm = "S2 (with the estimated motor curves of [motors], S8)"
+
+[limits.leg]                           # hip yaw, pitch, roll, knee, ankle pitch, roll of either leg (S2; the datasheet
+speed_rad_s = [23.0, 23.0, 23.0, 14.0, 9.0, 9.0]            # gives the knee about 360 N m, the ankle about 75 N m, S1)
+torque_nm = [200.0, 200.0, 200.0, 300.0, 60.0, 40.0]
+[limits.leg.source]
+speed_rad_s = "S2"
+accel_rad_s2 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S6); bounded by the torques"
+jerk_rad_s3 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S6); bounded by the torques"
+torque_nm = "S2 (with the estimated motor curves of [motors], S8)"
+
+[controller]                           # torso and arms: as the wheeled humanoid's servo (M qdd_des + PD + bias,
+[controller.kp]                        # clipped at the torques, every 1 ms); legs: the policy's PD
+waist = [600.0]
+arm = [300.0, 300.0, 200.0, 200.0, 80.0, 60.0, 60.0]
+[controller.kd]
+waist = [15.0]
+arm = [6.0, 6.0, 4.0, 4.0, 1.5, 1.0, 1.0]
+[controller.step]
+control_dt_s = 0.01
+physics_dt_s = 0.001
+
+[rest]                                 # the arms' zero pose (upper arms down, forearms forward): the pose the
+waist = [0.0, 0.0]                     # walking policy was trained with (h1_2_12dof: the arms fixed at zero); a
+arm = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]          # rest pose that moves the centre of mass makes the robot drift
+other_arm = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]    # (shoulders 0.3, elbows 0.6: 0.13 m/s backwards at command 0)
+
+[mounts]
+wrist = "the body <side>_mount in front of the palm of the Inspire hand on <side>_wrist_yaw_link (0.15 m along the link's +x, 0.04 m to the palm side): +z along the fingers, +x the palm's normal (a shakehand grip: a paddle's face turns with the wrist yaw, +-1.27 rad, not only the wrist pitch, +-0.47 rad; with +x along the wrist-yaw axis, as on the G1, the planner reached 44 of 90 test poses, with this grip 66)"
+cameras = ["head_left", "head_right"]  # a stereo pair in front of the face, 5 cm apart, 58 degree vertical field of
+                                       # view: the H1's head depth camera (Intel RealSense D435i class: 50 mm
+                                       # baseline, 87 x 58 degree depth field of view, S3); its tilt is a mount parameter
+head_pitch_rad = 0.5
+
+[motors]                               # torque-speed curves in Unitree's actuator model (bodies/servo.py Actuators:
+                                       # below X1 rad/s the limit is Y1 / Y2, falling linearly to 0 at X2). ESTIMATE:
+                                       # Unitree publishes no curve or motor assignment for the H1-2 (unitree_rl_lab
+                                       # has none), so each joint gets one shaped like the G1's published ones (S8):
+                                       # X2 = URDF velocity / 0.9 (the G1's URDF velocities are 0.88-0.92 of its motors'
+                                       # no-load speeds), X1 = 0.6 X2 (the G1's knees sit at 0.64-0.77), Y1 = Y2 = the
+                                       # URDF effort (the G1's Y2 is 1.17-1.29 Y1: the braking side kept conservative)
+hip = { X1 = 15.33, X2 = 25.56, Y1 = 200.0, Y2 = 200.0 }
+knee = { X1 = 9.33, X2 = 15.56, Y1 = 300.0, Y2 = 300.0 }
+ankle_pitch = { X1 = 6.0, X2 = 10.0, Y1 = 60.0, Y2 = 60.0 }
+ankle_roll = { X1 = 6.0, X2 = 10.0, Y1 = 40.0, Y2 = 40.0 }
+torso = { X1 = 15.33, X2 = 25.56, Y1 = 200.0, Y2 = 200.0 }
+shoulder = { X1 = 6.0, X2 = 10.0, Y1 = 40.0, Y2 = 40.0 }
+upper_arm = { X1 = 13.33, X2 = 22.22, Y1 = 18.0, Y2 = 18.0 }
+forearm = { X1 = 20.93, X2 = 34.89, Y1 = 19.0, Y2 = 19.0 }
+[motors.assign]
+hip_yaw = "hip"
+hip_pitch = "hip"
+hip_roll = "hip"
+knee = "knee"
+ankle_pitch = "ankle_pitch"
+ankle_roll = "ankle_roll"
+torso = "torso"
+shoulder_pitch = "shoulder"
+shoulder_roll = "shoulder"
+shoulder_yaw = "upper_arm"
+elbow_pitch = "upper_arm"
+elbow_roll = "forearm"
+wrist_pitch = "forearm"
+wrist_yaw = "forearm"
+
+# ---------------------------------------------------------------------------------------------------------------------
+# The low-level plan interface of the optional joint-group arbiter (bodies/control/arbiter.py), as the G1's. The gains
+# are estimates (the motor drivers accept any gain; these keep the 1 kHz PD stable in simulation); the stand gains of
+# the handover are 4 x the walking policy's (not tuned on the H1-2 as the G1's were).
+[lowlevel]
+groups = ["legs", "waist", "arms"]     # left leg 6, right leg 6, the torso joint, left arm 7, right arm 7
+row_dt_s = 0.01
+max_rows = 300
+min_plan_interval_steps = 2
+kp_max = { legs = 1500.0, waist = 800.0, arms = 400.0 }
+kd_max = { legs = 30.0, waist = 20.0, arms = 10.0 }
+[lowlevel.handover]
+blend_steps = 30
+blend_steps_after_skill = 0
+stand_kp = [800, 800, 800, 1200, 160, 160]
+stand_kd = [10, 10, 10, 16, 8, 8]
+stable_tilt_rad = 0.10
+stable_omega_rad_s = 2.0
+stable_com_speed_m_s = 0.20
+stable_window = 40
+timeout_steps = 200
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Self-collision (real limits B0, 2026-10-09: the real arm cannot pass through its own body, so the simulated one
+# cannot either). bodies/selfcollision.py turns this into MuJoCo <pair>s at mount(): parts by body name (without the
+# prefix; a body matching nothing takes its parent's part, one below an arm is that arm's tool), the rules say which
+# parts touch, the exclusions say which pairs do not and why. Automatic exclusions (not listed): geoms of one rigid
+# group (a link, its mount, its tool) and of two rigid groups joined by one joint (the joint's housing).
+# Recorded during play (rig.self_collisions()): events, time in contact, peak force; above warn_force_n a warning.
+# No penalty yet (the sports decide). Check: python -m bodies.selfcollision check <robot> (CI: check-robot-limits).
+[self_collision]
+parts.left_arm = "left_(shoulder_(pitch|roll|yaw)|elbow_(pitch|roll)|wrist_(pitch|yaw))_link|L_.*"
+parts.right_arm = "right_(shoulder_(pitch|roll|yaw)|elbow_(pitch|roll)|wrist_(pitch|yaw))_link|R_.*"
+parts.body = "pelvis|torso_link"
+parts.left_leg = "left_(hip_(yaw|pitch|roll)|knee|ankle_(pitch|roll))_link"
+parts.right_leg = "right_(hip_(yaw|pitch|roll)|knee|ankle_(pitch|roll))_link"
+rules = { arm_body = true, arm_arm = true, tool_own_arm = true, same_arm = false, leg_leg = true, same_leg = true }
+                                       # leg_leg / same_leg (audit, Changhe 2026-10-10): the walking policy's sidesteps
+                                       # crossed the legs by up to 52 mm; shin x foot of one leg (the ankle between)
+ignore_geoms = "(left|right)_foot_strike"   # the kick's strike boxes (contype 8): sensing volumes, not the shell
+warn_force_n = 20.0                    # a self-collision event above this peak normal force is a warning
+[self_collision.source]
+warn_force_n = "ESTIMATE: no vendor publishes a self-contact threshold for this robot; the Franka's collision threshold (20 N, bodies/franka_panda S4) for every body, so one rule reads the same everywhere"
+[[self_collision.exclude]]
+bodies = ["torso_link", "(left|right)_shoulder_roll_link"]
+reason = "shoulder housing: the roll link is the shoulder's second link (the pitch link, its parent, is excluded automatically); at the zero arm pose the walking policy was trained with, its collision mesh touches the torso's (distance 0.0 mm), so every standing robot would log a permanent self-contact; the hulls meet inside the shoulder's housing (up to 4.6 cm in 7% of legal poses). The upper arm (shoulder yaw link) onwards stays enabled and still stops the arm at the chest"
+
+[sources]
+S1 = "Unitree Robotics, H1 product page, specifications (H1 and H1-2): https://www.unitree.com/h1/ (H1-2: about 178 cm, about 70 kg; 6 DOF per leg, 7 DOF per arm; knee about 360 N m, ankle about 75 x 2 N m, waist about 220 N m, shoulder / elbow about 120 N m, wrist about 30 N m peak; arm load peak about 21 kg, rated about 7 kg; moving speed < 2 m/s; 3D LiDAR + depth camera; 15 Ah 0.864 kWh battery)"
+S2 = "Unitree Robotics, h1_2.urdf joint <limit> (effort, velocity, lower, upper), unitree_rl_gym resources/robots/h1_2 (commit 276801e46c5d433564f24658bac64f254b7d2d4b): https://github.com/unitreerobotics/unitree_rl_gym"
+S3 = "Intel RealSense D435i datasheet (stereo baseline 50 mm, depth field of view 87 x 58 degrees): https://www.intelrealsense.com/depth-camera-d435i/"
+S4 = "Unitree unitree_rl_gym resources/robots/h1_2/h1_2.xml and meshes/ (BSD-3-Clause), commit 276801e46c5d433564f24658bac64f254b7d2d4b (also in unitreerobotics/unitree_mujoco unitree_robots/h1_2)"
+S5 = "Unitree unitree_rl_gym (BSD-3-Clause), deploy/pre_train/h1_2/motion.pt, deploy/deploy_mujoco/configs/h1_2.yaml, legged_gym/envs/h1_2/h1_2_config.py, commit 276801e46c5d433564f24658bac64f254b7d2d4b"
+S6 = "Unitree unitree_sdk2 (BSD-3-Clause), commit 63096d0: LowCmd (q, dq, kp, kd, tau per motor) is sent to the motors unchanged: no joint position, velocity or acceleration limiting in the SDK, https://github.com/unitreerobotics/unitree_sdk2"
+S7 = "Unitree unitree_rl_gym (BSD-3-Clause), deploy/deploy_real/configs/h1_2.yaml (max_cmd), commit 276801e46c5d433564f24658bac64f254b7d2d4b"
+S8 = "Unitree unitree_rl_lab, source/unitree_rl_lab/unitree_rl_lab/assets/robots/unitree_actuators.py (the G1's motor curves N7520-14.3, N7520-22.5, N5020-16, W4010-25, from which the H1-2 estimate takes its shape), commit 4960b84732b0c2ec593dccbfe963fda1bcd7b1e3"

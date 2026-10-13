@@ -1,0 +1,13 @@
+{
+ "family": "boxing",
+ "steps": 404,
+ "time_s": 4.04,
+ "time_limit_s": 15.0,
+ "metrics": {
+  "hit_height_m": 1.238,
+  "impulse_n_s": 16.83,
+  "contact_impulse_n_s": 16.88,
+  "contact_s": 0.066
+ },
+ "deterministic": true
+}

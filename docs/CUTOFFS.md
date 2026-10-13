@@ -28,6 +28,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | RoboCasa-GR1 | 3600 s (60 min) | 3600 s (60 min) | — | 24 / 24 / — |
 | RoboCasa365 | 3600 s (60 min) | 3600 s (60 min) | — | 50 / 50 / — |
 | RoboDojo | 3600 s (60 min) | 3600 s (60 min) | — | 48 / 54 / — |
+| RoboFunOlympics | 7200 s (120 min) | 7200 s (120 min) | — | 50 / 50 / — |
 | RoboLab | 3600 s (60 min) | 3600 s (60 min) | — | 53 / 53 / — |
 | RoboOlympics | — | — | 7200 s (120 min) | — / — / 3 |
 | RoboPaint | 3600 s (60 min) | 3600 s (60 min) | — | 43 / 43 / — |
@@ -37,7 +38,7 @@ Every task gives the agent a fixed wall-clock time, its **cutoff**: Harbor's `[a
 | VLABench | 1800 s (30 min) | 1800 s (30 min) | — | 36 / 36 / — |
 | YAMLab | 3600 s (60 min) | 3600 s (60 min) | — | 10 / 10 / — |
 
-1576 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
+1676 task directories. P / S / RT: privileged, standard, standard-realtime. A cutoff is a whole number of seconds, at most 14400 (PROTOCOL D8; RoboTangle's exception: 21600).
 
 ## Exceptions (per family, per task)
 
@@ -93,6 +94,7 @@ The table started on 2026-10-11 with the number every task had on that day; each
 | Date | What | Change | Decided by | Note |
 |---|---|---|---|---|
 | 2026-10-11 | RoboDojo, privileged, standard | 5400 s -> 3600 s | owner | #155, before this table existed (the baseline already has 3600); trials recorded with 5400 s are kept apart |
+| 2026-10-12 | RoboFunOlympics, privileged, standard | (none) -> 7200 s | owner | the benchmark's first tasks (#161): the agent may go online and is asked to find, download and adapt controllers, or to build one, which an hour does not hold |
 | 2026-10-12 | BEHAVIOR-1K, privileged, standard | 14400 s -> 7200 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 14400 s are kept and reported as such |
 | 2026-10-12 | ManiGuard, privileged, standard | 7200 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such |
 | 2026-10-12 | RoboPaint, privileged, standard | 7200 s -> 3600 s | owner | stricter cutoffs in 30-minute steps, the same number in both modes (board 0085 section 9: of the successful trials so far, the share that fits the new number, the simulation cost and the task's execution time); results recorded with 7200 s are kept and reported as such |
