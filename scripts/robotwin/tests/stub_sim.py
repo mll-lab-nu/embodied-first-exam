@@ -116,6 +116,8 @@ class Session:
                 f.write(json.dumps({"task": task, "gripper_state": gripper_state, "enable_render": enable_render}) + "\n")
         self.task, self.seed = task, int(json.load(open(instance))["seed"]) if instance else seed
         self._recording = None
+        # rcb_traj.Session's hand-in cap (MAX_T rows; save_trajectory and replay refuse more), small here: RCB_STUB_MAX_T
+        self.max_rows = int(os.environ["RCB_STUB_MAX_T"]) if os.environ.get("RCB_STUB_MAX_T") else None
         self._build()
 
     def _build(self):
@@ -146,12 +148,18 @@ class Session:
         acts = np.array(self._recording or [], dtype=np.float64).reshape(-1, 34); self._recording = None
         return acts
 
+    def _too_long(self, n):
+        if self.max_rows is not None and n > self.max_rows:
+            raise ValueError(f"the trajectory has {n} rows; the verifier grades at most {self.max_rows} rows (stub)")
+
     def save_trajectory(self, actions, path, meta=None):
+        self._too_long(len(actions))
         np.savez(path, actions=np.asarray(actions, dtype=np.float64), task=self.task, seed=self.seed, meta=json.dumps(meta or {}))
 
     def replay(self, actions):
         if os.environ.get("RCB_STUB_REPLAY_FAIL"):
             raise RuntimeError("CUDA out of memory (stub)")
+        self._too_long(len(actions))
         self._build()
         for row in np.asarray(actions, dtype=np.float64):
             self.step(row)

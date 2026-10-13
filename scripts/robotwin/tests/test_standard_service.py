@@ -350,6 +350,18 @@ class Verdicts(ServiceCase):
         out = s.grade()
         self.assertEqual((out["success"], out["infra_error"], out["instance_mismatch"]), (0, 1, 1))
 
+    def test_the_tools_row_cap_is_not_the_episodes(self):
+        """rcb_traj.Session refuses to save or replay more rows than the privileged verifier grades (MAX_T). A standard
+        episode has no row cap, so the service lifts it for its own Session: a longer episode still gets its verdict."""
+        s = self.service(RCB_STUB_MAX_T=3)                # the stand-in tool's cap: 3 rows
+        code, m, _ = s.post("/submit", {"type": "joint_position", "dt": 0.02, "video": "none"}, [row(0.1)] * 4)
+        self.assertEqual(code, 200)
+        os.kill(s.proc.pid, signal.SIGUSR1)               # the collect hook: save, replay, verdict
+        d = s.wait_final()
+        self.assertGreater(d["n_actions"], 3)
+        self.assertEqual((d.get("finalize_error"), d["replay_success"], d["deterministic"]), (None, False, True))
+        self.assertEqual(s.grade()["infra_error"], 0)
+
 
 class StandardGrader(unittest.TestCase):
     """tests/grade.py of the standard twin on hand-written final.json files."""
