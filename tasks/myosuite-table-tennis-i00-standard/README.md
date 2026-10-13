@@ -8,7 +8,7 @@
 | Simulator / robot | `myosuite` / `myoarm-torso` |
 | Family / instance | `table_tennis` / seed 0 |
 | Oracle | `none` — the privileged twin's positive example (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-table-tennis-i00-privil__kdQdy89`, 111 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
-| Agent time budget | 5400 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
 
 ## Task

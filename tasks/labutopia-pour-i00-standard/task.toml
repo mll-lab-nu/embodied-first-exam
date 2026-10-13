@@ -84,7 +84,7 @@ command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice 
 timeout_sec = 9000                # 2700 (episode end, through a resume) + 2 x 2400 (verdict replays, each limited) + the video (the rest) + 300: finalize.sh
 
 [agent]
-timeout_sec = 5400.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 27 minutes to start
+timeout_sec = 3600.0              # LabUtopia's budget, both modes (docs/benchmarks/labutopia.md): a container's first simulator with its renderer takes 5 to 27 minutes to start
 # LabUtopia's scripted controllers are in its public repository (and a standard-mode agent could rebuild the simulator
 # from it): the agent reaches the model APIs and the package registries, nothing else (scripts/set_agent_egress.py HOSTS).
 network_mode = "allowlist"

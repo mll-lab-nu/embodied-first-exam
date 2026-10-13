@@ -8,7 +8,7 @@
 | Simulator / robot | `vlabench` / `franka-panda` |
 | Family / instance | `vlabench/select_chemistry_tube_spatial` / seed 0 |
 | Oracle | `full` |
-| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
 
 ## Task

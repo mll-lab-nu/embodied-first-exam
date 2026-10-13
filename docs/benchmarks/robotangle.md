@@ -145,6 +145,8 @@ One image and one version serve both modes:
 
 ## Time budget (D8)
 
+**Since 2026-10-12: 7200 s (2 h)** for every task of both modes, and the same for the standard sidecar's wall clock (owner: stricter cutoffs, one number for both modes; `scripts/task_cutoffs.toml` history). No result in the pool was recorded with the earlier 21600 s. One full reference execution takes 2–185 min (below), so a task whose reference execution is longer than the budget cannot be finished by replaying a reference-length solution at the reference's speed; the table can give such a family or task an exception. The text below describes the budget before that and why it was chosen.
+
 `[agent].timeout_sec = 21600` (6 h) for every task, uniform within the benchmark. This is the benchmark owner's rule:
 these puzzles are far harder than typical robotics tasks, and the budget probes the capability ceiling. Simulator
 speed-ups give the agent more interaction within the 6 h; they never shorten it. One full reference execution takes

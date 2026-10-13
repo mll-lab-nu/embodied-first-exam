@@ -8,7 +8,7 @@
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_acrylic_suddenshower` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier, whose replay CLI the collect hook runs (ws3, 2026-10-05): path_mm 13495 of the 40500 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
-| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
 
 ## Task

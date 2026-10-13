@@ -8,7 +8,7 @@
 | Simulator / robot | `maniguard` / `franka-panda-longfinger` |
 | Family / instance | `cabinet_pickup` / seed 26 |
 | Oracle | `none` — No positive example yet (oracle = "none": the 16 ManiGuard tasks added on 2026-10-04 for variety ship without one, user decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 1040-1079 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-cabinet-v1-joint-5cam (revision ea8d1242, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this task's service and none is copied into the task. The frozen instance (state sha 9f0df8b55512a085) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §2.7). |
-| Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-maniguard:0.1.0` |
 
 ## Task
