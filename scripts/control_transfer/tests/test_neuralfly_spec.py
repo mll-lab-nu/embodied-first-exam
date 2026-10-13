@@ -2,6 +2,9 @@
 
 import json
 import unittest
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from scripts.control_transfer.neuralfly_constants import BOUNDS, DEFAULT
 from scripts.control_transfer.neuralfly_spec import make_spec

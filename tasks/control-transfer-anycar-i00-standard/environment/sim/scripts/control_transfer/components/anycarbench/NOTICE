@@ -1,0 +1,14 @@
+This component's wheel, suspension, steering and actuator mechanism is derived from
+LeCAR-Lab/anycar at commit 20fc50a60d3dfff5e6e002a9cdbbb02d604d1b1f.
+The upstream README declares Apache License 2.0. See LICENSE.anycar.
+
+Source: car_dynamics/car_dynamics/envs/mujoco_sim/models/cars/base_car/turbo_boingg.xml
+SHA-256: 0b12cb5dacebdf3ee623ebae3a38bee56ebc9178a66673c7ec09f3fcdcd4f750
+
+Modifications: procedural chassis replacing omitted meshes; duplicate visual wheel
+mass consolidated; exact pi/2 tire alignment; new track, contact priorities, surface
+layout, model parameter interface, CPU solver settings and stepping wrapper.
+No upstream mesh or pretrained checkpoint is included.
+
+The pinned repository has no standalone LICENSE/NOTICE file. The README declaration
+is the recorded license provenance; omitted third-party asset licenses are not inferred.

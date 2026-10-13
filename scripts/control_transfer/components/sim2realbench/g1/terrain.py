@@ -2,8 +2,6 @@
 
 import math
 
-import mujoco
-import numpy as np
 
 KINDS = ("flat", "slope", "rough", "steps")
 
@@ -30,6 +28,8 @@ def make_spec(index):
 
 
 def terrain_parameters(kind, episode_seed):
+    import numpy as np
+
     if kind not in KINDS:
         raise ValueError("Unknown terrain class")
     rng = np.random.default_rng(np.random.SeedSequence([episode_seed, 531]))
@@ -45,6 +45,9 @@ def terrain_parameters(kind, episode_seed):
 
 def build_model(scene, terrain):
     """Flat preserves the source plane. Non-flat courses have a 1 m level starting area."""
+    import mujoco
+    import numpy as np
+
     spec = mujoco.MjSpec.from_file(str(scene))
     kind = terrain["kind"]
     if kind not in KINDS:
@@ -113,6 +116,9 @@ def build_model(scene, terrain):
 
 def ground_height(model, data, x, y):
     """Privileged collision-geometry ray; used only for fall detection, never actor input."""
+    import mujoco
+    import numpy as np
+
     distance = mujoco.mj_ray(
         model,
         data,

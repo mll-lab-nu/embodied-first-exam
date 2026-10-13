@@ -8,13 +8,23 @@ sys.path.insert(0, str(SRC / "components"))
 sys.path.insert(0, str(SRC))
 # Only the current roboEngineer work packages are generated. The other prototypes
 # remain available to explicit local development calls, without published tasks.
-FAMILIES = ["neural-fly", "g1"]
+FAMILIES = ["neural-fly", "g1", "anycar"]
 
 
 def spec(name, index):
+    if name == "neural-fly":
+        from .neuralfly_spec import make_spec
+
+        value = make_spec(index)
+        value.update(schema="control-transfer-instance/2", transfer_track="same-plant")
+        return value
+    if name == "anycar":
+        from .trusted.anycar_spec import make_spec
+
+        return make_spec(index)
     family = "linearbot" if name.startswith("linearbot") else name
     base = 10000 + index * 1000
-    count = {"neural-fly": 5, "linearbot": 3, "spacecraft": 3, "yam": 9, "g1": 3}[family]
+    count = {"neural-fly": 5, "linearbot": 3, "spacecraft": 3, "yam": 9, "g1": 4}[family]
 
     def cases(held):
         result = []
@@ -35,14 +45,14 @@ def spec(name, index):
         "linearbot": "Track independent world-frame base x/y/yaw and both gripper 6D poses simultaneously. Initial base displacement 0.40–0.65 m; hand displacement 0.30–0.85 m. Fixed and moving classes are separate tasks.",
         "spacecraft": "Rendezvous at [0.65,0,0] m in LVLH with identity attitude. Hold position, velocity, attitude and angular-rate tolerances for 3 s without collision.",
         "yam": "Catch and retain a thrown ball with the original YAM fingers; front/left/right approaches crossed with low/middle/high launch heights. No grasp weld or teleport capture.",
-        "g1": "Train a 29-DoF Unitree G1 walking policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo. Stand 2 s, walk forward at 0.6 m/s for 18 s.",
+        "g1": "Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5–0.65 m/s for 18 s.",
     }
     scores = {
         "neural-fly": "Crash or escape: 0. Otherwise 100 exp(-max(0,tracking_RMSE_m-0.03)/0.25); success requires full horizon and RMSE<0.25 m. Tracking uses prescribed timestamps; slowing the reference is impossible.",
         "linearbot": "100 exp(-mean(normalized_errors)); six thresholds: base xy 0.06 m, yaw 0.12 rad, each hand position 0.07 m, each orientation 0.20 rad. Success requires all six time-mean errors below threshold after a 1 s acquisition interval.",
         "spacecraft": "Collision or escape: 0. Weighted terminal pose, speed, angular rate and impulse quality; unsuccessful capture is capped at 49. Thresholds: 0.08 m, 0.025 m/s, 0.07 rad, 0.025 rad/s for final 3 s.",
         "yam": "100 for final bilateral finger retention, elevated >0.32 m and speed<0.25 m/s continuously >=0.5 s. Earlier retention capped at 49; mere proximity gives zero.",
-        "g1": "100 * walking survival fraction * exp(-mean absolute speed error/0.6). Success additionally requires full survival, speed error<0.25 m/s, forward travel>7.02 m, lateral drift<2 m.",
+        "g1": "100 * walking survival fraction * exp(-speed MAE/commanded speed) * clipped forward-progress fraction. Success requires full 20 s survival, speed MAE<0.25 m/s, forward travel>65% of commanded walking distance, lateral drift<2 m. Standing still scores zero.",
     }
     public = {
         "schema": "control-transfer/1",
@@ -143,6 +153,18 @@ def spec(name, index):
             "target_velocity": "world m/s",
             "target_acceleration": "world m/s²",
         }
+    bank = {"adaptation": cases(False), "held_out": cases(True)}
+    if family == "g1":
+        from sim2realbench.g1.terrain import make_spec
+
+        terrain_spec = make_spec(index)
+        bank = {part: terrain_spec[part] for part in ("adaptation", "held_out")}
+        public.update(adaptation_cases=len(bank["adaptation"]), held_out_cases=len(bank["held_out"]))
+        public["command_channels"] = ["forward_velocity", "lateral_velocity", "yaw_rate"]
+        public["command_units"] = ["m/s", "m/s", "rad/s"]
+        public["limitations"] = (
+            "Simulation transfer only, not hardware. Fixed 98→512→256→128→29 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on the second plant."
+        )
     public["image_interval_s"] = 0.2 if family == "yam" else 10.0 if family == "spacecraft" else 1.0
     return {
         "schema": "control-transfer-instance/2",
@@ -151,5 +173,5 @@ def spec(name, index):
         "name": name,
         "index": index,
         "public": public,
-        "bank": {"adaptation": cases(False), "held_out": cases(True)},
+        "bank": bank,
     }

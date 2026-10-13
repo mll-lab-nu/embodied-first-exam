@@ -20,7 +20,7 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]
     echo "ok scripts/$t${*:+ $*}: ${out##*$'\n'}"
   else echo "FAIL scripts/$t${*:+ $*}:"; echo "$out" | tail -n 40; rc=1; fi
 }
-for t in quadrotor_landing/tests/test_native.py robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
+for t in control_transfer/tests/test_neuralfly_spec.py quadrotor_landing/tests/test_native.py robolab/tests/test_grade_standard.py labutopia/tests/test_grade_standard.py labutopia/tests/test_finalize.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
          robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py \
          tests/test_codex_tools_off.py; do

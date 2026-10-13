@@ -1,55 +1,70 @@
-"""Copy operator-supplied pinned robot assets into a private build context. No runtime downloads."""
+"""Prepare pinned nominal G1/Go2 sources; reference policies are separate operator artifacts."""
 
-import argparse, hashlib, json, shutil, subprocess
+import argparse
+import hashlib
+import json
+import shutil
+import subprocess
 from pathlib import Path
 
+UNITREE_PIN = "1425b15f73bd4095f0df53709d7c389c3eb9e790"
 
-def prepare(workspace, out):
-    w = Path(workspace)
-    out = Path(out)
-    pins = [(w/"manipulationbench/vendor/mujoco_menagerie","0059d4335f8156206f63a35662313385f7ad6d74"),(w/"sim2realbench/vendor/unitree_rl_mjlab","1425b15f73bd4095f0df53709d7c389c3eb9e790")]
-    for checkout,commit in pins:
-        if subprocess.check_output(["git","rev-parse","HEAD"],cwd=checkout,text=True).strip()!=commit:
-            raise ValueError("Unpinned robot source")
-        subprocess.run(["git","diff","--quiet","HEAD"],cwd=checkout,check=True)
-    attached=json.loads((w/"locomanipbench/attachment-manifest.json").read_text())
-    for name,expected in attached["files"].items():
-        if name.startswith("bots/Linearbot/"):
-            if hashlib.sha256((w/"locomanipbench/vendor"/name).read_bytes()).hexdigest()!=expected:
-                raise ValueError("Attached Linearbot asset changed")
+
+def prepare(workspace, out, go2_source=None):
+    workspace, out = Path(workspace), Path(out)
+    unitree = workspace / "sim2realbench/vendor/unitree_rl_mjlab"
+    actual = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=unitree, text=True).strip()
+    if actual != UNITREE_PIN:
+        raise ValueError("Unpinned Unitree source")
+    subprocess.run(["git", "diff", "--quiet", "HEAD"], cwd=unitree, check=True)
+    go2_source = Path(go2_source) if go2_source else workspace / "manipulationbench/vendor/mujoco_menagerie"
+    if not (go2_source / "unitree_go2/go2.xml").is_file():
+        raise ValueError("Provide --go2-source with the pinned Menagerie unitree_go2 tree checked out")
     out.mkdir(parents=True, exist_ok=False)
-    for src, dst in [
-        (w / "manipulationbench/vendor/mujoco_menagerie/i2rt_yam", out / "yam"),
-        (w / "locomanipbench/vendor/bots", out / "bots"),
-        (w / "sim2realbench/vendor/unitree_rl_mjlab", out / "unitree_rl_mjlab"),
-    ]:
-        shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc"))
-    # Reference policies are separate operator-owned artifacts, not copied to the agent image.
-    from .control_public.weights import convert_linearbot, convert_g1
-
-    ref = out / "reference"
-    ref.mkdir()
-    convert_linearbot(w / "locomanipbench/runs/linearbot-trained-v1/policy.npz", ref / "linearbot.npz")
-    convert_g1(
-        w / "sim2realbench/vendor/unitree_rl_mjlab/deploy/robots/g1/config/policy/velocity/v0/exported/policy.onnx",
-        ref / "g1.npz",
+    # Keep training code, nominal model assets and licenses. Never stage deployment
+    # examples, released actors, simulation binaries or user-supplied robot archives.
+    shutil.copytree(
+        unitree,
+        out / "unitree_rl_mjlab",
+        ignore=shutil.ignore_patterns(
+            ".git",
+            "__pycache__",
+            "*.pyc",
+            "deploy",
+            "simulate",
+            "docs",
+            ".github",
+            "logs",
+            "outputs",
+            "*.onnx",
+            "*.onnx.data",
+            "*.pt",
+            "*.pth",
+            "*.ckpt",
+        ),
     )
-    # A scrubbed upstream training source has no pretrained policies, deployment logs or solution notebooks.
-    u = out / "unitree_rl_mjlab"
-    for p in list(u.rglob("*.onnx")) + list(u.rglob("*.onnx.data")) + list(u.rglob("*.pt")) + list(u.rglob("*.pth")):
-        p.unlink()
+    from .components.quadrupedbench.assets import prepare as prepare_go2
+
+    prepare_go2(out / "go2", checkout=go2_source)
     manifest = {
-        str(p.relative_to(out)): hashlib.sha256(p.read_bytes()).hexdigest()
-        for p in sorted(out.rglob("*"))
-        if p.is_file()
+        str(path.relative_to(out)): hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(out.rglob("*"))
+        if path.is_file()
     }
+    if any(Path(name).suffix in (".pt", ".pth", ".onnx", ".ckpt") for name in manifest):
+        raise RuntimeError("Reference policy in nominal assets")
     (out / "manifest.json").write_text(json.dumps(manifest, sort_keys=True, indent=2) + "\n")
-    print(json.dumps({"files": len(manifest), "bytes": sum(p.stat().st_size for p in out.rglob("*") if p.is_file())}))
+    print(
+        json.dumps(
+            {"files": len(manifest), "bytes": sum(path.stat().st_size for path in out.rglob("*") if path.is_file())}
+        )
+    )
 
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument("--workspace", required=True)
-    p.add_argument("--out", required=True)
-    a = p.parse_args()
-    prepare(a.workspace, a.out)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--workspace", required=True)
+    parser.add_argument("--out", required=True)
+    parser.add_argument("--go2-source", help="Pinned Menagerie checkout containing unitree_go2")
+    args = parser.parse_args()
+    prepare(args.workspace, args.out, args.go2_source)

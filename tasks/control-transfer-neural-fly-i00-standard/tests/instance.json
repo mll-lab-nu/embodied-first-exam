@@ -112,6 +112,10 @@
         0.5,
         20.0
       ],
+      "observer_gain": [
+        0.0,
+        15.0
+      ],
       "rate_gain": [
         5.0,
         40.0
@@ -131,6 +135,7 @@
       "kd": 4.0,
       "ki": 0.4,
       "kp": 6.0,
+      "observer_gain": 0.0,
       "rate_gain": 16.0,
       "residual": [
         [
@@ -162,18 +167,19 @@
         ]
       ]
     },
-    "evaluation_backend": "native MuJoCo CPU",
-    "feedback": "Video frames and noisy measurements only; no deployment scores, contacts, parameters, seeds or true state. Diagnosis is a short observation/change/prediction, not private reasoning.",
-    "goal": "Track six laps of x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized center and initial phase, in constant and time-varying wind.",
+    "evaluation_backend": "native MuJoCo CPU / NumPy CPU / OSMesa",
+    "feedback": "Noisy telemetry and sampled images only; no scores, contacts, hidden parameters, true state or seeds.",
+    "goal": "Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized phase, horizontal center and initial position offset.",
     "held_out_cases": 10,
     "image_interval_s": 1.0,
-    "limitations": "Flight-log-fitted force surrogate; approximate attitude/actuator dynamics, not PX4 SITL or a DAIML reproduction.",
+    "limitations": "Flight-data quadratic force surrogate and approximate rigid-body/actuator dynamics; not DAIML or PX4. Fixed 50-degree command tilt envelope; 2.2 thrust-to-weight limit.",
     "max_rounds": 3,
     "name": "neural-fly",
-    "policy_abi": "bounded JSON controller coefficients",
+    "policy_abi": "bounded JSON controller coefficients; optional observer_gain in [0,15], default 0",
     "protocol": "eai-policy/1.1",
     "schema": "control-transfer/1",
-    "score": "Crash or escape: 0. Otherwise 100 exp(-max(0,tracking_RMSE_m-0.03)/0.25); success requires full horizon and RMSE<0.25 m. Tracking uses prescribed timestamps; slowing the reference is impossible.",
+    "score": "Crash or escape: 0. Otherwise 100 exp(-max(0,RMSE_m-0.03)/0.25). Success requires the full horizon and RMSE<0.25 m; acquisition is included.",
+    "telemetry_interval_s": 0.1,
     "training_backend": "nominal MuJoCo CPU"
   },
   "schema": "control-transfer-instance/2",

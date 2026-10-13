@@ -21,6 +21,14 @@ def validate(family, policy):
         raw = base64.b64decode(policy["npz_base64"], validate=True)
         Network(raw, family)
         return raw
+    if family == "anycar":
+        from ..control_public.anycar import validate as check
+
+        return check(policy)
+    if family == "go2":
+        from ..control_public.go2 import validate as check
+
+        return check(policy)
     if family == "neural-fly":
         from ..control_public.fly import validate as check
     elif family == "spacecraft":
@@ -38,6 +46,12 @@ def run(family, policy, case, out, render, asset=None):
         from .fly import rollout
 
         return rollout(json.loads(Path(policy).read_text()), case, out, asset, render)
+    if family in ("anycar", "go2"):
+        if family == "anycar":
+            from .anycar import rollout
+        else:
+            from .go2 import rollout
+        return rollout(policy, case, out, render)
     if family == "linearbot":
         from locomanipbench.deploy import rollout
 
@@ -51,12 +65,9 @@ def run(family, policy, case, out, render, asset=None):
             out=out,
         )
     elif family == "g1":
-        from sim2realbench.g1.deploy import rollout
+        from sim2realbench.g1.evaluation import rollout
 
-        record = rollout(
-            policy, out=out, plant_seed=case["plant_seed"], episode_seed=case["episode_seed"], render=render
-        )
-        record["metrics"]["success"] = record["metrics"]["walking_success"]
+        record = rollout(policy, case, out, render)
     elif family == "yam":
         from manipulationbench.simulation import rollout
 
@@ -89,7 +100,13 @@ def run(family, policy, case, out, render, asset=None):
 
 def feedback(family, record, folder):
     value = record["feedback"]
-    allowed = {"telemetry", "targets"} if family == "linearbot" else {"telemetry"}
+    allowed = (
+        {"telemetry", "targets"}
+        if family == "linearbot"
+        else {"telemetry", "commands"}
+        if family == "g1"
+        else {"telemetry"}
+    )
     if set(value) != allowed:
         raise ValueError("Unexpected observation fields")
     # Exact sensor payloads only; no scores, contacts, dynamics, filenames or seeds.
@@ -108,16 +125,30 @@ def feedback(family, record, folder):
                 "target_acceleration",
             }:
                 raise ValueError("Observation fields")
+            for key, values in row.items():
+                if key != "t" and (not isinstance(values, list) or len(values) != (4 if key == "quaternion" else 3)):
+                    raise ValueError("Observation dimension")
             vals = [row["t"]] + [v for k, x in row.items() if k != "t" for v in x]
         else:
             if set(row) != {"t", "values"}:
                 raise ValueError("Observation fields")
-            dimensions = {"g1": 29, "linearbot": 16, "spacecraft": 13, "yam": 11}
+            dimensions = {"g1": 29, "linearbot": 16, "spacecraft": 13, "yam": 11, "anycar": 18, "go2": 37}
             if len(row["values"]) != dimensions[family]:
                 raise ValueError("Observation dimension")
             vals = [row["t"]] + row["values"]
         if not all(type(x) in (int, float) and math.isfinite(x) for x in vals):
             raise ValueError("Observation values")
+    if family == "g1":
+        commands = value["commands"]
+        if not isinstance(commands, list) or len(commands) != len(value["telemetry"]):
+            raise ValueError("Command schedule")
+        for sensor, command in zip(value["telemetry"], commands):
+            if set(command) != {"t", "values"} or command["t"] != sensor["t"]:
+                raise ValueError("Command fields")
+            if not isinstance(command["values"], list) or len(command["values"]) != 3:
+                raise ValueError("Command dimension")
+            if not all(type(v) in (int, float) and math.isfinite(v) for v in command["values"]):
+                raise ValueError("Command values")
     folder = Path(folder)
     frames = []
     if (folder / "video.mp4").exists():
@@ -136,6 +167,8 @@ def feedback(family, record, folder):
                 "vfr",
                 "-frames:v",
                 "48",
+                "-threads",
+                "1",
                 "-q:v",
                 "3",
                 str(folder / "frame-%03d.jpg"),

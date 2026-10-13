@@ -2,42 +2,118 @@
   "bank": {
     "adaptation": [
       {
-        "episode_seed": 11000,
-        "plant_seed": 11100
+        "duration": 20.0,
+        "episode_seed": 171003,
+        "plant_seed": 38664,
+        "speed": 0.5,
+        "terrain": "flat"
       },
       {
-        "episode_seed": 11001,
-        "plant_seed": 11100
+        "duration": 20.0,
+        "episode_seed": 171004,
+        "plant_seed": 38664,
+        "speed": 0.6,
+        "terrain": "slope"
       },
       {
-        "episode_seed": 11002,
-        "plant_seed": 11100
+        "duration": 20.0,
+        "episode_seed": 171005,
+        "plant_seed": 38664,
+        "speed": 0.65,
+        "terrain": "rough"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171006,
+        "plant_seed": 38664,
+        "speed": 0.5,
+        "terrain": "steps"
       }
     ],
     "held_out": [
       {
-        "episode_seed": 11300,
-        "plant_seed": 11100
+        "duration": 20.0,
+        "episode_seed": 171103,
+        "plant_seed": 38664,
+        "speed": 0.5,
+        "terrain": "flat"
       },
       {
-        "episode_seed": 11301,
-        "plant_seed": 11100
+        "duration": 20.0,
+        "episode_seed": 171104,
+        "plant_seed": 38664,
+        "speed": 0.6,
+        "terrain": "slope"
       },
       {
-        "episode_seed": 11302,
-        "plant_seed": 11100
+        "duration": 20.0,
+        "episode_seed": 171105,
+        "plant_seed": 38664,
+        "speed": 0.65,
+        "terrain": "rough"
       },
       {
-        "episode_seed": 11303,
-        "plant_seed": 11100
+        "duration": 20.0,
+        "episode_seed": 171106,
+        "plant_seed": 38664,
+        "speed": 0.5,
+        "terrain": "steps"
       },
       {
-        "episode_seed": 11304,
-        "plant_seed": 11100
+        "duration": 20.0,
+        "episode_seed": 171107,
+        "plant_seed": 38664,
+        "speed": 0.6,
+        "terrain": "flat"
       },
       {
-        "episode_seed": 11305,
-        "plant_seed": 11100
+        "duration": 20.0,
+        "episode_seed": 171108,
+        "plant_seed": 38664,
+        "speed": 0.65,
+        "terrain": "slope"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171109,
+        "plant_seed": 38664,
+        "speed": 0.5,
+        "terrain": "rough"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171110,
+        "plant_seed": 38664,
+        "speed": 0.6,
+        "terrain": "steps"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171111,
+        "plant_seed": 38664,
+        "speed": 0.65,
+        "terrain": "flat"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171112,
+        "plant_seed": 38664,
+        "speed": 0.5,
+        "terrain": "slope"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171113,
+        "plant_seed": 38664,
+        "speed": 0.6,
+        "terrain": "rough"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171114,
+        "plant_seed": 38664,
+        "speed": 0.65,
+        "terrain": "steps"
       }
     ]
   },
@@ -53,7 +129,7 @@
   "index": 1,
   "name": "g1",
   "public": {
-    "adaptation_cases": 3,
+    "adaptation_cases": 4,
     "channels": [
       "left_hip_pitch_joint",
       "left_hip_roll_joint",
@@ -85,18 +161,28 @@
       "right_wrist_pitch_joint",
       "right_wrist_yaw_joint"
     ],
+    "command_channels": [
+      "forward_velocity",
+      "lateral_velocity",
+      "yaw_rate"
+    ],
+    "command_units": [
+      "m/s",
+      "m/s",
+      "rad/s"
+    ],
     "evaluation_backend": "native MuJoCo CPU",
     "feedback": "Video frames and noisy measurements only; no deployment scores, contacts, parameters, seeds or true state. Diagnosis is a short observation/change/prediction, not private reasoning.",
-    "goal": "Train a 29-DoF Unitree G1 walking policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo. Stand 2 s, walk forward at 0.6 m/s for 18 s.",
-    "held_out_cases": 6,
+    "goal": "Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5\u20130.65 m/s for 18 s.",
+    "held_out_cases": 12,
     "image_interval_s": 1.0,
-    "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor, frozen public PD wrapper. Coding-agent feedback contains only joint angles and images.",
+    "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on the second plant.",
     "max_rounds": 3,
     "name": "g1",
     "policy_abi": "numeric fixed MLP NPZ (8 MiB maximum)",
     "protocol": "eai-policy/1.1",
     "schema": "control-transfer/1",
-    "score": "100 * walking survival fraction * exp(-mean absolute speed error/0.6). Success additionally requires full survival, speed error<0.25 m/s, forward travel>7.02 m, lateral drift<2 m.",
+    "score": "100 * walking survival fraction * exp(-speed MAE/commanded speed) * clipped forward-progress fraction. Success requires full 20 s survival, speed MAE<0.25 m/s, forward travel>65% of commanded walking distance, lateral drift<2 m. Standing still scores zero.",
     "training_backend": "mjlab / MuJoCo Warp GPU",
     "units": [
       "rad",

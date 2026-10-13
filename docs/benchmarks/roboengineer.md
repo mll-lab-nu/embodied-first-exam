@@ -6,29 +6,31 @@ roboEngineer evaluates a coding agent's ability to engineer controllers across r
 
 | Embodiment | Task | Intended objective | Status in this collection |
 |---|---|---|---|
-| Drone | Neural Fly | Track a timed figure-eight trajectory while adapting to hidden aerodynamic disturbances. | In development; imported CPU prototype |
+| Drone | [Neural Fly](roboengineer-neuralfly.md) | Track a timed figure-eight trajectory while adapting to hidden aerodynamic disturbances. | Implemented locally; 20/20 reference cases; native Harbor validation running |
 | Drone | [Neural Landing](quadrotor-landing.md) | Land safely and promptly on an independently randomized pad from randomized initial x/y and height, with a hidden real-flight learned force residual. | Implemented; two native Harbor instances validated with scripted oracle and nop |
-| Racing car — AnyCar | Multi-surface Tracking | Track a driving trajectory across surfaces with differing tire–ground interaction. | In development |
-| Humanoid — Unitree G1 | Walking over Terrain | Maintain commanded walking while traversing varied terrain. | In development; extending the walking prototype |
-| Quadruped — Unitree Go2 | Weave Pole Navigation | Navigate a slalom between poles; follow SPI-Active's open-loop weave-pole setting when specifying the task. | In development; SPI-Active reference |
-| Quadruped — Unitree Go2 | Attitude Tracking | Track commanded body attitude. | In development; SPI-Active reference |
-| Quadruped — Unitree Go2 | Forward Jump | Execute a forward jump and recover a stable landing. | In development; SPI-Active reference |
-| Quadruped — Unitree Go2 | Yaw Jump | Execute a jump with a change in heading and recover a stable landing. | In development; SPI-Active reference |
+| Racing car — AnyCar | [Multi-surface Tracking](roboengineer-anycar.md) | Track a driving trajectory across surfaces with differing tire–ground interaction. | Implemented locally; native Harbor validation running |
+| Humanoid — Unitree G1 | [Walking over Terrain](roboengineer-g1.md) | Maintain commanded walking while traversing varied terrain. | Implemented locally; trained reference 17/24; incomplete solvability on plant 1 |
+| Quadruped — Unitree Go2 | Weave Pole Navigation | Navigate a slalom between poles; follow SPI-Active's open-loop weave-pole setting when specifying the task. | Implemented development component; positive reference not established |
+| Quadruped — Unitree Go2 | Attitude Tracking | Track commanded body attitude. | Implemented locally; attitude reference 10/10 on MuJoCo 3.8; 3.5 alignment pending |
+| Quadruped — Unitree Go2 | Forward Jump | Execute a forward jump and recover a stable landing. | Implemented development component; positive reference not established |
+| Quadruped — Unitree Go2 | Yaw Jump | Execute a jump with a change in heading and recover a stable landing. | Implemented development component; positive reference not established |
 
-The quadruped reference is [SPI-Active: Sampling-Based System Identification with Active Exploration for Legged Robot Sim2Real Learning](https://lecar-lab.github.io/spi-active_/). Its project page presents forward jump, yaw jump, and attitude tracking among its performance tasks, plus a separate **open-loop weave pole navigation** demonstration. These four tasks define this roadmap's quadruped scope; their implementations, numeric targets and evaluation rules have not yet been ported. Open-loop refers to the eventual execution setting, distinct from feedback between engineering iterations.
+The quadruped reference is [SPI-Active: Sampling-Based System Identification with Active Exploration for Legged Robot Sim2Real Learning](https://lecar-lab.github.io/spi-active_/). Its project page presents forward jump, yaw jump, and attitude tracking among its performance tasks, plus a separate **open-loop weave pole navigation** demonstration. These four tasks define this roadmap's quadruped scope; the [Go2 implementation](roboengineer-go2.md) supplies numeric targets and contact-based success predicates, with remaining reference-control failures recorded. Open-loop refers to the eventual execution setting, distinct from feedback between engineering iterations.
 
-Neural Landing is the only task with completed native Harbor validation. The other seven entries are under development; generated prototype packages or local smoke runs do not establish successful control or container isolation. Training may use Isaac, mjlab/MuJoCo Warp or CPU simulation. **Every deployment and held-out evaluator must use native CPU MuJoCo, CPU numeric inference and software OSMesa rendering**, even where the source paper uses Isaac. The actual robot, actor inputs, hidden dynamics, budgets and scoring must be frozen and validated separately for each task.
+Neural Landing is the only task with completed native Harbor validation. The seven additions have local implementations, with differing reference-solvability and integration status as listed above. Local successes do not establish container isolation or an LLM result. Training may use Isaac, mjlab/MuJoCo Warp or CPU simulation. **Every deployment and held-out evaluator must use native CPU MuJoCo, CPU numeric inference and software OSMesa rendering**, even where the source paper uses Isaac. The actual robot, actor inputs, hidden dynamics, budgets and scoring must be frozen and validated separately for each task.
 
 The imported Control Transfer sources also contain earlier Linearbot, spacecraft and YAM prototypes. They remain available for development, but are not generated as members of this eight-task collection. Existing similarly named tasks elsewhere in the repository are not automatically members.
 
 ## Shared evaluation structure
 
-The intended collection workflow is:
+The collection workflow is:
 
 1. **Nominal training:** the agent develops a controller or policy with a public model and declared compute/time limits.
 2. **Deployment and improvement:** a separate evaluator runs a submitted artifact on hidden dynamics. The agent receives only the task's permitted camera/video observations and noisy measurements, records a short diagnosis and proposed change, and may improve its artifact for a bounded number of rounds.
 3. **Held-out evaluation:** freeze the selected artifact before evaluation on a private bank. Held-out states, scores and videos are withheld until the agent's work is complete.
 4. **Traceable reporting:** retain artifact versions, the exact feedback delivered at each round, submitted diagnoses, budgets, and final per-case metrics and recordings. Agent-visible feedback and operator-only evaluation records must be labeled separately.
+
+Each instance preserves one hidden physical plant throughout adaptation and held-out evaluation. Commands, terrain layouts, initial conditions and sensor noise vary across disjoint cases. Different instances use different plants. This measures adaptation to a particular deployment system; unseen-plant transfer is a separate track.
 
 Use [policy adaptation](../POLICY_MODE.md) where its contract applies. Each task must declare its actual controller interface, round count, sensor channels, privacy boundary and scoring rule; this roadmap does not imply that arbitrary agent code may execute inside the deployment service. Report results by task and embodiment. No cross-embodiment aggregate score is defined yet.
 

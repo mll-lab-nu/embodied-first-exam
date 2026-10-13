@@ -37,7 +37,7 @@ drives it from a controller program of its own. It is offered where a benchmark'
 
 ## roboEngineer
 
-[roboEngineer](docs/benchmarks/roboengineer.md) groups control-engineering tasks by embodiment: **drone**, **racing car**, **humanoid**, and **quadruped**. The agent trains or tunes a controller in a nominal simulator, improves it over bounded deployment-feedback rounds, and submits it for private held-out evaluation. **Neural Landing** is the first implemented task; Neural Fly, Multi-surface Tracking, Walking over Terrain, and four SPI-Active quadruped tasks are planned. See the collection roadmap for task scope and implementation status.
+[roboEngineer](docs/benchmarks/roboengineer.md) groups control-engineering tasks by embodiment: **drone**, **racing car**, **humanoid**, and **quadruped**. The agent trains or tunes a controller in a nominal simulator, improves it over bounded deployment-feedback rounds, and submits it for private held-out evaluation. **Neural Landing** has completed native Harbor validation. Neural Fly, AnyCar Multi-surface Tracking, G1 Walking over Terrain, and four SPI-Active-inspired Go2 tasks now have local implementations; the roadmap distinguishes successful references, remaining control failures, and pending isolated validation. See the collection roadmap for task scope and implementation status.
 
 ## Benchmarks
 

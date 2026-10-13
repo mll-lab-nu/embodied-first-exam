@@ -39,7 +39,6 @@ BASELINE = {
     "com_offset": 0.05,
     "action_rate_weight": -0.05,
 }
-PROMPT = """Improve transfer of a Unitree G1 walking policy. Use only describe_task, run_trial, submit. run_trial trains the official G1 mjlab PPO task on GPU and deploys the exported actor on three hidden CPU MuJoCo plants. Diagnose failures only from the returned noisy joint-angle trajectories and chronological video frames. Explain your observed failure, proposed training change, and prediction in a concise diagnosis field for each trial. This is a report for the experiment record, not a request for private reasoning. No deployment metrics, true state, hidden dynamics, or seeds are available. The robot policy retains standard IMU and joint proprioception; those internal policy observations are not exposed to you. Submit a completed checkpoint ID before held-out grading. No filesystem, shell, network, or delegation. This is bounded training configuration, not arbitrary code execution."""
 
 
 def validate(c):
@@ -54,16 +53,17 @@ def validate(c):
     return dict(c)
 
 
-def describe(iterations=10000, num_envs=4096, remaining=3):
+def describe(iterations=10000, num_envs=256, remaining=3):
+    """Public description only. Shared eai-policy service owns admission and final grading."""
     return {
-        "task": "unitree_g1_transfer_v2",
+        "task": "unitree_g1_terrain_transfer_v1",
         "robot": "Unitree G1 29 DoF",
-        "training": "mjlab 1.2.0 / MuJoCo-Warp 3.5.0 / RSL-RL PPO",
-        "deployment": "native MuJoCo 3.5.0 CPU + ONNX Runtime CPU",
-        "goal": "2 s standing then 18 s walking at 0.6 m/s",
-        "policy_inputs": "98 values: angular velocity, projected gravity, command, gait phase, relative joint positions, joint velocities, previous actions",
-        "policy_outputs": "29 position targets through PD, joint mapping and gains from ONNX metadata",
-        "agent_feedback": "Only noisy 29-joint angles at 10 Hz and at most 15 chronological image frames per deployment. Exact images are archived. Metrics and target dynamics withheld.",
+        "training": "blind-terrain mjlab 1.2.0 / MuJoCo-Warp 3.5.0 / PPO",
+        "deployment": "native MuJoCo 3.5.0 CPU + NumPy CPU + OSMesa",
+        "goal": "Stand 2 s, then walk 18 s at the public command over flat, slope, rough or stepped terrain",
+        "policy_inputs": "98 values: noisy angular velocity, projected gravity, command, gait phase, relative joints, joint velocities, previous actions; no terrain scan",
+        "policy_outputs": "29 joint position offsets through the fixed actuator ABI",
+        "agent_feedback": "Noisy 29-joint angles at 10 Hz, public velocity commands and sampled video; no IMU, scores, hidden parameters or true state",
         "channels": JOINT_NAMES,
         "joint_units": "rad",
         "bounds": BOUNDS,
@@ -71,49 +71,16 @@ def describe(iterations=10000, num_envs=4096, remaining=3):
         "iterations_per_trial": iterations,
         "num_envs": num_envs,
         "rollout_steps_per_env": 24,
-        "simulation_steps_per_trial": iterations * num_envs * 24,
+        "policy_steps_per_trial": iterations * num_envs * 24,
         "remaining_trials": remaining,
-        "development_plants": 3,
-        "score": "100 * walking_survival_fraction * exp(-mean_abs_speed_error / 0.6); success requires full horizon, error <0.25 m/s, >7.02 m forward, <2 m lateral drift",
+        "adaptation_cases": 4,
+        "held_out_cases": 12,
+        "plants_per_instance": 1,
+        "score": "100 * walking survival fraction * exp(-speed MAE / commanded speed) * clipped forward-progress fraction",
+        "success": "Full survival, speed MAE <0.25 m/s, forward displacement >65% of commanded walking distance, absolute lateral displacement <2 m",
         "limitations": [
             "sim-to-sim, not hardware",
-            "restricted-tool capability boundary, not an OS sandbox",
-            "default 10000 iterations must be calibrated for fair agent evaluation; short smoke runs do not validate training quality",
+            "short training is not convergence",
+            "native Harbor isolation validation is separate from local rollouts",
         ],
     }
-
-
-def tools():
-    fields = {k: {"type": "number", "minimum": lo, "maximum": hi} for k, (lo, hi) in BOUNDS.items()}
-
-    def t(n, d, p):
-        return {
-            "name": n,
-            "description": d,
-            "parameters": {"type": "object", "properties": p, "required": list(p), "additionalProperties": False},
-        }
-
-    return [
-        t("describe_task", "Public task definition and budget", {}),
-        t(
-            "run_trial",
-            "Train a G1 policy then inspect video and noisy joints on hidden plants",
-            {
-                "config": {
-                    "type": "object",
-                    "properties": fields,
-                    "required": list(fields),
-                    "additionalProperties": False,
-                },
-                "diagnosis": {"type": "string", "maxLength": 2000},
-            },
-        ),
-        t(
-            "submit",
-            "Seal a completed policy",
-            {
-                "checkpoint_id": {"type": "string", "pattern": "^policy-[1-3]$"},
-                "summary": {"type": "string", "maxLength": 2000},
-            },
-        ),
-    ]

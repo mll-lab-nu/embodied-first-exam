@@ -2,16 +2,16 @@
   "schema": "control-transfer/1",
   "protocol": "eai-policy/1.1",
   "name": "g1",
-  "goal": "Train a 29-DoF Unitree G1 walking policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo. Stand 2 s, walk forward at 0.6 m/s for 18 s.",
-  "score": "100 * walking survival fraction * exp(-mean absolute speed error/0.6). Success additionally requires full survival, speed error<0.25 m/s, forward travel>7.02 m, lateral drift<2 m.",
+  "goal": "Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5\u20130.65 m/s for 18 s.",
+  "score": "100 * walking survival fraction * exp(-speed MAE/commanded speed) * clipped forward-progress fraction. Success requires full 20 s survival, speed MAE<0.25 m/s, forward travel>65% of commanded walking distance, lateral drift<2 m. Standing still scores zero.",
   "max_rounds": 3,
-  "adaptation_cases": 3,
-  "held_out_cases": 6,
+  "adaptation_cases": 4,
+  "held_out_cases": 12,
   "feedback": "Video frames and noisy measurements only; no deployment scores, contacts, parameters, seeds or true state. Diagnosis is a short observation/change/prediction, not private reasoning.",
   "training_backend": "mjlab / MuJoCo Warp GPU",
   "evaluation_backend": "native MuJoCo CPU",
   "policy_abi": "numeric fixed MLP NPZ (8 MiB maximum)",
-  "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor, frozen public PD wrapper. Coding-agent feedback contains only joint angles and images.",
+  "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on the second plant.",
   "channels": [
     "left_hip_pitch_joint",
     "left_hip_roll_joint",
@@ -73,6 +73,16 @@
     "rad",
     "rad",
     "rad"
+  ],
+  "command_channels": [
+    "forward_velocity",
+    "lateral_velocity",
+    "yaw_rate"
+  ],
+  "command_units": [
+    "m/s",
+    "m/s",
+    "rad/s"
   ],
   "image_interval_s": 1.0
 }

@@ -17,7 +17,7 @@ EMBODIMENTS = {"neural-fly": "drone", "g1": "humanoid", "anycar": "racing-car", 
 ROBOTS = {"neural-fly": "neural-fly-partial", "g1": "unitree-g1", "anycar": "anycar", "go2": "unitree-go2"}
 
 
-def copy_package(task, where, private, family):
+def copy_legacy_package(task, where, private, family):
     for p in ["scripts/__init__.py", "scripts/control_transfer/__init__.py"]:
         put(task, where + "/" + p, "")
     for p in sorted((SRC / "control_public").glob("*.py")):
@@ -69,6 +69,96 @@ def copy_package(task, where, private, family):
     if private:
         for p in sorted((SRC / "trusted").glob("*.py")):
             put(task, where + "/scripts/control_transfer/trusted/" + p.name, p.read_text())
+
+
+# Explicit agent-visible files: new evaluator helpers must never become public
+# merely because someone added a Python file beside the nominal trainer.
+PUBLIC_MODULES = {
+    "neural-fly": ("fly.py",),
+    "g1": ("g1.py", "g1_training.py"),
+    "anycar": ("anycar.py", "anycar_nominal.py"),
+    "go2": ("go2.py", "go2_nominal.py", "go2_train.py"),
+}
+G1_PUBLIC = {
+    "__init__.py",
+    "g1/__init__.py",
+    "g1/actuator_abi.json",
+    "g1/assets.py",
+    "g1/contract.py",
+    "g1/policy.py",
+    "g1/train.py",
+}
+
+
+def copy_package(task, where, private, family):
+    if family not in PUBLIC_MODULES:
+        return copy_legacy_package(task, where, private, family)
+    for path in (
+        "scripts/__init__.py",
+        "scripts/control_transfer/__init__.py",
+        "scripts/control_transfer/components/__init__.py",
+    ):
+        put(task, where + "/" + path, "")
+    names = ("__init__.py", "client.py", "weights.py", *PUBLIC_MODULES[family])
+    for name in names:
+        source = SRC / "control_public" / name
+        for prefix in ("control_public/", "scripts/control_transfer/control_public/"):
+            put(task, where + "/" + prefix + name, source.read_text())
+    packages = {"neural-fly": [], "g1": ["sim2realbench"], "anycar": ["anycarbench"], "go2": ["quadrupedbench"]}[family]
+    for package in packages:
+        for source in sorted((SRC / "components" / package).rglob("*")):
+            if not source.is_file() or source.is_symlink():
+                continue
+            relative = source.relative_to(SRC / "components" / package).as_posix()
+            if source.suffix not in (".py", ".json") and source.name not in ("LICENSE.anycar", "NOTICE"):
+                continue
+            if not private:
+                if family == "g1" and relative not in G1_PUBLIC:
+                    continue
+                if family == "anycar" and relative not in ("__init__.py", "model.py", "LICENSE.anycar", "NOTICE"):
+                    continue
+                if family == "go2":
+                    continue
+            content = source.read_text()
+            if not private and source.name in ("contract.py", "assets.py"):
+                tree = ast.parse(content)
+                tree.body = [
+                    n
+                    for n in tree.body
+                    if not (
+                        isinstance(n, ast.Assign)
+                        and any(
+                            isinstance(t, ast.Name) and t.id in ("REFERENCE", "PROMPT", "POLICY") for t in n.targets
+                        )
+                        or isinstance(n, ast.FunctionDef)
+                        and n.name in ("describe", "tools")
+                    )
+                ]
+                content = ast.unparse(tree) + "\n"
+            for prefix in ("", "scripts/control_transfer/components/"):
+                put(task, where + "/" + prefix + package + "/" + relative, content)
+    if packages:
+        put(task, where + "/control_assets.py", (SRC / "components/control_assets.py").read_text())
+    if private:
+        names = ("__init__.py", "adapter.py", "session.py", "service.py", "verify.py", "collect.py", "cpu_runtime.py")
+        family_files = {
+            "neural-fly": ("fly.py",),
+            "g1": (),
+            "anycar": ("anycar.py", "anycar_spec.py"),
+            "go2": ("go2.py",),
+        }
+        for name in (*names, *family_files[family]):
+            put(task, where + "/scripts/control_transfer/trusted/" + name, (SRC / "trusted" / name).read_text())
+        for name in ("anycar_spec.py",):
+            if family == "anycar" and (SRC / name).exists():
+                put(task, where + "/scripts/control_transfer/" + name, (SRC / name).read_text())
+    if family == "neural-fly" and (SRC / "neuralfly_nominal.py").exists():
+        for name in ("neuralfly_nominal.py", "neuralfly_video.py", "neuralfly_constants.py"):
+            content = (SRC / name).read_text()
+            put(task, where + "/scripts/control_transfer/" + name, content)
+            put(task, where + "/" + name, content)
+        if not private:
+            put(task, where + "/nominal_fly.py", (SRC / "neuralfly_nominal.py").read_text())
 
 
 def render(task, name, index):
@@ -198,6 +288,8 @@ build_timeout_sec = 600.0
         if gpu
         else """Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python."""
     )
+    if family == "anycar":
+        training += " Run `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal` for local nominal rollouts. The public controller ABI is in `control_public.anycar`."
     if family == "neural-fly":
         training += " The reference and controller are in `control_public.fly`; a public nominal simulator is provided in `nominal_fly.py`."
     put(
@@ -256,12 +348,29 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
         True,
     )
     if family == "neural-fly":
-        s = (SRC / "trusted/fly.py").read_text().replace("from ..control_public.fly", "from control_public.fly")
-        s = s.replace(
-            "    weights = None\n    if asset:",
-            "    asset = None  # Public simulator has nominal dynamics only.\n    weights = None\n    if asset:",
+        put(task, "solution/neuralfly_reference.py", (SRC / "neuralfly_reference.py").read_text())
+        put(
+            task,
+            "solution/solve.sh",
+            "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/neuralfly_reference.py --out /app/output/reference\n",
+            True,
         )
-        put(task, "environment/public/nominal_fly.py", s)
+    if family == "anycar":
+        reference = (
+            (SRC / "trusted/anycar_reference.py")
+            .read_text()
+            .replace("from ..control_public.anycar", "from control_public.anycar")
+        )
+        reference += (
+            "\nif __name__ == '__main__':\n"
+            "    from control_public.client import Client\n"
+            "    from control_public.anycar import DEFAULT\n"
+            "    client = Client()\n"
+            "    client.describe()\n"
+            "    iterate(client, DEFAULT, '/app/output/reference')\n"
+        )
+        put(task, "solution/reference.py", reference)
+        put(task, "solution/solve.sh", "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n", True)
     if family == "spacecraft":
         from nonlinearbench.contract import REFERENCE
 

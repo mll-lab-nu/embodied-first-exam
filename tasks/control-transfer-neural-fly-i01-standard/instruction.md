@@ -1,6 +1,6 @@
 # neural-fly
 
-Track six laps of x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized center and initial phase, in constant and time-varying wind.
+Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized phase, horizontal center and initial position offset.
 
 ## Train, deploy, inspect and revise
 Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python. The reference and controller are in `control_public.fly`; a public nominal simulator is provided in `nominal_fly.py`.
@@ -10,11 +10,11 @@ Use `from control_public.client import Client, artifact`; `Client().describe()` 
 `seal(round_id, summary)` selects a completed round. No held-out feedback is returned. At agent exit the evaluator uses the sealed round or the latest round completed before cutoff; no eligible round scores zero. Hidden simulation runs in a separate container and accepts data-only policies. Network endpoint: `http://127.0.0.1:8000`. No reset or privileged-state endpoint exists.
 
 ## Verification and score
-Crash or escape: 0. Otherwise 100 exp(-max(0,tracking_RMSE_m-0.03)/0.25); success requires full horizon and RMSE<0.25 m. Tracking uses prescribed timestamps; slowing the reference is impossible.
+Crash or escape: 0. Otherwise 100 exp(-max(0,RMSE_m-0.03)/0.25). Success requires the full horizon and RMSE<0.25 m; acquisition is included.
 The selected policy is tested on 10 disjoint cases in two fresh processes. Binary success requires all cases to pass; `final_reward` reports the continuous mean score. Evaluation dynamics, seeds, true state, contacts and grades are never returned during adaptation.
 
 ## Modeling limitations
-Flight-log-fitted force surrogate; approximate attitude/actuator dynamics, not PX4 SITL or a DAIML reproduction.
+Flight-data quadratic force surrogate and approximate rigid-body/actuator dynamics; not DAIML or PX4. Fixed 50-degree command tilt envelope; 2.2 thrust-to-weight limit.
 
 ## External material
 You may install packages you need (pip, apt). Please solve the task yourself: do not look up or download a solution to it, such as this benchmark's own source code, published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

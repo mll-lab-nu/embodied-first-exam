@@ -11,7 +11,7 @@ out = Path(__file__).parent / "assets"
 out.mkdir(exist_ok=False)
 public = out / "public"
 public.mkdir()
-for name in ["bots", "yam", "unitree_rl_mjlab"]:
+for name in ["unitree_rl_mjlab", "go2"]:
     shutil.copytree(
         a.assets / name,
         public / name,

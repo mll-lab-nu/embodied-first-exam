@@ -1,0 +1,40 @@
+"""Stdlib-only operator-owned AnyCar instance hook; never copy into the agent image."""
+
+from ..control_public.anycar import CHANNELS, UNITS, DEFAULT, BOUNDS
+
+
+def make_spec(index):
+    base = 10000 + index * 1000
+    plant_seed = base + 100
+
+    def cases(start, n):
+        return [dict(plant_seed=plant_seed, episode_seed=base + start + i) for i in range(n)]
+
+    public = dict(
+        schema="control-transfer/1",
+        protocol="eai-policy/1.1",
+        name="anycar",
+        goal="Track one prescribed-time lap of a randomized ellipse across rigid traction patches; avoid barriers, rollover and offtrack excursions.",
+        score="Ordered completion and time-indexed position/heading/speed accuracy. Safety violation gives zero. No nearest-waypoint score.",
+        max_rounds=3,
+        adaptation_cases=3,
+        held_out_cases=10,
+        training_backend="nominal MuJoCo CPU",
+        evaluation_backend="native MuJoCo CPU + OSMesa + NumPy CPU",
+        policy_abi="anycar-controller/1 bounded numeric JSON",
+        default_policy=DEFAULT,
+        bounds=BOUNDS,
+        channels=CHANNELS,
+        units=UNITS,
+        image_interval_s=1.0,
+        limitations="Procedural chassis with retained contact-wheel mechanism. Rigid Coulomb friction is not deformable sand. No AnyCar learned transformer is evaluated.",
+    )
+    return dict(
+        schema="control-transfer-instance/2",
+        transfer_track="same-plant",
+        family="anycar",
+        name="anycar",
+        index=index,
+        public=public,
+        bank=dict(adaptation=cases(0, 3), held_out=cases(300, 10)),
+    )

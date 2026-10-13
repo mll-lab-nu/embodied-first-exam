@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0` |
 
 ## Task
-Track six laps of x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized center and initial phase, in constant and time-varying wind.
+Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized phase, horizontal center and initial position offset.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
@@ -39,4 +39,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ## Details
 
 ### Notes
-Flight-log-fitted force surrogate; approximate attitude/actuator dynamics, not PX4 SITL or a DAIML reproduction.
+Flight-data quadratic force surrogate and approximate rigid-body/actuator dynamics; not DAIML or PX4. Fixed 50-degree command tilt envelope; 2.2 thrust-to-weight limit.

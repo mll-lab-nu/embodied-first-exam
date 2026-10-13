@@ -87,14 +87,39 @@ class BoundaryTests(unittest.TestCase):
     def test_feedback_excludes_privileged_fields(self):
         with tempfile.TemporaryDirectory() as d:
             r = {
-                "feedback": {"telemetry": [{"t": 0.0, "values": [0.1] * 29}]},
+                "feedback": {
+                    "telemetry": [{"t": 0.0, "values": [0.1] * 29}],
+                    "commands": [{"t": 0.0, "values": [0.0, 0.0, 0.0]}],
+                },
                 "metrics": {"score": 100},
                 "dynamics": {"secret": 42},
             }
-            self.assertEqual(set(feedback("g1", r, d)), {"telemetry", "images"})
+            self.assertEqual(set(feedback("g1", r, d)), {"telemetry", "commands", "images"})
             r["feedback"]["true_state"] = [1]
             with self.assertRaises(ValueError):
                 feedback("g1", r, d)
+
+    def test_named_sensor_vectors_cannot_hide_additional_values(self):
+        row = {"t": 0.0, "quaternion": [1.0, 0.0, 0.0, 0.0]}
+        row.update(
+            {
+                name: [0.0] * 3
+                for name in (
+                    "position",
+                    "velocity",
+                    "omega",
+                    "target_position",
+                    "target_velocity",
+                    "target_acceleration",
+                )
+            }
+        )
+        with tempfile.TemporaryDirectory() as folder:
+            value = {"feedback": {"telemetry": [row]}}
+            self.assertEqual(len(feedback("neural-fly", value, folder)["telemetry"]), 1)
+            row["position"].append(123.0)
+            with self.assertRaises(ValueError):
+                feedback("neural-fly", value, folder)
 
     def test_nop_and_restart(self):
         with tempfile.TemporaryDirectory() as d:

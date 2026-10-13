@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/eai-control-transfer:0.1.0` |
 
 ## Task
-Train a 29-DoF Unitree G1 walking policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo. Stand 2 s, walk forward at 0.6 m/s for 18 s.
+Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5–0.65 m/s for 18 s.
 
 ## Difficulty
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
@@ -39,4 +39,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ## Details
 
 ### Notes
-Simulation transfer only, not hardware. Fixed 98→512→256→128→29 ELU actor, frozen public PD wrapper. Coding-agent feedback contains only joint angles and images.
+Simulation transfer only, not hardware. Fixed 98→512→256→128→29 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on the second plant.

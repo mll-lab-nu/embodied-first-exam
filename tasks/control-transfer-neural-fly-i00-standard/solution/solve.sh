@@ -1,3 +1,4 @@
 #!/bin/bash
-# No verified oracle: this task is explicitly oracle=none.
-exit 0
+set -euo pipefail
+cd /app
+python /solution/neuralfly_reference.py --out /app/output/reference
