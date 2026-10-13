@@ -321,6 +321,47 @@ CHUNK_S, WATCH_S = 10, 30  # the sim service's RCB_MAX_CHUNK_S / RCB_MAX_WATCH_S
 BUILD_ALLOWANCE_S = 1800  # scene build, kernel compilation and video encoding inside the verifier's timeout
 
 
+# The flat condition in the user's words (2026-10-13), the grader's gate after it; where the scene has the fence (its
+# `fence` object), cloth resting on it does not count. The task code says the same since 6120a57e2a (the blanket's
+# goal_description / blanket_fold common.py); this brings the released texts of the ported tiers in line.
+FLAT_OLD = "Keep every cloth point at most 30 mm above the tabletop and no more than 8 mm below it."
+FLAT_NEW = ("The sheet must lie flat on the tabletop, fully in contact with the table surface{fence}: keep every cloth "
+            "point at most 30 mm above the tabletop and no more than 8 mm below it.")   # = the task code's (goal_description)
+FOLD_FLAT_OLD = ("Flat: every point of the blanket within 35 mm of its height in the target fold, and no point more than "
+                 "30 mm above the target's highest point.")
+FOLD_FLAT_NEW = ("Flat: the folded cloth must lie flat on the tabletop, its bottom layer fully in contact with the table "
+                 "surface: every point of the blanket within 35 mm of its height in the target fold, and no point more than "
+                 "30 mm above the target's highest point.")   # = blanket_fold's own words (common.py)
+GOAL_DIR = "environment/goal"   # a package's goal-state images (fold: the target shape is shown, never given as coordinates)
+
+
+def flat_words(s: str, fence: bool) -> str:
+    """The cloth families' flat condition led by the user's words (a no-op on texts without it)."""
+    new = FLAT_NEW.format(fence=" (cloth resting on the fence does not count)" if fence else "")
+    if fence:
+        s = s.replace(FLAT_NEW.format(fence=""), new)
+    return s.replace(FLAT_OLD, new).replace(FOLD_FLAT_OLD, FOLD_FLAT_NEW)
+
+
+def goal_images(up: pathlib.Path, t: pathlib.Path, instruction: str) -> None:
+    """A package's goal-state images: copied into the agent container at /app/goal/ (both modes); the instruction must
+    name each one (an image nobody points to is a mistake)."""
+    goal = up / GOAL_DIR
+    if not goal.is_dir():
+        return
+    files = sorted(p for p in goal.iterdir() if p.is_file())
+    assert files, f"{up}: empty {GOAL_DIR}"
+    for p in files:
+        assert f"/app/goal/{p.name}" in instruction, f"{up.name}: instruction.md does not name /app/goal/{p.name}"
+        put(t / GOAL_DIR / p.name, p.read_bytes())
+    df = t / "environment/Dockerfile"
+    s, anchor = df.read_text(), "RUN mkdir -p /app/output\n"
+    assert s.count(anchor) == 1, f"{t.name}: environment/Dockerfile has no single {anchor!r}"
+    if "COPY goal/ /app/goal/" not in s:
+        s = s.replace(anchor, "COPY goal/ /app/goal/\n" + anchor)
+    df.write_text(s)
+
+
 def swap(s: str, old: str, new: str, what: str, count: int = 1) -> str:
     assert s.count(old) == count, f"{what}: expected {count} x {old[:60]!r}, found {s.count(old)}"
     return s.replace(old, new)
@@ -855,15 +896,17 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
         t = out / f"{BENCH}-{base}-{mode}"; up = PKG / f"{base}-{mode}"; dirs.append(t)
         rd = lambda n: (up / n).read_text()  # noqa: E731
         put(t / "task.toml", rewrite_toml(rd("task.toml"), base, rec).encode())
-        put(t / "README.md", rewrite_readme(rd("README.md"), base, mode, rec).encode())
+        fence = "`fence`" in rd("instruction.md")
+        put(t / "README.md", flat_words(rewrite_readme(rd("README.md"), base, mode, rec), fence).encode())
         ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(rd("instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboTangle", "RoboTangle (simulator package `topogym`)", 1)
-        ins = review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode)
+        ins = flat_words(review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode), fence)
         put(t / "instruction.md", (safety_text(ins) if mode == "standard" else ins).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
                 assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"
                 text_n = limits_env(n, staged(n, gpu_lines(n, image_lines(rd(n))), base), base, mode)
                 put(t / n, (mujoco_lines(n, text_n, rec) if mujoco else text_n).encode())
+        goal_images(up, t, (t / "instruction.md").read_text())
         put(t / "tests/test.sh", (up / "tests/test.sh").read_bytes(), exe=True)
         lock = binding(base, inst_src, mujoco, direct) if dev is None else dev_binding(inst_src, dev, mujoco, direct)
         tool = (SHARED / "rcb_topogym.py").read_bytes()
