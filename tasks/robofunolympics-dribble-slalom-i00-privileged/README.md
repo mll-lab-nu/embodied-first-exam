@@ -9,7 +9,7 @@
 | Family / instance | `dribble_slalom` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_dribble_slalom.py: positive by injection (the robot really walks the whole course in 54 s, the ball escorted 0.45 m ahead of it); negatives: the ball or the robot on the wrong side, straight back instead of weaving, the ball more than 2 m away, a cone touched, a handball. A walking kick gives the ball about 2 m/s: kick-and-chase inside the 2 m limit was not attempted; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Dribble the football through the slalom: out through the six cones, round the last one and back through them over the start line, keeping the ball within 2 m and touching no cone. (RoboFunOlympics `dribble-slalom`: one Unitree G1 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)
@@ -44,7 +44,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Category | football-and-volleyball |
 | Rule book | The slalom dribble of football skill tests (a line of cones, out through them, round the last and back through them, against the clock); it is a drill, not an event of the Laws: the course is six cones 2 m apart with 90 s allowed. IFAB Laws of the Game 2025/26 for the ball (Law 2: size 5, 68-70 cm round, 410-450 g) and for handling (Law 12: the hand or the arm); deviations: The line the ball and the player must weave is made exact: the ball's centre and the robot's pelvis must each pass every cone on the prescribed side, judged where they cross the line through that cone square to the course; a tester's eye is replaced by these planes. · The pitch is level and uniform (the official ball's rolling resistance), no wind. |
 | Stages | out 1 → out 2 → out 3 → out 4 → out 5 → out 6 → back 6 → back 5 → back 4 → back 3 → back 2 → back 1 → finish |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `096339de55a3b36109cffbcf7bb7b08d678e4561809f172fe35161e2d43a796b` |
+| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `d027195893b56f26eded334d2c02fb6272244c21e13a3ddfb5d0afcb576f9de4` |
 | Episode | 9000 control steps (90 s at 100 Hz) |
 | Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
 | Tooling | `environment/rcb_rfo.py`, `environment/rfo/` (the world, the action layer, the referee's toolkit) and `environment/rfo_task.py` (this family's rules), the same files as in `tests/` (scripts/robofunolympics/shared/) |

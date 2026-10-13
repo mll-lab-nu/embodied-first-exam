@@ -131,7 +131,9 @@ What the platform does and does not do for you:
   zero command it marks time on the spot and recovers from small disturbances, which `stand` does not. When the legs
   come to it from another mode it first blends them to the stance (0.3 s) and holds a zero command until the robot is
   steady (up to 2 s). It was trained with the arms at their zero pose (upper arms down, forearms forward): moving the
-  arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find.
+  arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find. The
+  G1's two other walking policies (FALCON, AGILE) are not offered for it: driven on this robot (joints matched by name)
+  they keep it upright but do not walk it.
 - **`joints` / `lowcmd`** are yours: each motor's torque is `kp (q − q_measured) + kd (dq − dq_measured) + tau`, evaluated
   at 1 kHz with your row held for its 10 ms, then limited by the motor's torque-speed curve and torque limit. `joints`
   uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to 1500 / 800 / 400 and kd up to
@@ -158,7 +160,7 @@ Each row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layo
 force (`*_target`, rad), the pelvis IMU and the torso IMU (each: orientation quaternion `qw, qx, qy, qz`, world from
 sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², gravity included; in the sensor's frame),
 `holding_left`, `holding_right` (1 while that hand grips something), `mode` (0 stand, 1 walk, 2 run, 3 run_arms,
-4 joints / lowcmd), the velocity command in force (`cmd_vx`, `cmd_vy`, `cmd_wz`) and `time_s`, the attempt's time. A
+4 joints / lowcmd; the G1 also 5 walk_falcon, 6 walk_agile), the velocity command in force (`cmd_vx`, `cmd_vy`, `cmd_wz`) and `time_s`, the attempt's time. A
 real H1-2 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
 
 ## External material

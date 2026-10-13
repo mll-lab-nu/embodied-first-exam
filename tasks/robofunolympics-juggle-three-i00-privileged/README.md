@@ -9,7 +9,7 @@
 | Family / instance | `juggle_three` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_juggle_three.py: positive by injection (the hands still, real grip releases and catches, each released ball put on an arc to the other palm); negatives: a ball coming down on its own hand, gripped by its own hand, a low pass, out of order, the waiting ball pushed, onto the head. With still hands the outgoing ball always meets the incoming one: a cascade needs hands that move; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Juggle three balls in a cascade: throw each ball from one hand in an arc to the other, the hands in turn, until 10 catches have been made in a row. (RoboFunOlympics `juggle-three`: one Unitree G1 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)
@@ -44,7 +44,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Category | throwing-catching-striking |
 | Rule book | No rule book: the three-ball cascade as jugglers define and count it (siteswap 3; the International Jugglers' Association counts a run in catches): each ball is thrown from one hand and caught by the other, the hands throw in turn, the balls follow one another in a fixed order; a run ends with a drop; deviations: A hand holds one ball at a time by a grip switched on and off (it closes on a ball whose surface is within 3.5 cm of the palm and that moves no faster than 6 m/s relative to it), so "two balls in one hand at the start" is modelled: the first of the two (the red ball) waits 0.14 m above the right palm and is thrown by the venue at t = 2.0 s, on an arc that rises 0.5 m and comes down on where the left palm is at the start. Until then it may not be touched. · A throw is a release after which the ball, touching nothing, rises at least 0.3 m above where it was let go; a hand-to-hand pass is not a throw. So that a ball laid on the other hand and lifted is not one, the rise counts only until the ball first touches you again, and from that first touch the other hand has 0.15 s to grip it. · The balls are spheres of a juggling ball's size and mass with a soft bounce; they fly in air (MuJoCo's ellipsoid fluid model: drag, a quasi-steady model), still air. |
 | Stages | first catch → half way → ten catches |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `a821be0749a382cc02fd991f7a37a17517a2bae62d937614093881fa38d497b3` |
+| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `6934a0c6194300754df89d76f8d91a3f3b65c7f68882490471597f6f2a87de91` |
 | Episode | 2000 control steps (20 s at 100 Hz) |
 | Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
 | Tooling | `environment/rcb_rfo.py`, `environment/rfo/` (the world, the action layer, the referee's toolkit) and `environment/rfo_task.py` (this family's rules), the same files as in `tests/` (scripts/robofunolympics/shared/) |

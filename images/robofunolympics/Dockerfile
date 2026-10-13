@@ -3,6 +3,7 @@
 # Unitree G1 (PROTOCOL §2.1: a base image holds the simulator and its assets) at /opt/roboolympics:
 #   bodies/              the robot library (model, meshes, real limits, the one servo path, the joint-group arbiter,
 #                        kinematics, the walking policies that come with the robot), unchanged
+#                        (with the G1's optional FALCON and AGILE walking policies, numpy ports, since 0.2.0)
 #   athletics/           the G1 running policy of RoboOlympics' athletics (run_policy.py, policy/)
 # Source and file list: roboolympics/SOURCE.md; every file is checked against roboolympics/manifest.sha256 here.
 # No task code, no referee and no solution is in the image: those are in the task directories.
@@ -25,5 +26,7 @@ RUN cd /opt/roboolympics && sha256sum --quiet -c manifest.sha256 \
     && test "$(find . -type f ! -name manifest.sha256 | wc -l)" = "$(wc -l < manifest.sha256)" \
     && python -c "import sys; sys.path[:0] = ['/opt/roboolympics', '/opt/roboolympics/athletics']; \
 import mujoco, numpy, imageio, OpenGL, PIL; from bodies import load_body; import run_policy; \
-B = load_body('unitree_g1'); print('mujoco', mujoco.__version__, B.name, B.revision)"
+B = load_body('unitree_g1'); from bodies.unitree_g1.falcon import Falcon; from bodies.unitree_g1.agile import Agile; \
+assert Falcon(B.decl).parity() < 1e-4 and Agile(B.decl).parity() < 1e-4; \
+print('mujoco', mujoco.__version__, B.name, B.revision, 'falcon + agile parity ok')"
 WORKDIR /app

@@ -9,7 +9,7 @@
 | Family / instance | `box_jump` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_box_jump.py: positive by injection (1.6 m/s forward and 3.7 m/s up onto the 0.61 m box, a perfect landing, the stand is the robot's own); negatives: touching the box before the jump, landing on the floor, a leg tuck, a one-foot take-off, the box's side, not on the feet, the floor after the landing, a fall. The H1-2's open-loop squat jump leaves the ground at 1.8 m/s; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Jump from the floor onto the 0.61 m box in front of you with a two-foot take-off, land on its top with both feet, and stand up straight on it. (RoboFunOlympics `box-jump`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)
@@ -44,7 +44,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Category | parkour-apparatus-balance |
 | Rule book | CrossFit's box jump movement standard (the CrossFit Games Open workout descriptions: both feet start on the floor, both feet end on the box, hips and knees fully extended on top) on the men's prescribed box: 24 in (0.61 m) high, the 20 x 24 x 30 in plyometric box standing on its 20 x 30 in face; deviations: the step-up that some Open workouts permit is not a box jump here: the take-off is from both feet and there is a flight (the family is the jump, not the step-up) · full extension on top is judged by the pelvis' height above the box's top (1.0 m; this robot's pelvis is 1.04 m above its soles with straight legs, 1.02 to 1.03 m in its own standing posture, whose knees stay bent 0.36 rad, and below 1.0 m once the knees bend more than about 0.65 rad) and by the torso's tilt: a referee cannot see "open hips" on a robot otherwise · one repetition, judged to a held stand of 2.0 s on the box (a workout counts repetitions; here the repetition is one attempt and the stand shows control) |
 | Stages | take-off → landing → stand |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `aa187afeec3c046cd68f2d439e2956009b95232ab0d53bc9b894fc39d9819beb` |
+| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `45873bd911ac18123ca48a3fca064ec753e6cdda7f1dbc98972f924743aa65f2` |
 | Episode | 2000 control steps (20 s at 100 Hz) |
 | Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
 | Tooling | `environment/rcb_rfo.py`, `environment/rfo/` (the world, the action layer, the referee's toolkit) and `environment/rfo_task.py` (this family's rules), the same files as in `tests/` (scripts/robofunolympics/shared/) |

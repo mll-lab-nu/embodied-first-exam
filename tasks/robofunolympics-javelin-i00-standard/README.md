@@ -9,7 +9,7 @@
 | Family / instance | `javelin` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_javelin.py: positive by injection (a real arm raise and release above the shoulder, the javelin's velocity set to 15.5 m/s at 38 degrees, a real exit from the runway); negatives: an underarm release, the back turned, over the arc, off the runway early, tail first, outside the sector, short, touched after the release, out in front. A legal release of the H1-2 gives 4.3 m/s (1.7 m); 20 m needs about 13.5 m/s; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Throw the javelin in your right hand over the shoulder from behind the arc so that its head strikes the ground first, inside the sector, at least 20.0 m from the arc, then leave the runway behind the arc and stand. (RoboFunOlympics `javelin`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

@@ -9,7 +9,7 @@
 | Family / instance | `bowling` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/robofunolympics/tests/test_bowling.py: positive by injection (a real release, the ball laid 0.35 m past the line at 8 m/s into the pocket: a strike); negatives: over the foul line, a gutter ball, a head-pin hit that is no strike, touched after the release, a foul after the delivery. Strikes exist from 4 m/s on (2 of 17 entry lines 1 cm apart); a swing of the H1-2 gives 3.3 m/s and it falls during the swing; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.0` |
 
 ## Task
 Bowl a strike: from behind the foul line, deliver the ball that hangs from your right hand down the lane so that all ten pins are knocked down. (RoboFunOlympics `bowling`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)
@@ -44,7 +44,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | Category | throwing-catching-striking |
 | Rule book | USBC Playing Rules 2024-2025 and USBC Equipment Specifications: the lane (60 ft from the foul line to the head pin, 41.5 in wide, gutters, pin deck), the pins (15 in, 3 lb 6 oz, 12 in apart), the ball (at most 8.595 in and 16 lb); the playing rules on a strike, a legal delivery, the foul (Rule 5) and legal and illegal pinfall; deviations: Equipment (ball): the hand holds the ball by a grip switched on and off, which stands for the finger holes (the ball hangs from the end of the hand); a uniform ball, no weight block; it is released when the grip is switched off. · Equipment (pins): each pin is six stacked cylinders and capsules that follow the official profile, with the official mass, centre of gravity and the profile's moments of inertia. · Lane condition: RoboOlympics' house pattern as friction zones (oil, friction 0.04, for 13.5 m in the middle of the lane and 3 m shorter on the outside boards; a 1.2 m transition; then dry boards, friction 0.2); the values are RoboOlympics' assumptions after Frohlich (2004), not a measured lane. · Pinfall and the pin count: a pin is down when it is tilted more than 20.0 degrees or is off the lane's surface (RoboOlympics' rule: a pin leaning on a wall counts as down); the count is taken 5.0 s after the ball first touches a pin. No pinsetter, no sweep; the pit is 0.1 m deep. · Rule 5: the foul is judged at any time, not only during or after the delivery; a fall also ends the attempt as a failure, as in every task of this benchmark. · One ball: the task is the first ball of a frame. |
 | Stages | delivery → pins → strike |
-| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `663e86ab24ea338edee338a4a632d175cf124b6357ef297bebd2809b60b37d2f` |
+| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `15b8452eef3ae4b49c91f53b81263d1c5610ba14ba3fd77ce71d56a8ab4277ff` |
 | Episode | 4000 control steps (40 s at 100 Hz) |
 | Action | sim rows of 141 floats per control step (`rfo/world.py`); six action types are views of it |
 | Tooling | `environment/rcb_rfo.py`, `environment/rfo/` (the world, the action layer, the referee's toolkit) and `environment/rfo_task.py` (this family's rules), the same files as in `tests/` (scripts/robofunolympics/shared/) |
