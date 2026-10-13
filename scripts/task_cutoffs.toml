@@ -37,6 +37,7 @@
 "RoboCasa-GR1"      = { privileged =  3600, standard =  3600 }
 "RoboCasa365"       = { privileged =  3600, standard =  3600 }
 "RoboDojo"          = { privileged =  3600, standard =  3600 }
+"RoboFunOlympics"   = { privileged =  7200, standard =  7200 }
 "RoboLab"           = { privileged =  3600, standard =  3600 }
 "RoboOlympics"      = { standard-realtime = 7200 }
 "RoboPaint"         = { privileged =  3600, standard =  3600 }
@@ -85,6 +86,15 @@ from_sec = 5400
 to_sec = 3600
 decided_by = "owner"
 note = "#155, before this table existed (the baseline already has 3600); trials recorded with 5400 s are kept apart"
+
+[[history]]
+date = "2026-10-12"
+benchmark = "RoboFunOlympics"
+modes = ["privileged", "standard"]
+from_sec = 0
+to_sec = 7200
+decided_by = "owner"
+note = "the benchmark's first tasks (#161): the agent may go online and is asked to find, download and adapt controllers, or to build one, which an hour does not hold"
 
 [[history]]
 date = "2026-10-12"

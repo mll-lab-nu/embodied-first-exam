@@ -1,0 +1,26 @@
+# @@PRIV@@
+
+@@SENTENCE@@ (RoboFunOlympics `@@FAMILY@@`: one @@ROBOT_TITLE@@ on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)
+
+## Difficulty
+@@DIFFICULTY@@
+
+## Reference solution
+@@REFERENCE@@
+
+## Verification
+`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in two fresh processes (`rcb_rfo.py replay`:
+one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success in both
+and both end in the same state. The rules: @@RULES@@ @@REVIEW@@
+
+## Details
+| | |
+|---|---|
+| Category | @@CATEGORY@@ |
+| Rule book | @@RULEBOOK_ROW@@ |
+| Stages | @@STAGES@@ |
+| Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `@@SHA@@` |
+| Episode | @@HORIZON_STEPS@@ control steps (@@HORIZON_S@@ s at 100 Hz) |
+| Action | sim rows of @@RAW_DIM@@ floats per control step (`rfo/world.py`); six action types are views of it |
+| Tooling | `environment/rcb_rfo.py`, `environment/rfo/` (the world, the action layer, the referee's toolkit) and `environment/rfo_task.py` (this family's rules), the same files as in `tests/` (scripts/robofunolympics/shared/) |
+| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; docs/benchmarks/robofunolympics.md) |

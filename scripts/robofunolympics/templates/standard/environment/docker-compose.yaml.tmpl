@@ -1,0 +1,26 @@
+# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+# No `expose`/`ports` on sim. CPU only: MuJoCo physics and OSMesa rendering; no GPU reservation.
+# Crash recovery (docs/STANDARD_MODE.md): compose restarts a crashed service (same container, same /data) and the
+# service replays its journal into the same episode, never a reset.
+services:
+  main:
+    depends_on: [sim]
+  sim:
+    image: @@IMAGE@@
+    volumes:
+      - ./sim:/srv:ro
+    working_dir: /tmp
+    command: python /srv/server.py
+    restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
+    environment:
+      RCB_INSTANCE: /srv/instance.json
+      RCB_DATA: /data
+      RCB_WALL_CLOCK_S: "@@AGENT_TIMEOUT@@"
+      RCB_STARTUP_TIMEOUT_S: "300"                      # the scene builds in under a second
+      # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
+      # configuration; results under other settings are reported separately.
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-@@RESET_BUDGET@@}"       # @@RESET_BUDGET@@: RoboFunOlympics' attempts (docs/benchmarks/robofunolympics.md); 0: one attempt
+      RCB_SESSION_LOG: ""
+      PYTHONPATH: /srv
+      MUJOCO_GL: osmesa
+      PYOPENGL_PLATFORM: osmesa
