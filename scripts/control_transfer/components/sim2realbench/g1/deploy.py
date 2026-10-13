@@ -2,13 +2,20 @@
 
 import os
 
-os.environ.setdefault("MUJOCO_GL", "egl")
+os.environ["MUJOCO_GL"] = "osmesa"
+os.environ["PYOPENGL_PLATFORM"] = "osmesa"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "4"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["LP_NUM_THREADS"] = "4"
 import argparse, json, subprocess, hashlib
 from pathlib import Path
 import mujoco
 import numpy as np
 from .assets import SCENE, POLICY, COMMIT, digest, verify
 from .policy import Policy
+from .terrain import build_model, terrain_parameters, ground_height
 
 
 def parameters(seed, nominal=False):
@@ -26,12 +33,27 @@ def parameters(seed, nominal=False):
     }
 
 
-def rollout(policy=POLICY, *, out, plant_seed=0, episode_seed=0, nominal=False, render=True, duration=20.0, speed=0.6):
+def rollout(
+    policy=POLICY,
+    *,
+    out,
+    plant_seed=0,
+    episode_seed=0,
+    nominal=False,
+    render=True,
+    duration=20.0,
+    speed=0.6,
+    terrain="flat",
+    initial_roll=0.0,
+):
     if not np.isfinite(duration) or not 3 <= duration <= 120 or not np.isfinite(speed) or not 0 < speed <= 1:
         raise ValueError("Invalid operator episode specification")
+    if hasattr(os, "sched_getaffinity"):
+        os.sched_setaffinity(0, sorted(os.sched_getaffinity(0))[:4])
     verify()
     actor = Policy(policy)
-    model = mujoco.MjModel.from_xml_path(str(SCENE))
+    terrain_config = terrain_parameters(terrain, episode_seed)
+    model = build_model(SCENE, terrain_config)
     model.opt.timestep = 0.002
     data = mujoco.MjData(model)
     rng = np.random.default_rng(episode_seed)
@@ -51,11 +73,16 @@ def rollout(policy=POLICY, *, out, plant_seed=0, episode_seed=0, nominal=False, 
             raise RuntimeError("Actuator mapping mismatch")
         motors.append(int(matches[0]))
     motors = np.array(motors)
-    data.qpos[:3] = [0, 0, 0.79]
-    data.qpos[3:7] = [1, 0, 0, 0]
+    if not np.isfinite(initial_roll) or abs(initial_roll) > 1.6:
+        raise ValueError("Invalid operator initial pose")
+    initial_rng = np.random.default_rng(np.random.SeedSequence([episode_seed, 917]))
+    data.qpos[:3] = [float(initial_rng.uniform(-0.15, 0.15)), float(initial_rng.uniform(-0.15, 0.15)), 0.79]
+    data.qpos[3:7] = [np.cos(initial_roll / 2), np.sin(initial_roll / 2), 0, 0]
     data.qpos[qp] = actor.default
     mujoco.mj_forward(model, data)
     renderer = mujoco.Renderer(model, height=240, width=320) if render else None
+    scene_option = mujoco.MjvOption()
+    scene_option.geomgroup[5] = 1  # Terrain ray group is hidden by MuJoCo viewer defaults.
     camera = mujoco.MjvCamera()
     camera.distance = 2.8
     camera.azimuth = 135
@@ -64,9 +91,10 @@ def rollout(policy=POLICY, *, out, plant_seed=0, episode_seed=0, nominal=False, 
     quat = model.sensor("imu_quat").adr[0]
     last = np.zeros(29, np.float32)
     queue = [actor.default.copy() for _ in range(plant["delay_steps"])]
-    states = []
+    state_hash = hashlib.sha256()
     frames = []
     telemetry = []
+    commands = []
     errors = []
     fallen = False
     start = None
@@ -97,12 +125,12 @@ def rollout(policy=POLICY, *, out, plant_seed=0, episode_seed=0, nominal=False, 
             queue.append(actor.default + actor.scale * last)
             control = queue.pop(0)
             if step % 5 == 0:
-                states.append([*data.qpos, *data.qvel])
                 telemetry.append({"t": round(time_s, 6), "values": q.tolist()})
+                commands.append({"t": round(time_s, 6), "values": command.tolist()})
                 frame_times.append(round(time_s, 6))
                 if renderer:
                     camera.lookat[:] = [data.qpos[0], data.qpos[1], 0.8]
-                    renderer.update_scene(data, camera)
+                    renderer.update_scene(data, camera, scene_option=scene_option)
                     frames.append(renderer.render())
             previous = float(data.qpos[0])
             if step == 100:
@@ -115,9 +143,12 @@ def rollout(policy=POLICY, *, out, plant_seed=0, episode_seed=0, nominal=False, 
                     model.actuator_ctrlrange[motors, 1],
                 )
                 mujoco.mj_step(model, data)
+                state_hash.update(np.concatenate([data.qpos, data.qvel, data.act, data.ctrl]).astype("<f8").tobytes())
             if step >= 100:
                 errors.append(abs((float(data.qpos[0]) - previous) / 0.02 - speed))
-            if data.qpos[2] < 0.45 or -gravity[2] < 0.5 or not np.isfinite(data.qpos).all():
+            body_up = 1 - 2 * (data.qpos[4] ** 2 + data.qpos[5] ** 2)
+            clearance = data.qpos[2] - ground_height(model, data, *data.qpos[:2])
+            if clearance < 0.45 or body_up < 0.5 or not np.isfinite(data.qpos).all():
                 fallen = True
                 break
         elapsed = (step + 1) * 0.02
@@ -125,7 +156,12 @@ def rollout(policy=POLICY, *, out, plant_seed=0, episode_seed=0, nominal=False, 
         mae = float(np.mean(errors)) if errors else float(abs(speed))
         survival = max(0, elapsed - 2) / (duration - 2)
         metrics = {
-            "score": float(100 * survival * np.exp(-mae / max(abs(speed), 0.1))),
+            "score": float(
+                100
+                * survival
+                * np.exp(-mae / max(abs(speed), 0.1))
+                * np.clip(travel[0] / (speed * (duration - 2)), 0, 1)
+            ),
             "duration_s": elapsed,
             "forward_displacement_m": float(travel[0]),
             "lateral_displacement_m": float(travel[1]),
@@ -142,8 +178,8 @@ def rollout(policy=POLICY, *, out, plant_seed=0, episode_seed=0, nominal=False, 
         out = Path(out)
         out.mkdir(parents=True, exist_ok=True)
         result = {
-            "state_sha256": hashlib.sha256(np.asarray(states).tobytes()).hexdigest(),
-            "task": "unitree_g1_transfer_v2",
+            "state_sha256": state_hash.hexdigest(),
+            "task": "unitree_g1_terrain_transfer_v1",
             "upstream_commit": COMMIT,
             "kind": "operator_policy_validation",
             "policy_sha256": digest(policy),
@@ -153,14 +189,18 @@ def rollout(policy=POLICY, *, out, plant_seed=0, episode_seed=0, nominal=False, 
             "nominal": nominal,
             "command_speed_m_s": speed,
             "requested_duration_s": duration,
-            "feedback": {"telemetry": telemetry},
+            "feedback": {"telemetry": telemetry, "commands": commands},
             "frame_times_s": frame_times,
             "joint_names": actor.joints,
-            "realized_dynamics": plant,
+            "dynamics": plant,
+            "terrain": terrain_config,
             "metrics": metrics,
             "physics": "native MuJoCo CPU",
+            "renderer": "OSMesa software",
+            "mujoco_version": mujoco.__version__,
             "policy_provider": ["numpy-cpu"],
         }
+        metrics["success"] = metrics["walking_success"]
         if render:
             subprocess.run(
                 [
@@ -213,6 +253,9 @@ if __name__ == "__main__":
     p.add_argument("--nominal", action="store_true")
     p.add_argument("--no-video", action="store_true")
     p.add_argument("--duration", type=float, default=20.0)
+    p.add_argument("--terrain", choices=["flat", "slope", "rough", "steps"], default="flat")
+    p.add_argument("--speed", type=float, default=0.6)
+    p.add_argument("--initial-roll", type=float, default=0.0)
     a = p.parse_args()
     print(
         json.dumps(
@@ -224,6 +267,9 @@ if __name__ == "__main__":
                 nominal=a.nominal,
                 render=not a.no_video,
                 duration=a.duration,
+                terrain=a.terrain,
+                speed=a.speed,
+                initial_roll=a.initial_roll,
             )["metrics"]
         )
     )
