@@ -30,7 +30,7 @@ def plant_parameters(seed):
     )
 
 
-def episode_parameters(seed):
+def episode_parameters(seed, track_id=None):
     rng = np.random.default_rng(seed)
     command = dict(
         a=float(rng.uniform(4.2, 4.8)),
@@ -49,6 +49,17 @@ def episode_parameters(seed):
     )
     surfaces = [(boundaries[i], boundaries[i + 1], float(mus[i])) for i in range(4)]
     offset = rng.uniform(-0.08, 0.08, 2)
+    if track_id is not None:
+        from ..components.anycarbench.tracks import get_route
+
+        route = get_route(track_id)
+        command = dict(track_id=route.name, start_fraction=float(rng.uniform(0, 1)), speed=0.85)
+        extent = route.half_extent
+        sector = route.at(command["start_fraction"] * route.length + np.linspace(0, 0.85 * (HORIZON - 0.5), 241))
+        low, high = float(sector[:, 0].min()), float(sector[:, 0].max())
+        center, span = (low + high) / 2, max(high - low, 0.5)
+        boundaries = [-extent, center - 0.25 * span, center, center + 0.25 * span, extent]
+        surfaces = [(boundaries[i], boundaries[i + 1], float(mus[i])) for i in range(4)]
     return command, surfaces, offset, float(rng.uniform(-0.05, 0.05))
 
 
@@ -67,6 +78,10 @@ class Video:
         self.camera = mujoco.MjvCamera()
         self.camera.lookat[:] = [0, 0, 0]
         self.camera.distance = 13
+        if "track_id" in vehicle.command:
+            from ..components.anycarbench.tracks import get_route
+
+            self.camera.distance = get_route(vehicle.command["track_id"]).half_extent * 3.1
         self.camera.azimuth = 90
         self.camera.elevation = -70
         # Fixed orientation; center uses the already-delivered noisy position only.
@@ -141,18 +156,43 @@ def score_trajectory(states, targets, command, collision=False, body_contact=Fal
     errors = np.linalg.norm(states[:, :2] - targets[:, :2], axis=1)
     heading = np.abs(wrap(states[:, 2] - targets[:, 2]))
     speed = np.abs(states[:, 3] - targets[:, 3])
-    phase = np.unwrap(np.arctan2(states[:, 1] / command["b"], states[:, 0] / command["a"]))
-    progress = command["direction"] * (phase - phase[0])
-    # Gates must be crossed in order and near the center line, not via chord shortcuts.
-    radial = np.abs(np.sqrt((states[:, 0] / command["a"]) ** 2 + (states[:, 1] / command["b"]) ** 2) - 1) * min(
-        command["a"], command["b"]
-    )
-    gate = 1
-    for angle, err in zip(progress, radial):
-        if gate <= 24 and angle >= gate * 2 * np.pi / 24 and err < 0.45:
-            gate += 1
-    completion = min((gate - 1) / 24, 1.0)
-    offtrack = bool(np.max(radial) > 0.70)
+    if "track_id" in command:
+        from ..components.anycarbench.tracks import get_route
+
+        route = get_route(command["track_id"])
+        start = command.get("start_fraction", 0.0) * route.length
+        distance = command.get("speed", 0.85) * (HORIZON - 0.5)
+        gates = route.at(start + np.linspace(distance / 24, distance, 24))
+        gate = 0
+        # Cross each prescribed gate plane forward, near its center, in order.
+        # A global nearest-waypoint jump cannot skip a bend or crossover.
+        for previous, current in zip(states[:-1], states[1:]):
+            if gate == 24:
+                break
+            x, y, yaw, _ = gates[gate]
+            normal = np.array([np.cos(yaw), np.sin(yaw)])
+            tangent = np.array([-normal[1], normal[0]])
+            before, after = (np.dot(p[:2] - [x, y], normal) for p in (previous, current))
+            if before < 0 and after >= -1e-10:
+                alpha = -before / (after - before)
+                crossing = previous[:2] + alpha * (current[:2] - previous[:2])
+                if abs(np.dot(crossing - [x, y], tangent)) < 0.45:
+                    gate += 1
+        completion = gate / 24
+        offtrack = bool(np.max(route.distance(states[:, :2])) > 0.70)
+    else:
+        phase = np.unwrap(np.arctan2(states[:, 1] / command["b"], states[:, 0] / command["a"]))
+        progress = command["direction"] * (phase - phase[0])
+        # Gates must be crossed in order and near the center line, not via chord shortcuts.
+        radial = np.abs(np.sqrt((states[:, 0] / command["a"]) ** 2 + (states[:, 1] / command["b"]) ** 2) - 1) * min(
+            command["a"], command["b"]
+        )
+        gate = 1
+        for angle, err in zip(progress, radial):
+            if gate <= 24 and angle >= gate * 2 * np.pi / 24 and err < 0.45:
+                gate += 1
+        completion = min((gate - 1) / 24, 1.0)
+        offtrack = bool(np.max(radial) > 0.70)
     rmse = float(np.sqrt(np.mean(errors**2)))
     mae_heading = float(np.mean(heading))
     mae_speed = float(np.mean(speed))
@@ -185,7 +225,9 @@ def rollout(policy_path, case, out, render=True):
     policy = json.loads(Path(policy_path).read_text())
     raw = validate(policy)
     plant = plant_parameters(case["plant_seed"])
-    command, surfaces, offset, angle = episode_parameters(case["episode_seed"])
+    command, surfaces, offset, angle = episode_parameters(case["episode_seed"], case.get("track_id"))
+    if "start_fraction" in case:
+        command["start_fraction"] = float(case["start_fraction"])
     rng = np.random.default_rng(case["episode_seed"] + 300000)
     v = Vehicle(plant, surfaces, command)
     start = reference(0, command)
@@ -249,8 +291,17 @@ def main():
     parser.add_argument("--plant-seed", type=int, default=10100)
     parser.add_argument("--episode-seed", type=int, default=10300)
     parser.add_argument("--no-render", action="store_true")
+    parser.add_argument("--track", help="Historical layout ID, circuit alias (latest raced layout), or zigzag")
+    parser.add_argument("--start-fraction", type=float, help="Operator-only public route start override for previews")
     a = parser.parse_args()
-    r = rollout(a.policy, dict(plant_seed=a.plant_seed, episode_seed=a.episode_seed), a.out, not a.no_render)
+    case = dict(plant_seed=a.plant_seed, episode_seed=a.episode_seed)
+    if a.track:
+        case["track_id"] = a.track
+    if a.start_fraction is not None:
+        if not a.track or not 0 <= a.start_fraction < 1:
+            parser.error("--start-fraction requires --track and a value in [0,1)")
+        case["start_fraction"] = a.start_fraction
+    r = rollout(a.policy, case, a.out, not a.no_render)
     print(json.dumps(dict(state_sha256=r["state_sha256"], metrics=r["metrics"])))
 
 

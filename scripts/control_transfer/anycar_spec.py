@@ -38,3 +38,22 @@ def make_spec(index):
         public=public,
         bank=dict(adaptation=cases(0, 3), held_out=cases(300, 10)),
     )
+
+
+def make_circuit_spec(index, track_id="zigzag"):
+    """Versioned circuit-sector bank; legacy ellipse instances remain unchanged."""
+    from .components.anycarbench.tracks import resolve_track
+
+    spec = make_spec(index)
+    layout = resolve_track(track_id)
+    for bank in spec["bank"].values():
+        for case in bank:
+            case["track_id"] = layout
+    spec["task_variant"] = "circuit-sector/1"
+    spec["public"].update(
+        track_id=layout,
+        horizon_s=24.0,
+        goal="Track a prescribed-time 24-second sector of a scaled circuit; cross ordered gates and avoid collisions/offtrack. Public nominal supports full-lap training.",
+        geometry="Planar SVG-derived schematic, smoothed and uniformly scaled for RC steering; no elevation/bridge reconstruction.",
+    )
+    return spec
